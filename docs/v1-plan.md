@@ -8,9 +8,9 @@
 
 ## What we're building
 
-An open-source library of college Common Data Set (CDS) information, published at **collegedata.fyi**. V1 is deliberately scoped as "rag-tag but useful": discover CDS PDFs across college websites, extract them with Docling, and publish both the raw PDFs and the raw Docling JSON alongside a queryable manifest. No hand-cleaned data, no opinionated schema — just reproducible ground truth that the community can build on top of.
+An open-source library of college Common Data Set (CDS) information, published at **collegedata.fyi**. V1's scope is "discover, preserve, structure": find each school's CDS document, archive the source file immediately, extract it into the CDS Initiative's own canonical schema (the one already published in the official Excel template), and expose the result as a queryable manifest. We do not invent a schema — `cds_schema_v1` is the Answer Sheet of the commondataset.org template, extracted programmatically.
 
-The bet is that the two hardest problems in this space ("where is each school's CDS?" and "turn the PDF into structured data") are independently valuable even in their roughest form, and that shipping the scraper + raw extracts is more useful to more people than waiting until we have perfectly normalized data.
+The bet is that the two hardest problems in this space ("where is each school's CDS?" and "turn the source document into structured data") are independently valuable even in rough form, and that shipping the scraper + structured extracts is more useful to more people than waiting until we have perfectly normalized data across every school. Doing both against a canonical schema, rather than against a schema of our own invention, means cross-school queries work from day one.
 
 **Naming and framing.** The public name is `collegedata.fyi`, deliberately not `opencds.io` or similar. "CDS" is inside-baseball — IR professionals know it instantly, everyone else reads it as a medical or music acronym. The `.fyi` TLD is an honest promise ("here's the reference, here's where to look it up") that matches V1's raw-and-rough scope without overclaiming the freshness or cleanliness that `.live` or `.org` would imply. README copy should lead with "college facts pulled straight from each school's Common Data Set" rather than "an open CDS library" so non-technical visitors get oriented without a glossary.
 
@@ -22,15 +22,44 @@ Yale came out essentially clean. Section hierarchy, numeric tables, checkbox sta
 
 Harvey Mudd exposed the real shape of the problem. The C1 applicants/admits table was misaligned so that 3452/1761/4 values shifted into the wrong rows — meaning a naive consumer would silently read wrong numbers for every applicant/admit field. The B1 enrollment header collapsed its merged Full-Time/Part-Time columns. Checkboxes were dropped throughout Section C. Running page headers got promoted to H2. Section C1-C2 appeared before the "C. FIRST-TIME, FIRST-YEAR ADMISSION" heading because of reading-order confusion. Year numerals came through kerned ("202 5 -202 6").
 
-The honest conclusion from this: extraction quality varies dramatically by school, and any V1 that tries to publish "clean" data will either lie or block indefinitely on the long tail. Publishing raw Docling output with provenance is a promise we can keep today. The cleanup becomes a separate, versionable, community-contributable layer on top.
+The honest conclusion from this: extraction quality varies dramatically by school, and any V1 that tries to publish "clean" data will either lie or block indefinitely on the long tail. Publishing structured extracts with provenance is a promise we can keep today. The cleanup becomes a separate, versionable, community-contributable layer on top.
+
+> **Postscript (2026-04-13):** The HMC "row-shift corruption" described above turned out to be a tool-choice error, not a layout bug. HMC distributes its CDS as an unflattened fillable PDF, and the correct values were available the whole time via `pypdf.get_fields()` from 1,026 named AcroForm fields. The Docling audit was solving a problem the source document did not have. This discovery led directly to the tiered extraction strategy described under V1b below: fillable PDFs take a deterministic Tier 2 path, and layout extraction (Docling, Reducto, OCR) is reserved for genuinely flat documents. See [`docs/known-issues/harvey-mudd-2025-26.md`](known-issues/harvey-mudd-2025-26.md) for the corrected per-school notes.
+
+## Preservation mission
+
+V1 is not just an open data library. Two shifts in the 2024-2026 landscape give this project an urgent archival mission that was not obvious when the initial plan was drafted.
+
+**ADA Title II + WCAG 2.1 AA.** The April 2024 DOJ final ruling requires state and local governments (including all public universities) to make hosted web content, including PDFs, compliant with WCAG 2.1 AA for screen readers. The traditional CDS template, with its dense multi-column demographic tables and intricate financial-aid matrices, is structurally hostile to screen readers and extremely difficult to remediate without full document re-authoring. To limit legal exposure, risk-averse public universities are removing historical CDS PDFs from their websites rather than retrofit them. Documents that existed last year are disappearing from the web right now.
+
+**The CDS Initiative is publicly endorsing machine-readable formats.** The 2025-26 Word template instructions include a note suggesting institutions use "Large Language Models, VBA macros, or Python scripts" to extract data from legacy PDFs into CSV files, and the Initiative is asking publishers to accept raw machine-readable data rather than continuing to rely on "beautifully formatted but legally perilous PDFs." The standards body is, in effect, writing cover for this kind of project.
+
+**What this means for V1:**
+
+1. Every source file we discover is archived in Supabase Storage **on first sight**, before any extraction work runs. Extraction can always be redone from the archived source. The source cannot be recovered if the school takes it down before we have it.
+2. The manifest tracks `discovered_at`, `last_verified_at`, and `removed_at` on every `cds_documents` row so we can answer "this URL used to exist and went away on this date." A periodic re-check job flips `removed_at` when a source 404s. Consumers can filter on removed-but-archived documents separately from currently-live ones.
+3. The README lead with the preservation framing, not just the data-library framing, because the preservation story is what journalists, IR professionals, and IPEDS-adjacent researchers will care about. "Archive of public-accountability documents being deleted in real time" is a much stronger story than "open data library."
+4. We are not the only ones trying to do this. Fairfield University's Digital Commons already hosts a well-curated single-institution archive going back to 2003 with RSS feeds. They are the existence proof that institutional archiving works. Our contribution is making it cross-institutional.
 
 ## V1 scope
 
 Three independently useful pieces, each shippable on its own.
 
-**V1a — CDS Finder.** A Google-dorking scraper that takes a school name and returns the canonical URL of its most recent CDS PDF. This is genuinely useful even if nobody ever touches the Docling half — journalists, researchers, and anyone building a college-search tool currently has no index of where these PDFs live. Output is a manifest row: `(school_id, cds_year, source_pdf_url, pdf_sha256, discovered_at)`. A `schools.yaml` file holds per-school URL patterns for the long tail where the default dorks fail, and contributors can PR new patterns.
+**V1a — CDS Finder.** A scraper that takes a school and returns the canonical URL of its most recent CDS document. Seed corpus comes from the pbworks College Lists Wiki (see [`tools/finder/seed_urls.md`](../tools/finder/seed_urls.md)), which lists ~80 institutional hosting URLs from circa 2005. Most of those URLs are now dead, but the school names are still right and the URL patterns give the scraper a starting template. For schools not in the wiki, fall back to targeted Google dorks (`site:.edu filetype:pdf "Common Data Set 2025-2026"`) and a ladder of known URL path patterns (`/ir/cds/`, `/institutional-research/common-data-set/`, etc.). Output is a manifest row with the fields described under Data model below. A `schools.yaml` file holds per-school overrides for the long tail where the default probes fail, and contributors PR new entries.
 
-**V1b — Raw Extraction Pipeline.** For each PDF in the manifest, run Docling and publish the resulting JSON blob to Storage. No cleanup, no normalization. The only promise is "this is what Docling saw." The raw PDF is published alongside the JSON so anyone can verify against the source.
+**V1b — Tiered Extraction Pipeline.** Each source file is routed to the appropriate extractor based on its format. The tier ladder:
+
+| Tier | Input | Extractor | Expected accuracy |
+|---|---|---|---|
+| 1 | Filled XLSX | `openpyxl` → Answer Sheet | ~100% when available, but no schools currently observed to publish this format |
+| 2 | Unflattened fillable PDF | [`tools/tier2_extractor/`](../tools/tier2_extractor/) via `pypdf.get_fields()` | ~100% when AcroForm is populated; HMC 2025-26 confirmed end-to-end |
+| 3 | Filled DOCX | `python-docx` → Word tags | ~100% when available; not yet observed |
+| 4 | Flattened PDF | Docling and/or Reducto plus a schema-targeting cleaner | variable, this is the hard path |
+| 5 | Image-only scan | OCR plus cleaner | worst case, may require manual review |
+
+Every extractor targets the same canonical schema ([`schemas/cds_schema_{year}.json`](../schemas/)), so downstream queries work identically regardless of which tier produced the values. The `cds_artifacts.producer` column records which tier did the work, letting consumers filter on extraction provenance.
+
+The scraper probes every incoming document with `pypdf.get_fields()` before routing, so fillable PDFs are detected cheaply and never end up in the expensive Tier 4 pipeline. The scraper also archives the source file to Supabase Storage before any extraction runs, so the raw bytes survive even if the extractor pipeline fails or the school later removes the original.
 
 **V1c — Public Manifest API.** A Supabase-hosted Postgres table exposed read-only through PostgREST, served under `api.collegedata.fyi` via Supabase custom domain. Consumers query `https://api.collegedata.fyi/rest/v1/cds_manifest?school=eq.yale` and get JSON back. No custom backend, no UI required. Using the custom domain from day one matters because the URL ends up in documentation and example `curl` commands — we don't want to migrate those post-launch.
 
@@ -52,23 +81,42 @@ Single vendor for everything: **Supabase**. No Railway, no AWS, no GCP needed.
 
 ```
 cds_documents
-  id              uuid pk
-  school_id       text          -- slug, e.g. "yale", "harvey-mudd"
-  school_name     text
-  cds_year        text          -- e.g. "2024-25"
-  source_pdf_url  text
-  pdf_sha256      text
-  pdf_page_count  int
-  discovered_at   timestamptz
-  status          text          -- discovered | extraction_pending | extracted | failed
-  unique (school_id, cds_year)
+  id                    uuid pk
+  school_id             text          -- slug, e.g. "yale", "harvey-mudd"
+  school_name           text
+  sub_institutional     text          -- e.g. "columbia-college-and-seas",
+                                      --       "columbia-general-studies";
+                                      --       null for schools that publish
+                                      --       a single CDS per year
+  cds_year              text          -- e.g. "2024-25"
+  source_url            text          -- where we found it
+  source_format         text          -- pdf_fillable | pdf_flat | pdf_scanned
+                                      -- | xlsx | docx; set on discovery
+  source_sha256         text
+  source_page_count     int
+  participation_status  text          -- published | verified_absent
+                                      -- | verified_partial | not_yet_found
+                                      -- | withdrawn
+  discovered_at         timestamptz   -- first time we saw this URL
+  last_verified_at      timestamptz   -- most recent time re-check job
+                                      -- confirmed the URL still 200s
+  removed_at            timestamptz   -- first time re-check job saw the URL
+                                      -- 404 or return a different document;
+                                      -- null while the source is still live
+  extraction_status     text          -- discovered | extraction_pending
+                                      -- | extracted | failed
+  unique (school_id, sub_institutional, cds_year)
 
 cds_artifacts
   id                uuid pk
   document_id       uuid fk -> cds_documents
-  kind              text          -- raw_docling | cleaned | schema_v1_normalized
-  producer          text          -- docling | community-cleaner | ...
+  kind              text          -- canonical | raw_docling | raw_reducto
+                                  -- | cleaned | schema_v1_normalized
+  producer          text          -- tier2_acroform | docling | reducto
+                                  -- | community-cleaner | ...
   producer_version  text          -- semver of the producing tool
+  schema_version    text          -- e.g. "2025-26" — which year's schema
+                                  -- the extract targets
   storage_path      text          -- path in Supabase Storage
   sha256            text
   created_at        timestamptz
@@ -82,7 +130,19 @@ cleaners
   registered_at    timestamptz
 ```
 
-The key property: **raw artifacts are immutable.** When a new Docling version ships, we re-extract and write a new artifact row, but the old blob stays in Storage forever. Same for cleaners. This gives us cheap reproducibility and lets multiple cleaners coexist without one overwriting another.
+The key property: **source files and raw artifacts are immutable.** When a new extractor version ships, we re-extract and write a new artifact row, but the old blob stays in Storage forever. Same for cleaners. This gives us cheap reproducibility and lets multiple producers coexist without one overwriting another. The source file (the archived PDF / XLSX / DOCX) is also immutable once discovered, which is what lets the preservation mission actually work.
+
+**Sub-institutional publication.** Some schools publish more than one CDS document in the same year. Columbia University, for example, publishes one for traditional undergraduates (Columbia College + Fu School of Engineering) and a separate one for the School of General Studies, explicitly to prevent combined-population averages from distorting the selective undergraduate numbers. The `sub_institutional` column makes these first-class citizens. Schools that publish a single CDS per year leave the column null. Cross-school queries filter on `where sub_institutional is null` or on a specific variant as needed.
+
+**Participation status.** `participation_status` distinguishes several real states that `status=not_found` conflates:
+
+- `published` — we have the document, it's live, and it's complete
+- `verified_absent` — the school is publicly known to refuse CDS publication (e.g., University of Chicago, Reed College). Consumers who query "all schools with no CDS" should see these explicitly, not inferred.
+- `verified_partial` — the school publishes but intentionally omits specific sections (e.g., Dartmouth and Princeton historically omit GPA breakdowns in Section C)
+- `not_yet_found` — we have not yet located a public URL, but the school probably publishes somewhere
+- `withdrawn` — the school previously published and has since removed the document; we have an archived copy but the live source is gone. This is the state the WCAG preservation story turns on.
+
+**Schema years are not interchangeable.** `cds_artifacts.schema_version` records which year's schema the extract targets. The 2025-26 schema introduces several breaking changes relative to prior years: gender categories collapsed from `{Men, Women, Another Gender, Unknown}` (four) to `{Male, Female, Unknown}` (three) with non-binary redistributed across binary; graduation rates B4-B21 now disaggregate by Pell recipient status; retention rate B22 now requires explicit numerator and denominator. Consumers doing cross-year time series must handle these discontinuities explicitly rather than assume field IDs are comparable. See the schema year-diff on the backlog for the tooling plan.
 
 ## Accommodating contributors from day one
 
