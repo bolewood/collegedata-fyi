@@ -26,20 +26,17 @@ The honest conclusion from this: extraction quality varies dramatically by schoo
 
 > **Postscript (2026-04-13):** The HMC "row-shift corruption" described above turned out to be a tool-choice error, not a layout bug. HMC distributes its CDS as an unflattened fillable PDF, and the correct values were available the whole time via `pypdf.get_fields()` from 1,026 named AcroForm fields. The Docling audit was solving a problem the source document did not have. This discovery led directly to the tiered extraction strategy described under V1b below: fillable PDFs take a deterministic Tier 2 path, and layout extraction (Docling, Reducto, OCR) is reserved for genuinely flat documents. See [`docs/known-issues/harvey-mudd-2025-26.md`](known-issues/harvey-mudd-2025-26.md) for the corrected per-school notes.
 
-## Preservation mission
+## Archival posture
 
-V1 is not just an open data library. Two shifts in the 2024-2026 landscape give this project an urgent archival mission that was not obvious when the initial plan was drafted.
+V1 is an open data library first and an incidental archive second. We archive every source file we discover to Supabase Storage on first sight — partly because that's how you make extraction reproducible across extractor versions, and partly because some schools do occasionally remove historical CDS files from their websites. We have observed this concretely at MIT, which removed every historical CDS URL during a domain migration between 2023 and 2026 with no successor content. An informal probe of ten elite schools found the aggregate removal rate so far to be well under 10%, and the ADA Title II compliance window (April 2026 / April 2027) may or may not accelerate this. We do not know yet, and we do not need to know for V1.
 
-**ADA Title II + WCAG 2.1 AA.** The April 2024 DOJ final ruling requires state and local governments (including all public universities) to make hosted web content, including PDFs, compliant with WCAG 2.1 AA for screen readers. The traditional CDS template, with its dense multi-column demographic tables and intricate financial-aid matrices, is structurally hostile to screen readers and extremely difficult to remediate without full document re-authoring. To limit legal exposure, risk-averse public universities are removing historical CDS PDFs from their websites rather than retrofit them. Documents that existed last year are disappearing from the web right now.
+The practical consequences for the data model are small but real:
 
-**The CDS Initiative is publicly endorsing machine-readable formats.** The 2025-26 Word template instructions include a note suggesting institutions use "Large Language Models, VBA macros, or Python scripts" to extract data from legacy PDFs into CSV files, and the Initiative is asking publishers to accept raw machine-readable data rather than continuing to rely on "beautifully formatted but legally perilous PDFs." The standards body is, in effect, writing cover for this kind of project.
+1. Source files get archived on first discovery, before extraction runs. If a school removes its CDS after we saw it, we still have the bytes.
+2. The manifest tracks `discovered_at`, `last_verified_at`, and `removed_at` on every `cds_documents` row so consumers can distinguish "live" from "archived but no longer live at the source."
+3. Fairfield University's Digital Commons already hosts a well-curated single-institution CDS archive going back to 2003 with RSS feeds. They are proof that institution-side archiving works. Our contribution is the cross-institutional manifest and the queryable API, not a novel preservation mission.
 
-**What this means for V1:**
-
-1. Every source file we discover is archived in Supabase Storage **on first sight**, before any extraction work runs. Extraction can always be redone from the archived source. The source cannot be recovered if the school takes it down before we have it.
-2. The manifest tracks `discovered_at`, `last_verified_at`, and `removed_at` on every `cds_documents` row so we can answer "this URL used to exist and went away on this date." A periodic re-check job flips `removed_at` when a source 404s. Consumers can filter on removed-but-archived documents separately from currently-live ones.
-3. The README lead with the preservation framing, not just the data-library framing, because the preservation story is what journalists, IR professionals, and IPEDS-adjacent researchers will care about. "Archive of public-accountability documents being deleted in real time" is a much stronger story than "open data library."
-4. We are not the only ones trying to do this. Fairfield University's Digital Commons already hosts a well-curated single-institution archive going back to 2003 with RSS feeds. They are the existence proof that institutional archiving works. Our contribution is making it cross-institutional.
+The README leads with the data-library framing, not the preservation framing. Preservation is a side benefit worth mentioning in the risks section and in the `removed_at` column's docstring, not a launch narrative.
 
 ## V1 scope
 

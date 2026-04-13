@@ -6,15 +6,18 @@ An open, reproducible library of US college data. We find each school's Common D
 
 > **Status: early V1.** Extraction quality varies by source format. Fillable PDFs are read deterministically via AcroForm fields; flattened PDFs fall through to a layout-extraction path that is still under development. See [`docs/known-issues/`](docs/known-issues/) for per-school notes.
 
-## Why this matters now
+## Why this exists
 
-Two things changed in 2024-2026 that make this project time-sensitive.
+There is no free public API for Common Data Set information. Every school publishes to its own URL, most as PDFs, with no central index. If you want to compare admissions statistics across schools, the options today are "write a custom scraper for each institution," "pay a commercial data provider," or "give up and use IPEDS instead," which is federal compliance data that lacks the admissions granularity the CDS captures.
 
-1. **The April 2024 DOJ ruling on ADA Title II** requires public universities to make all hosted PDFs WCAG 2.1 AA compliant. The traditional CDS template, with its dense multi-column demographic and financial-aid tables, is structurally hostile to screen readers and extremely difficult to remediate. To limit legal exposure, many risk-averse public universities are **actively removing historical CDS PDFs from their websites** rather than retrofit them for accessibility. Documents that existed last year are disappearing now.
+Two recent discoveries made this project much cheaper to build than it would have been a year ago:
 
-2. **The CDS Initiative is publicly endorsing machine-readable formats.** The 2025-26 Word template includes a note from the Initiative suggesting institutions use "Large Language Models, VBA macros, or Python scripts" to extract data from legacy PDFs into CSV files, and the Initiative is asking publishers to accept raw machine-readable data rather than continuing to rely on "beautifully formatted but legally perilous PDFs."
+1. The CDS Initiative publishes a canonical machine-readable schema in the official 2025-26 Excel template. We extract it programmatically — 1,105 fields keyed by stable question numbers — so there's no schema-design work, and every school's data lands in the same shape.
+2. A meaningful minority of school CDS PDFs are actually unflattened fillable forms with named AcroForm fields. For those schools, extraction is deterministic via `pypdf.get_fields()` and matches ground truth perfectly. Harvey Mudd 2025-26 is the verified case.
 
-Put those together and the project's mission is sharper than it was a month ago. We are not just an open data library. We are an **active preservation archive** for public-accountability documents that are vanishing in real time, and our architecture aligns with what the standards body itself is publicly asking for. Every PDF we find gets archived in Supabase Storage the moment we see it. Every manifest row tracks when we last verified the source was still live. If a school removes their CDS next year, we still have it, and consumers can still query the data.
+Combine those two and an open CDS library that was a multi-month engineering project a year ago is now a weekend's worth of effort. That is the actual reason this project exists now.
+
+We also archive source files on discovery, because some schools do occasionally remove historical CDS from their websites — MIT's 2023-era CDS URLs, for example, were all removed during a 2024-2026 domain migration. This is a side benefit of the architecture, not the headline.
 
 ## What's here
 
