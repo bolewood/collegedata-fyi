@@ -33,7 +33,7 @@ import pypdf
 
 
 PRODUCER_NAME = "tier2_acroform"
-PRODUCER_VERSION = "0.1.0"
+PRODUCER_VERSION = "0.2.0"
 
 
 def load_schema(schema_path: Path) -> dict:
@@ -61,6 +61,21 @@ def read_acroform(pdf_path: Path) -> dict:
     return result
 
 
+def decode_button_value(raw: str, value_options):
+    """If the field has a value_options list, translate the raw AcroForm
+    export value (e.g. '/VI') to the human-readable label (e.g. 'Very
+    Important'). Returns None if no value_options are defined or no
+    entry matches (in which case callers should fall through to the
+    raw value).
+    """
+    if not value_options:
+        return None
+    for opt in value_options:
+        if opt.get("export") == raw:
+            return opt.get("label")
+    return None
+
+
 def extract(pdf_path: Path, schema: dict) -> dict:
     acroform = read_acroform(pdf_path)
 
@@ -73,7 +88,8 @@ def extract(pdf_path: Path, schema: dict) -> dict:
         if field is None:
             unmapped.append({"pdf_tag": pdf_tag, "value": raw})
             continue
-        values[field["question_number"]] = {
+
+        record: dict = {
             "value": raw,
             "pdf_tag": pdf_tag,
             "word_tag": field.get("word_tag"),
@@ -82,6 +98,17 @@ def extract(pdf_path: Path, schema: dict) -> dict:
             "subsection": field.get("subsection"),
             "value_type": field.get("value_type"),
         }
+
+        # If this is a button field with value_options from the schema,
+        # decode the raw export value (/VI, /X, /SEM, ...) to a
+        # human-readable label. Raw value is preserved in `value`;
+        # decoded label is added as `value_decoded` so consumers can
+        # still see the source of truth.
+        decoded = decode_button_value(raw, field.get("value_options"))
+        if decoded is not None:
+            record["value_decoded"] = decoded
+
+        values[field["question_number"]] = record
 
     schema_tags = set(tag_to_field)
     present_tags = set(acroform) & schema_tags

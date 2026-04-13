@@ -8,62 +8,7 @@ Items are grouped by priority. Effort hints are rough estimates of CC-assisted t
 
 ## Next up
 
-### 1. Checkbox value decoder for Tier 2 extractor
-**Priority:** P1 (blocks Tier 2 from shipping with full output quality)
-**Effort:** ~30 minutes
-**Owner:** unassigned
-
-The Tier 2 extractor at `tools/tier2_extractor/` reads AcroForm checkbox widgets and emits their raw PDF export values: `/VI`, `/X`, `/NON`, `/SAME`, `/P`, etc. These are not human-readable. Each checkbox field has a known set of possible values defined in the blank template's widget dictionary (the `/AP` and `/Opt` entries on the field object).
-
-**What to build:** a one-time pass over `scratch/CDS-PDF-2025-2026_PDF_Template.pdf` that walks every Btn-type field, extracts its set of legal export values, and pairs each value with a human-readable label (from the adjacent text or the schema's question text). Bake the resulting decoder into `schemas/cds_schema_{year}.json` as a per-field `value_options` array, e.g.:
-
-```json
-{
-  "question_number": "C.701",
-  "pdf_tag": "Q111_1",
-  "value_type": "x",
-  "value_options": [
-    {"export": "/VI", "label": "Very Important"},
-    {"export": "/I",  "label": "Important"},
-    {"export": "/SC", "label": "Somewhat Considered"},
-    {"export": "/NC", "label": "Not Considered"}
-  ]
-}
-```
-
-The Tier 2 extractor then emits both the raw export value (for provenance) and the decoded label (for consumers).
-
-**Why it matters:** without this, every checkbox field in Tier 2 output is a meaningless one- or two-letter code. Downstream consumers cannot use the data without writing their own per-field decoder, which defeats the canonical-schema promise.
-
-**Cross-references:** `tools/tier2_extractor/README.md` known gap #1; `tools/schema_builder/build_from_xlsx.py`.
-
----
-
-### 2. Full HMC regression test for Tier 2 against ground truth
-**Priority:** P1 (validates the "Tier 2 is strictly better" claim with numbers)
-**Effort:** ~45 minutes
-**Owner:** unassigned
-
-The Tier 2 extractor was verified against 13 hand-picked C1/C2/B1 spot checks from `tools/extraction-validator/ground_truth/harvey-mudd-2025-26.yaml`. The full ground truth file has more fields (B2 race/ethnicity, B22 retention, C7 factor importance, C9 test scores, C10 class rank, C13 application fee, etc.) that were not checked.
-
-**What to build:** a script (probably `tools/extraction-validator/score_tier2.py` so it sits next to the existing Docling-config validator) that:
-1. Loads a school's ground-truth YAML
-2. Loads the corresponding Tier 2 extract JSON
-3. Builds a mapping from ground-truth field IDs (e.g. `b1_ft_firstyear_men`) to canonical question numbers (e.g. `B.101`) — this might require a small hand-edited map file because the ground truth uses homegrown IDs that don't directly join to the schema
-4. For every ground-truth field, look up the Tier 2 value and compare
-5. Emit `N/M match (X%)` plus a per-field diff table
-
-Run it on HMC. Expected result: 100% match for any field that exists as a non-computed AcroForm value, with a small number of misses for fields that are derived from sub-values or that the school left blank.
-
-**Why it matters:** the project's claim that Tier 2 is the right primary extraction path needs evidence beyond a 13-field spot check. A full regression score is the artifact a contributor can cite when defending the architecture decision in ADR 0006 or in a launch post.
-
-**Stretch:** also score the existing Reducto reference extracts (`tools/extraction-validator/references/reducto/`) against the same ground truth using the same script. That gives a side-by-side: Tier 2 vs Reducto vs Docling, all on the same scale, all reading the same hand-verified YAML.
-
-**Cross-references:** `tools/extraction-validator/README.md`; `tools/extraction-validator/ground_truth/harvey-mudd-2025-26.yaml`; `tools/extraction-validator/references/reducto/observations-2026-04-13.md`.
-
----
-
-### 3. Cross-year schema diff tool
+### 1. Cross-year schema diff tool
 **Priority:** P1 (cross-year time series cannot work without it, and the 2025-26 template has breaking changes)
 **Effort:** ~45 minutes once a second schema year exists
 
@@ -98,6 +43,7 @@ Items raised in conversation or design notes that haven't been promoted to the p
 - **Hand-mapping from ground-truth IDs to canonical question numbers.** The validator's `ground_truth/*.yaml` files use homegrown IDs (`b1_ft_firstyear_men`). The schema uses canonical question numbers (`B.101`). Building the join map is a one-time per-school task and unblocks both the regression test (P1 #2 above) and any cross-school query that wants to filter on schema-relative field IDs.
 - **Test framework.** No tests exist yet. The project will eventually need pytest for at least the schema builder, the Tier 2 extractor, and any future cleaner code. Defer until the first piece of code accumulates a regression worth catching.
 - **Periodic re-check job for preservation.** The `last_verified_at` / `removed_at` columns on `cds_documents` are useless without a scheduler that re-HEADs every known source URL on some cadence (weekly is probably fine) and flips `removed_at` when a URL starts 404ing. Build as a Supabase edge function cron once the manifest has more than a handful of rows.
+- **Score Reducto reference extracts against the HMC ground truth.** `tools/extraction-validator/score_tier2.py` already handles the join against `harvey-mudd-2025-26.yaml` via the committed id map. Adapting the scorer to read Reducto's free-form output (nested by section, not keyed by question_number) would produce the first real apples-to-apples Tier 2 vs Reducto vs Docling comparison. The HMC ground truth has 31 fields — a meaningful sample, not a spot check. Useful for the "when is Reducto worth paying for?" decision on Tier 4 coverage.
 - **`probe_urls.py` destroys schools.yaml formatting when it writes back.** It uses `yaml.dump()` with `sort_keys=False`, which preserves in-memory dict order but discards the section headers, comments, and section grouping that `build_school_list.py` produces. The idempotent fix is either (a) extract `build_school_list.py`'s `write_yaml()` into a shared helper both scripts import, or (b) have `probe_urls.py` write results to a side file like `tools/finder/probe_results.yaml` keyed by IPEDS ID, which `build_school_list.py` then reads during its next run. Option (b) is cleaner because it makes `probe_urls.py` purely additive and leaves `schools.yaml` generated-only from `build_school_list.py`.
 - **`probe_urls.py` does GET where HEAD would be faster.** The probe loop issues a GET with `read_bytes=5000` for every pattern attempt, even though most attempts will 404. A HEAD-first strategy (check status + content-type from headers, only GET-sniff the HTML body when the HEAD returns 200 text/html) would cut probe time roughly in half. Minor optimization, matters more if we run against the full 2,400-school corpus.
 

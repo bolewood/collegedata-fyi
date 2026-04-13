@@ -253,7 +253,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Yes",
+          "label": "Yes"
+        },
+        {
+          "export": "/No",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 15,
@@ -797,7 +811,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Public",
+          "label": "Public"
+        },
+        {
+          "export": "/Private (nonprofit)",
+          "label": "Private (nonprofit)"
+        },
+        {
+          "export": "/Proprietary",
+          "label": "Proprietary (for-profit)"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 47,
@@ -814,7 +846,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Coeducational college",
+          "label": "Coeducational"
+        },
+        {
+          "export": "/Men's college",
+          "label": "Men's college"
+        },
+        {
+          "export": "/Women's college",
+          "label": "Women's college"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 48,
@@ -831,7 +881,37 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/SEM",
+          "label": "Semester"
+        },
+        {
+          "export": "/QTR",
+          "label": "Quarter"
+        },
+        {
+          "export": "/TRI",
+          "label": "Trimester"
+        },
+        {
+          "export": "/414",
+          "label": "4-1-4"
+        },
+        {
+          "export": "/CON",
+          "label": "Continuous"
+        },
+        {
+          "export": "/DFR",
+          "label": "Differs by Program"
+        },
+        {
+          "export": "/Other",
+          "label": "Other"
+        }
+      ]
     },
     {
       "sort_order": 49,
@@ -882,7 +962,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 52,
@@ -899,7 +989,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 53,
@@ -916,7 +1016,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 54,
@@ -933,7 +1043,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 55,
@@ -950,7 +1070,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 56,
@@ -967,7 +1097,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 57,
@@ -984,7 +1124,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 58,
@@ -1001,7 +1151,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 59,
@@ -1018,7 +1178,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 60,
@@ -1035,7 +1205,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 61,
@@ -1052,7 +1232,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 62,
@@ -1069,7 +1259,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 63,
@@ -5081,7 +5281,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 299,
@@ -5149,7 +5363,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 303,
@@ -5166,7 +5394,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 304,
@@ -5183,7 +5425,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 305,
@@ -5200,7 +5456,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/GED",
+          "label": "GED"
+        },
+        {
+          "export": "/REQ",
+          "label": "Required"
+        },
+        {
+          "export": "/NON",
+          "label": "None"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 306,
@@ -5217,7 +5491,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/REQ",
+          "label": "Required"
+        },
+        {
+          "export": "/REC",
+          "label": "Recommended"
+        },
+        {
+          "export": "/NON",
+          "label": "None"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 307,
@@ -5659,7 +5951,21 @@
       "unit_load": null,
       "gender": null,
       "value_type": null,
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/O",
+          "label": "Open admission"
+        },
+        {
+          "export": "/S",
+          "label": "Open admission for most students"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 333,
@@ -5676,7 +5982,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Other",
+          "label": "Other"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 334,
@@ -5693,7 +6009,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 335,
@@ -5710,7 +6036,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/VI",
+          "label": "Very Important"
+        },
+        {
+          "export": "/I",
+          "label": "Important"
+        },
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/NC",
+          "label": "Not Considered"
+        }
+      ]
     },
     {
       "sort_order": 336,
@@ -5727,7 +6071,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/VI",
+          "label": "Very Important"
+        },
+        {
+          "export": "/I",
+          "label": "Important"
+        },
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/NC",
+          "label": "Not Considered"
+        }
+      ]
     },
     {
       "sort_order": 337,
@@ -5744,7 +6106,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/VI",
+          "label": "Very Important"
+        },
+        {
+          "export": "/I",
+          "label": "Important"
+        },
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/NC",
+          "label": "Not Considered"
+        }
+      ]
     },
     {
       "sort_order": 338,
@@ -5761,7 +6141,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/VI",
+          "label": "Very Important"
+        },
+        {
+          "export": "/I",
+          "label": "Important"
+        },
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/NC",
+          "label": "Not Considered"
+        }
+      ]
     },
     {
       "sort_order": 339,
@@ -5778,7 +6176,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/VI",
+          "label": "Very Important"
+        },
+        {
+          "export": "/I",
+          "label": "Important"
+        },
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/NC",
+          "label": "Not Considered"
+        }
+      ]
     },
     {
       "sort_order": 340,
@@ -5795,7 +6211,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/VI",
+          "label": "Very Important"
+        },
+        {
+          "export": "/I",
+          "label": "Important"
+        },
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/NC",
+          "label": "Not Considered"
+        }
+      ]
     },
     {
       "sort_order": 341,
@@ -5812,7 +6246,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/VI",
+          "label": "Very Important"
+        },
+        {
+          "export": "/I",
+          "label": "Important"
+        },
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/NC",
+          "label": "Not Considered"
+        }
+      ]
     },
     {
       "sort_order": 342,
@@ -5829,7 +6281,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/VI",
+          "label": "Very Important"
+        },
+        {
+          "export": "/I",
+          "label": "Important"
+        },
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/NC",
+          "label": "Not Considered"
+        }
+      ]
     },
     {
       "sort_order": 343,
@@ -5846,7 +6316,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/VI",
+          "label": "Very Important"
+        },
+        {
+          "export": "/I",
+          "label": "Important"
+        },
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/NC",
+          "label": "Not Considered"
+        }
+      ]
     },
     {
       "sort_order": 344,
@@ -5863,7 +6351,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/VI",
+          "label": "Very Important"
+        },
+        {
+          "export": "/I",
+          "label": "Important"
+        },
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/NC",
+          "label": "Not Considered"
+        }
+      ]
     },
     {
       "sort_order": 345,
@@ -5880,7 +6386,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/VI",
+          "label": "Very Important"
+        },
+        {
+          "export": "/I",
+          "label": "Important"
+        },
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/NC",
+          "label": "Not Considered"
+        }
+      ]
     },
     {
       "sort_order": 346,
@@ -5897,7 +6421,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/VI",
+          "label": "Very Important"
+        },
+        {
+          "export": "/I",
+          "label": "Important"
+        },
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/NC",
+          "label": "Not Considered"
+        }
+      ]
     },
     {
       "sort_order": 347,
@@ -5914,7 +6456,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/VI",
+          "label": "Very Important"
+        },
+        {
+          "export": "/I",
+          "label": "Important"
+        },
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/NC",
+          "label": "Not Considered"
+        }
+      ]
     },
     {
       "sort_order": 348,
@@ -5931,7 +6491,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/VI",
+          "label": "Very Important"
+        },
+        {
+          "export": "/I",
+          "label": "Important"
+        },
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/NC",
+          "label": "Not Considered"
+        }
+      ]
     },
     {
       "sort_order": 349,
@@ -5948,7 +6526,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/VI",
+          "label": "Very Important"
+        },
+        {
+          "export": "/I",
+          "label": "Important"
+        },
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/NC",
+          "label": "Not Considered"
+        }
+      ]
     },
     {
       "sort_order": 350,
@@ -5965,7 +6561,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/VI",
+          "label": "Very Important"
+        },
+        {
+          "export": "/I",
+          "label": "Important"
+        },
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/NC",
+          "label": "Not Considered"
+        }
+      ]
     },
     {
       "sort_order": 351,
@@ -5982,7 +6596,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/VI",
+          "label": "Very Important"
+        },
+        {
+          "export": "/I",
+          "label": "Important"
+        },
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/NC",
+          "label": "Not Considered"
+        }
+      ]
     },
     {
       "sort_order": 352,
@@ -5999,7 +6631,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/VI",
+          "label": "Very Important"
+        },
+        {
+          "export": "/I",
+          "label": "Important"
+        },
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/NC",
+          "label": "Not Considered"
+        }
+      ]
     },
     {
       "sort_order": 353,
@@ -6033,7 +6683,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 355,
@@ -6050,7 +6714,29 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/ADMS_REQ",
+          "label": "Required"
+        },
+        {
+          "export": "/ADMS_REC",
+          "label": "Recommended"
+        },
+        {
+          "export": "/ADMS_RFS ",
+          "label": "Required for Some"
+        },
+        {
+          "export": "/ADMS_CONSIDER ",
+          "label": "Considered"
+        },
+        {
+          "export": "/ADMS_NOT_USED",
+          "label": "Not Used"
+        }
+      ]
     },
     {
       "sort_order": 356,
@@ -6067,7 +6753,29 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/ADMS_REQ",
+          "label": "Required"
+        },
+        {
+          "export": "/ADMS_REC",
+          "label": "Recommended"
+        },
+        {
+          "export": "/ADMS_RFS",
+          "label": "Required for Some"
+        },
+        {
+          "export": "/ADMS_CONSIDER",
+          "label": "Considered"
+        },
+        {
+          "export": "/ADMS_NOT_USED",
+          "label": "Not Used"
+        }
+      ]
     },
     {
       "sort_order": 357,
@@ -6084,7 +6792,29 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/ADMS_REQ",
+          "label": "Required"
+        },
+        {
+          "export": "/ADMS_REC",
+          "label": "Recommended"
+        },
+        {
+          "export": "/ADMS_RFS",
+          "label": "Required for Some"
+        },
+        {
+          "export": "/ADMS_CONSIDER",
+          "label": "Considered"
+        },
+        {
+          "export": "/ADMS_NOT_USED",
+          "label": "Not Used"
+        }
+      ]
     },
     {
       "sort_order": 358,
@@ -6101,7 +6831,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 359,
@@ -6169,7 +6913,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 363,
@@ -6186,7 +6940,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 364,
@@ -6203,7 +6967,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 365,
@@ -6220,7 +6994,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 366,
@@ -6237,7 +7021,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 367,
@@ -6254,7 +7048,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 368,
@@ -8413,7 +9217,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 495,
@@ -8447,7 +9265,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 497,
@@ -8464,7 +9296,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/SAME",
+          "label": "Same fee as paper"
+        },
+        {
+          "export": "/FREE",
+          "label": "No fee for online"
+        },
+        {
+          "export": "/RED",
+          "label": "Reduced fee for online"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 498,
@@ -8481,7 +9331,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 499,
@@ -8498,7 +9362,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 500,
@@ -8583,7 +9461,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 505,
@@ -8600,7 +9492,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 506,
@@ -8651,7 +9553,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 509,
@@ -8702,7 +9614,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 512,
@@ -8736,7 +9658,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 514,
@@ -8787,7 +9719,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 517,
@@ -8804,7 +9746,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Number",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 518,
@@ -8838,7 +9790,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 520,
@@ -8923,7 +9885,25 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/F",
+          "label": "Full refund"
+        },
+        {
+          "export": "/P",
+          "label": "Partial refund"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 525,
@@ -8940,7 +9920,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 526,
@@ -8974,7 +9968,21 @@
       "unit_load": "FT",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 528,
@@ -8991,7 +9999,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 529,
@@ -9195,7 +10217,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 541,
@@ -9280,7 +10316,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 546,
@@ -9297,7 +10347,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        }
+      ]
     },
     {
       "sort_order": 547,
@@ -9314,7 +10374,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        }
+      ]
     },
     {
       "sort_order": 548,
@@ -9535,7 +10605,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/X",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 561,
@@ -9552,7 +10632,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/X",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 562,
@@ -9569,7 +10659,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/X",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 563,
@@ -9586,7 +10686,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/X",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 564,
@@ -9603,7 +10713,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        }
+      ]
     },
     {
       "sort_order": 565,
@@ -9654,7 +10774,29 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/TFER_REQ",
+          "label": "Required"
+        },
+        {
+          "export": "/TFER_REC",
+          "label": "Recommended"
+        },
+        {
+          "export": "/TFER_RFS",
+          "label": "Required for Some"
+        },
+        {
+          "export": "/TFER_ROS",
+          "label": "Recommended for Some"
+        },
+        {
+          "export": "/TFER_NREQ",
+          "label": "Not Required"
+        }
+      ]
     },
     {
       "sort_order": 568,
@@ -9671,7 +10813,29 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/TFER_REQ",
+          "label": "Required"
+        },
+        {
+          "export": "/TFER_REC",
+          "label": "Recommended"
+        },
+        {
+          "export": "/TFER_RFS",
+          "label": "Required for Some"
+        },
+        {
+          "export": "/TFER_ROS",
+          "label": "Recommended for Some"
+        },
+        {
+          "export": "/TFER_NREQ",
+          "label": "Not Required"
+        }
+      ]
     },
     {
       "sort_order": 569,
@@ -9688,7 +10852,29 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/TFER_REQ",
+          "label": "Required"
+        },
+        {
+          "export": "/TFER_REC",
+          "label": "Recommended"
+        },
+        {
+          "export": "/TFER_RFS",
+          "label": "Required for Some"
+        },
+        {
+          "export": "/TFER_ROS",
+          "label": "Recommended for Some"
+        },
+        {
+          "export": "/TFER_NREQ",
+          "label": "Not Required"
+        }
+      ]
     },
     {
       "sort_order": 570,
@@ -9705,7 +10891,29 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/TFER_REQ",
+          "label": "Required"
+        },
+        {
+          "export": "/TFER_REC",
+          "label": "Recommended"
+        },
+        {
+          "export": "/TFER_RFS",
+          "label": "Required for Some"
+        },
+        {
+          "export": "/TFER_ROS",
+          "label": "Recommended for Some"
+        },
+        {
+          "export": "/TFER_NREQ",
+          "label": "Not Required"
+        }
+      ]
     },
     {
       "sort_order": 571,
@@ -9722,7 +10930,29 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/TFER_REQ",
+          "label": "Required"
+        },
+        {
+          "export": "/TFER_REC",
+          "label": "Recommended"
+        },
+        {
+          "export": "/TFER_RFS",
+          "label": "Required for Some"
+        },
+        {
+          "export": "/TFER_ROS",
+          "label": "Recommended for Some"
+        },
+        {
+          "export": "/TFER_NREQ",
+          "label": "Not Required"
+        }
+      ]
     },
     {
       "sort_order": 572,
@@ -9739,7 +10969,29 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/TFER_REQ",
+          "label": "Required"
+        },
+        {
+          "export": "/TFER_REC",
+          "label": "Recommended"
+        },
+        {
+          "export": "/TFER_RFS",
+          "label": "Required for Some"
+        },
+        {
+          "export": "/TFER_ROS",
+          "label": "Recommended for Some"
+        },
+        {
+          "export": "/TFER_NREQ",
+          "label": "Not Required"
+        }
+      ]
     },
     {
       "sort_order": 573,
@@ -10351,7 +11603,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 609,
@@ -10368,7 +11630,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 610,
@@ -10385,7 +11657,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 611,
@@ -10402,7 +11684,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/C",
+          "label": "Considered"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 612,
@@ -10419,7 +11711,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 613,
@@ -10623,7 +11929,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 625,
@@ -10640,7 +11960,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 626,
@@ -10657,7 +11991,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 627,
@@ -10742,7 +12090,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 632,
@@ -10793,7 +12155,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 635,
@@ -10810,7 +12182,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 636,
@@ -10827,7 +12209,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 637,
@@ -10844,7 +12236,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 638,
@@ -10861,7 +12263,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 639,
@@ -10878,7 +12290,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 640,
@@ -10895,7 +12317,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 641,
@@ -10912,7 +12344,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 642,
@@ -10929,7 +12371,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 643,
@@ -10946,7 +12398,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 644,
@@ -10963,7 +12425,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 645,
@@ -10980,7 +12452,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 646,
@@ -10997,7 +12479,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 647,
@@ -11014,7 +12506,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 648,
@@ -11031,7 +12533,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 649,
@@ -11048,7 +12560,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 650,
@@ -11065,7 +12587,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 651,
@@ -11082,7 +12614,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 652,
@@ -11099,7 +12641,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 653,
@@ -11133,7 +12685,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 655,
@@ -11150,7 +12712,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 656,
@@ -11167,7 +12739,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 657,
@@ -11184,7 +12766,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 658,
@@ -11201,7 +12793,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 659,
@@ -11218,7 +12820,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 660,
@@ -11235,7 +12847,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 661,
@@ -11252,7 +12874,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 662,
@@ -11269,7 +12901,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 663,
@@ -11286,7 +12928,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 664,
@@ -11303,7 +12955,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 665,
@@ -11320,7 +12982,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 666,
@@ -11337,7 +13009,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 667,
@@ -11643,7 +13325,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 685,
@@ -11660,7 +13352,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 686,
@@ -11677,7 +13379,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 687,
@@ -11694,7 +13406,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 688,
@@ -11711,7 +13433,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 689,
@@ -11728,7 +13460,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 690,
@@ -11745,7 +13487,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 691,
@@ -11762,7 +13514,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 692,
@@ -11779,7 +13541,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 693,
@@ -11796,7 +13568,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 694,
@@ -11813,7 +13595,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 695,
@@ -11830,7 +13622,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 696,
@@ -11847,7 +13649,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 697,
@@ -11864,7 +13676,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 698,
@@ -11881,7 +13703,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 699,
@@ -11898,7 +13730,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 700,
@@ -11915,7 +13757,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 701,
@@ -11932,7 +13784,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 702,
@@ -11949,7 +13811,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 703,
@@ -11966,7 +13838,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 704,
@@ -11983,7 +13865,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/Y",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 705,
@@ -12000,7 +13892,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/B",
+          "label": "On campus"
+        },
+        {
+          "export": "/C",
+          "label": "At cooperating institution"
+        }
+      ]
     },
     {
       "sort_order": 706,
@@ -12034,7 +13936,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/B",
+          "label": "On campus"
+        },
+        {
+          "export": "/C",
+          "label": "At cooperating institution"
+        }
+      ]
     },
     {
       "sort_order": 708,
@@ -12051,7 +13963,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/MRN_OPT",
+          "label": "Marine Corps Option"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 709,
@@ -12085,7 +14007,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/B",
+          "label": "On campus"
+        },
+        {
+          "export": "/C",
+          "label": "At cooperating institution"
+        }
+      ]
     },
     {
       "sort_order": 711,
@@ -12119,7 +14051,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 713,
@@ -12136,7 +14078,17 @@
       "unit_load": "All",
       "gender": "Men",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 714,
@@ -12153,7 +14105,17 @@
       "unit_load": "All",
       "gender": "Females",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 715,
@@ -12170,7 +14132,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 716,
@@ -12187,7 +14159,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 717,
@@ -12204,7 +14186,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 718,
@@ -12221,7 +14213,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 719,
@@ -12238,7 +14240,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 720,
@@ -12255,7 +14267,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 721,
@@ -12272,7 +14294,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 722,
@@ -12289,7 +14321,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 723,
@@ -12306,7 +14348,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 724,
@@ -12323,7 +14375,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 725,
@@ -12374,7 +14436,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/On",
+          "label": "Yes"
+        },
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        }
+      ]
     },
     {
       "sort_order": 728,
@@ -12782,7 +14854,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 752,
@@ -12799,7 +14885,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "YesNo",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Y",
+          "label": "Yes"
+        },
+        {
+          "export": "/N",
+          "label": "No"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 753,
@@ -13139,7 +15239,21 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/2024",
+          "label": "2024"
+        },
+        {
+          "export": "/2023",
+          "label": "2023"
+        },
+        {
+          "export": "/N/A",
+          "label": "Not Applicable"
+        }
+      ]
     },
     {
       "sort_order": 773,
@@ -13156,7 +15270,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 774,
@@ -13173,7 +15297,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 775,
@@ -13190,7 +15324,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 776,
@@ -14737,7 +16881,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 867,
@@ -14754,7 +16908,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 868,
@@ -14771,7 +16935,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 869,
@@ -14839,7 +17013,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 873,
@@ -14856,7 +17040,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 874,
@@ -14873,7 +17067,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 875,
@@ -14907,7 +17111,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 877,
@@ -14924,7 +17138,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 878,
@@ -14941,7 +17165,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 879,
@@ -14958,7 +17192,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 880,
@@ -14975,7 +17219,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 881,
@@ -14992,7 +17246,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 882,
@@ -15009,7 +17273,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 883,
@@ -15043,7 +17317,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 885,
@@ -15094,7 +17378,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 888,
@@ -15145,7 +17439,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 891,
@@ -15162,7 +17466,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 892,
@@ -15213,7 +17527,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 895,
@@ -15315,7 +17639,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 901,
@@ -15332,7 +17666,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 902,
@@ -15349,7 +17693,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 903,
@@ -15366,7 +17720,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 904,
@@ -15383,7 +17747,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 905,
@@ -15400,7 +17774,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 906,
@@ -15417,7 +17801,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 907,
@@ -15451,7 +17845,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 909,
@@ -15468,7 +17872,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 910,
@@ -15485,7 +17899,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 911,
@@ -15502,7 +17926,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 912,
@@ -15519,7 +17953,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 913,
@@ -15536,7 +17980,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 914,
@@ -15553,7 +18007,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 915,
@@ -15570,7 +18034,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 916,
@@ -15604,7 +18078,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 918,
@@ -15621,7 +18105,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 919,
@@ -15638,7 +18132,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 920,
@@ -15655,7 +18159,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 921,
@@ -15672,7 +18186,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 922,
@@ -15689,7 +18213,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 923,
@@ -15706,7 +18240,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 924,
@@ -15723,7 +18267,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 925,
@@ -15740,7 +18294,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 926,
@@ -15757,7 +18321,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 927,
@@ -15774,7 +18348,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 928,
@@ -15791,7 +18375,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 929,
@@ -15808,7 +18402,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 930,
@@ -15825,7 +18429,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 931,
@@ -15842,7 +18456,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 932,
@@ -15859,7 +18483,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 933,
@@ -15876,7 +18510,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 934,
@@ -15893,7 +18537,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "Text",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 935,
@@ -15910,7 +18564,17 @@
       "unit_load": "All",
       "gender": "All",
       "value_type": "x",
-      "computed": false
+      "computed": false,
+      "value_options": [
+        {
+          "export": "/Off",
+          "label": "Not Selected"
+        },
+        {
+          "export": "/X",
+          "label": "Yes"
+        }
+      ]
     },
     {
       "sort_order": 936,
