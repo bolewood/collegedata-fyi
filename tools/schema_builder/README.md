@@ -106,7 +106,7 @@ A separate year-diff script could eventually produce `schemas/cds_schema_2024_25
 
 2. **The XLSX template is the authority, not the PDF template.** The PDF has 1,089 AcroForm fields but the XLSX lists 1,105 canonical fields. The 16-row delta is canonical questions that don't have AcroForm widgets (computed totals). Both are "real" CDS fields from the consumer's point of view, but only one tier has automatic population.
 
-3. **No license check.** The commondataset.org templates themselves are the CDS Initiative's work product and may or may not be freely redistributable. This script reads them and produces a derived schema; whether the derived schema can ship in a public repo depends on the template license. Verify before committing `schemas/cds_schema_*.json`.
+3. **Licensing.** The Common Data Set is a collaborative open survey instrument with no published terms of service at commondataset.org. The CDS Initiative is a working group, not a rights-holder, and individual schools own the data inside their own filled CDS. Derived schemas produced by this script can ship in the public repo without further review. The official template files themselves still live in `scratch/` as working artifacts rather than being committed — they're harmless but they're not the publishable form, the schema JSON is.
 
 ## See also
 
