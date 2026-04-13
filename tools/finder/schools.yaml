@@ -1,0 +1,575 @@
+# schools.yaml — canonical school list for the CDS Finder
+#
+# Each entry is a school the finder will attempt to discover, download, and
+# archive a CDS PDF for. The finder uses `domain` + the URL pattern fallback
+# ladder (see seed_urls.md) to locate the current-year file, unless
+# `cds_url_hint` provides a known-good starting point.
+#
+# Fields:
+#   id:                  kebab-case slug, used as the Storage path key
+#   name:                display name
+#   domain:              primary .edu domain (no protocol, no trailing slash)
+#   ipeds_id:            IPEDS Unit ID (6 digits) — the stable join key used
+#                        for any future College Scorecard or IPEDS integration.
+#                        Must be unique across every entry in this file.
+#   cds_url_hint:        optional last-known URL or IR page for the CDS
+#   scrape_policy:       finder-side policy, not a document status. Values:
+#                          active           — try to discover and archive
+#                          verified_absent  — known non-publisher; skip
+#                          verified_partial — publishes but omits sections; still scrape
+#                          unknown          — unclear; scrape and flag results
+#                        This is distinct from cds_documents.participation_status
+#                        in the database, which records the actual state of each
+#                        document at runtime (published / withdrawn / not_yet_found).
+#   sub_institutions:    optional list if the school publishes >1 CDS per year.
+#                        Each entry needs `id` (becomes the sub_institutional
+#                        slug in the DB) and `label` (human-readable).
+#   notes:               optional free-text
+#
+# Sourced from: tools/finder/seed_urls.md (pbworks wiki + Gemini research).
+# IPEDS IDs verified against NCES IPEDS institution profiles.
+# Add new schools by appending to this file and opening a PR.
+
+schools:
+
+  # ── Pilot schools (extraction-validated or in progress) ──────────────
+
+  - id: yale
+    name: Yale University
+    domain: yale.edu
+    ipeds_id: "130794"
+    cds_url_hint: https://oir.yale.edu/common-data-set
+    scrape_policy: active
+
+  - id: harvey-mudd
+    name: Harvey Mudd College
+    domain: hmc.edu
+    ipeds_id: "115409"
+    cds_url_hint: https://www.hmc.edu/institutional-research/common-data-set/
+    scrape_policy: active
+    notes: "C1 extraction regression target — see docs/known-issues/harvey-mudd-2025-26.md"
+
+  - id: harvard
+    name: Harvard University
+    domain: harvard.edu
+    ipeds_id: "166027"
+    cds_url_hint: https://oira.harvard.edu/common-data-set/
+    scrape_policy: active
+
+  - id: mit
+    name: Massachusetts Institute of Technology
+    domain: mit.edu
+    ipeds_id: "166683"
+    cds_url_hint: https://web.mit.edu/ir/cds/
+    scrape_policy: active
+
+  - id: carnegie-mellon
+    name: Carnegie Mellon University
+    domain: cmu.edu
+    ipeds_id: "211440"
+    cds_url_hint: https://www.cmu.edu/ira/CDS/
+    scrape_policy: active
+
+  # ── Ivies + near-Ivies ──────────────────────────────────────────────
+
+  - id: princeton
+    name: Princeton University
+    domain: princeton.edu
+    ipeds_id: "186131"
+    scrape_policy: active
+    notes: "Known to omit GPA breakdowns in Section C"
+
+  - id: columbia
+    name: Columbia University
+    domain: columbia.edu
+    ipeds_id: "190150"
+    cds_url_hint: https://opir.columbia.edu/common-data-set
+    scrape_policy: active
+    sub_institutions:
+      - id: columbia-college-seas
+        label: "Columbia College + School of Engineering and Applied Science"
+      - id: general-studies
+        label: "School of General Studies"
+    notes: "Publishes two separate CDS files per year. Each sub-institution gets its own cds_documents row via the (school_id, sub_institutional, cds_year) unique constraint."
+
+  - id: brown
+    name: Brown University
+    domain: brown.edu
+    ipeds_id: "217156"
+    scrape_policy: active
+
+  - id: dartmouth
+    name: Dartmouth College
+    domain: dartmouth.edu
+    ipeds_id: "182670"
+    scrape_policy: active
+    notes: "Known to omit GPA breakdowns in Section C"
+
+  - id: upenn
+    name: University of Pennsylvania
+    domain: upenn.edu
+    ipeds_id: "215062"
+    scrape_policy: active
+
+  - id: cornell
+    name: Cornell University
+    domain: cornell.edu
+    ipeds_id: "190415"
+    scrape_policy: active
+
+  - id: stanford
+    name: Stanford University
+    domain: stanford.edu
+    ipeds_id: "243744"
+    cds_url_hint: https://irds.stanford.edu/data-findings/cds
+    scrape_policy: active
+
+  - id: duke
+    name: Duke University
+    domain: duke.edu
+    ipeds_id: "198419"
+    scrape_policy: active
+
+  - id: johns-hopkins
+    name: Johns Hopkins University
+    domain: jhu.edu
+    ipeds_id: "162928"
+    scrape_policy: active
+
+  - id: northwestern
+    name: Northwestern University
+    domain: northwestern.edu
+    ipeds_id: "147767"
+    scrape_policy: active
+
+  - id: rice
+    name: Rice University
+    domain: rice.edu
+    ipeds_id: "227757"
+    scrape_policy: active
+
+  - id: vanderbilt
+    name: Vanderbilt University
+    domain: vanderbilt.edu
+    ipeds_id: "221999"
+    scrape_policy: active
+
+  - id: emory
+    name: Emory University
+    domain: emory.edu
+    ipeds_id: "139658"
+    scrape_policy: active
+
+  - id: georgetown
+    name: Georgetown University
+    domain: georgetown.edu
+    ipeds_id: "131496"
+    scrape_policy: active
+
+  - id: nyu
+    name: New York University
+    domain: nyu.edu
+    ipeds_id: "193900"
+    scrape_policy: active
+
+  # ── Top liberal arts colleges ───────────────────────────────────────
+
+  - id: amherst
+    name: Amherst College
+    domain: amherst.edu
+    ipeds_id: "164465"
+    scrape_policy: active
+
+  - id: williams
+    name: Williams College
+    domain: williams.edu
+    ipeds_id: "168148"
+    scrape_policy: active
+
+  - id: swarthmore
+    name: Swarthmore College
+    domain: swarthmore.edu
+    ipeds_id: "216287"
+    scrape_policy: active
+
+  - id: bowdoin
+    name: Bowdoin College
+    domain: bowdoin.edu
+    ipeds_id: "161004"
+    scrape_policy: active
+
+  - id: wellesley
+    name: Wellesley College
+    domain: wellesley.edu
+    ipeds_id: "168005"
+    scrape_policy: active
+
+  - id: colby
+    name: Colby College
+    domain: colby.edu
+    ipeds_id: "161086"
+    scrape_policy: active
+
+  - id: grinnell
+    name: Grinnell College
+    domain: grinnell.edu
+    ipeds_id: "153603"
+    scrape_policy: active
+
+  - id: hamilton
+    name: Hamilton College
+    domain: hamilton.edu
+    ipeds_id: "191515"
+    scrape_policy: active
+
+  - id: oberlin
+    name: Oberlin College
+    domain: oberlin.edu
+    ipeds_id: "204501"
+    scrape_policy: active
+
+  - id: barnard
+    name: Barnard College
+    domain: barnard.edu
+    ipeds_id: "189097"
+    scrape_policy: active
+
+  - id: bates
+    name: Bates College
+    domain: bates.edu
+    ipeds_id: "160977"
+    scrape_policy: active
+
+  - id: bryn-mawr
+    name: Bryn Mawr College
+    domain: brynmawr.edu
+    ipeds_id: "211291"
+    scrape_policy: active
+
+  - id: davidson
+    name: Davidson College
+    domain: davidson.edu
+    ipeds_id: "198507"
+    cds_url_hint: https://www.davidson.edu/offices-and-services/institutional-effectiveness/common-data-set
+    scrape_policy: active
+
+  - id: kenyon
+    name: Kenyon College
+    domain: kenyon.edu
+    ipeds_id: "203535"
+    scrape_policy: active
+
+  - id: macalester
+    name: Macalester College
+    domain: macalester.edu
+    ipeds_id: "174066"
+    scrape_policy: active
+
+  - id: washington-and-lee
+    name: Washington and Lee University
+    domain: wlu.edu
+    ipeds_id: "234207"
+    scrape_policy: active
+
+  - id: colorado-college
+    name: Colorado College
+    domain: coloradocollege.edu
+    ipeds_id: "126818"
+    scrape_policy: active
+
+  - id: holy-cross
+    name: College of the Holy Cross
+    domain: holycross.edu
+    ipeds_id: "165866"
+    scrape_policy: active
+
+  - id: dickinson
+    name: Dickinson College
+    domain: dickinson.edu
+    ipeds_id: "212054"
+    scrape_policy: active
+
+  # ── Major public universities ───────────────────────────────────────
+
+  - id: uc-berkeley
+    name: University of California, Berkeley
+    domain: berkeley.edu
+    ipeds_id: "110635"
+    scrape_policy: active
+
+  - id: ucla
+    name: University of California, Los Angeles
+    domain: ucla.edu
+    ipeds_id: "110662"
+    scrape_policy: active
+
+  - id: uc-davis
+    name: University of California, Davis
+    domain: ucdavis.edu
+    ipeds_id: "110644"
+    scrape_policy: active
+
+  - id: uc-irvine
+    name: University of California, Irvine
+    domain: uci.edu
+    ipeds_id: "110653"
+    scrape_policy: active
+
+  - id: uc-san-diego
+    name: University of California, San Diego
+    domain: ucsd.edu
+    ipeds_id: "110680"
+    scrape_policy: active
+
+  - id: uc-santa-barbara
+    name: University of California, Santa Barbara
+    domain: ucsb.edu
+    ipeds_id: "110705"
+    scrape_policy: active
+
+  - id: umich
+    name: University of Michigan
+    domain: umich.edu
+    ipeds_id: "170976"
+    cds_url_hint: https://obp.umich.edu/campus-statistics/common-data-set/
+    scrape_policy: active
+
+  - id: uva
+    name: University of Virginia
+    domain: virginia.edu
+    ipeds_id: "234076"
+    scrape_policy: active
+    notes: "James Caldwell (IR office) ships a CDS PDF autofill script — UVA may have clean form-layer PDFs"
+
+  - id: unc
+    name: University of North Carolina at Chapel Hill
+    domain: unc.edu
+    ipeds_id: "199120"
+    scrape_policy: active
+
+  - id: uf
+    name: University of Florida
+    domain: ufl.edu
+    ipeds_id: "134130"
+    scrape_policy: active
+
+  - id: uga
+    name: University of Georgia
+    domain: uga.edu
+    ipeds_id: "139959"
+    scrape_policy: active
+
+  - id: ut-austin
+    name: University of Texas at Austin
+    domain: utexas.edu
+    ipeds_id: "228778"
+    scrape_policy: active
+
+  - id: uw
+    name: University of Washington
+    domain: washington.edu
+    ipeds_id: "236948"
+    scrape_policy: active
+
+  - id: uw-madison
+    name: University of Wisconsin-Madison
+    domain: wisc.edu
+    ipeds_id: "240444"
+    scrape_policy: active
+
+  - id: osu
+    name: Ohio State University
+    domain: osu.edu
+    ipeds_id: "204796"
+    scrape_policy: active
+
+  - id: penn-state
+    name: Pennsylvania State University
+    domain: psu.edu
+    ipeds_id: "214777"
+    scrape_policy: active
+
+  - id: purdue
+    name: Purdue University
+    domain: purdue.edu
+    ipeds_id: "243780"
+    scrape_policy: active
+
+  - id: rutgers
+    name: Rutgers University
+    domain: rutgers.edu
+    ipeds_id: "186380"
+    scrape_policy: active
+
+  - id: georgia-tech
+    name: Georgia Institute of Technology
+    domain: gatech.edu
+    ipeds_id: "139755"
+    scrape_policy: active
+
+  - id: umd
+    name: University of Maryland
+    domain: umd.edu
+    ipeds_id: "163286"
+    scrape_policy: active
+
+  - id: colorado
+    name: University of Colorado Boulder
+    domain: colorado.edu
+    ipeds_id: "126614"
+    scrape_policy: active
+
+  - id: udel
+    name: University of Delaware
+    domain: udel.edu
+    ipeds_id: "130943"
+    scrape_policy: active
+
+  - id: texas-am
+    name: Texas A&M University
+    domain: tamu.edu
+    ipeds_id: "228723"
+    scrape_policy: active
+
+  # ── Other notable privates ──────────────────────────────────────────
+
+  - id: brandeis
+    name: Brandeis University
+    domain: brandeis.edu
+    ipeds_id: "165015"
+    scrape_policy: active
+
+  - id: case-western
+    name: Case Western Reserve University
+    domain: cwru.edu
+    ipeds_id: "201885"
+    scrape_policy: active
+
+  - id: bucknell
+    name: Bucknell University
+    domain: bucknell.edu
+    ipeds_id: "211158"
+    scrape_policy: active
+
+  - id: lehigh
+    name: Lehigh University
+    domain: lehigh.edu
+    ipeds_id: "213543"
+    scrape_policy: active
+
+  - id: northeastern
+    name: Northeastern University
+    domain: northeastern.edu
+    ipeds_id: "167358"
+    scrape_policy: active
+
+  - id: rpi
+    name: Rensselaer Polytechnic Institute
+    domain: rpi.edu
+    ipeds_id: "194824"
+    scrape_policy: active
+
+  - id: tufts
+    name: Tufts University
+    domain: tufts.edu
+    ipeds_id: "167987"
+    scrape_policy: active
+
+  - id: usc
+    name: University of Southern California
+    domain: usc.edu
+    ipeds_id: "123961"
+    scrape_policy: active
+
+  - id: gwu
+    name: George Washington University
+    domain: gwu.edu
+    ipeds_id: "131469"
+    scrape_policy: active
+
+  - id: boston-college
+    name: Boston College
+    domain: bc.edu
+    ipeds_id: "164924"
+    scrape_policy: active
+
+  - id: boston-university
+    name: Boston University
+    domain: bu.edu
+    ipeds_id: "164988"
+    scrape_policy: active
+
+  - id: drexel
+    name: Drexel University
+    domain: drexel.edu
+    ipeds_id: "212160"
+    scrape_policy: active
+
+  - id: wake-forest
+    name: Wake Forest University
+    domain: wfu.edu
+    ipeds_id: "199847"
+    scrape_policy: active
+
+  - id: temple
+    name: Temple University
+    domain: temple.edu
+    ipeds_id: "216339"
+    scrape_policy: active
+
+  - id: upitt
+    name: University of Pittsburgh
+    domain: pitt.edu
+    ipeds_id: "215293"
+    scrape_policy: active
+
+  # ── Known non-publishers ────────────────────────────────────────────
+
+  - id: uchicago
+    name: University of Chicago
+    domain: uchicago.edu
+    ipeds_id: "144050"
+    scrape_policy: verified_absent
+    notes: "Refuses to publish CDS. Commands fields be marked 'not published'. Strategic opacity around yield protection."
+
+  - id: reed
+    name: Reed College
+    domain: reed.edu
+    ipeds_id: "209542"
+    scrape_policy: verified_absent
+    notes: "Boycotts US News rankings since 1990s. Publishes mission-centric data (PhD productivity) instead of CDS."
+
+  # ── Schools from competitor sites (not in pbworks) ──────────────────
+
+  - id: claremont-mckenna
+    name: Claremont McKenna College
+    domain: cmc.edu
+    ipeds_id: "112260"
+    cds_url_hint: https://www.cmc.edu/institutional-research/common-data-set
+    scrape_policy: active
+
+  - id: clemson
+    name: Clemson University
+    domain: clemson.edu
+    ipeds_id: "217882"
+    scrape_policy: active
+
+  - id: colorado-school-of-mines
+    name: Colorado School of Mines
+    domain: mines.edu
+    ipeds_id: "126775"
+    scrape_policy: active
+
+  - id: indiana-bloomington
+    name: Indiana University Bloomington
+    domain: indiana.edu
+    ipeds_id: "151351"
+    scrape_policy: active
+
+  - id: fairfield
+    name: Fairfield University
+    domain: fairfield.edu
+    ipeds_id: "128902"
+    cds_url_hint: https://digitalcommons.fairfield.edu/archives-cds/
+    scrape_policy: active
+    notes: "Excellent historical archive in Digital Commons going back to 2003"
