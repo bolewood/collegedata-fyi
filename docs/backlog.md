@@ -63,34 +63,7 @@ Run it on HMC. Expected result: 100% match for any field that exists as a non-co
 
 ---
 
-### 3. ADR 0006: Tiered extraction strategy
-**Priority:** P1 (captures the most important strategic decision the project has made so far)
-**Effort:** ~45 minutes
-**Owner:** unassigned
-
-The project's extraction architecture has fundamentally changed in the last session and the change is not yet captured as an ADR. ADR 0002 ("Publish raw over clean") is still right in spirit but its framing assumes one extractor (Docling) and one artifact kind (raw Docling JSON). The reality is now:
-
-- **Tier 1 (XLSX direct)** — possible but unobserved in the wild
-- **Tier 2 (AcroForm direct)** — primary path for unflattened fillable PDFs, deterministic, ~100% accurate; HMC 2025-26 confirmed
-- **Tier 3 (DOCX direct)** — possible, not yet observed
-- **Tier 4 (flat-PDF layout extraction)** — Docling and/or Reducto + cleaner; required for Yale 2024-25, Harvard 2024-25
-- **Tier 5 (image-only OCR)** — worst case
-
-**What to write:** `docs/decisions/0006-tiered-extraction-strategy.md` following the format of the existing ADRs (Context / Decision / Why / Trade-offs accepted). It should:
-1. Document the discovery that HMC was a fillable form the whole time and Docling was the wrong tool
-2. Define the five tiers explicitly with detection logic
-3. Specify that the scraper probes every PDF with `pypdf.get_fields()` before routing
-4. Reference the data model columns that support the tier distinction (`source_format`, `producer`, `schema_version`) — these are now already documented in `docs/v1-plan.md`
-5. Note that ADR 0002 is preserved (source files and artifacts are still immutable, multiple producers can coexist) but extended (each tier emits a different `producer` tag, all targeting the same canonical schema)
-6. Acknowledge that the tier distribution across the wild corpus is still unmeasured and that the V1a finder needs to record `source_format` from day one so we can answer "what fraction of schools are Tier 2?" before deciding how much to invest in Tier 4
-
-**Why it matters:** without an ADR, the next contributor will look at `tools/tier2_extractor/` and `tools/extraction-validator/` and have no idea why both exist or which one is "right." The ADR is the contract that explains the architecture.
-
-**Cross-references:** `docs/decisions/0002-publish-raw-over-clean.md`; `tools/tier2_extractor/README.md`; `docs/known-issues/harvey-mudd-2025-26.md`.
-
----
-
-### 4. Cross-year schema diff tool
+### 3. Cross-year schema diff tool
 **Priority:** P1 (cross-year time series cannot work without it, and the 2025-26 template has breaking changes)
 **Effort:** ~45 minutes once a second schema year exists
 
