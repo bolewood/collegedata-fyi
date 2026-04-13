@@ -1,0 +1,4 @@
+# Source PDFs live in Supabase Storage, not in git
+pdfs/
+# Extraction artifacts and matrix outputs
+runs/

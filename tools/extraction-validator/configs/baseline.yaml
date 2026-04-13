@@ -1,0 +1,11 @@
+# Baseline: Docling defaults. No OCR forcing, TableFormer FAST.
+name: baseline
+description: Docling defaults — TableFormer FAST mode, OCR only on image-backed pages.
+pipeline_options:
+  do_ocr: true
+  do_table_structure: true
+  table_structure_options:
+    mode: fast
+    do_cell_matching: true
+  images_scale: 1.0
+  generate_page_images: false

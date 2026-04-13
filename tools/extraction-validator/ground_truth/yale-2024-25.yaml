@@ -1,0 +1,195 @@
+# Yale University, CDS 2024-25 — ground truth
+#
+# Values transcribed from the source PDF (cds_yale_2024_2025.pdf) on 2026-04-11.
+# Do not update these values from a Docling run — always re-verify against the PDF.
+#
+# Each field provides a `pattern` regex with a single capture group. The validator
+# applies it to the extracted markdown (case-insensitive, DOTALL). If the capture
+# (after stripping commas and whitespace) equals `expected`, the field passes.
+
+school: yale
+cds_year: "2024-25"
+source_pdf: cds_yale_2024_2025.pdf
+
+fields:
+  # ------------------------- B1 Enrollment -------------------------
+  - id: b1_ft_firstyear_men
+    section: B1
+    label: Full-time first-year — men
+    expected: "782"
+    pattern: 'First-time.{0,40}first-year.*?\b782\b.*?\b769\b'
+    capture: '(782)'
+
+  - id: b1_ft_firstyear_women
+    section: B1
+    label: Full-time first-year — women
+    expected: "769"
+    capture: '782\D+(769)'
+
+  - id: b1_ft_firstyear_another
+    section: B1
+    label: Full-time first-year — another gender
+    expected: "3"
+    capture: '782\D+769\D+(3)\b'
+
+  - id: b1_ft_total_ug_men
+    section: B1
+    label: Total full-time undergraduates — men
+    expected: "3234"
+    capture: '\b(3234)\b'
+
+  - id: b1_ft_total_ug_women
+    section: B1
+    label: Total full-time undergraduates — women
+    expected: "3422"
+    capture: '\b(3422)\b'
+
+  # ------------------------- B2 Race/ethnicity (first-year) -------------------------
+  - id: b2_fy_nonresident
+    section: B2
+    label: First-year nonresident
+    expected: "169"
+    capture: 'Nonresident[^\n]*?\b(169)\b'
+
+  - id: b2_fy_hispanic
+    section: B2
+    label: First-year Hispanic/Latino
+    expected: "289"
+    capture: 'Hispanic[^\n]*?\b(289)\b'
+
+  - id: b2_fy_white
+    section: B2
+    label: First-year White
+    expected: "463"
+    capture: 'White[^\n]*?\b(463)\b'
+
+  - id: b2_fy_asian
+    section: B2
+    label: First-year Asian
+    expected: "320"
+    capture: 'Asian[^\n]*?\b(320)\b'
+
+  - id: b2_fy_total
+    section: B2
+    label: First-year total (row)
+    expected: "1554"
+    capture: '\b(1554)\b'
+
+  # ------------------------- B3 Degrees conferred -------------------------
+  - id: b3_bachelors
+    section: B3
+    label: Bachelor's degrees conferred
+    expected: "1665"
+    capture: "Bachelor[^\\n]*?\\b(1665)\\b"
+
+  - id: b3_masters
+    section: B3
+    label: Master's degrees conferred
+    expected: "2757"
+    capture: "Master[^\\n]*?\\b(2757)\\b"
+
+  - id: b3_doctoral_research
+    section: B3
+    label: Doctoral research/scholarship
+    expected: "438"
+    capture: 'research.{0,40}\b(438)\b'
+
+  - id: b3_doctoral_professional
+    section: B3
+    label: Doctoral professional
+    expected: "318"
+    capture: 'professional.{0,40}\b(318)\b'
+
+  # ------------------------- C9 Test scores -------------------------
+  - id: c9_sat_submit_pct
+    section: C9
+    label: Percent submitting SAT
+    expected: "61"
+    capture: "SAT[^\\n]*?\\b(61)\\s*%"
+
+  - id: c9_sat_composite_25
+    section: C9
+    label: SAT Composite 25th percentile
+    expected: "1480"
+    capture: '\b(1480)\b'
+
+  - id: c9_sat_composite_50
+    section: C9
+    label: SAT Composite 50th percentile
+    expected: "1530"
+    capture: '\b(1530)\b'
+
+  - id: c9_sat_composite_75
+    section: C9
+    label: SAT Composite 75th percentile
+    expected: "1560"
+    capture: '1530\D+(1560)'
+
+  - id: c9_sat_ebrw_50
+    section: C9
+    label: SAT EBRW 50th percentile
+    expected: "760"
+    capture: 'EBRW[^\n]*?730\D+(760)'
+
+  - id: c9_sat_math_75
+    section: C9
+    label: SAT Math 75th percentile
+    expected: "790"
+    capture: 'Math[^\n]*?740\D+780\D+(790)'
+
+  - id: c9_act_composite_25
+    section: C9
+    label: ACT Composite 25th percentile
+    expected: "33"
+    capture: 'ACT Composite[^\n]*?\b(33)\b'
+
+  - id: c9_act_composite_75
+    section: C9
+    label: ACT Composite 75th percentile
+    expected: "35"
+    capture: 'ACT Composite[^\n]*?33\D+34\D+(35)'
+
+  # ------------------------- C10 Class rank -------------------------
+  - id: c10_top_tenth
+    section: C10
+    label: Percent in top tenth of HS class
+    expected: "96"
+    capture: 'top tenth[^\n]*?\b(96)\s*%'
+
+  - id: c10_top_quarter
+    section: C10
+    label: Percent in top quarter of HS class
+    expected: "99"
+    capture: 'top quarter[^\n]*?\b(99)\s*%'
+
+  - id: c10_rank_submitted
+    section: C10
+    label: Percent submitting class rank
+    expected: "33"
+    capture: 'submit[^\n]*?rank[^\n]*?\b(33)\s*%'
+
+  # ------------------------- C13 Application fee -------------------------
+  - id: c13_app_fee
+    section: C13
+    label: Application fee
+    expected: "80"
+    capture: 'application fee[^\n]*?\$\s*(80)\b'
+
+  # ------------------------- H4/H6 Financial aid -------------------------
+  - id: h4_undergrads_in_cohort
+    section: H4
+    label: H4 undergraduates in cohort
+    expected: "1665"
+    capture: '\b(1665)\b'
+
+  - id: h6_students_count
+    section: H6
+    label: H6 number of students
+    expected: "489"
+    capture: '\b(489)\b'
+
+  - id: h6_avg_award
+    section: H6
+    label: H6 average award (dollars, no commas/cents)
+    expected: "83878"
+    capture: '\$?\s*(83[,.]?878)'
