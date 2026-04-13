@@ -1,12 +1,32 @@
 # Harvey Mudd College, CDS 2025-26 — known extraction issues
 
 **Source PDF:** `CDS-HMC-2025.2026_shared.pdf`
-**Docling extraction quality:** Degraded; contains real data corruption
-**Last verified:** 2026-04-11
+**Source format:** Unflattened fillable PDF (1,026 AcroForm fields, 558 populated)
+**Recommended extractor:** `pypdf.get_fields()` (Tier 2) — **not** Docling
+**Last verified:** 2026-04-13
 
-**⚠️ Consumers of the raw Docling JSON for this school will read wrong numbers from the C1 applicants/admits tables unless they specifically handle the issues below.** Validate against the source PDF before trusting any enrollment or admissions figure.
+> **Update 2026-04-13 — the Docling "data corruption" below is an artifact of tool choice, not a bug at the source.**
+>
+> The original audit ran Docling against this PDF and documented a C1 row-shift pattern that produced wrong applicant/admit numbers. Shortly after, we checked the source with `pypdf.get_fields()` and found every C1/C2 value sitting cleanly in named AcroForm fields:
+>
+> | Field | Value | Ground truth |
+> |---|---|---|
+> | `AP_RECD_1ST_MEN_N` | 3452 | ✓ |
+> | `AP_RECD_1ST_WMN_N` | 1761 | ✓ |
+> | `AP_RECD_1ST_UNK_N` | 4 | ✓ |
+> | `AP_ADMT_1ST_MEN_N` | 276 | ✓ |
+> | `AP_ADMT_1ST_WMN_N` | 365 | ✓ |
+> | `AP_ADMT_1ST_UNK_N` | 2 | ✓ |
+> | `AP_RECD_WAIT_N` | 685 | ✓ |
+> | `AP_ACPT_WAIT_N` | 439 | ✓ |
+>
+> HMC publishes the commondataset.org fillable PDF template directly, without flattening. Every value we were trying to rescue via layout parsing is addressable by canonical US News PDF tag name. For this school, `pypdf.get_fields()` is the correct extraction path and produces deterministic, 100%-accurate output.
+>
+> The Docling observations below are preserved as a record of what happens if you point a layout-based extractor at a fillable PDF. They are **not** a description of bugs in the source document, and they do not apply to consumers who read AcroForm fields directly.
 
-HMC's CDS exposes the real shape of the extraction-quality problem. Clean numeric tables (B2 race/ethnicity, B4-B21 graduation rates, C9 test-score 25/50/75 percentiles, C9 SAT range distribution, C10 class rank) all came through correctly. But several layout quirks produced values in the wrong rows — not just structural noise.
+## Original audit notes (Docling on fillable PDF — historical)
+
+HMC's CDS exposes the real shape of the extraction-quality problem when you choose the wrong tool. Clean numeric tables (B2 race/ethnicity, B4-B21 graduation rates, C9 test-score 25/50/75 percentiles, C9 SAT range distribution, C10 class rank) all came through correctly. But several layout quirks produced values in the wrong rows — not just structural noise.
 
 ## Data-corrupting issues (high priority)
 
