@@ -142,7 +142,12 @@ def _get(url: str, timeout: int = 10, read_bytes: int = 0,
 
 def _get_full(url: str, timeout: int = 10,
               extra_headers: dict | None = None) -> tuple[int, dict, bytes]:
-    """GET a URL and read the full body. For API/search responses."""
+    """GET a URL and read the full body. For API/search responses.
+
+    Transparently decompresses gzip responses. Callers that send
+    `Accept-Encoding: gzip` (Brave API does) would otherwise see
+    raw gzip bytes where they expect text/JSON and silently fail.
+    """
     hdrs = {"User-Agent": _UA}
     if extra_headers:
         hdrs.update(extra_headers)
@@ -152,6 +157,9 @@ def _get_full(url: str, timeout: int = 10,
             status = resp.status
             headers = {k.lower(): v for k, v in resp.getheaders()}
             body = resp.read()
+            if headers.get("content-encoding", "").lower() == "gzip":
+                import gzip
+                body = gzip.decompress(body)
             return status, headers, body
     except (urllib.error.URLError, urllib.error.HTTPError, OSError, ValueError):
         return -1, {}, b""

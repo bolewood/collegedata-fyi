@@ -102,7 +102,7 @@ QUERY_VARIANTS = [
 ]
 
 
-def brave_query(q: str, api_key: str) -> tuple[int, dict, str]:
+def brave_query(q, api_key):
     """Call the Brave Search API. Returns (status, parsed_json, raw_text)."""
     params = urllib.parse.urlencode({"q": q, "count": 10})
     url = f"{BRAVE_ENDPOINT}?{params}"
@@ -118,6 +118,9 @@ def brave_query(q: str, api_key: str) -> tuple[int, dict, str]:
     try:
         with urllib.request.urlopen(req, timeout=15, context=_SSL_CTX) as resp:
             body = resp.read()
+            if resp.headers.get("Content-Encoding", "").lower() == "gzip":
+                import gzip
+                body = gzip.decompress(body)
             try:
                 data = json.loads(body)
             except json.JSONDecodeError:
@@ -129,7 +132,7 @@ def brave_query(q: str, api_key: str) -> tuple[int, dict, str]:
         return -1, {}, str(e)
 
 
-def extract_with_current_parser(data: dict, domain: str) -> str | None:
+def extract_with_current_parser(data, domain):
     """Replicate probe_urls.py's brave_search extraction logic."""
     results = data.get("web", {}).get("results", [])
     for r in results:
@@ -143,7 +146,7 @@ def extract_with_current_parser(data: dict, domain: str) -> str | None:
     return None
 
 
-def summarize_results(data: dict, domain: str) -> list[dict]:
+def summarize_results(data, domain):
     """Extract the top results with key fields for display."""
     results = data.get("web", {}).get("results", [])
     summary = []
