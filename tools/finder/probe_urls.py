@@ -451,6 +451,7 @@ def process_school(school: dict, args: argparse.Namespace,
 
     url = None
     method = "pattern"
+    last_attempted_method = "pattern"
     patterns_tried = 0
     search_tried = False
 
@@ -461,6 +462,7 @@ def process_school(school: dict, args: argparse.Namespace,
     # Step 2: Bing HTML scraping (free)
     if not url and args.bing_fallback:
         search_tried = True
+        last_attempted_method = "bing_html"
         url = bing_html_search(domain)
         if url:
             method = "bing_html"
@@ -469,6 +471,7 @@ def process_school(school: dict, args: argparse.Namespace,
     # Step 3: Brave Search API (free tier / cheap)
     if not url and args.brave_fallback and env.get("brave_api_key"):
         search_tried = True
+        last_attempted_method = "brave"
         url = brave_search(domain, env["brave_api_key"])
         if url:
             method = "brave"
@@ -477,9 +480,19 @@ def process_school(school: dict, args: argparse.Namespace,
     # Step 4: Google CSE (legacy, limited)
     if not url and args.google_fallback and env.get("google_api_key") and env.get("google_cx"):
         search_tried = True
+        last_attempted_method = "google"
         url = google_dork(domain, env["google_api_key"], env["google_cx"])
         if url:
             method = "google"
+
+    # Telemetry: when a search fallback was attempted and failed, record
+    # the LAST attempted method so probe_state.last_method reflects what
+    # was actually tried — not the default "pattern". Otherwise you can't
+    # tell from schools.yaml which not-found schools were Brave-tried vs
+    # pattern-only-tried, which matters for cooldown decisions and for
+    # knowing whether to re-try with a different fallback next run.
+    if not url and search_tried:
+        method = last_attempted_method
 
     if url:
         if not args.dry_run:
