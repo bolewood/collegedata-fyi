@@ -34,13 +34,16 @@ import html.parser
 import json
 import os
 import re
+import socket
 import ssl
 import time
 import urllib.request
 import urllib.error
 import urllib.parse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
+from threading import Lock
 
 import yaml
 
@@ -168,6 +171,33 @@ def is_cds_page(content: bytes, content_type: str) -> bool:
     return False
 
 
+# ── DNS short-circuit (skip bases whose hostname doesn't resolve) ──────────
+# Most schools don't have `sites.X.edu`, `oira.X.edu`, `irds.X.edu`, etc.
+# Probing those subdomains hits a TCP/SSL timeout which is slow. A cheap
+# DNS lookup (~100ms for NXDOMAIN) lets us skip entire bases that don't
+# exist. Results are cached per-session so the same host is only resolved
+# once even if multiple workers probe schools on the same domain.
+
+_dns_cache: dict[str, bool] = {}
+_dns_cache_lock = Lock()
+
+
+def _dns_ok(host: str) -> bool:
+    """Return True if `host` resolves in DNS. Cached per-session."""
+    with _dns_cache_lock:
+        cached = _dns_cache.get(host)
+    if cached is not None:
+        return cached
+    try:
+        socket.gethostbyname(host)
+        ok = True
+    except (socket.gaierror, socket.herror, OSError):
+        ok = False
+    with _dns_cache_lock:
+        _dns_cache[host] = ok
+    return ok
+
+
 # ── probe_state helpers ─────────────────────────────────────────────────────
 
 def _now_iso() -> str:
@@ -212,18 +242,32 @@ def probe_school(domain: str, rps: float) -> tuple[str | None, int]:
     """Try URL patterns against a domain.
 
     Returns (first_working_url_or_None, patterns_tried_count).
+
+    Uses a DNS short-circuit: before probing any base, we check whether
+    the hostname resolves at all. Bases that return NXDOMAIN are skipped
+    entirely, which saves ~150 probes per school for the common case of
+    schools that only have www.X.edu and maybe ir.X.edu live. DNS
+    results are cached per-session via `_dns_ok`.
     """
     if not domain:
         return None, 0
 
-    bases = [f"https://{domain}"]
+    candidate_bases = [f"https://{domain}"]
     for sub in SUBDOMAINS:
-        bases.append(f"https://{sub}.{domain}")
+        candidate_bases.append(f"https://{sub}.{domain}")
+
+    # Filter to bases whose host actually resolves. This is the main
+    # speedup vs the naive approach of HTTP-probing every base.
+    live_bases = []
+    for base in candidate_bases:
+        host = base.replace("https://", "").split("/")[0]
+        if _dns_ok(host):
+            live_bases.append(base)
 
     delay = 1.0 / rps if rps > 0 else 1.0
     tried = 0
 
-    for base in bases:
+    for base in live_bases:
         for pattern in PATTERNS:
             url = base.rstrip("/") + pattern
             tried += 1
@@ -234,8 +278,12 @@ def probe_school(domain: str, rps: float) -> tuple[str | None, int]:
                     return url, tried
             time.sleep(delay)
 
-    # Year-specific PDF patterns
+    # Year-specific PDF patterns (only against naked + www, which almost
+    # always resolve, so no DNS check needed here).
     for base in [f"https://{domain}", f"https://www.{domain}"]:
+        host = base.replace("https://", "").split("/")[0]
+        if not _dns_ok(host):
+            continue
         for year in CDS_YEARS:
             pdf_patterns = [
                 f"/ir/cds/CDS_{year}.pdf",
@@ -375,6 +423,82 @@ def google_dork(domain: str, api_key: str, cx: str) -> str | None:
     return None
 
 
+# ── Per-school worker ──────────────────────────────────────────────────────
+
+def process_school(school: dict, args: argparse.Namespace,
+                   env: dict) -> dict:
+    """Probe a single school. Mutates `school` in place when a hit is found.
+
+    This function is the threadpool worker. It must be thread-safe: it
+    mutates the school dict it was given (different workers receive
+    different dicts, so no contention), and it only reads from module-
+    level state that's already thread-safe (PATTERNS, SUBDOMAINS,
+    _SSL_CTX, _dns_cache with lock).
+
+    Returns a result dict with keys: name, domain, url (or None), method,
+    patterns_tried, search_tried.
+    """
+    domain = school.get("domain", "")
+    name = school.get("name", school.get("id", ""))
+
+    url = None
+    method = "pattern"
+    patterns_tried = 0
+    search_tried = False
+
+    # Step 1: Pattern ladder
+    if not args.search_only:
+        url, patterns_tried = probe_school(domain, args.rps)
+
+    # Step 2: Bing HTML scraping (free)
+    if not url and args.bing_fallback:
+        search_tried = True
+        url = bing_html_search(domain)
+        if url:
+            method = "bing_html"
+        time.sleep(1.0)  # polite pause between Bing scrapes
+
+    # Step 3: Brave Search API (free tier / cheap)
+    if not url and args.brave_fallback and env.get("brave_api_key"):
+        search_tried = True
+        url = brave_search(domain, env["brave_api_key"])
+        if url:
+            method = "brave"
+        time.sleep(0.5)
+
+    # Step 4: Google CSE (legacy, limited)
+    if not url and args.google_fallback and env.get("google_api_key") and env.get("google_cx"):
+        search_tried = True
+        url = google_dork(domain, env["google_api_key"], env["google_cx"])
+        if url:
+            method = "google"
+
+    if url:
+        if not args.dry_run:
+            school["cds_url_hint"] = url
+            school["scrape_policy"] = "active"
+            record_probe(school, "found", method, patterns_tried, search_tried)
+    else:
+        if not args.dry_run:
+            record_probe(school, "not_found", method, patterns_tried, search_tried)
+
+    return {
+        "name": name,
+        "domain": domain,
+        "url": url,
+        "method": method,
+        "patterns_tried": patterns_tried,
+        "search_tried": search_tried,
+    }
+
+
+def _save_yaml(data: dict) -> None:
+    """Dump data back to schools.yaml. Caller ensures single-threaded call."""
+    SCHOOLS_YAML.write_text(
+        yaml.dump(data, default_flow_style=False, sort_keys=False, allow_unicode=True)
+    )
+
+
 # ── Main ────────────────────────────────────────────────────────────────────
 
 def main():
@@ -384,7 +508,13 @@ def main():
     ap.add_argument("--dry-run", action="store_true",
                     help="Print results but don't update schools.yaml")
     ap.add_argument("--rps", type=float, default=1.0,
-                    help="Max requests per second (default: 1)")
+                    help="Max requests per second per worker (default: 1). "
+                         "Effective total rate is --rps × --workers, but spread "
+                         "across many hosts so per-host rate stays polite.")
+    ap.add_argument("--workers", type=int, default=4,
+                    help="Concurrent school workers (default: 4). IO-bound so "
+                         "Python threads are fine. Higher values finish faster "
+                         "but raise aggregate DNS / HTTP load.")
     ap.add_argument("--bing-fallback", action="store_true",
                     help="Try Bing HTML scraping if pattern ladder fails")
     ap.add_argument("--brave-fallback", action="store_true",
@@ -401,21 +531,24 @@ def main():
                     help="Only probe schools whose name contains TEXT (case-insensitive). "
                          "Useful for targeting subsets like --name-contains 'University of' "
                          "to bias toward schools more likely to publish.")
+    ap.add_argument("--save-every", type=int, default=50,
+                    help="Save schools.yaml every N completed schools so a "
+                         "Ctrl-C doesn't lose progress (default: 50)")
     args = ap.parse_args()
 
     data = yaml.safe_load(SCHOOLS_YAML.read_text())
     schools = data.get("schools", [])
 
-    google_api_key = os.environ.get("GOOGLE_API_KEY")
-    google_cx = os.environ.get("GOOGLE_CX")
-    brave_api_key = os.environ.get("BRAVE_API_KEY")
+    env = {
+        "google_api_key": os.environ.get("GOOGLE_API_KEY"),
+        "google_cx": os.environ.get("GOOGLE_CX"),
+        "brave_api_key": os.environ.get("BRAVE_API_KEY"),
+    }
 
-    probed = 0
-    found = 0
-    failed = 0
-    skipped = 0
-
+    # ── Build candidate list (apply all filters up front) ──
     name_filter = args.name_contains.lower() if args.name_contains else None
+    candidates: list[dict] = []
+    skipped = 0
 
     for school in schools:
         sid = school.get("id", "")
@@ -426,81 +559,73 @@ def main():
             continue
         if not args.only and policy != "unknown":
             continue
-
-        # Name filter: restrict to schools whose display name matches.
-        # Applies even when --only is not set; lets the user target
-        # a subset like "University of ..." for higher hit-rate runs.
         if name_filter and name_filter not in name.lower():
             continue
-
-        # Cooldown: skip recently-probed schools
         if not args.only and args.cooldown_days > 0 and should_skip(school, args.cooldown_days):
             skipped += 1
             continue
 
-        if args.limit and probed >= args.limit:
+        candidates.append(school)
+        if args.limit and len(candidates) >= args.limit:
             break
 
-        domain = school.get("domain", "")
-        probed += 1
+    total = len(candidates)
+    print(f"Probing {total} schools with {args.workers} workers (rps={args.rps} per worker)")
+    if skipped:
+        print(f"Skipped {skipped} schools due to {args.cooldown_days}-day cooldown")
+    if total == 0:
+        print("Nothing to probe. Exiting.")
+        return
 
-        print(f"[{probed:>4}] {name} ({domain}) ... ", end="", flush=True)
+    # ── Threadpool execution ──
+    found = 0
+    failed = 0
+    completed = 0
 
-        url = None
-        method = "pattern"
-        patterns_tried = 0
-        search_tried = False
+    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+        # Submit all schools; keep a mapping so we can attribute results
+        futures = {executor.submit(process_school, s, args, env): s for s in candidates}
 
-        # Step 1: Pattern ladder
-        if not args.search_only:
-            url, patterns_tried = probe_school(domain, args.rps)
+        try:
+            for future in as_completed(futures):
+                completed += 1
+                try:
+                    result = future.result()
+                except Exception as e:
+                    school = futures[future]
+                    print(f"[{completed:>5}/{total}] {school.get('name', school.get('id', '?'))} ... EXCEPTION: {type(e).__name__}: {e}")
+                    failed += 1
+                    continue
 
-        # Step 2: Bing HTML scraping (free)
-        if not url and args.bing_fallback:
-            search_tried = True
-            url = bing_html_search(domain)
-            if url:
-                method = "bing_html"
-                print("[bing] ", end="", flush=True)
-            time.sleep(1.0)  # polite pause between Bing scrapes
+                prefix = f"[{completed:>5}/{total}]"
+                if result["url"]:
+                    found += 1
+                    tag = f"[{result['method']}] " if result["method"] != "pattern" else ""
+                    print(f"{prefix} {result['name']} ({result['domain']}) ... {tag}FOUND: {result['url']}")
+                else:
+                    failed += 1
+                    print(f"{prefix} {result['name']} ({result['domain']}) ... not found")
 
-        # Step 3: Brave Search API (free tier / cheap)
-        if not url and args.brave_fallback and brave_api_key:
-            search_tried = True
-            url = brave_search(domain, brave_api_key)
-            if url:
-                method = "brave"
-                print("[brave] ", end="", flush=True)
-            time.sleep(0.5)
-
-        # Step 4: Google CSE (legacy, limited)
-        if not url and args.google_fallback and google_api_key and google_cx:
-            search_tried = True
-            url = google_dork(domain, google_api_key, google_cx)
-            if url:
-                method = "google"
-
-        if url:
-            found += 1
-            print(f"FOUND: {url}")
+                # Periodic save so Ctrl-C doesn't lose hours of probes
+                if not args.dry_run and args.save_every > 0 and completed % args.save_every == 0:
+                    _save_yaml(data)
+                    print(f"  [checkpoint saved at {completed}/{total}]")
+        except KeyboardInterrupt:
+            print(f"\n[interrupted at {completed}/{total}] — cancelling pending workers")
+            executor.shutdown(wait=False, cancel_futures=True)
             if not args.dry_run:
-                school["cds_url_hint"] = url
-                school["scrape_policy"] = "active"
-                record_probe(school, "found", method, patterns_tried, search_tried)
-        else:
-            failed += 1
-            print("not found")
-            if not args.dry_run:
-                record_probe(school, "not_found", method, patterns_tried, search_tried)
+                _save_yaml(data)
+                print(f"  [partial progress saved to {SCHOOLS_YAML}]")
+            print(f"\nProbed: {completed}, Found: {found}, Not found: {failed}")
+            return
 
-    print(f"\nProbed: {probed}, Found: {found}, Not found: {failed}", end="")
+    print(f"\nProbed: {completed}, Found: {found}, Not found: {failed}", end="")
     if skipped:
         print(f", Skipped (cooldown): {skipped}", end="")
     print()
 
-    if not args.dry_run and (found > 0 or failed > 0):
-        SCHOOLS_YAML.write_text(yaml.dump(data, default_flow_style=False,
-                                          sort_keys=False, allow_unicode=True))
+    if not args.dry_run and completed > 0:
+        _save_yaml(data)
         print(f"Updated {SCHOOLS_YAML}")
 
 
