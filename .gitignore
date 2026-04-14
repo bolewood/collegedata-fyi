@@ -38,6 +38,10 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+*.code-workspace
+
+# Local finder run logs
+tools/finder/*.log
 
 # Claude Code local state
 # (remove this line if you want to commit shared Claude Code project settings)
