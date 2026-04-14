@@ -56,20 +56,48 @@ _SSL_CTX = ssl.create_default_context()
 _SSL_CTX.check_hostname = False
 _SSL_CTX.verify_mode = ssl.CERT_NONE
 
-# URL pattern ladder — ordered by frequency in the wild
+# URL pattern ladder — ordered roughly by observed frequency.
+# Expanded 2026-04-14 after a 50-school dry run returned 1/50 hits,
+# with hand-verification showing real CDS pages at patterns we were
+# not checking. See the three categories below for what was added.
 PATTERNS = [
+    # ── Common IR patterns ──
     "/ir/cds/",
     "/institutional-research/common-data-set/",
-    "/facts-and-figures/common-data-set/",
+    "/institutional-research/common-data-set.html",
+    "/institutionalresearch/common-data-set/",           # no-hyphen variant (Agnes Scott)
+    "/institutionalresearch/common-data-set.html",       # no-hyphen + .html
+    "/ir/common-data-set/",                              # spelled-out "common-data-set" under /ir
     "/oir/cds/",
+    "/oir/common-data-set/",
+    "/ira/cds/",                                         # Carnegie Mellon pattern
     "/common-data-set/",
-    "/data/campus/general/cds.html",
-    "/registrar/cds.pdf",
-    "/budget/cds/",
+
+    # ── Institutional Effectiveness variants ──
+    # Several schools file CDS under IE rather than IR (e.g. Allegheny).
+    "/institutional-effectiveness/common-data-set/",
+    "/institutional-effectiveness/common-data-set.html",
+    "/institutional-effectiveness/the-common-data-set/",  # with article prefix
+    "/ie/cds/",
+    "/oie/cds/",
+
+    # ── Nested under /about/ or /provost/ or /planning/ ──
+    "/about/institutional-research/common-data-set/",
+    "/about/ir/cds/",
+    "/provost/institutional-research/common-data-set/",
+    "/planning/institutional-research/common-data-set/",
+
+    # ── Facts-and-figures style ──
+    "/facts-and-figures/common-data-set/",
+
+    # ── Generic "data" page (for schools like Adelphi whose CDS is
+    #    linked from a data hub with no CDS keyword in the path) ──
+    "/institutional-research/research/data/",
 ]
 
-# Subdomains to try
-SUBDOMAINS = ["www", "ir", "oir", "oira", "irds", "obp", "ira"]
+# Subdomains to try. `sites` catches Wordpress-multisite institutions
+# like Allegheny (sites.allegheny.edu/institutional-effectiveness/...).
+SUBDOMAINS = ["www", "ir", "oir", "oira", "irds", "obp", "ira", "sites"]
 
 # Current CDS years to search for (newest first)
 CDS_YEARS = ["2025-2026", "2024-2025", "2023-2024"]
@@ -369,6 +397,10 @@ def main():
                     help=f"Skip schools probed within N days (default: {DEFAULT_COOLDOWN_DAYS}, 0=ignore)")
     ap.add_argument("--limit", type=int, default=0,
                     help="Max schools to probe (0=all)")
+    ap.add_argument("--name-contains", metavar="TEXT",
+                    help="Only probe schools whose name contains TEXT (case-insensitive). "
+                         "Useful for targeting subsets like --name-contains 'University of' "
+                         "to bias toward schools more likely to publish.")
     args = ap.parse_args()
 
     data = yaml.safe_load(SCHOOLS_YAML.read_text())
@@ -383,13 +415,22 @@ def main():
     failed = 0
     skipped = 0
 
+    name_filter = args.name_contains.lower() if args.name_contains else None
+
     for school in schools:
         sid = school.get("id", "")
         policy = school.get("scrape_policy", "unknown")
+        name = school.get("name", sid)
 
         if args.only and sid != args.only:
             continue
         if not args.only and policy != "unknown":
+            continue
+
+        # Name filter: restrict to schools whose display name matches.
+        # Applies even when --only is not set; lets the user target
+        # a subset like "University of ..." for higher hit-rate runs.
+        if name_filter and name_filter not in name.lower():
             continue
 
         # Cooldown: skip recently-probed schools
@@ -401,7 +442,6 @@ def main():
             break
 
         domain = school.get("domain", "")
-        name = school.get("name", sid)
         probed += 1
 
         print(f"[{probed:>4}] {name} ({domain}) ... ", end="", flush=True)
