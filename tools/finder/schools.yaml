@@ -434,13 +434,6 @@ schools:
   domain: williams.edu
   ipeds_id: '168148'
   scrape_policy: active
-- id: reed
-  name: Reed College
-  domain: reed.edu
-  ipeds_id: '209542'
-  scrape_policy: verified_absent
-  notes: Boycotts US News rankings since 1990s. Publishes mission-centric data (PhD
-    productivity) instead of CDS.
 - id: uchicago
   name: University of Chicago
   domain: uchicago.edu
@@ -15237,6 +15230,14 @@ schools:
     last_method: pattern
     patterns_tried: 2
     search_fallback_tried: false
+- id: oregon-state-university
+  name: Oregon State University
+  domain: oregonstate.edu
+  ipeds_id: '209542'
+  scrape_policy: unknown
+  notes: Re-added 2026-04-14 after discovering a bad hand-curated Reed College entry
+    with the wrong IPEDS ID (209542) had been silently overlaying OSU's IPEDS row
+    during build_school_list.py merge, deleting OSU from the corpus. Needs probe.
 - id: oregon-state-university-cascades-campus
   name: Oregon State University-Cascades Campus
   domain: osucascades.edu
@@ -22712,11 +22713,16 @@ schools:
   name: University of Illinois Urbana-Champaign
   domain: illinois.edu
   ipeds_id: '145637'
-  scrape_policy: unknown
+  scrape_policy: active
+  cds_url_hint: https://www.dmi.illinois.edu/stuenr/misc/cds_2024_2025.xlsx
+  notes: Manually resolved 2026-04-14 after Brave fallback missed the XLSX-format
+    CDS. DMI at Illinois publishes CDS as .xlsx (Tier 1 extraction path), not PDF,
+    and Brave's index had no CDS signal in title/description for any illinois.edu
+    result. Archive at https://www.dmi.illinois.edu/stuenr/ (years 2003-04 onward).
   probe_state:
     last_probed_at: '2026-04-14T13:23:13Z'
-    last_result: not_found
-    last_method: brave
+    last_result: found
+    last_method: manual
     patterns_tried: 0
     search_fallback_tried: true
 - id: university-of-indianapolis
