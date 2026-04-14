@@ -116,6 +116,12 @@ CDS_YEARS = ["2025-2026", "2024-2025", "2023-2024"]
 # Default cooldown: skip schools probed within this many days
 DEFAULT_COOLDOWN_DAYS = 30
 
+# Per-school wall-clock budget for the pattern ladder. Caps the blast
+# radius when a base URL accepts TCP but never responds. 60s is enough
+# for a fully-live school to probe ~60 URLs at the default 1 rps cadence
+# while keeping monthly cron runtime bounded at 2400 schools × 60s / workers.
+DEFAULT_SCHOOL_BUDGET_SEC = 60.0
+
 
 # ── HTTP helpers ────────────────────────────────────────────────────────────
 
@@ -254,7 +260,7 @@ def record_probe(school: dict, result: str, method: str,
 
 # ── Pattern ladder ──────────────────────────────────────────────────────────
 
-def probe_school(domain: str, rps: float) -> tuple[str | None, int]:
+def probe_school(domain: str, rps: float, max_seconds: float = DEFAULT_SCHOOL_BUDGET_SEC) -> tuple[str | None, int]:
     """Try URL patterns against a domain.
 
     Returns (first_working_url_or_None, patterns_tried_count).
@@ -264,9 +270,19 @@ def probe_school(domain: str, rps: float) -> tuple[str | None, int]:
     entirely, which saves ~150 probes per school for the common case of
     schools that only have www.X.edu and maybe ir.X.edu live. DNS
     results are cached per-session via `_dns_ok`.
+
+    `max_seconds` is a per-school wall-clock budget. When a base URL
+    accepts TCP but never responds, the per-URL timeout (10s) stacks
+    across ~200 pattern combinations and a single school can wedge a
+    worker for ~33 minutes. The deadline check short-circuits pattern
+    probing once the budget is exhausted and returns whatever we have.
     """
     if not domain:
         return None, 0
+
+    start = time.monotonic()
+    def deadline_exceeded() -> bool:
+        return (time.monotonic() - start) >= max_seconds
 
     candidate_bases = [f"https://{domain}"]
     for sub in SUBDOMAINS:
@@ -284,7 +300,11 @@ def probe_school(domain: str, rps: float) -> tuple[str | None, int]:
     tried = 0
 
     for base in live_bases:
+        if deadline_exceeded():
+            return None, tried
         for pattern in PATTERNS:
+            if deadline_exceeded():
+                return None, tried
             url = base.rstrip("/") + pattern
             tried += 1
             status, headers, body = _get(url, timeout=10, read_bytes=5000)
@@ -297,10 +317,14 @@ def probe_school(domain: str, rps: float) -> tuple[str | None, int]:
     # Year-specific PDF patterns (only against naked + www, which almost
     # always resolve, so no DNS check needed here).
     for base in [f"https://{domain}", f"https://www.{domain}"]:
+        if deadline_exceeded():
+            return None, tried
         host = base.replace("https://", "").split("/")[0]
         if not _dns_ok(host):
             continue
         for year in CDS_YEARS:
+            if deadline_exceeded():
+                return None, tried
             pdf_patterns = [
                 f"/ir/cds/CDS_{year}.pdf",
                 f"/ir/cds/cds_{year}.pdf",
@@ -309,6 +333,8 @@ def probe_school(domain: str, rps: float) -> tuple[str | None, int]:
                 f"/common-data-set/CDS_{year}.pdf",
             ]
             for pat in pdf_patterns:
+                if deadline_exceeded():
+                    return None, tried
                 url = base.rstrip("/") + pat
                 tried += 1
                 status, headers = _head(url, timeout=10)
@@ -420,10 +446,25 @@ def brave_search(domain: str, api_key: str) -> str | None:
 
     results = data.get("web", {}).get("results", [])
     # Prefer PDFs when present, but accept CDS landing pages as fallback.
+    #
+    # Reject URL paths that look like they point at the CDS Initiative's
+    # template/definitions/instructions documents rather than a school's
+    # filled-out data. Without this filter, Brave's landing-page fallback
+    # returns e.g. `.../Common+Data+Set+Definitions.pdf` or `.../cds-template.pdf`
+    # because those titles legitimately contain "Common Data Set". They are
+    # not extractable school data. Filter was added 2026-04-14 after
+    # Amherst's Brave-discovered hint turned out to be the definitions PDF.
+    bad_keywords = ("definition", "definitions", "template", "instructions",
+                    "blank", "glossary")
+
+    def looks_like_template(url_str: str) -> bool:
+        p = url_str.lower()
+        return any(kw in p for kw in bad_keywords)
+
     landing_fallback = None
     for r in results:
         link = r.get("url", "")
-        if not link:
+        if not link or looks_like_template(link):
             continue
         if link.lower().endswith(".pdf"):
             return link
@@ -480,7 +521,7 @@ def process_school(school: dict, args: argparse.Namespace,
 
     # Step 1: Pattern ladder
     if not args.search_only:
-        url, patterns_tried = probe_school(domain, args.rps)
+        url, patterns_tried = probe_school(domain, args.rps, args.school_budget_sec)
 
     # Step 2: Bing HTML scraping (free)
     if not url and args.bing_fallback:
@@ -593,6 +634,13 @@ def main():
                          "have no cds_url_hint. Used to resolve seed-list "
                          "entries that were marked active on faith but never "
                          "got a URL — populates their hints without demoting.")
+    ap.add_argument("--school-budget-sec", type=float, default=DEFAULT_SCHOOL_BUDGET_SEC,
+                    help=f"Per-school wall-clock budget for the pattern "
+                         f"ladder in seconds (default: {DEFAULT_SCHOOL_BUDGET_SEC}). "
+                         f"Caps the damage when a base URL accepts TCP but "
+                         f"never responds and would otherwise wedge a worker "
+                         f"for ~33 minutes cycling through pattern × subdomain "
+                         f"× year combinations.")
     args = ap.parse_args()
 
     data = yaml.safe_load(SCHOOLS_YAML.read_text())

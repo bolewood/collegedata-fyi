@@ -80,13 +80,6 @@ schools:
   domain: amherst.edu
   ipeds_id: '164465'
   scrape_policy: active
-  cds_url_hint: https://www.amherst.edu/media/view/26538/original/Common+Data+Set+Definitions.pdf
-  probe_state:
-    last_probed_at: '2026-04-14T15:35:44Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
 - id: barnard
   name: Barnard College
   domain: barnard.edu
@@ -701,13 +694,6 @@ schools:
   domain: ucsd.edu
   ipeds_id: '110680'
   scrape_policy: active
-  cds_url_hint: https://ir.ucsd.edu/_files/stats-data/common-data-set/definitions.pdf
-  probe_state:
-    last_probed_at: '2026-04-14T15:35:56Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
 - id: uc-santa-barbara
   name: University of California, Santa Barbara
   domain: ucsb.edu
@@ -2923,13 +2909,6 @@ schools:
   domain: berea.edu
   ipeds_id: '156295'
   scrape_policy: active
-  probe_state:
-    last_probed_at: '2026-04-14T13:17:03Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
-  cds_url_hint: https://legacy.berea.edu/ira/wp-content/uploads/sites/27/2023/03/Definitions-and-Descriptions-For-Website.pdf
 - id: bergin-university-of-canine-studies
   name: Bergin University of Canine Studies
   domain: berginu.edu
@@ -3841,13 +3820,6 @@ schools:
   domain: butler.edu
   ipeds_id: '150163'
   scrape_policy: active
-  probe_state:
-    last_probed_at: '2026-04-14T13:17:20Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
-  cds_url_hint: https://cdn.butler.edu/www/sites/3/2025/02/08093226/cds_definitions.pdf
 - id: byzantine-catholic-seminary-of-saints-cyril-and-methodius
   name: Byzantine Catholic Seminary of Saints Cyril and Methodius
   domain: bcs.edu
@@ -5896,13 +5868,6 @@ schools:
   domain: ccd.edu
   ipeds_id: '126942'
   scrape_policy: active
-  probe_state:
-    last_probed_at: '2026-04-14T13:17:58Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
-  cds_url_hint: https://www.ccd.edu/docs/common-data-set-definitions
 - id: compass-college-of-film-and-media
   name: Compass College of Film and Media
   domain: null
@@ -7458,13 +7423,6 @@ schools:
   domain: emerson.edu
   ipeds_id: '165662'
   scrape_policy: active
-  probe_state:
-    last_probed_at: '2026-04-14T13:18:27Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
-  cds_url_hint: https://emerson.edu/departments/institutional-research/glossary-ir-terms
 - id: emmanuel-college
   name: Emmanuel College
   domain: emmanuel.edu
@@ -11361,13 +11319,6 @@ schools:
   domain: langston.edu
   ipeds_id: '207209'
   scrape_policy: active
-  probe_state:
-    last_probed_at: '2026-04-14T13:19:37Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
-  cds_url_hint: https://langston.edu/popups/data-definitions/
 - id: laramie-county-community-college
   name: Laramie County Community College
   domain: lccc.wy.edu
@@ -11509,13 +11460,6 @@ schools:
   domain: lr.edu
   ipeds_id: '198835'
   scrape_policy: active
-  probe_state:
-    last_probed_at: '2026-04-14T13:19:40Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
-  cds_url_hint: https://www.lr.edu/sites/default/files/2021-08/cds-definitions-2020-2021.pdf
 - id: lesley-university
   name: Lesley University
   domain: lesley.edu
@@ -14090,13 +14034,6 @@ schools:
   domain: murraystate.edu
   ipeds_id: '157401'
   scrape_policy: active
-  probe_state:
-    last_probed_at: '2026-04-14T13:20:27Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
-  cds_url_hint: https://www.murraystate.edu/about/administration/PresidentsOffice/media/research/2019-2020-CDS_Definitions.pdf
 - id: muskingum-university
   name: Muskingum University
   domain: muskingum.edu
@@ -21494,13 +21431,6 @@ schools:
   domain: utm.edu
   ipeds_id: '221768'
   scrape_policy: active
-  probe_state:
-    last_probed_at: '2026-04-14T13:22:40Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
-  cds_url_hint: https://www.utm.edu/offices-and-services/office-of-institutional-research/_media/2024-2025/Common%20Data%20Set%202024-2025%20-%20Definitions.pdf
 - id: the-university-of-texas-at-arlington
   name: The University of Texas at Arlington
   domain: uta.edu
@@ -24789,13 +24719,6 @@ schools:
   domain: utah.edu
   ipeds_id: '230764'
   scrape_policy: active
-  probe_state:
-    last_probed_at: '2026-04-14T13:23:53Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
-  cds_url_hint: https://data.utah.edu/wp-content/uploads/sites/61/2025/07/CDS-2024-2025-Template-for-Website.pdf
 - id: university-of-valley-forge
   name: University of Valley Forge
   domain: valleyforge.edu
@@ -24859,13 +24782,6 @@ schools:
   domain: uwa.edu
   ipeds_id: '101587'
   scrape_policy: active
-  probe_state:
-    last_probed_at: '2026-04-14T13:23:54Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
-  cds_url_hint: https://www.uwa.edu/sites/default/files/inline-files/2020-2021CDS-Definitions.pdf
 - id: university-of-west-florida
   name: University of West Florida
   domain: uwf.edu
