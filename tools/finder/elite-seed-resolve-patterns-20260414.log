@@ -1,0 +1,26 @@
+Probing 69 schools with 4 workers (rps=1.0 per worker)
+Skipped 1582 schools due to 30-day cooldown
+[    1/69] Bates College (bates.edu) ... FOUND: https://bates.edu/ir/common-data-set/
+[    2/69] Brandeis University (brandeis.edu) ... FOUND: https://brandeis.edu/institutional-research/common-data-set/
+[    3/69] Bowdoin College (bowdoin.edu) ... not found
+[    4/69] Boston College (bc.edu) ... not found
+[    5/69] Boston University (bu.edu) ... not found
+[    6/69] Case Western Reserve University (cwru.edu) ... FOUND: https://cwru.edu/ir/common-data-set/
+[    7/69] Brown University (brown.edu) ... not found
+[    8/69] Bucknell University (bucknell.edu) ... not found
+[    9/69] Bryn Mawr College (brynmawr.edu) ... not found
+[   10/69] Colby College (colby.edu) ... not found
+[   11/69] College of the Holy Cross (holycross.edu) ... not found
+[   12/69] Colorado College (coloradocollege.edu) ... not found
+[   13/69] Dartmouth College (dartmouth.edu) ... FOUND: https://dartmouth.edu/oir/cds/
+[   14/69] Colorado School of Mines (mines.edu) ... FOUND: https://ir.mines.edu/institutional-research/common-data-set/
+[   15/69] Cornell University (cornell.edu) ... not found
+[   16/69] Drexel University (drexel.edu) ... not found
+[   17/69] Dickinson College (dickinson.edu) ... not found
+[   18/69] George Washington University (gwu.edu) ... not found
+[   19/69] Emory University (emory.edu) ... not found
+
+[interrupted at 19/69] — cancelling pending workers
+  [partial progress saved to /Users/santhonys/Projects/Owen/colleges/collegedata-fyi/tools/finder/schools.yaml]
+
+Probed: 19, Found: 5, Not found: 14

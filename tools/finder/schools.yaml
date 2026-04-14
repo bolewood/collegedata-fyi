@@ -80,318 +80,766 @@ schools:
   domain: amherst.edu
   ipeds_id: '164465'
   scrape_policy: active
+  cds_url_hint: https://www.amherst.edu/media/view/26538/original/Common+Data+Set+Definitions.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:44Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: barnard
   name: Barnard College
   domain: barnard.edu
   ipeds_id: '189097'
   scrape_policy: active
+  cds_url_hint: https://barnard.edu/institutional-effectiveness/common-data-set/
+  probe_state:
+    last_probed_at: '2026-04-14T14:37:05Z'
+    last_result: found
+    last_method: pattern
+    patterns_tried: 11
+    search_fallback_tried: false
 - id: bates
   name: Bates College
   domain: bates.edu
   ipeds_id: '160977'
   scrape_policy: active
+  cds_url_hint: https://bates.edu/ir/common-data-set/
+  probe_state:
+    last_probed_at: '2026-04-14T14:46:01Z'
+    last_result: found
+    last_method: pattern
+    patterns_tried: 6
+    search_fallback_tried: false
 - id: boston-college
   name: Boston College
   domain: bc.edu
   ipeds_id: '164924'
   scrape_policy: active
+  cds_url_hint: https://www.bc.edu/content/dam/bc1/offices/irp/ir/cds/Boston%20College%202022-2023%20Common%20Data%20Set.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:44Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: boston-university
   name: Boston University
   domain: bu.edu
   ipeds_id: '164988'
   scrape_policy: active
+  cds_url_hint: https://www.bu.edu/asir/files/2020/02/cds-2018.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:44Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: bowdoin
   name: Bowdoin College
   domain: bowdoin.edu
   ipeds_id: '161004'
   scrape_policy: active
+  cds_url_hint: https://www.bowdoin.edu/ir/pdf/common-data-set-2020-21.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:44Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: brandeis
   name: Brandeis University
   domain: brandeis.edu
   ipeds_id: '165015'
   scrape_policy: active
+  cds_url_hint: https://brandeis.edu/institutional-research/common-data-set/
+  probe_state:
+    last_probed_at: '2026-04-14T14:46:03Z'
+    last_result: found
+    last_method: pattern
+    patterns_tried: 2
+    search_fallback_tried: false
 - id: brown
   name: Brown University
   domain: brown.edu
   ipeds_id: '217156'
   scrape_policy: active
+  cds_url_hint: https://oir.brown.edu/sites/default/files/2020-04/CDS2009_2010.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:45Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: bryn-mawr
   name: Bryn Mawr College
   domain: brynmawr.edu
   ipeds_id: '211291'
   scrape_policy: active
+  cds_url_hint: https://www.brynmawr.edu/sites/default/files/media/documents/2023-03/CDS_2022-2023-2.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:45Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: bucknell
   name: Bucknell University
   domain: bucknell.edu
   ipeds_id: '211158'
   scrape_policy: active
+  cds_url_hint: https://www.bucknell.edu/sites/default/files/institutional_research/cds_2020-2021.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:45Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: case-western
   name: Case Western Reserve University
   domain: cwru.edu
   ipeds_id: '201885'
   scrape_policy: active
+  cds_url_hint: https://cwru.edu/ir/common-data-set/
+  probe_state:
+    last_probed_at: '2026-04-14T14:49:28Z'
+    last_result: found
+    last_method: pattern
+    patterns_tried: 6
+    search_fallback_tried: false
 - id: clemson
   name: Clemson University
   domain: clemson.edu
   ipeds_id: '217882'
   scrape_policy: active
+  cds_url_hint: https://www.clemson.edu/institutional-effectiveness/documents/oir/CommonDataSet2007.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:45Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: colby
   name: Colby College
   domain: colby.edu
   ipeds_id: '161086'
   scrape_policy: active
+  cds_url_hint: https://www.colby.edu/wp-content/uploads/2018/06/cds2001.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:46Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: holy-cross
   name: College of the Holy Cross
   domain: holycross.edu
   ipeds_id: '165866'
   scrape_policy: active
+  cds_url_hint: https://www.holycross.edu/sites/default/files/files/planningandspecialproj/common_data_set_2019-2020_v2.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:46Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: colorado-college
   name: Colorado College
   domain: coloradocollege.edu
   ipeds_id: '126818'
   scrape_policy: active
+  cds_url_hint: https://www.coloradocollege.edu/offices/ipe/documents/CDS_2023-2024_Preliminary.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:46Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: colorado-school-of-mines
   name: Colorado School of Mines
   domain: mines.edu
   ipeds_id: '126775'
   scrape_policy: active
+  cds_url_hint: https://ir.mines.edu/institutional-research/common-data-set/
+  probe_state:
+    last_probed_at: '2026-04-14T14:53:35Z'
+    last_result: found
+    last_method: pattern
+    patterns_tried: 52
+    search_fallback_tried: false
 - id: cornell
   name: Cornell University
   domain: cornell.edu
   ipeds_id: '190415'
   scrape_policy: active
+  cds_url_hint: https://irp.dpb.cornell.edu/wp-content/uploads/2025/02/CDS-2024-2025-v1.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:46Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: dartmouth
   name: Dartmouth College
   domain: dartmouth.edu
   ipeds_id: '182670'
   scrape_policy: active
   notes: Known to omit GPA breakdowns in Section C
+  cds_url_hint: https://dartmouth.edu/oir/cds/
+  probe_state:
+    last_probed_at: '2026-04-14T14:53:34Z'
+    last_result: found
+    last_method: pattern
+    patterns_tried: 7
+    search_fallback_tried: false
 - id: dickinson
   name: Dickinson College
   domain: dickinson.edu
   ipeds_id: '212054'
   scrape_policy: active
+  cds_url_hint: https://www.dickinson.edu/download/downloads/id/12543/cds20202021pdf.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:47Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: drexel
   name: Drexel University
   domain: drexel.edu
   ipeds_id: '212160'
   scrape_policy: active
+  cds_url_hint: https://drexel.edu/institutionalresearch/~/media/Drexel/Provost-Group/InstitutionalResearch/Documents/Factbook/CDS_2020-2021.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:47Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: duke
   name: Duke University
   domain: duke.edu
   ipeds_id: '198419'
   scrape_policy: active
+  cds_url_hint: https://provost.duke.edu/sites/default/files/CDS_2020-2021_0.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:47Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: emory
   name: Emory University
   domain: emory.edu
   ipeds_id: '139658'
   scrape_policy: active
+  cds_url_hint: https://provost.emory.edu/planning-administration/_includes/documents/sections/institutional-data/emory-common-data-set-2024-2025.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:47Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: gwu
   name: George Washington University
   domain: gwu.edu
   ipeds_id: '131469'
   scrape_policy: active
+  cds_url_hint: https://irp.gwu.edu/sites/g/files/zaxdzs6056/files/downloads/CDS_2020-2021-FA2021.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:48Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: georgetown
   name: Georgetown University
   domain: georgetown.edu
   ipeds_id: '131496'
   scrape_policy: active
+  cds_url_hint: https://oads.georgetown.edu/commondataset/
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:48Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: georgia-tech
   name: Georgia Institute of Technology
   domain: gatech.edu
   ipeds_id: '139755'
   scrape_policy: active
+  cds_url_hint: https://irp.gatech.edu/files/CDS/cds_2006.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:48Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: grinnell
   name: Grinnell College
   domain: grinnell.edu
   ipeds_id: '153603'
   scrape_policy: active
+  cds_url_hint: https://www.grinnell.edu/sites/default/files/docs/2024-10/Grinnell-College-Common-Data-Set-CDS-2023-2024.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:48Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: hamilton
   name: Hamilton College
   domain: hamilton.edu
   ipeds_id: '191515'
   scrape_policy: active
+  cds_url_hint: https://www.hamilton.edu/documents/CDS_2020-2021_FINAL.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:49Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: indiana-bloomington
   name: Indiana University Bloomington
   domain: indiana.edu
   ipeds_id: '151351'
   scrape_policy: active
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:49Z'
+    last_result: found
+    last_method: manual
+    patterns_tried: 0
+    search_fallback_tried: true
+  cds_url_hint: https://iuapps.iu.edu/cds/index.html?i=home&p=index
+  notes: Manually resolved 2026-04-14. Brave fallback missed it because the CDS lives
+    on an IU-wide app server (iuapps.iu.edu/cds/) whose landing page does not have
+    "Common Data Set" in the crawlable body. Portal serves all IU campuses.
 - id: johns-hopkins
   name: Johns Hopkins University
   domain: jhu.edu
   ipeds_id: '162928'
   scrape_policy: active
+  cds_url_hint: https://oira.jhu.edu/wp-content/uploads/CDS_2021-2022.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:49Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: kenyon
   name: Kenyon College
   domain: kenyon.edu
   ipeds_id: '203535'
   scrape_policy: active
+  cds_url_hint: https://www.kenyon.edu/files/resources/kenyon-cds-202425-march-2025.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:50Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: lehigh
   name: Lehigh University
   domain: lehigh.edu
   ipeds_id: '213543'
   scrape_policy: active
+  cds_url_hint: https://data.lehigh.edu/sites/data.lehigh.edu/files/1302026-CDS-2025-2026-FINAL.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:50Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: macalester
   name: Macalester College
   domain: macalester.edu
   ipeds_id: '174066'
   scrape_policy: active
+  cds_url_hint: https://www.macalester.edu/institutional-research/wp-content/uploads/sites/515/CDS_2020-2021.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:50Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: nyu
   name: New York University
   domain: nyu.edu
   ipeds_id: '193900'
   scrape_policy: active
+  cds_url_hint: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-on-website/NYU_Common_Data_Set_2020-21.4.30.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:51Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: northeastern
   name: Northeastern University
   domain: northeastern.edu
   ipeds_id: '167358'
   scrape_policy: active
+  cds_url_hint: https://uds.northeastern.edu/facts/common-data-set/
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:51Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: northwestern
   name: Northwestern University
   domain: northwestern.edu
   ipeds_id: '147767'
   scrape_policy: active
+  cds_url_hint: https://enrollment.northwestern.edu/data/nu_cds_2023_2024_final.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:52Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: oberlin
   name: Oberlin College
   domain: oberlin.edu
   ipeds_id: '204501'
   scrape_policy: active
+  cds_url_hint: https://www.oberlin.edu/sites/default/files/content/office/institutional-research/documents/2023-24_oc_cds.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:51Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: osu
   name: Ohio State University
   domain: osu.edu
   ipeds_id: '204796'
   scrape_policy: active
+  cds_url_hint: https://irp.osu.edu/sites/default/files/documents/2024/08/CDS_2023-2024-Columbus.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:52Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: penn-state
   name: Pennsylvania State University
   domain: psu.edu
   ipeds_id: '214777'
   scrape_policy: active
+  cds_url_hint: https://opair.psu.edu/files/2019/04/CDS-2019-2020-University-Park.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:52Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: princeton
   name: Princeton University
   domain: princeton.edu
   ipeds_id: '186131'
   scrape_policy: active
   notes: Known to omit GPA breakdowns in Section C
+  cds_url_hint: https://registrar.princeton.edu/sites/g/files/toruqf136/files/documents/CDS_2020-2021.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:53Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: purdue
   name: Purdue University
   domain: purdue.edu
   ipeds_id: '243780'
   scrape_policy: active
+  cds_url_hint: https://www.purdue.edu/idata/wp-content/uploads/2025/02/CDS_2022-2023.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:53Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: rpi
   name: Rensselaer Polytechnic Institute
   domain: rpi.edu
   ipeds_id: '194824'
   scrape_policy: active
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:52Z'
+    last_result: found
+    last_method: manual
+    patterns_tried: 0
+    search_fallback_tried: true
+  cds_url_hint: https://rpi.box.com/s/fkqisnv4wxanikf1yfpw0yvajjtupg2z
+  notes: Manually resolved 2026-04-14. Brave fallback missed it because CDS files
+    are hosted on rpi.box.com — Box serves files behind auth walls to search engine
+    crawlers, so the content is systematically unindexed. Systematic blind spot for
+    any school using Box/Drive hosting.
 - id: rice
   name: Rice University
   domain: rice.edu
   ipeds_id: '227757'
   scrape_policy: active
+  cds_url_hint: https://oie.rice.edu/sites/g/files/bxs4401/files/inline-files/CDS_2023-24_WEBSITE.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:53Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: rutgers
   name: Rutgers University
   domain: rutgers.edu
   ipeds_id: '186380'
   scrape_policy: active
+  cds_url_hint: https://oirap.rutgers.edu/CDS/2021/Camden%20CDS_2021-2022_Final%20V1.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:54Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: swarthmore
   name: Swarthmore College
   domain: swarthmore.edu
   ipeds_id: '216287'
   scrape_policy: active
+  cds_url_hint: https://www.swarthmore.edu/sites/default/files/assets/documents/institutional-research/cds2011.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:54Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: temple
   name: Temple University
   domain: temple.edu
   ipeds_id: '216339'
   scrape_policy: active
+  cds_url_hint: https://ira.temple.edu/sites/ira/files/CDS_2022-2023.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:54Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: texas-am
   name: Texas A&M University
   domain: tamu.edu
   ipeds_id: '228723'
   scrape_policy: active
+  cds_url_hint: https://abpa.tamu.edu/getattachment/be61a654-0a21-4766-abb2-723ac566712d/CDS_2021-2022.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:54Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: tufts
   name: Tufts University
   domain: tufts.edu
   ipeds_id: '167987'
   scrape_policy: active
+  cds_url_hint: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2024-2025-1.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:55Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: uc-berkeley
   name: University of California, Berkeley
   domain: berkeley.edu
   ipeds_id: '110635'
   scrape_policy: active
+  cds_url_hint: https://cfo.berkeley.edu/sites/default/files/uc_berkeley_cds_2015-16_8-3-2016.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:55Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: uc-davis
   name: University of California, Davis
   domain: ucdavis.edu
   ipeds_id: '110644'
   scrape_policy: active
+  cds_url_hint: https://aggiedata.ucdavis.edu/sites/g/files/dgvnsk1841/files/media/documents/CDS_2020-2021_Davis.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:55Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: uc-irvine
   name: University of California, Irvine
   domain: uci.edu
   ipeds_id: '110653'
   scrape_policy: active
+  cds_url_hint: https://irap.uci.edu/institutional-research/data-hub/common-data-set/
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:55Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: ucla
   name: University of California, Los Angeles
   domain: ucla.edu
   ipeds_id: '110662'
   scrape_policy: active
+  cds_url_hint: https://apb.ucla.edu/file/22f7b216-5bcd-4401-bf95-6b9fc3652a67
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:56Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: uc-san-diego
   name: University of California, San Diego
   domain: ucsd.edu
   ipeds_id: '110680'
   scrape_policy: active
+  cds_url_hint: https://ir.ucsd.edu/_files/stats-data/common-data-set/definitions.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:56Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: uc-santa-barbara
   name: University of California, Santa Barbara
   domain: ucsb.edu
   ipeds_id: '110705'
   scrape_policy: active
+  cds_url_hint: https://bap.ucsb.edu/institutional-research
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:56Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: colorado
   name: University of Colorado Boulder
   domain: colorado.edu
   ipeds_id: '126614'
   scrape_policy: active
+  cds_url_hint: https://data.colorado.edu/reports/common-data-set
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:56Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: udel
   name: University of Delaware
   domain: udel.edu
   ipeds_id: '130943'
   scrape_policy: active
+  cds_url_hint: https://ire.udel.edu/files/2024/06/CDS2223_UDelaware.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:57Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: uf
   name: University of Florida
   domain: ufl.edu
   ipeds_id: '134130'
   scrape_policy: active
+  cds_url_hint: https://data-apps.ir.aa.ufl.edu/public/cds/CDS_2022-2023_UFMAIN_Post.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:57Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: uga
   name: University of Georgia
   domain: uga.edu
   ipeds_id: '139959'
   scrape_policy: active
+  cds_url_hint: https://oir.uga.edu/wp-content/uploads/UGA_CDS_2024-2025.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:57Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: umd
   name: University of Maryland
   domain: umd.edu
   ipeds_id: '163286'
   scrape_policy: active
+  cds_url_hint: https://www.irpa.umd.edu/InstitutionalData/cds.html
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:57Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: unc
   name: University of North Carolina at Chapel Hill
   domain: unc.edu
   ipeds_id: '199120'
   scrape_policy: active
+  cds_url_hint: https://oira.unc.edu/wp-content/uploads/sites/297/2024/02/CDS_2022-23_20240206.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:58Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: upenn
   name: University of Pennsylvania
   domain: upenn.edu
   ipeds_id: '215062'
   scrape_policy: active
+  cds_url_hint: https://ira.upenn.edu/penn-numbers/common-data-set
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:58Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: upitt
   name: University of Pittsburgh
   domain: pitt.edu
   ipeds_id: '215293'
   scrape_policy: active
+  cds_url_hint: https://ir.pitt.edu/sites/default/files/assets/2023-2024%20Common%20Data%20Set%20Pgh%20Campus_9.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:58Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: usc
   name: University of Southern California
   domain: usc.edu
   ipeds_id: '123961'
   scrape_policy: active
+  cds_url_hint: https://oir.usc.edu/wp-content/uploads/sites/3/2024/08/CDS_2023-2024_FINAL_082624.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:58Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: ut-austin
   name: University of Texas at Austin
   domain: utexas.edu
   ipeds_id: '228778'
   scrape_policy: active
+  cds_url_hint: https://reports.utexas.edu/common-data-set
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:59Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: uva
   name: University of Virginia
   domain: virginia.edu
@@ -399,41 +847,97 @@ schools:
   scrape_policy: active
   notes: James Caldwell (IR office) ships a CDS PDF autofill script — UVA may have
     clean form-layer PDFs
+  cds_url_hint: https://ira.virginia.edu/sites/ira/files/2025-03/CDS_2024-2025_508.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:59Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: uw
   name: University of Washington
   domain: washington.edu
   ipeds_id: '236948'
   scrape_policy: active
+  cds_url_hint: https://www.washington.edu/opb/uw-data/external-reporting/common-data-set/
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:59Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: uw-madison
   name: University of Wisconsin-Madison
   domain: wisc.edu
   ipeds_id: '240444'
   scrape_policy: active
+  cds_url_hint: https://data.wisc.edu/common-data-set-and-rankings/
+  probe_state:
+    last_probed_at: '2026-04-14T15:35:59Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: vanderbilt
   name: Vanderbilt University
   domain: vanderbilt.edu
   ipeds_id: '221999'
   scrape_policy: active
+  cds_url_hint: https://www.vanderbilt.edu/data/public-data/common-data-sets/
+  probe_state:
+    last_probed_at: '2026-04-14T15:36:00Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: wake-forest
   name: Wake Forest University
   domain: wfu.edu
   ipeds_id: '199847'
   scrape_policy: active
+  cds_url_hint: https://prod.wp.cdn.aws.wfu.edu/sites/202/2025/07/CDS-2024-2025-fillable-WFU.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:36:00Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: washington-and-lee
   name: Washington and Lee University
   domain: wlu.edu
   ipeds_id: '234207'
   scrape_policy: active
+  cds_url_hint: https://my.wlu.edu/document/2024-common-data-set
+  probe_state:
+    last_probed_at: '2026-04-14T15:36:01Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: wellesley
   name: Wellesley College
   domain: wellesley.edu
   ipeds_id: '168005'
   scrape_policy: active
+  cds_url_hint: https://www1.wellesley.edu/sites/default/files/assets/departments/instresearch/files/cds_2022-2023-final.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:36:01Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: williams
   name: Williams College
   domain: williams.edu
   ipeds_id: '168148'
   scrape_policy: active
+  cds_url_hint: https://www.williams.edu/institutional-research/files/2019/08/2010-2011_williams_common_data_set.pdf
+  probe_state:
+    last_probed_at: '2026-04-14T15:36:02Z'
+    last_result: found
+    last_method: brave
+    patterns_tried: 0
+    search_fallback_tried: true
 - id: uchicago
   name: University of Chicago
   domain: uchicago.edu
@@ -15238,6 +15742,12 @@ schools:
   notes: Re-added 2026-04-14 after discovering a bad hand-curated Reed College entry
     with the wrong IPEDS ID (209542) had been silently overlaying OSU's IPEDS row
     during build_school_list.py merge, deleting OSU from the corpus. Needs probe.
+  probe_state:
+    last_probed_at: '2026-04-14T14:34:16Z'
+    last_result: not_found
+    last_method: pattern
+    patterns_tried: 105
+    search_fallback_tried: false
 - id: oregon-state-university-cascades-campus
   name: Oregon State University-Cascades Campus
   domain: osucascades.edu

@@ -1,0 +1,71 @@
+Probing 65 schools with 4 workers (rps=1.0 per worker)
+Skipped 1581 schools due to 30-day cooldown
+[    1/65] Boston University (bu.edu) ... [brave] FOUND: https://www.bu.edu/asir/files/2020/02/cds-2018.pdf
+[    2/65] Amherst College (amherst.edu) ... [brave] FOUND: https://www.amherst.edu/media/view/26538/original/Common+Data+Set+Definitions.pdf
+[    3/65] Boston College (bc.edu) ... [brave] FOUND: https://www.bc.edu/content/dam/bc1/offices/irp/ir/cds/Boston%20College%202022-2023%20Common%20Data%20Set.pdf
+[    4/65] Bowdoin College (bowdoin.edu) ... [brave] FOUND: https://www.bowdoin.edu/ir/pdf/common-data-set-2020-21.pdf
+[    5/65] Bucknell University (bucknell.edu) ... [brave] FOUND: https://www.bucknell.edu/sites/default/files/institutional_research/cds_2020-2021.pdf
+[    6/65] Bryn Mawr College (brynmawr.edu) ... [brave] FOUND: https://www.brynmawr.edu/sites/default/files/media/documents/2023-03/CDS_2022-2023-2.pdf
+[    7/65] Brown University (brown.edu) ... [brave] FOUND: https://oir.brown.edu/sites/default/files/2020-04/CDS2009_2010.pdf
+[    8/65] Clemson University (clemson.edu) ... [brave] FOUND: https://www.clemson.edu/institutional-effectiveness/documents/oir/CommonDataSet2007.pdf
+[    9/65] Colby College (colby.edu) ... [brave] FOUND: https://www.colby.edu/wp-content/uploads/2018/06/cds2001.pdf
+[   10/65] College of the Holy Cross (holycross.edu) ... [brave] FOUND: https://www.holycross.edu/sites/default/files/files/planningandspecialproj/common_data_set_2019-2020_v2.pdf
+[   11/65] Cornell University (cornell.edu) ... [brave] FOUND: https://irp.dpb.cornell.edu/wp-content/uploads/2025/02/CDS-2024-2025-v1.pdf
+[   12/65] Colorado College (coloradocollege.edu) ... [brave] FOUND: https://www.coloradocollege.edu/offices/ipe/documents/CDS_2023-2024_Preliminary.pdf
+[   13/65] Dickinson College (dickinson.edu) ... [brave] FOUND: https://www.dickinson.edu/download/downloads/id/12543/cds20202021pdf.pdf
+[   14/65] Drexel University (drexel.edu) ... [brave] FOUND: https://drexel.edu/institutionalresearch/~/media/Drexel/Provost-Group/InstitutionalResearch/Documents/Factbook/CDS_2020-2021.pdf
+[   15/65] Emory University (emory.edu) ... [brave] FOUND: https://provost.emory.edu/planning-administration/_includes/documents/sections/institutional-data/emory-common-data-set-2024-2025.pdf
+[   16/65] Duke University (duke.edu) ... [brave] FOUND: https://provost.duke.edu/sites/default/files/CDS_2020-2021_0.pdf
+[   17/65] George Washington University (gwu.edu) ... [brave] FOUND: https://irp.gwu.edu/sites/g/files/zaxdzs6056/files/downloads/CDS_2020-2021-FA2021.pdf
+[   18/65] Georgetown University (georgetown.edu) ... [brave] FOUND: https://oads.georgetown.edu/commondataset/
+[   19/65] Grinnell College (grinnell.edu) ... [brave] FOUND: https://www.grinnell.edu/sites/default/files/docs/2024-10/Grinnell-College-Common-Data-Set-CDS-2023-2024.pdf
+[   20/65] Georgia Institute of Technology (gatech.edu) ... [brave] FOUND: https://irp.gatech.edu/files/CDS/cds_2006.pdf
+[   21/65] Indiana University Bloomington (indiana.edu) ... not found
+[   22/65] Hamilton College (hamilton.edu) ... [brave] FOUND: https://www.hamilton.edu/documents/CDS_2020-2021_FINAL.pdf
+[   23/65] Johns Hopkins University (jhu.edu) ... [brave] FOUND: https://oira.jhu.edu/wp-content/uploads/CDS_2021-2022.pdf
+[   24/65] Kenyon College (kenyon.edu) ... [brave] FOUND: https://www.kenyon.edu/files/resources/kenyon-cds-202425-march-2025.pdf
+[   25/65] Lehigh University (lehigh.edu) ... [brave] FOUND: https://data.lehigh.edu/sites/data.lehigh.edu/files/1302026-CDS-2025-2026-FINAL.pdf
+[   26/65] Macalester College (macalester.edu) ... [brave] FOUND: https://www.macalester.edu/institutional-research/wp-content/uploads/sites/515/CDS_2020-2021.pdf
+[   27/65] Northeastern University (northeastern.edu) ... [brave] FOUND: https://uds.northeastern.edu/facts/common-data-set/
+[   28/65] New York University (nyu.edu) ... [brave] FOUND: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-on-website/NYU_Common_Data_Set_2020-21.4.30.pdf
+[   29/65] Oberlin College (oberlin.edu) ... [brave] FOUND: https://www.oberlin.edu/sites/default/files/content/office/institutional-research/documents/2023-24_oc_cds.pdf
+[   30/65] Pennsylvania State University (psu.edu) ... [brave] FOUND: https://opair.psu.edu/files/2019/04/CDS-2019-2020-University-Park.pdf
+[   31/65] Ohio State University (osu.edu) ... [brave] FOUND: https://irp.osu.edu/sites/default/files/documents/2024/08/CDS_2023-2024-Columbus.pdf
+[   32/65] Northwestern University (northwestern.edu) ... [brave] FOUND: https://enrollment.northwestern.edu/data/nu_cds_2023_2024_final.pdf
+[   33/65] Rensselaer Polytechnic Institute (rpi.edu) ... not found
+[   34/65] Princeton University (princeton.edu) ... [brave] FOUND: https://registrar.princeton.edu/sites/g/files/toruqf136/files/documents/CDS_2020-2021.pdf
+[   35/65] Rice University (rice.edu) ... [brave] FOUND: https://oie.rice.edu/sites/g/files/bxs4401/files/inline-files/CDS_2023-24_WEBSITE.pdf
+[   36/65] Purdue University (purdue.edu) ... [brave] FOUND: https://www.purdue.edu/idata/wp-content/uploads/2025/02/CDS_2022-2023.pdf
+[   37/65] Swarthmore College (swarthmore.edu) ... [brave] FOUND: https://www.swarthmore.edu/sites/default/files/assets/documents/institutional-research/cds2011.pdf
+[   38/65] Rutgers University (rutgers.edu) ... [brave] FOUND: https://oirap.rutgers.edu/CDS/2021/Camden%20CDS_2021-2022_Final%20V1.pdf
+[   39/65] Texas A&M University (tamu.edu) ... [brave] FOUND: https://abpa.tamu.edu/getattachment/be61a654-0a21-4766-abb2-723ac566712d/CDS_2021-2022.pdf
+[   40/65] Temple University (temple.edu) ... [brave] FOUND: https://ira.temple.edu/sites/ira/files/CDS_2022-2023.pdf
+[   41/65] Tufts University (tufts.edu) ... [brave] FOUND: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2024-2025-1.pdf
+[   42/65] University of California, Berkeley (berkeley.edu) ... [brave] FOUND: https://cfo.berkeley.edu/sites/default/files/uc_berkeley_cds_2015-16_8-3-2016.pdf
+[   43/65] University of California, Irvine (uci.edu) ... [brave] FOUND: https://irap.uci.edu/institutional-research/data-hub/common-data-set/
+[   44/65] University of California, Davis (ucdavis.edu) ... [brave] FOUND: https://aggiedata.ucdavis.edu/sites/g/files/dgvnsk1841/files/media/documents/CDS_2020-2021_Davis.pdf
+[   45/65] University of California, Los Angeles (ucla.edu) ... [brave] FOUND: https://apb.ucla.edu/file/22f7b216-5bcd-4401-bf95-6b9fc3652a67
+[   46/65] University of California, San Diego (ucsd.edu) ... [brave] FOUND: https://ir.ucsd.edu/_files/stats-data/common-data-set/definitions.pdf
+[   47/65] University of California, Santa Barbara (ucsb.edu) ... [brave] FOUND: https://bap.ucsb.edu/institutional-research
+[   48/65] University of Colorado Boulder (colorado.edu) ... [brave] FOUND: https://data.colorado.edu/reports/common-data-set
+[   49/65] University of Delaware (udel.edu) ... [brave] FOUND: https://ire.udel.edu/files/2024/06/CDS2223_UDelaware.pdf
+[   50/65] University of Georgia (uga.edu) ... [brave] FOUND: https://oir.uga.edu/wp-content/uploads/UGA_CDS_2024-2025.pdf
+  [checkpoint saved at 50/65]
+[   51/65] University of Florida (ufl.edu) ... [brave] FOUND: https://data-apps.ir.aa.ufl.edu/public/cds/CDS_2022-2023_UFMAIN_Post.pdf
+[   52/65] University of Maryland (umd.edu) ... [brave] FOUND: https://www.irpa.umd.edu/InstitutionalData/cds.html
+[   53/65] University of Pennsylvania (upenn.edu) ... [brave] FOUND: https://ira.upenn.edu/penn-numbers/common-data-set
+[   54/65] University of North Carolina at Chapel Hill (unc.edu) ... [brave] FOUND: https://oira.unc.edu/wp-content/uploads/sites/297/2024/02/CDS_2022-23_20240206.pdf
+[   55/65] University of Pittsburgh (pitt.edu) ... [brave] FOUND: https://ir.pitt.edu/sites/default/files/assets/2023-2024%20Common%20Data%20Set%20Pgh%20Campus_9.pdf
+[   56/65] University of Southern California (usc.edu) ... [brave] FOUND: https://oir.usc.edu/wp-content/uploads/sites/3/2024/08/CDS_2023-2024_FINAL_082624.pdf
+[   57/65] University of Texas at Austin (utexas.edu) ... [brave] FOUND: https://reports.utexas.edu/common-data-set
+[   58/65] University of Virginia (virginia.edu) ... [brave] FOUND: https://ira.virginia.edu/sites/ira/files/2025-03/CDS_2024-2025_508.pdf
+[   59/65] University of Wisconsin-Madison (wisc.edu) ... [brave] FOUND: https://data.wisc.edu/common-data-set-and-rankings/
+[   60/65] University of Washington (washington.edu) ... [brave] FOUND: https://www.washington.edu/opb/uw-data/external-reporting/common-data-set/
+[   61/65] Wake Forest University (wfu.edu) ... [brave] FOUND: https://prod.wp.cdn.aws.wfu.edu/sites/202/2025/07/CDS-2024-2025-fillable-WFU.pdf
+[   62/65] Vanderbilt University (vanderbilt.edu) ... [brave] FOUND: https://www.vanderbilt.edu/data/public-data/common-data-sets/
+[   63/65] Washington and Lee University (wlu.edu) ... [brave] FOUND: https://my.wlu.edu/document/2024-common-data-set
+[   64/65] Wellesley College (wellesley.edu) ... [brave] FOUND: https://www1.wellesley.edu/sites/default/files/assets/departments/instresearch/files/cds_2022-2023-final.pdf
+[   65/65] Williams College (williams.edu) ... [brave] FOUND: https://www.williams.edu/institutional-research/files/2019/08/2010-2011_williams_common_data_set.pdf
+
+Probed: 65, Found: 63, Not found: 2, Skipped (cooldown): 1581
+Updated /Users/santhonys/Projects/Owen/colleges/collegedata-fyi/tools/finder/schools.yaml

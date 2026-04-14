@@ -588,6 +588,11 @@ def main():
     ap.add_argument("--save-every", type=int, default=50,
                     help="Save schools.yaml every N completed schools so a "
                          "Ctrl-C doesn't lose progress (default: 50)")
+    ap.add_argument("--include-active-no-hint", action="store_true",
+                    help="Also probe schools marked scrape_policy=active that "
+                         "have no cds_url_hint. Used to resolve seed-list "
+                         "entries that were marked active on faith but never "
+                         "got a URL — populates their hints without demoting.")
     args = ap.parse_args()
 
     data = yaml.safe_load(SCHOOLS_YAML.read_text())
@@ -612,7 +617,15 @@ def main():
         if args.only and sid != args.only:
             continue
         if not args.only and policy != "unknown":
-            continue
+            # Allow through active-but-no-hint entries when the caller asks
+            # for them. These are hand-curated seed-list rows that were
+            # marked active on faith but never got a URL resolved, so
+            # downstream has nothing to fetch. Running them through the
+            # probe populates cds_url_hint without touching scrape_policy.
+            if not (args.include_active_no_hint
+                    and policy == "active"
+                    and not school.get("cds_url_hint")):
+                continue
         if name_filter and name_filter not in name.lower():
             continue
         if not args.only and args.cooldown_days > 0 and should_skip(school, args.cooldown_days):
