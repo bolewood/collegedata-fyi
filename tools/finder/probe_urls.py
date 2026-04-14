@@ -89,6 +89,10 @@ PATTERNS = [
     "/about/institutional-research/common-data-set/",
     "/about/ir/cds/",
     "/provost/institutional-research/common-data-set/",
+    "/provost/oira/common-data-set/",                    # American University
+    "/provost/oira/common-data-set.cfm",                 # American U uses ColdFusion
+    "/provost/oir/common-data-set/",
+    "/provost/oir/common-data-set.cfm",
     "/planning/institutional-research/common-data-set/",
 
     # ── Facts-and-figures style ──
@@ -101,7 +105,10 @@ PATTERNS = [
 
 # Subdomains to try. `sites` catches Wordpress-multisite institutions
 # like Allegheny (sites.allegheny.edu/institutional-effectiveness/...).
-SUBDOMAINS = ["www", "ir", "oir", "oira", "irds", "obp", "ira", "sites"]
+# `oair` catches Tulane (oair.tulane.edu/common-data-set), and is a
+# common IR office abbreviation (Office of Assessment and Institutional
+# Research).
+SUBDOMAINS = ["www", "ir", "oir", "oair", "oira", "irds", "obp", "ira", "sites"]
 
 # Current CDS years to search for (newest first)
 CDS_YEARS = ["2025-2026", "2024-2025", "2023-2024"]
