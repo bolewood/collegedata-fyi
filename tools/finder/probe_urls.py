@@ -36,6 +36,7 @@ import os
 import re
 import socket
 import ssl
+import sys
 import time
 import urllib.request
 import urllib.error
@@ -502,6 +503,16 @@ def _save_yaml(data: dict) -> None:
 # ── Main ────────────────────────────────────────────────────────────────────
 
 def main():
+    # Force line buffering on stdout. Python block-buffers stdout when it's
+    # piped to another process (like `tee`), which holds output until an
+    # 8KB buffer fills. For long-running probes this makes the tool look
+    # stuck for 10-20 minutes even though it's working fine. Line buffering
+    # flushes per-print, so the tee'd log grows in real time.
+    try:
+        sys.stdout.reconfigure(line_buffering=True)
+    except (AttributeError, ValueError):
+        pass  # stdout isn't a TextIOWrapper (replaced?) — silently skip
+
     ap = argparse.ArgumentParser(
         description="Discover CDS URLs for schools in schools.yaml")
     ap.add_argument("--only", help="Only probe this school id")
