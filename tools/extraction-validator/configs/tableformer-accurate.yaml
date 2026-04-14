@@ -1,0 +1,12 @@
+# TableFormer ACCURATE mode. Hypothesis: HMC's C1 row-shift is a table
+# structure recognition failure, and the slower ACCURATE model will recover
+# the correct cell boundaries.
+name: tf-accurate
+description: TableFormer ACCURATE mode, otherwise default.
+pipeline_options:
+  do_ocr: true
+  do_table_structure: true
+  table_structure_options:
+    mode: accurate
+    do_cell_matching: true
+  images_scale: 1.0

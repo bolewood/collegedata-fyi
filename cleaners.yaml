@@ -1,0 +1,34 @@
+# cleaners.yaml — community cleanup tool registry
+#
+# This file is the registry of community cleanup tools that consume raw CDS
+# artifacts and produce normalized outputs. Contributors register a cleaner
+# by submitting a PR that appends an entry to the `cleaners:` list below.
+# Once merged, a GitHub Actions workflow (not yet written — M4) installs
+# each registered cleaner, runs it against new cds_artifacts rows that do
+# not yet have output from that producer, and writes results back as new
+# cds_artifacts rows plus new blobs in Storage.
+#
+# Contributors never touch production credentials. All writes happen through
+# the service-role key owned by the CI workflow.
+#
+# Schema (enforced by the CI workflow once it exists):
+#
+#   cleaners:
+#     - name:        <string, unique>       # producer tag stored in cds_artifacts.producer
+#       repo_url:    <URL>                  # public git repo where the cleaner lives
+#       latest_version: <semver>            # version the CI workflow installs
+#       entrypoint:  <module.function>      # Python import path, e.g. "mycleaner.cli:run"
+#       output_kind: <string>               # value stored in cds_artifacts.kind, e.g. "cleaned"
+#       description: <string>               # one-sentence what-it-does
+#
+# Example (commented out — not a real cleaner):
+#
+#   cleaners:
+#     - name:        reference-cleaner
+#       repo_url:    https://github.com/bolewood/cds-reference-cleaner
+#       latest_version: 0.1.0
+#       entrypoint:  reference_cleaner.cli:run
+#       output_kind: cleaned
+#       description: Strips running headers, normalizes kerned numerals, reattaches orphan boxed values.
+
+cleaners: []

@@ -1,0 +1,16 @@
+# Force OCR + TableFormer ACCURATE. If either of the targeted fixes helps on
+# its own, the combination should be at least as good. If this config is worst,
+# the two changes interact badly and we need to dig deeper.
+name: combined
+description: Force OCR (tesseract, 2x) plus TableFormer ACCURATE.
+pipeline_options:
+  do_ocr: true
+  do_table_structure: true
+  table_structure_options:
+    mode: accurate
+    do_cell_matching: true
+  ocr_options:
+    kind: tesseract
+    force_full_page_ocr: true
+    lang: ["eng"]
+  images_scale: 2.0

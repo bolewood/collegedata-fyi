@@ -1,0 +1,77 @@
+# Harvey Mudd College, CDS 2025-26 — ground-truth ID mapping
+#
+# Maps the homegrown ground-truth field IDs (b1_ft_firstyear_men, etc.)
+# to canonical CDS question numbers (B.101, C.101, etc.) so the
+# regression scorer can look up each ground-truth value in a Tier 2
+# extract and compare.
+#
+# The mapping was built by:
+#   1. Running `python tools/tier2_extractor/extract.py` against the HMC
+#      source PDF to produce a Tier 2 JSON with 558 populated fields.
+#   2. For each ground-truth field, searching the Tier 2 output for
+#      entries whose value matched the expected value.
+#   3. When the value appeared under a single question number within
+#      the right section prefix (B for b1_*, C for c1_*, etc.),
+#      auto-assigning. 19 fields mapped uniquely this way.
+#   4. When the value appeared under multiple question numbers, the
+#      mapping was hand-disambiguated by comparing the ground-truth
+#      label against the canonical question text from the schema.
+#      11 fields were disambiguated this way.
+#   5. One field (b22_retention_pct) did not find an exact-value match
+#      because the ground-truth YAML stored "95" while the AcroForm
+#      field RETENTION_FRSH_P stores the full precision "95.24". The
+#      score script handles this with numeric-tolerant comparison.
+
+school: harvey-mudd
+cds_year: "2025-26"
+source: "auto-built from tier2 extract, hand-disambiguated where needed"
+
+mappings:
+  # ── B1 Enrollment ──
+  b1_ft_firstyear_men:    B.101   # EN_FRSH_FT_MEN_N
+  b1_ft_firstyear_women:  B.126   # EN_FRSH_FT_WMN_N
+  b1_ft_total_ug_men:     B.106   # EN_UG_FT_MEN_N ("Total undergraduate Full-Time Students: males")
+  b1_ft_total_ug_women:   B.131   # EN_UG_FT_WMN_N ("Total undergraduate Full-Time Students: females")
+  b1_total_ug:            B.176   # EN_TOT_UG_N   ("Total all undergraduates")
+
+  # ── B2 Race/ethnicity ──
+  b2_fy_white:            B.204   # EN_1ST_WHITE_NONHISPANIC_N
+  b2_fy_asian:            B.206   # EN_1ST_ASIAN_NONHISPANIC_N
+  b2_fy_hispanic:         B.202   # EN_1ST_HISPANIC_ETHNICITY_N
+  b2_fy_total:            B.210   # EN_1ST_RACE_ETHNICITY_TOT_N
+
+  # ── B3 Degrees conferred ──
+  b3_bachelors:           B.303   # DEG_BACH_N
+
+  # ── B4 / B11 Graduation rates ──
+  b4_cohort_2018:         B.504   # GRS_LY_BACH_INIT_N (initial cohort, not adjusted)
+  b11_grad_rate_2018:     B.532   # GRS_LY_BACH_TOT_P
+
+  # ── B22 Retention ──
+  b22_retention_cohort:   B.2201  # RETENTION_FRSH_N
+  b22_retention_pct:      B.2203  # RETENTION_FRSH_P (PDF stores "95.24", GT says "95" — numeric tolerance)
+
+  # ── C1 Admissions ──
+  c1_applied_men:         C.101   # AP_RECD_1ST_MEN_N
+  c1_applied_women:       C.102   # AP_RECD_1ST_WMN_N
+  c1_applied_other:       C.103   # AP_RECD_1ST_UNK_N
+  c1_applied_total:       C.116   # AP_RECD_1ST_N
+  c1_admitted_men:        C.104   # AP_ADMT_1ST_MEN_N
+  c1_admitted_women:      C.105   # AP_ADMT_1ST_WMN_N
+  c1_admitted_other:      C.106   # AP_ADMT_1ST_UNK_N
+  c1_admitted_total:      C.117   # AP_ADMT_1ST_N
+  c1_enrolled_men:        C.107   # EN_TOT_1ST_MEN_N
+  c1_enrolled_women:      C.108   # EN_TOT_1ST_WMN_N
+
+  # ── C2 Waiting list ──
+  c2_waitlist_offered:    C.202   # AP_RECD_WAIT_N
+  c2_waitlist_accepted:   C.203   # AP_ACPT_WAIT_N
+
+  # ── C9 Test scores ──
+  c9_sat_composite_50:    C.906   # SAT1_COMP_50TH_P
+  c9_sat_math_75:         C.913   # SAT1_MATH_75TH_P
+  c9_act_composite_25:    C.914   # ACT_COMP_25TH_P
+
+  # ── C10 Class rank ──
+  c10_top_tenth:          C.1001  # FRSH_HS_RANK_10_P
+  c10_top_quarter:        C.1002  # FRSH_HS_RANK_25_P

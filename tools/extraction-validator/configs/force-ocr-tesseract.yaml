@@ -1,0 +1,16 @@
+# Force full-page OCR using tesseract at high DPI. Hypothesis: HMC's issues
+# come from the PDF's text layer (kerned digits "202 5", dropped checkboxes).
+# Re-rendering and OCRing from pixels might sidestep those quirks.
+name: ocr-tesseract
+description: Force full-page OCR with tesseract at 2x image scale.
+pipeline_options:
+  do_ocr: true
+  do_table_structure: true
+  table_structure_options:
+    mode: fast
+    do_cell_matching: true
+  ocr_options:
+    kind: tesseract
+    force_full_page_ocr: true
+    lang: ["eng"]
+  images_scale: 2.0

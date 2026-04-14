@@ -1,0 +1,217 @@
+# Harvey Mudd College, CDS 2025-26 — ground truth
+#
+# Values transcribed from the source PDF (CDS-HMC-2025.2026_shared.pdf) on 2026-04-11.
+# Critical fields (critical: true) are the C1/C2 tables where the baseline Docling
+# run produced row-shifted corruption. These are the regression we are trying to
+# fix with a better Docling configuration — see docs/known-issues/harvey-mudd-2025-26.md.
+
+school: harvey-mudd
+cds_year: "2025-26"
+source_pdf: CDS-HMC-2025.2026_shared.pdf
+
+fields:
+  # ------------------------- B1 Enrollment -------------------------
+  - id: b1_ft_firstyear_men
+    section: B1
+    label: Full-time first-year — men
+    expected: "109"
+    capture: 'First-time.{0,60}first-year.*?\b(109)\b'
+
+  - id: b1_ft_firstyear_women
+    section: B1
+    label: Full-time first-year — women
+    expected: "125"
+    capture: '109\D+(125)'
+
+  - id: b1_ft_total_ug_men
+    section: B1
+    label: Total full-time undergraduates — men
+    expected: "446"
+    capture: '\b(446)\b'
+
+  - id: b1_ft_total_ug_women
+    section: B1
+    label: Total full-time undergraduates — women
+    expected: "463"
+    capture: '\b(463)\b'
+
+  - id: b1_total_ug
+    section: B1
+    label: Total undergraduate enrollment
+    expected: "913"
+    capture: '\b(913)\b'
+
+  # ------------------------- B2 Race/ethnicity -------------------------
+  - id: b2_fy_white
+    section: B2
+    label: First-year White
+    expected: "64"
+    capture: 'White[^\n]*?\b(64)\b'
+
+  - id: b2_fy_asian
+    section: B2
+    label: First-year Asian
+    expected: "62"
+    capture: 'Asian[^\n]*?\b(62)\b'
+
+  - id: b2_fy_hispanic
+    section: B2
+    label: First-year Hispanic/Latino
+    expected: "36"
+    capture: 'Hispanic[^\n]*?\b(36)\b'
+
+  - id: b2_fy_total
+    section: B2
+    label: First-year total
+    expected: "236"
+    capture: '\b(236)\b'
+
+  # ------------------------- B3 Degrees conferred -------------------------
+  - id: b3_bachelors
+    section: B3
+    label: Bachelor's degrees conferred
+    expected: "228"
+    capture: "Bachelor[^\\n]*?\\b(228)\\b"
+
+  # ------------------------- B4-B21 Retention/graduation -------------------------
+  - id: b4_cohort_2018
+    section: B4
+    label: Fall 2018 first-year cohort (A)
+    expected: "234"
+    capture: '2018[^\n]*?\b(234)\b'
+
+  - id: b11_grad_rate_2018
+    section: B11
+    label: Fall 2018 six-year grad rate (%)
+    expected: "91.88"
+    capture: '2018[^\n]*?\b(91\.88)\b'
+
+  - id: b22_retention_cohort
+    section: B22
+    label: B22 retention cohort
+    expected: "231"
+    capture: '\b(231)\b'
+
+  - id: b22_retention_pct
+    section: B22
+    label: B22 retention rate (%)
+    expected: "95"
+    capture: '\b(95)\s*%'
+
+  # ------------------------- C1 Admissions (CRITICAL) -------------------------
+  # These are the fields where the baseline Docling run had row-shift corruption
+  # (men=3452 bled into women, etc.). Fixing these is the whole point.
+
+  - id: c1_applied_men
+    section: C1
+    label: Total first-year men who applied
+    expected: "3452"
+    critical: true
+    capture: 'men who applied[^\n]*?\b(3452)\b'
+
+  - id: c1_applied_women
+    section: C1
+    label: Total first-year women who applied
+    expected: "1761"
+    critical: true
+    capture: 'women who applied[^\n]*?\b(1761)\b'
+
+  - id: c1_applied_other
+    section: C1
+    label: Total first-year another/unknown gender who applied
+    expected: "4"
+    critical: true
+    capture: 'another.{0,40}applied[^\n]*?\b(4)\b'
+
+  - id: c1_admitted_men
+    section: C1
+    label: Total first-year men admitted
+    expected: "276"
+    critical: true
+    capture: 'men who were admitted[^\n]*?\b(276)\b'
+
+  - id: c1_admitted_women
+    section: C1
+    label: Total first-year women admitted
+    expected: "365"
+    critical: true
+    capture: 'women who were admitted[^\n]*?\b(365)\b'
+
+  - id: c1_admitted_other
+    section: C1
+    label: Total first-year another/unknown admitted
+    expected: "2"
+    critical: true
+    capture: 'another.{0,40}admitted[^\n]*?\b(2)\b'
+
+  - id: c1_enrolled_men
+    section: C1
+    label: Total first-year men enrolled
+    expected: "109"
+    capture: 'men who enrolled[^\n]*?\b(109)\b'
+
+  - id: c1_enrolled_women
+    section: C1
+    label: Total first-year women enrolled
+    expected: "125"
+    capture: 'women who enrolled[^\n]*?\b(125)\b'
+
+  # C1 residency totals
+  - id: c1_applied_total
+    section: C1
+    label: Total applicants (all)
+    expected: "5217"
+    capture: '\b(5217)\b'
+
+  - id: c1_admitted_total
+    section: C1
+    label: Total admitted (all)
+    expected: "643"
+    capture: '\b(643)\b'
+
+  # ------------------------- C2 Waiting list -------------------------
+  - id: c2_waitlist_offered
+    section: C2
+    label: Waiting list offered
+    expected: "685"
+    critical: true
+    capture: 'waiting list[^\n]*?\b(685)\b'
+
+  - id: c2_waitlist_accepted
+    section: C2
+    label: Waiting list accepted place
+    expected: "439"
+    critical: true
+    capture: '\b(439)\b'
+
+  # ------------------------- C9 Test scores -------------------------
+  - id: c9_sat_composite_50
+    section: C9
+    label: SAT Composite 50th percentile
+    expected: "1510"
+    capture: '\b(1510)\b'
+
+  - id: c9_sat_math_75
+    section: C9
+    label: SAT Math 75th percentile
+    expected: "800"
+    capture: 'Math[^\n]*?760\D+790\D+(800)'
+
+  - id: c9_act_composite_25
+    section: C9
+    label: ACT Composite 25th percentile
+    expected: "35"
+    capture: 'ACT Composite[^\n]*?\b(35)\b'
+
+  # ------------------------- C10 Class rank -------------------------
+  - id: c10_top_tenth
+    section: C10
+    label: Percent in top tenth of HS class
+    expected: "95"
+    capture: 'top tenth[^\n]*?\b(95)\s*%'
+
+  - id: c10_top_quarter
+    section: C10
+    label: Percent in top quarter of HS class
+    expected: "100"
+    capture: 'top quarter[^\n]*?\b(100)\s*%'
