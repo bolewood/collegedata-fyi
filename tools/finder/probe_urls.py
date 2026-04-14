@@ -379,8 +379,15 @@ def brave_search(domain: str, api_key: str) -> str | None:
     Free tier: 2,000 queries/month. Paid: $0.003/query.
     Independent index, no domain pre-registration.
     """
-    query = f'site:{domain} filetype:pdf "Common Data Set"'
-    params = urllib.parse.urlencode({"q": query, "count": 5})
+    # NOTE: do not add `filetype:pdf` here. Many schools publish CDS as an
+    # HTML landing page (oair.tulane.edu/common-data-set) or a .cfm page
+    # (american.edu/provost/oira/common-data-set.cfm), not a raw PDF.
+    # Hand-verified via Brave web UI on 2026-04-14: the filetype restriction
+    # returned 0 hits for Tulane while the un-restricted query returned the
+    # live landing page as result #1. The overnight $5 Brave run burned
+    # quota for 0 finds because of this one word.
+    query = f'site:{domain} "Common Data Set"'
+    params = urllib.parse.urlencode({"q": query, "count": 10})
     url = f"https://api.search.brave.com/res/v1/web/search?{params}"
 
     status, headers, body = _get_full(
@@ -392,6 +399,10 @@ def brave_search(domain: str, api_key: str) -> str | None:
         },
     )
     if status != 200:
+        # Surface quota exhaustion (402) and rate limiting (429) instead
+        # of silently returning None like the previous version did.
+        if status in (402, 429):
+            print(f"  [brave] HTTP {status} — quota/rate limit hit", flush=True)
         return None
 
     try:
@@ -400,17 +411,21 @@ def brave_search(domain: str, api_key: str) -> str | None:
         return None
 
     results = data.get("web", {}).get("results", [])
+    # Prefer PDFs when present, but accept CDS landing pages as fallback.
+    landing_fallback = None
     for r in results:
         link = r.get("url", "")
+        if not link:
+            continue
         if link.lower().endswith(".pdf"):
             return link
-        # Landing page with CDS mention
         desc = r.get("description", "").lower()
         title = r.get("title", "").lower()
         if "common data set" in desc or "common data set" in title:
-            return link
+            if landing_fallback is None:
+                landing_fallback = link
 
-    return None
+    return landing_fallback
 
 
 def google_dork(domain: str, api_key: str, cx: str) -> str | None:
