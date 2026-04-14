@@ -1,0 +1,2374 @@
+Probing 2323 schools with 8 workers (rps=3.0 per worker)
+Skipped 23 schools due to 30-day cooldown
+[    1/2323] Albany Medical College (amc.edu) ... not found
+[    2/2323] Albert Einstein College of Medicine (einsteinmed.edu) ... not found
+[    3/2323] Albizu University-Miami (albizu.edu) ... not found
+[    4/2323] Albion College (albion.edu) ... not found
+[    5/2323] Alderson Broaddus University (None) ... not found
+[    6/2323] Albertus Magnus College (albertus.edu) ... not found
+[    7/2323] Alice Lloyd College (alc.edu) ... not found
+[    8/2323] Alder Graduate School of Education (aldergse.edu) ... not found
+[    9/2323] Albright College (albright.edu) ... not found
+[   10/2323] Alcorn State University (alcorn.edu) ... not found
+[   11/2323] Alfred University (alfred.edu) ... not found
+[   12/2323] Alliance University (None) ... not found
+[   13/2323] Allegheny College (allegheny.edu) ... FOUND: https://sites.allegheny.edu/institutional-effectiveness/the-common-data-set/
+[   14/2323] Albany Law School (albanylaw.edu) ... not found
+[   15/2323] Allen University (allenuniversity.edu) ... not found
+[   16/2323] Allen College (allencollege.edu) ... not found
+[   17/2323] Alma College (alma.edu) ... not found
+[   18/2323] Alvernia University (alvernia.edu) ... not found
+[   19/2323] Allegheny Wesleyan College (awc.edu) ... not found
+[   20/2323] Alverno College (alverno.edu) ... not found
+[   21/2323] Amberton University (amberton.edu) ... not found
+[   22/2323] Alpena Community College (alpenacc.edu) ... not found
+[   23/2323] American Baptist College (abcnash.edu) ... not found
+[   24/2323] American International College (aic.edu) ... FOUND: https://aic.edu/about/institutional-research/common-data-set/
+[   25/2323] American College of the Building Arts (acba.edu) ... not found
+[   26/2323] Air Force Institute of Technology-Graduate School of Engineering & Management (afit.edu) ... not found
+[   27/2323] American Film Institute Conservatory (afi.com) ... not found
+[   28/2323] American Jewish University (aju.edu) ... not found
+[   29/2323] American College of Financial Services (theamericancollege.edu) ... not found
+[   30/2323] American Musical and Dramatic Academy (amda.edu) ... not found
+[   31/2323] American University (american.edu) ... not found
+[   32/2323] American Islamic College (aicusa.edu) ... not found
+[   33/2323] Ana G. Mendez University (agmu.edu) ... not found
+[   34/2323] Amridge University (amridgeuniversity.edu) ... not found
+[   35/2323] Anabaptist Mennonite Biblical Seminary (ambs.edu) ... not found
+[   36/2323] Anderson University (anderson.edu) ... not found
+[   37/2323] Alabama College of Osteopathic Medicine (acom.edu) ... not found
+[   38/2323] Andrew College (andrewcollege.edu) ... not found
+[   39/2323] Andrews University (andrews.edu) ... not found
+[   40/2323] Angelo State University (angelo.edu) ... not found
+[   41/2323] Anderson University (andersonuniversity.edu) ... not found
+[   42/2323] Antioch University (antioch.edu) ... not found
+[   43/2323] Antioch University-New England (antiochne.edu) ... not found
+[   44/2323] Antioch University-Los Angeles (antiochla.edu) ... not found
+[   45/2323] America Evangelical University (aeu.edu) ... not found
+[   46/2323] Antioch College (antiochcollege.edu) ... not found
+[   47/2323] Antioch University-Santa Barbara (antiochsb.edu) ... not found
+[   48/2323] Antelope Valley Community College District (avc.edu) ... not found
+[   49/2323] Appalachian Bible College (abc.edu) ... not found
+[   50/2323] Antioch University-Seattle (antiochseattle.edu) ... not found
+  [checkpoint saved at 50/2323]
+[   51/2323] Antioch University-System Administration (antioch.edu) ... not found
+[   52/2323] Appalachian State University (appstate.edu) ... not found
+[   53/2323] Appalachian College of Pharmacy (acp.edu) ... not found
+[   54/2323] Anna Maria College (annamaria.edu) ... not found
+[   55/2323] Aquinas College (aquinas.edu) ... not found
+[   56/2323] Aquinas Institute of Theology (ai.edu) ... not found
+[   57/2323] Arapahoe Community College (arapahoe.edu) ... not found
+[   58/2323] Arcadia University (arcadia.edu) ... not found
+[   59/2323] Arizona State University Campus Immersion (asu.edu) ... not found
+[   60/2323] Arkansas Baptist College (arkansasbaptist.edu) ... not found
+[   61/2323] Arizona State University Digital Immersion (asu.edu) ... not found
+[   62/2323] Appalachian School of Law (asl.edu) ... not found
+[   63/2323] Arizona Christian University (arizonachristian.edu) ... not found
+[   64/2323] Arkansas Colleges of Health Education (achehealth.edu) ... not found
+[   65/2323] Arkansas State University (astate.edu) ... not found
+[   66/2323] Arkansas State University System (asusystem.edu) ... not found
+[   67/2323] Arlington Baptist University (abu.edu) ... not found
+[   68/2323] Art Center College of Design (artcenter.edu) ... not found
+[   69/2323] Art Academy of Cincinnati (artacademy.edu) ... not found
+[   70/2323] Arkansas Tech University (atu.edu) ... not found
+[   71/2323] Asbury Theological Seminary (asburyseminary.edu) ... not found
+[   72/2323] Asbury University (asbury.edu) ... not found
+[   73/2323] Associated Beth Rivkah Schools (bethrivkah.edu) ... not found
+[   74/2323] Assumption University (assumption.edu) ... not found
+[   75/2323] Ashland University (ashland.edu) ... not found
+[   76/2323] Athens State University (athens.edu) ... not found
+[   77/2323] Auburn University (auburn.edu) ... FOUND: https://ir.auburn.edu/common-data-set/
+[   78/2323] Augusta University (augusta.edu) ... not found
+[   79/2323] Atlantic Institute of Oriental Medicine (atom.edu) ... not found
+[   80/2323] Ascent College (ascent.edu) ... not found
+[   81/2323] Augsburg University (augsburg.edu) ... not found
+[   82/2323] Augustana University (augie.edu) ... FOUND: https://augie.edu/common-data-set/
+[   83/2323] Aurora University (aurora.edu) ... not found
+[   84/2323] Auburn University at Montgomery (aum.edu) ... not found
+[   85/2323] Augustana College (augustana.edu) ... not found
+[   86/2323] Aultman College of Nursing and Health Sciences (aultmancollege.edu) ... not found
+[   87/2323] Austin Presbyterian Theological Seminary (austinseminary.edu) ... not found
+[   88/2323] Austin Community College District (austincc.edu) ... not found
+[   89/2323] Austin Peay State University (apsu.edu) ... not found
+[   90/2323] Ave Maria University (avemaria.edu) ... not found
+[   91/2323] Averett University (averett.edu) ... not found
+[   92/2323] Arizona Board of Regents (azregents.edu) ... not found
+[   93/2323] Bacone College (bacone.edu) ... not found
+[   94/2323] Azusa Pacific University (apu.edu) ... not found
+[   95/2323] Avila University (avila.edu) ... not found
+[   96/2323] Athenaeum of Ohio (athenaeum.edu) ... not found
+[   97/2323] Bais Medrash Elyon (baismedroshelyon.com) ... not found
+[   98/2323] Bais Medrash Mayan Hatorah (baismedrashmayanhatorah.com) ... not found
+[   99/2323] Bais Binyomin Academy (baisbinyominacademy.com) ... not found
+[  100/2323] Bais Medrash Toras Chesed (bmtc.edu) ... not found
+  [checkpoint saved at 100/2323]
+[  101/2323] Bais Medrash of Dexter Park (bmdpark.com) ... not found
+[  102/2323] Bakersfield College (bakersfieldcollege.edu) ... not found
+[  103/2323] Baker University (bakeru.edu) ... not found
+[  104/2323] Baker College (baker.edu) ... not found
+[  105/2323] Baldwin Wallace University (bw.edu) ... not found
+[  106/2323] Bakke Graduate University (bgu.edu) ... not found
+[  107/2323] Ball State University (bsu.edu) ... not found
+[  108/2323] Baptist Health Sciences University (baptistu.edu) ... not found
+[  109/2323] Bank Street College of Education (bankstreet.edu) ... not found
+[  110/2323] Babson College (babson.edu) ... not found
+[  111/2323] Baptist University of the Americas (bua.edu) ... not found
+[  112/2323] Barclay College (barclaycollege.edu) ... not found
+[  113/2323] Bard College (bard.edu) ... FOUND: https://bard.edu/institutionalresearch/common-data-set/
+[  114/2323] Atlanta Metropolitan State College (atlm.edu) ... not found
+[  115/2323] Bais HaMedrash and Mesivta of Baltimore (bhmb.edu) ... not found
+[  116/2323] Baptist Missionary Association Theological Seminary (bmats.edu) ... not found
+[  117/2323] Barnes-Jewish College Goldfarb School of Nursing (barnesjewishcollege.edu) ... not found
+[  118/2323] Bard College at Simon's Rock (simons-rock.edu) ... not found
+[  119/2323] Baptist University of Florida (buf.edu) ... not found
+[  120/2323] Barry University (barry.edu) ... not found
+[  121/2323] Bay Mills Community College (bmcc.edu) ... not found
+[  122/2323] Barton College (barton.edu) ... not found
+[  123/2323] Bastyr University (bastyr.edu) ... not found
+[  124/2323] Bay Path University (baypath.edu) ... not found
+[  125/2323] Be'er Yaakov Talmudic Seminary (byts.edu) ... not found
+[  126/2323] Beacon College (beaconcollege.edu) ... not found
+[  127/2323] Belhaven University (belhaven.edu) ... not found
+[  128/2323] Baylor University (baylor.edu) ... not found
+[  129/2323] Bellarmine University (bellarmine.edu) ... not found
+[  130/2323] Bellevue College (bellevuecollege.edu) ... not found
+[  131/2323] Bellevue University (bellevue.edu) ... not found
+[  132/2323] Bellin College (bellincollege.edu) ... not found
+[  133/2323] Belmont University (belmont.edu) ... not found
+[  134/2323] Belmont Abbey College (belmontabbeycollege.edu) ... not found
+[  135/2323] Beloit College (beloit.edu) ... not found
+[  136/2323] Benedictine College (benedictine.edu) ... not found
+[  137/2323] Baylor College of Medicine (bcm.edu) ... not found
+[  138/2323] Bemidji State University (bemidjistate.edu) ... not found
+[  139/2323] Bellingham Technical College (btc.edu) ... not found
+[  140/2323] Benjamin Franklin Cummings Institute of Technology (bfit.edu) ... not found
+[  141/2323] Bennington College (bennington.edu) ... not found
+[  142/2323] Bennett College (bennett.edu) ... not found
+[  143/2323] Benedictine University (ben.edu) ... not found
+[  144/2323] Bergin University of Canine Studies (berginu.edu) ... not found
+[  145/2323] Bentley University (bentley.edu) ... not found
+[  146/2323] Berea College (berea.edu) ... not found
+[  147/2323] Bet Medrash Gadol Ateret Torah (betmedrashgadolaterettorah.com) ... not found
+[  148/2323] Beis Medrash Heichal Dovid (heichaldovid.org) ... not found
+[  149/2323] Berkeley School of Theology (bst.edu) ... not found
+[  150/2323] Benedict College (benedict.edu) ... not found
+  [checkpoint saved at 150/2323]
+[  151/2323] Berry College (berry.edu) ... not found
+[  152/2323] Beth Medrash of Asbury Park (baismedrashzichronmeir.com) ... not found
+[  153/2323] Bethany College (bethanylb.edu) ... not found
+[  154/2323] Beth Medrash Govoha (yeshivanotices.org) ... not found
+[  155/2323] Beth Medrash Meor Yitzchok (bethmedrashmeoryitzchok.com) ... not found
+[  156/2323] Beth Hamedrash Shaarei Yosher Institute (bhsy.edu) ... not found
+[  157/2323] Bethany Global University (bethanygu.edu) ... not found
+[  158/2323] Berklee College of Music (berklee.edu) ... not found
+[  159/2323] Bethany Theological Seminary (bethanyseminary.edu) ... not found
+[  160/2323] Bethel College-North Newton (bethelks.edu) ... not found
+[  161/2323] Austin College (austincollege.edu) ... not found
+[  162/2323] Bethany Lutheran College (blc.edu) ... not found
+[  163/2323] Ave Maria School of Law (avemarialaw.edu) ... not found
+[  164/2323] Bethel University (bethel.edu) ... not found
+[  165/2323] Bethesda University (buc.edu) ... not found
+[  166/2323] Bethel University (betheluniversity.edu) ... not found
+[  167/2323] Bethlehem College & Seminary (bcsmn.edu) ... not found
+[  168/2323] Bethune-Cookman University (cookman.edu) ... not found
+[  169/2323] Bethany College (bethanywv.edu) ... not found
+[  170/2323] Bethel University (bethelu.edu) ... not found
+[  171/2323] Bexley Hall Seabury Western Theological Seminary Federation, Inc. (bexleyseabury.edu) ... not found
+[  172/2323] Big Bend Community College (bigbend.edu) ... not found
+[  173/2323] Birmingham-Southern College (bsc.edu) ... not found
+[  174/2323] Black Hills State University (bhsu.edu) ... not found
+[  175/2323] Binghamton University (binghamton.edu) ... not found
+[  176/2323] Bismarck State College (bismarckstate.edu) ... not found
+[  177/2323] Blackburn College (blackburn.edu) ... not found
+[  178/2323] Blackfeet Community College (bfcc.edu) ... not found
+[  179/2323] Biola University (biola.edu) ... not found
+[  180/2323] Bloomfield College (bloomfield.edu) ... not found
+[  181/2323] Blue Mountain Christian University (bmc.edu) ... not found
+[  182/2323] Bluefield State University (bluefieldstate.edu) ... not found
+[  183/2323] Bluffton University (bluffton.edu) ... not found
+[  184/2323] Board of Trustees-Mississippi State Institutions of Higher Learning (mississippi.edu) ... not found
+[  185/2323] Bluefield University (bluefield.edu) ... not found
+[  186/2323] Bob Jones University (bju.edu) ... not found
+[  187/2323] Bon Secours Memorial College of Nursing (bsmcon.edu) ... not found
+[  188/2323] Bolivar Technical College (bolivarcollege.edu) ... not found
+[  189/2323] Blessing Rieman College of Nursing and Health Sciences (brcn.edu) ... not found
+[  190/2323] Boricua College (boricuacollege.edu) ... not found
+[  191/2323] Boise State University (boisestate.edu) ... not found
+[  192/2323] Boise Bible College (boisebible.edu) ... not found
+[  193/2323] Boston Graduate School of Psychoanalysis Inc (bgsp.edu) ... not found
+[  194/2323] Boston Architectural College (the-bac.edu) ... not found
+[  195/2323] Beulah Heights University (beulah.edu) ... not found
+[  196/2323] Boston Baptist College (boston.edu) ... not found
+[  197/2323] Bowie State University (bowiestate.edu) ... not found
+[  198/2323] Bowling Green State University-Main Campus (bgsu.edu) ... not found
+[  199/2323] Brescia University (brescia.edu) ... not found
+[  200/2323] Brazosport College (brazosport.edu) ... not found
+  [checkpoint saved at 200/2323]
+[  201/2323] Bradley University (bradley.edu) ... not found
+[  202/2323] Bowling Green State University-Firelands (firelands.bgsu.edu) ... not found
+[  203/2323] Brenau University (brenau.edu) ... not found
+[  204/2323] Brewton-Parker College (bpc.edu) ... not found
+[  205/2323] Brevard College (brevard.edu) ... not found
+[  206/2323] Briar Cliff University (briarcliff.edu) ... not found
+[  207/2323] Brigham Young University-Idaho (byui.edu) ... not found
+[  208/2323] Bridges Christian College (bcc.edu) ... not found
+[  209/2323] Brigham Young University (byu.edu) ... not found
+[  210/2323] Bridgewater College (bridgewater.edu) ... not found
+[  211/2323] Bridgewater State University (bridgew.edu) ... not found
+[  212/2323] Brooklyn Law School (brooklaw.edu) ... not found
+[  213/2323] Brite Divinity School (brite.edu) ... not found
+[  214/2323] Bryan College of Health Sciences (bryanhealthcollege.edu) ... not found
+[  215/2323] Bryant & Stratton College-Albany (bryantstratton.edu) ... not found
+[  216/2323] Bryant & Stratton College-Buffalo (bryantstratton.edu) ... not found
+[  217/2323] Bryant & Stratton College-Greece (bryantstratton.edu) ... not found
+[  218/2323] Bryant & Stratton College-Online (bryantstratton.edu) ... not found
+[  219/2323] Bryan College-Dayton (bryan.edu) ... not found
+[  220/2323] Broward College (broward.edu) ... not found
+[  221/2323] Bryant & Stratton College-Parma (bryantstratton.edu) ... not found
+[  222/2323] Bryant & Stratton College-Syracuse North (bryantstratton.edu) ... not found
+[  223/2323] Bryant & Stratton College-Virginia Beach (bryantstratton.edu) ... not found
+[  224/2323] Bryn Athyn College of the New Church (brynathyn.edu) ... not found
+[  225/2323] Brigham Young University-Hawaii (byuh.edu) ... not found
+[  226/2323] Bryant & Stratton College-Wauwatosa (bryantstratton.edu) ... not found
+[  227/2323] Cabrini University (cabrini.edu) ... not found
+[  228/2323] Buena Vista University (bvu.edu) ... not found
+[  229/2323] Bushnell University (bushnell.edu) ... not found
+[  230/2323] Bryn Mawr College (brynmawr.edu) ... not found
+[  231/2323] California Christian College (calchristiancollege.edu) ... not found
+[  232/2323] Bryant University (bryant.edu) ... not found
+[  233/2323] Cairn University-Langhorne (cairn.edu) ... not found
+[  234/2323] Cabarrus College of Health Sciences (cabarruscollege.edu) ... not found
+[  235/2323] Butler University (butler.edu) ... not found
+[  236/2323] Byzantine Catholic Seminary of Saints Cyril and Methodius (bcs.edu) ... not found
+[  237/2323] California Baptist University (calbaptist.edu) ... not found
+[  238/2323] California College of the Arts (cca.edu) ... not found
+[  239/2323] Caldwell University (caldwell.edu) ... not found
+[  240/2323] California Institute of Integral Studies (ciis.edu) ... not found
+[  241/2323] California Jazz Conservatory (cjc.edu) ... not found
+[  242/2323] California Institute of Technology (caltech.edu) ... not found
+[  243/2323] California Institute of Advanced Management (ciam.edu) ... not found
+[  244/2323] California Lutheran University (callutheran.edu) ... not found
+[  245/2323] California Institute of the Arts (calarts.edu) ... not found
+[  246/2323] California State University-Bakersfield (csub.edu) ... not found
+[  247/2323] California Polytechnic State University-San Luis Obispo (calpoly.edu) ... not found
+[  248/2323] California State Polytechnic University-Pomona (cpp.edu) ... not found
+[  249/2323] California State Polytechnic University-Humboldt (humboldt.edu) ... not found
+[  250/2323] California State University-Chancellors Office (calstate.edu) ... not found
+  [checkpoint saved at 250/2323]
+[  251/2323] California State University Maritime Academy (csum.edu) ... not found
+[  252/2323] California State University-Long Beach (csulb.edu) ... FOUND: https://csulb.edu/common-data-set/
+[  253/2323] California State University-Channel Islands (csuci.edu) ... not found
+[  254/2323] California State University-Fullerton (fullerton.edu) ... not found
+[  255/2323] California State University-East Bay (csueastbay.edu) ... not found
+[  256/2323] California State University-Fresno (fresnostate.edu) ... not found
+[  257/2323] California State University-Dominguez Hills (csudh.edu) ... not found
+[  258/2323] California State University-Monterey Bay (csumb.edu) ... not found
+[  259/2323] California State University-Los Angeles (calstatela.edu) ... not found
+[  260/2323] California State University-Northridge (csun.edu) ... not found
+[  261/2323] California State University-Sacramento (csus.edu) ... not found
+[  262/2323] California State University-San Marcos (csusm.edu) ... not found
+[  263/2323] California State University-San Bernardino (csusb.edu) ... not found
+[  264/2323] California State University-Stanislaus (csustan.edu) ... not found
+[  265/2323] California Western School of Law (cwsl.edu) ... not found
+[  266/2323] Calumet College of Saint Joseph (ccsj.edu) ... not found
+[  267/2323] Cambridge College (cambridgecollege.edu) ... FOUND: https://cambridgecollege.edu/common-data-set/
+[  268/2323] Calvin University (calvin.edu) ... not found
+[  269/2323] Calvin Theological Seminary (calvinseminary.edu) ... not found
+[  270/2323] Campbellsville University (campbellsville.edu) ... not found
+[  271/2323] Cameron University (cameron.edu) ... not found
+[  272/2323] California University-Silicon Valley (cusv.edu) ... not found
+[  273/2323] Campbell University (campbell.edu) ... not found
+[  274/2323] Cardinal Stritch University (None) ... not found
+[  275/2323] Capital University (capital.edu) ... not found
+[  276/2323] California University of Science and Medicine (cusm.org) ... not found
+[  277/2323] Calvary University (calvary.edu) ... not found
+[  278/2323] Canisius University (canisius.edu) ... not found
+[  279/2323] Carlow University (carlow.edu) ... not found
+[  280/2323] Capitol Technology University (captechu.edu) ... not found
+[  281/2323] Carleton College (carleton.edu) ... not found
+[  282/2323] Carolina University (carolinau.edu) ... not found
+[  283/2323] California State University-Chico (csuchico.edu) ... not found
+[  284/2323] Carolinas College of Health Sciences (carolinascollege.edu) ... not found
+[  285/2323] Carolina Christian College (carolina.edu) ... not found
+[  286/2323] Carroll College (carroll.edu) ... not found
+[  287/2323] Carson-Newman University (cn.edu) ... not found
+[  288/2323] Castleton University (None) ... not found
+[  289/2323] Case Western Reserve University (case.edu) ... FOUND: https://case.edu/ir/common-data-set/
+[  290/2323] Catholic Distance University (cdu.edu) ... not found
+[  291/2323] Carolina College of Biblical Studies (ccbs.edu) ... not found
+[  292/2323] Cazenovia College (None) ... not found
+[  293/2323] Cascadia College (cascadia.edu) ... not found
+[  294/2323] Catawba College (catawba.edu) ... not found
+[  295/2323] Carthage College (carthage.edu) ... not found
+[  296/2323] Cedar Crest College (cedarcrest.edu) ... not found
+[  297/2323] Cedarville University (cedarville.edu) ... not found
+[  298/2323] CBD College (cbd.edu) ... not found
+[  299/2323] Centenary College of Louisiana (centenary.edu) ... not found
+[  300/2323] Catholic Theological Union at Chicago (ctu.edu) ... not found
+  [checkpoint saved at 300/2323]
+[  301/2323] Centra College (centrahealth.com) ... not found
+[  302/2323] Centenary University (centenaryuniversity.edu) ... not found
+[  303/2323] Central Baptist College (cbc.edu) ... not found
+[  304/2323] Casa Loma College-Los Angeles (casalomacollege.edu) ... not found
+[  305/2323] Central Christian College of Kansas (centralchristian.edu) ... not found
+[  306/2323] Carroll University (carrollu.edu) ... not found
+[  307/2323] Central Christian College of the Bible (cccb.edu) ... not found
+[  308/2323] Central Methodist University-College of Graduate and Extended Studies (centralmethodist.edu) ... not found
+[  309/2323] Central Methodist University-College of Liberal Arts and Sciences (centralmethodist.edu) ... not found
+[  310/2323] Central Michigan University (cmich.edu) ... not found
+[  311/2323] Central Ohio Technical College (cotc.edu) ... not found
+[  312/2323] Central State University (centralstate.edu) ... not found
+[  313/2323] Central Connecticut State University (ccsu.edu) ... not found
+[  314/2323] Central College (central.edu) ... not found
+[  315/2323] Central Washington University (cwu.edu) ... not found
+[  316/2323] Centre College (centre.edu) ... not found
+[  317/2323] Centralia College (centralia.edu) ... not found
+[  318/2323] Central Yeshiva Beth Joseph (centralyeshivabethjoseph.com) ... not found
+[  319/2323] Central Wyoming College (cwc.edu) ... not found
+[  320/2323] California College of ASU (columbiacollege.edu) ... not found
+[  321/2323] Central Yeshiva Tomchei Tmimim Lubavitz (cyttl.edu) ... not found
+[  322/2323] Charles R Drew University of Medicine and Science (cdrewu.edu) ... not found
+[  323/2323] Champion Christian College (champion.edu) ... not found
+[  324/2323] Chadron State College (csc.edu) ... not found
+[  325/2323] Charleston Southern University (charlestonsouthern.edu) ... not found
+[  326/2323] Chaminade University of Honolulu (chaminade.edu) ... not found
+[  327/2323] Champlain College (champlain.edu) ... not found
+[  328/2323] Chapman University (chapman.edu) ... not found
+[  329/2323] Charlotte Christian College and Theological Seminary (charlottechristian.edu) ... not found
+[  330/2323] Chestnut Hill College (chc.edu) ... not found
+[  331/2323] Charter Oak State College (charteroak.edu) ... not found
+[  332/2323] Chatham University (chatham.edu) ... not found
+[  333/2323] Chicago State University (csu.edu) ... not found
+[  334/2323] CHI Health School of Radiologic Technology (chihealth.com) ... not found
+[  335/2323] Cheyney University of Pennsylvania (cheyney.edu) ... not found
+[  336/2323] Chipola College (chipola.edu) ... not found
+[  337/2323] Chemeketa Community College (chemeketa.edu) ... not found
+[  338/2323] Chicago Theological Seminary (ctschicago.edu) ... not found
+[  339/2323] Christopher Newport University (cnu.edu) ... not found
+[  340/2323] Chowan University (chowan.edu) ... not found
+[  341/2323] Christian Brothers University (cbu.edu) ... not found
+[  342/2323] Christ Mission College (cmctx.edu) ... not found
+[  343/2323] Christian Theological Seminary (cts.edu) ... not found
+[  344/2323] City University of Seattle (cityu.edu) ... not found
+[  345/2323] Cincinnati State Technical and Community College (cincinnatistate.edu) ... not found
+[  346/2323] Citadel Military College of South Carolina (citadel.edu) ... not found
+[  347/2323] Church Divinity School of the Pacific (cdsp.edu) ... not found
+[  348/2323] Claflin University (claflin.edu) ... not found
+[  349/2323] City Vision University (cityvision.edu) ... not found
+[  350/2323] Claremont Graduate University (cgu.edu) ... not found
+  [checkpoint saved at 350/2323]
+[  351/2323] Clark College (clark.edu) ... not found
+[  352/2323] Cincinnati College of Mortuary Science (ccms.edu) ... not found
+[  353/2323] Claremont School of Theology (cst.edu) ... not found
+[  354/2323] Clark State College (clarkstate.edu) ... not found
+[  355/2323] Clarkson College (clarksoncollege.edu) ... not found
+[  356/2323] Clarks Summit University (clarkssummitu.edu) ... not found
+[  357/2323] Clayton  State University (clayton.edu) ... not found
+[  358/2323] Clarke University (clarke.edu) ... not found
+[  359/2323] Clear Creek Baptist Bible College (ccbbc.edu) ... not found
+[  360/2323] Clarkson University (clarkson.edu) ... not found
+[  361/2323] Cleveland Institute of Music (cim.edu) ... not found
+[  362/2323] Clark University (clarku.edu) ... not found
+[  363/2323] Cleary University (cleary.edu) ... not found
+[  364/2323] Cleveland State University (csuohio.edu) ... not found
+[  365/2323] Clinton College (clintoncollege.edu) ... not found
+[  366/2323] Clover Park Technical College (cptc.edu) ... not found
+[  367/2323] Coastal Carolina University (coastal.edu) ... not found
+[  368/2323] Cleveland University-Kansas City (cleveland.edu) ... not found
+[  369/2323] Colgate Rochester Crozer Divinity School (crcds.edu) ... not found
+[  370/2323] Coe College (coe.edu) ... not found
+[  371/2323] Coker University (coker.edu) ... not found
+[  372/2323] Claremont Lincoln University (claremontlincoln.edu) ... not found
+[  373/2323] Colby-Sawyer College (colby-sawyer.edu) ... not found
+[  374/2323] Colgate University (colgate.edu) ... not found
+[  375/2323] College for Creative Studies (collegeforcreativestudies.edu) ... not found
+[  376/2323] Clark Atlanta University (cau.edu) ... not found
+[  377/2323] College of Charleston (cofc.edu) ... not found
+[  378/2323] College of Biblical Studies-Houston (cbshouston.edu) ... not found
+[  379/2323] College of Coastal Georgia (ccga.edu) ... not found
+[  380/2323] College of Southern Idaho (csi.edu) ... not found
+[  381/2323] College of Saint Benedict (csbsju.edu) ... not found
+[  382/2323] College of Saint Mary (csm.edu) ... not found
+[  383/2323] College of Athens (collegeofathens.edu) ... not found
+[  384/2323] College of Staten Island CUNY (csi.cuny.edu) ... not found
+[  385/2323] College of Southern Nevada (csn.edu) ... not found
+[  386/2323] College of Our Lady of the Elms (elms.edu) ... not found
+[  387/2323] College of the Mainland (com.edu) ... not found
+[  388/2323] College of the Ozarks (cofo.edu) ... not found
+[  389/2323] College Unbound (collegeunbound.edu) ... not found
+[  390/2323] College of the Atlantic (coa.edu) ... not found
+[  391/2323] College of the Holy Cross (holycross.edu) ... not found
+[  392/2323] Collin County Community College District (collin.edu) ... not found
+[  393/2323] Colorado Christian University (ccu.edu) ... not found
+[  394/2323] Colorado College (coloradocollege.edu) ... not found
+[  395/2323] Colorado Mesa University (coloradomesa.edu) ... not found
+[  396/2323] Cleveland Institute of Art (cia.edu) ... not found
+[  397/2323] Colorado State University Pueblo (csupueblo.edu) ... not found
+[  398/2323] College of Central Florida (cf.edu) ... not found
+[  399/2323] Colorado State University-System Office (csusystem.edu) ... not found
+[  400/2323] Columbia Basin College (columbiabasin.edu) ... not found
+  [checkpoint saved at 400/2323]
+[  401/2323] Colorado Mountain College (coloradomtn.edu) ... not found
+[  402/2323] Columbia College (ccis.edu) ... not found
+[  403/2323] Columbia College Chicago (colum.edu) ... not found
+[  404/2323] Columbia College (columbiasc.edu) ... not found
+[  405/2323] College of Menominee Nation (menominee.edu) ... not found
+[  406/2323] Compass College of Film and Media (None) ... not found
+[  407/2323] Colorado State University Global (csuglobal.edu) ... not found
+[  408/2323] Commonwealth University of Pennsylvania (commonwealthu.edu) ... not found
+[  409/2323] Community College of Denver (ccd.edu) ... not found
+[  410/2323] Columbus College of Art & Design (ccad.edu) ... not found
+[  411/2323] Columbia International University (ciu.edu) ... not found
+[  412/2323] Concordia College at Moorhead (concordiacollege.edu) ... not found
+[  413/2323] Concordia Seminary (csl.edu) ... not found
+[  414/2323] Concordia University Ann Arbor (cuaa.edu) ... not found
+[  415/2323] Columbia Theological Seminary (ctsnet.edu) ... not found
+[  416/2323] Concordia University Texas (concordia.edu) ... not found
+[  417/2323] Conception Seminary College (conception.edu) ... not found
+[  418/2323] Concordia Theological Seminary (ctsfw.edu) ... not found
+[  419/2323] Concordia University-Irvine (cui.edu) ... not found
+[  420/2323] Concordia University-Chicago (cuchicago.edu) ... not found
+[  421/2323] Concordia University-Nebraska (cune.edu) ... not found
+[  422/2323] Concord University (concord.edu) ... not found
+[  423/2323] Concordia University-Wisconsin (cuw.edu) ... not found
+[  424/2323] Congregation Talmidei Mesivta Tiferes Shmiel Aleksander (yeshivaaleksander.org) ... not found
+[  425/2323] Concordia University-Saint Paul (csp.edu) ... not found
+[  426/2323] Corban University (corban.edu) ... not found
+[  427/2323] Conway School of Landscape Design (csld.edu) ... not found
+[  428/2323] Cornerstone University (cornerstone.edu) ... not found
+[  429/2323] Cornish College of the Arts (cornish.edu) ... not found
+[  430/2323] Coppin State University (coppin.edu) ... not found
+[  431/2323] Cottey College (cottey.edu) ... not found
+[  432/2323] Covenant Theological Seminary (covenantseminary.edu) ... not found
+[  433/2323] Converse University (converse.edu) ... not found
+[  434/2323] Cranbrook Academy of Art (cranbrookart.edu) ... not found
+[  435/2323] Criswell College (criswell.edu) ... not found
+[  436/2323] Covenant College (covenant.edu) ... not found
+[  437/2323] Cox College (coxcollege.edu) ... not found
+[  438/2323] Culinary Institute of America (ciachef.edu) ... not found
+[  439/2323] Cumberland University (cumberland.edu) ... not found
+[  440/2323] Creighton University (creighton.edu) ... not found
+[  441/2323] Culver-Stockton College (culver.edu) ... not found
+[  442/2323] CUNY Bernard M Baruch College (baruch.cuny.edu) ... FOUND: https://ir.baruch.cuny.edu/institutional-research/common-data-set/
+[  443/2323] CUNY Brooklyn College (brooklyn.cuny.edu) ... not found
+[  444/2323] CUNY City College (ccny.cuny.edu) ... not found
+[  445/2323] CUNY Graduate School and University Center (gc.cuny.edu) ... not found
+[  446/2323] CUNY John Jay College of Criminal Justice (jjay.cuny.edu) ... not found
+[  447/2323] CUNY Lehman College (lehman.edu) ... not found
+[  448/2323] CUNY Hunter College (hunter.cuny.edu) ... not found
+[  449/2323] Crowley's Ridge College (crc.edu) ... not found
+[  450/2323] CUNY New York City College of Technology (citytech.cuny.edu) ... not found
+  [checkpoint saved at 450/2323]
+[  451/2323] CUNY York College (york.cuny.edu) ... FOUND: https://york.cuny.edu/institutional-research/common-data-set/
+[  452/2323] CUNY Medgar Evers College (mec.cuny.edu) ... not found
+[  453/2323] CUNY School of Law (law.cuny.edu) ... not found
+[  454/2323] CUNY System Office (www2.cuny.edu) ... not found
+[  455/2323] Curtis Institute of Music (curtis.edu) ... not found
+[  456/2323] Curry College (curry.edu) ... not found
+[  457/2323] Cypress College (cypresscollege.edu) ... not found
+[  458/2323] D'Youville  University (dyu.edu) ... not found
+[  459/2323] Columbus State University (columbusstate.edu) ... not found
+[  460/2323] Dakota State University (dsu.edu) ... not found
+[  461/2323] CUNY Queens College (qc.cuny.edu) ... not found
+[  462/2323] Daemen University (daemen.edu) ... not found
+[  463/2323] Dakota Wesleyan University (dwu.edu) ... not found
+[  464/2323] Dallas Baptist University (dbu.edu) ... not found
+[  465/2323] Dallas College (dallascollege.edu) ... not found
+[  466/2323] Dallas Theological Seminary (dts.edu) ... not found
+[  467/2323] Davidson College (davidson.edu) ... not found
+[  468/2323] Dalton State College (daltonstate.edu) ... not found
+[  469/2323] Dallas Christian College (dallas.edu) ... not found
+[  470/2323] Davenport University (davenport.edu) ... not found
+[  471/2323] Davis & Elkins College (dewv.edu) ... not found
+[  472/2323] Daytona State College (daytonastate.edu) ... not found
+[  473/2323] Dean College (dean.edu) ... not found
+[  474/2323] Del Mar College (delmar.edu) ... not found
+[  475/2323] Delaware State University (desu.edu) ... not found
+[  476/2323] Cornell College (cornellcollege.edu) ... not found
+[  477/2323] Delaware Valley University (delval.edu) ... not found
+[  478/2323] Davis College (davisny.edu) ... not found
+[  479/2323] Defiance College (defiance.edu) ... not found
+[  480/2323] Delaware Technical Community College-Central Office (dtcc.edu) ... not found
+[  481/2323] Delta State University (deltastate.edu) ... not found
+[  482/2323] Delaware Technical Community College-Terry (dtcc.edu) ... not found
+[  483/2323] Denison University (denison.edu) ... not found
+[  484/2323] Denver Seminary (denverseminary.edu) ... not found
+[  485/2323] Des Moines University-Osteopathic Medical Center (dmu.edu) ... not found
+[  486/2323] DePauw University (depauw.edu) ... not found
+[  487/2323] DeSales University (desales.edu) ... not found
+[  488/2323] DePaul University (depaul.edu) ... not found
+[  489/2323] Dharma Realm Buddhist University (drbu.edu) ... not found
+[  490/2323] Dickinson College (dickinson.edu) ... not found
+[  491/2323] Dickinson State University (dickinsonstate.edu) ... not found
+[  492/2323] Daybreak University (daybreak.edu) ... not found
+[  493/2323] Doane University (doane.edu) ... not found
+[  494/2323] Dominican School of Philosophy & Theology (dspt.edu) ... not found
+[  495/2323] Dillard University (dillard.edu) ... not found
+[  496/2323] Divine Word College (dwci.edu) ... not found
+[  497/2323] Dominican University (dom.edu) ... not found
+[  498/2323] Dominican University of California (dominican.edu) ... not found
+[  499/2323] Dongguk University Los Angeles (dula.edu) ... not found
+[  500/2323] Dine College (dinecollege.edu) ... not found
+  [checkpoint saved at 500/2323]
+[  501/2323] Dominican University New York (duny.edu) ... not found
+[  502/2323] Donnelly College (donnelly.edu) ... not found
+[  503/2323] Drury University-College of Continuing Professional Studies (drury.edu) ... not found
+[  504/2323] Drury University (drury.edu) ... not found
+[  505/2323] Drake University (drake.edu) ... not found
+[  506/2323] Dordt University (dordt.edu) ... not found
+[  507/2323] Divine Mercy University (divinemercy.edu) ... not found
+[  508/2323] Duquesne University (duq.edu) ... not found
+[  509/2323] East Carolina University (ecu.edu) ... not found
+[  510/2323] Dragon Rises College of Oriental Medicine (dragonrises.edu) ... not found
+[  511/2323] Earlham College (earlham.edu) ... not found
+[  512/2323] East Georgia State College (ega.edu) ... not found
+[  513/2323] East Central University (ecok.edu) ... not found
+[  514/2323] Dunwoody College of Technology (dunwoody.edu) ... not found
+[  515/2323] Drew University (drew.edu) ... not found
+[  516/2323] East Tennessee State University (etsu.edu) ... not found
+[  517/2323] East Stroudsburg University of Pennsylvania (esu.edu) ... not found
+[  518/2323] Eastern Connecticut State University (easternct.edu) ... not found
+[  519/2323] East-West University (eastwest.edu) ... not found
+[  520/2323] Eastern Florida State College (easternflorida.edu) ... not found
+[  521/2323] Eastern Illinois University (eiu.edu) ... not found
+[  522/2323] Eastern Oregon University (eou.edu) ... FOUND: https://eou.edu/institutional-research/common-data-set/
+[  523/2323] Eastern Michigan University (emich.edu) ... not found
+[  524/2323] Eastern Virginia Medical School (evms.edu) ... FOUND: https://evms.edu/institutional-research/common-data-set/
+[  525/2323] Eastern Kentucky University (eku.edu) ... not found
+[  526/2323] Eastern Nazarene College (enc.edu) ... not found
+[  527/2323] Eastern New Mexico University-Main Campus (enmu.edu) ... not found
+[  528/2323] East Texas Baptist University (etbu.edu) ... not found
+[  529/2323] Eastern Mennonite University (emu.edu) ... not found
+[  530/2323] Eastern University (eastern.edu) ... not found
+[  531/2323] Eastern Washington University (ewu.edu) ... FOUND: https://sites.ewu.edu/institutional-research/common-data-set/
+[  532/2323] Ecumenical Theological Seminary (etseminary.edu) ... not found
+[  533/2323] Edward Via College of Osteopathic Medicine (vcom.edu) ... not found
+[  534/2323] Edgewood College (edgewood.edu) ... not found
+[  535/2323] Edward Waters University (ew.edu) ... not found
+[  536/2323] Ecclesia College (ecollege.edu) ... not found
+[  537/2323] Elizabethtown College (etown.edu) ... not found
+[  538/2323] Elmezzi Graduate School of Molecular Medicine (northwell.edu) ... not found
+[  539/2323] Elmhurst University (elmhurst.edu) ... not found
+[  540/2323] Elmira College (elmira.edu) ... not found
+[  541/2323] Elim Bible Institute and College (elim.edu) ... not found
+[  542/2323] Elon University (elon.edu) ... not found
+[  543/2323] Edmonds College (edmonds.edu) ... not found
+[  544/2323] Eckerd College (eckerd.edu) ... not found
+[  545/2323] Emerson College (emerson.edu) ... not found
+[  546/2323] Eden Theological Seminary (eden.edu) ... not found
+[  547/2323] Emmanuel University (ec.edu) ... not found
+[  548/2323] Emmaus Bible College (emmaus.edu) ... not found
+[  549/2323] Empire State University (sunyempire.edu) ... not found
+[  550/2323] Emmanuel College (emmanuel.edu) ... not found
+  [checkpoint saved at 550/2323]
+[  551/2323] Emory & Henry University (ehc.edu) ... not found
+[  552/2323] Emporia State University (emporia.edu) ... not found
+[  553/2323] Ensign College (ensign.edu) ... not found
+[  554/2323] Endicott College (endicott.edu) ... not found
+[  555/2323] Epic Bible College & Graduate School (epic.edu) ... not found
+[  556/2323] Crown College (crown.edu) ... not found
+[  557/2323] Erikson Institute (erikson.edu) ... not found
+[  558/2323] Episcopal Theological Seminary of the Southwest (ssw.edu) ... not found
+[  559/2323] Embry-Riddle Aeronautical University-Daytona Beach (daytonabeach.erau.edu) ... not found
+[  560/2323] Erskine College (erskine.edu) ... not found
+[  561/2323] Embry-Riddle Aeronautical University-Prescott (prescott.erau.edu) ... not found
+[  562/2323] Embry-Riddle Aeronautical University-Worldwide (worldwide.erau.edu) ... not found
+[  563/2323] Evangel University (evangel.edu) ... not found
+[  564/2323] Everett Community College (everettcc.edu) ... not found
+[  565/2323] Evangel University-College of Online Learning (evangel.edu) ... not found
+[  566/2323] Everglades University (evergladesuniversity.edu) ... not found
+[  567/2323] Fairmont State University (fairmontstate.edu) ... not found
+[  568/2323] Fairfield University (fairfield.edu) ... not found
+[  569/2323] Fairfax University of America (fxua.edu) ... not found
+[  570/2323] Faith Baptist Bible College and Theological Seminary (faith.edu) ... not found
+[  571/2323] Faith Theological Seminary and Christian College (ftscc.org) ... not found
+[  572/2323] Faith International University (faithiu.edu) ... not found
+[  573/2323] Farmingdale State College (farmingdale.edu) ... not found
+[  574/2323] Family of Faith Christian University (familyoffaith.edu) ... not found
+[  575/2323] Fashion Institute of Technology (fitnyc.edu) ... not found
+[  576/2323] Excelsior University (excelsior.edu) ... not found
+[  577/2323] Feather River Community College District (frc.edu) ... not found
+[  578/2323] Fairleigh Dickinson University-Florham Campus (fdu.edu) ... not found
+[  579/2323] Fairleigh Dickinson University-Metropolitan Campus (fdu.edu) ... not found
+[  580/2323] Finlandia University (None) ... not found
+[  581/2323] Ferris State University (ferris.edu) ... not found
+[  582/2323] Fielding Graduate University (fielding.edu) ... not found
+[  583/2323] Felician University (felician.edu) ... not found
+[  584/2323] Ferrum College (ferrum.edu) ... not found
+[  585/2323] Fisher College (fisher.edu) ... not found
+[  586/2323] Fisk University (fisk.edu) ... not found
+[  587/2323] Fitchburg State University (fitchburgstate.edu) ... not found
+[  588/2323] Flagler College (flagler.edu) ... not found
+[  589/2323] Florida Agricultural and Mechanical University (famu.edu) ... not found
+[  590/2323] Florida Gateway College (fgc.edu) ... not found
+[  591/2323] Florida Atlantic University (fau.edu) ... not found
+[  592/2323] Florida College (floridacollege.edu) ... not found
+[  593/2323] Florida Institute of Technology (fit.edu) ... not found
+[  594/2323] Florida Institute of Technology-Online (fit.edu) ... not found
+[  595/2323] Florida International University (fiu.edu) ... not found
+[  596/2323] Florida Gulf Coast University (fgcu.edu) ... not found
+[  597/2323] Eureka College (eureka.edu) ... not found
+[  598/2323] Florida Polytechnic University (floridapoly.edu) ... not found
+[  599/2323] Florida Memorial University (fmuniv.edu) ... not found
+[  600/2323] Florida Southern College (flsouthern.edu) ... not found
+  [checkpoint saved at 600/2323]
+[  601/2323] Florida State College at Jacksonville (fscj.edu) ... not found
+[  602/2323] Faulkner University (faulkner.edu) ... not found
+[  603/2323] Foothill College (foothill.edu) ... not found
+[  604/2323] Florida State University (fsu.edu) ... not found
+[  605/2323] Florida SouthWestern State College (fsw.edu) ... not found
+[  606/2323] Foothill-De Anza Community College District (fhda.edu) ... not found
+[  607/2323] Fontbonne University (fontbonne.edu) ... not found
+[  608/2323] Fordham University (fordham.edu) ... not found
+[  609/2323] Fort Valley State University (fvsu.edu) ... not found
+[  610/2323] Franciscan Missionaries of Our Lady University (franu.edu) ... not found
+[  611/2323] Franciscan School of Theology (fst.edu) ... not found
+[  612/2323] Fort Hays State University (fhsu.edu) ... not found
+[  613/2323] Franklin and Marshall College (fandm.edu) ... not found
+[  614/2323] Franklin Pierce University (franklinpierce.edu) ... not found
+[  615/2323] Francis Marion University (fmarion.edu) ... not found
+[  616/2323] Franklin College (franklincollege.edu) ... not found
+[  617/2323] Franciscan University of Steubenville (franciscan.edu) ... not found
+[  618/2323] Franklin W Olin College of Engineering (olin.edu) ... not found
+[  619/2323] Fond du Lac Tribal and Community College (fdltcc.edu) ... not found
+[  620/2323] Fresno Pacific University (fresno.edu) ... not found
+[  621/2323] Freed-Hardeman University (fhu.edu) ... not found
+[  622/2323] Front Range Community College (frontrange.edu) ... not found
+[  623/2323] Frostburg State University (frostburg.edu) ... not found
+[  624/2323] Frontier Nursing University (frontier.edu) ... not found
+[  625/2323] Furman University (furman.edu) ... not found
+[  626/2323] Friends University (friends.edu) ... not found
+[  627/2323] Future Generations University (future.edu) ... not found
+[  628/2323] Galveston College (gc.edu) ... not found
+[  629/2323] Gannon University (gannon.edu) ... not found
+[  630/2323] Garrett-Evangelical Theological Seminary (garrett.edu) ... not found
+[  631/2323] Geisinger Commonwealth School of Medicine (geisinger.edu) ... not found
+[  632/2323] Geneva College (geneva.edu) ... not found
+[  633/2323] Gardner-Webb University (gardner-webb.edu) ... not found
+[  634/2323] GateWay Community College (gatewaycc.edu) ... not found
+[  635/2323] Gallaudet University (gallaudet.edu) ... not found
+[  636/2323] George Fox University (georgefox.edu) ... not found
+[  637/2323] Fuller Theological Seminary (fuller.edu) ... not found
+[  638/2323] Fayetteville State University (uncfsu.edu) ... not found
+[  639/2323] Georgia Gwinnett College (ggc.edu) ... FOUND: https://www.ggc.edu/common-data-set/
+[  640/2323] Georgia Military College (gmc.edu) ... not found
+[  641/2323] Franklin University (franklin.edu) ... not found
+[  642/2323] Georgetown College (georgetowncollege.edu) ... not found
+[  643/2323] Georgia Southwestern State University (gsw.edu) ... not found
+[  644/2323] Georgia Highlands College (highlands.edu) ... not found
+[  645/2323] Glasgow Caledonian New York College (gcnyc.edu) ... not found
+[  646/2323] Fort Lewis College (fortlewis.edu) ... not found
+[  647/2323] Georgian Court University (georgian.edu) ... not found
+[  648/2323] Goddard College (goddard.edu) ... not found
+[  649/2323] Glendale Community College (gccaz.edu) ... not found
+[  650/2323] George Mason University (www2.gmu.edu) ... not found
+  [checkpoint saved at 650/2323]
+[  651/2323] Glenville State University (glenville.edu) ... not found
+[  652/2323] Gettysburg College (gettysburg.edu) ... not found
+[  653/2323] Goldey-Beacom College (gbc.edu) ... not found
+[  654/2323] Gods Bible School and College (gbs.edu) ... not found
+[  655/2323] Gonzaga University (gonzaga.edu) ... not found
+[  656/2323] Georgia State University (gsu.edu) ... not found
+[  657/2323] Gordon College (gordon.edu) ... not found
+[  658/2323] Georgia Southern University (georgiasouthern.edu) ... not found
+[  659/2323] Georgia College & State University (gcsu.edu) ... not found
+[  660/2323] Goodwin University (goodwin.edu) ... not found
+[  661/2323] Good Samaritan College of Nursing and Health Science (gscollege.edu) ... not found
+[  662/2323] Gordon State College (gordonstate.edu) ... not found
+[  663/2323] Goshen College (goshen.edu) ... not found
+[  664/2323] Golden Gate University (ggu.edu) ... not found
+[  665/2323] Governors State University (govst.edu) ... not found
+[  666/2323] Goucher College (goucher.edu) ... not found
+[  667/2323] Grace College and Theological Seminary (grace.edu) ... not found
+[  668/2323] Gordon-Conwell Theological Seminary (gordonconwell.edu) ... not found
+[  669/2323] Graduate Theological Union (gtu.edu) ... not found
+[  670/2323] Graceland University-Lamoni (graceland.edu) ... not found
+[  671/2323] Grambling State University (gram.edu) ... not found
+[  672/2323] Grace Christian University (gracechristian.edu) ... not found
+[  673/2323] Grand View University (grandview.edu) ... not found
+[  674/2323] Gratz College (gratz.edu) ... not found
+[  675/2323] Grand Valley State University (gvsu.edu) ... not found
+[  676/2323] Grayson College (grayson.edu) ... not found
+[  677/2323] Grays Harbor College (ghc.edu) ... not found
+[  678/2323] Great Basin College (gbcnv.edu) ... not found
+[  679/2323] Green River College (greenriver.edu) ... not found
+[  680/2323] Grace School of Theology (gsot.edu) ... not found
+[  681/2323] Greensboro College (greensboro.edu) ... not found
+[  682/2323] Great Northern University (greatnorthernu.org) ... not found
+[  683/2323] Greenville Technical College (gvltec.edu) ... not found
+[  684/2323] Grace Mission University (gm.edu) ... not found
+[  685/2323] Greenville University (greenville.edu) ... not found
+[  686/2323] Great Lakes Christian College (glcc.edu) ... not found
+[  687/2323] Gulf Coast State College (gulfcoast.edu) ... not found
+[  688/2323] Grove City College (gcc.edu) ... not found
+[  689/2323] Grinnell College (grinnell.edu) ... not found
+[  690/2323] Guilford College (guilford.edu) ... not found
+[  691/2323] Gwynedd Mercy University (gmercyu.edu) ... not found
+[  692/2323] Hampshire College (hampshire.edu) ... FOUND: https://hampshire.edu/common-data-set/
+[  693/2323] Hamline University (hamline.edu) ... not found
+[  694/2323] Gustavus Adolphus College (gustavus.edu) ... not found
+[  695/2323] Hackensack Meridian School of Medicine (hmsom.org) ... not found
+[  696/2323] Hampden-Sydney College (hsc.edu) ... not found
+[  697/2323] Hardin-Simmons University (hsutx.edu) ... not found
+[  698/2323] Hallmark University (hallmarkuniversity.edu) ... not found
+[  699/2323] Harding University (harding.edu) ... not found
+[  700/2323] Hannibal-LaGrange University (hlg.edu) ... not found
+  [checkpoint saved at 700/2323]
+[  701/2323] Harris-Stowe State University (hssu.edu) ... not found
+[  702/2323] Harrisburg University of Science and Technology (harrisburgu.edu) ... not found
+[  703/2323] Hanover College (hanover.edu) ... not found
+[  704/2323] Hartwick College (hartwick.edu) ... not found
+[  705/2323] Haskell Indian Nations University (haskell.edu) ... not found
+[  706/2323] Haven University (haven.edu) ... not found
+[  707/2323] Hawaii Pacific University (hpu.edu) ... not found
+[  708/2323] Hastings College (hastings.edu) ... not found
+[  709/2323] Hartford International University for Religion and Peace (hartfordinternational.edu) ... not found
+[  710/2323] Hazelden Betty Ford Graduate School (hazeldenbettyford.org) ... not found
+[  711/2323] Haverford College (haverford.edu) ... not found
+[  712/2323] Hebrew Theological College (htc.edu) ... not found
+[  713/2323] Hebrew College (hebrewcollege.edu) ... not found
+[  714/2323] Hampton University (hamptonu.edu) ... not found
+[  715/2323] Heidelberg University (heidelberg.edu) ... not found
+[  716/2323] Hebrew Union College-Jewish Institute of Religion (huc.edu) ... not found
+[  717/2323] Henderson State University (hsu.edu) ... not found
+[  718/2323] Hendrix College (hendrix.edu) ... not found
+[  719/2323] Henry Ford College (hfcc.edu) ... not found
+[  720/2323] Heritage University (heritage.edu) ... not found
+[  721/2323] Heritage Bible College (heritagebiblecollege.edu) ... not found
+[  722/2323] Herzing University-Akron (herzing.edu) ... not found
+[  723/2323] Herzing University-Atlanta (herzing.edu) ... not found
+[  724/2323] Herzing University-Birmingham (herzing.edu) ... not found
+[  725/2323] Herzing University-Brookfield (herzing.edu) ... not found
+[  726/2323] Helene Fuld College of Nursing (helenefuld.edu) ... not found
+[  727/2323] Herzing University-Kenosha (herzing.edu) ... not found
+[  728/2323] Herzing University-Madison (herzing.edu) ... not found
+[  729/2323] Herzing University-Minneapolis (herzing.edu) ... not found
+[  730/2323] Heritage Christian University (hcu.edu) ... not found
+[  731/2323] Herzing University-Nashville (herzing.edu) ... not found
+[  732/2323] Herzing University-New Orleans (herzing.edu) ... not found
+[  733/2323] Hellenic College-Holy Cross Greek Orthodox School of Theology (hchc.edu) ... not found
+[  734/2323] Herzing University-Orlando (herzing.edu) ... not found
+[  735/2323] Herzing University-Tampa (herzing.edu) ... not found
+[  736/2323] High Point University (highpoint.edu) ... not found
+[  737/2323] Hillsborough Community College (hccfl.edu) ... not found
+[  738/2323] Hilbert College (hilbert.edu) ... not found
+[  739/2323] Highline College (highline.edu) ... not found
+[  740/2323] HJ International Graduate School for Peace and Public Leadership (uts.edu) ... not found
+[  741/2323] Hesston College (hesston.edu) ... not found
+[  742/2323] Hobart William Smith Colleges (hws.edu) ... not found
+[  743/2323] Hodges University (hodges.edu) ... not found
+[  744/2323] High Tech High Graduate School of Education (hthgse.edu) ... not found
+[  745/2323] Hiram College (hiram.edu) ... not found
+[  746/2323] Holy Names University (None) ... not found
+[  747/2323] Hillsdale College (hillsdale.edu) ... not found
+[  748/2323] Hollins University (hollins.edu) ... not found
+[  749/2323] Hobe Sound Bible College (hsbc.edu) ... not found
+[  750/2323] Holy Cross College (hcc-nd.edu) ... not found
+  [checkpoint saved at 750/2323]
+[  751/2323] Hofstra University (hofstra.edu) ... not found
+[  752/2323] Holy Apostles College and Seminary (holyapostles.edu) ... not found
+[  753/2323] Holy Family University (holyfamily.edu) ... not found
+[  754/2323] Hope International University (hiu.edu) ... not found
+[  755/2323] Hood College (hood.edu) ... not found
+[  756/2323] Hope College (hope.edu) ... not found
+[  757/2323] Hood Theological Seminary (hoodseminary.edu) ... not found
+[  758/2323] Houghton University (houghton.edu) ... not found
+[  759/2323] Houston Graduate School of Theology (hgst.edu) ... not found
+[  760/2323] Houston Community College (hccs.edu) ... not found
+[  761/2323] Howard University (howard.edu) ... FOUND: https://ira.howard.edu/institutional-research/common-data-set/
+[  762/2323] Houston Christian University (hc.edu) ... not found
+[  763/2323] Hult International Business School (hult.edu) ... not found
+[  764/2323] Husson University (husson.edu) ... not found
+[  765/2323] Homestead Schools (homesteadschools.net) ... not found
+[  766/2323] Huntingdon College (huntingdon.edu) ... not found
+[  767/2323] Huntington University (huntington.edu) ... not found
+[  768/2323] Humphreys University-Stockton and Modesto Campuses (humphreys.edu) ... not found
+[  769/2323] Huntsville Bible College (huntsvillebiblecollege.org) ... not found
+[  770/2323] Icahn School of Medicine at Mount Sinai (icahn.mssm.edu) ... not found
+[  771/2323] Ilisagvik College (ilisagvik.edu) ... not found
+[  772/2323] Idaho State University (isu.edu) ... not found
+[  773/2323] Illinois College of Optometry (ico.edu) ... not found
+[  774/2323] Iliff School of Theology (iliff.edu) ... not found
+[  775/2323] Illinois College (ic.edu) ... not found
+[  776/2323] Huston-Tillotson University (htu.edu) ... not found
+[  777/2323] Illinois State University (illinoisstate.edu) ... not found
+[  778/2323] Illinois Wesleyan University (iwu.edu) ... not found
+[  779/2323] Illinois Institute of Technology (iit.edu) ... not found
+[  780/2323] Immaculata University (immaculata.edu) ... not found
+[  781/2323] Indiana Institute of Technology-College of Professional Studies (cps.indianatech.edu) ... not found
+[  782/2323] Indian River State College (irsc.edu) ... not found
+[  783/2323] Indiana State University (indstate.edu) ... not found
+[  784/2323] Indiana Institute of Technology (indianatech.edu) ... not found
+[  785/2323] Indiana University-Indianapolis (indianapolis.iu.edu) ... not found
+[  786/2323] Indiana University of Pennsylvania-Main Campus (iup.edu) ... not found
+[  787/2323] Indiana University-East (iue.edu) ... not found
+[  788/2323] Indiana University-Kokomo (iuk.edu) ... not found
+[  789/2323] Indiana University-Northwest (iun.edu) ... not found
+[  790/2323] Indian Bible College (indianbible.org) ... not found
+[  791/2323] Howard Payne University (hputx.edu) ... not found
+[  792/2323] Indiana University-South Bend (iusb.edu) ... not found
+[  793/2323] Indiana University-Southeast (ius.edu) ... not found
+[  794/2323] Institute for Clinical Social Work (icsw.edu) ... not found
+[  795/2323] Institute for Doctoral Studies in the Visual Arts (idsva.edu) ... not found
+[  796/2323] Horizon University (horizonuniversity.edu) ... not found
+[  797/2323] Institute of American Indian and Alaska Native Culture and Arts Development (iaia.edu) ... not found
+[  798/2323] Indiana Wesleyan University-Marion (indwes.edu) ... not found
+[  799/2323] Indiana Wesleyan University-National & Global (indwes.edu) ... not found
+[  800/2323] Interdenominational Theological Center (itc.edu) ... not found
+  [checkpoint saved at 800/2323]
+[  801/2323] Iowa Wesleyan University (None) ... not found
+[  802/2323] Institute of Buddhist Studies (shin-ibs.edu) ... not found
+[  803/2323] Ithaca College (ithaca.edu) ... FOUND: https://ithaca.edu/institutional-research/common-data-set/
+[  804/2323] Institute of Taoist Education and Acupuncture (itea.edu) ... not found
+[  805/2323] Iona University (iona.edu) ... not found
+[  806/2323] Irell & Manella Graduate School of Biological Sciences at City of Hope (cityofhope.org) ... not found
+[  807/2323] International Institute for Restorative Practices (iirp.edu) ... not found
+[  808/2323] Jackson Theological Seminary (jtseminary.edu) ... not found
+[  809/2323] Jacksonville University (ju.edu) ... not found
+[  810/2323] Jackson College (jccmi.edu) ... not found
+[  811/2323] Institute of Lutheran Theology (ilt.edu) ... not found
+[  812/2323] International Baptist College and Seminary (ibcs.edu) ... not found
+[  813/2323] James Madison University (jmu.edu) ... not found
+[  814/2323] John Brown University (jbu.edu) ... not found
+[  815/2323] Institute of World Politics (iwp.edu) ... not found
+[  816/2323] Jewish Theological Seminary of America (jtsa.edu) ... not found
+[  817/2323] Jackson State University (jsums.edu) ... not found
+[  818/2323] John Carroll University (jcu.edu) ... not found
+[  819/2323] Johnson C Smith University (jcsu.edu) ... FOUND: https://www.jcsu.edu/common-data-set/
+[  820/2323] Johnson & Wales University-Charlotte (jwu.edu) ... not found
+[  821/2323] Johnson & Wales University-Online (online.jwu.edu) ... not found
+[  822/2323] John Paul the Great Catholic University (jpcatholic.edu) ... not found
+[  823/2323] Johnson & Wales University-Providence (jwu.edu) ... not found
+[  824/2323] Johnson University (johnsonu.edu) ... not found
+[  825/2323] Johnson University Florida (johnsonu.edu) ... not found
+[  826/2323] Juniata College (juniata.edu) ... not found
+[  827/2323] Jarvis Christian University (jarvis.edu) ... not found
+[  828/2323] Jung Tao School of Classical Chinese Medicine (jungtao.edu) ... not found
+[  829/2323] Jacksonville State University (jsu.edu) ... not found
+[  830/2323] Kansas City University (None) ... not found
+[  831/2323] Judson University (judsonu.edu) ... not found
+[  832/2323] Kairos University (kairos.edu) ... not found
+[  833/2323] Kalamazoo College (kzoo.edu) ... not found
+[  834/2323] Kansas City University (kansascity.edu) ... not found
+[  835/2323] Kansas City Art Institute (kcai.edu) ... not found
+[  836/2323] Kansas State University (k-state.edu) ... not found
+[  837/2323] Keck Graduate Institute (kgi.edu) ... not found
+[  838/2323] Kansas Wesleyan University (kwu.edu) ... not found
+[  839/2323] Kansas Christian College (kansaschristian.edu) ... not found
+[  840/2323] Kehilath Yakov Rabbinical Seminary (kehilathyakov.com) ... not found
+[  841/2323] Keene State College (keene.edu) ... not found
+[  842/2323] Kenrick Glennon Seminary (kenrick.edu) ... not found
+[  843/2323] Kennesaw State University (kennesaw.edu) ... not found
+[  844/2323] Kent State University at East Liverpool (kent.edu) ... not found
+[  845/2323] Kent State University at Geauga (kent.edu) ... not found
+[  846/2323] Kent State University at Ashtabula (kent.edu) ... not found
+[  847/2323] Kent State University at Kent (kent.edu) ... not found
+[  848/2323] Kent State University at Stark (kent.edu) ... not found
+[  849/2323] Kent State University at Salem (kent.edu) ... not found
+[  850/2323] Kent State University at Trumbull (kent.edu) ... not found
+  [checkpoint saved at 850/2323]
+[  851/2323] James A. Rhodes State College (rhodesstate.edu) ... not found
+[  852/2323] Kent State University at Tuscarawas (kent.edu) ... not found
+[  853/2323] Kansas Health Science Center (kansascom.kansashsc.org) ... not found
+[  854/2323] Kentucky State University (kysu.edu) ... not found
+[  855/2323] Keser Torah-Mayan Hatalmud (mayanhatalmud.org) ... not found
+[  856/2323] Kentucky Wesleyan College (kwc.edu) ... not found
+[  857/2323] Kentucky Mountain Bible College (kmbc.edu) ... not found
+[  858/2323] Kettering University (kettering.edu) ... not found
+[  859/2323] Keuka College (keuka.edu) ... not found
+[  860/2323] Kean University (kean.edu) ... not found
+[  861/2323] Keystone College (keystone.edu) ... not found
+[  862/2323] Kentucky Christian University (kcu.edu) ... not found
+[  863/2323] King University (king.edu) ... not found
+[  864/2323] King's College (kings.edu) ... not found
+[  865/2323] Kettering College (kc.edu) ... not found
+[  866/2323] Knox College (knox.edu) ... not found
+[  867/2323] Kutztown University of Pennsylvania (kutztown.edu) ... not found
+[  868/2323] Kuyper College (kuyper.edu) ... not found
+[  869/2323] Lac Courte Oreilles Ojibwe University (lco.edu) ... not found
+[  870/2323] Laboure College of Healthcare (laboure.edu) ... not found
+[  871/2323] La Roche University (laroche.edu) ... not found
+[  872/2323] La Salle University (lasalle.edu) ... not found
+[  873/2323] Lackawanna College (lackawanna.edu) ... not found
+[  874/2323] Lafayette College (lafayette.edu) ... FOUND: https://oir.lafayette.edu/ir/cds/
+[  875/2323] LaGrange College (lagrange.edu) ... not found
+[  876/2323] Lake Erie College (lec.edu) ... not found
+[  877/2323] Lake Forest Graduate School of Management (lfgsm.edu) ... not found
+[  878/2323] Lake Washington Institute of Technology (lwtech.edu) ... not found
+[  879/2323] Lake Superior State University (lssu.edu) ... not found
+[  880/2323] La Sierra University (lasierra.edu) ... not found
+[  881/2323] Lake Erie College of Osteopathic Medicine (lecom.edu) ... not found
+[  882/2323] Lakeview College of Nursing (lcn.edu) ... not found
+[  883/2323] Lakeland University (lakeland.edu) ... not found
+[  884/2323] Laguna College of Art and Design (lcad.edu) ... not found
+[  885/2323] Lake-Sumter State College (lssc.edu) ... not found
+[  886/2323] Lamar University (lamar.edu) ... not found
+[  887/2323] Keiser University-Ft Lauderdale (keiseruniversity.edu) ... not found
+[  888/2323] Lander University (lander.edu) ... not found
+[  889/2323] Landmark College (landmark.edu) ... not found
+[  890/2323] Lancaster Theological Seminary (lancasterseminary.edu) ... not found
+[  891/2323] Laredo College (laredo.edu) ... not found
+[  892/2323] Langston University (langston.edu) ... not found
+[  893/2323] Lane College (lanecollege.edu) ... not found
+[  894/2323] Laramie County Community College (lccc.wy.edu) ... not found
+[  895/2323] Lakewood University (lakewood.edu) ... not found
+[  896/2323] Larkin University (ularkin.org) ... not found
+[  897/2323] Lancaster Bible College (lbc.edu) ... not found
+[  898/2323] Latin American Bible Institute (labi.edu) ... not found
+[  899/2323] Lawrence University (lawrence.edu) ... not found
+[  900/2323] Lee University (leeuniversity.edu) ... FOUND: https://leeuniversity.edu/institutional-research/common-data-set/
+  [checkpoint saved at 900/2323]
+[  901/2323] Lasell University (lasell.edu) ... not found
+[  902/2323] Le Moyne College (lemoyne.edu) ... not found
+[  903/2323] Le Moyne-Owen College (loc.edu) ... not found
+[  904/2323] Lawrence Technological University (ltu.edu) ... not found
+[  905/2323] Lees-McRae College (lmc.edu) ... not found
+[  906/2323] Lewis & Clark College (lclark.edu) ... not found
+[  907/2323] Lebanon Valley College (lvc.edu) ... not found
+[  908/2323] Lesley University (lesley.edu) ... not found
+[  909/2323] LeTourneau University (letu.edu) ... not found
+[  910/2323] Lenoir-Rhyne University (lr.edu) ... not found
+[  911/2323] Lewis-Clark State College (lcsc.edu) ... not found
+[  912/2323] Lewis University (lewisu.edu) ... not found
+[  913/2323] Lincoln Christian University (lincolnchristian.edu) ... not found
+[  914/2323] Life Chiropractic College West (lifewest.edu) ... not found
+[  915/2323] Liberty University (liberty.edu) ... not found
+[  916/2323] Limestone University (limestone.edu) ... not found
+[  917/2323] Lincoln Memorial University (lmunet.edu) ... not found
+[  918/2323] Lincoln University (lincolnu.edu) ... not found
+[  919/2323] Lincoln University (lincoln.edu) ... not found
+[  920/2323] Lexington Theological Seminary (lextheo.edu) ... not found
+[  921/2323] Life University (life.edu) ... not found
+[  922/2323] Lindenwood University (lindenwood.edu) ... not found
+[  923/2323] Life Pacific University (lifepacific.edu) ... not found
+[  924/2323] Linfield University (linfield.edu) ... not found
+[  925/2323] Lipscomb University (lipscomb.edu) ... not found
+[  926/2323] Loma Linda University (llu.edu) ... not found
+[  927/2323] Lone Star College System (lonestar.edu) ... not found
+[  928/2323] Long Island University (liu.edu) ... not found
+[  929/2323] Lindsey Wilson College (lindsey.edu) ... not found
+[  930/2323] Logan University (logan.edu) ... not found
+[  931/2323] Longwood University (longwood.edu) ... not found
+[  932/2323] Los Angeles Community College District Office (laccd.edu) ... not found
+[  933/2323] Livingstone College (livingstone.edu) ... not found
+[  934/2323] Longy School of Music of Bard College (longy.edu) ... not found
+[  935/2323] Louisiana State University and Agricultural & Mechanical College (lsu.edu) ... not found
+[  936/2323] Loras College (loras.edu) ... not found
+[  937/2323] Louisiana State University Health Sciences Center-New Orleans (lsuhsc.edu) ... not found
+[  938/2323] Los Angeles Pacific University (lapu.edu) ... not found
+[  939/2323] Louisiana State University-Alexandria (lsua.edu) ... not found
+[  940/2323] Louisiana State University Health Sciences Center-Shreveport (lsuhs.edu) ... not found
+[  941/2323] Louisiana State University-Shreveport (lsus.edu) ... not found
+[  942/2323] Louisville Presbyterian Theological Seminary (lpts.edu) ... not found
+[  943/2323] Lower Columbia College (lowercolumbia.edu) ... not found
+[  944/2323] Louisiana Christian University (lcuniversity.edu) ... not found
+[  945/2323] Loyola Marymount University (lmu.edu) ... not found
+[  946/2323] Loyola University Chicago (luc.edu) ... not found
+[  947/2323] Lubbock Christian University (lcu.edu) ... not found
+[  948/2323] Loyola University Maryland (loyola.edu) ... not found
+[  949/2323] Loyola University New Orleans (loyno.edu) ... not found
+[  950/2323] Lincoln University (lincolnuca.edu) ... not found
+  [checkpoint saved at 950/2323]
+[  951/2323] Lorain County Community College (lorainccc.edu) ... not found
+[  952/2323] Luther Rice College & Seminary (lutherrice.edu) ... not found
+[  953/2323] Luther Seminary (luthersem.edu) ... not found
+[  954/2323] Louisiana Tech University (latech.edu) ... not found
+[  955/2323] Lutheran School of Theology at Chicago (lstc.edu) ... not found
+[  956/2323] Luther College (luther.edu) ... not found
+[  957/2323] Lourdes University (lourdes.edu) ... not found
+[  958/2323] Lynn University (lynn.edu) ... not found
+[  959/2323] Magdalen College (magdalen.edu) ... not found
+[  960/2323] Machzikei Hadath Rabbinical College (mhrc.edu) ... not found
+[  961/2323] Lyon College (lyon.edu) ... not found
+[  962/2323] Lycoming College (lycoming.edu) ... not found
+[  963/2323] Madonna University (madonna.edu) ... not found
+[  964/2323] Maine College of Art & Design (meca.edu) ... not found
+[  965/2323] Madison Area Technical College (madisoncollege.edu) ... not found
+[  966/2323] Maharishi International University (miu.edu) ... not found
+[  967/2323] Macalester College (macalester.edu) ... not found
+[  968/2323] Maine College of Health Professions (mchp.edu) ... not found
+[  969/2323] Maine Maritime Academy (mainemaritime.edu) ... not found
+[  970/2323] Malone University (malone.edu) ... not found
+[  971/2323] Manhattan College (manhattan.edu) ... not found
+[  972/2323] Manhattanville College (mville.edu) ... not found
+[  973/2323] Manhattan School of Music (msmnyc.edu) ... not found
+[  974/2323] Maine Media College (mainemedia.edu) ... not found
+[  975/2323] Manor College (manor.edu) ... not found
+[  976/2323] Maria College of Albany (mariacollege.edu) ... not found
+[  977/2323] Marian University (marian.edu) ... not found
+[  978/2323] Manna University (manna.edu) ... not found
+[  979/2323] Marian University-Ancilla (marian.edu) ... not found
+[  980/2323] Marietta College (marietta.edu) ... not found
+[  981/2323] Marion Technical College (mtc.edu) ... not found
+[  982/2323] Manchester University (manchester.edu) ... not found
+[  983/2323] Marquette University (marquette.edu) ... not found
+[  984/2323] Marian University (marianuniversity.edu) ... not found
+[  985/2323] Marist College (marist.edu) ... not found
+[  986/2323] Maranatha Baptist University (mbu.edu) ... not found
+[  987/2323] Marshall B Ketchum University (ketchum.edu) ... not found
+[  988/2323] Mars Hill University (mhu.edu) ... not found
+[  989/2323] Marshall University (marshall.edu) ... not found
+[  990/2323] Martin University (martin.edu) ... not found
+[  991/2323] Mary Baldwin University (marybaldwin.edu) ... not found
+[  992/2323] Maryland University of Integrative Health (muih.edu) ... not found
+[  993/2323] Maryland Institute College of Art (mica.edu) ... not found
+[  994/2323] Marymount Manhattan College (mmm.edu) ... not found
+[  995/2323] Marymount University (marymount.edu) ... not found
+[  996/2323] Maryville University of Saint Louis (maryville.edu) ... not found
+[  997/2323] Martin Luther College (mlc-wels.edu) ... not found
+[  998/2323] Massachusetts College of Liberal Arts (mcla.edu) ... not found
+[  999/2323] Lake Forest College (lakeforest.edu) ... not found
+[ 1000/2323] Mayo Clinic College of Medicine and Science (college.mayo.edu) ... not found
+  [checkpoint saved at 1000/2323]
+[ 1001/2323] Massachusetts College of Art and Design (massart.edu) ... not found
+[ 1002/2323] Marywood University (marywood.edu) ... not found
+[ 1003/2323] Mayville State University (mayvillestate.edu) ... not found
+[ 1004/2323] McDaniel College (mcdaniel.edu) ... not found
+[ 1005/2323] Massachusetts School of Law (mslaw.edu) ... not found
+[ 1006/2323] McPherson College (mcpherson.edu) ... not found
+[ 1007/2323] Maryville College (maryvillecollege.edu) ... not found
+[ 1008/2323] McMurry University (mcm.edu) ... not found
+[ 1009/2323] McCormick Theological Seminary (mccormick.edu) ... not found
+[ 1010/2323] Medaille University (None) ... not found
+[ 1011/2323] McKendree University (mckendree.edu) ... not found
+[ 1012/2323] Mechon L'hoyroa (mechonlhoyroa.com) ... not found
+[ 1013/2323] MCPHS University (mcphs.edu) ... not found
+[ 1014/2323] Medical College of Wisconsin (mcw.edu) ... not found
+[ 1015/2323] Meharry Medical College (mmc.edu) ... not found
+[ 1016/2323] Manhattan Christian College (mccks.edu) ... not found
+[ 1017/2323] Medical University of South Carolina (web.musc.edu) ... not found
+[ 1018/2323] Menlo College (menlo.edu) ... not found
+[ 1019/2323] McNeese State University (mcneese.edu) ... not found
+[ 1020/2323] Meadville Theological School of Lombard College (meadville.edu) ... not found
+[ 1021/2323] Mercer University (mercer.edu) ... not found
+[ 1022/2323] Mercy College of Health Sciences (mchs.edu) ... not found
+[ 1023/2323] Mercy College of Ohio (mercycollege.edu) ... not found
+[ 1024/2323] Mercyhurst University (mercyhurst.edu) ... not found
+[ 1025/2323] Mercy University (mercy.edu) ... not found
+[ 1026/2323] Massachusetts Maritime Academy (maritime.edu) ... not found
+[ 1027/2323] Mesivta Torah Vodaath Rabbinical Seminary (independentrabbinicalcolleges.org) ... not found
+[ 1028/2323] Mesivta of Eastern Parkway-Yeshiva Zichron Meilech (mesivtaofeasternparkway.com) ... not found
+[ 1029/2323] Meredith College (meredith.edu) ... not found
+[ 1030/2323] Messenger College (messengercollege.edu) ... not found
+[ 1031/2323] Methodist College (methodistcol.edu) ... not found
+[ 1032/2323] Mesivtha Tifereth Jerusalem of America (mtj.edu) ... not found
+[ 1033/2323] Methodist Theological School in Ohio (mtso.edu) ... not found
+[ 1034/2323] Messiah University (messiah.edu) ... not found
+[ 1035/2323] Methodist University (methodist.edu) ... not found
+[ 1036/2323] Miami University-Hamilton (miamioh.edu) ... FOUND: https://miamioh.edu/institutional-research/common-data-set.html
+[ 1037/2323] Miami University-Middletown (miamioh.edu) ... FOUND: https://miamioh.edu/institutional-research/common-data-set.html
+[ 1038/2323] Miami University-Oxford (miamioh.edu) ... FOUND: https://miamioh.edu/institutional-research/common-data-set.html
+[ 1039/2323] Metropolitan State University (metrostate.edu) ... not found
+[ 1040/2323] Miami Dade College (mdc.edu) ... not found
+[ 1041/2323] Metropolitan College of New York (mcny.edu) ... not found
+[ 1042/2323] Metropolitan State University of Denver (msudenver.edu) ... not found
+[ 1043/2323] MGH Institute of Health Professions (mghihp.edu) ... not found
+[ 1044/2323] Mid-America College of Funeral Service (mid-america.edu) ... not found
+[ 1045/2323] Michigan Technological University (mtu.edu) ... not found
+[ 1046/2323] Mid-America Christian University (macu.edu) ... not found
+[ 1047/2323] Mid-Atlantic Christian University (macuniversity.edu) ... not found
+[ 1048/2323] Michigan State University (msu.edu) ... not found
+[ 1049/2323] Michigan School of Psychology (msp.edu) ... not found
+[ 1050/2323] Middle Georgia State University (mga.edu) ... not found
+  [checkpoint saved at 1050/2323]
+[ 1051/2323] Middle Tennessee State University (mtsu.edu) ... not found
+[ 1052/2323] Mid-South Christian College (midsouthchristian.edu) ... not found
+[ 1053/2323] Middle Tennessee School of Anesthesia Inc (mtsa.edu) ... not found
+[ 1054/2323] MidAmerica Nazarene University (mnu.edu) ... not found
+[ 1055/2323] Middlebury College (middlebury.edu) ... not found
+[ 1056/2323] Middlebury Institute of International Studies at Monterey (middlebury.edu) ... not found
+[ 1057/2323] Midland College (midland.edu) ... not found
+[ 1058/2323] Midwestern Baptist Theological Seminary (mbts.edu) ... not found
+[ 1059/2323] Midway University (midway.edu) ... not found
+[ 1060/2323] Merrimack College (merrimack.edu) ... not found
+[ 1061/2323] Midland University (midlandu.edu) ... not found
+[ 1062/2323] Midwestern State University (msutexas.edu) ... not found
+[ 1063/2323] Midwestern University-Downers Grove (midwestern.edu) ... not found
+[ 1064/2323] Midwestern University-Glendale (midwestern.edu) ... not found
+[ 1065/2323] Midwives College of Utah (midwifery.edu) ... not found
+[ 1066/2323] Miles College (miles.edu) ... not found
+[ 1067/2323] Millersville University of Pennsylvania (millersville.edu) ... not found
+[ 1068/2323] Millikin University (millikin.edu) ... not found
+[ 1069/2323] Minneapolis College of Art and Design (mcad.edu) ... not found
+[ 1070/2323] Minerva University (minerva.edu) ... not found
+[ 1071/2323] Milwaukee School of Engineering (msoe.edu) ... not found
+[ 1072/2323] Minnesota State Colleges and Universities System Office (minnstate.edu) ... not found
+[ 1073/2323] Milwaukee Institute of Art & Design (miad.edu) ... not found
+[ 1074/2323] Milligan University (milligan.edu) ... not found
+[ 1075/2323] Millsaps College (millsaps.edu) ... not found
+[ 1076/2323] Minot State University (minotstateu.edu) ... not found
+[ 1077/2323] MiraCosta College (miracosta.edu) ... not found
+[ 1078/2323] Minnesota State University Moorhead (mnstate.edu) ... not found
+[ 1079/2323] Minnesota State University-Mankato (mnsu.edu) ... not found
+[ 1080/2323] Misericordia University (misericordia.edu) ... not found
+[ 1081/2323] Mississippi College (mc.edu) ... not found
+[ 1082/2323] Missio Theological Seminary (missio.edu) ... not found
+[ 1083/2323] Mission University (mission.edu) ... not found
+[ 1084/2323] Mississippi State University (msstate.edu) ... not found
+[ 1085/2323] Mississippi Valley State University (mvsu.edu) ... not found
+[ 1086/2323] Missouri Southern State University (mssu.edu) ... not found
+[ 1087/2323] Missouri State University-Springfield (missouristate.edu) ... not found
+[ 1088/2323] Missouri Western State University (missouriwestern.edu) ... FOUND: https://missouriwestern.edu/ir/common-data-set/
+[ 1089/2323] Missouri University of Science and Technology (mst.edu) ... not found
+[ 1090/2323] Missouri Baptist University (mobap.edu) ... not found
+[ 1091/2323] Mitchell Hamline School of Law (mitchellhamline.edu) ... not found
+[ 1092/2323] Modesto Junior College (mjc.edu) ... not found
+[ 1093/2323] Molloy College (molloy.edu) ... not found
+[ 1094/2323] Mitchell College (mitchell.edu) ... not found
+[ 1095/2323] Montana Bible College (montanabiblecollege.edu) ... not found
+[ 1096/2323] Mississippi University for Women (muw.edu) ... not found
+[ 1097/2323] Monmouth University (monmouth.edu) ... not found
+[ 1098/2323] Montana State University (montana.edu) ... not found
+[ 1099/2323] Montana State University Billings (msubillings.edu) ... not found
+[ 1100/2323] Montclair State University (montclair.edu) ... FOUND: https://montclair.edu/provost/institutional-research/common-data-set/
+  [checkpoint saved at 1100/2323]
+[ 1101/2323] Montana Technological University (mtech.edu) ... not found
+[ 1102/2323] Montana State University-Northern (msun.edu) ... not found
+[ 1103/2323] Montreat College (montreat.edu) ... not found
+[ 1104/2323] Moore College of Art and Design (moore.edu) ... not found
+[ 1105/2323] Missouri Valley College (moval.edu) ... not found
+[ 1106/2323] Moody Bible Institute (moody.edu) ... not found
+[ 1107/2323] Moravian University (moravian.edu) ... not found
+[ 1108/2323] Morehead State University (moreheadstate.edu) ... not found
+[ 1109/2323] Montserrat College of Art (montserrat.edu) ... not found
+[ 1110/2323] Morehouse School of Medicine (msm.edu) ... not found
+[ 1111/2323] Monmouth College (monmouthcollege.edu) ... not found
+[ 1112/2323] Morgan Community College (morgancc.edu) ... not found
+[ 1113/2323] Morgan State University (morgan.edu) ... not found
+[ 1114/2323] Morehouse College (morehouse.edu) ... not found
+[ 1115/2323] Morningside University (morningside.edu) ... not found
+[ 1116/2323] Mount Holyoke College (mtholyoke.edu) ... FOUND: https://mtholyoke.edu/common-data-set/
+[ 1117/2323] Mount Angel Seminary (mountangelabbey.org) ... not found
+[ 1118/2323] Morris College (morris.edu) ... not found
+[ 1119/2323] Mount Marty University (mountmarty.edu) ... not found
+[ 1120/2323] Mount Aloysius College (mtaloy.edu) ... not found
+[ 1121/2323] Mirrer Yeshiva Cent Institute (mirreryeshiva.com) ... not found
+[ 1122/2323] Mount Mercy University (mtmercy.edu) ... not found
+[ 1123/2323] Morris Brown College (morrisbrown.edu) ... not found
+[ 1124/2323] Mount Mary University (mtmary.edu) ... not found
+[ 1125/2323] Mount Saint Mary College (msmc.edu) ... not found
+[ 1126/2323] Mount Saint Mary's University (msmu.edu) ... not found
+[ 1127/2323] Mount Sinai Phillips School of Nursing (pson.edu) ... not found
+[ 1128/2323] Mount St. Joseph University (msj.edu) ... not found
+[ 1129/2323] Mt Hood Community College (mhcc.edu) ... not found
+[ 1130/2323] Mount St. Mary's University (msmary.edu) ... not found
+[ 1131/2323] Mount Vernon Nazarene University (mvnu.edu) ... not found
+[ 1132/2323] Multnomah University (multnomah.edu) ... not found
+[ 1133/2323] Muhlenberg College (muhlenberg.edu) ... not found
+[ 1134/2323] Murray State University (murraystate.edu) ... not found
+[ 1135/2323] Muskingum University (muskingum.edu) ... not found
+[ 1136/2323] National Louis University (nl.edu) ... not found
+[ 1137/2323] National University (nu.edu) ... not found
+[ 1138/2323] National University of Health Sciences (nuhs.edu) ... not found
+[ 1139/2323] National University of Natural Medicine (nunm.edu) ... not found
+[ 1140/2323] Nashotah House (nashotah.edu) ... not found
+[ 1141/2323] Memphis Theological Seminary (memphisseminary.edu) ... not found
+[ 1142/2323] Naval Postgraduate School (nps.edu) ... not found
+[ 1143/2323] Nazareth University (www2.naz.edu) ... FOUND: https://www2.naz.edu/institutional-research/common-data-set/
+[ 1144/2323] Nazarene Theological Seminary (nts.edu) ... not found
+[ 1145/2323] Nebraska Indian Community College (thenicc.edu) ... not found
+[ 1146/2323] Nazarene Bible College (nbc.edu) ... not found
+[ 1147/2323] Naropa University (naropa.edu) ... not found
+[ 1148/2323] Nebraska Methodist College of Nursing & Allied Health (methodistcollege.edu) ... not found
+[ 1149/2323] Nebraska Wesleyan University (nebrwesleyan.edu) ... not found
+[ 1150/2323] Neumann University (neumann.edu) ... not found
+  [checkpoint saved at 1150/2323]
+[ 1151/2323] Navarro College (navarrocollege.edu) ... not found
+[ 1152/2323] NationsUniversity (nationsu.edu) ... not found
+[ 1153/2323] Nevada System of Higher Education-System Office (nshe.nevada.edu) ... not found
+[ 1154/2323] New Brunswick Theological Seminary (nbts.edu) ... not found
+[ 1155/2323] New College of Florida (ncf.edu) ... not found
+[ 1156/2323] Mount Carmel College of Nursing (mccn.edu) ... not found
+[ 1157/2323] Ner Israel Rabbinical College (nirc.edu) ... not found
+[ 1158/2323] New England College (nec.edu) ... not found
+[ 1159/2323] New Jersey City University (njcu.edu) ... not found
+[ 1160/2323] New Hope Christian College-Eugene (newhope.edu) ... not found
+[ 1161/2323] New England Law-Boston (nesl.edu) ... not found
+[ 1162/2323] New England College of Optometry (neco.edu) ... not found
+[ 1163/2323] New England Institute of Technology (neit.edu) ... not found
+[ 1164/2323] New Mexico State University-Main Campus (nmsu.edu) ... not found
+[ 1165/2323] New Mexico Institute of Mining and Technology (nmt.edu) ... not found
+[ 1166/2323] New Saint Andrews College (nsa.edu) ... not found
+[ 1167/2323] New Orleans Baptist Theological Seminary (nobts.edu) ... not found
+[ 1168/2323] Nevada State University (nsc.edu) ... not found
+[ 1169/2323] New Jersey Institute of Technology (njit.edu) ... not found
+[ 1170/2323] Navajo Technical University (navajotech.edu) ... not found
+[ 1171/2323] New York College of Health Professions (nycollege.edu) ... not found
+[ 1172/2323] New York Academy of Art (nyaa.edu) ... not found
+[ 1173/2323] New Mexico Highlands University (nmhu.edu) ... not found
+[ 1174/2323] New York Law School (nyls.edu) ... not found
+[ 1175/2323] New York Institute of Technology (nyit.edu) ... not found
+[ 1176/2323] New York College of Traditional Chinese Medicine (nyctcm.edu) ... not found
+[ 1177/2323] New York School of Interior Design (nysid.edu) ... not found
+[ 1178/2323] New York Medical College (nymc.edu) ... not found
+[ 1179/2323] Newman University (newmanu.edu) ... not found
+[ 1180/2323] New York College of Podiatric Medicine (nycpm.edu) ... not found
+[ 1181/2323] New York Theological Seminary (nyts.edu) ... not found
+[ 1182/2323] Niagara University (niagara.edu) ... not found
+[ 1183/2323] Newberry College (newberry.edu) ... not found
+[ 1184/2323] Nicholls State University (nicholls.edu) ... not found
+[ 1185/2323] North Carolina Central University (nccu.edu) ... not found
+[ 1186/2323] Nichols College (nichols.edu) ... not found
+[ 1187/2323] North Carolina Wesleyan University (ncwc.edu) ... not found
+[ 1188/2323] North Central College (northcentralcollege.edu) ... not found
+[ 1189/2323] North Carolina State University at Raleigh (ncsu.edu) ... not found
+[ 1190/2323] North Central State College (ncstatecollege.edu) ... not found
+[ 1191/2323] North Central University (northcentral.edu) ... not found
+[ 1192/2323] North Dakota State University-Main Campus (ndsu.edu) ... not found
+[ 1193/2323] North Florida College (nfc.edu) ... not found
+[ 1194/2323] Norfolk State University (nsu.edu) ... not found
+[ 1195/2323] North Greenville University (ngu.edu) ... not found
+[ 1196/2323] North Carolina A & T State University (ncat.edu) ... not found
+[ 1197/2323] North Orange County Community College District (nocccd.edu) ... not found
+[ 1198/2323] Northcentral University (nu.edu) ... not found
+[ 1199/2323] North Seattle College (northseattle.edu) ... not found
+[ 1200/2323] Northeastern Illinois University (neiu.edu) ... not found
+  [checkpoint saved at 1200/2323]
+[ 1201/2323] Northeastern State University (nsuok.edu) ... not found
+[ 1202/2323] Northeastern Seminary (nes.edu) ... not found
+[ 1203/2323] Northeast College of Health Sciences (northeastcollege.edu) ... not found
+[ 1204/2323] North American University (na.edu) ... not found
+[ 1205/2323] Northeastern University Oakland (oakland.northeastern.edu) ... not found
+[ 1206/2323] Northern Arizona University (nau.edu) ... not found
+[ 1207/2323] Northern Michigan University (nmu.edu) ... FOUND: https://nmu.edu/institutionalresearch/common-data-set/
+[ 1208/2323] Northern Illinois University (niu.edu) ... not found
+[ 1209/2323] Northeast Ohio Medical University (neomed.edu) ... not found
+[ 1210/2323] Northern Vermont University (None) ... not found
+[ 1211/2323] Northland College (northland.edu) ... FOUND: https://northland.edu/institutional-research/common-data-set/
+[ 1212/2323] NewU University (newu.university) ... not found
+[ 1213/2323] Northeastern University Professional Programs (northeastern.edu) ... not found
+[ 1214/2323] Northern Kentucky University (nku.edu) ... not found
+[ 1215/2323] Northern State University (northern.edu) ... not found
+[ 1216/2323] Northwest College (nwc.edu) ... not found
+[ 1217/2323] Northern New Mexico College (nnmc.edu) ... not found
+[ 1218/2323] Northwest Missouri State University (nwmissouri.edu) ... not found
+[ 1219/2323] Northwest Indian College (nwic.edu) ... not found
+[ 1220/2323] Northwest University (northwestu.edu) ... not found
+[ 1221/2323] Northwestern College (nwciowa.edu) ... not found
+[ 1222/2323] Northwest University-Center for Online and Extended Education (northwestu.edu) ... not found
+[ 1223/2323] Northpoint Bible College (northpoint.edu) ... not found
+[ 1224/2323] Northwest Nazarene University (nnu.edu) ... not found
+[ 1225/2323] Northwest Florida State College (nwfsc.edu) ... not found
+[ 1226/2323] North Park University (northpark.edu) ... not found
+[ 1227/2323] Northwestern Michigan College (nmc.edu) ... not found
+[ 1228/2323] Northern Baptist Theological Seminary (seminary.edu) ... not found
+[ 1229/2323] Northwestern Health Sciences University (nwhealth.edu) ... not found
+[ 1230/2323] Northwestern Oklahoma State University (nwosu.edu) ... not found
+[ 1231/2323] Northwestern State University of Louisiana (nsula.edu) ... not found
+[ 1232/2323] Norwich University (norwich.edu) ... not found
+[ 1233/2323] Oak Point University (oakpoint.edu) ... not found
+[ 1234/2323] Nueta Hidatsa Sahnish College (nhsc.edu) ... not found
+[ 1235/2323] Notre Dame de Namur University (ndnu.edu) ... not found
+[ 1236/2323] Northwood University (northwood.edu) ... not found
+[ 1237/2323] Oak Valley College (oakvalley.edu) ... not found
+[ 1238/2323] Oakland University (oakland.edu) ... not found
+[ 1239/2323] Occidental College (oxy.edu) ... FOUND: https://oxy.edu/common-data-set/
+[ 1240/2323] Oak Hills Christian College (oakhills.edu) ... not found
+[ 1241/2323] Oblate School of Theology (ost.edu) ... not found
+[ 1242/2323] Oakwood University (www2.oakwood.edu) ... not found
+[ 1243/2323] Oglala Lakota College (olc.edu) ... not found
+[ 1244/2323] Odessa College (odessa.edu) ... not found
+[ 1245/2323] Nova Southeastern University (nova.edu) ... not found
+[ 1246/2323] Ohio Christian University (ohiochristian.edu) ... not found
+[ 1247/2323] Ohio Dominican University (ohiodominican.edu) ... not found
+[ 1248/2323] Ohio State University-Lima Campus (lima.osu.edu) ... not found
+[ 1249/2323] Oakland City University (oak.edu) ... not found
+[ 1250/2323] Ohio State University-Mansfield Campus (mansfield.osu.edu) ... not found
+  [checkpoint saved at 1250/2323]
+[ 1251/2323] Oglethorpe University (oglethorpe.edu) ... FOUND: https://ir.oglethorpe.edu/institutional-research/common-data-set/
+[ 1252/2323] Ohio State University-Marion Campus (osumarion.osu.edu) ... not found
+[ 1253/2323] Ohio Northern University (onu.edu) ... not found
+[ 1254/2323] Ohio State University-Newark Campus (newark.osu.edu) ... not found
+[ 1255/2323] Ohio University-Chillicothe Campus (ohio.edu) ... not found
+[ 1256/2323] Ohio University-Main Campus (ohio.edu) ... not found
+[ 1257/2323] Ohio University-Eastern Campus (ohio.edu) ... not found
+[ 1258/2323] Ohio University-Lancaster Campus (ohio.edu) ... not found
+[ 1259/2323] Ohio University-Southern Campus (ohio.edu) ... not found
+[ 1260/2323] Oklahoma Baptist University (okbu.edu) ... not found
+[ 1261/2323] Ohr Hameir Theological Seminary (ohrhameir.com) ... not found
+[ 1262/2323] Ohio University-Zanesville Campus (ohio.edu) ... not found
+[ 1263/2323] Oklahoma State University Center for Health Sciences (medicine.okstate.edu) ... not found
+[ 1264/2323] Oklahoma State University Institute of Technology (osuit.edu) ... not found
+[ 1265/2323] Ohio Wesleyan University (owu.edu) ... not found
+[ 1266/2323] Oklahoma State University-Main Campus (okstate.edu) ... not found
+[ 1267/2323] Oklahoma State University-Oklahoma City (osuokc.edu) ... not found
+[ 1268/2323] Old Dominion University (odu.edu) ... FOUND: https://odu.edu/institutional-research/common-data-set/
+[ 1269/2323] Oklahoma Christian University (oc.edu) ... not found
+[ 1270/2323] Oklahoma City University (okcu.edu) ... not found
+[ 1271/2323] Oklahoma Wesleyan University (okwu.edu) ... not found
+[ 1272/2323] Olympic College (olympic.edu) ... not found
+[ 1273/2323] Olivet Nazarene University (olivet.edu) ... not found
+[ 1274/2323] Oregon Institute of Technology (oit.edu) ... FOUND: https://oit.edu/institutional-research/common-data-set/
+[ 1275/2323] Omega Graduate School (ogs.edu) ... not found
+[ 1276/2323] Oregon College of Oriental Medicine (ocom.edu) ... not found
+[ 1277/2323] Otis College of Art and Design (otis.edu) ... FOUND: https://otis.edu/common-data-set/
+[ 1278/2323] Oregon Health & Science University (ohsu.edu) ... not found
+[ 1279/2323] Oral Roberts University (oru.edu) ... not found
+[ 1280/2323] Oregon State University-Cascades Campus (osucascades.edu) ... not found
+[ 1281/2323] Notre Dame of Maryland University (ndm.edu) ... not found
+[ 1282/2323] Oklahoma Panhandle State University (opsu.edu) ... not found
+[ 1283/2323] Ouachita Baptist University (obu.edu) ... not found
+[ 1284/2323] Our Lady of the Lake University (ollusa.edu) ... not found
+[ 1285/2323] Otterbein University (otterbein.edu) ... not found
+[ 1286/2323] Ozarks Technical Community College (otc.edu) ... not found
+[ 1287/2323] Notre Dame College (notredamecollege.edu) ... not found
+[ 1288/2323] Ozark Christian College (occ.edu) ... not found
+[ 1289/2323] Pacific Lutheran University (plu.edu) ... FOUND: https://plu.edu/institutional-research/common-data-set/
+[ 1290/2323] Pacific Northwest College of Art (willamette.edu) ... not found
+[ 1291/2323] Pacific Bible College (pacificbible.edu) ... not found
+[ 1292/2323] Pace University (pace.edu) ... not found
+[ 1293/2323] Pacific Rim Christian University (pacrim.edu) ... not found
+[ 1294/2323] Pacific Oaks College (pacificoaks.edu) ... not found
+[ 1295/2323] Pacific Northwest University of Health Sciences (pnwu.edu) ... not found
+[ 1296/2323] Pacific States University (psuca.edu) ... not found
+[ 1297/2323] Pacific Union College (puc.edu) ... not found
+[ 1298/2323] Pacific University (pacificu.edu) ... not found
+[ 1299/2323] Palm Beach Atlantic University (pba.edu) ... FOUND: https://pba.edu/institutional-research/common-data-set/
+[ 1300/2323] Pacific School of Religion (psr.edu) ... not found
+  [checkpoint saved at 1300/2323]
+[ 1301/2323] Palm Beach State College (palmbeachstate.edu) ... not found
+[ 1302/2323] Paine College (paine.edu) ... not found
+[ 1303/2323] Paradise Valley Community College (paradisevalley.edu) ... not found
+[ 1304/2323] Palo Alto University (paloaltou.edu) ... not found
+[ 1305/2323] Palmer College of Chiropractic (palmer.edu) ... not found
+[ 1306/2323] Pardee RAND Graduate School (pardeerand.edu) ... not found
+[ 1307/2323] Park University (park.edu) ... not found
+[ 1308/2323] Pasco-Hernando State College (phsc.edu) ... not found
+[ 1309/2323] Ottawa University-Kansas City (ottawa.edu) ... not found
+[ 1310/2323] Ottawa University-Online (ottawa.edu) ... not found
+[ 1311/2323] Ottawa University-Milwaukee (ottawa.edu) ... not found
+[ 1312/2323] Parker University (parker.edu) ... not found
+[ 1313/2323] Pathways College (pathwayscollege.edu) ... not found
+[ 1314/2323] Paul Smiths College of Arts and Science (paulsmiths.edu) ... not found
+[ 1315/2323] Patrick Henry College (phc.edu) ... not found
+[ 1316/2323] Ottawa University-Ottawa (ottawa.edu) ... not found
+[ 1317/2323] Pathways College-Arizona (pathwayscollege.edu) ... not found
+[ 1318/2323] Paul Quinn College (pqc.edu) ... not found
+[ 1319/2323] Pennsylvania Academy of the Fine Arts (pafa.org) ... not found
+[ 1320/2323] Ottawa University-Surprise (ottawa.edu) ... not found
+[ 1321/2323] Peninsula College (pencol.edu) ... not found
+[ 1322/2323] Pennsylvania College of Health Sciences (pacollege.edu) ... not found
+[ 1323/2323] Payne Theological Seminary (payneseminary.edu) ... not found
+[ 1324/2323] Pennsylvania College of Technology (pct.edu) ... not found
+[ 1325/2323] Pennsylvania State System of Higher Education-Central Office (passhe.edu) ... not found
+[ 1326/2323] Pennsylvania State University-Penn State Abington (abington.psu.edu) ... not found
+[ 1327/2323] Pennsylvania College of Art and Design (pcad.edu) ... not found
+[ 1328/2323] Pennsylvania State University-Penn State Beaver (beaver.psu.edu) ... not found
+[ 1329/2323] Pennsylvania State University-Penn State Berks (berks.psu.edu) ... not found
+[ 1330/2323] Pennsylvania State University-Penn State Altoona (altoona.psu.edu) ... not found
+[ 1331/2323] Pennsylvania Institute of Technology (pit.edu) ... not found
+[ 1332/2323] Pennsylvania State University-Penn State Brandywine (brandywine.psu.edu) ... not found
+[ 1333/2323] Pennsylvania State University-Penn State DuBois (dubois.psu.edu) ... not found
+[ 1334/2323] Pennsylvania State University-Penn State Erie-Behrend College (behrend.psu.edu) ... not found
+[ 1335/2323] Pennsylvania State University-Penn State Fayette- Eberly (fayette.psu.edu) ... not found
+[ 1336/2323] Pennsylvania State University-Penn State Great Valley (greatvalley.psu.edu) ... not found
+[ 1337/2323] Pennsylvania State University-Penn State Greater Allegheny (greaterallegheny.psu.edu) ... not found
+[ 1338/2323] Pennsylvania State University-Penn State Harrisburg (harrisburg.psu.edu) ... not found
+[ 1339/2323] Pennsylvania State University-Penn State Hazleton (hazleton.psu.edu) ... not found
+[ 1340/2323] Pennsylvania State University-Penn State Lehigh Valley (lehighvalley.psu.edu) ... not found
+[ 1341/2323] Pennsylvania State University-Penn State Mont Alto (montalto.psu.edu) ... not found
+[ 1342/2323] Pennsylvania State University-Penn State New Kensington (newkensington.psu.edu) ... not found
+[ 1343/2323] Pennsylvania State University-Penn State Schuylkill (schuylkill.psu.edu) ... not found
+[ 1344/2323] Pennsylvania State University-Penn State Scranton (scranton.psu.edu) ... not found
+[ 1345/2323] Pennsylvania State University-Penn State Shenango (shenango.psu.edu) ... not found
+[ 1346/2323] Pennsylvania State University-Penn State Wilkes-Barre (wilkesbarre.psu.edu) ... not found
+[ 1347/2323] Pennsylvania State University-Penn State York (york.psu.edu) ... not found
+[ 1348/2323] Pennsylvania Western University (pennwest.edu) ... not found
+[ 1349/2323] Pensacola State College (pensacolastate.edu) ... not found
+[ 1350/2323] Pennsylvania State University-World Campus (worldcampus.psu.edu) ... not found
+  [checkpoint saved at 1350/2323]
+[ 1351/2323] Pepperdine University (pepperdine.edu) ... not found
+[ 1352/2323] Pentecostal Theological Seminary (ptseminary.edu) ... not found
+[ 1353/2323] Peru State College (peru.edu) ... not found
+[ 1354/2323] Peirce College (peirce.edu) ... not found
+[ 1355/2323] Philadelphia College of Osteopathic Medicine (pcom.edu) ... not found
+[ 1356/2323] Pfeiffer University (pfeiffer.edu) ... not found
+[ 1357/2323] Piedmont University (piedmont.edu) ... not found
+[ 1358/2323] Phillips Theological Seminary (ptstulsa.edu) ... not found
+[ 1359/2323] Pikes Peak State College (pikespeak.edu) ... not found
+[ 1360/2323] Philander Smith University (philander.edu) ... not found
+[ 1361/2323] Pierce College District (pierce.ctc.edu) ... not found
+[ 1362/2323] Pillar College (pillar.edu) ... not found
+[ 1363/2323] Pittsburg State University (pittstate.edu) ... not found
+[ 1364/2323] Pittsburgh Technical College (ptcollege.edu) ... not found
+[ 1365/2323] Phoenix Seminary (ps.edu) ... not found
+[ 1366/2323] Pittsburgh Theological Seminary (pts.edu) ... not found
+[ 1367/2323] Point Loma Nazarene University (pointloma.edu) ... not found
+[ 1368/2323] Plymouth State University (plymouth.edu) ... not found
+[ 1369/2323] Polk State College (polk.edu) ... not found
+[ 1370/2323] Point Park University (pointpark.edu) ... not found
+[ 1371/2323] Pontifical College Josephinum (pcj.edu) ... not found
+[ 1372/2323] Pontifex University (pontifex.university) ... not found
+[ 1373/2323] Point University (point.edu) ... not found
+[ 1374/2323] Pomona College (pomona.edu) ... not found
+[ 1375/2323] Pontifical Faculty of the Immaculate Conception at the Dominican House of Studies (dhs.edu) ... not found
+[ 1376/2323] Pope St John XXIII National Seminary (psjs.edu) ... not found
+[ 1377/2323] Prairie View A & M University (pvamu.edu) ... FOUND: https://pvamu.edu/ir/common-data-set/
+[ 1378/2323] Portland State University (pdx.edu) ... not found
+[ 1379/2323] Pontifical John Paul II Institute for Studies on Marriage and Family (johnpaulii.edu) ... not found
+[ 1380/2323] Potomac State College of West Virginia University (potomacstatecollege.edu) ... not found
+[ 1381/2323] Presentation College (None) ... not found
+[ 1382/2323] Presbyterian Theological Seminary in America (ch.ptsa.edu) ... not found
+[ 1383/2323] Presbyterian College (presby.edu) ... not found
+[ 1384/2323] Pratt Institute-Main (pratt.edu) ... not found
+[ 1385/2323] Presidio Graduate School (presidio.edu) ... not found
+[ 1386/2323] Princeton Theological Seminary (ptsem.edu) ... not found
+[ 1387/2323] Principia College (principiacollege.edu) ... not found
+[ 1388/2323] Providence College (providence.edu) ... not found
+[ 1389/2323] Pueblo Community College (pueblocc.edu) ... not found
+[ 1390/2323] Purdue University Fort Wayne (pfw.edu) ... not found
+[ 1391/2323] Queens University of Charlotte (queens.edu) ... not found
+[ 1392/2323] Polytechnic University of Puerto Rico-Miami (pupr.edu) ... not found
+[ 1393/2323] Polytechnic University of Puerto Rico-Orlando (pupr.edu) ... not found
+[ 1394/2323] Purdue University Northwest (pnw.edu) ... not found
+[ 1395/2323] Quincy College (quincycollege.edu) ... not found
+[ 1396/2323] Quincy University (quincy.edu) ... not found
+[ 1397/2323] Quinnipiac University (qu.edu) ... not found
+[ 1398/2323] Rabbi Jacob Joseph School (rabbijacobjoseph.com) ... not found
+[ 1399/2323] Rabbinical Academy Mesivta Rabbi Chaim Berlin (rabbinicalacademyrabbichaimberlin.com) ... not found
+[ 1400/2323] Rabbinical College Bobover Yeshiva Bnei Zion (rabbinicalcollegeboboveryeshiva.edu) ... not found
+  [checkpoint saved at 1400/2323]
+[ 1401/2323] Rabbinical College Beth Shraga (rabbinicalcollegebethshraga.com) ... not found
+[ 1402/2323] Rabbinical College of America (rca.edu) ... not found
+[ 1403/2323] Rabbinical College of Long Island (rabbinicalcollegelongisland.com) ... not found
+[ 1404/2323] Rabbinical College Telshe (independentrabbinicalcolleges.org) ... not found
+[ 1405/2323] Rabbinical College of Ohr Shimon Yisroel (ohr-sy.com) ... not found
+[ 1406/2323] Radford University (radford.edu) ... FOUND: https://radford.edu/institutional-research/common-data-set.html
+[ 1407/2323] Rabbinical Seminary Mkor Chaim (mkorchaim.org) ... not found
+[ 1408/2323] Purdue University Global (purdueglobal.edu) ... not found
+[ 1409/2323] Rancho Santiago Community College District Office (rsccd.edu) ... not found
+[ 1410/2323] Rabbinical Seminary of America (rabbinical.org) ... not found
+[ 1411/2323] Ramapo College of New Jersey (ramapo.edu) ... not found
+[ 1412/2323] Randolph College (randolphcollege.edu) ... not found
+[ 1413/2323] Providence Christian College (providencecc.edu) ... not found
+[ 1414/2323] Randolph-Macon College (rmc.edu) ... not found
+[ 1415/2323] Reach University (reach.edu) ... not found
+[ 1416/2323] Red Rocks Community College (rrcc.edu) ... not found
+[ 1417/2323] Redeemers University North America (rccgnaseminary.org) ... not found
+[ 1418/2323] Reed College (reed.edu) ... not found
+[ 1419/2323] Reconstructionist Rabbinical College (rrc.edu) ... not found
+[ 1420/2323] Ranken Technical College (ranken.edu) ... not found
+[ 1421/2323] Regis College (regiscollege.edu) ... not found
+[ 1422/2323] Regis University (regis.edu) ... not found
+[ 1423/2323] Reiss-Davis Graduate School (reissdavis.edu) ... not found
+[ 1424/2323] Reinhardt University (reinhardt.edu) ... not found
+[ 1425/2323] Relay Graduate School of Education (relay.edu) ... not found
+[ 1426/2323] Remington College-Dallas Campus (remingtoncollege.edu) ... not found
+[ 1427/2323] Remington College-Online Dallas (remingtoncollege.edu) ... not found
+[ 1428/2323] Remington College-Shreveport Campus (remingtoncollege.edu) ... not found
+[ 1429/2323] Reformed University (runiv.edu) ... not found
+[ 1430/2323] Rensselaer at Hartford (ewp.rpi.edu) ... not found
+[ 1431/2323] Regent University (regent.edu) ... not found
+[ 1432/2323] Rhodes College (rhodes.edu) ... FOUND: https://rhodes.edu/common-data-set/
+[ 1433/2323] Rhode Island College (ric.edu) ... not found
+[ 1434/2323] Richmont Graduate University (richmont.edu) ... not found
+[ 1435/2323] Rabbinical College Ohr Yisroel (rabbinicalcollegeohryisroel.com) ... not found
+[ 1436/2323] Rhode Island School of Design (risd.edu) ... not found
+[ 1437/2323] Rio Salado College (rio.maricopa.edu) ... not found
+[ 1438/2323] Rider University (rider.edu) ... not found
+[ 1439/2323] Ringling College of Art and Design (ringling.edu) ... not found
+[ 1440/2323] Ripon College (ripon.edu) ... not found
+[ 1441/2323] Rio Hondo College (riohondo.edu) ... not found
+[ 1442/2323] Riverside College of Health Careers (riversideonline.com) ... not found
+[ 1443/2323] Rivier University (rivier.edu) ... not found
+[ 1444/2323] Randall University (ru.edu) ... not found
+[ 1445/2323] Rochester University (rochesteru.edu) ... not found
+[ 1446/2323] Rochester Institute of Technology (rit.edu) ... FOUND: https://rit.edu/institutionalresearch/common-data-set/
+[ 1447/2323] Robert Morris University (rmu.edu) ... not found
+[ 1448/2323] Roanoke College (roanoke.edu) ... not found
+[ 1449/2323] Rocky Mountain College (rocky.edu) ... FOUND: https://rocky.edu/institutional-research/common-data-set/
+[ 1450/2323] Roberts Wesleyan University (roberts.edu) ... not found
+  [checkpoint saved at 1450/2323]
+[ 1451/2323] Rogers State University (rsu.edu) ... FOUND: https://rsu.edu/institutional-research/common-data-set/
+[ 1452/2323] Rockford University (rockford.edu) ... not found
+[ 1453/2323] Roger Williams University School of Law (law.rwu.edu) ... not found
+[ 1454/2323] Rollins College (rollins.edu) ... not found
+[ 1455/2323] Rosalind Franklin University of Medicine and Science (rosalindfranklin.edu) ... not found
+[ 1456/2323] Rose-Hulman Institute of Technology (rose-hulman.edu) ... not found
+[ 1457/2323] Rockhurst University (rockhurst.edu) ... not found
+[ 1458/2323] Roseman University of Health Sciences (roseman.edu) ... not found
+[ 1459/2323] Roger Williams University (rwu.edu) ... not found
+[ 1460/2323] Rowan University (rowan.edu) ... not found
+[ 1461/2323] Rosemont College (rosemont.edu) ... not found
+[ 1462/2323] Rush University (rushu.rush.edu) ... not found
+[ 1463/2323] Russell Sage College (sage.edu) ... not found
+[ 1464/2323] Renton Technical College (rtc.edu) ... not found
+[ 1465/2323] Rutgers University-Newark (newark.rutgers.edu) ... not found
+[ 1466/2323] Sacred Heart Major Seminary (shms.edu) ... not found
+[ 1467/2323] Roosevelt University (roosevelt.edu) ... not found
+[ 1468/2323] Rust College (rustcollege.edu) ... not found
+[ 1469/2323] Rutgers University-Camden (camden.rutgers.edu) ... not found
+[ 1470/2323] Sacred Heart Seminary and School of Theology (shsst.edu) ... not found
+[ 1471/2323] Saint Ambrose University (sau.edu) ... not found
+[ 1472/2323] Saint Anselm College (anselm.edu) ... not found
+[ 1473/2323] Saginaw Valley State University (svsu.edu) ... not found
+[ 1474/2323] Saint Anthony College of Nursing (sacn.edu) ... not found
+[ 1475/2323] Saint Cloud State University (stcloudstate.edu) ... not found
+[ 1476/2323] Saint Augustine's University (st-aug.edu) ... not found
+[ 1477/2323] Saint Elizabeth University (steu.edu) ... not found
+[ 1478/2323] Saint Edward's University (stedwards.edu) ... not found
+[ 1479/2323] Saint Francis Medical Center College of Nursing (sfmccon.edu) ... not found
+[ 1480/2323] Saint Francis University (francis.edu) ... not found
+[ 1481/2323] Saint Johns River State College (sjrstate.edu) ... not found
+[ 1482/2323] Prescott College (prescott.edu) ... not found
+[ 1483/2323] Saint Johns University (csbsju.edu) ... not found
+[ 1484/2323] Saint John's Seminary (sjs.edu) ... not found
+[ 1485/2323] Saint Joseph's College of Maine (sjcme.edu) ... not found
+[ 1486/2323] Pitzer College (pitzer.edu) ... not found
+[ 1487/2323] Sacred Heart University (sacredheart.edu) ... not found
+[ 1488/2323] Saint Leo University (saintleo.edu) ... not found
+[ 1489/2323] Saint Mary's College of California (stmarys-ca.edu) ... FOUND: https://stmarys-ca.edu/institutional-research/common-data-set/
+[ 1490/2323] Saint Louis University (slu.edu) ... not found
+[ 1491/2323] Saint Louis Community College (stlcc.edu) ... not found
+[ 1492/2323] Saint Joseph's University (sju.edu) ... not found
+[ 1493/2323] Saint Joseph Seminary College (sjasc.edu) ... not found
+[ 1494/2323] Saint Mary's College (saintmarys.edu) ... not found
+[ 1495/2323] Saint Meinrad School of Theology (saintmeinrad.edu) ... not found
+[ 1496/2323] Saint Charles Borromeo Seminary-Overbrook (scs.edu) ... not found
+[ 1497/2323] Saint Mary's University of Minnesota (smumn.edu) ... not found
+[ 1498/2323] Saint Mary-of-the-Woods College (smwc.edu) ... not found
+[ 1499/2323] Saint Norbert College (snc.edu) ... not found
+[ 1500/2323] Saint Michael's College (smcvt.edu) ... not found
+  [checkpoint saved at 1500/2323]
+[ 1501/2323] Saint Peter's University (saintpeters.edu) ... not found
+[ 1502/2323] Saint Vincent College (stvincent.edu) ... not found
+[ 1503/2323] Saint Xavier University (sxu.edu) ... not found
+[ 1504/2323] Saint Vladimirs Orthodox Theological Seminary (svots.edu) ... not found
+[ 1505/2323] Saint Vincent de Paul Regional Seminary (svdp.edu) ... not found
+[ 1506/2323] Salem College (salem.edu) ... not found
+[ 1507/2323] Salem State University (salemstate.edu) ... not found
+[ 1508/2323] Salisbury University (salisbury.edu) ... not found
+[ 1509/2323] Salus University (salus.edu) ... not found
+[ 1510/2323] Salve Regina University (salve.edu) ... not found
+[ 1511/2323] Salish Kootenai College (skc.edu) ... not found
+[ 1512/2323] Sam Houston State University (shsu.edu) ... not found
+[ 1513/2323] Saint Paul School of Theology (spst.edu) ... not found
+[ 1514/2323] San Diego Community College District-District Office (sdccd.edu) ... not found
+[ 1515/2323] San Antonio College (alamo.edu) ... not found
+[ 1516/2323] Saint Vincent Seminary (saintvincentseminary.edu) ... not found
+[ 1517/2323] San Diego Mesa College (sdmesa.edu) ... not found
+[ 1518/2323] Samuel Merritt University (samuelmerritt.edu) ... not found
+[ 1519/2323] San Francisco State University (sfsu.edu) ... not found
+[ 1520/2323] San Jacinto Community College (sanjac.edu) ... not found
+[ 1521/2323] San Francisco Conservatory of Music (sfcm.edu) ... not found
+[ 1522/2323] San Francisco Bay University (sfbu.edu) ... not found
+[ 1523/2323] San Mateo County Community College District Office (smccd.edu) ... not found
+[ 1524/2323] San Jose State University (sjsu.edu) ... not found
+[ 1525/2323] San Joaquin College of Law (sjcl.edu) ... not found
+[ 1526/2323] Santa Ana College (sac.edu) ... not found
+[ 1527/2323] Sanford Burnham Prebys Medical Discovery Institute (sbpdiscovery.org) ... not found
+[ 1528/2323] Santa Clara University (scu.edu) ... not found
+[ 1529/2323] Santa Fe College (sfcollege.edu) ... not found
+[ 1530/2323] Samford University (samford.edu) ... not found
+[ 1531/2323] Savannah State University (savannahstate.edu) ... not found
+[ 1532/2323] San Diego Christian College (sdcc.edu) ... not found
+[ 1533/2323] Sarah Lawrence College (sarahlawrence.edu) ... not found
+[ 1534/2323] Savannah College of Art and Design (scad.edu) ... not found
+[ 1535/2323] Santa Monica College (smc.edu) ... not found
+[ 1536/2323] San Diego State University (sdsu.edu) ... not found
+[ 1537/2323] Scripps College (scrippscollege.edu) ... not found
+[ 1538/2323] School of the Art Institute of Chicago (saic.edu) ... not found
+[ 1539/2323] Schoolcraft Community College District (schoolcraft.edu) ... not found
+[ 1540/2323] Saybrook University (saybrook.edu) ... not found
+[ 1541/2323] Seattle Central College (seattlecentral.edu) ... not found
+[ 1542/2323] Seattle Institute of East Asian Medicine (sieam.edu) ... not found
+[ 1543/2323] Seattle Pacific University (spu.edu) ... not found
+[ 1544/2323] Sattler College (sattler.edu) ... not found
+[ 1545/2323] Seattle University (seattleu.edu) ... not found
+[ 1546/2323] Selma University (selmau.edu) ... not found
+[ 1547/2323] Seton Hill University (setonhill.edu) ... not found
+[ 1548/2323] Sentara College of Health Sciences (sentara.edu) ... not found
+[ 1549/2323] Saint Martin's University (stmartin.edu) ... not found
+[ 1550/2323] Shasta College (shastacollege.edu) ... not found
+  [checkpoint saved at 1550/2323]
+[ 1551/2323] Sh'or Yoshuv Rabbinical College (shoryoshuv.org) ... not found
+[ 1552/2323] Shepherd University (shepherd.edu) ... FOUND: https://shepherd.edu/institutional-research/common-data-set/
+[ 1553/2323] Shaw University (shawu.edu) ... not found
+[ 1554/2323] Shenandoah University (su.edu) ... not found
+[ 1555/2323] Shawnee State University (shawnee.edu) ... not found
+[ 1556/2323] Shepherds Theological Seminary (shepherds.edu) ... not found
+[ 1557/2323] Sherman College of Chiropractic (sherman.edu) ... not found
+[ 1558/2323] Shippensburg University of Pennsylvania (ship.edu) ... not found
+[ 1559/2323] Siena College (siena.edu) ... not found
+[ 1560/2323] Simmons University (simmons.edu) ... not found
+[ 1561/2323] Siena Heights University (sienaheights.edu) ... not found
+[ 1562/2323] Schreiner University (schreiner.edu) ... not found
+[ 1563/2323] Simpson College (simpson.edu) ... not found
+[ 1564/2323] Simpson University (simpsonu.edu) ... not found
+[ 1565/2323] Sinte Gleska University (sintegleska.edu) ... not found
+[ 1566/2323] Sisseton Wahpeton College (swcollege.edu) ... not found
+[ 1567/2323] Sinclair Community College (sinclair.edu) ... not found
+[ 1568/2323] SIT Graduate Institute (sit.edu) ... not found
+[ 1569/2323] Seminole State College of Florida (seminolestate.edu) ... not found
+[ 1570/2323] Sitting Bull College (sittingbull.edu) ... not found
+[ 1571/2323] Skagit Valley College (skagit.edu) ... not found
+[ 1572/2323] Skidmore College (skidmore.edu) ... not found
+[ 1573/2323] Slippery Rock University of Pennsylvania (sru.edu) ... not found
+[ 1574/2323] Skyline College (skylinecollege.edu) ... not found
+[ 1575/2323] Snow College (snow.edu) ... not found
+[ 1576/2323] Solano Community College (welcome.solano.edu) ... not found
+[ 1577/2323] Smith College (smith.edu) ... not found
+[ 1578/2323] Soka University of America (soka.edu) ... not found
+[ 1579/2323] Sonoma State University (sonoma.edu) ... not found
+[ 1580/2323] South Baylo University (southbaylo.edu) ... not found
+[ 1581/2323] South Carolina State University (scsu.edu) ... not found
+[ 1582/2323] Simmons College of Kentucky (simmonscollegeky.edu) ... not found
+[ 1583/2323] Sonoran University of Health Sciences (sonoran.edu) ... not found
+[ 1584/2323] South Dakota School of Mines and Technology (sdsmt.edu) ... not found
+[ 1585/2323] South Dakota State University (sdstate.edu) ... not found
+[ 1586/2323] Seton Hall University (shu.edu) ... not found
+[ 1587/2323] South Texas College (southtexascollege.edu) ... not found
+[ 1588/2323] South Georgia State College (sgsc.edu) ... not found
+[ 1589/2323] South Florida State College (southflorida.edu) ... not found
+[ 1590/2323] South Seattle College (southseattle.edu) ... not found
+[ 1591/2323] Southeast Missouri State University (semo.edu) ... not found
+[ 1592/2323] Southeast Missouri Hospital College of Nursing and Health Sciences (sehcollege.edu) ... not found
+[ 1593/2323] South Florida Bible College and Theological Seminary (sfbc.edu) ... not found
+[ 1594/2323] Southeastern Louisiana University (southeastern.edu) ... FOUND: https://southeastern.edu/ir/cds/
+[ 1595/2323] Southeastern Baptist Theological Seminary (sebts.edu) ... not found
+[ 1596/2323] Southeastern Baptist College (southeasternbaptist.edu) ... not found
+[ 1597/2323] South Texas College of Law Houston (stcl.edu) ... not found
+[ 1598/2323] Southeastern Oklahoma State University (se.edu) ... not found
+[ 1599/2323] Southeastern Free Will Baptist Bible College (sfwbc.edu) ... not found
+[ 1600/2323] Southern Adventist University (southern.edu) ... not found
+  [checkpoint saved at 1600/2323]
+[ 1601/2323] Southern College of Optometry (sco.edu) ... not found
+[ 1602/2323] Southern Arkansas University Main Campus (saumag.edu) ... not found
+[ 1603/2323] Southern Connecticut State University (southernct.edu) ... FOUND: https://southernct.edu/ir/common-data-set/
+[ 1604/2323] Southern California Institute of Architecture (sciarc.edu) ... not found
+[ 1605/2323] Southern Illinois University-Carbondale (siu.edu) ... not found
+[ 1606/2323] Southern Illinois University-Edwardsville (siue.edu) ... not found
+[ 1607/2323] Southern California University of Health Sciences (scuhs.edu) ... not found
+[ 1608/2323] Southern California Seminary (socalsem.edu) ... not found
+[ 1609/2323] Southern Illinois University-System Office (siusystem.edu) ... not found
+[ 1610/2323] Southern Methodist University (smu.edu) ... not found
+[ 1611/2323] Shorter University (shorter.edu) ... not found
+[ 1612/2323] Southern Nazarene University (snu.edu) ... not found
+[ 1613/2323] Southeastern University (seu.edu) ... not found
+[ 1614/2323] Southern New Hampshire University (snhu.edu) ... not found
+[ 1615/2323] Southern Oregon University (sou.edu) ... not found
+[ 1616/2323] Southern University-Board and System (sus.edu) ... not found
+[ 1617/2323] Southern Utah University (suu.edu) ... not found
+[ 1618/2323] Southern Wesleyan University (swu.edu) ... not found
+[ 1619/2323] Southern Virginia University (svu.edu) ... not found
+[ 1620/2323] Southwestern Assemblies of God University (sagu.edu) ... not found
+[ 1621/2323] Southwest Baptist University (sbuniv.edu) ... not found
+[ 1622/2323] Southwestern Adventist University (swau.edu) ... not found
+[ 1623/2323] Southwestern Christian College (swcc.edu) ... not found
+[ 1624/2323] Southwest Minnesota State University (smsu.edu) ... not found
+[ 1625/2323] Southwestern Christian University (swcu.edu) ... not found
+[ 1626/2323] Southwestern College (sckans.edu) ... not found
+[ 1627/2323] Southwestern College (swc.edu) ... not found
+[ 1628/2323] Southwestern Oklahoma State University (swosu.edu) ... not found
+[ 1629/2323] Southwestern University (southwestern.edu) ... not found
+[ 1630/2323] Southwestern Law School (swlaw.edu) ... not found
+[ 1631/2323] Spelman College (spelman.edu) ... FOUND: https://spelman.edu/about/institutional-research/common-data-set/
+[ 1632/2323] Spalding University (spalding.edu) ... not found
+[ 1633/2323] Spartanburg Methodist College (smcsc.edu) ... not found
+[ 1634/2323] Spokane Falls Community College (sfcc.spokane.edu) ... not found
+[ 1635/2323] Spokane Community College (scc.spokane.edu) ... not found
+[ 1636/2323] Spring Arbor University (arbor.edu) ... not found
+[ 1637/2323] Springfield College (springfield.edu) ... not found
+[ 1638/2323] Springfield College-Regional, Online, and Continuing Education (springfield.edu) ... not found
+[ 1639/2323] Spring Hill College (shc.edu) ... not found
+[ 1640/2323] Southern University and A & M College (subr.edu) ... not found
+[ 1641/2323] Southern University at New Orleans (suno.edu) ... not found
+[ 1642/2323] Southern University Law Center (sulc.edu) ... not found
+[ 1643/2323] St Bernard's School of Theology and Ministry (stbernards.edu) ... not found
+[ 1644/2323] St Catherine University (stkate.edu) ... not found
+[ 1645/2323] St Bonaventure University (sbu.edu) ... not found
+[ 1646/2323] St Olaf College (wp.stolaf.edu) ... not found
+[ 1647/2323] St Luke's College (stlukescollege.edu) ... not found
+[ 1648/2323] St. Augustine College (staugustine.edu) ... not found
+[ 1649/2323] St Lawrence University (stlawu.edu) ... not found
+[ 1650/2323] St. Andrews University (sa.edu) ... not found
+  [checkpoint saved at 1650/2323]
+[ 1651/2323] St. John Fisher University (sjf.edu) ... not found
+[ 1652/2323] Shasta Bible College and Graduate School (shasta.edu) ... not found
+[ 1653/2323] St Petersburg College (spcollege.edu) ... not found
+[ 1654/2323] St. John's College-Department of Nursing (hshs.org) ... not found
+[ 1655/2323] St. John Vianney College Seminary (sjvcs.edu) ... not found
+[ 1656/2323] St. John's University-New York (stjohns.edu) ... not found
+[ 1657/2323] St. John's College (sjc.edu) ... not found
+[ 1658/2323] St. John's College (sjc.edu) ... not found
+[ 1659/2323] St. Mary's College of Maryland (smcm.edu) ... not found
+[ 1660/2323] St. Thomas Aquinas College (stac.edu) ... not found
+[ 1661/2323] State University of New York at Cortland (www2.cortland.edu) ... not found
+[ 1662/2323] Starr King School for the Ministry (sksm.edu) ... not found
+[ 1663/2323] St. Mary's University (stmarytx.edu) ... not found
+[ 1664/2323] St. Thomas University (stu.edu) ... not found
+[ 1665/2323] State College of Florida-Manatee-Sarasota (scf.edu) ... not found
+[ 1666/2323] Stephen F Austin State University (sfasu.edu) ... not found
+[ 1667/2323] Stephens College (stephens.edu) ... not found
+[ 1668/2323] State University of New York at New Paltz (newpaltz.edu) ... not found
+[ 1669/2323] Stetson University (stetson.edu) ... not found
+[ 1670/2323] Sterling College (sterlingcollege.edu) ... not found
+[ 1671/2323] St. Joseph's University-New York (sjny.edu) ... not found
+[ 1672/2323] State University of New York at Oswego (oswego.edu) ... not found
+[ 1673/2323] Stevens Institute of Technology (stevens.edu) ... not found
+[ 1674/2323] Sterling College (sterling.edu) ... not found
+[ 1675/2323] Stockton University (stockton.edu) ... not found
+[ 1676/2323] Stonehill College (stonehill.edu) ... not found
+[ 1677/2323] Stony Brook University (stonybrook.edu) ... not found
+[ 1678/2323] Stone Child College (stonechild.edu) ... not found
+[ 1679/2323] Stevenson University (stevenson.edu) ... not found
+[ 1680/2323] St. Francis College (sfc.edu) ... not found
+[ 1681/2323] Summit Christian College (summitcc.edu) ... not found
+[ 1682/2323] Sul Ross State University (sulross.edu) ... not found
+[ 1683/2323] SUNY Brockport (brockport.edu) ... not found
+[ 1684/2323] SUNY at Fredonia (fredonia.edu) ... not found
+[ 1685/2323] Stillman College (stillman.edu) ... not found
+[ 1686/2323] SUNY at Purchase College (purchase.edu) ... not found
+[ 1687/2323] SUNY Buffalo State University (suny.buffalostate.edu) ... not found
+[ 1688/2323] SUNY College at Plattsburgh (plattsburgh.edu) ... not found
+[ 1689/2323] SUNY College of Environmental Science and Forestry (esf.edu) ... not found
+[ 1690/2323] SUNY College of Agriculture and Technology at Cobleskill (cobleskill.edu) ... not found
+[ 1691/2323] SUM Bible College and Theological Seminary (sum.edu) ... not found
+[ 1692/2323] SUNY College at Potsdam (potsdam.edu) ... not found
+[ 1693/2323] SUNY College at Geneseo (geneseo.edu) ... not found
+[ 1694/2323] SUNY College of Technology at Canton (canton.edu) ... not found
+[ 1695/2323] SUNY College of Technology at Delhi (delhi.edu) ... not found
+[ 1696/2323] SUNY Downstate Health Sciences University (downstate.edu) ... not found
+[ 1697/2323] SUNY Oneonta (suny.oneonta.edu) ... FOUND: https://suny.oneonta.edu/institutional-research/common-data-set/
+[ 1698/2323] SUNY Old Westbury (oldwestbury.edu) ... not found
+[ 1699/2323] Susquehanna University (susqu.edu) ... FOUND: https://susqu.edu/institutional-research/common-data-set/
+[ 1700/2323] Sweet Briar College (sbc.edu) ... FOUND: https://sbc.edu/institutional-research/common-data-set/
+  [checkpoint saved at 1700/2323]
+[ 1701/2323] SUNY Maritime College (sunymaritime.edu) ... not found
+[ 1702/2323] SUNY College of Technology at Alfred (alfredstate.edu) ... not found
+[ 1703/2323] SUNY-System Office (suny.edu) ... not found
+[ 1704/2323] SUNY College of Optometry (sunyopt.edu) ... not found
+[ 1705/2323] SUNY Polytechnic Institute (sunypoly.edu) ... not found
+[ 1706/2323] Tacoma Community College (tacomacc.edu) ... not found
+[ 1707/2323] Tabor College (tabor.edu) ... not found
+[ 1708/2323] Syracuse University (syracuse.edu) ... not found
+[ 1709/2323] Talmudical Academy-New Jersey (talmudicalacademynj.com) ... not found
+[ 1710/2323] Talmudic College of Florida (talmudicu.edu) ... not found
+[ 1711/2323] Talladega College (talladega.edu) ... not found
+[ 1712/2323] Talmudical Seminary of Bobov (independentrabbinicalcolleges.org) ... not found
+[ 1713/2323] Talmudical Institute of Upstate New York (tiuny.org) ... not found
+[ 1714/2323] Talmudical Seminary Oholei Torah (tsot.edu) ... not found
+[ 1715/2323] Tallahassee Community College (tcc.fl.edu) ... not found
+[ 1716/2323] Taylor University (taylor.edu) ... not found
+[ 1717/2323] Tarleton State University (tarleton.edu) ... not found
+[ 1718/2323] Teachers College at Columbia University (tc.columbia.edu) ... not found
+[ 1719/2323] Telshe Yeshiva-Chicago (telsheyeshivachicago.com) ... not found
+[ 1720/2323] SUNY Morrisville (morrisville.edu) ... not found
+[ 1721/2323] Talmudical Yeshiva of Philadelphia (meterware.com) ... not found
+[ 1722/2323] Texas A & M University-Corpus Christi (tamucc.edu) ... not found
+[ 1723/2323] Tennessee Technological University (tntech.edu) ... not found
+[ 1724/2323] Texas A & M University-Kingsville (tamuk.edu) ... not found
+[ 1725/2323] Texas A & M International University (tamiu.edu) ... not found
+[ 1726/2323] Texas A & M University-System Office (tamus.edu) ... not found
+[ 1727/2323] Texas A & M University-Commerce (tamuc.edu) ... not found
+[ 1728/2323] Tennessee Wesleyan University (tnwesleyan.edu) ... not found
+[ 1729/2323] Texas A&M University-Texarkana (tamut.edu) ... not found
+[ 1730/2323] Teachers College of San Joaquin (teacherscollegesj.edu) ... not found
+[ 1731/2323] Texas A&M University-San Antonio (tamusa.edu) ... not found
+[ 1732/2323] Texas Christian University (tcu.edu) ... FOUND: https://ir.tcu.edu/institutional-research/common-data-set/
+[ 1733/2323] Texas Chiropractic College Foundation Inc (txchiro.edu) ... not found
+[ 1734/2323] Texas College (texascollege.edu) ... not found
+[ 1735/2323] Texas Lutheran University (tlu.edu) ... not found
+[ 1736/2323] Texas Tech University (ttu.edu) ... not found
+[ 1737/2323] Texas Tech University Health Sciences Center (ttuhsc.edu) ... not found
+[ 1738/2323] Tennessee State University (tnstate.edu) ... not found
+[ 1739/2323] Texas State University (txst.edu) ... not found
+[ 1740/2323] Texas Tech University Health Sciences Center-El Paso (elpaso.ttuhsc.edu) ... not found
+[ 1741/2323] The Catholic University of America (catholic.edu) ... FOUND: https://ir.catholic.edu/common-data-set/
+[ 1742/2323] Texas Tech University System Administration (texastech.edu) ... not found
+[ 1743/2323] Texas Woman's University (twu.edu) ... not found
+[ 1744/2323] Texas Wesleyan University (txwes.edu) ... not found
+[ 1745/2323] The Chicago School at Chicago (thechicagoschool.edu) ... not found
+[ 1746/2323] The Chicago School at Dallas (thechicagoschool.edu) ... not found
+[ 1747/2323] The Chicago School at San Diego (thechicagoschool.edu) ... not found
+[ 1748/2323] The Chicago School at Anaheim (thechicagoschool.edu) ... not found
+[ 1749/2323] The Chicago School at Los Angeles (thechicagoschool.edu) ... not found
+[ 1750/2323] The Chicago School at Washington DC (thechicagoschool.edu) ... not found
+  [checkpoint saved at 1750/2323]
+[ 1751/2323] The Chicago School at Xavier University of Louisiana (thechicagoschool.edu) ... not found
+[ 1752/2323] The College of Saint Rose (strose.edu) ... not found
+[ 1753/2323] Texas A&M University-Central Texas (tamuct.edu) ... not found
+[ 1754/2323] The College of Idaho (collegeofidaho.edu) ... not found
+[ 1755/2323] The College of the Florida Keys (cfk.edu) ... not found
+[ 1756/2323] The College of New Jersey (tcnj.edu) ... FOUND: https://ira.tcnj.edu/institutional-research/common-data-set/
+[ 1757/2323] The College of Saint Scholastica (css.edu) ... not found
+[ 1758/2323] The Christ College of Nursing and Health Sciences (thechristcollege.edu) ... not found
+[ 1759/2323] The Cooper Union for the Advancement of Science and Art (cooper.edu) ... not found
+[ 1760/2323] The Continents States University (continents.us) ... not found
+[ 1761/2323] The Juilliard School (juilliard.edu) ... not found
+[ 1762/2323] The Evergreen State College (evergreen.edu) ... not found
+[ 1763/2323] The Colleges of Law at Santa Barbara (collegesoflaw.edu) ... not found
+[ 1764/2323] The Colleges of Law at Ventura (collegesoflaw.edu) ... not found
+[ 1765/2323] Spertus College (spertus.edu) ... not found
+[ 1766/2323] The King's College (tkc.edu) ... not found
+[ 1767/2323] The Master's University and Seminary (masters.edu) ... not found
+[ 1768/2323] The New School (newschool.edu) ... not found
+[ 1769/2323] The School of Architecture (tsoa.edu) ... not found
+[ 1770/2323] The Seattle School of Theology & Psychology (theseattleschool.edu) ... not found
+[ 1771/2323] The New England Conservatory of Music (necmusic.edu) ... not found
+[ 1772/2323] The College of Wooster (wooster.edu) ... not found
+[ 1773/2323] The King's University (tku.edu) ... not found
+[ 1774/2323] The Southern Baptist Theological Seminary (sbts.edu) ... not found
+[ 1775/2323] The Southwestern Baptist Theological Seminary (swbts.edu) ... not found
+[ 1776/2323] The University of Alabama (ua.edu) ... not found
+[ 1777/2323] The University of Montana (umt.edu) ... not found
+[ 1778/2323] The University of Montana-Western (umwestern.edu) ... not found
+[ 1779/2323] The University of America (ua-edu.us) ... not found
+[ 1780/2323] The University of Tampa (ut.edu) ... not found
+[ 1781/2323] The University of Tennessee Southern (utsouthern.edu) ... not found
+[ 1782/2323] The University of Tennessee Health Science Center (uthsc.edu) ... not found
+[ 1783/2323] The University of Olivet (uolivet.edu) ... not found
+[ 1784/2323] The University of Tennessee-Martin (utm.edu) ... not found
+[ 1785/2323] The University of Tennessee-Chattanooga (utc.edu) ... not found
+[ 1786/2323] The University of Findlay (findlay.edu) ... not found
+[ 1787/2323] The University of Tennessee-Knoxville (utk.edu) ... not found
+[ 1788/2323] The University of Texas at El Paso (utep.edu) ... not found
+[ 1789/2323] The University of Texas at Arlington (uta.edu) ... not found
+[ 1790/2323] The University of Texas at San Antonio (utsa.edu) ... not found
+[ 1791/2323] The University of Texas at Tyler (uttyler.edu) ... not found
+[ 1792/2323] The University of Texas at Dallas (utdallas.edu) ... not found
+[ 1793/2323] The University of Texas Health Science Center at Houston (uth.edu) ... not found
+[ 1794/2323] The University of Texas MD Anderson Cancer Center (mdanderson.org) ... not found
+[ 1795/2323] The University of Texas Medical Branch at Galveston (utmb.edu) ... not found
+[ 1796/2323] The University of Texas Permian Basin (utpb.edu) ... not found
+[ 1797/2323] The University of Texas Health Science Center at San Antonio (uthscsa.edu) ... not found
+[ 1798/2323] The University of Tennessee System Office (tennessee.edu) ... not found
+[ 1799/2323] The University of Texas Rio Grande Valley (utrgv.edu) ... not found
+[ 1800/2323] The Wright Institute (wi.edu) ... not found
+  [checkpoint saved at 1800/2323]
+[ 1801/2323] The University of Texas System Office (utsystem.edu) ... not found
+[ 1802/2323] Theological Seminary of the Reformed Episcopal Church (reseminary.edu) ... not found
+[ 1803/2323] Thomas Aquinas College (thomasaquinas.edu) ... not found
+[ 1804/2323] The University of the South (sewanee.edu) ... not found
+[ 1805/2323] Thomas Edison State University (tesu.edu) ... not found
+[ 1806/2323] Thiel College (thiel.edu) ... not found
+[ 1807/2323] Thomas College (thomas.edu) ... not found
+[ 1808/2323] Thomas Jefferson School of Law (tjsl.edu) ... not found
+[ 1809/2323] Thomas Jefferson University (jefferson.edu) ... not found
+[ 1810/2323] Thomas M Cooley Law School (cooley.edu) ... not found
+[ 1811/2323] Thomas More University (thomasmore.edu) ... not found
+[ 1812/2323] Torah Temimah Talmudical Seminary (torahtemimahtalmudicalseminary.com) ... not found
+[ 1813/2323] Thomas More College of Liberal Arts (thomasmorecollege.edu) ... not found
+[ 1814/2323] Tougaloo College (tougaloo.edu) ... not found
+[ 1815/2323] Tiffin University (tiffin.edu) ... not found
+[ 1816/2323] Toccoa Falls College (tfc.edu) ... not found
+[ 1817/2323] Touro University Nevada (tun.touro.edu) ... not found
+[ 1818/2323] Touro University (touro.edu) ... not found
+[ 1819/2323] Toyota Technological Institute at Chicago (ttic.edu) ... not found
+[ 1820/2323] Touro University Worldwide (tuw.edu) ... not found
+[ 1821/2323] Towson University (towson.edu) ... not found
+[ 1822/2323] Touro University California (tu.edu) ... not found
+[ 1823/2323] Transylvania University (transy.edu) ... not found
+[ 1824/2323] Trevecca Nazarene University (trevecca.edu) ... not found
+[ 1825/2323] Trine University (trine.edu) ... not found
+[ 1826/2323] Trine University-Regional/Non-Traditional Campuses (trine.edu) ... not found
+[ 1827/2323] Trinidad State College (trinidadstate.edu) ... not found
+[ 1828/2323] Texas Southern University (tsu.edu) ... not found
+[ 1829/2323] Tri-State Bible College (tsbc.edu) ... not found
+[ 1830/2323] Trinity Bible College and Graduate School (trinitybiblecollege.edu) ... not found
+[ 1831/2323] Trinity College (trincoll.edu) ... not found
+[ 1832/2323] Trinity Baptist College (tbc.edu) ... not found
+[ 1833/2323] Trinity Episcopal School for Ministry (tsm.edu) ... not found
+[ 1834/2323] The Rockefeller University (rockefeller.edu) ... not found
+[ 1835/2323] Trinity Christian College (trnty.edu) ... not found
+[ 1836/2323] Trinity University (new.trinity.edu) ... not found
+[ 1837/2323] Trinity International University-Florida (tiu.edu) ... not found
+[ 1838/2323] Trinity College of Nursing & Health Sciences (trinitycollegeqc.edu) ... not found
+[ 1839/2323] Trinity International University-Illinois (tiu.edu) ... not found
+[ 1840/2323] Trinity Law School (tiu.edu) ... not found
+[ 1841/2323] Trinity College of Florida (trinitycollege.edu) ... not found
+[ 1842/2323] Troy University (troy.edu) ... not found
+[ 1843/2323] Trinity Washington University (trinitydc.edu) ... not found
+[ 1844/2323] Truett McConnell University (truett.edu) ... not found
+[ 1845/2323] Trocaire College (trocaire.edu) ... not found
+[ 1846/2323] Tusculum University (tusculum.edu) ... not found
+[ 1847/2323] Truckee Meadows Community College (tmcc.edu) ... not found
+[ 1848/2323] Thomas University (thomasu.edu) ... not found
+[ 1849/2323] Tuskegee University (tuskegee.edu) ... not found
+[ 1850/2323] Union Bible College (ubca.org) ... not found
+  [checkpoint saved at 1850/2323]
+[ 1851/2323] Tyler Junior College (tjc.edu) ... not found
+[ 1852/2323] Union Institute & University (myunion.edu) ... not found
+[ 1853/2323] Turtle Mountain Community College (tm.edu) ... not found
+[ 1854/2323] Union College (union.edu) ... not found
+[ 1855/2323] Union University (uu.edu) ... not found
+[ 1856/2323] Union Theological Seminary in the City of New York (utsnyc.edu) ... not found
+[ 1857/2323] Union Presbyterian Seminary (upsem.edu) ... not found
+[ 1858/2323] United States Air Force Academy (usafa.edu) ... not found
+[ 1859/2323] United Lutheran Seminary (unitedlutheranseminary.edu) ... not found
+[ 1860/2323] United States Merchant Marine Academy (usmma.edu) ... not found
+[ 1861/2323] Union Adventist University (ucollege.edu) ... not found
+[ 1862/2323] Tulane University of Louisiana (tulane.edu) ... not found
+[ 1863/2323] United Talmudical Seminary (utsny.edu) ... not found
+[ 1864/2323] Trinity Valley Community College (tvcc.edu) ... not found
+[ 1865/2323] United States Naval Academy (usna.edu) ... not found
+[ 1866/2323] United States Military Academy (westpoint.edu) ... not found
+[ 1867/2323] United States Coast Guard Academy (uscga.edu) ... not found
+[ 1868/2323] United States Sports Academy (ussa.edu) ... not found
+[ 1869/2323] United Tribes Technical College (uttc.edu) ... not found
+[ 1870/2323] University at Albany (albany.edu) ... not found
+[ 1871/2323] United Theological Seminary of the Twin Cities (unitedseminary.edu) ... not found
+[ 1872/2323] Unity Environmental University (unity.edu) ... not found
+[ 1873/2323] University of Akron Main Campus (uakron.edu) ... not found
+[ 1874/2323] University at Buffalo (buffalo.edu) ... not found
+[ 1875/2323] United Theological Seminary (united.edu) ... not found
+[ 1876/2323] University of Alabama in Huntsville (uah.edu) ... not found
+[ 1877/2323] University of Alabama System Office (uasystem.edu) ... not found
+[ 1878/2323] Union College (unionky.edu) ... not found
+[ 1879/2323] University of Alabama at Birmingham (uab.edu) ... not found
+[ 1880/2323] University of Arkansas at Little Rock (ualr.edu) ... FOUND: https://ualr.edu/institutionalresearch/common-data-set/
+[ 1881/2323] University of Alaska Fairbanks (uaf.edu) ... not found
+[ 1882/2323] University of Alaska Southeast (uas.alaska.edu) ... not found
+[ 1883/2323] University of Alaska Anchorage (uaa.alaska.edu) ... not found
+[ 1884/2323] University of Arkansas at Monticello (uamont.edu) ... not found
+[ 1885/2323] University of Alaska System of Higher Education (alaska.edu) ... not found
+[ 1886/2323] University of Arkansas for Medical Sciences (uams.edu) ... not found
+[ 1887/2323] University of Arkansas (uark.edu) ... not found
+[ 1888/2323] University of Arkansas-Fort Smith (uafs.edu) ... not found
+[ 1889/2323] University of Arkansas System Office (uasys.edu) ... not found
+[ 1890/2323] University of Arkansas at Pine Bluff (uapb.edu) ... not found
+[ 1891/2323] University of Baltimore (ubalt.edu) ... not found
+[ 1892/2323] University of Arkansas Grantham (uagrantham.edu) ... not found
+[ 1893/2323] University of California College of the Law-San Francisco (uclawsf.edu) ... not found
+[ 1894/2323] University of California-Riverside (ucr.edu) ... not found
+[ 1895/2323] University of California-Santa Cruz (ucsc.edu) ... not found
+[ 1896/2323] University of California-San Francisco (ucsf.edu) ... not found
+[ 1897/2323] University of California-System Administration Central Office (ucop.edu) ... not found
+[ 1898/2323] University of Central Arkansas (uca.edu) ... not found
+[ 1899/2323] University of Central Florida (ucf.edu) ... not found
+[ 1900/2323] University of Central Missouri (ucmo.edu) ... not found
+  [checkpoint saved at 1900/2323]
+[ 1901/2323] University of Central Oklahoma (uco.edu) ... not found
+[ 1902/2323] University of Charleston (ucwv.edu) ... not found
+[ 1903/2323] University of Cincinnati-Blue Ash College (ucblueash.edu) ... not found
+[ 1904/2323] University of Cincinnati-Clermont College (ucclermont.edu) ... not found
+[ 1905/2323] University of Colorado Colorado Springs (uccs.edu) ... not found
+[ 1906/2323] University of Colorado Denver/Anschutz Medical Campus (ucdenver.edu) ... not found
+[ 1907/2323] University of Bridgeport (bridgeport.edu) ... not found
+[ 1908/2323] University of Colorado System Office (cu.edu) ... not found
+[ 1909/2323] University of Connecticut (uconn.edu) ... FOUND: https://oir.uconn.edu/institutional-research/common-data-set/
+[ 1910/2323] University of Connecticut-Avery Point (averypoint.uconn.edu) ... not found
+[ 1911/2323] University of Connecticut-Hartford Campus (hartford.uconn.edu) ... not found
+[ 1912/2323] University of Arizona (arizona.edu) ... not found
+[ 1913/2323] University of Connecticut-Stamford (stamford.uconn.edu) ... not found
+[ 1914/2323] University of Dallas (udallas.edu) ... not found
+[ 1915/2323] University of Connecticut-Waterbury Campus (waterbury.uconn.edu) ... not found
+[ 1916/2323] University of Dubuque (dbq.edu) ... not found
+[ 1917/2323] University of Denver (du.edu) ... not found
+[ 1918/2323] University of Detroit Mercy (udmercy.edu) ... not found
+[ 1919/2323] University of Dayton (udayton.edu) ... not found
+[ 1920/2323] University of Hartford (hartford.edu) ... not found
+[ 1921/2323] University of Florida-Online (ufonline.ufl.edu) ... not found
+[ 1922/2323] University of Hawaii at Hilo (hilo.hawaii.edu) ... not found
+[ 1923/2323] University of Hawaii at Manoa (manoa.hawaii.edu) ... not found
+[ 1924/2323] University of Fort Lauderdale (uftl.edu) ... not found
+[ 1925/2323] University of Hawaii System Office (hawaii.edu) ... not found
+[ 1926/2323] University of Holy Cross (uhcno.edu) ... not found
+[ 1927/2323] University of Health Sciences and Pharmacy in St. Louis (uhsp.edu) ... not found
+[ 1928/2323] University of Houston (uh.edu) ... not found
+[ 1929/2323] University of Houston-Clear Lake (uhcl.edu) ... not found
+[ 1930/2323] University of Houston-Downtown (uhd.edu) ... not found
+[ 1931/2323] University of Houston-System Administration (uh.edu) ... not found
+[ 1932/2323] University of Hawaii-West Oahu (westoahu.hawaii.edu) ... not found
+[ 1933/2323] University of Idaho (uidaho.edu) ... not found
+[ 1934/2323] University of Houston-Victoria (uhv.edu) ... not found
+[ 1935/2323] University of Illinois Chicago (uic.edu) ... FOUND: https://oir.uic.edu/institutional-research/common-data-set/
+[ 1936/2323] University of Illinois System Offices (uillinois.edu) ... not found
+[ 1937/2323] University of Illinois Springfield (uis.edu) ... not found
+[ 1938/2323] University of Illinois Urbana-Champaign (illinois.edu) ... not found
+[ 1939/2323] University of Jamestown (uj.edu) ... not found
+[ 1940/2323] University of Kansas (ku.edu) ... not found
+[ 1941/2323] University of Iowa (uiowa.edu) ... not found
+[ 1942/2323] Truman State University (truman.edu) ... not found
+[ 1943/2323] University of Louisiana at Monroe (ulm.edu) ... not found
+[ 1944/2323] University of La Verne (laverne.edu) ... not found
+[ 1945/2323] University of Louisville (louisville.edu) ... FOUND: https://louisville.edu/common-data-set/
+[ 1946/2323] University of Louisiana-System Administration (ulsystem.edu) ... not found
+[ 1947/2323] University of Kentucky (uky.edu) ... not found
+[ 1948/2323] University of Evansville (evansville.edu) ... not found
+[ 1949/2323] University of Lynchburg (lynchburg.edu) ... not found
+[ 1950/2323] University of Louisiana at Lafayette (louisiana.edu) ... not found
+  [checkpoint saved at 1950/2323]
+[ 1951/2323] University of Maine at Augusta (uma.edu) ... not found
+[ 1952/2323] University of California-Merced (ucmerced.edu) ... not found
+[ 1953/2323] University of Hawaii Maui College (maui.hawaii.edu) ... not found
+[ 1954/2323] University of Maine at Presque Isle (umpi.edu) ... FOUND: https://umpi.edu/about/institutional-research/common-data-set/
+[ 1955/2323] University of Maine at Farmington (umf.maine.edu) ... not found
+[ 1956/2323] University of Indianapolis (uindy.edu) ... not found
+[ 1957/2323] University of Mary (umary.edu) ... not found
+[ 1958/2323] University of Maryland Eastern Shore (wwwcp.umes.edu) ... not found
+[ 1959/2323] University of Maine at Fort Kent (umfk.maine.edu) ... not found
+[ 1960/2323] University of Mary Hardin-Baylor (go.umhb.edu) ... not found
+[ 1961/2323] University of Maine (umaine.edu) ... not found
+[ 1962/2323] University of Maine-System Central Office (maine.edu) ... not found
+[ 1963/2323] University of Massachusetts Chan Medical School (umassmed.edu) ... not found
+[ 1964/2323] University of Maryland, Baltimore (umaryland.edu) ... not found
+[ 1965/2323] University of Maryland Global Campus (umgc.edu) ... not found
+[ 1966/2323] University of Massachusetts Global (umassglobal.edu) ... not found
+[ 1967/2323] University of Mary Washington (umw.edu) ... not found
+[ 1968/2323] University of Massachusetts-Boston (umb.edu) ... not found
+[ 1969/2323] University of Maryland-Baltimore County (umbc.edu) ... not found
+[ 1970/2323] University of Massachusetts-Amherst (umass.edu) ... not found
+[ 1971/2323] University of Massachusetts-Central Office (massachusetts.edu) ... not found
+[ 1972/2323] University of Michigan-Dearborn (umdearborn.edu) ... not found
+[ 1973/2323] University of Massachusetts-Lowell (uml.edu) ... not found
+[ 1974/2323] University of Miami (miami.edu) ... not found
+[ 1975/2323] University of Michigan-Flint (umflint.edu) ... not found
+[ 1976/2323] University of Missouri-Columbia (missouri.edu) ... FOUND: https://ir.missouri.edu/institutional-research/common-data-set/
+[ 1977/2323] University of Minnesota-Morris (morris.umn.edu) ... not found
+[ 1978/2323] University of Minnesota-Crookston (crk.umn.edu) ... not found
+[ 1979/2323] University of Minnesota-Duluth (d.umn.edu) ... not found
+[ 1980/2323] University of Minnesota-Rochester (r.umn.edu) ... not found
+[ 1981/2323] University of Missouri-Kansas City (umkc.edu) ... not found
+[ 1982/2323] University of Mobile (umobile.edu) ... not found
+[ 1983/2323] University of Mississippi (olemiss.edu) ... not found
+[ 1984/2323] University of Missouri-System Office (umsystem.edu) ... not found
+[ 1985/2323] University of Mount Saint Vincent (mountsaintvincent.edu) ... not found
+[ 1986/2323] University of Montevallo (montevallo.edu) ... not found
+[ 1987/2323] University of Mount Union (mountunion.edu) ... not found
+[ 1988/2323] University of Nebraska at Kearney (unk.edu) ... not found
+[ 1989/2323] University of Mount Olive (umo.edu) ... not found
+[ 1990/2323] University of Nebraska at Omaha (unomaha.edu) ... not found
+[ 1991/2323] University of Nevada-Reno (unr.edu) ... not found
+[ 1992/2323] University of Nebraska Medical Center (unmc.edu) ... not found
+[ 1993/2323] University of Memphis (memphis.edu) ... not found
+[ 1994/2323] University of Nebraska-Central Administration System Office (nebraska.edu) ... not found
+[ 1995/2323] University of New England (une.edu) ... not found
+[ 1996/2323] University of Nebraska-Lincoln (unl.edu) ... not found
+[ 1997/2323] University of Nevada-Las Vegas (unlv.edu) ... not found
+[ 1998/2323] University of New Hampshire at Manchester (manchester.unh.edu) ... not found
+[ 1999/2323] University of New Hampshire College of Professional Studies Online (cps.unh.edu) ... not found
+[ 2000/2323] University of New Orleans (new.uno.edu) ... not found
+  [checkpoint saved at 2000/2323]
+[ 2001/2323] University of New Hampshire-Franklin Pierce School of Law (law.unh.edu) ... not found
+[ 2002/2323] University of New Mexico-Main Campus (unm.edu) ... not found
+[ 2003/2323] University of New Hampshire-Main Campus (unh.edu) ... not found
+[ 2004/2323] University of North Carolina at Charlotte (charlotte.edu) ... FOUND: https://ir.charlotte.edu/common-data-set/
+[ 2005/2323] University of North Alabama (una.edu) ... not found
+[ 2006/2323] University of Missouri-St Louis (umsl.edu) ... not found
+[ 2007/2323] University of New Haven (newhaven.edu) ... not found
+[ 2008/2323] University of North Carolina at Pembroke (uncp.edu) ... not found
+[ 2009/2323] University of North Carolina School of the Arts (uncsa.edu) ... not found
+[ 2010/2323] University of North Carolina Asheville (unca.edu) ... not found
+[ 2011/2323] University of North Florida (unf.edu) ... not found
+[ 2012/2323] University of North Carolina at Greensboro (uncg.edu) ... not found
+[ 2013/2323] University of North Texas (unt.edu) ... not found
+[ 2014/2323] University of North Georgia (ung.edu) ... not found
+[ 2015/2323] University of North Carolina Wilmington (uncw.edu) ... not found
+[ 2016/2323] University of North Texas at Dallas (untdallas.edu) ... not found
+[ 2017/2323] University of North Texas System (untsystem.unt.edu) ... not found
+[ 2018/2323] University of Northwestern Ohio (unoh.edu) ... not found
+[ 2019/2323] University of Northwestern-St Paul (unwsp.edu) ... not found
+[ 2020/2323] University of Northern Colorado (unco.edu) ... not found
+[ 2021/2323] University of North Carolina System (northcarolina.edu) ... not found
+[ 2022/2323] University of Oklahoma-Health Sciences Center (ouhsc.edu) ... not found
+[ 2023/2323] University of Oklahoma-Norman Campus (ou.edu) ... not found
+[ 2024/2323] University of Northern Iowa (uni.edu) ... not found
+[ 2025/2323] University of Oregon (uoregon.edu) ... not found
+[ 2026/2323] University of Pittsburgh-Bradford (upb.pitt.edu) ... not found
+[ 2027/2323] University of Pittsburgh-Greensburg (greensburg.pitt.edu) ... not found
+[ 2028/2323] University of North Dakota (und.edu) ... not found
+[ 2029/2323] University of Portland (up.edu) ... not found
+[ 2030/2323] University of Pittsburgh-Johnstown (upj.pitt.edu) ... not found
+[ 2031/2323] University of Pikeville (upike.edu) ... not found
+[ 2032/2323] University of Redlands (redlands.edu) ... not found
+[ 2033/2323] University of Providence (uprovidence.edu) ... not found
+[ 2034/2323] University of Rhode Island (web.uri.edu) ... not found
+[ 2035/2323] University of North Texas Health Science Center (unthsc.edu) ... not found
+[ 2036/2323] University of Rio Grande (rio.edu) ... not found
+[ 2037/2323] University of Saint Francis-Fort Wayne (sf.edu) ... not found
+[ 2038/2323] University of Saint Katherine (usk.edu) ... not found
+[ 2039/2323] University of Saint Joseph (usj.edu) ... not found
+[ 2040/2323] University of Rochester (rochester.edu) ... not found
+[ 2041/2323] University of Saint Mary (stmary.edu) ... not found
+[ 2042/2323] University of Notre Dame (nd.edu) ... not found
+[ 2043/2323] University of Silicon Andhra (uofsa.edu) ... not found
+[ 2044/2323] University of Richmond (richmond.edu) ... not found
+[ 2045/2323] University of San Diego (sandiego.edu) ... not found
+[ 2046/2323] University of San Francisco (usfca.edu) ... not found
+[ 2047/2323] University of Science and Arts of Oklahoma (usao.edu) ... not found
+[ 2048/2323] University of South Carolina Aiken (usca.edu) ... not found
+[ 2049/2323] University of South Alabama (southalabama.edu) ... not found
+[ 2050/2323] University of Scranton (scranton.edu) ... not found
+  [checkpoint saved at 2050/2323]
+[ 2051/2323] University of South Carolina Beaufort (uscb.edu) ... not found
+[ 2052/2323] University of South Carolina-Upstate (uscupstate.edu) ... not found
+[ 2053/2323] University of South Carolina-Columbia (sc.edu) ... not found
+[ 2054/2323] University of South Dakota (usd.edu) ... not found
+[ 2055/2323] University of Southern Indiana (usi.edu) ... not found
+[ 2056/2323] University of Sioux Falls (usiouxfalls.edu) ... not found
+[ 2057/2323] University of Southern Mississippi (usm.edu) ... not found
+[ 2058/2323] University of Southern Maine (usm.maine.edu) ... not found
+[ 2059/2323] University of the Arts (uarts.edu) ... not found
+[ 2060/2323] University of St Thomas (stthomas.edu) ... not found
+[ 2061/2323] University of St Francis (stfrancis.edu) ... not found
+[ 2062/2323] University of St Thomas (stthom.edu) ... not found
+[ 2063/2323] University of Texas Southwestern Medical Center (utsouthwestern.edu) ... not found
+[ 2064/2323] University of the Incarnate Word (uiw.edu) ... not found
+[ 2065/2323] University of the District of Columbia (udc.edu) ... not found
+[ 2066/2323] University of the Cumberlands (ucumberlands.edu) ... not found
+[ 2067/2323] University of the Ozarks (ozarks.edu) ... not found
+[ 2068/2323] University of the Southwest (usw.edu) ... not found
+[ 2069/2323] University of the People (uopeople.edu) ... not found
+[ 2070/2323] University of Puget Sound (pugetsound.edu) ... not found
+[ 2071/2323] University of Tulsa (utulsa.edu) ... not found
+[ 2072/2323] University of Utah (utah.edu) ... not found
+[ 2073/2323] University of Vermont (uvm.edu) ... FOUND: https://uvm.edu/oir/common-data-set/
+[ 2074/2323] University of Virginia's College at Wise (uvawise.edu) ... not found
+[ 2075/2323] University of the West (uwest.edu) ... not found
+[ 2076/2323] University of Washington-Tacoma Campus (tacoma.uw.edu) ... not found
+[ 2077/2323] University of Valley Forge (valleyforge.edu) ... not found
+[ 2078/2323] University of West Alabama (uwa.edu) ... not found
+[ 2079/2323] University of West Georgia (westga.edu) ... not found
+[ 2080/2323] University of Wisconsin-Eau Claire (uwec.edu) ... FOUND: https://uwec.edu/institutional-research/common-data-set/
+[ 2081/2323] University of West Florida (uwf.edu) ... not found
+[ 2082/2323] University of Wisconsin-Green Bay (uwgb.edu) ... not found
+[ 2083/2323] University of Western States (uws.edu) ... not found
+[ 2084/2323] University of Toledo (utoledo.edu) ... not found
+[ 2085/2323] University of Wisconsin-Oshkosh (uwosh.edu) ... FOUND: https://uwosh.edu/oir/common-data-set/
+[ 2086/2323] University of Wisconsin-La Crosse (uwlax.edu) ... not found
+[ 2087/2323] University of Wisconsin-Milwaukee (uwm.edu) ... not found
+[ 2088/2323] University of Wisconsin-Parkside (uwp.edu) ... not found
+[ 2089/2323] University of South Florida (usf.edu) ... not found
+[ 2090/2323] University of Wisconsin-Milwaukee Flex (flex.wisconsin.edu) ... not found
+[ 2091/2323] University of Wisconsin-Parkside Flex (flex.wisconsin.edu) ... not found
+[ 2092/2323] University of Wisconsin-Platteville (uwplatt.edu) ... not found
+[ 2093/2323] University of Wisconsin-River Falls (uwrf.edu) ... not found
+[ 2094/2323] University of Wisconsin-Stevens Point (uwsp.edu) ... not found
+[ 2095/2323] University of Wisconsin-Superior (uwsuper.edu) ... not found
+[ 2096/2323] University of Wisconsin-Stout (uwstout.edu) ... not found
+[ 2097/2323] University of Wisconsin-Whitewater (uww.edu) ... not found
+[ 2098/2323] University of Wisconsin-System Administration (wisconsin.edu) ... not found
+[ 2099/2323] University System of Maryland (usmd.edu) ... not found
+[ 2100/2323] University System of Maryland-Research Centers (usmd.edu) ... not found
+  [checkpoint saved at 2100/2323]
+[ 2101/2323] Upper Iowa University (uiu.edu) ... not found
+[ 2102/2323] Upstate Medical University (upstate.edu) ... not found
+[ 2103/2323] University System of New Hampshire System Office (usnh.edu) ... not found
+[ 2104/2323] Urshan Graduate School of Theology (ugst.edu) ... not found
+[ 2105/2323] Ursinus College (ursinus.edu) ... not found
+[ 2106/2323] Ursuline College (ursuline.edu) ... not found
+[ 2107/2323] Urbana Theological Seminary (urbanatheologicalseminary.org) ... not found
+[ 2108/2323] Utah State University (usu.edu) ... not found
+[ 2109/2323] Utah Valley University (uvu.edu) ... not found
+[ 2110/2323] Utah Tech University (utahtech.edu) ... FOUND: https://ir.utahtech.edu/institutional-research/common-data-set/
+[ 2111/2323] University of Wyoming (uwyo.edu) ... not found
+[ 2112/2323] Utica University (utica.edu) ... not found
+[ 2113/2323] Valdosta State University (valdosta.edu) ... not found
+[ 2114/2323] Valencia College (valenciacollege.edu) ... not found
+[ 2115/2323] Valor Christian College (valorcollege.edu) ... not found
+[ 2116/2323] Valparaiso University (valpo.edu) ... not found
+[ 2117/2323] VanderCook College of Music (vandercook.edu) ... not found
+[ 2118/2323] Vanguard University of Southern California (vanguard.edu) ... not found
+[ 2119/2323] Vassar College (vassar.edu) ... not found
+[ 2120/2323] University of Saint Mary of the Lake (usml.edu) ... not found
+[ 2121/2323] University of Washington-Bothell Campus (uwb.edu) ... not found
+[ 2122/2323] Veritas Baptist College (vbc.edu) ... not found
+[ 2123/2323] Uta Mesivta of Kiryas Joel (utam.edu) ... not found
+[ 2124/2323] Vermont State Colleges-Office of the Chancellor (vsc.edu) ... not found
+[ 2125/2323] Vermont College of Fine Arts (vcfa.edu) ... not found
+[ 2126/2323] Vermont State University (vermontstate.edu) ... not found
+[ 2127/2323] Villa Maria College (villa.edu) ... not found
+[ 2128/2323] Villanova University (villanova.edu) ... not found
+[ 2129/2323] Urshan College (urshancollege.org) ... not found
+[ 2130/2323] Vermont Law and Graduate School (vermontlaw.edu) ... not found
+[ 2131/2323] Virginia Beach Theological Seminary (vbts.edu) ... not found
+[ 2132/2323] Vincennes University (vinu.edu) ... not found
+[ 2133/2323] Virginia Commonwealth University (vcu.edu) ... not found
+[ 2134/2323] Virginia Polytechnic Institute and State University (vt.edu) ... not found
+[ 2135/2323] Virginia Union University (vuu.edu) ... not found
+[ 2136/2323] Virginia Military Institute (vmi.edu) ... not found
+[ 2137/2323] University of the Pacific (pacific.edu) ... not found
+[ 2138/2323] Virginia University of Integrative Medicine (vuim.edu) ... not found
+[ 2139/2323] Virginia University of Lynchburg (vul.edu) ... not found
+[ 2140/2323] Virginia Wesleyan University (vwu.edu) ... not found
+[ 2141/2323] Visible Music College (visible.edu) ... not found
+[ 2142/2323] Viterbo University (viterbo.edu) ... not found
+[ 2143/2323] Walla Walla Community College (wwcc.edu) ... not found
+[ 2144/2323] Wagner College (wagner.edu) ... not found
+[ 2145/2323] Wabash College (wabash.edu) ... not found
+[ 2146/2323] Walla Walla University (wallawalla.edu) ... not found
+[ 2147/2323] Walsh University (walsh.edu) ... not found
+[ 2148/2323] Warner Pacific University (warnerpacific.edu) ... not found
+[ 2149/2323] Vaughn College of Aeronautics and Technology (vaughn.edu) ... not found
+[ 2150/2323] Warner Pacific University Professional and Graduate Studies (warnerpacific.edu) ... not found
+  [checkpoint saved at 2150/2323]
+[ 2151/2323] Wartburg Theological Seminary (wartburgseminary.edu) ... not found
+[ 2152/2323] Warren Wilson College (warren-wilson.edu) ... not found
+[ 2153/2323] Valley City State University (vcsu.edu) ... not found
+[ 2154/2323] Warner University (warner.edu) ... not found
+[ 2155/2323] Wartburg College (wartburg.edu) ... not found
+[ 2156/2323] Virginia State University (vsu.edu) ... not found
+[ 2157/2323] Washburn University (washburn.edu) ... not found
+[ 2158/2323] Washington College (washcoll.edu) ... not found
+[ 2159/2323] Washington & Jefferson College (washjeff.edu) ... not found
+[ 2160/2323] Voorhees University (voorhees.edu) ... not found
+[ 2161/2323] Watts College of Nursing (wattscollegeofnursing.edu) ... not found
+[ 2162/2323] Wayne State College (wsc.edu) ... not found
+[ 2163/2323] Washington University in St Louis (wustl.edu) ... not found
+[ 2164/2323] Wayland Baptist University (wbu.edu) ... not found
+[ 2165/2323] Washington State University (wsu.edu) ... not found
+[ 2166/2323] Waynesburg University (waynesburg.edu) ... not found
+[ 2167/2323] Weatherford College (wc.edu) ... not found
+[ 2168/2323] Washington State Community College (wscc.edu) ... not found
+[ 2169/2323] Weber State University (weber.edu) ... not found
+[ 2170/2323] Webster University (webster.edu) ... not found
+[ 2171/2323] Weill Medical College of Cornell University (weill.cornell.edu) ... not found
+[ 2172/2323] Webb Institute (webb.edu) ... not found
+[ 2173/2323] Walsh College (walshcollege.edu) ... not found
+[ 2174/2323] Wenatchee Valley College (wvc.edu) ... not found
+[ 2175/2323] Wells College (wells.edu) ... not found
+[ 2176/2323] Wesley Biblical Seminary (wbs.edu) ... not found
+[ 2177/2323] Webber International University (webber.edu) ... not found
+[ 2178/2323] Welch College (welch.edu) ... not found
+[ 2179/2323] Wentworth Institute of Technology (wit.edu) ... not found
+[ 2180/2323] Wesleyan University (wesleyan.edu) ... not found
+[ 2181/2323] West Los Angeles College (wlac.edu) ... not found
+[ 2182/2323] Wayne State University (wayne.edu) ... not found
+[ 2183/2323] West Liberty University (westliberty.edu) ... not found
+[ 2184/2323] Wellesley College (wellesley.edu) ... not found
+[ 2185/2323] West Chester University of Pennsylvania (wcupa.edu) ... not found
+[ 2186/2323] Wesley Theological Seminary (wesleyseminary.edu) ... not found
+[ 2187/2323] West Texas A & M University (wtamu.edu) ... not found
+[ 2188/2323] West Virginia State University (wvstateu.edu) ... not found
+[ 2189/2323] West Virginia University (wvu.edu) ... not found
+[ 2190/2323] West Virginia School of Osteopathic Medicine (wvsom.edu) ... not found
+[ 2191/2323] West Virginia University at Parkersburg (wvup.edu) ... not found
+[ 2192/2323] Western Governors University (wgu.edu) ... not found
+[ 2193/2323] West Virginia University Institute of Technology (wvutech.edu) ... not found
+[ 2194/2323] West Virginia Wesleyan College (wvwc.edu) ... not found
+[ 2195/2323] Western Carolina University (wcu.edu) ... not found
+[ 2196/2323] Western Connecticut State University (wcsu.edu) ... not found
+[ 2197/2323] Western Michigan University Homer Stryker M.D. School of Medicine (wmed.edu) ... not found
+[ 2198/2323] Western New England University (wne.edu) ... FOUND: https://wne.edu/institutional-research/common-data-set/
+[ 2199/2323] Washington Adventist University (wau.edu) ... not found
+[ 2200/2323] Western Kentucky University (wku.edu) ... not found
+  [checkpoint saved at 2200/2323]
+[ 2201/2323] Western Michigan University (wmich.edu) ... not found
+[ 2202/2323] Western Nevada College (wnc.edu) ... not found
+[ 2203/2323] Western Illinois University (wiu.edu) ... not found
+[ 2204/2323] Western New Mexico University (wnmu.edu) ... not found
+[ 2205/2323] Western Seminary (westernseminary.edu) ... not found
+[ 2206/2323] Western University of Health Sciences (westernu.edu) ... not found
+[ 2207/2323] Western Theological Seminary (westernsem.edu) ... not found
+[ 2208/2323] Western Washington University (wwu.edu) ... not found
+[ 2209/2323] Western Wyoming Community College (westernwyoming.edu) ... not found
+[ 2210/2323] Western Oregon University (wou.edu) ... not found
+[ 2211/2323] Westminster College (wcmo.edu) ... not found
+[ 2212/2323] Westminster University (westminstercollege.edu) ... FOUND: https://westminstercollege.edu/about/institutional-research/common-data-set/
+[ 2213/2323] Wesleyan College (wesleyancollege.edu) ... not found
+[ 2214/2323] Westminster Theological Seminary in California (wscal.edu) ... not found
+[ 2215/2323] Wheaton College (Massachusetts) (wheatoncollege.edu) ... FOUND: https://wheatoncollege.edu/ir/cds/
+[ 2216/2323] Westminster Theological Seminary (wts.edu) ... not found
+[ 2217/2323] Whitman College (whitman.edu) ... FOUND: https://whitman.edu/institutional-research/common-data-set/
+[ 2218/2323] Whatcom Community College (whatcom.edu) ... not found
+[ 2219/2323] Westmont College (westmont.edu) ... not found
+[ 2220/2323] Westfield State University (westfield.ma.edu) ... not found
+[ 2221/2323] Wheaton College (wheaton.edu) ... not found
+[ 2222/2323] Whittier College (whittier.edu) ... not found
+[ 2223/2323] Western Colorado University (western.edu) ... not found
+[ 2224/2323] Wichita State University (wichita.edu) ... not found
+[ 2225/2323] Whitworth University (whitworth.edu) ... not found
+[ 2226/2323] Whitworth University-Adult Degree Programs (whitworth.edu) ... not found
+[ 2227/2323] Widener University (widener.edu) ... not found
+[ 2228/2323] Wilkes University (wilkes.edu) ... not found
+[ 2229/2323] Wilberforce University (wilberforce.edu) ... not found
+[ 2230/2323] Wheeling University (wheeling.edu) ... not found
+[ 2231/2323] Willamette University (willamette.edu) ... not found
+[ 2232/2323] William Carey University (wmcarey.edu) ... not found
+[ 2233/2323] William James College (williamjames.edu) ... not found
+[ 2234/2323] Wiley University (wileyc.edu) ... not found
+[ 2235/2323] William Jewell College (jewell.edu) ... not found
+[ 2236/2323] William Paterson University of New Jersey (wpunj.edu) ... not found
+[ 2237/2323] William & Mary (wm.edu) ... not found
+[ 2238/2323] Williams College (williams.edu) ... not found
+[ 2239/2323] William Penn University (wmpenn.edu) ... not found
+[ 2240/2323] Wilmington College (wilmington.edu) ... not found
+[ 2241/2323] William Peace University (peace.edu) ... not found
+[ 2242/2323] William Jessup University (jessup.edu) ... not found
+[ 2243/2323] William Woods University (williamwoods.edu) ... not found
+[ 2244/2323] Wilson College (wilson.edu) ... not found
+[ 2245/2323] Wilmington University (wilmu.edu) ... not found
+[ 2246/2323] Winona State University (winona.edu) ... not found
+[ 2247/2323] Wingate University (wingate.edu) ... not found
+[ 2248/2323] Winston-Salem State University (wssu.edu) ... not found
+[ 2249/2323] Williams Baptist University (williamsbaptistuniversity.com) ... not found
+[ 2250/2323] Winthrop University (winthrop.edu) ... not found
+  [checkpoint saved at 2250/2323]
+[ 2251/2323] Williamson Christian College (williamsoncc.edu) ... not found
+[ 2252/2323] Wisconsin Lutheran College (wlc.edu) ... not found
+[ 2253/2323] Wisconsin School of Professional Psychology (wspp.edu) ... not found
+[ 2254/2323] Women's Institute of Torah Seminary and College (wits.edu) ... not found
+[ 2255/2323] Wittenberg University (wittenberg.edu) ... not found
+[ 2256/2323] Won Institute of Graduate Studies (woninstitute.edu) ... not found
+[ 2257/2323] Wofford College (wofford.edu) ... not found
+[ 2258/2323] Wright Graduate University for the Realization of Human Potential (None) ... not found
+[ 2259/2323] Westminster College (westminster.edu) ... not found
+[ 2260/2323] Worcester Polytechnic Institute (wpi.edu) ... not found
+[ 2261/2323] World Mission University (wmu.edu) ... not found
+[ 2262/2323] Woodbury University (woodbury.edu) ... not found
+[ 2263/2323] Wright State University-Lake Campus (lake.wright.edu) ... not found
+[ 2264/2323] Worcester State University (worcester.edu) ... not found
+[ 2265/2323] Yakima Valley College (yvcc.edu) ... not found
+[ 2266/2323] Xavier University of Louisiana (xula.edu) ... not found
+[ 2267/2323] Xavier University (xavier.edu) ... not found
+[ 2268/2323] Wright State University-Main Campus (wright.edu) ... not found
+[ 2269/2323] Yeshiva Bais Aharon (yeshivabaisaharon.com) ... not found
+[ 2270/2323] Yeshiva Chemdas Hatorah (yeshivachemdashatorah.com) ... not found
+[ 2271/2323] Yavapai College (yc.edu) ... not found
+[ 2272/2323] Yeshiva D'monsey Rabbinical College (yeshivadmonsey.com) ... not found
+[ 2273/2323] Yeshiva Gedola Tiferes Yerachmiel (yeshivagedolatiferesyerachmiel.com) ... not found
+[ 2274/2323] Yeshiva Gedolah Imrei Yosef D'spinka (spinka58st.com) ... not found
+[ 2275/2323] Wongu University of Oriental Medicine (wongu.edu) ... not found
+[ 2276/2323] Yeshiva Gedolah Keren Hatorah (yeshivagedolahkerenhatorah.com) ... not found
+[ 2277/2323] Yeshiva Derech Chaim (ydc.edu) ... not found
+[ 2278/2323] Yeshiva Gedolah of Greater Detroit (yeshivagedolahgreaterdetroit.com) ... not found
+[ 2279/2323] Yeshiva Gedolah Kesser Torah (yeshivagedolahkessertorah.com) ... not found
+[ 2280/2323] Yeshiva Gedolah of Cliffwood (yeshivagedolahcliffwood.com) ... not found
+[ 2281/2323] Yeshiva Gedolah of Woodlake Village (yeshivaohrzechariah.com) ... not found
+[ 2282/2323] Yeshiva Gedolah Shaarei Shmuel (yeshivagedolahshaareishmuel.com) ... not found
+[ 2283/2323] Yeshiva Gedolah Zichron Leyma (yzl.edu) ... not found
+[ 2284/2323] Yeshiva Kollel Tifereth Elizer (yeshivakolleltiferethelizer.com) ... not found
+[ 2285/2323] Yeshiva Gedolah Tiferes Boruch (yeshivagedolahtiferesboruch.com) ... not found
+[ 2286/2323] Yeshiva College of the Nations Capital (ycnc.org) ... not found
+[ 2287/2323] Yeshiva Karlin Stolin (yeshivakarlinstolin.org) ... not found
+[ 2288/2323] Yeshiva of Far Rockaway Derech Ayson Rabbinical Seminary (yofr.org) ... not found
+[ 2289/2323] Yeshiva Gedola Tiferes Yaakov Yitzchok (yeshivatyy.com) ... not found
+[ 2290/2323] Yeshiva of Machzikai Hadas (yeshivaofmachzikaihadas.com) ... not found
+[ 2291/2323] Yeshiva of the Telshe Alumni (yeshivatelshealumni.com) ... not found
+[ 2292/2323] Yeshiva of Ocean (yeshivaofocean.com) ... not found
+[ 2293/2323] Yeshiva Ohr Elchonon Chabad West Coast Talmudical Seminary (yoec.edu) ... not found
+[ 2294/2323] Yeshiva of Kasho (yokny.org) ... not found
+[ 2295/2323] Yeshiva Shaar Ephraim (shaarephraim.org) ... not found
+[ 2296/2323] Yeshiva Ohr Naftoli (yeshivaohrnaftoli.com) ... not found
+[ 2297/2323] Winebrenner Theological Seminary (winebrenner.edu) ... not found
+[ 2298/2323] Yeshiva Shaarei Torah of Rockland (yst.edu) ... not found
+[ 2299/2323] Yeshiva Sholom Shachna (yeshivasholomshachna.com) ... not found
+[ 2300/2323] Yeshiva Ohr Yisrael (yoy.edu) ... not found
+  [checkpoint saved at 2300/2323]
+[ 2301/2323] Yeshiva Toras Chaim (ytclakewood.com) ... not found
+[ 2302/2323] Yeshiva University (yu.edu) ... not found
+[ 2303/2323] Yeshiva Zichron Aryeh (yeshivazichronaryeh.com) ... not found
+[ 2304/2323] Yeshiva Yesoda Hatorah Vetz Chaim (yeshivayh.org) ... not found
+[ 2305/2323] Yeshiva Yesodei Hatorah (yeshivayesodeihatorahlakewood.com) ... not found
+[ 2306/2323] Yeshivas Emek Hatorah (yeshivasemekhatorah.com) ... not found
+[ 2307/2323] Yeshivas Novominsk (yeshivasnovominsk.com) ... not found
+[ 2308/2323] Yeshivas Be'er Yitzchok (yeshivasbeeryitzchok.org) ... not found
+[ 2309/2323] Yeshivat Hechal Shemuel (hechalshemuel.com) ... not found
+[ 2310/2323] Yeshivath Beth Moshe (yeshivabethmoshe.com) ... not found
+[ 2311/2323] Yeshivah Gedolah Rabbinical College (lecfl.com) ... not found
+[ 2312/2323] Yeshivath Viznitz (yeshivathviznitz.com) ... not found
+[ 2313/2323] Yeshivath Zichron Moshe (yeshivathzichronmoshe.com) ... not found
+[ 2314/2323] York College of Pennsylvania (ycp.edu) ... not found
+[ 2315/2323] York University (york.edu) ... not found
+[ 2316/2323] Yosemite Community College District Office (yosemite.edu) ... not found
+[ 2317/2323] Young Harris College (yhc.edu) ... not found
+[ 2318/2323] Yo San University of Traditional Chinese Medicine (yosan.edu) ... not found
+[ 2319/2323] Youngstown State University (ysu.edu) ... not found
+[ 2320/2323] Yeshivas Sanz Klauzenburg (yeshivasanzk.org) ... not found
+[ 2321/2323] Zane State College (zanestate.edu) ... not found
+[ 2322/2323] Yeshivath Shaar Hatorah (shaarhatorah.edu) ... not found
+[ 2323/2323] Yeshiva of Nitra Rabbinical College (yeshivaofnitra.org) ... not found
+
+Probed: 2323, Found: 68, Not found: 2255, Skipped (cooldown): 23
+Updated /Users/santhonys/Projects/Owen/colleges/collegedata-fyi/tools/finder/schools.yaml

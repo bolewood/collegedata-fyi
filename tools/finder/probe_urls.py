@@ -142,7 +142,12 @@ def _get(url: str, timeout: int = 10, read_bytes: int = 0,
 
 def _get_full(url: str, timeout: int = 10,
               extra_headers: dict | None = None) -> tuple[int, dict, bytes]:
-    """GET a URL and read the full body. For API/search responses."""
+    """GET a URL and read the full body. For API/search responses.
+
+    Transparently decompresses gzip responses. Callers that send
+    `Accept-Encoding: gzip` (Brave API does) would otherwise see
+    raw gzip bytes where they expect text/JSON and silently fail.
+    """
     hdrs = {"User-Agent": _UA}
     if extra_headers:
         hdrs.update(extra_headers)
@@ -152,6 +157,9 @@ def _get_full(url: str, timeout: int = 10,
             status = resp.status
             headers = {k.lower(): v for k, v in resp.getheaders()}
             body = resp.read()
+            if headers.get("content-encoding", "").lower() == "gzip":
+                import gzip
+                body = gzip.decompress(body)
             return status, headers, body
     except (urllib.error.URLError, urllib.error.HTTPError, OSError, ValueError):
         return -1, {}, b""
@@ -379,8 +387,15 @@ def brave_search(domain: str, api_key: str) -> str | None:
     Free tier: 2,000 queries/month. Paid: $0.003/query.
     Independent index, no domain pre-registration.
     """
-    query = f'site:{domain} filetype:pdf "Common Data Set"'
-    params = urllib.parse.urlencode({"q": query, "count": 5})
+    # NOTE: do not add `filetype:pdf` here. Many schools publish CDS as an
+    # HTML landing page (oair.tulane.edu/common-data-set) or a .cfm page
+    # (american.edu/provost/oira/common-data-set.cfm), not a raw PDF.
+    # Hand-verified via Brave web UI on 2026-04-14: the filetype restriction
+    # returned 0 hits for Tulane while the un-restricted query returned the
+    # live landing page as result #1. The overnight $5 Brave run burned
+    # quota for 0 finds because of this one word.
+    query = f'site:{domain} "Common Data Set"'
+    params = urllib.parse.urlencode({"q": query, "count": 10})
     url = f"https://api.search.brave.com/res/v1/web/search?{params}"
 
     status, headers, body = _get_full(
@@ -392,6 +407,10 @@ def brave_search(domain: str, api_key: str) -> str | None:
         },
     )
     if status != 200:
+        # Surface quota exhaustion (402) and rate limiting (429) instead
+        # of silently returning None like the previous version did.
+        if status in (402, 429):
+            print(f"  [brave] HTTP {status} — quota/rate limit hit", flush=True)
         return None
 
     try:
@@ -400,17 +419,21 @@ def brave_search(domain: str, api_key: str) -> str | None:
         return None
 
     results = data.get("web", {}).get("results", [])
+    # Prefer PDFs when present, but accept CDS landing pages as fallback.
+    landing_fallback = None
     for r in results:
         link = r.get("url", "")
+        if not link:
+            continue
         if link.lower().endswith(".pdf"):
             return link
-        # Landing page with CDS mention
         desc = r.get("description", "").lower()
         title = r.get("title", "").lower()
         if "common data set" in desc or "common data set" in title:
-            return link
+            if landing_fallback is None:
+                landing_fallback = link
 
-    return None
+    return landing_fallback
 
 
 def google_dork(domain: str, api_key: str, cx: str) -> str | None:
@@ -451,6 +474,7 @@ def process_school(school: dict, args: argparse.Namespace,
 
     url = None
     method = "pattern"
+    last_attempted_method = "pattern"
     patterns_tried = 0
     search_tried = False
 
@@ -461,6 +485,7 @@ def process_school(school: dict, args: argparse.Namespace,
     # Step 2: Bing HTML scraping (free)
     if not url and args.bing_fallback:
         search_tried = True
+        last_attempted_method = "bing_html"
         url = bing_html_search(domain)
         if url:
             method = "bing_html"
@@ -469,6 +494,7 @@ def process_school(school: dict, args: argparse.Namespace,
     # Step 3: Brave Search API (free tier / cheap)
     if not url and args.brave_fallback and env.get("brave_api_key"):
         search_tried = True
+        last_attempted_method = "brave"
         url = brave_search(domain, env["brave_api_key"])
         if url:
             method = "brave"
@@ -477,9 +503,19 @@ def process_school(school: dict, args: argparse.Namespace,
     # Step 4: Google CSE (legacy, limited)
     if not url and args.google_fallback and env.get("google_api_key") and env.get("google_cx"):
         search_tried = True
+        last_attempted_method = "google"
         url = google_dork(domain, env["google_api_key"], env["google_cx"])
         if url:
             method = "google"
+
+    # Telemetry: when a search fallback was attempted and failed, record
+    # the LAST attempted method so probe_state.last_method reflects what
+    # was actually tried — not the default "pattern". Otherwise you can't
+    # tell from schools.yaml which not-found schools were Brave-tried vs
+    # pattern-only-tried, which matters for cooldown decisions and for
+    # knowing whether to re-try with a different fallback next run.
+    if not url and search_tried:
+        method = last_attempted_method
 
     if url:
         if not args.dry_run:
