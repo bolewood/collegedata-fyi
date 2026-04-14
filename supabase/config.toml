@@ -391,3 +391,23 @@ entrypoint = "./functions/discover/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/discover/*.html" ]
+
+[functions.archive-process]
+enabled = true
+# verify_jwt=true gatekeeps at the Supabase layer. The handler additionally
+# verifies the bearer token matches SUPABASE_SERVICE_ROLE_KEY exactly so
+# only service-role callers (pg_cron and authorized operators) can trigger
+# writes. See supabase/functions/archive-process/index.ts for the in-function
+# auth check.
+verify_jwt = true
+import_map = "./functions/archive-process/deno.json"
+entrypoint = "./functions/archive-process/index.ts"
+
+[functions.archive-enqueue]
+enabled = true
+# Same auth pattern as archive-process: verify_jwt=true + in-handler
+# service-role bearer compare. Only pg_cron and authorized operators can
+# seed a monthly batch.
+verify_jwt = true
+import_map = "./functions/archive-enqueue/deno.json"
+entrypoint = "./functions/archive-enqueue/index.ts"

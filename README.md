@@ -54,6 +54,8 @@ Full architecture: [`docs/v1-plan.md`](docs/v1-plan.md).
 ## Docs and decisions
 
 - [`docs/v1-plan.md`](docs/v1-plan.md) — living project plan for V1
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — five-pipeline map of the whole system
+- [`docs/archive-pipeline.md`](docs/archive-pipeline.md) — deep dive on the discovery/archive queue: architecture, operator runbook, failure-mode classification, known issues
 - [`docs/decisions/`](docs/decisions/) — Architectural Decision Records
 - [`docs/known-issues/`](docs/known-issues/) — per-school extraction quality notes
 

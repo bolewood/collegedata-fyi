@@ -68,7 +68,7 @@ Single vendor for everything: **Supabase**. No Railway, no AWS, no GCP needed.
 
 **Supabase Postgres** holds the manifest and provenance: `cds_documents` (one row per school/year), `cds_artifacts` (one row per derived file, tagged with kind/producer/version), and `cleaners` (registry of known cleanup tools). Row-level security exposes the tables read-only through PostgREST, which gives us a free public API.
 
-**Supabase Storage** holds the actual bytes: raw PDFs under `{school}/{year}/source.pdf`, raw Docling JSON under `{school}/{year}/raw/docling-{version}.json`, and any future derived artifacts under `{school}/{year}/cleaned/{producer}-{version}.json`. Storage is S3-compatible and free-tier generous.
+**Supabase Storage** holds the actual bytes: archived source files under `{school}/{year}/{sha256}.{ext}` (SHA-addressed so every version of a school's CDS survives forever and the archive is truly immutable per ADR 0006), raw Docling JSON under `{school}/{year}/raw/docling-{version}.json`, and any future derived artifacts under `{school}/{year}/cleaned/{producer}-{version}.json`. Consumers never construct source paths themselves — they read `cds_manifest.source_storage_path`, the view column that picks the most recent `cds_artifacts` row with `kind='source'`. Storage is S3-compatible and free-tier generous.
 
 **Supabase Edge Functions on cron** run the scraper. Edge functions are Deno, which is a clean fit for "fetch URLs, compute sha256, upsert Postgres rows, push bytes to Storage." A daily cron discovers new or changed PDFs and flags them `extraction_pending`. Execution logs live in the Supabase dashboard — one click to see whether the weekly refresh ran.
 
