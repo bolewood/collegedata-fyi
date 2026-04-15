@@ -110,13 +110,16 @@ Each pipeline is independently runnable. None of them requires any of the others
   │                       EXTRACTION PIPELINE                           │
   │                   (Python worker, triggered)                        │
   │                                                                     │
-  │  tools/extraction_worker/worker.py  (M2 scope, not yet built)       │
+  │  tools/extraction_worker/worker.py  (M2 skeleton live, Tier 2 only) │
   │    1. SELECT * FROM cds_documents WHERE extraction_status =         │
   │         'extraction_pending' ORDER BY cds_year DESC                 │
   │    2. For each row:                                                 │
   │         - Download archived source from Storage                     │
   │         - Run pypdf.get_fields() to detect format                   │
   │         - Set cds_documents.source_format                           │
+  │         - Detect document year from page content via                │
+  │           detect_year_from_pdf_bytes (observation-only in Stage A,  │
+  │           write-authoritative in Stage B per ADR 0007)              │
   │         - Route to tier-specific extractor:                         │
   │                                                                     │
   │              ┌───────────────────────────────────────────────┐      │
@@ -218,7 +221,7 @@ Summary of the components:
 
 | Component | Role |
 |---|---|
-| `tools/extraction_worker/worker.py` **(M2, not yet built)** | Python worker that polls `cds_documents WHERE extraction_status = 'extraction_pending'`, downloads the archived source, runs `pypdf.get_fields()` to detect format, routes to the appropriate tier extractor, writes the result back as a `cds_artifacts` row with `kind=canonical`. |
+| [`tools/extraction_worker/worker.py`](../tools/extraction_worker/worker.py) | Python worker. Polls `cds_documents WHERE extraction_status = 'extraction_pending'`, downloads the archived source, runs `pypdf.get_fields()` to detect format, performs content-based PDF year detection via `detect_year_from_pdf_bytes` (observation-only in Stage A per [ADR 0007](decisions/0007-year-authority-moves-to-extraction.md)), routes to the appropriate tier extractor, writes the result back as a `cds_artifacts` row with `kind=canonical`. Supports a `--detect-year-only` harness mode that runs the year detector against every archived document and reports a confirmed/mismatch/undetected summary without touching the DB. Currently wired end-to-end for Tier 2 (fillable PDF); other tiers are still stubs that mark `extraction_status=failed` with a reason so the row exits the pending queue. |
 | [`tools/tier2_extractor/extract.py`](../tools/tier2_extractor/extract.py) | Tier 2 extractor. Reads a CDS PDF via `pypdf.get_fields()`, joins against the schema by `pdf_tag`, decodes button values via `value_options`, emits canonical JSON keyed by `question_number`. Deterministic, ~100% accurate on HMC (31/31 ground-truth fields, verified by `score_tier2.py`). |
 | Tier 1 / Tier 3 / Tier 4 / Tier 5 extractors **(not yet built)** | Each slot is specified in ADR 0006 but the code doesn't exist yet. For now, documents in these formats are ingested and their `source_format` is recorded, but `extraction_status` stays at `extraction_pending` until the matching extractor ships. |
 | [`tools/extraction-validator/score_tier2.py`](../tools/extraction-validator/score_tier2.py) | Regression scoring tool. Loads a ground-truth YAML, a Tier 2 extract JSON, and an ID map, compares every field with numeric tolerance, emits per-field diff + overall accuracy. Offline quality check, not part of the runtime pipeline. |
@@ -297,7 +300,7 @@ The offline tools (schema + corpus) produce committed artifacts that ship with t
 
 ## Where the architecture is still incomplete
 
-As of 2026-04-14, what's built and what isn't:
+As of 2026-04-15, what's built and what isn't:
 
 | Component | Status |
 |---|---|
@@ -305,11 +308,12 @@ As of 2026-04-14, what's built and what isn't:
 | Corpus pipeline | ✅ Built. 2,434 schools in `schools.yaml`, 839 archivable (scrape_policy=active + cds_url_hint present + no sub_institutions). Probe runs are ongoing. |
 | Discovery: M1a dry-run (HTML parsing, year normalization, two-hop) | ✅ Refactored into `_shared/resolve.ts` so it can be reused by the queue consumer. Served by the `discover` edge function as a dry-run dev entry. |
 | Discovery: M1b writeback (schools.yaml loading, Storage uploads, `cds_documents` + `cds_artifacts` upserts) | ✅ Implemented in `archive-process` edge function. Uses SHA-addressed Storage paths (`{school}/{year}/{sha256}.{ext}`) and the document-first-then-artifact crash-safe refresh ordering. Verified end-to-end against yale + 9 other schools in production. |
-| Discovery: M1c cron schedule (queue fan-out) | ✅ Live 2026-04-15. Daily `archive-enqueue-daily` + per-30s `archive-process-every-30s` running against production, queue draining cleanly after a vault secret rotation fixed an initial 401 (operator pasted the placeholder string instead of the real key — resolved via `vault.update_secret()`). Details in [`docs/archive-pipeline.md`](./archive-pipeline.md). |
-| Extraction: Tier 2 (fillable PDF) | ✅ Built as standalone tool, verified 31/31 against HMC ground truth. |
-| Extraction: Tier 4 (flattened PDF via Docling/Reducto) | ⚠️ Reference extracts exist from Reducto, no schema-targeting cleaner yet. |
-| Extraction: Tier 1 / 3 / 5 | ❌ Specified in ADR 0006, not yet built. |
-| Extraction worker (polling loop) | ❌ M2 scope, not yet built. |
+| Discovery: M1c cron schedule (queue fan-out) | ✅ Live 2026-04-15. Daily `archive-enqueue-daily` + per-30s `archive-process-every-30s` running against production. First full drain completed overnight 2026-04-14/15: 535 done, 302 failed_permanent, 518 archived. Failure analysis in [`docs/archive-pipeline.md`](./archive-pipeline.md) and [ADR 0007](decisions/0007-year-authority-moves-to-extraction.md). |
+| Extraction worker (polling loop) | ✅ M2 skeleton live (commit `db520e6`). Polls `extraction_pending`, detects format, routes to tier extractors. Content-based PDF year detection added 2026-04-15 ([ADR 0007](decisions/0007-year-authority-moves-to-extraction.md) Stage A) as an observation-only side channel plus a `--detect-year-only` harness mode. Stage A harness measured 100% precision / 80% recall against 476 PDFs, clearing the Stage B gate for the upcoming resolver change. |
+| Extraction: Tier 2 (fillable PDF) | ✅ Built as standalone tool, verified 31/31 against HMC ground truth. Wired end-to-end through the worker; Harvey Mudd and Bates extracted successfully in production. |
+| Extraction: Tier 4 (flattened PDF via Docling/Reducto) | ⚠️ Reference extracts exist from Reducto, no schema-targeting cleaner yet. Tier probe (commit `49729de`) reveals Tier 4 is 84% of the corpus, so the Docling-vs-Reducto bake-off is the next major decision. |
+| Extraction: Tier 1 / 3 / 5 | ❌ Specified in ADR 0006, not yet built. Worker routes these to a stub that records `extraction_status=failed` with a tier-not-implemented reason so the rows exit the pending queue. |
+| Year authority migration | ⚠️ Stage A shipped 2026-04-15 ([ADR 0007](decisions/0007-year-authority-moves-to-extraction.md)): content detection runs as observation only. Stage B (resolver drops URL year requirement; extraction writes year) and Stage C (cleanup of `_shared/year.ts`) are the next two PRs. |
 | Consumer pipeline | ✅ Live at `api.collegedata.fyi/rest/v1/`. All three tables + the view respond to curl. |
 
 "Built" means the code exists and has been exercised against real data. "Not yet built" means the design is specified but no code exists. "Reference extracts exist" means we have the raw output from an external tool but no production path from raw → canonical.

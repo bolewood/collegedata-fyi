@@ -255,8 +255,20 @@ Capped at 10 schools per request to keep memory bounded.
 select status, count(*) from public.archive_queue group by status;
 ```
 
-A healthy steady state after a full monthly drain is `done: ~820`,
-`failed_permanent: <20`, `ready/processing: 0` between runs.
+The first full monthly drain (2026-04-14/15) produced `done: 535`,
+`failed_permanent: 302`, `ready/processing: 0`. The 302 failure
+bucket decomposes into: ~204 resolver "no year-bearing anchors"
+(~68% of all failures — addressed by [ADR 0007](decisions/0007-year-authority-moves-to-extraction.md)
+which moves year authority from discovery to extraction), ~51 HTTP
+404 on stale hints, ~20 transient 403/timeout exhausted, ~11
+content-type / magic-byte misses. Expect the failure count to
+drop substantially once ADR 0007 Stage B lands and the resolver
+stops requiring URL year parsing.
+
+Earlier versions of this runbook projected a "healthy steady state"
+of `failed_permanent: <20` based on a 10-school hand-picked sample;
+that target did not survive contact with the real corpus and has
+been retired.
 
 **Recent cron executions:**
 
@@ -370,6 +382,21 @@ basic regression coverage for the `NULLS NOT DISTINCT` constraint.
 
 ## Known issues
 
+**Resolver year requirement causes 68% of permanent failures.** The
+first full drain classified 204 of 302 `failed_permanent` rows as
+"no year-bearing anchors / no parseable year." Content-based year
+detection in the extraction worker ([ADR 0007](decisions/0007-year-authority-moves-to-extraction.md))
+is Stage A of the fix — observation-only today, load-bearing when
+Stage B lands and the resolver stops requiring URL year parsing as
+a precondition for archiving.
+
+**Resolver loses multi-year historical depth on successful schools.**
+25% of successful schools have HTML landing pages with an average
+of 14.2 distinct years (Northern Michigan has 25, Allegheny 24,
+Lafayette 20). The current resolver picks one and discards the
+rest. Stage B of ADR 0007 is the fix — returns every CDS-ish
+anchor from a landing page instead of ranking-then-picking.
+
 **Sub-institution schools.** Columbia (and any other school with a
 `sub_institutions` array) is intentionally excluded in V1 per
 `filterArchivable`. Follow-up: add a resolver path that matches landing
@@ -419,3 +446,9 @@ service role key already substituted in.
 - ADR 0006 (Tiered extraction strategy) — the "archive bytes are
   immutable" guarantee is now backed by SHA-addressed Storage paths,
   which is a stronger implementation of the same promise.
+- [ADR 0007](decisions/0007-year-authority-moves-to-extraction.md)
+  (Year authority moves to extraction) — Stage A shipped 2026-04-15
+  as observation-only. Stage B will remove the resolver's URL year
+  requirement and let the archiver emit every CDS-ish anchor from
+  a landing page, addressing the 68% of failures and the
+  ~1,900-document historical-depth gap above.
