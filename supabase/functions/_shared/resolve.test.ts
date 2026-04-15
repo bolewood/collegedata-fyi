@@ -1,5 +1,7 @@
 import { assertEquals, assertExists } from "jsr:@std/assert";
 import {
+  pickCandidates,
+  UNKNOWN_YEAR_SENTINEL,
   extractCdsAnchors,
   findBestSourceAnchor,
   findDownloadLinks,
@@ -173,6 +175,32 @@ Deno.test("findBestSourceAnchor: empty input returns null", () => {
   assertEquals(findBestSourceAnchor([]), null);
 });
 
+Deno.test("extractCdsAnchors: Lafayette-style CDS-digit filename with no separator matches", () => {
+  // Regression for Stage B smoke test 2026-04-15. The previous
+  // CDS_KEYWORDS_RE used `\bcds\b`, which requires a non-word
+  // boundary between `s` and the following character. Both `s` and
+  // the digit/underscore are word characters, so `\bcds\b` did not
+  // fire and every Lafayette / Samford / similar cramped-filename
+  // anchor was silently dropped at the keyword gate. The relaxed
+  // `(?![a-z])` right guard still rejects `cdsomething.pdf` but
+  // accepts `CDS2025-2026.pdf`, `cds_2022.pdf`, `cds-2024.pdf`, and
+  // bare `cds.pdf`.
+  const html = `
+    <a href="https://example.edu/files/CDS2025-2026.pdf">2025-2026</a>
+    <a href="https://example.edu/files/cds_2022.pdf">2022-23</a>
+    <a href="https://example.edu/files/cds-2021.pdf">2021-22</a>
+    <a href="https://example.edu/files/cdsomething.pdf">Budget Report</a>
+    <a href="https://example.edu/files/CDSummit-notes.pdf">Summit notes</a>
+  `;
+  const anchors = extractCdsAnchors(html, BASE);
+  const filenames = anchors.map((a) => a.filename).sort();
+  assertEquals(filenames, [
+    "CDS2025-2026.pdf",
+    "cds-2021.pdf",
+    "cds_2022.pdf",
+  ]);
+});
+
 Deno.test("extractCdsAnchors: test artifact filenames flagged", () => {
   const html = `
     <a href="/files/cds_2015-2016_test.pdf">CDS 2015-2016</a>
@@ -338,6 +366,198 @@ Deno.test("findDownloadLinks: commondataset.org excluded here too", () => {
   const html = `<a href="https://commondataset.org/template.pdf">Download Template</a>`;
   const anchors = findDownloadLinks(html, "https://example.edu/item/1");
   assertEquals(anchors.length, 0);
+});
+
+// ─── pickCandidates (ADR 0007 Stage B) ─────────────────────────────────────
+
+Deno.test("pickCandidates: Lafayette-style multi-year landing page returns every year", () => {
+  // Real shape of Lafayette's IR page: N anchors, all pointing at
+  // individual year-labeled PDFs. Stage B archives all of them as
+  // separate cds_documents rows.
+  const anchors = [2024, 2023, 2022, 2021].map((y) => ({
+    url: `https://oir.lafayette.edu/files/CDS${y}-${y + 1}.pdf`,
+    filename: `CDS${y}-${y + 1}.pdf`,
+    link_text: `${y}-${y + 1}`,
+    year: `${y}-${String((y + 1) % 100).padStart(2, "0")}`,
+    year_source: "filename" as const,
+    kind: "document" as const,
+    is_section_file: false,
+    is_test_artifact: false,
+  }));
+  const result = pickCandidates(anchors, "landing");
+  assertExists(result);
+  assertEquals(result.length, 4);
+  assertEquals(
+    result.map((r) => r.cds_year).sort(),
+    ["2021-22", "2022-23", "2023-24", "2024-25"],
+  );
+  assertEquals(result.every((r) => r.discovered_via === "landing"), true);
+});
+
+Deno.test("pickCandidates: single year-less candidate returns UNKNOWN_YEAR_SENTINEL", () => {
+  // Direct-doc hint case: the URL is a CDS PDF whose filename carries
+  // no parseable year (Bowie State's common-data-set.pdf, West Texas
+  // A&M's CDS.pdf). Year fills in when extraction runs.
+  const anchors = [{
+    url: "https://www.bowiestate.edu/academic/common-data-set.pdf",
+    filename: "common-data-set.pdf",
+    link_text: "Common Data Set",
+    year: null,
+    year_source: "unknown" as const,
+    kind: "document" as const,
+    is_section_file: false,
+    is_test_artifact: false,
+  }];
+  const result = pickCandidates(anchors, "landing");
+  assertExists(result);
+  assertEquals(result.length, 1);
+  assertEquals(result[0].cds_year, UNKNOWN_YEAR_SENTINEL);
+});
+
+Deno.test("pickCandidates: mixed year-labeled + year-less drops the year-less ones", () => {
+  const anchors = [
+    {
+      url: "https://ex.edu/cds2024-25.pdf",
+      filename: "cds2024-25.pdf",
+      link_text: "CDS 2024-25",
+      year: "2024-25",
+      year_source: "filename" as const,
+      kind: "document" as const,
+      is_section_file: false,
+      is_test_artifact: false,
+    },
+    {
+      url: "https://ex.edu/cds-extras.pdf",
+      filename: "cds-extras.pdf",
+      link_text: "Supplemental",
+      year: null,
+      year_source: "unknown" as const,
+      kind: "document" as const,
+      is_section_file: false,
+      is_test_artifact: false,
+    },
+  ];
+  const result = pickCandidates(anchors, "landing");
+  assertExists(result);
+  assertEquals(result.length, 1);
+  assertEquals(result[0].cds_year, "2024-25");
+});
+
+Deno.test("pickCandidates: multi-candidate all year-less returns null (Stage B limitation)", () => {
+  // The edge case scoped out of Stage B. Two CDS-ish anchors, neither
+  // has a year signal. Cannot disambiguate under the current unique
+  // constraint without a per-candidate discriminator. pickCandidates
+  // returns null; resolveCdsForSchool converts that to a specific
+  // no_cds_found reason mentioning the limitation.
+  const anchors = [
+    {
+      url: "https://ex.edu/cds.pdf",
+      filename: "cds.pdf",
+      link_text: "Common Data Set",
+      year: null,
+      year_source: "unknown" as const,
+      kind: "document" as const,
+      is_section_file: false,
+      is_test_artifact: false,
+    },
+    {
+      url: "https://ex.edu/common-data-set.pdf",
+      filename: "common-data-set.pdf",
+      link_text: "Common Data Set",
+      year: null,
+      year_source: "unknown" as const,
+      kind: "document" as const,
+      is_section_file: false,
+      is_test_artifact: false,
+    },
+  ];
+  const result = pickCandidates(anchors, "landing");
+  assertEquals(result, null);
+});
+
+Deno.test("pickCandidates: clean beats demoted when a clean sibling exists", () => {
+  const anchors = [
+    {
+      url: "https://ex.edu/cds2024-25_test.pdf",
+      filename: "cds2024-25_test.pdf",
+      link_text: "CDS 2024-25 (Test)",
+      year: "2024-25",
+      year_source: "filename" as const,
+      kind: "document" as const,
+      is_section_file: false,
+      is_test_artifact: true,
+    },
+    {
+      url: "https://ex.edu/cds2023-24.pdf",
+      filename: "cds2023-24.pdf",
+      link_text: "CDS 2023-24",
+      year: "2023-24",
+      year_source: "filename" as const,
+      kind: "document" as const,
+      is_section_file: false,
+      is_test_artifact: false,
+    },
+  ];
+  const result = pickCandidates(anchors, "landing");
+  assertExists(result);
+  assertEquals(result.length, 1);
+  assertEquals(result[0].filename, "cds2023-24.pdf");
+  assertEquals(result[0].is_test_artifact, false);
+});
+
+Deno.test("pickCandidates: falls back to demoted set when no clean siblings exist (CSULB)", () => {
+  // CSULB regression: the school's only archivable files are both
+  // test artifacts. Without a clean fallback, the school would be
+  // skipped entirely. With fallback, it ships — content detection
+  // downstream will surface the actual year.
+  const anchors = [{
+    url: "https://csulb.edu/cds_2015-2016_test.pdf",
+    filename: "cds_2015-2016_test.pdf",
+    link_text: "CDS 2015-2016",
+    year: "2015-16",
+    year_source: "filename" as const,
+    kind: "document" as const,
+    is_section_file: false,
+    is_test_artifact: true,
+  }];
+  const result = pickCandidates(anchors, "landing");
+  assertExists(result);
+  assertEquals(result.length, 1);
+  assertEquals(result[0].is_test_artifact, true);
+});
+
+Deno.test("pickCandidates: deduplicates by URL across subpage walk duplicates", () => {
+  // When the two-hop walk discovers the same PDF via different
+  // subpages, pickCandidates should fold them into one row.
+  const anchors = [
+    {
+      url: "https://ex.edu/cds2024-25.pdf",
+      filename: "cds2024-25.pdf",
+      link_text: "2024-25",
+      year: "2024-25",
+      year_source: "filename" as const,
+      kind: "document" as const,
+      is_section_file: false,
+      is_test_artifact: false,
+    },
+    {
+      url: "https://ex.edu/cds2024-25.pdf",
+      filename: "cds2024-25.pdf",
+      link_text: "CDS",
+      year: "2024-25",
+      year_source: "filename" as const,
+      kind: "document" as const,
+      is_section_file: false,
+      is_test_artifact: false,
+    },
+  ];
+  const result = pickCandidates(anchors, "subpage");
+  assertExists(result);
+  assertEquals(result.length, 1);
+});
+
+Deno.test("pickCandidates: empty list returns empty array (caller's choice)", () => {
+  assertEquals(pickCandidates([], "landing"), []);
 });
 
 Deno.test("findBestSourceAnchor: only subpages → null", () => {

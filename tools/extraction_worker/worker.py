@@ -324,6 +324,31 @@ def mark_extraction_status(
     client.table("cds_documents").update(update).eq("id", document_id).execute()
 
 
+def write_detected_year(
+    client: Client,
+    document_id: str,
+    detected_year: str,
+) -> None:
+    """Persist a content-derived year to cds_documents.detected_year.
+
+    Per ADR 0007 Stage B, extraction is the authoritative source for a
+    document's academic year. cds_year stays as the archive-time guess;
+    detected_year supersedes it. cds_manifest's canonical_year
+    expression returns detected_year when set, so consumers see the
+    corrected value without needing to chase the column change.
+
+    This function never touches cds_year and never rekeys the source
+    Storage object. Storage paths are {school_id}/{cds_year}/{sha}.ext
+    and consumers look the path up via cds_manifest.source_storage_path
+    rather than reconstructing it from year — so a mismatched path is
+    aesthetic, not load-bearing. Rekey is tracked as a Stage C
+    follow-up if the aesthetic bothers us later.
+    """
+    client.table("cds_documents").update(
+        {"detected_year": detected_year},
+    ).eq("id", document_id).execute()
+
+
 def insert_canonical_artifact(
     client: Client,
     document_id: str,
@@ -376,24 +401,41 @@ def extract_one(
             mark_extraction_status(client, document_id, "failed")
         return f"download_error: {e}"
 
-    # Side-channel year detection. Observation-only until we trust the
-    # signal across the whole corpus — no DB writes here, just a print.
-    # The real load-bearing use is the upcoming resolver change that will
-    # emit multiple CDS candidates per landing page without year info in
-    # the URL; this proves detection is reliable first.
-    #
-    # Stage B TODO: the `stored_year and` guard below must come out when
-    # extraction becomes write-authoritative. At that point nullable /
-    # placeholder `cds_year` values need to surface as mismatches so
-    # extraction can populate them, not be silently skipped.
+    # Year detection. ADR 0007 Stage B: extraction is write-authoritative
+    # for academic year. Writes detected_year when a valid span is found
+    # on the archived PDF; leaves detected_year null when detection
+    # couldn't resolve a unique span (the collect-all-spans rule
+    # deliberately fails rather than corrupts). cds_year is never
+    # touched — it stays as the resolver's archive-time guess and keeps
+    # its role in the unique constraint. Consumer queries read
+    # cds_manifest.canonical_year which COALESCEs detected_year over
+    # cds_year.
     detected_year = detect_year_from_pdf_bytes(pdf_bytes)
     stored_year = doc.get("cds_year")
-    if detected_year and stored_year and detected_year != stored_year:
-        print(
-            f"    year_mismatch: school={school_id} document={document_id} "
-            f"stored={stored_year} detected={detected_year}",
-            flush=True,
-        )
+    stored_detected = doc.get("detected_year")
+    if detected_year and detected_year != stored_detected:
+        if not dry_run:
+            try:
+                write_detected_year(client, document_id, detected_year)
+            except Exception as e:
+                print(
+                    f"    year_write_error: school={school_id} document={document_id} "
+                    f"{type(e).__name__}: {e}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+        if stored_year and stored_year != detected_year:
+            print(
+                f"    year_correction: school={school_id} document={document_id} "
+                f"stored={stored_year} detected={detected_year}",
+                flush=True,
+            )
+        else:
+            print(
+                f"    year_confirmed: school={school_id} document={document_id} "
+                f"year={detected_year}",
+                flush=True,
+            )
 
     source_format = doc.get("source_format") or sniff_format_from_bytes(pdf_bytes)
 
@@ -444,13 +486,20 @@ def run_detect_year_only(
     client: Client,
     school_filter: Optional[str] = None,
     limit: Optional[int] = None,
+    write: bool = False,
 ) -> int:
     """Year-detection harness. Queries every cds_documents row that has
     an archived source (any extraction_status) and runs
-    detect_year_from_pdf_bytes on each. Writes nothing. Reports
-    confirmed / mismatch / undetected counts plus a sample of mismatches
-    and undetecteds for manual inspection. This is the gate we clear
-    before making year detection load-bearing."""
+    detect_year_from_pdf_bytes on each. Reports confirmed / mismatch /
+    undetected counts plus a sample of mismatches and undetecteds for
+    manual inspection.
+
+    With write=False (default), this is the Stage A read-only gate we
+    clear before making detection load-bearing. With write=True, this
+    is the Stage B backfill tool: every confirmed or corrected hit is
+    persisted via write_detected_year. Use the --write CLI flag to
+    opt in.
+    """
     # Explicit row cap to close PostgREST's silent-truncation risk.
     # The default cap (often 1000 at project settings) would otherwise
     # silently drop rows once Stage B's multi-candidate archiver
@@ -463,7 +512,9 @@ def run_detect_year_only(
     HARNESS_ROW_CAP = 5000
     query = (
         client.table("cds_documents")
-        .select("id, school_id, cds_year, source_format, extraction_status")
+        .select(
+            "id, school_id, cds_year, detected_year, source_format, extraction_status",
+        )
         .order("school_id")
         .limit(HARNESS_ROW_CAP)
     )
@@ -494,6 +545,7 @@ def run_detect_year_only(
     for i, doc in enumerate(docs, 1):
         school_id = doc["school_id"]
         stored_year = doc.get("cds_year")
+        stored_detected = doc.get("detected_year")
         storage_path = fetch_latest_source_path(client, doc["id"])
         if not storage_path:
             counts["no_source"] += 1
@@ -522,7 +574,8 @@ def run_detect_year_only(
                 f"[{i:4d}/{len(docs)}] {school_id}: undetected (stored={stored_year})",
                 flush=True,
             )
-        elif detected == stored_year:
+            continue
+        if detected == stored_year:
             counts["confirmed"] += 1
             print(
                 f"[{i:4d}/{len(docs)}] {school_id}: confirmed {detected}", flush=True
@@ -534,13 +587,51 @@ def run_detect_year_only(
                 f"[{i:4d}/{len(docs)}] {school_id}: MISMATCH stored={stored_year} detected={detected}",
                 flush=True,
             )
+        # Backfill detected_year when --write is set, skipping rows that
+        # already carry the right value. Backfill is idempotent; re-runs
+        # are cheap.
+        if write and detected != stored_detected:
+            try:
+                write_detected_year(client, doc["id"], detected)
+                counts["written"] += 1
+            except Exception as e:
+                counts["write_error"] += 1
+                print(
+                    f"    write_error: {school_id} {type(e).__name__}: {e}",
+                    file=sys.stderr,
+                    flush=True,
+                )
 
     print()
     print("=== year detection summary ===")
-    for bucket in ("confirmed", "mismatch", "undetected", "non_pdf", "download_error", "no_source"):
+    for bucket in (
+        "confirmed",
+        "mismatch",
+        "undetected",
+        "non_pdf",
+        "download_error",
+        "no_source",
+    ):
         if counts[bucket]:
             print(f"  {bucket:18s} {counts[bucket]:5d}")
-    print(f"  {'total':18s} {sum(counts.values()):5d}")
+    # The detection-outcome bucket is what sums to the query cardinality.
+    # written/write_error are side-effect counters from the --write path
+    # and are not part of the row total.
+    detection_total = (
+        counts["confirmed"]
+        + counts["mismatch"]
+        + counts["undetected"]
+        + counts["non_pdf"]
+        + counts["download_error"]
+        + counts["no_source"]
+    )
+    print(f"  {'total':18s} {detection_total:5d}")
+    if write:
+        print()
+        print("=== write summary ===")
+        print(f"  {'written':18s} {counts['written']:5d}")
+        if counts["write_error"]:
+            print(f"  {'write_error':18s} {counts['write_error']:5d}")
 
     if mismatches:
         print()
@@ -586,10 +677,20 @@ def main() -> int:
         action="store_true",
         help=(
             "Run only the PDF year-detection harness across every archived "
-            "document regardless of extraction_status. Writes nothing; "
-            "prints a confirmed/mismatch/undetected summary. Used to "
-            "validate detection reliability before the resolver change "
-            "that emits multiple CDS candidates per landing page."
+            "document regardless of extraction_status. Prints a "
+            "confirmed/mismatch/undetected summary. Combine with --write "
+            "to persist detected_year values (ADR 0007 Stage B backfill)."
+        ),
+    )
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        help=(
+            "With --detect-year-only, persist each detected year to "
+            "cds_documents.detected_year via write_detected_year. "
+            "Default is read-only observation. Safe to re-run — backfill "
+            "is idempotent and skips rows whose detected_year already "
+            "matches the result."
         ),
     )
     args = parser.parse_args()
@@ -611,12 +712,13 @@ def main() -> int:
             client,
             school_filter=args.school,
             limit=args.limit,
+            write=args.write,
         )
 
     schema = load_schema(Path(args.schema))
 
     query = client.table("cds_documents").select(
-        "id, school_id, cds_year, source_format, extraction_status",
+        "id, school_id, cds_year, detected_year, source_format, extraction_status",
     )
     if args.include_failed:
         query = query.in_("extraction_status", ["extraction_pending", "failed"])

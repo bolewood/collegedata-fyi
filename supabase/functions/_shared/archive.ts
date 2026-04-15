@@ -54,8 +54,33 @@ export type ArchiveAction =
   | "unchanged_repaired"
   | "marked_removed";
 
+// Per-candidate outcome. ADR 0007 Stage B fans the archiver out into
+// one cds_documents row per CDS-ish anchor found on a landing page
+// (Lafayette-style multi-year archives), so a single school run can
+// produce multiple CandidateOutcomes.
+export interface CandidateOutcome {
+  action: ArchiveAction;
+  document_id: string | null;
+  cds_year: string | null;
+  source_sha256: string | null;
+  resolved_url: string | null;
+  storage_path: string | null;
+}
+
+// Aggregate outcome for one archiveOneSchool call. `candidates` is the
+// non-empty list of per-candidate outcomes on success, or a single
+// marked_removed candidate on upstream_gone. `action` is a rollup:
+// the action of the first candidate when all candidates took the same
+// action, or the most specific one (inserted > refreshed >
+// unchanged_repaired > unchanged_verified > marked_removed) when
+// candidates differ — the log event only has room for one label.
 export interface ArchiveOutcome {
   action: ArchiveAction;
+  candidates: CandidateOutcome[];
+  // Back-compat fields for callers that expected a single outcome.
+  // Populated from candidates[0] when there is exactly one candidate,
+  // and left null when there are multiple (consumers should iterate
+  // `candidates` in that case).
   document_id: string | null;
   cds_year: string | null;
   source_sha256: string | null;
@@ -69,13 +94,37 @@ export interface SchoolInput {
   cds_url_hint: string;
 }
 
+// Rollup precedence: when a multi-candidate school has a mix of
+// actions, the log event's single `action` field reports the most
+// specific one. Order here is "most meaningful" first.
+const ACTION_PRIORITY: ArchiveAction[] = [
+  "inserted",
+  "refreshed",
+  "unchanged_repaired",
+  "unchanged_verified",
+  "marked_removed",
+];
+
+function rollupAction(candidates: CandidateOutcome[]): ArchiveAction {
+  if (candidates.length === 0) {
+    throw new Error("rollupAction called with empty candidates");
+  }
+  const present = new Set(candidates.map((c) => c.action));
+  for (const a of ACTION_PRIORITY) {
+    if (present.has(a)) return a;
+  }
+  return candidates[0].action;
+}
+
 const DOWNLOAD_TIMEOUT_MS = 30_000;
 
 export async function archiveOneSchool(
   supabase: SupabaseClient,
   school: SchoolInput,
 ): Promise<ArchiveOutcome> {
-  // 1. Resolve the hint to a direct document URL + cds_year.
+  // 1. Resolve the hint. Post-Stage-B the resolver returns docs[] —
+  //    one CDS-ish anchor per historical year for schools that expose
+  //    a multi-year landing page, one row for the direct-doc case.
   const result = await resolveCdsForSchool(school.cds_url_hint);
   switch (result.kind) {
     case "resolved":
@@ -91,9 +140,48 @@ export async function archiveOneSchool(
     case "no_cds_found":
       throw new PermanentError(`resolve no cds found: ${result.reason}`);
   }
-  const resolved = result.doc;
 
-  // 2. Download the resolved document with a hard memory + wall clock cap.
+  if (result.docs.length === 0) {
+    throw new PermanentError("resolver returned resolved kind with empty docs[]");
+  }
+
+  // 2. Archive each candidate in order. Throw on first error so the
+  //    whole school is retried as a unit; already-archived candidates
+  //    are detected as unchanged_verified on the retry pass and cost
+  //    nothing to reprocess. Processing is serial, not parallel:
+  //    parallelism here would race against the existing-row lookup
+  //    and risk double-inserting rows for the same (school, cds_year)
+  //    before either upload completes.
+  const candidates: CandidateOutcome[] = [];
+  for (const resolved of result.docs) {
+    candidates.push(await archiveOneCandidate(supabase, school, resolved));
+  }
+
+  const first = candidates[0];
+  return {
+    action: rollupAction(candidates),
+    candidates,
+    // Back-compat single-candidate fields: populated only when the
+    // school yielded one document. Multi-candidate callers should
+    // iterate `candidates`.
+    document_id: candidates.length === 1 ? first.document_id : null,
+    cds_year: candidates.length === 1 ? first.cds_year : null,
+    source_sha256: candidates.length === 1 ? first.source_sha256 : null,
+    resolved_url: candidates.length === 1 ? first.resolved_url : null,
+    storage_path: candidates.length === 1 ? first.storage_path : null,
+  };
+}
+
+// Archive a single resolved candidate. Shared by archiveOneSchool for
+// both the single-candidate direct-doc path and the multi-candidate
+// landing-page fan-out. This is the body of the pre-Stage-B
+// archiveOneSchool lifted as-is; the outer function just loops.
+async function archiveOneCandidate(
+  supabase: SupabaseClient,
+  school: SchoolInput,
+  resolved: { url: string; cds_year: string },
+): Promise<CandidateOutcome> {
+  // Download with a hard memory + wall clock cap.
   const { bytes, sha256, contentType, finalUrl } = await downloadWithCaps(
     resolved.url,
   );
@@ -119,7 +207,7 @@ export async function archiveOneSchool(
     ext,
   );
 
-  // 3. Look up existing state.
+  // Look up existing state for this (school, cds_year) combo.
   const existing = await fetchDocumentForSchoolYear(
     supabase,
     school.school_id,
@@ -223,10 +311,19 @@ async function handleUpstreamGone(
   if (mostRecent) {
     await recordRemoval(supabase, mostRecent.id, result.reason);
   }
-  return {
+  const candidate: CandidateOutcome = {
     action: "marked_removed",
     document_id: mostRecent?.id ?? null,
     cds_year: mostRecent?.cds_year ?? null,
+    source_sha256: null,
+    resolved_url: null,
+    storage_path: null,
+  };
+  return {
+    action: "marked_removed",
+    candidates: [candidate],
+    document_id: candidate.document_id,
+    cds_year: candidate.cds_year,
     source_sha256: null,
     resolved_url: null,
     storage_path: null,

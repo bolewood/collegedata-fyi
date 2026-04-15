@@ -22,7 +22,18 @@ export const LANDING_TIMEOUT_MS = 30_000;
 export const SUBPAGE_TIMEOUT_MS = 15_000;
 const MAX_SUBPAGES_PER_SCHOOL = 25;
 
-const CDS_KEYWORDS_RE = /common\s*data\s*set|\bcds\b/i;
+// Matches "common data set" (with flexible whitespace) or "cds" as a
+// left-boundaried token not followed by another letter. The right-
+// side guard is `(?![a-z])` rather than `\b` so that filenames with
+// no separator between CDS and the year — like Lafayette's
+// `CDS2025-2026.pdf` or Samford's `CDS2024_Section_A.pdf` — still
+// match. `\bcds\b` would require a word boundary between `s` and
+// the following digit/underscore, which is not a word boundary at
+// all (both are word characters), and dropped every year on those
+// schools' landing pages during the Stage B resolver rewrite.
+// `(?![a-z])` still rejects `cdsomething`, `CDSummit`, and similar
+// false positives where cds is a prefix of a different word.
+const CDS_KEYWORDS_RE = /common\s*data\s*set|\bcds(?![a-z])/i;
 const DOCUMENT_EXT_RE = /\.(pdf|xlsx|docx)(\?|#|$)/i;
 
 // Section-file detection deliberately scoped to filenames only.
@@ -183,13 +194,29 @@ export interface ResolvedDocument {
   parent_subpage_url?: string;
 }
 
+// Sentinel cds_year for direct-doc hints whose filename carries no
+// parseable year (e.g. `cds_all.pdf`, `common-data-set.pdf`, UCLA's
+// `/file/<uuid>`). Per ADR 0007 Stage B the archiver writes the
+// document anyway and defers year assignment to the extraction
+// worker, which populates detected_year from page-1 content. The
+// sentinel stays in cds_year as a historical marker; consumers read
+// cds_manifest.canonical_year which COALESCEs detected_year over
+// cds_year and suppresses the sentinel for any extracted row.
+export const UNKNOWN_YEAR_SENTINEL = "unknown";
+
 // Discriminated union so callers can classify failure modes. This replaces
 // the earlier "return null for everything that isn't happy path" design,
 // which collapsed transient network errors into "upstream gone" and caused
 // cds_documents.removed_at to fire on DNS blips. Codex flagged it as the
 // #1 critical finding in review.
+//
+// The `resolved` variant carries `docs: ResolvedDocument[]` — a
+// non-empty list of candidates — rather than a single doc, so the
+// archiver can fan out into multiple cds_documents rows per school
+// (ADR 0007 Stage B: one row per historical year for schools like
+// Lafayette that expose 20 years on a single landing page).
 export type ResolveResult =
-  | { kind: "resolved"; doc: ResolvedDocument }
+  | { kind: "resolved"; docs: ResolvedDocument[] }
   | { kind: "upstream_gone"; status: number; reason: string }
   | { kind: "transient"; reason: string }
   | { kind: "no_cds_found"; reason: string }
@@ -442,18 +469,18 @@ export function findDownloadLinks(html: string, baseUrl: string): CdsAnchor[] {
   return out;
 }
 
-// Ranks candidate document anchors and returns the best one.
+// Ranks candidate document anchors and returns the best single one.
+// Legacy single-pick helper kept for tests and any caller that still
+// wants "the one" document. The main resolveCdsForSchool path uses
+// pickCandidates below, which returns every qualifying anchor so the
+// archiver can fan out into multiple cds_documents rows (ADR 0007
+// Stage B).
+//
 //   1. Full CDS beats section files
 //   2. Non-test files beat test/draft/backup staging artifacts
 //   3. Anchors with a year beat anchors without
 //   4. More recent year beats older
 //   5. Within ties, document order wins (earlier in HTML = more prominent)
-//
-// Deliberately ranks test artifacts rather than filtering them out: a
-// school whose *only* archivable CDS is a `_test` upload (CSULB's case
-// as of 2026-04-15) should still be archived — we'd rather have the
-// bytes and let content-based year detection surface the actual year
-// than drop the school entirely.
 export function findBestSourceAnchor(
   anchors: CdsAnchor[],
 ): CdsAnchor | null {
@@ -479,6 +506,90 @@ export function findBestSourceAnchor(
   return ranked[0];
 }
 
+// pickCandidates — ADR 0007 Stage B candidate selection.
+//
+// Transforms a list of document-kind anchors into a list of
+// ResolvedDocument candidates the archiver should fan out into. The
+// rules are deliberately conservative to keep the unique constraint
+// on (school_id, sub_institutional, cds_year) working without schema
+// surgery:
+//
+//   1. Deduplicate by URL. extractCdsAnchors already does intra-HTML
+//      dedup; this also catches duplicates across subpage walk results.
+//   2. Partition into clean vs demoted (section files + test
+//      artifacts). If the clean set is non-empty, use it; otherwise
+//      fall back to the demoted set so schools whose only archivable
+//      file is a `_test` upload (CSULB) still ship.
+//   3. Within the chosen set:
+//      - **All have URL years** → return every candidate as its own
+//        ResolvedDocument. This is the Lafayette / NMU multi-year
+//        historical archive case.
+//      - **Exactly one candidate, no URL year** → return it with
+//        cds_year = UNKNOWN_YEAR_SENTINEL. This is the direct-doc
+//        no-year-in-filename case. Single row per school, no
+//        collision.
+//      - **Mixed: some have years, some don't** → keep only the
+//        year-known candidates. Year-less ones are dropped. They
+//        would otherwise collide in the unique key with each other
+//        or with each others' sentinels.
+//      - **Multiple candidates, none have years** → return null.
+//        Caller emits no_cds_found with a "Stage B limitation"
+//        reason. Out of scope for this PR; tracked as a follow-up
+//        because the real fix needs either a per-candidate
+//        disambiguator in cds_year (ugly) or the unique constraint
+//        to drop cds_year entirely (riskier).
+//
+// Return value of null means "fail this school with no_cds_found."
+// Empty array means "no document-kind anchors at all" — caller's
+// choice how to classify.
+export function pickCandidates(
+  docs: CdsAnchor[],
+  discoveredVia: "landing" | "subpage",
+): ResolvedDocument[] | null {
+  if (docs.length === 0) return [];
+
+  // Dedupe by URL (minus fragment). extractCdsAnchors does this on
+  // its own output, but subpage walk results can collide across
+  // parallel fetches.
+  const byUrl = new Map<string, CdsAnchor>();
+  for (const d of docs) {
+    const key = d.url.split("#")[0];
+    if (!byUrl.has(key)) byUrl.set(key, d);
+  }
+  const unique = Array.from(byUrl.values());
+
+  const clean = unique.filter(
+    (d) => !d.is_section_file && !d.is_test_artifact,
+  );
+  const set = clean.length > 0 ? clean : unique;
+
+  const withYear = set.filter((a) => a.year !== null);
+  const withoutYear = set.filter((a) => a.year === null);
+
+  let chosen: CdsAnchor[];
+  if (withoutYear.length === 0) {
+    chosen = withYear;
+  } else if (set.length === 1) {
+    // Single year-less candidate — sentinel is safe, no collision.
+    chosen = set;
+  } else if (withYear.length > 0) {
+    // Mixed set. Drop year-less to avoid collisions; keep year-known.
+    chosen = withYear;
+  } else {
+    // Multiple year-less candidates. Out of Stage B scope.
+    return null;
+  }
+
+  return chosen.map((d) => ({
+    url: d.url,
+    cds_year: d.year ?? UNKNOWN_YEAR_SENTINEL,
+    filename: d.filename,
+    is_section_file: d.is_section_file,
+    is_test_artifact: d.is_test_artifact,
+    discovered_via: discoveredVia,
+  }));
+}
+
 // Translates a content-type header into an extension symbol. Shared with
 // storage.ts — kept local here so the resolver can classify direct-file
 // landing responses without pulling storage.ts into resolve.ts's import
@@ -492,10 +603,18 @@ function extensionFromContentType(contentType: string): "pdf" | "xlsx" | "docx" 
 }
 
 // Top-level resolver. Given a hint URL, returns a ResolveResult discriminated
-// union. See the type for the five possible kinds. Callers branch on kind:
-// resolved → archive; upstream_gone → mark removed; transient → retry later;
-// no_cds_found / unsupported_content → permanent failure for human review;
-// blocked_url → permanent (SSRF defense tripped).
+// union. See the type for the six possible kinds. Callers branch on kind:
+// resolved → archive every doc in `docs`; upstream_gone → mark removed;
+// transient → retry later; no_cds_found / unsupported_content → permanent
+// failure for human review; blocked_url → permanent (SSRF defense tripped).
+//
+// ADR 0007 Stage B: `docs` is a non-empty list. Direct-doc hints return
+// a single candidate (with cds_year set to the parsed year or the
+// UNKNOWN_YEAR_SENTINEL if the filename had no parseable year). Landing
+// pages return every CDS-ish document anchor that passes pickCandidates'
+// scope rules — which for the common case means one row per historical
+// year for schools like Lafayette that expose a long archive on one
+// page.
 export async function resolveCdsForSchool(
   hint: string,
 ): Promise<ResolveResult> {
@@ -503,30 +622,26 @@ export async function resolveCdsForSchool(
     return { kind: "blocked_url", reason: "hint URL failed safety check" };
   }
 
-  // Direct document hint: the schools.yaml entry points straight at the
-  // file. Skip landing-page parsing entirely.
+  // Case A: direct document hint. schools.yaml points straight at the
+  // file. Skip landing-page parsing entirely and accept the document
+  // regardless of whether the filename carries a parseable year —
+  // extraction will derive it from page 1 content.
   if (DOCUMENT_EXT_RE.test(hint)) {
-    const year = normalizeYear(hint);
-    if (!year) {
-      return {
-        kind: "no_cds_found",
-        reason: "direct document hint has no parseable year",
-      };
-    }
     const parsed = new URL(hint);
     const filename = decodeURIComponent(
       parsed.pathname.split("/").filter(Boolean).pop() ?? "",
     );
+    const year = normalizeYear(hint) ?? normalizeYear(filename);
     return {
       kind: "resolved",
-      doc: {
+      docs: [{
         url: hint,
-        cds_year: year,
+        cds_year: year ?? UNKNOWN_YEAR_SENTINEL,
         filename,
         is_section_file: SECTION_MARKER_RE.test(filename),
         is_test_artifact: TEST_ARTIFACT_RE.test(filename),
         discovered_via: "direct",
-      },
+      }],
     };
   }
 
@@ -547,8 +662,9 @@ export async function resolveCdsForSchool(
 
   const ct = landing.contentType.toLowerCase();
 
-  // Landing redirected to a supported document MIME directly (some schools
-  // host their CDS behind an opaque download URL that 302s to the PDF).
+  // Case B: landing redirected to a supported document MIME directly.
+  // Some schools host their CDS behind an opaque download URL that
+  // 302s to the PDF. Same year-fallback treatment as Case A.
   const directExt = extensionFromContentType(ct);
   if (directExt) {
     const parsed = new URL(landing.finalUrl);
@@ -556,22 +672,16 @@ export async function resolveCdsForSchool(
       parsed.pathname.split("/").filter(Boolean).pop() ?? "",
     );
     const year = normalizeYear(filename) ?? normalizeYear(landing.finalUrl);
-    if (!year) {
-      return {
-        kind: "no_cds_found",
-        reason: "direct document response has no parseable year",
-      };
-    }
     return {
       kind: "resolved",
-      doc: {
+      docs: [{
         url: landing.finalUrl,
-        cds_year: year,
+        cds_year: year ?? UNKNOWN_YEAR_SENTINEL,
         filename,
         is_section_file: SECTION_MARKER_RE.test(filename),
         is_test_artifact: TEST_ARTIFACT_RE.test(filename),
         discovered_via: "direct",
-      },
+      }],
     };
   }
 
@@ -582,28 +692,26 @@ export async function resolveCdsForSchool(
     };
   }
 
+  // Case C: HTML landing page. Extract every CDS-ish document anchor
+  // and let pickCandidates decide how many to return.
   const anchors = extractCdsAnchors(landing.text, landing.finalUrl);
-  const landingDocsWithYear = anchors
-    .filter((a) => a.kind === "document" && a.year !== null);
+  const landingDocs = anchors.filter((a) => a.kind === "document");
 
-  if (landingDocsWithYear.length > 0) {
-    const best = findBestSourceAnchor(landingDocsWithYear);
-    if (best && best.year) {
+  if (landingDocs.length > 0) {
+    const candidates = pickCandidates(landingDocs, "landing");
+    if (candidates === null) {
       return {
-        kind: "resolved",
-        doc: {
-          url: best.url,
-          cds_year: best.year,
-          filename: best.filename,
-          is_section_file: best.is_section_file,
-          is_test_artifact: best.is_test_artifact,
-          discovered_via: "landing",
-        },
+        kind: "no_cds_found",
+        reason: "landing has multiple CDS-ish docs but none carry a year signal (Stage B limitation)",
       };
+    }
+    if (candidates.length > 0) {
+      return { kind: "resolved", docs: candidates };
     }
   }
 
-  // Two-hop fallback: landing has subpage anchors; follow one hop each.
+  // Case D: two-hop fallback. Landing has subpage anchors; follow one
+  // hop each and collect document candidates from the child pages.
   const subpages = anchors
     .filter((a) => a.kind === "subpage")
     .slice(0, MAX_SUBPAGES_PER_SCHOOL);
@@ -611,7 +719,7 @@ export async function resolveCdsForSchool(
   if (subpages.length === 0) {
     return {
       kind: "no_cds_found",
-      reason: "landing parsed, no year-bearing document anchors and no subpages",
+      reason: "landing parsed, no CDS-ish document anchors and no subpages",
     };
   }
 
@@ -628,13 +736,12 @@ export async function resolveCdsForSchool(
           parsed.pathname.split("/").filter(Boolean).pop() ?? "",
         );
         const year = normalizeYear(filename) ?? sub.year;
-        if (!year) return [];
         return [{
           url: resp.finalUrl,
           filename,
           link_text: sub.link_text,
           year,
-          year_source: "filename" as YearSource,
+          year_source: (year ? "filename" : "unknown") as YearSource,
           kind: "document" as AnchorKind,
           is_section_file: SECTION_MARKER_RE.test(filename),
           is_test_artifact: TEST_ARTIFACT_RE.test(filename),
@@ -642,11 +749,11 @@ export async function resolveCdsForSchool(
       }
       // Non-HTML response with an unrecognized content-type (e.g.
       // application/octet-stream from Google Drive direct-download, or
-      // a bare 200 from a CGI endpoint). If the parent subpage had a
-      // year, trust it as a document candidate and let downloadWithCaps
-      // do magic-byte sniffing on the actual bytes. This unblocks Drive-
-      // hosted CDS archives where every year comes back as octet-stream.
-      if (!subCt.includes("text/html") && sub.year) {
+      // a bare 200 from a CGI endpoint). Inherit the parent subpage's
+      // year if it had one and let downloadWithCaps do magic-byte
+      // sniffing on the actual bytes.
+      if (!subCt.includes("text/html")) {
+        if (!sub.year) return [];
         const parsed = new URL(resp.finalUrl);
         const filename = decodeURIComponent(
           parsed.pathname.split("/").filter(Boolean).pop() ?? "",
@@ -662,7 +769,6 @@ export async function resolveCdsForSchool(
           is_test_artifact: TEST_ARTIFACT_RE.test(filename),
         }];
       }
-      if (!subCt.includes("text/html")) return [];
       const subAnchors = extractCdsAnchors(resp.text, resp.finalUrl);
       const out: CdsAnchor[] = [];
       for (const a of subAnchors) {
@@ -695,31 +801,25 @@ export async function resolveCdsForSchool(
 
   for (const docs of subResults) allSubDocs.push(...docs);
 
-  const subDocsWithYear = allSubDocs.filter((a) => a.year !== null);
-  if (subDocsWithYear.length === 0) {
+  if (allSubDocs.length === 0) {
     return {
       kind: "no_cds_found",
-      reason: "two-hop walk found no year-bearing document anchors",
+      reason: "two-hop walk found no document anchors",
     };
   }
 
-  const best = findBestSourceAnchor(subDocsWithYear);
-  if (!best || !best.year) {
+  const subCandidates = pickCandidates(allSubDocs, "subpage");
+  if (subCandidates === null) {
     return {
       kind: "no_cds_found",
-      reason: "ranking found no valid best anchor",
+      reason: "two-hop walk found multiple CDS-ish docs but none carry a year signal (Stage B limitation)",
     };
   }
-
-  return {
-    kind: "resolved",
-    doc: {
-      url: best.url,
-      cds_year: best.year,
-      filename: best.filename,
-      is_section_file: best.is_section_file,
-      is_test_artifact: best.is_test_artifact,
-      discovered_via: "subpage",
-    },
-  };
+  if (subCandidates.length === 0) {
+    return {
+      kind: "no_cds_found",
+      reason: "two-hop walk found no qualifying document candidates",
+    };
+  }
+  return { kind: "resolved", docs: subCandidates };
 }
