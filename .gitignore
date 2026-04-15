@@ -51,3 +51,4 @@ tools/finder/*.log
 /notes/
 /scratch/
 tools/tier_probe/.venv/
+tools/extraction_worker/.venv/
