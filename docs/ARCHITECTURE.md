@@ -114,7 +114,7 @@ Each pipeline is independently runnable. None of them requires any of the others
   │                                                                     │
   │  tools/extraction_worker/worker.py  (M2 skeleton live, Tier 2 only) │
   │    1. SELECT * FROM cds_documents WHERE extraction_status =         │
-  │         'extraction_pending' ORDER BY cds_year DESC                 │
+  │         'extraction_pending' ORDER BY school_id                     │
   │    2. For each row:                                                 │
   │         - Download archived source from Storage                     │
   │         - Run pypdf.get_fields() to detect format                   │
@@ -237,7 +237,7 @@ Summary of the components:
 | Component | Role |
 |---|---|
 | Supabase PostgREST | Exposes `public.cds_documents`, `public.cds_artifacts`, `public.cleaners`, and the `public.cds_manifest` view at `api.collegedata.fyi/rest/v1/`. Public-read via RLS policies defined in the initial migration. |
-| Supabase Storage | Serves archived source files from the `sources` bucket at `{project-ref}.supabase.co/storage/v1/object/public/sources/{school_id}/{cds_year}/{sha256}.{ext}`. SHA-addressed so every version is preserved forever (ADR 0006). Consumers discover the exact path via `cds_manifest.source_storage_path`. Public bucket, MIME allowlist enforces PDF/XLSX/DOCX only. |
+| Supabase Storage | Serves archived source files from the `sources` bucket at `{project-ref}.supabase.co/storage/v1/object/public/sources/{school_id}/{cds_year}/{sha256}.{ext}`. The `{cds_year}` segment is the archive-time resolver guess, frozen at upload time; the authoritative content-derived year lives in `cds_documents.detected_year` and is exposed as `canonical_year` in the manifest (see ADR 0007 Stage B trade-offs). SHA-addressed so every version is preserved forever (ADR 0006). Consumers discover the exact path via `cds_manifest.source_storage_path`, never by construction. Public bucket, MIME allowlist enforces PDF/XLSX/DOCX only. |
 | [`supabase/migrations/20260413201910_initial_schema.sql`](../supabase/migrations/20260413201910_initial_schema.sql) | Creates the three core tables, RLS policies, the manifest view, the Storage bucket, and the `sources` public-read policy. |
 
 ---
@@ -262,9 +262,9 @@ The five pipelines are loosely coupled but they do depend on each other in speci
 
 **When a consumer wants to know a specific school's 2024-25 CDS:**
 ```
-curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?school_id=eq.yale&cds_year=eq.2024-25'
+curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?school_id=eq.yale&canonical_year=eq.2024-25'
 ```
-Returns a row from the `cds_manifest` view with the latest canonical artifact ID and the archived source path. Follow `latest_canonical_artifact_id` to get the structured extract, or follow `source_storage_path` to download the original file.
+Returns a row from the `cds_manifest` view with the latest canonical artifact ID and the archived source path. Prefer `canonical_year` over `cds_year` — the former coalesces the content-derived `detected_year` (authoritative per ADR 0007) over the archive-time resolver guess. Follow `latest_canonical_artifact_id` to get the structured extract, or follow `source_storage_path` to download the original file.
 
 **When a school removes their CDS from the web:**
 1. The periodic re-check job (M3+ scope, on the backlog) HEADs every known `source_url` on some cadence

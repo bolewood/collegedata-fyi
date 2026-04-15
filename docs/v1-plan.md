@@ -85,7 +85,18 @@ cds_documents
                                       --       "columbia-general-studies";
                                       --       null for schools that publish
                                       --       a single CDS per year
-  cds_year              text          -- e.g. "2024-25"
+  cds_year              text          -- e.g. "2024-25". Archive-time guess
+                                      -- from URL/filename. Part of the
+                                      -- uniqueness key. NOT authoritative
+                                      -- for document year — prefer
+                                      -- detected_year / canonical_year
+                                      -- (ADR 0007).
+  detected_year         text          -- e.g. "2024-25" or null. Content-
+                                      -- derived via detect_year_from_pdf_bytes
+                                      -- in the extraction worker. Authoritative
+                                      -- when set. Exposed as
+                                      -- cds_manifest.canonical_year via
+                                      -- coalesce(detected_year, cds_year).
   source_url            text          -- where we found it
   source_format         text          -- pdf_fillable | pdf_flat | pdf_scanned
                                       -- | xlsx | docx; set on discovery

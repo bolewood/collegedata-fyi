@@ -111,7 +111,7 @@ wall clock.
 | Resolver dev entry (dry-run, no writes) | `supabase/functions/discover/index.ts` |
 | Queue consumer (30 s cron target + `force_school` backfill) | `supabase/functions/archive-process/index.ts` |
 | Monthly seeder (daily cron target, deterministic per-month run_id) | `supabase/functions/archive-enqueue/index.ts` |
-| Unit tests (28 tests: year normalizer, HTML extraction, Brown regression) | `supabase/functions/_shared/{year,resolve}.test.ts` |
+| Unit tests (48 tests: year normalizer, HTML anchor extraction, `pickCandidates` multi-candidate selection, Brown 2020-04 regression, test-artifact deprioritization, Lafayette CDS-digit filename) | `supabase/functions/_shared/{year,resolve}.test.ts` |
 
 ## Storage path convention
 
@@ -340,21 +340,31 @@ Then re-run step 4 of the setup to re-schedule the cron jobs.
 deno test --allow-net supabase/functions/_shared/
 ```
 
-28 tests:
+48 tests:
 
 - **`year.test.ts`** (16 tests) — `YYYY-YY` canonicalization for the 7
   forms the corpus uses (long-long hyphen, long-long en-dash, underscore,
   space, long-short, short-short, no-separator 4-digit), millennium
   boundary, false positives (2021 is not a span), plausibility bounds,
   and the Brown `/sites/default/files/2020-04/CDS2009_2010.pdf` path-trap
-  regression codex flagged in the PR 1-2 review.
+  regression codex flagged in the PR 1-2 review. Note: per ADR 0007 these
+  tests cover `normalizeYear`'s URL-hint semantics; the authoritative
+  document year lives in `detected_year` and is tested by the Python
+  extraction worker's harness, not here.
 
-- **`resolve.test.ts`** (12 tests) — HTML anchor extraction, relative
+- **`resolve.test.ts`** (32 tests) — HTML anchor extraction, relative
   href resolution, CDS keyword filtering (hostname doesn't false-match
   commondataset.org), section-file detection via filename, document
-  vs subpage categorization, malformed HTML, and `findBestSourceAnchor`
+  vs subpage categorization, malformed HTML, `findBestSourceAnchor`
   ranking (full-CDS beats section, more recent year beats older,
-  fallback to section if no full CDS).
+  test-artifact deprioritization, Lafayette CDS-digit filename
+  regression), `findDownloadLinks` Digital Commons fallback, Google
+  Drive URL rewriting (Stanford pattern), and the 8 `pickCandidates`
+  cases for ADR 0007 Stage B multi-candidate fan-out (Lafayette-style
+  multi-year landing page, single year-less candidate sentinel, mixed
+  year-labeled + year-less drops, multi-candidate all-year-less null
+  return, clean-vs-demoted partitioning, CSULB-style demoted fallback,
+  cross-subpage URL dedup, empty-list pass-through).
 
 Integration tests against a local Supabase stack (claim RPC concurrency,
 NULL uniqueness, decision-table branches) are out of scope for this PR
@@ -390,21 +400,6 @@ basic regression coverage for the `NULLS NOT DISTINCT` constraint.
 
 ## Known issues
 
-**Resolver year requirement causes 68% of permanent failures.** The
-first full drain classified 204 of 302 `failed_permanent` rows as
-"no year-bearing anchors / no parseable year." Content-based year
-detection in the extraction worker ([ADR 0007](decisions/0007-year-authority-moves-to-extraction.md))
-is Stage A of the fix — observation-only today, load-bearing when
-Stage B lands and the resolver stops requiring URL year parsing as
-a precondition for archiving.
-
-**Resolver loses multi-year historical depth on successful schools.**
-25% of successful schools have HTML landing pages with an average
-of 14.2 distinct years (Northern Michigan has 25, Allegheny 24,
-Lafayette 20). The current resolver picks one and discards the
-rest. Stage B of ADR 0007 is the fix — returns every CDS-ish
-anchor from a landing page instead of ranking-then-picking.
-
 **Sub-institution schools.** Columbia (and any other school with a
 `sub_institutions` array) is intentionally excluded in V1 per
 `filterArchivable`. Follow-up: add a resolver path that matches landing
@@ -426,6 +421,26 @@ updating — prefer `cds_manifest.source_storage_path` as the canonical
 accessor.
 
 ## Resolved issues
+
+**Resolver year requirement causing 68% of permanent failures (resolved
+2026-04-15, commit `6ea67a8`).** The first full drain (2026-04-14/15)
+classified 204 of 302 `failed_permanent` rows as "no year-bearing
+anchors / no parseable year." ADR 0007 Stage B fixed this structurally:
+direct-doc hints bypass year parsing entirely, landing pages return
+every CDS-ish anchor via `pickCandidates`, and content-derived year
+lives in `cds_documents.detected_year` (authoritative) exposed via
+`cds_manifest.canonical_year`. The `no_cds_found` bucket still exists
+for pathological cases (multi-candidate all-year-less landing pages
+with no distinguishing signal) but the 204-row class is gone.
+
+**Resolver losing multi-year historical depth on successful schools
+(resolved 2026-04-15, commit `6ea67a8`).** 25% of successful schools
+have HTML landing pages with an average of 14.2 distinct years
+(Northern Michigan has 25, Allegheny 24, Lafayette 20). ADR 0007
+Stage B `pickCandidates` now returns every qualifying anchor, so
+the archiver fans out into one `cds_documents` row per year rather
+than picking-then-discarding. Measured gain lands in this doc's
+failure taxonomy once the post-Stage-B re-drain completes.
 
 **pg_cron authorization 401 (resolved 2026-04-15).** Inner cron fired
 on schedule, pg_net made the HTTP call, but every response was 401 at
@@ -455,8 +470,11 @@ service role key already substituted in.
   immutable" guarantee is now backed by SHA-addressed Storage paths,
   which is a stronger implementation of the same promise.
 - [ADR 0007](decisions/0007-year-authority-moves-to-extraction.md)
-  (Year authority moves to extraction) — Stage A shipped 2026-04-15
-  as observation-only. Stage B will remove the resolver's URL year
-  requirement and let the archiver emit every CDS-ish anchor from
-  a landing page, addressing the 68% of failures and the
-  ~1,900-document historical-depth gap above.
+  (Year authority moves to extraction) — Stages A + B + C shipped
+  2026-04-15. Stage A (7c86e37) added content detection as an
+  observation-only side channel. Stage B (6ea67a8) made detection
+  write-authoritative via the new `cds_documents.detected_year`
+  column, removed the resolver's URL year requirement, and landed
+  `pickCandidates` multi-candidate fan-out. Stage C (9af6a5f) was
+  de-scoped to docs-only; the full retirement of `cds_year` is
+  tracked in [`docs/backlog.md`](./backlog.md).
