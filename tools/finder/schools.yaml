@@ -23355,14 +23355,16 @@ schools:
   name: University of Maine-System Central Office
   domain: maine.edu
   ipeds_id: '161280'
-  scrape_policy: active
-  probe_state:
-    last_probed_at: '2026-04-14T13:23:17Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
-  cds_url_hint: https://usm.maine.edu/department-of-analysis-applications-institutional-research/common-data-set/
+  # System administrative office, not a degree-granting institution.
+  # Maine's member campuses (Orono, USM, etc.) publish their own CDS;
+  # the system office does not. The Brave search fallback originally
+  # flipped this to scrape_policy=active and copied USM's IR page URL
+  # into its cds_url_hint, leading to two different schools archiving
+  # the same file under different cds_documents rows. Flagged during
+  # the 2026-04-15 ADR 0007 Stage A year-detection harness run when
+  # both U Maine System and USM showed up as year mismatches pointing
+  # at the same Google Drive download URL.
+  scrape_policy: verified_absent
 - id: university-of-mary
   name: University of Mary
   domain: umary.edu

@@ -33,6 +33,22 @@ const DOCUMENT_EXT_RE = /\.(pdf|xlsx|docx)(\?|#|$)/i;
 // marker across the corpus.
 const SECTION_MARKER_RE = /\bsection[-_ ]?[a-j]\b/i;
 
+// Staging artifacts schools leave behind on their CMS. CSULB's
+// cds_url_hint landing page exposes `cds_2015-2016_test.pdf` twice
+// (once labeled "CDS 2015-2016", once labeled "CDS 2016-2017") and
+// nothing else — so the resolver picks a test upload as the school's
+// canonical CDS. Content-based year detection surfaced the bug by
+// flagging CSULB as a year mismatch in the ADR 0007 Stage A harness
+// (stored 2015-16, detected 2016-17). More generally: schools
+// frequently leave `_test|_draft|_old|_copy|_backup|_archive` files
+// sitting in their document roots after real uploads go live. We
+// don't want to *drop* these anchors entirely, because a school whose
+// only linked CDS is a test artifact is still better-archived than
+// skipped — but we do want to deprioritize them so a clean sibling
+// always wins. Ranking happens in findBestSourceAnchor below.
+const TEST_ARTIFACT_RE =
+  /[_\-.](?:test|draft|old|copy|backup|archive|bak|tmp|temp|staging|dev|preview)\b/i;
+
 // SSRF defense. The resolver follows arbitrary URLs out of HTML, so a
 // compromised school website could try to pivot into cloud metadata
 // endpoints or private address space via the edge function's network
@@ -154,6 +170,7 @@ export interface CdsAnchor {
   year_source: YearSource;
   kind: AnchorKind;
   is_section_file: boolean;
+  is_test_artifact: boolean;
 }
 
 export interface ResolvedDocument {
@@ -161,6 +178,7 @@ export interface ResolvedDocument {
   cds_year: string;
   filename: string;
   is_section_file: boolean;
+  is_test_artifact: boolean;
   discovered_via: "direct" | "landing" | "subpage";
   parent_subpage_url?: string;
 }
@@ -316,6 +334,7 @@ export function extractCdsAnchors(html: string, baseUrl: string): CdsAnchor[] {
       // "Enrollment and General Information" on a CDS overview page would
       // otherwise flag a full CDS as a section file and demote it.
       is_section_file: SECTION_MARKER_RE.test(filename),
+      is_test_artifact: TEST_ARTIFACT_RE.test(filename),
     });
   }
 
@@ -416,6 +435,7 @@ export function findDownloadLinks(html: string, baseUrl: string): CdsAnchor[] {
       year_source: "unknown",
       kind: "document",
       is_section_file: false,
+      is_test_artifact: TEST_ARTIFACT_RE.test(filename),
     });
   }
 
@@ -424,9 +444,16 @@ export function findDownloadLinks(html: string, baseUrl: string): CdsAnchor[] {
 
 // Ranks candidate document anchors and returns the best one.
 //   1. Full CDS beats section files
-//   2. Anchors with a year beat anchors without
-//   3. More recent year beats older
-//   4. Within ties, document order wins (earlier in HTML = more prominent)
+//   2. Non-test files beat test/draft/backup staging artifacts
+//   3. Anchors with a year beat anchors without
+//   4. More recent year beats older
+//   5. Within ties, document order wins (earlier in HTML = more prominent)
+//
+// Deliberately ranks test artifacts rather than filtering them out: a
+// school whose *only* archivable CDS is a `_test` upload (CSULB's case
+// as of 2026-04-15) should still be archived — we'd rather have the
+// bytes and let content-based year detection surface the actual year
+// than drop the school entirely.
 export function findBestSourceAnchor(
   anchors: CdsAnchor[],
 ): CdsAnchor | null {
@@ -436,6 +463,9 @@ export function findBestSourceAnchor(
   const ranked = [...docs].sort((a, b) => {
     if (a.is_section_file !== b.is_section_file) {
       return a.is_section_file ? 1 : -1;
+    }
+    if (a.is_test_artifact !== b.is_test_artifact) {
+      return a.is_test_artifact ? 1 : -1;
     }
     const aHas = a.year !== null;
     const bHas = b.year !== null;
@@ -494,6 +524,7 @@ export async function resolveCdsForSchool(
         cds_year: year,
         filename,
         is_section_file: SECTION_MARKER_RE.test(filename),
+        is_test_artifact: TEST_ARTIFACT_RE.test(filename),
         discovered_via: "direct",
       },
     };
@@ -538,6 +569,7 @@ export async function resolveCdsForSchool(
         cds_year: year,
         filename,
         is_section_file: SECTION_MARKER_RE.test(filename),
+        is_test_artifact: TEST_ARTIFACT_RE.test(filename),
         discovered_via: "direct",
       },
     };
@@ -564,6 +596,7 @@ export async function resolveCdsForSchool(
           cds_year: best.year,
           filename: best.filename,
           is_section_file: best.is_section_file,
+          is_test_artifact: best.is_test_artifact,
           discovered_via: "landing",
         },
       };
@@ -604,6 +637,7 @@ export async function resolveCdsForSchool(
           year_source: "filename" as YearSource,
           kind: "document" as AnchorKind,
           is_section_file: SECTION_MARKER_RE.test(filename),
+          is_test_artifact: TEST_ARTIFACT_RE.test(filename),
         }];
       }
       // Non-HTML response with an unrecognized content-type (e.g.
@@ -625,6 +659,7 @@ export async function resolveCdsForSchool(
           year_source: sub.year_source,
           kind: "document" as AnchorKind,
           is_section_file: SECTION_MARKER_RE.test(filename),
+          is_test_artifact: TEST_ARTIFACT_RE.test(filename),
         }];
       }
       if (!subCt.includes("text/html")) return [];
@@ -683,6 +718,7 @@ export async function resolveCdsForSchool(
       cds_year: best.year,
       filename: best.filename,
       is_section_file: best.is_section_file,
+      is_test_artifact: best.is_test_artifact,
       discovered_via: "subpage",
     },
   };

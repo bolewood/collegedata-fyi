@@ -95,6 +95,7 @@ Deno.test("findBestSourceAnchor: prefers full CDS over section file", () => {
       year_source: "filename" as const,
       kind: "document" as const,
       is_section_file: true,
+      is_test_artifact: false,
     },
     {
       url: "https://example.edu/files/cds2024-25.pdf",
@@ -104,6 +105,7 @@ Deno.test("findBestSourceAnchor: prefers full CDS over section file", () => {
       year_source: "filename" as const,
       kind: "document" as const,
       is_section_file: false,
+      is_test_artifact: false,
     },
   ];
   const best = findBestSourceAnchor(anchors);
@@ -121,6 +123,7 @@ Deno.test("findBestSourceAnchor: prefers recent year", () => {
       year_source: "filename" as const,
       kind: "document" as const,
       is_section_file: false,
+      is_test_artifact: false,
     },
     {
       url: "b.pdf",
@@ -130,6 +133,7 @@ Deno.test("findBestSourceAnchor: prefers recent year", () => {
       year_source: "filename" as const,
       kind: "document" as const,
       is_section_file: false,
+      is_test_artifact: false,
     },
     {
       url: "c.pdf",
@@ -139,6 +143,7 @@ Deno.test("findBestSourceAnchor: prefers recent year", () => {
       year_source: "filename" as const,
       kind: "document" as const,
       is_section_file: false,
+      is_test_artifact: false,
     },
   ];
   const best = findBestSourceAnchor(anchors);
@@ -156,6 +161,7 @@ Deno.test("findBestSourceAnchor: falls back to section file if no full CDS", () 
       year_source: "filename" as const,
       kind: "document" as const,
       is_section_file: true,
+      is_test_artifact: false,
     },
   ];
   const best = findBestSourceAnchor(anchors);
@@ -165,6 +171,79 @@ Deno.test("findBestSourceAnchor: falls back to section file if no full CDS", () 
 
 Deno.test("findBestSourceAnchor: empty input returns null", () => {
   assertEquals(findBestSourceAnchor([]), null);
+});
+
+Deno.test("extractCdsAnchors: test artifact filenames flagged", () => {
+  const html = `
+    <a href="/files/cds_2015-2016_test.pdf">CDS 2015-2016</a>
+    <a href="/files/cds_2024-25_draft.pdf">CDS 2024-25 Draft</a>
+    <a href="/files/cds_2023-24_backup.pdf">CDS 2023-24</a>
+    <a href="/files/cds-2022-23.pdf">CDS 2022-23</a>
+  `;
+  const anchors = extractCdsAnchors(html, BASE);
+  assertEquals(anchors.length, 4);
+  const byFilename = new Map(anchors.map((a) => [a.filename, a]));
+  assertEquals(byFilename.get("cds_2015-2016_test.pdf")?.is_test_artifact, true);
+  assertEquals(byFilename.get("cds_2024-25_draft.pdf")?.is_test_artifact, true);
+  assertEquals(byFilename.get("cds_2023-24_backup.pdf")?.is_test_artifact, true);
+  assertEquals(byFilename.get("cds-2022-23.pdf")?.is_test_artifact, false);
+});
+
+Deno.test("findBestSourceAnchor: non-test file wins over higher-year test artifact", () => {
+  // CSULB regression (2026-04-15): landing page exposed
+  // cds_2015-2016_test.pdf with two separate anchor labels. In the
+  // real corpus this was the only file, but the rank must still
+  // prefer a clean sibling when one exists — otherwise a school
+  // with both a real 2023-24 PDF and a leftover 2024-25_draft
+  // would archive the draft as canonical.
+  const anchors = [
+    {
+      url: "https://example.edu/files/cds2024-25_draft.pdf",
+      filename: "cds2024-25_draft.pdf",
+      link_text: "CDS 2024-25 (Draft)",
+      year: "2024-25",
+      year_source: "filename" as const,
+      kind: "document" as const,
+      is_section_file: false,
+      is_test_artifact: true,
+    },
+    {
+      url: "https://example.edu/files/cds2023-24.pdf",
+      filename: "cds2023-24.pdf",
+      link_text: "CDS 2023-24",
+      year: "2023-24",
+      year_source: "filename" as const,
+      kind: "document" as const,
+      is_section_file: false,
+      is_test_artifact: false,
+    },
+  ];
+  const best = findBestSourceAnchor(anchors);
+  assertExists(best);
+  assertEquals(best.filename, "cds2023-24.pdf");
+});
+
+Deno.test("findBestSourceAnchor: test artifact wins when it is the only candidate", () => {
+  // The inverse: if the only archivable thing is a test file, we
+  // still archive it (content detection downstream flags the year).
+  // Dropping it outright would regress CSULB — the school's only
+  // linked CDS is a `_test` upload and we still want those bytes.
+  const anchors = [
+    {
+      url: "https://www.csulb.edu/sites/default/files/document/cds_2015-2016_test.pdf",
+      filename: "cds_2015-2016_test.pdf",
+      link_text: "CDS 2016 - 2017",
+      year: "2016-17",
+      year_source: "link_text" as const,
+      kind: "document" as const,
+      is_section_file: false,
+      is_test_artifact: true,
+    },
+  ];
+  const best = findBestSourceAnchor(anchors);
+  assertExists(best);
+  assertEquals(best.filename, "cds_2015-2016_test.pdf");
+  assertEquals(best.is_test_artifact, true);
 });
 
 Deno.test("findDownloadLinks: Digital Commons item page (Fairfield regression)", () => {
@@ -271,6 +350,7 @@ Deno.test("findBestSourceAnchor: only subpages → null", () => {
       year_source: "filename" as const,
       kind: "subpage" as const,
       is_section_file: false,
+      is_test_artifact: false,
     },
   ];
   assertEquals(findBestSourceAnchor(anchors), null);
