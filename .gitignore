@@ -50,3 +50,4 @@ tools/finder/*.log
 # Personal planning — never commit
 /notes/
 /scratch/
+tools/tier_probe/.venv/
