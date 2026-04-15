@@ -3,6 +3,7 @@ import {
   extractCdsAnchors,
   findBestSourceAnchor,
   findDownloadLinks,
+  rewriteGoogleDriveUrl,
 } from "./resolve.ts";
 
 const BASE = "https://example.edu/ir/cds/";
@@ -212,6 +213,44 @@ Deno.test("findDownloadLinks: skips anchors without download-pattern markers", (
   // DOWNLOAD_URL_RE (no viewcontent/bitstream/etc). So this entry is also
   // correctly excluded.
   assertEquals(anchors.length, 0);
+});
+
+Deno.test("rewriteGoogleDriveUrl: /file/d/ID/view form", () => {
+  // Stanford hosts every year of their CDS as Drive share links.
+  const input =
+    "https://drive.google.com/file/d/1GIPKgVj1d86dkmLkHI_mZVCk_iY6kiCp/view?usp=sharing";
+  const expected =
+    "https://drive.google.com/uc?export=download&id=1GIPKgVj1d86dkmLkHI_mZVCk_iY6kiCp&confirm=t";
+  assertEquals(rewriteGoogleDriveUrl(input), expected);
+});
+
+Deno.test("rewriteGoogleDriveUrl: /open?id=ID form", () => {
+  const input = "https://drive.google.com/open?id=abc123xyz";
+  const expected =
+    "https://drive.google.com/uc?export=download&id=abc123xyz&confirm=t";
+  assertEquals(rewriteGoogleDriveUrl(input), expected);
+});
+
+Deno.test("rewriteGoogleDriveUrl: non-drive URL passes through", () => {
+  const input = "https://example.edu/cds-2024-25.pdf";
+  assertEquals(rewriteGoogleDriveUrl(input), input);
+});
+
+Deno.test("extractCdsAnchors: Stanford-style Google Drive links rewritten", () => {
+  const html = `
+    <h2>Stanford Common Data Set Reports</h2>
+    <a href="https://drive.google.com/file/d/1GIPKgVj1d86dkmLkHI_mZVCk_iY6kiCp/view?usp=sharing">Stanford CDS 2025-2026</a>
+    <a href="https://drive.google.com/file/d/12MjIqdzzHiECf6hfRlbU3RmmIy14hl1H/view?usp=sharing">Stanford CDS 2024-2025</a>
+  `;
+  const anchors = extractCdsAnchors(html, "https://irds.stanford.edu/data-findings/cds");
+  assertEquals(anchors.length, 2);
+  // Both should be rewritten to direct-download URLs
+  for (const a of anchors) {
+    assertEquals(a.url.startsWith("https://drive.google.com/uc?export=download&id="), true);
+  }
+  // Year should still be parsed from link text
+  const years = anchors.map((a) => a.year).sort();
+  assertEquals(years, ["2024-25", "2025-26"]);
 });
 
 Deno.test("findDownloadLinks: commondataset.org excluded here too", () => {

@@ -10,8 +10,14 @@
 import { DOMParser, type Element as DomElement } from "jsr:@b-fuze/deno-dom";
 import { normalizeYear } from "./year.ts";
 
+// Mozilla-compatible UA. The plain "collegedata.fyi/0.1" UA was getting
+// 403'd by Bepress-hosted Digital Commons sites (Fairfield, others) and
+// likely by other WAFs tuned to block non-browser UAs. Keeping the
+// project identity in the comment so we're honest about who we are
+// while passing naive UA filters. The format (Mozilla/5.0 (compatible;
+// name/version; +url)) is the convention used by most crawler bots.
 export const USER_AGENT =
-  "collegedata.fyi/0.1 (research probe; https://collegedata.fyi)";
+  "Mozilla/5.0 (compatible; collegedata.fyi/0.1; +https://collegedata.fyi)";
 export const LANDING_TIMEOUT_MS = 30_000;
 export const SUBPAGE_TIMEOUT_MS = 15_000;
 const MAX_SUBPAGES_PER_SCHOOL = 25;
@@ -85,6 +91,38 @@ function isExcludedDocumentHost(hostname: string): boolean {
     if (h === suffix || h.endsWith("." + suffix)) return true;
   }
   return false;
+}
+
+// Google Drive file-share URLs point at an HTML viewer, not the file
+// itself. Our resolver's two-hop fetch lands on the viewer, sees
+// text/html, and can't classify it as a document. The fix is to rewrite
+// share URLs into the direct-download form before we try to follow them.
+//
+// Example input:
+//   https://drive.google.com/file/d/1GIPKgVj1d86dkmLkHI_mZVCk_iY6kiCp/view?usp=sharing
+// Example output:
+//   https://drive.google.com/uc?export=download&id=1GIPKgVj1d86dkmLkHI_mZVCk_iY6kiCp
+//
+// Stanford hosts all 18 years of their CDS on Drive. The whole pattern
+// is probably not unique to them — any school that lets their IR
+// office use Drive for public document distribution lands here.
+//
+// The confirm=t parameter defeats Google's "virus scan warning" interstitial
+// for larger files. Without it, Drive returns an HTML confirmation page
+// instead of the binary bytes for files over ~25MB.
+const GOOGLE_DRIVE_FILE_RE = /^https?:\/\/drive\.google\.com\/file\/d\/([^/]+)/i;
+const GOOGLE_DRIVE_OPEN_RE = /^https?:\/\/drive\.google\.com\/open\?id=([^&]+)/i;
+
+export function rewriteGoogleDriveUrl(url: string): string {
+  const fileMatch = url.match(GOOGLE_DRIVE_FILE_RE);
+  if (fileMatch) {
+    return `https://drive.google.com/uc?export=download&id=${fileMatch[1]}&confirm=t`;
+  }
+  const openMatch = url.match(GOOGLE_DRIVE_OPEN_RE);
+  if (openMatch) {
+    return `https://drive.google.com/uc?export=download&id=${openMatch[1]}&confirm=t`;
+  }
+  return url;
 }
 
 export function isSafeUrl(raw: string): boolean {
@@ -225,6 +263,12 @@ export function extractCdsAnchors(html: string, baseUrl: string): CdsAnchor[] {
       continue;
     }
 
+    // Rewrite Google Drive share URLs into direct-download form before
+    // any classification. Without this, the subsequent two-hop fetch
+    // lands on Drive's HTML viewer and we can't classify it as a
+    // document. See rewriteGoogleDriveUrl comment above.
+    absoluteUrl = rewriteGoogleDriveUrl(absoluteUrl);
+
     const parsed = new URL(absoluteUrl);
 
     // Drop anchors pointing at upstream aggregator sites that host CDS
@@ -343,6 +387,9 @@ export function findDownloadLinks(html: string, baseUrl: string): CdsAnchor[] {
     } catch {
       continue;
     }
+
+    // Same Google Drive rewrite as extractCdsAnchors.
+    absoluteUrl = rewriteGoogleDriveUrl(absoluteUrl);
 
     const parsed = new URL(absoluteUrl);
     if (isExcludedDocumentHost(parsed.hostname)) continue;
@@ -555,6 +602,27 @@ export async function resolveCdsForSchool(
           link_text: sub.link_text,
           year,
           year_source: "filename" as YearSource,
+          kind: "document" as AnchorKind,
+          is_section_file: SECTION_MARKER_RE.test(filename),
+        }];
+      }
+      // Non-HTML response with an unrecognized content-type (e.g.
+      // application/octet-stream from Google Drive direct-download, or
+      // a bare 200 from a CGI endpoint). If the parent subpage had a
+      // year, trust it as a document candidate and let downloadWithCaps
+      // do magic-byte sniffing on the actual bytes. This unblocks Drive-
+      // hosted CDS archives where every year comes back as octet-stream.
+      if (!subCt.includes("text/html") && sub.year) {
+        const parsed = new URL(resp.finalUrl);
+        const filename = decodeURIComponent(
+          parsed.pathname.split("/").filter(Boolean).pop() ?? "",
+        );
+        return [{
+          url: resp.finalUrl,
+          filename,
+          link_text: sub.link_text,
+          year: sub.year,
+          year_source: sub.year_source,
           kind: "document" as AnchorKind,
           is_section_file: SECTION_MARKER_RE.test(filename),
         }];

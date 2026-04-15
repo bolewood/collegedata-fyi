@@ -30,6 +30,59 @@ export function extForContentType(contentType: string | null, fallbackUrl: strin
   return null;
 }
 
+// Magic-byte sniffer. Used as a last-resort fallback when content-type
+// and URL extension both fail to identify the file — most commonly
+// for Google Drive direct-download URLs which serve every file as
+// application/octet-stream regardless of the actual contents. Trusts
+// the first 8 bytes since the magic numbers for all three supported
+// formats are unambiguous and unique.
+//
+//   PDF:          %PDF-       → 0x25 0x50 0x44 0x46 0x2d
+//   XLSX / DOCX:  PK\x03\x04  → 0x50 0x4b 0x03 0x04  (they are both ZIP
+//                                                     archives; distinguishing
+//                                                     them would require
+//                                                     reading [Content_Types].xml)
+//
+// Returns the detected extension, or null if the magic doesn't match
+// any supported format. For ZIP archives we return "xlsx" as a best
+// guess since CDS filled templates are overwhelmingly spreadsheets
+// rather than Word docs (and the extractor will re-detect format via
+// openpyxl / python-docx anyway, so a wrong guess is recoverable).
+export function sniffBytesForExt(bytes: Uint8Array): "pdf" | "xlsx" | "docx" | null {
+  if (bytes.length < 4) return null;
+  // %PDF- → PDF
+  if (
+    bytes[0] === 0x25 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x44 &&
+    bytes[3] === 0x46
+  ) return "pdf";
+  // PK\x03\x04 → ZIP archive (xlsx or docx). Default to xlsx for CDS.
+  if (
+    bytes[0] === 0x50 &&
+    bytes[1] === 0x4b &&
+    bytes[2] === 0x03 &&
+    bytes[3] === 0x04
+  ) return "xlsx";
+  return null;
+}
+
+// Combined classifier: tries content-type first, then URL suffix, then
+// magic-byte sniffing. This is what downloadWithCaps uses to decide the
+// final extension for the SHA-addressed Storage path after the bytes
+// are in hand.
+export function extForResponse(
+  contentType: string | null,
+  finalUrl: string,
+  bytes: Uint8Array,
+): "pdf" | "xlsx" | "docx" | null {
+  const fromCt = extForContentType(contentType, finalUrl);
+  if (fromCt === "pdf" || fromCt === "xlsx" || fromCt === "docx") {
+    return fromCt;
+  }
+  return sniffBytesForExt(bytes);
+}
+
 export function normalizedContentType(ext: string): string {
   switch (ext) {
     case "pdf":

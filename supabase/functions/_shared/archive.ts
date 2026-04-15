@@ -23,7 +23,7 @@ import {
 } from "./db.ts";
 import {
   buildSourcePath,
-  extForContentType,
+  extForResponse,
   MAX_SOURCE_BYTES,
   objectExists,
   uploadSource,
@@ -97,10 +97,14 @@ export async function archiveOneSchool(
   const { bytes, sha256, contentType, finalUrl } = await downloadWithCaps(
     resolved.url,
   );
-  const ext = extForContentType(contentType, finalUrl);
+  // extForResponse tries content-type → URL suffix → magic-byte sniff.
+  // The magic-byte path is what rescues Google Drive (serves everything
+  // as application/octet-stream) and any other host whose download
+  // endpoint doesn't set a canonical Content-Type.
+  const ext = extForResponse(contentType, finalUrl, bytes);
   if (!ext) {
     throw new PermanentError(
-      `unknown content type for ${finalUrl}: ${contentType || "(none)"}`,
+      `unknown content type for ${finalUrl}: ${contentType || "(none)"}, bytes do not match PDF/XLSX/DOCX magic`,
     );
   }
 
