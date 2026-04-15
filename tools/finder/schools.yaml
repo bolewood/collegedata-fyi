@@ -55,8 +55,9 @@ schools:
   name: Massachusetts Institute of Technology
   domain: mit.edu
   ipeds_id: '166683'
-  cds_url_hint: https://web.mit.edu/ir/cds/
+  cds_url_hint: https://ir.mit.edu/project-topic/common-data-set
   scrape_policy: active
+  notes: web.mit.edu/ir/cds/ is a stale Apache redirect stub; real listing moved to ir.mit.edu WordPress in 2024.
 - id: stanford
   name: Stanford University
   domain: stanford.edu

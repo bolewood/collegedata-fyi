@@ -57,6 +57,36 @@ const BLOCKED_HOSTNAMES = new Set<string>([
   "metadata",
 ]);
 
+// Hosts whose documents look like CDS files but are NOT an individual
+// school's filled CDS. Anchors pointing at these hosts get dropped during
+// extraction even if their filename/text matches the CDS keyword filter.
+//
+// commondataset.org is the CDS Initiative's own site. It publishes the
+// blank template, the Summary of Changes reference doc, and the value-
+// options spec — all of which contain "CDS" in the filename and match
+// the keyword filter. IR landing pages link to those references for
+// context, and on pages that link both the reference AND the school's
+// own CDS, the ranker used to pick the reference (more recent year in
+// the filename) and archive it as the school's data. Surfaced by the
+// tier probe when stanford, georgetown, and davidson all archived the
+// exact same 326023-byte "Summary of Changes" docx, byte-for-byte
+// identical SHA.
+//
+// Match is suffix-based so subdomains (www.commondataset.org, etc) are
+// covered automatically. Add more entries if other upstream aggregators
+// show the same false-positive pattern.
+const EXCLUDED_DOCUMENT_HOSTS: string[] = [
+  "commondataset.org",
+];
+
+function isExcludedDocumentHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  for (const suffix of EXCLUDED_DOCUMENT_HOSTS) {
+    if (h === suffix || h.endsWith("." + suffix)) return true;
+  }
+  return false;
+}
+
 export function isSafeUrl(raw: string): boolean {
   let parsed: URL;
   try {
@@ -196,6 +226,12 @@ export function extractCdsAnchors(html: string, baseUrl: string): CdsAnchor[] {
     }
 
     const parsed = new URL(absoluteUrl);
+
+    // Drop anchors pointing at upstream aggregator sites that host CDS
+    // reference documents (blank template, Summary of Changes, etc).
+    // See EXCLUDED_DOCUMENT_HOSTS comment above.
+    if (isExcludedDocumentHost(parsed.hostname)) continue;
+
     const pathSegments = parsed.pathname.split("/").filter(Boolean);
     const filename = decodeURIComponent(
       pathSegments[pathSegments.length - 1] ?? "",
@@ -264,6 +300,79 @@ export function extractCdsAnchors(html: string, baseUrl: string): CdsAnchor[] {
   }
 
   return Array.from(byUrl.values());
+}
+
+// Patterns for recognizing "download" links on item pages that don't have
+// a file extension and don't carry CDS keywords in the link text. Used as
+// a fallback when the strict extractCdsAnchors pass finds no document
+// anchors on a subpage — which is the Digital Commons / Bepress / DSpace
+// item-page shape (Fairfield being the concrete example from tonight's
+// failed_permanent rows).
+const DOWNLOAD_TEXT_RE =
+  /\b(download|full[\s-]?text|view[\s-]?pdf|open[\s-]?access|pdf)\b/i;
+const DOWNLOAD_URL_RE =
+  /\b(viewcontent|bitstream|download|getfile|attachment|fulltext)\b/i;
+
+// Scans a subpage HTML for anchors that look like document download links
+// even when they don't carry a file extension or CDS keyword. Used only as
+// a fallback in the two-hop walk — the parent subpage already confirmed
+// CDS context, so anchors here are trusted to be the download for the
+// CDS item the parent was pointing at. Caller fills year from parent.
+// Content-type is confirmed at download time in downloadWithCaps, so a
+// false-positive here becomes a clean PermanentError downstream rather
+// than corrupted data.
+export function findDownloadLinks(html: string, baseUrl: string): CdsAnchor[] {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  if (!doc) return [];
+
+  const base = new URL(baseUrl);
+  const seen = new Set<string>();
+  const out: CdsAnchor[] = [];
+
+  for (const node of doc.querySelectorAll("a[href]")) {
+    const el = node as unknown as DomElement;
+    const href = el.getAttribute("href") ?? "";
+    if (!href) continue;
+    if (/^(#|mailto:|tel:|javascript:)/i.test(href)) continue;
+
+    const linkText = (el.textContent ?? "").replace(/\s+/g, " ").trim();
+
+    let absoluteUrl: string;
+    try {
+      absoluteUrl = new URL(href, base).toString();
+    } catch {
+      continue;
+    }
+
+    const parsed = new URL(absoluteUrl);
+    if (isExcludedDocumentHost(parsed.hostname)) continue;
+
+    const fullPath = decodeURIComponent(parsed.pathname + parsed.search);
+    const matchesText = DOWNLOAD_TEXT_RE.test(linkText);
+    const matchesUrl = DOWNLOAD_URL_RE.test(fullPath);
+    if (!matchesText && !matchesUrl) continue;
+
+    const key = absoluteUrl.split("#")[0];
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    const pathSegments = parsed.pathname.split("/").filter(Boolean);
+    const filename = decodeURIComponent(
+      pathSegments[pathSegments.length - 1] ?? "",
+    );
+
+    out.push({
+      url: absoluteUrl,
+      filename,
+      link_text: linkText,
+      year: null,
+      year_source: "unknown",
+      kind: "document",
+      is_section_file: false,
+    });
+  }
+
+  return out;
 }
 
 // Ranks candidate document anchors and returns the best one.
@@ -460,6 +569,23 @@ export async function resolveCdsForSchool(
           year: a.year ?? sub.year,
         });
       }
+
+      // Fallback for Digital Commons / Bepress / DSpace item pages where
+      // the real PDF download link has no file extension and no CDS
+      // keyword. The CDS context was established on the parent subpage,
+      // so we trust any download-pattern anchor on the child and let
+      // downloadWithCaps validate the content-type before archiving.
+      if (out.length === 0) {
+        const downloadAnchors = findDownloadLinks(resp.text, resp.finalUrl);
+        for (const a of downloadAnchors) {
+          out.push({
+            ...a,
+            year: sub.year,
+            year_source: sub.year_source,
+          });
+        }
+      }
+
       return out;
     }),
   );
