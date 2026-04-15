@@ -10,7 +10,7 @@ The project has five logical pipelines, each running at a different cadence and 
 
 1. **Schema pipeline** — once per CDS year. Extracts the canonical schema from commondataset.org's official XLSX template into a committed JSON artifact. Also folds per-field checkbox value decoders into the same artifact.
 2. **Corpus pipeline** — once per month or so. Builds the canonical school list from IPEDS data and enriches it with URL hints discovered by a pattern-ladder prober.
-3. **Discovery pipeline** — nightly via cron. Reads the canonical school list, crawls each school's IR landing page, extracts year-labeled CDS document links, archives source bytes to Storage, and upserts `cds_documents` rows.
+3. **Discovery pipeline** — nightly via cron. Reads the canonical school list, crawls each school's IR landing page, extracts every CDS-ish document anchor (multi-candidate per ADR 0007 Stage B), archives source bytes to Storage, and upserts one `cds_documents` row per archived file. Academic year is assigned later by the extraction pipeline from page-1 content, not from the URL.
 4. **Extraction pipeline** — triggered by discovery. Pulls each `extraction_pending` row, downloads the archived source, detects format, routes to a tier-specific extractor, and writes a `canonical` artifact back.
 5. **Consumer pipeline** — on demand. PostgREST serves the manifest and the `cds_manifest` view at `api.collegedata.fyi/rest/v1/`. Signed or public Storage URLs serve the archived source files.
 
@@ -73,16 +73,18 @@ Each pipeline is independently runnable. None of them requires any of the others
   │                       DISCOVERY PIPELINE                            │
   │                      (online, daily cron)                           │
   │                                                                     │
-  │  supabase/functions/discover/index.ts                               │
+  │  supabase/functions/archive-process/index.ts                        │
   │    1. Load schools.yaml                                             │
   │    2. For each scrape_policy ∈ {active, verified_partial}:          │
   │         - Fetch cds_url_hint landing page                           │
-  │         - Parse HTML, extract year-labeled CDS links                │
+  │         - Parse HTML, extract every CDS-ish document anchor         │
+  │           (href or link-text matches /cds|common data set/)         │
   │         - Follow HTML subpages one hop (CMU pattern)                │
-  │         - Normalize year span (2024-2025 → 2024-25,                 │
-  │           cds9900 → 1999-00, etc.)                                  │
+  │         - pickCandidates: return every qualifying anchor (ADR 0007  │
+  │           Stage B) so a landing page like Lafayette's 19-year       │
+  │           archive produces 19 candidates, not one                   │
   │         - HEAD each discovered document                             │
-  │    3. For each distinct (school, year) pair:                        │
+  │    3. For each candidate URL:                                       │
   │         - Download source bytes                                     │
   │         - Compute sha256                                            │
   │         - Upload to Storage at                                      │
@@ -117,9 +119,10 @@ Each pipeline is independently runnable. None of them requires any of the others
   │         - Download archived source from Storage                     │
   │         - Run pypdf.get_fields() to detect format                   │
   │         - Set cds_documents.source_format                           │
-  │         - Detect document year from page content via                │
-  │           detect_year_from_pdf_bytes (observation-only in Stage A,  │
-  │           write-authoritative in Stage B per ADR 0007)              │
+  │         - Detect document year from page 1-10 content via           │
+  │           detect_year_from_pdf_bytes (strict prefix-anchored        │
+  │           regex, collect-all-unique), write to                      │
+  │           cds_documents.detected_year — authoritative per ADR 0007 │
   │         - Route to tier-specific extractor:                         │
   │                                                                     │
   │              ┌───────────────────────────────────────────────┐      │
@@ -208,7 +211,7 @@ Summary of the components:
 
 | Component | Role |
 |---|---|
-| [`supabase/functions/_shared/`](../supabase/functions/_shared/) | Shared Deno modules imported by all three edge functions: `year.ts` (normalizer), `resolve.ts` (HTML parsing, two-hop, SSRF guard, discriminated `ResolveResult`), `schools.ts` (schools.yaml fetch + validation), `storage.ts` (SHA-addressed path helpers), `db.ts` (`cds_documents` + `cds_artifacts` DAL), `archive.ts` (one-school orchestrator with `TransientError`/`PermanentError` classification). |
+| [`supabase/functions/_shared/`](../supabase/functions/_shared/) | Shared Deno modules imported by all three edge functions: `year.ts` (URL-hint year guesser — **not authoritative for document year** per ADR 0007; used by `pickCandidates` as a partitioning signal and to populate the NOT NULL `cds_year` column), `resolve.ts` (HTML parsing, two-hop, SSRF guard, multi-candidate `pickCandidates`, discriminated `ResolveResult`), `schools.ts` (schools.yaml fetch + validation), `storage.ts` (SHA-addressed path helpers), `db.ts` (`cds_documents` + `cds_artifacts` DAL), `archive.ts` (one-school orchestrator with `TransientError`/`PermanentError` classification). |
 | [`supabase/functions/discover/index.ts`](../supabase/functions/discover/index.ts) | Resolver dev entry. HTTP `?schools=yale,mit,...` returns a `ResolveResult` per school as JSON. **No writes.** Used for iterating on the resolver and debugging `no_cds_found` cases. Capped at 10 schools per request. |
 | [`supabase/functions/archive-process/index.ts`](../supabase/functions/archive-process/index.ts) | Queue consumer. Invoked every 30 s by pg_cron. Claims one row via `claim_archive_queue_row()` RPC, runs `archiveOneSchool`, marks terminal state in a `finally` block guarded by the claim lease. Also supports `?force_school=<id>` for operator backfill that bypasses the queue. |
 | [`supabase/functions/archive-enqueue/index.ts`](../supabase/functions/archive-enqueue/index.ts) | Monthly seeder. Invoked daily at 02:00 UTC by pg_cron. Fetches `schools.yaml` from GitHub raw, derives a deterministic `run_id` from the current calendar month, bulk-upserts one `archive_queue` row per active school with `ignoreDuplicates=true`. Repeated daily runs within a month are no-ops. |
@@ -221,7 +224,7 @@ Summary of the components:
 
 | Component | Role |
 |---|---|
-| [`tools/extraction_worker/worker.py`](../tools/extraction_worker/worker.py) | Python worker. Polls `cds_documents WHERE extraction_status = 'extraction_pending'`, downloads the archived source, runs `pypdf.get_fields()` to detect format, performs content-based PDF year detection via `detect_year_from_pdf_bytes` (observation-only in Stage A per [ADR 0007](decisions/0007-year-authority-moves-to-extraction.md)), routes to the appropriate tier extractor, writes the result back as a `cds_artifacts` row with `kind=canonical`. Supports a `--detect-year-only` harness mode that runs the year detector against every archived document and reports a confirmed/mismatch/undetected summary without touching the DB. Currently wired end-to-end for Tier 2 (fillable PDF); other tiers are still stubs that mark `extraction_status=failed` with a reason so the row exits the pending queue. |
+| [`tools/extraction_worker/worker.py`](../tools/extraction_worker/worker.py) | Python worker. Polls `cds_documents WHERE extraction_status = 'extraction_pending'`, downloads the archived source, runs `pypdf.get_fields()` to detect format, performs content-based PDF year detection via `detect_year_from_pdf_bytes` and writes the result to `cds_documents.detected_year` — authoritative per [ADR 0007](decisions/0007-year-authority-moves-to-extraction.md) Stage B — then routes to the appropriate tier extractor and writes the result back as a `cds_artifacts` row with `kind=canonical`. Supports a `--detect-year-only --write` harness mode that runs the year detector against every archived document and backfills `detected_year` without touching extraction. Currently wired end-to-end for Tier 2 (fillable PDF); other tiers are still stubs that mark `extraction_status=failed` with a reason so the row exits the pending queue. |
 | [`tools/tier2_extractor/extract.py`](../tools/tier2_extractor/extract.py) | Tier 2 extractor. Reads a CDS PDF via `pypdf.get_fields()`, joins against the schema by `pdf_tag`, decodes button values via `value_options`, emits canonical JSON keyed by `question_number`. Deterministic, ~100% accurate on HMC (31/31 ground-truth fields, verified by `score_tier2.py`). |
 | Tier 1 / Tier 3 / Tier 4 / Tier 5 extractors **(not yet built)** | Each slot is specified in ADR 0006 but the code doesn't exist yet. For now, documents in these formats are ingested and their `source_format` is recorded, but `extraction_status` stays at `extraction_pending` until the matching extractor ships. |
 | [`tools/extraction-validator/score_tier2.py`](../tools/extraction-validator/score_tier2.py) | Regression scoring tool. Loads a ground-truth YAML, a Tier 2 extract JSON, and an ID map, compares every field with numeric tolerance, emits per-field diff + overall accuracy. Offline quality check, not part of the runtime pipeline. |
@@ -309,11 +312,11 @@ As of 2026-04-15, what's built and what isn't:
 | Discovery: M1a dry-run (HTML parsing, year normalization, two-hop) | ✅ Refactored into `_shared/resolve.ts` so it can be reused by the queue consumer. Served by the `discover` edge function as a dry-run dev entry. |
 | Discovery: M1b writeback (schools.yaml loading, Storage uploads, `cds_documents` + `cds_artifacts` upserts) | ✅ Implemented in `archive-process` edge function. Uses SHA-addressed Storage paths (`{school}/{year}/{sha256}.{ext}`) and the document-first-then-artifact crash-safe refresh ordering. Verified end-to-end against yale + 9 other schools in production. |
 | Discovery: M1c cron schedule (queue fan-out) | ✅ Live 2026-04-15. Daily `archive-enqueue-daily` + per-30s `archive-process-every-30s` running against production. First full drain completed overnight 2026-04-14/15: 535 done, 302 failed_permanent, 518 archived. Failure analysis in [`docs/archive-pipeline.md`](./archive-pipeline.md) and [ADR 0007](decisions/0007-year-authority-moves-to-extraction.md). |
-| Extraction worker (polling loop) | ✅ M2 skeleton live (commit `db520e6`). Polls `extraction_pending`, detects format, routes to tier extractors. Content-based PDF year detection added 2026-04-15 ([ADR 0007](decisions/0007-year-authority-moves-to-extraction.md) Stage A) as an observation-only side channel plus a `--detect-year-only` harness mode. Stage A harness measured 100% precision / 80% recall against 476 PDFs, clearing the Stage B gate for the upcoming resolver change. |
+| Extraction worker (polling loop) | ✅ M2 skeleton live (commit `db520e6`). Polls `extraction_pending`, detects format, routes to tier extractors. Content-based PDF year detection ([ADR 0007](decisions/0007-year-authority-moves-to-extraction.md)) is now write-authoritative: `detect_year_from_pdf_bytes` runs on every archived doc and writes `cds_documents.detected_year`, which the `cds_manifest.canonical_year` view prefers over `cds_year`. Stage B backfill 2026-04-15 populated `detected_year` on 379 of 518 archived rows (73%) via the `--detect-year-only --write` harness. |
 | Extraction: Tier 2 (fillable PDF) | ✅ Built as standalone tool, verified 31/31 against HMC ground truth. Wired end-to-end through the worker; Harvey Mudd and Bates extracted successfully in production. |
 | Extraction: Tier 4 (flattened PDF via Docling/Reducto) | ⚠️ Reference extracts exist from Reducto, no schema-targeting cleaner yet. Tier probe (commit `49729de`) reveals Tier 4 is 84% of the corpus, so the Docling-vs-Reducto bake-off is the next major decision. |
 | Extraction: Tier 1 / 3 / 5 | ❌ Specified in ADR 0006, not yet built. Worker routes these to a stub that records `extraction_status=failed` with a tier-not-implemented reason so the rows exit the pending queue. |
-| Year authority migration | ⚠️ Stage A shipped 2026-04-15 ([ADR 0007](decisions/0007-year-authority-moves-to-extraction.md)): content detection runs as observation only. Stage B (resolver drops URL year requirement; extraction writes year) and Stage C (cleanup of `_shared/year.ts`) are the next two PRs. |
+| Year authority migration | ✅ Stage A + B shipped 2026-04-15 ([ADR 0007](decisions/0007-year-authority-moves-to-extraction.md)). Content detection is authoritative; resolver `pickCandidates` fans out landing-page anchors into multiple `cds_documents` rows; extraction writes `detected_year`; `cds_manifest.canonical_year` prefers content over URL. Stage C was de-scoped to docs-only — full retirement of `cds_year` and `_shared/year.ts` requires dropping `cds_year` from the unique constraint, deferred to a follow-up item in [backlog.md](./backlog.md). |
 | Consumer pipeline | ✅ Live at `api.collegedata.fyi/rest/v1/`. All three tables + the view respond to curl. |
 
 "Built" means the code exists and has been exercised against real data. "Not yet built" means the design is specified but no code exists. "Reference extracts exist" means we have the raw output from an external tool but no production path from raw → canonical.

@@ -238,13 +238,49 @@ Changes in Stage B:
 
 ### Stage C — cleanup (follow-up)
 
-Delete URL year parsing from `_shared/year.ts`. Update
-[`docs/ARCHITECTURE.md`](../ARCHITECTURE.md) §Overview (line 13) and
-§Discovery flowbox (lines 80-83) to remove "year-labeled" and
-"Normalize year span," and add a "Detect document year from page
-content" step to the Extraction flowbox. Update
-[`docs/archive-pipeline.md`](../archive-pipeline.md) failure
-taxonomy. Re-run the April drain against the new pipeline.
+**De-scoped to docs-only. Shipped in this PR.**
+
+The original Stage C plan — "delete URL year parsing from
+`_shared/year.ts`" — did not survive contact with the Stage B
+code. `normalizeYear` turned out to be load-bearing inside
+`pickCandidates` as the partitioning signal that fans out
+multi-candidate landing pages without colliding on the
+`UNIQUE (school_id, sub_institutional, cds_year)` constraint.
+Deleting it cleanly requires dropping `cds_year` from the unique
+constraint — a schema migration Stage B explicitly sidestepped
+via option 2 (keep `cds_year`, add `detected_year`). So Stage C
+landed as documentation sync only:
+
+- [`docs/ARCHITECTURE.md`](../ARCHITECTURE.md) §Overview, Discovery
+  flowbox, Extraction flowbox, component reference for
+  `_shared/year.ts`, and status table updated to reflect multi-
+  candidate archiving and write-authoritative content detection.
+- [`docs/archive-pipeline.md`](../archive-pipeline.md) flowbox,
+  files table, and failure taxonomy updated; the "no year-bearing
+  anchors" failure class is called out as structurally resolved by
+  Stage B.
+- [`supabase/functions/_shared/year.ts`](../../supabase/functions/_shared/year.ts)
+  header comment re-frames the module as a URL-hint guesser used
+  only by `pickCandidates` and to populate the NOT NULL `cds_year`
+  column — explicitly not authoritative for document year.
+
+The full retirement of `cds_year` — drop from the unique constraint,
+rework `pickCandidates` to partition on URL/sha, delete `year.ts`,
+update the `cds_manifest` view — is tracked in
+[`docs/backlog.md`](../backlog.md) as a follow-up item. It is a
+larger migration than Stage C wanted to take on, and deferring it
+does not block any downstream work because `cds_manifest.canonical_year`
+already exposes content-detected year as the primary read path.
+
+## Shipped
+
+| Stage | Commit | Date | What |
+|---|---|---|---|
+| A | `7c86e37` | 2026-04-15 | `detect_year_from_pdf_bytes` + `--detect-year-only` harness, observation-only |
+| B | `6ea67a8` | 2026-04-15 | `detected_year` column + `cds_manifest.canonical_year` view expression; `pickCandidates` multi-candidate fan-out; direct-doc bypass of year parsing; write-authoritative extraction-side detection; `--detect-year-only --write` backfill harness |
+| B | — | 2026-04-15 | `--detect-year-only --write` backfill against all 518 pre-Stage-B archived docs: 373 confirmed, 7 corrected, 96 undetected, 42 non-PDF; 379 rows written |
+| B | — | 2026-04-15 | Full-corpus re-drain: `archive_queue` truncated and re-seeded with 836 rows; cron-in-place drain against the new multi-candidate resolver (results refreshed in `docs/archive-pipeline.md`) |
+| C | (this PR) | 2026-04-15 | Docs sync only. `cds_year` retirement deferred to a follow-up in `docs/backlog.md` |
 
 ## Why
 

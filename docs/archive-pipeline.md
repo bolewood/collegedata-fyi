@@ -56,11 +56,13 @@ wall clock.
 ┌──────────────────────────────────────────────────────────────┐
 │  archiveOneSchool  (shared, supabase/functions/_shared/)     │
 │                                                              │
-│  Resolve: fetch hint, parse HTML, extract CDS anchors,       │
-│           follow one hop of subpages (CMU pattern),          │
-│           normalize year span (YYYY-YY canonical),           │
-│           pick best anchor (prefer full-CDS over section,    │
-│           prefer year-bearing, prefer recent).               │
+│  Resolve: fetch hint, parse HTML, extract every CDS-ish      │
+│           document anchor, follow one hop of subpages        │
+│           (CMU pattern), fan out via pickCandidates (ADR     │
+│           0007 Stage B — multi-candidate, prefer full-CDS    │
+│           over section, deprioritize test artifacts).        │
+│           Year is a URL-side guess only; content year is     │
+│           written later by the extraction worker.            │
 │                                                              │
 │  Returns a discriminated ResolveResult:                      │
 │    resolved             → happy path                         │
@@ -100,8 +102,8 @@ wall clock.
 |---|---|
 | `cds_documents` NULL-uniqueness fix + `archive_queue` + claim RPC | `supabase/migrations/20260414170000_archive_pipeline.sql` |
 | pg_cron schedules with vault-backed secrets | `supabase/migrations/20260414180000_archive_pipeline_cron.sql` |
-| Year normalizer (`YYYY-YY` canonical) | `supabase/functions/_shared/year.ts` |
-| HTML anchor extraction, two-hop, SSRF guard, discriminated resolver | `supabase/functions/_shared/resolve.ts` |
+| URL-hint year guesser (not authoritative; see ADR 0007) | `supabase/functions/_shared/year.ts` |
+| HTML anchor extraction, two-hop, SSRF guard, `pickCandidates` multi-candidate selection, discriminated resolver | `supabase/functions/_shared/resolve.ts` |
 | `schools.yaml` fetch + filter + validation | `supabase/functions/_shared/schools.ts` |
 | SHA-addressed Storage helpers (upload, head, path build) | `supabase/functions/_shared/storage.ts` |
 | `cds_documents` + `cds_artifacts` data access | `supabase/functions/_shared/db.ts` |
@@ -261,9 +263,15 @@ bucket decomposes into: ~204 resolver "no year-bearing anchors"
 (~68% of all failures — addressed by [ADR 0007](decisions/0007-year-authority-moves-to-extraction.md)
 which moves year authority from discovery to extraction), ~51 HTTP
 404 on stale hints, ~20 transient 403/timeout exhausted, ~11
-content-type / magic-byte misses. Expect the failure count to
-drop substantially once ADR 0007 Stage B lands and the resolver
-stops requiring URL year parsing.
+content-type / magic-byte misses.
+
+**2026-04-15 Stage B re-drain:** after ADR 0007 Stage B shipped
+(commit `6ea67a8`), the archive queue was truncated and re-seeded
+against the new multi-candidate resolver. The "no year-bearing
+anchors" failure class is gone structurally — direct-doc hints
+bypass year parsing and landing pages with multi-year archives
+fan out into one `cds_documents` row per year. Refreshed bucket
+counts land here after the 2026-04-15 re-drain completes.
 
 Earlier versions of this runbook projected a "healthy steady state"
 of `failed_permanent: <20` based on a 10-school hand-picked sample;
