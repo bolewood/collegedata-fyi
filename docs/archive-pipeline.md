@@ -370,27 +370,6 @@ basic regression coverage for the `NULLS NOT DISTINCT` constraint.
 
 ## Known issues
 
-**pg_cron authorization (pending investigation).** The inner cron
-(`archive-process-every-30s`) fires on schedule but every HTTP call via
-`pg_net` returns `401` at Supabase's gateway layer — before the function
-handler runs. Direct curl with the same credential from `.env` succeeds.
-First hypothesis was trailing whitespace in the vault-stored secret; the
-cron body was updated to wrap the fetch in `trim()` but the 401s
-continued. Next debugging steps (for when QA resumes):
-
-1. Confirm the cron body is actually the updated one (`select command
-   from cron.job where jobname = 'archive-process-every-30s'` should
-   show the `trim(...)` call).
-2. Query the vault-stored value length vs the `.env` value length to
-   confirm they match byte-for-byte.
-3. Test with a hardcoded literal bearer token directly in the cron body
-   (no vault lookup) to isolate whether the failure is in the vault
-   round-trip or elsewhere.
-4. Capture the Authorization header value that pg_net is actually
-   sending — either by deploying a temporary diagnostic edge function
-   that logs the raw header, or by watching edge function logs in the
-   Supabase dashboard for the 401 path.
-
 **Sub-institution schools.** Columbia (and any other school with a
 `sub_institutions` array) is intentionally excluded in V1 per
 `filterArchivable`. Follow-up: add a resolver path that matches landing
@@ -410,6 +389,28 @@ now uses SHA-addressed paths instead; `docs/ARCHITECTURE.md` and
 documentation or client code that assumes the old convention will need
 updating — prefer `cds_manifest.source_storage_path` as the canonical
 accessor.
+
+## Resolved issues
+
+**pg_cron authorization 401 (resolved 2026-04-15).** Inner cron fired
+on schedule, pg_net made the HTTP call, but every response was 401 at
+Supabase's gateway layer. Root cause: during the one-time operator
+setup, the SQL block to create the vault secret was copy-pasted with
+its placeholder text `<paste SUPABASE_SERVICE_ROLE_KEY from your .env
+here>` still in place, so the vault-stored "credential" was that
+53-character English sentence. Direct curl with the real key worked
+because the handler's own auth check used `Deno.env.get(...)` which
+is injected by Supabase with the actual key. Fixed via
+`vault.update_secret()` called against the live database. HTTP status
+flipped from 401 → 200 on the next cron tick, confirmed in
+`net._http_response`.
+
+Mitigation baked into the operator runbook: the SQL block in this doc
+makes the placeholder obvious, and the `trim()` wrapper added to both
+cron bodies in the migration defends against whitespace in real-world
+paste scenarios. A future improvement would be a dashboard link in the
+operator setup that generates a ready-to-run SQL block with the actual
+service role key already substituted in.
 
 ## ADRs touched
 
