@@ -348,9 +348,11 @@ def _run_tier4(
 
         mark_extraction_status(client, document_id, "extracted", source_format)
 
-    md_len = canonical.get("stats", {}).get("markdown_length", 0)
-    pages = canonical.get("stats", {}).get("page_count", 0)
-    return f"tier4_extracted ({md_len} chars, {pages} pages)"
+    stats = canonical.get("stats", {})
+    md_len = stats.get("markdown_length", 0)
+    pages = stats.get("page_count", 0)
+    fields = stats.get("schema_fields_populated", 0)
+    return f"tier4_extracted ({fields} fields, {md_len} chars, {pages} pages)"
 
 
 def mark_extraction_status(

@@ -59,6 +59,10 @@ def extract(pdf_path: Path) -> dict:
     except Exception:
         pass
 
+    # Run the schema-targeting cleaner to map markdown → canonical fields.
+    from tier4_cleaner import clean
+    values = clean(markdown)
+
     return {
         "producer": PRODUCER_NAME,
         "producer_version": PRODUCER_VERSION,
@@ -67,8 +71,10 @@ def extract(pdf_path: Path) -> dict:
         "stats": {
             "markdown_length": len(markdown),
             "page_count": page_count,
+            "schema_fields_populated": len(values),
         },
         "markdown": markdown,
+        "values": values,
     }
 
 
