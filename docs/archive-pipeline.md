@@ -265,13 +265,30 @@ which moves year authority from discovery to extraction), ~51 HTTP
 404 on stale hints, ~20 transient 403/timeout exhausted, ~11
 content-type / magic-byte misses.
 
-**2026-04-15 Stage B re-drain:** after ADR 0007 Stage B shipped
-(commit `6ea67a8`), the archive queue was truncated and re-seeded
-against the new multi-candidate resolver. The "no year-bearing
-anchors" failure class is gone structurally — direct-doc hints
-bypass year parsing and landing pages with multi-year archives
-fan out into one `cds_documents` row per year. Refreshed bucket
-counts land here after the 2026-04-15 re-drain completes.
+**2026-04-15/16 Stage B re-drain** (commit `6ea67a8`): archive queue
+truncated and re-seeded against the new multi-candidate resolver.
+Drained overnight in ~8 hours via the existing 30 s cron.
+
+| Metric | Pre-drain (April 14/15) | Post-drain (April 16) | Delta |
+|---|---|---|---|
+| `cds_documents` rows | 518 | **1,675** | **+1,157** (3.2x) |
+| Distinct schools with rows | 518 | **617** | **+99 new schools** |
+| `archive_queue` done | 535 | **615** | +80 |
+| `archive_queue` failed_permanent | 302 | **221** | **-81** (27% fewer) |
+| `detected_year` populated | 380 | 380 | — (new rows need backfill) |
+
+The "no year-bearing anchors" failure class is gone structurally —
+direct-doc hints bypass year parsing and landing pages with
+multi-year archives fan out into one `cds_documents` row per year.
+Top fan-out schools: Bates and Cal Poly SLO (27 rows each),
+Louisiana Tech / Michigan State / Montclair State (25 each),
+Dartmouth (22), Harvard (18), Lafayette (19 — was `failed_permanent`
+before Stage B). No schools lost rows; upsert semantics held.
+
+The 1,295 newly-archived rows have `detected_year = NULL` because
+the extraction worker has not yet processed them. A
+`--detect-year-only --write` backfill pass will populate the column
+across the expanded corpus.
 
 Earlier versions of this runbook projected a "healthy steady state"
 of `failed_permanent: <20` based on a 10-school hand-picked sample;
