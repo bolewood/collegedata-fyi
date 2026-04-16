@@ -119,7 +119,8 @@ See [`supabase/migrations/20260413201910_initial_schema.sql`](../../supabase/mig
 
 ## Open items
 
-- First-party Tier 4 implementation. The Reducto reference extracts exist as research artifacts; a production Tier 4 extractor that produces canonical-schema output from flat PDFs has not been written yet. On the backlog.
+- ~~First-party Tier 4 implementation.~~ **Shipped 2026-04-16 (commit `37293ab`).** Docling baseline config (TableFormer FAST, 1x DPI) chosen after a 9-config bake-off (commit `e15a5d3`). Output is raw markdown; a schema-targeting cleaner that maps markdown → canonical question numbers is the remaining open item.
+- Tier 4 schema-targeting cleaner. The extractor writes raw Docling markdown to `cds_artifacts.notes.markdown`. Mapping this to canonical `notes.values` keyed by question number (`B.101`, `C.101`, etc.) is the next step. This is a regex/pattern-matching layer, not a model change.
 - Producer precedence ordering in `cds_manifest`. Current view picks most recent; should eventually pick highest-quality producer. P2 backlog.
-- Checkbox value decoding for Tier 2. Raw AcroForm export values (`/VI`, `/X`, `/NON`) need per-field decoding against the blank template's widget dictionaries. P1 backlog item.
-- Corpus-wide format distribution. We have N=3 audit data. M1 will produce N in the hundreds and let us measure the actual Tier 2 / Tier 4 / Tier 5 distribution for the first time.
+- ~~Checkbox value decoding for Tier 2.~~ **Shipped in `decode_checkboxes.py` + schema `value_options`.** Raw AcroForm export values are decoded via the per-field `value_options` array in the canonical schema.
+- ~~Corpus-wide format distribution.~~ **Measured.** Tier probe (commit `49729de`) on 32 schools: 84% pdf_flat (Tier 4), 6% pdf_fillable (Tier 2), 9% docx, 0% pdf_scanned. Full post-drain distribution across 1,675 docs pending.
