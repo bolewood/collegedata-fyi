@@ -1,7 +1,19 @@
 # collegedata.fyi
 
 Open-source archive of U.S. college Common Data Set (CDS) documents.
-See `docs/ARCHITECTURE.md` for the full data flow and `docs/v1-plan.md` for product framing.
+
+- **Live site:** https://collegedata.fyi (Next.js on Vercel)
+- **API:** https://api.collegedata.fyi (PostgREST on Supabase)
+- **Architecture:** `docs/ARCHITECTURE.md` (six pipelines: schema, corpus, discovery, extraction, consumer API, frontend)
+- **Frontend PRD:** `docs/prd/002-frontend.md`
+
+## Project layout
+
+- `web/` — Next.js 16 frontend (TypeScript, Tailwind, @supabase/supabase-js)
+- `supabase/` — Postgres migrations, Edge Functions (Deno/TS), shared modules
+- `tools/` — Python extraction pipeline, schema builder, corpus tools
+- `schemas/` — Canonical CDS schema JSON (1,105 fields)
+- `docs/` — Architecture, PRDs, ADRs, research, backlog
 
 ## Skill routing
 

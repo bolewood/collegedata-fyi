@@ -4,7 +4,7 @@
 
 An open, reproducible library of US college data. We find each school's Common Data Set document, extract it into a canonical schema, and publish both the raw source file and the structured extract alongside a queryable manifest. No hand-cleaned numbers, no opinionated schema of our own — we use the one the CDS Initiative already publishes. Just ground truth you can build on top of.
 
-> **Status: early V1.** Extraction quality varies by source format. Fillable PDFs are read deterministically via AcroForm fields; flattened PDFs fall through to a layout-extraction path that is still under development. See [`docs/known-issues/`](docs/known-issues/) for per-school notes.
+> **Status: V1 live at [collegedata.fyi](https://collegedata.fyi).** Browse 337 schools, 1,000+ archived CDS documents, with structured field extraction for fillable PDFs. Flattened PDF extraction (84% of the corpus) is under active development via Docling. See [`docs/known-issues/`](docs/known-issues/) for per-school notes.
 
 ## Why this exists
 
@@ -21,25 +21,27 @@ We also archive source files on discovery, because some schools do occasionally 
 
 ## What's here
 
-- **Source files** (PDF, and eventually XLSX / DOCX) for each school + year combination we've found, archived on discovery
-- **Canonical structured extracts** keyed to the CDS Initiative's own field IDs (A.001, B.101, C.101, …), with provenance linking every value back to the source
-- **A public manifest** exposed at `https://api.collegedata.fyi` that tracks discovery status, last-verified dates, participation status, and per-document provenance
+- **[collegedata.fyi](https://collegedata.fyi)** — a public frontend for browsing, searching, and downloading archived CDS documents
+- **Source files** (PDF, XLSX, DOCX) for each school + year combination we've found, archived on discovery
+- **Canonical structured extracts** keyed to the CDS Initiative's own field IDs (A.001, B.101, C.101, ...), with provenance linking every value back to the source
+- **A public API** at `https://api.collegedata.fyi` that tracks discovery status, last-verified dates, participation status, and per-document provenance
 - **An extensible artifact model** so community cleanup tools can publish their own extracts alongside the primary ones without replacing them
 
 ## Quick look
 
+**Browse the site:** [collegedata.fyi](https://collegedata.fyi) — search for a school, view archived CDS years, download source PDFs, or browse extracted field values.
+
+**Query the API:**
 ```bash
-# List every document in the manifest
-curl 'https://api.collegedata.fyi/rest/v1/cds_documents?select=*'
+# List all schools in the manifest
+curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?select=school_id,school_name,canonical_year&order=school_name'
 
-# Find a specific school's most recent CDS
-curl 'https://api.collegedata.fyi/rest/v1/cds_documents?school_id=eq.yale&order=cds_year.desc&limit=1'
+# Find a specific school's documents
+curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?school_id=eq.yale&order=canonical_year.desc'
 
-# List all artifacts for that document (raw + any cleaners that have run)
-curl 'https://api.collegedata.fyi/rest/v1/cds_artifacts?document_id=eq.<uuid>'
+# Get the structured extract for a document
+curl 'https://api.collegedata.fyi/rest/v1/cds_artifacts?document_id=eq.<uuid>&kind=eq.canonical'
 ```
-
-(API not live yet — pending M0 milestone. See [`docs/v1-plan.md`](docs/v1-plan.md).)
 
 ## How it works
 
@@ -49,13 +51,15 @@ curl 'https://api.collegedata.fyi/rest/v1/cds_artifacts?document_id=eq.<uuid>'
 4. PostgREST exposes the manifest as a public read-only API at `api.collegedata.fyi`.
 5. Community cleanup tools can register via `cleaners.yaml` and publish their own artifacts alongside the primary ones — see [ADR 0002](docs/decisions/0002-publish-raw-over-clean.md) for the rationale.
 
-Full architecture: [`docs/v1-plan.md`](docs/v1-plan.md).
+Full architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Docs and decisions
 
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — six-pipeline map of the whole system (schema, corpus, discovery, extraction, consumer API, frontend)
 - [`docs/v1-plan.md`](docs/v1-plan.md) — living project plan for V1
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — five-pipeline map of the whole system
-- [`docs/archive-pipeline.md`](docs/archive-pipeline.md) — deep dive on the discovery/archive queue: architecture, operator runbook, failure-mode classification, known issues
+- [`docs/prd/002-frontend.md`](docs/prd/002-frontend.md) — frontend PRD (reviewed via /autoplan: CEO + Design + Eng review)
+- [`docs/archive-pipeline.md`](docs/archive-pipeline.md) — deep dive on the discovery/archive queue
+- [`docs/research/cds-vs-college-scorecard.md`](docs/research/cds-vs-college-scorecard.md) — CDS vs College Scorecard schema comparison
 - [`docs/decisions/`](docs/decisions/) — Architectural Decision Records
 - [`docs/known-issues/`](docs/known-issues/) — per-school extraction quality notes
 

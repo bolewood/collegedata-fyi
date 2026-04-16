@@ -6,13 +6,14 @@ How the pieces fit together at runtime. Complements [`docs/v1-plan.md`](v1-plan.
 
 ## Overview
 
-The project has five logical pipelines, each running at a different cadence and responsibility boundary:
+The project has six logical pipelines, each running at a different cadence and responsibility boundary:
 
 1. **Schema pipeline** — once per CDS year. Extracts the canonical schema from commondataset.org's official XLSX template into a committed JSON artifact. Also folds per-field checkbox value decoders into the same artifact.
 2. **Corpus pipeline** — once per month or so. Builds the canonical school list from IPEDS data and enriches it with URL hints discovered by a pattern-ladder prober.
 3. **Discovery pipeline** — nightly via cron. Reads the canonical school list, crawls each school's IR landing page, extracts every CDS-ish document anchor (multi-candidate per ADR 0007 Stage B), archives source bytes to Storage, and upserts one `cds_documents` row per archived file. Academic year is assigned later by the extraction pipeline from page-1 content, not from the URL.
 4. **Extraction pipeline** — triggered by discovery. Pulls each `extraction_pending` row, downloads the archived source, detects format, routes to a tier-specific extractor, and writes a `canonical` artifact back.
-5. **Consumer pipeline** — on demand. PostgREST serves the manifest and the `cds_manifest` view at `api.collegedata.fyi/rest/v1/`. Signed or public Storage URLs serve the archived source files.
+5. **Consumer API** — on demand. PostgREST serves the manifest and the `cds_manifest` view at `api.collegedata.fyi/rest/v1/`. Public Storage URLs serve the archived source files.
+6. **Frontend** — on demand. A Next.js app at `collegedata.fyi` (hosted on Vercel) consumes the PostgREST API and renders a searchable school directory, per-school document archives, and per-year structured field viewers. See [`docs/prd/002-frontend.md`](prd/002-frontend.md).
 
 Each pipeline is independently runnable. None of them requires any of the others to be live for the others to work. This is deliberate: the project ships incrementally, one pipeline at a time, rather than requiring the full stack to be up before anything is useful.
 
@@ -233,13 +234,25 @@ Summary of the components:
 | [`tools/extraction-validator/id_maps/`](../tools/extraction-validator/id_maps/) | Hand-built maps from ground-truth IDs (`b1_ft_firstyear_men`) to canonical question numbers (`B.101`). One file per school-year. |
 | [`tools/extraction-validator/references/reducto/`](../tools/extraction-validator/references/reducto/) | Curated Reducto API reference extracts for HMC and Yale. Not used at runtime; kept as a quality benchmark for future Tier 4 work. |
 
-### Consumer pipeline
+### Consumer API
 
 | Component | Role |
 |---|---|
 | Supabase PostgREST | Exposes `public.cds_documents`, `public.cds_artifacts`, `public.cleaners`, and the `public.cds_manifest` view at `api.collegedata.fyi/rest/v1/`. Public-read via RLS policies defined in the initial migration. |
 | Supabase Storage | Serves archived source files from the `sources` bucket at `{project-ref}.supabase.co/storage/v1/object/public/sources/{school_id}/{cds_year}/{sha256}.{ext}`. The `{cds_year}` segment is the archive-time resolver guess, frozen at upload time; the authoritative content-derived year lives in `cds_documents.detected_year` and is exposed as `canonical_year` in the manifest (see ADR 0007 Stage B trade-offs). SHA-addressed so every version is preserved forever (ADR 0006). Consumers discover the exact path via `cds_manifest.source_storage_path`, never by construction. Public bucket, MIME allowlist enforces PDF/XLSX/DOCX only. |
 | [`supabase/migrations/20260413201910_initial_schema.sql`](../supabase/migrations/20260413201910_initial_schema.sql) | Creates the three core tables, RLS policies, the manifest view, the Storage bucket, and the `sources` public-read policy. |
+
+### Frontend
+
+| Component | Role |
+|---|---|
+| [`web/`](../web/) | Next.js 16 app hosted on Vercel at `collegedata.fyi`. Consumes the PostgREST API via `@supabase/supabase-js` with the anon key. Read-only, no auth, no write paths. |
+| [`web/src/app/page.tsx`](../web/src/app/page.tsx) | Landing page with school search autocomplete and live corpus stats. |
+| [`web/src/app/schools/page.tsx`](../web/src/app/schools/page.tsx) | School directory: searchable, sortable table of all schools with archived CDS data. |
+| [`web/src/app/schools/[school_id]/page.tsx`](../web/src/app/schools/[school_id]/page.tsx) | School detail: document list with status badges, PDF download links, sub-institutional support. |
+| [`web/src/app/schools/[school_id]/[year]/page.tsx`](../web/src/app/schools/[school_id]/[year]/page.tsx) | Year detail (SEO answer page): key stats block + full structured field viewer grouped by CDS section. |
+| [`web/src/lib/labels.ts`](../web/src/lib/labels.ts) | Auto-generated CDS field ID to plain-English label map (1,105 fields from `cds_schema_2025_26.json`). |
+| [`docs/prd/002-frontend.md`](prd/002-frontend.md) | Full PRD with design decisions, visual spec, artifact JSON shape, and test plan. |
 
 ---
 
@@ -283,22 +296,23 @@ Returns a row from the `cds_manifest` view with the latest canonical artifact ID
 
 ## Environment and deployment
 
-Everything runs on **Supabase**. Single vendor per ADR 0001. No AWS, no Railway, no GCP, no Vercel. The components map to Supabase primitives like this:
+Data infrastructure runs on **Supabase** (single vendor per ADR 0001). The frontend is hosted on **Vercel** (presentation layer only, per ADR 0001's distinction between data infrastructure and presentation).
 
-| Component | Supabase primitive |
-|---|---|
-| Schema migrations | `supabase/migrations/` + `supabase db push` |
-| Discovery edge function | `supabase/functions/discover/` + `supabase functions deploy` |
-| Postgres tables, views, RLS | Managed by migrations |
-| Storage bucket | Created by the initial migration via `storage.buckets` insert |
-| Cron schedule | Supabase edge function cron trigger (configured via dashboard or `pg_cron`) |
-| Custom domain | `supabase domains create --experimental` → CNAME + TXT records at the domain registrar |
-| PostgREST API | Automatic when the Postgres tables exist and RLS policies are set |
-| Python extraction worker | Runs outside Supabase (local laptop for V1, GitHub Actions cron for scale). Connects to Supabase via `supabase-py` and the service-role key. |
-| Offline corpus tools (`build_school_list`, `probe_urls`) | Pure Python, run locally. No Supabase interaction. |
-| Offline schema tools (`build_from_xlsx`, `decode_checkboxes`) | Pure Python, run locally. No Supabase interaction. |
+| Component | Platform | Notes |
+|---|---|---|
+| Schema migrations | Supabase | `supabase/migrations/` + `supabase db push` |
+| Discovery edge functions | Supabase | `supabase/functions/` + `supabase functions deploy` |
+| Postgres tables, views, RLS | Supabase | Managed by migrations |
+| Storage bucket | Supabase | Created by initial migration via `storage.buckets` insert |
+| Cron schedule | Supabase | `pg_cron` + `net.http_post` |
+| API custom domain | Supabase | `api.collegedata.fyi` → PostgREST |
+| PostgREST API | Supabase | Automatic from Postgres + RLS policies |
+| Python extraction worker | External | Local laptop for V1, GitHub Actions cron for scale |
+| **Frontend** | **Vercel** | Next.js at `collegedata.fyi`, consumes PostgREST API |
+| Offline corpus tools | Local | Pure Python, no Supabase interaction |
+| Offline schema tools | Local | Pure Python, no Supabase interaction |
 
-The offline tools (schema + corpus) produce committed artifacts that ship with the repo. The online pipelines (discovery + extraction + consumer) run against Supabase.
+The offline tools (schema + corpus) produce committed artifacts that ship with the repo. The online pipelines (discovery + extraction + consumer API) run against Supabase. The frontend runs on Vercel and reads from the Supabase API via the anon key.
 
 ---
 
@@ -318,7 +332,8 @@ As of 2026-04-15, what's built and what isn't:
 | Extraction: Tier 4 (flattened PDF via Docling) | ✅ Wired end-to-end through the worker (commit `37293ab`). Docling baseline config (TableFormer FAST, 1x DPI) chosen after a 9-config bake-off scored 21/21 on critical C1 fields across Yale, Harvard, and Dartmouth (commit `e15a5d3`). Output is raw markdown stored in `cds_artifacts.notes`; a schema-targeting cleaner to map markdown → canonical question numbers is a follow-up. Reducto reference extracts remain in `tools/extraction-validator/references/reducto/` as a quality benchmark for a potential future upgrade. |
 | Extraction: Tier 1 / 3 / 5 | ❌ Specified in ADR 0006, not yet built. Worker routes these to a stub that records `extraction_status=failed` with a tier-not-implemented reason so the rows exit the pending queue. |
 | Year authority migration | ✅ Stage A + B shipped 2026-04-15 ([ADR 0007](decisions/0007-year-authority-moves-to-extraction.md)). Content detection is authoritative; resolver `pickCandidates` fans out landing-page anchors into multiple `cds_documents` rows; extraction writes `detected_year`; `cds_manifest.canonical_year` prefers content over URL. Stage C was de-scoped to docs-only — full retirement of `cds_year` and `_shared/year.ts` requires dropping `cds_year` from the unique constraint, deferred to a follow-up item in [backlog.md](./backlog.md). |
-| Consumer pipeline | ✅ Live at `api.collegedata.fyi/rest/v1/`. All three tables + the view respond to curl. |
+| Consumer API | ✅ Live at `api.collegedata.fyi/rest/v1/`. All three tables + the view respond to curl. |
+| Frontend | ✅ Live at `collegedata.fyi` (Vercel). 5 pages: landing with search, school directory, school detail, year detail with field viewer, about. Consumes the PostgREST API. See [`docs/prd/002-frontend.md`](prd/002-frontend.md). |
 
 "Built" means the code exists and has been exercised against real data. "Not yet built" means the design is specified but no code exists. "Reference extracts exist" means we have the raw output from an external tool but no production path from raw → canonical.
 
@@ -327,7 +342,11 @@ As of 2026-04-15, what's built and what isn't:
 ## Related docs
 
 - [`docs/prd/001-collegedata-fyi-v1.md`](prd/001-collegedata-fyi-v1.md) — product-level framing, scope, milestones, success criteria
+- [`docs/prd/002-frontend.md`](prd/002-frontend.md) — frontend PRD (CEO + Design + Eng reviewed)
 - [`docs/v1-plan.md`](v1-plan.md) — engineering plan with data model details and milestone breakdown
-- [`docs/decisions/`](decisions/) — ADRs 0001-0006 for every foundational choice
+- [`docs/research/cds-vs-college-scorecard.md`](research/cds-vs-college-scorecard.md) — CDS vs College Scorecard schema comparison
+- [`docs/research/scorecard-join-recipe.md`](research/scorecard-join-recipe.md) — how to join CDS data with Scorecard
+- [`docs/research/scorecard-summary-table-v2-plan.md`](research/scorecard-summary-table-v2-plan.md) — V2 plan for hosting Scorecard summary data
+- [`docs/decisions/`](decisions/) — ADRs 0001-0007 for every foundational choice
 - [`docs/backlog.md`](backlog.md) — priority queue for near-term work
 - [`docs/known-issues/`](known-issues/) — per-school extraction quality notes
