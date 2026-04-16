@@ -1,0 +1,11 @@
+# Baseline at 2x DPI. Tests whether higher resolution alone (without
+# changing OCR engine or table mode) improves extraction quality.
+name: baseline-2x
+description: Docling defaults at 2x image scale.
+pipeline_options:
+  do_ocr: true
+  do_table_structure: true
+  table_structure_options:
+    mode: fast
+    do_cell_matching: true
+  images_scale: 2.0

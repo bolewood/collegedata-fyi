@@ -1,0 +1,9 @@
+# No table structure recognition. Isolates whether TableFormer helps or
+# hurts CDS-shaped documents. If scores are similar, TableFormer is adding
+# complexity without value on this corpus.
+name: no-tables
+description: Table structure disabled, OCR on, default scale.
+pipeline_options:
+  do_ocr: true
+  do_table_structure: false
+  images_scale: 1.0

@@ -1,0 +1,191 @@
+# Dartmouth College, CDS 2024-25 — ground truth
+#
+# Values transcribed from the source PDF on 2026-04-16.
+# Do not update these values from a Docling run — always re-verify against the PDF.
+#
+# Note: C9 test score percentiles are not reported in this CDS (Dartmouth was
+# test-optional for Fall 2024; C8F notes the policy ended for Fall 2025).
+# C10 class rank is reported.
+
+school: dartmouth
+cds_year: "2024-25"
+source_pdf: dartmouth-2024-25.pdf
+
+fields:
+  # ------------------------- B1 Enrollment -------------------------
+  - id: b1_ft_firstyear_men
+    section: B1
+    label: Full-time first-year degree-seeking — men
+    expected: "612"
+    capture: 'first.{0,10}time.{0,40}first.{0,10}year.*?\b(612)\b'
+
+  - id: b1_ft_firstyear_women
+    section: B1
+    label: Full-time first-year degree-seeking — women
+    expected: "554"
+    capture: '612\D+(554)'
+
+  - id: b1_ft_firstyear_another
+    section: B1
+    label: Full-time first-year degree-seeking — another gender
+    expected: "16"
+    capture: '554\D+(16)\b'
+
+  - id: b1_ft_total_ug_men
+    section: B1
+    label: Total full-time undergraduates — men
+    expected: "2322"
+    capture: '\b(2322)\b'
+
+  - id: b1_ft_total_ug_women
+    section: B1
+    label: Total full-time undergraduates — women
+    expected: "2158"
+    capture: '\b(2158)\b'
+
+  # ------------------------- B2 Race/ethnicity -------------------------
+  - id: b2_fy_nonresident
+    section: B2
+    label: First-year nonresident
+    expected: "170"
+    capture: 'Nonresident[^\n]*?\b(170)\b'
+
+  - id: b2_fy_hispanic
+    section: B2
+    label: First-year Hispanic/Latino
+    expected: "130"
+    capture: 'Hispanic[^\n]*?\b(130)\b'
+
+  - id: b2_fy_white
+    section: B2
+    label: First-year White
+    expected: "484"
+    capture: 'White[^\n]*?\b(484)\b'
+
+  - id: b2_fy_asian
+    section: B2
+    label: First-year Asian
+    expected: "150"
+    capture: 'Asian[^\n]*?\b(150)\b'
+
+  - id: b2_fy_total
+    section: B2
+    label: First-year total
+    expected: "1182"
+    capture: 'TOTAL[^\n]*?\b(1182)\b'
+
+  # ------------------------- B3 Degrees -------------------------
+  - id: b3_bachelors
+    section: B3
+    label: Bachelor's degrees
+    expected: "1156"
+    capture: "Bachelor[^\\n]*?\\b(1156)\\b"
+
+  - id: b3_masters
+    section: B3
+    label: Master's degrees
+    expected: "773"
+    capture: "Master[^\\n]*?\\b(773)\\b"
+
+  - id: b3_doctoral_research
+    section: B3
+    label: Doctoral research/scholarship
+    expected: "104"
+    capture: 'research[^\n]*?\b(104)\b'
+
+  - id: b3_doctoral_professional
+    section: B3
+    label: Doctoral professional practice
+    expected: "91"
+    capture: 'professional[^\n]*?\b(91)\b'
+
+  # ------------------------- C1 Applications (CRITICAL) -------------------------
+  - id: c1_applied_men
+    section: C1
+    label: First-year men who applied
+    expected: "15153"
+    capture: 'men who applied[^\n]*?\b(15153)\b'
+    critical: true
+
+  - id: c1_applied_women
+    section: C1
+    label: First-year women who applied
+    expected: "15812"
+    capture: 'women who applied[^\n]*?\b(15812)\b'
+    critical: true
+
+  - id: c1_applied_another
+    section: C1
+    label: First-year another gender who applied
+    expected: "690"
+    capture: 'another gender who applied[^\n]*?\b(690)\b'
+    critical: true
+
+  - id: c1_admitted_men
+    section: C1
+    label: First-year men who were admitted
+    expected: "893"
+    capture: 'men who were admitted[^\n]*?\b(893)\b'
+    critical: true
+
+  - id: c1_admitted_women
+    section: C1
+    label: First-year women who were admitted
+    expected: "795"
+    capture: 'women who were admitted[^\n]*?\b(795)\b'
+    critical: true
+
+  - id: c1_admitted_another
+    section: C1
+    label: First-year another gender who were admitted
+    expected: "22"
+    capture: 'another gender who were admitted[^\n]*?\b(22)\b'
+    critical: true
+
+  - id: c1_enrolled_men
+    section: C1
+    label: First-year men who enrolled (full-time)
+    expected: "612"
+    capture: 'first-year men who enrolled[^\n]*?\b(612)\b'
+    critical: true
+
+  - id: c1_enrolled_women
+    section: C1
+    label: First-year women who enrolled (full-time)
+    expected: "554"
+    capture: 'first-year women who enrolled[^\n]*?\b(554)\b'
+    critical: true
+
+  - id: c1_total_applied
+    section: C1
+    label: Total first-year who applied (residency row)
+    expected: "31656"
+    capture: 'who applied[^\n]*?\b(31656)\b'
+    critical: true
+
+  - id: c1_total_admitted
+    section: C1
+    label: Total first-year who were admitted (residency row)
+    expected: "1710"
+    capture: 'who were admitted[^\n]*?\b(1710)\b'
+    critical: true
+
+  - id: c1_total_enrolled
+    section: C1
+    label: Total first-year who enrolled (residency row)
+    expected: "1182"
+    capture: 'who enrolled[^\n]*?\b(1182)\b'
+    critical: true
+
+  # ------------------------- C10 Class rank -------------------------
+  - id: c10_top_tenth
+    section: C10
+    label: Percent in top tenth
+    expected: "93"
+    capture: 'top tenth[^\n]*?\b(93)\s*%'
+
+  - id: c10_top_quarter
+    section: C10
+    label: Percent in top quarter
+    expected: "99"
+    capture: 'top quarter[^\n]*?\b(99)\s*%'

@@ -1,0 +1,15 @@
+# EasyOCR at 3x DPI — tests whether higher resolution helps on small-font
+# CDS tables (section H financial aid tables use 8pt in many templates).
+name: easyocr-3x
+description: Force full-page OCR with EasyOCR at 3x image scale.
+pipeline_options:
+  do_ocr: true
+  do_table_structure: true
+  table_structure_options:
+    mode: fast
+    do_cell_matching: true
+  ocr_options:
+    kind: easyocr
+    force_full_page_ocr: true
+    lang: ["en"]
+  images_scale: 3.0

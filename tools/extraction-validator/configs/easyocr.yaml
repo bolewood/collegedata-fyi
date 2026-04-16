@@ -1,0 +1,15 @@
+# EasyOCR at 2x DPI — matches the tesseract config's resolution so the
+# comparison isolates the OCR engine, not the input quality.
+name: easyocr
+description: Force full-page OCR with EasyOCR at 2x image scale.
+pipeline_options:
+  do_ocr: true
+  do_table_structure: true
+  table_structure_options:
+    mode: fast
+    do_cell_matching: true
+  ocr_options:
+    kind: easyocr
+    force_full_page_ocr: true
+    lang: ["en"]
+  images_scale: 2.0

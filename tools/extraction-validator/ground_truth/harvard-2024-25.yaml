@@ -1,0 +1,218 @@
+# Harvard University, CDS 2024-25 — ground truth
+#
+# Values transcribed from the source PDF on 2026-04-16.
+# Do not update these values from a Docling run — always re-verify against the PDF.
+
+school: harvard
+cds_year: "2024-25"
+source_pdf: harvard-2024-25.pdf
+
+fields:
+  # ------------------------- B1 Enrollment -------------------------
+  - id: b1_ft_firstyear_men
+    section: B1
+    label: Full-time first-year degree-seeking — men
+    expected: "764"
+    capture: 'first.{0,10}time.{0,40}first.{0,10}year.*?\b(764)\b'
+
+  - id: b1_ft_firstyear_women
+    section: B1
+    label: Full-time first-year degree-seeking — women
+    expected: "877"
+    capture: '764\D+(877)'
+
+  - id: b1_ft_total_ug_men
+    section: B1
+    label: Total full-time undergraduates — men
+    expected: "3271"
+    capture: '\b(3271)\b'
+
+  - id: b1_ft_total_ug_women
+    section: B1
+    label: Total full-time undergraduates — women
+    expected: "3762"
+    capture: '\b(3762)\b'
+
+  # ------------------------- B2 Race/ethnicity -------------------------
+  - id: b2_fy_nonresident
+    section: B2
+    label: First-year nonresident
+    expected: "265"
+    capture: 'Nonresident[^\n]*?\b(265)\b'
+
+  - id: b2_fy_hispanic
+    section: B2
+    label: First-year Hispanic/Latino
+    expected: "183"
+    capture: 'Hispanic[^\n]*?\b(183)\b'
+
+  - id: b2_fy_white
+    section: B2
+    label: First-year White
+    expected: "457"
+    capture: 'White[^\n]*?\b(457)\b'
+
+  - id: b2_fy_asian
+    section: B2
+    label: First-year Asian
+    expected: "375"
+    capture: 'Asian[^\n]*?\b(375)\b'
+
+  - id: b2_fy_total
+    section: B2
+    label: First-year total
+    expected: "1641"
+    capture: '\b(1641)\b'
+
+  # ------------------------- B3 Degrees -------------------------
+  - id: b3_bachelors
+    section: B3
+    label: Bachelor's degrees
+    expected: "1753"
+    capture: "Bachelor[^\\n]*?\\b(1753)\\b"
+
+  - id: b3_masters
+    section: B3
+    label: Master's degrees
+    expected: "4441"
+    capture: "Master[^\\n]*?\\b(4441)\\b"
+
+  - id: b3_doctoral_research
+    section: B3
+    label: Doctoral research/scholarship
+    expected: "712"
+    capture: 'research[^\n]*?\b(712)\b'
+
+  - id: b3_doctoral_professional
+    section: B3
+    label: Doctoral professional practice
+    expected: "837"
+    capture: 'professional[^\n]*?\b(837)\b'
+
+  # ------------------------- C1 Applications (CRITICAL) -------------------------
+  - id: c1_applied_men
+    section: C1
+    label: First-year men who applied
+    expected: "25613"
+    capture: 'men who applied[^\n]*?\b(25613)\b'
+    critical: true
+
+  - id: c1_applied_women
+    section: C1
+    label: First-year women who applied
+    expected: "28372"
+    capture: 'women who applied[^\n]*?\b(28372)\b'
+    critical: true
+
+  - id: c1_applied_another
+    section: C1
+    label: First-year another gender who applied
+    expected: "23"
+    capture: 'another gender who applied[^\n]*?\b(23)\b'
+    critical: true
+
+  - id: c1_admitted_men
+    section: C1
+    label: First-year men who were admitted
+    expected: "920"
+    capture: 'men who were admitted[^\n]*?\b(920)\b'
+    critical: true
+
+  - id: c1_admitted_women
+    section: C1
+    label: First-year women who were admitted
+    expected: "1050"
+    capture: 'women who were admitted[^\n]*?\b(1050)\b'
+    critical: true
+
+  - id: c1_enrolled_men
+    section: C1
+    label: First-year men who enrolled (full-time)
+    expected: "767"
+    capture: 'first-year men who enrolled[^\n]*?\b(767)\b'
+    critical: true
+
+  - id: c1_enrolled_women
+    section: C1
+    label: First-year women who enrolled (full-time)
+    expected: "880"
+    capture: 'first-year women who enrolled[^\n]*?\b(880)\b'
+    critical: true
+
+  - id: c1_total_applied
+    section: C1
+    label: Total first-year who applied
+    expected: "54008"
+    capture: 'who applied[^\n]*?\b(54008)\b'
+    critical: true
+
+  - id: c1_total_admitted
+    section: C1
+    label: Total first-year who were admitted
+    expected: "1970"
+    capture: 'who were admitted[^\n]*?\b(1970)\b'
+    critical: true
+
+  - id: c1_total_enrolled
+    section: C1
+    label: Total first-year who enrolled
+    expected: "1647"
+    capture: 'who enrolled[^\n]*?\b(1647)\b'
+    critical: true
+
+  # ------------------------- C9 Test scores -------------------------
+  - id: c9_sat_submit_pct
+    section: C9
+    label: Percent submitting SAT
+    expected: "54"
+    capture: 'SAT[^\n]*?\b(54)\s*%'
+
+  - id: c9_sat_ebrw_25
+    section: C9
+    label: SAT Evidence-Based Reading 25th percentile
+    expected: "740"
+    capture: 'Evidence.{0,30}Reading[^\n]*?\b(740)\b'
+
+  - id: c9_sat_ebrw_50
+    section: C9
+    label: SAT Evidence-Based Reading 50th percentile
+    expected: "760"
+    capture: 'Evidence.{0,30}Reading[^\n]*?740\D+(760)'
+
+  - id: c9_sat_math_75
+    section: C9
+    label: SAT Math 75th percentile
+    expected: "800"
+    capture: 'Math[^\n]*?770\D+790\D+(800)'
+
+  - id: c9_act_composite_25
+    section: C9
+    label: ACT Composite 25th percentile
+    expected: "34"
+    capture: 'ACT Composite[^\n]*?\b(34)\b'
+
+  - id: c9_act_composite_75
+    section: C9
+    label: ACT Composite 75th percentile
+    expected: "36"
+    capture: 'ACT Composite[^\n]*?34\D+35\D+(36)'
+
+  # ------------------------- C10 Class rank -------------------------
+  - id: c10_top_tenth
+    section: C10
+    label: Percent in top tenth
+    expected: "94"
+    capture: 'top tenth[^\n]*?\b(94)\s*%'
+
+  - id: c10_top_quarter
+    section: C10
+    label: Percent in top quarter
+    expected: "99"
+    capture: 'top quarter[^\n]*?\b(99)\s*%'
+
+  # ------------------------- C13 Application fee -------------------------
+  - id: c13_app_fee
+    section: C13
+    label: Application fee
+    expected: "85"
+    capture: 'application fee[^\n]*?\$\s*(85)\b'

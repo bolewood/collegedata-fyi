@@ -1,0 +1,11 @@
+# No OCR. Flattened PDFs have an extractable text layer — OCR adds noise.
+# Hypothesis: skipping OCR reduces false reads on tables with intact text.
+name: no-ocr
+description: OCR disabled, TableFormer FAST, default scale.
+pipeline_options:
+  do_ocr: false
+  do_table_structure: true
+  table_structure_options:
+    mode: fast
+    do_cell_matching: true
+  images_scale: 1.0
