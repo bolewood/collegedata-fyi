@@ -13,8 +13,8 @@ Routing (driven by cds_documents.source_format):
 
     pdf_fillable    → Tier 2: tier2_extractor.extract (deterministic
                       AcroForm read via pypdf.get_fields)
-    pdf_flat        → not yet implemented (Tier 4; Docling or Reducto
-                      bake-off pending)
+    pdf_flat        → Tier 4: tier4_extractor.extract (Docling baseline
+                      config — markdown output, not yet schema-mapped)
     pdf_scanned     → not yet implemented (Tier 5; OCR pipeline)
     xlsx            → not yet implemented (Tier 1; openpyxl read of
                       the CDS filled template)
@@ -78,7 +78,9 @@ from supabase import Client, create_client
 # sys.path so the sibling module is importable regardless of how the
 # worker is invoked.
 _TOOLS_ROOT = Path(__file__).resolve().parent.parent
+_WORKER_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(_TOOLS_ROOT))
+sys.path.insert(0, str(_WORKER_DIR))
 from tier2_extractor.extract import extract as tier2_extract  # noqa: E402
 from tier2_extractor.extract import load_schema  # noqa: E402
 
@@ -312,6 +314,45 @@ def run_tier2(pdf_bytes: bytes, schema: dict) -> dict:
         return tier2_extract(Path(tmp.name), schema)
 
 
+def _run_tier4(
+    client: Client,
+    document_id: str,
+    school_id: str,
+    pdf_bytes: bytes,
+    source_format: str,
+    dry_run: bool,
+) -> str:
+    """Tier 4 path: Docling baseline → markdown artifact."""
+    from tier4_extractor import extract_from_bytes as tier4_extract
+
+    try:
+        canonical = tier4_extract(pdf_bytes)
+    except Exception as e:
+        if not dry_run:
+            mark_extraction_status(client, document_id, "failed", source_format)
+        return f"tier4_error: {e}"
+
+    producer = canonical["producer"]
+    producer_version = canonical["producer_version"]
+
+    if not dry_run:
+        if artifact_already_extracted(client, document_id, producer, producer_version):
+            mark_extraction_status(client, document_id, "extracted", source_format)
+            return "already_extracted"
+
+        try:
+            insert_canonical_artifact(client, document_id, canonical)
+        except Exception as e:
+            mark_extraction_status(client, document_id, "failed", source_format)
+            return f"artifact_insert_error: {e}"
+
+        mark_extraction_status(client, document_id, "extracted", source_format)
+
+    md_len = canonical.get("stats", {}).get("markdown_length", 0)
+    pages = canonical.get("stats", {}).get("page_count", 0)
+    return f"tier4_extracted ({md_len} chars, {pages} pages)"
+
+
 def mark_extraction_status(
     client: Client,
     document_id: str,
@@ -439,10 +480,13 @@ def extract_one(
 
     source_format = doc.get("source_format") or sniff_format_from_bytes(pdf_bytes)
 
+    if source_format == "pdf_flat":
+        return _run_tier4(
+            client, document_id, school_id, pdf_bytes,
+            source_format, dry_run,
+        )
+
     if source_format != "pdf_fillable":
-        # All non-Tier-2 paths are stubs for now. Mark failed so the row
-        # leaves the extraction_pending queue and the operator can see
-        # which tiers still need work via a simple GROUP BY source_format.
         if not dry_run:
             mark_extraction_status(client, document_id, "failed", source_format)
         return f"stub_{source_format}"
