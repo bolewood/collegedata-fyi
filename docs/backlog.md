@@ -73,6 +73,11 @@ Ideas bigger than a single backlog item, captured here so they don't get dropped
 
 The College Scorecard provides post-graduation earnings, federal debt loads, and other outcome data that the CDS completely ignores. The CDS captures admissions granularity (C7 factor weighting, C9 test distributions, C21 demonstrated interest tracking) that Scorecard completely ignores. Both can be joined to every school in the US higher-ed universe via IPEDS unit ID. A V2 or V3 that exposes the joined dataset through the same PostgREST API would give consumers the strongest public ROI-per-admissions-tier comparison available anywhere: "schools where early decision matters but 4-year-out earnings don't justify the premium," "schools whose admissions emphasize demonstrated interest and whose 10-year-out debt-to-earnings ratios are worst," etc. The join is trivial technically. The value is high because nobody currently offers this.
 
+**Research and planning docs (2026-04-16):**
+- [CDS vs. College Scorecard schema comparison](research/cds-vs-college-scorecard.md) — authoritative domain-by-domain field mapping
+- [Join recipe](research/scorecard-join-recipe.md) — curl/Python/SQL examples for manual join (pre-V2 workaround)
+- [V2 Scorecard summary table plan](research/scorecard-summary-table-v2-plan.md) — 46-column curated table, migration SQL, refresh pipeline, implementation phases
+
 ### Cross-year time series as a first-class query
 
 Once multiple years of data exist for each school, cross-year time series become the most interesting consumer query: "show me Yale's SAT 50th percentile from 2015 to 2025," "which schools' acceptance rates dropped fastest during the test-optional period." This requires the schema year-diff tooling (P1 #4 above) plus a data model extension that lets consumers ask for "the same field across years" in the face of known schema discontinuities. Park for V2.
