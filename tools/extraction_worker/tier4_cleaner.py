@@ -22,13 +22,25 @@ from pathlib import Path
 
 
 def _normalize_gender(text: str) -> str:
-    """Normalize gender terms for cross-year matching."""
+    """Normalize gender and year-cohort terms for cross-year matching.
+
+    Also collapses "nonresident aliens" (pre-2020 CDS) → "nonresidents"
+    (2020+ CDS), and "freshman/freshmen" → "first-year" (the 2019-20
+    template change that switched to gender-neutral student terminology).
+    Without these rewrites, the cleaner silently misses B1/C1 on every
+    CDS filed before the rename — a large slice of the historical corpus.
+    """
     t = text.lower()
     t = re.sub(r'\bmales?\b', 'men', t)
     t = re.sub(r'\bfemales?\b', 'women', t)
     t = re.sub(r'\banother gender\b', 'unknown', t)
     t = re.sub(r'\bunknown gender\b', 'unknown', t)
     t = re.sub(r'\bunknown sex\b', 'unknown', t)
+    t = re.sub(r'\bnonresident aliens?\b', 'nonresidents', t)
+    # Pre-2020 templates: "freshmen" → "first-year". Order matters —
+    # "freshmen" before "freshman" because \bfreshman\b won't match "freshmen".
+    t = re.sub(r'\bfreshmen\b', 'first-year', t)
+    t = re.sub(r'\bfreshman\b', 'first-year', t)
     return t
 
 
@@ -42,7 +54,11 @@ def _normalize_label(text: str) -> str:
     between schools routinely produces these variants.
     """
     t = _normalize_gender(text)
-    t = re.sub(r'[,\-–—:;/]', ' ', t)
+    # Strip punctuation that might appear between words in table cell
+    # labels. Parentheses matter because pre-2020 CDS templates sometimes
+    # include parentheticals like "first-year (freshman)" that would
+    # otherwise block substring matching of "first-year men".
+    t = re.sub(r'[,\-–—:;/()]', ' ', t)
     t = re.sub(r'\s+', ' ', t).strip()
     return t
 
@@ -77,15 +93,31 @@ def _parse_markdown_tables(markdown: str) -> list[dict]:
             if len(table_lines) < 2:
                 continue
 
-            # Parse header row.
-            header_cells = [c.strip() for c in table_lines[0].split("|")[1:-1]]
+            # Parse the nominal header row, then decide whether it's really
+            # a header or a data row. Aims-style CDS tables often omit a
+            # proper header — every row is one metric (e.g. "C1 ... men who
+            # applied | 1368"), with a separator row after the FIRST data
+            # row. Heuristic: if any non-first cell in the nominal header
+            # contains digits, treat it as a data row and use a synthetic
+            # empty header so row parsing doesn't drop the first data row.
+            nominal_header_cells = [
+                c.strip() for c in table_lines[0].split("|")[1:-1]
+            ]
+            header_looks_like_data = any(
+                re.search(r"\d", c) for c in nominal_header_cells[1:]
+            )
+            if header_looks_like_data:
+                header_cells = [""] * len(nominal_header_cells)
+                data_start = 0
+            else:
+                header_cells = nominal_header_cells
+                data_start = 1
 
-            # Skip separator row (|---|---|)
-            data_start = 1
+            # Skip the separator row (|---|---|) wherever it appears.
             if data_start < len(table_lines) and re.match(
                 r"^\|[\s\-:|]+\|$", table_lines[data_start]
             ):
-                data_start = 2
+                data_start += 1
 
             rows = []
             prev_label = ""
@@ -174,12 +206,16 @@ def _extract_number(value_str: str) -> str | None:
 
 _FIELD_MAP: list[tuple[str, str, str | int]] = [
     # --- B1 Enrollment (full-time undergrad) ---
-    ("degree-seeking, first-time, first-year students", "B.101", "men"),
-    ("degree-seeking, first-time, first-year students", "B.126", "women"),
+    # "students" trailing word dropped so the substring matches both the
+    # 2020+ template ("first-time, first-year students") and the pre-2020
+    # template ("first-time freshmen", after the freshmen→first-year
+    # rewrite in _normalize_gender drops the "students" word).
+    ("degree-seeking, first-time, first-year", "B.101", "men"),
+    ("degree-seeking, first-time, first-year", "B.126", "women"),
     # B.151 picks up the 2024-25 "Another Gender" column (normalized to
     # "unknown"); header-first-match semantics cause col_hint "unknown" to
     # land on the Another Gender column when both it and Unknown are present.
-    ("degree-seeking, first-time, first-year students", "B.151", "unknown"),
+    ("degree-seeking, first-time, first-year", "B.151", "unknown"),
     ("other first-year, degree-seeking", "B.102", "men"),
     ("other first-year, degree-seeking", "B.127", "women"),
     ("all other degree-seeking", "B.103", "men"),
