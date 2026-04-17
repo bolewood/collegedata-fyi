@@ -6,6 +6,7 @@ import {
   findBestSourceAnchor,
   findDownloadLinks,
   rewriteGoogleDriveUrl,
+  parentLandingCandidates,
 } from "./resolve.ts";
 
 const BASE = "https://example.edu/ir/cds/";
@@ -558,6 +559,50 @@ Deno.test("pickCandidates: deduplicates by URL across subpage walk duplicates", 
 
 Deno.test("pickCandidates: empty list returns empty array (caller's choice)", () => {
   assertEquals(pickCandidates([], "landing"), []);
+});
+
+Deno.test("parentLandingCandidates: Boston-College-style direct PDF returns CDS + IR ancestors", () => {
+  const hint = "https://www.bc.edu/content/dam/bc1/offices/irp/ir/cds/BC-2022-2023-CDS.pdf";
+  const candidates = parentLandingCandidates(hint);
+  // Expect ancestors whose paths contain /ir/ or /cds/. Generic /dam/, /bc1/,
+  // /offices/ ancestors are filtered out.
+  assertEquals(candidates[0], "https://www.bc.edu/content/dam/bc1/offices/irp/ir/cds/");
+  assertEquals(candidates[1], "https://www.bc.edu/content/dam/bc1/offices/irp/ir/");
+});
+
+Deno.test("parentLandingCandidates: Drupal upload-dir path has no CDS-like segments, returns []", () => {
+  const hint = "https://oir.brown.edu/sites/default/files/2020-04/CDS2009_2010.pdf";
+  const candidates = parentLandingCandidates(hint);
+  // Path segments are {sites, default, files, 2020-04}. None match the
+  // CDS-like regex, so no ancestor is fetched. Pre-upgrade behavior
+  // (archive the direct doc only) is preserved for this URL shape.
+  assertEquals(candidates.length, 0);
+});
+
+Deno.test("parentLandingCandidates: keeps CDS-like segment even inside WP uploads", () => {
+  const hint = "https://example.edu/wp-content/uploads/cds/CDS-2024-25.pdf";
+  const candidates = parentLandingCandidates(hint);
+  // The /cds/ segment makes this ancestor pass the filter.
+  assertEquals(candidates[0], "https://example.edu/wp-content/uploads/cds/");
+});
+
+Deno.test("parentLandingCandidates: walks up through CDS-like path levels", () => {
+  const hint = "https://example.edu/ir/annual/common-data-set/2024/cds.pdf";
+  const candidates = parentLandingCandidates(hint);
+  // /2024/ under /common-data-set/ — segments contain /ir/ and /common-data-set/
+  // so all three ancestor levels are kept.
+  const urls = new Set(candidates);
+  assertEquals(urls.has("https://example.edu/ir/annual/common-data-set/2024/"), true);
+  assertEquals(urls.has("https://example.edu/ir/annual/common-data-set/"), true);
+  assertEquals(urls.has("https://example.edu/ir/annual/"), true);
+});
+
+Deno.test("parentLandingCandidates: rejects cross-scheme + malformed URLs", () => {
+  assertEquals(parentLandingCandidates("not a url").length, 0);
+  assertEquals(parentLandingCandidates("javascript:alert(1)").length, 0);
+  assertEquals(parentLandingCandidates("ftp://example.edu/cds.pdf").length, 0);
+  // Root-level file has no meaningful parent to walk to.
+  assertEquals(parentLandingCandidates("https://example.edu/cds.pdf").length, 0);
 });
 
 Deno.test("findBestSourceAnchor: only subpages → null", () => {

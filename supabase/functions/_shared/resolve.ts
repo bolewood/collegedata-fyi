@@ -602,6 +602,91 @@ function extensionFromContentType(contentType: string): "pdf" | "xlsx" | "docx" 
   return null;
 }
 
+// Walk up the URL path of a direct-document hint and return ancestor URLs
+// that could plausibly be CDS landing pages. A school like Boston College
+// has `cds_url_hint: .../irp/ir/cds/BC-2022-2023-CDS.pdf` — stripping the
+// filename lands on `.../irp/ir/cds/` which, if indexed, lists every year
+// the school published. Without this walk, the resolver archives only the
+// specific year in the hint and never finds sibling years.
+//
+// Strategy: ONLY return ancestors whose path contains at least one
+// CDS-related segment ("cds", "common-data-set", "ir", "oir", "irp", ...).
+// That keeps us from blindly hammering generic Drupal `/sites/default/files/`
+// or WordPress `/wp-content/uploads/<date>/` paths that reliably 403 and
+// have nothing to do with CDS. For schools whose CDS lives at a semantic
+// URL (`/ir/cds/`, `/oira/common-data-set/`), the walk succeeds cheaply;
+// for schools with opaque upload-dir URLs, we skip silently and return
+// just the direct doc (pre-upgrade behavior).
+const MAX_PARENT_LEVELS = 3;
+const CDS_LIKE_PATH_SEGMENT_RE =
+  /^(cds|common-data-set|common_data_set|institutional-research|institutional_research|ir|oir|oira|iro|irp)$/i;
+
+function pathHasCdsLikeSegment(segments: string[]): boolean {
+  return segments.some((s) => CDS_LIKE_PATH_SEGMENT_RE.test(s));
+}
+
+export function parentLandingCandidates(hint: string): string[] {
+  let parsed: URL;
+  try {
+    parsed = new URL(hint);
+  } catch {
+    return [];
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return [];
+
+  const segments = parsed.pathname.split("/").filter(Boolean);
+  if (segments.length === 0) return [];
+
+  // Strip filename; now segments represent the direct-parent directory.
+  const withoutFilename = segments.slice(0, -1);
+  if (withoutFilename.length === 0) return [];
+
+  const origin = `${parsed.protocol}//${parsed.host}`;
+  const out: string[] = [];
+
+  for (let i = 0; i < MAX_PARENT_LEVELS && i < withoutFilename.length; i++) {
+    const ancestorSegments = withoutFilename.slice(0, withoutFilename.length - i);
+    if (ancestorSegments.length === 0) break;
+
+    // Only include ancestors whose path has a CDS-related segment. This
+    // excludes the common Drupal/WordPress upload trees and other generic
+    // file stores.
+    if (!pathHasCdsLikeSegment(ancestorSegments)) continue;
+
+    const pathPart = ancestorSegments.join("/");
+    out.push(`${origin}/${pathPart}/`);
+  }
+  return out;
+}
+
+// Fetch each candidate ancestor URL; the first one that returns HTML with
+// at least one CDS-like document anchor wins. Return that ancestor's
+// resolved candidates. Returns [] if no ancestor yielded CDS docs.
+//
+// This is called ONLY when the hint is a direct document URL. Landing-
+// page hints already get the full Case C treatment and don't need this.
+async function findSiblingDocsFromParents(
+  hint: string,
+): Promise<ResolvedDocument[]> {
+  const candidates = parentLandingCandidates(hint);
+  for (const ancestorUrl of candidates) {
+    const resp = await fetchText(ancestorUrl, SUBPAGE_TIMEOUT_MS);
+    if (!resp.ok) continue;
+    const ct = resp.contentType.toLowerCase();
+    if (!ct.includes("text/html")) continue;
+
+    const anchors = extractCdsAnchors(resp.text, resp.finalUrl);
+    const docs = anchors.filter((a) => a.kind === "document");
+    if (docs.length === 0) continue;
+
+    const picked = pickCandidates(docs, "landing");
+    if (picked && picked.length > 0) {
+      return picked;
+    }
+  }
+  return [];
+}
+
 // Top-level resolver. Given a hint URL, returns a ResolveResult discriminated
 // union. See the type for the six possible kinds. Callers branch on kind:
 // resolved → archive every doc in `docs`; upstream_gone → mark removed;
@@ -623,26 +708,40 @@ export async function resolveCdsForSchool(
   }
 
   // Case A: direct document hint. schools.yaml points straight at the
-  // file. Skip landing-page parsing entirely and accept the document
-  // regardless of whether the filename carries a parseable year —
-  // extraction will derive it from page 1 content.
+  // file. Archive the document, AND try the directory ancestors to find
+  // any sibling years the school also publishes.
+  //
+  // 63% of schools.yaml hints are direct PDFs (e.g. Boston College points
+  // at a specific 2022-23 PDF). Without the parent walk we'd archive only
+  // that year and walk past every other year in the same directory. The
+  // parent walk is best-effort: if every ancestor 403s or has no CDS
+  // anchors, we still return the direct doc (current pre-upgrade behavior).
   if (DOCUMENT_EXT_RE.test(hint)) {
     const parsed = new URL(hint);
     const filename = decodeURIComponent(
       parsed.pathname.split("/").filter(Boolean).pop() ?? "",
     );
     const year = normalizeYear(hint) ?? normalizeYear(filename);
-    return {
-      kind: "resolved",
-      docs: [{
-        url: hint,
-        cds_year: year ?? UNKNOWN_YEAR_SENTINEL,
-        filename,
-        is_section_file: SECTION_MARKER_RE.test(filename),
-        is_test_artifact: TEST_ARTIFACT_RE.test(filename),
-        discovered_via: "direct",
-      }],
+    const directDoc: ResolvedDocument = {
+      url: hint,
+      cds_year: year ?? UNKNOWN_YEAR_SENTINEL,
+      filename,
+      is_section_file: SECTION_MARKER_RE.test(filename),
+      is_test_artifact: TEST_ARTIFACT_RE.test(filename),
+      discovered_via: "direct",
     };
+
+    const siblings = await findSiblingDocsFromParents(hint);
+
+    // Merge direct + siblings, dedupe by URL (fragments stripped).
+    const byUrl = new Map<string, ResolvedDocument>();
+    byUrl.set(directDoc.url.split("#")[0], directDoc);
+    for (const sib of siblings) {
+      const key = sib.url.split("#")[0];
+      if (!byUrl.has(key)) byUrl.set(key, sib);
+    }
+
+    return { kind: "resolved", docs: Array.from(byUrl.values()) };
   }
 
   const landing = await fetchText(hint, LANDING_TIMEOUT_MS);
