@@ -1,0 +1,1976 @@
+{
+  "year_a": "2023-24",
+  "year_b": "2025-26",
+  "generated_at": "2026-04-17T18:37:40Z",
+  "summary": {
+    "year_a_fields": 1044,
+    "year_b_fields": 1016,
+    "unchanged": 839,
+    "removed": 162,
+    "added": 134,
+    "possibly_renamed": 43
+  },
+  "by_subsection": {
+    "A0": {
+      "unchanged": 4,
+      "added": 8,
+      "removed": 3,
+      "possibly_renamed": 3
+    },
+    "A1": {
+      "unchanged": 7,
+      "added": 16,
+      "removed": 2,
+      "possibly_renamed": 3
+    },
+    "A6": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "B1": {
+      "unchanged": 48,
+      "added": 6,
+      "removed": 6,
+      "possibly_renamed": 3
+    },
+    "B2": {
+      "unchanged": 27,
+      "added": 8,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "B22": {
+      "unchanged": 0,
+      "added": 2,
+      "removed": 0,
+      "possibly_renamed": 0
+    },
+    "B3": {
+      "unchanged": 11,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 5
+    },
+    "C1": {
+      "unchanged": 11,
+      "added": 4,
+      "removed": 0,
+      "possibly_renamed": 20
+    },
+    "C10": {
+      "unchanged": 6,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 1
+    },
+    "C13": {
+      "unchanged": 0,
+      "added": 8,
+      "removed": 16,
+      "possibly_renamed": 0
+    },
+    "C14": {
+      "unchanged": 0,
+      "added": 3,
+      "removed": 6,
+      "possibly_renamed": 0
+    },
+    "C18": {
+      "unchanged": 0,
+      "added": 2,
+      "removed": 4,
+      "possibly_renamed": 0
+    },
+    "C2": {
+      "unchanged": 1,
+      "added": 10,
+      "removed": 18,
+      "possibly_renamed": 0
+    },
+    "C21": {
+      "unchanged": 0,
+      "added": 7,
+      "removed": 14,
+      "possibly_renamed": 0
+    },
+    "C22": {
+      "unchanged": 0,
+      "added": 4,
+      "removed": 8,
+      "possibly_renamed": 0
+    },
+    "C7": {
+      "unchanged": 125,
+      "added": 0,
+      "removed": 7,
+      "possibly_renamed": 0
+    },
+    "C9": {
+      "unchanged": 67,
+      "added": 30,
+      "removed": 30,
+      "possibly_renamed": 0
+    },
+    "D18": {
+      "unchanged": 0,
+      "added": 3,
+      "removed": 6,
+      "possibly_renamed": 0
+    },
+    "D3": {
+      "unchanged": 4,
+      "added": 1,
+      "removed": 0,
+      "possibly_renamed": 0
+    },
+    "D4": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "F4": {
+      "unchanged": 10,
+      "added": 2,
+      "removed": 2,
+      "possibly_renamed": 1
+    },
+    "G1": {
+      "unchanged": 20,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 2
+    },
+    "H1": {
+      "unchanged": 0,
+      "added": 19,
+      "removed": 32,
+      "possibly_renamed": 0
+    },
+    "H12": {
+      "unchanged": 4,
+      "added": 0,
+      "removed": 1,
+      "possibly_renamed": 3
+    },
+    "H13": {
+      "unchanged": 7,
+      "added": 1,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "H14": {
+      "unchanged": 20,
+      "added": 0,
+      "removed": 2,
+      "possibly_renamed": 0
+    },
+    "H15": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "H7": {
+      "unchanged": 3,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 1
+    },
+    "H8": {
+      "unchanged": 6,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 1
+    }
+  },
+  "removed": [
+    {
+      "subsection": "A0",
+      "row_label": "City/State/Zip/Country:",
+      "column_header": null
+    },
+    {
+      "subsection": "A0",
+      "row_label": "Fax:",
+      "column_header": null
+    },
+    {
+      "subsection": "A0",
+      "row_label": "Mailing Address:",
+      "column_header": null
+    },
+    {
+      "subsection": "A1",
+      "row_label": "City/State/Zip/Country:",
+      "column_header": null
+    },
+    {
+      "subsection": "A1",
+      "row_label": "Mailing Address:",
+      "column_header": null
+    },
+    {
+      "subsection": "A6",
+      "row_label": "If you have a diversity, equity, and inclusion office or department, please provide the URL of the corresponding Web page:",
+      "column_header": null
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Graduate Students: Full-Time",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Graduate Students: Full-Time",
+      "column_header": "Men"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Graduate Students: Full-Time",
+      "column_header": "Women"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Graduate Students:Part-Time",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Graduate Students:Part-Time",
+      "column_header": "Men"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Graduate Students:Part-Time",
+      "column_header": "Women"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Persistence",
+      "column_header": "0"
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Amount of application fee:",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Amount of application fee:",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Can it be waived for applicants with financial need?",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Can it be waived for applicants with financial need?",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Can on-line application fee be waived for applicants with financial need?",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Can on-line application fee be waived for applicants with financial need?",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Does your institution have an application fee?",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Does your institution have an application fee?",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Free",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Free",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C13",
+      "row_label": "If you have an application fee and an on-line application option, please indicate policy for students who apply on-line:",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C13",
+      "row_label": "If you have an application fee and an on-line application option, please indicate policy for students who apply on-line:",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Reduced",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Reduced",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Same fee",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Same fee",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C14",
+      "row_label": "Application closing date (fall)",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C14",
+      "row_label": "Application closing date (fall)",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C14",
+      "row_label": "Does your institution have an application closing date?",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C14",
+      "row_label": "Does your institution have an application closing date?",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C14",
+      "row_label": "Priority Date",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C14",
+      "row_label": "Priority Date",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C18",
+      "row_label": "Does your institution allow students to postpone enrollment after admission?",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C18",
+      "row_label": "Does your institution allow students to postpone enrollment after admission?",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C18",
+      "row_label": "If yes, maximum period of postponement:",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C18",
+      "row_label": "If yes, maximum period of postponement:",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C2",
+      "row_label": "C3-C5: Admission Requirements",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C2",
+      "row_label": "C3-C5: Admission Requirements",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C2",
+      "row_label": "Do you have a policy of placing students on a waiting list?",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C2",
+      "row_label": "Do you have a policy of placing students on a waiting list?",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C2",
+      "row_label": "Do you release that information to school counselors?",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C2",
+      "row_label": "Do you release that information to school counselors?",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C2",
+      "row_label": "If yes, do you release that information to students?",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C2",
+      "row_label": "If yes, do you release that information to students?",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C2",
+      "row_label": "If yes, please answer the questions below for Fall 2023 admissions:",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C2",
+      "row_label": "If yes, please answer the questions below for Fall 2023 admissions:",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C2",
+      "row_label": "Number accepting a place on the waiting list:",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C2",
+      "row_label": "Number accepting a place on the waiting list:",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C2",
+      "row_label": "Number of qualified applicants offered a place on waiting list:",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C2",
+      "row_label": "Number of qualified applicants offered a place on waiting list:",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C2",
+      "row_label": "Number of wait-listed students admitted:",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C2",
+      "row_label": "Number of wait-listed students admitted:",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C2",
+      "row_label": "WAITING LIST",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C2",
+      "row_label": "WAITING LIST",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C21",
+      "row_label": "First or only early decision plan closing date",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C21",
+      "row_label": "First or only early decision plan closing date",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C21",
+      "row_label": "First or only early decision plan notification date",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C21",
+      "row_label": "First or only early decision plan notification date",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C21",
+      "row_label": "If \u201cyes,\u201d please complete the following:",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C21",
+      "row_label": "If \u201cyes,\u201d please complete the following:",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C21",
+      "row_label": "Number of applicants admitted under early decision plan",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C21",
+      "row_label": "Number of applicants admitted under early decision plan",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C21",
+      "row_label": "Number of early decision applications received by your institution",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C21",
+      "row_label": "Number of early decision applications received by your institution",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C21",
+      "row_label": "Other early decision plan closing date",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C21",
+      "row_label": "Other early decision plan closing date",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C21",
+      "row_label": "Other early decision plan notification date",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C21",
+      "row_label": "Other early decision plan notification date",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C22",
+      "row_label": "Early action closing date",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C22",
+      "row_label": "Early action closing date",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C22",
+      "row_label": "Early action notification date",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C22",
+      "row_label": "Early action notification date",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C22",
+      "row_label": "If \u201cyes,\u201d please complete the following:",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C22",
+      "row_label": "If \u201cyes,\u201d please complete the following:",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C22",
+      "row_label": "Is your early action plan a \u201crestrictive\u201d plan under which you limit students from applying to other early plans?",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C22",
+      "row_label": "Is your early action plan a \u201crestrictive\u201d plan under which you limit students from applying to other early plans?",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Does your institution make use of SAT or ACT scores in admission decisions for first-time, first-year, degree-seeking applicants?",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Does your institution make use of SAT or ACT scores in admission decisions for first-time, first-year, degree-seeking applicants?",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Not considered for admission, even if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Not required for admission, but considered if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Required for some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Required to be considered for admission"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Recommended"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Composite",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Composite",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Composite",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT English",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT English",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT English",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Math",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Math",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Math",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Reading",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Reading",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Reading",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Science",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Science",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Science",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Writing",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Writing",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Writing",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Percent of first-time, first-year students with scores in each range:",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Percent of first-time, first-year students with scores in each range:",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Percent of first-time, first-year students with scores in each range:",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Composite",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Composite",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Composite",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Evidence-Based Reading and Writing",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Evidence-Based Reading and Writing",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Evidence-Based Reading and Writing",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Math",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Math",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Math",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "D18",
+      "row_label": "American Council on Education (ACE)",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "D18",
+      "row_label": "American Council on Education (ACE)",
+      "column_header": "No"
+    },
+    {
+      "subsection": "D18",
+      "row_label": "College Level Examination Program (CLEP)",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "D18",
+      "row_label": "College Level Examination Program (CLEP)",
+      "column_header": "No"
+    },
+    {
+      "subsection": "D18",
+      "row_label": "DANTES Subject Standardized Tests (DSST)",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "D18",
+      "row_label": "DANTES Subject Standardized Tests (DSST)",
+      "column_header": "No"
+    },
+    {
+      "subsection": "D4",
+      "row_label": "If yes, what is the minimum number of credits and the unit of measure?",
+      "column_header": null
+    },
+    {
+      "subsection": "F4",
+      "row_label": "Coed dorms",
+      "column_header": null
+    },
+    {
+      "subsection": "F4",
+      "row_label": "Men's dorms",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Athletic Awards",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Athletic Awards",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Both FM and IM",
+      "column_header": "2022-2023 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Both FM and IM",
+      "column_header": "2023-2024 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal methodology (FM)",
+      "column_header": "2022-2023 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal methodology (FM)",
+      "column_header": "2023-2024 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal Work-Study",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal Work-Study",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": "2022-2023 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": "2023-2024 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": "2022-2023 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": "2023-2024 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Parent Loans",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Parent Loans",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Scholarships/Grants",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Scholarships/Grants",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Self-Help",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Self-Help",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "State all states, not only the state in which your institution is located",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "State all states, not only the state in which your institution is located",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "State and other (e.g., institutional) work-study/employment (Note: Excludes Federal Work-Study captured above.)",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "State and other (e.g., institutional) work-study/employment (Note: Excludes Federal Work-Study captured above.)",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Student loans from all sources (excluding parent loans)",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Student loans from all sources (excluding parent loans)",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Total Scholarships/Grants",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Total Scholarships/Grants",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Total Self-Help",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Total Self-Help",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Which needs-analysis methodology does your institution use in awarding institutional aid? (Formerly H3)",
+      "column_header": "2022-2023 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Which needs-analysis methodology does your institution use in awarding institutional aid? (Formerly H3)",
+      "column_header": "2023-2024 estimated"
+    },
+    {
+      "subsection": "H12",
+      "row_label": "Direct Unsubsidized Stafford Loans",
+      "column_header": null
+    },
+    {
+      "subsection": "H13",
+      "row_label": "SEOG",
+      "column_header": null
+    },
+    {
+      "subsection": "H14",
+      "row_label": "Minority status",
+      "column_header": "Non-Need Based"
+    },
+    {
+      "subsection": "H14",
+      "row_label": "Minority status",
+      "column_header": "Need-Based"
+    },
+    {
+      "subsection": "H15",
+      "row_label": "Are these policies related to the COVID-19 pandemic?",
+      "column_header": null
+    }
+  ],
+  "added": [
+    {
+      "subsection": "A0",
+      "row_label": "Address Line 1:",
+      "column_header": null
+    },
+    {
+      "subsection": "A0",
+      "row_label": "Address Line 2:",
+      "column_header": null
+    },
+    {
+      "subsection": "A0",
+      "row_label": "Address Line 3:",
+      "column_header": null
+    },
+    {
+      "subsection": "A0",
+      "row_label": "City:",
+      "column_header": null
+    },
+    {
+      "subsection": "A0",
+      "row_label": "Country:",
+      "column_header": null
+    },
+    {
+      "subsection": "A0",
+      "row_label": "First Name:",
+      "column_header": null
+    },
+    {
+      "subsection": "A0",
+      "row_label": "State",
+      "column_header": null
+    },
+    {
+      "subsection": "A0",
+      "row_label": "Zipcode",
+      "column_header": null
+    },
+    {
+      "subsection": "A1",
+      "row_label": "Admissions Office",
+      "column_header": null
+    },
+    {
+      "subsection": "A1",
+      "row_label": "Admissions Office Street Address (if different):",
+      "column_header": null
+    },
+    {
+      "subsection": "A1",
+      "row_label": "Admissions Phone Number (Ext):",
+      "column_header": null
+    },
+    {
+      "subsection": "A1",
+      "row_label": "Admissions Toll-Free Phone Number (Ext):",
+      "column_header": null
+    },
+    {
+      "subsection": "A1",
+      "row_label": "Admissions Toll-Free Phone Number (Out-of-State Area Code):",
+      "column_header": null
+    },
+    {
+      "subsection": "A1",
+      "row_label": "City",
+      "column_header": null
+    },
+    {
+      "subsection": "A1",
+      "row_label": "Country:",
+      "column_header": null
+    },
+    {
+      "subsection": "A1",
+      "row_label": "Main Institution Email",
+      "column_header": null
+    },
+    {
+      "subsection": "A1",
+      "row_label": "Main Phone Number (Area Code)",
+      "column_header": null
+    },
+    {
+      "subsection": "A1",
+      "row_label": "Main Phone Number (Ext):",
+      "column_header": null
+    },
+    {
+      "subsection": "A1",
+      "row_label": "State",
+      "column_header": null
+    },
+    {
+      "subsection": "A1",
+      "row_label": "Street Address (if different) Line 2:",
+      "column_header": null
+    },
+    {
+      "subsection": "A1",
+      "row_label": "Street Address Line 1:",
+      "column_header": null
+    },
+    {
+      "subsection": "A1",
+      "row_label": "Street Address Line 2:",
+      "column_header": null
+    },
+    {
+      "subsection": "A1",
+      "row_label": "Street Address Line 3:",
+      "column_header": null
+    },
+    {
+      "subsection": "A1",
+      "row_label": "Zip",
+      "column_header": null
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total Full-Time Students",
+      "column_header": "Unknown"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total Full-Time Students",
+      "column_header": "Males"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total Full-Time Students",
+      "column_header": "Females"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total Part-Time Students",
+      "column_header": "Unknown"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total Part-Time Students",
+      "column_header": "Males"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total Part-Time Students",
+      "column_header": "Females"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "More information about other eligible (for financial aid purposes) non-citizens is available at:",
+      "column_header": null
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Persistence",
+      "column_header": "Total Undergraduates (both degree & non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Persistence",
+      "column_header": "Degree-Seeking Undergraduates (include first-time first-year)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Persistence",
+      "column_header": "Degree-Seeking First-Time First Year"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Racial/ethnic designations are requested only for United States citizens, residents, and other eligible non-citizens.",
+      "column_header": null
+    },
+    {
+      "subsection": "B2",
+      "row_label": "TOTAL",
+      "column_header": "Total Undergraduates (both degree & non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "TOTAL",
+      "column_header": "Degree-Seeking Undergraduates (include first-time first-year)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "TOTAL",
+      "column_header": "Degree-Seeking First-Time First Year"
+    },
+    {
+      "subsection": "B22",
+      "row_label": "Calculate the percentage of the Fall 2024 entering cohort who remained enrolled on the official census date.",
+      "column_header": null
+    },
+    {
+      "subsection": "B22",
+      "row_label": "From this group, identify how many were still enrolled at your institution as of the official enrollment date in Fall 2025.",
+      "column_header": null
+    },
+    {
+      "subsection": "C1",
+      "row_label": "First-Time, First-Year Student Enrollees",
+      "column_header": null
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year males who enrolled",
+      "column_header": null
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year students of unknown sex who enrolled",
+      "column_header": null
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year females who enrolled",
+      "column_header": null
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Amount of application fee:",
+      "column_header": null
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Can it be waived for applicants with financial need?",
+      "column_header": null
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Can on-line application fee be waived for applicants with financial need?",
+      "column_header": null
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Does your institution have an application fee?",
+      "column_header": null
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Free",
+      "column_header": null
+    },
+    {
+      "subsection": "C13",
+      "row_label": "If you have an application fee and an on-line application option, please indicate policy for students who apply on-line:",
+      "column_header": null
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Reduced",
+      "column_header": null
+    },
+    {
+      "subsection": "C13",
+      "row_label": "Same fee",
+      "column_header": null
+    },
+    {
+      "subsection": "C14",
+      "row_label": "Application closing date (fall)",
+      "column_header": null
+    },
+    {
+      "subsection": "C14",
+      "row_label": "Does your institution have an application closing date?",
+      "column_header": null
+    },
+    {
+      "subsection": "C14",
+      "row_label": "Priority Date",
+      "column_header": null
+    },
+    {
+      "subsection": "C18",
+      "row_label": "Does your institution allow students to postpone enrollment after admission?",
+      "column_header": null
+    },
+    {
+      "subsection": "C18",
+      "row_label": "If yes, maximum period of postponement:",
+      "column_header": null
+    },
+    {
+      "subsection": "C2",
+      "row_label": "C3-C5: Admission Requirements",
+      "column_header": null
+    },
+    {
+      "subsection": "C2",
+      "row_label": "Do you have a policy of placing students on a waiting list?",
+      "column_header": null
+    },
+    {
+      "subsection": "C2",
+      "row_label": "Do you release that information to school counselors?",
+      "column_header": null
+    },
+    {
+      "subsection": "C2",
+      "row_label": "If yes, do you release that information to students?",
+      "column_header": null
+    },
+    {
+      "subsection": "C2",
+      "row_label": "If yes, please answer the questions below for Fall 2025 admissions:",
+      "column_header": null
+    },
+    {
+      "subsection": "C2",
+      "row_label": "Is your waiting list ranked?",
+      "column_header": null
+    },
+    {
+      "subsection": "C2",
+      "row_label": "Number accepting a place on the waiting list:",
+      "column_header": null
+    },
+    {
+      "subsection": "C2",
+      "row_label": "Number of qualified applicants offered a place on waiting list:",
+      "column_header": null
+    },
+    {
+      "subsection": "C2",
+      "row_label": "Number of wait-listed students admitted:",
+      "column_header": null
+    },
+    {
+      "subsection": "C2",
+      "row_label": "WAITING LIST",
+      "column_header": null
+    },
+    {
+      "subsection": "C21",
+      "row_label": "First or only early decision plan closing date",
+      "column_header": null
+    },
+    {
+      "subsection": "C21",
+      "row_label": "First or only early decision plan notification date",
+      "column_header": null
+    },
+    {
+      "subsection": "C21",
+      "row_label": "If \u201cyes,\u201d please complete the following:",
+      "column_header": null
+    },
+    {
+      "subsection": "C21",
+      "row_label": "Number of applicants admitted under early decision plan",
+      "column_header": null
+    },
+    {
+      "subsection": "C21",
+      "row_label": "Number of early decision applications received by your institution",
+      "column_header": null
+    },
+    {
+      "subsection": "C21",
+      "row_label": "Other early decision plan closing date",
+      "column_header": null
+    },
+    {
+      "subsection": "C21",
+      "row_label": "Other early decision plan notification date",
+      "column_header": null
+    },
+    {
+      "subsection": "C22",
+      "row_label": "Early action closing date",
+      "column_header": null
+    },
+    {
+      "subsection": "C22",
+      "row_label": "Early action notification date",
+      "column_header": null
+    },
+    {
+      "subsection": "C22",
+      "row_label": "If \u201cyes,\u201d please complete the following:",
+      "column_header": null
+    },
+    {
+      "subsection": "C22",
+      "row_label": "Is your early action plan a \u201crestrictive\u201d plan under which you limit students from applying to other early plans?",
+      "column_header": null
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Composite",
+      "column_header": "25th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Composite",
+      "column_header": "75th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Composite",
+      "column_header": "50th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT English",
+      "column_header": "25th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT English",
+      "column_header": "75th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT English",
+      "column_header": "50th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Math",
+      "column_header": "25th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Math",
+      "column_header": "75th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Math",
+      "column_header": "50th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Reading",
+      "column_header": "25th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Reading",
+      "column_header": "75th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Reading",
+      "column_header": "50th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Science",
+      "column_header": "25th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Science",
+      "column_header": "75th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Science",
+      "column_header": "50th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Writing",
+      "column_header": "25th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Writing",
+      "column_header": "75th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Writing",
+      "column_header": "50th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Percent of first-time, first-year students with scores in each range:",
+      "column_header": "25th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Percent of first-time, first-year students with scores in each range:",
+      "column_header": "75th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Percent of first-time, first-year students with scores in each range:",
+      "column_header": "50th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Composite",
+      "column_header": "25th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Composite",
+      "column_header": "75th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Composite",
+      "column_header": "50th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Evidence-Based Reading and Writing",
+      "column_header": "25th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Evidence-Based Reading and Writing",
+      "column_header": "75th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Evidence-Based Reading and Writing",
+      "column_header": "50th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Math",
+      "column_header": "25th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Math",
+      "column_header": "75th Percentile Score"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Math",
+      "column_header": "50th Percentile Score"
+    },
+    {
+      "subsection": "D18",
+      "row_label": "American Council on Education (ACE)",
+      "column_header": null
+    },
+    {
+      "subsection": "D18",
+      "row_label": "College Level Examination Program (CLEP)",
+      "column_header": null
+    },
+    {
+      "subsection": "D18",
+      "row_label": "DANTES Subject Standardized Tests (DSST)",
+      "column_header": null
+    },
+    {
+      "subsection": "D3",
+      "row_label": "Must a transfer applicant have a minimum number of credits completed or else must apply as an entering first-year student?",
+      "column_header": null
+    },
+    {
+      "subsection": "F4",
+      "row_label": "Coed residence halls",
+      "column_header": null
+    },
+    {
+      "subsection": "F4",
+      "row_label": "Men's residence halls",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Athletic Awards",
+      "column_header": "Not Applicable"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Both FM and IM",
+      "column_header": "2025-2026 Estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Both FM and IM",
+      "column_header": "2024-2025 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal",
+      "column_header": "Not Applicable"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal methodology (FM)",
+      "column_header": "2025-2026 Estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal methodology (FM)",
+      "column_header": "2024-2025 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal Work-Study",
+      "column_header": "Not Applicable"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": "2025-2026 Estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": "2024-2025 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": "2025-2026 Estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": "2024-2025 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Parent Loans",
+      "column_header": "Not Applicable"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "State all states, not only the state in which your institution is located",
+      "column_header": "Not Applicable"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "State and other (e.g., institutional) work-study/employment (Note: Excludes Federal Work-Study captured above.)",
+      "column_header": "Not Applicable"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Student loans from all sources (excluding parent loans)",
+      "column_header": "Not Applicable"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Total Scholarships/Grants",
+      "column_header": "Not Applicable"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Total Self-Help",
+      "column_header": "Not Applicable"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Which needs-analysis methodology does your institution use in awarding institutional aid? (Formerly H3)",
+      "column_header": "2025-2026 Estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Which needs-analysis methodology does your institution use in awarding institutional aid? (Formerly H3)",
+      "column_header": "2024-2025 Final"
+    },
+    {
+      "subsection": "H13",
+      "row_label": "Federal SEOG",
+      "column_header": null
+    }
+  ],
+  "possibly_renamed": [
+    {
+      "subsection": "A0",
+      "column_header": null,
+      "from": "Are your responses to the CDS posted for reference on your institution's Web site?",
+      "to": "Are your responses to the CDS posted for reference on your institution's Website?",
+      "similarity": 0.994
+    },
+    {
+      "subsection": "A0",
+      "column_header": null,
+      "from": "E-mail Address:",
+      "to": "Email Address:",
+      "similarity": 0.963
+    },
+    {
+      "subsection": "A0",
+      "column_header": null,
+      "from": "Name:",
+      "to": "Last Name:",
+      "similarity": 0.615
+    },
+    {
+      "subsection": "A1",
+      "column_header": null,
+      "from": "Street Address (if different):",
+      "to": "Street Address (if different) Line 3:",
+      "similarity": 0.885
+    },
+    {
+      "subsection": "A1",
+      "column_header": null,
+      "from": "Admissions Office Mailing Address:",
+      "to": "Admissions Email Address:",
+      "similarity": 0.842
+    },
+    {
+      "subsection": "A1",
+      "column_header": null,
+      "from": "Admissions E-mail Address:",
+      "to": "Admissions Phone Number (Area Code):",
+      "similarity": 0.621
+    },
+    {
+      "subsection": "B1",
+      "column_header": "Another Gender",
+      "from": "Degree-seeking, first-time freshmen",
+      "to": "Degree-seeking, first-time first-year students",
+      "similarity": 0.889
+    },
+    {
+      "subsection": "B1",
+      "column_header": "Men",
+      "from": "Degree-seeking, first-time freshmen",
+      "to": "Degree-seeking, first-time first-year students",
+      "similarity": 0.889
+    },
+    {
+      "subsection": "B1",
+      "column_header": "Women",
+      "from": "Degree-seeking, first-time freshmen",
+      "to": "Degree-seeking, first-time first-year students",
+      "similarity": 0.889
+    },
+    {
+      "subsection": "B3",
+      "column_header": "Recipients of a Subsidized Stafford Loan who did not receive a Pell Grant",
+      "from": "Fall 2016 Cohort",
+      "to": "Fall 2018 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": "Total (sum of 3 columns to the left)",
+      "from": "Fall 2016 Cohort",
+      "to": "Fall 2018 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": "Students who did not receive either a Pell Grant or a subsidized Stafford Loan",
+      "from": "Fall 2016 Cohort",
+      "to": "Fall 2018 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": "Recipients of a Federal Pell Grant",
+      "from": "Fall 2016 Cohort",
+      "to": "Fall 2018 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": null,
+      "from": "Fall 2017 Cohort",
+      "to": "Fall 2019 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "If available, please provide residency breakdowns for total applicants, admits, and enrolled students: Fall 2023",
+      "to": "If available, please provide residency breakdowns for total applicants, admits, and enrolled students: Fall 2025",
+      "similarity": 0.991
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total part-time, first-time, first-year another gender who enrolled",
+      "to": "Total part-time, first-time, first-year students of unknown sex who enrolled",
+      "similarity": 0.879
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total full-time, first-time, first-year another gender who enrolled",
+      "to": "Total full-time, first-time, first-year students of unknown sex who enrolled",
+      "similarity": 0.879
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total first-time, first-year another gender who were admitted",
+      "to": "Total first-time, first-year students of unknown sex who were admitted",
+      "similarity": 0.869
+    },
+    {
+      "subsection": "C1",
+      "column_header": "International",
+      "from": "Total first-time, first-year men who applied",
+      "to": "Total first-time, first-year (degree-seeking) who applied",
+      "similarity": 0.866
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total first-time, first-year another gender who applied",
+      "to": "Total first-time, first-year students of unknown sex who applied",
+      "similarity": 0.855
+    },
+    {
+      "subsection": "C1",
+      "column_header": "Unknown",
+      "from": "Total first-time, first-year women who applied",
+      "to": "Total first-time, first-year (degree-seeking) who applied",
+      "similarity": 0.848
+    },
+    {
+      "subsection": "C1",
+      "column_header": "Out-of-State",
+      "from": "Total first-time, first-year women who applied",
+      "to": "Total first-time, first-year (degree-seeking) who applied",
+      "similarity": 0.848
+    },
+    {
+      "subsection": "C1",
+      "column_header": "Total",
+      "from": "Total first-time, first-year women who applied",
+      "to": "Total first-time, first-year (degree-seeking) who applied",
+      "similarity": 0.848
+    },
+    {
+      "subsection": "C1",
+      "column_header": "In-State",
+      "from": "Total first-time, first-year women who applied",
+      "to": "Total first-time, first-year (degree-seeking) who applied",
+      "similarity": 0.848
+    },
+    {
+      "subsection": "C1",
+      "column_header": "Unknown",
+      "from": "Total first-time, first-year men who applied",
+      "to": "Total first-time, first-year (degree-seeking) who enrolled",
+      "similarity": 0.776
+    },
+    {
+      "subsection": "C1",
+      "column_header": "Out-of-State",
+      "from": "Total first-time, first-year men who applied",
+      "to": "Total first-time, first-year (degree-seeking) who enrolled",
+      "similarity": 0.776
+    },
+    {
+      "subsection": "C1",
+      "column_header": "Total",
+      "from": "Total first-time, first-year men who applied",
+      "to": "Total first-time, first-year (degree-seeking) who enrolled",
+      "similarity": 0.776
+    },
+    {
+      "subsection": "C1",
+      "column_header": "In-State",
+      "from": "Total first-time, first-year men who applied",
+      "to": "Total first-time, first-year (degree-seeking) who enrolled",
+      "similarity": 0.776
+    },
+    {
+      "subsection": "C1",
+      "column_header": "International",
+      "from": "Total first-time, first-year women who applied",
+      "to": "Total first-time, first-year (degree-seeking) who were admitted",
+      "similarity": 0.743
+    },
+    {
+      "subsection": "C1",
+      "column_header": "International",
+      "from": "Total first-time, first-year another gender who applied",
+      "to": "Total first-time, first-year (degree-seeking) who enrolled",
+      "similarity": 0.725
+    },
+    {
+      "subsection": "C1",
+      "column_header": "Unknown",
+      "from": "Total first-time, first-year another gender who applied",
+      "to": "Total first-time, first-year (degree-seeking) who were admitted",
+      "similarity": 0.71
+    },
+    {
+      "subsection": "C1",
+      "column_header": "Out-of-State",
+      "from": "Total first-time, first-year another gender who applied",
+      "to": "Total first-time, first-year (degree-seeking) who were admitted",
+      "similarity": 0.71
+    },
+    {
+      "subsection": "C1",
+      "column_header": "Total",
+      "from": "Total first-time, first-year another gender who applied",
+      "to": "Total first-time, first-year (degree-seeking) who were admitted",
+      "similarity": 0.71
+    },
+    {
+      "subsection": "C1",
+      "column_header": "In-State",
+      "from": "Total first-time, first-year another gender who applied",
+      "to": "Total first-time, first-year (degree-seeking) who were admitted",
+      "similarity": 0.71
+    },
+    {
+      "subsection": "C10",
+      "column_header": null,
+      "from": "Percent of total first-time, first-year (freshmen) students who submitted high school class rank:",
+      "to": "Percent of total first-time, first-year students who submitted high school class rank:",
+      "similarity": 0.939
+    },
+    {
+      "subsection": "F4",
+      "column_header": null,
+      "from": "Women's dorms",
+      "to": "Women's residence halls",
+      "similarity": 0.556
+    },
+    {
+      "subsection": "G1",
+      "column_header": "First-Year",
+      "from": "Tuition: Non-resident",
+      "to": "Tuition: Nonresident",
+      "similarity": 0.974
+    },
+    {
+      "subsection": "G1",
+      "column_header": "Undergraduates",
+      "from": "Tuition: Non-resident",
+      "to": "Tuition: Nonresident",
+      "similarity": 0.974
+    },
+    {
+      "subsection": "H12",
+      "column_header": null,
+      "from": "Direct PLUS Loans",
+      "to": "Federal Direct PLUS Loans",
+      "similarity": 0.81
+    },
+    {
+      "subsection": "H12",
+      "column_header": null,
+      "from": "Direct Subsidized Stafford Loans",
+      "to": "Federal Direct Subsidized Loans",
+      "similarity": 0.73
+    },
+    {
+      "subsection": "H12",
+      "column_header": null,
+      "from": "Federal Perkins Loans",
+      "to": "Federal Direct Unsubsidized Loans",
+      "similarity": 0.63
+    },
+    {
+      "subsection": "H7",
+      "column_header": null,
+      "from": "CSS/Financial Aid PROFILE",
+      "to": "CSS Profile",
+      "similarity": 0.611
+    },
+    {
+      "subsection": "H8",
+      "column_header": null,
+      "from": "CSS/Financial Aid PROFILE",
+      "to": "CSS Profile",
+      "similarity": 0.611
+    }
+  ]
+}

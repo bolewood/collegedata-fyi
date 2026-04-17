@@ -8,24 +8,25 @@ Items are grouped by priority. Effort hints are rough estimates of CC-assisted t
 
 ## Next up
 
-### 1. Cross-year schema diff tool
-**Priority:** P1 (cross-year time series cannot work without it, and the 2025-26 template has breaking changes)
-**Effort:** ~45 minutes now that structural schemas exist for 2019-20 through 2025-26
+### 1. [RESOLVED 2026-04-17] ~~Cross-year schema diff tool~~
 
-**Dependency unblocked 2026-04-17** — `tools/schema_builder/build_from_tabs.py` shipped and produced `schemas/cds_schema_YYYY_YY.structural.json` for 2019-20, 2020-21, 2021-22, 2022-23, 2023-24, and 2025-26. See `schemas/README.md` for the canonical vs structural distinction. 2024-25 XLSX not on commondataset.org anymore; may need to contact the CDS Initiative.
+Shipped as `tools/schema_builder/diff.py` with 5 year-pair diffs committed to `schemas/`:
 
-The 2025-26 CDS template introduces three breaking changes versus prior years: gender categories collapsed from four (`Men, Women, Another Gender, Unknown`) to three (`Male, Female, Unknown`) with non-binary explicitly redistributed across binary; graduation rates B4-B21 now disaggregate by Pell recipient status; retention rate B22 now requires explicit numerator and denominator. A 2023-24 vs 2025-26 structural-schema diff already confirms 205 fields changed (including the B1 `freshmen → first-year students` rename and the graduate-students-block restructure). C9, H1, C1, and C2 had the most churn.
+| Transition | Unchanged | Added | Removed | Possibly renamed |
+|---|---:|---:|---:|---:|
+| 2019-20 → 2020-21 | 750 | 216 | 105 | 39 |
+| 2020-21 → 2021-22 | 988 | 13 | 10 | 7 |
+| 2021-22 → 2022-23 | 885 | 131 | 99 | 24 (major redesign — file size 135KB → 770KB) |
+| 2022-23 → 2023-24 | 886 | 124 | 120 | 34 |
+| 2023-24 → 2025-26 | 839 | 134 | 162 | 43 (freshmen→first-year, gender collapse, graduate restructure) |
 
-**What to build:** `tools/schema_builder/diff.py` that:
-1. Loads two structural schema JSON files
-2. For each `(subsection, normalized row_label, normalized column_header)` tuple, categorizes the change: `unchanged` / `renamed_label` / `renamed_header` / `added` / `removed`
-3. Outputs a `schemas/cds_schema_{yearA}-to-{yearB}.diff.json` with a human-readable summary
+Each diff emits both a JSON file (machine-readable for cross-year consumers) and a Markdown file (human release-notes style). Rename detection uses SequenceMatcher similarity ≥ 0.55 on normalized row_labels within the same (subsection, column_header) group, which correctly catches cohort-year rolls (e.g. B3 "Fall 2013 Cohort" → "Fall 2014 Cohort") and admission-year rolls (C2 "Fall 2020 admissions" → "Fall 2021 admissions").
 
-Downstream consumers reading cross-year data consult the diff file to decide how to handle each field. A "gender discontinuity" flag is probably the single most important output.
+Normalization built into the tool: freshmen→first-year, male/female→men/women, another-gender→unknown, nonresident-aliens→nonresidents. These prevent false-positive churn on known template-drift renames.
 
-**Why it matters:** without this, cross-year queries silently lose or mis-merge data at year boundaries. The 2023-24 → 2025-26 transition alone involves ~20% of fields changing in some way.
+Downstream: cross-year consumers read the diff files to reconcile fields across years. The B2 gender-column breaking change lives in `cds_schema_2023_24-to-2025_26.diff.json`; a "gender discontinuity" consumer filter can be built from that.
 
-**Cross-references:** `schemas/README.md`; `schemas/cds_schema_*.structural.json`; `docs/v1-plan.md` data model section ("Schema years are not interchangeable").
+**Follow-ups:** (a) generate canonical question-number overlays on older structural schemas by fuzzy-matching against the 2025-26 Answer Sheet; (b) the 2024-25 → 2025-26 diff remains incomplete because we don't have the 2024-25 XLSX.
 
 ---
 

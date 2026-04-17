@@ -1,0 +1,2157 @@
+{
+  "year_a": "2019-20",
+  "year_b": "2020-21",
+  "generated_at": "2026-04-17T18:37:40Z",
+  "summary": {
+    "year_a_fields": 894,
+    "year_b_fields": 1005,
+    "unchanged": 750,
+    "removed": 105,
+    "added": 216,
+    "possibly_renamed": 39
+  },
+  "by_subsection": {
+    "B1": {
+      "unchanged": 28,
+      "added": 2,
+      "removed": 0,
+      "possibly_renamed": 0
+    },
+    "B21": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 2,
+      "possibly_renamed": 0
+    },
+    "B3": {
+      "unchanged": 9,
+      "added": 2,
+      "removed": 5,
+      "possibly_renamed": 5
+    },
+    "C10": {
+      "unchanged": 6,
+      "added": 1,
+      "removed": 0,
+      "possibly_renamed": 0
+    },
+    "C11": {
+      "unchanged": 10,
+      "added": 1,
+      "removed": 0,
+      "possibly_renamed": 0
+    },
+    "C12": {
+      "unchanged": 1,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 1
+    },
+    "C15": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "C17": {
+      "unchanged": 7,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 2
+    },
+    "C2": {
+      "unchanged": 12,
+      "added": 1,
+      "removed": 0,
+      "possibly_renamed": 6
+    },
+    "C20": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 1
+    },
+    "C22": {
+      "unchanged": 8,
+      "added": 0,
+      "removed": 2,
+      "possibly_renamed": 0
+    },
+    "C3": {
+      "unchanged": 3,
+      "added": 1,
+      "removed": 0,
+      "possibly_renamed": 0
+    },
+    "C5": {
+      "unchanged": 24,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 2
+    },
+    "C7": {
+      "unchanged": 84,
+      "added": 87,
+      "removed": 0,
+      "possibly_renamed": 4
+    },
+    "C8": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 2,
+      "possibly_renamed": 0
+    },
+    "C9": {
+      "unchanged": 51,
+      "added": 18,
+      "removed": 16,
+      "possibly_renamed": 0
+    },
+    "D1": {
+      "unchanged": 1,
+      "added": 0,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "D10": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "D11": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 1
+    },
+    "D13": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "D14": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "D17": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 1
+    },
+    "D19": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "D2": {
+      "unchanged": 9,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 3
+    },
+    "D21": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 1
+    },
+    "D4": {
+      "unchanged": 1,
+      "added": 0,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "G1": {
+      "unchanged": 12,
+      "added": 6,
+      "removed": 0,
+      "possibly_renamed": 10
+    },
+    "G2": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "G3": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "G4": {
+      "unchanged": 1,
+      "added": 0,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "G5": {
+      "unchanged": 15,
+      "added": 3,
+      "removed": 3,
+      "possibly_renamed": 0
+    },
+    "G6": {
+      "unchanged": 2,
+      "added": 2,
+      "removed": 1,
+      "possibly_renamed": 2
+    },
+    "H1": {
+      "unchanged": 0,
+      "added": 32,
+      "removed": 14,
+      "possibly_renamed": 0
+    },
+    "H12": {
+      "unchanged": 8,
+      "added": 0,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "H13": {
+      "unchanged": 8,
+      "added": 0,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "H15": {
+      "unchanged": 0,
+      "added": 1,
+      "removed": 0,
+      "possibly_renamed": 0
+    },
+    "H3": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 3,
+      "possibly_renamed": 0
+    },
+    "H4": {
+      "unchanged": 0,
+      "added": 2,
+      "removed": 0,
+      "possibly_renamed": 0
+    },
+    "H5": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "H9": {
+      "unchanged": 0,
+      "added": 0,
+      "removed": 3,
+      "possibly_renamed": 0
+    },
+    "I1": {
+      "unchanged": 2,
+      "added": 1,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "I3": {
+      "unchanged": 2,
+      "added": 16,
+      "removed": 0,
+      "possibly_renamed": 0
+    },
+    "J1": {
+      "unchanged": 120,
+      "added": 40,
+      "removed": 40,
+      "possibly_renamed": 0
+    }
+  },
+  "removed": [
+    {
+      "subsection": "B21",
+      "row_label": "2015 Cohort",
+      "column_header": null
+    },
+    {
+      "subsection": "B21",
+      "row_label": "Retention Rates",
+      "column_header": null
+    },
+    {
+      "subsection": "B3",
+      "row_label": "2016 Cohort",
+      "column_header": "Recipients of a Federal Pell Grant"
+    },
+    {
+      "subsection": "B3",
+      "row_label": "2016 Cohort",
+      "column_header": "Total (sum of 3 columes to the left)"
+    },
+    {
+      "subsection": "B3",
+      "row_label": "2016 Cohort",
+      "column_header": "Recipients of a Subsidized Stafford Loan who did not receive a Pell Grant"
+    },
+    {
+      "subsection": "B3",
+      "row_label": "Fall 2012 Cohort",
+      "column_header": "Students who did not receive either a Pell Grant or a subsidized Stafford Loan"
+    },
+    {
+      "subsection": "B3",
+      "row_label": "Fall 2012 Cohort",
+      "column_header": "Total (sum of 3 columes to the left)"
+    },
+    {
+      "subsection": "C15",
+      "row_label": "Are first-time, first-year students accepted for terms other than the fall?",
+      "column_header": null
+    },
+    {
+      "subsection": "C22",
+      "row_label": "Yes",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C22",
+      "row_label": "Yes",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C8",
+      "row_label": "Freshman Profile",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C8",
+      "row_label": "Freshman Profile",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "1000-1199",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "1000-1199",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "1200-1399",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "1200-1399",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "1400-1600",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "1400-1600",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "400-599",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "400-599",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "600-799",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "600-799",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "800-999",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "800-999",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Percent submitting ACT scores",
+      "column_header": null
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Percent submitting SAT scores",
+      "column_header": null
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Totals should = 100%",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Totals should = 100%",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "D1",
+      "row_label": "Does your institution enroll transfer students? (If no, please skip to Section E)",
+      "column_header": null
+    },
+    {
+      "subsection": "D10",
+      "row_label": "Does an open admission policy, if reported, apply to transfer students?",
+      "column_header": null
+    },
+    {
+      "subsection": "D13",
+      "row_label": "Maximum number of credits or courses that may be transferred from a two-year institution:",
+      "column_header": null
+    },
+    {
+      "subsection": "D14",
+      "row_label": "Maximum number of credits or courses that may be transferred from a four-year institution:",
+      "column_header": null
+    },
+    {
+      "subsection": "D19",
+      "row_label": "Maximum number of credits or courses that may be transferred based on military education evaluated by the American Council on Education (ACE):",
+      "column_header": null
+    },
+    {
+      "subsection": "D4",
+      "row_label": "Must a transfer applicant have a minimum number of credits completed or else must apply as an entering freshman?",
+      "column_header": null
+    },
+    {
+      "subsection": "G2",
+      "row_label": "Number of credits per term a student can take for the stated full-time tuition",
+      "column_header": null
+    },
+    {
+      "subsection": "G3",
+      "row_label": "Do tuition and fees vary by year of study (e.g., sophomore, junior, senior)?",
+      "column_header": null
+    },
+    {
+      "subsection": "G4",
+      "row_label": "Do tuition and fees vary by undergraduate instructional program?",
+      "column_header": null
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Room and board total (if your college cannot provide separate room and board figures for commuters not living at home):",
+      "column_header": "Residents"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Room and board total (if your college cannot provide separate room and board figures for commuters not living at home):",
+      "column_header": "Commuters (living at home)"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Room and board total (if your college cannot provide separate room and board figures for commuters not living at home):",
+      "column_header": "Commuters (not living at home)"
+    },
+    {
+      "subsection": "G6",
+      "row_label": "PUBLIC INSTITUTIONS In-state (out-of-district):",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Athletic Awards",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal Work-Study",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Other",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Parent Loans",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Scholarships/Grants",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Scholarships/grants from external sources (e.g., Kiwanis, National Merit) not awarded by the college",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Self-Help",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "State and other (e.g., institutional) work-study/employment (Note: Excludes Federal Work-Study captured above.)",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "State (i.e., all states, not only the state in which your institution is located)",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Student loans from all sources (excluding parent loans)",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Total Scholarships/Grants",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Total Self-Help",
+      "column_header": null
+    },
+    {
+      "subsection": "H12",
+      "row_label": "FEDERAL DIRECT STUDENT LOAN PROGRAM (DIRECT LOAN)",
+      "column_header": null
+    },
+    {
+      "subsection": "H13",
+      "row_label": "NEED-BASED:",
+      "column_header": null
+    },
+    {
+      "subsection": "H3",
+      "row_label": "Both FM and IM",
+      "column_header": null
+    },
+    {
+      "subsection": "H3",
+      "row_label": "Federal methodology (FM)",
+      "column_header": null
+    },
+    {
+      "subsection": "H3",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": null
+    },
+    {
+      "subsection": "H5",
+      "row_label": "Aid to Undergraduate Degree-seeking Nonresident Aliens (Note: Report numbers and dollar amounts for the same academic year checked in item H1.)",
+      "column_header": null
+    },
+    {
+      "subsection": "H9",
+      "row_label": "Deadline for filing required financial aid forms:",
+      "column_header": null
+    },
+    {
+      "subsection": "H9",
+      "row_label": "No deadline for filing required forms (applications processed on a rolling basis):",
+      "column_header": null
+    },
+    {
+      "subsection": "H9",
+      "row_label": "Priority date for filing required financial aid forms:",
+      "column_header": null
+    },
+    {
+      "subsection": "I1",
+      "row_label": "Full-time instructional faculty: faculty employed on a full-time basis for instruction (including those with released time for research)",
+      "column_header": "(g) replacement faculty for faculty on sabbatical leave or leave with pay"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Agriculture",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Architecture",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Area, ethnic, and gender studies",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Biological/life sciences",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Business/marketing",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Communication/journalism",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Communication technologies",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Computer and information sciences",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Construction trades",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Education",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Engineering",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Engineering technologies",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "English",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Family and consumer sciences",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Foreign languages, literatures, and linguistics",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Health professions and related programs",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "History",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Homeland Security, law enforcement, firefighting, and protective services",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Interdisciplinary studies",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Law/legal studies",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Liberal arts/general studies",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Library science",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Mathematics and statistics",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Mechanic and repair technologies",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Military science and military technologies",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Natural resources and conservation",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Other",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Parks and recreation",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Personal and culinary services",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Philosophy and religious studies",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Physical sciences",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Precision production",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Psychology",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Public administration and social services",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Science technologies",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Social sciences",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Theology and religious vocations",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "TOTAL (should = 100%)",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Transportation and materials moving",
+      "column_header": "CIP 2010 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Visual and performing arts",
+      "column_header": "CIP 2010 Categories to Include"
+    }
+  ],
+  "added": [
+    {
+      "subsection": "B1",
+      "row_label": "Total all students",
+      "column_header": "Men"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total all students",
+      "column_header": "Women"
+    },
+    {
+      "subsection": "B3",
+      "row_label": "Fall 2013 Cohort",
+      "column_header": "Total (sum of 3 columns to the left)"
+    },
+    {
+      "subsection": "B3",
+      "row_label": "The items in this section correspond to data elements collected by the IPEDS Web-based Data Collection System\u2019s Graduation Rate Survey (GRS).",
+      "column_header": null
+    },
+    {
+      "subsection": "C10",
+      "row_label": "Assessment",
+      "column_header": null
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Score Range",
+      "column_header": null
+    },
+    {
+      "subsection": "C2",
+      "row_label": "Students who met admission requirements but whose final admission was contingent on space availability",
+      "column_header": null
+    },
+    {
+      "subsection": "C3",
+      "row_label": "Check the appropriate box to identify your high school completion requirement for degree-seeking entering students:",
+      "column_header": null
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT Only",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT Only",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT Only",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT Only",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT Only",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with or without writing accepted",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with or without writing accepted",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with or without writing accepted",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with or without writing accepted",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with or without writing accepted",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing recommended",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing recommended",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing recommended",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing recommended",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing recommended",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing required",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing required",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing required",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing required",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing required",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "As a validity check on the application process",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "As a validity check on the application process",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: Freshman Profile",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: Freshman Profile",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Does your institution make use of SAT, ACT, or SAT Subject Test scores in admission decisions for first-time, first-year, degree-seeking applicants?",
+      "column_header": "Yes"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Does your institution make use of SAT, ACT, or SAT Subject Test scores in admission decisions for first-time, first-year, degree-seeking applicants?",
+      "column_header": "No"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Entrance exams",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Entrance exams",
+      "column_header": "Important"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Entrance exams",
+      "column_header": "Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Entrance exams",
+      "column_header": "Very Important"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "In place of an application essay",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "In place of an application essay",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Latest date by which SAT Subject Test scores must be received for fall-term admission",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Latest date by which SAT Subject Test scores must be received for fall-term admission",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "No college policy as of now",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "No college policy as of now",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Not using essay component",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Not using essay component",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT and SAT Subject Tests or ACT",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT and SAT Subject Tests or ACT",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT and SAT Subject Tests or ACT",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT and SAT Subject Tests or ACT",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT and SAT Subject Tests or ACT",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Only",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Only",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Only",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Only",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Only",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT or ACT",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT or ACT",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT or ACT",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT or ACT",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT or ACT",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Subject Tests",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Subject Tests",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Subject Tests",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Subject Tests",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Subject Tests",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Subject Tests",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Subject Tests",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component recommended",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component recommended",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component recommended",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component recommended",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component recommended",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component required",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component required",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component required",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component required",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component required",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with or without Essay component accepted",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with or without Essay component accepted",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with or without Essay component accepted",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with or without Essay component accepted",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with or without Essay component accepted",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "1000-1199",
+      "column_header": "SAT Evidence-Based Reading and Writing"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "1000-1199",
+      "column_header": "SAT Math"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "1200-1399",
+      "column_header": "SAT Evidence-Based Reading and Writing"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "1200-1399",
+      "column_header": "SAT Math"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "1400-1600",
+      "column_header": "SAT Evidence-Based Reading and Writing"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "1400-1600",
+      "column_header": "SAT Math"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "400-599",
+      "column_header": "SAT Evidence-Based Reading and Writing"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "400-599",
+      "column_header": "SAT Math"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "600-799",
+      "column_header": "SAT Evidence-Based Reading and Writing"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "600-799",
+      "column_header": "SAT Math"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "800-999",
+      "column_header": "SAT Evidence-Based Reading and Writing"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "800-999",
+      "column_header": "SAT Math"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Score Range",
+      "column_header": "SAT Evidence-Based Reading and Writing"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Score Range",
+      "column_header": "SAT Math"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Submitting ACT Scores",
+      "column_header": "Number"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Submitting ACT Scores",
+      "column_header": "Percent"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Submitting SAT Scores",
+      "column_header": "Number"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Submitting SAT Scores",
+      "column_header": "Percent"
+    },
+    {
+      "subsection": "G1",
+      "row_label": "FOR ALL INSTITUTIONS",
+      "column_header": "First-Year"
+    },
+    {
+      "subsection": "G1",
+      "row_label": "FOR ALL INSTITUTIONS",
+      "column_header": "Undergraduates"
+    },
+    {
+      "subsection": "G1",
+      "row_label": "Tuition:",
+      "column_header": "First-Year"
+    },
+    {
+      "subsection": "G1",
+      "row_label": "Tuition:",
+      "column_header": "Undergraduates"
+    },
+    {
+      "subsection": "G1",
+      "row_label": "Tuition: In-district",
+      "column_header": "Undergraduates"
+    },
+    {
+      "subsection": "G1",
+      "row_label": "Tuition: Out-of-state:",
+      "column_header": "First-Year"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Room and board total*",
+      "column_header": "Residents"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Room and board total*",
+      "column_header": "Commuters (living at home)"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Room and board total*",
+      "column_header": "Commuters (not living at home)"
+    },
+    {
+      "subsection": "G6",
+      "row_label": "In-district:",
+      "column_header": null
+    },
+    {
+      "subsection": "G6",
+      "row_label": "Out-of-state:",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Athletic Awards",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Athletic Awards",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Both FM and IM",
+      "column_header": "2020-2021 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Both FM and IM",
+      "column_header": "2019-2020 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal methodology (FM)",
+      "column_header": "2020-2021 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal methodology (FM)",
+      "column_header": "2019-2020 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal Work-Study",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal Work-Study",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": "2020-2021 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": "2019-2020 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": "2020-2021 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": "2019-2020 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Parent Loans",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Parent Loans",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Scholarships/Grants",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Scholarships/Grants",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Self-Help",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Self-Help",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "State all states, not only the state in which your institution is located",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "State all states, not only the state in which your institution is located",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "State and other (e.g., institutional) work-study/employment (Note: Excludes Federal Work-Study captured above.)",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "State and other (e.g., institutional) work-study/employment (Note: Excludes Federal Work-Study captured above.)",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Student loans from all sources (excluding parent loans)",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Student loans from all sources (excluding parent loans)",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Total Scholarships/Grants",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Total Scholarships/Grants",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Total Self-Help",
+      "column_header": "Need-based (Include non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Total Self-Help",
+      "column_header": "Non-need-based (Exclude non-need-based aid use to meet need.)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Which needs-analysis methodology does your institution use in awarding institutional aid? (Formerly H3)",
+      "column_header": "2020-2021 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Which needs-analysis methodology does your institution use in awarding institutional aid? (Formerly H3)",
+      "column_header": "2019-2020 Final"
+    },
+    {
+      "subsection": "H15",
+      "row_label": "Are these policies related to the COVID-19 pandemic?",
+      "column_header": null
+    },
+    {
+      "subsection": "H4",
+      "row_label": "Aid to Undergraduate Degree-seeking Nonresident Aliens",
+      "column_header": null
+    },
+    {
+      "subsection": "H4",
+      "row_label": "Source/Type of Loan",
+      "column_header": null
+    },
+    {
+      "subsection": "I1",
+      "row_label": "Full-time instructional faculty: faculty employed on a full-time basis for instruction (including those with released time for research)",
+      "column_header": "Replacement faculty for faculty on sabbatical leave or leave with pay"
+    },
+    {
+      "subsection": "I3",
+      "row_label": "CLASS SECTIONS",
+      "column_header": "10-19"
+    },
+    {
+      "subsection": "I3",
+      "row_label": "CLASS SECTIONS",
+      "column_header": "30-39"
+    },
+    {
+      "subsection": "I3",
+      "row_label": "CLASS SECTIONS",
+      "column_header": "100+"
+    },
+    {
+      "subsection": "I3",
+      "row_label": "CLASS SECTIONS",
+      "column_header": "40-49"
+    },
+    {
+      "subsection": "I3",
+      "row_label": "CLASS SECTIONS",
+      "column_header": "2-9"
+    },
+    {
+      "subsection": "I3",
+      "row_label": "CLASS SECTIONS",
+      "column_header": "20-29"
+    },
+    {
+      "subsection": "I3",
+      "row_label": "CLASS SECTIONS",
+      "column_header": "Total"
+    },
+    {
+      "subsection": "I3",
+      "row_label": "CLASS SECTIONS",
+      "column_header": "50-99"
+    },
+    {
+      "subsection": "I3",
+      "row_label": "CLASS SUB-SECTIONS",
+      "column_header": "10-19"
+    },
+    {
+      "subsection": "I3",
+      "row_label": "CLASS SUB-SECTIONS",
+      "column_header": "30-39"
+    },
+    {
+      "subsection": "I3",
+      "row_label": "CLASS SUB-SECTIONS",
+      "column_header": "100+"
+    },
+    {
+      "subsection": "I3",
+      "row_label": "CLASS SUB-SECTIONS",
+      "column_header": "40-49"
+    },
+    {
+      "subsection": "I3",
+      "row_label": "CLASS SUB-SECTIONS",
+      "column_header": "2-9"
+    },
+    {
+      "subsection": "I3",
+      "row_label": "CLASS SUB-SECTIONS",
+      "column_header": "20-29"
+    },
+    {
+      "subsection": "I3",
+      "row_label": "CLASS SUB-SECTIONS",
+      "column_header": "Total"
+    },
+    {
+      "subsection": "I3",
+      "row_label": "CLASS SUB-SECTIONS",
+      "column_header": "50-99"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Agriculture",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Architecture",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Area, ethnic, and gender studies",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Biological/life sciences",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Business/marketing",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Communication/journalism",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Communication technologies",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Computer and information sciences",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Construction trades",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Education",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Engineering",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Engineering technologies",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "English",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Family and consumer sciences",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Foreign languages, literatures, and linguistics",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Health professions and related programs",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "History",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Homeland Security, law enforcement, firefighting, and protective services",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Interdisciplinary studies",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Law/legal studies",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Liberal arts/general studies",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Library science",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Mathematics and statistics",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Mechanic and repair technologies",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Military science and military technologies",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Natural resources and conservation",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Other",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Parks and recreation",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Personal and culinary services",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Philosophy and religious studies",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Physical sciences",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Precision production",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Psychology",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Public administration and social services",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Science technologies",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Social sciences",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Theology and religious vocations",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "TOTAL (should = 100%)",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Transportation and materials moving",
+      "column_header": "CIP 2020 Categories to Include"
+    },
+    {
+      "subsection": "J1",
+      "row_label": "Visual and performing arts",
+      "column_header": "CIP 2020 Categories to Include"
+    }
+  ],
+  "possibly_renamed": [
+    {
+      "subsection": "B3",
+      "column_header": "Recipients of a Federal Pell Grant",
+      "from": "Fall 2012 Cohort",
+      "to": "Fall 2013 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": null,
+      "from": "Fall 2013 Cohort",
+      "to": "Fall 2014 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": "Recipients of a Subsidized Stafford Loan who did not receive a Pell Grant",
+      "from": "Fall 2012 Cohort",
+      "to": "Fall 2013 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": null,
+      "from": "Graduation Rates",
+      "to": "B4-B21: Graduation Rates",
+      "similarity": 0.821
+    },
+    {
+      "subsection": "B3",
+      "column_header": "Students who did not receive either a Pell Grant or a subsidized Stafford Loan",
+      "from": "2016 Cohort",
+      "to": "Fall 2013 Cohort",
+      "similarity": 0.741
+    },
+    {
+      "subsection": "C12",
+      "column_header": null,
+      "from": "Admission Policies",
+      "to": "C13-C20: Admission Policies",
+      "similarity": 0.818
+    },
+    {
+      "subsection": "C17",
+      "column_header": null,
+      "from": "Deadline for housing deposit (MM/DD):",
+      "to": "Deadline for housing deposit (MMDD):",
+      "similarity": 0.985
+    },
+    {
+      "subsection": "C17",
+      "column_header": null,
+      "from": "Must reply by May 1 or within _____ weeks if notified thereafter",
+      "to": "Must reply by May 1st or within",
+      "similarity": 0.611
+    },
+    {
+      "subsection": "C2",
+      "column_header": "Yes",
+      "from": "If yes, please answer the questions below for Fall 2019 admissions:",
+      "to": "If yes, please answer the questions below for Fall 2020 admissions:",
+      "similarity": 0.969
+    },
+    {
+      "subsection": "C2",
+      "column_header": "No",
+      "from": "If yes, please answer the questions below for Fall 2019 admissions:",
+      "to": "If yes, please answer the questions below for Fall 2020 admissions:",
+      "similarity": 0.969
+    },
+    {
+      "subsection": "C2",
+      "column_header": "Yes",
+      "from": "Admission Requirements",
+      "to": "C3-C5: Admission Requirements",
+      "similarity": 0.88
+    },
+    {
+      "subsection": "C2",
+      "column_header": "No",
+      "from": "Admission Requirements",
+      "to": "C3-C5: Admission Requirements",
+      "similarity": 0.88
+    },
+    {
+      "subsection": "C2",
+      "column_header": "Yes",
+      "from": "Is your waiting list ranked?",
+      "to": "WAITING LIST",
+      "similarity": 0.615
+    },
+    {
+      "subsection": "C2",
+      "column_header": "No",
+      "from": "Is your waiting list ranked?",
+      "to": "WAITING LIST",
+      "similarity": 0.615
+    },
+    {
+      "subsection": "C20",
+      "column_header": null,
+      "from": "Early Decision and Early Action Plans",
+      "to": "C21-C22: Early Decision and Early Action Plans",
+      "similarity": 0.902
+    },
+    {
+      "subsection": "C5",
+      "column_header": "Units Required",
+      "from": "Basis for Selection",
+      "to": "C6-C7: Basis for Selection",
+      "similarity": 0.864
+    },
+    {
+      "subsection": "C5",
+      "column_header": "Units Recommended",
+      "from": "Basis for Selection",
+      "to": "C6-C7: Basis for Selection",
+      "similarity": 0.864
+    },
+    {
+      "subsection": "C7",
+      "column_header": "Not Considered",
+      "from": "SAT and ACT Policies",
+      "to": "C8: SAT and ACT Policies",
+      "similarity": 0.93
+    },
+    {
+      "subsection": "C7",
+      "column_header": "Important",
+      "from": "SAT and ACT Policies",
+      "to": "C8: SAT and ACT Policies",
+      "similarity": 0.93
+    },
+    {
+      "subsection": "C7",
+      "column_header": "Considered",
+      "from": "SAT and ACT Policies",
+      "to": "C8: SAT and ACT Policies",
+      "similarity": 0.93
+    },
+    {
+      "subsection": "C7",
+      "column_header": "Very Important",
+      "from": "SAT and ACT Policies",
+      "to": "C8: SAT and ACT Policies",
+      "similarity": 0.93
+    },
+    {
+      "subsection": "D11",
+      "column_header": null,
+      "from": "Transfer Credit Policies",
+      "to": "D12-D17: Transfer Credit Policies",
+      "similarity": 0.857
+    },
+    {
+      "subsection": "D17",
+      "column_header": null,
+      "from": "Military Service Transfer Credit Policies",
+      "to": "D18-D22: Military Service Transfer Credit Policies",
+      "similarity": 0.911
+    },
+    {
+      "subsection": "D2",
+      "column_header": "Applicants",
+      "from": "Application for Admission",
+      "to": "D3-D11: Application for Admission",
+      "similarity": 0.877
+    },
+    {
+      "subsection": "D2",
+      "column_header": "Enrolled Applicants",
+      "from": "Application for Admission",
+      "to": "D3-D11: Application for Admission",
+      "similarity": 0.877
+    },
+    {
+      "subsection": "D2",
+      "column_header": "Admitted Applicants",
+      "from": "Application for Admission",
+      "to": "D3-D11: Application for Admission",
+      "similarity": 0.877
+    },
+    {
+      "subsection": "D21",
+      "column_header": null,
+      "from": "If yes, please provide the URL where they can be located:",
+      "to": "If yes, please provide the URL where the policy can be located:",
+      "similarity": 0.948
+    },
+    {
+      "subsection": "G1",
+      "column_header": "First-Year",
+      "from": "PRIVATE INSTITUTIONS Tuition:",
+      "to": "PRIVATE INSTITUTIONS",
+      "similarity": 0.833
+    },
+    {
+      "subsection": "G1",
+      "column_header": "Undergraduates",
+      "from": "PRIVATE INSTITUTIONS Tuition:",
+      "to": "PRIVATE INSTITUTIONS",
+      "similarity": 0.833
+    },
+    {
+      "subsection": "G1",
+      "column_header": "First-Year",
+      "from": "PUBLIC INSTITUTIONS In-state (out-of-district):",
+      "to": "Tuition: In-state (out-of-district):",
+      "similarity": 0.816
+    },
+    {
+      "subsection": "G1",
+      "column_header": "Undergraduates",
+      "from": "PUBLIC INSTITUTIONS In-state (out-of-district):",
+      "to": "Tuition: In-state (out-of-district):",
+      "similarity": 0.816
+    },
+    {
+      "subsection": "G1",
+      "column_header": "First-Year",
+      "from": "PUBLIC INSTITUTIONS Out-of-state:",
+      "to": "PUBLIC INSTITUTIONS",
+      "similarity": 0.745
+    },
+    {
+      "subsection": "G1",
+      "column_header": "Undergraduates",
+      "from": "PUBLIC INSTITUTIONS Out-of-state:",
+      "to": "Tuition: Out-of-state:",
+      "similarity": 0.731
+    },
+    {
+      "subsection": "G1",
+      "column_header": "First-Year",
+      "from": "PUBLIC INSTITUTIONS Tuition: In-district",
+      "to": "Tuition: In-district",
+      "similarity": 0.655
+    },
+    {
+      "subsection": "G1",
+      "column_header": "Undergraduates",
+      "from": "PUBLIC INSTITUTIONS Tuition: In-district",
+      "to": "PUBLIC INSTITUTIONS",
+      "similarity": 0.655
+    },
+    {
+      "subsection": "G1",
+      "column_header": "First-Year",
+      "from": "NONRESIDENT ALIENS Tuition:",
+      "to": "Tuition: Non-resident alien",
+      "similarity": 0.609
+    },
+    {
+      "subsection": "G1",
+      "column_header": "Undergraduates",
+      "from": "NONRESIDENT ALIENS Tuition:",
+      "to": "Tuition: Non-resident alien",
+      "similarity": 0.609
+    },
+    {
+      "subsection": "G6",
+      "column_header": null,
+      "from": "PUBLIC INSTITUTIONS In-district:",
+      "to": "PUBLIC INSTITUTIONS:",
+      "similarity": 0.76
+    },
+    {
+      "subsection": "G6",
+      "column_header": null,
+      "from": "PUBLIC INSTITUTIONS Out-of-state:",
+      "to": "In-state (out-of-district):",
+      "similarity": 0.571
+    }
+  ]
+}

@@ -1,0 +1,209 @@
+{
+  "year_a": "2020-21",
+  "year_b": "2021-22",
+  "generated_at": "2026-04-17T18:37:40Z",
+  "summary": {
+    "year_a_fields": 1005,
+    "year_b_fields": 1008,
+    "unchanged": 988,
+    "removed": 10,
+    "added": 13,
+    "possibly_renamed": 7
+  },
+  "by_subsection": {
+    "B3": {
+      "unchanged": 11,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 5
+    },
+    "C1": {
+      "unchanged": 8,
+      "added": 3,
+      "removed": 0,
+      "possibly_renamed": 0
+    },
+    "C2": {
+      "unchanged": 17,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 2
+    },
+    "H1": {
+      "unchanged": 22,
+      "added": 10,
+      "removed": 10,
+      "possibly_renamed": 0
+    }
+  },
+  "removed": [
+    {
+      "subsection": "H1",
+      "row_label": "Both FM and IM",
+      "column_header": "2020-2021 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Both FM and IM",
+      "column_header": "2019-2020 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal methodology (FM)",
+      "column_header": "2020-2021 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal methodology (FM)",
+      "column_header": "2019-2020 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": "2020-2021 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": "2019-2020 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": "2020-2021 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": "2019-2020 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Which needs-analysis methodology does your institution use in awarding institutional aid? (Formerly H3)",
+      "column_header": "2020-2021 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Which needs-analysis methodology does your institution use in awarding institutional aid? (Formerly H3)",
+      "column_header": "2019-2020 Final"
+    }
+  ],
+  "added": [
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year (degree-seeking) enrolled",
+      "column_header": null
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year (degree-seeking) men who applied",
+      "column_header": null
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year (degree-seeking) men who were admitted",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Both FM and IM",
+      "column_header": "2020-2021 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Both FM and IM",
+      "column_header": "2021-2022 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal methodology (FM)",
+      "column_header": "2020-2021 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal methodology (FM)",
+      "column_header": "2021-2022 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": "2020-2021 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": "2021-2022 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": "2020-2021 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": "2021-2022 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Which needs-analysis methodology does your institution use in awarding institutional aid? (Formerly H3)",
+      "column_header": "2020-2021 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Which needs-analysis methodology does your institution use in awarding institutional aid? (Formerly H3)",
+      "column_header": "2021-2022 estimated"
+    }
+  ],
+  "possibly_renamed": [
+    {
+      "subsection": "B3",
+      "column_header": "Recipients of a Subsidized Stafford Loan who did not receive a Pell Grant",
+      "from": "Fall 2013 Cohort",
+      "to": "Fall 2014 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": null,
+      "from": "Fall 2014 Cohort",
+      "to": "Fall 2015 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": "Recipients of a Federal Pell Grant",
+      "from": "Fall 2013 Cohort",
+      "to": "Fall 2014 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": "Students who did not receive either a Pell Grant or a subsidized Stafford Loan",
+      "from": "Fall 2013 Cohort",
+      "to": "Fall 2014 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": "Total (sum of 3 columns to the left)",
+      "from": "Fall 2013 Cohort",
+      "to": "Fall 2014 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "C2",
+      "column_header": "No",
+      "from": "If yes, please answer the questions below for Fall 2020 admissions:",
+      "to": "If yes, please answer the questions below for Fall 2021 admissions:",
+      "similarity": 0.985
+    },
+    {
+      "subsection": "C2",
+      "column_header": "Yes",
+      "from": "If yes, please answer the questions below for Fall 2020 admissions:",
+      "to": "If yes, please answer the questions below for Fall 2021 admissions:",
+      "similarity": 0.985
+    }
+  ]
+}

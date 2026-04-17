@@ -1,0 +1,1551 @@
+{
+  "year_a": "2022-23",
+  "year_b": "2023-24",
+  "generated_at": "2026-04-17T18:37:40Z",
+  "summary": {
+    "year_a_fields": 1040,
+    "year_b_fields": 1044,
+    "unchanged": 886,
+    "removed": 120,
+    "added": 124,
+    "possibly_renamed": 34
+  },
+  "by_subsection": {
+    "A1": {
+      "unchanged": 12,
+      "added": 0,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "B1": {
+      "unchanged": 33,
+      "added": 15,
+      "removed": 3,
+      "possibly_renamed": 9
+    },
+    "B3": {
+      "unchanged": 11,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 5
+    },
+    "C1": {
+      "unchanged": 8,
+      "added": 16,
+      "removed": 0,
+      "possibly_renamed": 7
+    },
+    "C10": {
+      "unchanged": 6,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 1
+    },
+    "C11": {
+      "unchanged": 0,
+      "added": 30,
+      "removed": 11,
+      "possibly_renamed": 0
+    },
+    "C2": {
+      "unchanged": 17,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 2
+    },
+    "C7": {
+      "unchanged": 80,
+      "added": 50,
+      "removed": 72,
+      "possibly_renamed": 2
+    },
+    "G1": {
+      "unchanged": 14,
+      "added": 0,
+      "removed": 6,
+      "possibly_renamed": 8
+    },
+    "G5": {
+      "unchanged": 3,
+      "added": 3,
+      "removed": 15,
+      "possibly_renamed": 0
+    },
+    "H1": {
+      "unchanged": 22,
+      "added": 10,
+      "removed": 10,
+      "possibly_renamed": 0
+    },
+    "H7": {
+      "unchanged": 4,
+      "added": 0,
+      "removed": 2,
+      "possibly_renamed": 0
+    }
+  },
+  "removed": [
+    {
+      "subsection": "A1",
+      "row_label": "Admissions Fax Number:",
+      "column_header": null
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Graduate",
+      "column_header": "Men"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Graduate",
+      "column_header": "Women"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Graduate",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA below 1.0",
+      "column_header": null
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 1.0 and 1.99",
+      "column_header": null
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 2.0 and 2.49",
+      "column_header": null
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 2.50 and 2.99",
+      "column_header": null
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 3.00 and 3.24",
+      "column_header": null
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 3.25 and 3.49",
+      "column_header": null
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 3.50 and 3.74",
+      "column_header": null
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 3.75 and 3.99",
+      "column_header": null
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA of 4.0",
+      "column_header": null
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Score Range",
+      "column_header": null
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Totals should = 100%",
+      "column_header": null
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Academic",
+      "column_header": "Very Important"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Academic",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Academic",
+      "column_header": "Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Academic",
+      "column_header": "Important"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT Only",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT Only",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT Only",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT Only",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT Only",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: First-time, first-year Profile",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: First-time, first-year Profile",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: First-time, first-year Profile",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: First-time, first-year Profile",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: First-time, first-year Profile",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Latest date by which SAT Subject Test scores must be received for fall-term admission",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Latest date by which SAT Subject Test scores must be received for fall-term admission",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Latest date by which SAT Subject Test scores must be received for fall-term admission",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Latest date by which SAT Subject Test scores must be received for fall-term admission",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Latest date by which SAT Subject Test scores must be received for fall-term admission",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Nonacademic",
+      "column_header": "Very Important"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Nonacademic",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Nonacademic",
+      "column_header": "Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Nonacademic",
+      "column_header": "Important"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Racial/ethnic status",
+      "column_header": "Very Important"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Racial/ethnic status",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Racial/ethnic status",
+      "column_header": "Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Racial/ethnic status",
+      "column_header": "Important"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Only",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Only",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Only",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Only",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Only",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT or ACT",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT or ACT",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT or ACT",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT or ACT",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT or ACT",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Subject Tests",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Subject Tests",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Subject Tests",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Subject Tests",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Subject Tests",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "G1",
+      "row_label": "FOR ALL INSTITUTIONS",
+      "column_header": "First-Year"
+    },
+    {
+      "subsection": "G1",
+      "row_label": "FOR ALL INSTITUTIONS",
+      "column_header": "Undergraduates"
+    },
+    {
+      "subsection": "G1",
+      "row_label": "PRIVATE INSTITUTIONS",
+      "column_header": "First-Year"
+    },
+    {
+      "subsection": "G1",
+      "row_label": "PRIVATE INSTITUTIONS",
+      "column_header": "Undergraduates"
+    },
+    {
+      "subsection": "G1",
+      "row_label": "PUBLIC INSTITUTIONS",
+      "column_header": "First-Year"
+    },
+    {
+      "subsection": "G1",
+      "row_label": "PUBLIC INSTITUTIONS",
+      "column_header": "Undergraduates"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Board only:",
+      "column_header": "Commuters (living at home)"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Board only:",
+      "column_header": "Residents"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Board only:",
+      "column_header": "Commuters (not living at home)"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Other expenses:",
+      "column_header": "Commuters (living at home)"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Other expenses:",
+      "column_header": "Residents"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Other expenses:",
+      "column_header": "Commuters (not living at home)"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Room and board total*",
+      "column_header": "Commuters (living at home)"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Room and board total*",
+      "column_header": "Residents"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Room and board total*",
+      "column_header": "Commuters (not living at home)"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Room only:",
+      "column_header": "Commuters (living at home)"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Room only:",
+      "column_header": "Residents"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Room only:",
+      "column_header": "Commuters (not living at home)"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Transportation:",
+      "column_header": "Commuters (living at home)"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Transportation:",
+      "column_header": "Residents"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Transportation:",
+      "column_header": "Commuters (not living at home)"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Both FM and IM",
+      "column_header": "2022-2023 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Both FM and IM",
+      "column_header": "2021-2022 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal methodology (FM)",
+      "column_header": "2022-2023 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal methodology (FM)",
+      "column_header": "2021-2022 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": "2022-2023 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": "2021-2022 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": "2022-2023 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": "2021-2022 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Which needs-analysis methodology does your institution use in awarding institutional aid? (Formerly H3)",
+      "column_header": "2022-2023 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Which needs-analysis methodology does your institution use in awarding institutional aid? (Formerly H3)",
+      "column_header": "2021-2022 Final"
+    },
+    {
+      "subsection": "H7",
+      "row_label": "International Student\u2019s Certification of Finances",
+      "column_header": null
+    },
+    {
+      "subsection": "H7",
+      "row_label": "International Student\u2019s Financial Aid Application",
+      "column_header": null
+    }
+  ],
+  "added": [
+    {
+      "subsection": "B1",
+      "row_label": "Graduate Students: Full-Time",
+      "column_header": "Men"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Graduate Students: Full-Time",
+      "column_header": "Women"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Graduate Students: Full-Time",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Graduate Students:Part-Time",
+      "column_header": "Men"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Graduate Students:Part-Time",
+      "column_header": "Women"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Graduate Students:Part-Time",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total graduate Full-Time Students",
+      "column_header": "Men"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total graduate Full-Time Students",
+      "column_header": "Women"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total graduate Full-Time Students",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total graduate Part-Time Students",
+      "column_header": "Men"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total graduate Part-Time Students",
+      "column_header": "Women"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total graduate Part-Time Students",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total undergraduate Full-Time Students",
+      "column_header": "Women"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total undergraduate Full-Time Students",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total undergraduate Part-Time Students",
+      "column_header": "Men"
+    },
+    {
+      "subsection": "C1",
+      "row_label": "If available, please provide residency breakdowns for total applicants, admits, and enrolled students: Fall 2023",
+      "column_header": null
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year men who applied",
+      "column_header": "Unknown"
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year men who applied",
+      "column_header": "International"
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year men who applied",
+      "column_header": "In-State"
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year men who applied",
+      "column_header": "Total"
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year men who applied",
+      "column_header": "Out-of-State"
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year another gender who applied",
+      "column_header": "Unknown"
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year another gender who applied",
+      "column_header": "International"
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year another gender who applied",
+      "column_header": "In-State"
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year another gender who applied",
+      "column_header": "Total"
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year another gender who applied",
+      "column_header": "Out-of-State"
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year women who applied",
+      "column_header": "Unknown"
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year women who applied",
+      "column_header": "International"
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year women who applied",
+      "column_header": "In-State"
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year women who applied",
+      "column_header": "Total"
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year women who applied",
+      "column_header": "Out-of-State"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA below 1.0",
+      "column_header": "Percent (Students who submitted scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA below 1.0",
+      "column_header": "Percent (Students who did not submit scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA below 1.0",
+      "column_header": "Percent (All enrolled students)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 1.0 and 1.99",
+      "column_header": "Percent (Students who submitted scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 1.0 and 1.99",
+      "column_header": "Percent (Students who did not submit scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 1.0 and 1.99",
+      "column_header": "Percent (All enrolled students)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 2.0 and 2.49",
+      "column_header": "Percent (Students who submitted scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 2.0 and 2.49",
+      "column_header": "Percent (Students who did not submit scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 2.0 and 2.49",
+      "column_header": "Percent (All enrolled students)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 2.50 and 2.99",
+      "column_header": "Percent (Students who submitted scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 2.50 and 2.99",
+      "column_header": "Percent (Students who did not submit scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 2.50 and 2.99",
+      "column_header": "Percent (All enrolled students)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 3.00 and 3.24",
+      "column_header": "Percent (Students who submitted scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 3.00 and 3.24",
+      "column_header": "Percent (Students who did not submit scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 3.00 and 3.24",
+      "column_header": "Percent (All enrolled students)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 3.25 and 3.49",
+      "column_header": "Percent (Students who submitted scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 3.25 and 3.49",
+      "column_header": "Percent (Students who did not submit scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 3.25 and 3.49",
+      "column_header": "Percent (All enrolled students)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 3.50 and 3.74",
+      "column_header": "Percent (Students who submitted scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 3.50 and 3.74",
+      "column_header": "Percent (Students who did not submit scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 3.50 and 3.74",
+      "column_header": "Percent (All enrolled students)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 3.75 and 3.99",
+      "column_header": "Percent (Students who submitted scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 3.75 and 3.99",
+      "column_header": "Percent (Students who did not submit scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA between 3.75 and 3.99",
+      "column_header": "Percent (All enrolled students)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA of 4.0",
+      "column_header": "Percent (Students who submitted scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA of 4.0",
+      "column_header": "Percent (Students who did not submit scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Percent who had GPA of 4.0",
+      "column_header": "Percent (All enrolled students)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Totals should = 100%",
+      "column_header": "Percent (Students who submitted scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Totals should = 100%",
+      "column_header": "Percent (Students who did not submit scores)"
+    },
+    {
+      "subsection": "C11",
+      "row_label": "Totals should = 100%",
+      "column_header": "Percent (All enrolled students)"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "Not required for admission, but considered if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "Required to be considered for admission"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "Recommended"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "Not considered for admission, even if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "Required for some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT Only",
+      "column_header": "Not required for admission, but considered if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT Only",
+      "column_header": "Required to be considered for admission"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT Only",
+      "column_header": "Recommended"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT Only",
+      "column_header": "Not considered for admission, even if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT Only",
+      "column_header": "Required for some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: First-time, first-year Profile",
+      "column_header": "Not required for admission, but considered if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: First-time, first-year Profile",
+      "column_header": "Required to be considered for admission"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: First-time, first-year Profile",
+      "column_header": "Recommended"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: First-time, first-year Profile",
+      "column_header": "Not considered for admission, even if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: First-time, first-year Profile",
+      "column_header": "Required for some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "Not required for admission, but considered if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "Required to be considered for admission"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "Recommended"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "Not considered for admission, even if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "Required for some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "Not required for admission, but considered if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "Required to be considered for admission"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "Recommended"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "Not considered for admission, even if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "Required for some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "Not required for admission, but considered if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "Required to be considered for admission"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "Recommended"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "Not considered for admission, even if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "Required for some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Only",
+      "column_header": "Not required for admission, but considered if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Only",
+      "column_header": "Required to be considered for admission"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Only",
+      "column_header": "Recommended"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Only",
+      "column_header": "Not considered for admission, even if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Only",
+      "column_header": "Required for some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT or ACT",
+      "column_header": "Not required for admission, but considered if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT or ACT",
+      "column_header": "Required to be considered for admission"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT or ACT",
+      "column_header": "Recommended"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT or ACT",
+      "column_header": "Not considered for admission, even if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT or ACT",
+      "column_header": "Required for some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "Not required for admission, but considered if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "Required to be considered for admission"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "Recommended"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "Not considered for admission, even if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "Required for some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Not required for admission, but considered if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Required to be considered for admission"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Recommended"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Not considered for admission, even if submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Required for some"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Food only:",
+      "column_header": "Not Applicable"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Other expenses:",
+      "column_header": "Not Applicable"
+    },
+    {
+      "subsection": "G5",
+      "row_label": "Transportation:",
+      "column_header": "Not Applicable"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Both FM and IM",
+      "column_header": "2022-2023 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Both FM and IM",
+      "column_header": "2023-2024 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal methodology (FM)",
+      "column_header": "2022-2023 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal methodology (FM)",
+      "column_header": "2023-2024 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": "2022-2023 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": "2023-2024 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": "2022-2023 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": "2023-2024 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Which needs-analysis methodology does your institution use in awarding institutional aid? (Formerly H3)",
+      "column_header": "2022-2023 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Which needs-analysis methodology does your institution use in awarding institutional aid? (Formerly H3)",
+      "column_header": "2023-2024 estimated"
+    }
+  ],
+  "possibly_renamed": [
+    {
+      "subsection": "B1",
+      "column_header": "Men",
+      "from": "Total graduate",
+      "to": "Total Graduate Students",
+      "similarity": 0.757
+    },
+    {
+      "subsection": "B1",
+      "column_header": "Women",
+      "from": "Total graduate",
+      "to": "Total Graduate Students",
+      "similarity": 0.757
+    },
+    {
+      "subsection": "B1",
+      "column_header": "Another Gender",
+      "from": "Total graduate",
+      "to": "Total Graduate Students",
+      "similarity": 0.757
+    },
+    {
+      "subsection": "B1",
+      "column_header": "Men",
+      "from": "Total undergraduates",
+      "to": "Total undergraduate Full-Time Students",
+      "similarity": 0.69
+    },
+    {
+      "subsection": "B1",
+      "column_header": "Women",
+      "from": "Total undergraduates",
+      "to": "Total undergraduate Part-Time Students",
+      "similarity": 0.69
+    },
+    {
+      "subsection": "B1",
+      "column_header": "Another Gender",
+      "from": "Total undergraduates",
+      "to": "Total undergraduate Part-Time Students",
+      "similarity": 0.69
+    },
+    {
+      "subsection": "B1",
+      "column_header": "Men",
+      "from": "Undergraduates",
+      "to": "Total undergraduate Students",
+      "similarity": 0.667
+    },
+    {
+      "subsection": "B1",
+      "column_header": "Women",
+      "from": "Undergraduates",
+      "to": "Total undergraduate Students",
+      "similarity": 0.667
+    },
+    {
+      "subsection": "B1",
+      "column_header": "Another Gender",
+      "from": "Undergraduates",
+      "to": "Total undergraduate Students",
+      "similarity": 0.667
+    },
+    {
+      "subsection": "B3",
+      "column_header": "Total (sum of 3 columns to the left)",
+      "from": "Fall 2015 Cohort",
+      "to": "Fall 2016 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": "Recipients of a Federal Pell Grant",
+      "from": "Fall 2015 Cohort",
+      "to": "Fall 2016 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": null,
+      "from": "Fall 2016 Cohort",
+      "to": "Fall 2017 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": "Recipients of a Subsidized Stafford Loan who did not receive a Pell Grant",
+      "from": "Fall 2015 Cohort",
+      "to": "Fall 2016 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": "Students who did not receive either a Pell Grant or a subsidized Stafford Loan",
+      "from": "Fall 2015 Cohort",
+      "to": "Fall 2016 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total part-time, first-time, first-year of another gender who enrolled",
+      "to": "Total part-time, first-time, first-year another gender who enrolled",
+      "similarity": 0.975
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total first-time, first-year of another gender who were admitted",
+      "to": "Total first-time, first-year another gender who were admitted",
+      "similarity": 0.972
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total first-time, first-year of another gender who applied",
+      "to": "Total first-time, first-year another gender who applied",
+      "similarity": 0.969
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total first-time, first-year (degree-seeking) enrolled",
+      "to": "Total full-time, first-time, first-year another gender who enrolled",
+      "similarity": 0.697
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total first-time, first-year (degree-seeking) who applied",
+      "to": "First-Time, First-Year Student Applicants",
+      "similarity": 0.66
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total first-time, first-year (degree-seeking) who were admitted",
+      "to": "First-Time, First-Year Student Admits",
+      "similarity": 0.646
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total full-time, first-time, first-year of another gender who enrolled",
+      "to": "First-Time, First-Year Student Enrollees by Status",
+      "similarity": 0.582
+    },
+    {
+      "subsection": "C10",
+      "column_header": null,
+      "from": "Percent of total first-time, first-year students who submitted high school class rank:",
+      "to": "Percent of total first-time, first-year (freshmen) students who submitted high school class rank:",
+      "similarity": 0.939
+    },
+    {
+      "subsection": "C2",
+      "column_header": "Yes",
+      "from": "If yes, please answer the questions below for Fall 2022 admissions:",
+      "to": "If yes, please answer the questions below for Fall 2023 admissions:",
+      "similarity": 0.985
+    },
+    {
+      "subsection": "C2",
+      "column_header": "No",
+      "from": "If yes, please answer the questions below for Fall 2022 admissions:",
+      "to": "If yes, please answer the questions below for Fall 2023 admissions:",
+      "similarity": 0.985
+    },
+    {
+      "subsection": "C7",
+      "column_header": "Yes",
+      "from": "Does your institution make use of SAT, ACT, or SAT Subject Test scores in admission decisions for first-time, first-year, degree-seeking applicants?",
+      "to": "Does your institution make use of SAT or ACT scores in admission decisions for first-time, first-year, degree-seeking applicants?",
+      "similarity": 0.937
+    },
+    {
+      "subsection": "C7",
+      "column_header": "No",
+      "from": "Does your institution make use of SAT, ACT, or SAT Subject Test scores in admission decisions for first-time, first-year, degree-seeking applicants?",
+      "to": "Does your institution make use of SAT or ACT scores in admission decisions for first-time, first-year, degree-seeking applicants?",
+      "similarity": 0.937
+    },
+    {
+      "subsection": "G1",
+      "column_header": "First-Year",
+      "from": "Board Only (on-campus meal plan):",
+      "to": "Food Only (on-campus meal plan):",
+      "similarity": 0.915
+    },
+    {
+      "subsection": "G1",
+      "column_header": "Undergraduates",
+      "from": "Board Only (on-campus meal plan):",
+      "to": "Food Only (on-campus meal plan):",
+      "similarity": 0.915
+    },
+    {
+      "subsection": "G1",
+      "column_header": "First-Year",
+      "from": "Comprehensive tuition and room and board fee (if your college cannot provide separate tuition and room and board fees):",
+      "to": "Comprehensive tuition and food and housing fee (if your college cannot provide separate tuition and food and housing fees):",
+      "similarity": 0.881
+    },
+    {
+      "subsection": "G1",
+      "column_header": "Undergraduates",
+      "from": "Comprehensive tuition and room and board fee (if your college cannot provide separate tuition and room and board fees):",
+      "to": "Comprehensive tuition and food and housing fee (if your college cannot provide separate tuition and food and housing fees):",
+      "similarity": 0.881
+    },
+    {
+      "subsection": "G1",
+      "column_header": "First-Year",
+      "from": "Room Only (on-campus):",
+      "to": "Housing Only (on-campus):",
+      "similarity": 0.78
+    },
+    {
+      "subsection": "G1",
+      "column_header": "Undergraduates",
+      "from": "Room Only (on-campus):",
+      "to": "Housing Only (on-campus):",
+      "similarity": 0.78
+    },
+    {
+      "subsection": "G1",
+      "column_header": "First-Year",
+      "from": "Room and Board (on-campus):",
+      "to": "Food and housing (on-campus):",
+      "similarity": 0.72
+    },
+    {
+      "subsection": "G1",
+      "column_header": "Undergraduates",
+      "from": "Room and Board (on-campus):",
+      "to": "Food and housing (on-campus):",
+      "similarity": 0.72
+    }
+  ]
+}

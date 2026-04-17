@@ -1,0 +1,1453 @@
+{
+  "year_a": "2021-22",
+  "year_b": "2022-23",
+  "generated_at": "2026-04-17T18:37:40Z",
+  "summary": {
+    "year_a_fields": 1008,
+    "year_b_fields": 1040,
+    "unchanged": 885,
+    "removed": 99,
+    "added": 131,
+    "possibly_renamed": 24
+  },
+  "by_subsection": {
+    "A6": {
+      "unchanged": 0,
+      "added": 1,
+      "removed": 0,
+      "possibly_renamed": 0
+    },
+    "B1": {
+      "unchanged": 30,
+      "added": 15,
+      "removed": 0,
+      "possibly_renamed": 0
+    },
+    "B2": {
+      "unchanged": 18,
+      "added": 10,
+      "removed": 15,
+      "possibly_renamed": 0
+    },
+    "B3": {
+      "unchanged": 11,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 5
+    },
+    "C1": {
+      "unchanged": 1,
+      "added": 4,
+      "removed": 0,
+      "possibly_renamed": 10
+    },
+    "C10": {
+      "unchanged": 6,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 1
+    },
+    "C12": {
+      "unchanged": 1,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 1
+    },
+    "C2": {
+      "unchanged": 17,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 2
+    },
+    "C7": {
+      "unchanged": 110,
+      "added": 44,
+      "removed": 65,
+      "possibly_renamed": 0
+    },
+    "C9": {
+      "unchanged": 67,
+      "added": 28,
+      "removed": 0,
+      "possibly_renamed": 2
+    },
+    "D2": {
+      "unchanged": 12,
+      "added": 3,
+      "removed": 0,
+      "possibly_renamed": 0
+    },
+    "E1": {
+      "unchanged": 17,
+      "added": 2,
+      "removed": 1,
+      "possibly_renamed": 0
+    },
+    "E3": {
+      "unchanged": 11,
+      "added": 2,
+      "removed": 0,
+      "possibly_renamed": 0
+    },
+    "F1": {
+      "unchanged": 8,
+      "added": 8,
+      "removed": 8,
+      "possibly_renamed": 0
+    },
+    "F3": {
+      "unchanged": 9,
+      "added": 3,
+      "removed": 0,
+      "possibly_renamed": 0
+    },
+    "F4": {
+      "unchanged": 12,
+      "added": 1,
+      "removed": 0,
+      "possibly_renamed": 0
+    },
+    "G1": {
+      "unchanged": 26,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 2
+    },
+    "H1": {
+      "unchanged": 22,
+      "added": 10,
+      "removed": 10,
+      "possibly_renamed": 0
+    },
+    "H7": {
+      "unchanged": 5,
+      "added": 0,
+      "removed": 0,
+      "possibly_renamed": 1
+    }
+  },
+  "removed": [
+    {
+      "subsection": "B2",
+      "row_label": "American Indian or Alaska Native, non-Hispanic",
+      "column_header": "Total Undergraduates (both degree- and non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Asian, non-Hispanic",
+      "column_header": "Total Undergraduates (both degree- and non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Black or African American, non-Hispanic",
+      "column_header": "Total Undergraduates (both degree- and non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Hispanic/Latino",
+      "column_header": "Total Undergraduates (both degree- and non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Native Hawaiian or other Pacific Islander, non-Hispanic",
+      "column_header": "Total Undergraduates (both degree- and non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Nonresident aliens",
+      "column_header": "Total Undergraduates (both degree- and non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Persistence",
+      "column_header": "Total Undergraduates (both degree- and non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Persistence",
+      "column_header": "Degree-Seeking Undergraduates (include first-time first-year)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Persistence",
+      "column_header": "Degree-Seeking First-Time First Year"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Race and/or ethnicity unknown",
+      "column_header": "Total Undergraduates (both degree- and non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "TOTAL",
+      "column_header": "Total Undergraduates (both degree- and non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "TOTAL",
+      "column_header": "Degree-Seeking Undergraduates (include first-time first-year)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "TOTAL",
+      "column_header": "Degree-Seeking First-Time First Year"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Two or more races, non-Hispanic",
+      "column_header": "Total Undergraduates (both degree- and non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "White, non-Hispanic",
+      "column_header": "Total Undergraduates (both degree- and non-degree-seeking)"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT Only",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with or without writing accepted",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with or without writing accepted",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with or without writing accepted",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with or without writing accepted",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with or without writing accepted",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing recommended",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing recommended",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing recommended",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing recommended",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing recommended",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing required",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing required",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing required",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing required",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT with writing required",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "As a validity check on the application process",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "As a validity check on the application process",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: Freshman Profile",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: Freshman Profile",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "In place of an application essay",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "In place of an application essay",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Latest date by which SAT Subject Test scores must be received for fall-term admission",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Latest date by which SAT Subject Test scores must be received for fall-term admission",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "No college policy as of now",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "No college policy as of now",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Not using essay component",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Not using essay component",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT and SAT Subject Tests or ACT",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT and SAT Subject Tests or ACT",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT and SAT Subject Tests or ACT",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT and SAT Subject Tests or ACT",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT and SAT Subject Tests or ACT",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Only",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT or ACT",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Subject Tests",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Subject Tests",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Subject Tests",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component recommended",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component recommended",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component recommended",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component recommended",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component recommended",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component required",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component required",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component required",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component required",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with Essay component required",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with or without Essay component accepted",
+      "column_header": "Not Used"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with or without Essay component accepted",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with or without Essay component accepted",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with or without Essay component accepted",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT with or without Essay component accepted",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "ACT essay"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "SAT essay"
+    },
+    {
+      "subsection": "E1",
+      "row_label": "Cooperative education program",
+      "column_header": null
+    },
+    {
+      "subsection": "F1",
+      "row_label": "Average age of all students (full- and part-time)",
+      "column_header": "First-time, first-year (freshman) students"
+    },
+    {
+      "subsection": "F1",
+      "row_label": "Average age of full-time students",
+      "column_header": "First-time, first-year (freshman) students"
+    },
+    {
+      "subsection": "F1",
+      "row_label": "Percent of men who join fraternities",
+      "column_header": "First-time, first-year (freshman) students"
+    },
+    {
+      "subsection": "F1",
+      "row_label": "Percent of students age 25 and older",
+      "column_header": "First-time, first-year (freshman) students"
+    },
+    {
+      "subsection": "F1",
+      "row_label": "Percent of women who join sororities",
+      "column_header": "First-time, first-year (freshman) students"
+    },
+    {
+      "subsection": "F1",
+      "row_label": "Percent who are from out of state (exclude international/nonresident aliens from the numerator and denominator)",
+      "column_header": "First-time, first-year (freshman) students"
+    },
+    {
+      "subsection": "F1",
+      "row_label": "Percent who live in college-owned, -operated, or -affiliated housing",
+      "column_header": "First-time, first-year (freshman) students"
+    },
+    {
+      "subsection": "F1",
+      "row_label": "Percent who live off campus or commute",
+      "column_header": "First-time, first-year (freshman) students"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Both FM and IM",
+      "column_header": "2020-2021 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Both FM and IM",
+      "column_header": "2021-2022 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal methodology (FM)",
+      "column_header": "2020-2021 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal methodology (FM)",
+      "column_header": "2021-2022 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": "2020-2021 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": "2021-2022 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": "2020-2021 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": "2021-2022 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Which needs-analysis methodology does your institution use in awarding institutional aid? (Formerly H3)",
+      "column_header": "2020-2021 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Which needs-analysis methodology does your institution use in awarding institutional aid? (Formerly H3)",
+      "column_header": "2021-2022 estimated"
+    }
+  ],
+  "added": [
+    {
+      "subsection": "A6",
+      "row_label": "If you have a diversity, equity, and inclusion office or department, please provide the URL of the corresponding Web page:",
+      "column_header": null
+    },
+    {
+      "subsection": "B1",
+      "row_label": "All other degree-seeking",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "All other graduates enrolled in credit courses",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "All other undergraduates enrolled in credit courses",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Degree-seeking, first-time",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Degree-seeking, first-time, first-year",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Graduate",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "GRAND TOTAL ALL STUDENTS",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Other first-year, degree-seeking",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total all graduate",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total all students",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total all undergraduates",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total degree-seeking",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total graduate",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Total undergraduates",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B1",
+      "row_label": "Undergraduates",
+      "column_header": "Another Gender"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "American Indian or Alaska Native, non-Hispanic",
+      "column_header": "Total Undergraduates (both degree & non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Asian, non-Hispanic",
+      "column_header": "Total Undergraduates (both degree & non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Black or African American, non-Hispanic",
+      "column_header": "Total Undergraduates (both degree & non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Hispanic/Latino",
+      "column_header": "Total Undergraduates (both degree & non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Native Hawaiian or other Pacific Islander, non-Hispanic",
+      "column_header": "Total Undergraduates (both degree & non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Nonresidents",
+      "column_header": "Total Undergraduates (both degree & non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Persistence",
+      "column_header": "0"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Race and/or ethnicity unknown",
+      "column_header": "Total Undergraduates (both degree & non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "Two or more races, non-Hispanic",
+      "column_header": "Total Undergraduates (both degree & non-degree-seeking)"
+    },
+    {
+      "subsection": "B2",
+      "row_label": "White, non-Hispanic",
+      "column_header": "Total Undergraduates (both degree & non-degree-seeking)"
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year of another gender who applied",
+      "column_header": null
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total first-time, first-year of another gender who were admitted",
+      "column_header": null
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total full-time, first-time, first-year of another gender who enrolled",
+      "column_header": null
+    },
+    {
+      "subsection": "C1",
+      "row_label": "Total part-time, first-time, first-year of another gender who enrolled",
+      "column_header": null
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "ACT Only",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: First-time, first-year Profile",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: First-time, first-year Profile",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: First-time, first-year Profile",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: First-time, first-year Profile",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "C9-C12: First-time, first-year Profile",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "CLEP",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Institutional Exam",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Latest date by which SAT Subject Test scores must be received for fall-term admission",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Latest date by which SAT Subject Test scores must be received for fall-term admission",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Latest date by which SAT Subject Test scores must be received for fall-term admission",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Latest date by which SAT Subject Test scores must be received for fall-term admission",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Latest date by which SAT Subject Test scores must be received for fall-term admission",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Only",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT or ACT",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "SAT Subject Tests",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "State Exam (specify):",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Require for Some"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Require"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Consider if Submitted"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Recommend"
+    },
+    {
+      "subsection": "C7",
+      "row_label": "Yes",
+      "column_header": "Not Considered"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "12-17",
+      "column_header": "ACT Science"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "12-17",
+      "column_header": "ACT Reading"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "18-23",
+      "column_header": "ACT Science"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "18-23",
+      "column_header": "ACT Reading"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "24-29",
+      "column_header": "ACT Science"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "24-29",
+      "column_header": "ACT Reading"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "30-36",
+      "column_header": "ACT Science"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "30-36",
+      "column_header": "ACT Reading"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "6-11",
+      "column_header": "ACT Science"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "6-11",
+      "column_header": "ACT Reading"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Composite",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT English",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Math",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Reading",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Reading",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Reading",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Science",
+      "column_header": "25th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Science",
+      "column_header": "75th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Science",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "ACT Writing",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Below 6",
+      "column_header": "ACT Science"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Below 6",
+      "column_header": "ACT Reading"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Percent of first-time, first-year students with scores in each range:",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Composite",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Evidence-Based Reading and Writing",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "SAT Math",
+      "column_header": "50th Percentile"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Totals should = 100%",
+      "column_header": "ACT Science"
+    },
+    {
+      "subsection": "C9",
+      "row_label": "Totals should = 100%",
+      "column_header": "ACT Reading"
+    },
+    {
+      "subsection": "D2",
+      "row_label": "Another Gender",
+      "column_header": "Enrolled Applicants"
+    },
+    {
+      "subsection": "D2",
+      "row_label": "Another Gender",
+      "column_header": "Admitted Applicants"
+    },
+    {
+      "subsection": "D2",
+      "row_label": "Another Gender",
+      "column_header": "Applicants"
+    },
+    {
+      "subsection": "E1",
+      "row_label": "Comprehensive transition and postsecondary program for students with intellectual disabilities",
+      "column_header": null
+    },
+    {
+      "subsection": "E1",
+      "row_label": "Undergraduate Research",
+      "column_header": null
+    },
+    {
+      "subsection": "E3",
+      "row_label": "Intensive writing",
+      "column_header": null
+    },
+    {
+      "subsection": "E3",
+      "row_label": "Physical Education",
+      "column_header": null
+    },
+    {
+      "subsection": "F1",
+      "row_label": "Average age of all students (full- and part-time)",
+      "column_header": "First-time, first-year students"
+    },
+    {
+      "subsection": "F1",
+      "row_label": "Average age of full-time students",
+      "column_header": "First-time, first-year students"
+    },
+    {
+      "subsection": "F1",
+      "row_label": "Percent of men who join fraternities",
+      "column_header": "First-time, first-year students"
+    },
+    {
+      "subsection": "F1",
+      "row_label": "Percent of students age 25 and older",
+      "column_header": "First-time, first-year students"
+    },
+    {
+      "subsection": "F1",
+      "row_label": "Percent of women who join sororities",
+      "column_header": "First-time, first-year students"
+    },
+    {
+      "subsection": "F1",
+      "row_label": "Percent who are from out of state (exclude international/nonresidents from the numerator and denominator)",
+      "column_header": "First-time, first-year students"
+    },
+    {
+      "subsection": "F1",
+      "row_label": "Percent who live in college-owned, -operated, or -affiliated housing",
+      "column_header": "First-time, first-year students"
+    },
+    {
+      "subsection": "F1",
+      "row_label": "Percent who live off campus or commute",
+      "column_header": "First-time, first-year students"
+    },
+    {
+      "subsection": "F3",
+      "row_label": "Air Force ROTC is offered:",
+      "column_header": "Marine Option (for Naval ROTC)"
+    },
+    {
+      "subsection": "F3",
+      "row_label": "Army ROTC is offered:",
+      "column_header": "Marine Option (for Naval ROTC)"
+    },
+    {
+      "subsection": "F3",
+      "row_label": "Naval ROTC is offered:",
+      "column_header": "Marine Option (for Naval ROTC)"
+    },
+    {
+      "subsection": "F4",
+      "row_label": "Living Learning Communities",
+      "column_header": null
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Both FM and IM",
+      "column_header": "2022-2023 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Both FM and IM",
+      "column_header": "2021-2022 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal methodology (FM)",
+      "column_header": "2022-2023 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Federal methodology (FM)",
+      "column_header": "2021-2022 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": "2022-2023 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Indicate the academic year for which data are reported for items H1, H2, H2A, and H6 below:",
+      "column_header": "2021-2022 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": "2022-2023 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Institutional methodology (IM)",
+      "column_header": "2021-2022 Final"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Which needs-analysis methodology does your institution use in awarding institutional aid? (Formerly H3)",
+      "column_header": "2022-2023 estimated"
+    },
+    {
+      "subsection": "H1",
+      "row_label": "Which needs-analysis methodology does your institution use in awarding institutional aid? (Formerly H3)",
+      "column_header": "2021-2022 Final"
+    }
+  ],
+  "possibly_renamed": [
+    {
+      "subsection": "B3",
+      "column_header": "Total (sum of 3 columns to the left)",
+      "from": "Fall 2014 Cohort",
+      "to": "Fall 2015 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": "Recipients of a Federal Pell Grant",
+      "from": "Fall 2014 Cohort",
+      "to": "Fall 2015 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": "Recipients of a Subsidized Stafford Loan who did not receive a Pell Grant",
+      "from": "Fall 2014 Cohort",
+      "to": "Fall 2015 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": null,
+      "from": "Fall 2015 Cohort",
+      "to": "Fall 2016 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "B3",
+      "column_header": "Students who did not receive either a Pell Grant or a subsidized Stafford Loan",
+      "from": "Fall 2014 Cohort",
+      "to": "Fall 2015 Cohort",
+      "similarity": 0.938
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total first-time, first-year (degree-seeking) men who were admitted",
+      "to": "Total first-time, first-year (degree-seeking) who were admitted",
+      "similarity": 0.968
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total first-time, first-year (degree-seeking) men who applied",
+      "to": "Total first-time, first-year (degree-seeking) who applied",
+      "similarity": 0.964
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total full-time, first-time, first-year (freshman) women who enrolled",
+      "to": "Total full-time, first-time, first-year women who enrolled",
+      "similarity": 0.911
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total part-time, first-time, first-year (freshman) women who enrolled",
+      "to": "Total part-time, first-time, first-year women who enrolled",
+      "similarity": 0.911
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total part-time, first-time, first-year (freshman) men who enrolled",
+      "to": "Total part-time, first-time, first-year men who enrolled",
+      "similarity": 0.908
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total full-time, first-time, first-year (freshman) men who enrolled",
+      "to": "Total full-time, first-time, first-year men who enrolled",
+      "similarity": 0.908
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total first-time, first-year (freshman) women who were admitted",
+      "to": "Total first-time, first-year women who were admitted",
+      "similarity": 0.903
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total first-time, first-year (freshman) men who were admitted",
+      "to": "Total first-time, first-year men who were admitted",
+      "similarity": 0.899
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total first-time, first-year (freshman) women who applied",
+      "to": "Total first-time, first-year women who applied",
+      "similarity": 0.891
+    },
+    {
+      "subsection": "C1",
+      "column_header": null,
+      "from": "Total first-time, first-year (freshman) men who applied",
+      "to": "Total first-time, first-year men who applied",
+      "similarity": 0.887
+    },
+    {
+      "subsection": "C10",
+      "column_header": null,
+      "from": "Percent of total first-time, first-year (freshmen) students who submitted high school class rank:",
+      "to": "Percent of total first-time, first-year students who submitted high school class rank:",
+      "similarity": 0.939
+    },
+    {
+      "subsection": "C12",
+      "column_header": null,
+      "from": "Percent of total first-time, first-year (freshman) students who submitted high school GPA:",
+      "to": "Percent of total first-time, first-year students who submitted high school GPA:",
+      "similarity": 0.933
+    },
+    {
+      "subsection": "C2",
+      "column_header": "No",
+      "from": "If yes, please answer the questions below for Fall 2021 admissions:",
+      "to": "If yes, please answer the questions below for Fall 2022 admissions:",
+      "similarity": 0.985
+    },
+    {
+      "subsection": "C2",
+      "column_header": "Yes",
+      "from": "If yes, please answer the questions below for Fall 2021 admissions:",
+      "to": "If yes, please answer the questions below for Fall 2022 admissions:",
+      "similarity": 0.985
+    },
+    {
+      "subsection": "C9",
+      "column_header": "25th Percentile",
+      "from": "Percent of first-time, first-year (freshman) students with scores in each range:",
+      "to": "Percent of first-time, first-year students with scores in each range:",
+      "similarity": 0.924
+    },
+    {
+      "subsection": "C9",
+      "column_header": "75th Percentile",
+      "from": "Percent of first-time, first-year (freshman) students with scores in each range:",
+      "to": "Percent of first-time, first-year students with scores in each range:",
+      "similarity": 0.924
+    },
+    {
+      "subsection": "G1",
+      "column_header": "Undergraduates",
+      "from": "Tuition: Non-resident alien",
+      "to": "Tuition: Non-resident",
+      "similarity": 0.87
+    },
+    {
+      "subsection": "G1",
+      "column_header": "First-Year",
+      "from": "Tuition: Non-resident alien",
+      "to": "Tuition: Non-resident",
+      "similarity": 0.87
+    },
+    {
+      "subsection": "H7",
+      "column_header": null,
+      "from": "Process for First-Year/Freshman Students",
+      "to": "Process for First-Year Students",
+      "similarity": 0.849
+    }
+  ]
+}
