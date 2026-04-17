@@ -1,0 +1,52 @@
+# Yale University, CDS 2024-25 — ground-truth ID mapping
+#
+# Maps the homegrown ground-truth field IDs to canonical CDS question numbers
+# from schemas/cds_schema_2025_26.json for score_tier4.py.
+
+school: yale
+cds_year: "2024-25"
+source: "hand-built 2026-04-17 from schema + ground truth cross-reference"
+
+mappings:
+  # ── B1 Enrollment ──
+  b1_ft_firstyear_men:     B.101
+  b1_ft_firstyear_women:   B.126
+  b1_ft_firstyear_another: B.151   # 2024-25 "another gender" ≈ 2025-26 unknown column (B.151); cleaner has no Unknown/Another-Gender column support yet
+  b1_ft_total_ug_men:      B.106
+  b1_ft_total_ug_women:    B.131
+
+  # ── B2 Race/ethnicity ──
+  b2_fy_nonresident:       B.201
+  b2_fy_hispanic:          B.202
+  b2_fy_white:             B.204
+  b2_fy_asian:             B.206
+  b2_fy_total:             B.210
+
+  # ── B3 Degrees conferred ──
+  b3_bachelors:            B.303
+  b3_masters:              B.305
+  b3_doctoral_research:    B.307
+  b3_doctoral_professional: B.308
+
+  # ── C9 Test scores ──
+  c9_sat_submit_pct:       C.901
+  c9_sat_composite_25:     C.905
+  c9_sat_composite_50:     C.906
+  c9_sat_composite_75:     C.907
+  c9_sat_ebrw_50:          C.909
+  c9_sat_math_75:          C.913
+  c9_act_composite_25:     C.914
+  c9_act_composite_75:     C.916
+
+  # ── C10 Class rank ──
+  c10_top_tenth:           C.1001
+  c10_top_quarter:         C.1002
+  c10_rank_submitted:      C.1006
+
+  # ── C13 Application fee ──
+  c13_app_fee:             C.1302
+
+  # ── H4/H6 Financial aid ──
+  h4_undergrads_in_cohort: H.401
+  h6_students_count:       H.604   # Number of nonresidents receiving aid (best-fit)
+  h6_avg_award:            H.605

@@ -1,0 +1,65 @@
+# Harvard University, CDS 2024-25 — ground-truth ID mapping
+#
+# Maps the homegrown ground-truth field IDs (b1_ft_firstyear_men, etc.)
+# to canonical CDS question numbers from schemas/cds_schema_2025_26.json
+# so score_tier4.py can join cleaner output to expected values.
+#
+# Note on cross-year schema drift (2024-25 → 2025-26):
+#   - The 2024-25 template had "Men / Women / Another Gender / Unknown".
+#     The 2025-26 schema has "Male / Female / Unknown". The Tier 4 cleaner
+#     extracts men/women columns today; "another gender" values are not
+#     yet mapped. Entries below for "another gender" fields map to the
+#     nearest 2025-26 question number so the scorer reports them as
+#     expected-but-missing rather than unmapped — that makes the coverage
+#     gap visible.
+
+school: harvard
+cds_year: "2024-25"
+source: "hand-built 2026-04-17 from schema + ground truth cross-reference"
+
+mappings:
+  # ── B1 Enrollment ──
+  b1_ft_firstyear_men:     B.101
+  b1_ft_firstyear_women:   B.126
+  b1_ft_total_ug_men:      B.106
+  b1_ft_total_ug_women:    B.131
+
+  # ── B2 Race/ethnicity (first-year) ──
+  b2_fy_nonresident:       B.201
+  b2_fy_hispanic:          B.202
+  b2_fy_white:             B.204
+  b2_fy_asian:             B.206
+  b2_fy_total:             B.210
+
+  # ── B3 Degrees conferred ──
+  b3_bachelors:            B.303
+  b3_masters:              B.305
+  b3_doctoral_research:    B.307
+  b3_doctoral_professional: B.308
+
+  # ── C1 Applications (critical) ──
+  c1_applied_men:          C.101
+  c1_applied_women:        C.102
+  c1_applied_another:      C.103   # 2024-25 "another gender" ≈ 2025-26 C.103 unknown
+  c1_admitted_men:         C.104
+  c1_admitted_women:       C.105
+  c1_enrolled_men:         C.107
+  c1_enrolled_women:       C.108
+  c1_total_applied:        C.116
+  c1_total_admitted:       C.117
+  c1_total_enrolled:       C.118
+
+  # ── C9 Test scores ──
+  c9_sat_submit_pct:       C.901
+  c9_sat_ebrw_25:          C.908
+  c9_sat_ebrw_50:          C.909
+  c9_sat_math_75:          C.913
+  c9_act_composite_25:     C.914
+  c9_act_composite_75:     C.916
+
+  # ── C10 Class rank ──
+  c10_top_tenth:           C.1001
+  c10_top_quarter:         C.1002
+
+  # ── C13 Application fee ──
+  c13_app_fee:             C.1302

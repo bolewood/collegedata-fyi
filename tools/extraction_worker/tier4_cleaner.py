@@ -32,6 +32,21 @@ def _normalize_gender(text: str) -> str:
     return t
 
 
+def _normalize_label(text: str) -> str:
+    """Normalize a row label or substring for tolerant matching.
+
+    Applies gender normalization, then collapses punctuation (commas,
+    hyphens, en/em dashes, colons) into single spaces so variants like
+    "first-time, first-year" vs "first-time first-year" vs
+    "first time, first year" all compare equal. OCR and schema drift
+    between schools routinely produces these variants.
+    """
+    t = _normalize_gender(text)
+    t = re.sub(r'[,\-–—:;/]', ' ', t)
+    t = re.sub(r'\s+', ' ', t).strip()
+    return t
+
+
 def _parse_markdown_tables(markdown: str) -> list[dict]:
     """Extract every markdown table as a list of {section, rows} dicts.
 
@@ -123,14 +138,22 @@ def _extract_number(value_str: str) -> str | None:
         return None
 
 
-# Mapping from normalized schema question text fragments to question numbers.
-# Each entry is (substring_to_match, question_number, column_hint).
-# column_hint is which column to read when the table has multiple value columns:
-#   "TOTAL" or "total" or index 0 (first value column).
-# The substring match is applied after gender normalization on both sides.
+# Mapping from schema question text fragments to question numbers.
+# Each entry is (substring, question_number, column_hint).
 #
-# This table covers the high-value fields from B1, C1, C9. Additional
-# fields can be added incrementally.
+# Substrings are written in natural form — clean() normalizes both the
+# substring and the row label via _normalize_label (which lowercases,
+# rewrites "another gender"→"unknown" and "male/female"→"men/women",
+# strips punctuation) before comparing. So commas, hyphens, dashes, and
+# gender synonyms need not be exact.
+#
+# column_hint selects which column to read when the row has multiple
+# value columns:
+#   - int: positional index into row["values"]
+#   - str: substring of a header cell (e.g. "men", "percent")
+#
+# This table covers the high-value fields from B1, C1, B3, C9. Additional
+# fields can be added incrementally with score_tier4.py as the gate.
 
 _FIELD_MAP: list[tuple[str, str, str | int]] = [
     # --- B1 Enrollment (full-time undergrad) ---
@@ -138,22 +161,30 @@ _FIELD_MAP: list[tuple[str, str, str | int]] = [
     ("degree-seeking, first-time, first-year students", "B.126", "women"),
     ("other first-year, degree-seeking", "B.102", "men"),
     ("other first-year, degree-seeking", "B.127", "women"),
-    ("all other degree-seeking undergraduate", "B.103", "men"),
-    ("all other degree-seeking undergraduate", "B.128", "women"),
+    ("all other degree-seeking", "B.103", "men"),
+    ("all other degree-seeking", "B.128", "women"),
     ("total degree-seeking undergraduate", "B.104", "men"),
     ("total degree-seeking undergraduate", "B.129", "women"),
     ("total undergraduate full-time students", "B.106", "men"),
     ("total undergraduate full-time students", "B.131", "women"),
 
     # --- C1 Applications (critical) ---
+    # Gendered rows: single value column. "another gender" normalizes to
+    # "unknown", matching both 2024-25 and 2025-26 CDS forms.
     ("first-year men who applied", "C.101", 0),
     ("first-year women who applied", "C.102", 0),
+    ("first-year another gender who applied", "C.103", 0),
     ("first-year men who were admitted", "C.104", 0),
     ("first-year women who were admitted", "C.105", 0),
+    ("first-year another gender who were admitted", "C.106", 0),
     ("first-year men who enrolled", "C.107", 0),
     ("first-year women who enrolled", "C.108", 0),
     ("full-time, first-time, first-year men who enrolled", "C.110", 0),
     ("full-time, first-time, first-year women who enrolled", "C.112", 0),
+    # Genderless totals (row label lacks "men/women/another gender/unknown").
+    ("total first-time, first-year who applied", "C.116", 0),
+    ("total first-time, first-year who were admitted", "C.117", 0),
+    ("total first-time, first-year who enrolled", "C.118", 0),
 
     # --- B3 Degrees ---
     ("certificate/diploma", "B.301", 0),
@@ -162,15 +193,17 @@ _FIELD_MAP: list[tuple[str, str, str | int]] = [
     ("postbachelor", "B.304", 0),
     ("master's degrees", "B.305", 0),
     ("post-master", "B.306", 0),
-    ("doctoral degrees – research", "B.307", 0),
-    ("research/scholarship", "B.307", 0),
-    ("doctoral degrees – professional", "B.308", 0),
-    ("professional practice", "B.308", 0),
+    ("doctoral degrees – research/scholarship", "B.307", 0),
+    ("doctoral degrees – professional practice", "B.308", 0),
     ("doctoral degrees – other", "B.309", 0),
 
     # --- C9 Test scores ---
-    ("submitting sat scores", "C.901", 0),
-    ("submitting act scores", "C.903", 0),
+    # The "Submitting" block is a 2-column table with Percent / Number
+    # headers. C.901/902 → Percent column, C.903/904 → Number column.
+    ("submitting sat scores", "C.901", "percent"),
+    ("submitting act scores", "C.902", "percent"),
+    ("submitting sat scores", "C.903", "number"),
+    ("submitting act scores", "C.904", "number"),
 ]
 
 # Percentile table: matched by assessment name + column position.
@@ -189,12 +222,12 @@ _PERCENTILE_MAP: list[tuple[str, int, str]] = [
     ("act composite", 0, "C.914"),
     ("act composite", 1, "C.915"),
     ("act composite", 2, "C.916"),
-    ("act english", 0, "C.917"),
-    ("act english", 1, "C.918"),
-    ("act english", 2, "C.919"),
-    ("act math", 0, "C.920"),
-    ("act math", 1, "C.921"),
-    ("act math", 2, "C.922"),
+    ("act math", 0, "C.917"),
+    ("act math", 1, "C.918"),
+    ("act math", 2, "C.919"),
+    ("act english", 0, "C.920"),
+    ("act english", 1, "C.921"),
+    ("act english", 2, "C.922"),
 ]
 
 
@@ -207,15 +240,22 @@ def clean(markdown: str) -> dict[str, dict]:
     tables = _parse_markdown_tables(markdown)
     values: dict[str, dict] = {}
 
+    # Pre-normalize the map substrings once so _FIELD_MAP / _PERCENTILE_MAP
+    # entries can be written in natural form (e.g. "another gender",
+    # "first-year", "research/scholarship") — normalization is applied
+    # uniformly on both sides of the substring check.
+    field_map_norm = [(_normalize_label(s), qn, ch) for s, qn, ch in _FIELD_MAP]
+    percentile_map_norm = [(_normalize_label(s), ci, qn) for s, ci, qn in _PERCENTILE_MAP]
+
     for table in tables:
-        section_norm = _normalize_gender(table["section"].lower())
+        section_norm = _normalize_label(table["section"])
 
         for row in table["rows"]:
-            label_norm = _normalize_gender(row["label"].lower())
-            headers_norm = [_normalize_gender(h.lower()) for h in row.get("headers", [])]
+            label_norm = _normalize_label(row["label"])
+            headers_norm = [_normalize_label(h) for h in row.get("headers", [])]
 
             # --- Standard field map ---
-            for substr, qnum, col_hint in _FIELD_MAP:
+            for substr, qnum, col_hint in field_map_norm:
                 if substr not in label_norm:
                     continue
 
@@ -246,7 +286,7 @@ def clean(markdown: str) -> dict[str, dict]:
                     values[qnum] = {"value": num, "source": "tier4_cleaner"}
 
             # --- Percentile table ---
-            for substr, col_idx, qnum in _PERCENTILE_MAP:
+            for substr, col_idx, qnum in percentile_map_norm:
                 if substr not in label_norm:
                     continue
                 if col_idx < len(row["values"]):
