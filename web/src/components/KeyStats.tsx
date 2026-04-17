@@ -1,15 +1,5 @@
 import type { FieldValue } from "@/lib/types";
 
-const KEY_FIELDS: { id: string; displayLabel: string }[] = [
-  { id: "C.105", displayLabel: "Applications" },
-  { id: "C.107", displayLabel: "Admitted" },
-  { id: "C.109", displayLabel: "Enrolled" },
-  { id: "C.901", displayLabel: "SAT Math 25th" },
-  { id: "C.902", displayLabel: "SAT Math 75th" },
-  { id: "C.905", displayLabel: "SAT Reading 25th" },
-  { id: "C.906", displayLabel: "SAT Reading 75th" },
-];
-
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white px-4 py-3">
@@ -19,39 +9,82 @@ function StatCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function getVal(values: Record<string, FieldValue>, id: string): string | null {
+function getNum(values: Record<string, FieldValue>, id: string): number | null {
   const field = values[id];
   if (!field) return null;
-  return field.value_decoded ?? field.value;
-}
-
-function getNum(values: Record<string, FieldValue>, id: string): number | null {
-  const v = getVal(values, id);
-  if (!v) return null;
+  const v = field.value_decoded ?? field.value;
   const n = parseInt(v.replace(/,/g, ""), 10);
   return isNaN(n) ? null : n;
 }
 
-export function KeyStats({ values }: { values: Record<string, FieldValue> }) {
-  const apps = getNum(values, "C.105");
-  const admits = getNum(values, "C.107");
-  const acceptanceRate =
-    apps && admits && apps > 0
-      ? ((admits / apps) * 100).toFixed(1) + "%"
-      : null;
+function sumFields(
+  values: Record<string, FieldValue>,
+  ...ids: string[]
+): number | null {
+  let total = 0;
+  let found = false;
+  for (const id of ids) {
+    const n = getNum(values, id);
+    if (n != null) {
+      total += n;
+      found = true;
+    }
+  }
+  return found ? total : null;
+}
 
+export function KeyStats({ values }: { values: Record<string, FieldValue> }) {
   const stats: { label: string; value: string }[] = [];
 
-  if (acceptanceRate) {
-    stats.push({ label: "Acceptance Rate", value: acceptanceRate });
+  // Admissions funnel: sum across male + female + unknown
+  const totalApplied = sumFields(values, "C.101", "C.102", "C.103");
+  const totalAdmitted = sumFields(values, "C.104", "C.105", "C.106");
+  const totalEnrolled = sumFields(values, "C.107", "C.108", "C.109");
+
+  // Acceptance rate
+  if (totalApplied && totalAdmitted && totalApplied > 0) {
+    const rate = ((totalAdmitted / totalApplied) * 100).toFixed(1) + "%";
+    stats.push({ label: "Acceptance Rate", value: rate });
   }
 
-  for (const field of KEY_FIELDS) {
-    const v = getVal(values, field.id);
-    if (!v || v === "0") continue;
-    const num = parseInt(v.replace(/,/g, ""), 10);
-    const displayValue = isNaN(num) ? v : num.toLocaleString();
-    stats.push({ label: field.displayLabel, value: displayValue });
+  if (totalApplied) {
+    stats.push({ label: "Applications", value: totalApplied.toLocaleString() });
+  }
+  if (totalAdmitted) {
+    stats.push({ label: "Admitted", value: totalAdmitted.toLocaleString() });
+  }
+  if (totalEnrolled) {
+    stats.push({ label: "Enrolled", value: totalEnrolled.toLocaleString() });
+  }
+
+  // SAT Composite (C.905 = 25th, C.907 = 75th)
+  const sat25 = getNum(values, "C.905");
+  const sat75 = getNum(values, "C.907");
+  if (sat25 && sat75) {
+    stats.push({ label: "SAT Composite", value: `${sat25}-${sat75}` });
+  } else if (sat25) {
+    stats.push({ label: "SAT Composite 25th", value: sat25.toLocaleString() });
+  }
+
+  // SAT Math (C.911 = 25th, C.913 = 75th if exists)
+  const satMath25 = getNum(values, "C.911");
+  const satMath75 = getNum(values, "C.913");
+  if (satMath25 && satMath75) {
+    stats.push({ label: "SAT Math", value: `${satMath25}-${satMath75}` });
+  }
+
+  // SAT Reading (C.908 = 25th, C.910 = 75th)
+  const satRead25 = getNum(values, "C.908");
+  const satRead75 = getNum(values, "C.910");
+  if (satRead25 && satRead75) {
+    stats.push({ label: "SAT Reading", value: `${satRead25}-${satRead75}` });
+  }
+
+  // ACT Composite (C.921 = 25th, C.923 = 75th if they exist)
+  const act25 = getNum(values, "C.921");
+  const act75 = getNum(values, "C.923");
+  if (act25 && act75) {
+    stats.push({ label: "ACT Composite", value: `${act25}-${act75}` });
   }
 
   if (stats.length === 0) return null;

@@ -60,8 +60,29 @@ export default async function SchoolYearPage({
 
   const hasValues = Object.keys(values).length > 0;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    name: `${doc.school_name} Common Data Set ${year}`,
+    description: `Common Data Set ${year} for ${doc.school_name}, containing admissions, enrollment, financial aid, and other institutional data.`,
+    url: `https://collegedata.fyi/schools/${school_id}/${year}`,
+    creator: { "@type": "Organization", name: doc.school_name },
+    temporalCoverage: year,
+    license: "https://opensource.org/licenses/MIT",
+    isAccessibleForFree: true,
+    provider: {
+      "@type": "Organization",
+      name: "collegedata.fyi",
+      url: "https://collegedata.fyi",
+    },
+  };
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-500 mb-4">
         <Link href="/schools" className="hover:text-gray-700">
