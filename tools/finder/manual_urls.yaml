@@ -1,0 +1,3062 @@
+generated_at: '2026-04-17T23:55:01Z'
+tool: tools/finder/playwright_collect.py
+note: Operator-reviewable list of CDS URLs collected via JS-rendered pages. Review each entry, then pipe through a small follow-up
+  tool that archives the URLs. See PRD 004 Option C.
+schools:
+  mit:
+    starting_url: https://ir.mit.edu/project-topic/common-data-set
+    final_url: https://ir.mit.edu/project-topic/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 4407
+    anchors:
+    - url: https://ir.mit.edu/project-topic/common-data-set
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://ir.mit.edu/projects/2024-25-common-data-set/
+      text: "2024-25 Common Data SetBenchmark data to compare general attributes and undergraduate statistics. \n2024-25"
+      year: 2024-25
+      is_document: false
+    - url: https://ir.mit.edu/projects/2023-24-common-data-set/
+      text: "2023-24 Common Data SetBenchmark data to compare general attributes and undergraduate statistics. \n2023-24"
+      year: 2023-24
+      is_document: false
+    - url: https://ir.mit.edu/projects/2021-22-common-data-set/
+      text: 2021-22 Common Data Set2021-22
+      year: 2021-22
+      is_document: false
+    - url: https://ir.mit.edu/projects/2022-23-common-data-set/
+      text: "2022-23 Common Data SetBenchmark data to compare general attributes and undergraduate statistics. \n2022-23"
+      year: 2022-23
+      is_document: false
+  stanford:
+    starting_url: https://irds.stanford.edu/data-findings/cds
+    final_url: https://irds.stanford.edu/data-findings/cds
+    status: ok
+    error: null
+    duration_ms: 1079
+    anchors:
+    - url: https://irds.stanford.edu/data-findings/cds#page-title
+      text: Skip to main content
+      year: null
+      is_document: false
+    - url: https://drive.google.com/file/d/1GIPKgVj1d86dkmLkHI_mZVCk_iY6kiCp/view?usp=sharing
+      text: Stanford CDS 2025-2026
+      year: 2025-26
+      is_document: false
+    - url: https://drive.google.com/file/d/12MjIqdzzHiECf6hfRlbU3RmmIy14hl1H/view?usp=sharing
+      text: Stanford CDS 2024-2025
+      year: 2024-25
+      is_document: false
+    - url: https://drive.google.com/file/d/11t0SaMg7GHtBV_rAz82AqbLWLFkI5--H/view?usp=sharing
+      text: Stanford CDS 2023-2024
+      year: 2023-24
+      is_document: false
+    - url: https://drive.google.com/file/d/11t39wJIScOdjw1TxUDX_C0WfRzIK29Tg/view?usp=sharing
+      text: Stanford CDS 2022-2023
+      year: 2022-23
+      is_document: false
+    - url: https://drive.google.com/file/d/1QMo5reHaPd0TPp6U295rJEgNFDu4Zmw1/view?usp=sharing
+      text: Stanford CDS 2021-2022
+      year: 2021-22
+      is_document: false
+    - url: https://drive.google.com/file/d/1eWY776poiulroE0RUd5kFYNg4gx28ZRZ/view?usp=sharing
+      text: Stanford CDS 2020-2021
+      year: 2020-21
+      is_document: false
+    - url: https://drive.google.com/file/d/157X_6ZlNX-x9I0SDaXh7gRmDKs_vY3Gi/view?usp=sharing
+      text: Stanford CDS 2019-2020
+      year: 2019-20
+      is_document: false
+    - url: https://drive.google.com/file/d/13WLNULlOxLCQ1n-TE0A7CwHL2haO2azQ/view?usp=sharing
+      text: Stanford CDS 2018-2019
+      year: 2018-19
+      is_document: false
+    - url: https://drive.google.com/file/d/1ztejUpnVbRDRPrKcLwK197k0MaoPOy8w/view?usp=sharing
+      text: Stanford CDS 2017-2018
+      year: 2017-18
+      is_document: false
+    - url: https://drive.google.com/file/d/1Igza4AT9K55_oV_bdUhX0Pu4CjO8Ki9Y/view?usp=sharing
+      text: Stanford CDS 2016-2017
+      year: 2016-17
+      is_document: false
+    - url: https://drive.google.com/file/d/1hpG9ept4AOnNrN43p_aYDu0WWcVbbizm/view?usp=sharing
+      text: Stanford CDS 2015-2016
+      year: 2015-16
+      is_document: false
+    - url: https://drive.google.com/file/d/1MB8tDuhdCBroxeKcBisVamWSJULzvYab/view?usp=sharing
+      text: Stanford CDS 2014-2015
+      year: 2014-15
+      is_document: false
+    - url: https://drive.google.com/file/d/1I_MnCEwJKh25UwgEhbuPOZzLy6AZrFWw/view?usp=sharing
+      text: Stanford CDS 2013-2014
+      year: 2013-14
+      is_document: false
+    - url: https://drive.google.com/file/d/1IpjO-gv8Eh7IiVBa8W174CMm0dp7k6KK/view?usp=sharing
+      text: Stanford CDS 2012-2013
+      year: 2012-13
+      is_document: false
+    - url: https://drive.google.com/file/d/1l8yFW9r5Zx327HUP_44ZNbLaXLzTmmQW/view?usp=sharing
+      text: Stanford CDS 2011-2012
+      year: 2011-12
+      is_document: false
+    - url: https://drive.google.com/file/d/1K3DsLLtFyicvBB1tNSXs5RNUMGcK4Kuf/view?usp=sharing
+      text: Stanford CDS 2010-2011
+      year: 2010-11
+      is_document: false
+    - url: https://drive.google.com/file/d/1ePXpDQjY8wveJHB_ZBLlUCDQzu-5ZigB/view?usp=sharing
+      text: Stanford CDS 2009-2010
+      year: 2009-10
+      is_document: false
+    - url: https://drive.google.com/file/d/1sd8-J7S-uhu0M_wnlCQWPCqzxKUIaOKt/view?usp=sharing
+      text: Stanford CDS 2008-2009
+      year: 2008-09
+      is_document: false
+    - url: https://irds.stanford.edu/saml/login?destination=/data-findings/cds
+      text: Web Login
+      year: null
+      is_document: false
+  yale:
+    starting_url: https://oir.yale.edu/common-data-set
+    final_url: https://oir.yale.edu/common-data-set
+    status: ok
+    error: null
+    duration_ms: 909
+    anchors:
+    - url: https://oir.yale.edu/common-data-set
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://oir.yale.edu/sites/default/files/yale_cds_2024-25_rmd_20250612.pdf
+      text: CDS 2024-2025
+      year: 2024-25
+      is_document: true
+    - url: https://oir.yale.edu/sites/default/files/cds_yale_2023-24_vf_20240320.pdf
+      text: CDS 2023-2024
+      year: 2023-24
+      is_document: true
+    - url: https://oir.yale.edu/sites/default/files/cds_yale_2022-2023_vf_10062023.pdf
+      text: CDS 2022-2023
+      year: 2022-23
+      is_document: true
+    - url: https://oir.yale.edu/sites/default/files/yale_cds_2021-2022_vf_06062022_0.pdf
+      text: CDS 2021-2022
+      year: 2021-22
+      is_document: true
+    - url: https://oir.yale.edu/sites/default/files/cds_2020-2021_yale_vf_030521.pdf
+      text: CDS 2020-2021
+      year: 2020-21
+      is_document: true
+    - url: https://oir.yale.edu/sites/default/files/cds_2019-2020_yale_vf_030420.pdf
+      text: CDS 2019-2020
+      year: 2019-20
+      is_document: true
+    - url: https://oir.yale.edu/sites/default/files/cds_yale_2018-2019.pdf
+      text: CDS 2018-2019
+      year: 2018-19
+      is_document: true
+    - url: https://oir.yale.edu/sites/default/files/cds_2017-2018.pdf
+      text: CDS 2017-2018
+      year: 2017-18
+      is_document: true
+    - url: https://oir.yale.edu/sites/default/files/cds2016-2017.pdf
+      text: CDS 2016-2017
+      year: 2016-17
+      is_document: true
+    - url: https://oir.yale.edu/sites/default/files/cds2015_2016_0.pdf
+      text: CDS 2015-2016
+      year: 2015-16
+      is_document: true
+    - url: https://oir.yale.edu/sites/default/files/cds2014_2015_0.pdf
+      text: CDS 2014-2015
+      year: 2014-15
+      is_document: true
+    - url: https://oir.yale.edu/sites/default/files/cds2013_2014.pdf
+      text: CDS 2013-2014
+      year: 2013-14
+      is_document: true
+    - url: https://oir.yale.edu/sites/default/files/cds2012_2013.pdf
+      text: CDS 2012-2013
+      year: 2012-13
+      is_document: true
+    - url: https://oir.yale.edu/sites/default/files/cds2011_2012_3.pdf
+      text: CDS 2011-2012
+      year: 2011-12
+      is_document: true
+    - url: https://oir.yale.edu/sites/default/files/cds2010_2011_1.pdf
+      text: CDS 2010-2011
+      year: 2010-11
+      is_document: true
+    - url: https://oir.yale.edu/sites/default/files/cds2009_2010_1.pdf
+      text: CDS 2009-2010
+      year: 2009-10
+      is_document: true
+  upenn:
+    starting_url: https://ira.upenn.edu/penn-numbers/common-data-set
+    final_url: https://ira.upenn.edu/penn-numbers/common-data-set
+    status: ok
+    error: null
+    duration_ms: 910
+    anchors:
+    - url: https://ira.upenn.edu/penn-numbers/common-data-set
+      text: 'Common Data Set (CDS): Penn'
+      year: null
+      is_document: false
+    - url: https://upenn.box.com/s/ckv4frz37rzxa4u6bdiv2h4yzykqm4ef
+      text: 2024-25 Penn Common Data Set (PDF)
+      year: 2024-25
+      is_document: false
+    - url: https://upenn.box.com/s/0btxxmu1lmxgj1dc2pfzqewoun6miyn4
+      text: 2023-24 Penn Common Data Set (PDF)
+      year: 2023-24
+      is_document: false
+    - url: https://upenn.box.com/s/75jr7yip7279rcsfic0946o1pkr8okrt
+      text: 2022-23 Penn Common Data Set (PDF)
+      year: 2022-23
+      is_document: false
+    - url: https://upenn.box.com/s/kn155bg3pnwzs69xtkcs8stlw1mtzdk6
+      text: 2021-22 Penn Common Data Set (PDF)
+      year: 2021-22
+      is_document: false
+    - url: https://upenn.box.com/s/4eme94dckyvxz6bctzuhfi8titbzwvvt
+      text: 2020-21 Penn Common Data Set (PDF)
+      year: 2020-21
+      is_document: false
+    - url: https://upenn.box.com/s/eqi2w0b5k0hf4vvwvykpzukjf8nz1w6n
+      text: 2019-20 Penn Common Data Set (PDF)
+      year: 2019-20
+      is_document: false
+    - url: https://upenn.box.com/s/58glwcn3cst8cga05hgz1kpm4nixkm7e
+      text: 2018-19 Penn Common Data Set (PDF)
+      year: 2018-19
+      is_document: false
+    - url: https://upenn.box.com/s/81wzyc15ou73fnq92dr0jrdf5lcmqqkq
+      text: 2017-18 Penn Common Data Set (PDF)
+      year: 2017-18
+      is_document: false
+    - url: https://upenn.box.com/s/8ec9jny6vtzcsfxgebsbbscy90whkw63
+      text: 2016-17 Penn Common Data Set (PDF)
+      year: 2016-17
+      is_document: false
+    - url: https://upenn.box.com/s/mivuljjf57btij3f6af2ghgox2vrojqi
+      text: 2015-16 Penn Common Data Set (PDF)
+      year: 2015-16
+      is_document: false
+    - url: https://upenn.box.com/s/w33xhtd6l88kgqk582zcabtmye4zw9jd
+      text: 2014-15 Penn Common Data Set (PDF)
+      year: 2014-15
+      is_document: false
+    - url: https://upenn.box.com/s/ti2nwclo3olaxaihqrwq679l5d579oam
+      text: 2013-14 Penn Common Data Set (PDF)
+      year: 2013-14
+      is_document: false
+    - url: https://upenn.box.com/s/h1es7h3r2o376cgz60doqe4mwxwiaxvs
+      text: 2012-13 Penn Common Data Set (PDF
+      year: 2012-13
+      is_document: false
+    - url: https://upenn.box.com/s/qhmwxhnbt5w3a23i1inm89kyoupdup18
+      text: 2011-12 Penn Common Data Set (PDF)
+      year: 2011-12
+      is_document: false
+    - url: https://upenn.box.com/s/588dasiy929zq18pi5tt1s3i8eru7j2r
+      text: 2010-11 Penn Common Data Set (PDF)
+      year: 2010-11
+      is_document: false
+    - url: https://upenn.box.com/s/dfjaekhwoexpbxaz2qp3wo4emqq897fo
+      text: 2009-10 Penn Common Data Set (PDF)
+      year: 2009-10
+      is_document: false
+    - url: https://tabsoft.co/3enUl45
+      text: Visit CDS (AAUDE peers)
+      year: null
+      is_document: false
+  columbia:
+    starting_url: https://opir.columbia.edu/common-data-set
+    final_url: https://opir.columbia.edu/common-data-set
+    status: no_anchors
+    error: null
+    duration_ms: 14617
+    anchors: []
+  harvard:
+    starting_url: https://oira.harvard.edu/common-data-set/
+    final_url: https://oira.harvard.edu/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 1858
+    anchors:
+    - url: https://oira.harvard.edu/common-data-set/
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://oira.harvard.edu/files/2025/06/HarvardUniversity_CDS_2024-2025.pdf
+      text: "Download Harvard\u2019s LATEST CDS Submission: 2024-2025"
+      year: 2024-25
+      is_document: true
+    - url: https://bpb-us-e1.wpmucdn.com/sites.harvard.edu/dist/6/210/files/2024/05/CDS_2023-2024-Final-4755619e875b1241.pdf
+      text: Harvard Common Data Set 2023-2024
+      year: 2023-24
+      is_document: true
+    - url: https://oira.harvard.edu/files/2023/06/harvard_cds_2022-2023.pdf
+      text: Harvard Common Data Set 2022-2023
+      year: 2022-23
+      is_document: true
+    - url: https://oira.harvard.edu/files/2023/06/harvard_cds_2021-2022_revised.pdf
+      text: Harvard Common Data Set 2021-2022
+      year: 2021-22
+      is_document: true
+    - url: https://oira.harvard.edu/files/2023/02/harvard_cds_2020-2021.pdf
+      text: Harvard Common Data Set 2020-2021
+      year: 2020-21
+      is_document: true
+    - url: https://oira.harvard.edu/files/2023/02/harvard_cds_2019-2020.pdf
+      text: Harvard Common Data Set 2019-2020
+      year: 2019-20
+      is_document: true
+    - url: https://oira.harvard.edu/files/2023/02/harvard_cds_2018-19.pdf
+      text: Harvard Common Data Set 2018-2019
+      year: 2018-19
+      is_document: true
+    - url: https://oira.harvard.edu/files/2023/02/harvard_cds_2017-18.pdf
+      text: Harvard Common Data Set 2017-2018
+      year: 2017-18
+      is_document: true
+    - url: https://oira.harvard.edu/files/2023/02/harvard_cds_2016-17.pdf
+      text: Harvard Common Data Set 2016-2017
+      year: 2016-17
+      is_document: true
+    - url: https://oira.harvard.edu/files/2023/02/harvard_cds_2015-16.pdf
+      text: Harvard Common Data Set 2015-2016
+      year: 2015-16
+      is_document: true
+    - url: https://oira.harvard.edu/files/2023/02/harvard_cds_2014-15.pdf
+      text: Harvard Common Data Set 2014-2015
+      year: 2014-15
+      is_document: true
+    - url: https://oira.harvard.edu/files/2023/02/harvard_cds_2013-14.pdf
+      text: Harvard Common Data Set 2013-2014
+      year: 2013-14
+      is_document: true
+    - url: https://oira.harvard.edu/files/2023/02/harvard_cds_2012-13.pdf
+      text: Harvard Common Data Set 2012-2013
+      year: 2012-13
+      is_document: true
+    - url: https://oira.harvard.edu/files/2023/02/harvard_cds_2011-2012.pdf
+      text: Harvard Common Data Set 2011-2012
+      year: 2011-12
+      is_document: true
+    - url: https://oira.harvard.edu/files/2023/02/harvard_cds_2010-2011.pdf
+      text: Harvard Common Data Set 2010-2011
+      year: 2010-11
+      is_document: true
+    - url: https://oira.harvard.edu/files/2023/02/harvard_cds_2009-2010.pdf
+      text: Harvard Common Data Set 2009-2010
+      year: 2009-10
+      is_document: true
+    - url: https://oira.harvard.edu/files/2023/02/harvard_cds_2008-2009.pdf
+      text: Harvard Common Data Set 2008-2009
+      year: 2008-09
+      is_document: true
+    - url: https://oira.harvard.edu/files/2023/02/harvard_cds_2007-2008.pdf
+      text: Harvard Common Data Set 2007-2008
+      year: 2007-08
+      is_document: true
+    - url: https://ucomm.stanford.edu/cds/
+      text: Stanford University
+      year: null
+      is_document: false
+  dartmouth:
+    starting_url: https://dartmouth.edu/oir/cds/
+    final_url: https://www.dartmouth.edu/oir/new-location.html
+    status: ok
+    error: null
+    duration_ms: 2760
+    anchors:
+    - url: https://www.dartmouth.edu/oir/data-reporting/cds/index.html
+      text: Common Data Set
+      year: null
+      is_document: false
+  carnegie-mellon:
+    starting_url: https://www.cmu.edu/ira/CDS/
+    final_url: https://www.cmu.edu/ira/CDS/
+    status: ok
+    error: null
+    duration_ms: 2241
+    anchors:
+    - url: https://www.cmu.edu/ira/CDS/#content
+      text: Skip to main content
+      year: null
+      is_document: false
+    - url: https://www.cmu.edu/ira/CDS/index.html
+      text: Common Data Sets
+      year: null
+      is_document: false
+    - url: https://www.cmu.edu/ira/CDS/cds_2526.html
+      text: Common Data Set 2025-26
+      year: 2025-26
+      is_document: false
+    - url: https://www.cmu.edu/ira/CDS/cds_2425.html
+      text: Common Data Set 2024-25
+      year: 2024-25
+      is_document: false
+    - url: https://www.cmu.edu/ira/CDS/cds_2324.html
+      text: Common Data Set 2023-24
+      year: 2023-24
+      is_document: false
+    - url: https://www.cmu.edu/ira/CDS/cds_2223.html
+      text: Common Data Set 2022-23
+      year: 2022-23
+      is_document: false
+    - url: https://www.cmu.edu/ira/CDS/cds_2122.html
+      text: Common Data Set 2021-22
+      year: 2021-22
+      is_document: false
+    - url: https://www.cmu.edu/ira/CDS/cds_2021.html
+      text: Common Data Set 2020-21
+      year: 2020-21
+      is_document: false
+    - url: https://www.cmu.edu/ira/CDS/cds_1920.html
+      text: Common Data Set 2019-20
+      year: 2019-20
+      is_document: false
+    - url: https://www.cmu.edu/ira/CDS/cds_1819.html
+      text: Common Data Set 2018-19
+      year: 2018-19
+      is_document: false
+    - url: https://www.cmu.edu/ira/CDS/cds_1718.html
+      text: Common Data Set 2017-18
+      year: 2017-18
+      is_document: false
+    - url: https://www.cmu.edu/ira/CDS/previouscds.html
+      text: Previous Common Data Sets
+      year: null
+      is_document: false
+  case-western-reserve-university:
+    starting_url: https://case.edu/ir/common-data-set/
+    final_url: https://case.edu/ir/common-data-set
+    status: ok
+    error: null
+    duration_ms: 2782
+    anchors:
+    - url: https://case.edu/ir/common-data-set-0
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://case.edu/ir/media/1261
+      text: 2018-19 CDS
+      year: 2018-19
+      is_document: false
+    - url: https://case.edu/ir/media/1066
+      text: 2017-18 CDS
+      year: 2017-18
+      is_document: false
+    - url: https://case.edu/ir/media/86
+      text: 2016-17 CDS
+      year: 2016-17
+      is_document: false
+    - url: https://case.edu/ir/media/76
+      text: 2015-16 CDS
+      year: 2015-16
+      is_document: false
+    - url: https://case.edu/ir/media/56
+      text: 2014-15 CDS
+      year: 2014-15
+      is_document: false
+    - url: https://case.edu/ir/media/116
+      text: 2013-14 CDS
+      year: 2013-14
+      is_document: false
+    - url: https://case.edu/ir/media/111
+      text: 2012-13 CDS
+      year: 2012-13
+      is_document: false
+    - url: https://case.edu/ir/media/46
+      text: 2011-12 CDS
+      year: 2011-12
+      is_document: false
+    - url: https://case.edu/ir/media/41
+      text: 2010-11 CDS
+      year: 2010-11
+      is_document: false
+    - url: https://case.edu/ir/media/36
+      text: 2009-10 CDS
+      year: 2009-10
+      is_document: false
+    - url: https://case.edu/ir/media/31
+      text: 2008-09 CDS
+      year: 2008-09
+      is_document: false
+    - url: https://case.edu/ir/media/26
+      text: 2007-08 CDS
+      year: 2007-08
+      is_document: false
+    - url: https://case.edu/ir/media/21
+      text: 2006-07 CDS
+      year: 2006-07
+      is_document: false
+    - url: https://case.edu/ir/media/16
+      text: 2005-06 CDS
+      year: 2005-06
+      is_document: false
+    - url: https://case.edu/ir/media/11
+      text: 2004-05 CDS
+      year: 2004-05
+      is_document: false
+    - url: https://case.edu/ir/media/6
+      text: 2003-04 CDS
+      year: 2003-04
+      is_document: false
+    - url: https://case.edu/ir/media/1
+      text: 2002-03 CDS
+      year: 2002-03
+      is_document: false
+  rochester-institute-of-technology:
+    starting_url: https://rit.edu/institutionalresearch/common-data-set/
+    final_url: https://www.rit.edu/institutionalresearch/common-data-set
+    status: ok
+    error: null
+    duration_ms: 1652
+    anchors:
+    - url: https://www.rit.edu/institutionalresearch/common-data-set
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://www.rit.edu/institutionalresearch/sites/rit.edu.institutionalresearch/files/documents/Common%20Data%20Set%20PDFs/RIT_CDS_2024_25_FINAL_20250603.pdf
+      text: 2024-2025 Common Data Set
+      year: 2024-25
+      is_document: true
+    - url: https://www.rit.edu/institutionalresearch/sites/rit.edu.institutionalresearch/files/documents/Common%20Data%20Set%20PDFs/CDS%202023-24%20FINAL%20for%20PDF%2020240617.pdf
+      text: 2023-2024 Common Data Set
+      year: 2023-24
+      is_document: true
+    - url: https://www.rit.edu/institutionalresearch/sites/rit.edu.institutionalresearch/files/documents/Common%20Data%20Set%20PDFs/RIT%20CDS%202022-2023%20FINAL%2020230425.pdf
+      text: 2022-2023 Common Data Set
+      year: 2022-23
+      is_document: true
+    - url: https://www.rit.edu/institutionalresearch/sites/rit.edu.institutionalresearch/files/documents/Common%20Data%20Set%20PDFs/CDS_2021-2022_FINAL%20REV%2020220513.pdf
+      text: 2021-2022 Common Data Set
+      year: 2021-22
+      is_document: true
+    - url: https://www.rit.edu/institutionalresearch/sites/rit.edu.institutionalresearch/files/documents/Common%20Data%20Set%20PDFs/2020-21%20RIT%20Common%20Data%20Set%20REV%2020211123.pdf
+      text: 2020-2021 Common Data Set
+      year: 2020-21
+      is_document: true
+  auburn-university:
+    starting_url: https://ir.auburn.edu/common-data-set/
+    final_url: https://auburn.edu/administration/ir/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 1952
+    anchors:
+    - url: https://auburn.edu/administration/ir/common-data-set/index.html
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://auburn.edu/administration/ir/common-data-set/cds-definitions.html
+      text: CDS Definitions
+      year: null
+      is_document: false
+  texas-christian-university:
+    starting_url: https://ir.tcu.edu/institutional-research/common-data-set/
+    final_url: https://ir.tcu.edu/facts-data/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 3445
+    anchors:
+    - url: https://ir.tcu.edu/wp-content/uploads/2026/03/CDS-2025-26-TCU.pdf
+      text: 2025 Common Data Set
+      year: 2025-26
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2024/02/CDS_2023_2024-final-1.pdf
+      text: ''
+      year: 2023-24
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2025/09/TCU-CDS_2024_2025.pdf
+      text: TCU CDS 2024
+      year: 2024-25
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2023/07/CDS_2022-23.pdf
+      text: TCU CDS 2022
+      year: 2022-23
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2022/02/TCU-CDS-2021-2022.pdf
+      text: TCU CDS 2021
+      year: 2021-22
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2021/05/TCUCDS2020.pdf
+      text: TCU CDS 2020
+      year: null
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2021/05/TCUCDS2019.pdf
+      text: TCU CDS 2019
+      year: null
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2021/05/TCUCDS2018.pdf
+      text: TCU CDS 2018
+      year: null
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2021/05/TCUCDS2017.pdf
+      text: TCU CDS 2017
+      year: null
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2021/05/TCUCDS2016.pdf
+      text: TCU CDS 2016
+      year: null
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2021/05/TCUCDS2015.pdf
+      text: TCU CDS 2015
+      year: null
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2021/05/TCUCDS2014.pdf
+      text: TCU CDS 2014
+      year: null
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2021/05/TCUCDS2013.pdf
+      text: TCU CDS 2013
+      year: null
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2021/05/TCUCDS2012.pdf
+      text: TCU CDS 2012
+      year: null
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2021/05/TCUCDS2011.pdf
+      text: TCU CDS 2011
+      year: null
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2025/09/CDS-2010.pdf
+      text: TCU CDS 2010
+      year: null
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2025/09/CDS-2009.pdf
+      text: TCU CDS 2009
+      year: null
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2021/05/TCUCDS2008.pdf
+      text: TCU CDS 2008
+      year: null
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2021/05/TCUCDS2007.pdf
+      text: TCU CDS 2007
+      year: null
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2021/05/TCUCDS2006.pdf
+      text: TCU CDS 2006
+      year: null
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2021/05/TCUCDS2005.pdf
+      text: TCU CDS 2005
+      year: null
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2021/05/TCUCDS2004.pdf
+      text: TCU CDS 2004
+      year: null
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2021/05/TCUCDS2003.pdf
+      text: TCU CDS 2003
+      year: null
+      is_document: true
+    - url: https://ir.tcu.edu/wp-content/uploads/2021/05/TCUCDS2002.pdf
+      text: TCU CDS 2002
+      year: null
+      is_document: true
+  university-of-connecticut:
+    starting_url: https://oir.uconn.edu/institutional-research/common-data-set
+    final_url: https://bpir.uconn.edu/home/institutional-research/data-resources/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 3673
+    anchors:
+    - url: https://bpir.media.uconn.edu/wp-content/uploads/sites/3452/2023/07/CDS_2022_2023_Website.pdf
+      text: 2022-23.pdf
+      year: 2022-23
+      is_document: true
+    - url: https://bpir.media.uconn.edu/wp-content/uploads/sites/3452/2022/09/CDS_2021-2022_UConn_Website.pdf
+      text: 2021-22.pdf
+      year: 2021-22
+      is_document: true
+    - url: https://bpir.media.uconn.edu/wp-content/uploads/sites/3452/2022/08/CDS_2018_2019.pdf
+      text: 2018-19.pdf
+      year: 2018-19
+      is_document: true
+    - url: https://bpir.media.uconn.edu/wp-content/uploads/sites/3452/2022/08/CDS_2017_2018.pdf
+      text: 2017-18.pdf
+      year: 2017-18
+      is_document: true
+    - url: https://bpir.media.uconn.edu/wp-content/uploads/sites/3452/2022/08/CDS_2016_2017.pdf
+      text: 2016-17.pdf
+      year: 2016-17
+      is_document: true
+    - url: https://bpir.media.uconn.edu/wp-content/uploads/sites/3452/2024/07/CDS_2023-2024-Definitions-for-Website.pdf
+      text: Definitions.pdf
+      year: 2023-24
+      is_document: true
+  michigan-state-university:
+    starting_url: https://ir.msu.edu/cds
+    final_url: https://ir.msu.edu/cds
+    status: ok
+    error: null
+    duration_ms: 2594
+    anchors:
+    - url: https://ir.msu.edu/cds#global-header
+      text: Jump to Header
+      year: null
+      is_document: false
+    - url: https://xmc-michiganstab57e-msustrategi129d-prod9868.sitecorecloud.io/-/media/project/msu/ir/docs/cds/cds-2024-2025.pdf
+      text: CDS - 2024-25 (PDF)
+      year: 2024-25
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2023-2024.pdf
+      text: CDS - 2023-24 (PDF)
+      year: 2023-24
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2022-2023.pdf
+      text: CDS - 2022-23 (PDF)
+      year: 2022-23
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2021-2022.pdf
+      text: CDS - 2021-22 (PDF)
+      year: 2021-22
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2020-2021.pdf
+      text: CDS - 2020-21 (PDF)
+      year: 2020-21
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2019-2020.pdf
+      text: CDS - 2019-20 (PDF)
+      year: 2019-20
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2018-2019.pdf
+      text: CDS - 2018-19 (PDF)
+      year: 2018-19
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2017-2018.pdf
+      text: CDS - 2017-18 (PDF)
+      year: 2017-18
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2016-2017.pdf
+      text: CDS - 2016-17 (PDF)
+      year: 2016-17
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2015-2016.pdf
+      text: CDS - 2015-16 (PDF)
+      year: 2015-16
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2014-2015.pdf
+      text: CDS - 2014-15 (PDF)
+      year: 2014-15
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2013-2014.pdf
+      text: CDS - 2013-14 (PDF)
+      year: 2013-14
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2012-2013.pdf
+      text: CDS - 2012-13 (PDF)
+      year: 2012-13
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2011-2012.pdf
+      text: CDS - 2011-12 (PDF)
+      year: 2011-12
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2010-2011.pdf
+      text: CDS - 2010-11 (PDF)
+      year: 2010-11
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2009-2010.pdf
+      text: CDS - 2009-10 (PDF)
+      year: 2009-10
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2008-2009.pdf
+      text: CDS - 2008-09 (PDF)
+      year: 2008-09
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2007-2008.pdf
+      text: CDS - 2007-08 (PDF)
+      year: 2007-08
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2006-2007.pdf
+      text: CDS - 2006-07 (PDF)
+      year: 2006-07
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2005-2006.pdf
+      text: CDS - 2005-06 (PDF)
+      year: 2005-06
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2004-2005.pdf
+      text: CDS - 2004-05 (PDF)
+      year: 2004-05
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2003-2004.pdf
+      text: CDS - 2003-04 (PDF)
+      year: 2003-04
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2002-2003.pdf
+      text: CDS - 2002-03 (PDF)
+      year: 2002-03
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2001-2002.pdf
+      text: CDS - 2001-02 (PDF)
+      year: 2001-02
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-2000-2001.pdf
+      text: CDS - 2000-01 (PDF)
+      year: 2000-01
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-1999-2000.pdf
+      text: CDS - 1999-2000 (PDF)
+      year: null
+      is_document: true
+    - url: https://edge.sitecorecloud.io/michiganstab57e-msustrategi129d-prod9868-7e5e/media/project/msu/ir/docs/cds/cds-1998-1999.pdf
+      text: CDS - 1998-99 (PDF)
+      year: null
+      is_document: true
+  washington-university-in-st-louis:
+    starting_url: https://wustl.edu/about/compliance-policies/registrar/student-consumer-information/
+    final_url: https://washu.edu/policies/student-consumer-information/
+    status: ok
+    error: null
+    duration_ms: 1559
+    anchors:
+    - url: https://washu.edu/app/uploads/2025/06/2024-2025-WashU-CDS.pdf
+      text: 2024-25 CDS (PDF)
+      year: 2024-25
+      is_document: true
+  princeton:
+    starting_url: https://registrar.princeton.edu/common-data-set
+    final_url: https://registrar.princeton.edu/common-data-set
+    status: no_anchors
+    error: null
+    duration_ms: 1378
+    anchors: []
+  duke:
+    starting_url: https://provost.duke.edu/about/administration/office-of-institutional-research/common-data-set/
+    final_url: https://provost.duke.edu/about/administration/office-of-institutional-research/common-data-set/
+    status: no_anchors
+    error: null
+    duration_ms: 1759
+    anchors: []
+  northwestern:
+    starting_url: https://enrollment.northwestern.edu/data/
+    final_url: https://enrollment.northwestern.edu/data/
+    status: ok
+    error: null
+    duration_ms: 3086
+    anchors:
+    - url: https://enrollment.northwestern.edu/data/common-data-set.html
+      text: Common Data Set
+      year: null
+      is_document: false
+  university-of-notre-dame:
+    starting_url: https://irds.nd.edu/common-data-set/
+    final_url: null
+    status: nav_error
+    error: "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://irds.nd.edu/common-data-set/\nCall log:\n  - navigating to \"\
+      https://irds.nd.edu/common-data-set/\", waiting until \"domcontentloaded\"\n"
+    duration_ms: 6
+    anchors: []
+  university-of-rochester:
+    starting_url: https://www.rochester.edu/provost/ir/data-reports/common-data-set/
+    final_url: https://www.rochester.edu/provost/about-institutional-research/data-reports/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 14249
+    anchors:
+    - url: https://www.rochester.edu/provost/university-data/data-insights-reporting/university-of-rochester-common-data-set/
+      text: Common Data Set
+      year: null
+      is_document: false
+  university-of-miami:
+    starting_url: https://irsa.miami.edu/facts-and-information/common-data-set/
+    final_url: https://irsa.miami.edu/facts-and-information/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 1531
+    anchors:
+    - url: https://irsa.miami.edu/facts-and-information/common-data-set/index.html
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://irsa.miami.edu/_assets/pdf/Documents/cds1819.pdf
+      text: ''
+      year: null
+      is_document: true
+    - url: https://irsa.miami.edu/facts-and-information/common-data-set/cds2526.pdf
+      text: Common Data Set 2025-2026
+      year: 2025-26
+      is_document: true
+    - url: https://irsa.miami.edu/cds2425.pdf
+      text: Common Data Set 2024-2025
+      year: 2024-25
+      is_document: true
+    - url: https://irsa.miami.edu/facts-and-information/common-data-set/cds2324.pdf
+      text: Common Data Set 2023-2024
+      year: 2023-24
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/cds2223.pdf
+      text: Common Data Set 2022-2023
+      year: 2022-23
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/cds2122.pdf
+      text: Common Data Set 2021-2022
+      year: 2021-22
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/cds2021.pdf
+      text: Common Data Set 2020-2021
+      year: 2020-21
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/cds1920.pdf
+      text: Common Data Set 2019-2020
+      year: 2019-20
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/Documents/cds1718.pdf
+      text: Common Data Set 2017-2018
+      year: 2017-18
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/Documents/CDS1617.pdf
+      text: Common Data Set 2016-2017
+      year: 2016-17
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/Documents/CDS1516.pdf
+      text: Common Data Set 2015-2016
+      year: 2015-16
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/Documents/CDS1415.pdf
+      text: Common Data Set 2014-2015
+      year: 2014-15
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/Documents/CDS1314.pdf
+      text: Common Data Set 2013-2014
+      year: 2013-14
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/Documents/CDS1213.pdf
+      text: Common Data Set 2012-2013
+      year: 2012-13
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/Documents/CDS1112.pdf
+      text: Common Data Set 2011-2012
+      year: 2011-12
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/Documents/CDS1011.pdf
+      text: Common Data Set 2010-2011
+      year: 2010-11
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/Documents/CDS0809.pdf
+      text: Common Data Set 2008-2009
+      year: 2008-09
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/Documents/CDS0708.pdf
+      text: Common Data Set 2007-2008
+      year: 2007-08
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/Documents/CDS0607.pdf
+      text: Common Data Set 2006-2007
+      year: 2006-07
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/Documents/CDS0506.pdf
+      text: Common Data Set 2005-2006
+      year: 2005-06
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/Documents/CDS0405.pdf
+      text: Common Data Set 2004-2005
+      year: 2004-05
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/Documents/CDS0304.pdf
+      text: Common Data Set 2003-2004
+      year: 2003-04
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/Documents/CDS0203.pdf
+      text: Common Data Set 2002-2003
+      year: 2002-03
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/Documents/CDS0102.pdf
+      text: Common Data Set 2001-2002
+      year: 2001-02
+      is_document: true
+    - url: https://irsa.miami.edu/_assets/pdf/Documents/CDS0001.pdf
+      text: Common Data Set 2000-2001
+      year: 2000-01
+      is_document: true
+  university-of-illinois-urbana-champaign:
+    starting_url: https://www.dmi.illinois.edu/stuenr/
+    final_url: https://www.dmi.illinois.edu/stuenr/
+    status: ok
+    error: null
+    duration_ms: 1122
+    anchors:
+    - url: https://www.dmi.illinois.edu/stuenr/index.htm#CDS
+      text: Common Dataset
+      year: null
+      is_document: false
+    - url: https://www.dmi.illinois.edu/stuenr/#CDS
+      text: Common Data Set for UIUC
+      year: null
+      is_document: false
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2024_2025.xlsx
+      text: 2024-25
+      year: 2024-25
+      is_document: true
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2023_2024.xlsx
+      text: 2023-24
+      year: 2023-24
+      is_document: true
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2022_2023.xlsx
+      text: 2022-23
+      year: 2022-23
+      is_document: true
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2021_2022.xlsx
+      text: 2021-22
+      year: 2021-22
+      is_document: true
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2020_2021.xlsx
+      text: 2020-21
+      year: 2020-21
+      is_document: true
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2019_2020.xlsx
+      text: 2019-20
+      year: 2019-20
+      is_document: true
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2018_2019.xlsx
+      text: 2018-19
+      year: 2018-19
+      is_document: true
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2017_2018.xlsx
+      text: 2017-18
+      year: 2017-18
+      is_document: true
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2016_2017.xls
+      text: 2016-17
+      year: 2016-17
+      is_document: false
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2015_2016.xls
+      text: 2015-16
+      year: 2015-16
+      is_document: false
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2014_2015.xls
+      text: 2014-15
+      year: 2014-15
+      is_document: false
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2013_2014.xls
+      text: 2013-14
+      year: 2013-14
+      is_document: false
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2012_2013.xls
+      text: 2012-13
+      year: 2012-13
+      is_document: false
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2011_2012.xls
+      text: 2011-12
+      year: 2011-12
+      is_document: false
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2010_2011.xls
+      text: 2010-11
+      year: 2010-11
+      is_document: false
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2009_2010.xls
+      text: 2009-10
+      year: 2009-10
+      is_document: false
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2008_2009.xls
+      text: 2008-09
+      year: 2008-09
+      is_document: false
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2007_2008.xls
+      text: 2007-08
+      year: 2007-08
+      is_document: false
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2006_2007.xls
+      text: 2006-07
+      year: 2006-07
+      is_document: false
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2005_2006.xls
+      text: 2005-06
+      year: 2005-06
+      is_document: false
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2004_2005.xls
+      text: 2004-05
+      year: 2004-05
+      is_document: false
+    - url: https://www.dmi.illinois.edu/stuenr/misc/cds_2003-2004.xls
+      text: 2003-04
+      year: 2003-04
+      is_document: false
+  penn-state:
+    starting_url: https://opair.psu.edu/common-data-set/
+    final_url: https://opair.psu.edu/project/common-data-set/
+    status: no_anchors
+    error: null
+    duration_ms: 2217
+    anchors: []
+  university-of-massachusetts-amherst:
+    starting_url: https://www.umass.edu/uair/reports/common-data-set
+    final_url: https://www.umass.edu/uair/reports/common-data-set
+    status: ok
+    error: null
+    duration_ms: 1454
+    anchors:
+    - url: https://www.umass.edu/uair/data/common-data-set
+      text: Common Data Set
+      year: null
+      is_document: false
+  pepperdine-university:
+    starting_url: https://www.pepperdine.edu/oie/common-data-set/
+    final_url: https://www.pepperdine.edu/oie/common-data-set/
+    status: no_anchors
+    error: null
+    duration_ms: 6311
+    anchors: []
+  fordham-university:
+    starting_url: https://www.fordham.edu/info/21205/common_data_set
+    final_url: https://www.fordham.edu/info/21205/common_data_set
+    status: no_anchors
+    error: null
+    duration_ms: 5950
+    anchors: []
+  villanova-university:
+    starting_url: https://www1.villanova.edu/university/about/facts-figures/common-data-set.html
+    final_url: https://www.villanova.edu/university/about/facts-figures/common-data-set.html
+    status: no_anchors
+    error: null
+    duration_ms: 2975
+    anchors: []
+  american-university:
+    starting_url: https://www.american.edu/provost/oira/common-data-set.cfm
+    final_url: https://www.american.edu/provost/oira/common-data-set.cfm
+    status: ok
+    error: null
+    duration_ms: 5062
+    anchors:
+    - url: https://www.american.edu/provost/oira/Common-Data-Set.cfm
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://www.american.edu/provost/oira/upload/CDS_2024-2025_American-University_Final.pdf
+      text: "Access AU's 2024-25\_Common Data Set (PDF)"
+      year: 2024-25
+      is_document: true
+  southern-methodist-university:
+    starting_url: https://www.smu.edu/ir/common-data-sets
+    final_url: https://www.smu.edu/ir/common-data-sets#gsc.tab=0&gsc.q=%20ir%20common%20data%20sets&gsc.sort=
+    status: ok
+    error: null
+    duration_ms: 5537
+    anchors:
+    - url: https://www.smu.edu/-/media/site/ir/commondatasets/2024/cds_2024-2025-definitions.pdf
+      text: Common Data Set 2024-2025 - SMU
+      year: 2024-25
+      is_document: true
+    - url: https://www.smu.edu/-/media/site/ir/commondatasets/2024/cds_2024-25-pt-e-academic-offerings.pdf
+      text: Common Data Set 2024-2025 - SMU
+      year: 2024-25
+      is_document: true
+    - url: https://www.smu.edu/-/media/site/ir/commondatasets/2023/cds_2023-2024_part-a-general-information.pdf
+      text: Common Data Set 2023-2024 - SMU
+      year: 2023-24
+      is_document: true
+    - url: https://www.smu.edu/-/media/site/ir/commondatasets/2023/cds_2023-2024-part-e-academic-offerings.pdf
+      text: Common Data Set 2023-2024 - SMU
+      year: 2023-24
+      is_document: true
+    - url: https://www.smu.edu/-/media/site/ir/commondatasets/2024/cds-2024-25-part-a-general-info.pdf
+      text: Common Data Set 2024-2025 - SMU
+      year: 2024-25
+      is_document: true
+    - url: https://www.smu.edu/-/media/site/ir/commondatasets/2024/cds-2024-25-part-c-first-time-freshman.pdf
+      text: 'Common Data Elements: - SMU'
+      year: 2024-25
+      is_document: true
+    - url: https://www.smu.edu/-/media/site/ir/commondatasets/2023/cds_2023-2024-part-c-first-time-freshman.pdf
+      text: 'Common Data Elements: - SMU'
+      year: 2023-24
+      is_document: true
+    - url: https://www.smu.edu/-/media/Site/ir/commondatasets/2022/CDS_2022-23-Definitions.pdf
+      text: Common Data Set Definitions - SMU
+      year: 2022-23
+      is_document: true
+    - url: https://www.smu.edu/-/media/site/ir/commondatasets/2025/cds-2025-26-part-c-first-time-freshman-final.pdf
+      text: 'C1-C2: Applications - SMU'
+      year: 2025-26
+      is_document: true
+    - url: https://www.smu.edu/-/media/Site/ir/commondatasets/2019/CDS_2019-2020_Definitions.pdf
+      text: Common Data Set Definitions - SMU
+      year: 2019-20
+      is_document: true
+    - url: https://www.google.com/search?client=ms-google-coop&q=+ir+common+data+sets&cx=002498849849150680630:zwylhr1wpxw
+      text: searchSearch " ir common data sets" on Google
+      year: null
+      is_document: false
+  baylor-university:
+    starting_url: https://ir.web.baylor.edu/common-data-sets
+    final_url: https://ir.web.baylor.edu/common-data-sets
+    status: ok
+    error: null
+    duration_ms: 1677
+    anchors:
+    - url: https://ir.web.baylor.edu/institutional-reports/common-data-set
+      text: Common Data Set
+      year: null
+      is_document: false
+  university-of-iowa:
+    starting_url: https://provost.uiowa.edu/common-data-set
+    final_url: https://provost.uiowa.edu/common-data-set
+    status: ok
+    error: null
+    duration_ms: 1665
+    anchors:
+    - url: https://provost.uiowa.edu/data-and-reports/common-data-set
+      text: Common Data Set
+      year: null
+      is_document: false
+  stevens-institute-of-technology:
+    starting_url: https://www.stevens.edu/institutional-research-and-analytics/common-data-set
+    final_url: https://www.stevens.edu/institutional-research-and-analytics/common-data-set
+    status: no_anchors
+    error: null
+    duration_ms: 3773
+    anchors: []
+  marquette-university:
+    starting_url: https://www.marquette.edu/institutional-research-analysis/common-data-set.php
+    final_url: https://www.marquette.edu/academic-effectiveness/institutional-research-analysis/public-reports/common-data-set.php
+    status: ok
+    error: null
+    duration_ms: 6743
+    anchors:
+    - url: https://www.marquette.edu/academic-effectiveness/institutional-research-analysis/public-reports/common-data-set.php
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://www.marquette.edu/academic-effectiveness/institutional-research-analysis/documents/cds-2025-2026_final.pdf
+      text: 2025 - 2026
+      year: 2025-26
+      is_document: true
+    - url: https://www.marquette.edu/academic-effectiveness/institutional-research-analysis/documents/cds-2024-2025_final.pdf
+      text: 2024 - 2025
+      year: 2024-25
+      is_document: true
+    - url: https://www.marquette.edu/academic-effectiveness/institutional-research-analysis/documents/cds-2023-24.pdf
+      text: 2023 - 2024
+      year: 2023-24
+      is_document: true
+    - url: https://www.marquette.edu/academic-effectiveness/institutional-research-analysis/documents/cds_2223_new.pdf
+      text: 2022 - 2023
+      year: null
+      is_document: true
+    - url: https://www.marquette.edu/academic-effectiveness/institutional-research-analysis/documents/cds21-22.pdf
+      text: 2021 - 2022
+      year: null
+      is_document: true
+    - url: https://www.marquette.edu/academic-effectiveness/institutional-research-analysis/documents/cds20-21-final.pdf
+      text: 2020 - 2021
+      year: null
+      is_document: true
+    - url: https://www.marquette.edu/academic-effectiveness/institutional-research-analysis/documents/cds19-20-final.pdf
+      text: 2019 - 2020
+      year: null
+      is_document: true
+    - url: https://www.marquette.edu/academic-effectiveness/institutional-research-analysis/documents/mu-cds-1819-final.pdf
+      text: 2018 - 2019
+      year: null
+      is_document: true
+    - url: https://www.marquette.edu/academic-effectiveness/institutional-research-analysis/documents/mu-cds-1718-final.pdf
+      text: 2017 - 2018
+      year: null
+      is_document: true
+    - url: https://www.marquette.edu/academic-effectiveness/institutional-research-analysis/documents/mu-cds-1617-final.pdf
+      text: 2016 - 2017
+      year: null
+      is_document: true
+    - url: https://www.marquette.edu/academic-effectiveness/institutional-research-analysis/documents/mu-cds-1516-final.pdf
+      text: 2015 - 2016
+      year: null
+      is_document: true
+  boston-college:
+    starting_url: https://www.bc.edu/bc-web/offices/institutional-research-planning.html
+    final_url: https://www.bc.edu/bc-web/offices/institutional-research-planning.html
+    status: no_anchors
+    error: null
+    duration_ms: 2175
+    anchors: []
+  boston-university:
+    starting_url: https://www.bu.edu/asir/bu-institutional-datasets/common-data-set/
+    final_url: https://www.bu.edu/asir/bu-facts/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 2313
+    anchors:
+    - url: https://www.bu.edu/asir/bu-facts/common-data-set/
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://www.bu.edu/asir/files/2026/04/CDS_2024_25-updated-sect-I.pdf
+      text: 2024-2025 Common Data Set
+      year: 2024-25
+      is_document: true
+    - url: https://www.bu.edu/asir/files/2025/03/cds-2025-a.pdf
+      text: A. General Information
+      year: null
+      is_document: true
+    - url: https://www.bu.edu/asir/files/2025/03/cds-2025-b.pdf
+      text: B. Enrollment and Persistence
+      year: null
+      is_document: true
+    - url: https://www.bu.edu/asir/files/2025/03/cds-2025-c.pdf
+      text: "C.\_First\u2010Time, First\u2010Year (Freshman) Admission"
+      year: null
+      is_document: true
+    - url: https://www.bu.edu/asir/files/2025/03/cds-2025-d.pdf
+      text: "D.\_Transfer Admission"
+      year: null
+      is_document: true
+    - url: https://www.bu.edu/asir/files/2025/03/cds-2025-e.pdf
+      text: "E.\_Academic Offerings and Policies"
+      year: null
+      is_document: true
+    - url: https://www.bu.edu/asir/files/2025/03/cds-2025-f.pdf
+      text: F. Student Life
+      year: null
+      is_document: true
+    - url: https://www.bu.edu/asir/files/2025/03/cds-2025-g.pdf
+      text: G. Annual Expenses
+      year: null
+      is_document: true
+    - url: https://www.bu.edu/asir/files/2025/03/cds-2025-h.pdf
+      text: H. Financial Aid
+      year: null
+      is_document: true
+    - url: https://www.bu.edu/asir/files/2026/04/CDS-Sect-I-2024-25.pdf
+      text: I. Instructional Faculty
+      year: 2024-25
+      is_document: true
+    - url: https://www.bu.edu/asir/files/2025/03/cds-2025-j.pdf
+      text: J. Degrees Conferred
+      year: null
+      is_document: true
+    - url: https://www.bu.edu/asir/bu-facts/common-data-set/cds-archive/
+      text: CDS Archive
+      year: null
+      is_document: false
+  william-and-mary:
+    starting_url: https://www.wm.edu/offices/ir/university_data/cds/
+    final_url: https://www.wm.edu/offices/ir/university_data/cds/
+    status: ok
+    error: null
+    duration_ms: 3800
+    anchors:
+    - url: https://www.wm.edu/offices/ir/university_data/cds/#main_content
+      text: Skip to main content
+      year: null
+      is_document: false
+    - url: https://www.wm.edu/offices/ir/university_data/cds/index.php
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds_2025-26_a1.pdf
+      text: 'A: General Info'
+      year: 2025-26
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds_2025-26_b3.pdf
+      text: 'B: Enrollment & Persistence'
+      year: 2025-26
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds_2025-26_c.pdf
+      text: 'C: First-time First-Year Admissions'
+      year: 2025-26
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds_2025-26_d.pdf
+      text: 'D: Transfer Admission'
+      year: 2025-26
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds_2025-26_e.pdf
+      text: 'E: Academic Offerings & Policies'
+      year: 2025-26
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds_2025-26_f.pdf
+      text: 'F: Student Life'
+      year: 2025-26
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds-2024-2025_g2.pdf
+      text: 'G: Annual Expenses'
+      year: 2024-25
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds_2025-26_h.pdf
+      text: 'H: Financial Aid'
+      year: 2025-26
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds_2025-26_i3.pdf
+      text: 'I: Instructional Faculty & Class Size'
+      year: 2025-26
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds_2025-26_j.pdf
+      text: 'J: Degrees Conferred'
+      year: 2025-26
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds_2025-2026-definition.pdf
+      text: CDS Definitions
+      year: 2025-26
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds-2025-26_working_04.14.2026.xlsx
+      text: 2025-26 CDS
+      year: 2025-26
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/wm_cds_2024-20251.xlsx
+      text: 2024-25 CDS
+      year: 2024-25
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds_2023_2024_working_may_2024.xlsx
+      text: 2023-24 CDS
+      year: 2023-24
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/22-23cdspdfs/cds_2022-2023-6_20_2023-1.xlsx
+      text: 2022-23 CDS
+      year: 2022-23
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds_2021-2022-as-of-may-20211.xlsx
+      text: 2021-22 CDS
+      year: 2021-22
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds_2020-2021-as-of-apr-2021.xlsx
+      text: 2020-21 CDS
+      year: 2020-21
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds_2019-2020-working-file-as-of-11_11_2020.xlsx
+      text: 2019-20 CDS
+      year: 2019-20
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/2018-2019-common-data-set-working-file.xlsx
+      text: 2018-19 CDS
+      year: 2018-19
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds1718_working_v2.xlsx
+      text: 2017-18 CDS
+      year: 2017-18
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds1617.xls
+      text: 2016-17 CDS
+      year: 2016-17
+      is_document: false
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds1516.xls
+      text: 2015-16 CDS
+      year: 2015-16
+      is_document: false
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds1415.xls
+      text: 2014-15 CDS
+      year: 2014-15
+      is_document: false
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds1314.xls
+      text: 2013-14 CDS
+      year: 2013-14
+      is_document: false
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds1213.xls
+      text: 2012-13 CDS
+      year: 2012-13
+      is_document: false
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds1112.xls
+      text: 2011-12 CDS
+      year: 2011-12
+      is_document: false
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds1011.xls
+      text: 2010-11 CDS
+      year: 2010-11
+      is_document: false
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds0910.xls
+      text: 2009-10 CDS
+      year: 2009-10
+      is_document: false
+    - url: https://www.wm.edu/offices/ir/university_data/cds/live-cds2008_2009.xls
+      text: 2008-09 CDS
+      year: 2008-09
+      is_document: false
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds0708-revised-for-ftpt-override.xls
+      text: 2007-08 CDS
+      year: 2007-08
+      is_document: false
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds0607.xls
+      text: 2006-07 CDS
+      year: 2006-07
+      is_document: false
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds0506.xls
+      text: 2005-06 CDS
+      year: 2005-06
+      is_document: false
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds_2004_05.xls
+      text: 2004-05 CDS
+      year: 2004-05
+      is_document: false
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds_2003-04.xls
+      text: 2003-04 CDS
+      year: 2003-04
+      is_document: false
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds2002.xls
+      text: 2002-03 CDS
+      year: 2002-03
+      is_document: false
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds0102.pdf
+      text: 2001-02 CDS
+      year: 2001-02
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds0001.pdf
+      text: 2000-01 CDS
+      year: 2000-01
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds9900.pdf
+      text: 1999-00 CDS
+      year: null
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds9899.pdf
+      text: 1998-99 CDS
+      year: null
+      is_document: true
+    - url: https://www.wm.edu/offices/ir/university_data/cds/cds9798.pdf
+      text: 1997-98 CDS
+      year: null
+      is_document: true
+  pomona-college:
+    starting_url: https://www.pomona.edu/administration/institutional-research/common-data-sets
+    final_url: https://www.pomona.edu/administration/institutional-research/common-data-sets
+    status: no_anchors
+    error: null
+    duration_ms: 711
+    anchors: []
+  wellesley-college:
+    starting_url: https://www.wellesley.edu/institutionalplanningandassessment/institutional-research/common-data-set
+    final_url: https://www.wellesley.edu/institutionalplanningandassessment/institutional-research/common-data-set#gsc.tab=0
+    status: no_anchors
+    error: null
+    duration_ms: 2857
+    anchors: []
+  carleton-college:
+    starting_url: https://www.carleton.edu/ir/common-data-set/
+    final_url: https://www.carleton.edu/ir/common-data-set/
+    status: no_anchors
+    error: null
+    duration_ms: 1120
+    anchors: []
+  middlebury-college:
+    starting_url: https://www.middlebury.edu/office/institutional-research-and-analysis/common-data-sets
+    final_url: https://www.middlebury.edu/institutional-research-and-analysis/common-data-sets
+    status: no_anchors
+    error: null
+    duration_ms: 645
+    anchors: []
+  vassar-college:
+    starting_url: https://offices.vassar.edu/institutional-research/common-data-set/
+    final_url: https://offices.vassar.edu/institutional-research/data/common-data-set-2022-23/
+    status: ok
+    error: null
+    duration_ms: 5646
+    anchors:
+    - url: https://offices.vassar.edu/institutional-research/data/
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://offices.vassar.edu/institutional-research/wp-content/uploads/sites/23/2023/03/Vassar-College-CDS-2022-2023.pdf
+      text: CDS 22-23
+      year: 2022-23
+      is_document: true
+  smith-college:
+    starting_url: https://www.smith.edu/about-smith/institutional-research/reports
+    final_url: https://www.smith.edu/about-smith/institutional-research/reports
+    status: no_anchors
+    error: null
+    duration_ms: 1276
+    anchors: []
+  haverford-college:
+    starting_url: https://www.haverford.edu/institutional-research/common-data-set
+    final_url: https://www.haverford.edu/institutional-research/common-data-set
+    status: no_anchors
+    error: null
+    duration_ms: 1440
+    anchors: []
+  grinnell-college:
+    starting_url: https://www.grinnell.edu/about/leadership/offices/analytic-support-institutional-research/common-data-set
+    final_url: https://www.grinnell.edu/about/leadership/offices/analytic-support-institutional-research/common-data-set
+    status: no_anchors
+    error: null
+    duration_ms: 884
+    anchors: []
+  colgate-university:
+    starting_url: https://www.colgate.edu/about/institutional-research/common-data-set
+    final_url: https://www.colgate.edu/about/institutional-research/common-data-set
+    status: no_anchors
+    error: null
+    duration_ms: 628
+    anchors: []
+  wesleyan-university:
+    starting_url: https://www.wesleyan.edu/ir/data-sets/cds.html
+    final_url: https://www.wesleyan.edu/ir/data-sets/cds.html
+    status: ok
+    error: null
+    duration_ms: 2601
+    anchors:
+    - url: https://www.wesleyan.edu/ir/data-sets/cds.html#maincontent
+      text: Skip to main content
+      year: null
+      is_document: false
+  university-of-richmond:
+    starting_url: https://ifx.richmond.edu/cds
+    final_url: https://ifx.richmond.edu/cds
+    status: ok
+    error: null
+    duration_ms: 1630
+    anchors:
+    - url: https://ifx.richmond.edu/cds#content
+      text: Skip to Main Content
+      year: null
+      is_document: false
+    - url: https://ifx.richmond.edu/research/common-data.html
+      text: Common Data Set
+      year: null
+      is_document: false
+  macalester-college:
+    starting_url: https://www.macalester.edu/institutional-research/common-data-set/
+    final_url: https://www.macalester.edu/institutional-research/common-data-set/
+    status: no_anchors
+    error: null
+    duration_ms: 1519
+    anchors: []
+  williams-college:
+    starting_url: https://www.williams.edu/institutional-research/common-data-set/
+    final_url: https://www.williams.edu/institutional-research/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 1945
+    anchors:
+    - url: https://www.williams.edu/institutional-research/files/2026/04/Williams-CDS-2025-2026-V2.pdf
+      text: Common Data Set 2025-2026
+      year: 2025-26
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2025/06/CDS_2024_2025_Williams_V5.pdf
+      text: Common Data Set 2024-2025
+      year: 2024-25
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2024/03/CDS_2023_2024_Williams_March2024.pdf
+      text: ''
+      year: 2023-24
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2024/04/CDS_2023_2024_Williams_April2024.pdf
+      text: Common Data Set 2023-2024
+      year: 2023-24
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2023/06/CDS_2022_2023_Williams_June2023.pdf
+      text: Common Data Set 2022-2023
+      year: 2022-23
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2022/06/2021-2022_williams_common_data_set.pdf
+      text: Common Data Set 2021-2022
+      year: 2021-22
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2022/06/2020-2021_williams_common_data_set.pdf
+      text: Common Data Set 2020-2021
+      year: 2020-21
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2022/06/2019-2020_williams_common_data_set.pdf
+      text: Common Data Set 2019-2020
+      year: 2019-20
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2018-2019_williams_common_data_set.pdf
+      text: Common Data Set 2018-2019
+      year: 2018-19
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2017-2018_williams_common_data_set.pdf
+      text: Common Data Set 2017-2018
+      year: 2017-18
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2016-2017_williams_common_data_set.pdf
+      text: Common Data Set 2016-2017
+      year: 2016-17
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2015-2016_williams_common_data_set.pdf
+      text: Common Data Set 2015-2016
+      year: 2015-16
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2014-2015_williams_common_data_set.pdf
+      text: Common Data Set 2014-2015
+      year: 2014-15
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2013-2014_williams_common_data_set.pdf
+      text: Common Data Set 2013-2014
+      year: 2013-14
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2012-2013_williams_common_data_set.pdf
+      text: Common Data Set 2012-2013
+      year: 2012-13
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2011-2012_williams_common_data_set.pdf
+      text: Common Data Set 2011-2012
+      year: 2011-12
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2010-2011_williams_common_data_set.pdf
+      text: Common Data Set 2010-2011
+      year: 2010-11
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2009-2010_williams_common_data_set.pdf
+      text: Common Data Set 2009-2010
+      year: 2009-10
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2008-2009_williams_common_data_set.pdf
+      text: Common Data Set 2008-2009
+      year: 2008-09
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2007-2008_williams_common_data_set.pdf
+      text: Common Data Set 2007-2008
+      year: 2007-08
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2006-2007_williams_common_data_set.pdf
+      text: Common Data Set 2006-2007
+      year: 2006-07
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2005-2006_williams_common_data_set.pdf
+      text: Common Data Set 2005-2006
+      year: 2005-06
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2004-2005_williams_common_data_set.pdf
+      text: Common Data Set 2004-2005
+      year: 2004-05
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2003-2004_williams_common_data_set.pdf
+      text: Common Data Set 2003-2004
+      year: 2003-04
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2002_2003_williams_common_data_set.pdf
+      text: Common Data Set 2002-2003
+      year: 2002-03
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2001-2002_williams_common_data_set.pdf
+      text: Common Data Set 2001-2002
+      year: 2001-02
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2000-2001_williams_common_data_set.pdf
+      text: Common Data Set 2000-2001
+      year: 2000-01
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/1999-2000_williams_common_data_set.pdf
+      text: Common Data Set 1999-2000
+      year: null
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/1998-1999_williams_common_data_set.pdf
+      text: Common Data Set 1998-1999
+      year: null
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/common-data-set/
+      text: Common Data Set
+      year: null
+      is_document: false
+  university-of-chicago:
+    starting_url: https://provost.uchicago.edu/reports/common-data-set
+    final_url: https://provost.uchicago.edu/reports/common-data-set
+    status: no_anchors
+    error: null
+    duration_ms: 1379
+    anchors: []
+  caltech:
+    starting_url: https://iro.caltech.edu/common-data-set/
+    final_url: https://iro.caltech.edu/common-data-set
+    status: no_anchors
+    error: null
+    duration_ms: 1194
+    anchors: []
+  johns-hopkins-university:
+    starting_url: https://ir.jhu.edu/common-data-set/
+    final_url: null
+    status: nav_error
+    error: "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://ir.jhu.edu/common-data-set/\nCall log:\n  - navigating to \"\
+      https://ir.jhu.edu/common-data-set/\", waiting until \"domcontentloaded\"\n"
+    duration_ms: 8
+    anchors: []
+  university-of-california-berkeley:
+    starting_url: https://opa.berkeley.edu/campus-data/common-data-set
+    final_url: https://opa.berkeley.edu/campus-data/common-data-set
+    status: ok
+    error: null
+    duration_ms: 863
+    anchors:
+    - url: https://opa.berkeley.edu/campus-data/common-data-set
+      text: Common Data Set
+      year: null
+      is_document: false
+  university-of-california-los-angeles:
+    starting_url: https://www.aim.ucla.edu/institutional-research/common-data-set
+    final_url: https://apb.ucla.edu/institutional-research/common-data-set
+    status: ok
+    error: null
+    duration_ms: 972
+    anchors:
+    - url: https://apb.ucla.edu/campus-statistics/common-data-set
+      text: Common Data Set & Undergraduate Profile
+      year: null
+      is_document: false
+  rice-university:
+    starting_url: https://oir.rice.edu/cds
+    final_url: http://ideas.rice.edu/functions-services
+    status: ok
+    error: null
+    duration_ms: 2009
+    anchors:
+    - url: https://ideas.rice.edu/reporting-analytics/common-data-set/
+      text: Common Data Set
+      year: null
+      is_document: false
+  vanderbilt-university:
+    starting_url: https://www.vanderbilt.edu/oire/institutional-data/
+    final_url: https://www.vanderbilt.edu/oire/institutional-data/
+    status: no_anchors
+    error: null
+    duration_ms: 1451
+    anchors: []
+  university-of-michigan:
+    starting_url: https://obp.umich.edu/campus-statistics/common-data-set/
+    final_url: https://obp.umich.edu/campus-statistics/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 1499
+    anchors:
+    - url: https://obp.umich.edu/campus-statistics/common-data-set/
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2025-26_umaa.pdf
+      text: 2025-26 Common Data Set
+      year: 2025-26
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/CDS_2024-25_UMAA.pdf
+      text: 2024-25 Common Data Set
+      year: 2024-25
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/CDS_2023-24_UMAA_10-25-24.pdf
+      text: 2023-24 Common Data Set
+      year: 2023-24
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2022-2023_umaa.pdf
+      text: 2022-23 Common Data Set
+      year: 2022-23
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2021-2022_umaa.pdf
+      text: 2021-22 Common Data Set
+      year: 2021-22
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2020-2021_umaa.pdf
+      text: 2020-21 Common Data Set
+      year: 2020-21
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2019-2020_umaa.pdf
+      text: 2019-20 Common Data Set
+      year: 2019-20
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2018-2019_umaa.pdf
+      text: 2018-19 Common Data Set
+      year: 2018-19
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2017-2018_umaa.pdf
+      text: 2017-18 Common Data Set
+      year: 2017-18
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2016-2017_umaa.pdf
+      text: 2016-17 Common Data Set
+      year: 2016-17
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2015-2016_umaa.pdf
+      text: 2015-16 Common Data Set
+      year: 2015-16
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2014-2015_umaa.pdf
+      text: 2014-15 Common Data Set
+      year: 2014-15
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2013-2014_umaa.pdf
+      text: 2013-14 Common Data Set
+      year: 2013-14
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2012-2013_umaa.pdf
+      text: 2012-13 Common Data Set
+      year: 2012-13
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2011-2012_umaa.pdf
+      text: 2011-12 Common Data Set
+      year: 2011-12
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2010-2011_umaa.pdf
+      text: 2010-11 Common Data Set
+      year: 2010-11
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2009-2010_umaa.pdf
+      text: 2009-10 Common Data Set
+      year: 2009-10
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2008-2009_umaa.pdf
+      text: 2008-09 Common Data Set
+      year: 2008-09
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2007-2008_umaa.pdf
+      text: 2007-08 Common Data Set
+      year: 2007-08
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2006-2007_umaa.pdf
+      text: 2006-07 Common Data Set
+      year: 2006-07
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2005-2006_umaa.pdf
+      text: 2005-06 Common Data Set
+      year: 2005-06
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2004-2005_umaa.pdf
+      text: 2004-05 CommonData Set
+      year: 2004-05
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2003-2004_umaa.pdf
+      text: 2003-04 Common Data Set
+      year: 2003-04
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2002-2003_umaa.pdf
+      text: 2002-03 Common Data Set
+      year: 2002-03
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2001-2002_umaa.pdf
+      text: 2001-02 Common Data Set
+      year: 2001-02
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2000-2001_umaa.pdf
+      text: 2000-01 Common Data Set
+      year: 2000-01
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_1999-2000_umaa.pdf
+      text: 1999-00 Common Data Set
+      year: null
+      is_document: true
+    - url: https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_1998-1999_umaa.pdf
+      text: 1998-99 Common Data Set
+      year: null
+      is_document: true
+  georgetown-university:
+    starting_url: https://oir.georgetown.edu/institutional-profile/common-data-set/
+    final_url: null
+    status: nav_error
+    error: "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://oir.georgetown.edu/institutional-profile/common-data-set/\nCall\
+      \ log:\n  - navigating to \"https://oir.georgetown.edu/institutional-profile/common-data-set"
+    duration_ms: 7
+    anchors: []
+  university-of-north-carolina-at-chapel-hill:
+    starting_url: https://oira.unc.edu/reports/institutional-reports/common-data-set/
+    final_url: https://oira.unc.edu/reports/reports-archives/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 1558
+    anchors:
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2025/08/CDS_UNCCH_2024-25_20250829.pdf
+      text: 2024-25
+      year: 2024-25
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2024/07/CDS_PUBLISHED_2023_2024_07162024.pdf
+      text: 2023-24
+      year: 2023-24
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2024/02/CDS_2022-23_20240206.pdf
+      text: 2022-23
+      year: 2022-23
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2023/08/CDS_2021-22_20230825.pdf
+      text: 2021-22
+      year: 2021-22
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2022/07/CDS_2020-21_20220705.pdf
+      text: 2020-21
+      year: 2020-21
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2020/12/CDS_2019-2020_20201201.pdf
+      text: 2019-20
+      year: 2019-20
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2020/05/CDS_2018-2019_20200513.pdf
+      text: 2018-19
+      year: 2018-19
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2018/06/CDS_2017-2018_20180605.pdf
+      text: 2017-18
+      year: 2017-18
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2018/03/cds_2016_2017_20180315.pdf
+      text: 2016-17
+      year: 2016-17
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2017/07/CDS_2015-2016_2016041416.pdf
+      text: 2015-16
+      year: 2015-16
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2018/03/CH-CDS_2014-2015-Final-March-22-2018-Revision.pdf
+      text: 2014-15
+      year: 2014-15
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2017/07/cds_2013_2014.pdf
+      text: 2013-14
+      year: 2013-14
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2018/03/CDS-12-13-March-22-2018-Revision.pdf
+      text: 2012-13
+      year: 2012-13
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2017/07/cds_2011_2012.pdf
+      text: 2011-12
+      year: 2011-12
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2017/07/cds_2010_2011.pdf
+      text: 2010-11
+      year: 2010-11
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2017/07/cds_2009_2010.pdf
+      text: 2009-10
+      year: 2009-10
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2017/07/cds_2008_2009.pdf
+      text: 2008-09
+      year: 2008-09
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2017/07/cds_2007_2008_final.pdf
+      text: 2007-08
+      year: 2007-08
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2017/07/cds_2006_2007.pdf
+      text: 2006-07
+      year: 2006-07
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2017/07/cds_2005_2006.pdf
+      text: 2005-06
+      year: 2005-06
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2017/07/cds_2004_2005.pdf
+      text: 2004-05
+      year: 2004-05
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2017/07/cds_2003-2004.pdf
+      text: 2003-04
+      year: 2003-04
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2017/07/cds_2002_2003.pdf
+      text: 2002-03
+      year: 2002-03
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2017/07/cds_2001_2002.pdf
+      text: 2001-02
+      year: 2001-02
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2017/07/cds_2000_2001.pdf
+      text: 2000-01
+      year: 2000-01
+      is_document: true
+    - url: https://oira.unc.edu/wp-content/uploads/sites/297/2017/07/cds_1999_2000.pdf
+      text: 1999-00
+      year: null
+      is_document: true
+  emory-university:
+    starting_url: https://oirpe.emory.edu/data-information/common-data-set/index.html
+    final_url: https://provost.emory.edu/planning-administration/index.html
+    status: no_anchors
+    error: null
+    duration_ms: 2808
+    anchors: []
+  university-of-virginia-main-campus:
+    starting_url: https://ira.virginia.edu/common-data-set
+    final_url: https://ira.virginia.edu/common-data-set
+    status: ok
+    error: null
+    duration_ms: 1503
+    anchors:
+    - url: https://ira.virginia.edu/data-analytics/common-data-set-initiatve
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://ira.virginia.edu/data-analytics/cds/2021-2022
+      text: View Data Set
+      year: 2021-22
+      is_document: false
+    - url: https://ira.virginia.edu/data-analytics/cds/2020-2021
+      text: View Data Set
+      year: 2020-21
+      is_document: false
+  university-of-southern-california:
+    starting_url: https://oir.usc.edu/common-data-set/
+    final_url: https://oir.usc.edu/statistics-data-visualization/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 1327
+    anchors:
+    - url: https://oir.usc.edu/statistics-data-visualization/common-data-set/
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://oir.usc.edu/common-data-set-archive/common-data-set-2024-2025/
+      text: Common Data Set 2024-2025
+      year: 2024-25
+      is_document: false
+    - url: https://oir.usc.edu/common-data-set-archive/common-data-set-2023-2024/
+      text: Common Data Set 2023-2024
+      year: 2023-24
+      is_document: false
+    - url: https://oir.usc.edu/common-data-set-archive/common-data-set-2022-2023/
+      text: Common Data Set 2022-2023
+      year: 2022-23
+      is_document: false
+    - url: https://oir.usc.edu/common-data-set-archive/common-data-set-2021-2022/
+      text: Common Data Set 2021-2022
+      year: 2021-22
+      is_document: false
+    - url: https://oir.usc.edu/common-data-set-archive/common-data-set-template/
+      text: Common Data Set 2020-2021
+      year: 2020-21
+      is_document: false
+    - url: https://oir.usc.edu/common-data-set-archive/common-data-set-2019-2020/
+      text: Common Data Set 2019-2020
+      year: 2019-20
+      is_document: false
+  new-york-university:
+    starting_url: https://www.nyu.edu/about/policies-guidelines-compliance/policies-and-guidelines/common-data-set.html
+    final_url: https://www.nyu.edu/about/policies-guidelines-compliance/policies-and-guidelines/common-data-set.html
+    status: no_anchors
+    error: null
+    duration_ms: 3610
+    anchors: []
+  university-of-florida:
+    starting_url: https://ir.aa.ufl.edu/surveys/common-data-set/
+    final_url: https://ir.aa.ufl.edu/file-not-found/
+    status: ok
+    error: null
+    duration_ms: 3063
+    anchors:
+    - url: https://ir.aa.ufl.edu/reports/cds-reports/
+      text: CDS Reports
+      year: null
+      is_document: false
+  university-of-texas-at-austin:
+    starting_url: https://reports.utexas.edu/common-data-set
+    final_url: https://reports.utexas.edu/common-data-set
+    status: ok
+    error: null
+    duration_ms: 1526
+    anchors:
+    - url: https://reports.utexas.edu/common-data-set
+      text: Common Data Set
+      year: null
+      is_document: false
+  university-of-wisconsin-madison:
+    starting_url: https://apir.wisc.edu/institutional-research/common-data-set/
+    final_url: null
+    status: nav_error
+    error: "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://apir.wisc.edu/institutional-research/common-data-set/\nCall log:\n\
+      \  - navigating to \"https://apir.wisc.edu/institutional-research/common-data-set/\", wait"
+    duration_ms: 8
+    anchors: []
+  georgia-institute-of-technology-main-campus:
+    starting_url: https://lite.gatech.edu/common-data-set/
+    final_url: https://lite.gatech.edu/common-data-set/
+    status: no_anchors
+    error: null
+    duration_ms: 1116
+    anchors: []
+  university-of-california-san-diego:
+    starting_url: https://ir.ucsd.edu/stats/undergrad/cds.html
+    final_url: https://ir.ucsd.edu/stats/undergrad/cds.html
+    status: ok
+    error: null
+    duration_ms: 3808
+    anchors:
+    - url: https://ir.ucsd.edu/stats/undergrad/cds.html#a-main
+      text: Skip to the main content
+      year: null
+      is_document: false
+  university-of-california-davis:
+    starting_url: https://budget.ucdavis.edu/data-reports/common-data-set.html
+    final_url: https://budget.ucdavis.edu/data-reports/common-data-set.html
+    status: no_anchors
+    error: null
+    duration_ms: 970
+    anchors: []
+  university-of-california-irvine:
+    starting_url: https://oir.uci.edu/common-data-set/
+    final_url: https://irap.uci.edu/institutional-research/
+    status: no_anchors
+    error: null
+    duration_ms: 2167
+    anchors: []
+  university-of-california-santa-barbara:
+    starting_url: https://bap.ucsb.edu/institutional-research/common-data-set
+    final_url: https://bap.ucsb.edu/institutional-research/common-data-set
+    status: no_anchors
+    error: null
+    duration_ms: 811
+    anchors: []
+  tufts-university:
+    starting_url: https://provost.tufts.edu/institutionalresearch/common-data-set/
+    final_url: https://provost.tufts.edu/institutionalresearch/about-tufts/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 1550
+    anchors:
+    - url: https://provost.tufts.edu/institutionalresearch/about-tufts/common-data-set/
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2024-2025-1.pdf
+      text: 2024-2025 Common Data Set
+      year: 2024-25
+      is_document: true
+    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2023_2024.pdf
+      text: 2023-2024 Common Data Set
+      year: 2023-24
+      is_document: true
+    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2022-2023.pdf
+      text: 2022-2023 Common Data Set
+      year: 2022-23
+      is_document: true
+    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS-2021-2022.pdf
+      text: 2021-2022 Common Data Set
+      year: 2021-22
+      is_document: true
+    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2020-2021_Final-Revised-9.1.21.pdf
+      text: 2020-2021 Common Data Set
+      year: 2020-21
+      is_document: true
+    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2019-2020_Final-Revised-7.28.20.pdf
+      text: 2019-2020 Common Data Set
+      year: 2019-20
+      is_document: true
+    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2018-2019-Final-Revised-7.22.19.pdf
+      text: 2018-2019 Common Data Set
+      year: 2018-19
+      is_document: true
+    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2017-2018.pdf
+      text: 2017-2018 Common Data Set
+      year: 2017-18
+      is_document: true
+    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2016-2017.pdf
+      text: 2016-2017 Common Data Set
+      year: 2016-17
+      is_document: true
+    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/Tufts_CDS_2015-2016.pdf
+      text: 2015-2016 Common Data Set
+      year: 2015-16
+      is_document: true
+  wake-forest-university:
+    starting_url: https://ir.wfu.edu/common-data-set/
+    final_url: https://ir.wfu.edu/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 3163
+    anchors:
+    - url: https://ir.wfu.edu/common-data-set/
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2025/07/CDS-2024-2025-fillable-WFU.pdf
+      text: 2024-25 (opens in a new tab)
+      year: 2024-25
+      is_document: true
+    - url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2025/02/CDS_2023-2024_2025-02-07.pdf
+      text: 2023-24 (opens in a new tab)
+      year: 2023-24
+      is_document: true
+    - url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2023/06/CDS_2022-2023-1.pdf
+      text: 2022-23 (opens in a new tab)
+      year: 2022-23
+      is_document: true
+    - url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2017/09/CDS_2021-2022-1.pdf
+      text: 2021-22 (opens in a new tab)
+      year: 2021-22
+      is_document: true
+    - url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2023/01/CDS_2020-2021-3.pdf
+      text: 2020-21 (opens in a new tab)
+      year: 2020-21
+      is_document: true
+    - url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2023/01/CDS_2019-2020.pdf
+      text: 2019-20 (opens in a new tab)
+      year: 2019-20
+      is_document: true
+    - url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2019/04/CDS_2018-2019.pdf
+      text: 2018-19 (opens in a new tab)
+      year: 2018-19
+      is_document: true
+    - url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2018/02/CDS_2017-2018.pdf
+      text: 2017-18 (opens in a new tab)
+      year: 2017-18
+      is_document: true
+    - url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2017/10/CDS_2016-2017.pdf
+      text: 2016-17 (opens in a new tab)
+      year: 2016-17
+      is_document: true
+    - url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2017/10/CDS_2015-2016.pdf
+      text: 2015-16 (opens in a new tab)
+      year: 2015-16
+      is_document: true
+    - url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2017/10/CDS_2014-2015.pdf
+      text: 2014-15 (opens in a new tab)
+      year: 2014-15
+      is_document: true
+    - url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2017/10/cds2013wfu.pdf
+      text: 2013-14 (opens in a new tab)
+      year: 2013-14
+      is_document: true
+    - url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2017/10/cds2012wfu.pdf
+      text: 2012-13 (opens in a new tab)
+      year: 2012-13
+      is_document: true
+    - url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2017/10/cds2011wfu.pdf
+      text: 2011-12 (opens in a new tab)
+      year: 2011-12
+      is_document: true
+    - url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2017/10/cds2010wfu.pdf
+      text: 2010-11 (opens in a new tab)
+      year: 2010-11
+      is_document: true
+    - url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2017/10/cds2009wfu.pdf
+      text: 2009-10
+      year: 2009-10
+      is_document: true
+    - url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2017/10/cds2008wfu.pdf
+      text: 2008-09
+      year: 2008-09
+      is_document: true
+    - url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2017/10/cds2007wfu.pdf
+      text: 2007-08
+      year: 2007-08
+      is_document: true
+  tulane-university:
+    starting_url: https://oir.tulane.edu/common-data-set
+    final_url: null
+    status: nav_error
+    error: "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://oir.tulane.edu/common-data-set\nCall log:\n  - navigating to\
+      \ \"https://oir.tulane.edu/common-data-set\", waiting until \"domcontentloaded\"\n"
+    duration_ms: 7
+    anchors: []
+  university-of-washington-seattle-campus:
+    starting_url: https://www.washington.edu/opb/common-data-set/
+    final_url: https://www.washington.edu/opb/uw-data/external-reporting/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 2605
+    anchors:
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2026/02/27111247/CDS_2025-2026_Seattle.pdf
+      text: 2025-26 CDS
+      year: 2025-26
+      is_document: true
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2026/02/27111246/CDS_2025-2026_Bothell.pdf
+      text: 2025-26 CDS
+      year: 2025-26
+      is_document: true
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2026/02/27111249/CDS_2025-2026_Tacoma.pdf
+      text: 2025-26 CDS
+      year: 2025-26
+      is_document: true
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2025/04/01121035/CDS_2024-2025_Seattle.pdf
+      text: 2024-25 CDS
+      year: 2024-25
+      is_document: true
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2025/04/01121033/CDS_2024-2025_Bothell.pdf
+      text: 2024-25 CDS
+      year: 2024-25
+      is_document: true
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2025/04/01121037/CDS_2024-2025_Tacoma.pdf
+      text: 2024-25 CDS
+      year: 2024-25
+      is_document: true
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2024/03/01124227/CDS_Seattle_2023_2024.xlsx
+      text: 2023-24 CDS
+      year: 2023-24
+      is_document: true
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2024/03/01124226/CDS_Bothell_2023_2024.xlsx
+      text: 2023-24 CDS
+      year: 2023-24
+      is_document: true
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2024/03/01124246/CDS_Tacoma_2023_2024.xlsx
+      text: 2023-24 CDS
+      year: 2023-24
+      is_document: true
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2023/05/15160051/CDS_2022-2023_Seattle.xlsx
+      text: 2022-23 CDS
+      year: 2022-23
+      is_document: true
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2023/02/22104529/CDS_2022-2023_Bothell.xlsx
+      text: 2022-23 CDS
+      year: 2022-23
+      is_document: true
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2023/02/22104530/CDS_2022-2023_Tacoma.xlsx
+      text: 2022-23 CDS
+      year: 2022-23
+      is_document: true
+    - url: https://www.washington.edu/opb/uw-data/external-reporting/common-data-set/cds_2021-2022_seattle/
+      text: 2021-22 CDS
+      year: 2021-22
+      is_document: false
+    - url: https://www.washington.edu/opb/uw-data/external-reporting/common-data-set/cds_2021-2022_bothell/
+      text: 2021-22 CDS
+      year: 2021-22
+      is_document: false
+    - url: https://www.washington.edu/opb/uw-data/external-reporting/common-data-set/cds_2021-2022_tacoma/
+      text: 2021-22 CDS
+      year: 2021-22
+      is_document: false
+    - url: https://www.washington.edu/opb/uw-data/external-reporting/common-data-set/cds_2020-2021_seattle-3/
+      text: 2020-21 CDS
+      year: 2020-21
+      is_document: false
+    - url: https://www.washington.edu/opb/uw-data/external-reporting/common-data-set/cds_2020-2021_bothell-2/
+      text: 2020-21 CDS
+      year: 2020-21
+      is_document: false
+    - url: https://www.washington.edu/opb/uw-data/external-reporting/common-data-set/cds_2020-2021_tacoma-2/
+      text: 2020-21 CDS
+      year: 2020-21
+      is_document: false
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2018/10/12161233/CDS_2019-2020_seattle.xlsx
+      text: 2019-20 CDS
+      year: 2019-20
+      is_document: true
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2018/10/11150801/CDS_2019-2020_Bothell.xlsx
+      text: 2019-20 CDS
+      year: 2019-20
+      is_document: true
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2018/10/12162240/CDS_2019-2020_tacoma.xlsx
+      text: 2019-20 CDS
+      year: 2019-20
+      is_document: true
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2018/10/11151933/2018-2019-Common-Data-Set_Seattle_updated.xlsx
+      text: 2018-19 CDS
+      year: 2018-19
+      is_document: true
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2018/10/11154031/2018-2019-Common-Data-Set_Bothell_updated.xlsx
+      text: 2018-19 CDS
+      year: 2018-19
+      is_document: true
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2018/10/11153720/2018-2019-Common-Data-Set_Tacoma_updated.xlsx
+      text: 2018-19 CDS
+      year: 2018-19
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2017-2018_Seattle.xlsx
+      text: 2017-18 CDS
+      year: 2017-18
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2017-2018_Bothell.xlsx
+      text: 2017-18 CDS
+      year: 2017-18
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2017-2018_Tacoma.xlsx
+      text: 2017-18 CDS
+      year: 2017-18
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2016-2017_Seattle.xlsx
+      text: 2016-17 CDS
+      year: 2016-17
+      is_document: true
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2018/12/19143536/CDS_2016-2017_Bothell.xlsx
+      text: 2016-17 CDS
+      year: 2016-17
+      is_document: true
+    - url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2018/12/19143537/CDS_2016-2017_Tacoma.xlsx
+      text: 2016-17 CDS
+      year: 2016-17
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2015-2016_Seattle_updated.xlsx
+      text: 2015-16 CDS
+      year: 2015-16
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2015-2016_Bothell_updated.xlsx
+      text: 2015-16 CDS
+      year: 2015-16
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2015-2016_Tacoma_updated.xlsx
+      text: 2015-16 CDS
+      year: 2015-16
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2014-2015%20Seattle.xlsx
+      text: 2014-15 CDS
+      year: 2014-15
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2014-2015%20Bothell.xlsx
+      text: 2014-15 CDS
+      year: 2014-15
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2014-2015%20Tacoma.xlsx
+      text: 2014-15 CDS
+      year: 2014-15
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2013-2014_Seattle.xlsx
+      text: 2013-14 CDS
+      year: 2013-14
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2013-2014_Bothell.xlsx
+      text: 2013-14 CDS
+      year: 2013-14
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2013-2014_Tacoma.xlsx
+      text: 2013-14 CDS
+      year: 2013-14
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2012-2013_Seattle.xlsx
+      text: 2012-13 CDS
+      year: 2012-13
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2012-2013_Bothell.xlsx
+      text: 2012-13 CDS
+      year: 2012-13
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2012-2013_Tacoma.xlsx
+      text: 2012-13 CDS
+      year: 2012-13
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2011-2012_Seattle.xlsx
+      text: 2011-12 CDS
+      year: 2011-12
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2011-2012_Bothell.xlsx
+      text: 2011-12 CDS
+      year: 2011-12
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2011-2012_Tacoma.xlsx
+      text: 2011-12 CDS
+      year: 2011-12
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CB_2010-11_Print%20Survey.pdf
+      text: 2010-11 CDS
+      year: 2010-11
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/CDS_2009.pdf
+      text: 2009-10 CDS
+      year: 2009-10
+      is_document: true
+    - url: http://depts.washington.edu/opbfiles/web/common_data_set_2008.pdf
+      text: 2008-09 CDS
+      year: 2008-09
+      is_document: true
+    - url: https://www.washington.edu/opb/uw-data/external-reporting/common-data-set/
+      text: Common Data Set
+      year: null
+      is_document: false
+  ohio-state-university:
+    starting_url: https://ipr.osu.edu/common-data-set
+    final_url: https://ipr.osu.edu/common-data-set
+    status: no_anchors
+    error: null
+    duration_ms: 1256
+    anchors: []
+  purdue-university:
+    starting_url: https://www.purdue.edu/datadigest/pages/common_data_set.html
+    final_url: https://www.purdue.edu/datadigest/pages/common_data_set.html
+    status: no_anchors
+    error: null
+    duration_ms: 2806
+    anchors: []
+  university-of-maryland-college-park:
+    starting_url: https://www.irpa.umd.edu/InstitutionalData/CommonDataSet/
+    final_url: https://www.irpa.umd.edu/InstitutionalData/CommonDataSet/
+    status: no_anchors
+    error: null
+    duration_ms: 930
+    anchors: []
+  lehigh-university:
+    starting_url: https://oirsa.lehigh.edu/lehigh-common-data-sets
+    final_url: https://data.lehigh.edu/lehigh-common-data-sets
+    status: ok
+    error: null
+    duration_ms: 1958
+    anchors:
+    - url: https://data.lehigh.edu/common-data-set
+      text: Common Data Set
+      year: null
+      is_document: false
+  northeastern-university:
+    starting_url: https://facts.northeastern.edu/common-data-set/
+    final_url: https://facts.northeastern.edu/common-data-set/
+    status: no_anchors
+    error: null
+    duration_ms: 597
+    anchors: []
+  virginia-tech:
+    starting_url: https://www.ir.vt.edu/reporting/common-data-set/
+    final_url: null
+    status: nav_error
+    error: "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://www.ir.vt.edu/reporting/common-data-set/\nCall log:\n  - navigating\
+      \ to \"https://www.ir.vt.edu/reporting/common-data-set/\", waiting until \"domcontentloade"
+    duration_ms: 8
+    anchors: []
+  texas-a-and-m-university-college-station:
+    starting_url: https://accountability.tamu.edu/Data-Sets/Common-Data-Set
+    final_url: https://abpa.tamu.edu/accountability-metrics
+    status: no_anchors
+    error: null
+    duration_ms: 2240
+    anchors: []
+  syracuse-university:
+    starting_url: https://provost.syracuse.edu/faculty-support/institutional-research-assessment/common-data-set/
+    final_url: null
+    status: nav_error
+    error: "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://provost.syracuse.edu/faculty-support/institutional-research-assessment/common-data-set/\n\
+      Call log:\n  - navigating to \"https://provost.syracuse.edu/facul"
+    duration_ms: 6
+    anchors: []
+  university-of-minnesota-twin-cities:
+    starting_url: https://ir.umn.edu/common-data-set
+    final_url: null
+    status: nav_error
+    error: "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://ir.umn.edu/common-data-set\nCall log:\n  - navigating to \"https://ir.umn.edu/common-data-set\"\
+      , waiting until \"domcontentloaded\"\n"
+    duration_ms: 32
+    anchors: []
+  university-of-pittsburgh:
+    starting_url: https://www.oir.pitt.edu/institutional-information/common-data-set
+    final_url: null
+    status: nav_error
+    error: "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://www.oir.pitt.edu/institutional-information/common-data-set\n\
+      Call log:\n  - navigating to \"https://www.oir.pitt.edu/institutional-information/common-data-"
+    duration_ms: 4
+    anchors: []
+  rutgers-university-new-brunswick:
+    starting_url: https://oirap.rutgers.edu/instchar/cds.html
+    final_url: https://oirap.rutgers.edu/instchar/cds.html
+    status: no_anchors
+    error: null
+    duration_ms: 1680
+    anchors: []
+  indiana-university-bloomington:
+    starting_url: https://uirr.iu.edu/facts-figures/common-data-set/
+    final_url: https://iuia.iu.edu/
+    status: ok
+    error: null
+    duration_ms: 1758
+    anchors:
+    - url: https://iuapps.iu.edu/cds/index.html?i=home&p=index
+      text: Common Data Set (CDS)
+      year: null
+      is_document: false
+  brandeis-university:
+    starting_url: https://www.brandeis.edu/institutional-research/data-facts/common-data-set.html
+    final_url: https://www.brandeis.edu/institutional-research/data-facts/common-data-set.html
+    status: no_anchors
+    error: null
+    duration_ms: 2084
+    anchors: []
+  george-washington-university:
+    starting_url: https://irp.gwu.edu/common-data-set
+    final_url: https://irp.gwu.edu/common-data-set
+    status: ok
+    error: null
+    duration_ms: 1607
+    anchors:
+    - url: https://irp.gwu.edu/common-data-set
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://irp.gwu.edu/sites/g/files/zaxdzs6056/files/downloads/2018-2019_Common_Data_Set_FA1819.pdf
+      text: CDS 2018-2019
+      year: 2018-19
+      is_document: true
+    - url: https://irp.gwu.edu/sites/g/files/zaxdzs6056/files/downloads/2019-2020_Common_Data_Set_FA1920.pdf
+      text: CDS 2019-2020
+      year: 2019-20
+      is_document: true
+    - url: https://irp.gwu.edu/sites/g/files/zaxdzs6056/files/downloads/CDS_2020-2021-FA2021.pdf
+      text: CDS 2020-2021
+      year: 2020-21
+      is_document: true
+    - url: https://irp.gwu.edu/sites/g/files/zaxdzs6056/files/CDS_2021-2022.pdf
+      text: CDS 2021-2022
+      year: 2021-22
+      is_document: true
+    - url: https://irp.gwu.edu/sites/g/files/zaxdzs6056/files/2023-09/cds_2022-2023_0.pdf
+      text: CDS 2022-2023
+      year: 2023-09
+      is_document: true
+    - url: https://irp.gwu.edu/sites/g/files/zaxdzs6056/files/2025-05/CDS_2023-2024_Updated.pdf
+      text: CDS 2023-2024
+      year: 2025-05
+      is_document: true
+    - url: https://irp.gwu.edu/sites/g/files/zaxdzs6056/files/2025-05/CDS_2024-2025_FINAL.pdf
+      text: CDS 2024-2025
+      year: 2025-05
+      is_document: true
+    - url: https://irp.gwu.edu/common-data-set-definitions
+      text: Common Data Set Definitions
+      year: null
+      is_document: false
+  drexel-university:
+    starting_url: https://drexel.edu/provost/institutional-research/institutional-reports/common-data-set/
+    final_url: https://drexel.edu/provost/institutional-research/institutional-reports/common-data-set/
+    status: no_anchors
+    error: null
+    duration_ms: 4398
+    anchors: []
+  university-of-delaware:
+    starting_url: https://ire.udel.edu/common-data-set/
+    final_url: https://ire.udel.edu/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 2654
+    anchors:
+    - url: https://ire.udel.edu/common-data-set/
+      text: Common Data Set
+      year: null
+      is_document: false
+  amherst-college:
+    starting_url: https://www.amherst.edu/offices/institutional-research/cds
+    final_url: https://www.amherst.edu/offices/institutional-research/cds
+    status: ok
+    error: null
+    duration_ms: 2205
+    anchors:
+    - url: https://www.amherst.edu/offices/institutional-research/cds#header
+      text: Skip to primary navigation
+      year: null
+      is_document: false
+  swarthmore-college:
+    starting_url: https://www.swarthmore.edu/institutional-research/common-data-set
+    final_url: https://www.swarthmore.edu/institutional-effectiveness-research-assessment/common-data-set
+    status: ok
+    error: null
+    duration_ms: 1118
+    anchors:
+    - url: https://www.swarthmore.edu/institutional-effectiveness-research-assessment/common-data-set
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://www.swarthmore.edu/sites/default/files/assets/documents/institutional-effectiveness-research-assessment/Swarthmore-CDS-2025-26.pdf
+      text: 2025-2026 [pdf]
+      year: 2025-26
+      is_document: true
+    - url: https://www.swarthmore.edu/sites/default/files/assets/documents/institutional-effectiveness-research-assessment/Swarthmore-CDS-2024-2025-fillable-pdf-version.pdf
+      text: 2024-2025 [pdf]
+      year: 2024-25
+      is_document: true
+    - url: https://archive.swarthmore.edu/files/assets/documents/institutional-research/CDS_2021-2022-Swarthmore.pdf
+      text: 2021-2022 [pdf]
+      year: 2021-22
+      is_document: true
+    - url: https://archive.swarthmore.edu/files/assets/documents/institutional-research/CDS_2016-17-%20Swarthmore%20College.pdf
+      text: 2016-2017 [pdf]
+      year: 2016-17
+      is_document: true
+    - url: https://archive.swarthmore.edu/files/assets/documents/institutional-research/CDS%202015-2016.pdf
+      text: 2015-2016 [pdf]
+      year: 2015-16
+      is_document: true
+    - url: https://archive.swarthmore.edu/files/assets/documents/institutional-research/cds2014.pdf
+      text: 2014-2015 [pdf]
+      year: 2014-15
+      is_document: true
+    - url: https://archive.swarthmore.edu/files/assets/documents/institutional-research/cds2013.pdf
+      text: 2013-2014 [pdf]
+      year: 2013-14
+      is_document: true
+    - url: https://archive.swarthmore.edu/files/assets/documents/institutional-research/cds2012.pdf
+      text: 2012-2013 [pdf]
+      year: 2012-13
+      is_document: true
+    - url: https://archive.swarthmore.edu/files/assets/documents/institutional-research/cds2011.pdf
+      text: 2011-2012 [pdf]
+      year: 2011-12
+      is_document: true
+    - url: https://archive.swarthmore.edu/files/assets/documents/institutional-research/cds2010.pdf
+      text: 2010-2011 [pdf]
+      year: 2010-11
+      is_document: true
+    - url: https://archive.swarthmore.edu/files/assets/documents/institutional-research/cds2009.pdf
+      text: 2009-2010 [pdf]
+      year: 2009-10
+      is_document: true
+    - url: https://archive.swarthmore.edu/files/assets/documents/institutional-research/cds2008.pdf
+      text: 2008-2009 [pdf]
+      year: 2008-09
+      is_document: true
+    - url: https://archive.swarthmore.edu/files/assets/documents/institutional-research/cds2007.pdf
+      text: 2007-2008 [pdf]
+      year: 2007-08
+      is_document: true
+    - url: https://archive.swarthmore.edu/files/assets/documents/institutional-research/cds2006.pdf
+      text: 2006-2007 [pdf]
+      year: 2006-07
+      is_document: true
+    - url: https://archive.swarthmore.edu/files/assets/documents/institutional-research/cds2005.pdf
+      text: 2005-2006 [pdf]
+      year: 2005-06
+      is_document: true
+    - url: https://archive.swarthmore.edu/files/assets/documents/institutional-research/cds2004.pdf
+      text: 2004-2005 [pdf]
+      year: 2004-05
+      is_document: true
+    - url: https://archive.swarthmore.edu/files/assets/documents/institutional-research/cds2003.pdf
+      text: 2003-2004 [pdf]
+      year: 2003-04
+      is_document: true
+    - url: https://archive.swarthmore.edu/files/assets/documents/institutional-research/cds2002.pdf
+      text: 2002-2003 [pdf]
+      year: 2002-03
+      is_document: true
+    - url: https://archive.swarthmore.edu/files/assets/documents/institutional-research/cds2001.pdf
+      text: 2001-2002 [pdf]
+      year: 2001-02
+      is_document: true
+    - url: https://archive.swarthmore.edu/files/assets/documents/institutional-research/cds0001.pdf
+      text: 2000-2001 [pdf]
+      year: 2000-01
+      is_document: true
+  bowdoin-college:
+    starting_url: https://www.bowdoin.edu/ir/common-data-set/
+    final_url: https://www.bowdoin.edu/ir/common-data-set/
+    status: no_anchors
+    error: null
+    duration_ms: 1484
+    anchors: []
+  claremont-mckenna-college:
+    starting_url: https://www.cmc.edu/institutional-research/common-data-set
+    final_url: https://www.cmc.edu/institutional-research/common-data-set
+    status: ok
+    error: null
+    duration_ms: 1131
+    anchors:
+    - url: https://www.cmc.edu/institutional-research/common-data-set
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://www.cmc.edu/sites/default/files/CDS_2025-26_0.pdf
+      text: CDS 2025-2026 Annotated
+      year: 2025-26
+      is_document: true
+    - url: https://www.cmc.edu/sites/default/files/CDS_2024-2025.pdf
+      text: CDS 2024-2025 Annotated
+      year: 2024-25
+      is_document: true
+    - url: https://www.cmc.edu/sites/default/files/CDS_2023_2024%20V2.pdf
+      text: CDS 2023-2024 Annotated
+      year: 2023-24
+      is_document: true
+    - url: https://www.cmc.edu/sites/default/files/CDS_2022-2023_0.pdf
+      text: CDS 2022-2023 Annotated
+      year: 2022-23
+      is_document: true
+    - url: https://www.cmc.edu/sites/default/files/2022-04/CDS_2021-2022%20Update.pdf
+      text: CDS 2021-2022 Annotated
+      year: 2022-04
+      is_document: true
+    - url: https://www.cmc.edu/sites/default/files/2021-06/CDS_2020-2021_Updated.pdf
+      text: CDS 2020-2021 Annotated
+      year: 2021-06
+      is_document: true
+    - url: https://www.cmc.edu/sites/default/files/ir/enrollment/CDS%202019%20web%20version_0.pdf
+      text: CDS 2019-2020 Annotated
+      year: 2019-20
+      is_document: true
+    - url: https://www.cmc.edu/sites/default/files/ir/2018-2019_Common_Data_Set.pdf
+      text: CDS 2018-2019 Annotated
+      year: 2018-19
+      is_document: true
+    - url: https://www.cmc.edu/sites/default/files/ir/CDS_2017-2018.pdf
+      text: CDS 2017-2018 Annotated
+      year: 2017-18
+      is_document: true
+    - url: https://www.cmc.edu/sites/default/files/ir/CDS_2016-2017%20Updated.pdf
+      text: CDS 2016-2017 Annotated
+      year: 2016-17
+      is_document: true
+    - url: https://www.cmc.edu/sites/default/files/ir/CDS%202015-2016%20Revised.pdf
+      text: CDS 2015-2016 Annotated
+      year: 2015-16
+      is_document: true
+    - url: https://www.cmc.edu/sites/default/files/ir/CDS_2014-15_Annotated.pdf
+      text: CDS 2014-2015 Annotated
+      year: 2014-15
+      is_document: true
+    - url: https://www.cmc.edu/sites/default/files/ir/CDS_2013-14.pdf
+      text: CDS 2013-2014 Annotated
+      year: 2013-14
+      is_document: true
+    - url: https://www.cmc.edu/sites/default/files/ir/CDS_2012-2013_Annotated.pdf
+      text: CDS 2012-2013 Annotated
+      year: 2012-13
+      is_document: true
+  washington-and-lee-university:
+    starting_url: https://www.wlu.edu/institutional-effectiveness-and-analytics/common-data-set
+    final_url: https://www.wlu.edu/institutional-effectiveness-and-analytics/common-data-set
+    status: no_anchors
+    error: null
+    duration_ms: 2425
+    anchors: []
+  hamilton-college:
+    starting_url: https://www.hamilton.edu/offices/institutional-research/reports
+    final_url: https://www.hamilton.edu/offices/institutional-research/reports
+    status: no_anchors
+    error: null
+    duration_ms: 1928
+    anchors: []
+  colby-college:
+    starting_url: https://www.colby.edu/oir/common-data-set/
+    final_url: https://www.colby.edu/oir/common-data-set/
+    status: no_anchors
+    error: null
+    duration_ms: 1767
+    anchors: []
+  barnard-college:
+    starting_url: https://barnard.edu/institutional-effectiveness/common-data-set/
+    final_url: https://barnard.edu/institutional-effectiveness/common-data-set
+    status: ok
+    error: null
+    duration_ms: 1386
+    anchors:
+    - url: https://barnard.edu/sites/default/files/inline-files/Barnard%20CDS%202024-2025.pdf
+      text: Common Data Set 2024-25 (pdf)
+      year: 2024-25
+      is_document: true
+    - url: https://barnard.edu/sites/default/files/inline-files/CDS_2023-2024-Barnard%20College_0.pdf
+      text: Common Data Set 2023-24 (pdf)
+      year: 2023-24
+      is_document: true
+    - url: https://barnard.edu/sites/default/files/inline-files/20230622_CDS_2022-2023_Barnard.pdf
+      text: Common Data Set 2022-23 (pdf)
+      year: 2022-23
+      is_document: true
+    - url: https://barnard.edu/sites/default/files/inline-files/CDS_2021-2022_Barnard_5.2.22.pdf
+      text: Common Data Set 2021-22 (pdf)
+      year: 2021-22
+      is_document: true
+    - url: https://barnard.edu/sites/default/files/inline-files/CDS_2020-2021_FINAL_Barnard_20210625.pdf
+      text: Common Data Set 2020-21 (pdf)
+      year: 2020-21
+      is_document: true
+    - url: https://barnard.edu/sites/default/files/inline-files/CDS_2019-2020_completed.pdf
+      text: Common Data Set 2019-20 (pdf)
+      year: 2019-20
+      is_document: true
+    - url: https://barnard.edu/sites/default/files/inline-files/2018-2019%20Common%20Data%20Set_v2.pdf
+      text: Common Data Set 2018-19 (pdf)
+      year: 2018-19
+      is_document: true
+    - url: https://barnard.edu/sites/default/files/inline-files/CDS_2017-2018_2018-05-16.pdf
+      text: Common Data Set 2017-18 (pdf)
+      year: 2017-18
+      is_document: true
+    - url: https://barnard.edu/sites/default/files/inline-files/CDS_2016-2017_4.27.17.pdf
+      text: Common Data Set 2016-17 (pdf)
+      year: 2016-17
+      is_document: true
+    - url: https://barnard.edu/sites/default/files/inline-files/CDS_2015-2016%2009-02-16.pdf
+      text: Common Data Set 2015-16 (pdf)
+      year: 2015-16
+      is_document: true
+    - url: https://barnard.edu/sites/default/files/inline-files/Barnard_CDS_2014_2015_15Apr2016.pdf
+      text: Common Data Set 2014-15 (pdf)
+      year: 2014-15
+      is_document: true
+    - url: https://barnard.edu/sites/default/files/inline-files/Barnard_CDS_2013_14_Updated.pdf
+      text: Common Data Set 2013-14 (pdf)
+      year: 2013-14
+      is_document: true
+  bates-college:
+    starting_url: https://www.bates.edu/ir/common-data-set/
+    final_url: https://www.bates.edu/research/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 2403
+    anchors:
+    - url: https://www.bates.edu/research/common-data-set/
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://www.bates.edu/research/files/2026/04/CDS_2025-2026.pdf
+      text: Bates College Common Data Set 2025-2026
+      year: 2025-26
+      is_document: true
+    - url: https://www.bates.edu/research/files/2026/03/CDS_2024-2025.pdf
+      text: Bates College Common Data Set 2024-2025
+      year: 2024-25
+      is_document: true
+    - url: https://www.bates.edu/research/files/2024/08/CDS_2023-2024.pdf
+      text: Bates College Common Data Set 2023-2024
+      year: 2023-24
+      is_document: true
+    - url: https://www.bates.edu/research/files/2023/07/CDS_2022-2023.pdf
+      text: Bates College Common Data Set 2022-2023
+      year: 2022-23
+      is_document: true
+    - url: https://www.bates.edu/research/files/2022/03/CDS_2021-2022.pdf
+      text: Bates College Common Data Set 2021-2022
+      year: 2021-22
+      is_document: true
+    - url: https://www.bates.edu/research/files/2021/05/CDS_2020-2021.pdf
+      text: Bates College Common Data Set 2020-2021
+      year: 2020-21
+      is_document: true
+    - url: https://www.bates.edu/research/files/2020/04/CDS-2019-2020-II.pdf
+      text: Bates College Common Data Set 2019-2020
+      year: 2019-20
+      is_document: true
+    - url: https://www.bates.edu/research/files/2019/05/cds1819.pdf
+      text: Bates College Common Data Set 2018-2019
+      year: 2018-19
+      is_document: true
+    - url: https://www.bates.edu/research/files/2010/03/cds1718.pdf
+      text: "Bates College Common Data Set\_2017-2018"
+      year: 2017-18
+      is_document: true
+    - url: https://www.bates.edu/research/files/2010/03/cds1617.pdf
+      text: Bates College Common Data Set 2016-2017
+      year: 2016-17
+      is_document: true
+    - url: https://www.bates.edu/research/files/2010/03/cds1516.pdf
+      text: Bates College Common Data Set 2015-2016
+      year: 2015-16
+      is_document: true
+    - url: https://www.bates.edu/research/files/2016/01/cds.1415.bates_.pdf
+      text: Bates College Common Data Set 2014-2015
+      year: 2014-15
+      is_document: true
+    - url: https://www.bates.edu/research/files/2010/03/cds.1314.bates_.pdf
+      text: Bates College Common Data Set 2013-2014
+      year: 2013-14
+      is_document: true
+    - url: https://www.bates.edu/research/files/2010/03/cds.1213.bates_.pdf
+      text: Bates College Common Data Set 2012-2013
+      year: 2012-13
+      is_document: true
+    - url: https://www.bates.edu/research/files/2010/03/cds.1112.bates_.pdf
+      text: Bates College Common Data Set 2011-2012
+      year: 2011-12
+      is_document: true
+    - url: https://www.bates.edu/research/files/2010/03/cds.1011.bates_.pdf
+      text: Bates College Common Data Set 2010-2011
+      year: 2010-11
+      is_document: true
+    - url: https://www.bates.edu/research/files/2010/03/cds.0910.bates_.pdf
+      text: Bates College Common Data Set 2009-2010
+      year: 2009-10
+      is_document: true
+    - url: https://www.bates.edu/research/files/2010/03/cds.0809.bates_.pdf
+      text: Bates College Common Data Set 2008-2009
+      year: 2008-09
+      is_document: true
+    - url: https://www.bates.edu/Prebuilt/cds0708.pdf
+      text: Bates College Common Data Set 2007-2008
+      year: 2007-08
+      is_document: true
+    - url: https://www.bates.edu/Prebuilt/2006.2007.common.data.set.pdf
+      text: Bates College Common Data Set 2006-2007
+      year: 2006-07
+      is_document: true
+    - url: https://www.bates.edu/Prebuilt/2005.2006.common.data.set.pdf
+      text: Bates College Common Data Set 2005-2006
+      year: 2005-06
+      is_document: true
+    - url: https://www.bates.edu/Prebuilt/cds.0405.bates.pdf
+      text: Bates College Common Data Set 2004-2005
+      year: 2004-05
+      is_document: true
+    - url: https://www.bates.edu/Prebuilt/cds.0304.bates.pdf
+      text: Bates College Common Data Set 2003-2004
+      year: 2003-04
+      is_document: true
+    - url: https://www.bates.edu/Prebuilt/cds.0203.bates.pdf
+      text: Bates College Common Data Set 2002-2003
+      year: 2002-03
+      is_document: true
+    - url: https://www.bates.edu/Prebuilt/cds.0102.bates.pdf
+      text: Bates College Common Data Set 2001-2002
+      year: 2001-02
+      is_document: true
+    - url: https://www.bates.edu/Prebuilt/cds.0001.bates.pdf
+      text: Bates College Common Data Set 2000-2001
+      year: 2000-01
+      is_document: true
+    - url: https://www.bates.edu/Prebuilt/cds.9900.bates.pdf
+      text: Bates College Common Data Set 1999-2000
+      year: null
+      is_document: true
