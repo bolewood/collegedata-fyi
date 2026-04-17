@@ -7,6 +7,7 @@ import {
   findDownloadLinks,
   rewriteGoogleDriveUrl,
   parentLandingCandidates,
+  wellKnownPathUrls,
 } from "./resolve.ts";
 
 const BASE = "https://example.edu/ir/cds/";
@@ -603,6 +604,26 @@ Deno.test("parentLandingCandidates: rejects cross-scheme + malformed URLs", () =
   assertEquals(parentLandingCandidates("ftp://example.edu/cds.pdf").length, 0);
   // Root-level file has no meaningful parent to walk to.
   assertEquals(parentLandingCandidates("https://example.edu/cds.pdf").length, 0);
+});
+
+Deno.test("wellKnownPathUrls: expands to host-rooted CDS landing paths", () => {
+  const hint = "https://irp.dpb.cornell.edu/wp-content/uploads/2025/02/CDS-2024-2025-v1.pdf";
+  const urls = wellKnownPathUrls(hint);
+  // Check a few expected candidates — the exact list is intentionally
+  // short and may evolve, so this test is permissive.
+  const set = new Set(urls);
+  assertEquals(set.has("https://irp.dpb.cornell.edu/common-data-set"), true);
+  assertEquals(set.has("https://irp.dpb.cornell.edu/institutional-data/common-data-set"), true);
+  // Origin is preserved without the hint's path.
+  for (const u of urls) {
+    assertEquals(u.startsWith("https://irp.dpb.cornell.edu"), true);
+  }
+});
+
+Deno.test("wellKnownPathUrls: rejects malformed/non-http URLs", () => {
+  assertEquals(wellKnownPathUrls("not a url").length, 0);
+  assertEquals(wellKnownPathUrls("javascript:alert(1)").length, 0);
+  assertEquals(wellKnownPathUrls("ftp://example.edu/file.pdf").length, 0);
 });
 
 Deno.test("findBestSourceAnchor: only subpages → null", () => {

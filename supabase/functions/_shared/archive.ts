@@ -145,16 +145,37 @@ export async function archiveOneSchool(
     throw new PermanentError("resolver returned resolved kind with empty docs[]");
   }
 
-  // 2. Archive each candidate in order. Throw on first error so the
-  //    whole school is retried as a unit; already-archived candidates
-  //    are detected as unchanged_verified on the retry pass and cost
-  //    nothing to reprocess. Processing is serial, not parallel:
-  //    parallelism here would race against the existing-row lookup
-  //    and risk double-inserting rows for the same (school, cds_year)
+  // 2. Archive each candidate in order. PermanentError on one candidate
+  //    (typically a 404 on a stale URL) is caught and skipped so the
+  //    other candidates still land — e.g., Cornell's direct-PDF hint
+  //    is stale but the well-known-paths fallback yields 17 valid years.
+  //    TransientError still propagates school-level so the whole batch
+  //    retries on the next run. Processing is serial, not parallel:
+  //    parallelism would race against the existing-row lookup and
+  //    risk double-inserting rows for the same (school, cds_year)
   //    before either upload completes.
   const candidates: CandidateOutcome[] = [];
+  const skipped: { url: string; reason: string }[] = [];
   for (const resolved of result.docs) {
-    candidates.push(await archiveOneCandidate(supabase, school, resolved));
+    try {
+      candidates.push(await archiveOneCandidate(supabase, school, resolved));
+    } catch (e) {
+      if (e instanceof PermanentError) {
+        skipped.push({ url: resolved.url, reason: e.message });
+        continue;
+      }
+      throw e;
+    }
+  }
+
+  // If ALL candidates failed permanently, surface as school-level
+  // PermanentError so the queue row lands in failed_permanent instead
+  // of silently succeeding with zero rows.
+  if (candidates.length === 0) {
+    const reasons = skipped.map((s) => `${s.url}: ${s.reason}`).join("; ");
+    throw new PermanentError(
+      `all ${skipped.length} candidate(s) failed permanently: ${reasons}`,
+    );
   }
 
   const first = candidates[0];

@@ -687,6 +687,62 @@ async function findSiblingDocsFromParents(
   return [];
 }
 
+// Well-known CDS landing-page paths that IR sites commonly host. Used as a
+// last-resort fallback when a direct-PDF hint's parent walk yields nothing
+// (typically because the hint lives under /wp-content/uploads/ or
+// /sites/default/files/, where no ancestor has a CDS-like path segment).
+//
+// Real-world coverage examples (spot-checked 2026-04-17):
+//   Cornell:  irp.dpb.cornell.edu/wp-content/uploads/.../CDS-2024-2025-v1.pdf (404, stale)
+//             → irp.dpb.cornell.edu/common-data-set returns 17 CDS files
+//   Brown:    oir.brown.edu/sites/default/files/2020-04/CDS2009_2010.pdf
+//             → oir.brown.edu/institutional-data/common-data-set returns 5 CDS files
+//
+// List is intentionally short (5 paths). Each probe is one HTTP GET against
+// the hint's host, so 5 × 15s = 75s worst case per affected school. In
+// practice most probes return 404 quickly; the fallback only fires when the
+// parent walk already failed, which is ~20-25% of direct-PDF schools.
+const WELL_KNOWN_CDS_LANDING_PATHS: readonly string[] = [
+  "/common-data-set",
+  "/common-data-set/",
+  "/institutional-data/common-data-set",
+  "/cds/",
+  "/reports/common-data-set",
+];
+
+export function wellKnownPathUrls(hint: string): string[] {
+  let parsed: URL;
+  try {
+    parsed = new URL(hint);
+  } catch {
+    return [];
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return [];
+  const origin = `${parsed.protocol}//${parsed.host}`;
+  return WELL_KNOWN_CDS_LANDING_PATHS.map((p) => origin + p);
+}
+
+async function findDocsViaWellKnownPaths(
+  hint: string,
+): Promise<ResolvedDocument[]> {
+  for (const url of wellKnownPathUrls(hint)) {
+    const resp = await fetchText(url, SUBPAGE_TIMEOUT_MS);
+    if (!resp.ok) continue;
+    const ct = resp.contentType.toLowerCase();
+    if (!ct.includes("text/html")) continue;
+
+    const anchors = extractCdsAnchors(resp.text, resp.finalUrl);
+    const docs = anchors.filter((a) => a.kind === "document");
+    if (docs.length === 0) continue;
+
+    const picked = pickCandidates(docs, "landing");
+    if (picked && picked.length > 0) {
+      return picked;
+    }
+  }
+  return [];
+}
+
 // Top-level resolver. Given a hint URL, returns a ResolveResult discriminated
 // union. See the type for the six possible kinds. Callers branch on kind:
 // resolved → archive every doc in `docs`; upstream_gone → mark removed;
@@ -733,12 +789,24 @@ export async function resolveCdsForSchool(
 
     const siblings = await findSiblingDocsFromParents(hint);
 
-    // Merge direct + siblings, dedupe by URL (fragments stripped).
+    // Well-known-paths fallback. Fires only when the parent walk yielded
+    // no siblings, which happens when the hint lives under /wp-content/
+    // /uploads/ or /sites/default/files/ (no CDS-like ancestor segments).
+    // Probes /common-data-set, /institutional-data/common-data-set, etc.
+    // on the hint's host. Spot-check 2026-04-17 confirmed this is how we
+    // discover Cornell's 17 years and Brown's 5 years — schools whose
+    // hints are stale but whose IR landing pages are alive at conventional
+    // URLs.
+    const fallback = siblings.length === 0
+      ? await findDocsViaWellKnownPaths(hint)
+      : [];
+
+    // Merge direct + siblings + fallback, dedupe by URL.
     const byUrl = new Map<string, ResolvedDocument>();
     byUrl.set(directDoc.url.split("#")[0], directDoc);
-    for (const sib of siblings) {
-      const key = sib.url.split("#")[0];
-      if (!byUrl.has(key)) byUrl.set(key, sib);
+    for (const d of [...siblings, ...fallback]) {
+      const key = d.url.split("#")[0];
+      if (!byUrl.has(key)) byUrl.set(key, d);
     }
 
     return { kind: "resolved", docs: Array.from(byUrl.values()) };
