@@ -1,8 +1,9 @@
 # PRD 002: collegedata.fyi Frontend
 
-**Status:** Approved
+**Status:** Shipped (2026-04-16). Live at [collegedata.fyi](https://collegedata.fyi).
 **Created:** 2026-04-16
-**Reviewed via:** /autoplan (CEO + Design + Eng review pipeline)
+**Reviewed via:** /autoplan (CEO + Design + Eng review pipeline), then /review with adversarial (Claude + Codex)
+**Post-ship fixes:** PostgREST pagination (commit `b829ce9`), XSS in JSON-LD, sub-institutional year pages, error boundary
 
 ---
 

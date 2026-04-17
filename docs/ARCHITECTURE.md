@@ -343,6 +343,7 @@ As of 2026-04-15, what's built and what isn't:
 
 - [`docs/prd/001-collegedata-fyi-v1.md`](prd/001-collegedata-fyi-v1.md) — product-level framing, scope, milestones, success criteria
 - [`docs/prd/002-frontend.md`](prd/002-frontend.md) — frontend PRD (CEO + Design + Eng reviewed)
+- [`docs/frontend.md`](frontend.md) — frontend design: pages, components, data flow, SEO, security
 - [`docs/v1-plan.md`](v1-plan.md) — engineering plan with data model details and milestone breakdown
 - [`docs/research/cds-vs-college-scorecard.md`](research/cds-vs-college-scorecard.md) — CDS vs College Scorecard schema comparison
 - [`docs/research/scorecard-join-recipe.md`](research/scorecard-join-recipe.md) — how to join CDS data with Scorecard
