@@ -1,0 +1,235 @@
+"""
+Read-only corpus survey: how well does the current Tier 4 cleaner perform
+against already-extracted Docling markdown in the cds_artifacts table?
+
+Pulls every cds_artifacts row with kind='canonical' and producer='tier4_docling',
+re-runs the latest tier4_cleaner.clean() against the stored notes.markdown,
+and reports:
+
+  - Distribution of fields_populated per doc (histogram + percentiles)
+  - Delta between stored stats.schema_fields_populated and current cleaner
+    (shows how much Phase 1 + Phase 2a improved things)
+  - Per-question-number coverage (which fields extract reliably vs never)
+  - The 10 lowest-coverage docs, for manual inspection
+
+Safe to run while the extraction worker is writing new rows — this script
+performs reads only and never mutates the DB.
+
+Usage:
+    tools/extraction_worker/.venv/bin/python \\
+        tools/extraction-validator/corpus_survey_tier4.py --limit 200
+
+    # or all tier4 docs:
+    tools/extraction_worker/.venv/bin/python \\
+        tools/extraction-validator/corpus_survey_tier4.py
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import statistics
+import sys
+from collections import Counter
+from pathlib import Path
+
+# Import the cleaner and load_env helper.
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(_REPO_ROOT / "tools" / "extraction_worker"))
+from tier4_cleaner import clean  # noqa: E402
+from worker import load_env  # noqa: E402
+
+from supabase import create_client  # noqa: E402
+
+
+def fetch_tier4_artifacts(client, limit: int | None):
+    """Page through cds_artifacts where producer=tier4_docling."""
+    page_size = 500
+    offset = 0
+    out = []
+    while True:
+        q = (
+            client.table("cds_artifacts")
+            .select("id,document_id,created_at,notes")
+            .eq("producer", "tier4_docling")
+            .eq("kind", "canonical")
+            .order("created_at", desc=False)
+            .range(offset, offset + page_size - 1)
+        )
+        res = q.execute()
+        rows = res.data or []
+        if not rows:
+            break
+        out.extend(rows)
+        if limit and len(out) >= limit:
+            out = out[:limit]
+            break
+        if len(rows) < page_size:
+            break
+        offset += page_size
+    return out
+
+
+def fetch_doc_names(client, document_ids: list[str]) -> dict[str, str]:
+    """Batch-fetch school_id + cds_year for the document_ids we surveyed."""
+    out: dict[str, str] = {}
+    for i in range(0, len(document_ids), 200):
+        batch = document_ids[i : i + 200]
+        res = (
+            client.table("cds_documents")
+            .select("id,school_id,cds_year,detected_year")
+            .in_("id", batch)
+            .execute()
+        )
+        for row in res.data or []:
+            year = row.get("detected_year") or row.get("cds_year") or "?"
+            out[row["id"]] = f"{row['school_id']} / {year}"
+    return out
+
+
+def histogram(values: list[int], buckets: list[tuple[int, int | None]]) -> list[tuple[str, int, str]]:
+    rows = []
+    total = len(values)
+    for lo, hi in buckets:
+        if hi is None:
+            count = sum(1 for v in values if v >= lo)
+            label = f">= {lo}"
+        else:
+            count = sum(1 for v in values if lo <= v < hi)
+            label = f"{lo}-{hi - 1}"
+        bar = "█" * int(40 * count / total) if total else ""
+        rows.append((label, count, bar))
+    return rows
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__.strip().split("\n\n")[0])
+    ap.add_argument("--env", default=str(_REPO_ROOT / ".env"))
+    ap.add_argument("--limit", type=int, default=None,
+                    help="Cap artifacts surveyed (useful for quick runs)")
+    ap.add_argument("--json", action="store_true",
+                    help="Emit full results as JSON")
+    args = ap.parse_args()
+
+    env = load_env(Path(args.env))
+    url = env.get("SUPABASE_URL")
+    key = env.get("SUPABASE_SERVICE_ROLE_KEY")
+    if not url or not key:
+        print("error: missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY", file=sys.stderr)
+        return 2
+    client = create_client(url, key)
+
+    print(f"Fetching tier4_docling canonical artifacts (limit={args.limit or 'all'})…")
+    artifacts = fetch_tier4_artifacts(client, args.limit)
+    print(f"  got {len(artifacts)} artifacts\n")
+
+    if not artifacts:
+        print("No tier4 artifacts in DB yet.")
+        return 0
+
+    # Re-run cleaner against each stored markdown.
+    results = []
+    field_coverage: Counter[str] = Counter()
+    stored_counts: list[int] = []
+    current_counts: list[int] = []
+
+    for a in artifacts:
+        notes = a.get("notes") or {}
+        md = notes.get("markdown") or ""
+        stored_stats = notes.get("stats") or {}
+        stored_n = stored_stats.get("schema_fields_populated", 0)
+        if not md:
+            continue
+        current_values = clean(md)
+        current_n = len(current_values)
+        for qn in current_values:
+            field_coverage[qn] += 1
+        stored_counts.append(stored_n)
+        current_counts.append(current_n)
+        results.append({
+            "artifact_id": a["id"],
+            "document_id": a["document_id"],
+            "created_at": a["created_at"],
+            "md_length": len(md),
+            "stored_fields": stored_n,
+            "current_fields": current_n,
+            "delta": current_n - stored_n,
+        })
+
+    n = len(results)
+    if n == 0:
+        print("All artifacts had empty markdown.")
+        return 0
+
+    # Pull document names for low-coverage inspection.
+    doc_ids = [r["document_id"] for r in results]
+    doc_names = fetch_doc_names(client, doc_ids)
+
+    if args.json:
+        print(json.dumps({
+            "n_artifacts": n,
+            "results": results,
+            "field_coverage": dict(field_coverage),
+            "doc_names": doc_names,
+        }, indent=2))
+        return 0
+
+    # ---------- Summary ----------
+    print(f"Surveyed {n} Tier 4 artifacts\n")
+
+    print("Distribution of fields_populated (current cleaner):")
+    for label, count, bar in histogram(
+        current_counts,
+        buckets=[(0, 10), (10, 20), (20, 30), (30, 40), (40, 50), (50, None)],
+    ):
+        pct = 100 * count / n
+        print(f"  {label:<8} {count:>4}  ({pct:>4.1f}%)  {bar}")
+    print()
+
+    cur = current_counts
+    print(f"Percentiles (current): p10={_pct(cur,10)}  p50={_pct(cur,50)}  "
+          f"p90={_pct(cur,90)}  mean={statistics.mean(cur):.1f}  max={max(cur)}  min={min(cur)}")
+
+    stored_nonzero = [s for s in stored_counts if s > 0]
+    if stored_nonzero:
+        deltas = [r["delta"] for r in results]
+        print(f"Delta vs stored (positive = current cleaner better): "
+              f"mean={statistics.mean(deltas):.1f}  median={statistics.median(deltas):.0f}  "
+              f"max=+{max(deltas)}  min={min(deltas)}")
+    print()
+
+    # ---------- Per-field coverage ----------
+    print(f"Per-question-number coverage ({n} docs):")
+    print(f"  {'QN':<8} {'pct':>6}  {'count':>6}")
+    sorted_fields = sorted(field_coverage.items(), key=lambda kv: (-kv[1], kv[0]))
+    for qn, count in sorted_fields[:60]:
+        pct = 100 * count / n
+        bar = "█" * int(20 * count / n)
+        print(f"  {qn:<8} {pct:>5.1f}%  {count:>6}  {bar}")
+    print()
+
+    # ---------- Low-coverage docs ----------
+    low = sorted(results, key=lambda r: r["current_fields"])[:15]
+    print(f"15 lowest-coverage docs (for manual inspection):")
+    print(f"  {'current':>7} {'stored':>6}  {'md_len':>7}  school / year")
+    for r in low:
+        name = doc_names.get(r["document_id"], r["document_id"])
+        print(f"  {r['current_fields']:>7} {r['stored_fields']:>6}  {r['md_length']:>7}  {name}")
+
+    return 0
+
+
+def _pct(values: list[int], p: int) -> int:
+    if not values:
+        return 0
+    sorted_v = sorted(values)
+    k = (len(sorted_v) - 1) * p / 100
+    f = int(k)
+    c = min(f + 1, len(sorted_v) - 1)
+    if f == c:
+        return sorted_v[f]
+    return int(sorted_v[f] + (sorted_v[c] - sorted_v[f]) * (k - f))
+
+
+if __name__ == "__main__":
+    sys.exit(main())
