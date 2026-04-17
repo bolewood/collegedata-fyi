@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  fetchDocumentBySchoolAndYear,
+  fetchDocumentsBySchoolAndYear,
   fetchCanonicalArtifact,
 } from "@/lib/queries";
 import type { FieldValue } from "@/lib/types";
@@ -21,10 +21,11 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { school_id, year } = await params;
-  const doc = await fetchDocumentBySchoolAndYear(school_id, year);
+  const docs = await fetchDocumentsBySchoolAndYear(school_id, year);
 
-  if (!doc) return { title: "Document Not Found" };
+  if (docs.length === 0) return { title: "Document Not Found" };
 
+  const doc = docs[0];
   return {
     title: `${doc.school_name} Common Data Set ${year}`,
     description: `Common Data Set ${year} for ${doc.school_name}. Admissions, enrollment, financial aid, and more, extracted from the official CDS document.`,
@@ -37,36 +38,21 @@ export default async function SchoolYearPage({
   params: Promise<Params>;
 }) {
   const { school_id, year } = await params;
-  const doc = await fetchDocumentBySchoolAndYear(school_id, year);
+  const docs = await fetchDocumentsBySchoolAndYear(school_id, year);
 
-  if (!doc) {
+  if (docs.length === 0) {
     notFound();
   }
 
-  const pdfUrl = storageUrl(doc.source_storage_path);
-  const isExtracted = doc.extraction_status === "extracted";
-
-  let artifact = null;
-  let values: Record<string, FieldValue> = {};
-  let totalFields: number | undefined;
-
-  if (isExtracted && doc.latest_canonical_artifact_id) {
-    artifact = await fetchCanonicalArtifact(doc.document_id);
-    if (artifact?.notes?.values) {
-      values = artifact.notes.values;
-    }
-    totalFields = artifact?.notes?.stats?.total_fields;
-  }
-
-  const hasValues = Object.keys(values).length > 0;
+  const schoolName = docs[0].school_name;
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Dataset",
-    name: `${doc.school_name} Common Data Set ${year}`,
-    description: `Common Data Set ${year} for ${doc.school_name}, containing admissions, enrollment, financial aid, and other institutional data.`,
+    name: `${schoolName} Common Data Set ${year}`,
+    description: `Common Data Set ${year} for ${schoolName}, containing admissions, enrollment, financial aid, and other institutional data.`,
     url: `https://collegedata.fyi/schools/${school_id}/${year}`,
-    creator: { "@type": "Organization", name: doc.school_name },
+    creator: { "@type": "Organization", name: schoolName },
     temporalCoverage: year,
     license: "https://opensource.org/licenses/MIT",
     isAccessibleForFree: true,
@@ -81,7 +67,9 @@ export default async function SchoolYearPage({
     <div className="mx-auto max-w-5xl px-4 py-8">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
       />
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-500 mb-4">
@@ -93,32 +81,57 @@ export default async function SchoolYearPage({
           href={`/schools/${school_id}`}
           className="hover:text-gray-700"
         >
-          {doc.school_name}
+          {schoolName}
         </Link>
         {" / "}
         <span className="text-gray-900">{year}</span>
       </nav>
 
       {/* Header */}
-      <h1 className="text-3xl font-bold text-gray-900">
-        {doc.school_name}
-      </h1>
-      <p className="text-xl text-gray-600 mt-1">
-        Common Data Set {year}
-      </p>
+      <h1 className="text-3xl font-bold text-gray-900">{schoolName}</h1>
+      <p className="text-xl text-gray-600 mt-1">Common Data Set {year}</p>
+
+      {/* Render each document variant */}
+      {docs.map((doc) => (
+        <DocumentVariant key={doc.document_id} doc={doc} />
+      ))}
+    </div>
+  );
+}
+
+async function DocumentVariant({ doc }: { doc: Awaited<ReturnType<typeof fetchDocumentsBySchoolAndYear>>[number] }) {
+  const pdfUrl = storageUrl(doc.source_storage_path);
+  const isExtracted = doc.extraction_status === "extracted";
+
+  let values: Record<string, FieldValue> = {};
+  let totalFields: number | undefined;
+
+  if (isExtracted) {
+    const artifact = await fetchCanonicalArtifact(doc.document_id);
+    if (artifact?.notes?.values) {
+      values = artifact.notes.values;
+    }
+    totalFields = artifact?.notes?.stats?.total_fields;
+  }
+
+  const hasValues = Object.keys(values).length > 0;
+
+  return (
+    <div className="mt-8">
+      {/* Sub-institutional label */}
+      {doc.sub_institutional && (
+        <h2 className="text-lg font-semibold text-gray-800 mb-2">
+          {doc.sub_institutional}
+        </h2>
+      )}
 
       {/* Meta */}
-      <div className="flex items-center gap-3 mt-3 flex-wrap">
+      <div className="flex items-center gap-3 flex-wrap">
         {doc.source_format && (
           <Badge
             label={formatBadgeLabel(doc.source_format)}
             className="bg-gray-100 text-gray-700"
           />
-        )}
-        {doc.sub_institutional && (
-          <span className="text-sm text-gray-500">
-            {doc.sub_institutional}
-          </span>
         )}
         {pdfUrl && (
           <a
@@ -134,26 +147,29 @@ export default async function SchoolYearPage({
 
       {/* Key stats */}
       {hasValues && (
-        <div className="mt-8">
+        <div className="mt-4">
           <KeyStats values={values} />
         </div>
       )}
 
       {/* Full fields */}
       {hasValues ? (
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
             All Extracted Fields
-          </h2>
+          </h3>
           <FieldsView values={values} totalFields={totalFields} />
         </div>
       ) : isExtracted ? (
-        <div className="mt-8 rounded-lg border border-gray-200 p-6 text-center text-gray-500">
+        <div className="mt-4 rounded-lg border border-gray-200 p-6 text-center text-gray-500">
           <p>No structured field values available for this document yet.</p>
         </div>
       ) : (
-        <div className="mt-8 rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-center text-yellow-800">
-          <p>Structured data coming soon. The source PDF is available for download above.</p>
+        <div className="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-center text-yellow-800">
+          <p>
+            Structured data coming soon. The source PDF is available for
+            download above.
+          </p>
         </div>
       )}
     </div>

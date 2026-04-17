@@ -13,7 +13,7 @@ function getNum(values: Record<string, FieldValue>, id: string): number | null {
   const field = values[id];
   if (!field) return null;
   const v = field.value_decoded ?? field.value;
-  const n = parseInt(v.replace(/,/g, ""), 10);
+  const n = parseFloat(v.replace(/,/g, ""));
   return isNaN(n) ? null : n;
 }
 

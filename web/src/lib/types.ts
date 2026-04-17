@@ -4,17 +4,18 @@ export interface ManifestRow {
   school_name: string;
   sub_institutional: string | null;
   cds_year: string;
-  source_url: string | null;
   source_format: string | null;
-  participation_status: string;
-  discovered_at: string | null;
-  last_verified_at: string | null;
-  removed_at: string | null;
   extraction_status: string;
-  latest_canonical_artifact_id: string | null;
-  source_storage_path: string | null;
-  detected_year: string | null;
   canonical_year: string | null;
+  source_storage_path: string | null;
+  // Fields present when fetching with select("*") but not in the list query
+  source_url?: string | null;
+  participation_status?: string;
+  discovered_at?: string | null;
+  last_verified_at?: string | null;
+  removed_at?: string | null;
+  latest_canonical_artifact_id?: string | null;
+  detected_year?: string | null;
 }
 
 export interface FieldValue {

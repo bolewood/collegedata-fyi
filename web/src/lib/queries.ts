@@ -1,14 +1,31 @@
+import { cache } from "react";
 import { supabase } from "./supabase";
 import type { ManifestRow, ArtifactRow, SchoolSummary, CorpusStats } from "./types";
 
-export async function fetchManifest(): Promise<ManifestRow[]> {
-  const { data, error } = await supabase
-    .from("cds_manifest")
-    .select("*")
-    .order("school_name");
+const MANIFEST_COLUMNS =
+  "document_id, school_id, school_name, sub_institutional, cds_year, source_format, extraction_status, canonical_year, source_storage_path";
 
-  if (error) throw new Error(`Failed to fetch manifest: ${error.message}`);
-  return data ?? [];
+export async function fetchManifest(): Promise<ManifestRow[]> {
+  const PAGE_SIZE = 1000;
+  const allRows: ManifestRow[] = [];
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from("cds_manifest")
+      .select(MANIFEST_COLUMNS)
+      .order("school_name")
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) throw new Error(`Failed to fetch manifest: ${error.message}`);
+    if (!data || data.length === 0) break;
+
+    allRows.push(...data);
+    if (data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  return allRows;
 }
 
 export function aggregateSchools(rows: ManifestRow[]): SchoolSummary[] {
@@ -68,7 +85,7 @@ export function computeStats(rows: ManifestRow[]): CorpusStats {
   };
 }
 
-export async function fetchSchoolDocuments(
+export const fetchSchoolDocuments = cache(async function fetchSchoolDocuments(
   schoolId: string
 ): Promise<ManifestRow[]> {
   const { data, error } = await supabase
@@ -80,25 +97,24 @@ export async function fetchSchoolDocuments(
   if (error)
     throw new Error(`Failed to fetch school documents: ${error.message}`);
   return data ?? [];
-}
+});
 
-export async function fetchDocumentBySchoolAndYear(
+export const fetchDocumentsBySchoolAndYear = cache(async function fetchDocumentsBySchoolAndYear(
   schoolId: string,
   year: string
-): Promise<ManifestRow | null> {
+): Promise<ManifestRow[]> {
   const { data, error } = await supabase
     .from("cds_manifest")
     .select("*")
     .eq("school_id", schoolId)
     .eq("canonical_year", year)
-    .limit(1)
-    .single();
+    .order("sub_institutional", { ascending: true, nullsFirst: true });
 
-  if (error && error.code !== "PGRST116") {
-    throw new Error(`Failed to fetch document: ${error.message}`);
+  if (error) {
+    throw new Error(`Failed to fetch documents: ${error.message}`);
   }
-  return data ?? null;
-}
+  return data ?? [];
+});
 
 export async function fetchCanonicalArtifact(
   documentId: string

@@ -12,16 +12,17 @@ import type { ManifestRow } from "@/lib/types";
 export function DocumentCard({ doc }: { doc: ManifestRow }) {
   const pdfUrl = storageUrl(doc.source_storage_path);
   const isExtracted = doc.extraction_status === "extracted";
+  const canLink = isExtracted && doc.canonical_year && doc.canonical_year !== "unknown";
 
   return (
     <div className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 hover:bg-gray-50">
       <div className="flex items-center gap-3 flex-wrap">
-        {isExtracted ? (
+        {canLink ? (
           <Link
             href={`/schools/${doc.school_id}/${doc.canonical_year}`}
             className="text-blue-600 hover:text-blue-800 font-medium"
           >
-            {doc.canonical_year ?? doc.cds_year}
+            {doc.canonical_year}
           </Link>
         ) : (
           <span className="font-medium text-gray-700">
