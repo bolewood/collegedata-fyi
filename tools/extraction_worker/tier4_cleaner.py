@@ -95,15 +95,32 @@ def _parse_markdown_tables(markdown: str) -> list[dict]:
                     continue
                 label = cells[0]
                 values = cells[1:] if len(cells) > 1 else []
+                has_values = any(v.strip() for v in values)
 
-                # Continuation row: empty label with values inherits the
-                # previous row's label. Common when Docling splits a merged
-                # cell across two markdown rows (Harvard B1 pattern).
-                if not label.strip() and any(v.strip() for v in values):
+                # Continuation row (Harvard B1 pattern): empty label with
+                # values inherits the previous row's label. Common when
+                # Docling splits a merged cell across two markdown rows.
+                if not label.strip() and has_values:
                     label = prev_label
-                elif label.strip():
-                    prev_label = label
+                    rows.append({"label": label, "values": values, "headers": header_cells})
+                    continue
 
+                # Wrapped-label row (Dartmouth B1 pattern): the previous
+                # row had a label but empty values, and this row has a
+                # label plus values. Docling wrapped a long label onto
+                # two rows. Concatenate them into a single row.
+                if (
+                    label.strip() and has_values and rows
+                    and rows[-1]["label"].strip()
+                    and not any(v.strip() for v in rows[-1]["values"])
+                ):
+                    merged = rows[-1]["label"] + " " + label
+                    rows[-1] = {"label": merged, "values": values, "headers": header_cells}
+                    prev_label = merged
+                    continue
+
+                if label.strip():
+                    prev_label = label
                 rows.append({"label": label, "values": values, "headers": header_cells})
 
             tables.append({
@@ -159,6 +176,10 @@ _FIELD_MAP: list[tuple[str, str, str | int]] = [
     # --- B1 Enrollment (full-time undergrad) ---
     ("degree-seeking, first-time, first-year students", "B.101", "men"),
     ("degree-seeking, first-time, first-year students", "B.126", "women"),
+    # B.151 picks up the 2024-25 "Another Gender" column (normalized to
+    # "unknown"); header-first-match semantics cause col_hint "unknown" to
+    # land on the Another Gender column when both it and Unknown are present.
+    ("degree-seeking, first-time, first-year students", "B.151", "unknown"),
     ("other first-year, degree-seeking", "B.102", "men"),
     ("other first-year, degree-seeking", "B.127", "women"),
     ("all other degree-seeking", "B.103", "men"),
@@ -186,6 +207,23 @@ _FIELD_MAP: list[tuple[str, str, str | int]] = [
     ("total first-time, first-year who were admitted", "C.117", 0),
     ("total first-time, first-year who enrolled", "C.118", 0),
 
+    # --- B2 Race/ethnicity (first-year column) ---
+    # col_hint "first-time first-year" selects the first value column of the
+    # B2 race/ethnicity table. It also scopes matches to that table because
+    # no other table in a CDS has that phrase in a value-column header.
+    # Row ordering in the standard CDS (Hispanic/Latino precedes the
+    # "non-Hispanic" rows) means first-match-wins keeps "hispanic" from
+    # leaking into the non-Hispanic rows below it.
+    ("nonresident", "B.201", "first-time first-year"),
+    ("hispanic", "B.202", "first-time first-year"),
+    ("black or african", "B.203", "first-time first-year"),
+    ("white", "B.204", "first-time first-year"),
+    ("american indian", "B.205", "first-time first-year"),
+    ("asian", "B.206", "first-time first-year"),
+    ("native hawaiian", "B.207", "first-time first-year"),
+    ("two or more races", "B.208", "first-time first-year"),
+    ("total", "B.210", "first-time first-year"),
+
     # --- B3 Degrees ---
     ("certificate/diploma", "B.301", 0),
     ("associate degrees", "B.302", 0),
@@ -196,6 +234,15 @@ _FIELD_MAP: list[tuple[str, str, str | int]] = [
     ("doctoral degrees – research/scholarship", "B.307", 0),
     ("doctoral degrees – professional practice", "B.308", 0),
     ("doctoral degrees – other", "B.309", 0),
+
+    # --- C10 Class rank ---
+    # Clean 2-column table: Assessment | Percent.
+    ("top tenth", "C.1001", 0),
+    ("top quarter", "C.1002", 0),
+    ("top half", "C.1003", 0),
+    ("bottom half", "C.1004", 0),
+    ("bottom quarter", "C.1005", 0),
+    ("submitted high school class rank", "C.1006", 0),
 
     # --- C9 Test scores ---
     # The "Submitting" block is a 2-column table with Percent / Number
@@ -231,6 +278,29 @@ _PERCENTILE_MAP: list[tuple[str, int, str]] = [
 ]
 
 
+# Inline-regex patterns for fields that aren't in table rows. Each entry is
+# (anchor_regex, value_capture_regex, question_number). The cleaner looks
+# for anchor_regex in the markdown, then searches the next ~300 chars for
+# value_capture_regex. First match wins; first-match-wins across tables +
+# inline patterns is preserved (table extractions run first).
+#
+# The window is wide enough to span Docling's paragraph splitting — Harvard
+# emits the $85 fee a few paragraphs after the "Amount of application fee:"
+# label, while Yale keeps it inline. Both match.
+
+_INLINE_PATTERNS: list[tuple[str, str, str]] = [
+    # C.1302 — Amount of application fee. "$N" or "N dollars".
+    (r"amount of application fee", r"\$\s*(\d+)", "C.1302"),
+
+    # C.901 — Percent Submitting SAT Scores. Fallback for Harvard-style
+    # tables where the "Submitting SAT/ACT Scores" row labels are emitted
+    # as free text rather than in the first table column, so the row-based
+    # extractor can't find them. The anchor is the SAT label text, the
+    # window captures the first N% that follows.
+    (r"submitting sat scores", r"(\d+)\s*%", "C.901"),
+]
+
+
 def clean(markdown: str) -> dict[str, dict]:
     """Map Docling markdown to canonical question-number-keyed values.
 
@@ -243,8 +313,11 @@ def clean(markdown: str) -> dict[str, dict]:
     # Pre-normalize the map substrings once so _FIELD_MAP / _PERCENTILE_MAP
     # entries can be written in natural form (e.g. "another gender",
     # "first-year", "research/scholarship") — normalization is applied
-    # uniformly on both sides of the substring check.
-    field_map_norm = [(_normalize_label(s), qn, ch) for s, qn, ch in _FIELD_MAP]
+    # uniformly on both sides of the substring check. String col_hints are
+    # normalized too since they are matched against normalized headers.
+    def _norm_hint(ch):
+        return _normalize_label(ch) if isinstance(ch, str) else ch
+    field_map_norm = [(_normalize_label(s), qn, _norm_hint(ch)) for s, qn, ch in _FIELD_MAP]
     percentile_map_norm = [(_normalize_label(s), ci, qn) for s, ci, qn in _PERCENTILE_MAP]
 
     for table in tables:
@@ -293,6 +366,20 @@ def clean(markdown: str) -> dict[str, dict]:
                     num = _extract_number(row["values"][col_idx])
                     if num and qnum not in values:
                         values[qnum] = {"value": num, "source": "tier4_cleaner"}
+
+    # --- Inline patterns (non-table fields) ---
+    # Runs after table extraction so table matches take precedence.
+    md_lower = markdown.lower()
+    for anchor, value_re, qnum in _INLINE_PATTERNS:
+        if qnum in values:
+            continue
+        m = re.search(anchor, md_lower)
+        if not m:
+            continue
+        window = markdown[m.end(): m.end() + 300]
+        vm = re.search(value_re, window, re.IGNORECASE)
+        if vm:
+            values[qnum] = {"value": vm.group(1), "source": "tier4_cleaner"}
 
     return values
 
