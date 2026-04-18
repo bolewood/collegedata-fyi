@@ -72,9 +72,9 @@ The frontend shipped with 5 pages (landing, directory, school detail, year detai
 
 **Open frontend items:**
 
-- **`supabase gen types` for typed client.** Currently using hand-written TypeScript interfaces in `web/src/lib/types.ts`. Running `npx supabase gen types typescript --project-id isduwmygvmdozhpvzaix > web/src/lib/database.types.ts` and typing the client as `createClient<Database>(url, key)` would catch column renames at compile time. **Effort:** ~15 minutes. **Cross-references:** `web/src/lib/supabase.ts`, `web/src/lib/types.ts`.
+- **[RESOLVED 2026-04-18, commit `8ea5567`] ~~`supabase gen types` for typed client.~~** Shipped. Generated `database.types.ts` from live schema, typed the Supabase client as `createClient<Database>(url, key)`. ManifestRow and ArtifactRow now derive from the generated types; app-level types (SchoolSummary, CorpusStats, FieldValue) kept in `types.ts`.
 
-- **Schema-version-aware labels.** `web/src/lib/labels.ts` is auto-generated from `cds_schema_2025_26.json` only. Documents targeting older schema years may have field IDs that don't appear in the label map. The `FieldsView` component falls back to showing the raw field ID, which is functional but not pretty. Fix: key the label map by `(schema_version, field_id)`. **Dependency resolved:** cross-year schema diff tool shipped (`351af48`), structural schemas for 6 years now exist in `schemas/`. Can build multi-version labels from these. **Effort:** ~30 minutes.
+- **[RESOLVED 2026-04-18] ~~Schema-version-aware labels.~~** Investigation showed this is already handled: FieldsView uses `field.question` from the artifact data (the extraction pipeline writes the question text into each field value). `labels.ts` is only a fallback for the rare case where an artifact has values but no inline `question` text. Multi-version labels from structural schemas is a V1.1 belt-and-suspenders option, not blocking.
 
 - **Playwright smoke tests.** No automated frontend tests exist. Minimum: page-renders, search-works, PDF-link-resolves. Run post-deploy. **Effort:** ~30 minutes.
 
