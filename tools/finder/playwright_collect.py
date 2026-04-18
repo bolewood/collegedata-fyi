@@ -408,15 +408,27 @@ def _probe_url(page, url: str, is_starting_hint: bool = False) -> ProbeOutcome:
             landed_on_document=True, download_triggered=False,
         )
 
-    raw = page.evaluate(
-        """() => {
-            const out = [];
-            document.querySelectorAll('a[href]').forEach(a => {
-                out.push({href: a.href, text: (a.textContent || '').trim()});
-            });
-            return out;
-        }"""
-    )
+    # Some sites (spotted on UIS / Zoho PageSense integrations) ship bot-
+    # detection scripts that hijack document.querySelectorAll and throw
+    # TypeError inside our anchor-collection eval. That's not our problem
+    # to debug — a thrown eval here means the page is hostile, treat it
+    # the same as 0 anchors and move on. Without this guard a single
+    # weaponized page crashes the whole shard.
+    try:
+        raw = page.evaluate(
+            """() => {
+                const out = [];
+                document.querySelectorAll('a[href]').forEach(a => {
+                    out.push({href: a.href, text: (a.textContent || '').trim()});
+                });
+                return out;
+            }"""
+        )
+    except Exception as e:
+        return ProbeOutcome(
+            final_url=final_url, anchors=[], error=f"evaluate failed: {str(e)[:160]}",
+            landed_on_document=False, download_triggered=False,
+        )
 
     anchors: list[AnchorResult] = []
     seen: set[str] = set()
@@ -533,11 +545,71 @@ def main() -> int:
                          "Untouched schools keep their previous result.")
     ap.add_argument("--headless", action="store_true", default=True)
     ap.add_argument("--no-headless", dest="headless", action="store_false")
+    ap.add_argument("--from-schools-yaml", type=Path,
+                    help="Instead of using the hand-curated STARTING_URLS dict, "
+                         "load targets from this schools.yaml and use each "
+                         "school's cds_url_hint as the starting URL. Intended "
+                         "for expanding walk-up coverage beyond the top-100. "
+                         "Only direct-doc hints are included (schools whose "
+                         "cds_url_hint already points at a landing page don't "
+                         "benefit from the walk-up and are skipped).")
+    ap.add_argument("--skip-covered", action="store_true",
+                    help="When used with --from-schools-yaml, skip schools "
+                         "already present in the --output file with status=ok. "
+                         "Lets you re-run after interruption without reprobing "
+                         "everything. Pairs naturally with --merge.")
+    ap.add_argument("--shard", type=str,
+                    help="Shard 'N/M': process only targets where "
+                         "index % M == N (0-indexed). Pair with --output "
+                         "pointing at a per-shard temp file so workers "
+                         "don't stomp on each other, then merge with "
+                         "scripts/merge_manual_urls.py or by hand.")
     args = ap.parse_args()
 
-    targets = list(STARTING_URLS.items())
+    if args.from_schools_yaml:
+        schools_data = yaml.safe_load(args.from_schools_yaml.read_text())
+        covered_ok: set[str] = set()
+        if args.skip_covered and args.output.exists():
+            prior = yaml.safe_load(args.output.read_text()) or {}
+            covered_ok = {
+                sid for sid, info in (prior.get("schools") or {}).items()
+                if (info or {}).get("status") == "ok"
+            }
+        targets = []
+        for s in (schools_data.get("schools") or []):
+            hint = s.get("cds_url_hint") or ""
+            if not hint or not DOCUMENT_EXT_RE.search(hint):
+                continue
+            # Skip Box/Drive/Sharepoint — walk-up doesn't apply to share URLs.
+            if re.search(r"(drive\.google\.com|docs\.google\.com|box\.com|"
+                         r"dropbox\.com|onedrive\.live\.com|sharepoint\.com)",
+                         hint, re.I):
+                continue
+            sid = s["id"]
+            if sid in covered_ok:
+                continue
+            targets.append((sid, hint))
+        print(f"  loaded {len(targets)} direct-doc targets from "
+              f"{args.from_schools_yaml} (skipped {len(covered_ok)} already ok)",
+              file=sys.stderr)
+    else:
+        targets = list(STARTING_URLS.items())
+
     if args.school:
         targets = [(k, v) for k, v in targets if k == args.school]
+    if args.shard:
+        try:
+            n_str, m_str = args.shard.split("/")
+            n, m = int(n_str), int(m_str)
+            if not (0 <= n < m):
+                raise ValueError
+        except Exception:
+            print(f"error: --shard must be 'N/M' with 0 <= N < M (got {args.shard!r})",
+                  file=sys.stderr)
+            return 2
+        targets = [t for i, t in enumerate(targets) if i % m == n]
+        print(f"  shard {n}/{m}: {len(targets)} targets",
+              file=sys.stderr)
     if args.limit:
         targets = targets[: args.limit]
 
