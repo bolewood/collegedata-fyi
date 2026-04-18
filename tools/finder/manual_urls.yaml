@@ -878,13 +878,16 @@ schools:
       year: null
       is_document: false
   university-of-notre-dame:
-    starting_url: https://irds.nd.edu/common-data-set/
-    final_url: null
-    status: nav_error
-    error: "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://irds.nd.edu/common-data-set/\nCall log:\n  - navigating to \"\
-      https://irds.nd.edu/common-data-set/\", waiting until \"domcontentloaded\"\n"
-    duration_ms: 6
-    anchors: []
+    starting_url: https://iris.nd.edu/institutional-research/common-data-set-cds/common-data-set/
+    final_url: https://iris.nd.edu/institutional-research/common-data-set-cds/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 1456
+    anchors:
+    - url: https://iris.nd.edu/institutional-research/common-data-set-cds/common-data-set/#content
+      text: Skip To Content
+      year: null
+      is_document: false
   university-of-rochester:
     starting_url: https://www.rochester.edu/provost/ir/data-reports/common-data-set/
     final_url: https://www.rochester.edu/provost/about-institutional-research/data-reports/common-data-set/
@@ -1786,13 +1789,16 @@ schools:
     duration_ms: 1194
     anchors: []
   johns-hopkins-university:
-    starting_url: https://ir.jhu.edu/common-data-set/
-    final_url: null
-    status: nav_error
-    error: "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://ir.jhu.edu/common-data-set/\nCall log:\n  - navigating to \"\
-      https://ir.jhu.edu/common-data-set/\", waiting until \"domcontentloaded\"\n"
-    duration_ms: 8
-    anchors: []
+    starting_url: https://oira.jhu.edu/reports-2/
+    final_url: https://oira.jhu.edu/reports-2/
+    status: ok
+    error: null
+    duration_ms: 1776
+    anchors:
+    - url: https://oira.jhu.edu/reports-2/
+      text: Common Data Sets
+      year: null
+      is_document: false
   university-of-california-berkeley:
     starting_url: https://opa.berkeley.edu/campus-data/common-data-set
     final_url: https://opa.berkeley.edu/campus-data/common-data-set
@@ -1957,13 +1963,120 @@ schools:
       year: null
       is_document: true
   georgetown-university:
-    starting_url: https://oir.georgetown.edu/institutional-profile/common-data-set/
-    final_url: null
-    status: nav_error
-    error: "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://oir.georgetown.edu/institutional-profile/common-data-set/\nCall\
-      \ log:\n  - navigating to \"https://oir.georgetown.edu/institutional-profile/common-data-set"
-    duration_ms: 7
-    anchors: []
+    starting_url: https://oads.georgetown.edu/commondataset/
+    final_url: https://oads.georgetown.edu/commondataset/
+    status: ok
+    error: null
+    duration_ms: 2121
+    anchors:
+    - url: https://oads.georgetown.edu/commondataset/#main-content
+      text: Skip to main content
+      year: null
+      is_document: false
+    - url: https://oads.georgetown.edu/cds-dashboard
+      text: CDS Dashboard
+      year: null
+      is_document: false
+    - url: https://georgetown.box.com/s/0r8akn4cbm52zjkll6i7uttlb9k36px2
+      text: 2025-2026 Common Data Set
+      year: 2025-26
+      is_document: false
+    - url: https://georgetown.box.com/s/rp4p2ly4ej2tsikv827pl48psmb68quv
+      text: 2024-2025 Common Data Set
+      year: 2024-25
+      is_document: false
+    - url: https://georgetown.box.com/s/i6ct2x531j7aso2ka3kvw2blur82embn
+      text: 2023-2024 Common Data Set
+      year: 2023-24
+      is_document: false
+    - url: https://georgetown.box.com/s/rm2h89oik59skfqe3dcrx1r9j2rs2n1i
+      text: 2022-2023 Common Data Set
+      year: 2022-23
+      is_document: false
+    - url: https://georgetown.box.com/s/w5ofngecelho4y9rhqdmvjohw0qsvfay
+      text: 2021-2022 Common Data Set
+      year: 2021-22
+      is_document: false
+    - url: https://georgetown.box.com/s/32o25lslrx69q6n4n12egrd5yudswpl7
+      text: 2020-2021 Common Data Set
+      year: 2020-21
+      is_document: false
+    - url: https://georgetown.box.com/s/sty6w23zh0te8rnsbnndy62afivfdaz1
+      text: 2019-2020 Common Data Set
+      year: 2019-20
+      is_document: false
+    - url: https://georgetown.box.com/s/4kq8y4ud4d3kwsvxaf37rsvvibhtydd7
+      text: 2018-2019 Common Data Set
+      year: 2018-19
+      is_document: false
+    - url: https://georgetown.box.com/s/3azkfk30zxabxqccj0osp0lrhhy2p1s9
+      text: 2017-2018 Common Data Set
+      year: 2017-18
+      is_document: false
+    - url: https://georgetown.box.com/s/sy6d1d9f6riz5t3q2egojnyzw3qj509q
+      text: 2016-2017 Common Data Set
+      year: 2016-17
+      is_document: false
+    - url: https://georgetown.box.com/s/8vtoy67rj039e2tw6fk9knax92rhkpm3
+      text: 2015-2016 Common Data Set
+      year: 2015-16
+      is_document: false
+    - url: https://georgetown.box.com/s/6wrzbqcxo8lwcqa95268t12qf44r02cl
+      text: 2014-2015 Common Data Set
+      year: 2014-15
+      is_document: false
+    - url: https://georgetown.box.com/s/7ymipj6abu9rqe2fek7v
+      text: 2013-2014 Common Data Set
+      year: 2013-14
+      is_document: false
+    - url: https://georgetown.box.com/s/bj3ma3fy5yj51ordejup
+      text: 2012-2013 Common Data Set
+      year: 2012-13
+      is_document: false
+    - url: https://georgetown.box.com/s/byrqv15invxrqiycd0bq
+      text: 2011-2012 Common Data Set
+      year: 2011-12
+      is_document: false
+    - url: https://georgetown.box.com/s/gepwqvci4ooj4hmogxk0
+      text: 2010-2011 Common Data Set
+      year: 2010-11
+      is_document: false
+    - url: https://georgetown.box.com/s/buuthk3ro7ua80ou9gs2
+      text: 2009-2010 Common Data Set
+      year: 2009-10
+      is_document: false
+    - url: https://georgetown.box.com/s/24jvaggaotetrv9h61m7
+      text: 2008-2009 Common Data Set
+      year: 2008-09
+      is_document: false
+    - url: https://georgetown.box.com/s/9ue6k3jiqf35uekbj0tx
+      text: 2007-2008 Common Data Set
+      year: 2007-08
+      is_document: false
+    - url: https://georgetown.box.com/s/g8ojpk1g4nisf0fvovzb
+      text: 2006-2007 Common Data Set
+      year: 2006-07
+      is_document: false
+    - url: https://georgetown.box.com/s/36zerxbj1u97l6sis8fn
+      text: 2005-2006 Common Data Set
+      year: 2005-06
+      is_document: false
+    - url: https://georgetown.box.com/s/wsn9i52hnx3pa4afxlsi
+      text: 2004-2005 Common Data Set
+      year: 2004-05
+      is_document: false
+    - url: https://georgetown.box.com/s/c2ujrlwv9pyawdpg16bz
+      text: 2003-2004 Common Data Set
+      year: 2003-04
+      is_document: false
+    - url: https://georgetown.box.com/s/ruqshit87dc3do4kcq6y
+      text: 2002-2003 Common Data Set
+      year: 2002-03
+      is_document: false
+    - url: https://georgetown.box.com/s/4k4mng0q7hy5vwvvkjdc
+      text: 2001-2002 Common Data Set
+      year: 2001-02
+      is_document: false
   university-of-north-carolina-at-chapel-hill:
     starting_url: https://oira.unc.edu/reports/institutional-reports/common-data-set/
     final_url: https://oira.unc.edu/reports/reports-archives/common-data-set/
@@ -2166,13 +2279,116 @@ schools:
       year: null
       is_document: false
   university-of-wisconsin-madison:
-    starting_url: https://apir.wisc.edu/institutional-research/common-data-set/
-    final_url: null
-    status: nav_error
-    error: "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://apir.wisc.edu/institutional-research/common-data-set/\nCall log:\n\
-      \  - navigating to \"https://apir.wisc.edu/institutional-research/common-data-set/\", wait"
-    duration_ms: 8
-    anchors: []
+    starting_url: https://data.wisc.edu/common-data-set-and-rankings/
+    final_url: https://data.wisc.edu/common-data-set-and-rankings/
+    status: ok
+    error: null
+    duration_ms: 2282
+    anchors:
+    - url: https://data.wisc.edu/common-data-set-and-rankings/
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/cm3r7gc83w3eqjotfbva111dnin6toer
+      text: UW-Madison 2024-2025 CDS (PDF)
+      year: 2024-25
+      is_document: false
+    - url: https://uwmadison.box.com/s/50d3gbh8j6fltsphaxbqh7vpn0g4bdj0
+      text: UW-Madison 2024 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/1156jfkw8rmecrcqdowokza5jd08ltla
+      text: UW-Madison 2023 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/bbsb2m0rak1hktv3x7efx3k1heiwumzt
+      text: UW-Madison 2022 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/cw2truhdpv0bnfddb1wkwh6rnsr1ruvp
+      text: UW-Madison 2021 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/cf2vstfvk9l26o4tv8h2ww5io301rmsu
+      text: UW-Madison 2020 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/vcxo3q1826uq6zfjntr773wcmen3x0cx
+      text: UW-Madison 2019 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/twlkdyows3m6gsphga32mb2h3nt1kb7x
+      text: UW-Madison 2018 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/hzyaescuownnk8umh0y96si9xub477z5
+      text: UW-Madison 2017 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/6321sam8vrfjciwruvaspr2ggetc3sl9
+      text: UW-Madison 2016 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/x37319irxwsdghg6kar9buuzf352ggu3
+      text: UW-Madison 2015 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/yevpr4cnl1lfqno403ulxrzzacq3rqgm
+      text: UW-Madison 2014 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/vu1viygg24v4f3iappeis9rjokfks26g
+      text: UW-Madison 2013 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/9m5wua8ghdri9a1xy67mmgy3qc9hrlw5
+      text: UW-Madison 2012 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/039hct6vhkt8y4fbc35er5d7798vgclg
+      text: UW-Madison 2011 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/ijwf6g1ng90ba5uuutmgo0gvvpjcbvf3
+      text: UW-Madison 2010 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/2ge1up651ara7s9atca7fgrzqylndvfq
+      text: UW-Madison 2009 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/et80czs263b3dzgeo26uad09bu64lokd
+      text: UW-Madison 2008 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/seizfvkmf9twl5lefybhgzhuah2bla34
+      text: UW-Madison 2007 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/040o4b31be495llnop401tlwayy85dyn
+      text: UW-Madison 2006 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/igrpkmm9wbjkw79of98nfc5qdeiiocvz
+      text: UW-Madison 2005 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/8vkfhcj65lcg5htgxufkdbqa2az2gusw
+      text: UW-Madison 2004 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/tk9mkqvapafjhtidb16sox1eapkklrkf
+      text: UW-Madison 2003 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/xce2c21o21vkvvmd0iu0v3qb9egf7hqg
+      text: UW-Madison 2002 CDS
+      year: null
+      is_document: false
+    - url: https://uwmadison.box.com/s/3grfgkxpkvbwms9kpgd6gxxoy3htl6c7
+      text: UW-Madison 2001 CDS
+      year: null
+      is_document: false
   georgia-institute-of-technology-main-campus:
     starting_url: https://lite.gatech.edu/common-data-set/
     final_url: https://lite.gatech.edu/common-data-set/
@@ -2347,13 +2563,84 @@ schools:
       year: 2007-08
       is_document: true
   tulane-university:
-    starting_url: https://oir.tulane.edu/common-data-set
-    final_url: null
-    status: nav_error
-    error: "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://oir.tulane.edu/common-data-set\nCall log:\n  - navigating to\
-      \ \"https://oir.tulane.edu/common-data-set\", waiting until \"domcontentloaded\"\n"
-    duration_ms: 7
-    anchors: []
+    starting_url: https://oair.tulane.edu/common-data-set
+    final_url: https://oair.tulane.edu/common-data-set
+    status: ok
+    error: null
+    duration_ms: 2369
+    anchors:
+    - url: https://oair.tulane.edu/common-data-set
+      text: Common Data Set (CDS)
+      year: null
+      is_document: false
+    - url: https://tulane.box.com/s/1dgaxpa2x2ie24zgglrg0puwm1h7xrt5
+      text: 2025-26 Common Data Set (CDS)
+      year: 2025-26
+      is_document: false
+    - url: https://tulane.box.com/s/uzo690yk2rzs7v2tqws50i3cesgz194w
+      text: 2024-25 Common Data Set (CDS)
+      year: 2024-25
+      is_document: false
+    - url: https://tulane.box.com/s/7gmt7sajtd26tx5gj0687hfzuael5gwp
+      text: 2023-24 Common Data Set (CDS)
+      year: 2023-24
+      is_document: false
+    - url: https://tulane.box.com/s/r53izqi0eq9dpkt0hwqwzlcahe2g9ooa
+      text: 2022-23 Common Data Set (CDS)
+      year: 2022-23
+      is_document: false
+    - url: https://tulane.box.com/s/h7ez09u7tx68wsvxcgt4wt41nwl9vjml
+      text: 2021-22 Common Data Set (CDS)
+      year: 2021-22
+      is_document: false
+    - url: https://tulane.box.com/s/skhjuruyk0v39tmr2vhoqerunce8anan
+      text: 2020-21 Common Data Set (CDS)
+      year: 2020-21
+      is_document: false
+    - url: https://tulane.box.com/s/zdns25egfljq26bpvb2kf4f1g21bpvn0
+      text: 2019-20 Common Data Set (CDS)
+      year: 2019-20
+      is_document: false
+    - url: https://tulane.box.com/s/zwm37ymscy77bx5oh0elusqfcsnl66sz
+      text: 2018-19 Common Data Set (CDS)
+      year: 2018-19
+      is_document: false
+    - url: https://tulane.box.com/s/3cujcy9px4mfgmigvz3fm68wb1eh0jj2
+      text: 2017-18 Common Data Set (CDS)
+      year: 2017-18
+      is_document: false
+    - url: https://tulane.box.com/s/34zrujbd4l4h0tucxte5nafzpethoqa4
+      text: 2016-17 Common Data Set (CDS)
+      year: 2016-17
+      is_document: false
+    - url: https://tulane.box.com/s/54ji3lfcyr83p1onuzo1gmyo3elemeky
+      text: 2015-16 Common Data Set (CDS)
+      year: 2015-16
+      is_document: false
+    - url: https://tulane.box.com/s/bvzaw36lejhmk5vi68wtfilrizo8sve9
+      text: 2014-15 Common Data Set (CDS)
+      year: 2014-15
+      is_document: false
+    - url: https://tulane.box.com/s/f3zvbxmfsfkl37c9m5yzj8nxldjse7qc
+      text: 2013-14 Common Data Set (CDS)
+      year: 2013-14
+      is_document: false
+    - url: https://tulane.box.com/s/loq3n9sb3yzkedn4smu6mxpy7ixyu1ri
+      text: 2012-13 Common Data Set (CDS)
+      year: 2012-13
+      is_document: false
+    - url: https://tulane.box.com/s/zqkhu7mta1je674m276z89hxm1bfd3qa
+      text: 2011-12 Common Data Set (CDS)
+      year: 2011-12
+      is_document: false
+    - url: https://tulane.box.com/s/m2uvsw0bi4rx4flm40lccl34u0gwmeh5
+      text: 2010-11 Common Data Set (CDS)
+      year: 2010-11
+      is_document: false
+    - url: https://tulane.box.com/s/gdysn5yyort61paw69heyqdyu7yonlce
+      text: 2009-10 Common Data Set (CDS)
+      year: 2009-10
+      is_document: false
   university-of-washington-seattle-campus:
     starting_url: https://www.washington.edu/opb/common-data-set/
     final_url: https://www.washington.edu/opb/uw-data/external-reporting/common-data-set/
@@ -2597,13 +2884,520 @@ schools:
     duration_ms: 597
     anchors: []
   virginia-tech:
-    starting_url: https://www.ir.vt.edu/reporting/common-data-set/
-    final_url: null
-    status: nav_error
-    error: "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://www.ir.vt.edu/reporting/common-data-set/\nCall log:\n  - navigating\
-      \ to \"https://www.ir.vt.edu/reporting/common-data-set/\", waiting until \"domcontentloade"
-    duration_ms: 8
-    anchors: []
+    starting_url: https://aie.vt.edu/analytics-and-ai/common-data-set.html
+    final_url: https://aie.vt.edu/analytics-and-ai/common-data-set.html
+    status: ok
+    error: null
+    duration_ms: 5909
+    anchors:
+    - url: https://aie.vt.edu/analytics-and-ai/common-data-set.html
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/25-26/2025-2026-CDS.xlsx
+      text: 'Common Data Set: 2025-26'
+      year: 2025-26
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/24-25/2024-2025-CDS.xlsx
+      text: 'Common Data Set: 2024-25'
+      year: 2024-25
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/23-24/CDS_2023-2024.pdf
+      text: 'Common Data Set: 2023-24'
+      year: 2023-24
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/22-23/CDS_2022-2023.xlsx
+      text: 'Common Data Set: 2022-23'
+      year: 2022-23
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/21-22/cds_definitions_21-22.xlsx
+      text: Common Data Set Definitions
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/20-21/cds_definitions_20-21.xlsx
+      text: Common Data Set Definitions
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/19-20/CDS_2019-20_A.xlsx
+      text: General Information
+      year: 2019-20
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/19-20/CDS_2019-20_B.xlsx
+      text: Enrollment and Persistence
+      year: 2019-20
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/19-20/CDS_2019-20_C.xlsx
+      text: First-Time, First-Year (Freshmen) Admission
+      year: 2019-20
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/19-20/CDS_2019-20_D.xlsx
+      text: Transfer Admission
+      year: 2019-20
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/19-20/CDS_2019-20_E.xlsx
+      text: Academic Offerings and Policies
+      year: 2019-20
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/19-20/CDS_2019-20_F.xlsx
+      text: Student Life
+      year: 2019-20
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/19-20/CDS_2019-20_G.xlsx
+      text: Annual Expenses
+      year: 2019-20
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/19-20/CDS_2019-20_H.xlsx
+      text: Financial Aid
+      year: 2019-20
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/19-20/CDS_2019-20_I.xlsx
+      text: Instructional Faculty and Class Size
+      year: 2019-20
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/19-20/CDS_2019-20_J.xlsx
+      text: Degrees Conferred
+      year: 2019-20
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/19-20/CDS_2019-20_definitions.xlsx
+      text: Common Data Set Definitions
+      year: 2019-20
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/19-20/CDS_2019-2020_Changes.docx
+      text: Common Data Set Significant Changes
+      year: 2019-20
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/18-19/CDS_2018-2019_A.xlsx
+      text: General Information
+      year: 2018-19
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/18-19/CDS_2018-2019_B.xlsx
+      text: Enrollment and Persistence
+      year: 2018-19
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/18-19/CDS_2018-2019_C.xlsx
+      text: First-Time, First-Year (Freshmen) Admission
+      year: 2018-19
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/18-19/CDS_2018-2019_D.xlsx
+      text: Transfer Admission
+      year: 2018-19
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/18-19/CDS_2018-2019_E.xlsx
+      text: Academic Offerings and Policies
+      year: 2018-19
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/18-19/CDS_2018-2019_F.xlsx
+      text: Student Life
+      year: 2018-19
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/18-19/CDS_2018-2019_G.xlsx
+      text: Annual Expenses
+      year: 2018-19
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/18-19/CDS_2018-2019_H.xlsx
+      text: Financial Aid
+      year: 2018-19
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/18-19/CDS_2018-2019_I.xlsx
+      text: Instructional Faculty and Class Size
+      year: 2018-19
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/18-19/CDS_2018-2019_J.xlsx
+      text: Degrees Conferred
+      year: 2018-19
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/18-19/CDS_2018-2019_definitions.xlsx
+      text: Common Data Set Definitions
+      year: 2018-19
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/18-19/CDS_2018-2019_Changes.rtf
+      text: Common Data Set Significant Changes
+      year: 2018-19
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/17-18/CDS_2017-2018_A.xlsx
+      text: General Information
+      year: 2017-18
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/17-18/CDS_2017-2018_B.xlsx
+      text: Enrollment and Persistence
+      year: 2017-18
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/17-18/CDS_2017-2018_C.xlsx
+      text: First-Time, First-Year (Freshmen) Admission
+      year: 2017-18
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/17-18/CDS_2017-2018_D.xlsx
+      text: Transfer Admission
+      year: 2017-18
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/17-18/CDS_2017-2018_E.xlsx
+      text: Academic Offerings and Policies
+      year: 2017-18
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/17-18/CDS_2017-2018_F.xlsx
+      text: Student Life
+      year: 2017-18
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/17-18/CDS_2017-2018_G.xlsx
+      text: Annual Expenses
+      year: 2017-18
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/17-18/CDS_2017-2018_H.xlsx
+      text: Financial Aid
+      year: 2017-18
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/17-18/CDS_2017-2018_I.xlsx
+      text: Instructional Faculty and Class Size
+      year: 2017-18
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/17-18/CDS_2017-2018_J.xlsx
+      text: Degrees Conferred
+      year: 2017-18
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/17-18/CDS_2017-2018_definitions.xlsx
+      text: Common Data Set Definitions
+      year: 2017-18
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/17-18/CDS_2017-2018_Changes.docx
+      text: Common Data Set Significant Changes
+      year: 2017-18
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/16-17/CDS_fall_2016_A.xlsx
+      text: General Information
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/16-17/CDS_fall_2016_B.xlsx
+      text: Enrollment and Persistence
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/16-17/CDS_fall_2016_C.xlsx
+      text: First-Time, First-Year (Freshmen) Admission
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/16-17/CDS_fall_2016_D.xlsx
+      text: Transfer Admission
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/16-17/CDS_fall_2016_E.xlsx
+      text: Academic Offerings and Policies
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/16-17/CDS_fall_2016_F.xlsx
+      text: Student Life
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/16-17/CDS_fall_2016_G.xlsx
+      text: Annual Expenses
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/16-17/CDS_fall_2016_H.xlsx
+      text: Financial Aid
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/16-17/CDS_fall_2016_I.xlsx
+      text: Instructional Faculty and Class Size
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/16-17/CDS_fall_2016_J.xlsx
+      text: Degrees Conferred
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/16-17/CDS_fall_2016_definitions.xlsx
+      text: Common Data Set Definitions
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/16-17/CDS_2016-2017_Changes.docx
+      text: Common Data Set Significant Changes
+      year: 2016-17
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/15-16/CDS_2015_A.xlsx
+      text: General Information
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/15-16/CDS_2015_B.xlsx
+      text: Enrollment and Persistence
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/15-16/CDS_2015_C.xlsx
+      text: First-Time, First-Year (Freshmen) Admission
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/15-16/CDS_2015_D.xlsx
+      text: Transfer Admission
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/15-16/CDS_2015_E.xlsx
+      text: Academic Offerings and Policies
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/15-16/CDS_2015_F.xlsx
+      text: Student Life
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/15-16/CDS_2015_G.xlsx
+      text: Annual Expenses
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/15-16/CDS_2015_H.xlsx
+      text: Financial Aid
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/15-16/CDS_2015_I.xlsx
+      text: Instructional Faculty and Class Size
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/15-16/CDS_2015_J.xlsx
+      text: Degrees Conferred
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/15-16/CDS_2015_definitions.xlsx
+      text: Common Data Set Definitions
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/15-16/CDS_2015_changes.xlsx
+      text: Common Data Set Significant Changes
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/14-15/CDS_2014_A.xlsx
+      text: General Information
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/14-15/CDS_2014_B.xlsx
+      text: Enrollment and Persistence
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/14-15/CDS_2014_C.xlsx
+      text: First-Time, First-Year (Freshmen) Admission
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/14-15/CDS_2014_D.xlsx
+      text: Transfer Admission
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/14-15/CDS_2014_E.xlsx
+      text: Academic Offerings and Policies
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/14-15/CDS_2014_F.xlsx
+      text: Student Life
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/14-15/CDS_2014_G.xlsx
+      text: Annual Expenses
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/14-15/CDS_2014_H.xlsx
+      text: Financial Aid
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/14-15/CDS_2014_I.xlsx
+      text: Instructional Faculty and Class Size
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/14-15/CDS_2014_J.xlsx
+      text: Degrees Conferred
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/14-15/CDS_2014_definitions.xlsx
+      text: Common Data Set Definitions
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/14-15/CDS_2014_changes.xlsx
+      text: Common Data Set Significant Changes
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/13-14/CDS_2013_A.xlsx
+      text: General Information
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/13-14/CDS_2013_B.xlsx
+      text: Enrollment and Persistence
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/13-14/CDS_2013_C.xlsx
+      text: First-Time, First-Year (Freshmen) Admission
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/13-14/CDS_2013_D.xlsx
+      text: Transfer Admission
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/13-14/CDS_2013_E.xlsx
+      text: Academic Offerings and Policies
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/13-14/CDS_2013_F.xlsx
+      text: Student Life
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/13-14/CDS_2013_G.xlsx
+      text: Annual Expenses
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/13-14/CDS_2013_H.xlsx
+      text: Financial Aid
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/13-14/CDS_2013_I.xlsx
+      text: Instructional Faculty and Class Size
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/13-14/CDS_2013_J.xlsx
+      text: Degrees Conferred
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/13-14/CDS_2013_definitions.xlsx
+      text: Common Data Set Definitions
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/13-14/CDS_2013_changes.xlsx
+      text: Common Data Set Significant Changes
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/12-13/CDS_2012_A.xlsx
+      text: General Information
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/12-13/CDS_2012_B.xlsx
+      text: Enrollment and Persistence
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/12-13/CDS_2012_C.xlsx
+      text: First-Time, First-Year (Freshmen) Admission
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/12-13/CDS_2012_D.xlsx
+      text: Transfer Admission
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/12-13/CDS_2012_E.xlsx
+      text: Academic Offerings and Policies
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/12-13/CDS_2012_F.xlsx
+      text: Student Life
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/12-13/CDS_2012_G.xlsx
+      text: Annual Expenses
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/12-13/CDS_2012_H.xlsx
+      text: Financial Aid
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/12-13/CDS_2012_I.xlsx
+      text: Instructional Faculty and Class Size
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/12-13/CDS_2012_J.xlsx
+      text: Degrees Conferred
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/12-13/CDS_2012_definitions.xlsx
+      text: Common Data Set Definitions
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/12-13/CDS_2012_changes.xlsx
+      text: Common Data Set Significant Changes
+      year: null
+      is_document: true
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/11-12/CDS_2011_A.xls
+      text: General Information
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/11-12/CDS_2011_B.xls
+      text: Enrollment and Persistence
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/11-12/CDS_2011_C.xls
+      text: First-Time, First-Year (Freshmen) Admission
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/11-12/CDS_2011_D.xls
+      text: Transfer Admission
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/11-12/CDS_2011_E.xls
+      text: Academic Offerings and Policies
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/11-12/CDS_2011_F.xls
+      text: Student Life
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/11-12/CDS_2011_G.xls
+      text: Annual Expenses
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/11-12/CDS_2011_H.xls
+      text: Financial Aid
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/11-12/CDS_2011_I.xls
+      text: Instructional Faculty and Class Size
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/11-12/CDS_2011_J.xls
+      text: Degrees Conferred
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/11-12/CDS_2011_definitions.xls
+      text: Common Data Set Definitions
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/11-12/CDS_2011_changes.xls
+      text: Common Data Set Significant Changes
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/10-11/cds_2010_A.xls
+      text: General Information
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/10-11/cds_2010_B.xls
+      text: Enrollment and Persistence
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/10-11/cds_2010_C.xls
+      text: First-Time, First-Year (Freshmen) Admission
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/10-11/cds_2010_D.xls
+      text: Transfer Admission
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/10-11/cds_2010_E.xls
+      text: Academic Offerings and Policies
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/10-11/cds_2010_F.xls
+      text: Student Life
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/10-11/cds_2010_G.xls
+      text: Annual Expenses
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/10-11/cds_2010_H.xls
+      text: Financial Aid
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/10-11/cds_2010_I.xls
+      text: Instructional Faculty and Class Size
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/10-11/cds_2010_J.xls
+      text: Degrees Conferred
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/10-11/cds_2010_definitions.xls
+      text: Common Data Set Definitions
+      year: null
+      is_document: false
+    - url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/10-11/cds_2010_changes.xls
+      text: Common Data Set Significant Changes
+      year: null
+      is_document: false
   texas-a-and-m-university-college-station:
     starting_url: https://accountability.tamu.edu/Data-Sets/Common-Data-Set
     final_url: https://abpa.tamu.edu/accountability-metrics
@@ -2612,29 +3406,190 @@ schools:
     duration_ms: 2240
     anchors: []
   syracuse-university:
-    starting_url: https://provost.syracuse.edu/faculty-support/institutional-research-assessment/common-data-set/
-    final_url: null
-    status: nav_error
-    error: "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://provost.syracuse.edu/faculty-support/institutional-research-assessment/common-data-set/\n\
-      Call log:\n  - navigating to \"https://provost.syracuse.edu/facul"
-    duration_ms: 6
+    starting_url: https://institutionaldata.syr.edu/key-data/
+    final_url: https://institutionaldata.syr.edu/key-data/
+    status: no_anchors
+    error: null
+    duration_ms: 3711
     anchors: []
   university-of-minnesota-twin-cities:
-    starting_url: https://ir.umn.edu/common-data-set
-    final_url: null
-    status: nav_error
-    error: "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://ir.umn.edu/common-data-set\nCall log:\n  - navigating to \"https://ir.umn.edu/common-data-set\"\
-      , waiting until \"domcontentloaded\"\n"
-    duration_ms: 32
-    anchors: []
+    starting_url: https://idr.umn.edu/institutional-metrics-compliance-reporting/twin-cities-campus-factbook
+    final_url: https://idr.umn.edu/institutional-metrics-compliance-reporting/common-data-set
+    status: ok
+    error: null
+    duration_ms: 2442
+    anchors:
+    - url: https://idr.umn.edu/institutional-metrics-compliance-reporting/common-data-set
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2024_2025_ro.pdf
+      text: 2024-2025 Common Data Set (PDF)
+      year: 2024-25
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2023_2024_ro.pdf
+      text: 2023-2024 Common Data Set (PDF)
+      year: 2023-24
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2022_2023_ro.pdf
+      text: 2022-2023 Common Data Set (PDF)
+      year: 2022-23
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2021_2022_ro.pdf
+      text: 2021-2022 Common Data Set (PDF)
+      year: 2021-22
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2020_2021_ro.pdf
+      text: 2020-2021 Common Data Set (PDF)
+      year: 2020-21
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2019_2020_ro.pdf
+      text: 2019-2020 Common Data Set (PDF)
+      year: 2019-20
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2024_2025_tc_2.pdf
+      text: 2024-2025 Common Data Set (PDF)
+      year: 2024-25
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2023_2024_tc.pdf
+      text: 2023-2024 Common Data Set (PDF)
+      year: 2023-24
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2022_2023_tc_0.pdf
+      text: 2022-2023 Common Data Set (PDF)
+      year: 2022-23
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2021_2022_tc.pdf
+      text: 2021-2022 Common Data Set (PDF)
+      year: 2021-22
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2020_2021_tc.pdf
+      text: 2020-2021 Common Data Set (PDF)
+      year: 2020-21
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2019_2020_tc.pdf
+      text: 2019-2020 Common Data Set (PDF)
+      year: 2019-20
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2018_2019_tc.pdf
+      text: 2018-2019 Common Data Set (PDF)
+      year: 2018-19
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2017_2018_tc.pdf
+      text: 2017-2018 Common Data Set (PDF)
+      year: 2017-18
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2016_2017_tc.pdf
+      text: 2016-2017 Common Data Set (PDF)
+      year: 2016-17
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2015_2016_tc.pdf
+      text: 2015-2016 Common Data Set (PDF)
+      year: 2015-16
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2014_2015_tc.pdf
+      text: 2014-2015 Common Data Set (PDF)
+      year: 2014-15
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2013_2014_tc.pdf
+      text: 2013-2014 Common Data Set (PDF)
+      year: 2013-14
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2012_2013_tc.pdf
+      text: 2012-2013 Common Data Set (PDF)
+      year: 2012-13
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2011_2012_tc.xls
+      text: 2011-2012 Common Data Set (PDF)
+      year: 2011-12
+      is_document: false
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2010_2011_tc.xls
+      text: 2010-2011 Common Data Set (PDF)
+      year: 2010-11
+      is_document: false
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2009_2010_tc.xls
+      text: 2009-2010 Common Data Set (PDF)
+      year: 2009-10
+      is_document: false
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2008_2009_tc.xls
+      text: 2008-2009 Common Data Set (PDF)
+      year: 2008-09
+      is_document: false
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2007_2008_tc.xls
+      text: 2007-2008 Common Data Set (PDF)
+      year: 2007-08
+      is_document: false
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2006_2007_tc.xls
+      text: 2006-2007 Common Data Set (PDF)
+      year: 2006-07
+      is_document: false
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2005_2006_tc.xls
+      text: 2005-2006 Common Data Set (PDF)
+      year: 2005-06
+      is_document: false
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2004_2005_tc.xls
+      text: 2004-2005 Common Data Set (PDF)
+      year: 2004-05
+      is_document: false
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/fact03.pdf
+      text: 2003-2004 Common Data Set (PDF)
+      year: 2003-04
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/fact02.pdf
+      text: 2002-2003 Common Data Set (PDF)
+      year: 2002-03
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/fact01.pdf
+      text: 2001-2002 Common Data Set (PDF)
+      year: 2001-02
+      is_document: true
+    - url: https://idr.umn.edu/sites/idr.umn.edu/files/fact00.pdf
+      text: 2000-2001 Common Data Set (PDF)
+      year: 2000-01
+      is_document: true
+    - url: https://crk.umn.edu/institutional-effectiveness/common-data-set-and-surveys
+      text: UMN Crookston Common Data Sets
+      year: null
+      is_document: false
+    - url: https://oir.d.umn.edu/common-data-set
+      text: UMN Duluth Common Data Sets
+      year: null
+      is_document: false
+    - url: https://digitalcommons.morris.umn.edu/institutionaldata/
+      text: UMN Morris Common Data Sets
+      year: null
+      is_document: false
   university-of-pittsburgh:
-    starting_url: https://www.oir.pitt.edu/institutional-information/common-data-set
-    final_url: null
-    status: nav_error
-    error: "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://www.oir.pitt.edu/institutional-information/common-data-set\n\
-      Call log:\n  - navigating to \"https://www.oir.pitt.edu/institutional-information/common-data-"
-    duration_ms: 4
-    anchors: []
+    starting_url: https://www.ir.pitt.edu/university-information/common-data-set
+    final_url: https://www.ir.pitt.edu/university-information/common-data-set
+    status: ok
+    error: null
+    duration_ms: 2916
+    anchors:
+    - url: https://www.ir.pitt.edu/university-information/common-data-set
+      text: Common Data Set
+      year: null
+      is_document: false
+    - url: https://www.ir.pitt.edu/sites/default/files/assets/CDS_2022-2023%20Pittsburgh_23.pdf
+      text: Pittsburgh Campus 2022-2023
+      year: 2022-23
+      is_document: true
+    - url: https://www.ir.pitt.edu/sites/default/files/assets/CDS_2022-2023%20Bradford_16.pdf
+      text: Bradford Campus 2022-2023
+      year: 2022-23
+      is_document: true
+    - url: https://www.ir.pitt.edu/sites/default/files/assets/CDS_2022-2023%20Greensburg_13.pdf
+      text: Greensburg Campus 2022-2023
+      year: 2022-23
+      is_document: true
+    - url: https://www.ir.pitt.edu/sites/default/files/assets/CDS_2022-2023%20Johnstown_17.pdf
+      text: Johnstown Campus 2022-2023
+      year: 2022-23
+      is_document: true
+    - url: https://www.ir.pitt.edu/sites/default/files/assets/CDS_2022-2023%20Titusville_10.pdf
+      text: Titusville Campus 2022-2023
+      year: 2022-23
+      is_document: true
   rutgers-university-new-brunswick:
     starting_url: https://oirap.rutgers.edu/instchar/cds.html
     final_url: https://oirap.rutgers.edu/instchar/cds.html
