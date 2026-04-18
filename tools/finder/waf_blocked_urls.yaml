@@ -1,0 +1,103 @@
+schools:
+  university-of-notre-dame:
+    school_name: University of Notre Dame
+    landing_url: null
+    urls:
+    - url: https://drive.google.com/uc?export=download&id=1jKjPHBrOR_G0Xzj5sLWEppmXd05kBaMd&confirm=t
+      year: 2007-08
+    - url: https://drive.google.com/uc?export=download&id=1UbtpG9MhutjH2kwSKDYRPk7KxCWkNX0n&confirm=t
+      year: 2008-09
+    - url: https://drive.google.com/uc?export=download&id=1mhyCJJ4DwYhcG2FSeEBG7pHtFc-D1_qn&confirm=t
+      year: 2009-10
+    - url: https://drive.google.com/uc?export=download&id=16qESfFQFqEEJxvILUJvoAJ1XZ6twU4eX&confirm=t
+      year: 2010-11
+    - url: https://drive.google.com/uc?export=download&id=1EtN94HkeAKVo1aYlx9O9kDV05Wp2d-VE&confirm=t
+      year: 2011-12
+    - url: https://drive.google.com/uc?export=download&id=1EeEjfQyxGTo4evNpDTFbBGr__4_Zk0dN&confirm=t
+      year: 2012-13
+    - url: https://drive.google.com/uc?export=download&id=1pu7lc1L0Gv81A9D_OkqOTE-AO6YC8kCO&confirm=t
+      year: 2013-14
+    - url: https://drive.google.com/uc?export=download&id=1rl3Am0gX1S5UZyxFcLVDklvBZjdfaQtF&confirm=t
+      year: 2014-15
+    - url: https://drive.google.com/uc?export=download&id=1mQjEqGmcrY1yXbTzCQN5LYRj8pp3G0Yc&confirm=t
+      year: 2015-16
+    - url: https://drive.google.com/uc?export=download&id=1XDZIrhi9iDHvJSqNXBVAh768dqIn7pRY&confirm=t
+      year: 2016-17
+    - url: https://drive.google.com/uc?export=download&id=19m6cPhHDeZClEa7BHUcPeij6Z37BTgGd&confirm=t
+      year: 2017-18
+    - url: https://drive.google.com/uc?export=download&id=19F9ZHMblBF1fqjhjZm6QxziIB59lkvgL&confirm=t
+      year: 2018-19
+    - url: https://drive.google.com/uc?export=download&id=11fzkHvsTRdGegv9yiQ5RRTDXOijOpXJM&confirm=t
+      year: 2019-20
+    - url: https://drive.google.com/uc?export=download&id=1j6Q8pIYIx0qNXNVbzLWmaneDWEyU4a3C&confirm=t
+      year: 2020-21
+    - url: https://drive.google.com/uc?export=download&id=1O3gZNUzWLzehfJAlrihwbS_OGwjl35xD&confirm=t
+      year: 2021-22
+    - url: https://drive.google.com/uc?export=download&id=1X_hwFEbIUnlBHwfDq_SRdZQX7HtqHXus&confirm=t
+      year: 2022-23
+    - url: https://drive.google.com/uc?export=download&id=1uxnlJICJcF0HQeKRoBXt8ymXa95IF_iX&confirm=t
+      year: 2023-24
+    - url: https://drive.google.com/uc?export=download&id=1L1IOSn19CxOwqRaDK8F_cZVzbsFD1EPg&confirm=t
+      year: 2024-25
+    - url: https://drive.google.com/uc?export=download&id=1yWm48DwrNsGJJmw8ZEcx4T1pj2xunXQq&confirm=t
+      year: 2025-26
+  johns-hopkins-university:
+    school_name: Johns Hopkins University
+    landing_url: https://oira.jhu.edu/reports-2/
+    urls:
+    - url: https://oira.jhu.edu/wp-content/uploads/2025-2026-CDS-Johns-Hopkins-University.pdf
+      year: 2025-26
+  new-york-university:
+    school_name: New York University
+    landing_url: https://www.nyu.edu/employees/resources-and-services/administrative-services/institutional-research/self-service-reporting-resources/factbook.html
+    urls:
+    - url: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-2024-2025/CDS_2024-2025.xlsx
+      year: 2024-25
+    - url: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-2024-2025/CDS_2024-2025-1.pdf
+      year: 2024-25
+    - url: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-on-website/CDS_2023_2024_Public_Final.xlsx
+      year: 2023-24
+    - url: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-on-website/CDS_2023_2024_Public_Final.pdf
+      year: 2023-24
+    - url: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-on-website/CDS_2022-2023_FINAL_6_28.xlsx
+      year: 2022-23
+    - url: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-on-website/CDS_2022-2023_FINAL.pdf
+      year: 2022-23
+    - url: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-on-website/CDS_2021-2022_FINAL.xlsx
+      year: 2021-22
+    - url: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-on-website/2021-2022_OIR_Common_Data_Set.pdf
+      year: 2021-22
+    - url: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-on-website/CDS_2020-2021_FINAL.xlsx
+      year: 2020-21
+    - url: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-on-website/NYU_Common_Data_Set_2020-21.4.30.pdf
+      year: 2020-21
+    - url: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-on-website/CDS_2019-2020_10_06rev.pdf
+      year: 2019-20
+    - url: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-on-website/CDS_2019-2020_6_30rev.pdf
+      year: 2019-20
+  williams-college:
+    school_name: Williams College
+    landing_url: https://www.williams.edu/institutional-research/common-data-set/
+    urls: []
+  fordham-university:
+    school_name: Fordham University
+    landing_url: https://www.fordham.edu/about/leadership-and-administration/administrative-offices/office-of-the-provost/provost-office-units/institutional-research-and-assessment/consumer-information/common-data-set/
+    urls:
+    - url: https://www.fordham.edu/media/home/departments-centers-and-offices/office-of-the-provost/pdfs/common_data_set_2019-2020.pdf
+      year: 2019-20
+    - url: https://www.fordham.edu/media/home/departments-centers-and-offices/office-of-the-provost/pdfs/common_data_set_2018-2019.pdf
+      year: 2018-19
+    - url: https://www.fordham.edu/media/home/departments-centers-and-offices/office-of-the-provost/pdfs/common_data_set_2017-2018.pdf
+      year: 2017-18
+    - url: https://www.fordham.edu/media/home/departments-centers-and-offices/office-of-the-provost/pdfs/common_data_set_2016-2017.pdf
+      year: 2016-17
+    - url: https://www.fordham.edu/media/review/content-assets/migrated/pdfs/jadu-single-folder-pdfs/Common_Data_Set_2015_2016.pdf
+      year: 2015-16
+    - url: https://www.fordham.edu/media/review/content-assets/migrated/pdfs/jadu-single-folder-pdfs/Common_Data_Set_2014_2015.pdf
+      year: 2014-15
+    - url: https://www.fordham.edu/media/review/content-assets/migrated/pdfs/jadu-single-folder-pdfs/Common_Data_Set_2013_2014.pdf
+      year: 2013-14
+    - url: https://www.fordham.edu/media/review/content-assets/migrated/pdfs/jadu-single-folder-pdfs/Common_Data_Set_2012_2013.pdf
+      year: 2012-13
+    - url: https://www.fordham.edu/media/home/departments-centers-and-offices/office-of-the-provost/pdfs/common_data_set_2011-2012.pdf
+      year: 2011-12
