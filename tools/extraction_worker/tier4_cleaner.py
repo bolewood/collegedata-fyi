@@ -374,15 +374,23 @@ def clean(markdown: str) -> dict[str, dict]:
                     if col_hint < len(row["values"]):
                         val_str = row["values"][col_hint]
                 elif isinstance(col_hint, str):
-                    # Find column by header substring.
+                    # Find column by header substring. When multiple headers
+                    # match (e.g. "Full-Time Men" and "Part-Time Men" both
+                    # contain "men"), prefer the one containing "full" since
+                    # B.101-B.131 are the full-time enrollment block.
+                    matches = []
                     for ci, hdr in enumerate(headers_norm):
                         if col_hint in hdr:
-                            # ci is header index; values are offset by 1
-                            # (first header is the label column).
                             vi = ci - 1
                             if 0 <= vi < len(row["values"]):
-                                val_str = row["values"][vi]
-                                break
+                                matches.append((ci, vi, hdr))
+                    if matches:
+                        # Prefer "full-time" match, fall back to first match
+                        best = next(
+                            (m for m in matches if "full" in m[2]),
+                            matches[0],
+                        )
+                        val_str = row["values"][best[1]]
 
                 if val_str is None:
                     continue
