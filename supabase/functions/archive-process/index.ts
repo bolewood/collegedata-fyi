@@ -102,12 +102,24 @@ async function runForceUrls(
   body: Record<string, unknown>,
 ): Promise<Response> {
   const schoolId = typeof body.school_id === "string" ? body.school_id : null;
-  const urls = Array.isArray(body.urls)
-    ? (body.urls as unknown[]).filter((u): u is string => typeof u === "string")
-    : [];
-  if (!schoolId || urls.length === 0) {
+  // Accept either plain strings or {url, year} objects.
+  const rawUrls = Array.isArray(body.urls) ? (body.urls as unknown[]) : [];
+  const items = rawUrls
+    .map((u): string | { url: string; year?: string } | null => {
+      if (typeof u === "string") return u;
+      if (u && typeof u === "object" && "url" in u && typeof (u as Record<string, unknown>).url === "string") {
+        const year = (u as Record<string, unknown>).year;
+        return {
+          url: (u as Record<string, unknown>).url as string,
+          year: typeof year === "string" ? year : undefined,
+        };
+      }
+      return null;
+    })
+    .filter((x): x is string | { url: string; year?: string } => x !== null);
+  if (!schoolId || items.length === 0) {
     return json({
-      error: "force_urls mode requires body { school_id: string, urls: string[] }",
+      error: "force_urls requires body { school_id: string, urls: (string | {url, year})[] }",
     }, 400);
   }
 
@@ -131,18 +143,16 @@ async function runForceUrls(
   logEvent({
     event: "force_urls_start",
     school_id: schoolId,
-    url_count: urls.length,
+    url_count: items.length,
   });
 
   try {
+    const firstUrl = typeof items[0] === "string" ? items[0] : items[0].url;
     const outcome = await archiveManualUrls(supabase, {
       school_id: schoolId,
       school_name: schoolName ?? schoolId,
-      // cds_url_hint is unused on the manual-urls path (we provide URLs
-      // directly), but SchoolInput requires it. Stuff the first URL as a
-      // best-effort breadcrumb so logs still have something to reference.
-      cds_url_hint: urls[0],
-    }, urls);
+      cds_url_hint: firstUrl,
+    }, items);
     logEvent({
       event: "force_urls_completed",
       school_id: schoolId,

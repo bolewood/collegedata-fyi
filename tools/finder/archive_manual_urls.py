@@ -98,30 +98,33 @@ def main() -> int:
         # Prefer document-like anchors (PDF/XLSX/DOCX). Drop subpage URLs and
         # hash-only fragments. The archiver will still try them if asked, but
         # subpages need the two-hop walk the resolver does, not the direct
-        # download this path performs.
-        urls: list[str] = []
+        # download this path performs. Pass year alongside each URL so the
+        # archiver doesn't collapse multiple Box/Drive opaque-id URLs onto
+        # the same cds_year=unknown row (unique constraint collision).
+        items: list[dict] = []
         seen = set()
         for a in info["anchors"]:
             u = a["url"].split("#")[0]
             if u in seen:
                 continue
             seen.add(u)
-            # Keep direct-document anchors + anything that's a drive/box share
-            # (which the downloader magic-byte-sniffs even if URL has no ext)
             lower = u.lower()
             if (a.get("is_document")
                     or "drive.google.com" in lower
                     or "box.com" in lower
                     or "dropbox.com" in lower):
-                urls.append(u)
+                item = {"url": u}
+                if a.get("year"):
+                    item["year"] = a["year"]
+                items.append(item)
 
-        if not urls:
+        if not items:
             print(f"  [{i:>3}/{len(targets)}] {sid:<45} no document anchors → skip",
                   file=sys.stderr)
             continue
 
-        payload = {"school_id": sid, "urls": urls}
-        print(f"  [{i:>3}/{len(targets)}] {sid:<45} POST {len(urls)} urls",
+        payload = {"school_id": sid, "urls": items}
+        print(f"  [{i:>3}/{len(targets)}] {sid:<45} POST {len(items)} urls",
               file=sys.stderr, flush=True)
 
         if args.dry_run:

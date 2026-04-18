@@ -6,6 +6,7 @@ import {
   findBestSourceAnchor,
   findDownloadLinks,
   rewriteGoogleDriveUrl,
+  rewriteBoxUrl,
   parentLandingCandidates,
   wellKnownPathUrls,
 } from "./resolve.ts";
@@ -618,6 +619,35 @@ Deno.test("wellKnownPathUrls: expands to host-rooted CDS landing paths", () => {
   for (const u of urls) {
     assertEquals(u.startsWith("https://irp.dpb.cornell.edu"), true);
   }
+});
+
+Deno.test("rewriteBoxUrl: subdomain share URL → direct static", () => {
+  // UPenn's share URL shape — the main case this rewriter exists for.
+  const got = rewriteBoxUrl("https://upenn.box.com/s/ckv4frz37rzxa4u6bdiv2h4yzykqm4ef");
+  assertEquals(got, "https://upenn.box.com/shared/static/ckv4frz37rzxa4u6bdiv2h4yzykqm4ef");
+});
+
+Deno.test("rewriteBoxUrl: .app.box.com variant canonicalized", () => {
+  // Some share URLs redirect to the .app. subdomain; rewrite should
+  // canonicalize to the non-.app form, which reliably serves the file.
+  const got = rewriteBoxUrl("https://upenn.app.box.com/s/abc123def456");
+  assertEquals(got, "https://upenn.box.com/shared/static/abc123def456");
+});
+
+Deno.test("rewriteBoxUrl: bare app.box.com share", () => {
+  const got = rewriteBoxUrl("https://app.box.com/s/xyz999");
+  assertEquals(got, "https://app.box.com/shared/static/xyz999");
+});
+
+Deno.test("rewriteBoxUrl: non-box URL passes through", () => {
+  const got = rewriteBoxUrl("https://example.edu/cds-2024.pdf");
+  assertEquals(got, "https://example.edu/cds-2024.pdf");
+});
+
+Deno.test("rewriteBoxUrl: already-rewritten URL passes through", () => {
+  // /shared/static/ form has no /s/ segment, so the rewrite doesn't fire.
+  const got = rewriteBoxUrl("https://upenn.box.com/shared/static/abc");
+  assertEquals(got, "https://upenn.box.com/shared/static/abc");
 });
 
 Deno.test("wellKnownPathUrls: rejects malformed/non-http URLs", () => {

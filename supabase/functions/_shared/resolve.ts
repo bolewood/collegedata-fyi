@@ -140,6 +140,42 @@ function isExcludedDocumentHost(hostname: string): boolean {
 const GOOGLE_DRIVE_FILE_RE = /^https?:\/\/drive\.google\.com\/file\/d\/([^/]+)/i;
 const GOOGLE_DRIVE_OPEN_RE = /^https?:\/\/drive\.google\.com\/open\?id=([^&]+)/i;
 
+// Box share URLs (e.g. https://upenn.box.com/s/<id>) serve an HTML viewer,
+// not the file itself. Downloaders land on the viewer HTML and classify
+// the response as text/html, rejecting the candidate. The canonical
+// direct-download form is /shared/static/<id> on the same host.
+//
+// Public-share examples:
+//   https://upenn.box.com/s/ckv4frz37rzxa4u6bdiv2h4yzykqm4ef (HTML viewer)
+//   https://upenn.app.box.com/s/ckv4frz37rzxa4u6bdiv2h4yzykqm4ef (HTML viewer)
+// Both rewrite to:
+//   https://upenn.box.com/shared/static/ckv4frz37rzxa4u6bdiv2h4yzykqm4ef
+// Which 302s to a time-limited public.boxcloud.com URL serving the file.
+//
+// UPenn hosts 16+ years of CDS on Box. The whole pattern is probably not
+// unique to them — any school whose IR office publishes through Box ends
+// up here.
+//
+// The rewrite also canonicalizes <subdomain>.app.box.com → <subdomain>.box.com
+// because the app. variant of /shared/static/<id> sometimes 404s while the
+// non-app variant succeeds.
+const BOX_SHARE_RE = /^(https?:\/\/)([^.]+)(?:\.app)?\.box\.com\/s\/([^/?#]+)/i;
+const BOX_APP_SHARE_RE = /^(https?:\/\/)app\.box\.com\/s\/([^/?#]+)/i;
+
+export function rewriteBoxUrl(url: string): string {
+  const m = url.match(BOX_SHARE_RE);
+  if (m) {
+    const [, scheme, subdomain, fileId] = m;
+    return `${scheme}${subdomain}.box.com/shared/static/${fileId}`;
+  }
+  const m2 = url.match(BOX_APP_SHARE_RE);
+  if (m2) {
+    const [, scheme, fileId] = m2;
+    return `${scheme}app.box.com/shared/static/${fileId}`;
+  }
+  return url;
+}
+
 export function rewriteGoogleDriveUrl(url: string): string {
   const fileMatch = url.match(GOOGLE_DRIVE_FILE_RE);
   if (fileMatch) {
@@ -313,6 +349,7 @@ export function extractCdsAnchors(html: string, baseUrl: string): CdsAnchor[] {
     // lands on Drive's HTML viewer and we can't classify it as a
     // document. See rewriteGoogleDriveUrl comment above.
     absoluteUrl = rewriteGoogleDriveUrl(absoluteUrl);
+    absoluteUrl = rewriteBoxUrl(absoluteUrl);
 
     const parsed = new URL(absoluteUrl);
 
@@ -436,6 +473,7 @@ export function findDownloadLinks(html: string, baseUrl: string): CdsAnchor[] {
 
     // Same Google Drive rewrite as extractCdsAnchors.
     absoluteUrl = rewriteGoogleDriveUrl(absoluteUrl);
+    absoluteUrl = rewriteBoxUrl(absoluteUrl);
 
     const parsed = new URL(absoluteUrl);
     if (isExcludedDocumentHost(parsed.hostname)) continue;

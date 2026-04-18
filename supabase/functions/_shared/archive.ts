@@ -203,23 +203,42 @@ export async function archiveOneSchool(
 // from the URL path. PermanentError on one candidate is caught and
 // skipped (same semantics as the resolver-driven path), so one stale URL
 // in the batch doesn't abandon the rest.
+// Item accepted by archiveManualUrls: a URL and optional explicit cds_year.
+// The caller (typically the Playwright URL collector) knows the year from
+// the link text or surrounding page context, which is NOT recoverable from
+// opaque share-viewer URLs like Box /s/<id> or Drive /file/d/<id>. If
+// `year` is omitted, archiveManualUrls falls back to URL+filename parsing.
+export interface ManualUrlItem {
+  url: string;
+  year?: string;
+}
+
 export async function archiveManualUrls(
   supabase: SupabaseClient,
   school: SchoolInput,
-  urls: string[],
+  items: (string | ManualUrlItem)[],
 ): Promise<ArchiveOutcome> {
-  if (urls.length === 0) {
+  if (items.length === 0) {
     throw new PermanentError("archiveManualUrls called with empty url list");
   }
   const { normalizeYear } = await import("./year.ts");
-  const { UNKNOWN_YEAR_SENTINEL } = await import("./resolve.ts");
+  const { UNKNOWN_YEAR_SENTINEL, rewriteBoxUrl, rewriteGoogleDriveUrl } =
+    await import("./resolve.ts");
 
   const candidates: CandidateOutcome[] = [];
   const skipped: { url: string; reason: string }[] = [];
-  for (const rawUrl of urls) {
+  for (const raw of items) {
+    const rawUrl = typeof raw === "string" ? raw : raw.url;
+    const explicitYear = typeof raw === "string" ? null : (raw.year ?? null);
+
+    // Rewrite share-viewer URLs (Google Drive, Box) into direct-download
+    // form before handing to the downloader.
+    let url = rewriteGoogleDriveUrl(rawUrl);
+    url = rewriteBoxUrl(url);
+
     let parsedUrl: URL;
     try {
-      parsedUrl = new URL(rawUrl);
+      parsedUrl = new URL(url);
     } catch {
       skipped.push({ url: rawUrl, reason: "invalid URL" });
       continue;
@@ -227,10 +246,17 @@ export async function archiveManualUrls(
     const filename = decodeURIComponent(
       parsedUrl.pathname.split("/").filter(Boolean).pop() ?? "",
     );
-    const year = normalizeYear(rawUrl) ?? normalizeYear(filename);
+    // Year precedence: explicit (from caller) → pre-rewrite URL → post-rewrite
+    // URL → filename. Box/Drive opaque-id URLs yield nothing on their own,
+    // so the explicit year is the authoritative source for those.
+    const year =
+      explicitYear ??
+      normalizeYear(rawUrl) ??
+      normalizeYear(url) ??
+      normalizeYear(filename);
     try {
       candidates.push(await archiveOneCandidate(supabase, school, {
-        url: rawUrl,
+        url,
         cds_year: year ?? UNKNOWN_YEAR_SENTINEL,
       }));
     } catch (e) {
