@@ -1,23 +1,15 @@
-export interface ManifestRow {
-  document_id: string;
-  school_id: string;
-  school_name: string;
-  sub_institutional: string | null;
-  cds_year: string;
-  source_format: string | null;
-  extraction_status: string;
-  canonical_year: string | null;
-  source_storage_path: string | null;
-  // Fields present when fetching with select("*") but not in the list query
-  source_url?: string | null;
-  participation_status?: string;
-  discovered_at?: string | null;
-  last_verified_at?: string | null;
-  removed_at?: string | null;
-  latest_canonical_artifact_id?: string | null;
-  detected_year?: string | null;
-}
+import type { Database } from "./database.types";
 
+// DB-derived types from generated schema
+export type ManifestRow =
+  Database["public"]["Views"]["cds_manifest"]["Row"];
+
+export type ArtifactRow =
+  Database["public"]["Tables"]["cds_artifacts"]["Row"];
+
+// Artifact notes are typed as Json in the generated schema.
+// This interface describes the actual runtime shape written by the
+// extraction pipeline (Tier 2 and Tier 4 cleaners).
 export interface FieldValue {
   value: string;
   value_decoded?: string;
@@ -29,23 +21,13 @@ export interface FieldValue {
   value_type?: string;
 }
 
-export interface ArtifactRow {
-  id: string;
-  document_id: string;
-  kind: string;
-  producer: string | null;
-  producer_version: string | null;
-  schema_version: string | null;
-  storage_path: string | null;
-  sha256: string | null;
-  created_at: string;
-  notes: {
-    values?: Record<string, FieldValue>;
-    stats?: { total_fields?: number; unmapped_count?: number };
-    markdown?: string;
-  } | null;
+export interface ArtifactNotes {
+  values?: Record<string, FieldValue>;
+  stats?: { total_fields?: number; unmapped_count?: number };
+  markdown?: string;
 }
 
+// App-level aggregation types (not direct DB mirrors)
 export interface SchoolSummary {
   school_id: string;
   school_name: string;

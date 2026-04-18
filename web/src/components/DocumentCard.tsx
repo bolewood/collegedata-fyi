@@ -44,8 +44,8 @@ export function DocumentCard({ doc }: { doc: ManifestRow }) {
         )}
 
         <Badge
-          label={formatExtractionStatus(doc.extraction_status)}
-          className={statusColor(doc.extraction_status)}
+          label={formatExtractionStatus(doc.extraction_status ?? "discovered")}
+          className={statusColor(doc.extraction_status ?? "discovered")}
         />
       </div>
 

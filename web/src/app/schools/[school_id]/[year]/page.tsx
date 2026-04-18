@@ -5,7 +5,7 @@ import {
   fetchDocumentsBySchoolAndYear,
   fetchCanonicalArtifact,
 } from "@/lib/queries";
-import type { FieldValue } from "@/lib/types";
+import type { FieldValue, ArtifactNotes } from "@/lib/types";
 import { storageUrl, formatBadgeLabel } from "@/lib/format";
 import { Badge } from "@/components/Badge";
 import { KeyStats } from "@/components/KeyStats";
@@ -106,12 +106,13 @@ async function DocumentVariant({ doc }: { doc: Awaited<ReturnType<typeof fetchDo
   let values: Record<string, FieldValue> = {};
   let totalFields: number | undefined;
 
-  if (isExtracted) {
+  if (isExtracted && doc.document_id) {
     const artifact = await fetchCanonicalArtifact(doc.document_id);
-    if (artifact?.notes?.values) {
-      values = artifact.notes.values;
+    const notes = artifact?.notes as ArtifactNotes | null;
+    if (notes?.values) {
+      values = notes.values;
     }
-    totalFields = artifact?.notes?.stats?.total_fields;
+    totalFields = notes?.stats?.total_fields;
   }
 
   const hasValues = Object.keys(values).length > 0;

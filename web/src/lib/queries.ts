@@ -2,9 +2,6 @@ import { cache } from "react";
 import { supabase } from "./supabase";
 import type { ManifestRow, ArtifactRow, SchoolSummary, CorpusStats } from "./types";
 
-const MANIFEST_COLUMNS =
-  "document_id, school_id, school_name, sub_institutional, cds_year, source_format, extraction_status, canonical_year, source_storage_path";
-
 export async function fetchManifest(): Promise<ManifestRow[]> {
   const PAGE_SIZE = 1000;
   const allRows: ManifestRow[] = [];
@@ -13,7 +10,7 @@ export async function fetchManifest(): Promise<ManifestRow[]> {
   while (true) {
     const { data, error } = await supabase
       .from("cds_manifest")
-      .select(MANIFEST_COLUMNS)
+      .select("*")
       .order("school_name")
       .range(from, from + PAGE_SIZE - 1);
 
@@ -32,11 +29,13 @@ export function aggregateSchools(rows: ManifestRow[]): SchoolSummary[] {
   const map = new Map<string, SchoolSummary>();
 
   for (const row of rows) {
-    const existing = map.get(row.school_id);
+    const sid = row.school_id ?? "";
+    const sname = row.school_name ?? sid;
+    const existing = map.get(sid);
     if (!existing) {
-      map.set(row.school_id, {
-        school_id: row.school_id,
-        school_name: row.school_name,
+      map.set(sid, {
+        school_id: sid,
+        school_name: sname,
         doc_count: 1,
         latest_year: row.canonical_year,
         formats: row.source_format ? [row.source_format] : [],
@@ -65,7 +64,7 @@ export function aggregateSchools(rows: ManifestRow[]): SchoolSummary[] {
 }
 
 export function computeStats(rows: ManifestRow[]): CorpusStats {
-  const schoolIds = new Set(rows.map((r) => r.school_id));
+  const schoolIds = new Set(rows.map((r) => r.school_id).filter(Boolean));
   const years = rows
     .map((r) => r.canonical_year)
     .filter((y): y is string => y != null && y !== "unknown" && /^\d{4}/.test(y))
