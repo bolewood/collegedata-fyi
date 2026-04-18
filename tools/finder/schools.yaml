@@ -134,7 +134,7 @@ schools:
   domain: bowdoin.edu
   ipeds_id: '161004'
   scrape_policy: active
-  cds_url_hint: https://www.bowdoin.edu/ir/pdf/common-data-set-2020-21.pdf
+  cds_url_hint: https://www.bowdoin.edu/ir/
   probe_state:
     last_probed_at: '2026-04-14T15:35:44Z'
     last_result: found
@@ -158,7 +158,7 @@ schools:
   domain: brown.edu
   ipeds_id: '217156'
   scrape_policy: active
-  cds_url_hint: https://oir.brown.edu/sites/default/files/2020-04/CDS2009_2010.pdf
+  cds_url_hint: https://oir.brown.edu/institutional-data/common-data-set
   probe_state:
     last_probed_at: '2026-04-14T15:35:45Z'
     last_result: found
@@ -182,7 +182,7 @@ schools:
   domain: bucknell.edu
   ipeds_id: '211158'
   scrape_policy: active
-  cds_url_hint: https://www.bucknell.edu/sites/default/files/institutional_research/cds_2020-2021.pdf
+  cds_url_hint: https://www.bucknell.edu/commondataset/
   probe_state:
     last_probed_at: '2026-04-14T15:35:45Z'
     last_result: found
@@ -266,7 +266,7 @@ schools:
   domain: cornell.edu
   ipeds_id: '190415'
   scrape_policy: active
-  cds_url_hint: https://irp.dpb.cornell.edu/wp-content/uploads/2025/02/CDS-2024-2025-v1.pdf
+  cds_url_hint: https://irp.dpb.cornell.edu/common-data-set/
   probe_state:
     last_probed_at: '2026-04-14T15:35:46Z'
     last_result: found
@@ -339,7 +339,7 @@ schools:
   domain: gwu.edu
   ipeds_id: '131469'
   scrape_policy: active
-  cds_url_hint: https://irp.gwu.edu/sites/g/files/zaxdzs6056/files/downloads/CDS_2020-2021-FA2021.pdf
+  cds_url_hint: https://irp.gwu.edu/common-data-set/
   probe_state:
     last_probed_at: '2026-04-14T15:35:48Z'
     last_result: found
@@ -363,7 +363,7 @@ schools:
   domain: gatech.edu
   ipeds_id: '139755'
   scrape_policy: active
-  cds_url_hint: https://irp.gatech.edu/files/CDS/cds_2006.pdf
+  cds_url_hint: https://irp.gatech.edu/common-data-set/
   probe_state:
     last_probed_at: '2026-04-14T15:35:48Z'
     last_result: found
@@ -414,7 +414,7 @@ schools:
   domain: jhu.edu
   ipeds_id: '162928'
   scrape_policy: active
-  cds_url_hint: https://oira.jhu.edu/wp-content/uploads/CDS_2021-2022.pdf
+  cds_url_hint: https://oira.jhu.edu/common-data-set/
   probe_state:
     last_probed_at: '2026-04-14T15:35:49Z'
     last_result: found
@@ -438,7 +438,7 @@ schools:
   domain: lehigh.edu
   ipeds_id: '213543'
   scrape_policy: active
-  cds_url_hint: https://data.lehigh.edu/sites/data.lehigh.edu/files/1302026-CDS-2025-2026-FINAL.pdf
+  cds_url_hint: https://data.lehigh.edu/common-data-set/
   probe_state:
     last_probed_at: '2026-04-14T15:35:50Z'
     last_result: found
@@ -498,7 +498,7 @@ schools:
   domain: oberlin.edu
   ipeds_id: '204501'
   scrape_policy: active
-  cds_url_hint: https://www.oberlin.edu/sites/default/files/content/office/institutional-research/documents/2023-24_oc_cds.pdf
+  cds_url_hint: https://www.oberlin.edu/institutional-research/cds/
   probe_state:
     last_probed_at: '2026-04-14T15:35:51Z'
     last_result: found
@@ -522,7 +522,7 @@ schools:
   domain: psu.edu
   ipeds_id: '214777'
   scrape_policy: active
-  cds_url_hint: https://opair.psu.edu/files/2019/04/CDS-2019-2020-University-Park.pdf
+  cds_url_hint: https://opair.psu.edu/cds/
   probe_state:
     last_probed_at: '2026-04-14T15:35:52Z'
     last_result: found
@@ -575,7 +575,7 @@ schools:
   domain: rice.edu
   ipeds_id: '227757'
   scrape_policy: active
-  cds_url_hint: https://oie.rice.edu/sites/g/files/bxs4401/files/inline-files/CDS_2023-24_WEBSITE.pdf
+  cds_url_hint: https://oie.rice.edu/common-data-set/
   probe_state:
     last_probed_at: '2026-04-14T15:35:53Z'
     last_result: found
@@ -599,7 +599,7 @@ schools:
   domain: swarthmore.edu
   ipeds_id: '216287'
   scrape_policy: active
-  cds_url_hint: https://www.swarthmore.edu/sites/default/files/assets/documents/institutional-research/cds2011.pdf
+  cds_url_hint: https://www.swarthmore.edu/institutional-research/common-data-set/
   probe_state:
     last_probed_at: '2026-04-14T15:35:54Z'
     last_result: found
@@ -635,7 +635,7 @@ schools:
   domain: tufts.edu
   ipeds_id: '167987'
   scrape_policy: active
-  cds_url_hint: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2024-2025-1.pdf
+  cds_url_hint: https://provost.tufts.edu/institutionalresearch/common-data-set/
   probe_state:
     last_probed_at: '2026-04-14T15:35:55Z'
     last_result: found
@@ -659,7 +659,7 @@ schools:
   domain: ucdavis.edu
   ipeds_id: '110644'
   scrape_policy: active
-  cds_url_hint: https://aggiedata.ucdavis.edu/sites/g/files/dgvnsk1841/files/media/documents/CDS_2020-2021_Davis.pdf
+  cds_url_hint: https://aggiedata.ucdavis.edu/common-data-set/
   probe_state:
     last_probed_at: '2026-04-14T15:35:55Z'
     last_result: found
@@ -772,7 +772,7 @@ schools:
   domain: unc.edu
   ipeds_id: '199120'
   scrape_policy: active
-  cds_url_hint: https://oira.unc.edu/wp-content/uploads/sites/297/2024/02/CDS_2022-23_20240206.pdf
+  cds_url_hint: https://oira.unc.edu/common-data-set/
   probe_state:
     last_probed_at: '2026-04-14T15:35:58Z'
     last_result: found
@@ -796,7 +796,7 @@ schools:
   domain: pitt.edu
   ipeds_id: '215293'
   scrape_policy: active
-  cds_url_hint: https://ir.pitt.edu/sites/default/files/assets/2023-2024%20Common%20Data%20Set%20Pgh%20Campus_9.pdf
+  cds_url_hint: https://ir.pitt.edu/common-data-set/
   probe_state:
     last_probed_at: '2026-04-14T15:35:58Z'
     last_result: found
@@ -918,7 +918,7 @@ schools:
   domain: williams.edu
   ipeds_id: '168148'
   scrape_policy: active
-  cds_url_hint: https://www.williams.edu/institutional-research/files/2019/08/2010-2011_williams_common_data_set.pdf
+  cds_url_hint: https://www.williams.edu/institutional-research/common-data-set/
   probe_state:
     last_probed_at: '2026-04-14T15:36:02Z'
     last_result: found
@@ -1999,7 +1999,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.atu.edu/ir/docs/cds/CDS_fall_2022.pdf
+  cds_url_hint: https://www.atu.edu/ir/
 - id: arlington-baptist-university
   name: Arlington Baptist University
   domain: abu.edu
@@ -2273,7 +2273,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.apsu.edu/dsir/common_data_set/CDSforWeb1819v6.pdf
+  cds_url_hint: https://www.apsu.edu/institutional-research/cds/
 - id: austin-presbyterian-theological-seminary
   name: Austin Presbyterian Theological Seminary
   domain: austinseminary.edu
@@ -3594,7 +3594,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://assessmentandplanning.byu.edu/https:/brightspotcdn.byu.edu/d4/ef/781d4ba74c888a1f5be7f98406b3/common-data-set-2002-2003.pdf
+  cds_url_hint: https://assessmentandplanning.byu.edu/common-data-set/
 - id: brigham-young-university-hawaii
   name: Brigham Young University-Hawaii
   domain: byuh.edu
@@ -5140,7 +5140,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.citadel.edu/institutional-research/wp-content/uploads/sites/75/cds2021_2022.pdf
+  cds_url_hint: https://www.citadel.edu/institutional-research/common-data-set/
 - id: city-university-of-seattle
   name: City University of Seattle
   domain: cityu.edu
@@ -6995,7 +6995,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.duq.edu/documents/institutionalresearch/cds-2020-2021.pdf
+  cds_url_hint: https://www.duq.edu/commondataset/
 - id: earlham-college
   name: Earlham College
   domain: earlham.edu
@@ -9674,7 +9674,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://registrar.press.hollins.edu/wp-content/uploads/sites/47/2025/04/CDS-2024-2025-Hollins.pdf
+  cds_url_hint: https://registrar.press.hollins.edu/common-data-set/
 - id: holy-apostles-college-and-seminary
   name: Holy Apostles College and Seminary
   domain: holyapostles.edu
@@ -10442,7 +10442,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.jmu.edu/pair/ir/common-data-set/cds2024/cds-2024b.pdf
+  cds_url_hint: https://www.jmu.edu/oir/common-data-set/
 - id: jarvis-christian-university
   name: Jarvis Christian University
   domain: jarvis.edu
@@ -10689,7 +10689,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.k-state.edu/data/institutional-research/resources/common-data-set/CDS_2020-2021.pdf
+  cds_url_hint: https://www.k-state.edu/data/institutional-research/resources/
 - id: kansas-wesleyan-university
   name: Kansas Wesleyan University
   domain: kwu.edu
@@ -10769,7 +10769,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.kennesaw.edu/data-strategy/institutional-research/publications/common-data-set/docs/cds-2024-2025-06102025.pdf
+  cds_url_hint: https://www.kennesaw.edu/data-strategy/institutional-research/publications/common-data-set/
 - id: kenrick-glennon-seminary
   name: Kenrick Glennon Seminary
   domain: kenrick.edu
@@ -11192,7 +11192,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.lssu.edu/wp-content/uploads/2019/05/CommonDataSet2017-2018.pdf
+  cds_url_hint: https://www.lssu.edu/common-data-set/
 - id: lake-washington-institute-of-technology
   name: Lake Washington Institute of Technology
   domain: lwtech.edu
@@ -11835,7 +11835,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.lsu.edu/data/common-data-set/2023/3_2324_admissions.pdf
+  cds_url_hint: https://www.lsu.edu/data/common-data-set/
 - id: louisiana-state-university-health-sciences-center-new
   name: Louisiana State University Health Sciences Center-New Orleans
   domain: lsuhsc.edu
@@ -11949,7 +11949,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.luc.edu/media/lucedu/oie/CDS_2021-2022.pdf
+  cds_url_hint: https://www.luc.edu/institutional-data/common-data-set
 - id: loyola-university-maryland
   name: Loyola University Maryland
   domain: loyola.edu
@@ -13652,7 +13652,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.montana.edu/data/common-data-set/cds24.pdf
+  cds_url_hint: https://www.montana.edu/data/common-data-set/
 - id: montana-state-university-billings
   name: Montana State University Billings
   domain: msubillings.edu
@@ -14650,7 +14650,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://report.isa.ncsu.edu/ir/cds/pdfs/CDS_2022-23.v2.pdf
+  cds_url_hint: https://report.isa.ncsu.edu/ir/cds/
 - id: north-carolina-wesleyan-university
   name: North Carolina Wesleyan University
   domain: ncwc.edu
@@ -14865,7 +14865,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://in.nau.edu/wp-content/uploads/sites/129/2025/02/CDS-2024-2025.pdf
+  cds_url_hint: https://in.nau.edu/institutional-research/common-data-set/
 - id: northern-baptist-theological-seminary
   name: Northern Baptist Theological Seminary
   domain: seminary.edu
@@ -15557,7 +15557,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://ira.okstate.edu/site-files/documents/cds/cds2425.pdf
+  cds_url_hint: https://ira.okstate.edu/cds/
 - id: oklahoma-state-university-oklahoma-city
   name: Oklahoma State University-Oklahoma City
   domain: osuokc.edu
@@ -17681,7 +17681,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://rpublic.rollins.edu/sites/IR/Common%20Data%20Set%20CDS/CDS_2021-2022%20Rollins.pdf
+  cds_url_hint: https://rpublic.rollins.edu/sites/IR/Common%20Data%20Set%20CDS/
 - id: roosevelt-university
   name: Roosevelt University
   domain: roosevelt.edu
@@ -18395,7 +18395,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://asir.sdsu.edu/Documents/CommonDataSets/CDS_2022-23_rev_1.pdf
+  cds_url_hint: https://asir.sdsu.edu/common-data-set/
 - id: san-francisco-bay-university
   name: San Francisco Bay University
   domain: sfbu.edu
@@ -18801,7 +18801,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.su.edu/wp-content/uploads/2014/11/CDS-2425-Final.pdf
+  cds_url_hint: https://www.su.edu/common-data-set/
 - id: shepherd-university
   name: Shepherd University
   domain: shepherd.edu
@@ -19005,7 +19005,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.skidmore.edu/ir/facts/common/CDS_2022-2023.pdf
+  cds_url_hint: https://www.skidmore.edu/ir/facts/common/
 - id: skyline-college
   name: Skyline College
   domain: skylinecollege.edu
@@ -19979,7 +19979,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.smcm.edu/ir/wp-content/uploads/sites/60/2023/02/CDS-2022-2023-final.pdf
+  cds_url_hint: https://www.smcm.edu/ir/cds/
 - id: st-marys-university
   name: St. Mary's University
   domain: stmarytx.edu
@@ -20211,7 +20211,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.stonybrook.edu/commcms/irpe/fact_book/common_data_set/_files/CDS_2024_2025.pdf
+  cds_url_hint: https://www.stonybrook.edu/commcms/irpe/fact_book/common_data_set/
 - id: sul-ross-state-university
   name: Sul Ross State University
   domain: sulross.edu
@@ -20931,7 +20931,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://txwes.edu/media/twu/institutional-research/docs/CDS2015-2016.pdf
+  cds_url_hint: https://txwes.edu/common-data-set/
 - id: texas-womans-university
   name: Texas Woman's University
   domain: twu.edu
@@ -21168,7 +21168,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.evergreen.edu/sites/default/files/2024-07/The%20Evergreen%20State%20College_CDS_2023-2024.pdf
+  cds_url_hint: https://www.evergreen.edu/common-data-set/
 - id: the-juilliard-school
   name: The Juilliard School
   domain: juilliard.edu
@@ -21426,7 +21426,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://irsa.utk.edu/wp-content/uploads/sites/107/2024/02/CDS_2023-2024_C.pdf
+  cds_url_hint: https://irsa.utk.edu/common-data-set/
 - id: the-university-of-tennessee-martin
   name: The University of Tennessee-Martin
   domain: utm.edu
@@ -21466,7 +21466,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.utep.edu/planning/cierp/_files/docs/common-data-set/2024-25%20common%20data%20set.pdf
+  cds_url_hint: https://www.utep.edu/common-data-set/
 - id: the-university-of-texas-at-san-antonio
   name: The University of Texas at San Antonio
   domain: utsa.edu
@@ -22471,7 +22471,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.uaf.edu/pair/pair_reports/common-data-set/CDS_2022-2023.pdf
+  cds_url_hint: https://www.uaf.edu/pair/pair_reports/common-data-set/
 - id: university-of-alaska-southeast
   name: University of Alaska Southeast
   domain: uas.alaska.edu
@@ -22519,7 +22519,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://osai.uark.edu/datasets/cds/cds24-25v1.pdf
+  cds_url_hint: https://osai.uark.edu/datasets/cds/
 - id: university-of-arkansas-at-little-rock
   name: University of Arkansas at Little Rock
   domain: ualr.edu
@@ -22654,7 +22654,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://ir.ucr.edu/sites/default/files/2024-03/cds-2023-2024.pdf
+  cds_url_hint: https://ir.ucr.edu/cds/
 - id: university-of-california-san-francisco
   name: University of California-San Francisco
   domain: ucsf.edu
@@ -23054,7 +23054,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://uh.edu/ir/reports/common-data-sets/cds-data/cds01-02_new.pdf
+  cds_url_hint: https://uh.edu/ir/reports/common-data-sets/
 - id: university-of-houston-clear-lake
   name: University of Houston-Clear Lake
   domain: uhcl.edu
@@ -23090,7 +23090,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://uh.edu/ir/reports/common-data-sets/cds-data/cds01-02_new.pdf
+  cds_url_hint: https://uh.edu/ir/reports/common-data-sets/
 - id: university-of-houston-victoria
   name: University of Houston-Victoria
   domain: uhv.edu
@@ -23212,7 +23212,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://aire.ku.edu/sites/aire/files/files/CDS/2024-2025/C.pdf
+  cds_url_hint: https://aire.ku.edu/common-data-set/
 - id: university-of-kentucky
   name: University of Kentucky
   domain: uky.edu
@@ -23224,7 +23224,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://irads.uky.edu/sites/default/files/common_data_set/CDS_2022-2023%2004052023%20-%20not%20G.pdf
+  cds_url_hint: https://irads.uky.edu/common-data-set/
 - id: university-of-la-verne
   name: University of La Verne
   domain: laverne.edu
@@ -23236,7 +23236,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://laverne.edu/institutional-research/wp-content/uploads/sites/27/2011/10/CDS_2014-2015_University-of-La-Verne.pdf
+  cds_url_hint: https://laverne.edu/institutional-research/common-data-set/
 - id: university-of-louisiana-at-lafayette
   name: University of Louisiana at Lafayette
   domain: louisiana.edu
@@ -23443,7 +23443,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://irads.umbc.edu/wp-content/uploads/sites/62/2013/11/CDS_2013-2014-.pdf
+  cds_url_hint: https://irads.umbc.edu/common-data-set/
 - id: university-of-massachusetts-chan-medical-school
   name: University of Massachusetts Chan Medical School
   domain: umassmed.edu
@@ -23512,7 +23512,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.uml.edu/docs/UMass-Lowell-CDS-2021-2022-4-27-2022_tcm18-357637.pdf
+  cds_url_hint: https://www.uml.edu/common-data-set/
 - id: university-of-memphis
   name: University of Memphis
   domain: memphis.edu
@@ -23536,7 +23536,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://irsa.miami.edu/facts-and-information/common-data-set/cds2526.pdf
+  cds_url_hint: https://irsa.miami.edu/facts-and-information/common-data-set/
 - id: university-of-michigan-dearborn
   name: University of Michigan-Dearborn
   domain: umdearborn.edu
@@ -24035,7 +24035,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://institutionalresearch.unt.edu/sites/default/files/cds_2020-2021_unt.pdf
+  cds_url_hint: https://institutionalresearch.unt.edu/common-data-set
 - id: university-of-north-texas-at-dallas
   name: University of North Texas at Dallas
   domain: untdallas.edu
@@ -24081,7 +24081,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.unco.edu/app/uploads/2025/10/UNC-Common-Data-Set-2023-24.pdf
+  cds_url_hint: https://www.unco.edu/common-data-set/
 - id: university-of-northern-iowa
   name: University of Northern Iowa
   domain: uni.edu
@@ -24474,7 +24474,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: http://oiraa.dw.sc.edu/cds/cds2024/cds_2024-2025.pdf
+  cds_url_hint: http://oiraa.dw.sc.edu/cds/cds2024/
 - id: university-of-south-carolina-upstate
   name: University of South Carolina-Upstate
   domain: uscupstate.edu
@@ -24855,7 +24855,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.uwlax.edu/globalassets/offices-services/institutional-research/ir-resources/cds_2022-2023.pdf
+  cds_url_hint: https://www.uwlax.edu/institutional-research/common-data-set/
 - id: university-of-wisconsin-milwaukee
   name: University of Wisconsin-Milwaukee
   domain: uwm.edu
@@ -25188,7 +25188,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.valdosta.edu/administration/institutional-research/documents/common-data-set/cds-2023.pdf
+  cds_url_hint: https://www.valdosta.edu/administration/institutional-research/
 - id: valencia-college
   name: Valencia College
   domain: valenciacollege.edu
@@ -25233,7 +25233,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.valpo.edu/wp-content/uploads/2025/09/CDS-2024-2025_v3_060425.pdf
+  cds_url_hint: https://www.valpo.edu/common-data-set/
 - id: vandercook-college-of-music
   name: VanderCook College of Music
   domain: vandercook.edu
@@ -25268,7 +25268,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://offices.vassar.edu/institutional-research/wp-content/uploads/sites/23/2025/03/Vassar-College-CDS-2024-2025-1.pdf
+  cds_url_hint: https://offices.vassar.edu/institutional-research/common-data-set/
 - id: vaughn-college-of-aeronautics-and-technology
   name: Vaughn College of Aeronautics and Technology
   domain: vaughn.edu
@@ -25494,7 +25494,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.viterbo.edu/sites/default/files/2025-05/viterbocds-2024-25-final05272025.pdf
+  cds_url_hint: https://www.viterbo.edu/institutional-research/common-data-set/
 - id: voorhees-university
   name: Voorhees University
   domain: voorhees.edu
@@ -25768,7 +25768,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://irda.wayne.edu/common-data-set/cds-2023-2024-final.pdf
+  cds_url_hint: https://irda.wayne.edu/institutional-research/cds/
 - id: waynesburg-university
   name: Waynesburg University
   domain: waynesburg.edu
@@ -25948,7 +25948,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.wesleyan.edu/ir/data-sets/CDS_2021-2022.pdf
+  cds_url_hint: https://www.wesleyan.edu/ir/
 - id: west-chester-university-of-pennsylvania
   name: West Chester University of Pennsylvania
   domain: wcupa.edu
@@ -26246,7 +26246,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://oie.wwu.edu/files/2022/05/CDS_2021-2022_.pdf
+  cds_url_hint: https://oie.wwu.edu/common-data-set/
 - id: western-wyoming-community-college
   name: Western Wyoming Community College
   domain: westernwyoming.edu
@@ -26511,7 +26511,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.wm.edu/offices/ir/university_data/cds/cds-2024-2025_a.pdf
+  cds_url_hint: https://www.wm.edu/offices/ir/university_data/cds/
 - id: william-carey-university
   name: William Carey University
   domain: wmcarey.edu
@@ -26623,7 +26623,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  cds_url_hint: https://www.williams.edu/institutional-research/files/2019/08/2010-2011_williams_common_data_set.pdf
+  cds_url_hint: https://www.williams.edu/institutional-research/common-data-set/
 - id: williamson-christian-college
   name: Williamson Christian College
   domain: williamsoncc.edu
