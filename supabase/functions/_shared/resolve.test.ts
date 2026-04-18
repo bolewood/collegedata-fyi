@@ -610,11 +610,16 @@ Deno.test("parentLandingCandidates: rejects cross-scheme + malformed URLs", () =
 Deno.test("wellKnownPathUrls: expands to host-rooted CDS landing paths", () => {
   const hint = "https://irp.dpb.cornell.edu/wp-content/uploads/2025/02/CDS-2024-2025-v1.pdf";
   const urls = wellKnownPathUrls(hint);
-  // Check a few expected candidates — the exact list is intentionally
-  // short and may evolve, so this test is permissive.
+  // Check a few expected candidates — the exact list may evolve, so this
+  // test is permissive. Covers both short (subdomain-root) and long
+  // (site-root-with-IR-prefix) shapes so regressions on either family
+  // surface here.
   const set = new Set(urls);
   assertEquals(set.has("https://irp.dpb.cornell.edu/common-data-set"), true);
+  assertEquals(set.has("https://irp.dpb.cornell.edu/common-data-set/"), true);
   assertEquals(set.has("https://irp.dpb.cornell.edu/institutional-data/common-data-set"), true);
+  assertEquals(set.has("https://irp.dpb.cornell.edu/institutional-research/common-data-set/"), true);
+  assertEquals(set.has("https://irp.dpb.cornell.edu/ir/common-data-set/"), true);
   // Origin is preserved without the hint's path.
   for (const u of urls) {
     assertEquals(u.startsWith("https://irp.dpb.cornell.edu"), true);

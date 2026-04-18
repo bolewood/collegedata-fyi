@@ -735,17 +735,34 @@ async function findSiblingDocsFromParents(
 //             → irp.dpb.cornell.edu/common-data-set returns 17 CDS files
 //   Brown:    oir.brown.edu/sites/default/files/2020-04/CDS2009_2010.pdf
 //             → oir.brown.edu/institutional-data/common-data-set returns 5 CDS files
+//   Williams: www.williams.edu/institutional-research/files/2019/08/2010-2011_... (stale)
+//             → www.williams.edu/institutional-research/common-data-set/ returns 28 PDFs
 //
-// List is intentionally short (5 paths). Each probe is one HTTP GET against
-// the hint's host, so 5 × 15s = 75s worst case per affected school. In
-// practice most probes return 404 quickly; the fallback only fires when the
-// parent walk already failed, which is ~20-25% of direct-PDF schools.
+// Paths surveyed from manual_urls.yaml and docs/top100_with_urls.csv; sorted
+// by observed prevalence + genericness (most-generic first, subdomain-specific
+// roots before site-root-with-IR-prefix variants). Each probe is one HTTP GET
+// against the hint's host, so 15 × 15s = ~4m worst case per affected school.
+// In practice most probes return 404 quickly; the fallback only fires when
+// the parent walk already failed, which is ~20-25% of direct-PDF schools.
 const WELL_KNOWN_CDS_LANDING_PATHS: readonly string[] = [
-  "/common-data-set",
+  // Subdomain-root or short landing (e.g. ir.school.edu/common-data-set)
   "/common-data-set/",
-  "/institutional-data/common-data-set",
+  "/common-data-set",
+  "/common-data-sets/",
   "/cds/",
+  "/cds",
+  "/commondataset/",
+  // Site root with IR-office prefix (e.g. www.school.edu/ir/common-data-set/)
+  "/institutional-research/common-data-set/",
+  "/ir/common-data-set/",
+  "/oir/common-data-set/",
+  "/institutionalresearch/common-data-set/",
+  "/institutional-research/cds/",
+  "/ir/cds/",
+  // Variants observed at specific schools (Brown, Cornell, Vanderbilt, etc.)
+  "/institutional-data/common-data-set",
   "/reports/common-data-set",
+  "/reports/cds-reports/",
 ];
 
 export function wellKnownPathUrls(hint: string): string[] {
