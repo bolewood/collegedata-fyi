@@ -260,7 +260,8 @@ See the frontend section of [`docs/backlog.md`](backlog.md) for the full list.
 Key items:
 
 - `supabase gen types` for typed Supabase client (currently using manual types)
+- Schema-version-aware labels (dependency resolved: structural schemas for 6 years now exist)
 - Playwright smoke tests
 - OG images (per-school social cards)
 - Cross-year comparison views (V2)
-- Scorecard joined data (V2)
+- Scorecard joined data (V2, see [`docs/research/scorecard-summary-table-v2-plan.md`](research/scorecard-summary-table-v2-plan.md))

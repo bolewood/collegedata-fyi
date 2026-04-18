@@ -322,18 +322,18 @@ The offline tools (schema + corpus) produce committed artifacts that ship with t
 
 ## Where the architecture is still incomplete
 
-As of 2026-04-15, what's built and what isn't:
+As of 2026-04-18, what's built and what isn't:
 
 | Component | Status |
 |---|---|
-| Schema pipeline | ✅ Built end-to-end. 1,105 fields for 2025-26, 224 button fields decoded. |
+| Schema pipeline | ✅ Built end-to-end. 1,105 fields for 2025-26, 224 button fields decoded. Per-section-tab structural schemas for 6 years (2019-20 through 2025-26) and cross-year diffs for 5 transitions shipped 2026-04-17 (`351af48`, `526ded7`). |
 | Corpus pipeline | ✅ Built. 2,434 schools in `schools.yaml`, 839 archivable (scrape_policy=active + cds_url_hint present + no sub_institutions). Probe runs are ongoing. |
 | Discovery: M1a dry-run (HTML parsing, year normalization, two-hop) | ✅ Refactored into `_shared/resolve.ts` so it can be reused by the queue consumer. Served by the `discover` edge function as a dry-run dev entry. |
 | Discovery: M1b writeback (schools.yaml loading, Storage uploads, `cds_documents` + `cds_artifacts` upserts) | ✅ Implemented in `archive-process` edge function. Uses SHA-addressed Storage paths (`{school}/{year}/{sha256}.{ext}`) and the document-first-then-artifact crash-safe refresh ordering. Verified end-to-end against yale + 9 other schools in production. |
-| Discovery: M1c cron schedule (queue fan-out) | ✅ Live 2026-04-15. Daily `archive-enqueue-daily` + per-30s `archive-process-every-30s` running against production. First full drain completed overnight 2026-04-14/15: 535 done, 302 failed_permanent, 518 archived. Failure analysis in [`docs/archive-pipeline.md`](./archive-pipeline.md) and [ADR 0007](decisions/0007-year-authority-moves-to-extraction.md). |
+| Discovery: M1c cron schedule (queue fan-out) | ✅ Live 2026-04-15. Daily `archive-enqueue-daily` + per-30s `archive-process-every-30s` running against production. First full drain completed overnight 2026-04-14/15. Resolver enhanced 2026-04-17/18 with well-known-paths fallback (`df574a4`), parent-ancestor walking for sibling years (`39bf219`), Box share-URL rewriter (`ec3c03c`), and `force_urls` batch archive endpoint (`5cc6718`). Playwright URL collector and headless-browser download added for JS-rendered / WAF-blocked schools per [PRD 004](prd/004-js-rendered-resolver.md). |
 | Extraction worker (polling loop) | ✅ M2 skeleton live (commit `db520e6`). Polls `extraction_pending`, detects format, routes to tier extractors. Content-based PDF year detection ([ADR 0007](decisions/0007-year-authority-moves-to-extraction.md)) is now write-authoritative: `detect_year_from_pdf_bytes` runs on every archived doc and writes `cds_documents.detected_year`, which the `cds_manifest.canonical_year` view prefers over `cds_year`. Stage B backfill 2026-04-15 populated `detected_year` on 379 of 518 archived rows (73%) via the `--detect-year-only --write` harness. |
 | Extraction: Tier 2 (fillable PDF) | ✅ Built as standalone tool, verified 31/31 against HMC ground truth. Wired end-to-end through the worker; Harvey Mudd and Bates extracted successfully in production. |
-| Extraction: Tier 4 (flattened PDF via Docling) | ✅ Wired end-to-end through the worker (commit `37293ab`). Docling baseline config (TableFormer FAST, 1x DPI) chosen after a 9-config bake-off scored 21/21 on critical C1 fields across Yale, Harvard, and Dartmouth (commit `e15a5d3`). Output is raw markdown stored in `cds_artifacts.notes`; a schema-targeting cleaner to map markdown → canonical question numbers is a follow-up. Reducto reference extracts remain in `tools/extraction-validator/references/reducto/` as a quality benchmark for a potential future upgrade. |
+| Extraction: Tier 4 (flattened PDF via Docling) | ✅ Wired end-to-end through the worker (commit `37293ab`). Docling baseline config (TableFormer FAST, 1x DPI) chosen after a 9-config bake-off. Schema-targeting cleaner shipped across four phases (`00d4cd6` through `5951379`): GT scorer 94.3% (83/88), critical C1 fields 100% (21/21), corpus C1 admissions coverage 50-59%. Pre-2020 CDS terminology normalization and header-row recovery included. |
 | Extraction: Tier 1 / 3 / 5 | ❌ Specified in ADR 0006, not yet built. Worker routes these to a stub that records `extraction_status=failed` with a tier-not-implemented reason so the rows exit the pending queue. |
 | Year authority migration | ✅ Stage A + B shipped 2026-04-15 ([ADR 0007](decisions/0007-year-authority-moves-to-extraction.md)). Content detection is authoritative; resolver `pickCandidates` fans out landing-page anchors into multiple `cds_documents` rows; extraction writes `detected_year`; `cds_manifest.canonical_year` prefers content over URL. Stage C was de-scoped to docs-only — full retirement of `cds_year` and `_shared/year.ts` requires dropping `cds_year` from the unique constraint, deferred to a follow-up item in [backlog.md](./backlog.md). |
 | Consumer API | ✅ Live at `api.collegedata.fyi/rest/v1/`. All three tables + the view respond to curl. |
@@ -347,6 +347,8 @@ As of 2026-04-15, what's built and what isn't:
 
 - [`docs/prd/001-collegedata-fyi-v1.md`](prd/001-collegedata-fyi-v1.md) — product-level framing, scope, milestones, success criteria
 - [`docs/prd/002-frontend.md`](prd/002-frontend.md) — frontend PRD (CEO + Design + Eng reviewed)
+- [`docs/prd/003-ai-driven-data-quality.md`](prd/003-ai-driven-data-quality.md) — AI-driven data-quality spike PRD
+- [`docs/prd/004-js-rendered-resolver.md`](prd/004-js-rendered-resolver.md) — JS-rendered resolver PRD (hybrid spike)
 - [`docs/frontend.md`](frontend.md) — frontend design: pages, components, data flow, SEO, security
 - [`docs/v1-plan.md`](v1-plan.md) — engineering plan with data model details and milestone breakdown
 - [`docs/research/cds-vs-college-scorecard.md`](research/cds-vs-college-scorecard.md) — CDS vs College Scorecard schema comparison
