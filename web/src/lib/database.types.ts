@@ -114,6 +114,7 @@ export type Database = {
         Row: {
           cds_year: string
           created_at: string
+          data_quality_flag: string | null
           detected_year: string | null
           discovered_at: string | null
           extraction_status: string
@@ -203,6 +204,7 @@ export type Database = {
         Row: {
           canonical_year: string | null
           cds_year: string | null
+          data_quality_flag: string | null
           detected_year: string | null
           discovered_at: string | null
           document_id: string | null

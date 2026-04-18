@@ -66,3 +66,20 @@ export function yearRange(
 export function sectionLetter(questionNumber: string): string {
   return questionNumber.split(".")[0];
 }
+
+export function dataQualityLabel(flag: string | null): string | null {
+  switch (flag) {
+    case "blank_template":
+      return "Blank template";
+    case "wrong_file":
+      return "Wrong file archived";
+    case "low_coverage":
+      return "Low field coverage";
+    default:
+      return null;
+  }
+}
+
+export function dataQualityColor(): string {
+  return "bg-amber-100 text-amber-800";
+}

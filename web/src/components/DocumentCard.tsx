@@ -6,6 +6,8 @@ import {
   statusColor,
   formatColor,
   storageUrl,
+  dataQualityLabel,
+  dataQualityColor,
 } from "@/lib/format";
 import type { ManifestRow } from "@/lib/types";
 
@@ -13,6 +15,7 @@ export function DocumentCard({ doc }: { doc: ManifestRow }) {
   const pdfUrl = storageUrl(doc.source_storage_path);
   const isExtracted = doc.extraction_status === "extracted";
   const canLink = isExtracted && doc.canonical_year && doc.canonical_year !== "unknown";
+  const dqLabel = dataQualityLabel(doc.data_quality_flag ?? null);
 
   return (
     <div className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 hover:bg-gray-50">
@@ -47,6 +50,13 @@ export function DocumentCard({ doc }: { doc: ManifestRow }) {
           label={formatExtractionStatus(doc.extraction_status ?? "discovered")}
           className={statusColor(doc.extraction_status ?? "discovered")}
         />
+
+        {dqLabel && (
+          <Badge
+            label={`Publisher issue: ${dqLabel}`}
+            className={dataQualityColor()}
+          />
+        )}
       </div>
 
       {pdfUrl && (
