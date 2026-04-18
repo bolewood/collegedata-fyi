@@ -13,8 +13,12 @@ COMMENT ON COLUMN public.cds_documents.data_quality_flag IS
   'than 5 fields extracted (likely a publisher issue, not an extraction bug). '
   'Set by tools/data_quality/audit_manifest.py.';
 
--- Update cds_manifest view to expose the flag
-CREATE OR REPLACE VIEW public.cds_manifest AS
+-- Recreate cds_manifest view to include data_quality_flag.
+-- Must DROP + CREATE (not CREATE OR REPLACE) because adding a column
+-- in the middle changes the column order, which Postgres disallows.
+DROP VIEW IF EXISTS public.cds_manifest;
+
+CREATE VIEW public.cds_manifest AS
   SELECT
     d.id                   AS document_id,
     d.school_id,
@@ -28,7 +32,6 @@ CREATE OR REPLACE VIEW public.cds_manifest AS
     d.last_verified_at,
     d.removed_at,
     d.extraction_status,
-    d.data_quality_flag,
     (
       SELECT a.id
       FROM public.cds_artifacts a
@@ -44,8 +47,12 @@ CREATE OR REPLACE VIEW public.cds_manifest AS
       LIMIT 1
     ) AS source_storage_path,
     d.detected_year,
-    COALESCE(d.detected_year, d.cds_year) AS canonical_year
+    COALESCE(d.detected_year, d.cds_year) AS canonical_year,
+    d.data_quality_flag
   FROM public.cds_documents d;
+
+-- Restore RLS grants (DROP VIEW removes them)
+GRANT SELECT ON public.cds_manifest TO anon, authenticated;
 
 COMMENT ON VIEW public.cds_manifest IS
   'Convenience view joining cds_documents to their most recent canonical '

@@ -37,13 +37,23 @@ def main():
     key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ["SUPABASE_ANON_KEY"]
     sb = create_client(url, key)
 
-    # Fetch all canonical artifacts
-    query = sb.table("cds_artifacts").select(
-        "id, document_id, notes, producer"
-    ).eq("kind", "canonical")
-
-    data = query.execute().data or []
-    print(f"Found {len(data)} canonical artifacts")
+    # Fetch canonical artifacts in small batches to avoid statement timeout.
+    # The notes JSONB is large, so we fetch in pages of 200.
+    data = []
+    page_size = 200
+    offset = 0
+    while True:
+        batch = sb.table("cds_artifacts").select(
+            "id, document_id, notes, producer"
+        ).eq("kind", "canonical").order(
+            "created_at", desc=True
+        ).range(offset, offset + page_size - 1).execute().data or []
+        data.extend(batch)
+        print(f"  fetched {len(data)} artifacts...", end="\r")
+        if len(batch) < page_size:
+            break
+        offset += page_size
+    print(f"Found {len(data)} canonical artifacts        ")
 
     # Build a map of document_id -> artifact
     doc_artifacts: dict[str, dict] = {}
