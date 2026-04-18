@@ -193,6 +193,74 @@ export async function archiveOneSchool(
   };
 }
 
+// Operator entry point: archive an explicit list of URLs for a school,
+// bypassing the resolver entirely. Used by the manual-urls tooling that
+// feeds Playwright-collected anchors directly into the archive pipeline
+// when the resolver can't see them (JS-rendered IR pages).
+//
+// Each URL is treated as an independent candidate. URL→year parsing uses
+// the same normalizeYear heuristic as the resolver; filenames are derived
+// from the URL path. PermanentError on one candidate is caught and
+// skipped (same semantics as the resolver-driven path), so one stale URL
+// in the batch doesn't abandon the rest.
+export async function archiveManualUrls(
+  supabase: SupabaseClient,
+  school: SchoolInput,
+  urls: string[],
+): Promise<ArchiveOutcome> {
+  if (urls.length === 0) {
+    throw new PermanentError("archiveManualUrls called with empty url list");
+  }
+  const { normalizeYear } = await import("./year.ts");
+  const { UNKNOWN_YEAR_SENTINEL } = await import("./resolve.ts");
+
+  const candidates: CandidateOutcome[] = [];
+  const skipped: { url: string; reason: string }[] = [];
+  for (const rawUrl of urls) {
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(rawUrl);
+    } catch {
+      skipped.push({ url: rawUrl, reason: "invalid URL" });
+      continue;
+    }
+    const filename = decodeURIComponent(
+      parsedUrl.pathname.split("/").filter(Boolean).pop() ?? "",
+    );
+    const year = normalizeYear(rawUrl) ?? normalizeYear(filename);
+    try {
+      candidates.push(await archiveOneCandidate(supabase, school, {
+        url: rawUrl,
+        cds_year: year ?? UNKNOWN_YEAR_SENTINEL,
+      }));
+    } catch (e) {
+      if (e instanceof PermanentError) {
+        skipped.push({ url: rawUrl, reason: e.message });
+        continue;
+      }
+      throw e;
+    }
+  }
+
+  if (candidates.length === 0) {
+    const reasons = skipped.map((s) => `${s.url}: ${s.reason}`).join("; ");
+    throw new PermanentError(
+      `all ${skipped.length} manual url(s) failed: ${reasons}`,
+    );
+  }
+
+  const first = candidates[0];
+  return {
+    action: rollupAction(candidates),
+    candidates,
+    document_id: candidates.length === 1 ? first.document_id : null,
+    cds_year: candidates.length === 1 ? first.cds_year : null,
+    source_sha256: candidates.length === 1 ? first.source_sha256 : null,
+    resolved_url: candidates.length === 1 ? first.resolved_url : null,
+    storage_path: candidates.length === 1 ? first.storage_path : null,
+  };
+}
+
 // Archive a single resolved candidate. Shared by archiveOneSchool for
 // both the single-candidate direct-doc path and the multi-candidate
 // landing-page fan-out. This is the body of the pre-Stage-B

@@ -272,12 +272,44 @@ schools:
       year: null
       is_document: false
   columbia:
-    starting_url: https://opir.columbia.edu/common-data-set
-    final_url: https://opir.columbia.edu/common-data-set
-    status: no_anchors
+    starting_url: https://opir.columbia.edu/cds
+    final_url: https://opir.columbia.edu/cds
+    status: ok
     error: null
-    duration_ms: 14617
-    anchors: []
+    duration_ms: 7335
+    anchors:
+    - url: https://opir.columbia.edu/cds#main-content
+      text: Skip to main content
+      year: null
+      is_document: false
+    - url: https://opir.columbia.edu/understanding-columbias-common-data-set
+      text: Understanding Columbia's CDS
+      year: null
+      is_document: false
+    - url: https://opir.columbia.edu/view_the_data/cds
+      text: View the Data
+      year: null
+      is_document: false
+    - url: https://opir.columbia.edu/sites/default/files/content/Common%20Data%20Set/2023-24_Columbia_College_and_Columbia_Engineering_CDS.pdf
+      text: "2023-2024 Columbia College and Columbia Engineering\_Common Data Set."
+      year: 2023-24
+      is_document: true
+    - url: https://opir.columbia.edu/sites/default/files/content/Common%20Data%20Set/2023-24_Columbia_General_Studies_CDS.pdf
+      text: 2023-2024 Columbia General Studies Common Data Set.
+      year: 2023-24
+      is_document: true
+    - url: https://opir.columbia.edu/sites/default/files/content/Common%20Data%20Set/CDS%20College%20Engineering%202022-2023.pdf
+      text: "2022-2023 Columbia College and Columbia Engineering\_Common Data Set"
+      year: 2022-23
+      is_document: true
+    - url: https://opir.columbia.edu/sites/default/files/content/Common%20Data%20Set/CDS_General%20Studies%202022-2023.pdf
+      text: 2022-2023 Columbia General Studies Common Data Se
+      year: 2022-23
+      is_document: true
+    - url: https://opir.columbia.edu/sites/default/files/content/Common%20Data%20Set/Common%20Data%20Set%20Columbia%20College%20Engineering%202021-2022.pdf
+      text: "2021-2022 Columbia College and Columbia Engineering\_Common Data Set"
+      year: 2021-22
+      is_document: true
   harvard:
     starting_url: https://oira.harvard.edu/common-data-set/
     final_url: https://oira.harvard.edu/common-data-set/

@@ -23,6 +23,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2";
 
 import {
+  archiveManualUrls,
   archiveOneSchool,
   ArchiveOutcome,
   PermanentError,
@@ -71,12 +72,102 @@ Deno.serve(async (req: Request) => {
   const url = new URL(req.url);
   const forceSchool = url.searchParams.get("force_school");
 
+  // force_urls mode: operator posts an explicit URL list for a school,
+  // resolver is bypassed entirely. Used by the Playwright URL-collector
+  // for schools whose IR pages are JS-rendered. Body shape:
+  //   {"school_id": "stanford", "urls": ["https://...", "https://..."]}
+  // Multiple URLs are archived as separate cds_documents rows.
+  if (req.method === "POST" && !forceSchool) {
+    let body: unknown = null;
+    try {
+      body = await req.json();
+    } catch (_) {
+      // fall through — may be queue mode with no body
+    }
+    if (body && typeof body === "object" && "urls" in body) {
+      return await runForceUrls(supabase, body as Record<string, unknown>);
+    }
+  }
+
   if (forceSchool) {
     return await runForceSchool(supabase, forceSchool);
   }
 
   return await runQueueClaim(supabase);
 });
+
+// ── force_urls mode: archive an explicit URL list for one school ────────
+async function runForceUrls(
+  supabase: Client,
+  body: Record<string, unknown>,
+): Promise<Response> {
+  const schoolId = typeof body.school_id === "string" ? body.school_id : null;
+  const urls = Array.isArray(body.urls)
+    ? (body.urls as unknown[]).filter((u): u is string => typeof u === "string")
+    : [];
+  if (!schoolId || urls.length === 0) {
+    return json({
+      error: "force_urls mode requires body { school_id: string, urls: string[] }",
+    }, 400);
+  }
+
+  // school_name can be supplied, or looked up in schools.yaml, or synthesized
+  // from school_id. Synthesized name is fine for archiving because it only
+  // appears as a display field — the stable identifier is school_id.
+  let schoolName: string | null = typeof body.school_name === "string"
+    ? body.school_name
+    : null;
+  if (!schoolName) {
+    try {
+      const result = await fetchSchoolsYaml();
+      const entry = result.entries.find((e) => e.id === schoolId);
+      schoolName = entry?.name ?? schoolId;
+    } catch {
+      schoolName = schoolId;
+    }
+  }
+
+  const started = Date.now();
+  logEvent({
+    event: "force_urls_start",
+    school_id: schoolId,
+    url_count: urls.length,
+  });
+
+  try {
+    const outcome = await archiveManualUrls(supabase, {
+      school_id: schoolId,
+      school_name: schoolName ?? schoolId,
+      // cds_url_hint is unused on the manual-urls path (we provide URLs
+      // directly), but SchoolInput requires it. Stuff the first URL as a
+      // best-effort breadcrumb so logs still have something to reference.
+      cds_url_hint: urls[0],
+    }, urls);
+    logEvent({
+      event: "force_urls_completed",
+      school_id: schoolId,
+      action: outcome.action,
+      candidates: outcome.candidates.length,
+      duration_ms: Date.now() - started,
+    });
+    return json({ mode: "force_urls", school_id: schoolId, outcome });
+  } catch (e) {
+    const err = e as Error;
+    logEvent({
+      event: "force_urls_failed",
+      school_id: schoolId,
+      error_class: err.name,
+      error: err.message,
+      duration_ms: Date.now() - started,
+    });
+    return json({
+      mode: "force_urls",
+      school_id: schoolId,
+      error_class: err.name,
+      error: err.message,
+    }, 500);
+  }
+}
 
 // ── Queue mode ──────────────────────────────────────────────────────────
 async function runQueueClaim(

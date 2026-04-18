@@ -56,7 +56,7 @@ STARTING_URLS: dict[str, str] = {
     "stanford": "https://irds.stanford.edu/data-findings/cds",
     "yale": "https://oir.yale.edu/common-data-set",
     "upenn": "https://ira.upenn.edu/penn-numbers/common-data-set",
-    "columbia": "https://opir.columbia.edu/common-data-set",
+    "columbia": "https://opir.columbia.edu/cds",
     "harvard": "https://oira.harvard.edu/common-data-set/",
     "dartmouth": "https://dartmouth.edu/oir/cds/",
     "carnegie-mellon": "https://www.cmu.edu/ira/CDS/",
