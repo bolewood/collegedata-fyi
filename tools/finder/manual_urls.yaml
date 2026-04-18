@@ -1,14 +1,15 @@
-generated_at: '2026-04-17T23:55:01Z'
+generated_at: '2026-04-18T15:14:50Z'
 tool: tools/finder/playwright_collect.py
 note: Operator-reviewable list of CDS URLs collected via JS-rendered pages. Review each entry, then pipe through a small follow-up
   tool that archives the URLs. See PRD 004 Option C.
 schools:
   mit:
     starting_url: https://ir.mit.edu/project-topic/common-data-set
+    landing_url_found: null
     final_url: https://ir.mit.edu/project-topic/common-data-set/
     status: ok
     error: null
-    duration_ms: 2609
+    duration_ms: 17539
     anchors:
     - url: https://ir.mit.edu/project-topic/common-data-set
       text: Common Data Set
@@ -575,10 +576,11 @@ schools:
       is_document: true
   auburn-university:
     starting_url: https://ir.auburn.edu/common-data-set/
+    landing_url_found: null
     final_url: https://auburn.edu/administration/ir/common-data-set/
     status: ok
     error: null
-    duration_ms: 3235
+    duration_ms: 13240
     anchors:
     - url: https://auburn.edu/administration/ir/common-data-set/index.html
       text: Common Data Set
@@ -1133,10 +1135,11 @@ schools:
       is_document: false
   pepperdine-university:
     starting_url: https://www.pepperdine.edu/oie/institutional-research/common-data-set.htm
+    landing_url_found: null
     final_url: https://www.pepperdine.edu/oie/institutional-research/common-data-set.htm
     status: ok
     error: null
-    duration_ms: 6615
+    duration_ms: 103828
     anchors:
     - url: https://www.pepperdine.edu/oie/institutional-research/common-data-set.htm
       text: Common Data Set
@@ -1673,12 +1676,132 @@ schools:
     anchors: []
   williams-college:
     starting_url: https://www.williams.edu/institutional-research/files/2019/08/2010-2011_williams_common_data_set.pdf
-    final_url: null
-    status: nav_error
-    error: "Page.goto: Download is starting\nCall log:\n  - navigating to \"https://www.williams.edu/institutional-research/files/2019/08/2010-2011_williams_common_data_set.pdf\"\
-      , waiting until \"domcontentloaded\"\n"
-    duration_ms: 911
-    anchors: []
+    landing_url_found: https://www.williams.edu/institutional-research/common-data-set/
+    final_url: https://www.williams.edu/institutional-research/common-data-set/
+    status: ok
+    error: null
+    duration_ms: 6397
+    anchors:
+    - url: https://www.williams.edu/institutional-research/files/2026/04/Williams-CDS-2025-2026-V2.pdf
+      text: Common Data Set 2025-2026
+      year: 2025-26
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2025/06/CDS_2024_2025_Williams_V5.pdf
+      text: Common Data Set 2024-2025
+      year: 2024-25
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2024/03/CDS_2023_2024_Williams_March2024.pdf
+      text: ''
+      year: 2023-24
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2024/04/CDS_2023_2024_Williams_April2024.pdf
+      text: Common Data Set 2023-2024
+      year: 2023-24
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2023/06/CDS_2022_2023_Williams_June2023.pdf
+      text: Common Data Set 2022-2023
+      year: 2022-23
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2022/06/2021-2022_williams_common_data_set.pdf
+      text: Common Data Set 2021-2022
+      year: 2021-22
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2022/06/2020-2021_williams_common_data_set.pdf
+      text: Common Data Set 2020-2021
+      year: 2020-21
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2022/06/2019-2020_williams_common_data_set.pdf
+      text: Common Data Set 2019-2020
+      year: 2019-20
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2018-2019_williams_common_data_set.pdf
+      text: Common Data Set 2018-2019
+      year: 2018-19
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2017-2018_williams_common_data_set.pdf
+      text: Common Data Set 2017-2018
+      year: 2017-18
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2016-2017_williams_common_data_set.pdf
+      text: Common Data Set 2016-2017
+      year: 2016-17
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2015-2016_williams_common_data_set.pdf
+      text: Common Data Set 2015-2016
+      year: 2015-16
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2014-2015_williams_common_data_set.pdf
+      text: Common Data Set 2014-2015
+      year: 2014-15
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2013-2014_williams_common_data_set.pdf
+      text: Common Data Set 2013-2014
+      year: 2013-14
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2012-2013_williams_common_data_set.pdf
+      text: Common Data Set 2012-2013
+      year: 2012-13
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2011-2012_williams_common_data_set.pdf
+      text: Common Data Set 2011-2012
+      year: 2011-12
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2010-2011_williams_common_data_set.pdf
+      text: Common Data Set 2010-2011
+      year: 2010-11
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2009-2010_williams_common_data_set.pdf
+      text: Common Data Set 2009-2010
+      year: 2009-10
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2008-2009_williams_common_data_set.pdf
+      text: Common Data Set 2008-2009
+      year: 2008-09
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2007-2008_williams_common_data_set.pdf
+      text: Common Data Set 2007-2008
+      year: 2007-08
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2006-2007_williams_common_data_set.pdf
+      text: Common Data Set 2006-2007
+      year: 2006-07
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2005-2006_williams_common_data_set.pdf
+      text: Common Data Set 2005-2006
+      year: 2005-06
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2004-2005_williams_common_data_set.pdf
+      text: Common Data Set 2004-2005
+      year: 2004-05
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2003-2004_williams_common_data_set.pdf
+      text: Common Data Set 2003-2004
+      year: 2003-04
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2002_2003_williams_common_data_set.pdf
+      text: Common Data Set 2002-2003
+      year: 2002-03
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2001-2002_williams_common_data_set.pdf
+      text: Common Data Set 2001-2002
+      year: 2001-02
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/2000-2001_williams_common_data_set.pdf
+      text: Common Data Set 2000-2001
+      year: 2000-01
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/1999-2000_williams_common_data_set.pdf
+      text: Common Data Set 1999-2000
+      year: null
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/files/2019/08/1998-1999_williams_common_data_set.pdf
+      text: Common Data Set 1998-1999
+      year: null
+      is_document: true
+    - url: https://www.williams.edu/institutional-research/common-data-set/
+      text: Common Data Set
+      year: null
+      is_document: false
   university-of-chicago:
     starting_url: https://data.uchicago.edu/common-data-set/
     final_url: https://data.uchicago.edu/common-data-set/
@@ -1822,10 +1945,11 @@ schools:
       is_document: false
   university-of-california-berkeley:
     starting_url: https://opa.berkeley.edu/campus-data/common-data-set
+    landing_url_found: null
     final_url: https://opa.berkeley.edu/campus-data/common-data-set
     status: ok
     error: null
-    duration_ms: 863
+    duration_ms: 14226
     anchors:
     - url: https://opa.berkeley.edu/campus-data/common-data-set
       text: Common Data Set
@@ -2387,10 +2511,11 @@ schools:
       is_document: true
   emory-university:
     starting_url: https://provost.emory.edu/planning-administration/data/common-data-set.html
+    landing_url_found: null
     final_url: https://provost.emory.edu/planning-administration/data/common-data-set.html
     status: no_anchors
     error: null
-    duration_ms: 2246
+    duration_ms: 22387
     anchors: []
   university-of-virginia-main-campus:
     starting_url: https://ira.virginia.edu/data-analytics/common-data-set-initiatve
@@ -2425,10 +2550,11 @@ schools:
       is_document: false
   university-of-southern-california:
     starting_url: https://oir.usc.edu/statistics-data-visualization/common-data-set/
+    landing_url_found: null
     final_url: https://oir.usc.edu/statistics-data-visualization/common-data-set/
     status: ok
     error: null
-    duration_ms: 2158
+    duration_ms: 12302
     anchors:
     - url: https://oir.usc.edu/statistics-data-visualization/common-data-set/
       text: Common Data Set
@@ -2534,10 +2660,11 @@ schools:
       is_document: true
   university-of-texas-at-austin:
     starting_url: https://reports.utexas.edu/common-data-set
+    landing_url_found: null
     final_url: https://reports.utexas.edu/common-data-set
     status: ok
     error: null
-    duration_ms: 1526
+    duration_ms: 17894
     anchors:
     - url: https://reports.utexas.edu/common-data-set
       text: Common Data Set
@@ -2755,10 +2882,11 @@ schools:
       is_document: true
   university-of-california-san-diego:
     starting_url: https://ir.ucsd.edu/stats/undergrad/cds.html
+    landing_url_found: null
     final_url: https://ir.ucsd.edu/stats/undergrad/cds.html
     status: ok
     error: null
-    duration_ms: 3808
+    duration_ms: 45073
     anchors:
     - url: https://ir.ucsd.edu/stats/undergrad/cds.html#a-main
       text: Skip to the main content
@@ -2777,17 +2905,51 @@ schools:
       is_document: true
   university-of-california-irvine:
     starting_url: https://irap.uci.edu/institutional-research/data-hub/common-data-set/
-    final_url: https://irap.uci.edu/institutional-research/data-hub/common-data-set/
-    status: no_anchors
+    landing_url_found: https://irap.uci.edu/common-data-sets/
+    final_url: https://irap.uci.edu/quick-links/document-download-library/common-data-sets/
+    status: ok
     error: null
-    duration_ms: 3123
-    anchors: []
+    duration_ms: 44108
+    anchors:
+    - url: https://irap.uci.edu/files/2024/02/CDS2022_23-d0b1720a6b74681c.pdf
+      text: Open in new tab
+      year: 2022-23
+      is_document: true
+    - url: https://irap.uci.edu/files/2024/02/CDS2021_22-b874b256605b800e.pdf
+      text: Open in new tab
+      year: 2021-22
+      is_document: true
+    - url: https://irap.uci.edu/files/2024/02/CDS2020_21-733fd668330c7e47.pdf
+      text: Open in new tab
+      year: 2020-21
+      is_document: true
+    - url: https://irap.uci.edu/files/2024/02/CDS2019_20-c528b2dfd1b0f8f4.pdf
+      text: Open in new tab
+      year: 2019-20
+      is_document: true
+    - url: https://irap.uci.edu/files/2024/02/CDS2018_19-696d9c3a008afb3c.pdf
+      text: Open in new tab
+      year: 2018-19
+      is_document: true
+    - url: https://irap.uci.edu/files/2024/02/CDS2017_18-2a188a8779e1d485.pdf
+      text: Open in new tab
+      year: 2017-18
+      is_document: true
+    - url: https://irap.uci.edu/files/2024/02/CDS2016_17-dd944934754a506e.pdf
+      text: Open in new tab
+      year: 2016-17
+      is_document: true
+    - url: https://irap.uci.edu/files/2024/02/CDS2015_16-8594903848c08439.pdf
+      text: Open in new tab
+      year: 2015-16
+      is_document: true
   university-of-california-santa-barbara:
     starting_url: https://bap.ucsb.edu/institutional-research
+    landing_url_found: null
     final_url: https://bap.ucsb.edu/institutional-research
     status: ok
     error: null
-    duration_ms: 1250
+    duration_ms: 13937
     anchors:
     - url: https://drive.google.com/file/d/1FIkvY5dANho45ioG7-JHgO3IPH6-ui1W/view?usp=sharing
       text: Common Data Set - 2025-26
@@ -3305,10 +3467,11 @@ schools:
       is_document: true
   university-of-maryland-college-park:
     starting_url: https://www.irpa.umd.edu/InstitutionalData/cds.html
+    landing_url_found: null
     final_url: https://www.irpa.umd.edu/InstitutionalData/cds.html
     status: ok
     error: null
-    duration_ms: 1845
+    duration_ms: 11028
     anchors:
     - url: https://www.irpa.umd.edu/InstitutionalData/cds.html#main
       text: Skip to main content
@@ -3968,10 +4131,11 @@ schools:
       is_document: true
   syracuse-university:
     starting_url: https://institutionaldata.syr.edu/key-data/
+    landing_url_found: null
     final_url: https://institutionaldata.syr.edu/key-data/
     status: no_anchors
     error: null
-    duration_ms: 3711
+    duration_ms: 22518
     anchors: []
   university-of-minnesota-twin-cities:
     starting_url: https://idr.umn.edu/institutional-metrics-compliance-reporting/twin-cities-campus-factbook
@@ -4316,10 +4480,11 @@ schools:
       is_document: true
   indiana-university-bloomington:
     starting_url: https://iuapps.iu.edu/cds/index.html?i=home&p=index
+    landing_url_found: null
     final_url: https://iuapps.iu.edu/cds/index.html?i=home&p=index
     status: ok
     error: null
-    duration_ms: 2349
+    duration_ms: 11348
     anchors:
     - url: https://iuapps.iu.edu/cds/
       text: CDS (Common Data Set)
@@ -4452,10 +4617,11 @@ schools:
       is_document: true
   university-of-delaware:
     starting_url: https://ire.udel.edu/common-data-set/
+    landing_url_found: null
     final_url: https://ire.udel.edu/common-data-set/
     status: ok
     error: null
-    duration_ms: 2654
+    duration_ms: 29753
     anchors:
     - url: https://ire.udel.edu/common-data-set/
       text: Common Data Set
@@ -4463,10 +4629,11 @@ schools:
       is_document: false
   amherst-college:
     starting_url: https://www.amherst.edu/offices/institutional-research/cds
+    landing_url_found: null
     final_url: https://www.amherst.edu/offices/institutional-research/cds
     status: ok
     error: null
-    duration_ms: 2205
+    duration_ms: 24999
     anchors:
     - url: https://www.amherst.edu/offices/institutional-research/cds#header
       text: Skip to primary navigation
@@ -4743,10 +4910,11 @@ schools:
       is_document: true
   washington-and-lee-university:
     starting_url: https://my.wlu.edu/accreditation-and-institutional-research/common-data-set
+    landing_url_found: null
     final_url: https://my.wlu.edu/accreditation-and-institutional-research/common-data-set
     status: ok
     error: null
-    duration_ms: 2891
+    duration_ms: 15342
     anchors:
     - url: https://my.wlu.edu/accreditation-and-institutional-research/common-data-set
       text: Common Data Set
@@ -4838,10 +5006,11 @@ schools:
       is_document: false
   hamilton-college:
     starting_url: https://www.hamilton.edu/offices/oir/common-data-sets
+    landing_url_found: null
     final_url: https://www.hamilton.edu/offices/oir/common-data-sets
     status: ok
     error: null
-    duration_ms: 2924
+    duration_ms: 28597
     anchors:
     - url: https://www.hamilton.edu/offices/oir/common-data-sets#
       text: Common Data Sets
@@ -4929,10 +5098,11 @@ schools:
       is_document: false
   colby-college:
     starting_url: https://www.colby.edu/oir/common-data-set/
+    landing_url_found: null
     final_url: https://www.colby.edu/oir/common-data-set/
     status: no_anchors
     error: null
-    duration_ms: 1767
+    duration_ms: 17537
     anchors: []
   barnard-college:
     starting_url: https://barnard.edu/institutional-effectiveness/common-data-set/

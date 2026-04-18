@@ -166,6 +166,128 @@ YEAR_RE = re.compile(r"(20\d\d)[-_](20\d\d|\d\d)")
 
 COMMONDATASET_ORG_RE = re.compile(r"^https?://(?:[^/]+\.)?commondataset\.org", re.I)
 
+# Mirror of resolve.ts parentLandingCandidates. When the starting URL is a
+# direct document, walk up to 3 ancestor directories, but only those whose
+# path contains a CDS-like segment (avoids Drupal/WordPress upload trees
+# that happen to sit N levels below an IR page).
+CDS_LIKE_PATH_SEGMENT_RE = re.compile(
+    r"^(cds|common-data-set|common_data_set|institutional-research|"
+    r"institutional_research|ir|oir|oira|iro|irp)$",
+    re.I,
+)
+MAX_PARENT_LEVELS = 3
+
+# Mirror of resolve.ts WELL_KNOWN_CDS_LANDING_PATHS (PR 1). Kept in sync by
+# convention — if resolve.ts grows paths, update here too. Used only as a
+# last-resort fallback when the parent walk yields nothing (covers cases
+# where the direct-PDF hint lives under /wp-content/uploads/ or similar
+# opaque trees with no CDS-like ancestor segment).
+WELL_KNOWN_CDS_LANDING_PATHS: tuple[str, ...] = (
+    "/common-data-set/", "/common-data-set", "/common-data-sets/",
+    "/cds/", "/cds", "/commondataset/",
+    "/institutional-research/common-data-set/",
+    "/ir/common-data-set/", "/oir/common-data-set/",
+    "/institutionalresearch/common-data-set/",
+    "/institutional-research/cds/", "/ir/cds/",
+    "/institutional-data/common-data-set",
+    "/reports/common-data-set",
+    "/reports/cds-reports/",
+)
+
+
+def parent_landing_candidates(hint: str) -> list[str]:
+    """Python port of resolve.ts parentLandingCandidates."""
+    parsed = urlparse(hint)
+    if parsed.scheme not in ("http", "https"):
+        return []
+    segments = [s for s in parsed.path.split("/") if s]
+    if not segments:
+        return []
+    without_filename = segments[:-1]
+    if not without_filename:
+        return []
+    origin = f"{parsed.scheme}://{parsed.netloc}"
+    out: list[str] = []
+    for i in range(min(MAX_PARENT_LEVELS, len(without_filename))):
+        ancestor = without_filename[: len(without_filename) - i]
+        if not ancestor:
+            break
+        if not any(CDS_LIKE_PATH_SEGMENT_RE.match(s) for s in ancestor):
+            continue
+        out.append(f"{origin}/{'/'.join(ancestor)}/")
+    return out
+
+
+def well_known_path_urls(hint: str) -> list[str]:
+    """Python port of resolve.ts wellKnownPathUrls."""
+    parsed = urlparse(hint)
+    if parsed.scheme not in ("http", "https"):
+        return []
+    origin = f"{parsed.scheme}://{parsed.netloc}"
+    return [origin + p for p in WELL_KNOWN_CDS_LANDING_PATHS]
+
+
+def _build_walk_up_candidates(hint: str) -> list[str]:
+    """Order walk-up candidates so the highest-signal ones probe first.
+
+    Crucial for Cloudflare/Akamai-protected hosts (Williams, JHU, Fordham),
+    which flip to a bot-challenge page after only ~4 suspicious requests
+    in a row. Probing the wrong URLs first doesn't just waste time — it
+    poisons the session so the correct URL then serves the challenge page
+    instead of the CDS HTML we need.
+
+    Order:
+      1. Well-known paths that SHARE a CDS-like segment with the hint —
+         e.g. hint has /institutional-research/ → try
+         /institutional-research/common-data-set/ and /institutional-research/cds/
+         FIRST. On Drupal/WordPress-hosted IR sites, these are the actual
+         landing pages; the parent directories below return 403 and
+         poison the session before we get here otherwise.
+      2. Parent directories (restricted to CDS-like ancestors). These
+         help for the minority of sites that expose auto-index pages, but
+         on modern CMS they're usually 403s — so they come second.
+      3. Remaining well-known paths (root-level: /common-data-set/, /cds/,
+         etc.). Matter mostly for IR-subdomain hosts like ir.mit.edu or
+         irp.dpb.cornell.edu where there's no CDS-like ancestor to match.
+    """
+    parents = parent_landing_candidates(hint)
+    wk_all = well_known_path_urls(hint)
+
+    parsed = urlparse(hint)
+    hint_segments = [s for s in parsed.path.split("/") if s]
+    hint_cds_ancestors = {
+        s.lower() for s in hint_segments if CDS_LIKE_PATH_SEGMENT_RE.match(s)
+    }
+
+    prioritized: list[str] = []
+    deferred: list[str] = []
+    for wk in wk_all:
+        wk_segments = [s.lower() for s in urlparse(wk).path.split("/") if s]
+        shares_prefix = bool(hint_cds_ancestors) and bool(
+            hint_cds_ancestors.intersection(wk_segments)
+        )
+        (prioritized if shares_prefix else deferred).append(wk)
+
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for u in (*prioritized, *parents, *deferred):
+        if u not in seen:
+            seen.add(u)
+            ordered.append(u)
+    return ordered
+
+
+def is_download_nav_error(msg: str) -> bool:
+    """Chromium raises 'Download is starting' when goto() lands on a PDF
+    whose server sends Content-Disposition: attachment. That's the main
+    direct-doc signal; also match the variants Playwright emits."""
+    if not msg:
+        return False
+    m = msg.lower()
+    return ("download is starting" in m
+            or "net::err_aborted" in m
+            or "page.goto: net::err_download" in m)
+
 
 def normalize_year(text: str) -> str | None:
     m = YEAR_RE.search(text)
@@ -199,61 +321,93 @@ class SchoolResult:
     school_id: str
     starting_url: str
     final_url: str | None
+    # URL of the landing page whose anchors populated `anchors`. Differs
+    # from starting_url when the walk-up logic recovered from a direct-doc
+    # hint by stepping up the path or probing well-known CDS landings.
+    # `null` when the starting_url was itself the successful landing.
+    landing_url_found: str | None
     status: str          # "ok" | "no_anchors" | "nav_error" | "timeout"
     anchors: list[AnchorResult]
     error: str | None
     duration_ms: int
 
 
-def collect_for_school(page, school_id: str, url: str) -> SchoolResult:
-    t0 = time.monotonic()
-    goto_error: str | None = None
+@dataclass
+class ProbeOutcome:
+    """Single-URL probe result. Used by collect_for_school's orchestration
+    to pick the best landing candidate across the original hint + ancestors
+    + well-known paths."""
+    final_url: str | None
+    anchors: list[AnchorResult]
+    error: str | None
+    # Set when the browser landed on (or was redirected to) a document
+    # itself — the caller can use this as a valid single-anchor fallback.
+    landed_on_document: bool
+    # Set when Chromium fired a download event during navigation. Strong
+    # signal the target URL is a direct PDF and the caller should walk up.
+    download_triggered: bool
+
+
+def _probe_url(page, url: str, is_starting_hint: bool = False) -> ProbeOutcome:
+    """Navigate to `url` and collect CDS-like anchors from its rendered DOM.
+
+    Does NOT decide whether to walk up — that's the caller's job. Returns
+    a ProbeOutcome the orchestrator can compare across candidates.
+    """
     try:
         page.goto(url, wait_until="domcontentloaded", timeout=15_000)
+        error_msg: str | None = None
     except Exception as e:
         msg = str(e)
-        # "Navigation ... is interrupted by another navigation to ..." means
-        # the page JS-triggered a redirect (often to a PDF). Playwright
-        # raises, but the browser has already landed somewhere useful. Wait
-        # briefly and inspect the current URL rather than failing.
+        # A JS-triggered redirect (often to the asset we wanted) — wait
+        # briefly for whatever the browser landed on.
         if "interrupted by another navigation" in msg or "ERR_ABORTED" in msg:
-            goto_error = None
             try:
                 page.wait_for_load_state("domcontentloaded", timeout=5_000)
+                error_msg = None
             except Exception:
-                pass
+                error_msg = msg[:200]
+        elif is_download_nav_error(msg):
+            # Direct-doc navigation — Chromium fired a download instead of
+            # rendering. Caller (when this is the starting hint) should
+            # walk up. Return no anchors; page.url is unreliable here.
+            return ProbeOutcome(
+                final_url=None, anchors=[], error=msg[:200],
+                landed_on_document=True, download_triggered=True,
+            )
         else:
-            return SchoolResult(
-                school_id=school_id, starting_url=url, final_url=None,
-                status="nav_error", anchors=[], error=msg[:200],
-                duration_ms=int((time.monotonic() - t0) * 1000),
+            return ProbeOutcome(
+                final_url=None, anchors=[], error=msg[:200],
+                landed_on_document=False, download_triggered=False,
             )
 
-    # Small wait for JS-rendered content to settle.
     try:
         page.wait_for_load_state("networkidle", timeout=6_000)
     except Exception:
-        pass  # timeout here is OK
+        pass  # expected when sites keep long-lived connections open
 
     final_url = page.url
 
-    # If the browser landed directly on a PDF (redirect chain), that URL
-    # alone is a valid CDS doc. Emit it as a single-anchor result so the
-    # operator still gets value.
+    # If the browser landed on a PDF inline (rare — usually blocked by the
+    # download dialog), emit it as a single-anchor CDS doc.
     if DOCUMENT_EXT_RE.search(final_url):
         parsed = urlparse(final_url)
         fname = parsed.path.rsplit("/", 1)[-1]
         if is_cds_like(final_url, fname):
-            return SchoolResult(
-                school_id=school_id, starting_url=url, final_url=final_url,
-                status="ok", anchors=[AnchorResult(
+            return ProbeOutcome(
+                final_url=final_url,
+                anchors=[AnchorResult(
                     url=final_url, text=fname,
                     year=normalize_year(final_url),
                     is_document=True,
-                )], error=None,
-                duration_ms=int((time.monotonic() - t0) * 1000),
+                )],
+                error=None, landed_on_document=True, download_triggered=False,
             )
-    # Pull every <a href> via DOM query (post-render).
+        return ProbeOutcome(
+            final_url=final_url, anchors=[], error=None,
+            landed_on_document=True, download_triggered=False,
+        )
+
     raw = page.evaluate(
         """() => {
             const out = [];
@@ -265,7 +419,7 @@ def collect_for_school(page, school_id: str, url: str) -> SchoolResult:
     )
 
     anchors: list[AnchorResult] = []
-    seen = set()
+    seen: set[str] = set()
     for a in raw:
         href = a.get("href") or ""
         text = a.get("text") or ""
@@ -282,10 +436,87 @@ def collect_for_school(page, school_id: str, url: str) -> SchoolResult:
             is_document=bool(DOCUMENT_EXT_RE.search(href)),
         ))
 
-    status = "ok" if anchors else "no_anchors"
+    return ProbeOutcome(
+        final_url=final_url, anchors=anchors, error=error_msg,
+        landed_on_document=False, download_triggered=False,
+    )
+
+
+def _count_doc_anchors(anchors: list[AnchorResult]) -> int:
+    """Document anchors are the thing we actually want to archive; a
+    landing page that lists 30 PDFs beats one that lists 2 PDFs + 10 HTML
+    subpages."""
+    return sum(1 for a in anchors if a.is_document)
+
+
+def collect_for_school(page, school_id: str, url: str) -> SchoolResult:
+    """Try the starting hint; if it's a direct-doc hint (by extension, by
+    download event, or by 0-anchor result) walk up the path and fall back
+    to well-known CDS landing paths on the same host. Return the best
+    landing page found, tagged with `landing_url_found` when the original
+    hint wasn't itself the winner.
+    """
+    t0 = time.monotonic()
+    starting_is_direct_doc = bool(DOCUMENT_EXT_RE.search(url))
+
+    # First pass: the operator-provided hint.
+    first = _probe_url(page, url, is_starting_hint=True)
+    best_url = url
+    best = first
+
+    # Walk-up trigger conditions:
+    #   (a) starting URL has a document extension (always try, even if the
+    #       first probe somehow returned anchors — a direct PDF URL rarely
+    #       does, but if it did we want the sibling years too);
+    #   (b) first probe fired a download event (Chromium's strongest
+    #       "this is a direct doc" signal);
+    #   (c) first probe returned zero CDS anchors — the hint may be a
+    #       landing page that's since been moved, so try the well-known
+    #       paths as a last resort.
+    needs_walk_up = (
+        starting_is_direct_doc
+        or first.download_triggered
+        or _count_doc_anchors(first.anchors) == 0
+    )
+
+    if needs_walk_up:
+        for candidate in _build_walk_up_candidates(url):
+            # Cheap safety: don't re-probe the original hint.
+            if candidate == url:
+                continue
+            outcome = _probe_url(page, candidate)
+            docs = _count_doc_anchors(outcome.anchors)
+            if docs > _count_doc_anchors(best.anchors):
+                best = outcome
+                best_url = candidate
+                # Early-out aggressively: 5+ document anchors is already a
+                # multi-year CDS landing page. Stopping quickly matters
+                # for WAF-protected hosts (Cloudflare starts challenging
+                # after ~8-10 404s; every avoided probe preserves session
+                # trust on hosts we haven't hit yet).
+                if docs >= 5:
+                    break
+
+    # Final status classification.
+    if best.anchors:
+        status = "ok"
+    elif best.download_triggered:
+        status = "nav_error"
+    elif best.error:
+        status = "nav_error"
+    else:
+        status = "no_anchors"
+
+    landing_url_found = best_url if best_url != url else None
+
     return SchoolResult(
-        school_id=school_id, starting_url=url, final_url=final_url,
-        status=status, anchors=anchors, error=None,
+        school_id=school_id,
+        starting_url=url,
+        final_url=best.final_url,
+        landing_url_found=landing_url_found,
+        status=status,
+        anchors=best.anchors,
+        error=best.error,
         duration_ms=int((time.monotonic() - t0) * 1000),
     )
 
@@ -294,8 +525,12 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.strip().split("\n\n")[0])
     ap.add_argument("--output", type=Path,
                     default=Path("tools/finder/manual_urls.yaml"))
-    ap.add_argument("--school", help="Run one specific school only (by id)")
+    ap.add_argument("--school", "--only", dest="school",
+                    help="Run one specific school only (by id)")
     ap.add_argument("--limit", type=int, help="Cap schools processed")
+    ap.add_argument("--merge", action="store_true",
+                    help="Merge into existing --output file rather than overwriting. "
+                         "Untouched schools keep their previous result.")
     ap.add_argument("--headless", action="store_true", default=True)
     ap.add_argument("--no-headless", dest="headless", action="store_false")
     args = ap.parse_args()
@@ -324,12 +559,39 @@ def main() -> int:
             print(f"  [{i+1:>3}/{len(targets)}]  {sid:<50} {url[:70]}",
                   file=sys.stderr, flush=True)
             r = collect_for_school(page, sid, url)
+            walked = f" via {r.landing_url_found}" if r.landing_url_found else ""
             print(f"         → status={r.status:<12} anchors={len(r.anchors):>3} "
-                  f"{r.duration_ms}ms", file=sys.stderr, flush=True)
+                  f"{r.duration_ms}ms{walked}", file=sys.stderr, flush=True)
             results.append(r)
         browser.close()
 
-    # Emit the YAML sidecar.
+    def school_payload(r: SchoolResult) -> dict:
+        return {
+            "starting_url": r.starting_url,
+            "landing_url_found": r.landing_url_found,
+            "final_url": r.final_url,
+            "status": r.status,
+            "error": r.error,
+            "duration_ms": r.duration_ms,
+            "anchors": [asdict(a) for a in r.anchors],
+        }
+
+    # Merge mode: preserve untouched schools from the prior run so a
+    # single-school re-probe (--only williams-college) doesn't wipe the
+    # other 99 entries. Overwrite-mode (default) keeps the existing
+    # behavior for full sweeps.
+    schools_out: dict = {}
+    if args.merge and args.output.exists():
+        try:
+            prior = yaml.safe_load(args.output.read_text()) or {}
+            schools_out = dict(prior.get("schools") or {})
+        except Exception as e:
+            print(f"warn: could not parse existing {args.output}: {e}",
+                  file=sys.stderr)
+
+    for r in results:
+        schools_out[r.school_id] = school_payload(r)
+
     output = {
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "tool": "tools/finder/playwright_collect.py",
@@ -338,17 +600,7 @@ def main() -> int:
             "pages. Review each entry, then pipe through a small follow-up "
             "tool that archives the URLs. See PRD 004 Option C."
         ),
-        "schools": {
-            r.school_id: {
-                "starting_url": r.starting_url,
-                "final_url": r.final_url,
-                "status": r.status,
-                "error": r.error,
-                "duration_ms": r.duration_ms,
-                "anchors": [asdict(a) for a in r.anchors],
-            }
-            for r in results
-        },
+        "schools": schools_out,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(yaml.safe_dump(output, sort_keys=False, width=120))
