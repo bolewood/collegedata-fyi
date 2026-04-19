@@ -51,4 +51,79 @@
 # fields fall back to the schools.yaml entry, and a malformed override
 # row is logged and skipped (it cannot abort the loader).
 
-overrides: []
+overrides:
+  # ── Auth-walled / inaccessible publishers ────────────────────────────
+  # Adelphi's CDS PDFs live on intranet.adelphi.edu, which redirects all
+  # download attempts to login.microsoftonline.com SAML. Confirmed via
+  # 2026-04-18 force-resolve probe: all 6 candidate PDFs the resolver
+  # surfaced from the IR landing page redirected to the Microsoft 365
+  # SSO login. The school does not appear to publish CDS publicly.
+  # Surfaced to the kids worklist tool as "skip — not publicly
+  # accessible" so contributors don't waste time hunting.
+  - school_id: adelphi-university
+    hosting_override:
+      auth_required: microsoft_sso
+      file_storage: intranet
+      cms: wordpress  # /wp-content/ paths in the file URLs
+      notes: >-
+        Intranet PDFs behind Microsoft 365 SSO (login.microsoftonline.com).
+        IR landing page (https://www.adelphi.edu/institutional-research/research/data/)
+        is publicly readable but the linked PDFs are not. Verified
+        2026-04-18 via the force_resolve batch.
+
+  # RPI hosts on Box, which serves auth-walled responses to crawlers.
+  # The Brave/search-engine probe path can't index Box content, and the
+  # resolver's static-HTML pass returns nothing. Browse_url points at
+  # the Box folder (humans CAN open it in a browser); direct_archive_urls
+  # is the operator-curated list when individual file URLs are known.
+  - school_id: rpi
+    browse_url: https://rpi.box.com/v/CDS
+    hosting_override:
+      file_storage: box
+      auth_required: none  # browse via human session works; just no crawler indexing
+      cms: custom
+      notes: >-
+        CDS hosted on rpi.box.com. Box does not serve content to search
+        engine crawlers, so neither Brave nor the resolver can index it.
+        Manual list of year-tagged URLs maintained quarterly when the
+        IR office posts new files. Operator action: when a new year
+        appears, add to direct_archive_urls below.
+    # direct_archive_urls populated as operators discover them; left
+    # empty as a placeholder so the schema is exercised end-to-end.
+    direct_archive_urls: []
+
+  # Indiana University Bloomington publishes CDS on iuapps.iu.edu — an
+  # IU-wide app server with query-param URLs and an HTML body that
+  # doesn't carry "Common Data Set" in the crawlable text, so search
+  # engines can't surface it. Browse_url points at the iuapps page
+  # (humans can navigate it); resolver still gets the original seed.
+  - school_id: indiana-bloomington
+    browse_url: https://iuapps.iu.edu/cds/index.html?i=home&p=index
+    hosting_override:
+      file_storage: same_origin
+      cms: custom
+      rendering: js_required  # iuapps app server, content rendered client-side
+      notes: >-
+        CDS lives on iuapps.iu.edu, an IU-wide app server with
+        query-parameter URLs and a body that lacks the "Common Data Set"
+        keyword in crawlable text. Brave returns no results for any
+        permutation of site:iu.edu queries. Manual operator resolution
+        only.
+
+  # dmi.illinois.edu is the IR subdomain for UIUC's Division of
+  # Management Information. Brave's search index has effectively no
+  # coverage of this subdomain — site:illinois.edu queries return zero
+  # results across every variant tested. The school publishes CDS as
+  # XLSX (not PDF) at a stable URL pattern. Tier 1 extraction
+  # (openpyxl → Answer Sheet) handles the format directly.
+  - school_id: university-of-illinois-urbana-champaign
+    hosting_override:
+      file_storage: same_origin
+      cms: custom
+      waf: none
+      notes: >-
+        Division of Management Information publishes CDS as XLSX at
+        https://www.dmi.illinois.edu/stuenr/misc/cds_YYYY_YYYY.xlsx.
+        The dmi.illinois.edu subdomain is effectively invisible to
+        Brave's index — site:illinois.edu "Common Data Set" returns
+        zero results. Per-school manual resolution only.

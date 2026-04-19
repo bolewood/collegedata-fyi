@@ -16,6 +16,17 @@ import { USER_AGENT } from "./resolve.ts";
 const SCHOOLS_YAML_URL =
   "https://raw.githubusercontent.com/bolewood/collegedata-fyi/main/tools/finder/schools.yaml";
 
+// school_overrides.yaml is a separate committed file for hand-curated
+// per-school data that cannot live in schools.yaml because the latter
+// is regenerated from IPEDS by build_school_list.py and would lose any
+// nested override structure on regeneration. PR 5 introduced the file
+// (with a documented schema); PR 6 wires this loader to read and merge
+// it. Operator-supplied browse_url, direct_archive_urls, and
+// hosting_override entries land on top of the schools.yaml entry,
+// keyed by school_id.
+const SCHOOL_OVERRIDES_YAML_URL =
+  "https://raw.githubusercontent.com/bolewood/collegedata-fyi/main/tools/finder/school_overrides.yaml";
+
 // Hard cap on how long we wait for the raw YAML fetch. Without this, a
 // hanging GitHub request could consume the whole edge function invocation
 // and leave the queue un-seeded. 15s is well above typical GitHub response
@@ -60,6 +71,50 @@ export interface ArchivableSchool {
   browse_url?: string;
 }
 
+// Operator-supplied per-school overrides. See
+// tools/finder/school_overrides.yaml for the source-of-truth schema
+// and tools/finder/school_overrides.yaml comments for field semantics.
+// Every field is optional; a missing field falls back to the
+// schools.yaml entry. hosting_override carries the same enum domains
+// as the school_hosting_observations columns of the same name.
+export interface DirectArchiveUrl {
+  url: string;
+  year?: string;
+}
+
+export interface HostingOverride {
+  cms?: string;
+  file_storage?: string;
+  auth_required?: string;
+  rendering?: string;
+  waf?: string;
+  notes?: string;
+}
+
+export interface SchoolOverride {
+  school_id: string;
+  browse_url?: string;
+  direct_archive_urls?: DirectArchiveUrl[];
+  hosting_override?: HostingOverride;
+}
+
+function isValidSchoolOverride(raw: unknown): raw is SchoolOverride {
+  if (!raw || typeof raw !== "object") return false;
+  const o = raw as Record<string, unknown>;
+  if (typeof o.school_id !== "string" || o.school_id.length === 0) return false;
+  if (o.browse_url !== undefined && o.browse_url !== null && typeof o.browse_url !== "string") {
+    return false;
+  }
+  if (o.direct_archive_urls !== undefined && !Array.isArray(o.direct_archive_urls)) {
+    return false;
+  }
+  if (
+    o.hosting_override !== undefined && o.hosting_override !== null &&
+    typeof o.hosting_override !== "object"
+  ) return false;
+  return true;
+}
+
 // Validates a raw YAML node matches the minimum shape we rely on. Missing
 // or malformed fields would otherwise surface as cryptic runtime errors
 // inside the bulk insert (e.g. "null value in column ... violates not-null
@@ -87,6 +142,77 @@ function isValidSchoolEntry(raw: unknown): raw is SchoolEntry {
 export interface FetchSchoolsYamlResult {
   entries: SchoolEntry[];
   skipped_invalid: number;
+  // Map from school_id → override. Populated from school_overrides.yaml.
+  // Empty when the file is missing or empty. Callers that don't care
+  // about overrides can ignore this field.
+  overrides: Map<string, SchoolOverride>;
+  skipped_invalid_overrides: number;
+}
+
+// Fetch school_overrides.yaml from GitHub raw. Best-effort: any failure
+// (HTTP error, parse error, etc.) is logged and treated as "no
+// overrides," so a missing/broken overrides file doesn't break the
+// archive pipeline. The schools.yaml fetch is the load-bearing one.
+async function fetchSchoolOverrides(): Promise<{
+  overrides: Map<string, SchoolOverride>;
+  skipped_invalid: number;
+}> {
+  const empty = { overrides: new Map<string, SchoolOverride>(), skipped_invalid: 0 };
+  let resp: Response;
+  try {
+    resp = await fetch(SCHOOL_OVERRIDES_YAML_URL, {
+      headers: { "User-Agent": USER_AGENT },
+      signal: AbortSignal.timeout(SCHOOLS_YAML_FETCH_TIMEOUT_MS),
+    });
+  } catch (e) {
+    console.log(JSON.stringify({
+      ts: new Date().toISOString(),
+      fn: "schools.ts",
+      event: "school_overrides_fetch_failed",
+      error: (e as Error).message,
+    }));
+    return empty;
+  }
+  if (!resp.ok) {
+    // 404 is a normal state if the file hasn't been added yet.
+    if (resp.status === 404) return empty;
+    console.log(JSON.stringify({
+      ts: new Date().toISOString(),
+      fn: "schools.ts",
+      event: "school_overrides_fetch_failed",
+      status: resp.status,
+    }));
+    return empty;
+  }
+  let parsed: unknown;
+  try {
+    parsed = parseYaml(await resp.text());
+  } catch (e) {
+    console.log(JSON.stringify({
+      ts: new Date().toISOString(),
+      fn: "schools.ts",
+      event: "school_overrides_parse_failed",
+      error: (e as Error).message,
+    }));
+    return empty;
+  }
+  let rawOverrides: unknown[] = [];
+  if (
+    parsed && typeof parsed === "object" &&
+    Array.isArray((parsed as { overrides?: unknown }).overrides)
+  ) {
+    rawOverrides = (parsed as { overrides: unknown[] }).overrides;
+  }
+  const out = new Map<string, SchoolOverride>();
+  let skipped_invalid = 0;
+  for (const raw of rawOverrides) {
+    if (isValidSchoolOverride(raw)) {
+      out.set(raw.school_id, raw);
+    } else {
+      skipped_invalid += 1;
+    }
+  }
+  return { overrides: out, skipped_invalid };
 }
 
 export async function fetchSchoolsYaml(): Promise<FetchSchoolsYamlResult> {
@@ -136,7 +262,34 @@ export async function fetchSchoolsYaml(): Promise<FetchSchoolsYamlResult> {
       skipped_invalid += 1;
     }
   }
-  return { entries, skipped_invalid };
+
+  // Fetch overrides in parallel with… well, actually we already
+  // awaited the schools fetch. Sequential is fine — overrides is
+  // tiny (4 rows today, probably never more than 50) and the round
+  // trip dominates parsing cost.
+  const { overrides, skipped_invalid: skipped_invalid_overrides } =
+    await fetchSchoolOverrides();
+
+  // Apply overrides on top of entries. Only browse_url is overlaid
+  // back onto SchoolEntry today because that's what filterArchivable
+  // and the kids tool consume; direct_archive_urls and hosting_override
+  // are exposed via the returned map for callers that want them
+  // (kids worklist queries hosting_override; archiveManualUrls feeds
+  // on direct_archive_urls in a future PR).
+  for (const e of entries) {
+    const o = overrides.get(e.id);
+    if (!o) continue;
+    if (o.browse_url && !e.browse_url) {
+      e.browse_url = o.browse_url;
+    }
+  }
+
+  return {
+    entries,
+    skipped_invalid,
+    overrides,
+    skipped_invalid_overrides,
+  };
 }
 
 // V1 filter: every school that can actually be archived by the current
