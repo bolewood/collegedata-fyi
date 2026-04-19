@@ -393,6 +393,14 @@ export async function archiveManualUrls(
   supabase: SupabaseClient,
   school: SchoolInput,
   items: (string | ManualUrlItem)[],
+  // options.source_provenance lets callers tag the resulting
+  // cds_documents row with the right provenance value. Mirror ingest
+  // scripts pass 'mirror_college_transitions' (or similar); the
+  // default undefined falls through to insertFreshDocument's
+  // 'school_direct' default, which is correct for the existing
+  // manual_urls.yaml / Playwright-collector call sites where the URLs
+  // are the school's own-domain hosts.
+  options: { source_provenance?: string } = {},
 ): Promise<ArchiveOutcome> {
   if (items.length === 0) {
     throw new PermanentError(
@@ -441,7 +449,7 @@ export async function archiveManualUrls(
       candidates.push(await archiveOneCandidate(supabase, school, {
         url,
         cds_year: year ?? UNKNOWN_YEAR_SENTINEL,
-      }));
+      }, { source_provenance: options.source_provenance }));
     } catch (e) {
       if (e instanceof PermanentError) {
         skipped.push({
@@ -485,6 +493,13 @@ async function archiveOneCandidate(
   supabase: SupabaseClient,
   school: SchoolInput,
   resolved: { url: string; cds_year: string },
+  // options.source_provenance propagates into insertFreshDocument and
+  // refreshDocumentWithNewSha. Defaults to undefined (→ 'school_direct'
+  // via db.ts default), which is correct for the resolver-driven path
+  // that archiveOneSchool uses. Mirror ingests pass
+  // { source_provenance: 'mirror_college_transitions' } through
+  // archiveManualUrls.
+  options: { source_provenance?: string } = {},
 ): Promise<CandidateOutcome> {
   // Download with a hard memory + wall clock cap.
   const { bytes, sha256, contentType, finalUrl } = await downloadWithCaps(
@@ -544,6 +559,7 @@ async function archiveOneCandidate(
       source_url: sourceUrl,
       source_sha256: sha256,
       storage_path: storagePath,
+      source_provenance: options.source_provenance,
     });
     return {
       action: "inserted",
@@ -608,6 +624,7 @@ async function archiveOneCandidate(
     source_url: sourceUrl,
     source_sha256: sha256,
     storage_path: storagePath,
+    source_provenance: options.source_provenance,
   });
   return {
     action: "refreshed",

@@ -100,6 +100,11 @@ export interface InsertFreshArgs {
   source_sha256: string;
   storage_path: string;
   source_page_count?: number | null;
+  // Where this document came from — defaults to school_direct for the
+  // normal resolver path. Mirror ingests pass their own value
+  // (e.g., 'mirror_college_transitions'). See migration
+  // 20260419100000_source_provenance.sql for the enum domain.
+  source_provenance?: string;
 }
 
 // Used for the "no existing row" branch. Inserts cds_documents + the first
@@ -124,6 +129,7 @@ export async function insertFreshDocument(
       discovered_at: nowIso,
       last_verified_at: nowIso,
       extraction_status: "extraction_pending",
+      source_provenance: args.source_provenance ?? "school_direct",
     })
     .select("id")
     .single();
@@ -147,6 +153,14 @@ export interface RefreshArgs {
   source_url: string;
   source_sha256: string;
   storage_path: string;
+  // Provenance of the NEW bytes being written. If the caller is the
+  // normal resolver path, this defaults to 'school_direct' and
+  // correctly upgrades a row that was previously mirror-provenance.
+  // Mirror ingests never call refresh (they only insert fresh), so a
+  // refresh always means "the school's current file, or an explicit
+  // operator override" which is school_direct by definition unless
+  // otherwise stated.
+  source_provenance?: string;
 }
 
 // Used when a new SHA is seen for an existing (school, year) row.
@@ -175,6 +189,7 @@ export async function refreshDocumentWithNewSha(
       extraction_status: "extraction_pending",
       participation_status: "published",
       removed_at: null,
+      source_provenance: args.source_provenance ?? "school_direct",
     })
     .eq("id", args.document_id);
   if (updErr) {

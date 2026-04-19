@@ -124,6 +124,25 @@ async function runForceUrls(
     }, 400);
   }
 
+  // source_provenance tags where these URLs came from. Mirror ingest
+  // scripts (tools/mirrors/) pass 'mirror_college_transitions' (or
+  // similar) so the resulting cds_documents row is marked as
+  // secondary-mirror provenance. Missing / invalid values fall
+  // through to the db.ts default ('school_direct') which is correct
+  // for the existing manual_urls.yaml / Playwright-collector call
+  // sites where the URLs are the school's own-domain hosts.
+  const ALLOWED_PROVENANCE = new Set([
+    "school_direct",
+    "mirror_college_transitions",
+    "operator_manual",
+  ]);
+  const rawProvenance = typeof body.source_provenance === "string"
+    ? body.source_provenance
+    : null;
+  const sourceProvenance = rawProvenance && ALLOWED_PROVENANCE.has(rawProvenance)
+    ? rawProvenance
+    : undefined;
+
   // school_name can be supplied, or looked up in schools.yaml, or synthesized
   // from school_id. Synthesized name is fine for archiving because it only
   // appears as a display field — the stable identifier is school_id.
@@ -145,6 +164,7 @@ async function runForceUrls(
     event: "force_urls_start",
     school_id: schoolId,
     url_count: items.length,
+    source_provenance: sourceProvenance ?? "school_direct",
   });
 
   try {
@@ -153,7 +173,7 @@ async function runForceUrls(
       school_id: schoolId,
       school_name: schoolName ?? schoolId,
       discovery_seed_url: firstUrl,
-    }, items);
+    }, items, { source_provenance: sourceProvenance });
     logEvent({
       event: "force_urls_completed",
       school_id: schoolId,
