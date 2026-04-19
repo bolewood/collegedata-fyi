@@ -14,8 +14,10 @@ This directory turns that problem into a reproducible pipeline. You run one comm
 |---|---|
 | `schools.yaml` | The corpus. 2,434 schools keyed by IPEDS ID, with `discovery_seed_url` (the resolver's seed URL; renamed from `cds_url_hint` in PR 5 of the URL hint refactor), optional `browse_url` (human-friendly URL for contributor tools), `scrape_policy`, `probe_state`. |
 | `school_overrides.yaml` | Operator-supplied per-school overrides keyed by `school_id`. Hand-curated `browse_url`, `direct_archive_urls` (year-tagged for Box/Drive/SharePoint-hosted schools), `hosting_override` (CMS/file_storage/auth_required/rendering/waf/notes). Read at edge-function runtime by `_shared/schools.ts`; NOT touched by `build_school_list.py`. |
-| `build_school_list.py` | Rebuilds `schools.yaml` from IPEDS HD data, preserving hand-curated overrides. Run rarely (once per IPEDS release). |
+| `build_school_list.py` | Rebuilds `schools.yaml` from IPEDS HD data, preserving hand-curated overrides. Run rarely (once per IPEDS release). Includes `assert_no_duplicates()` build-time guard. |
 | `probe_urls.py` | Discovers CDS URLs for schools where we don't have one. Run monthly. This is the workhorse. |
+| `dedup_audit.py` | Compares duplicate-name `schools.yaml` entries against authoritative IPEDS HD data, recommends a canonical. Run when the build guard surfaces a duplicate. |
+| `dedup_migrate.py` | Moves Supabase rows (cds_documents, archive_queue, etc.) from a wrong slug to its canonical, then deletes the wrong yaml entry. Run after `dedup_audit.py` chooses the canonical. |
 | `debug_brave.py` | Diagnostic for Brave Search API. Hits 5 hand-verified publishers × 4 query shapes, prints raw results. Used when a Brave run misbehaves. |
 | `seed_urls.md` | Hand-curated seed list of elite schools known to publish, plus a known-absent list of schools that refuse (Reed? Not actually. Chicago? Yes — see story below.). |
 
@@ -171,7 +173,67 @@ Things we know we don't catch, documented so they don't surprise anyone later.
 - **Subdomain coverage gaps in Brave's index.** `dmi.illinois.edu` is effectively invisible to Brave; `site:illinois.edu "Common Data Set"` returns zero results. Rare but real. Only fix is per-school manual resolution.
 - **Opaque file URLs without extension.** UCLA publishes CDS at `apb.ucla.edu/file/<uuid>` — no file extension in the URL, parser currently rejects because `endswith(".pdf")` fails. Needs a `Content-Type` header check during URL validation.
 - **Landing pages that aren't direct files.** 289 of the 840 active hints are IR landing pages (like `irp.osu.edu/institutional-data-and-reports`), not direct file URLs. Downstream extraction will need a second-step HTML parse to find the actual PDF/XLSX link. Separate M2 concern.
-- **`build_school_list.py` merge silent-overwrite.** If a hand-curated entry has a mismatched IPEDS ID (Reed/OSU bug), the IPEDS row for the wrong school gets silently renamed in place during every build. Low-frequency, high-consequence. `build_school_list.py` should warn when hand-curated name/domain disagrees with the IPEDS row it's overlaying. Open follow-up.
+- **`build_school_list.py` merge silent-overwrite.** If a hand-curated entry has a mismatched IPEDS ID (Reed/OSU bug), the IPEDS row for the wrong school gets silently renamed in place during every build. The `assert_no_duplicates()` guard now catches the downstream symptom (two active rows with the same slug or the same display name with different IPEDS IDs) and aborts the build, so the bug surfaces at build time instead of leaking into production. The full first-line defense — warning when hand-curated `name` disagrees with the IPEDS row it's overlaying — is still an open follow-up. See "Deduplication" below.
+
+## Deduplication
+
+`schools.yaml` is the canonical school list, keyed by a slug `id`. Two rows for the same institution (or two institutions sharing one slug) is a corpus bug. Symptoms range from invisible (a hand-curated entry overlays an unrelated IPEDS row, like the Reed/OSU case) to actively harmful (uploads land at the wrong slug, the resolver chases stale URLs, the manifest fans out two near-identical rows).
+
+We have one cleanup ran 2026-04-19 that removed 11 wrong-IPEDS rows and renamed Lincoln University to `lincoln-university-mo` + `lincoln-university-pa`. Going forward, the workflow below prevents new dupes from landing.
+
+### Build-time guard (prevention)
+
+`build_school_list.py` ends every run with `assert_no_duplicates()`. It enforces two invariants:
+
+1. **No two ACTIVE schools share a slug.** Hard error, exit code 2. Aborts the build. This is the load-bearing invariant — every downstream consumer (resolver, archiver, frontend) keys on `school_id`, so two active rows under the same id corrupt every table that joins to schools.
+2. **No two ACTIVE schools share a display name with different IPEDS IDs.** Hard error. This catches the Reed/OSU class: a hand-curated entry pointing at the wrong UNITID will produce two rows with the same name but different IPEDS IDs after the merge runs.
+
+Inactive-cohort duplicates produce a warning, not an error. They're a separate bug class (the slugify-collision case where two real schools share a name and our slugify drops state info — see backlog "Fix slugify state-suffix disambiguation"). Warning means the build still completes and ships; the strict check upgrades to error once the slugify fix lands.
+
+### When the guard fires (cleanup)
+
+If a build fails with "duplicate active-school slugs" or "duplicate active-school names":
+
+```bash
+cd tools/finder
+
+# 1. Audit the dupes against authoritative IPEDS data.
+#    Downloads HD2024.zip from NCES (cached in .ipeds-cache/),
+#    looks up each ipeds_id, prints which yaml row matches NCES exactly.
+#    Recommends a canonical when exactly one row matches.
+../extraction_worker/.venv/bin/python dedup_audit.py --json dedup-audit-$(date +%Y%m%d).json
+
+# 2. Inspect the JSON. For each group, the recommendation is one of:
+#    - delete-other: one slug is canonical, drop the other
+#    - manual-review-both-match: legitimate name collision
+#      (two real schools, e.g., Lincoln University MO + PA), rename both
+#    - manual-review-no-match: neither matches NCES, dig in by hand
+
+# 3. Migrate the database (Supabase rows for cds_documents, archive_queue,
+#    extraction_pending, etc.) from the wrong slug to the canonical, then
+#    delete the wrong yaml entry. Dry-run by default; --apply to commit.
+../extraction_worker/.venv/bin/python dedup_migrate.py \
+  --audit dedup-audit-$(date +%Y%m%d).json
+../extraction_worker/.venv/bin/python dedup_migrate.py \
+  --audit dedup-audit-$(date +%Y%m%d).json --apply
+
+# 4. Re-run build_school_list.py to confirm the guard passes.
+python build_school_list.py
+```
+
+### Why IPEDS HD is the source of truth
+
+NCES IPEDS HD (Header) is the official US Department of Education registry of every Title-IV-eligible institution. UNITID is the federal primary key. INSTNM is the official institution name. STABBR is the state. Every other school dataset (College Scorecard, College Navigator, ACT, SAT) joins back to UNITID. If `schools.yaml` and IPEDS disagree about what institution lives at a given UNITID, IPEDS wins. The audit script downloads `HD{year}.zip` from `nces.ed.gov/ipeds/datacenter` and caches it in `.ipeds-cache/` (gitignored, re-fetched on demand).
+
+### Why this matters
+
+Slug collisions silently corrupt the entire pipeline. The symptoms we hit before the guard:
+
+- **Operator uploads landed at the wrong slug.** Williams CDS files uploaded via `tools/upload/` went to `williams` (an old wrong-IPEDS row) while the canonical `williams-college` already had the same files. Same school, two slugs, two parallel archives, neither one complete.
+- **The resolver wasted budget on stale URLs.** Old hand-curated entries had `discovery_seed_url` values pointing at landing pages that had moved years ago. Every monthly cron retried them, hit the cooldown table, and burned a slot that the canonical row needed.
+- **The frontend showed phantom schools.** `cds_manifest` joins to schools by id, so the directory page rendered both rows side by side, neither linking to the other, neither labeled as a duplicate.
+
+The guard catches all three at build time before they ship.
 
 ## Architecture notes
 
