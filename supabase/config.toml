@@ -411,3 +411,14 @@ enabled = true
 verify_jwt = true
 import_map = "./functions/archive-enqueue/deno.json"
 entrypoint = "./functions/archive-enqueue/index.ts"
+
+[functions.archive-upload]
+enabled = true
+# Operator upload endpoint. Accepts multipart POST with a downloaded
+# CDS file and archives it with operator_manual provenance. Same auth
+# pattern as archive-process: verify_jwt=true + in-handler service-role
+# bearer compare. NOT a public endpoint — see docs/backlog.md entry
+# "Public CDS upload form" for the future public pathway.
+verify_jwt = true
+import_map = "./functions/archive-upload/deno.json"
+entrypoint = "./functions/archive-upload/index.ts"

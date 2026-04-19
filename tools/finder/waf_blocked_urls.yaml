@@ -75,10 +75,18 @@ schools:
       year: 2019-20
     - url: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-on-website/CDS_2019-2020_6_30rev.pdf
       year: 2019-20
-  williams-college:
+  williams:
     school_name: Williams College
     landing_url: https://www.williams.edu/institutional-research/common-data-set/
-    urls: []
+    urls:
+    - url: https://www.williams.edu/institutional-research/files/2026/04/Williams-CDS-2025-2026-V2.pdf
+      year: 2025-26
+    - url: https://www.williams.edu/institutional-research/files/2025/06/CDS_2024_2025_Williams_V5.pdf
+      year: 2024-25
+    - url: https://www.williams.edu/institutional-research/files/2024/04/CDS_2023_2024_Williams_April2024.pdf
+      year: 2023-24
+    - url: https://www.williams.edu/institutional-research/files/2023/06/CDS_2022_2023_Williams_June2023.pdf
+      year: 2022-23
   fordham-university:
     school_name: Fordham University
     landing_url: https://www.fordham.edu/about/leadership-and-administration/administrative-offices/office-of-the-provost/provost-office-units/institutional-research-and-assessment/consumer-information/common-data-set/
