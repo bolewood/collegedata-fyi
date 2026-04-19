@@ -51,9 +51,9 @@ import {
 } from "../_shared/db.ts";
 import {
   buildSourcePath,
-  extForResponse,
   MAX_SOURCE_BYTES,
   objectExists,
+  sniffBytesForExt,
   uploadSource,
 } from "../_shared/storage.ts";
 import { fetchSchoolsYaml } from "../_shared/schools.ts";
@@ -128,12 +128,17 @@ Deno.serve(async (req: Request) => {
     }, 413);
   }
 
-  // Magic-byte check — the same extForResponse helper the resolver uses.
-  // Content-Type hints from the upload form are untrustworthy; bytes win.
-  const ext = extForResponse(file.type || "", sourceUrl, bytes);
+  // Magic-byte check ONLY — not extForResponse. The upload path must
+  // not trust content-type or URL suffix: content-type comes from the
+  // client's multipart form (easily forged as application/pdf), and
+  // sourceUrl is synthetic ('upload://...') or operator-supplied (they
+  // could paste 'example.com/garbage.pdf' and we'd accept anything).
+  // The bytes are the only source of truth. Reject if the first 4
+  // bytes don't match PDF or ZIP (XLSX/DOCX).
+  const ext = sniffBytesForExt(bytes);
   if (!ext) {
     return json({
-      error: "uploaded bytes do not match PDF/XLSX/DOCX magic",
+      error: "uploaded bytes do not match PDF/XLSX/DOCX magic. Content-type and filename are ignored; bytes must match.",
       content_type: file.type,
       size_bytes: bytes.length,
       first_bytes_hex: Array.from(bytes.slice(0, 8))
