@@ -251,12 +251,27 @@ export const UNKNOWN_YEAR_SENTINEL = "unknown";
 // archiver can fan out into multiple cds_documents rows per school
 // (ADR 0007 Stage B: one row per historical year for schools like
 // Lafayette that expose 20 years on a single landing page).
+//
+// The optional `probe` field carries hosting-inference signal from
+// the resolver's first fetchText call when one happened (Cases B/C/D
+// in resolveCdsForSchool). Direct-doc hints (Case A) skip the hint
+// fetch entirely and probe is undefined — archive.ts handles that by
+// leaving CMS/WAF/auth_required as "unknown" in the observation.
+// Added in PR 4 of the URL hint refactor plan.
+export interface ResolveProbeData {
+  finalUrl: string;
+  contentType: string;
+  headers: Record<string, string>;
+  bodyLength: number;
+  anchorCount: number; // CDS-ish anchor count on the landing page
+}
+
 export type ResolveResult =
-  | { kind: "resolved"; docs: ResolvedDocument[] }
-  | { kind: "upstream_gone"; status: number; reason: string }
-  | { kind: "transient"; reason: string }
-  | { kind: "no_cds_found"; reason: string }
-  | { kind: "unsupported_content"; reason: string }
+  | { kind: "resolved"; docs: ResolvedDocument[]; probe?: ResolveProbeData }
+  | { kind: "upstream_gone"; status: number; reason: string; probe?: ResolveProbeData }
+  | { kind: "transient"; reason: string; probe?: ResolveProbeData }
+  | { kind: "no_cds_found"; reason: string; probe?: ResolveProbeData }
+  | { kind: "unsupported_content"; reason: string; probe?: ResolveProbeData }
   | { kind: "blocked_url"; reason: string };
 
 export interface FetchResult {
@@ -265,7 +280,39 @@ export interface FetchResult {
   contentType: string;
   text: string;
   finalUrl: string;
+  // Selected response headers used for hosting-environment inference
+  // (CMS, WAF, server). Only a small allowlist (HOSTING_HEADERS below)
+  // is captured rather than the full Headers object — keeps the
+  // surface small and avoids accidentally hauling around huge Set-Cookie
+  // values. Empty {} on error or when the fetch never returned a
+  // response.
+  headers: Record<string, string>;
   error?: string;
+}
+
+// Headers we care about for hosting inference. Each appears in
+// inferHosting() (PR 4 of the URL hint refactor plan). Captured here
+// rather than reading the full Headers object to keep the FetchResult
+// small. Lowercase keys; matched case-insensitively against response
+// headers.
+const HOSTING_HEADERS = [
+  "server",
+  "x-generator",
+  "x-powered-by",
+  "cf-ray", //          Cloudflare
+  "x-amz-cf-id", //     CloudFront
+  "x-akamai-transformed", // Akamai
+  "x-fastly-request-id", // Fastly
+  "x-cdn", //           generic CDN tag
+];
+
+function captureHostingHeaders(headers: Headers): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const name of HOSTING_HEADERS) {
+    const value = headers.get(name);
+    if (value !== null) out[name] = value;
+  }
+  return out;
 }
 
 export async function fetchText(
@@ -279,6 +326,7 @@ export async function fetchText(
       contentType: "",
       text: "",
       finalUrl: url,
+      headers: {},
       error: "blocked unsafe URL",
     };
   }
@@ -297,6 +345,7 @@ export async function fetchText(
         contentType: "",
         text: "",
         finalUrl: r.url,
+        headers: {},
         error: "redirect target blocked as unsafe URL",
       };
     }
@@ -309,6 +358,7 @@ export async function fetchText(
       contentType,
       text,
       finalUrl: r.url,
+      headers: captureHostingHeaders(r.headers),
     };
   } catch (e) {
     return {
@@ -317,6 +367,7 @@ export async function fetchText(
       contentType: "",
       text: "",
       finalUrl: url,
+      headers: {},
       error: (e as Error).message,
     };
   }
@@ -868,17 +919,34 @@ export async function resolveCdsForSchool(
   }
 
   const landing = await fetchText(hint, LANDING_TIMEOUT_MS);
+
+  // Probe data captured from the landing fetch — used by archive.ts
+  // to populate school_hosting_observations. anchorCount is set after
+  // anchor extraction below; we initialize to 0 here and refine.
+  // Failure paths still surface probe so auth-wall / dead-URL
+  // observations are recorded.
+  const buildProbe = (anchorCount: number): ResolveProbeData => ({
+    finalUrl: landing.finalUrl,
+    contentType: landing.contentType,
+    headers: landing.headers,
+    bodyLength: landing.text.length,
+    anchorCount,
+  });
+
   if (!landing.ok) {
+    const probe = buildProbe(0);
     if (landing.status === 404 || landing.status === 410) {
       return {
         kind: "upstream_gone",
         status: landing.status,
         reason: `landing HTTP ${landing.status}`,
+        probe,
       };
     }
     return {
       kind: "transient",
       reason: landing.error ?? `landing HTTP ${landing.status}`,
+      probe,
     };
   }
 
@@ -904,6 +972,7 @@ export async function resolveCdsForSchool(
         is_test_artifact: TEST_ARTIFACT_RE.test(filename),
         discovered_via: "direct",
       }],
+      probe: buildProbe(0),
     };
   }
 
@@ -911,6 +980,7 @@ export async function resolveCdsForSchool(
     return {
       kind: "unsupported_content",
       reason: `landing content-type ${landing.contentType || "(none)"}`,
+      probe: buildProbe(0),
     };
   }
 
@@ -925,10 +995,15 @@ export async function resolveCdsForSchool(
       return {
         kind: "no_cds_found",
         reason: "landing has multiple CDS-ish docs but none carry a year signal (Stage B limitation)",
+        probe: buildProbe(landingDocs.length),
       };
     }
     if (candidates.length > 0) {
-      return { kind: "resolved", docs: candidates };
+      return {
+        kind: "resolved",
+        docs: candidates,
+        probe: buildProbe(landingDocs.length),
+      };
     }
   }
 
@@ -942,6 +1017,7 @@ export async function resolveCdsForSchool(
     return {
       kind: "no_cds_found",
       reason: "landing parsed, no CDS-ish document anchors and no subpages",
+      probe: buildProbe(landingDocs.length),
     };
   }
 
@@ -1027,6 +1103,7 @@ export async function resolveCdsForSchool(
     return {
       kind: "no_cds_found",
       reason: "two-hop walk found no document anchors",
+      probe: buildProbe(landingDocs.length),
     };
   }
 
@@ -1035,13 +1112,19 @@ export async function resolveCdsForSchool(
     return {
       kind: "no_cds_found",
       reason: "two-hop walk found multiple CDS-ish docs but none carry a year signal (Stage B limitation)",
+      probe: buildProbe(landingDocs.length),
     };
   }
   if (subCandidates.length === 0) {
     return {
       kind: "no_cds_found",
       reason: "two-hop walk found no qualifying document candidates",
+      probe: buildProbe(landingDocs.length),
     };
   }
-  return { kind: "resolved", docs: subCandidates };
+  return {
+    kind: "resolved",
+    docs: subCandidates,
+    probe: buildProbe(landingDocs.length),
+  };
 }

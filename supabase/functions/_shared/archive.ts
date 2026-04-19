@@ -8,9 +8,11 @@ import { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import {
   isSafeUrl,
   resolveCdsForSchool,
+  ResolveProbeData,
   ResolveResult,
   USER_AGENT,
 } from "./resolve.ts";
+import { inferHosting, type HostingInference } from "./hosting.ts";
 import {
   bumpVerified,
   fetchDocumentForSchoolYear,
@@ -151,6 +153,87 @@ function pickAggregateCategory(categories: ProbeOutcome[]): ProbeOutcome {
 
 const DOWNLOAD_TIMEOUT_MS = 30_000;
 
+// Feature flag for hosting-environment observations. The plan calls
+// for this gate so the riskiest part of PR 4 (resolver writes a new
+// row per probe) can be reverted without a code rollback if it
+// causes problems in production. Default off; flip to "true" once
+// the table has been migrated and a smoke test on a single school
+// looks clean.
+function hostingObservationsEnabled(): boolean {
+  return (Deno.env.get("HOSTING_OBSERVATIONS_ENABLED") ?? "").toLowerCase() === "true";
+}
+
+// Record a single school_hosting_observations row. Best-effort: any
+// error is swallowed and logged so observation failures never break
+// archiving. The whole point of the env var is the safety net here.
+async function recordHostingObservation(
+  supabase: SupabaseClient,
+  school: SchoolInput,
+  probe: ResolveProbeData | undefined,
+  resolvedDocs: { url: string }[] | undefined,
+  outcome: ProbeOutcome,
+  outcomeReason: string | null,
+): Promise<void> {
+  if (!hostingObservationsEnabled()) return;
+
+  // Build the inferHosting input from whatever we have. archive.ts
+  // is the natural orchestration point because it has both probe (from
+  // resolver) and resolvedDocs (also from resolver). The hint URL is
+  // always available from school.cds_url_hint.
+  const inference: HostingInference = inferHosting({
+    hintUrl: school.cds_url_hint,
+    finalUrl: probe?.finalUrl,
+    contentType: probe?.contentType,
+    headers: probe?.headers,
+    resolvedDocs,
+    anchorCount: probe?.anchorCount,
+    bodyLength: probe?.bodyLength,
+  });
+
+  // Truncate outcome_reason so a chatty error message doesn't bloat
+  // the table. 200 chars matches the categoriseLegacyError pattern
+  // window; longer is the underlying last_error in archive_queue.
+  const reasonTrunc = outcomeReason && outcomeReason.length > 200
+    ? outcomeReason.slice(0, 200)
+    : outcomeReason;
+
+  try {
+    const { error } = await supabase
+      .from("school_hosting_observations")
+      .insert({
+        school_id: school.school_id,
+        observation_source: "resolver",
+        seed_url: school.cds_url_hint,
+        origin_domain: inference.origin_domain,
+        final_url_host: inference.final_url_host,
+        cms: inference.cms,
+        file_storage: inference.file_storage,
+        auth_required: inference.auth_required,
+        rendering: inference.rendering,
+        waf: inference.waf,
+        outcome,
+        outcome_reason: reasonTrunc,
+      });
+    if (error) {
+      console.log(JSON.stringify({
+        ts: new Date().toISOString(),
+        fn: "archive.ts",
+        event: "hosting_observation_insert_failed",
+        school_id: school.school_id,
+        error: error.message,
+      }));
+    }
+  } catch (e) {
+    console.log(JSON.stringify({
+      ts: new Date().toISOString(),
+      fn: "archive.ts",
+      event: "hosting_observation_threw",
+      school_id: school.school_id,
+      error: (e as Error).message,
+    }));
+  }
+}
+
 export async function archiveOneSchool(
   supabase: SupabaseClient,
   school: SchoolInput,
@@ -159,19 +242,41 @@ export async function archiveOneSchool(
   //    one CDS-ish anchor per historical year for schools that expose
   //    a multi-year landing page, one row for the direct-doc case.
   const result = await resolveCdsForSchool(school.cds_url_hint);
+
+  // Branch on the resolver's discriminated union. Each non-resolved
+  // kind triggers an observation write before throwing so failure
+  // probes show up in school_hosting_observations alongside successes.
   switch (result.kind) {
     case "resolved":
       break;
     case "upstream_gone":
+      // upstream_gone is handled below by handleUpstreamGone which
+      // returns ArchiveOutcome; observation is recorded inside that
+      // path.
       return handleUpstreamGone(supabase, school, result);
-    case "transient":
+    case "transient": {
+      await recordHostingObservation(
+        supabase, school, result.probe, undefined, "transient", result.reason,
+      );
       throw new TransientError(`resolve transient: ${result.reason}`, "transient");
-    case "blocked_url":
+    }
+    case "blocked_url": {
+      // blocked_url has no probe (we never made the request). Skip the
+      // observation — there's nothing to observe.
       throw new PermanentError(`resolve blocked: ${result.reason}`, "blocked_url");
-    case "unsupported_content":
+    }
+    case "unsupported_content": {
+      await recordHostingObservation(
+        supabase, school, result.probe, undefined, "wrong_content_type", result.reason,
+      );
       throw new PermanentError(`resolve unsupported: ${result.reason}`, "wrong_content_type");
-    case "no_cds_found":
+    }
+    case "no_cds_found": {
+      await recordHostingObservation(
+        supabase, school, result.probe, undefined, "no_pdfs_found", result.reason,
+      );
       throw new PermanentError(`resolve no cds found: ${result.reason}`, "no_pdfs_found");
+    }
   }
 
   if (result.docs.length === 0) {
@@ -217,14 +322,25 @@ export async function archiveOneSchool(
   // auth_walled_microsoft, not permanent_other).
   if (candidates.length === 0) {
     const reasons = skipped.map((s) => `${s.url}: ${s.reason}`).join("; ");
+    const aggregate = pickAggregateCategory(skipped.map((s) => s.category));
+    await recordHostingObservation(
+      supabase, school, result.probe, result.docs, aggregate, reasons,
+    );
     throw new PermanentError(
       `all ${skipped.length} candidate(s) failed permanently: ${reasons}`,
-      pickAggregateCategory(skipped.map((s) => s.category)),
+      aggregate,
     );
   }
 
   const first = candidates[0];
   const action = rollupAction(candidates);
+  // Success path: record observation. resolvedDocs uses the resolver
+  // outputs (not the candidates outcomes) so file_storage inference
+  // sees ALL candidate URLs, including ones that got skipped due to
+  // per-candidate transient errors.
+  await recordHostingObservation(
+    supabase, school, result.probe, result.docs, action, null,
+  );
   return {
     action,
     outcome: action, // ArchiveAction values are valid ProbeOutcome values
@@ -510,6 +626,14 @@ async function handleUpstreamGone(
     resolved_url: null,
     storage_path: null,
   };
+  await recordHostingObservation(
+    supabase,
+    school,
+    result.probe,
+    undefined,
+    "dead_url", // upstream_gone is the dead-url failure mode
+    result.reason,
+  );
   return {
     action: "marked_removed",
     outcome: "marked_removed",
