@@ -408,6 +408,15 @@ def insert_canonical_artifact(
     placeholder_path = (
         f"canonical-inline/{document_id}/{producer}-{producer_version}.json"
     )
+    # Strip \u0000 null bytes that Postgres JSONB rejects (22P05).
+    # Docling occasionally produces these from malformed PDF text streams.
+    # Check both raw null bytes and JSON-escaped \u0000 sequences.
+    import json
+    notes_json = json.dumps(canonical)
+    if "\x00" in notes_json or "\\u0000" in notes_json:
+        notes_json = notes_json.replace("\x00", "").replace("\\u0000", "")
+        canonical = json.loads(notes_json)
+
     client.table("cds_artifacts").insert({
         "document_id": document_id,
         "kind": "canonical",

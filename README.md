@@ -4,7 +4,7 @@
 
 An open, reproducible library of US college data. We find each school's Common Data Set document, extract it into a canonical schema, and publish both the raw source file and the structured extract alongside a queryable manifest. No hand-cleaned numbers, no opinionated schema of our own — we use the one the CDS Initiative already publishes. Just ground truth you can build on top of.
 
-> **Status: V1 live at [collegedata.fyi](https://collegedata.fyi).** 337 schools, 1,675 archived CDS documents, structured field extraction for 668 of them so far (fillable PDFs via `pypdf.get_fields()`, flattened PDFs via Docling + a schema-targeting cleaner). Extraction worker is still draining the backlog. GT scorer 94% on hand-audited schools; C1 admissions fields land at 50–60% coverage corpus-wide. See [`docs/known-issues/`](docs/known-issues/) for per-school notes.
+> **Status: V1 live at [collegedata.fyi](https://collegedata.fyi).** 617 schools, 2,913 archived CDS documents, structured field extraction for 2,008 of them (69%). Fillable PDFs via `pypdf.get_fields()`, flattened PDFs via Docling + a schema-targeting cleaner. GT scorer 94% on hand-audited schools; C1 admissions fields at 50-60% coverage corpus-wide. See [`docs/known-issues/`](docs/known-issues/) for per-school notes.
 
 ## Why this exists
 
