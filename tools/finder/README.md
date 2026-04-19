@@ -198,7 +198,9 @@ cd /path/to/collegedata-fyi/tools/finder && \
 ## See also
 
 - [`schools.yaml`](schools.yaml) — the corpus this tool maintains
+- [`school_overrides.yaml`](school_overrides.yaml) — operator-supplied per-school overrides (browse_url, hand-curated direct PDFs, hosting fingerprints). Read alongside schools.yaml at edge-function runtime.
 - [`seed_urls.md`](seed_urls.md) — hand-curated known publishers and non-publishers
 - [`build_school_list.py`](build_school_list.py) — regenerates schools.yaml from IPEDS (run rarely)
 - [`debug_brave.py`](debug_brave.py) — run when a Brave run misbehaves
 - [`tools/tier2_extractor/`](../tier2_extractor/) — consumes the `discovery_seed_url` values this tool produces
+- [`tools/mirrors/`](../mirrors/) — third-party CDS archive ingests that read `schools.yaml` to map mirror entries to our school_ids. The finder establishes the canonical school list; mirrors fill coverage gaps from that list. Every mirror row carries a `source_provenance` tag so consumers can distinguish school-direct from mirror data.

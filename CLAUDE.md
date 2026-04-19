@@ -4,7 +4,7 @@ Open-source archive of U.S. college Common Data Set (CDS) documents.
 
 - **Live site:** https://collegedata.fyi (Next.js on Vercel)
 - **API:** https://api.collegedata.fyi (PostgREST on Supabase)
-- **Architecture:** `docs/ARCHITECTURE.md` (six pipelines: schema, corpus, discovery, extraction, consumer API, frontend)
+- **Architecture:** `docs/ARCHITECTURE.md` (seven pipelines: schema, corpus, discovery, mirror, extraction, consumer API, frontend)
 - **Frontend PRD:** `docs/prd/002-frontend.md`
 
 ## Project layout

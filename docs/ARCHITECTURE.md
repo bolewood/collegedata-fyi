@@ -6,14 +6,15 @@ How the pieces fit together at runtime. Complements [`docs/v1-plan.md`](v1-plan.
 
 ## Overview
 
-The project has six logical pipelines, each running at a different cadence and responsibility boundary:
+The project has seven logical pipelines, each running at a different cadence and responsibility boundary:
 
 1. **Schema pipeline** — once per CDS year. Extracts the canonical schema from commondataset.org's official XLSX template into a committed JSON artifact. Also folds per-field checkbox value decoders into the same artifact.
 2. **Corpus pipeline** — once per month or so. Builds the canonical school list from IPEDS data and enriches it with URL hints discovered by a pattern-ladder prober.
 3. **Discovery pipeline** — nightly via cron. Reads the canonical school list, crawls each school's IR landing page, extracts every CDS-ish document anchor (multi-candidate per ADR 0007 Stage B), archives source bytes to Storage, and upserts one `cds_documents` row per archived file. Academic year is assigned later by the extraction pipeline from page-1 content, not from the URL.
-4. **Extraction pipeline** — triggered by discovery. Pulls each `extraction_pending` row, downloads the archived source, detects format, routes to a tier-specific extractor, and writes a `canonical` artifact back.
-5. **Consumer API** — on demand. PostgREST serves the manifest and the `cds_manifest` view at `api.collegedata.fyi/rest/v1/`. Public Storage URLs serve the archived source files.
-6. **Frontend** — on demand. A Next.js app at `collegedata.fyi` (hosted on Vercel) consumes the PostgREST API and renders a searchable school directory, per-school document archives, and per-year structured field viewers. See [`docs/prd/002-frontend.md`](prd/002-frontend.md).
+4. **Mirror pipeline** — monthly or ad-hoc. Ingests third-party CDS archives (College Transitions today; Wayback Machine, others later) as a gap-filler when a school's own IR page 404s or is auth-walled. Every row carries a structured `source_provenance` tag so consumers can filter on `school_direct` for authoritative data or include mirror rows for maximum coverage. The mirror never overwrites; the school's own publication always wins.
+5. **Extraction pipeline** — triggered by discovery. Pulls each `extraction_pending` row, downloads the archived source, detects format, routes to a tier-specific extractor, and writes a `canonical` artifact back.
+6. **Consumer API** — on demand. PostgREST serves the manifest and the `cds_manifest` view at `api.collegedata.fyi/rest/v1/`. Public Storage URLs serve the archived source files.
+7. **Frontend** — on demand. A Next.js app at `collegedata.fyi` (hosted on Vercel) consumes the PostgREST API and renders a searchable school directory, per-school document archives, and per-year structured field viewers. See [`docs/prd/002-frontend.md`](prd/002-frontend.md).
 
 Each pipeline is independently runnable. None of them requires any of the others to be live for the others to work. This is deliberate: the project ships incrementally, one pipeline at a time, rather than requiring the full stack to be up before anything is useful.
 
@@ -221,9 +222,21 @@ Summary of the components:
 | [`supabase/migrations/20260418220000_archive_queue_last_outcome.sql`](../supabase/migrations/20260418220000_archive_queue_last_outcome.sql) | Adds `archive_queue.last_outcome` column (CHECK-constrained to `ArchiveAction` values initially; extended to full `ProbeOutcome` in the next migration). Drives the cooldown filter in `archive-enqueue`. Partial index on `(school_id, processed_at desc) WHERE status='done' AND last_outcome='unchanged_verified'`. |
 | [`supabase/migrations/20260418230000_probe_outcome_categories.sql`](../supabase/migrations/20260418230000_probe_outcome_categories.sql) | Extends `archive_queue.last_outcome` CHECK to all 15 `ProbeOutcome` values (success + failure categories like `auth_walled_microsoft`, `dead_url`, `no_pdfs_found`, etc.). Backfills historical `failed_permanent` rows by parsing `last_error` into structured categories. Adds a failure-outcome partial index for analytics. |
 | [`supabase/migrations/20260419000000_school_hosting_observations.sql`](../supabase/migrations/20260419000000_school_hosting_observations.sql) | Append-only log of what the resolver learned about each school's hosting environment on each probe. Inferred dimensions (CMS, file_storage, auth_required, rendering, WAF) plus per-observation outcome + truncated error reason. Plus `latest_school_hosting` view (DISTINCT ON per school, most recent) for consumers that want current state without history. Write gated by `HOSTING_OBSERVATIONS_ENABLED` env var in `archive-process`. |
+| [`supabase/migrations/20260419100000_source_provenance.sql`](../supabase/migrations/20260419100000_source_provenance.sql) | Adds `cds_documents.source_provenance` (CHECK-constrained: `school_direct` / `mirror_college_transitions` / `operator_manual`; default `school_direct`) + index on `(source_provenance, cds_year)`. The distinguishing-authoritative-from-mirror signal consumers filter on. Threaded through `archiveOneCandidate` → `insertFreshDocument` / `refreshDocumentWithNewSha`; refresh always writes `school_direct` so a school's publication always upgrades a prior mirror copy. |
 | [`supabase/migrations/20260414180000_archive_pipeline_cron.sql`](../supabase/migrations/20260414180000_archive_pipeline_cron.sql) | pg_cron schedules. Wires the outer daily + inner 30-s jobs via `net.http_post`, with both the function base URL and the service role key stored as Vault secrets. Gracefully skips scheduling in environments where the Vault secrets are missing (local dev). |
 | [`supabase/config.toml`](../supabase/config.toml) | Edge function configuration. `verify_jwt = true` on all three functions. `archive-process` and `archive-enqueue` additionally do an in-handler service-role check via `isServiceRoleAuth()` so that a plain authenticated project user cannot trigger writes. |
 | [`schemas/cds_schema_YYYY_YY.json`](../schemas/) | Not directly used by the edge functions. The `sources` bucket path convention and the `cds_documents` column layout both reference concepts from the canonical schema. |
+
+### Mirror pipeline
+
+Ingests third-party CDS archives as a gap-filler. The school's own publication always wins; mirrors only insert rows for (school, year) pairs we don't already have.
+
+| Component | Role |
+|---|---|
+| [`tools/mirrors/README.md`](../tools/mirrors/README.md) | The mirror pattern. Every mirror subdirectory follows the same contract: `fetch.py` refreshes a committed `catalog.json`; `ingest.py` cross-references against `cds_documents` and calls `force_urls` for the gap set with the right `source_provenance` tag. Documents how to add a new mirror (schema migration + allowlist update + scripts). |
+| [`tools/mirrors/college_transitions/`](../tools/mirrors/college_transitions/) | First mirror wired up. Re-hosts 1,983 CDS files across 333 schools on Google Drive (2019-20 through 2024-25 window). `fetch.py` uses Playwright to pull the FooTable's in-memory row data and match schools against our corpus; `ingest.py` POSTs gaps to `archive-process?POST force_urls` with `source_provenance='mirror_college_transitions'`. Spot-check + content-diff diagnostics live in the same directory. |
+| [`supabase/functions/archive-process/index.ts`](../supabase/functions/archive-process/index.ts) (`runForceUrls`) | The ingest target. Accepts optional `source_provenance` in the POST body, validates against an allowlist, threads it into `archiveManualUrls` → `archiveOneCandidate` → `insertFreshDocument`. Default behavior (missing / invalid provenance) falls through to `school_direct`, which is correct for the existing manual_urls.yaml / Playwright-collector call sites. |
+| [`supabase/functions/_shared/resolve.ts`](../supabase/functions/_shared/resolve.ts) (`rewriteGoogleDriveUrl`) | Handles Drive-hosted mirror URLs. Rewrites `/file/d/<id>/view` and `/open?id=<id>` share URLs to the `uc?export=download&id=<id>` endpoint that returns the actual bytes. Also handles Google Sheets (`docs.google.com/spreadsheets/d/<id>/edit` → `/export?format=xlsx`) so CT's sheet-format entries work. |
 
 ### Extraction pipeline
 
