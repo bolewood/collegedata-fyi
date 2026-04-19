@@ -175,6 +175,11 @@ def main() -> int:
     parser.add_argument("--log", default=str(DEFAULT_LOG), help="JSONL output path")
     parser.add_argument("--include-partial", action="store_true",
                         help="Also retry schools missing 1-3 of the target years (default: only fully-missing)")
+    parser.add_argument("--all", action="store_true",
+                        help="Run against EVERY active school with a discovery_seed_url, "
+                             "regardless of how many recent years are missing. Use this to "
+                             "populate school_hosting_observations from a single corpus-wide "
+                             "drain after a deploy of the hosting infrastructure.")
     parser.add_argument("--dry-run", action="store_true", help="Print the target list without calling")
     args = parser.parse_args()
 
@@ -191,6 +196,9 @@ def main() -> int:
 
     targets: list[dict] = []
     for s in schools:
+        if args.all:
+            targets.append(s)
+            continue
         present = have.get(s["id"], set())
         missing_count = sum(1 for y in years if y not in present)
         if args.include_partial and missing_count >= 1:
