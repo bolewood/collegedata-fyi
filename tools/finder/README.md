@@ -12,7 +12,8 @@ This directory turns that problem into a reproducible pipeline. You run one comm
 
 | File | Purpose |
 |---|---|
-| `schools.yaml` | The corpus. 2,434 schools keyed by IPEDS ID, with `cds_url_hint`, `scrape_policy`, `probe_state`. |
+| `schools.yaml` | The corpus. 2,434 schools keyed by IPEDS ID, with `discovery_seed_url` (the resolver's seed URL; renamed from `cds_url_hint` in PR 5 of the URL hint refactor), optional `browse_url` (human-friendly URL for contributor tools), `scrape_policy`, `probe_state`. |
+| `school_overrides.yaml` | Operator-supplied per-school overrides keyed by `school_id`. Hand-curated `browse_url`, `direct_archive_urls` (year-tagged for Box/Drive/SharePoint-hosted schools), `hosting_override` (CMS/file_storage/auth_required/rendering/waf/notes). Read at edge-function runtime by `_shared/schools.ts`; NOT touched by `build_school_list.py`. |
 | `build_school_list.py` | Rebuilds `schools.yaml` from IPEDS HD data, preserving hand-curated overrides. Run rarely (once per IPEDS release). |
 | `probe_urls.py` | Discovers CDS URLs for schools where we don't have one. Run monthly. This is the workhorse. |
 | `debug_brave.py` | Diagnostic for Brave Search API. Hits 5 hand-verified publishers × 4 query shapes, prints raw results. Used when a Brave run misbehaves. |
@@ -26,7 +27,7 @@ For every school in `schools.yaml` with `scrape_policy: unknown`, tries to find 
 2. **Brave Search API fallback** (cheap, $0.005/query). If no pattern hits, query `site:{domain} "Common Data Set"` and return the first PDF or CDS-titled landing page.
 3. **Bing HTML scraping** and **Google Custom Search** (optional alternatives, not used by default).
 
-When a URL is found, write it as `cds_url_hint` and flip `scrape_policy` to `active`. On failure, write a `probe_state` with `last_result: not_found` so a 30-day cooldown skips the school on the next run.
+When a URL is found, write it as `discovery_seed_url` and flip `scrape_policy` to `active`. On failure, write a `probe_state` with `last_result: not_found` so a 30-day cooldown skips the school on the next run.
 
 ## Usage
 
@@ -153,7 +154,7 @@ After one day of work:
 |---|---:|
 | Total corpus | 2,434 |
 | Active (known publishers) | 852 |
-| Active **with clean `cds_url_hint`** | **840** |
+| Active **with clean `discovery_seed_url`** | **840** |
 | Active, hint cleared pending re-probe | 12 |
 | `verified_absent` (known non-publishers) | 2 |
 | Still `unknown` | 1,581 |
@@ -200,4 +201,4 @@ cd /path/to/collegedata-fyi/tools/finder && \
 - [`seed_urls.md`](seed_urls.md) — hand-curated known publishers and non-publishers
 - [`build_school_list.py`](build_school_list.py) — regenerates schools.yaml from IPEDS (run rarely)
 - [`debug_brave.py`](debug_brave.py) — run when a Brave run misbehaves
-- [`tools/tier2_extractor/`](../tier2_extractor/) — consumes the `cds_url_hint` values this tool produces
+- [`tools/tier2_extractor/`](../tier2_extractor/) — consumes the `discovery_seed_url` values this tool produces

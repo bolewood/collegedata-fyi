@@ -3,11 +3,24 @@
 The archive pipeline is the bridge between discovery (the finder corpus and
 the M1a `discover` edge function) and extraction (the M2 Python worker). It
 takes every active school in `tools/finder/schools.yaml`, resolves its
-`cds_url_hint` to a direct document URL, downloads the bytes, hashes them,
-writes provenance rows to `cds_documents` + `cds_artifacts`, and uploads
-the source file to the `sources` Storage bucket. The M2 extractor then
-polls `cds_documents WHERE extraction_status = 'extraction_pending'` and
-does the structured extraction.
+`discovery_seed_url` (renamed from `cds_url_hint` in PR 5 of the URL hint
+refactor — see [docs/plans/url-hint-refactor-and-hosting-jsonb.md](plans/url-hint-refactor-and-hosting-jsonb.md))
+to a direct document URL, downloads the bytes, hashes them, writes
+provenance rows to `cds_documents` + `cds_artifacts`, and uploads the
+source file to the `sources` Storage bucket. The M2 extractor then polls
+`cds_documents WHERE extraction_status = 'extraction_pending'` and does
+the structured extraction.
+
+The resolver also writes a row to `school_hosting_observations` on every
+probe (gated by `HOSTING_OBSERVATIONS_ENABLED=true`), capturing inferred
+CMS, file_storage, auth_required, rendering, and WAF. The
+`latest_school_hosting` view exposes the most-recent observation per
+school for consumers that don't want history.
+
+The monthly enqueuer applies a per-outcome cooldown so schools whose
+most recent probe was `unchanged_verified` (30d), `auth_walled_*` (90d),
+`dead_url` (14d), etc. are skipped for the relevant window — typically
+~67% of active schools per cron.
 
 Runs on Supabase Edge Functions + pg_cron + pg_net. One school per edge
 function invocation so the 400 s wall clock, 256 MB memory, and 2 s CPU
@@ -23,8 +36,10 @@ wall clock.
 │                                                              │
 │  archive-enqueue:                                            │
 │    1. GET schools.yaml from GitHub raw                       │
-│    2. Filter: scrape_policy=active AND cds_url_hint != null  │
-│                AND sub_institutions is null                  │
+│    2. Filter: scrape_policy=active AND discovery_seed_url   │
+│                != null AND sub_institutions is null          │
+│    2b. Cooldown filter: drop schools whose most-recent       │
+│                         last_outcome's window hasn't expired │
 │    3. Derive run_id = sha256('archive-enqueue:YYYY-MM')      │
 │    4. Bulk upsert one archive_queue row per school,          │
 │       ignoreDuplicates=true → same month is a no-op          │

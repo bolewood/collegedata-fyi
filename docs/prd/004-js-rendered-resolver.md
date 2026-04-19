@@ -4,6 +4,14 @@
 
 **Status:** SPIKE APPROVED (Option C via /autoplan 2026-04-17)
 
+**Update 2026-04-19:** The URL hint refactor's hosting observations drain
+quantified the JS-rendered cohort for the first time: **51 active schools
+classified as `rendering: js_required`** out of 807 observations. Query
+`SELECT school_id FROM latest_school_hosting WHERE rendering = 'js_required'`
+for the concrete target list. The Playwright spike can skip the
+"inventory which schools are JS-rendered" step and go straight to
+attempting the 51 known cases.
+
 > **Product context captured at the gate:** top-100 schools coverage is existential for the project. If Google/Brave can find the landing page, we need the files. Hand-curation is an acceptable fallback; automation is preferred if it works cleanly. This context shifts the PRD's framing from "build speculatively" to "find the least-expensive path to top-100 coverage." Option C (hybrid) is the approved path: hand-curate now, spike-test Playwright in parallel, decide infra based on spike results.
 **Author:** Anthony Showalter (with Claude)
 **Date started:** 2026-04-17
@@ -82,10 +90,10 @@ Concrete deliverables:
 │                                                        │
 │ Step 3: update schools.yaml                            │
 │   For schools with directory-listing landing pages:    │
-│     cds_url_hint: <landing URL>                        │
+│     discovery_seed_url: <landing URL>                  │
 │     let existing resolver fan out                      │
 │   For schools with single-PDF-only pages:              │
-│     cds_url_hint: <direct URL>                         │
+│     discovery_seed_url: <direct URL>                   │
 │     well-known-paths fallback catches siblings         │
 │                                                        │
 │ Step 4: trigger force_school for each updated entry    │
