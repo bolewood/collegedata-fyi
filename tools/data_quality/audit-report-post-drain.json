@@ -1,0 +1,1955 @@
+[
+  {
+    "document_id": "f69b31a2-2176-4c48-832a-8a28645e719d",
+    "school_id": "cuny-bernard-m-baruch-college",
+    "school_name": "CUNY Bernard M Baruch College",
+    "year": "2018-19",
+    "fields_populated": 0,
+    "producer": "tier2_acroform",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "da760597-fe1b-4f95-a637-ed3b7106a3bb",
+    "school_id": "dartmouth",
+    "school_name": "Dartmouth College",
+    "year": "2024-25",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "7738fa6c-8042-4153-89d9-5707f5a491aa",
+    "school_id": "louisiana-tech-university",
+    "school_name": "Louisiana Tech University",
+    "year": "2004-05",
+    "fields_populated": 4,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "688ad8e0-6c1d-4c88-a987-ba44585d2cec",
+    "school_id": "agnes-scott-college",
+    "school_name": "Agnes Scott College",
+    "year": "2020-21",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "d51835db-92c4-4c45-add7-6147716b8aa1",
+    "school_id": "central-washington-university",
+    "school_name": "Central Washington University",
+    "year": "2021-22",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "9079e821-40fe-4b73-b251-44bbd73ea5be",
+    "school_id": "bowdoin",
+    "school_name": "Bowdoin College",
+    "year": "2020-21",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "d8f5c9b2-38e4-4e24-821f-906a2592210a",
+    "school_id": "louisiana-tech-university",
+    "school_name": "Louisiana Tech University",
+    "year": "2001-02",
+    "fields_populated": 4,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "504c727d-4439-4415-abf6-f533128c778a",
+    "school_id": "berklee-college-of-music",
+    "school_name": "Berklee College of Music",
+    "year": "2009-10",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "579af464-c2a6-4e32-bfa1-03f122964fc1",
+    "school_id": "aquinas-college",
+    "school_name": "Aquinas College",
+    "year": "2022-23",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "15265cea-37ae-41ec-a9eb-5204ba36bb7a",
+    "school_id": "college-of-southern-idaho",
+    "school_name": "College of Southern Idaho",
+    "year": "2002-03",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "9adfd06a-e24d-45f5-812b-ca2ee98cfc74",
+    "school_id": "arapahoe-community-college",
+    "school_name": "Arapahoe Community College",
+    "year": "2017-18",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "e7d9b28c-513f-49ff-9509-40e7d389a659",
+    "school_id": "ashland-university",
+    "school_name": "Ashland University",
+    "year": "2023-24",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "064ec1bd-b719-4281-ab6d-1604f10305de",
+    "school_id": "antioch-college",
+    "school_name": "Antioch College",
+    "year": "2021-22",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "217d662c-50c6-4d69-bb72-ea451357d70b",
+    "school_id": "angelo-state-university",
+    "school_name": "Angelo State University",
+    "year": "2019-20",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "60bea5ee-52be-46dc-b8e5-72759498c575",
+    "school_id": "augustana-college",
+    "school_name": "Augustana College",
+    "year": "2020-21",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "d783efb9-178a-48a8-8171-7b0d3c25347a",
+    "school_id": "alabama-state-university",
+    "school_name": "Alabama State University",
+    "year": "2017-18",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "2d1a80fc-65c1-4422-86cb-014362d65ad9",
+    "school_id": "aurora-university",
+    "school_name": "Aurora University",
+    "year": "2023-24",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "d782f7cf-8e76-481b-b955-386ce17efbb0",
+    "school_id": "azusa-pacific-university",
+    "school_name": "Azusa Pacific University",
+    "year": "2020-21",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "03e704a9-1cf4-4a96-8482-a1f09b2b2169",
+    "school_id": "austin-college",
+    "school_name": "Austin College",
+    "year": "2025-26",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "7054ec4a-3d41-457c-9725-c3b5cd3f6c24",
+    "school_id": "bennington-college",
+    "school_name": "Bennington College",
+    "year": "2024-25",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "db9b14e5-8e35-4b45-b525-05b60899b520",
+    "school_id": "belmont-university",
+    "school_name": "Belmont University",
+    "year": "2022-23",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "29646aeb-e9e0-454a-b0ac-64bf3be87d01",
+    "school_id": "bethune-cookman-university",
+    "school_name": "Bethune-Cookman University",
+    "year": "2020-21",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "73fdf7d2-5f1c-46e0-8370-bba8a592e888",
+    "school_id": "berklee-college-of-music",
+    "school_name": "Berklee College of Music",
+    "year": "2025-26",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "0eef49a6-14e0-49bb-9e8b-f4028c387266",
+    "school_id": "brenau-university",
+    "school_name": "Brenau University",
+    "year": "2018-19",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "3808414b-336f-4ea3-8961-4ba6a83889ec",
+    "school_id": "bryn-mawr-college",
+    "school_name": "Bryn Mawr College",
+    "year": "2022-23",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "7fe7847a-3111-44d1-b7bb-9546e1d4d182",
+    "school_id": "boise-state-university",
+    "school_name": "Boise State University",
+    "year": "2021-22",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "00c34d8f-f591-4fcf-a35e-b715e0f8930a",
+    "school_id": "california-baptist-university",
+    "school_name": "California Baptist University",
+    "year": "2023-24",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "67e4a01c-5a46-4671-a2c9-75ad24c31883",
+    "school_id": "california-state-university-chico",
+    "school_name": "California State University-Chico",
+    "year": "2016-17",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "df344cf0-db49-45d2-9a6f-4266d1d54143",
+    "school_id": "california-lutheran-university",
+    "school_name": "California Lutheran University",
+    "year": "2013-14",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "284b5e5c-c710-4df0-97c1-4f16154c9f94",
+    "school_id": "california-state-university-fresno",
+    "school_name": "California State University-Fresno",
+    "year": "2014-15",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "01023c70-1931-43fe-b531-e763273070af",
+    "school_id": "beloit-college",
+    "school_name": "Beloit College",
+    "year": "2024-25",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "21802c5c-b095-450c-a3a8-201fe17220a2",
+    "school_id": "college-of-coastal-georgia",
+    "school_name": "College of Coastal Georgia",
+    "year": "2023-24",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "62887395-5a50-4599-b93e-9a102688b57c",
+    "school_id": "colgate-university",
+    "school_name": "Colgate University",
+    "year": "2023-24",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "1e9c65a0-25d8-48ce-afba-05ca90bda356",
+    "school_id": "louisiana-tech-university",
+    "school_name": "Louisiana Tech University",
+    "year": "2002-03",
+    "fields_populated": 4,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "434f6b63-354b-4564-ad5a-9bb1a99c225f",
+    "school_id": "cambridge-college",
+    "school_name": "Cambridge College",
+    "year": "2020-21",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "ae879c31-759e-4ae8-9d4d-d699534cb7be",
+    "school_id": "cameron-university",
+    "school_name": "Cameron University",
+    "year": "2024-25",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "3008d906-49e2-4277-b7b5-1579f3ca60e8",
+    "school_id": "carleton-college",
+    "school_name": "Carleton College",
+    "year": "2020-21",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "73a9fe3e-5c18-4943-a32e-7ec9be5f1a63",
+    "school_id": "chapman-university",
+    "school_name": "Chapman University",
+    "year": "2022-23",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "4f305c7e-c77b-43e3-ad13-d1ceda934f7c",
+    "school_id": "case-western-reserve-university",
+    "school_name": "Case Western Reserve University",
+    "year": "2025-26",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "1080b251-94da-4f18-8735-e096ac67b99e",
+    "school_id": "centre-college",
+    "school_name": "Centre College",
+    "year": "2022-23",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "39b2487b-fc78-4be2-9a5f-ce3418c653d4",
+    "school_id": "canisius-university",
+    "school_name": "Canisius University",
+    "year": "2023-24",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "2a74c29b-cab7-4bf2-8ae9-2dc8cb144ab9",
+    "school_id": "christopher-newport-university",
+    "school_name": "Christopher Newport University",
+    "year": "2012-13",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "e0d3d349-dee2-403f-9dfa-35e1575727f4",
+    "school_id": "clark-university",
+    "school_name": "Clark University",
+    "year": "2024-25",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "4c22c4a0-4d54-4589-9e98-014bd956dbe3",
+    "school_id": "citadel-military-college-of-south-carolina",
+    "school_name": "Citadel Military College of South Carolina",
+    "year": "2021-22",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "36d81c17-8cf8-4c3e-b958-6e7c8cf3a085",
+    "school_id": "california-state-university-san-bernardino",
+    "school_name": "California State University-San Bernardino",
+    "year": "2024-25",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "9f2d60e2-7a21-4167-af41-562828a16e54",
+    "school_id": "commonwealth-university-of-pennsylvania",
+    "school_name": "Commonwealth University of Pennsylvania",
+    "year": "2022-23",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "3c6aa613-0f6b-4f1d-b84e-76732d46e696",
+    "school_id": "creighton-university",
+    "school_name": "Creighton University",
+    "year": "2017-18",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "7393c505-5965-41e9-b255-bb4e4117b4a2",
+    "school_id": "cuny-bernard-m-baruch-college",
+    "school_name": "CUNY Bernard M Baruch College",
+    "year": "2019-20",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "4e803df4-14ac-4c52-99bf-fb6500375aba",
+    "school_id": "concordia-university-chicago",
+    "school_name": "Concordia University-Chicago",
+    "year": "2022-23",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "d4d4504a-6186-489f-89f6-ab0136452d7d",
+    "school_id": "daemen-university",
+    "school_name": "Daemen University",
+    "year": "2023-24",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "4a12142c-30fb-47a4-9cd8-210883d35688",
+    "school_id": "eastern-connecticut-state-university",
+    "school_name": "Eastern Connecticut State University",
+    "year": "2022-23",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "a8c9a37d-87e3-408e-af0e-432193ab395d",
+    "school_id": "louisiana-tech-university",
+    "school_name": "Louisiana Tech University",
+    "year": "2000-01",
+    "fields_populated": 3,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "538564bd-50f7-4734-8112-add024934088",
+    "school_id": "hampshire-college",
+    "school_name": "Hampshire College",
+    "year": "2018-19",
+    "fields_populated": 1,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "e8505e30-0cf7-4c79-aaf8-e1436b11d8c3",
+    "school_id": "morehouse-college",
+    "school_name": "Morehouse College",
+    "year": "2017-18",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "6edcd850-9530-4868-b52f-b7e817060d75",
+    "school_id": "mount-vernon-nazarene-university",
+    "school_name": "Mount Vernon Nazarene University",
+    "year": "2017-18",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "11f6fb75-c4ee-4e58-91b7-3cf10bf5887f",
+    "school_id": "missouri-western-state-university",
+    "school_name": "Missouri Western State University",
+    "year": "2024-25",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "361f17aa-cd96-4396-b670-8bbdf4481d7e",
+    "school_id": "montana-state-university-billings",
+    "school_name": "Montana State University Billings",
+    "year": "2020-21",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "5a6358d4-49db-40ec-990a-41f1f07ed15a",
+    "school_id": "hampshire-college",
+    "school_name": "Hampshire College",
+    "year": "2017-18",
+    "fields_populated": 1,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "9cc8340b-a4a2-49d5-befc-e4a4de86bddd",
+    "school_id": "hampshire-college",
+    "school_name": "Hampshire College",
+    "year": "2016-17",
+    "fields_populated": 1,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "a4616416-c916-475d-8aaf-2b22ab92ffc1",
+    "school_id": "seton-hall-university",
+    "school_name": "Seton Hall University",
+    "year": "2004-05",
+    "fields_populated": 2,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "cab35bc9-3bab-4cc4-8dbb-1ea680242599",
+    "school_id": "hampshire-college",
+    "school_name": "Hampshire College",
+    "year": "2015-16",
+    "fields_populated": 1,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "a8367548-1f7c-4cd1-b209-a26e35541c40",
+    "school_id": "saint-marys-college-of-california",
+    "school_name": "Saint Mary's College of California",
+    "year": "2022-23",
+    "fields_populated": 3,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "794af95c-0d68-4c75-9bc5-cbae5f3def18",
+    "school_id": "suny-college-at-geneseo",
+    "school_name": "SUNY College at Geneseo",
+    "year": "2019-20",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "7fb2942a-d5a6-4ca3-abc2-08fc60400a70",
+    "school_id": "south-carolina-state-university",
+    "school_name": "South Carolina State University",
+    "year": "2025-26",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "693ad236-6d71-4e63-834e-19242f7bd0e9",
+    "school_id": "bard-college",
+    "school_name": "Bard College",
+    "year": "2015-16",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "3ade4d38-bfe6-4fe2-88a0-b6cd2e9877bf",
+    "school_id": "montclair-state-university",
+    "school_name": "Montclair State University",
+    "year": "2001-02",
+    "fields_populated": 1,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "4a8a1c1d-c32b-43de-8d59-672bf9fd0802",
+    "school_id": "union-college",
+    "school_name": "Union College",
+    "year": "2024-25",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "3a968979-7724-4342-a264-e67e73e7654f",
+    "school_id": "boston-college",
+    "school_name": "Boston College",
+    "year": "2022-23",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "428c314d-fcdd-4538-bf0e-5cf6cf811dd9",
+    "school_id": "university-of-alaska-southeast",
+    "school_name": "University of Alaska Southeast",
+    "year": "2021-22",
+    "fields_populated": 4,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "ddfa2054-a42f-4c79-911e-3ad0d99bc062",
+    "school_id": "california-state-university-los-angeles",
+    "school_name": "California State University-Los Angeles",
+    "year": "2023-24",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "da3d1bfa-e3db-44b2-9d12-4e6eaa033600",
+    "school_id": "university-of-hawaii-system-office",
+    "school_name": "University of Hawaii System Office",
+    "year": "2023-24",
+    "fields_populated": 4,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "6d0ef326-ce81-4f11-8214-125e29c1cd4f",
+    "school_id": "university-of-maine-system-central-office",
+    "school_name": "University of Maine-System Central Office",
+    "year": "2024-25",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "62200acc-4268-4200-a256-506d6b14eb01",
+    "school_id": "spelman-college",
+    "school_name": "Spelman College",
+    "year": "2015-16",
+    "fields_populated": 4,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "514813dc-e979-437f-819c-54f256377775",
+    "school_id": "agnes-scott-college",
+    "school_name": "Agnes Scott College",
+    "year": "2024-25",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "e3d0855c-9c18-4af0-aeab-e6f34b27a014",
+    "school_id": "baker-college",
+    "school_name": "Baker College",
+    "year": "2021-22",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "ff4da622-b4e4-464f-9217-c37ba8a57471",
+    "school_id": "brigham-young-university",
+    "school_name": "Brigham Young University",
+    "year": "2002-03",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "d0fc2209-f59c-4756-a521-1952510756e8",
+    "school_id": "central-connecticut-state-university",
+    "school_name": "Central Connecticut State University",
+    "year": "2008-09",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "4a5714d4-74e3-480b-bbca-3a2f1283d88f",
+    "school_id": "northern-kentucky-university",
+    "school_name": "Northern Kentucky University",
+    "year": "2024-25",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "28106032-6b30-4a56-a01f-fa7214f44749",
+    "school_id": "university-of-california-merced",
+    "school_name": "University of California-Merced",
+    "year": "2021-22",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "ba014600-d447-4e33-a2bb-7827897010a2",
+    "school_id": "university-of-connecticut",
+    "school_name": "University of Connecticut",
+    "year": "2023-24",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "5bde45e0-ca04-445f-af8d-7c2572139d91",
+    "school_id": "university-of-massachusetts-amherst",
+    "school_name": "University of Massachusetts-Amherst",
+    "year": "unknown",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "d0765c6d-5d87-41e8-9ed6-5005509895e1",
+    "school_id": "hampshire-college",
+    "school_name": "Hampshire College",
+    "year": "2006-07",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "1aaa7aa1-b754-4836-b7dd-8fe97bcc017d",
+    "school_id": "university-of-hawaii-west-oahu",
+    "school_name": "University of Hawaii-West Oahu",
+    "year": "2011-12",
+    "fields_populated": 1,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "88899013-05cf-4387-b7fb-a168e84325ee",
+    "school_id": "bluefield-state-university",
+    "school_name": "Bluefield State University",
+    "year": "2017-18",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "a3687bea-8cfc-4865-a785-61e1e60a1e66",
+    "school_id": "biola-university",
+    "school_name": "Biola University",
+    "year": "2013-14",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "1134360e-f475-42ff-aedb-106446f8c9dc",
+    "school_id": "biola-university",
+    "school_name": "Biola University",
+    "year": "2011-12",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "b2fb1843-57ef-469b-bca7-e54ec33e5466",
+    "school_id": "biola-university",
+    "school_name": "Biola University",
+    "year": "2010-11",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "b24eec5c-f494-4933-ad9a-2e7e697fc467",
+    "school_id": "biola-university",
+    "school_name": "Biola University",
+    "year": "2009-10",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "67002708-66a5-43c5-ae04-8097cb0e2acc",
+    "school_id": "biola-university",
+    "school_name": "Biola University",
+    "year": "2008-09",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "4dbd0d41-5204-46bb-8029-2d8c64dfe949",
+    "school_id": "jackson-state-university",
+    "school_name": "Jackson State University",
+    "year": "2016-17",
+    "fields_populated": 2,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "7dc8467a-0d3a-4945-9310-644359bf5300",
+    "school_id": "jackson-state-university",
+    "school_name": "Jackson State University",
+    "year": "2014-15",
+    "fields_populated": 4,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "9cc04f46-a7e4-40f0-aa9a-5c657357557f",
+    "school_id": "california-polytechnic-state-university-san-luis-obispo",
+    "school_name": "California Polytechnic State University-San Luis Obispo",
+    "year": "2021-22",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "ba26b7a7-46bd-4bf9-add8-9acb80e8a541",
+    "school_id": "california-polytechnic-state-university-san-luis-obispo",
+    "school_name": "California Polytechnic State University-San Luis Obispo",
+    "year": "2020-21",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "38406753-1a73-4d34-a686-efd8433d9d73",
+    "school_id": "california-polytechnic-state-university-san-luis-obispo",
+    "school_name": "California Polytechnic State University-San Luis Obispo",
+    "year": "2019-20",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "9864dae9-dd5b-4ac5-a817-f180067b0e07",
+    "school_id": "california-polytechnic-state-university-san-luis-obispo",
+    "school_name": "California Polytechnic State University-San Luis Obispo",
+    "year": "2018-19",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "d743a04d-ecd0-4865-9902-d0e37a3186ff",
+    "school_id": "california-polytechnic-state-university-san-luis-obispo",
+    "school_name": "California Polytechnic State University-San Luis Obispo",
+    "year": "2022-23",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "3e391243-1c25-44a1-b8ba-b7de64f8bb18",
+    "school_id": "agnes-scott-college",
+    "school_name": "Agnes Scott College",
+    "year": "2019-20",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "725a9653-8b67-4f7f-ba49-47a5627d7ddb",
+    "school_id": "north-dakota-state-university-main-campus",
+    "school_name": "North Dakota State University-Main Campus",
+    "year": "2014-15",
+    "fields_populated": 4,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "68224c4d-5b28-4bfc-8600-a26144fe7698",
+    "school_id": "clemson",
+    "school_name": "Clemson University",
+    "year": "unknown",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "3dcf257c-7054-4cf0-bc3f-95129952fbb8",
+    "school_id": "dartmouth",
+    "school_name": "Dartmouth College",
+    "year": "2023-24",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "ab6fbb8b-f4e6-419c-b837-ce200b0a02ee",
+    "school_id": "dartmouth",
+    "school_name": "Dartmouth College",
+    "year": "2022-23",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "cf05cc14-0994-470d-acc5-525a4838bbf7",
+    "school_id": "brandeis",
+    "school_name": "Brandeis University",
+    "year": "2022-23",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "ec9a3d22-0e9d-497c-a86d-33d7cba70f75",
+    "school_id": "brandeis",
+    "school_name": "Brandeis University",
+    "year": "2021-22",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "1a4042f2-d333-4270-a984-b237da2c6016",
+    "school_id": "dartmouth",
+    "school_name": "Dartmouth College",
+    "year": "2021-22",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "7d71ab19-b0c0-47fc-bb89-2bbb693fcbd9",
+    "school_id": "ucla",
+    "school_name": "University of California, Los Angeles",
+    "year": "unknown",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "0dde210c-4462-422e-83f9-6808c635eeea",
+    "school_id": "norwich-university",
+    "school_name": "Norwich University",
+    "year": "2018-19",
+    "fields_populated": 3,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "e6edcceb-8057-4b88-8710-e9539180546a",
+    "school_id": "university-of-miami",
+    "school_name": "University of Miami",
+    "year": "2024-25",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "19b43d92-24c4-4b7d-9dfe-2cff2439b53c",
+    "school_id": "agnes-scott-college",
+    "school_name": "Agnes Scott College",
+    "year": "2023-24",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "e55542fe-1db7-487d-8ff1-8b36804b7e1f",
+    "school_id": "california-polytechnic-state-university-san-luis-obispo",
+    "school_name": "California Polytechnic State University-San Luis Obispo",
+    "year": "2012-13",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "3b8697a1-1d38-4b1a-875c-24e7ef3a3ea6",
+    "school_id": "agnes-scott-college",
+    "school_name": "Agnes Scott College",
+    "year": "2021-22",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "22d6eb11-8ef2-49af-885c-7d05bf1851f3",
+    "school_id": "occidental-college",
+    "school_name": "Occidental College",
+    "year": "2025-26",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "84f19af7-71fc-4395-8eeb-c613c69ed202",
+    "school_id": "old-dominion-university",
+    "school_name": "Old Dominion University",
+    "year": "2021-22",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "89171964-0601-4b10-a740-3b8bb7d533e4",
+    "school_id": "old-dominion-university",
+    "school_name": "Old Dominion University",
+    "year": "2018-19",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "efab84cb-060e-4a03-a576-a99ab63bb562",
+    "school_id": "arizona-state-university-campus-immersion",
+    "school_name": "Arizona State University Campus Immersion",
+    "year": "unknown",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "970ee313-6b66-4014-b2c2-0235605224a4",
+    "school_id": "augustana-university",
+    "school_name": "Augustana University",
+    "year": "2022-23",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "e50b723d-170c-431b-af40-61ed4465b38e",
+    "school_id": "azusa-pacific-university",
+    "school_name": "Azusa Pacific University",
+    "year": "2019-20",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "fc3a5b6e-70ed-48c5-91f3-8abc74e5b8c4",
+    "school_id": "old-dominion-university",
+    "school_name": "Old Dominion University",
+    "year": "2024-25",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "258797f6-aee3-4409-bce7-ed8526756dd2",
+    "school_id": "rocky-mountain-college",
+    "school_name": "Rocky Mountain College",
+    "year": "2011-12",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "cfb55847-b6cc-4767-ad5b-548780e30fc8",
+    "school_id": "azusa-pacific-university",
+    "school_name": "Azusa Pacific University",
+    "year": "2018-19",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "4256574b-5ef0-415a-a537-c2bf02869849",
+    "school_id": "arizona-state-university-digital-immersion",
+    "school_name": "Arizona State University Digital Immersion",
+    "year": "unknown",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "8f65fa23-c444-43a1-a688-215c89ee4942",
+    "school_id": "old-dominion-university",
+    "school_name": "Old Dominion University",
+    "year": "2022-23",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "d0e08484-3874-43f4-bc40-c76328e3232e",
+    "school_id": "berklee-college-of-music",
+    "school_name": "Berklee College of Music",
+    "year": "2021-22",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "a4a3ecce-98dc-4960-a5d8-0476391b5605",
+    "school_id": "occidental-college",
+    "school_name": "Occidental College",
+    "year": "2005-06",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "c082c27c-99ee-4bde-a11f-74946775d3c6",
+    "school_id": "occidental-college",
+    "school_name": "Occidental College",
+    "year": "2003-04",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "9563e26f-5837-4f32-bca3-9594f8785345",
+    "school_id": "berklee-college-of-music",
+    "school_name": "Berklee College of Music",
+    "year": "2020-21",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "f42fb5dc-f5f7-47ba-aa1e-b7188a417389",
+    "school_id": "berklee-college-of-music",
+    "school_name": "Berklee College of Music",
+    "year": "2019-20",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "e21918e3-c8be-453c-9441-3cd526715d25",
+    "school_id": "beloit-college",
+    "school_name": "Beloit College",
+    "year": "2023-24",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "cd78c2c4-4d25-4316-9bbd-0575866e5664",
+    "school_id": "biola-university",
+    "school_name": "Biola University",
+    "year": "2015-16",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "0519965a-c7c8-451b-a6ba-b92a77f5de7b",
+    "school_id": "biola-university",
+    "school_name": "Biola University",
+    "year": "2014-15",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "1eac6cc5-e3d3-438c-a973-be848488c23f",
+    "school_id": "biola-university",
+    "school_name": "Biola University",
+    "year": "2016-17",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "269bed44-da25-4a56-8c03-2eea0d21771a",
+    "school_id": "binghamton-university",
+    "school_name": "Binghamton University",
+    "year": "unknown",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "2247df8a-0330-46c4-938b-5c834603485d",
+    "school_id": "bluefield-state-university",
+    "school_name": "Bluefield State University",
+    "year": "2015-16",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "1767a408-7d30-4b41-93dd-f99ea94bc47c",
+    "school_id": "bluefield-state-university",
+    "school_name": "Bluefield State University",
+    "year": "2014-15",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "e215d87a-4374-4040-bb3f-874573adf5ad",
+    "school_id": "bluefield-state-university",
+    "school_name": "Bluefield State University",
+    "year": "2013-14",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "3102ece9-6b30-48a0-be5c-78dfd7df2ccc",
+    "school_id": "bluefield-state-university",
+    "school_name": "Bluefield State University",
+    "year": "2012-13",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "8c44fc53-e91f-48c4-9f3a-8926870847ca",
+    "school_id": "bowie-state-university",
+    "school_name": "Bowie State University",
+    "year": "unknown",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "e67f2aa7-dfe2-45bb-8a50-a8af5e3413f9",
+    "school_id": "california-institute-of-technology",
+    "school_name": "California Institute of Technology",
+    "year": "2022-23",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "31eac1f6-3c1d-480a-bf1e-2ba8f6b7afd5",
+    "school_id": "old-dominion-university",
+    "school_name": "Old Dominion University",
+    "year": "2023-24",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "a471c0cd-b654-478c-8750-44c1080f0071",
+    "school_id": "california-polytechnic-state-university-san-luis-obispo",
+    "school_name": "California Polytechnic State University-San Luis Obispo",
+    "year": "2024-25",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "15be51ad-cc50-424d-ab81-e381259238f4",
+    "school_id": "california-state-university-long-beach",
+    "school_name": "California State University-Long Beach",
+    "year": "2016-17",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "505eeb66-4324-414d-88b9-36dbc0c53e1f",
+    "school_id": "calvary-university",
+    "school_name": "Calvary University",
+    "year": "2016-17",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "6c8975d7-0490-4987-a0d8-9accdcec22f1",
+    "school_id": "cambridge-college",
+    "school_name": "Cambridge College",
+    "year": "2019-20",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "061e659c-427e-4731-89b0-0558b3095702",
+    "school_id": "cambridge-college",
+    "school_name": "Cambridge College",
+    "year": "2018-19",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "0373d201-26c8-4b48-a044-64a564d27f1e",
+    "school_id": "cambridge-college",
+    "school_name": "Cambridge College",
+    "year": "2017-18",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "67baea2f-291f-442f-b04a-f53df8baa554",
+    "school_id": "cambridge-college",
+    "school_name": "Cambridge College",
+    "year": "2015-16",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "68f884bb-3cc4-45a9-8dae-e758605a9846",
+    "school_id": "cambridge-college",
+    "school_name": "Cambridge College",
+    "year": "2014-15",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "4e4837a8-c9d6-47b6-a863-6664bcc93107",
+    "school_id": "calvin-university",
+    "school_name": "Calvin University",
+    "year": "unknown",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "f79a3696-616c-47e5-8c21-3a117cde2b61",
+    "school_id": "california-state-university-fullerton",
+    "school_name": "California State University-Fullerton",
+    "year": "unknown",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "613dee89-7201-4718-b870-eef19c51f0c8",
+    "school_id": "st-petersburg-college",
+    "school_name": "St Petersburg College",
+    "year": "2019-20",
+    "fields_populated": 2,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "2bbf8caa-31f6-4014-9c9e-dc07030aa8fe",
+    "school_id": "california-state-polytechnic-university-pomona",
+    "school_name": "California State Polytechnic University-Pomona",
+    "year": "2021-22",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "797781ac-c29c-4983-8a94-47df22fcaeed",
+    "school_id": "centre-college",
+    "school_name": "Centre College",
+    "year": "2016-17",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "90c54bd0-2c93-4cc7-bfdd-83809bf11c86",
+    "school_id": "centre-college",
+    "school_name": "Centre College",
+    "year": "2015-16",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "bf6ab0d7-1fa4-4fc8-a93f-9ad8953d5b99",
+    "school_id": "oral-roberts-university",
+    "school_name": "Oral Roberts University",
+    "year": "2015-16",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "2da157ba-fe4e-462f-906f-0bce64179477",
+    "school_id": "cleveland-state-university",
+    "school_name": "Cleveland State University",
+    "year": "2002-03",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "2e1d7107-ed25-4e7b-b9d0-a06efb6f2dc8",
+    "school_id": "centre-college",
+    "school_name": "Centre College",
+    "year": "2014-15",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "3b810352-2642-4b98-95a6-16e5814f40ea",
+    "school_id": "centre-college",
+    "school_name": "Centre College",
+    "year": "2013-14",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "12a5a783-09de-40e5-9149-d5cda30bd032",
+    "school_id": "centre-college",
+    "school_name": "Centre College",
+    "year": "2012-13",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "e5d0099e-e8cf-453a-bb2e-be01622339c5",
+    "school_id": "centre-college",
+    "school_name": "Centre College",
+    "year": "2011-12",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "b812f580-a0b5-45c7-9bbc-e67006b14f66",
+    "school_id": "centre-college",
+    "school_name": "Centre College",
+    "year": "2010-11",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "4d37d025-c986-4a8d-8237-27ddcfa39b98",
+    "school_id": "old-dominion-university",
+    "school_name": "Old Dominion University",
+    "year": "2019-20",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "3a72c6a9-4b55-44b0-b2f0-d3a2bd14f723",
+    "school_id": "centre-college",
+    "school_name": "Centre College",
+    "year": "2018-19",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "df91c4f7-3be6-477a-9365-67f47fcc1cf5",
+    "school_id": "centre-college",
+    "school_name": "Centre College",
+    "year": "2017-18",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "56be005f-8a61-4c8d-bd2a-e62ca73927ca",
+    "school_id": "central-college",
+    "school_name": "Central College",
+    "year": "2023-24",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "623e15b4-4397-42d1-9e98-13994d1d04dc",
+    "school_id": "old-dominion-university",
+    "school_name": "Old Dominion University",
+    "year": "2017-18",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "463b663a-d4d4-473f-af6d-020e2b3d6c9c",
+    "school_id": "michigan-state-university",
+    "school_name": "Michigan State University",
+    "year": "2001-02",
+    "fields_populated": 3,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "1cd190c7-bd22-4f47-a318-0468dc4fb932",
+    "school_id": "university-of-california-los-angeles",
+    "school_name": "university-of-california-los-angeles",
+    "year": "2019-20",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "1df0054b-09ac-4b0b-a449-a2478d694026",
+    "school_id": "university-of-kansas",
+    "school_name": "University of Kansas",
+    "year": "2025-26",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "57adf2db-bb8d-4819-baaa-837466c4eeb4",
+    "school_id": "concordia-university-texas",
+    "school_name": "Concordia University Texas",
+    "year": "2010-11",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "c0424302-ba64-4519-b3aa-189ad2986150",
+    "school_id": "cuny-bernard-m-baruch-college",
+    "school_name": "CUNY Bernard M Baruch College",
+    "year": "2017-18",
+    "fields_populated": 0,
+    "producer": "tier2_acroform",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "65725eee-4028-47cc-864b-e24bedf1209d",
+    "school_id": "concordia-university-texas",
+    "school_name": "Concordia University Texas",
+    "year": "2008-09",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "8811d61f-3339-4d54-859e-bc30c8e29f9a",
+    "school_id": "concordia-university-texas",
+    "school_name": "Concordia University Texas",
+    "year": "2006-07",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "d326dac9-da29-44d5-b900-44fe352f4432",
+    "school_id": "columbus-state-university",
+    "school_name": "Columbus State University",
+    "year": "2019-20",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "f3645eb4-457c-48e0-bbc3-c9138d12e6b5",
+    "school_id": "cuny-bernard-m-baruch-college",
+    "school_name": "CUNY Bernard M Baruch College",
+    "year": "2016-17",
+    "fields_populated": 0,
+    "producer": "tier2_acroform",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "4cdafe24-89de-4462-be02-0ff221b93fcf",
+    "school_id": "cuny-bernard-m-baruch-college",
+    "school_name": "CUNY Bernard M Baruch College",
+    "year": "2015-16",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "736cd9bc-4067-4f38-8963-81a969abd749",
+    "school_id": "concordia-university-texas",
+    "school_name": "Concordia University Texas",
+    "year": "2012-13",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "f3019954-79af-4e5b-8081-0a03c987a696",
+    "school_id": "concordia-university-texas",
+    "school_name": "Concordia University Texas",
+    "year": "2014-15",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "0044173b-360c-4a77-a06a-3e6a6c59fd38",
+    "school_id": "concordia-university-texas",
+    "school_name": "Concordia University Texas",
+    "year": "2011-12",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "c87189d1-fca7-4683-8171-9de3455c307a",
+    "school_id": "concordia-university-texas",
+    "school_name": "Concordia University Texas",
+    "year": "2009-10",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "7b3f022b-f2f0-4be3-974a-c129092fc367",
+    "school_id": "montclair-state-university",
+    "school_name": "Montclair State University",
+    "year": "2018-19",
+    "fields_populated": 4,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "ef6a93ef-7e65-4d32-a2ab-df05fc7da0d4",
+    "school_id": "montclair-state-university",
+    "school_name": "Montclair State University",
+    "year": "2017-18",
+    "fields_populated": 4,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "971ee619-903b-400e-aa23-dfab94885631",
+    "school_id": "montclair-state-university",
+    "school_name": "Montclair State University",
+    "year": "2005-06",
+    "fields_populated": 3,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "e398a02a-b367-4ffb-8a79-971cc6cac4bb",
+    "school_id": "montclair-state-university",
+    "school_name": "Montclair State University",
+    "year": "2004-05",
+    "fields_populated": 4,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "1c58e417-faa3-4d9a-ad0c-4909e8fd042a",
+    "school_id": "california-polytechnic-state-university-san-luis-obispo",
+    "school_name": "California Polytechnic State University-San Luis Obispo",
+    "year": "2009-10",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "4defc4b6-1fea-4da6-8e44-6735ae72f4ca",
+    "school_id": "california-polytechnic-state-university-san-luis-obispo",
+    "school_name": "California Polytechnic State University-San Luis Obispo",
+    "year": "2006-07",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "bf9f46ea-2795-422f-b3b9-e8fde5a12897",
+    "school_id": "california-polytechnic-state-university-san-luis-obispo",
+    "school_name": "California Polytechnic State University-San Luis Obispo",
+    "year": "2005-06",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "cd964fbe-391e-4349-bbc5-b06ff0fd536d",
+    "school_id": "california-polytechnic-state-university-san-luis-obispo",
+    "school_name": "California Polytechnic State University-San Luis Obispo",
+    "year": "2004-05",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "ce0b6a75-5595-4a7a-bd32-088179ce7a54",
+    "school_id": "california-polytechnic-state-university-san-luis-obispo",
+    "school_name": "California Polytechnic State University-San Luis Obispo",
+    "year": "2002-03",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "4a44121f-930f-4a77-a123-eeaacdf433fd",
+    "school_id": "california-polytechnic-state-university-san-luis-obispo",
+    "school_name": "California Polytechnic State University-San Luis Obispo",
+    "year": "2001-02",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "a0fdfc4e-2745-41e3-b713-1d1b7105e01b",
+    "school_id": "california-polytechnic-state-university-san-luis-obispo",
+    "school_name": "California Polytechnic State University-San Luis Obispo",
+    "year": "2000-01",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "74dc86dd-7587-48b3-abfa-f82883067ef5",
+    "school_id": "california-polytechnic-state-university-san-luis-obispo",
+    "school_name": "California Polytechnic State University-San Luis Obispo",
+    "year": "1999-00",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "76174b8a-31fd-410c-ac76-ec76a8373ff5",
+    "school_id": "california-state-university-sacramento",
+    "school_name": "California State University-Sacramento",
+    "year": "2024-25",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "829fda30-7af4-434d-a5d2-01df2f033979",
+    "school_id": "cambridge-college",
+    "school_name": "Cambridge College",
+    "year": "2013-14",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "0b82aaef-52fe-4003-b858-8f0d488fd07a",
+    "school_id": "cambridge-college",
+    "school_name": "Cambridge College",
+    "year": "2011-12",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "3cf55c01-ade8-4951-a576-47c438e602b8",
+    "school_id": "montclair-state-university",
+    "school_name": "Montclair State University",
+    "year": "2003-04",
+    "fields_populated": 3,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "fd225ba7-ce1b-4a4b-8603-57f6d3a89046",
+    "school_id": "college-of-southern-idaho",
+    "school_name": "College of Southern Idaho",
+    "year": "2013-14",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "7df41ba6-d89d-44cf-90a2-14e3740e54ee",
+    "school_id": "montclair-state-university",
+    "school_name": "Montclair State University",
+    "year": "2006-07",
+    "fields_populated": 3,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "333a5f59-e2da-4f1f-afcd-1330daaeda89",
+    "school_id": "college-of-southern-idaho",
+    "school_name": "College of Southern Idaho",
+    "year": "2017-18",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "8edd44aa-c3ce-46fa-9dfe-3307301c3235",
+    "school_id": "college-of-southern-idaho",
+    "school_name": "College of Southern Idaho",
+    "year": "2016-17",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "e3cb315b-e52c-4377-8185-70ffb28799ae",
+    "school_id": "college-of-southern-idaho",
+    "school_name": "College of Southern Idaho",
+    "year": "2015-16",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "39f4bd83-10de-4d4e-b893-4123dc9ead26",
+    "school_id": "montclair-state-university",
+    "school_name": "Montclair State University",
+    "year": "2001-02",
+    "fields_populated": 3,
+    "producer": "tier4_docling",
+    "reason": "low_coverage"
+  },
+  {
+    "document_id": "3e890b4c-15bf-4361-9565-2a8ac38e3862",
+    "school_id": "college-of-southern-idaho",
+    "school_name": "College of Southern Idaho",
+    "year": "2014-15",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "b0c42f8b-a790-4094-8ed1-abffae14a9b3",
+    "school_id": "college-of-southern-idaho",
+    "school_name": "College of Southern Idaho",
+    "year": "2012-13",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "098765a3-c591-4ad4-bb20-6996dede890a",
+    "school_id": "college-of-southern-idaho",
+    "school_name": "College of Southern Idaho",
+    "year": "2011-12",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "ec02d727-f915-4883-aa1b-d124af74a68f",
+    "school_id": "grambling-state-university",
+    "school_name": "Grambling State University",
+    "year": "2016-17",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "4b6617df-f719-4ec2-8b28-a73a285ecaa7",
+    "school_id": "elon-university",
+    "school_name": "Elon University",
+    "year": "2007-08",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "4679c896-f151-42d7-acbf-bb2192ceabd3",
+    "school_id": "concord-university",
+    "school_name": "Concord University",
+    "year": "2024-25",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "8980a11a-06a1-49d6-bf19-09c9a13ca8b8",
+    "school_id": "college-of-southern-idaho",
+    "school_name": "College of Southern Idaho",
+    "year": "2010-11",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "00d6612f-979a-4e0e-81df-4ccb442b5eaf",
+    "school_id": "colorado-state-university-pueblo",
+    "school_name": "Colorado State University Pueblo",
+    "year": "2022-23",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "a56989cc-a658-4371-b334-ee65d0261c50",
+    "school_id": "eastern-virginia-medical-school",
+    "school_name": "Eastern Virginia Medical School",
+    "year": "2019-20",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "9429cc2a-c95d-4124-8ad3-d05cdbf42e53",
+    "school_id": "concordia-university-texas",
+    "school_name": "Concordia University Texas",
+    "year": "2013-14",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "faa4e55e-4e18-448a-ab76-b31da41ca80b",
+    "school_id": "cuny-queens-college",
+    "school_name": "CUNY Queens College",
+    "year": "2016-17",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "c8d9a4f6-78cc-41ac-a234-a55e6ec1d4fb",
+    "school_id": "rochester-institute-of-technology",
+    "school_name": "Rochester Institute of Technology",
+    "year": "2024-25",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "f4dd0cb3-cf4a-4259-9291-7111f9efef1a",
+    "school_id": "college-of-southern-idaho",
+    "school_name": "College of Southern Idaho",
+    "year": "2008-09",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "2a86946e-9514-4d58-b4c9-17eb4c37013e",
+    "school_id": "eastern-virginia-medical-school",
+    "school_name": "Eastern Virginia Medical School",
+    "year": "2018-19",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "c3df24ae-6fa0-42b8-ba2a-73eae20e4b59",
+    "school_id": "eastern-virginia-medical-school",
+    "school_name": "Eastern Virginia Medical School",
+    "year": "2017-18",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "7058909f-0e2e-4246-ac1c-5963449c4f0e",
+    "school_id": "northeastern-illinois-university",
+    "school_name": "Northeastern Illinois University",
+    "year": "2020-21",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  },
+  {
+    "document_id": "1a59a936-1d14-4006-9943-d3e43b2b0102",
+    "school_id": "eastern-washington-university",
+    "school_name": "Eastern Washington University",
+    "year": "2024-25",
+    "fields_populated": 0,
+    "producer": "tier4_docling",
+    "reason": "blank_template"
+  }
+]
