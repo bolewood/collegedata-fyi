@@ -43,6 +43,9 @@ Thumbs.db
 # Local finder run logs
 tools/finder/*.log
 
+# IPEDS HD download cache (re-fetched on demand)
+tools/finder/.ipeds-cache/
+
 # Claude Code local state
 # (remove this line if you want to commit shared Claude Code project settings)
 .claude/

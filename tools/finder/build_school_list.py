@@ -25,6 +25,7 @@ import argparse
 import csv
 import io
 import re
+import sys
 import zipfile
 from pathlib import Path
 from urllib.request import urlopen, Request
@@ -217,8 +218,93 @@ def merge(ipeds_rows: list[dict], existing: dict[str, dict]) -> list[dict]:
     return result
 
 
+def assert_no_duplicates(schools: list[dict]) -> None:
+    """Refuse to write schools.yaml if it contains duplicate-name entries.
+
+    Prevents regression of the bug class cleaned up in 2026-04-19's dedup
+    migration: short-slug hand-curated entries (`williams`, `davidson`, etc.)
+    coexisting alongside the IPEDS-merger's `<name>-college` entries, with
+    different IPEDS UNITIDs that often pointed at completely unrelated
+    institutions (the `williams` slug had IPEDS 168148 = Tufts University).
+
+    Two checks:
+      1. Duplicate `id` (slug) — same key twice in the file.
+      2. Duplicate `(name, state)` among active entries — two slugs claim
+         the same school. State comes from the FIPS code in IPEDS data;
+         hand-curated entries without a state are matched by name alone.
+
+    On any duplicate, prints all involved entries with their IPEDS IDs and
+    aborts with a non-zero exit. The build is broken; the operator must
+    decide which entry is canonical (run tools/finder/dedup_audit.py for
+    IPEDS-driven analysis) before re-running build_school_list.py.
+    """
+    active = [s for s in schools if s.get("scrape_policy") == "active"]
+
+    # Slug uniqueness among ACTIVE schools is the load-bearing invariant
+    # (active schools drive the resolver, archive_queue, and storage paths).
+    # Inactive duplicates exist from a separate slugify-collision bug
+    # (e.g., two real schools both named "Anderson University") and are
+    # tracked as a backlog item — they don't affect runtime correctness.
+    by_id: dict[str, list[dict]] = {}
+    for s in active:
+        by_id.setdefault(s.get("id", ""), []).append(s)
+    id_dupes = {sid: rows for sid, rows in by_id.items() if len(rows) > 1}
+    if id_dupes:
+        print("\n✗ ERROR: schools.yaml has duplicate active-school slugs:", file=sys.stderr)
+        for sid, rows in sorted(id_dupes.items()):
+            print(f"  {sid!r} appears {len(rows)} times:", file=sys.stderr)
+            for r in rows:
+                print(f"    name={r.get('name')!r}  ipeds={r.get('ipeds_id')}",
+                      file=sys.stderr)
+        print("\nFix: run tools/finder/dedup_audit.py to identify which entry is canonical, "
+              "then dedup_migrate.py to consolidate.", file=sys.stderr)
+        raise SystemExit(2)
+
+    # Inactive-cohort duplicate slugs: warn loudly (they break the next
+    # IPEDS regeneration's merge dict — the slug collision causes one
+    # entry to silently overwrite the other) but don't block this build.
+    by_id_all: dict[str, list[dict]] = {}
+    for s in schools:
+        by_id_all.setdefault(s.get("id", ""), []).append(s)
+    inactive_id_dupes = {
+        sid: rows for sid, rows in by_id_all.items()
+        if len(rows) > 1 and sid not in id_dupes
+    }
+    if inactive_id_dupes:
+        print(f"\n⚠️  WARNING: schools.yaml has {len(inactive_id_dupes)} duplicate "
+              f"slugs among non-active schools:", file=sys.stderr)
+        for sid in sorted(inactive_id_dupes)[:5]:
+            ipeds = [r.get("ipeds_id") for r in inactive_id_dupes[sid]]
+            print(f"  {sid!r}  ipeds={ipeds}", file=sys.stderr)
+        if len(inactive_id_dupes) > 5:
+            print(f"  ... and {len(inactive_id_dupes) - 5} more", file=sys.stderr)
+        print("This is a separate slugify-collision bug. See backlog: "
+              "'Fix slugify state-suffix disambiguation'.", file=sys.stderr)
+
+    by_name: dict[str, list[dict]] = {}
+    for s in active:
+        key = (s.get("name", "").lower().strip())
+        by_name.setdefault(key, []).append(s)
+    name_dupes = {n: rows for n, rows in by_name.items() if len(rows) > 1}
+    if name_dupes:
+        print("\n✗ ERROR: schools.yaml has duplicate active-school names:", file=sys.stderr)
+        for name, rows in sorted(name_dupes.items()):
+            print(f"  {name!r} appears {len(rows)} times:", file=sys.stderr)
+            for r in rows:
+                print(f"    id={r.get('id')!r}  ipeds={r.get('ipeds_id')}  "
+                      f"domain={r.get('domain')!r}", file=sys.stderr)
+        print("\nThis is the bug class cleaned up by the 2026-04-19 dedup migration.",
+              file=sys.stderr)
+        print("Fix: run tools/finder/dedup_audit.py for IPEDS-driven analysis, "
+              "then dedup_migrate.py to consolidate.", file=sys.stderr)
+        raise SystemExit(2)
+
+
 def write_yaml(schools: list[dict], dry_run: bool = False) -> None:
     """Write the merged school list to schools.yaml."""
+
+    # Refuse to write a corrupted corpus.
+    assert_no_duplicates(schools)
 
     # discovery_seed_url is the post-PR-5 field; cds_url_hint is the
     # legacy alias preserved during the migration window.

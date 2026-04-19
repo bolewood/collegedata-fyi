@@ -1,0 +1,374 @@
+[
+  {
+    "yaml_name": "bryn mawr college",
+    "candidates": [
+      {
+        "slug": "bryn-mawr",
+        "yaml_ipeds_id": "211291",
+        "yaml_domain": "brynmawr.edu",
+        "ipeds_instnm": "Bucknell University",
+        "ipeds_state": "PA",
+        "ipeds_web": "www.bucknell.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "2",
+        "ipeds_iclevel": "1",
+        "name_match": "MISMATCH"
+      },
+      {
+        "slug": "bryn-mawr-college",
+        "yaml_ipeds_id": "211273",
+        "yaml_domain": "brynmawr.edu",
+        "ipeds_instnm": "Bryn Mawr College",
+        "ipeds_state": "PA",
+        "ipeds_web": "www.brynmawr.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "2",
+        "ipeds_iclevel": "1",
+        "name_match": "EXACT"
+      }
+    ],
+    "recommended_canonical": "bryn-mawr-college",
+    "recommendation": "delete-other"
+  },
+  {
+    "yaml_name": "case western reserve university",
+    "candidates": [
+      {
+        "slug": "case-western",
+        "yaml_ipeds_id": "201885",
+        "yaml_domain": "cwru.edu",
+        "ipeds_instnm": "University of Cincinnati-Main Campus",
+        "ipeds_state": "OH",
+        "ipeds_web": "www.uc.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "1",
+        "ipeds_iclevel": "1",
+        "name_match": "MISMATCH"
+      },
+      {
+        "slug": "case-western-reserve-university",
+        "yaml_ipeds_id": "201645",
+        "yaml_domain": "case.edu",
+        "ipeds_instnm": "Case Western Reserve University",
+        "ipeds_state": "OH",
+        "ipeds_web": "www.case.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "2",
+        "ipeds_iclevel": "1",
+        "name_match": "EXACT"
+      }
+    ],
+    "recommended_canonical": "case-western-reserve-university",
+    "recommendation": "delete-other"
+  },
+  {
+    "yaml_name": "college of the holy cross",
+    "candidates": [
+      {
+        "slug": "holy-cross",
+        "yaml_ipeds_id": "165866",
+        "yaml_domain": "holycross.edu",
+        "ipeds_instnm": "Framingham State University",
+        "ipeds_state": "MA",
+        "ipeds_web": "www.framingham.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "1",
+        "ipeds_iclevel": "1",
+        "name_match": "MISMATCH"
+      },
+      {
+        "slug": "college-of-the-holy-cross",
+        "yaml_ipeds_id": "166124",
+        "yaml_domain": "holycross.edu",
+        "ipeds_instnm": "College of the Holy Cross",
+        "ipeds_state": "MA",
+        "ipeds_web": "www.holycross.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "2",
+        "ipeds_iclevel": "1",
+        "name_match": "EXACT"
+      }
+    ],
+    "recommended_canonical": "college-of-the-holy-cross",
+    "recommendation": "delete-other"
+  },
+  {
+    "yaml_name": "colorado college",
+    "candidates": [
+      {
+        "slug": "colorado-college",
+        "yaml_ipeds_id": "126818",
+        "yaml_domain": "coloradocollege.edu",
+        "ipeds_instnm": "Colorado State University-Fort Collins",
+        "ipeds_state": "CO",
+        "ipeds_web": "colostate.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "1",
+        "ipeds_iclevel": "1",
+        "name_match": "MISMATCH"
+      },
+      {
+        "slug": "colorado-college",
+        "yaml_ipeds_id": "126678",
+        "yaml_domain": "coloradocollege.edu",
+        "ipeds_instnm": "Colorado College",
+        "ipeds_state": "CO",
+        "ipeds_web": "www.coloradocollege.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "2",
+        "ipeds_iclevel": "1",
+        "name_match": "EXACT"
+      }
+    ],
+    "recommended_canonical": "colorado-college",
+    "recommendation": "delete-other"
+  },
+  {
+    "yaml_name": "davidson college",
+    "candidates": [
+      {
+        "slug": "davidson",
+        "yaml_ipeds_id": "198507",
+        "yaml_domain": "davidson.edu",
+        "ipeds_instnm": "Elizabeth City State University",
+        "ipeds_state": "NC",
+        "ipeds_web": "https://www.ecsu.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "1",
+        "ipeds_iclevel": "1",
+        "name_match": "MISMATCH"
+      },
+      {
+        "slug": "davidson-college",
+        "yaml_ipeds_id": "198385",
+        "yaml_domain": "davidson.edu",
+        "ipeds_instnm": "Davidson College",
+        "ipeds_state": "NC",
+        "ipeds_web": "https://davidson.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "2",
+        "ipeds_iclevel": "1",
+        "name_match": "EXACT"
+      }
+    ],
+    "recommended_canonical": "davidson-college",
+    "recommendation": "delete-other"
+  },
+  {
+    "yaml_name": "dickinson college",
+    "candidates": [
+      {
+        "slug": "dickinson",
+        "yaml_ipeds_id": "212054",
+        "yaml_domain": "dickinson.edu",
+        "ipeds_instnm": "Drexel University",
+        "ipeds_state": "PA",
+        "ipeds_web": "https://drexel.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "2",
+        "ipeds_iclevel": "1",
+        "name_match": "MISMATCH"
+      },
+      {
+        "slug": "dickinson-college",
+        "yaml_ipeds_id": "212009",
+        "yaml_domain": "dickinson.edu",
+        "ipeds_instnm": "Dickinson College",
+        "ipeds_state": "PA",
+        "ipeds_web": "https://www.dickinson.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "2",
+        "ipeds_iclevel": "1",
+        "name_match": "EXACT"
+      }
+    ],
+    "recommended_canonical": "dickinson-college",
+    "recommendation": "delete-other"
+  },
+  {
+    "yaml_name": "fairfield university",
+    "candidates": [
+      {
+        "slug": "fairfield",
+        "yaml_ipeds_id": "128902",
+        "yaml_domain": "fairfield.edu",
+        "ipeds_instnm": "Connecticut College",
+        "ipeds_state": "CT",
+        "ipeds_web": "www.conncoll.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "2",
+        "ipeds_iclevel": "1",
+        "name_match": "MISMATCH"
+      },
+      {
+        "slug": "fairfield-university",
+        "yaml_ipeds_id": "129242",
+        "yaml_domain": "fairfield.edu",
+        "ipeds_instnm": "Fairfield University",
+        "ipeds_state": "CT",
+        "ipeds_web": "fairfield.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "2",
+        "ipeds_iclevel": "1",
+        "name_match": "EXACT"
+      }
+    ],
+    "recommended_canonical": "fairfield-university",
+    "recommendation": "delete-other"
+  },
+  {
+    "yaml_name": "grinnell college",
+    "candidates": [
+      {
+        "slug": "grinnell",
+        "yaml_ipeds_id": "153603",
+        "yaml_domain": "grinnell.edu",
+        "ipeds_instnm": "Iowa State University",
+        "ipeds_state": "IA",
+        "ipeds_web": "https://www.iastate.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "1",
+        "ipeds_iclevel": "1",
+        "name_match": "MISMATCH"
+      },
+      {
+        "slug": "grinnell-college",
+        "yaml_ipeds_id": "153384",
+        "yaml_domain": "grinnell.edu",
+        "ipeds_instnm": "Grinnell College",
+        "ipeds_state": "IA",
+        "ipeds_web": "www.grinnell.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "2",
+        "ipeds_iclevel": "1",
+        "name_match": "EXACT"
+      }
+    ],
+    "recommended_canonical": "grinnell-college",
+    "recommendation": "delete-other"
+  },
+  {
+    "yaml_name": "lincoln university",
+    "candidates": [
+      {
+        "slug": "lincoln-university",
+        "yaml_ipeds_id": "177940",
+        "yaml_domain": "lincolnu.edu",
+        "ipeds_instnm": "Lincoln University",
+        "ipeds_state": "MO",
+        "ipeds_web": "https://www.lincolnu.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "1",
+        "ipeds_iclevel": "1",
+        "name_match": "EXACT"
+      },
+      {
+        "slug": "lincoln-university",
+        "yaml_ipeds_id": "213598",
+        "yaml_domain": "lincoln.edu",
+        "ipeds_instnm": "Lincoln University",
+        "ipeds_state": "PA",
+        "ipeds_web": "www.lincoln.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "1",
+        "ipeds_iclevel": "1",
+        "name_match": "EXACT"
+      }
+    ],
+    "recommended_canonical": null,
+    "recommendation": "manual-review-both-match"
+  },
+  {
+    "yaml_name": "macalester college",
+    "candidates": [
+      {
+        "slug": "macalester",
+        "yaml_ipeds_id": "174066",
+        "yaml_domain": "macalester.edu",
+        "ipeds_instnm": "University of Minnesota-Twin Cities",
+        "ipeds_state": "MN",
+        "ipeds_web": "https://twin-cities.umn.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "1",
+        "ipeds_iclevel": "1",
+        "name_match": "MISMATCH"
+      },
+      {
+        "slug": "macalester-college",
+        "yaml_ipeds_id": "173902",
+        "yaml_domain": "macalester.edu",
+        "ipeds_instnm": "Macalester College",
+        "ipeds_state": "MN",
+        "ipeds_web": "www.macalester.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "2",
+        "ipeds_iclevel": "1",
+        "name_match": "EXACT"
+      }
+    ],
+    "recommended_canonical": "macalester-college",
+    "recommendation": "delete-other"
+  },
+  {
+    "yaml_name": "wellesley college",
+    "candidates": [
+      {
+        "slug": "wellesley",
+        "yaml_ipeds_id": "168005",
+        "yaml_domain": "wellesley.edu",
+        "ipeds_instnm": "Suffolk University",
+        "ipeds_state": "MA",
+        "ipeds_web": "https://www.suffolk.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "2",
+        "ipeds_iclevel": "1",
+        "name_match": "MISMATCH"
+      },
+      {
+        "slug": "wellesley-college",
+        "yaml_ipeds_id": "168218",
+        "yaml_domain": "wellesley.edu",
+        "ipeds_instnm": "Wellesley College",
+        "ipeds_state": "MA",
+        "ipeds_web": "www.wellesley.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "2",
+        "ipeds_iclevel": "1",
+        "name_match": "EXACT"
+      }
+    ],
+    "recommended_canonical": "wellesley-college",
+    "recommendation": "delete-other"
+  },
+  {
+    "yaml_name": "williams college",
+    "candidates": [
+      {
+        "slug": "williams",
+        "yaml_ipeds_id": "168148",
+        "yaml_domain": "williams.edu",
+        "ipeds_instnm": "Tufts University",
+        "ipeds_state": "MA",
+        "ipeds_web": "https://www.tufts.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "2",
+        "ipeds_iclevel": "1",
+        "name_match": "MISMATCH"
+      },
+      {
+        "slug": "williams-college",
+        "yaml_ipeds_id": "168342",
+        "yaml_domain": "williams.edu",
+        "ipeds_instnm": "Williams College",
+        "ipeds_state": "MA",
+        "ipeds_web": "https://www.williams.edu/",
+        "ipeds_active": "1",
+        "ipeds_control": "2",
+        "ipeds_iclevel": "1",
+        "name_match": "EXACT"
+      }
+    ],
+    "recommended_canonical": "williams-college",
+    "recommendation": "delete-other"
+  }
+]

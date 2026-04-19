@@ -25,19 +25,6 @@ schools:
   notes: Publishes two separate CDS files per year. Each sub-institution gets its
     own cds_documents row via the (school_id, sub_institutional, cds_year) unique
     constraint.
-- id: davidson
-  name: Davidson College
-  domain: davidson.edu
-  ipeds_id: '198507'
-  discovery_seed_url: https://www.davidson.edu/offices-and-services/institutional-effectiveness/common-data-set
-  scrape_policy: active
-- id: fairfield
-  name: Fairfield University
-  domain: fairfield.edu
-  ipeds_id: '128902'
-  discovery_seed_url: https://digitalcommons.fairfield.edu/archives-cds/
-  scrape_policy: active
-  notes: Excellent historical archive in Digital Commons going back to 2003
 - id: harvard
   name: Harvard University
   domain: harvard.edu
@@ -165,18 +152,6 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-- id: bryn-mawr
-  name: Bryn Mawr College
-  domain: brynmawr.edu
-  ipeds_id: '211291'
-  scrape_policy: active
-  discovery_seed_url: https://www.brynmawr.edu/sites/default/files/media/documents/2023-03/CDS_2022-2023-2.pdf
-  probe_state:
-    last_probed_at: '2026-04-14T15:35:45Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
 - id: bucknell
   name: Bucknell University
   domain: bucknell.edu
@@ -189,18 +164,6 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-- id: case-western
-  name: Case Western Reserve University
-  domain: cwru.edu
-  ipeds_id: '201885'
-  scrape_policy: active
-  discovery_seed_url: https://cwru.edu/ir/common-data-set/
-  probe_state:
-    last_probed_at: '2026-04-14T14:49:28Z'
-    last_result: found
-    last_method: pattern
-    patterns_tried: 6
-    search_fallback_tried: false
 - id: clemson
   name: Clemson University
   domain: clemson.edu
@@ -219,30 +182,6 @@ schools:
   ipeds_id: '161086'
   scrape_policy: active
   discovery_seed_url: https://www.colby.edu/wp-content/uploads/2018/06/cds2001.pdf
-  probe_state:
-    last_probed_at: '2026-04-14T15:35:46Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
-- id: holy-cross
-  name: College of the Holy Cross
-  domain: holycross.edu
-  ipeds_id: '165866'
-  scrape_policy: active
-  discovery_seed_url: https://www.holycross.edu/sites/default/files/files/planningandspecialproj/common_data_set_2019-2020_v2.pdf
-  probe_state:
-    last_probed_at: '2026-04-14T15:35:46Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
-- id: colorado-college
-  name: Colorado College
-  domain: coloradocollege.edu
-  ipeds_id: '126818'
-  scrape_policy: active
-  discovery_seed_url: https://www.coloradocollege.edu/offices/ipe/documents/CDS_2023-2024_Preliminary.pdf
   probe_state:
     last_probed_at: '2026-04-14T15:35:46Z'
     last_result: found
@@ -286,18 +225,6 @@ schools:
     last_method: pattern
     patterns_tried: 7
     search_fallback_tried: false
-- id: dickinson
-  name: Dickinson College
-  domain: dickinson.edu
-  ipeds_id: '212054'
-  scrape_policy: active
-  discovery_seed_url: https://www.dickinson.edu/download/downloads/id/12543/cds20202021pdf.pdf
-  probe_state:
-    last_probed_at: '2026-04-14T15:35:47Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
 - id: drexel
   name: Drexel University
   domain: drexel.edu
@@ -370,18 +297,6 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-- id: grinnell
-  name: Grinnell College
-  domain: grinnell.edu
-  ipeds_id: '153603'
-  scrape_policy: active
-  discovery_seed_url: https://www.grinnell.edu/sites/default/files/docs/2024-10/Grinnell-College-Common-Data-Set-CDS-2023-2024.pdf
-  probe_state:
-    last_probed_at: '2026-04-14T15:35:48Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
 - id: hamilton
   name: Hamilton College
   domain: hamilton.edu
@@ -439,18 +354,6 @@ schools:
   ipeds_id: '213543'
   scrape_policy: active
   discovery_seed_url: https://data.lehigh.edu/common-data-set/
-  probe_state:
-    last_probed_at: '2026-04-14T15:35:50Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
-- id: macalester
-  name: Macalester College
-  domain: macalester.edu
-  ipeds_id: '174066'
-  scrape_policy: active
-  discovery_seed_url: https://www.macalester.edu/institutional-research/wp-content/uploads/sites/515/CDS_2020-2021.pdf
   probe_state:
     last_probed_at: '2026-04-14T15:35:50Z'
     last_result: found
@@ -897,30 +800,6 @@ schools:
   discovery_seed_url: https://my.wlu.edu/document/2024-common-data-set
   probe_state:
     last_probed_at: '2026-04-14T15:36:01Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
-- id: wellesley
-  name: Wellesley College
-  domain: wellesley.edu
-  ipeds_id: '168005'
-  scrape_policy: active
-  discovery_seed_url: https://www1.wellesley.edu/sites/default/files/assets/departments/instresearch/files/cds_2022-2023-final.pdf
-  probe_state:
-    last_probed_at: '2026-04-14T15:36:01Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
-- id: williams
-  name: Williams College
-  domain: williams.edu
-  ipeds_id: '168148'
-  scrape_policy: active
-  discovery_seed_url: https://www.williams.edu/institutional-research/common-data-set/
-  probe_state:
-    last_probed_at: '2026-04-14T15:36:02Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -11618,8 +11497,8 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-- id: lincoln-university
-  name: Lincoln University
+- id: lincoln-university-mo
+  name: Lincoln University (MO)
   domain: lincolnu.edu
   ipeds_id: '177940'
   scrape_policy: active
@@ -11630,8 +11509,8 @@ schools:
     patterns_tried: 0
     search_fallback_tried: true
   discovery_seed_url: https://www.lincolnu.edu/about-lincoln/oira/common-data-set-2022-2023.pdf
-- id: lincoln-university
-  name: Lincoln University
+- id: lincoln-university-pa
+  name: Lincoln University (PA)
   domain: lincoln.edu
   ipeds_id: '213598'
   scrape_policy: active
