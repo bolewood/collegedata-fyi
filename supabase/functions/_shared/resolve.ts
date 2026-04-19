@@ -139,6 +139,10 @@ function isExcludedDocumentHost(hostname: string): boolean {
 // instead of the binary bytes for files over ~25MB.
 const GOOGLE_DRIVE_FILE_RE = /^https?:\/\/drive\.google\.com\/file\/d\/([^/]+)/i;
 const GOOGLE_DRIVE_OPEN_RE = /^https?:\/\/drive\.google\.com\/open\?id=([^&]+)/i;
+// Google Sheets share URL. Files in this form need a different download
+// endpoint that returns the sheet as XLSX. Seen on some mirrored
+// College Transitions entries where the CDS was uploaded as a Sheet.
+const GOOGLE_SHEETS_RE = /^https?:\/\/docs\.google\.com\/spreadsheets\/d\/([^/]+)/i;
 
 // Box share URLs (e.g. https://upenn.box.com/s/<id>) serve an HTML viewer,
 // not the file itself. Downloaders land on the viewer HTML and classify
@@ -184,6 +188,13 @@ export function rewriteGoogleDriveUrl(url: string): string {
   const openMatch = url.match(GOOGLE_DRIVE_OPEN_RE);
   if (openMatch) {
     return `https://drive.google.com/uc?export=download&id=${openMatch[1]}&confirm=t`;
+  }
+  // Sheets live at a different endpoint. Use the /export?format=xlsx
+  // shape so we get a real XLSX back that Tier 1 can read, rather than
+  // the HTML viewer that /edit would return.
+  const sheetsMatch = url.match(GOOGLE_SHEETS_RE);
+  if (sheetsMatch) {
+    return `https://docs.google.com/spreadsheets/d/${sheetsMatch[1]}/export?format=xlsx`;
   }
   return url;
 }
