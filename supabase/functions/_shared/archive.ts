@@ -28,22 +28,30 @@ import {
   objectExists,
   uploadSource,
 } from "./storage.ts";
+import { authWallOutcome, ProbeOutcome } from "./probe_outcome.ts";
 
 // Transient: worth retrying next tick or next cron. Counts against the
-// MAX_ATTEMPTS budget in archive-process.
+// MAX_ATTEMPTS budget in archive-process. Carries a typed
+// ProbeOutcome category so archive-process can record it in
+// archive_queue.last_outcome without string-matching.
 export class TransientError extends Error {
-  constructor(message: string) {
+  category: ProbeOutcome;
+  constructor(message: string, category: ProbeOutcome = "transient") {
     super(message);
     this.name = "TransientError";
+    this.category = category;
   }
 }
 
 // Permanent: retrying cannot help. The row is marked failed_permanent and
-// left for manual inspection.
+// left for manual inspection. Carries a typed ProbeOutcome category
+// (see probe_outcome.ts for the enum) so the failure mode is queryable.
 export class PermanentError extends Error {
-  constructor(message: string) {
+  category: ProbeOutcome;
+  constructor(message: string, category: ProbeOutcome = "permanent_other") {
     super(message);
     this.name = "PermanentError";
+    this.category = category;
   }
 }
 
@@ -74,8 +82,16 @@ export interface CandidateOutcome {
 // action, or the most specific one (inserted > refreshed >
 // unchanged_repaired > unchanged_verified > marked_removed) when
 // candidates differ — the log event only has room for one label.
+//
+// `outcome` is the structured ProbeOutcome the school-level attempt
+// produced. For successful runs, outcome === action (since all
+// ArchiveAction values are also ProbeOutcome values). For failed
+// runs, archiveOneSchool throws and the caller (archive-process)
+// reads the category from PermanentError/TransientError; this field
+// is unused on the throw path.
 export interface ArchiveOutcome {
   action: ArchiveAction;
+  outcome: ProbeOutcome;
   candidates: CandidateOutcome[];
   // Back-compat fields for callers that expected a single outcome.
   // Populated from candidates[0] when there is exactly one candidate,
@@ -116,6 +132,23 @@ function rollupAction(candidates: CandidateOutcome[]): ArchiveAction {
   return candidates[0].action;
 }
 
+// When all candidates in a multi-candidate run fail permanently,
+// promote the most specific category (anything more specific than
+// permanent_other) so the school-level error preserves diagnostic
+// signal. If every candidate failed with permanent_other, that's
+// what we surface. If the failures span categories (rare; auth-walled
+// hosts usually fail uniformly), pick the first non-generic one.
+const GENERIC_CATEGORIES: Set<ProbeOutcome> = new Set([
+  "permanent_other",
+  "transient",
+]);
+
+function pickAggregateCategory(categories: ProbeOutcome[]): ProbeOutcome {
+  if (categories.length === 0) return "permanent_other";
+  const specific = categories.find((c) => !GENERIC_CATEGORIES.has(c));
+  return specific ?? categories[0];
+}
+
 const DOWNLOAD_TIMEOUT_MS = 30_000;
 
 export async function archiveOneSchool(
@@ -132,17 +165,20 @@ export async function archiveOneSchool(
     case "upstream_gone":
       return handleUpstreamGone(supabase, school, result);
     case "transient":
-      throw new TransientError(`resolve transient: ${result.reason}`);
+      throw new TransientError(`resolve transient: ${result.reason}`, "transient");
     case "blocked_url":
-      throw new PermanentError(`resolve blocked: ${result.reason}`);
+      throw new PermanentError(`resolve blocked: ${result.reason}`, "blocked_url");
     case "unsupported_content":
-      throw new PermanentError(`resolve unsupported: ${result.reason}`);
+      throw new PermanentError(`resolve unsupported: ${result.reason}`, "wrong_content_type");
     case "no_cds_found":
-      throw new PermanentError(`resolve no cds found: ${result.reason}`);
+      throw new PermanentError(`resolve no cds found: ${result.reason}`, "no_pdfs_found");
   }
 
   if (result.docs.length === 0) {
-    throw new PermanentError("resolver returned resolved kind with empty docs[]");
+    throw new PermanentError(
+      "resolver returned resolved kind with empty docs[]",
+      "permanent_other",
+    );
   }
 
   // 2. Archive each candidate in order. PermanentError on one candidate
@@ -155,13 +191,17 @@ export async function archiveOneSchool(
   //    risk double-inserting rows for the same (school, cds_year)
   //    before either upload completes.
   const candidates: CandidateOutcome[] = [];
-  const skipped: { url: string; reason: string }[] = [];
+  const skipped: { url: string; reason: string; category: ProbeOutcome }[] = [];
   for (const resolved of result.docs) {
     try {
       candidates.push(await archiveOneCandidate(supabase, school, resolved));
     } catch (e) {
       if (e instanceof PermanentError) {
-        skipped.push({ url: resolved.url, reason: e.message });
+        skipped.push({
+          url: resolved.url,
+          reason: e.message,
+          category: e.category,
+        });
         continue;
       }
       throw e;
@@ -170,17 +210,24 @@ export async function archiveOneSchool(
 
   // If ALL candidates failed permanently, surface as school-level
   // PermanentError so the queue row lands in failed_permanent instead
-  // of silently succeeding with zero rows.
+  // of silently succeeding with zero rows. Promote the most specific
+  // category from the per-candidate failures so the aggregated error
+  // doesn't lose its diagnostic value (e.g., 6 candidates all
+  // auth_walled_microsoft → school-level outcome should be
+  // auth_walled_microsoft, not permanent_other).
   if (candidates.length === 0) {
     const reasons = skipped.map((s) => `${s.url}: ${s.reason}`).join("; ");
     throw new PermanentError(
       `all ${skipped.length} candidate(s) failed permanently: ${reasons}`,
+      pickAggregateCategory(skipped.map((s) => s.category)),
     );
   }
 
   const first = candidates[0];
+  const action = rollupAction(candidates);
   return {
-    action: rollupAction(candidates),
+    action,
+    outcome: action, // ArchiveAction values are valid ProbeOutcome values
     candidates,
     // Back-compat single-candidate fields: populated only when the
     // school yielded one document. Multi-candidate callers should
@@ -219,14 +266,17 @@ export async function archiveManualUrls(
   items: (string | ManualUrlItem)[],
 ): Promise<ArchiveOutcome> {
   if (items.length === 0) {
-    throw new PermanentError("archiveManualUrls called with empty url list");
+    throw new PermanentError(
+      "archiveManualUrls called with empty url list",
+      "permanent_other",
+    );
   }
   const { normalizeYear } = await import("./year.ts");
   const { UNKNOWN_YEAR_SENTINEL, rewriteBoxUrl, rewriteGoogleDriveUrl } =
     await import("./resolve.ts");
 
   const candidates: CandidateOutcome[] = [];
-  const skipped: { url: string; reason: string }[] = [];
+  const skipped: { url: string; reason: string; category: ProbeOutcome }[] = [];
   for (const raw of items) {
     const rawUrl = typeof raw === "string" ? raw : raw.url;
     const explicitYear = typeof raw === "string" ? null : (raw.year ?? null);
@@ -240,7 +290,11 @@ export async function archiveManualUrls(
     try {
       parsedUrl = new URL(url);
     } catch {
-      skipped.push({ url: rawUrl, reason: "invalid URL" });
+      skipped.push({
+        url: rawUrl,
+        reason: "invalid URL",
+        category: "blocked_url",
+      });
       continue;
     }
     const filename = decodeURIComponent(
@@ -261,7 +315,11 @@ export async function archiveManualUrls(
       }));
     } catch (e) {
       if (e instanceof PermanentError) {
-        skipped.push({ url: rawUrl, reason: e.message });
+        skipped.push({
+          url: rawUrl,
+          reason: e.message,
+          category: e.category,
+        });
         continue;
       }
       throw e;
@@ -272,12 +330,15 @@ export async function archiveManualUrls(
     const reasons = skipped.map((s) => `${s.url}: ${s.reason}`).join("; ");
     throw new PermanentError(
       `all ${skipped.length} manual url(s) failed: ${reasons}`,
+      pickAggregateCategory(skipped.map((s) => s.category)),
     );
   }
 
   const first = candidates[0];
+  const action = rollupAction(candidates);
   return {
-    action: rollupAction(candidates),
+    action,
+    outcome: action,
     candidates,
     document_id: candidates.length === 1 ? first.document_id : null,
     cds_year: candidates.length === 1 ? first.cds_year : null,
@@ -306,8 +367,23 @@ async function archiveOneCandidate(
   // endpoint doesn't set a canonical Content-Type.
   const ext = extForResponse(contentType, finalUrl, bytes);
   if (!ext) {
+    // Auth-wall detection: when a school's CDS lives behind SSO, the
+    // download follow-redirects path lands on an SSO HTML page (e.g.,
+    // login.microsoftonline.com/<tenant>/saml2). The bytes are HTML, not
+    // PDF, so extForResponse rejects them — but the *reason* matters.
+    // An auth-walled school is structurally different from a school
+    // whose link 404s, and downstream cooldown / hosting policy needs
+    // to distinguish them.
+    const authCategory = authWallOutcome(finalUrl);
+    if (authCategory) {
+      throw new PermanentError(
+        `auth-walled: download for ${resolved.url} redirected to ${finalUrl}`,
+        authCategory,
+      );
+    }
     throw new PermanentError(
       `unknown content type for ${finalUrl}: ${contentType || "(none)"}, bytes do not match PDF/XLSX/DOCX magic`,
+      "wrong_content_type",
     );
   }
 
@@ -436,6 +512,7 @@ async function handleUpstreamGone(
   };
   return {
     action: "marked_removed",
+    outcome: "marked_removed",
     candidates: [candidate],
     document_id: candidate.document_id,
     cds_year: candidate.cds_year,
@@ -455,7 +532,7 @@ async function ensureObjectUploaded(
   try {
     await uploadSource(supabase, path, bytes, ext);
   } catch (e) {
-    throw new TransientError((e as Error).message);
+    throw new TransientError((e as Error).message, "transient");
   }
 }
 
@@ -471,7 +548,7 @@ async function downloadWithCaps(url: string): Promise<DownloadResult> {
     // Resolver should already have rejected this, but double-check at the
     // actual download boundary so there is no single-point-of-failure in
     // SSRF defense.
-    throw new PermanentError(`download blocked unsafe URL: ${url}`);
+    throw new PermanentError(`download blocked unsafe URL: ${url}`, "blocked_url");
   }
 
   let resp: Response;
@@ -482,20 +559,21 @@ async function downloadWithCaps(url: string): Promise<DownloadResult> {
       redirect: "follow",
     });
   } catch (e) {
-    throw new TransientError(`download fetch failed: ${(e as Error).message}`);
+    throw new TransientError(`download fetch failed: ${(e as Error).message}`, "transient");
   }
 
   if (!isSafeUrl(resp.url)) {
     throw new PermanentError(
       `download redirect target blocked as unsafe URL: ${resp.url}`,
+      "blocked_url",
     );
   }
 
   if (resp.status === 404 || resp.status === 410) {
-    throw new PermanentError(`download HTTP ${resp.status} at ${url}`);
+    throw new PermanentError(`download HTTP ${resp.status} at ${url}`, "dead_url");
   }
   if (!resp.ok) {
-    throw new TransientError(`download HTTP ${resp.status} at ${url}`);
+    throw new TransientError(`download HTTP ${resp.status} at ${url}`, "transient");
   }
 
   const contentType = resp.headers.get("content-type") ?? "";
@@ -508,12 +586,13 @@ async function downloadWithCaps(url: string): Promise<DownloadResult> {
     if (!Number.isNaN(n) && n > MAX_SOURCE_BYTES) {
       throw new PermanentError(
         `file exceeds ${MAX_SOURCE_BYTES} bytes (Content-Length ${n}) at ${url}`,
+        "file_too_large",
       );
     }
   }
 
   const reader = resp.body?.getReader();
-  if (!reader) throw new TransientError(`no response body at ${url}`);
+  if (!reader) throw new TransientError(`no response body at ${url}`, "transient");
 
   // Wrap the streaming read in try/catch/finally. A mid-stream abort
   // (timeout signal, connection reset) would otherwise surface as a raw
@@ -531,13 +610,14 @@ async function downloadWithCaps(url: string): Promise<DownloadResult> {
       if (total > MAX_SOURCE_BYTES) {
         throw new PermanentError(
           `file exceeds ${MAX_SOURCE_BYTES} bytes (streamed) at ${url}`,
+          "file_too_large",
         );
       }
       chunks.push(value);
     }
   } catch (e) {
     if (e instanceof PermanentError) throw e;
-    throw new TransientError(`download read failed: ${(e as Error).message}`);
+    throw new TransientError(`download read failed: ${(e as Error).message}`, "transient");
   } finally {
     try { await reader.cancel(); } catch { /* ignore */ }
   }

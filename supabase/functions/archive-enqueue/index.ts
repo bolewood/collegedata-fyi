@@ -39,6 +39,10 @@ import {
   fetchSchoolsYaml,
   filterArchivable,
 } from "../_shared/schools.ts";
+import {
+  DEFAULT_COOLDOWN_DAYS,
+  ProbeOutcome,
+} from "../_shared/probe_outcome.ts";
 
 Deno.serve(async (req: Request) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -104,44 +108,72 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Cooldown: skip schools whose most recent done row had
-  // last_outcome=unchanged_verified within the cooldown window.
-  // Empirical motivation in migration 20260418220000.
-  // Operator override: ?force_recheck=true bypasses the cooldown for
-  // this run only. force_school via archive-process always bypasses
-  // the queue and is unaffected.
+  // Cooldown: skip schools whose most recent terminal row has an
+  // outcome whose DEFAULT_COOLDOWN_DAYS window hasn't elapsed yet.
+  // PR 2 expanded this from a single hardcoded check on
+  // unchanged_verified to a per-outcome policy:
+  //   unchanged_verified → 30d
+  //   auth_walled_*      → 90d (rarely change)
+  //   dead_url           → 14d (schools fix broken URLs in days/weeks)
+  //   no_pdfs_found      → 14d
+  //   transient          → 0d  (retry next cron — design intent)
+  //   etc. (see DEFAULT_COOLDOWN_DAYS in _shared/probe_outcome.ts)
+  //
+  // Operator override: ?force_recheck=true bypasses cooldown for this
+  // run only. ?cooldown_days=N (single integer) overrides ALL outcome
+  // windows uniformly — useful for "process everything that hasn't
+  // been touched in N days regardless of category."
+  // force_school via archive-process always bypasses the queue and
+  // is unaffected.
   const forceRecheck = url.searchParams.get("force_recheck") === "true";
-  const cooldownDays = parseInt(
-    url.searchParams.get("cooldown_days") ?? "30",
-    10,
-  );
+  const uniformOverride = url.searchParams.get("cooldown_days");
+  const uniformDays = uniformOverride ? parseInt(uniformOverride, 10) : null;
 
   let inCooldown = new Set<string>();
-  if (!forceRecheck && cooldownDays > 0) {
-    const cooldownCutoff = new Date(
-      Date.now() - cooldownDays * 24 * 60 * 60 * 1000,
-    ).toISOString();
-
-    const { data: cooldownRows, error: cooldownErr } = await supabase
+  if (!forceRecheck) {
+    // Pull the most-recent terminal row per school across both done
+    // (success outcomes) and failed_permanent (failure outcomes).
+    // We over-fetch (no DISTINCT ON via REST) and reduce client-side
+    // to the latest row per school.
+    const { data: terminalRows, error: terminalErr } = await supabase
       .from("archive_queue")
-      .select("school_id, processed_at")
-      .eq("status", "done")
-      .eq("last_outcome", "unchanged_verified")
-      .gte("processed_at", cooldownCutoff);
+      .select("school_id, processed_at, last_outcome")
+      .in("status", ["done", "failed_permanent"])
+      .not("last_outcome", "is", null)
+      .not("processed_at", "is", null);
 
-    if (cooldownErr) {
+    if (terminalErr) {
       // Don't fail enqueue on cooldown query failure — log and proceed
       // with no cooldown applied. Better to over-enqueue than to skip
       // a fresh batch entirely.
       logEvent({
         event: "cooldown_query_failed",
         run_id: runId,
-        error: cooldownErr.message,
+        error: terminalErr.message,
       });
     } else {
-      // Multiple rows per school can match (one per past run); we only
-      // need the school_ids.
-      inCooldown = new Set((cooldownRows ?? []).map((r) => r.school_id));
+      const latestBySchool = new Map<
+        string,
+        { processed_at: string; last_outcome: ProbeOutcome }
+      >();
+      for (const row of terminalRows ?? []) {
+        const prior = latestBySchool.get(row.school_id);
+        if (!prior || row.processed_at > prior.processed_at) {
+          latestBySchool.set(row.school_id, {
+            processed_at: row.processed_at,
+            last_outcome: row.last_outcome as ProbeOutcome,
+          });
+        }
+      }
+      const now = Date.now();
+      for (const [schoolId, latest] of latestBySchool) {
+        const cooldownDays = uniformDays ?? DEFAULT_COOLDOWN_DAYS[latest.last_outcome] ?? 0;
+        if (cooldownDays <= 0) continue;
+        const elapsedMs = now - new Date(latest.processed_at).getTime();
+        if (elapsedMs < cooldownDays * 24 * 60 * 60 * 1000) {
+          inCooldown.add(schoolId);
+        }
+      }
     }
   }
 
@@ -159,7 +191,7 @@ Deno.serve(async (req: Request) => {
     logEvent({
       event: "cooldown_skipped",
       run_id: runId,
-      cooldown_days: cooldownDays,
+      uniform_cooldown_days: uniformDays,
       skipped: inCooldown.size,
     });
   }

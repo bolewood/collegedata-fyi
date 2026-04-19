@@ -29,6 +29,7 @@ import {
   PermanentError,
   TransientError,
 } from "../_shared/archive.ts";
+import { ProbeOutcome } from "../_shared/probe_outcome.ts";
 import { fetchSchoolsYaml, filterArchivable } from "../_shared/schools.ts";
 
 // Relaxed client typing. supabase-js v2's strict generics collapse to never
@@ -225,6 +226,11 @@ async function runQueueClaim(
     attempts,
   });
 
+  // Failure category captured from PermanentError.category /
+  // TransientError.category. Persisted to archive_queue.last_outcome on
+  // terminal status so the queue carries structured outcome history,
+  // not just a free-text last_error string.
+  let failureCategory: ProbeOutcome | null = null;
   try {
     outcome = await archiveOneSchool(supabase, {
       school_id: row.school_id,
@@ -237,14 +243,24 @@ async function runQueueClaim(
     if (err instanceof PermanentError) {
       finalStatus = "failed_permanent";
       finalError = `PermanentError: ${err.message}`;
+      failureCategory = err.category;
     } else if (err instanceof TransientError) {
       if (attempts >= MAX_ATTEMPTS) {
         finalStatus = "failed_permanent";
         finalError =
           `exhausted ${MAX_ATTEMPTS} attempts (last: TransientError: ${err.message})`;
+        // After exhausting retries the school is effectively in a stable
+        // failure state; record the transient category so cooldown
+        // policy can throttle re-attempts the same way as a fresh
+        // transient. (TransientError.category defaults to "transient";
+        // future code may pass a more specific tag.)
+        failureCategory = err.category;
       } else {
         finalStatus = "ready";
         finalError = `attempt ${attempts} TransientError: ${err.message}`;
+        // Don't write last_outcome on a re-claim; the prior outcome
+        // (if any) stays so cooldown logic isn't disturbed by an
+        // in-flight retry.
       }
     } else {
       // Unclassified error. Treat as transient so a one-off blip doesn't
@@ -253,6 +269,7 @@ async function runQueueClaim(
         finalStatus = "failed_permanent";
         finalError =
           `exhausted ${MAX_ATTEMPTS} attempts (last: ${err.name}: ${err.message})`;
+        failureCategory = "permanent_other";
       } else {
         finalStatus = "ready";
         finalError = `attempt ${attempts} ${err.name}: ${err.message}`;
@@ -292,12 +309,16 @@ async function runQueueClaim(
     if (finalStatus === "done" || finalStatus === "failed_permanent") {
       update.processed_at = new Date().toISOString();
     }
-    // Persist the per-school outcome so archive-enqueue can apply a
-    // cooldown to schools whose previous run was unchanged_verified.
-    // Only set on terminal status; ready (re-claimable) leaves the
-    // prior outcome in place since this attempt didn't conclude.
+    // Persist the structured ProbeOutcome on terminal status so the
+    // queue carries categorized outcome history (not just a free-text
+    // last_error). archive-enqueue's cooldown reads this column;
+    // future audit dashboards and the school_hosting table will too.
+    // ready (re-claimable) intentionally does NOT touch last_outcome
+    // so an in-flight retry doesn't disturb the cooldown signal.
     if (finalStatus === "done" && outcome) {
-      update.last_outcome = outcome.action;
+      update.last_outcome = outcome.outcome;
+    } else if (finalStatus === "failed_permanent" && failureCategory) {
+      update.last_outcome = failureCategory;
     }
     const { error: updErr } = await supabase
       .from("archive_queue")
@@ -376,11 +397,21 @@ async function runForceSchool(
     return json({ mode: "force_school", school_id: school.id, outcome });
   } catch (e) {
     const err = e as Error;
+    // Surface the typed ProbeOutcome category in the response so
+    // operators (and tools/data_quality/force_resolve_missing.py)
+    // don't have to string-match the error text. PermanentError /
+    // TransientError both carry .category; other errors fall through
+    // to permanent_other.
+    const category: ProbeOutcome =
+      err instanceof PermanentError || err instanceof TransientError
+        ? err.category
+        : "permanent_other";
     logEvent({
       event: "force_school_failed",
       school_id: school.id,
       error_class: err.name,
       error: err.message,
+      outcome: category,
       duration_ms: Date.now() - started,
     });
     return json({
@@ -388,6 +419,7 @@ async function runForceSchool(
       school_id: school.id,
       error_class: err.name,
       error: err.message,
+      outcome: category,
     }, 500);
   }
 }

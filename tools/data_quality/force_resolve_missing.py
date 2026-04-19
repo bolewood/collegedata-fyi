@@ -108,24 +108,47 @@ def call_force_school(base_url: str, key: str, school_id: str, timeout: int) -> 
 
 
 def categorise(payload: dict) -> str:
-    """Bucket the outcome into a small set of human labels."""
+    """Bucket the outcome into a small set of human labels.
+
+    Preferred path (post-PR 2): the API response surfaces a structured
+    `outcome` field at the top level (failure path) or under `outcome.outcome`
+    (success path). Either is the canonical ProbeOutcome category written by
+    the Deno pipeline — no string matching needed.
+
+    Fallback path: pre-PR-2 responses or unexpected shapes still get
+    classified by the legacy heuristics so historical JSONL files are
+    readable.
+    """
     if not isinstance(payload, dict):
         return "unknown"
+
+    # Client-side issues (the Python wrapper, not the API)
     if "error" in payload and "error_class" not in payload:
         err = str(payload.get("error", "")).lower()
         if "client_timeout" in err: return "client_timeout"
         if "not found in archivable" in err: return "not_archivable"
         return "unknown_error"
-    cls = payload.get("error_class")
-    if cls is None and payload.get("outcome"):
-        outcome = payload["outcome"]
-        if isinstance(outcome, dict):
-            action = outcome.get("action") or ""
+
+    # Post-PR-2 structured outcome (failure path)
+    if isinstance(payload.get("outcome"), str):
+        return payload["outcome"]
+
+    # Post-PR-2 structured outcome (success path: outcome is the
+    # ArchiveOutcome object; outcome.outcome is the ProbeOutcome string)
+    outcome_obj = payload.get("outcome")
+    if isinstance(outcome_obj, dict):
+        if isinstance(outcome_obj.get("outcome"), str):
+            return outcome_obj["outcome"]
+        # Pre-PR-2 ArchiveOutcome only had .action — fall back
+        action = outcome_obj.get("action") or ""
+        if action:
             if "archived" in action or "saved" in action or "documents" in action:
                 return "success"
             if "no_change" in action: return "no_change"
             return f"outcome:{action}"[:40]
-        return "success"
+
+    # Legacy fallback for pre-PR-2 error payloads (no structured outcome)
+    cls = payload.get("error_class")
     if cls == "PermanentError":
         err = str(payload.get("error", "")).lower()
         if "login.microsoftonline" in err or "saml" in err: return "auth_walled_microsoft"
@@ -137,7 +160,7 @@ def categorise(payload: dict) -> str:
         return "permanent_other"
     if cls == "TransientError":
         return "transient"
-    return f"class:{cls}"
+    return f"class:{cls}" if cls else "unknown"
 
 
 def main() -> int:
