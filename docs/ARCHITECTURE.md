@@ -258,6 +258,14 @@ Summary of the components:
 | [`web/src/lib/labels.ts`](../web/src/lib/labels.ts) | Auto-generated CDS field ID to plain-English label map (1,105 fields from `cds_schema_2025_26.json`). |
 | [`docs/prd/002-frontend.md`](prd/002-frontend.md) | Full PRD with design decisions, visual spec, artifact JSON shape, and test plan. |
 
+### Data quality
+
+| Component | Role |
+|---|---|
+| [`tools/data_quality/audit_manifest.py`](../tools/data_quality/audit_manifest.py) | Post-ingest audit. Queries canonical artifacts, flags documents with <5 fields populated as `blank_template` or `low_coverage`. Writes `data_quality_flag` to `cds_documents`. |
+| [`supabase/migrations/20260418120000_data_quality_flag.sql`](../supabase/migrations/20260418120000_data_quality_flag.sql) | Adds `data_quality_flag` column to `cds_documents`, exposed in `cds_manifest` view. |
+| [`tools/finder/promote_landing_hints.py`](../tools/finder/promote_landing_hints.py) | Rewrites direct-PDF `cds_url_hint` entries in `schools.yaml` to their parent IR landing pages, enabling multi-year discovery. Applied to 67 schools (`ce1a9ac`). |
+
 ---
 
 ## How the pipelines compose
@@ -327,13 +335,13 @@ As of 2026-04-18, what's built and what isn't:
 | Component | Status |
 |---|---|
 | Schema pipeline | ✅ Built end-to-end. 1,105 fields for 2025-26, 224 button fields decoded. Per-section-tab structural schemas for 6 years (2019-20 through 2025-26) and cross-year diffs for 5 transitions shipped 2026-04-17 (`351af48`, `526ded7`). |
-| Corpus pipeline | ✅ Built. 2,434 schools in `schools.yaml`, 839 archivable (scrape_policy=active + cds_url_hint present + no sub_institutions). Probe runs are ongoing. |
+| Corpus pipeline | ✅ Built. `schools.yaml` tracks 2,434+ schools. 617 with archived data, 2,913 documents in the database. Playwright-assisted probing and `promote_landing_hints.py` tool (`b56ef97`) improved landing-page hint quality for 67 schools (`ce1a9ac`). |
 | Discovery: M1a dry-run (HTML parsing, year normalization, two-hop) | ✅ Refactored into `_shared/resolve.ts` so it can be reused by the queue consumer. Served by the `discover` edge function as a dry-run dev entry. |
 | Discovery: M1b writeback (schools.yaml loading, Storage uploads, `cds_documents` + `cds_artifacts` upserts) | ✅ Implemented in `archive-process` edge function. Uses SHA-addressed Storage paths (`{school}/{year}/{sha256}.{ext}`) and the document-first-then-artifact crash-safe refresh ordering. Verified end-to-end against yale + 9 other schools in production. |
 | Discovery: M1c cron schedule (queue fan-out) | ✅ Live 2026-04-15. Daily `archive-enqueue-daily` + per-30s `archive-process-every-30s` running against production. First full drain completed overnight 2026-04-14/15. Resolver enhanced 2026-04-17/18 with well-known-paths fallback (`df574a4`), parent-ancestor walking for sibling years (`39bf219`), Box share-URL rewriter (`ec3c03c`), and `force_urls` batch archive endpoint (`5cc6718`). Playwright URL collector and headless-browser download added for JS-rendered / WAF-blocked schools per [PRD 004](prd/004-js-rendered-resolver.md). |
-| Extraction worker (polling loop) | ✅ M2 skeleton live (commit `db520e6`). Polls `extraction_pending`, detects format, routes to tier extractors. Content-based PDF year detection ([ADR 0007](decisions/0007-year-authority-moves-to-extraction.md)) is now write-authoritative: `detect_year_from_pdf_bytes` runs on every archived doc and writes `cds_documents.detected_year`, which the `cds_manifest.canonical_year` view prefers over `cds_year`. Stage B backfill 2026-04-15 populated `detected_year` on 379 of 518 archived rows (73%) via the `--detect-year-only --write` harness. |
+| Extraction worker (polling loop) | ✅ Full drain completed 2026-04-18: 2,008 of 2,913 documents extracted (69%). Polls `extraction_pending`, detects format, routes to tier extractors. Includes `\u0000` null-byte stripping for malformed PDF text streams (Berklee fix, `9b7f3f7`). Content-based PDF year detection ([ADR 0007](decisions/0007-year-authority-moves-to-extraction.md)) is write-authoritative. |
 | Extraction: Tier 2 (fillable PDF) | ✅ Built as standalone tool, verified 31/31 against HMC ground truth. Wired end-to-end through the worker; Harvey Mudd and Bates extracted successfully in production. |
-| Extraction: Tier 4 (flattened PDF via Docling) | ✅ Wired end-to-end through the worker (commit `37293ab`). Docling baseline config (TableFormer FAST, 1x DPI) chosen after a 9-config bake-off. Schema-targeting cleaner shipped across four phases (`00d4cd6` through `5951379`): GT scorer 94.3% (83/88), critical C1 fields 100% (21/21), corpus C1 admissions coverage 50-59%. Pre-2020 CDS terminology normalization and header-row recovery included. |
+| Extraction: Tier 4 (flattened PDF via Docling) | ✅ Full drain completed 2026-04-18 (693 Tier 4 docs extracted in one run). Schema-targeting cleaner shipped across four phases + B1 col_hint fix (`7138a3e`): GT scorer 94.3%, critical C1 fields 100%. Col_hint now prefers "full-time" headers in community college templates. |
 | Extraction: Tier 1 / 3 / 5 | ❌ Specified in ADR 0006, not yet built. Worker routes these to a stub that records `extraction_status=failed` with a tier-not-implemented reason so the rows exit the pending queue. |
 | Year authority migration | ✅ Stage A + B shipped 2026-04-15 ([ADR 0007](decisions/0007-year-authority-moves-to-extraction.md)). Content detection is authoritative; resolver `pickCandidates` fans out landing-page anchors into multiple `cds_documents` rows; extraction writes `detected_year`; `cds_manifest.canonical_year` prefers content over URL. Stage C was de-scoped to docs-only — full retirement of `cds_year` and `_shared/year.ts` requires dropping `cds_year` from the unique constraint, deferred to a follow-up item in [backlog.md](./backlog.md). |
 | Consumer API | ✅ Live at `api.collegedata.fyi/rest/v1/`. All three tables + the view respond to curl. |
