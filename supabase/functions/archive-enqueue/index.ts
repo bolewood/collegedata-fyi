@@ -104,17 +104,92 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  const rows = allSchools.map((s) => ({
-    enqueued_run_id: runId,
-    school_id: s.id,
-    school_name: s.name,
-    cds_url_hint: s.cds_url_hint,
-    status: "ready" as const,
-  }));
+  // Cooldown: skip schools whose most recent done row had
+  // last_outcome=unchanged_verified within the cooldown window.
+  // Empirical motivation in migration 20260418220000.
+  // Operator override: ?force_recheck=true bypasses the cooldown for
+  // this run only. force_school via archive-process always bypasses
+  // the queue and is unaffected.
+  const forceRecheck = url.searchParams.get("force_recheck") === "true";
+  const cooldownDays = parseInt(
+    url.searchParams.get("cooldown_days") ?? "30",
+    10,
+  );
+
+  let inCooldown = new Set<string>();
+  if (!forceRecheck && cooldownDays > 0) {
+    const cooldownCutoff = new Date(
+      Date.now() - cooldownDays * 24 * 60 * 60 * 1000,
+    ).toISOString();
+
+    const { data: cooldownRows, error: cooldownErr } = await supabase
+      .from("archive_queue")
+      .select("school_id, processed_at")
+      .eq("status", "done")
+      .eq("last_outcome", "unchanged_verified")
+      .gte("processed_at", cooldownCutoff);
+
+    if (cooldownErr) {
+      // Don't fail enqueue on cooldown query failure — log and proceed
+      // with no cooldown applied. Better to over-enqueue than to skip
+      // a fresh batch entirely.
+      logEvent({
+        event: "cooldown_query_failed",
+        run_id: runId,
+        error: cooldownErr.message,
+      });
+    } else {
+      // Multiple rows per school can match (one per past run); we only
+      // need the school_ids.
+      inCooldown = new Set((cooldownRows ?? []).map((r) => r.school_id));
+    }
+  }
+
+  const rows = allSchools
+    .filter((s) => !inCooldown.has(s.id))
+    .map((s) => ({
+      enqueued_run_id: runId,
+      school_id: s.id,
+      school_name: s.name,
+      cds_url_hint: s.cds_url_hint,
+      status: "ready" as const,
+    }));
+
+  if (inCooldown.size > 0) {
+    logEvent({
+      event: "cooldown_skipped",
+      run_id: runId,
+      cooldown_days: cooldownDays,
+      skipped: inCooldown.size,
+    });
+  }
 
   // Bulk insert with onConflict + ignoreDuplicates so re-running with the
   // same run_id is a no-op on rows that already landed. This is the
   // retry-safety property the plan's Rollout step 2 assumes.
+  // After cooldown filtering, rows may be empty. Short-circuit so we
+  // don't issue an empty upsert (which Supabase rejects).
+  if (rows.length === 0) {
+    logEvent({
+      event: "enqueue_completed",
+      run_id: runId,
+      enqueued: 0,
+      skipped_existing: 0,
+      skipped_cooldown: inCooldown.size,
+      duration_ms: Date.now() - started,
+    });
+    return json({
+      mode: "enqueue",
+      run_id: runId,
+      enqueued: 0,
+      skipped_existing: 0,
+      skipped_cooldown: inCooldown.size,
+      skipped_invalid_yaml: skippedInvalid,
+      total_archivable: allSchools.length,
+      note: "all archivable schools were in cooldown",
+    });
+  }
+
   const { data, error } = await supabase
     .from("archive_queue")
     .upsert(rows, {
@@ -138,12 +213,13 @@ Deno.serve(async (req: Request) => {
   }
 
   const enqueued = data?.length ?? 0;
-  const skipped = rows.length - enqueued;
+  const skippedExisting = rows.length - enqueued;
   logEvent({
     event: "enqueue_completed",
     run_id: runId,
     enqueued,
-    skipped,
+    skipped_existing: skippedExisting,
+    skipped_cooldown: inCooldown.size,
     duration_ms: Date.now() - started,
   });
 
@@ -151,9 +227,10 @@ Deno.serve(async (req: Request) => {
     mode: "enqueue",
     run_id: runId,
     enqueued,
-    skipped,
+    skipped_existing: skippedExisting,
+    skipped_cooldown: inCooldown.size,
     skipped_invalid_yaml: skippedInvalid,
-    total_archivable: rows.length,
+    total_archivable: allSchools.length,
   });
 });
 

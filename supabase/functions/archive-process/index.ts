@@ -292,6 +292,13 @@ async function runQueueClaim(
     if (finalStatus === "done" || finalStatus === "failed_permanent") {
       update.processed_at = new Date().toISOString();
     }
+    // Persist the per-school outcome so archive-enqueue can apply a
+    // cooldown to schools whose previous run was unchanged_verified.
+    // Only set on terminal status; ready (re-claimable) leaves the
+    // prior outcome in place since this attempt didn't conclude.
+    if (finalStatus === "done" && outcome) {
+      update.last_outcome = outcome.action;
+    }
     const { error: updErr } = await supabase
       .from("archive_queue")
       .update(update)
