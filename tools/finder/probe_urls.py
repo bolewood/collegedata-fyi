@@ -3,7 +3,7 @@
 
 For each school in schools.yaml with scrape_policy == "unknown", tries the
 URL pattern ladder against the school's domain. On a hit, updates the entry
-with cds_url_hint and flips scrape_policy to "active".
+with discovery_seed_url and flips scrape_policy to "active".
 
 Records probe_state per school so we don't re-query paid search APIs for
 schools that genuinely don't publish.
@@ -560,7 +560,7 @@ def process_school(school: dict, args: argparse.Namespace,
 
     if url:
         if not args.dry_run:
-            school["cds_url_hint"] = url
+            school["discovery_seed_url"] = url
             school["scrape_policy"] = "active"
             record_probe(school, "found", method, patterns_tried, search_tried)
     else:
@@ -631,9 +631,9 @@ def main():
                          "Ctrl-C doesn't lose progress (default: 50)")
     ap.add_argument("--include-active-no-hint", action="store_true",
                     help="Also probe schools marked scrape_policy=active that "
-                         "have no cds_url_hint. Used to resolve seed-list "
+                         "have no discovery_seed_url. Used to resolve seed-list "
                          "entries that were marked active on faith but never "
-                         "got a URL — populates their hints without demoting.")
+                         "got a URL — populates their seeds without demoting.")
     ap.add_argument("--school-budget-sec", type=float, default=DEFAULT_SCHOOL_BUDGET_SEC,
                     help=f"Per-school wall-clock budget for the pattern "
                          f"ladder in seconds (default: {DEFAULT_SCHOOL_BUDGET_SEC}). "
@@ -669,10 +669,11 @@ def main():
             # for them. These are hand-curated seed-list rows that were
             # marked active on faith but never got a URL resolved, so
             # downstream has nothing to fetch. Running them through the
-            # probe populates cds_url_hint without touching scrape_policy.
+            # probe populates discovery_seed_url without touching scrape_policy.
+            # Both names checked so legacy YAML rows (pre-PR-5) still match.
             if not (args.include_active_no_hint
                     and policy == "active"
-                    and not school.get("cds_url_hint")):
+                    and not (school.get("discovery_seed_url") or school.get("cds_url_hint"))):
                 continue
         if name_filter and name_filter not in name.lower():
             continue

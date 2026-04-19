@@ -1,0 +1,54 @@
+# school_overrides.yaml — hand-curated per-school overrides
+#
+# This file lives outside the IPEDS-merged schools.yaml so that
+# build_school_list.py regenerations don't clobber operator data.
+# (build_school_list.py does NOT read or write this file.)
+#
+# The edge-function loader (supabase/functions/_shared/schools.ts) merges
+# overrides on top of schools.yaml entries at runtime, keyed by school_id.
+# A future PR will wire this in; for now the file is a documented stub.
+#
+# Override schema (all fields optional — supply only what you want to
+# override or supplement on top of schools.yaml):
+#
+#   - school_id: <slug from schools.yaml>
+#     browse_url: https://example.com/cds   # human-friendly URL for the
+#                                             # kids worklist tool. Distinct
+#                                             # from discovery_seed_url, which
+#                                             # the resolver fetches.
+#     direct_archive_urls:                    # explicit list of year-tagged
+#                                             # archive URLs. Used when the
+#                                             # school hosts on Box/Drive/
+#                                             # SharePoint or behind any
+#                                             # storage that the resolver
+#                                             # can't crawl. Each entry must
+#                                             # carry an explicit `year`
+#                                             # because share-viewer URLs
+#                                             # are opaque (Box /s/<id>,
+#                                             # Drive /file/d/<id>) — the
+#                                             # extraction worker still
+#                                             # validates by reading the
+#                                             # PDF content.
+#       - { url: https://..., year: "2023-24" }
+#       - { url: https://..., year: "2024-25" }
+#     hosting_override:                       # operator-supplied hosting
+#                                             # facts the resolver can't
+#                                             # infer. Each field matches
+#                                             # the school_hosting_observations
+#                                             # column of the same name.
+#       cms: drupal | wordpress | sharepoint | static | custom | unknown
+#       file_storage: same_origin | box | google_drive | sharepoint |
+#                     dropbox | intranet | mixed | unknown
+#       auth_required: none | microsoft_sso | okta | google_sso |
+#                      basic | unknown
+#       rendering: static_html | js_required | unknown
+#       waf: none | cloudflare | akamai | imperva | aws_cloudfront |
+#            fastly | unknown
+#       notes: free text — why this override was added, contact
+#              channel, anything a future maintainer should know
+#
+# The runtime loader is permissive: unknown fields are ignored, missing
+# fields fall back to the schools.yaml entry, and a malformed override
+# row is logged and skipped (it cannot abort the loader).
+
+overrides: []

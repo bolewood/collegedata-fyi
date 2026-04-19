@@ -183,7 +183,10 @@ Deno.serve(async (req: Request) => {
       enqueued_run_id: runId,
       school_id: s.id,
       school_name: s.name,
-      cds_url_hint: s.cds_url_hint,
+      // archive_queue.cds_url_hint is the DB column (denormalized
+      // cache); ArchivableSchool.discovery_seed_url is the runtime
+      // field after PR 5's rename. Map at the boundary.
+      cds_url_hint: s.discovery_seed_url,
       status: "ready" as const,
     }));
 

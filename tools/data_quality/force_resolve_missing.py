@@ -44,7 +44,9 @@ def load_active_schools_with_hints() -> list[dict]:
     for s in data.get("schools", []):
         if s.get("scrape_policy") != "active":
             continue
-        if not s.get("cds_url_hint"):
+        # discovery_seed_url is the post-PR-5 field; cds_url_hint is the
+        # legacy alias kept readable during migration.
+        if not (s.get("discovery_seed_url") or s.get("cds_url_hint")):
             continue
         # archive-process explicitly excludes schools with sub_institutions in V1
         if s.get("sub_institutions"):
@@ -207,7 +209,8 @@ def main() -> int:
     if args.dry_run:
         print("\nDry run — first 10 targets:")
         for s in targets[:10]:
-            print(f"  {s['id']:<35} {s.get('cds_url_hint', '')}")
+            seed = s.get("discovery_seed_url") or s.get("cds_url_hint") or ""
+            print(f"  {s['id']:<35} {seed}")
         return 0
 
     log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -227,7 +230,9 @@ def main() -> int:
             res = fut.result()
             res["category"] = categorise(res.get("payload") or {})
             res["school_name"] = s.get("name", "")
-            res["cds_url_hint"] = s.get("cds_url_hint", "")
+            res["discovery_seed_url"] = (
+                s.get("discovery_seed_url") or s.get("cds_url_hint") or ""
+            )
             log_fp.write(json.dumps(res) + "\n")
             log_fp.flush()
             summary[res["category"]] = summary.get(res["category"], 0) + 1

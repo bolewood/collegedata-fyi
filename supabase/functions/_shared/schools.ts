@@ -2,6 +2,13 @@
 // GitHub raw at runtime so new schools land without a function redeploy.
 // See the plan for rejected alternatives (embed-at-deploy, push-to-storage-
 // on-commit).
+//
+// PR 5 of the URL hint refactor renamed the YAML field cds_url_hint →
+// discovery_seed_url and added an optional browse_url. The loader accepts
+// either field name during the migration window so existing schools.yaml
+// rows continue to work even if the rename hasn't propagated to every
+// row yet. Once the YAML is fully renamed, the back-compat fallback can
+// be removed in a follow-up cleanup.
 
 import { parse as parseYaml } from "jsr:@std/yaml";
 import { USER_AGENT } from "./resolve.ts";
@@ -22,12 +29,25 @@ interface SubInstitution {
 
 // Mirrors the shape in tools/finder/schools.yaml. Only the fields the
 // archiver needs are listed; YAML parse tolerates extras.
+//
+// `discovery_seed_url` is what the resolver fetches as the seed for its
+// upgrade path (parent walk, well-known paths, multi-candidate fan-out).
+// `browse_url` is the human-friendly URL surfaced by the kids worklist
+// and any contributor-facing tool. They differ when a school's seed is
+// a direct PDF (good for the resolver, useless for a kid trying to
+// browse for new years).
+//
+// `cds_url_hint` is preserved for back-compat with un-renamed YAML rows
+// during the PR 5 migration window.
 export interface SchoolEntry {
   id: string;
   name: string;
   domain?: string;
   ipeds_id?: string;
   scrape_policy: "active" | "unknown" | "verified_absent";
+  discovery_seed_url?: string | null;
+  browse_url?: string | null;
+  /** @deprecated use discovery_seed_url; kept as YAML back-compat */
   cds_url_hint?: string | null;
   sub_institutions?: SubInstitution[];
   notes?: string;
@@ -36,7 +56,8 @@ export interface SchoolEntry {
 export interface ArchivableSchool {
   id: string;
   name: string;
-  cds_url_hint: string;
+  discovery_seed_url: string;
+  browse_url?: string;
 }
 
 // Validates a raw YAML node matches the minimum shape we rely on. Missing
@@ -54,11 +75,12 @@ function isValidSchoolEntry(raw: unknown): raw is SchoolEntry {
     e.scrape_policy !== "unknown" &&
     e.scrape_policy !== "verified_absent"
   ) return false;
-  if (
-    e.cds_url_hint !== undefined &&
-    e.cds_url_hint !== null &&
-    typeof e.cds_url_hint !== "string"
-  ) return false;
+  // discovery_seed_url (new) or cds_url_hint (legacy) — either is OK.
+  // Both must be string when present.
+  for (const key of ["discovery_seed_url", "cds_url_hint", "browse_url"] as const) {
+    const v = e[key];
+    if (v !== undefined && v !== null && typeof v !== "string") return false;
+  }
   return true;
 }
 
@@ -119,20 +141,24 @@ export async function fetchSchoolsYaml(): Promise<FetchSchoolsYamlResult> {
 
 // V1 filter: every school that can actually be archived by the current
 // pipeline. Sub-institution schools (Columbia et al.) are deferred to a
-// follow-up per the approved plan. cds_url_hint is trimmed before the
-// emptiness check to reject whitespace-only values that would otherwise
-// pass a truthiness test and waste retry budget at download time.
+// follow-up per the approved plan. discovery_seed_url is trimmed before
+// the emptiness check to reject whitespace-only values that would
+// otherwise pass a truthiness test and waste retry budget at download
+// time. The legacy cds_url_hint field is honored as a fallback so the
+// PR 5 YAML rename can land before the runtime is recut.
 export function filterArchivable(schools: SchoolEntry[]): ArchivableSchool[] {
   const out: ArchivableSchool[] = [];
   for (const s of schools) {
     if (s.scrape_policy !== "active") continue;
-    const hint = s.cds_url_hint?.trim();
-    if (!hint) continue;
+    const seed = (s.discovery_seed_url ?? s.cds_url_hint)?.trim();
+    if (!seed) continue;
     if (s.sub_institutions && s.sub_institutions.length > 0) continue;
+    const browse = s.browse_url?.trim();
     out.push({
       id: s.id,
       name: s.name,
-      cds_url_hint: hint,
+      discovery_seed_url: seed,
+      ...(browse ? { browse_url: browse } : {}),
     });
   }
   return out;

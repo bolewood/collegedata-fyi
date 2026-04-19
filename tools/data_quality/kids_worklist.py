@@ -136,11 +136,19 @@ def main() -> int:
             continue
         if args.max_missing is not None and len(missing) != args.max_missing:
             continue
-        if not s.get("cds_url_hint"):
+        # Prefer browse_url for human-facing display; fall back to the
+        # resolver seed (post-PR-5 discovery_seed_url, with legacy
+        # cds_url_hint fallback for un-renamed YAML rows).
+        landing = (
+            s.get("browse_url")
+            or s.get("discovery_seed_url")
+            or s.get("cds_url_hint")
+        )
+        if not landing:
             continue
         row = {
             "school_name": s.get("name", ""),
-            "landing_page": s.get("cds_url_hint", ""),
+            "landing_page": landing,
             "_missing_count": len(missing),
             "_school_id": sid,
         }

@@ -2,12 +2,12 @@
 """CSV of active schools and which recent CDS years we're missing for them.
 
 Output columns:
-  school_id, school_name, domain, cds_url_hint, missing_count,
+  school_id, school_name, domain, browse_url, discovery_seed_url, missing_count,
   has_2022_23, has_2023_24, has_2024_25, has_2025_26, notes
 
 A "Y" means we have a published cds_documents row for that year. Empty means
-no row exists yet. Kids open the cds_url_hint in a browser, look for the
-missing year, and report any URL they find.
+no row exists yet. Kids open the browse_url (preferred) or discovery_seed_url
+in a browser, look for the missing year, and report any URL they find.
 
 Usage:
     python tools/data_quality/active_schools_missing_recent.py
@@ -93,7 +93,10 @@ def main() -> int:
             "school_id": sid,
             "school_name": s.get("name", ""),
             "domain": s.get("domain", ""),
-            "cds_url_hint": s.get("cds_url_hint", ""),
+            "browse_url": s.get("browse_url", ""),
+            "discovery_seed_url": (
+                s.get("discovery_seed_url") or s.get("cds_url_hint") or ""
+            ),
             "missing_count": len(missing),
         }
         for y in years:
@@ -107,7 +110,8 @@ def main() -> int:
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = (
-        ["school_id", "school_name", "domain", "cds_url_hint", "missing_count"]
+        ["school_id", "school_name", "domain", "browse_url",
+         "discovery_seed_url", "missing_count"]
         + [f"has_{y.replace('-', '_')}" for y in years]
         + ["notes"]
     )

@@ -152,7 +152,7 @@ async function runForceUrls(
     const outcome = await archiveManualUrls(supabase, {
       school_id: schoolId,
       school_name: schoolName ?? schoolId,
-      cds_url_hint: firstUrl,
+      discovery_seed_url: firstUrl,
     }, items);
     logEvent({
       event: "force_urls_completed",
@@ -235,7 +235,10 @@ async function runQueueClaim(
     outcome = await archiveOneSchool(supabase, {
       school_id: row.school_id,
       school_name: row.school_name,
-      cds_url_hint: row.cds_url_hint,
+      // archive_queue.cds_url_hint is the DB column name (denormalized
+      // cache from schools.yaml); SchoolInput uses the post-PR-5
+      // discovery_seed_url terminology. Map at the boundary.
+      discovery_seed_url: row.cds_url_hint,
     });
     finalStatus = "done";
   } catch (e) {
@@ -372,7 +375,7 @@ async function runForceSchool(
     return json({
       error: `school '${schoolId}' not found in archivable schools`,
       hint:
-        "Active scrape_policy + non-null cds_url_hint + no sub_institutions. Columbia and other multi-CDS schools are excluded in V1.",
+        "Active scrape_policy + non-null discovery_seed_url + no sub_institutions. Columbia and other multi-CDS schools are excluded in V1.",
     }, 404);
   }
 
@@ -386,7 +389,8 @@ async function runForceSchool(
     const outcome = await archiveOneSchool(supabase, {
       school_id: school.id,
       school_name: school.name,
-      cds_url_hint: school.cds_url_hint,
+      discovery_seed_url: school.discovery_seed_url,
+      ...(school.browse_url ? { browse_url: school.browse_url } : {}),
     });
     logEvent({
       event: "force_school_completed",

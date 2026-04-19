@@ -548,10 +548,10 @@ def main() -> int:
     ap.add_argument("--from-schools-yaml", type=Path,
                     help="Instead of using the hand-curated STARTING_URLS dict, "
                          "load targets from this schools.yaml and use each "
-                         "school's cds_url_hint as the starting URL. Intended "
+                         "school's discovery_seed_url as the starting URL. Intended "
                          "for expanding walk-up coverage beyond the top-100. "
-                         "Only direct-doc hints are included (schools whose "
-                         "cds_url_hint already points at a landing page don't "
+                         "Only direct-doc seeds are included (schools whose "
+                         "discovery_seed_url already points at a landing page don't "
                          "benefit from the walk-up and are skipped).")
     ap.add_argument("--skip-covered", action="store_true",
                     help="When used with --from-schools-yaml, skip schools "
@@ -577,7 +577,7 @@ def main() -> int:
             }
         targets = []
         for s in (schools_data.get("schools") or []):
-            hint = s.get("cds_url_hint") or ""
+            hint = s.get("discovery_seed_url") or s.get("cds_url_hint") or ""
             if not hint or not DOCUMENT_EXT_RE.search(hint):
                 continue
             # Skip Box/Drive/Sharepoint — walk-up doesn't apply to share URLs.

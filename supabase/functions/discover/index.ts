@@ -24,7 +24,7 @@
 //   GET  .../functions/v1/discover?schools=yale,mit,fairfield
 //     → returns a JSON report for each requested school:
 //       { mode: 'dry_run', count: N, results: [
-//           { school_id, school_name, cds_url_hint, result }
+//           { school_id, school_name, discovery_seed_url, result }
 //       ]}
 //     where `result` is the ResolveResult discriminated union from
 //     _shared/resolve.ts (kind: resolved | upstream_gone | transient |
@@ -87,18 +87,20 @@ Deno.serve(async (req: Request) => {
   const results: unknown[] = [];
   for (const s of targets) {
     try {
-      const result = await resolveCdsForSchool(s.cds_url_hint);
+      const result = await resolveCdsForSchool(s.discovery_seed_url);
       results.push({
         school_id: s.id,
         school_name: s.name,
-        cds_url_hint: s.cds_url_hint,
+        discovery_seed_url: s.discovery_seed_url,
+        ...(s.browse_url ? { browse_url: s.browse_url } : {}),
         result,
       });
     } catch (e) {
       results.push({
         school_id: s.id,
         school_name: s.name,
-        cds_url_hint: s.cds_url_hint,
+        discovery_seed_url: s.discovery_seed_url,
+        ...(s.browse_url ? { browse_url: s.browse_url } : {}),
         error: (e as Error).message,
       });
     }

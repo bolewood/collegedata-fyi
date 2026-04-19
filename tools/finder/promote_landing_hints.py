@@ -1,12 +1,16 @@
 """
-Propose (or apply) landing-page rewrites for direct-PDF cds_url_hint values
-in tools/finder/schools.yaml.
+Propose (or apply) landing-page rewrites for direct-PDF discovery_seed_url
+values in tools/finder/schools.yaml.
 
-Background: ~63% of schools.yaml cds_url_hint values point at a specific
+(Field was renamed cds_url_hint → discovery_seed_url in PR 5 of the URL hint
+refactor plan. This tool reads either name during the migration window so
+existing schools.yaml rows continue to work, and writes the new name.)
+
+Background: ~63% of schools.yaml discovery_seed_url values point at a specific
 PDF (often a random old year) rather than the school's CDS landing page.
 This starves discovery — the resolver and the Playwright probe both yield
 best results when given a landing page. This one-shot tool replaces each
-direct-PDF hint with the discovered landing URL, sourced in priority order:
+direct-PDF seed with the discovered landing URL, sourced in priority order:
 
   1. manual_urls.yaml:<school>.landing_url_found  (from PR 2 walk-up)
   2. manual_urls.yaml:<school>.final_url          (when probe succeeded
@@ -218,7 +222,9 @@ def build_proposals(
     proposals: list[dict] = []
     for s in schools:
         sid = s["id"]
-        hint = s.get("cds_url_hint") or ""
+        # Dual-read: PR 5 renamed to discovery_seed_url; old rows still
+        # carry cds_url_hint during the migration.
+        hint = s.get("discovery_seed_url") or s.get("cds_url_hint") or ""
         if not is_direct_doc_hint(hint):
             continue
 
@@ -357,13 +363,18 @@ def write_proposal_report(path: Path, proposals: list[dict], total_direct_docs: 
 
 
 def apply_proposals(schools_yaml: Path, proposals: list[dict]) -> int:
-    """Rewrite `cds_url_hint` lines in-place. Line-based because
+    """Rewrite the seed-URL line in-place. Line-based because
     ruamel.yaml isn't available in the venv and round-tripping via
     PyYAML would obliterate every comment, key order, and blank line
     across the 27k-line file. The schools.yaml formatting is consistent
-    enough (flat `- id:` + `  cds_url_hint:` blocks) for a regex to be
-    safe — confirmed by pre-scan above the loop that every school's
-    block matches the expected shape."""
+    enough (flat `- id:` + `  discovery_seed_url:` blocks) for a regex
+    to be safe — confirmed by pre-scan above the loop that every
+    school's block matches the expected shape.
+
+    PR 5 of the URL hint refactor renamed cds_url_hint →
+    discovery_seed_url. This rewriter accepts either as the matched
+    line (so partially-migrated YAML still applies cleanly) but always
+    writes the new field name back."""
     by_sid = {p["school_id"]: p for p in proposals}
     lines = schools_yaml.read_text().splitlines(keepends=True)
 
@@ -371,7 +382,7 @@ def apply_proposals(schools_yaml: Path, proposals: list[dict]) -> int:
     current_sid: str | None = None
     applied = 0
     id_re = re.compile(r"^- id: (\S+)\s*$")
-    hint_re = re.compile(r"^(  cds_url_hint: )(\S+.*)$")
+    seed_re = re.compile(r"^(  )(?:discovery_seed_url|cds_url_hint)(: )(\S+.*)$")
 
     for line in lines:
         m_id = id_re.match(line)
@@ -379,10 +390,11 @@ def apply_proposals(schools_yaml: Path, proposals: list[dict]) -> int:
             current_sid = m_id.group(1)
             out.append(line)
             continue
-        m_hint = hint_re.match(line)
-        if m_hint and current_sid in by_sid:
+        m_seed = seed_re.match(line)
+        if m_seed and current_sid in by_sid:
             new_hint = by_sid[current_sid]["proposed_hint"]
-            out.append(f"{m_hint.group(1)}{new_hint}\n")
+            # Always emit the new field name on rewrite.
+            out.append(f"{m_seed.group(1)}discovery_seed_url{m_seed.group(2)}{new_hint}\n")
             applied += 1
             continue
         out.append(line)
@@ -421,8 +433,11 @@ def main() -> int:
     schools = schools_data.get("schools") or []
     manual = load_manual_urls(args.manual_urls)
 
-    direct_doc_schools = [s for s in schools if is_direct_doc_hint(s.get("cds_url_hint"))]
-    print(f"Schools with direct-doc hints: {len(direct_doc_schools)}", file=sys.stderr)
+    direct_doc_schools = [
+        s for s in schools
+        if is_direct_doc_hint(s.get("discovery_seed_url") or s.get("cds_url_hint"))
+    ]
+    print(f"Schools with direct-doc seeds: {len(direct_doc_schools)}", file=sys.stderr)
     print(f"manual_urls.yaml entries: {len(manual)}", file=sys.stderr)
 
     sb = None
@@ -493,7 +508,7 @@ def main() -> int:
             print("No proposals to apply.", file=sys.stderr)
             return 0
         applied = apply_proposals(args.schools_yaml, proposals)
-        print(f"Rewrote {applied} cds_url_hint lines in {args.schools_yaml}",
+        print(f"Rewrote {applied} discovery_seed_url lines in {args.schools_yaml}",
               file=sys.stderr)
         return 0
 

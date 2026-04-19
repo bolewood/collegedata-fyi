@@ -106,10 +106,22 @@ export interface ArchiveOutcome {
   storage_path: string | null;
 }
 
+// SchoolInput is the runtime shape passed into archiveOneSchool.
+// `discovery_seed_url` is the URL the resolver fetches first (then walks
+// up / probes well-known paths). `browse_url`, when set, is the
+// human-friendly URL contributors use — distinct from the resolver
+// seed so direct-PDF schools can still expose a browseable IR landing
+// page to humans without confusing the resolver.
+//
+// PR 5 of the URL hint refactor renamed cds_url_hint → discovery_seed_url.
+// archive_queue.cds_url_hint (the DB column) keeps its name as a
+// denormalized cache; the rename happens at the boundary in
+// archive-process and archive-enqueue.
 export interface SchoolInput {
   school_id: string;
   school_name: string;
-  cds_url_hint: string;
+  discovery_seed_url: string;
+  browse_url?: string;
 }
 
 // Rollup precedence: when a multi-candidate school has a mix of
@@ -179,9 +191,10 @@ async function recordHostingObservation(
   // Build the inferHosting input from whatever we have. archive.ts
   // is the natural orchestration point because it has both probe (from
   // resolver) and resolvedDocs (also from resolver). The hint URL is
-  // always available from school.cds_url_hint.
+  // always available from school.discovery_seed_url (renamed from
+  // cds_url_hint in PR 5 of the URL hint refactor).
   const inference: HostingInference = inferHosting({
-    hintUrl: school.cds_url_hint,
+    hintUrl: school.discovery_seed_url,
     finalUrl: probe?.finalUrl,
     contentType: probe?.contentType,
     headers: probe?.headers,
@@ -203,7 +216,7 @@ async function recordHostingObservation(
       .insert({
         school_id: school.school_id,
         observation_source: "resolver",
-        seed_url: school.cds_url_hint,
+        seed_url: school.discovery_seed_url,
         origin_domain: inference.origin_domain,
         final_url_host: inference.final_url_host,
         cms: inference.cms,
@@ -241,7 +254,7 @@ export async function archiveOneSchool(
   // 1. Resolve the hint. Post-Stage-B the resolver returns docs[] —
   //    one CDS-ish anchor per historical year for schools that expose
   //    a multi-year landing page, one row for the direct-doc case.
-  const result = await resolveCdsForSchool(school.cds_url_hint);
+  const result = await resolveCdsForSchool(school.discovery_seed_url);
 
   // Branch on the resolver's discriminated union. Each non-resolved
   // kind triggers an observation write before throwing so failure
