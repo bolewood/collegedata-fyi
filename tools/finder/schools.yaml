@@ -254,7 +254,7 @@ schools:
   domain: mines.edu
   ipeds_id: '126775'
   scrape_policy: active
-  discovery_seed_url: https://ir.mines.edu/institutional-research/common-data-set/
+  discovery_seed_url: https://ir.mines.edu/common-data-set/
   probe_state:
     last_probed_at: '2026-04-14T14:53:35Z'
     last_result: found
@@ -510,7 +510,7 @@ schools:
   domain: osu.edu
   ipeds_id: '204796'
   scrape_policy: active
-  discovery_seed_url: https://irp.osu.edu/sites/default/files/documents/2024/08/CDS_2023-2024-Columbus.pdf
+  discovery_seed_url: https://irp.osu.edu/sites/default/files/documents/2025/11/CDS-2024-2025-The-Ohio-State-University-Columbus.pdf
   probe_state:
     last_probed_at: '2026-04-14T15:35:52Z'
     last_result: found
@@ -587,7 +587,7 @@ schools:
   domain: rutgers.edu
   ipeds_id: '186380'
   scrape_policy: active
-  discovery_seed_url: https://oirap.rutgers.edu/CDS/2021/Camden%20CDS_2021-2022_Final%20V1.pdf
+  discovery_seed_url: https://oirap.rutgers.edu/ReportingCommonDataSet.html
   probe_state:
     last_probed_at: '2026-04-14T15:35:54Z'
     last_result: found
@@ -623,7 +623,7 @@ schools:
   domain: tamu.edu
   ipeds_id: '228723'
   scrape_policy: active
-  discovery_seed_url: https://abpa.tamu.edu/getattachment/be61a654-0a21-4766-abb2-723ac566712d/CDS_2021-2022.pdf
+  discovery_seed_url: https://abpa.tamu.edu/getattachment/439f54fe-1105-48af-955a-405775f80872/CDS-2024-2025_TexasA-M.pdf
   probe_state:
     last_probed_at: '2026-04-14T15:35:54Z'
     last_result: found
@@ -3594,7 +3594,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://assessmentandplanning.byu.edu/common-data-set/
+  discovery_seed_url: https://data.byu.edu/common-data-set
 - id: brigham-young-university-hawaii
   name: Brigham Young University-Hawaii
   domain: byuh.edu
@@ -24266,7 +24266,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://web.uri.edu/ir/wp-content/uploads/sites/276/cds07-08.pdf
+  discovery_seed_url: https://web.uri.edu/ir/reports-and-surveys/common/
 - id: university-of-richmond
   name: University of Richmond
   domain: richmond.edu

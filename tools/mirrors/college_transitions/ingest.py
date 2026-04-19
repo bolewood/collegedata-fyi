@@ -150,15 +150,30 @@ def main() -> int:
     have_count = sum(len(v) for v in have.values())
     print(f"Existing cds_documents rows across these schools: {have_count}")
 
+    # URL-shape sanity: CT's table occasionally has malformed entries
+    # (e.g., 'http://v/' seen on Bennington 2019-20). Drop these before
+    # POST so the edge function doesn't waste a call on DNS errors.
+    from urllib.parse import urlparse
+    def valid_url(u: str) -> bool:
+        try:
+            p = urlparse(u)
+            return p.scheme in ("http", "https") and bool(p.hostname) and "." in p.hostname
+        except Exception:
+            return False
+
     # Build gap list: (school, year, drive_url) we don't have
     tasks: list[dict] = []
     total_ct_pairs = 0
     skipped_have = 0
+    skipped_malformed = 0
     for e in entries:
         for year, drive_url in e["years"].items():
             total_ct_pairs += 1
             if year in have.get(e["school_id"], set()):
                 skipped_have += 1
+                continue
+            if not valid_url(drive_url):
+                skipped_malformed += 1
                 continue
             tasks.append({
                 "school_id": e["school_id"],
@@ -168,6 +183,7 @@ def main() -> int:
             })
     print(f"CT (school, year) pairs: {total_ct_pairs}")
     print(f"  Already in our archive (skip): {skipped_have}")
+    print(f"  Malformed URL on CT side (skip): {skipped_malformed}")
     print(f"  Gaps to ingest: {len(tasks)}")
 
     if args.limit:

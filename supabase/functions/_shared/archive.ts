@@ -459,6 +459,19 @@ export async function archiveManualUrls(
         });
         continue;
       }
+      // TransientError on one candidate in a manual batch should not
+      // abort the whole batch. Mirror ingests submit multi-year URL
+      // lists where one bad URL (malformed, temporary DNS blip) would
+      // otherwise take down the other 5 legitimate years with it.
+      // Treat as skip-and-continue, like PermanentError.
+      if (e instanceof TransientError) {
+        skipped.push({
+          url: rawUrl,
+          reason: e.message,
+          category: e.category,
+        });
+        continue;
+      }
       throw e;
     }
   }

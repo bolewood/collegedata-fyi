@@ -143,6 +143,9 @@ const GOOGLE_DRIVE_OPEN_RE = /^https?:\/\/drive\.google\.com\/open\?id=([^&]+)/i
 // endpoint that returns the sheet as XLSX. Seen on some mirrored
 // College Transitions entries where the CDS was uploaded as a Sheet.
 const GOOGLE_SHEETS_RE = /^https?:\/\/docs\.google\.com\/spreadsheets\/d\/([^/]+)/i;
+// Google Docs share URL. Same pattern as Sheets but exports as DOCX.
+// A handful of CT mirror entries uploaded the CDS as a Google Doc.
+const GOOGLE_DOCS_RE = /^https?:\/\/docs\.google\.com\/document\/d\/([^/]+)/i;
 
 // Box share URLs (e.g. https://upenn.box.com/s/<id>) serve an HTML viewer,
 // not the file itself. Downloaders land on the viewer HTML and classify
@@ -195,6 +198,15 @@ export function rewriteGoogleDriveUrl(url: string): string {
   const sheetsMatch = url.match(GOOGLE_SHEETS_RE);
   if (sheetsMatch) {
     return `https://docs.google.com/spreadsheets/d/${sheetsMatch[1]}/export?format=xlsx`;
+  }
+  // Google Docs: same pattern, DOCX export endpoint. Tier 3 (python-docx)
+  // is a stub today, so extraction will route to 'failed' with a
+  // wrong_content_type reason — but archiving still succeeds, which is
+  // what mirror ingest cares about (preserve the file; extraction can
+  // come later when Tier 3 ships).
+  const docsMatch = url.match(GOOGLE_DOCS_RE);
+  if (docsMatch) {
+    return `https://docs.google.com/document/d/${docsMatch[1]}/export?format=docx`;
   }
   return url;
 }
