@@ -60,7 +60,8 @@ export function yearRange(
 ): string {
   if (!earliest && !latest) return "N/A";
   if (earliest === latest) return earliest!;
-  return `${earliest} to ${latest}`;
+  const startYear = (s: string | null) => (s ? s.split("-")[0] : "");
+  return `${startYear(earliest)}\u2013${startYear(latest)}`;
 }
 
 export function sectionLetter(questionNumber: string): string {

@@ -41,14 +41,12 @@ export default async function HomePage() {
         >
           Browse all schools
         </Link>
-        <a
-          href="https://api.collegedata.fyi/rest/v1/"
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          href="/api"
           className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
         >
           API docs
-        </a>
+        </Link>
         <a
           href="https://github.com/bolewood/collegedata-fyi"
           target="_blank"

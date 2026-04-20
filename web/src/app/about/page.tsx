@@ -15,12 +15,12 @@ export default function AboutPage() {
 
       <div className="mt-8 space-y-5 text-base leading-relaxed">
         <p>
-          The Common Data Set is a beautiful idea. Twenty-seven years ago, three
-          college-guide publishers — the College Board, Peterson&apos;s, and U.S.
-          News — sat down with a bunch of college institutional research offices
-          and agreed on a single template for reporting the numbers that matter
-          about a school: enrollment, admissions, retention, tuition, financial
-          aid, faculty.
+          The Common Data Set is a beautiful idea. Almost thirty years ago,
+          three college-guide publishers — the College Board, Peterson&apos;s,
+          and U.S. News — sat down with a bunch of college institutional
+          research offices and agreed on a single template for reporting the
+          numbers that matter about a school: enrollment, admissions,
+          retention, tuition, financial aid, faculty.
         </p>
 
         <p>
@@ -40,10 +40,10 @@ export default function AboutPage() {
 
         <p>
           Schools publish their CDS in every format imaginable: fillable PDFs
-          where every answer lives in a named form field (14% of the corpus),
-          flattened PDFs where the form structure has been destroyed (84%),
-          scanned images, XLSX files, DOCX files, HTML pages behind JavaScript
-          frameworks, Box embeds, SharePoint pages, and Google Drive shares.
+          where every answer lives in a named form field, flattened PDFs where
+          the form structure has been destroyed, scanned images, filled XLSX
+          workbooks, DOCX files, HTML pages behind JavaScript frameworks, Box
+          embeds, SharePoint pages, and Google Drive shares.
         </p>
 
         <p>
@@ -59,6 +59,42 @@ export default function AboutPage() {
           beautiful canonical template into a distributed system of 800+
           institutional research offices, each with their own webmaster, CMS,
           and IT policies. Over twenty years, the drift is cumulative.
+        </p>
+
+        <h2 className="mt-10 text-xl font-semibold text-gray-900">
+          Why we did this anyway
+        </h2>
+
+        <p>
+          It started as a side project. I was building a college spreadsheet
+          for my son and got tired of typing numbers from PDFs. The more I
+          looked at the existing options, the more obvious it was that nobody
+          had built the index this data deserves.
+        </p>
+
+        <p>
+          We kept building because we think it&apos;s a public good. Students,
+          parents, and counselors navigating college selection deserve direct,
+          free access to the data colleges already publish about themselves,
+          in a form that&apos;s actually queryable. For the past two decades
+          that access has been mediated by commercial aggregators who package
+          the same numbers and sell them back, sometimes for hundreds of
+          dollars per seat.
+        </p>
+
+        <p>
+          We also think colleges will appreciate having the infrastructure
+          they didn&apos;t have to build themselves. The institutional research
+          staff who painstakingly produce the CDS each year do so in PDF
+          format, on their own websites, where the work is effectively
+          invisible to anyone outside the institution until an aggregator
+          picks it up. We give that work direct attribution and a much larger
+          audience.
+        </p>
+
+        <p>
+          The open-access version of this data will probably annoy the
+          incumbent aggregators. We&apos;re fine with that.
         </p>
 
         <h2 className="mt-10 text-xl font-semibold text-gray-900">
@@ -92,8 +128,10 @@ export default function AboutPage() {
           </li>
           <li>
             <strong className="font-semibold text-gray-900">Extraction pipeline</strong>{" "}
-            routes each document to a format-specific extractor (fillable PDFs
-            via AcroForm, flat PDFs via Docling).
+            routes each document to a format-specific extractor: filled XLSX
+            workbooks via the CDS template&apos;s own cell map, fillable PDFs
+            via AcroForm, flattened PDFs via Docling with a schema-targeting
+            cleaner, and scanned image PDFs via OCR.
           </li>
           <li>
             <strong className="font-semibold text-gray-900">Consumer pipeline</strong>{" "}
@@ -175,6 +213,25 @@ export default function AboutPage() {
           </a>{" "}
           reference extracts used as a quality benchmark.
         </p>
+
+        <h2 className="mt-10 text-xl font-semibold text-gray-900">
+          Project Sponsors
+        </h2>
+
+        <p>collegedata.fyi is supported by:</p>
+
+        <ul className="ml-6 list-disc space-y-2 marker:text-gray-400">
+          <li>
+            <a
+              className="text-blue-700 underline hover:text-blue-900"
+              href="https://bolewood.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Bolewood Group
+            </a>
+          </li>
+        </ul>
 
         <div className="mt-10 border-t border-gray-200 pt-6 text-sm text-gray-500">
           The &ldquo;Common&rdquo; in Common Data Set is doing a lot of work.
