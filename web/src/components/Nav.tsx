@@ -20,14 +20,12 @@ export function Nav() {
           >
             About
           </Link>
-          <a
-            href="https://api.collegedata.fyi/rest/v1/"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/api"
             className="text-gray-600 hover:text-gray-900"
           >
             API
-          </a>
+          </Link>
           <a
             href="https://github.com/bolewood/collegedata-fyi"
             target="_blank"
