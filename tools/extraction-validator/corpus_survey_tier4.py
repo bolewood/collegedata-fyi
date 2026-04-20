@@ -124,6 +124,35 @@ def fetch_tier4_artifacts(client, limit: int | None):
     return out
 
 
+def fetch_fallback_values(
+    client, document_ids: list[str]
+) -> dict[str, dict[str, dict]]:
+    """Return {document_id: {qn: value_dict}} from the latest tier4_llm_fallback
+    artifact for each document.
+
+    Returns empty dict for docs without a fallback artifact. Newest artifact
+    wins on dedup (same producer/doc pair rarely has more than one row).
+    """
+    out: dict[str, dict[str, dict]] = {}
+    for i in range(0, len(document_ids), 200):
+        batch = document_ids[i : i + 200]
+        res = (
+            client.table("cds_artifacts")
+            .select("document_id,created_at,notes")
+            .eq("producer", "tier4_llm_fallback")
+            .in_("document_id", batch)
+            .order("created_at", desc=True)
+            .execute()
+        )
+        for row in res.data or []:
+            did = row["document_id"]
+            if did in out:
+                continue  # newest already seen
+            vals = (row.get("notes") or {}).get("values") or {}
+            out[did] = vals
+    return out
+
+
 def fetch_doc_names(client, document_ids: list[str]) -> dict[str, str]:
     """Batch-fetch school_id + cds_year for the document_ids we surveyed."""
     out: dict[str, str] = {}
@@ -203,6 +232,10 @@ def main() -> int:
                     help="Schema JSON used to compute per-section totals")
     ap.add_argument("--json", action="store_true",
                     help="Emit full results as JSON")
+    ap.add_argument("--include-fallback", action="store_true",
+                    help="Also load tier4_llm_fallback artifacts and report "
+                         "cleaner-only vs cleaner+fallback coverage delta per "
+                         "section family and per question (PRD 006 Phase 1).")
     args = ap.parse_args()
 
     section_totals = _load_section_totals(Path(args.schema))
@@ -270,18 +303,50 @@ def main() -> int:
         doc_ids = [r["document_id"] for r in results]
         doc_names = fetch_doc_names(client, doc_ids)
 
+        # Optional: pull tier4_llm_fallback artifacts and merge per Mode B.
+        fallback_coverage: Counter[str] = Counter()
+        fallback_by_doc: dict[str, dict[str, dict]] = {}
+        if args.include_fallback:
+            fallback_by_doc = fetch_fallback_values(client, doc_ids)
+            # Apply fill_gaps merge per doc, then tally coverage from the
+            # merged view (cleaner wins; fallback fills blanks).
+            for a in artifacts:
+                did = a["document_id"]
+                cleaner_vals = clean((a.get("notes") or {}).get("markdown") or "")
+                fb_vals = fallback_by_doc.get(did, {})
+                merged_qns = set(cleaner_vals.keys())
+                for qn in fb_vals:
+                    merged_qns.add(qn)
+                for qn in merged_qns:
+                    fallback_coverage[qn] += 1
+            # Annotate each result with fallback counts.
+            for r in results:
+                fb = fallback_by_doc.get(r["document_id"], {})
+                # How many new qns did the fallback add (beyond what cleaner had)?
+                cleaner_qns = set()
+                for a in artifacts:
+                    if a["document_id"] == r["document_id"]:
+                        cleaner_qns = set(clean((a.get("notes") or {}).get("markdown") or "").keys())
+                        break
+                new_from_fb = len([qn for qn in fb if qn not in cleaner_qns])
+                r["fallback_fields_added"] = new_from_fb
+                r["merged_fields"] = r["current_fields"] + new_from_fb
+
     n = len(results)
     if n == 0:
         print("All artifacts had empty markdown.")
         return 0
 
     if args.json:
-        print(json.dumps({
+        payload = {
             "n_artifacts": n,
             "results": results,
             "field_coverage": dict(field_coverage),
             "doc_names": doc_names,
-        }, indent=2))
+        }
+        if args.include_fallback:
+            payload["fallback_coverage"] = dict(fallback_coverage)
+        print(json.dumps(payload, indent=2))
         return 0
 
     # ---------- Summary ----------
@@ -317,8 +382,17 @@ def main() -> int:
     section_hits: Counter[str] = Counter()
     for qn, count in field_coverage.items():
         section_hits[_section_bucket(qn)] += count
+    # Optional: merged (cleaner + fallback) per-bucket tally.
+    merged_section_hits: Counter[str] = Counter()
+    if args.include_fallback and 'fallback_coverage' in dir():
+        for qn, count in fallback_coverage.items():
+            merged_section_hits[_section_bucket(qn)] += count
+
     print("Per-section-family coverage:")
-    print(f"  {'bucket':<8} {'fill%':>7}  {'fields_observed':>16}  {'expected':>9}")
+    if args.include_fallback:
+        print(f"  {'bucket':<8} {'cleaner%':>9}  {'merged%':>8}  {'delta':>6}  {'expected':>9}")
+    else:
+        print(f"  {'bucket':<8} {'fill%':>7}  {'fields_observed':>16}  {'expected':>9}")
     buckets_sorted = sorted(
         set(section_hits) | set(section_totals),
         key=lambda b: (b[0], b[1:].zfill(2)),
@@ -328,8 +402,15 @@ def main() -> int:
         observed = section_hits.get(bucket, 0)
         denom = n * expected
         fill = (100 * observed / denom) if denom else 0.0
-        bar = "█" * int(20 * fill / 100)
-        print(f"  {bucket:<8} {fill:>6.1f}%  {observed:>16}  {expected:>9}  {bar}")
+        if args.include_fallback:
+            merged_obs = merged_section_hits.get(bucket, observed)
+            merged_fill = (100 * merged_obs / denom) if denom else 0.0
+            delta = merged_fill - fill
+            bar = "█" * int(20 * merged_fill / 100)
+            print(f"  {bucket:<8} {fill:>8.1f}%  {merged_fill:>7.1f}%  {delta:>+5.1f}%  {expected:>9}  {bar}")
+        else:
+            bar = "█" * int(20 * fill / 100)
+            print(f"  {bucket:<8} {fill:>6.1f}%  {observed:>16}  {expected:>9}  {bar}")
     print()
 
     # ---------- Per-field coverage ----------

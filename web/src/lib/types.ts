@@ -19,12 +19,29 @@ export interface FieldValue {
   word_tag?: string;
   subsection?: string;
   value_type?: string;
+  // Added by the tier4_llm_fallback producer (PRD 006).
+  source?: string;
+  evidence_text?: string;
+  evidence_section?: string;
+  verification?: string;
+  confidence?: number;
 }
 
 export interface ArtifactNotes {
   values?: Record<string, FieldValue>;
-  stats?: { total_fields?: number; unmapped_count?: number };
+  stats?: {
+    total_fields?: number;
+    unmapped_count?: number;
+    fields_accepted?: number;
+    fields_rejected?: number;
+    cache_hits?: number;
+    cache_misses?: number;
+    total_cost_usd?: number;
+  };
   markdown?: string;
+  // tier4_llm_fallback-only fields
+  mode?: "fill_gaps" | "shadow";
+  producer?: string;
 }
 
 // App-level aggregation types (not direct DB mirrors)

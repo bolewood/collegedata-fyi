@@ -1,6 +1,13 @@
 import { cache } from "react";
 import { supabase } from "./supabase";
-import type { ManifestRow, ArtifactRow, SchoolSummary, CorpusStats } from "./types";
+import type {
+  ManifestRow,
+  ArtifactRow,
+  ArtifactNotes,
+  FieldValue,
+  SchoolSummary,
+  CorpusStats,
+} from "./types";
 
 export async function fetchManifest(): Promise<ManifestRow[]> {
   const PAGE_SIZE = 1000;
@@ -131,4 +138,63 @@ export async function fetchCanonicalArtifact(
     throw new Error(`Failed to fetch artifact: ${error.message}`);
   }
   return data ?? null;
+}
+
+/**
+ * Fetch the canonical (deterministic) artifact and, if present, the
+ * tier4_llm_fallback artifact, and return merged values per PRD 006 Mode B
+ * (fill_gaps): the deterministic cleaner always wins; the fallback only
+ * populates question numbers the cleaner left blank.
+ *
+ * Callers that need the raw canonical (markdown, stats) still get it back
+ * via `canonical`. The `mergedValues` field is the shape to render to users.
+ */
+export async function fetchExtract(documentId: string): Promise<{
+  canonical: ArtifactRow | null;
+  fallback: ArtifactRow | null;
+  mergedValues: Record<string, FieldValue>;
+}> {
+  const [canonicalRes, fallbackRes] = await Promise.all([
+    supabase
+      .from("cds_artifacts")
+      .select("*")
+      .eq("document_id", documentId)
+      .eq("kind", "canonical")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("cds_artifacts")
+      .select("*")
+      .eq("document_id", documentId)
+      .eq("producer", "tier4_llm_fallback")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  if (canonicalRes.error) {
+    throw new Error(`Failed to fetch canonical artifact: ${canonicalRes.error.message}`);
+  }
+  if (fallbackRes.error) {
+    throw new Error(`Failed to fetch fallback artifact: ${fallbackRes.error.message}`);
+  }
+
+  const canonicalValues =
+    ((canonicalRes.data?.notes as ArtifactNotes | null)?.values ?? {}) as Record<string, FieldValue>;
+  const fallbackValues =
+    ((fallbackRes.data?.notes as ArtifactNotes | null)?.values ?? {}) as Record<string, FieldValue>;
+
+  // Mode B merge: fallback is the base, canonical overlays on top so the
+  // deterministic cleaner's values always win on collision.
+  const mergedValues: Record<string, FieldValue> = {
+    ...fallbackValues,
+    ...canonicalValues,
+  };
+
+  return {
+    canonical: canonicalRes.data ?? null,
+    fallback: fallbackRes.data ?? null,
+    mergedValues,
+  };
 }

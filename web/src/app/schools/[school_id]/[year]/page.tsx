@@ -3,13 +3,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   fetchDocumentsBySchoolAndYear,
-  fetchCanonicalArtifact,
+  fetchExtract,
 } from "@/lib/queries";
 import type { FieldValue, ArtifactNotes } from "@/lib/types";
 import { storageUrl, formatBadgeLabel } from "@/lib/format";
 import { Badge } from "@/components/Badge";
 import { KeyStats } from "@/components/KeyStats";
 import { FieldsView } from "@/components/FieldsView";
+import { MarkdownView } from "@/components/MarkdownView";
 
 export const revalidate = 3600;
 
@@ -105,14 +106,14 @@ async function DocumentVariant({ doc }: { doc: Awaited<ReturnType<typeof fetchDo
 
   let values: Record<string, FieldValue> = {};
   let totalFields: number | undefined;
+  let markdown: string | undefined;
 
   if (isExtracted && doc.document_id) {
-    const artifact = await fetchCanonicalArtifact(doc.document_id);
-    const notes = artifact?.notes as ArtifactNotes | null;
-    if (notes?.values) {
-      values = notes.values;
-    }
+    const { canonical, mergedValues } = await fetchExtract(doc.document_id);
+    const notes = canonical?.notes as ArtifactNotes | null;
+    values = mergedValues;
     totalFields = notes?.stats?.total_fields;
+    markdown = notes?.markdown ?? undefined;
   }
 
   const hasValues = Object.keys(values).length > 0;
@@ -172,6 +173,15 @@ async function DocumentVariant({ doc }: { doc: Awaited<ReturnType<typeof fetchDo
             download above.
           </p>
         </div>
+      )}
+
+      {/* Docling source markdown */}
+      {markdown && (
+        <MarkdownView
+          markdown={markdown}
+          schoolName={doc.school_name ?? "School"}
+          year={doc.canonical_year ?? "unknown"}
+        />
       )}
     </div>
   );

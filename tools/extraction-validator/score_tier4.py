@@ -55,12 +55,31 @@ def numeric_match(expected: str, actual: str) -> bool:
     return abs(ef - af) < 0.005
 
 
-def score(gt_path: Path, markdown_path: Path, idmap_path: Path) -> dict:
+def score(
+    gt_path: Path,
+    markdown_path: Path,
+    idmap_path: Path,
+    llm_artifact_path: Path | None = None,
+) -> dict:
     gt = yaml.safe_load(gt_path.read_text())
     md = markdown_path.read_text()
     idmap = yaml.safe_load(idmap_path.read_text())["mappings"]
 
     values = clean(md)  # {q_number: {"value": ..., "source": ...}}
+
+    # Optional PRD 006 regression check: load the LLM fallback artifact and
+    # merge values per Mode B (fill_gaps — cleaner wins, fallback only fills
+    # missing qns). Hard rule from PRD: no regression on the current
+    # audited schools when this merge is applied.
+    fallback_added = 0
+    if llm_artifact_path:
+        fb = json.loads(llm_artifact_path.read_text())
+        fb_values = (fb.get("notes") or fb).get("values") or {}
+        for qn, v in fb_values.items():
+            if qn not in values:
+                values[qn] = v
+                fallback_added += 1
+
     fields = gt["fields"]
 
     results = []
@@ -116,6 +135,7 @@ def score(gt_path: Path, markdown_path: Path, idmap_path: Path) -> dict:
         "critical_accuracy_pct": round(100 * critical_matched / critical_total, 1) if critical_total else 0.0,
         "unmapped_fields": unmapped,
         "cleaner_fields_populated": cleaner_populated,
+        "fallback_fields_merged": fallback_added,
     }
 
     return {"summary": summary, "results": results}
@@ -139,16 +159,27 @@ def main() -> int:
     parser.add_argument("--markdown", type=Path, required=True,
                         help="Docling output.md to score")
     parser.add_argument("--id-map", type=Path, required=True)
+    parser.add_argument("--include-llm-artifact", type=Path, default=None,
+                        help="Path to a tier4_llm_fallback artifact JSON. If "
+                             "provided, merges its values into the cleaner "
+                             "output per Mode B (fill_gaps) before scoring. "
+                             "Used to verify the PRD 006 no-regression gate.")
     parser.add_argument("--json", action="store_true",
                         help="Emit full results as JSON instead of the table")
     args = parser.parse_args()
 
-    for p in [args.ground_truth, args.markdown, args.id_map]:
+    required = [args.ground_truth, args.markdown, args.id_map]
+    if args.include_llm_artifact:
+        required.append(args.include_llm_artifact)
+    for p in required:
         if not p.exists():
             print(f"error: {p} does not exist", file=sys.stderr)
             return 2
 
-    result = score(args.ground_truth, args.markdown, args.id_map)
+    result = score(
+        args.ground_truth, args.markdown, args.id_map,
+        llm_artifact_path=args.include_llm_artifact,
+    )
 
     if args.json:
         print(json.dumps(result, indent=2))
@@ -159,6 +190,8 @@ def main() -> int:
         print(f"CDS year:                 {s['cds_year']}")
         print(f"Markdown:                 {s['markdown']}")
         print(f"Cleaner fields populated: {s['cleaner_fields_populated']}")
+        if s.get("fallback_fields_merged"):
+            print(f"LLM fallback fields added: {s['fallback_fields_merged']}")
         print()
         print_table(result["results"])
         print()
