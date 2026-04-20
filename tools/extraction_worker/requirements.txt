@@ -1,3 +1,5 @@
 pypdf>=6.0
 supabase>=2.9
 docling>=2.0
+openpyxl>=3.1
+easyocr>=1.7

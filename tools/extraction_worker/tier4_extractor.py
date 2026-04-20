@@ -30,9 +30,10 @@ PRODUCER_NAME = "tier4_docling"
 PRODUCER_VERSION = "0.1.0"
 
 
-def extract(pdf_path: Path) -> dict:
+def extract(pdf_path: Path, force_ocr: bool = False) -> dict:
     from docling.datamodel.base_models import InputFormat
     from docling.datamodel.pipeline_options import (
+        EasyOcrOptions,
         PdfPipelineOptions,
         TableFormerMode,
     )
@@ -40,6 +41,13 @@ def extract(pdf_path: Path) -> dict:
 
     pipeline = PdfPipelineOptions()
     pipeline.do_ocr = True
+    # When force_ocr is set (pdf_scanned path), OCR every page with EasyOCR
+    # explicitly. Docling's default "auto" OCR detection doesn't reliably
+    # trigger on scanned PDFs in our corpus — verified on Kennesaw State
+    # 2023-24 which produced 14 chars across 31 pages under auto mode but
+    # full extracted content under force_full_page_ocr=True.
+    if force_ocr:
+        pipeline.ocr_options = EasyOcrOptions(force_full_page_ocr=True)
     pipeline.do_table_structure = True
     pipeline.table_structure_options.mode = TableFormerMode.FAST
     pipeline.table_structure_options.do_cell_matching = True
@@ -78,8 +86,8 @@ def extract(pdf_path: Path) -> dict:
     }
 
 
-def extract_from_bytes(pdf_bytes: bytes) -> dict:
+def extract_from_bytes(pdf_bytes: bytes, force_ocr: bool = False) -> dict:
     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=True) as tmp:
         tmp.write(pdf_bytes)
         tmp.flush()
-        return extract(Path(tmp.name))
+        return extract(Path(tmp.name), force_ocr=force_ocr)

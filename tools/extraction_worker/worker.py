@@ -11,13 +11,16 @@ not yet implemented.
 
 Routing (driven by cds_documents.source_format):
 
+    xlsx            → Tier 1: tier1_extractor.extract (deterministic
+                      cell-position read via openpyxl, mapped from the
+                      CDS template's hidden lookup columns)
     pdf_fillable    → Tier 2: tier2_extractor.extract (deterministic
                       AcroForm read via pypdf.get_fields)
     pdf_flat        → Tier 4: tier4_extractor.extract (Docling baseline
                       config — markdown output, not yet schema-mapped)
-    pdf_scanned     → not yet implemented (Tier 5; OCR pipeline)
-    xlsx            → not yet implemented (Tier 1; openpyxl read of
-                      the CDS filled template)
+    pdf_scanned     → Tier 4 with lazy OCR: same Docling pipeline. do_ocr=True
+                      triggers EasyOCR on pages with no extractable text,
+                      which is exactly the pdf_scanned case.
     docx            → not yet implemented (Tier 3; python-docx read of
                       the Word template)
     (null)          → sniff via pypdf at run time and backfill
@@ -81,6 +84,7 @@ _TOOLS_ROOT = Path(__file__).resolve().parent.parent
 _WORKER_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(_TOOLS_ROOT))
 sys.path.insert(0, str(_WORKER_DIR))
+from tier1_extractor.extract import build_cell_map, extract_from_bytes as tier1_extract  # noqa: E402
 from tier2_extractor.extract import extract as tier2_extract  # noqa: E402
 from tier2_extractor.extract import load_schema  # noqa: E402
 
@@ -314,6 +318,44 @@ def run_tier2(pdf_bytes: bytes, schema: dict) -> dict:
         return tier2_extract(Path(tmp.name), schema)
 
 
+def _run_tier1(
+    client: Client,
+    document_id: str,
+    school_id: str,
+    xlsx_bytes: bytes,
+    source_format: str,
+    schema: dict,
+    cell_map: dict,
+    dry_run: bool,
+) -> str:
+    """Tier 1 path: read filled CDS XLSX via template cell-position map."""
+    try:
+        canonical = tier1_extract(xlsx_bytes, schema, cell_map)
+    except Exception as e:
+        if not dry_run:
+            mark_extraction_status(client, document_id, "failed", source_format)
+        return f"tier1_error: {e}"
+
+    producer = canonical["producer"]
+    producer_version = canonical["producer_version"]
+
+    if not dry_run:
+        if artifact_already_extracted(client, document_id, producer, producer_version):
+            mark_extraction_status(client, document_id, "extracted", source_format)
+            return "already_extracted"
+
+        try:
+            insert_canonical_artifact(client, document_id, canonical)
+        except Exception as e:
+            mark_extraction_status(client, document_id, "failed", source_format)
+            return f"artifact_insert_error: {e}"
+
+        mark_extraction_status(client, document_id, "extracted", source_format)
+
+    fields = canonical.get("stats", {}).get("schema_fields_populated", 0)
+    return f"tier1_extracted ({fields} fields)"
+
+
 def _run_tier4(
     client: Client,
     document_id: str,
@@ -322,11 +364,16 @@ def _run_tier4(
     source_format: str,
     dry_run: bool,
 ) -> str:
-    """Tier 4 path: Docling baseline → markdown artifact."""
+    """Tier 4 path: Docling baseline → markdown artifact.
+
+    For pdf_scanned, forces full-page EasyOCR since Docling's auto OCR
+    heuristic doesn't reliably trigger on scanned documents.
+    """
     from tier4_extractor import extract_from_bytes as tier4_extract
 
+    force_ocr = source_format == "pdf_scanned"
     try:
-        canonical = tier4_extract(pdf_bytes)
+        canonical = tier4_extract(pdf_bytes, force_ocr=force_ocr)
     except Exception as e:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed", source_format)
@@ -433,6 +480,7 @@ def extract_one(
     doc: dict,
     schema: dict,
     dry_run: bool,
+    cell_map: dict | None = None,
 ) -> str:
     """Process a single cds_documents row. Returns a short action string
     for logging. Does NOT raise — every failure is caught and recorded
@@ -491,7 +539,17 @@ def extract_one(
 
     source_format = doc.get("source_format") or sniff_format_from_bytes(pdf_bytes)
 
-    if source_format == "pdf_flat":
+    if source_format == "xlsx" and cell_map:
+        return _run_tier1(
+            client, document_id, school_id, pdf_bytes,
+            source_format, schema, cell_map, dry_run,
+        )
+
+    # pdf_scanned routes to Tier 4 too — Docling's do_ocr=True lazily runs
+    # OCR (default engine: EasyOCR) on pages with no extractable text, which
+    # is exactly the pdf_scanned case. If OCR quality is insufficient, a
+    # follow-up can add a dedicated Tier 5 path with force_full_page_ocr=True.
+    if source_format in ("pdf_flat", "pdf_scanned"):
         return _run_tier4(
             client, document_id, school_id, pdf_bytes,
             source_format, dry_run,
@@ -772,6 +830,17 @@ def main() -> int:
 
     schema = load_schema(Path(args.schema))
 
+    # Build the Tier 1 cell map from the CDS template (once, reused for
+    # all xlsx docs in the run). The template ships with the repo.
+    _TEMPLATE_PATH = _TOOLS_ROOT.parent / "scratch" / "CDS-PDF-2025-2026-Excel_Template.xlsx"
+    cell_map = None
+    if _TEMPLATE_PATH.exists():
+        try:
+            cell_map = build_cell_map(_TEMPLATE_PATH)
+            print(f"Tier 1 cell map loaded: {len(cell_map)} fields", flush=True)
+        except Exception as e:
+            print(f"Tier 1 cell map failed: {e} (xlsx will fall through to stub)", flush=True)
+
     query = client.table("cds_documents").select(
         "id, school_id, cds_year, detected_year, source_format, extraction_status",
     )
@@ -799,7 +868,7 @@ def main() -> int:
 
     counts: Counter = Counter()
     for i, doc in enumerate(docs, 1):
-        action = extract_one(client, doc, schema, args.dry_run)
+        action = extract_one(client, doc, schema, args.dry_run, cell_map)
         bucket = action.split(":")[0].split(" ")[0]
         counts[bucket] += 1
         print(f"[{i:4d}/{len(docs)}] {doc['school_id']}: {action}", flush=True)
