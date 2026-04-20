@@ -27,9 +27,15 @@ export async function generateMetadata({
   if (docs.length === 0) return { title: "Document Not Found" };
 
   const doc = docs[0];
+  const path = `/schools/${school_id}/${year}`;
+  const title = `${doc.school_name} Common Data Set ${year}`;
+  const description = `Common Data Set ${year} for ${doc.school_name}. Admissions, enrollment, financial aid, and more, extracted from the official CDS document.`;
+
   return {
-    title: `${doc.school_name} Common Data Set ${year}`,
-    description: `Common Data Set ${year} for ${doc.school_name}. Admissions, enrollment, financial aid, and more, extracted from the official CDS document.`,
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: { url: path, title, description },
   };
 }
 
@@ -47,22 +53,34 @@ export default async function SchoolYearPage({
 
   const schoolName = docs[0].school_name;
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Dataset",
-    name: `${schoolName} Common Data Set ${year}`,
-    description: `Common Data Set ${year} for ${schoolName}, containing admissions, enrollment, financial aid, and other institutional data.`,
-    url: `https://collegedata.fyi/schools/${school_id}/${year}`,
-    creator: { "@type": "Organization", name: schoolName },
-    temporalCoverage: year,
-    license: "https://opensource.org/licenses/MIT",
-    isAccessibleForFree: true,
-    provider: {
-      "@type": "Organization",
-      name: "collegedata.fyi",
-      url: "https://collegedata.fyi",
+  const canonicalUrl = `https://www.collegedata.fyi/schools/${school_id}/${year}`;
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      name: `${schoolName} Common Data Set ${year}`,
+      description: `Common Data Set ${year} for ${schoolName}, containing admissions, enrollment, financial aid, and other institutional data.`,
+      url: canonicalUrl,
+      creator: { "@type": "Organization", name: schoolName },
+      temporalCoverage: year,
+      license: "https://opensource.org/licenses/MIT",
+      isAccessibleForFree: true,
+      provider: {
+        "@type": "Organization",
+        name: "collegedata.fyi",
+        url: "https://www.collegedata.fyi",
+      },
     },
-  };
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Schools", item: "https://www.collegedata.fyi/schools" },
+        { "@type": "ListItem", position: 2, name: schoolName, item: `https://www.collegedata.fyi/schools/${school_id}` },
+        { "@type": "ListItem", position: 3, name: year, item: canonicalUrl },
+      ],
+    },
+  ];
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">

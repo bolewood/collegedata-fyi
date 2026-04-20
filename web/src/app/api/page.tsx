@@ -5,6 +5,8 @@ export const metadata: Metadata = {
   title: "API",
   description:
     "Public REST API for the collegedata.fyi Common Data Set archive. PostgREST endpoints, anon key, and example queries.",
+  alternates: { canonical: "/api" },
+  openGraph: { url: "/api" },
 };
 
 const ANON_KEY =

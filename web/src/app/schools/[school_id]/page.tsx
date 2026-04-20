@@ -20,10 +20,14 @@ export async function generateMetadata({
     .map((d) => d.canonical_year)
     .filter((y): y is string => y != null)
     .sort();
+  const path = `/schools/${school_id}`;
+  const description = `${docs.length} archived Common Data Set document${docs.length !== 1 ? "s" : ""} for ${name}, ${yearRange(years[0], years[years.length - 1])}.`;
 
   return {
     title: `${name} - Common Data Set Archive`,
-    description: `${docs.length} archived Common Data Set document${docs.length !== 1 ? "s" : ""} for ${name}, ${yearRange(years[0], years[years.length - 1])}.`,
+    description,
+    alternates: { canonical: path },
+    openGraph: { url: path, title: `${name} - Common Data Set Archive`, description },
   };
 }
 
@@ -65,8 +69,32 @@ export default async function SchoolDetailPage({
     groups.push({ label: null, docs });
   }
 
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "CollegeOrUniversity",
+      name,
+      url: `https://www.collegedata.fyi/schools/${school_id}`,
+      description: `Common Data Set archive for ${name}. ${docs.length} document${docs.length !== 1 ? "s" : ""} archived${years.length > 0 ? `, ${yearRange(years[0], years[years.length - 1])}` : ""}.`,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Schools", item: "https://www.collegedata.fyi/schools" },
+        { "@type": "ListItem", position: 2, name, item: `https://www.collegedata.fyi/schools/${school_id}` },
+      ],
+    },
+  ];
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
       <h1 className="text-2xl font-bold text-gray-900">{name}</h1>
       <p className="text-gray-600 mt-1">
         {docs.length} document{docs.length !== 1 ? "s" : ""} archived

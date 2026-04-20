@@ -5,7 +5,9 @@ import { SchoolTable } from "@/components/SchoolTable";
 export const metadata: Metadata = {
   title: "Schools",
   description:
-    "Browse 600+ U.S. colleges with archived Common Data Set documents. Search by name, sort by year or document count.",
+    "Browse U.S. colleges with archived Common Data Set documents. Search by name, sort by year or document count.",
+  alternates: { canonical: "/schools" },
+  openGraph: { url: "/schools" },
 };
 
 export const revalidate = 3600;

@@ -4,6 +4,8 @@ export const metadata: Metadata = {
   title: "About",
   description:
     "The story behind collegedata.fyi, an open-source archive of U.S. college Common Data Set documents.",
+  alternates: { canonical: "/about" },
+  openGraph: { url: "/about" },
 };
 
 export default function AboutPage() {
