@@ -55,3 +55,9 @@ tools/finder/.ipeds-cache/
 /scratch/
 tools/tier_probe/.venv/
 tools/extraction_worker/.venv/
+
+# Operational run logs — too noisy for the repo
+drain-*.log
+
+# Playwright MCP local browser profile / cache
+.playwright-mcp/

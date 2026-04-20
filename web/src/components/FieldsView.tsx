@@ -1,5 +1,5 @@
 import type { FieldValue } from "@/lib/types";
-import { SECTION_NAMES } from "@/lib/labels";
+import { SECTION_NAMES, FIELD_LABELS } from "@/lib/labels";
 
 export function FieldsView({
   values,
@@ -48,7 +48,8 @@ export function FieldsView({
             </h3>
             <dl className="space-y-1">
               {fields.map(({ id, field }) => {
-                const label = field.question ?? id;
+                const label =
+                  field.question ?? FIELD_LABELS[id]?.label ?? id;
                 const displayValue = field.value_decoded ?? field.value;
                 return (
                   <div

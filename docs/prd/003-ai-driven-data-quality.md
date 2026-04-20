@@ -2,12 +2,29 @@
 
 # PRD 003: AI-driven data-quality spike for Tier 4 extraction (M1 only)
 
-**Status:** APPROVED (scope M1 only, per /autoplan 2026-04-17)
+**Status:** Historical planning artifact — approved for M1 exploration, but **not implemented directly**
 **Author:** Anthony Showalter (with Claude)
 **Date started:** 2026-04-17
-**Related:** [PRD 001](001-collegedata-fyi-v1.md), [PRD 002](002-frontend.md), [ADR 0006](../decisions/0006-tiered-extraction-strategy.md), [ADR 0007](../decisions/0007-year-authority-moves-to-extraction.md)
+**Updated:** 2026-04-20
+**Related:** [PRD 001](001-collegedata-fyi-v1.md), [PRD 002](002-frontend.md), [PRD 006](006-llm-fallback.md), [ADR 0006](../decisions/0006-tiered-extraction-strategy.md), [ADR 0007](../decisions/0007-year-authority-moves-to-extraction.md)
 
 > **Scope note:** /autoplan dual-voice review (both CEO and Eng phases) concluded that the original M1–M5 multi-milestone plan was over-scoped for a 2-day-old site with no user signal. Approved scope is **M1 only**, with an explicit kill-switch decision gate at the end of M1. M2–M5 are preserved as "conditional follow-ups" below but NOT committed work. See the Review Report section at the end of this document for the full analysis.
+
+> **Implementation note (2026-04-20):** This PRD was **not** implemented directly. Keep it as the strategy/review record for the first LLM-fallback exploration, not as the active implementation spec.
+>
+> What is still worth keeping here:
+> - the M1-only decision-gate framing
+> - the alternatives table (`Reducto-only`, anomaly-only, top-N schools, "Ask the CDS")
+> - ops/review-queue ideas like validator flags and maintainer workflow
+> - prompt-eval guardrails such as deterministic confidence and prompt A/B regression testing
+>
+> What it does **not** own anymore:
+> - the active fallback architecture
+> - target-section ownership
+> - subsection slicing / prompt / cache design
+> - current validation and rollout plan
+>
+> Those moved into [PRD 006](006-llm-fallback.md), which is the in-flight implementation path. Read **PRD 003** for context and review history; read **PRD 006** for what is actually being built.
 
 ---
 
