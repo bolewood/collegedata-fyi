@@ -23,6 +23,11 @@ Routing (driven by cds_documents.source_format):
                       which is exactly the pdf_scanned case.
     docx            → not yet implemented (Tier 3; python-docx read of
                       the Word template)
+    html            → Tier 6 (PRD 008): html_to_markdown() normalizes the
+                      bytes to the markdown shape that tier4_cleaner
+                      already consumes. No bespoke parser — reuses the
+                      cleaner's table parser, row-label normalizer, and
+                      SchemaIndex filter. producer='tier6_html'.
     (null)          → sniff via pypdf at run time and backfill
 
 On success (Tier 2 path):
@@ -87,6 +92,7 @@ sys.path.insert(0, str(_WORKER_DIR))
 from tier1_extractor.extract import build_cell_map, extract_from_bytes as tier1_extract  # noqa: E402
 from tier2_extractor.extract import extract as tier2_extract  # noqa: E402
 from tier2_extractor.extract import load_schema  # noqa: E402
+from html_to_markdown import html_to_markdown  # noqa: E402 (PRD 008 Tier 6)
 
 
 def load_env(env_path: Path) -> dict[str, str]:
@@ -287,6 +293,20 @@ def sniff_format_from_bytes(data: bytes) -> str:
             return "other"
     if len(data) >= 4 and data[:4] == b"PK\x03\x04":
         return "xlsx"  # or docx; tier probe distinguishes via filename
+    # HTML sniff (PRD 008). Runs after binary magic so a PDF/ZIP with a
+    # stray "<html" byte sequence doesn't mis-route. Matches the
+    # storage.ts sniffBytesForExt logic on the discovery side.
+    try:
+        head = data[:512].decode("utf-8", errors="ignore").lower().lstrip()
+    except Exception:
+        head = ""
+    if (
+        head.startswith("<!doctype html")
+        or head.startswith("<html")
+        or head.startswith("<head")
+        or (head.startswith("<?xml") and "<html" in head)
+    ):
+        return "html"
     return "other"
 
 
@@ -354,6 +374,82 @@ def _run_tier1(
 
     fields = canonical.get("stats", {}).get("schema_fields_populated", 0)
     return f"tier1_extracted ({fields} fields)"
+
+
+def _run_tier6(
+    client: Client,
+    document_id: str,
+    school_id: str,
+    html_bytes: bytes,
+    source_format: str,
+    dry_run: bool,
+) -> str:
+    """Tier 6 path (PRD 008): HTML → markdown → tier4_cleaner.
+
+    The normalizer (html_to_markdown) emits the same pipe-delimited markdown
+    shape tier4_cleaner already handles, so this is a thin orchestration
+    layer: normalize, call the cleaner, wrap the canonical artifact shape.
+
+    Failure modes: if the normalized markdown yields fewer than
+    MIN_HTML_FIELDS populated fields, mark the row failed with reason
+    html_no_tables — this is the silent-success trap (login-wall stub,
+    empty redirect page, etc.). Genuine low-coverage HTML is still flagged
+    so an operator can investigate.
+    """
+    MIN_HTML_FIELDS = 5
+    from tier4_cleaner import clean as tier4_clean
+
+    try:
+        markdown = html_to_markdown(html_bytes)
+    except Exception as e:
+        if not dry_run:
+            mark_extraction_status(client, document_id, "failed", source_format)
+        return f"tier6_html_error: {e}"
+
+    try:
+        values = tier4_clean(markdown)
+    except Exception as e:
+        if not dry_run:
+            mark_extraction_status(client, document_id, "failed", source_format)
+        return f"tier6_clean_error: {e}"
+
+    if len(values) < MIN_HTML_FIELDS:
+        if not dry_run:
+            mark_extraction_status(client, document_id, "failed", source_format)
+        return f"html_no_tables ({len(values)} fields)"
+
+    canonical: dict = {
+        "producer": "tier6_html",
+        "producer_version": "0.1.0",
+        "source_html": f"{document_id}.html",
+        "extracted_at": __import__("datetime").datetime.now(
+            __import__("datetime").timezone.utc,
+        ).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "stats": {
+            "markdown_length": len(markdown),
+            "schema_fields_populated": len(values),
+        },
+        "markdown": markdown,
+        "values": values,
+    }
+
+    producer = canonical["producer"]
+    producer_version = canonical["producer_version"]
+
+    if not dry_run:
+        if artifact_already_extracted(client, document_id, producer, producer_version):
+            mark_extraction_status(client, document_id, "extracted", source_format)
+            return "already_extracted"
+
+        try:
+            insert_canonical_artifact(client, document_id, canonical)
+        except Exception as e:
+            mark_extraction_status(client, document_id, "failed", source_format)
+            return f"artifact_insert_error: {e}"
+
+        mark_extraction_status(client, document_id, "extracted", source_format)
+
+    return f"tier6_extracted ({len(values)} fields, {len(markdown)} md chars)"
 
 
 def _run_tier4(
@@ -543,6 +639,15 @@ def extract_one(
         return _run_tier1(
             client, document_id, school_id, pdf_bytes,
             source_format, schema, cell_map, dry_run,
+        )
+
+    # Tier 6 (PRD 008): HTML → markdown → tier4_cleaner. Must run before
+    # the "pdf_*" and "pdf_fillable" branches since the variable name
+    # `pdf_bytes` is reused for raw source bytes regardless of format.
+    if source_format == "html":
+        return _run_tier6(
+            client, document_id, school_id, pdf_bytes,
+            source_format, dry_run,
         )
 
     # pdf_scanned routes to Tier 4 too — Docling's do_ocr=True lazily runs

@@ -22,11 +22,14 @@ export function extForContentType(contentType: string | null, fallbackUrl: strin
   if (ct.includes("application/pdf")) return "pdf";
   if (ct.includes("officedocument.spreadsheetml.sheet")) return "xlsx";
   if (ct.includes("officedocument.wordprocessingml.document")) return "docx";
+  if (ct.includes("text/html")) return "html";
 
   const lower = fallbackUrl.toLowerCase();
   if (lower.endsWith(".pdf") || lower.includes(".pdf?")) return "pdf";
   if (lower.endsWith(".xlsx") || lower.includes(".xlsx?")) return "xlsx";
   if (lower.endsWith(".docx") || lower.includes(".docx?")) return "docx";
+  if (lower.endsWith(".html") || lower.endsWith(".htm") ||
+      lower.includes(".html?") || lower.includes(".htm?")) return "html";
   return null;
 }
 
@@ -42,13 +45,17 @@ export function extForContentType(contentType: string | null, fallbackUrl: strin
 //                                                     archives; distinguishing
 //                                                     them would require
 //                                                     reading [Content_Types].xml)
+//   HTML:         <html / <!DOCTYPE html / <head (case-insensitive text sniff
+//                                                in the first 512 bytes)
 //
 // Returns the detected extension, or null if the magic doesn't match
 // any supported format. For ZIP archives we return "xlsx" as a best
 // guess since CDS filled templates are overwhelmingly spreadsheets
 // rather than Word docs (and the extractor will re-detect format via
 // openpyxl / python-docx anyway, so a wrong guess is recoverable).
-export function sniffBytesForExt(bytes: Uint8Array): "pdf" | "xlsx" | "docx" | null {
+// HTML sniff runs after binary magic so a ZIP/PDF with a stray "<html"
+// byte sequence still classifies correctly.
+export function sniffBytesForExt(bytes: Uint8Array): "pdf" | "xlsx" | "docx" | "html" | null {
   if (bytes.length < 4) return null;
   // %PDF- → PDF
   if (
@@ -64,6 +71,21 @@ export function sniffBytesForExt(bytes: Uint8Array): "pdf" | "xlsx" | "docx" | n
     bytes[2] === 0x03 &&
     bytes[3] === 0x04
   ) return "xlsx";
+  // HTML text sniff: decode the first 512 bytes as ASCII-ish UTF-8
+  // fragment and check for an html-ish token at the start of the
+  // document. Case-insensitive. Tolerates leading whitespace / BOM.
+  const head = new TextDecoder("utf-8", { fatal: false })
+    .decode(bytes.slice(0, 512))
+    .toLowerCase()
+    .trimStart();
+  if (
+    head.startsWith("<!doctype html") ||
+    head.startsWith("<html") ||
+    head.startsWith("<head") ||
+    head.startsWith("<?xml") && head.includes("<html")
+  ) {
+    return "html";
+  }
   return null;
 }
 
@@ -75,14 +97,24 @@ export function extForResponse(
   contentType: string | null,
   finalUrl: string,
   bytes: Uint8Array,
-): "pdf" | "xlsx" | "docx" | null {
+): "pdf" | "xlsx" | "docx" | "html" | null {
   const fromCt = extForContentType(contentType, finalUrl);
-  if (fromCt === "pdf" || fromCt === "xlsx" || fromCt === "docx") {
+  if (fromCt === "pdf" || fromCt === "xlsx" || fromCt === "docx" || fromCt === "html") {
     return fromCt;
   }
   return sniffBytesForExt(bytes);
 }
 
+// XSS mitigation (PRD 008): the `sources` Storage bucket is public-read,
+// so any stored object served with its native content-type is fair game
+// for a browser to render. For binary formats (pdf/xlsx/docx) the browser
+// downloads; but raw HTML bytes served with `text/html` would execute
+// embedded `<script>` at the Supabase CDN URL. We intentionally store
+// archived HTML and serve it with `text/plain; charset=utf-8` so a
+// browser renders the markup as source text, never as a live page.
+// The extractor reads the bytes from Storage directly (not via the
+// browser-facing CDN), so the plain-text response header doesn't impair
+// extraction — only XSS.
 export function normalizedContentType(ext: string): string {
   switch (ext) {
     case "pdf":
@@ -91,6 +123,14 @@ export function normalizedContentType(ext: string): string {
       return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     case "docx":
       return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    case "html":
+      // XSS mitigation: archived HTML bytes are uploaded with a declared
+      // content-type of 'text/plain' (no charset param, so the string
+      // exact-matches the 'text/plain' entry in the sources bucket MIME
+      // allowlist). Public reads serve the object with this declared
+      // type, so a browser loading the Supabase CDN URL sees plaintext,
+      // never a live HTML page that could execute <script>. See PRD 008.
+      return "text/plain";
     default:
       return "application/octet-stream";
   }

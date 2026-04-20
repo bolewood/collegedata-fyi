@@ -149,6 +149,11 @@ Each pipeline is independently runnable. None of them requires any of the others
   │              │   Tier 5  image-only scan                     │      │
   │              │       → Tier 4 with force_ocr=True            │      │
   │              │         (EasyOCR on every page)               │      │
+  │              ├───────────────────────────────────────────────┤      │
+  │              │   Tier 6  structured HTML (PRD 008)           │      │
+  │              │       → html_to_markdown (BS4 + lxml)         │      │
+  │              │         → tier4_cleaner.clean                 │      │
+  │              │         producer='tier6_html'                 │      │
   │              └──────────────────┬────────────────────────────┘      │
   │                                 │                                   │
   │                                 ▼                                   │

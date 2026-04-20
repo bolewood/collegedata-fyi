@@ -87,6 +87,7 @@ Routing is driven by `cds_documents.source_format`, which `tier_probe/probe.py` 
 | `pdf_flat` | 4 | Shipped | `tier4_extractor.py` + `tier4_cleaner.py` — Docling markdown + schema-targeting cleaner. GT scorer 94% on audited schools. |
 | `pdf_scanned` | 5 | Shipped 2026-04-20 | Same pipeline as Tier 4 with `force_ocr=True`. Worker passes the flag into `tier4_extractor.extract()` which swaps in `EasyOcrOptions(force_full_page_ocr=True)`. Docling's default "auto" OCR doesn't reliably trigger on scanned CDS PDFs — force mode is needed. |
 | `docx` | 3 | Stub (PRD 007) | Not yet implemented. Will use `python-docx` to read Structured Document Tags (SDTs) — the DOCX template has 1,204 SDTs with tags that match schema `word_tag` values exactly. See [PRD 007](../../docs/prd/007-tier3-docx-extraction.md). |
+| `html` | 6 | Shipped 2026-04-20 | `html_to_markdown.py` (BeautifulSoup + lxml) normalizes archived HTML into the pipe-delimited markdown shape the Tier 4 cleaner already consumes. No bespoke parser — reuses `_parse_markdown_tables` + `_normalize_label` + `SchemaIndex.filter`. MIT 2024-25 reference: 152 fields populated. Archived bytes are served with `text/plain` content-type from the public sources bucket to prevent XSS. Producer: `tier6_html`. See [PRD 008](../../docs/prd/008-html-extraction.md). |
 
 Stub tiers fail fast with a reason in `last_error` so the row exits the pending queue and an operator can see the gap.
 

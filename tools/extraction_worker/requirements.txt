@@ -3,3 +3,5 @@ supabase>=2.9
 docling>=2.0
 openpyxl>=3.1
 easyocr>=1.7
+beautifulsoup4>=4.12
+lxml>=5.0

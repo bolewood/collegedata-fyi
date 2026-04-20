@@ -12,6 +12,8 @@ export function formatBadgeLabel(format: string | null): string {
       return "Excel";
     case "docx":
       return "Word";
+    case "html":
+      return "HTML";
     default:
       return format ?? "Unknown";
   }
