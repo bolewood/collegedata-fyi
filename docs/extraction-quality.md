@@ -20,9 +20,10 @@ The gap between the two is where the real work is.
 | Documents with structured extraction | 3,841 (98%) |
 | Extraction artifacts by tier | 3,364 Tier 4+5 · 350 Tier 1 · 123 Tier 2 · 4 Tier 6 |
 | Ground-truth score, hand-audited schools (average) | 94% |
-| Corpus-wide coverage, C1 admissions section (Tier 4) | 50-60% |
-| Corpus-wide coverage, 1,105-field schema (Tier 4 average) | ~35-40% |
-| Tier 1 XLSX field coverage (median per doc) | 307 fields (~28% of schema) |
+| Benchmark-school coverage, C1 admissions section (Tier 4) | 50-60% |
+| Benchmark-school coverage, 1,105-field schema (3-doc Tier 4 avg, post-Phase 6) | ~35-40% (Harvard 382, Yale 390, Dartmouth 343) |
+| **Actual corpus-wide fields per doc** (mean) | Tier 2: 582 · Tier 1: 297 · Tier 6: 152 · Tier 4: 58 · overall: 96 |
+| Tier 1 XLSX field coverage (median per doc) | 297 fields (~27% of schema) |
 | Tier 1 XLSX field coverage (max per doc) | 782 fields (~71% of schema) |
 
 ## Pipeline tiers
@@ -34,7 +35,7 @@ The extraction pipeline routes each document to a tier based on its source forma
 | 1 | Filled XLSX | Template cell-position map + openpyxl | ✅ Shipped 2026-04-20 | Parses the CDS Excel template's hidden lookup columns once; applies the map to any filled workbook. Deterministic on the standard template layout. 350 artifacts, median 307 fields/doc. |
 | 2 | Fillable PDF with AcroForm fields | `pypdf.get_fields()` | ✅ Shipped | Deterministic. Fields read directly from the PDF's form metadata. |
 | 3 | Filled DOCX | `python-docx` SDT reader | 📄 [PRD 007](prd/007-tier3-docx-extraction.md) | Word template has 1,204 Structured Document Tags whose `w:tag` values match schema `word_tag` exactly. ~30-50 addressable docs today (Kent State's 14 SDT-preserving files are the largest family). Not yet built. |
-| 4 | Flattened PDF (most common) | Docling layout extraction + schema-targeting cleaner | ✅ Shipped | The hardest tier. Most of this document is about Tier 4. Full-schema expansion planned in [PRD 005](prd/005-full-schema-extraction.md). |
+| 4 | Flattened PDF (most common) | Docling layout extraction + schema-targeting cleaner | ✅ Shipped | The hardest tier. Most of this document is about Tier 4. [PRD 005](prd/005-full-schema-extraction.md) Phase 6 shipped 2026-04-20: section-family resolvers took the cleaner from 72 → ~380 fields (Harvard 382, Yale 390, Dartmouth 343). |
 | 5 | Image-only scan | Tier 4 with `force_ocr=True` | ✅ Shipped 2026-04-20 | Same Docling pipeline, swaps in `EasyOcrOptions(force_full_page_ocr=True)`. Kennesaw State 2023-24 went from 0 fields (default lazy OCR) to 172 fields (force OCR) on 31 scanned pages. |
 | 6 | Structured HTML | `html_to_markdown` (BeautifulSoup + lxml) → `tier4_cleaner.clean` | ✅ Shipped 2026-04-20 | HTML normalizer + reuse of the Tier 4 cleaner. Archived HTML bytes are served as `text/plain` from the public Storage bucket to prevent XSS. MIT 2024-25 reference: 152 of 1,105 schema fields populated on first-drain without an alias table. See [PRD 008](prd/008-html-extraction.md). |
 
@@ -155,11 +156,11 @@ Corpus-wide surveys are available via [`corpus_survey_tier4.py`](../tools/extrac
 
 ## Where future work goes
 
-The cleaner has pushed deterministic extraction about as far as the Docling output will permit on the hard sections. Three active workstreams move the quality needle:
+Most of the structural work is shipped. What's left is either opportunistic coverage expansion or the one remaining tier.
 
-- **[PRD 005: Full-schema extraction](prd/005-full-schema-extraction.md)** — expand the Tier 4 cleaner from 72 to full 1,105-field coverage via a section-family resolver framework backed by a shared `SchemaIndex`. Rev 2 incorporates measured schema ambiguity and phases the work by section cleanliness, starting with the cleanest sections (J disciplines, B2 race/ethnicity).
-- **[PRD 006: LLM fallback](prd/006-llm-fallback.md)** — schema-aware LLM pass for the failure modes the deterministic cleaner cannot recover. Evaluates alternative extraction backends for the initial PDF-to-structured step.
-- **[PRD 007: Tier 3 DOCX extraction](prd/007-tier3-docx-extraction.md)** — ship the SDT-based DOCX reader. Unlocks Kent State's campus family and other SDT-preserving publications.
+- **[PRD 005: Full-schema extraction](prd/005-full-schema-extraction.md)** — ✅ Phase 6 shipped 2026-04-20. Section-family resolvers took the Tier 4 cleaner from 72 → ~380 fields. Continuing to add resolvers for thinner sections is opportunistic work, triggered by specific school gaps.
+- **[PRD 006: LLM fallback](prd/006-llm-fallback.md)** — ✅ Shipped 2026-04-20. Schema-aware Claude Haiku pass for structural-failure modes the deterministic cleaner can't recover. 244 2024-25 docs backfilled with mean 28.2 fields added per doc beyond the pre-Phase-6 cleaner baseline. Cache keyed on source+markdown+prompt sha so re-runs cost $0. See [`docs/tier4-llm-fallback.md`](tier4-llm-fallback.md) for the operator runbook.
+- **[PRD 007: Tier 3 DOCX extraction](prd/007-tier3-docx-extraction.md)** — the only remaining tier. Ships the SDT-based DOCX reader. Unlocks Kent State's campus family (14 docs, SDT-preserving) and other structured-DOCX publications. Addressable corpus today is ~30-50 documents.
 
 Quality improvements fall into three categories, roughly in priority order:
 
