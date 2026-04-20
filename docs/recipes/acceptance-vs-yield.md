@@ -10,9 +10,9 @@
 
 ## The demo
 
-See [`acceptance-vs-yield-demo.html`](../../web/public/recipes/acceptance-vs-yield-demo.html) for the interactive scatter plot. It currently shows three schools seeded from the ground-truth fixtures in the repo: Harvard (2024-25), Dartmouth (2024-25), and Harvey Mudd (2025-26). The points are arranged with acceptance rate on the x-axis and yield on the y-axis, sized by full-time undergraduate enrollment. Hover over a dot for the underlying numbers.
+See [`acceptance-vs-yield-demo.html`](../../web/public/recipes/acceptance-vs-yield-demo.html) for the interactive scatter plot. It now shows eighteen schools across the top 100: three ground-truth anchors (Harvard, Dartmouth, Harvey Mudd) plus fifteen rows pulled directly from the collegedata.fyi public API for Stanford, Princeton, Brown, Duke, Cornell, Northeastern, Notre Dame, Rice, Johns Hopkins, NYU, USC, Washington University in St. Louis, Boston College, UVA, and William & Mary. Acceptance rate is on the x-axis (0–40%) and yield on the y-axis (0–100%); each dot is sized by the enrolled first-year class. Hover over a dot for applied / admitted / enrolled counts and the data source (ground-truth vs. API).
 
-Three points isn't enough to see the pattern across the whole admissions market. The XLSX starter ([`acceptance-vs-yield-starter.xlsx`](../../web/public/recipes/acceptance-vs-yield-starter.xlsx)) is designed to be populated from the public API; instructions are below.
+Eighteen points is enough to see the four quadrants resolve — but still only 2–3% of the addressable corpus. The XLSX starter ([`acceptance-vs-yield-starter.xlsx`](../../web/public/recipes/acceptance-vs-yield-starter.xlsx)) is designed to be populated from the public API; instructions are below.
 
 ## How to read it
 

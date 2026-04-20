@@ -109,15 +109,15 @@
 <body>
 
 <h1>Acceptance rate vs yield</h1>
-<div class="subtitle">Two numbers, sixteen schools worth of context. A collegedata.fyi recipe.</div>
+<div class="subtitle">Two numbers, eighteen schools worth of context. A collegedata.fyi recipe.</div>
 
 <div class="chart-container">
   <svg id="chart" width="900" height="540"></svg>
   <div class="legend">
     <span class="legend-item"><span class="legend-dot"></span>CDS-verified school (2024-25 or 2025-26)</span>
-    <span class="legend-item">Dot size = total full-time undergraduate enrollment</span>
+    <span class="legend-item">Dot size = enrolled first-year class</span>
   </div>
-  <div class="source-note">Seed data: ground-truth fixtures in <code>tools/extraction-validator/ground_truth/</code>. The XLSX starter in this recipe includes the API query to populate all 700+ schools in the corpus.</div>
+  <div class="source-note">Three seed rows (Harvard, Dartmouth, Harvey Mudd) come from hand-audited ground-truth fixtures in <code>tools/extraction-validator/ground_truth/</code>. The remaining fifteen are pulled directly from the collegedata.fyi public API (<code>C.116</code>/<code>C.117</code>/<code>C.118</code> on the latest extracted CDS for each school). The XLSX starter includes the exact query to extend to all 700+ schools.</div>
 </div>
 
 <div class="caption">
@@ -134,36 +134,32 @@
 <div class="tooltip" id="tooltip"></div>
 
 <script>
-// Real data from collegedata.fyi ground-truth fixtures.
-// All three rows are hand-audited against the source PDF.
+// Three rows (Harvard, Dartmouth, Harvey Mudd) are hand-audited against the
+// source PDF via tools/extraction-validator/ground_truth/. The remaining
+// fifteen are pulled directly from the collegedata.fyi public API —
+// canonical artifact values for C.116 (applied), C.117 (admitted), and
+// C.118 (enrolled) on the latest extracted CDS for each school.
 const data = [
-  {
-    school: "Harvard University",
-    cds_year: "2024-25",
-    applied: 54008,
-    admitted: 1970,
-    enrolled: 1647,
-    ug_ft: 7033,
-    retention: 98.0
-  },
-  {
-    school: "Dartmouth College",
-    cds_year: "2024-25",
-    applied: 31656,
-    admitted: 1710,
-    enrolled: 1182,
-    ug_ft: 4480,
-    retention: 98.4
-  },
-  {
-    school: "Harvey Mudd College",
-    cds_year: "2025-26",
-    applied: 5213,
-    admitted: 641,
-    enrolled: 234,
-    ug_ft: 909,
-    retention: 95.0
-  }
+  // --- Hand-audited ground-truth rows ---
+  { school: "Harvard University", cds_year: "2024-25", applied: 54008, admitted: 1970, enrolled: 1647, source: "ground-truth" },
+  { school: "Dartmouth College", cds_year: "2024-25", applied: 31656, admitted: 1710, enrolled: 1182, source: "ground-truth" },
+  { school: "Harvey Mudd College", cds_year: "2025-26", applied: 5213, admitted: 641, enrolled: 234, source: "ground-truth" },
+  // --- Live-API rows ---
+  { school: "Stanford University", cds_year: "2024-25", applied: 57326, admitted: 2067, enrolled: 1693, source: "api" },
+  { school: "Princeton University", cds_year: "2024-25", applied: 40468, admitted: 1868, enrolled: 1410, source: "api" },
+  { school: "Brown University", cds_year: "2024-25", applied: 48904, admitted: 2638, enrolled: 1719, source: "api" },
+  { school: "Duke University", cds_year: "2024-25", applied: 51795, admitted: 2957, enrolled: 1740, source: "api" },
+  { school: "Cornell University", cds_year: "2024-25", applied: 65612, admitted: 5516, enrolled: 3525, source: "api" },
+  { school: "Northeastern University", cds_year: "2024-25", applied: 98425, admitted: 5133, enrolled: 2759, source: "api" },
+  { school: "University of Notre Dame", cds_year: "2025-26", applied: 35401, admitted: 3320, enrolled: 2118, source: "api" },
+  { school: "Rice University", cds_year: "2024-25", applied: 32473, admitted: 2597, enrolled: 1148, source: "api" },
+  { school: "Johns Hopkins University", cds_year: "2024-25", applied: 45895, admitted: 2954, enrolled: 1389, source: "api" },
+  { school: "New York University", cds_year: "2024-25", applied: 110807, admitted: 10232, enrolled: 5666, source: "api" },
+  { school: "University of Southern California", cds_year: "2024-25", applied: 82027, admitted: 8050, enrolled: 3489, source: "api" },
+  { school: "Washington University in St Louis", cds_year: "2024-25", applied: 32754, admitted: 3951, enrolled: 1847, source: "api" },
+  { school: "Boston College", cds_year: "2024-25", applied: 34779, admitted: 5632, enrolled: 2394, source: "api" },
+  { school: "University of Virginia", cds_year: "2024-25", applied: 58951, admitted: 9909, enrolled: 3961, source: "api" },
+  { school: "William & Mary", cds_year: "2025-26", applied: 16895, admitted: 6245, enrolled: 1639, source: "api" },
 ];
 
 // Compute ratios.
@@ -179,15 +175,15 @@ const M = { top: 30, right: 110, bottom: 60, left: 70 };
 const innerW = W - M.left - M.right;
 const innerH = H - M.top - M.bottom;
 
-// Scales: x is acceptance rate (0-30%), y is yield (0-100%).
-const xDomain = [0, 30];
+// Scales: x is acceptance rate (0-40%), y is yield (0-100%).
+const xDomain = [0, 40];
 const yDomain = [0, 100];
 const x = (v) => M.left + (v - xDomain[0]) / (xDomain[1] - xDomain[0]) * innerW;
 const y = (v) => M.top + innerH - (v - yDomain[0]) / (yDomain[1] - yDomain[0]) * innerH;
 
-// Dot radius scaled by UG enrollment.
-const ugMax = 8000;
-const r = (ug) => 5 + Math.sqrt(ug / ugMax) * 14;
+// Dot radius scaled by first-year enrolled (max ~6000 for NYU).
+const enrolledMax = 6000;
+const r = (enr) => 5 + Math.sqrt(enr / enrolledMax) * 13;
 
 // SVG helpers.
 function el(tag, attrs = {}, parent = svg) {
@@ -199,17 +195,17 @@ function el(tag, attrs = {}, parent = svg) {
 
 // Grid lines.
 const gridG = el("g", { class: "grid" });
-for (let v = 0; v <= 30; v += 5) {
+for (let v = 0; v <= xDomain[1]; v += 5) {
   el("line", { x1: x(v), y1: y(0), x2: x(v), y2: y(100) }, gridG);
 }
 for (let v = 0; v <= 100; v += 20) {
-  el("line", { x1: x(0), y1: y(v), x2: x(30), y2: y(v) }, gridG);
+  el("line", { x1: x(0), y1: y(v), x2: x(xDomain[1]), y2: y(v) }, gridG);
 }
 
 // Axes.
 const xAxisG = el("g", { class: "axis" });
-el("line", { x1: x(0), y1: y(0), x2: x(30), y2: y(0), stroke: "#9ca3af" }, xAxisG);
-for (let v = 0; v <= 30; v += 5) {
+el("line", { x1: x(0), y1: y(0), x2: x(xDomain[1]), y2: y(0), stroke: "#9ca3af" }, xAxisG);
+for (let v = 0; v <= xDomain[1]; v += 5) {
   el("line", { x1: x(v), y1: y(0), x2: x(v), y2: y(0) + 5, stroke: "#9ca3af" }, xAxisG);
   const t = el("text", { x: x(v), y: y(0) + 20, "text-anchor": "middle" }, xAxisG);
   t.textContent = v + "%";
@@ -255,11 +251,11 @@ const refTxt1 = el("text", {
 refTxt1.textContent = "10% acceptance";
 
 el("line", {
-  x1: x(0), y1: y(50), x2: x(30), y2: y(50),
+  x1: x(0), y1: y(50), x2: x(xDomain[1]), y2: y(50),
   class: "annotation-line"
 }, refG);
 const refTxt2 = el("text", {
-  x: x(28), y: y(50) - 4, class: "annotation"
+  x: x(xDomain[1]) - 4, y: y(50) - 4, class: "annotation", "text-anchor": "end"
 }, refG);
 refTxt2.textContent = "50% yield";
 
@@ -269,7 +265,7 @@ const tooltip = document.getElementById("tooltip");
 data.forEach(d => {
   const cx = x(d.accept_rate);
   const cy = y(d.yield_rate);
-  const radius = r(d.ug_ft);
+  const radius = r(d.enrolled);
 
   const dot = el("circle", {
     cx, cy, r: radius,
@@ -287,6 +283,7 @@ data.forEach(d => {
     tooltip.style.opacity = 1;
     tooltip.style.left = (e.pageX + 12) + "px";
     tooltip.style.top = (e.pageY + 12) + "px";
+    const src = d.source === "ground-truth" ? "Ground truth (hand-audited)" : "Live API (C.116/C.117/C.118)";
     tooltip.innerHTML = `
       <strong>${d.school}</strong><br>
       <span class="meta">CDS ${d.cds_year}</span><br>
@@ -295,8 +292,7 @@ data.forEach(d => {
       Applied: ${d.applied.toLocaleString()}<br>
       Admitted: ${d.admitted.toLocaleString()}<br>
       Enrolled: ${d.enrolled.toLocaleString()}<br>
-      Full-time UG: ${d.ug_ft.toLocaleString()}<br>
-      1-yr retention: ${d.retention}%
+      <span class="meta">Source: ${src}</span>
     `;
   });
   dot.addEventListener("mouseleave", () => {
