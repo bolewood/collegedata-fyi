@@ -15,10 +15,10 @@ The gap between the two is where the real work is.
 
 | Measure | Value |
 |---|---|
-| Schools indexed | 723 |
-| Archived CDS documents | 4,131 |
-| Documents with structured extraction | 4,042 (98%) |
-| Extraction artifacts by tier | 3,545 Tier 4+5 · 362 Tier 1 · 136 Tier 2 |
+| Schools indexed | 697 |
+| Archived CDS documents | 3,924 |
+| Documents with structured extraction | 3,841 (98%) |
+| Extraction artifacts by tier | 3,364 Tier 4+5 · 350 Tier 1 · 123 Tier 2 · 4 Tier 6 |
 | Ground-truth score, hand-audited schools (average) | 94% |
 | Corpus-wide coverage, C1 admissions section (Tier 4) | 50-60% |
 | Corpus-wide coverage, 1,105-field schema (Tier 4 average) | ~35-40% |
@@ -31,7 +31,7 @@ The extraction pipeline routes each document to a tier based on its source forma
 
 | Tier | Input shape | Extractor | Status | Notes |
 |---|---|---|---|---|
-| 1 | Filled XLSX | Template cell-position map + openpyxl | ✅ Shipped 2026-04-20 | Parses the CDS Excel template's hidden lookup columns once; applies the map to any filled workbook. Deterministic on the standard template layout. 289 artifacts, median 307 fields/doc. |
+| 1 | Filled XLSX | Template cell-position map + openpyxl | ✅ Shipped 2026-04-20 | Parses the CDS Excel template's hidden lookup columns once; applies the map to any filled workbook. Deterministic on the standard template layout. 350 artifacts, median 307 fields/doc. |
 | 2 | Fillable PDF with AcroForm fields | `pypdf.get_fields()` | ✅ Shipped | Deterministic. Fields read directly from the PDF's form metadata. |
 | 3 | Filled DOCX | `python-docx` SDT reader | 📄 [PRD 007](prd/007-tier3-docx-extraction.md) | Word template has 1,204 Structured Document Tags whose `w:tag` values match schema `word_tag` exactly. ~30-50 addressable docs today (Kent State's 14 SDT-preserving files are the largest family). Not yet built. |
 | 4 | Flattened PDF (most common) | Docling layout extraction + schema-targeting cleaner | ✅ Shipped | The hardest tier. Most of this document is about Tier 4. Full-schema expansion planned in [PRD 005](prd/005-full-schema-extraction.md). |

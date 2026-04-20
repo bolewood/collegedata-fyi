@@ -11,7 +11,7 @@ Worked examples that show what you can do with the CDS data in this repo. Each r
 
 ## Current recipes
 
-- [**Acceptance rate vs yield**](./acceptance-vs-yield.md) — scatter plot showing the gap between how selective a school looks on paper (acceptance rate) and how selective it actually is in practice (yield). Seeded with three ground-truth schools. Extends to 700+ via the API. Artifacts: [`acceptance-vs-yield-demo.html`](../../web/public/recipes/acceptance-vs-yield-demo.html), [`acceptance-vs-yield-starter.xlsx`](../../web/public/recipes/acceptance-vs-yield-starter.xlsx).
+- [**Acceptance rate vs yield**](./acceptance-vs-yield.md) — scatter plot showing the gap between how selective a school looks on paper (acceptance rate) and how selective it actually is in practice (yield). Seeded with 18 hand-audited schools across a range of selectivity tiers. Extends to 697 via the API. Artifacts: [`acceptance-vs-yield-demo.html`](../../web/public/recipes/acceptance-vs-yield-demo.html), [`acceptance-vs-yield-starter.xlsx`](../../web/public/recipes/acceptance-vs-yield-starter.xlsx).
 - [**Test-optional tracker**](./test-optional-tracker.md) — line chart of SAT submission percentage over time for seven well-documented schools (Yale 2009–2024, Caltech 2002–2020, MIT, Princeton, Stanford, Harvard, Wake Forest). Uses the submission rate as an honest proxy for effective test-optional policy: written disclosures lie, enrollment numbers don't. Artifact: [`test-optional-tracker-demo.html`](../../web/public/recipes/test-optional-tracker-demo.html).
 
 ## Ideas for future recipes
