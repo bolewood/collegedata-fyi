@@ -156,14 +156,22 @@ Reverse chronological.
 
 Ideas bigger than a single backlog item, captured here so they don't get dropped. These are not scheduled.
 
-### Join CDS with College Scorecard via IPEDS unit ID
+### [SHIPPED 2026-04-20] Join CDS with College Scorecard via IPEDS unit ID
 
-The College Scorecard provides post-graduation earnings, federal debt loads, and other outcome data that the CDS completely ignores. The CDS captures admissions granularity (C7 factor weighting, C9 test distributions, C21 demonstrated interest tracking) that Scorecard completely ignores. Both can be joined to every school in the US higher-ed universe via IPEDS unit ID. A V2 or V3 that exposes the joined dataset through the same PostgREST API would give consumers the strongest public ROI-per-admissions-tier comparison available anywhere: "schools where early decision matters but 4-year-out earnings don't justify the premium," "schools whose admissions emphasize demonstrated interest and whose 10-year-out debt-to-earnings ratios are worst," etc. The join is trivial technically. The value is high because nobody currently offers this.
+Shipped across three migrations + two Python scripts:
 
-**Research and planning docs (2026-04-16):**
-- [CDS vs. College Scorecard schema comparison](research/cds-vs-college-scorecard.md) — authoritative domain-by-domain field mapping
-- [Join recipe](research/scorecard-join-recipe.md) — curl/Python/SQL examples for manual join (pre-V2 workaround)
-- [V2 Scorecard summary table plan](research/scorecard-summary-table-v2-plan.md) — 46-column curated table, migration SQL, refresh pipeline, implementation phases
+- `20260420170000_ipeds_id.sql` — adds `ipeds_id` to `cds_documents`, exposes it in the `cds_manifest` view, wires it through `SchoolInput`/`InsertFreshArgs` so new archives populate it automatically from `schools.yaml`.
+- `20260420170100_scorecard_summary.sql` — 43-field curated subset of the College Scorecard Most-Recent-Institution data. One row per UNITID. RLS-gated public read.
+- `20260420170200_cds_scorecard_view.sql` — `cds_scorecard` view that left-joins the CDS manifest with a 20-column Scorecard outcome slice, answering "should I apply here, and what happens if I do?" in a single API call.
+- `tools/scorecard/backfill_ipeds_ids.py` — one-shot SQL generator / supabase-py writer to populate `ipeds_id` on rows inserted before the migration.
+- `tools/scorecard/refresh_summary.py` — annual CSV→upsert loader keyed on UNITID.
+
+Operator runs refresh once a year after each Scorecard bulk release. See [`tools/scorecard/README.md`](../tools/scorecard/README.md) for the runbook.
+
+**Research docs (still authoritative):**
+- [CDS vs. College Scorecard schema comparison](research/cds-vs-college-scorecard.md) — domain-by-domain field mapping that informed the 43-column selection
+- [Join recipe](research/scorecard-join-recipe.md) — manual-join curl/Python/SQL examples for consumers who need Scorecard columns beyond our curated subset
+- [Scorecard summary table plan](research/scorecard-summary-table-v2-plan.md) — the design doc this shipped against
 
 ### Cross-year time series as a first-class query
 

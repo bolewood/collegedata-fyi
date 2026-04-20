@@ -67,6 +67,7 @@ export interface SchoolEntry {
 export interface ArchivableSchool {
   id: string;
   name: string;
+  ipeds_id?: string;
   discovery_seed_url: string;
   browse_url?: string;
 }
@@ -135,6 +136,16 @@ function isValidSchoolEntry(raw: unknown): raw is SchoolEntry {
   for (const key of ["discovery_seed_url", "cds_url_hint", "browse_url"] as const) {
     const v = e[key];
     if (v !== undefined && v !== null && typeof v !== "string") return false;
+  }
+  // IPEDS UNITID: NCES-issued numeric identifier. Must be a digit string
+  // when present. YAML parses unquoted 166027 as a number, which would
+  // silently become numeric in downstream consumers (and could bypass
+  // escaping in tools/scorecard/backfill_ipeds_ids.py). Reject non-string
+  // or non-digit values so the trust boundary is enforced at the
+  // schools.yaml parser, not at every call site.
+  if (e.ipeds_id !== undefined && e.ipeds_id !== null) {
+    if (typeof e.ipeds_id !== "string") return false;
+    if (!/^\d{3,8}$/.test(e.ipeds_id)) return false;
   }
   return true;
 }
@@ -382,6 +393,40 @@ export async function resolveSchoolName(
   );
 }
 
+// Resolve the IPEDS Unit ID for a school_id from schools.yaml, or null
+// if the school isn't listed or carries no UNITID. Used by the archive
+// path so newly inserted cds_documents rows carry ipeds_id automatically
+// and the cds_scorecard join works without a separate backfill.
+// Errors fetching schools.yaml are swallowed to null — the archive must
+// succeed even if the crosswalk is temporarily unavailable.
+//
+// The resolution is memoized within a single edge-function invocation
+// (module-scope cache). archive-process calls this alongside the related
+// resolveSchoolName, which ALSO calls fetchSchoolsYaml, so without a
+// cache every archive makes two identical GitHub raw fetches. At scale,
+// the queue-claim loop multiplies that by N schools per batch. Cache
+// lifetime is the isolate lifetime, which matches Supabase's per-request
+// isolation guarantees.
+let _schoolsYamlCache: Promise<FetchSchoolsYamlResult> | null = null;
+
+export async function resolveSchoolIpedsId(
+  schoolId: string,
+): Promise<string | null> {
+  try {
+    if (_schoolsYamlCache === null) {
+      _schoolsYamlCache = fetchSchoolsYaml();
+    }
+    const result = await _schoolsYamlCache;
+    const entry = result.entries.find((e) => e.id === schoolId);
+    return entry?.ipeds_id ?? null;
+  } catch {
+    // Reset cache on error so a transient failure doesn't poison the
+    // whole isolate's future resolutions.
+    _schoolsYamlCache = null;
+    return null;
+  }
+}
+
 // V1 filter: every school that can actually be archived by the current
 // pipeline. Sub-institution schools (Columbia et al.) are deferred to a
 // follow-up per the approved plan. discovery_seed_url is trimmed before
@@ -400,6 +445,7 @@ export function filterArchivable(schools: SchoolEntry[]): ArchivableSchool[] {
     out.push({
       id: s.id,
       name: s.name,
+      ...(s.ipeds_id ? { ipeds_id: s.ipeds_id } : {}),
       discovery_seed_url: seed,
       ...(browse ? { browse_url: browse } : {}),
     });

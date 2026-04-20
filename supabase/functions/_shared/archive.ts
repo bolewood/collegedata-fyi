@@ -122,6 +122,12 @@ export interface SchoolInput {
   school_name: string;
   discovery_seed_url: string;
   browse_url?: string;
+  // IPEDS Unit ID (UNITID) from schools.yaml. Written to
+  // cds_documents.ipeds_id at insert time so the Scorecard join in
+  // cds_scorecard resolves without a separate backfill pass. Optional
+  // because schools.yaml carries a small number of entries (mostly
+  // verified_absent administrative offices) without a UNITID.
+  ipeds_id?: string;
 }
 
 // Rollup precedence: when a multi-candidate school has a mix of
@@ -565,9 +571,26 @@ async function archiveOneCandidate(
   // Branch A: no existing row → fresh insert.
   if (!existing) {
     await ensureObjectUploaded(supabase, storagePath, bytes, ext);
+    // If schools.yaml was transiently unreachable (school.ipeds_id
+    // swallowed to null by resolveSchoolIpedsId) but prior-year rows for
+    // this school DO carry ipeds_id, reuse that value so new-year rows
+    // don't end up correlated-inconsistent. Cheap fallback query, no-op
+    // when school.ipeds_id is already set from schools.yaml.
+    let effectiveIpedsId: string | null = school.ipeds_id ?? null;
+    if (!effectiveIpedsId) {
+      const { data: sibling } = await supabase
+        .from("cds_documents")
+        .select("ipeds_id")
+        .eq("school_id", school.school_id)
+        .not("ipeds_id", "is", null)
+        .limit(1)
+        .maybeSingle();
+      if (sibling?.ipeds_id) effectiveIpedsId = sibling.ipeds_id as string;
+    }
     const docId = await insertFreshDocument(supabase, {
       school_id: school.school_id,
       school_name: school.school_name,
+      ipeds_id: effectiveIpedsId,
       cds_year: resolved.cds_year,
       source_url: sourceUrl,
       source_sha256: sha256,

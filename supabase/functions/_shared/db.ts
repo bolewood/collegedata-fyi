@@ -95,6 +95,7 @@ export async function fetchLatestSourceArtifact(
 export interface InsertFreshArgs {
   school_id: string;
   school_name: string;
+  ipeds_id?: string | null;
   cds_year: string;
   source_url: string;
   source_sha256: string;
@@ -120,6 +121,7 @@ export async function insertFreshDocument(
     .insert({
       school_id: args.school_id,
       school_name: args.school_name,
+      ipeds_id: args.ipeds_id ?? null,
       cds_year: args.cds_year,
       sub_institutional: null,
       source_url: args.source_url,

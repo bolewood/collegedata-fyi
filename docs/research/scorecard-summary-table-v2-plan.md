@@ -1,10 +1,11 @@
 # V2 Plan: Scorecard Summary Table
 
-> **Status.** Planned (V2). Not scheduled.
+> **Status.** Shipped 2026-04-20. Migrations + refresh tooling landed;
+> operator runs `tools/scorecard/refresh_summary.py` with each annual
+> Scorecard release. See [`tools/scorecard/README.md`](../../tools/scorecard/README.md)
+> for the runbook.
 >
-> **Depends on.** V1 launch (M3 API live, extraction pipeline stable).
->
-> **Last updated.** 2026-04-16
+> **Last updated.** 2026-04-20
 
 ---
 

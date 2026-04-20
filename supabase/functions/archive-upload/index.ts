@@ -58,6 +58,7 @@ import {
 } from "../_shared/storage.ts";
 import {
   fetchSchoolsYaml,
+  resolveSchoolIpedsId,
   resolveSchoolName,
   UnknownSchoolError,
 } from "../_shared/schools.ts";
@@ -200,9 +201,11 @@ Deno.serve(async (req: Request) => {
   // Branch A: no existing row → fresh insert
   if (!existing) {
     await ensureUploaded(supabase, storagePath, bytes, ext);
+    const ipedsId = await resolveSchoolIpedsId(schoolId);
     const docId = await insertFreshDocument(supabase, {
       school_id: schoolId,
       school_name: schoolName,
+      ipeds_id: ipedsId,
       cds_year: cdsYear,
       source_url: sourceUrl,
       source_sha256: sha256,

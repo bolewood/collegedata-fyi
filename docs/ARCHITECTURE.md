@@ -6,15 +6,16 @@ How the pieces fit together at runtime. Complements [`docs/v1-plan.md`](v1-plan.
 
 ## Overview
 
-The project has seven logical pipelines, each running at a different cadence and responsibility boundary:
+The project has eight logical pipelines, each running at a different cadence and responsibility boundary:
 
 1. **Schema pipeline** — once per CDS year. Extracts the canonical schema from commondataset.org's official XLSX template into a committed JSON artifact. Also folds per-field checkbox value decoders into the same artifact.
 2. **Corpus pipeline** — once per month or so. Builds the canonical school list from IPEDS data and enriches it with URL hints discovered by a pattern-ladder prober.
 3. **Discovery pipeline** — nightly via cron. Reads the canonical school list, crawls each school's IR landing page, extracts every CDS-ish document anchor (multi-candidate per ADR 0007 Stage B), archives source bytes to Storage, and upserts one `cds_documents` row per archived file. Academic year is assigned later by the extraction pipeline from page-1 content, not from the URL.
 4. **Mirror pipeline** — monthly or ad-hoc. Ingests third-party CDS archives (College Transitions today; Wayback Machine, others later) as a gap-filler when a school's own IR page 404s or is auth-walled. Every row carries a structured `source_provenance` tag so consumers can filter on `school_direct` for authoritative data or include mirror rows for maximum coverage. The mirror never overwrites; the school's own publication always wins.
 5. **Extraction pipeline** — triggered by discovery. Pulls each `extraction_pending` row, downloads the archived source, detects format, routes to a tier-specific extractor, and writes a `canonical` artifact back. A schema-aware LLM fallback ([PRD 006](prd/006-llm-fallback.md)) runs after the deterministic Tier 4 cleaner on low-coverage docs and writes a separate `cds_artifacts` row with `producer='tier4_llm_fallback'`; consumers merge the two per Mode B (cleaner wins, fallback fills gaps).
-6. **Consumer API** — on demand. PostgREST serves the manifest and the `cds_manifest` view at `api.collegedata.fyi/rest/v1/`. Public Storage URLs serve the archived source files.
-7. **Frontend** — on demand. A Next.js app at `collegedata.fyi` (hosted on Vercel) consumes the PostgREST API and renders a searchable school directory, per-school document archives, and per-year structured field viewers. See [`docs/prd/002-frontend.md`](prd/002-frontend.md).
+6. **Scorecard pipeline** — once per year. Ingests the federal College Scorecard Most-Recent Institution CSV into `scorecard_summary` (curated 43-column subset, one row per IPEDS UNITID). Joins to the CDS corpus via `cds_documents.ipeds_id`, sourced from `schools.yaml` at archive time. Exposed through the `cds_scorecard` view. See [`tools/scorecard/README.md`](../tools/scorecard/README.md).
+7. **Consumer API** — on demand. PostgREST serves the manifest and the `cds_manifest` view at `api.collegedata.fyi/rest/v1/`. Public Storage URLs serve the archived source files.
+8. **Frontend** — on demand. A Next.js app at `collegedata.fyi` (hosted on Vercel) consumes the PostgREST API and renders a searchable school directory, per-school document archives, and per-year structured field viewers. See [`docs/prd/002-frontend.md`](prd/002-frontend.md).
 
 Each pipeline is independently runnable. None of them requires any of the others to be live for the others to work. This is deliberate: the project ships incrementally, one pipeline at a time, rather than requiring the full stack to be up before anything is useful.
 

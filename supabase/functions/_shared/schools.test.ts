@@ -1,7 +1,9 @@
 import { assertEquals, assertRejects } from "jsr:@std/assert";
 import {
+  filterArchivable,
   normalizeSchoolToken,
   resolveSchoolName,
+  type SchoolEntry,
   suggestCanonicalSchool,
   UnknownSchoolError,
 } from "./schools.ts";
@@ -64,6 +66,38 @@ Deno.test("UnknownSchoolError carries the suggestion on the error instance", () 
   assertEquals(e.suggestion, "uf");
   assertEquals(e.code, "unknown_school");
   assertEquals(e.name, "UnknownSchoolError");
+});
+
+Deno.test("filterArchivable threads ipeds_id through when present", () => {
+  const fixtures: SchoolEntry[] = [
+    {
+      id: "uf",
+      name: "University of Florida",
+      ipeds_id: "134130",
+      scrape_policy: "active",
+      discovery_seed_url: "https://uf.edu/cds.pdf",
+    },
+    {
+      id: "mit",
+      name: "MIT",
+      scrape_policy: "active",
+      discovery_seed_url: "https://mit.edu/cds.pdf",
+    },
+    {
+      id: "skip",
+      name: "Verified Absent",
+      scrape_policy: "verified_absent",
+      discovery_seed_url: "https://skip.edu/cds.pdf",
+    },
+  ];
+  const out = filterArchivable(fixtures);
+  assertEquals(out.length, 2);
+  const uf = out.find((s) => s.id === "uf")!;
+  const mit = out.find((s) => s.id === "mit")!;
+  assertEquals(uf.ipeds_id, "134130");
+  // ipeds_id is conditionally spread — absent in the output when the
+  // schools.yaml entry has none. This guards the optional contract.
+  assertEquals("ipeds_id" in mit, false);
 });
 
 // resolveSchoolName's fail-closed behavior when the id is unknown cannot be

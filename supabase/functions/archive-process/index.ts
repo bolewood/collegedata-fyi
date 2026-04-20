@@ -33,6 +33,7 @@ import { ProbeOutcome } from "../_shared/probe_outcome.ts";
 import {
   fetchSchoolsYaml,
   filterArchivable,
+  resolveSchoolIpedsId,
   resolveSchoolName,
   UnknownSchoolError,
 } from "../_shared/schools.ts";
@@ -186,9 +187,11 @@ async function runForceUrls(
 
   try {
     const firstUrl = typeof items[0] === "string" ? items[0] : items[0].url;
+    const ipedsId = await resolveSchoolIpedsId(schoolId);
     const outcome = await archiveManualUrls(supabase, {
       school_id: schoolId,
       school_name: schoolName ?? schoolId,
+      ipeds_id: ipedsId ?? undefined,
       discovery_seed_url: firstUrl,
     }, items, { source_provenance: sourceProvenance });
     logEvent({
@@ -269,9 +272,13 @@ async function runQueueClaim(
   // not just a free-text last_error string.
   let failureCategory: ProbeOutcome | null = null;
   try {
+    // archive_queue doesn't carry ipeds_id; look it up from schools.yaml
+    // so new rows get populated at insert time without a follow-up backfill.
+    const ipedsId = await resolveSchoolIpedsId(row.school_id);
     outcome = await archiveOneSchool(supabase, {
       school_id: row.school_id,
       school_name: row.school_name,
+      ipeds_id: ipedsId ?? undefined,
       // archive_queue.cds_url_hint is the DB column name (denormalized
       // cache from schools.yaml); SchoolInput uses the post-PR-5
       // discovery_seed_url terminology. Map at the boundary.
@@ -426,6 +433,7 @@ async function runForceSchool(
     const outcome = await archiveOneSchool(supabase, {
       school_id: school.id,
       school_name: school.name,
+      ipeds_id: school.ipeds_id,
       discovery_seed_url: school.discovery_seed_url,
       ...(school.browse_url ? { browse_url: school.browse_url } : {}),
     });
