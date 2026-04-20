@@ -193,3 +193,105 @@ fields:
     label: H6 average award (dollars, no commas/cents)
     expected: "83878"
     capture: '\$?\s*(83[,.]?878)'
+
+  # ------------------------- J1 Disciplines (PRD 005 Phase 0) -------------------------
+  # Values verified against yale-2024-25.pdf page 33 (J1 table).
+  - id: j1_bach_natural_resources
+    section: J1
+    label: "Bachelor's: Natural resources and conservation"
+    expected: "2.2"
+  - id: j1_bach_architecture
+    section: J1
+    label: "Bachelor's: Architecture"
+    expected: "1.4"
+  - id: j1_bach_area_ethnic
+    section: J1
+    label: "Bachelor's: Area, ethnic, and gender studies"
+    expected: "4.6"
+  - id: j1_bach_computer
+    section: J1
+    label: "Bachelor's: Computer and information sciences"
+    expected: "9.4"
+  - id: j1_bach_engineering
+    section: J1
+    label: "Bachelor's: Engineering"
+    expected: "5.8"
+  - id: j1_bach_bio
+    section: J1
+    label: "Bachelor's: Biological/life sciences"
+    expected: "10.6"
+  - id: j1_bach_math
+    section: J1
+    label: "Bachelor's: Mathematics and statistics"
+    expected: "7.5"
+  - id: j1_bach_physical_sci
+    section: J1
+    label: "Bachelor's: Physical sciences"
+    expected: "3.8"
+  - id: j1_bach_social_sciences
+    section: J1
+    label: "Bachelor's: Social sciences"
+    expected: "22.9"
+  - id: j1_bach_total
+    section: J1
+    label: "Bachelor's: TOTAL"
+    expected: "100.0"
+
+  # ------------------------- B1 Enrollment expansion (PRD 005 Phase 1) -------------------------
+  # Values extracted from Yale's Full-Time undergraduate enrollment table.
+  - id: b1_ft_other_firstyr_men
+    section: B1
+    label: FT other first-year men
+    expected: "18"
+  - id: b1_ft_all_other_men
+    section: B1
+    label: FT all-other degree-seeking men
+    expected: "2433"
+  - id: b1_ft_total_degree_men
+    section: B1
+    label: FT total degree-seeking men
+    expected: "3233"
+  - id: b1_ft_total_ug_men
+    section: B1
+    label: Total FT undergraduate men
+    expected: "3234"
+
+  # ------------------------- B5 Graduation rates (Pell column, Fall 2018 cohort) -------------------------
+  # Values verified against yale-2024-25.pdf page 5 Fall 2018 Cohort table.
+  - id: b5_pell_A_initial
+    section: B5
+    label: Pell initial cohort
+    expected: "313"
+  - id: b5_pell_D_4yr
+    section: B5
+    label: Pell 4-year completers
+    expected: "197"
+  - id: b5_pell_G_total
+    section: B5
+    label: Pell total completers
+    expected: "298"
+  - id: b5_pell_H_rate
+    section: B5
+    label: Pell 6-year graduation rate (decimal form in template)
+    expected: "0.952"
+
+  # ------------------------- B22 Retention -------------------------
+  - id: b22_retention_pct
+    section: B22
+    label: 1-year retention rate
+    expected: "98.8"
+
+  # ------------------------- C2 Wait List (Phase 2) -------------------------
+  # Values verified against yale-2024-25.pdf C2 waiting list table.
+  - id: c2_offered
+    section: C2
+    label: Qualified applicants offered place on wait list
+    expected: "773"
+  - id: c2_accepting
+    section: C2
+    label: Students accepting place on wait list
+    expected: "565"
+  - id: c2_admitted
+    section: C2
+    label: Wait-listed students admitted
+    expected: "23"

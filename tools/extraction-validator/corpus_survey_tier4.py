@@ -8,26 +8,33 @@ and reports:
 
   - Distribution of fields_populated per doc (histogram + percentiles)
   - Delta between stored stats.schema_fields_populated and current cleaner
-    (shows how much Phase 1 + Phase 2a improved things)
+    (shows how much each phase improves things)
   - Per-question-number coverage (which fields extract reliably vs never)
+  - Per-section-family coverage (PRD 005): mean fields populated per section
+    (A, B1, B2, B3, C1, …, J) vs expected total per section, so each phase
+    can be validated against its targeted section.
   - The 10 lowest-coverage docs, for manual inspection
 
 Safe to run while the extraction worker is writing new rows — this script
 performs reads only and never mutates the DB.
 
 Usage:
+    # Live DB survey (requires SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY):
     tools/extraction_worker/.venv/bin/python \\
         tools/extraction-validator/corpus_survey_tier4.py --limit 200
 
-    # or all tier4 docs:
+    # Benchmark slice from local markdown files (no DB required):
     tools/extraction_worker/.venv/bin/python \\
-        tools/extraction-validator/corpus_survey_tier4.py
+        tools/extraction-validator/corpus_survey_tier4.py \\
+        --markdown-glob 'tools/extraction-validator/runs/*/baseline/output.md'
 """
 
 from __future__ import annotations
 
 import argparse
+import glob
 import json
+import re
 import statistics
 import sys
 from collections import Counter
@@ -37,9 +44,56 @@ from pathlib import Path
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_REPO_ROOT / "tools" / "extraction_worker"))
 from tier4_cleaner import clean  # noqa: E402
-from worker import load_env  # noqa: E402
 
-from supabase import create_client  # noqa: E402
+
+# --- Section family map for PRD 005 coverage reporting ---
+
+# Maps a question number (e.g. "C.1102") to a coarse section family bucket
+# (e.g. "C11"). The bucket naming follows CDS convention (B1, B2, C1, … J).
+# Expected totals are from cds_schema_2025_26.json; they let the survey show
+# "D/J populated" as "actual/expected" instead of bare counts.
+# Sections whose fields cleanly divide into CDS-style sub-tables keyed by
+# "letter + digit(s)" (e.g. B1/B2/B3, C1/C5/C11). For these we bucket by
+# parsing the numeric prefix. Other sections (A, D, E, F, G, H, I, J) are
+# treated as single buckets because their question numbers aren't organized
+# by table-within-section.
+_MULTI_TABLE_SECTIONS = {"B", "C"}
+
+
+def _section_bucket(qn: str) -> str:
+    """Map 'B.201' → 'B2', 'B.2201' → 'B22', 'C.1302' → 'C13', 'J.181' → 'J'.
+
+    Letters not in _MULTI_TABLE_SECTIONS always collapse to the bare letter.
+    Schema also contains alphabetic-suffixed fields (e.g. 'C.8E01', 'A.0A');
+    those bucket into their top-level letter too.
+    """
+    m = re.match(r"^([A-Z])\.(\d+)$", qn)
+    if not m:
+        # Alphabetic suffix (e.g. C.8E01, A.0A): bucket by leading letter.
+        letter_match = re.match(r"^([A-Z])\.", qn)
+        return letter_match.group(1) if letter_match else "?"
+    prefix, digits = m.group(1), m.group(2)
+    if prefix not in _MULTI_TABLE_SECTIONS:
+        return prefix
+    if len(digits) <= 3:
+        return f"{prefix}{digits[:1]}"
+    return f"{prefix}{digits[:2]}"
+
+
+def _load_section_totals(schema_path: Path) -> dict[str, int]:
+    """Count expected fields per bucket from the schema JSON."""
+    data = json.loads(schema_path.read_text())
+    counts: Counter[str] = Counter()
+    for f in data["fields"]:
+        counts[_section_bucket(f["question_number"])] += 1
+    return dict(counts)
+
+
+# Local-markdown mode doesn't need Supabase; import lazily.
+def _lazy_supabase():
+    from worker import load_env  # noqa: WPS433
+    from supabase import create_client  # noqa: WPS433
+    return load_env, create_client
 
 
 def fetch_tier4_artifacts(client, limit: int | None):
@@ -102,68 +156,124 @@ def histogram(values: list[int], buckets: list[tuple[int, int | None]]) -> list[
     return rows
 
 
+def _survey_local(paths: list[Path]) -> tuple[list[dict], Counter, dict]:
+    """Run the cleaner against local markdown files (benchmark-slice mode).
+
+    Returns (results, field_coverage, doc_names) in the same shape as the
+    DB-mode path, so the reporting code below can consume either.
+    """
+    results = []
+    field_coverage: Counter[str] = Counter()
+    doc_names: dict[str, str] = {}
+    for p in paths:
+        md = p.read_text()
+        values = clean(md)
+        for qn in values:
+            field_coverage[qn] += 1
+        # Identity keys mirror DB rows so the reporting code is shared.
+        doc_id = str(p)
+        try:
+            rel = p.resolve().relative_to(_REPO_ROOT)
+            doc_names[doc_id] = str(rel)
+        except ValueError:
+            doc_names[doc_id] = doc_id
+        results.append({
+            "artifact_id": str(p),
+            "document_id": doc_id,
+            "created_at": "",
+            "md_length": len(md),
+            "stored_fields": 0,
+            "current_fields": len(values),
+            "delta": 0,
+        })
+    return results, field_coverage, doc_names
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.strip().split("\n\n")[0])
     ap.add_argument("--env", default=str(_REPO_ROOT / ".env"))
     ap.add_argument("--limit", type=int, default=None,
                     help="Cap artifacts surveyed (useful for quick runs)")
+    ap.add_argument("--markdown-glob", default=None,
+                    help="Survey local markdown files matching this glob "
+                         "instead of hitting the DB. Example: "
+                         "tools/extraction-validator/runs/*/baseline/output.md")
+    ap.add_argument("--schema",
+                    default=str(_REPO_ROOT / "schemas" / "cds_schema_2025_26.json"),
+                    help="Schema JSON used to compute per-section totals")
     ap.add_argument("--json", action="store_true",
                     help="Emit full results as JSON")
     args = ap.parse_args()
 
-    env = load_env(Path(args.env))
-    url = env.get("SUPABASE_URL")
-    key = env.get("SUPABASE_SERVICE_ROLE_KEY")
-    if not url or not key:
-        print("error: missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY", file=sys.stderr)
-        return 2
-    client = create_client(url, key)
+    section_totals = _load_section_totals(Path(args.schema))
 
-    print(f"Fetching tier4_docling canonical artifacts (limit={args.limit or 'all'})…")
-    artifacts = fetch_tier4_artifacts(client, args.limit)
-    print(f"  got {len(artifacts)} artifacts\n")
+    # --- Data acquisition: local-markdown mode vs DB mode ---
+    if args.markdown_glob:
+        paths = sorted(Path(p) for p in glob.glob(args.markdown_glob))
+        if not paths:
+            print(f"error: no markdown files matched {args.markdown_glob!r}",
+                  file=sys.stderr)
+            return 2
+        print(f"Surveying {len(paths)} local markdown files…\n")
+        results, field_coverage, doc_names = _survey_local(paths)
+        stored_counts = [0] * len(results)
+        current_counts = [r["current_fields"] for r in results]
+    else:
+        load_env, create_client = _lazy_supabase()
+        env = load_env(Path(args.env))
+        url = env.get("SUPABASE_URL")
+        key = env.get("SUPABASE_SERVICE_ROLE_KEY")
+        if not url or not key:
+            print("error: missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY",
+                  file=sys.stderr)
+            return 2
+        client = create_client(url, key)
 
-    if not artifacts:
-        print("No tier4 artifacts in DB yet.")
-        return 0
+        print(f"Fetching tier4_docling canonical artifacts (limit={args.limit or 'all'})…")
+        artifacts = fetch_tier4_artifacts(client, args.limit)
+        print(f"  got {len(artifacts)} artifacts\n")
 
-    # Re-run cleaner against each stored markdown.
-    results = []
-    field_coverage: Counter[str] = Counter()
-    stored_counts: list[int] = []
-    current_counts: list[int] = []
+        if not artifacts:
+            print("No tier4 artifacts in DB yet.")
+            return 0
 
-    for a in artifacts:
-        notes = a.get("notes") or {}
-        md = notes.get("markdown") or ""
-        stored_stats = notes.get("stats") or {}
-        stored_n = stored_stats.get("schema_fields_populated", 0)
-        if not md:
-            continue
-        current_values = clean(md)
-        current_n = len(current_values)
-        for qn in current_values:
-            field_coverage[qn] += 1
-        stored_counts.append(stored_n)
-        current_counts.append(current_n)
-        results.append({
-            "artifact_id": a["id"],
-            "document_id": a["document_id"],
-            "created_at": a["created_at"],
-            "md_length": len(md),
-            "stored_fields": stored_n,
-            "current_fields": current_n,
-            "delta": current_n - stored_n,
-        })
+        # Re-run cleaner against each stored markdown.
+        results = []
+        field_coverage = Counter()
+        stored_counts = []
+        current_counts = []
+
+        for a in artifacts:
+            notes = a.get("notes") or {}
+            md = notes.get("markdown") or ""
+            stored_stats = notes.get("stats") or {}
+            stored_n = stored_stats.get("schema_fields_populated", 0)
+            if not md:
+                continue
+            current_values = clean(md)
+            current_n = len(current_values)
+            for qn in current_values:
+                field_coverage[qn] += 1
+            stored_counts.append(stored_n)
+            current_counts.append(current_n)
+            results.append({
+                "artifact_id": a["id"],
+                "document_id": a["document_id"],
+                "created_at": a["created_at"],
+                "md_length": len(md),
+                "stored_fields": stored_n,
+                "current_fields": current_n,
+                "delta": current_n - stored_n,
+            })
+
+        # Pull document names for low-coverage inspection.
+        doc_ids = [r["document_id"] for r in results]
+        doc_names = fetch_doc_names(client, doc_ids)
 
     n = len(results)
     if n == 0:
         print("All artifacts had empty markdown.")
         return 0
-
-    # Pull document names for low-coverage inspection.
-    doc_ids = [r["document_id"] for r in results]
-    doc_names = fetch_doc_names(client, doc_ids)
 
     if args.json:
         print(json.dumps({
@@ -196,6 +306,30 @@ def main() -> int:
         print(f"Delta vs stored (positive = current cleaner better): "
               f"mean={statistics.mean(deltas):.1f}  median={statistics.median(deltas):.0f}  "
               f"max=+{max(deltas)}  min={min(deltas)}")
+    print()
+
+    # ---------- Per-section-family coverage (PRD 005) ----------
+    # For each bucket, sum the number of (doc × unique question) hits observed
+    # and divide by (n docs × expected fields in bucket). This is the
+    # population rate per section — how "filled-in" a typical doc is for
+    # that section's schema slice. Each phase should move the bucket it
+    # targets toward 100% while leaving unchanged buckets flat.
+    section_hits: Counter[str] = Counter()
+    for qn, count in field_coverage.items():
+        section_hits[_section_bucket(qn)] += count
+    print("Per-section-family coverage:")
+    print(f"  {'bucket':<8} {'fill%':>7}  {'fields_observed':>16}  {'expected':>9}")
+    buckets_sorted = sorted(
+        set(section_hits) | set(section_totals),
+        key=lambda b: (b[0], b[1:].zfill(2)),
+    )
+    for bucket in buckets_sorted:
+        expected = section_totals.get(bucket, 0)
+        observed = section_hits.get(bucket, 0)
+        denom = n * expected
+        fill = (100 * observed / denom) if denom else 0.0
+        bar = "█" * int(20 * fill / 100)
+        print(f"  {bucket:<8} {fill:>6.1f}%  {observed:>16}  {expected:>9}  {bar}")
     print()
 
     # ---------- Per-field coverage ----------

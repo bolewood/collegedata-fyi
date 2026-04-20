@@ -216,3 +216,464 @@ fields:
     label: Application fee
     expected: "85"
     capture: 'application fee[^\n]*?\$\s*(85)\b'
+
+  # ------------------------- B2 Race/ethnicity (all columns) -------------------------
+  # Values verified against harvard-2024-25.pdf page 3 (B2 table).
+  - id: b2_fy_black
+    section: B2
+    label: First-year Black or African American
+    expected: "112"
+  - id: b2_fy_am_indian
+    section: B2
+    label: First-year American Indian / Alaska Native
+    expected: "3"
+  - id: b2_fy_pacific
+    section: B2
+    label: First-year Native Hawaiian or other Pacific Islander
+    expected: "2"
+  - id: b2_fy_two_or_more
+    section: B2
+    label: First-year Two or more races
+    expected: "127"
+  - id: b2_fy_unknown
+    section: B2
+    label: First-year Race/ethnicity unknown
+    expected: "117"
+
+  # Column 2: Degree-seeking undergraduates (includes first-year).
+  - id: b2_ds_nonresident
+    section: B2
+    label: Degree-seeking UG nonresident
+    expected: "1048"
+  - id: b2_ds_hispanic
+    section: B2
+    label: Degree-seeking UG Hispanic/Latino
+    expected: "806"
+  - id: b2_ds_white
+    section: B2
+    label: Degree-seeking UG White
+    expected: "2088"
+  - id: b2_ds_asian
+    section: B2
+    label: Degree-seeking UG Asian
+    expected: "1647"
+  - id: b2_ds_total
+    section: B2
+    label: Degree-seeking UG total
+    expected: "6979"
+
+  # Column 3: Total undergraduates (degree + non-degree).
+  - id: b2_total_nonresident
+    section: B2
+    label: Total UG nonresident
+    expected: "1103"
+  - id: b2_total_white
+    section: B2
+    label: Total UG White
+    expected: "2088"
+  - id: b2_total_asian
+    section: B2
+    label: Total UG Asian
+    expected: "1651"
+  - id: b2_total_total
+    section: B2
+    label: Grand total undergraduates
+    expected: "7038"
+
+  # ------------------------- J1 Disciplines (bachelor's column sample) -------------------------
+  # Values verified against harvard-2024-25.pdf page 25 (J1 table).
+  # Harvard reports 0% for Diploma and Associate; Bachelor's column only.
+  - id: j1_bach_natural_resources
+    section: J1
+    label: "Bachelor's: Natural resources and conservation"
+    expected: "0.01"
+  - id: j1_bach_area_ethnic
+    section: J1
+    label: "Bachelor's: Area, ethnic, and gender studies"
+    expected: "0.02"
+  - id: j1_bach_computer
+    section: J1
+    label: "Bachelor's: Computer and information sciences"
+    expected: "0.11"
+  - id: j1_bach_engineering
+    section: J1
+    label: "Bachelor's: Engineering"
+    expected: "0.05"
+  - id: j1_bach_english
+    section: J1
+    label: "Bachelor's: English"
+    expected: "0.02"
+  - id: j1_bach_bio
+    section: J1
+    label: "Bachelor's: Biological/life sciences"
+    expected: "0.13"
+  - id: j1_bach_math
+    section: J1
+    label: "Bachelor's: Mathematics and statistics"
+    expected: "0.12"
+  - id: j1_bach_physical_sci
+    section: J1
+    label: "Bachelor's: Physical sciences"
+    expected: "0.08"
+  - id: j1_bach_psychology
+    section: J1
+    label: "Bachelor's: Psychology"
+    expected: "0.04"
+  - id: j1_bach_social_sciences
+    section: J1
+    label: "Bachelor's: Social sciences"
+    expected: "0.27"
+  - id: j1_bach_visual_arts
+    section: J1
+    label: "Bachelor's: Visual and performing arts"
+    expected: "0.03"
+  - id: j1_bach_history
+    section: J1
+    label: "Bachelor's: History"
+    expected: "0.08"
+
+  # ------------------------- B1 Enrollment expansion (PRD 005 Phase 1) -------------------------
+  # Values verified against harvard-2024-25.pdf B1 table (page 2-3).
+  - id: b1_ft_other_firstyr_men
+    section: B1
+    label: FT other first-year men
+    expected: "3"
+  - id: b1_ft_other_firstyr_women
+    section: B1
+    label: FT other first-year women
+    expected: "5"
+  - id: b1_ft_all_other_men
+    section: B1
+    label: FT all-other degree-seeking men
+    expected: "2465"
+  - id: b1_ft_all_other_women
+    section: B1
+    label: FT all-other degree-seeking women
+    expected: "2860"
+  - id: b1_ft_total_degree_men
+    section: B1
+    label: FT total degree-seeking men
+    expected: "3232"
+  - id: b1_ft_total_degree_women
+    section: B1
+    label: FT total degree-seeking women
+    expected: "3742"
+  - id: b1_ft_grad_firsttime_men
+    section: B1
+    label: FT grad first-time men
+    expected: "2303"
+  - id: b1_ft_grad_firsttime_women
+    section: B1
+    label: FT grad first-time women
+    expected: "2818"
+  - id: b1_grad_total_men
+    section: B1
+    label: Total grad students men
+    expected: "6493"
+  - id: b1_grad_total_women
+    section: B1
+    label: Total grad students women
+    expected: "7658"
+
+  # ------------------------- B5 Graduation rates (Pell column, Fall 2018) -------------------------
+  # Values verified against harvard-2024-25.pdf B5 Fall 2018 Cohort table.
+  - id: b5_pell_A_initial
+    section: B5
+    label: Pell initial 2018 cohort
+    expected: "303"
+  - id: b5_pell_D_4yr
+    section: B5
+    label: Pell completed in 4 years
+    expected: "195"
+  - id: b5_pell_E_5yr
+    section: B5
+    label: Pell completed in 5 years
+    expected: "80"
+  - id: b5_pell_F_6yr
+    section: B5
+    label: Pell completed in 6 years
+    expected: "12"
+  - id: b5_pell_G_total
+    section: B5
+    label: Pell total completers
+    expected: "287"
+  - id: b5_pell_H_rate
+    section: B5
+    label: Pell 6-year graduation rate
+    expected: "95"
+
+  # ------------------------- B22 Retention (Phase 1) -------------------------
+  - id: b22_retention_pct
+    section: B22
+    label: 1-year retention rate
+    expected: "98"
+
+  # ------------------------- C11 GPA profile (Phase 3) -------------------------
+  # Values from harvard-2024-25.pdf page 15; only the "All enrolled students"
+  # column is populated (C.1121-C.1130).
+  - id: c11_all_4_0
+    section: C11
+    label: "% all enrolled with GPA of 4.0"
+    expected: "72.41"
+  - id: c11_all_3_75
+    section: C11
+    label: "% all enrolled 3.75-3.99"
+    expected: "22.20"
+  - id: c11_all_3_50
+    section: C11
+    label: "% all enrolled 3.50-3.74"
+    expected: "4.11"
+  - id: c11_all_total
+    section: C11
+    label: "C11 all-enrolled totals"
+    expected: "100.00"
+
+  # ------------------------- G1 Expenses (Phase 4) -------------------------
+  # Values verified against harvard-2024-25.pdf page 20.
+  - id: g1_tuition_fy
+    section: G1
+    label: First-year tuition
+    expected: "59320"
+  - id: g1_required_fees
+    section: G1
+    label: Required fees (UG)
+    expected: "5476"
+  - id: g1_food_housing
+    section: G1
+    label: Food and housing on-campus (UG)
+    expected: "22130"
+  - id: g1_housing_only
+    section: G1
+    label: Housing only (UG)
+    expected: "13532"
+  - id: g1_food_only
+    section: G1
+    label: Food only (UG)
+    expected: "8598"
+
+  # ------------------------- I1 Instructional Faculty (Phase 4) -------------------------
+  # Values verified against harvard-2024-25.pdf page 26 I-1 table.
+  - id: i1_total_ft
+    section: I1
+    label: Total instructional faculty FT
+    expected: "1846"
+  - id: i1_total_pt
+    section: I1
+    label: Total instructional faculty PT
+    expected: "316"
+  - id: i1_total_all
+    section: I1
+    label: Total instructional faculty (all)
+    expected: "2162"
+  - id: i1_females_ft
+    section: I1
+    label: Female faculty FT
+    expected: "726"
+  - id: i1_males_ft
+    section: I1
+    label: Male faculty FT
+    expected: "1120"
+  - id: i1_doctorate_ft
+    section: I1
+    label: Faculty with doctorate FT
+    expected: "1710"
+
+  # ------------------------- I3 Class Size (Phase 4) -------------------------
+  - id: i3_sections_2_9
+    section: I3
+    label: Class sections 2-9
+    expected: "465"
+  - id: i3_sections_100plus
+    section: I3
+    label: Class sections 100+
+    expected: "52"
+  - id: i3_sections_total
+    section: I3
+    label: Total class sections
+    expected: "1072"
+
+  # ------------------------- H1 Aid Awarded (Phase 5) -------------------------
+  # Values verified against harvard-2024-25.pdf H1 table (page 21).
+  - id: h1_nb_federal
+    section: H1
+    label: Need-based federal scholarships
+    expected: "14477617"
+  - id: h1_nb_institutional
+    section: H1
+    label: Need-based institutional scholarships
+    expected: "249502952"
+  - id: h1_nb_total_scholarships
+    section: H1
+    label: Need-based total scholarships
+    expected: "270553652"
+  - id: h1_nb_student_loans
+    section: H1
+    label: Need-based student loans
+    expected: "1943520"
+  - id: h1_nn_federal
+    section: H1
+    label: Non-need-based federal
+    expected: "5347800"
+  - id: h1_nn_institutional
+    section: H1
+    label: Non-need-based institutional
+    expected: "129393"
+
+  # ------------------------- H2 Students Awarded Aid (Phase 5) -------------------------
+  # Values verified against harvard-2024-25.pdf H2 table.
+  - id: h2_fy_total_applicants
+    section: H2
+    label: First-year A row (degree-seeking undergrads)
+    expected: "1630"
+  - id: h2_fy_need_applied
+    section: H2
+    label: First-year B row (applied for need-based)
+    expected: "1083"
+  - id: h2_fy_have_need
+    section: H2
+    label: First-year C row (determined to have need)
+    expected: "920"
+  - id: h2_ugft_total
+    section: H2
+    label: UG FT A row
+    expected: "6975"
+  - id: h2_ugft_need_applied
+    section: H2
+    label: UG FT B row
+    expected: "4117"
+
+  # ------------------------- H2A Non-need-based scholarships (Phase 5) -------------------------
+  - id: h2a_fy_n_count
+    section: H2A
+    label: First-year N row (non-need institutional)
+    expected: "3"
+  - id: h2a_fy_o_amount
+    section: H2A
+    label: First-year O row (avg non-need amount)
+    expected: "6000"
+
+  # ------------------------- H4 Bachelor's degree class (Phase 5) -------------------------
+  - id: h4_class_size
+    section: H4
+    label: Total class of 2024 graduates
+    expected: "1753"
+
+  # ------------------------- A5 Degrees Offered (Phase 6) -------------------------
+  - id: a5_bachelors
+    section: A5
+    label: Bachelor's degrees offered
+    expected: "X"
+  - id: a5_masters
+    section: A5
+    label: Master's degrees offered
+    expected: "X"
+  - id: a5_doctoral_research
+    section: A5
+    label: Doctoral research degrees offered
+    expected: "X"
+
+  # ------------------------- E Special Study Options (Phase 6) -------------------------
+  - id: e1_cross_registration
+    section: E1
+    label: Cross-registration offered
+    expected: "X"
+  - id: e1_double_major
+    section: E1
+    label: Double major offered
+    expected: "X"
+  - id: e1_honors_program
+    section: E1
+    label: Honors program offered
+    expected: "X"
+  - id: e1_study_abroad
+    section: E1
+    label: Study abroad offered
+    expected: "X"
+
+  # ------------------------- F2 Activities (Phase 6) -------------------------
+  - id: f2_campus_ministries
+    section: F2
+    label: Campus Ministries
+    expected: "X"
+  - id: f2_choral_groups
+    section: F2
+    label: Choral groups
+    expected: "X"
+  - id: f2_yearbook
+    section: F2
+    label: Yearbook
+    expected: "X"
+
+  # ------------------------- F1 Percent Participating (Phase 6) -------------------------
+  # Values verified against harvard-2024-25.pdf F1 table.
+  - id: f1_fy_out_of_state
+    section: F1
+    label: First-year out-of-state percent
+    expected: "86"
+  - id: f1_ug_out_of_state
+    section: F1
+    label: Undergrad out-of-state percent
+    expected: "85"
+  - id: f1_fy_avg_age_ft
+    section: F1
+    label: Average age FT first-year
+    expected: "19"
+  - id: f1_ug_avg_age_ft
+    section: F1
+    label: Average age FT undergrads
+    expected: "21"
+
+  # ------------------------- C7 Basis for Selection (Phase 3) -------------------------
+  # Values match harvard-2024-25.pdf page 12 C7 table; all first-block factors
+  # are rated "Considered" except Class rank which is "Not Considered".
+  - id: c7_rigor
+    section: C7
+    label: Rigor importance
+    expected: "Considered"
+  - id: c7_class_rank
+    section: C7
+    label: Class rank importance
+    expected: "Not Considered"
+  - id: c7_extracurricular
+    section: C7
+    label: Extracurricular importance
+    expected: "Considered"
+
+  # ------------------------- C1 Residency split (Phase 2) -------------------------
+  # Values verified against harvard-2024-25.pdf C1 residency table.
+  - id: c1_applied_instate
+    section: C1
+    label: In-state applied
+    expected: "3032"
+  - id: c1_applied_outstate
+    section: C1
+    label: Out-of-state applied
+    expected: "34216"
+  - id: c1_applied_international
+    section: C1
+    label: International applied
+    expected: "16760"
+  - id: c1_admitted_instate
+    section: C1
+    label: In-state admitted
+    expected: "265"
+  - id: c1_admitted_outstate
+    section: C1
+    label: Out-of-state admitted
+    expected: "1380"
+  - id: c1_admitted_international
+    section: C1
+    label: International admitted
+    expected: "325"
+  - id: c1_enrolled_instate
+    section: C1
+    label: In-state enrolled
+    expected: "227"
+  - id: c1_enrolled_outstate
+    section: C1
+    label: Out-of-state enrolled
+    expected: "1125"
+  - id: c1_enrolled_international
+    section: C1
+    label: International enrolled
+    expected: "295"

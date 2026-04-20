@@ -44,3 +44,33 @@ mappings:
   # ── C10 Class rank ──
   c10_top_tenth:           C.1001
   c10_top_quarter:         C.1002
+
+  # ── J1 Disciplines (PRD 005 Phase 0) ──
+  j1_bach_area_ethnic:     J.184
+  j1_bach_computer:        J.187
+  j1_bach_engineering:     J.190
+  j1_bach_english:         J.195
+  j1_bach_bio:             J.198
+  j1_bach_physical_sci:    J.205
+  j1_bach_psychology:      J.207
+  j1_bach_social_sciences: J.210
+  j1_bach_visual_arts:     J.215
+  j1_bach_history:         J.218
+  j1_bach_total:           J.220
+
+  # ── B5 Graduation (Pell column) ──
+  b5_pell_A_initial: B.401
+  b5_pell_D_4yr:     B.413
+  b5_pell_G_total:   B.425
+  b5_pell_H_rate:    B.429
+
+  # ── B22 Retention ──
+  b22_retention_pct: B.2203
+
+  # ── C7 Basis for Selection (Phase 3) ──
+  c7_rigor:           C.701
+  c7_class_rank:      C.702
+  c7_academic_gpa:    C.703
+  c7_extracurricular: C.708
+  c7_interview:       C.707
+  c7_state_residency: C.714

@@ -63,3 +63,142 @@ mappings:
 
   # ── C13 Application fee ──
   c13_app_fee:             C.1302
+
+  # ── B2 Race/ethnicity — full-column expansion (PRD 005 Phase 0) ──
+  b2_fy_black:             B.203
+  b2_fy_am_indian:         B.205
+  b2_fy_pacific:           B.207
+  b2_fy_two_or_more:       B.208
+  b2_fy_unknown:           B.209
+  b2_ds_nonresident:       B.211
+  b2_ds_hispanic:          B.212
+  b2_ds_white:             B.214
+  b2_ds_asian:             B.216
+  b2_ds_total:             B.220
+  b2_total_nonresident:    B.221
+  b2_total_white:          B.224
+  b2_total_asian:          B.226
+  b2_total_total:          B.230
+
+  # ── J1 Disciplines (bachelor's column sample) — PRD 005 Phase 0 ──
+  j1_bach_natural_resources: J.182
+  j1_bach_area_ethnic:       J.184
+  j1_bach_computer:          J.187
+  j1_bach_engineering:       J.190
+  j1_bach_english:           J.195
+  j1_bach_bio:               J.198
+  j1_bach_math:              J.199
+  j1_bach_physical_sci:      J.205
+  j1_bach_psychology:        J.207
+  j1_bach_social_sciences:   J.210
+  j1_bach_visual_arts:       J.215
+  j1_bach_history:           J.218
+
+  # ── B1 Enrollment expansion (PRD 005 Phase 1) ──
+  b1_ft_other_firstyr_men:   B.102
+  b1_ft_other_firstyr_women: B.127
+  b1_ft_all_other_men:       B.103
+  b1_ft_all_other_women:     B.128
+  b1_ft_total_degree_men:    B.104
+  b1_ft_total_degree_women:  B.129
+  b1_ft_grad_firsttime_men:  B.114
+  b1_ft_grad_firsttime_women: B.139
+  b1_grad_total_men:         B.122
+  b1_grad_total_women:       B.147
+
+  # ── B5 Graduation (Pell column) ──
+  b5_pell_A_initial: B.401
+  b5_pell_D_4yr:     B.413
+  b5_pell_E_5yr:     B.417
+  b5_pell_F_6yr:     B.421
+  b5_pell_G_total:   B.425
+  b5_pell_H_rate:    B.429
+
+  # ── B22 Retention ──
+  b22_retention_pct: B.2203
+
+  # ── G1 Expenses (Phase 4) ──
+  g1_tuition_fy:       G.101
+  g1_required_fees:    G.115
+  g1_food_housing:     G.116
+  g1_housing_only:     G.117
+  g1_food_only:        G.118
+
+  # ── I1 Instructional Faculty (Phase 4) ──
+  i1_total_ft:    I.101
+  i1_total_pt:    I.111
+  i1_total_all:   I.121
+  i1_females_ft:  I.103
+  i1_males_ft:    I.104
+  i1_doctorate_ft: I.106
+
+  # ── H1 Aid Awarded (Phase 5) ──
+  h1_nb_federal:            H.105
+  h1_nb_institutional:      H.107
+  h1_nb_total_scholarships: H.109
+  h1_nb_student_loans:      H.110
+  h1_nn_federal:            H.117
+  h1_nn_institutional:      H.119
+
+  # ── H2 Students Awarded Aid (Phase 5) ──
+  h2_fy_total_applicants: H.201
+  h2_fy_need_applied:     H.202
+  h2_fy_have_need:        H.203
+  h2_ugft_total:          H.214
+  h2_ugft_need_applied:   H.215
+
+  # ── H2A Non-need-based scholarships ──
+  h2a_fy_n_count:  H.2A01
+  h2a_fy_o_amount: H.2A02
+
+  # ── H4 Bachelor's class size ──
+  h4_class_size:   H.401
+
+  # ── A5 Degrees Offered (Phase 6) ──
+  a5_bachelors:         A.506
+  a5_masters:           A.508
+  a5_doctoral_research: A.510
+
+  # ── E Special Study Options (Phase 6) ──
+  e1_cross_registration: E.103
+  e1_double_major:       E.105
+  e1_honors_program:     E.110
+  e1_study_abroad:       E.115
+
+  # ── F2 Activities (Phase 6) ──
+  f2_campus_ministries: F.201
+  f2_choral_groups:     F.202
+  f2_yearbook:          F.221
+
+  # ── F1 Percent Participating (Phase 6) ──
+  f1_fy_out_of_state:  F.101
+  f1_ug_out_of_state:  F.109
+  f1_fy_avg_age_ft:    F.107
+  f1_ug_avg_age_ft:    F.115
+
+  # ── I3 Class Size (Phase 4) ──
+  i3_sections_2_9:      I.301
+  i3_sections_100plus:  I.307
+  i3_sections_total:    I.308
+
+  # ── C11 GPA profile (Phase 3) ──
+  c11_all_4_0:     C.1121
+  c11_all_3_75:    C.1122
+  c11_all_3_50:    C.1123
+  c11_all_total:   C.1130
+
+  # ── C7 Basis for Selection (Phase 3) ──
+  c7_rigor:           C.701
+  c7_class_rank:      C.702
+  c7_extracurricular: C.708
+
+  # ── C1 Residency split (Phase 2) ──
+  c1_applied_instate:          C.119
+  c1_applied_outstate:         C.122
+  c1_applied_international:    C.125
+  c1_admitted_instate:         C.120
+  c1_admitted_outstate:        C.123
+  c1_admitted_international:   C.126
+  c1_enrolled_instate:         C.121
+  c1_enrolled_outstate:        C.124
+  c1_enrolled_international:   C.127

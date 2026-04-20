@@ -189,3 +189,102 @@ fields:
     label: Percent in top quarter
     expected: "99"
     capture: 'top quarter[^\n]*?\b(99)\s*%'
+
+  # ------------------------- J1 Disciplines (PRD 005 Phase 0) -------------------------
+  # Values verified against dartmouth-2024-25.pdf J1 page.
+  - id: j1_bach_area_ethnic
+    section: J1
+    label: "Bachelor's: Area, ethnic, and gender studies"
+    expected: "4.1"
+  - id: j1_bach_computer
+    section: J1
+    label: "Bachelor's: Computer and information sciences"
+    expected: "10.2"
+  - id: j1_bach_engineering
+    section: J1
+    label: "Bachelor's: Engineering"
+    expected: "8.3"
+  - id: j1_bach_english
+    section: J1
+    label: "Bachelor's: English"
+    expected: "3.0"
+  - id: j1_bach_bio
+    section: J1
+    label: "Bachelor's: Biological/life sciences"
+    expected: "6.6"
+  - id: j1_bach_physical_sci
+    section: J1
+    label: "Bachelor's: Physical sciences"
+    expected: "4.0"
+  - id: j1_bach_psychology
+    section: J1
+    label: "Bachelor's: Psychology"
+    expected: "4.2"
+  - id: j1_bach_social_sciences
+    section: J1
+    label: "Bachelor's: Social sciences"
+    expected: "29.2"
+  - id: j1_bach_visual_arts
+    section: J1
+    label: "Bachelor's: Visual and performing arts"
+    expected: "5.4"
+  - id: j1_bach_history
+    section: J1
+    label: "Bachelor's: History"
+    expected: "3.5"
+  - id: j1_bach_total
+    section: J1
+    label: "Bachelor's: TOTAL"
+    expected: "100.0"
+
+  # ------------------------- B5 Graduation rates (Pell column, Fall 2018 cohort) -------------------------
+  # Values verified against dartmouth-2024-25.pdf Fall 2018 Cohort table.
+  - id: b5_pell_A_initial
+    section: B5
+    label: Pell initial cohort
+    expected: "176"
+  - id: b5_pell_D_4yr
+    section: B5
+    label: Pell 4-year completers
+    expected: "131"
+  - id: b5_pell_G_total
+    section: B5
+    label: Pell total completers
+    expected: "162"
+  - id: b5_pell_H_rate
+    section: B5
+    label: Pell 6-year graduation rate
+    expected: "93"
+
+  # ------------------------- B22 Retention -------------------------
+  - id: b22_retention_pct
+    section: B22
+    label: 1-year retention rate
+    expected: "98.40"
+
+  # ------------------------- C7 Basis for Selection (Phase 3) -------------------------
+  # Values match dartmouth-2024-25.pdf C6-C7 table (page 14).
+  - id: c7_rigor
+    section: C7
+    label: Rigor of secondary school record
+    expected: "Very Important"
+  - id: c7_class_rank
+    section: C7
+    label: Class rank
+    expected: "Very Important"
+  - id: c7_academic_gpa
+    section: C7
+    label: Academic GPA
+    expected: "Very Important"
+  - id: c7_extracurricular
+    section: C7
+    label: Extracurricular activities
+    expected: "Very Important"
+  - id: c7_interview
+    section: C7
+    label: Interview
+    expected: "Considered"
+  - id: c7_state_residency
+    section: C7
+    label: State residency
+    expected: "Not Considered"

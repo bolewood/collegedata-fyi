@@ -50,3 +50,34 @@ mappings:
   h4_undergrads_in_cohort: H.401
   h6_students_count:       H.604   # Number of nonresidents receiving aid (best-fit)
   h6_avg_award:            H.605
+
+  # ── J1 Disciplines (PRD 005 Phase 0) ──
+  j1_bach_natural_resources: J.182
+  j1_bach_architecture:      J.183
+  j1_bach_area_ethnic:       J.184
+  j1_bach_computer:          J.187
+  j1_bach_engineering:       J.190
+  j1_bach_bio:               J.198
+  j1_bach_math:              J.199
+  j1_bach_physical_sci:      J.205
+  j1_bach_social_sciences:   J.210
+  j1_bach_total:             J.220
+
+  # ── B1 Enrollment expansion (PRD 005 Phase 1) ──
+  b1_ft_other_firstyr_men:   B.102
+  b1_ft_all_other_men:       B.103
+  b1_ft_total_degree_men:    B.104
+
+  # ── B5 Graduation (Pell column) ──
+  b5_pell_A_initial: B.401
+  b5_pell_D_4yr:     B.413
+  b5_pell_G_total:   B.425
+  b5_pell_H_rate:    B.429
+
+  # ── B22 Retention ──
+  b22_retention_pct: B.2203
+
+  # ── C2 Wait List (Phase 2) ──
+  c2_offered:   C.202
+  c2_accepting: C.203
+  c2_admitted:  C.204
