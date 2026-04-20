@@ -15,6 +15,12 @@ export function Nav() {
             Schools
           </Link>
           <Link
+            href="/recipes"
+            className="text-gray-600 hover:text-gray-900"
+          >
+            Recipes
+          </Link>
+          <Link
             href="/about"
             className="text-gray-600 hover:text-gray-900"
           >

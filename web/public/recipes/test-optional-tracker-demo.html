@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Test-optional tracker — a collegedata.fyi recipe</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Arial, sans-serif;
+    max-width: 1040px;
+    margin: 40px auto;
+    padding: 0 20px;
+    color: #1f2937;
+    line-height: 1.55;
+  }
+  h1 { font-size: 28px; font-weight: 700; color: #111827; margin-bottom: 4px; }
+  .subtitle { color: #6b7280; font-size: 14px; margin-bottom: 32px; }
+  .chart-container {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  .legend {
+    font-size: 12px;
+    color: #374151;
+    margin-top: 12px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .legend-item.muted { opacity: 0.35; }
+  .legend-swatch {
+    width: 14px; height: 3px; border-radius: 1.5px;
+  }
+  .axis line, .axis path { stroke: #d1d5db; }
+  .axis text { fill: #6b7280; font-size: 11px; }
+  .grid line { stroke: #f3f4f6; stroke-dasharray: 2,2; }
+  .grid path { stroke-width: 0; }
+  .series-line {
+    fill: none;
+    stroke-width: 2;
+    transition: opacity 0.15s;
+  }
+  .series-dot {
+    stroke: #fff;
+    stroke-width: 1.5;
+    cursor: pointer;
+    transition: r 0.1s;
+  }
+  .series-dot:hover { r: 7; }
+  .annotation-line { stroke: #9ca3af; stroke-dasharray: 4,3; stroke-width: 1; }
+  .annotation-label {
+    font-size: 11px;
+    fill: #6b7280;
+    font-style: italic;
+  }
+  .threshold-line { stroke: #fbbf24; stroke-dasharray: 3,3; stroke-width: 1; opacity: 0.7; }
+  .threshold-label { font-size: 10px; fill: #b45309; }
+  .tooltip {
+    position: absolute;
+    background: rgba(17, 24, 39, 0.96);
+    color: white;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    line-height: 1.5;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .tooltip strong { color: #f9fafb; }
+  .tooltip .meta { color: #9ca3af; font-size: 11px; }
+  .caption {
+    font-size: 13px;
+    color: #4b5563;
+    border-left: 3px solid #e5e7eb;
+    padding: 8px 12px;
+    margin: 16px 0;
+    background: #f9fafb;
+  }
+  .caption strong { color: #111827; }
+  .source-note {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 8px;
+  }
+  code {
+    background: #f3f4f6;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+  }
+  .bands {
+    font-size: 12px;
+    color: #4b5563;
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+  .band {
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+  }
+  .band strong { color: #1f2937; display: block; margin-bottom: 2px; }
+  .band.required { border-left: 4px solid #dc2626; }
+  .band.optional { border-left: 4px solid #d97706; }
+  .band.blind { border-left: 4px solid #2563eb; }
+</style>
+</head>
+<body>
+
+<h1>Test-optional tracker</h1>
+<div class="subtitle">What share of enrolled first-years actually submitted SAT scores, year by year. A collegedata.fyi recipe.</div>
+
+<div class="chart-container">
+  <svg id="chart" width="980" height="520"></svg>
+  <div class="legend" id="legend"></div>
+  <div class="source-note">Every line is hand-verified against the collegedata.fyi public API. Click a school in the legend to toggle its line. Gaps in a line mean no CDS was archived for that year.</div>
+</div>
+
+<div class="caption">
+  <strong>How to read this chart.</strong> The y-axis is the percentage of enrolled first-year students who submitted SAT scores. Higher = more students submitted = closer to a de-facto test-required school. The orange dashed lines mark 85% (above = effectively test-required) and 10% (below = effectively test-blind); anything between is genuinely test-optional. Written policy and effective practice do not always match, which is the whole point.
+</div>
+
+<div class="bands">
+  <div class="band required"><strong>≥ 85% submission</strong>Effectively test-required. Almost every admit submits; not submitting is a meaningful disadvantage.</div>
+  <div class="band optional"><strong>10–85% submission</strong>Genuinely test-optional. A real fraction of admits get in without scores.</div>
+  <div class="band blind"><strong>&lt; 10% submission</strong>Effectively test-blind. Written policy is binding regardless of whether a student submits.</div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// Real data from the collegedata.fyi public API.
+// Each trajectory was pulled directly from cds_artifacts.notes.values["C.901"]
+// (Percent Submitting SAT) and C.902 (Percent Submitting ACT).
+// Dates are CDS years (academic, e.g. "2020-21"); numeric axis uses the
+// leading calendar year (2020).
+const schools = [
+  {
+    id: "yale",
+    name: "Yale University",
+    color: "#1e3a8a",
+    data: [
+      { year: "2009-10", sat: 91.0, act: null },
+      { year: "2010-11", sat: 89.0, act: null },
+      { year: "2011-12", sat: 85.0, act: null },
+      { year: "2012-13", sat: 84.0, act: null },
+      { year: "2013-14", sat: 81.0, act: null },
+      { year: "2014-15", sat: 79.0, act: null },
+      { year: "2015-16", sat: 74.0, act: null },
+      { year: "2016-17", sat: 69.0, act: null },
+      { year: "2017-18", sat: 61.0, act: null },
+      { year: "2018-19", sat: 68.0, act: null },
+      { year: "2019-20", sat: 68.0, act: null },
+      { year: "2020-21", sat: 70.0, act: 46.0 },
+      { year: "2021-22", sat: 54.0, act: 35.0 },
+      { year: "2022-23", sat: 59.0, act: null },
+      { year: "2023-24", sat: 56.0, act: 26.0 },
+      { year: "2024-25", sat: 61.0, act: 25.0 },
+    ],
+  },
+  {
+    id: "caltech",
+    name: "Caltech",
+    color: "#b91c1c",
+    data: [
+      { year: "2002-03", sat: 100.0, act: null },
+      { year: "2003-04", sat: 100.0, act: null },
+      { year: "2004-05", sat: 100.0, act: null },
+      { year: "2005-06", sat: 99.0, act: null },
+      { year: "2006-07", sat: 99.0, act: null },
+      { year: "2007-08", sat: 99.0, act: null },
+      { year: "2008-09", sat: 97.0, act: null },
+      { year: "2009-10", sat: 97.0, act: null },
+      { year: "2011-12", sat: 91.0, act: null },
+      { year: "2012-13", sat: 90.0, act: null },
+      { year: "2013-14", sat: 88.0, act: null },
+      { year: "2014-15", sat: 88.0, act: null },
+      { year: "2015-16", sat: 78.0, act: null },
+      { year: "2016-17", sat: 81.0, act: null },
+      { year: "2017-18", sat: 65.0, act: null },
+      { year: "2018-19", sat: 68.0, act: null },
+      { year: "2019-20", sat: 79.0, act: null },
+      { year: "2020-21", sat: 45.0, act: null },
+    ],
+  },
+  {
+    id: "mit",
+    name: "MIT",
+    color: "#059669",
+    data: [
+      { year: "2021-22", sat: 70.0, act: 34.0 },
+      { year: "2022-23", sat: 78.0, act: 32.0 },
+      { year: "2023-24", sat: 83.0, act: 31.0 },
+      { year: "2024-25", sat: 83.0, act: 29.0 },
+    ],
+  },
+  {
+    id: "princeton",
+    name: "Princeton University",
+    color: "#f59e0b",
+    data: [
+      { year: "2018-19", sat: 68.0, act: null },
+      { year: "2019-20", sat: 71.0, act: null },
+      { year: "2020-21", sat: 71.0, act: null },
+      { year: "2021-22", sat: 56.0, act: 35.0 },
+      { year: "2022-23", sat: 60.0, act: null },
+      { year: "2023-24", sat: 57.0, act: null },
+      { year: "2024-25", sat: 56.0, act: null },
+    ],
+  },
+  {
+    id: "stanford",
+    name: "Stanford University",
+    color: "#7c3aed",
+    data: [
+      { year: "2020-21", sat: 71.9, act: null },
+      { year: "2021-22", sat: 48.0, act: 31.0 },
+      { year: "2023-24", sat: 47.0, act: 22.0 },
+    ],
+  },
+  {
+    id: "harvard",
+    name: "Harvard University",
+    color: "#dc2626",
+    data: [
+      { year: "2020-21", sat: 72.0, act: null },
+      { year: "2023-24", sat: 52.0, act: null },
+      { year: "2024-25", sat: 54.0, act: null },
+    ],
+  },
+  {
+    id: "wake-forest",
+    name: "Wake Forest",
+    color: "#0891b2",
+    data: [
+      { year: "2007-08", sat: 80.0, act: null },
+      { year: "2014-15", sat: 45.0, act: null },
+      { year: "2015-16", sat: 53.0, act: null },
+      { year: "2016-17", sat: 43.0, act: null },
+      { year: "2017-18", sat: 38.0, act: null },
+      { year: "2018-19", sat: 41.0, act: null },
+      { year: "2019-20", sat: 44.0, act: null },
+      { year: "2020-21", sat: 50.0, act: 45.0 },
+      { year: "2021-22", sat: 23.0, act: null },
+      { year: "2023-24", sat: 26.0, act: null },
+      { year: "2024-25", sat: 22.2, act: 25.7 },
+    ],
+  },
+];
+
+// Convert CDS year string like "2020-21" to a numeric year (2020) for the axis.
+function yearNum(y) {
+  return parseInt(y.split("-")[0], 10);
+}
+
+// SVG setup.
+const svg = document.getElementById("chart");
+const W = 980, H = 520;
+const M = { top: 30, right: 30, bottom: 55, left: 55 };
+const innerW = W - M.left - M.right;
+const innerH = H - M.top - M.bottom;
+
+const xMin = 2002, xMax = 2025;
+const yMin = 0, yMax = 100;
+const x = (v) => M.left + (v - xMin) / (xMax - xMin) * innerW;
+const y = (v) => M.top + innerH - (v - yMin) / (yMax - yMin) * innerH;
+
+function el(tag, attrs = {}, parent = svg) {
+  const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  parent.appendChild(e);
+  return e;
+}
+
+// Grid.
+const gridG = el("g", { class: "grid" });
+for (let v = xMin; v <= xMax; v += 2) {
+  el("line", { x1: x(v), y1: y(0), x2: x(v), y2: y(100) }, gridG);
+}
+for (let v = 0; v <= 100; v += 20) {
+  el("line", { x1: x(xMin), y1: y(v), x2: x(xMax), y2: y(v) }, gridG);
+}
+
+// Axes.
+const xAxisG = el("g", { class: "axis" });
+el("line", { x1: x(xMin), y1: y(0), x2: x(xMax), y2: y(0), stroke: "#9ca3af" }, xAxisG);
+for (let v = xMin; v <= xMax; v += 2) {
+  const t = el("text", { x: x(v), y: y(0) + 18, "text-anchor": "middle" }, xAxisG);
+  t.textContent = "'" + String(v).slice(2);
+}
+
+const yAxisG = el("g", { class: "axis" });
+el("line", { x1: x(xMin), y1: y(0), x2: x(xMin), y2: y(100), stroke: "#9ca3af" }, yAxisG);
+for (let v = 0; v <= 100; v += 20) {
+  el("line", { x1: x(xMin) - 5, y1: y(v), x2: x(xMin), y2: y(v), stroke: "#9ca3af" }, yAxisG);
+  const t = el("text", { x: x(xMin) - 8, y: y(v) + 4, "text-anchor": "end" }, yAxisG);
+  t.textContent = v + "%";
+}
+
+// Axis labels.
+const xlab = el("text", {
+  x: M.left + innerW / 2, y: H - 14,
+  "text-anchor": "middle", fill: "#374151",
+  "font-size": 13, "font-weight": 600,
+});
+xlab.textContent = "CDS year (leading calendar year shown) →";
+
+const ylab = el("text", {
+  transform: `translate(14, ${M.top + innerH / 2}) rotate(-90)`,
+  "text-anchor": "middle", fill: "#374151",
+  "font-size": 13, "font-weight": 600,
+});
+ylab.textContent = "Percent submitting SAT →";
+
+// Threshold lines at 85% and 10%.
+const threshG = el("g");
+el("line", {
+  x1: x(xMin), y1: y(85), x2: x(xMax), y2: y(85),
+  class: "threshold-line",
+}, threshG);
+const tLbl1 = el("text", { x: x(xMax) - 4, y: y(85) - 4, "text-anchor": "end", class: "threshold-label" }, threshG);
+tLbl1.textContent = "85% — effectively required";
+el("line", {
+  x1: x(xMin), y1: y(10), x2: x(xMax), y2: y(10),
+  class: "threshold-line",
+}, threshG);
+const tLbl2 = el("text", { x: x(xMax) - 4, y: y(10) - 4, "text-anchor": "end", class: "threshold-label" }, threshG);
+tLbl2.textContent = "10% — effectively blind";
+
+// Annotation: COVID / 2020 test-optional wave.
+const annG = el("g");
+el("line", {
+  x1: x(2020), y1: y(0), x2: x(2020), y2: y(100),
+  class: "annotation-line",
+}, annG);
+const annT = el("text", {
+  x: x(2020) + 4, y: y(98), class: "annotation-label",
+}, annG);
+annT.textContent = "2020 — mass test-optional adoption";
+
+// Path generator.
+function linePath(points) {
+  return points.map((p, i) => (i === 0 ? "M" : "L") + x(yearNum(p.year)) + "," + y(p.sat)).join(" ");
+}
+
+const tooltip = document.getElementById("tooltip");
+const pathsById = {};
+const dotsById = {};
+
+function renderSeries(s) {
+  const g = el("g", { "data-series": s.id });
+  const path = el("path", {
+    d: linePath(s.data),
+    class: "series-line",
+    stroke: s.color,
+  }, g);
+  pathsById[s.id] = path;
+
+  const dots = [];
+  s.data.forEach((p) => {
+    const dot = el("circle", {
+      cx: x(yearNum(p.year)),
+      cy: y(p.sat),
+      r: 4.5,
+      class: "series-dot",
+      fill: s.color,
+    }, g);
+    dot.addEventListener("mousemove", (e) => {
+      tooltip.style.opacity = 1;
+      tooltip.style.left = (e.pageX + 12) + "px";
+      tooltip.style.top = (e.pageY + 12) + "px";
+      const combined = Math.min(100, p.sat + (p.act || 0));
+      let band = "Test-optional";
+      if (combined >= 85) band = "Effectively test-required";
+      else if (combined < 10) band = "Effectively test-blind";
+      tooltip.innerHTML = `
+        <strong>${s.name}</strong><br>
+        <span class="meta">CDS ${p.year}</span><br>
+        SAT submission: <strong>${p.sat.toFixed(1)}%</strong><br>
+        ACT submission: <strong>${p.act == null ? "—" : p.act.toFixed(1) + "%"}</strong><br>
+        Combined: <strong>${combined.toFixed(1)}%</strong><br>
+        <span class="meta">Bucket: ${band}</span>
+      `;
+    });
+    dot.addEventListener("mouseleave", () => { tooltip.style.opacity = 0; });
+    dots.push(dot);
+  });
+  dotsById[s.id] = dots;
+}
+
+schools.forEach(renderSeries);
+
+// Legend with toggle.
+const legend = document.getElementById("legend");
+const hidden = new Set();
+schools.forEach((s) => {
+  const li = document.createElement("span");
+  li.className = "legend-item";
+  li.innerHTML = `<span class="legend-swatch" style="background:${s.color}"></span>${s.name}`;
+  li.addEventListener("click", () => {
+    if (hidden.has(s.id)) {
+      hidden.delete(s.id);
+      li.classList.remove("muted");
+      pathsById[s.id].style.opacity = 1;
+      dotsById[s.id].forEach(d => d.style.opacity = 1);
+    } else {
+      hidden.add(s.id);
+      li.classList.add("muted");
+      pathsById[s.id].style.opacity = 0.08;
+      dotsById[s.id].forEach(d => d.style.opacity = 0.08);
+    }
+  });
+  legend.appendChild(li);
+});
+</script>
+
+</body>
+</html>

@@ -4,7 +4,7 @@
 
 An open, reproducible library of US college data. We find each school's Common Data Set document, extract it into a canonical schema, and publish both the raw source file and the structured extract alongside a queryable manifest. No hand-cleaned numbers, no opinionated schema of our own — we use the one the CDS Initiative already publishes. Just ground truth you can build on top of.
 
-> **Status: V1 live at [collegedata.fyi](https://collegedata.fyi).** 617 schools, 2,913 archived CDS documents, structured field extraction for 2,008 of them (69%). Fillable PDFs via `pypdf.get_fields()`, flattened PDFs via Docling + a schema-targeting cleaner. GT scorer 94% on hand-audited schools; C1 admissions fields at 50-60% coverage corpus-wide. See [`docs/known-issues/`](docs/known-issues/) for per-school notes.
+> **Status: V1 live at [collegedata.fyi](https://collegedata.fyi).** 723 schools indexed, 4,131 archived CDS documents, structured extraction on 4,042 of them (98%). Five of six extraction tiers shipped: filled XLSX (template cell-position map), fillable PDF (AcroForm), flattened PDF (Docling + schema-targeting cleaner), image-only scan (force-OCR), and structured HTML (HTML normalizer reusing the Tier 4 cleaner). DOCX is the only remaining tier and is scoped in [PRD 007](docs/prd/007-tier3-docx-extraction.md). GT scorer 94% on hand-audited schools; C1 admissions fields at 50-60% Tier 4 coverage corpus-wide. See [`docs/extraction-quality.md`](docs/extraction-quality.md) for full coverage by section, [`docs/known-issues/`](docs/known-issues/) for per-school notes.
 
 ## Why this exists
 
@@ -46,7 +46,7 @@ curl 'https://api.collegedata.fyi/rest/v1/cds_artifacts?document_id=eq.<uuid>&ki
 ## How it works
 
 1. A Supabase Edge Function runs on cron, discovers new or changed CDS documents at each school's Institutional Research URL, and records them in Postgres. The source file is downloaded and archived in Storage on first discovery so we still have it if the school later removes the original.
-2. A Python worker routes each document to the appropriate extractor based on its source format. Tiers that ship today: fillable PDF with AcroForm fields → deterministic direct read ([`tools/tier2_extractor/`](tools/tier2_extractor/)); flattened PDF → Docling layout extraction + a schema-targeting cleaner ([`tools/extraction_worker/tier4_cleaner.py`](tools/extraction_worker/tier4_cleaner.py)). Tiers stubbed for future: image-only scan → OCR + cleaner; filled XLSX/DOCX → openpyxl / python-docx.
+2. A Python worker routes each document to the appropriate extractor based on its source format. Tiers that ship today: filled XLSX → template cell-position map + openpyxl (deterministic on the standard template layout); fillable PDF with AcroForm fields → deterministic direct read ([`tools/tier2_extractor/`](tools/tier2_extractor/)); flattened PDF → Docling layout extraction + a schema-targeting cleaner ([`tools/extraction_worker/tier4_cleaner.py`](tools/extraction_worker/tier4_cleaner.py)); image-only scans → force-OCR pass through the same Docling pipeline; structured HTML → HTML normalizer reusing the Tier 4 cleaner. Remaining tier scoped but not yet built: filled DOCX via Structured Document Tags ([PRD 007](docs/prd/007-tier3-docx-extraction.md)).
 3. All extractors produce output keyed to the CDS Initiative's canonical field IDs using the schema at [`schemas/`](schemas/). Cross-school queries join on that field ID regardless of which extractor produced the values.
 4. PostgREST exposes the manifest as a public read-only API at `api.collegedata.fyi`.
 5. Community cleanup tools can register via `cleaners.yaml` and publish their own artifacts alongside the primary ones — see [ADR 0002](docs/decisions/0002-publish-raw-over-clean.md) for the rationale.
@@ -56,6 +56,8 @@ Full architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 ## Docs and decisions
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — six-pipeline map of the whole system (schema, corpus, discovery, extraction, consumer API, frontend)
+- [`docs/extraction-quality.md`](docs/extraction-quality.md) — current accuracy by tier, per-section corpus-wide coverage, and reproducible scoring commands
+- [`docs/recipes/`](docs/recipes/) — worked examples with real data: interactive visualizations, XLSX starters, and API queries. Start with [acceptance rate vs yield](docs/recipes/acceptance-vs-yield.md)
 - [`docs/v1-plan.md`](docs/v1-plan.md) — living project plan for V1
 - [`docs/prd/002-frontend.md`](docs/prd/002-frontend.md) — frontend PRD (reviewed via /autoplan: CEO + Design + Eng review)
 - [`docs/prd/003-ai-driven-data-quality.md`](docs/prd/003-ai-driven-data-quality.md) — AI-driven data-quality spike PRD (M1 only, approved via /autoplan)
@@ -70,9 +72,9 @@ This project is designed around community contribution from day one. Two especia
 
 **Add a school to the discovery scraper.** If `collegedata.fyi` doesn't know about a school's CDS, it's usually because the school's website doesn't match our default URL patterns. PR a new entry to `schools.yaml` with a known-good URL or search pattern.
 
-**Write a cleanup tool.** Our in-tree cleaner handles ~25 fields well, but Docling markdown has a long tail of format variants we don't cover — community college templates, pre-2020 terminology, wrapped cells (see [`docs/known-issues/`](docs/known-issues/) and the corpus survey). Raw Docling markdown lives at `cds_artifacts.notes.markdown` on every Tier 4 artifact, keyed by document. A cleanup tool reads the markdown, normalizes its target fields, and publishes the result as a new artifact with its own `producer` tag. Register your tool in `cleaners.yaml` and the CI will run it against the corpus. Per [ADR 0002](docs/decisions/0002-publish-raw-over-clean.md), we don't pick a winner — every contributor's artifact is published alongside the primary ones.
+**Write a cleanup tool.** Our in-tree cleaner handles ~380 fields well after the Phase 6 expansion, but Docling markdown has a long tail of format variants we don't cover — community college templates, pre-2020 terminology, wrapped cells (see [`docs/known-issues/`](docs/known-issues/), [`docs/extraction-quality.md`](docs/extraction-quality.md), and the corpus survey). Raw Docling markdown lives at `cds_artifacts.notes.markdown` on every Tier 4 artifact, keyed by document. A cleanup tool reads the markdown, normalizes its target fields, and publishes the result as a new artifact with its own `producer` tag. Register your tool in `cleaners.yaml` and the CI will run it against the corpus. Per [ADR 0002](docs/decisions/0002-publish-raw-over-clean.md), we don't pick a winner — every contributor's artifact is published alongside the primary ones.
 
-See `CONTRIBUTING.md` (coming soon) for details.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full contributor guide, including how to add a school, fix your own school's data, write a cleaner, and become a co-maintainer.
 
 ## Authors
 

@@ -18,12 +18,10 @@ export function Footer() {
             >
               GitHub
             </a>
-            <a
-              href="https://api.collegedata.fyi/rest/v1/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-gray-700"
-            >
+            <a href="/recipes" className="hover:text-gray-700">
+              Recipes
+            </a>
+            <a href="/api" className="hover:text-gray-700">
               API
             </a>
             <a href="/about" className="hover:text-gray-700">

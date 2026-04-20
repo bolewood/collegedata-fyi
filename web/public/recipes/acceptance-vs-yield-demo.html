@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Acceptance Rate vs Yield — a collegedata.fyi recipe</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Arial, sans-serif;
+    max-width: 960px;
+    margin: 40px auto;
+    padding: 0 20px;
+    color: #1f2937;
+    line-height: 1.55;
+  }
+  h1 { font-size: 28px; font-weight: 700; color: #111827; margin-bottom: 4px; }
+  .subtitle { color: #6b7280; font-size: 14px; margin-bottom: 32px; }
+  .chart-container {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  .legend {
+    font-size: 12px;
+    color: #4b5563;
+    margin-top: 12px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #2563eb;
+  }
+  .axis line, .axis path { stroke: #d1d5db; }
+  .axis text { fill: #6b7280; font-size: 11px; }
+  .grid line { stroke: #f3f4f6; stroke-dasharray: 2,2; }
+  .grid path { stroke-width: 0; }
+  .school-label { font-size: 11px; fill: #1f2937; pointer-events: none; }
+  .school-dot {
+    fill: #2563eb;
+    fill-opacity: 0.6;
+    stroke: #1e40af;
+    stroke-width: 1.5;
+    cursor: pointer;
+    transition: fill-opacity 0.15s, stroke-width 0.15s;
+  }
+  .school-dot:hover { fill-opacity: 0.9; stroke-width: 2.5; }
+  .annotation {
+    font-size: 11px;
+    fill: #6b7280;
+    font-style: italic;
+  }
+  .annotation-line { stroke: #d1d5db; stroke-dasharray: 3,3; }
+  .tooltip {
+    position: absolute;
+    background: rgba(17, 24, 39, 0.95);
+    color: white;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    line-height: 1.5;
+  }
+  .tooltip strong { color: #f9fafb; }
+  .tooltip .meta { color: #9ca3af; font-size: 11px; }
+  .caption {
+    font-size: 13px;
+    color: #4b5563;
+    border-left: 3px solid #e5e7eb;
+    padding: 8px 12px;
+    margin: 16px 0;
+    background: #f9fafb;
+  }
+  .caption strong { color: #111827; }
+  .source-note {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 8px;
+  }
+  code {
+    background: #f3f4f6;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+  }
+  .quadrants {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .quadrant {
+    background: #f9fafb;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+  }
+  .quadrant strong { color: #1f2937; display: block; margin-bottom: 2px; }
+</style>
+</head>
+<body>
+
+<h1>Acceptance rate vs yield</h1>
+<div class="subtitle">Two numbers, sixteen schools worth of context. A collegedata.fyi recipe.</div>
+
+<div class="chart-container">
+  <svg id="chart" width="900" height="540"></svg>
+  <div class="legend">
+    <span class="legend-item"><span class="legend-dot"></span>CDS-verified school (2024-25 or 2025-26)</span>
+    <span class="legend-item">Dot size = total full-time undergraduate enrollment</span>
+  </div>
+  <div class="source-note">Seed data: ground-truth fixtures in <code>tools/extraction-validator/ground_truth/</code>. The XLSX starter in this recipe includes the API query to populate all 700+ schools in the corpus.</div>
+</div>
+
+<div class="caption">
+  <strong>How to read this chart.</strong> The x-axis is how selective a school <em>looks</em> on paper (acceptance rate). The y-axis is how selective it actually <em>is</em> in practice (yield, i.e. the share of admitted students who enroll). Low acceptance + high yield is the top-left quadrant: schools that turn most applicants away and still capture most of the students they admit. Low acceptance + low yield is the bottom-left: schools that look selective but lose most of their admits to competitors.
+</div>
+
+<div class="quadrants">
+  <div class="quadrant"><strong>Top-left: selective and desired</strong>Low acceptance, high yield. These schools are both hard to get into and hard to turn down.</div>
+  <div class="quadrant"><strong>Top-right: loved despite openness</strong>Higher acceptance but strong yield. Often regional flagships or niche-fit schools.</div>
+  <div class="quadrant"><strong>Bottom-left: selective but second-choice</strong>Hard to get into, but most admits choose somewhere else. Often cross-admit peers of top-left schools.</div>
+  <div class="quadrant"><strong>Bottom-right: accessible and optional</strong>Admits freely, captures a smaller share. Common among safety-school territory.</div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// Real data from collegedata.fyi ground-truth fixtures.
+// All three rows are hand-audited against the source PDF.
+const data = [
+  {
+    school: "Harvard University",
+    cds_year: "2024-25",
+    applied: 54008,
+    admitted: 1970,
+    enrolled: 1647,
+    ug_ft: 7033,
+    retention: 98.0
+  },
+  {
+    school: "Dartmouth College",
+    cds_year: "2024-25",
+    applied: 31656,
+    admitted: 1710,
+    enrolled: 1182,
+    ug_ft: 4480,
+    retention: 98.4
+  },
+  {
+    school: "Harvey Mudd College",
+    cds_year: "2025-26",
+    applied: 5213,
+    admitted: 641,
+    enrolled: 234,
+    ug_ft: 909,
+    retention: 95.0
+  }
+];
+
+// Compute ratios.
+data.forEach(d => {
+  d.accept_rate = (d.admitted / d.applied) * 100;
+  d.yield_rate = (d.enrolled / d.admitted) * 100;
+});
+
+// SVG setup.
+const svg = document.getElementById("chart");
+const W = 900, H = 540;
+const M = { top: 30, right: 110, bottom: 60, left: 70 };
+const innerW = W - M.left - M.right;
+const innerH = H - M.top - M.bottom;
+
+// Scales: x is acceptance rate (0-30%), y is yield (0-100%).
+const xDomain = [0, 30];
+const yDomain = [0, 100];
+const x = (v) => M.left + (v - xDomain[0]) / (xDomain[1] - xDomain[0]) * innerW;
+const y = (v) => M.top + innerH - (v - yDomain[0]) / (yDomain[1] - yDomain[0]) * innerH;
+
+// Dot radius scaled by UG enrollment.
+const ugMax = 8000;
+const r = (ug) => 5 + Math.sqrt(ug / ugMax) * 14;
+
+// SVG helpers.
+function el(tag, attrs = {}, parent = svg) {
+  const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  parent.appendChild(e);
+  return e;
+}
+
+// Grid lines.
+const gridG = el("g", { class: "grid" });
+for (let v = 0; v <= 30; v += 5) {
+  el("line", { x1: x(v), y1: y(0), x2: x(v), y2: y(100) }, gridG);
+}
+for (let v = 0; v <= 100; v += 20) {
+  el("line", { x1: x(0), y1: y(v), x2: x(30), y2: y(v) }, gridG);
+}
+
+// Axes.
+const xAxisG = el("g", { class: "axis" });
+el("line", { x1: x(0), y1: y(0), x2: x(30), y2: y(0), stroke: "#9ca3af" }, xAxisG);
+for (let v = 0; v <= 30; v += 5) {
+  el("line", { x1: x(v), y1: y(0), x2: x(v), y2: y(0) + 5, stroke: "#9ca3af" }, xAxisG);
+  const t = el("text", { x: x(v), y: y(0) + 20, "text-anchor": "middle" }, xAxisG);
+  t.textContent = v + "%";
+}
+
+const yAxisG = el("g", { class: "axis" });
+el("line", { x1: x(0), y1: y(0), x2: x(0), y2: y(100), stroke: "#9ca3af" }, yAxisG);
+for (let v = 0; v <= 100; v += 20) {
+  el("line", { x1: x(0) - 5, y1: y(v), x2: x(0), y2: y(v), stroke: "#9ca3af" }, yAxisG);
+  const t = el("text", { x: x(0) - 10, y: y(v) + 4, "text-anchor": "end" }, yAxisG);
+  t.textContent = v + "%";
+}
+
+// Axis labels.
+const xlab = el("text", {
+  x: M.left + innerW / 2,
+  y: H - 18,
+  "text-anchor": "middle",
+  fill: "#374151",
+  "font-size": 13,
+  "font-weight": 600
+});
+xlab.textContent = "Acceptance rate →";
+
+const ylab = el("text", {
+  transform: `translate(22, ${M.top + innerH / 2}) rotate(-90)`,
+  "text-anchor": "middle",
+  fill: "#374151",
+  "font-size": 13,
+  "font-weight": 600
+});
+ylab.textContent = "Yield (enrolled ÷ admitted) →";
+
+// Reference lines at Ivy-ish thresholds for context.
+const refG = el("g");
+el("line", {
+  x1: x(10), y1: y(0), x2: x(10), y2: y(100),
+  class: "annotation-line"
+}, refG);
+const refTxt1 = el("text", {
+  x: x(10) + 4, y: y(98), class: "annotation"
+}, refG);
+refTxt1.textContent = "10% acceptance";
+
+el("line", {
+  x1: x(0), y1: y(50), x2: x(30), y2: y(50),
+  class: "annotation-line"
+}, refG);
+const refTxt2 = el("text", {
+  x: x(28), y: y(50) - 4, class: "annotation"
+}, refG);
+refTxt2.textContent = "50% yield";
+
+// Dots.
+const dotsG = el("g");
+const tooltip = document.getElementById("tooltip");
+data.forEach(d => {
+  const cx = x(d.accept_rate);
+  const cy = y(d.yield_rate);
+  const radius = r(d.ug_ft);
+
+  const dot = el("circle", {
+    cx, cy, r: radius,
+    class: "school-dot"
+  }, dotsG);
+
+  const label = el("text", {
+    x: cx + radius + 4,
+    y: cy + 4,
+    class: "school-label"
+  }, dotsG);
+  label.textContent = d.school.replace(/ (University|College)$/, "");
+
+  dot.addEventListener("mousemove", (e) => {
+    tooltip.style.opacity = 1;
+    tooltip.style.left = (e.pageX + 12) + "px";
+    tooltip.style.top = (e.pageY + 12) + "px";
+    tooltip.innerHTML = `
+      <strong>${d.school}</strong><br>
+      <span class="meta">CDS ${d.cds_year}</span><br>
+      Acceptance rate: <strong>${d.accept_rate.toFixed(2)}%</strong><br>
+      Yield: <strong>${d.yield_rate.toFixed(1)}%</strong><br>
+      Applied: ${d.applied.toLocaleString()}<br>
+      Admitted: ${d.admitted.toLocaleString()}<br>
+      Enrolled: ${d.enrolled.toLocaleString()}<br>
+      Full-time UG: ${d.ug_ft.toLocaleString()}<br>
+      1-yr retention: ${d.retention}%
+    `;
+  });
+  dot.addEventListener("mouseleave", () => {
+    tooltip.style.opacity = 0;
+  });
+});
+</script>
+
+</body>
+</html>

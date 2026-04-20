@@ -64,6 +64,25 @@ The hardest part of the pipeline is extracting structured data from flattened PD
 - Reference the relevant PRD or ADR in the PR body when applicable.
 - If you're changing an extractor, run the regression scorers in [`tools/extraction-validator/`](tools/extraction-validator/) and include the delta.
 
+## Project governance
+
+The project is currently maintained by [Anthony S.](https://bolewood.com) at Bolewood Group, LLC, which funds infrastructure (Supabase, Vercel, domains). That's a single-maintainer bus factor today, and we're open about it.
+
+**We actively want co-maintainers.** If you've contributed a meaningful cleaner, a schema extension, a substantial documentation improvement, or a new extraction tier — or if you just care about this data being good and want to take shared ownership of a surface (discovery pipeline, Tier 4 cleaner, schema, frontend, docs) — open an issue or reach out directly. Co-maintainer conversations are welcome at any contribution level; there's no minimum tenure gate.
+
+Architectural decisions are recorded as ADRs in [`docs/decisions/`](docs/decisions/). Substantive proposals should start as an ADR draft in a PR so the discussion is durable and the reasoning is preserved. Smaller changes can go through a regular issue or PR with a clear description.
+
+### Succession and continuity
+
+The project is designed so that the corpus cannot be stranded if Bolewood Group is ever unable to continue funding infrastructure:
+
+- The code is MIT-licensed with no proprietary dependencies. Any fork can run the full pipeline.
+- All archived source documents live in an S3-compatible object store and can be mirrored by any third party. The full archive is the long-term public-good asset; keeping it independently replicable is a first-class design goal, not an afterthought.
+- The canonical schema is extracted programmatically from the CDS Initiative's own XLSX template, so there is no private schema definition to lose.
+- The extraction pipeline, the discovery crawler, and the frontend are all reproducible from the repository alone.
+
+A dedicated succession ADR will be written if the project grows to a scale where it's warranted, or if a second maintainer or sponsoring organization steps in. Until then, the fork-friendly posture above is the practical guarantee.
+
 ## Questions
 
 Open a GitHub issue with the question label, or reach out via the contact on [collegedata.fyi](https://collegedata.fyi). Substantive technical questions and methodology discussions are always welcome.
