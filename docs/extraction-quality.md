@@ -17,8 +17,8 @@ The gap between the two is where the real work is.
 |---|---|
 | Schools indexed | 723 |
 | Archived CDS documents | 4,131 |
-| Documents with structured extraction | 3,963 (96%) |
-| Extraction artifacts by tier | 3,539 Tier 4 · 289 Tier 1 · 136 Tier 2 |
+| Documents with structured extraction | 4,042 (98%) |
+| Extraction artifacts by tier | 3,545 Tier 4+5 · 362 Tier 1 · 136 Tier 2 |
 | Ground-truth score, hand-audited schools (average) | 94% |
 | Corpus-wide coverage, C1 admissions section (Tier 4) | 50-60% |
 | Corpus-wide coverage, 1,105-field schema (Tier 4 average) | ~35-40% |
@@ -43,7 +43,7 @@ When a school publishes their CDS as a filled Excel workbook, extraction is dete
 
 | Metric | Value |
 |---|---|
-| Artifacts produced | 289 |
+| Artifacts produced | 362 |
 | Median fields populated per doc | 307 (~28% of schema) |
 | Max fields populated (well-filled school) | 782 (~71% of schema) |
 | Accuracy on standard template | Deterministic (cell-position read, no heuristics) |
