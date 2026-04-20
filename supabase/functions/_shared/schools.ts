@@ -292,6 +292,96 @@ export async function fetchSchoolsYaml(): Promise<FetchSchoolsYamlResult> {
   };
 }
 
+// Error raised by resolveSchoolName when the caller passes a school_id
+// that is not in schools.yaml and does not supply an explicit school_name.
+// Callers (archive-process, archive-upload) turn this into a 400 response
+// so the upstream tool can retry with either the canonical id or an
+// explicit school_name.
+//
+// Backstory: before this guard, `schoolName = entry?.name ?? schoolId`
+// was allowed to fall through to the raw slug, which stuffed ids like
+// `university-of-florida` into cds_documents.school_name and created
+// silent duplicates alongside the canonical `uf` entry (see
+// docs/dedup-plan-20260420.md for the cleanup). This class is the
+// fail-closed replacement.
+export class UnknownSchoolError extends Error {
+  code = "unknown_school";
+  suggestion?: string;
+  constructor(message: string, suggestion?: string) {
+    super(message);
+    this.name = "UnknownSchoolError";
+    this.suggestion = suggestion;
+  }
+}
+
+// Normalize a slug or display name to a comparable token string. Drops
+// structural noise words ("university", "college", "institute", "of",
+// "at", "the") and everything non-alphanumeric, so we can match
+// `university-of-florida` against the `uf` entry's `University of Florida`
+// name and surface `uf` as the suggestion.
+export function normalizeSchoolToken(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[-_]/g, " ")
+    .replace(/\bthe\b/g, "")
+    .replace(/\buniversity\b/g, "")
+    .replace(/\bcollege\b/g, "")
+    .replace(/\binstitute\b/g, "")
+    .replace(/\bof\b/g, "")
+    .replace(/\bat\b/g, "")
+    .replace(/[^a-z0-9]/g, "")
+    .trim();
+}
+
+// Given an unknown school_id and the list of valid entries, return the
+// canonical entry that best matches — or null if no normalized-token
+// match is found. Matches either the entry's id or its name.
+export function suggestCanonicalSchool(
+  inputId: string,
+  entries: SchoolEntry[],
+): { id: string; name: string } | null {
+  const needle = normalizeSchoolToken(inputId);
+  if (!needle) return null;
+  for (const e of entries) {
+    if (normalizeSchoolToken(e.id) === needle) return { id: e.id, name: e.name };
+    if (normalizeSchoolToken(e.name) === needle) return { id: e.id, name: e.name };
+  }
+  return null;
+}
+
+// Resolve the display name for a school_id. Either returns the explicit
+// name the caller supplied, the canonical name from schools.yaml, or
+// throws UnknownSchoolError with a suggestion. Never silently stuffs the
+// slug into the display column.
+export async function resolveSchoolName(
+  schoolId: string,
+  explicitName: string | null | undefined,
+): Promise<string> {
+  const trimmed = typeof explicitName === "string" ? explicitName.trim() : "";
+  if (trimmed) return trimmed;
+
+  let result: FetchSchoolsYamlResult;
+  try {
+    result = await fetchSchoolsYaml();
+  } catch (e) {
+    throw new UnknownSchoolError(
+      `cannot resolve school_name for '${schoolId}': schools.yaml unreachable (${(e as Error).message}) and no explicit school_name supplied. Pass school_name in the request body to bypass the lookup.`,
+    );
+  }
+
+  const entry = result.entries.find((e) => e.id === schoolId);
+  if (entry) return entry.name;
+
+  const suggestion = suggestCanonicalSchool(schoolId, result.entries);
+  const hint = suggestion
+    ? ` Did you mean school_id='${suggestion.id}' (${suggestion.name})?`
+    : "";
+  throw new UnknownSchoolError(
+    `school_id '${schoolId}' is not in schools.yaml and no explicit school_name was supplied.${hint} Either pass school_name in the request body, or use the canonical school_id.`,
+    suggestion?.id,
+  );
+}
+
 // V1 filter: every school that can actually be archived by the current
 // pipeline. Sub-institution schools (Columbia et al.) are deferred to a
 // follow-up per the approved plan. discovery_seed_url is trimmed before

@@ -30,7 +30,12 @@ import {
   TransientError,
 } from "../_shared/archive.ts";
 import { ProbeOutcome } from "../_shared/probe_outcome.ts";
-import { fetchSchoolsYaml, filterArchivable } from "../_shared/schools.ts";
+import {
+  fetchSchoolsYaml,
+  filterArchivable,
+  resolveSchoolName,
+  UnknownSchoolError,
+} from "../_shared/schools.ts";
 
 // Relaxed client typing. supabase-js v2's strict generics collapse to never
 // when no Database type parameter is supplied, which breaks .update() with
@@ -143,20 +148,32 @@ async function runForceUrls(
     ? rawProvenance
     : undefined;
 
-  // school_name can be supplied, or looked up in schools.yaml, or synthesized
-  // from school_id. Synthesized name is fine for archiving because it only
-  // appears as a display field — the stable identifier is school_id.
-  let schoolName: string | null = typeof body.school_name === "string"
-    ? body.school_name
-    : null;
-  if (!schoolName) {
-    try {
-      const result = await fetchSchoolsYaml();
-      const entry = result.entries.find((e) => e.id === schoolId);
-      schoolName = entry?.name ?? schoolId;
-    } catch {
-      schoolName = schoolId;
+  // school_name resolution is fail-closed: either the caller supplies
+  // it, or schools.yaml knows the school_id, or we reject with 400.
+  // Dropping the old slug-fallback is deliberate — it used to stuff the
+  // raw id (e.g. "university-of-florida") into cds_documents.school_name,
+  // which created silent duplicates alongside canonical entries like
+  // "uf". See docs/dedup-plan-20260420.md for the cleanup.
+  let schoolName: string;
+  try {
+    schoolName = await resolveSchoolName(
+      schoolId,
+      typeof body.school_name === "string" ? body.school_name : null,
+    );
+  } catch (e) {
+    if (e instanceof UnknownSchoolError) {
+      logEvent({
+        event: "force_urls_rejected_unknown_school",
+        school_id: schoolId,
+        suggestion: e.suggestion,
+      });
+      return json({
+        error: e.message,
+        code: e.code,
+        suggestion: e.suggestion,
+      }, 400);
     }
+    throw e;
   }
 
   const started = Date.now();

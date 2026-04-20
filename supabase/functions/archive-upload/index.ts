@@ -56,7 +56,11 @@ import {
   sniffBytesForExt,
   uploadSource,
 } from "../_shared/storage.ts";
-import { fetchSchoolsYaml } from "../_shared/schools.ts";
+import {
+  fetchSchoolsYaml,
+  resolveSchoolName,
+  UnknownSchoolError,
+} from "../_shared/schools.ts";
 
 const ALLOWED_PROVENANCE = new Set([
   "school_direct",
@@ -152,18 +156,30 @@ Deno.serve(async (req: Request) => {
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 
-  // Resolve school_name if not supplied
+  // Resolve school_name — fail-closed via resolveSchoolName(). Rejects
+  // unknown school_ids instead of silently stuffing the slug into the
+  // display column (the root cause of the 2026-04-20 dedup cleanup; see
+  // docs/dedup-plan-20260420.md).
   let schoolName: string;
-  if (typeof schoolNameInput === "string" && schoolNameInput.length > 0) {
-    schoolName = schoolNameInput;
-  } else {
-    try {
-      const result = await fetchSchoolsYaml();
-      const entry = result.entries.find((e) => e.id === schoolId);
-      schoolName = entry?.name ?? schoolId;
-    } catch {
-      schoolName = schoolId;
+  try {
+    schoolName = await resolveSchoolName(
+      schoolId,
+      typeof schoolNameInput === "string" ? schoolNameInput : null,
+    );
+  } catch (e) {
+    if (e instanceof UnknownSchoolError) {
+      logEvent({
+        event: "upload_rejected_unknown_school",
+        school_id: schoolId,
+        suggestion: e.suggestion,
+      });
+      return json({
+        error: e.message,
+        code: e.code,
+        suggestion: e.suggestion,
+      }, 400);
     }
+    throw e;
   }
 
   const storagePath = buildSourcePath(schoolId, cdsYear, sha256, ext);
