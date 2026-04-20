@@ -1,0 +1,73 @@
+# Contributing to collegedata.fyi
+
+Thanks for thinking about contributing. This project is designed around community help from day one, and there are a few specific ways you can make a real difference.
+
+## Ways to contribute
+
+### 1. Add a school we don't yet track
+
+If `collegedata.fyi` doesn't know about a school's CDS, it's almost always because the school's website doesn't match our default URL patterns. The fix is usually one entry in [`tools/finder/schools.yaml`](tools/finder/schools.yaml).
+
+Minimum entry:
+
+```yaml
+- id: your-school-slug
+  name: Your School Name
+  domain: yourschool.edu
+  ipeds_id: '123456'
+  discovery_seed_url: https://yourschool.edu/institutional-research/common-data-set
+  scrape_policy: active
+```
+
+Use the existing entries (Carnegie Mellon, Columbia, Harvard, and so on) as reference for edge cases, such as schools that publish separate CDS files per sub-institution.
+
+Open a PR with the new entry and a short note saying how you found the URL. The discovery pipeline will pick it up on the next scheduled run.
+
+### 2. Fix your own school's data
+
+If you work in institutional research at a school we index and our extraction got something wrong, you have three options, in increasing order of effort:
+
+- **Open an issue** describing what's wrong. Include the school ID, CDS year, the specific field IDs (e.g., C1.01), and what the correct value is. We'll investigate and either fix the cleaner or add a per-school override.
+- **Submit ground-truth data** for a specific year. We use hand-verified ground-truth YAMLs to score extraction accuracy. Files live in [`tools/extraction-validator/ground_truth/`](tools/extraction-validator/ground_truth/). Contributing ground truth for your school lets us detect regressions for it specifically, which is the most durable way to keep your numbers right.
+- **Write a cleaner** that normalizes your school's CDS format (see below).
+
+### 3. Write a cleanup tool
+
+Our in-tree cleaner handles a useful subset of fields well, but Docling markdown has a long tail of format variants our cleaner does not cover (community college templates, pre-2020 terminology, wrapped cells, and so on). See [`docs/extraction-quality.md`](docs/extraction-quality.md) for current coverage by section and [`docs/known-issues/`](docs/known-issues/) for per-school notes.
+
+Raw Docling markdown lives at `cds_artifacts.notes.markdown` on every Tier 4 artifact, keyed by document. A cleanup tool reads the markdown, normalizes its target fields, and publishes the result as a new artifact with its own `producer` tag.
+
+To register a cleaner:
+
+1. Build and publish your cleaner as a Python package in a public repo.
+2. Open a PR appending an entry to [`cleaners.yaml`](cleaners.yaml). See the commented example in that file for schema.
+3. Once merged, the CI workflow (coming soon, tracked in M4) will install and run your cleaner against new artifacts and publish results alongside ours.
+
+Per [ADR 0002](docs/decisions/0002-publish-raw-over-clean.md), we do not pick a winner. Every contributor's artifact is published side by side with the primary, tagged with the `producer` field so consumers can choose.
+
+### 4. Help with extraction quality research
+
+The hardest part of the pipeline is extracting structured data from flattened PDFs. If you have extraction tooling, schema-aware parsers, or ideas for LLM-based fallback, take a look at [`docs/prd/006-llm-fallback.md`](docs/prd/006-llm-fallback.md) and the failure-mode catalog in [`docs/research/tier4-cleaner-learnings-for-llm-fallback.md`](docs/research/tier4-cleaner-learnings-for-llm-fallback.md). PRs welcome.
+
+## Development basics
+
+- Python 3.11+, Node 20+, Deno for Supabase Edge Functions.
+- `.venv` in repo root for Python tooling. Requirements in each tool's directory.
+- Architecture overview: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+- Schema reference: [`schemas/`](schemas/) (canonical 1,105-field CDS schema, keyed by stable question IDs).
+- Frontend: see [`web/README.md`](web/README.md).
+
+## Pull request conventions
+
+- Conventional commit prefixes: `feat:`, `fix:`, `docs:`, `refactor:`, `chore:`, scoped by area (e.g., `feat(finder):`, `fix(extraction):`).
+- One logical change per PR where possible.
+- Reference the relevant PRD or ADR in the PR body when applicable.
+- If you're changing an extractor, run the regression scorers in [`tools/extraction-validator/`](tools/extraction-validator/) and include the delta.
+
+## Questions
+
+Open a GitHub issue with the question label, or reach out via the contact on [collegedata.fyi](https://collegedata.fyi). Substantive technical questions and methodology discussions are always welcome.
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the MIT License. See [`LICENSE`](LICENSE).
