@@ -83,6 +83,12 @@ The project is designed so that the corpus cannot be stranded if Bolewood Group 
 
 A dedicated succession ADR will be written if the project grows to a scale where it's warranted, or if a second maintainer or sponsoring organization steps in. Until then, the fork-friendly posture above is the practical guarantee.
 
+## If you represent a school and need a document removed
+
+The archive preserves publicly-published CDS documents on the presumption that they are public-accountability records. If your school's IR office needs a document removed (accidental publish, FERPA-adjacent content, version dispute, etc.), the protocol is documented in [ADR 0008](docs/decisions/0008-takedown-process.md).
+
+Briefly: email the contact on [collegedata.fyi](https://collegedata.fyi) from a `.edu` address matching your school's domain and specify `school_id`, `cds_year`, and reason. Catalog removal is immediate; bytes removal is available on request. Every takedown is logged in [`docs/takedowns.md`](docs/takedowns.md) as a public transparency measure (no requester PII).
+
 ## Questions
 
 Open a GitHub issue with the question label, or reach out via the contact on [collegedata.fyi](https://collegedata.fyi). Substantive technical questions and methodology discussions are always welcome.

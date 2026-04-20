@@ -9,6 +9,13 @@ import type {
   CorpusStats,
 } from "./types";
 
+// Documents with these participation_status values are excluded from every
+// public-facing manifest query. 'withdrawn' = takedown per ADR 0008.
+// 'verified_absent' = school is publicly known not to publish CDS.
+// Consumers who need the full manifest (audit, transparency log reconciliation)
+// can query cds_documents directly via PostgREST.
+const PUBLIC_EXCLUDED_STATUSES = ["withdrawn", "verified_absent"];
+
 export async function fetchManifest(): Promise<ManifestRow[]> {
   const PAGE_SIZE = 1000;
   const allRows: ManifestRow[] = [];
@@ -18,6 +25,7 @@ export async function fetchManifest(): Promise<ManifestRow[]> {
     const { data, error } = await supabase
       .from("cds_manifest")
       .select("*")
+      .not("participation_status", "in", `(${PUBLIC_EXCLUDED_STATUSES.join(",")})`)
       .order("school_name")
       .range(from, from + PAGE_SIZE - 1);
 
@@ -98,6 +106,7 @@ export const fetchSchoolDocuments = cache(async function fetchSchoolDocuments(
     .from("cds_manifest")
     .select("*")
     .eq("school_id", schoolId)
+    .not("participation_status", "in", `(${PUBLIC_EXCLUDED_STATUSES.join(",")})`)
     .order("canonical_year", { ascending: false });
 
   if (error)
@@ -114,6 +123,7 @@ export const fetchDocumentsBySchoolAndYear = cache(async function fetchDocuments
     .select("*")
     .eq("school_id", schoolId)
     .eq("canonical_year", year)
+    .not("participation_status", "in", `(${PUBLIC_EXCLUDED_STATUSES.join(",")})`)
     .order("sub_institutional", { ascending: true, nullsFirst: true });
 
   if (error) {

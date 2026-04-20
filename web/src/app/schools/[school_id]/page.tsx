@@ -69,12 +69,15 @@ export default async function SchoolDetailPage({
     groups.push({ label: null, docs });
   }
 
+  const schoolUrl = `https://www.collegedata.fyi/schools/${school_id}`;
+  const uniqueYears = Array.from(new Set(years));
+
   const jsonLd = [
     {
       "@context": "https://schema.org",
       "@type": "CollegeOrUniversity",
       name,
-      url: `https://www.collegedata.fyi/schools/${school_id}`,
+      url: schoolUrl,
       description: `Common Data Set archive for ${name}. ${docs.length} document${docs.length !== 1 ? "s" : ""} archived${years.length > 0 ? `, ${yearRange(years[0], years[years.length - 1])}` : ""}.`,
     },
     {
@@ -82,8 +85,28 @@ export default async function SchoolDetailPage({
       "@type": "BreadcrumbList",
       itemListElement: [
         { "@type": "ListItem", position: 1, name: "Schools", item: "https://www.collegedata.fyi/schools" },
-        { "@type": "ListItem", position: 2, name, item: `https://www.collegedata.fyi/schools/${school_id}` },
+        { "@type": "ListItem", position: 2, name, item: schoolUrl },
       ],
+    },
+    // DataCatalog enumerates every archived year as a Dataset reference.
+    // Gives LLMs and search engines a one-stop index of what's in the archive
+    // for this school.
+    {
+      "@context": "https://schema.org",
+      "@type": "DataCatalog",
+      name: `${name} Common Data Set archive`,
+      url: schoolUrl,
+      description: `Every archived Common Data Set year for ${name}, keyed to the canonical 1,105-field schema published by the Common Data Set Initiative.`,
+      creator: { "@type": "Organization", name, url: schoolUrl },
+      provider: { "@type": "Organization", name: "collegedata.fyi", url: "https://www.collegedata.fyi" },
+      isAccessibleForFree: true,
+      license: "https://opensource.org/licenses/MIT",
+      dataset: uniqueYears.map((year) => ({
+        "@type": "Dataset",
+        name: `${name} Common Data Set ${year}`,
+        url: `https://www.collegedata.fyi/schools/${school_id}/${year}`,
+        temporalCoverage: year,
+      })),
     },
   ];
 
