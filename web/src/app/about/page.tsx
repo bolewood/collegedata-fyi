@@ -10,9 +10,19 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12 text-gray-800">
-      <h1 className="text-3xl font-bold text-gray-900">
-        The Uncommon Data Set
+    <div className="mx-auto max-w-2xl px-4 py-12" style={{ color: "var(--ink-2)" }}>
+      <h1
+        style={{
+          fontFamily: "var(--serif)",
+          fontWeight: 400,
+          fontSize: 48,
+          lineHeight: 1.05,
+          letterSpacing: "-0.02em",
+          color: "var(--ink)",
+          margin: 0,
+        }}
+      >
+        The <span style={{ fontStyle: "italic", color: "var(--forest-ink)" }}>Uncommon</span> Data Set
       </h1>
 
       <div className="mt-8 space-y-5 text-base leading-relaxed">
@@ -36,7 +46,7 @@ export default function AboutPage() {
 
         <p>The reality is extremely uncommon.</p>
 
-        <h2 className="mt-10 text-xl font-semibold text-gray-900">
+        <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
           What we found
         </h2>
 
@@ -63,7 +73,7 @@ export default function AboutPage() {
           and IT policies. Over twenty years, the drift is cumulative.
         </p>
 
-        <h2 className="mt-10 text-xl font-semibold text-gray-900">
+        <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
           Why we did this anyway
         </h2>
 
@@ -99,12 +109,12 @@ export default function AboutPage() {
           incumbent aggregators. We&apos;re fine with that.
         </p>
 
-        <h2 className="mt-10 text-xl font-semibold text-gray-900">
+        <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
           What we built
         </h2>
 
         <p>
-          <strong className="font-semibold text-gray-900">collegedata.fyi</strong>{" "}
+          <strong style={{ fontWeight: 600, color: "var(--ink)" }}>collegedata.fyi</strong>{" "}
           is the index. We discover each school&apos;s CDS document, archive the
           source file immediately (SHA-addressed, preserved forever), extract
           the numbers into the CDS Initiative&apos;s own canonical 1,105-field
@@ -115,33 +125,33 @@ export default function AboutPage() {
 
         <ol className="ml-6 list-decimal space-y-2 marker:text-gray-400">
           <li>
-            <strong className="font-semibold text-gray-900">Schema pipeline</strong>{" "}
+            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Schema pipeline</strong>{" "}
             extracts the canonical field definitions from the official XLSX
             template.
           </li>
           <li>
-            <strong className="font-semibold text-gray-900">Corpus pipeline</strong>{" "}
+            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Corpus pipeline</strong>{" "}
             builds the school list from IPEDS data and probes for CDS landing
             pages.
           </li>
           <li>
-            <strong className="font-semibold text-gray-900">Discovery pipeline</strong>{" "}
+            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Discovery pipeline</strong>{" "}
             crawls IR pages and archives source files to storage.
           </li>
           <li>
-            <strong className="font-semibold text-gray-900">Extraction pipeline</strong>{" "}
+            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Extraction pipeline</strong>{" "}
             routes each document to a format-specific extractor: filled XLSX
             workbooks via the CDS template&apos;s own cell map, fillable PDFs
             via AcroForm, flattened PDFs via Docling with a schema-targeting
             cleaner, and scanned image PDFs via OCR.
           </li>
           <li>
-            <strong className="font-semibold text-gray-900">Consumer pipeline</strong>{" "}
+            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Consumer pipeline</strong>{" "}
             exposes everything through a public REST API.
           </li>
         </ol>
 
-        <h2 className="mt-10 text-xl font-semibold text-gray-900">
+        <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
           Open source
         </h2>
 
@@ -154,7 +164,7 @@ export default function AboutPage() {
         <ul className="ml-6 list-disc space-y-2 marker:text-gray-400">
           <li>
             <a
-              className="text-blue-700 underline hover:text-blue-900"
+              style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
               href="https://github.com/bolewood/collegedata-fyi"
               target="_blank"
               rel="noopener noreferrer"
@@ -164,7 +174,7 @@ export default function AboutPage() {
           </li>
           <li>
             <a
-              className="text-blue-700 underline hover:text-blue-900"
+              style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
               href="/api"
             >
               Public API
@@ -172,7 +182,7 @@ export default function AboutPage() {
           </li>
           <li>
             <a
-              className="text-blue-700 underline hover:text-blue-900"
+              style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
               href="https://commondataset.org/"
               target="_blank"
               rel="noopener noreferrer"
@@ -183,12 +193,12 @@ export default function AboutPage() {
           </li>
         </ul>
 
-        <h2 className="mt-10 text-xl font-semibold text-gray-900">Credits</h2>
+        <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>Credits</h2>
 
         <p>
           Built on{" "}
           <a
-            className="text-blue-700 underline hover:text-blue-900"
+            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
             href="https://supabase.com"
             target="_blank"
             rel="noopener noreferrer"
@@ -197,7 +207,7 @@ export default function AboutPage() {
           </a>{" "}
           (Postgres, Edge Functions, Storage). Extraction powered by{" "}
           <a
-            className="text-blue-700 underline hover:text-blue-900"
+            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
             href="https://github.com/DS4SD/docling"
             target="_blank"
             rel="noopener noreferrer"
@@ -206,7 +216,7 @@ export default function AboutPage() {
           </a>{" "}
           for flattened PDFs.{" "}
           <a
-            className="text-blue-700 underline hover:text-blue-900"
+            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
             href="https://reducto.ai"
             target="_blank"
             rel="noopener noreferrer"
@@ -216,7 +226,7 @@ export default function AboutPage() {
           reference extracts used as a quality benchmark.
         </p>
 
-        <h2 className="mt-10 text-xl font-semibold text-gray-900">
+        <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
           Project Sponsors
         </h2>
 
@@ -225,7 +235,7 @@ export default function AboutPage() {
         <ul className="ml-6 list-disc space-y-2 marker:text-gray-400">
           <li>
             <a
-              className="text-blue-700 underline hover:text-blue-900"
+              style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
               href="https://bolewood.com"
               target="_blank"
               rel="noopener noreferrer"
@@ -235,7 +245,7 @@ export default function AboutPage() {
           </li>
         </ul>
 
-        <div className="mt-10 border-t border-gray-200 pt-6 text-sm text-gray-500">
+        <div style={{ marginTop: 40, borderTop: "1px solid var(--rule)", paddingTop: 24, fontSize: 13, fontStyle: "italic", fontFamily: "var(--serif)", color: "var(--ink-3)" }}>
           The &ldquo;Common&rdquo; in Common Data Set is doing a lot of work.
           We&apos;re doing the rest.
         </div>

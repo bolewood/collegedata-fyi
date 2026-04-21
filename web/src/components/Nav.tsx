@@ -1,42 +1,55 @@
 import Link from "next/link";
+import { Wordmark } from "./Wordmark";
+
+const NAV_LINKS = [
+  { href: "/schools", label: "Schools" },
+  { href: "/recipes", label: "Recipes" },
+  { href: "/about", label: "About" },
+  { href: "/api", label: "API" },
+];
 
 export function Nav() {
   return (
-    <nav className="border-b border-gray-200 bg-white">
-      <div className="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
-        <Link href="/" className="text-lg font-semibold text-gray-900">
-          collegedata.fyi
+    <nav
+      style={{
+        borderBottom: "1px solid var(--rule)",
+        background: "var(--paper)",
+      }}
+    >
+      <div
+        className="mx-auto max-w-5xl cd-nav-row"
+        style={{ padding: "18px 24px" }}
+      >
+        <Link href="/" style={{ textDecoration: "none" }}>
+          <Wordmark variant="dotted" size={20} />
         </Link>
-        <div className="flex gap-6 text-sm">
-          <Link
-            href="/schools"
-            className="text-gray-600 hover:text-gray-900"
-          >
-            Schools
-          </Link>
-          <Link
-            href="/recipes"
-            className="text-gray-600 hover:text-gray-900"
-          >
-            Recipes
-          </Link>
-          <Link
-            href="/about"
-            className="text-gray-600 hover:text-gray-900"
-          >
-            About
-          </Link>
-          <Link
-            href="/api"
-            className="text-gray-600 hover:text-gray-900"
-          >
-            API
-          </Link>
+        <div className="cd-nav-links">
+          {NAV_LINKS.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              style={{
+                textDecoration: "none",
+                color: "var(--ink-3)",
+                paddingBottom: 2,
+                borderBottom: "1px solid transparent",
+              }}
+              className="nav-link"
+            >
+              {l.label}
+            </Link>
+          ))}
           <a
             href="https://github.com/bolewood/collegedata-fyi"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-gray-600 hover:text-gray-900"
+            style={{
+              textDecoration: "none",
+              color: "var(--ink-3)",
+              paddingBottom: 2,
+              borderBottom: "1px solid transparent",
+            }}
+            className="nav-link"
           >
             GitHub
           </a>

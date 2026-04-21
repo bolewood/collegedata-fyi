@@ -55,15 +55,26 @@ const RECIPES: Recipe[] = [
 
 export default function RecipesPage() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 text-gray-800">
-      <h1 className="text-3xl font-bold text-gray-900">Recipes</h1>
-      <p className="mt-3 text-base leading-relaxed text-gray-600">
-        Worked examples of what you can do with the archive. Each recipe pairs
-        a short write-up with an interactive artifact seeded from
-        hand-verified data, and a copy-pasteable API query you can use to
+    <div className="mx-auto max-w-3xl px-4 py-12">
+      <div className="meta" style={{ marginBottom: 16 }}>§ Recipes</div>
+      <h1
+        style={{
+          fontFamily: "var(--serif)",
+          fontWeight: 400,
+          fontSize: 48,
+          lineHeight: 1.05,
+          letterSpacing: "-0.02em",
+          color: "var(--ink)",
+          margin: 0,
+        }}
+      >
+        Worked <span style={{ fontStyle: "italic", color: "var(--forest-ink)" }}>examples</span>.
+      </h1>
+      <p style={{ marginTop: 20, fontSize: 16, lineHeight: 1.6, color: "var(--ink-2)" }}>
+        What you can do with the archive. Each recipe pairs a short write-up with an interactive
+        artifact seeded from hand-verified data, plus a copy-pasteable API query you can use to
         scale it to the full corpus. If you want to contribute one,{" "}
         <a
-          className="text-blue-700 underline hover:text-blue-900"
           href="https://github.com/bolewood/collegedata-fyi/blob/main/CONTRIBUTING.md"
           target="_blank"
           rel="noopener noreferrer"
@@ -77,49 +88,49 @@ export default function RecipesPage() {
         {RECIPES.map((r) => (
           <article
             key={r.slug}
-            className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
+            className="cd-card cd-card--cut"
+            style={{ padding: 20 }}
           >
-            <div className="flex items-baseline justify-between gap-3">
-              <h2 className="text-lg font-semibold text-gray-900">
-                <a
-                  href={r.demoPath}
-                  className="hover:text-blue-700"
-                >
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+              <h2
+                style={{
+                  fontFamily: "var(--serif)",
+                  fontWeight: 500,
+                  fontSize: 22,
+                  letterSpacing: "-0.01em",
+                  color: "var(--ink)",
+                  margin: 0,
+                }}
+              >
+                <a href={r.demoPath} style={{ textDecoration: "none", color: "inherit" }}>
                   {r.title}
                 </a>
               </h2>
-              <span className="whitespace-nowrap text-xs text-gray-500">
+              <span className="mono" style={{ fontSize: 11, color: "var(--ink-3)", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>
                 CDS {r.sections}
               </span>
             </div>
-            <p className="mt-2 text-sm leading-relaxed text-gray-700">
+            <p style={{ marginTop: 10, fontSize: 14, lineHeight: 1.55, color: "var(--ink-2)" }}>
               {r.tagline}
             </p>
-            <p className="mt-2 text-xs text-gray-500">
-              <span className="font-medium text-gray-700">For:</span>{" "}
+            <p style={{ marginTop: 8, fontSize: 12, color: "var(--ink-3)" }}>
+              <span className="meta" style={{ marginRight: 6 }}>For</span>
               {r.audience}
             </p>
-            <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
-              <a
-                href={r.demoPath}
-                className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
-              >
+            <div style={{ marginTop: 14, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
+              <a href={r.demoPath} className="cd-btn" style={{ padding: "8px 14px", fontSize: 13 }}>
                 Open demo →
               </a>
               <a
                 href={r.writeupUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-blue-700 underline hover:text-blue-900"
+                style={{ fontSize: 12 }}
               >
                 Read write-up
               </a>
               {r.extras?.map((x) => (
-                <a
-                  key={x.path}
-                  href={x.path}
-                  className="text-xs text-blue-700 underline hover:text-blue-900"
-                >
+                <a key={x.path} href={x.path} style={{ fontSize: 12 }}>
                   {x.label}
                 </a>
               ))}
@@ -128,11 +139,17 @@ export default function RecipesPage() {
         ))}
       </div>
 
-      <div className="mt-10 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-5">
-        <h3 className="text-sm font-semibold text-gray-900">
-          Ideas we haven&apos;t built yet
-        </h3>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-gray-700 marker:text-gray-400">
+      <div
+        style={{
+          marginTop: 40,
+          border: "1px dashed var(--rule-strong)",
+          background: "var(--paper-2)",
+          padding: 20,
+          borderRadius: 2,
+        }}
+      >
+        <div className="meta" style={{ marginBottom: 10 }}>§ Not yet built</div>
+        <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, color: "var(--ink-2)", lineHeight: 1.6 }}>
           <li>
             Net-price-by-income-bracket (H2A, H4) — the single most-asked
             question in college search.
@@ -150,10 +167,9 @@ export default function RecipesPage() {
             years.
           </li>
         </ul>
-        <p className="mt-3 text-xs text-gray-500">
+        <p style={{ marginTop: 14, fontSize: 12, color: "var(--ink-3)" }}>
           Want to build one of these?{" "}
           <a
-            className="text-blue-700 underline hover:text-blue-900"
             href="https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/README.md"
             target="_blank"
             rel="noopener noreferrer"
@@ -164,22 +180,10 @@ export default function RecipesPage() {
         </p>
       </div>
 
-      <div className="mt-10 border-t border-gray-200 pt-6 text-sm text-gray-500">
+      <div style={{ marginTop: 40, borderTop: "1px solid var(--rule)", paddingTop: 24, fontSize: 14, color: "var(--ink-3)" }}>
         Looking for the data directly? Head to the{" "}
-        <Link
-          href="/api"
-          className="text-blue-700 underline hover:text-blue-900"
-        >
-          public API
-        </Link>{" "}
-        or browse every school in the{" "}
-        <Link
-          href="/schools"
-          className="text-blue-700 underline hover:text-blue-900"
-        >
-          directory
-        </Link>
-        .
+        <Link href="/api">public API</Link> or browse every school in the{" "}
+        <Link href="/schools">directory</Link>.
       </div>
     </div>
   );

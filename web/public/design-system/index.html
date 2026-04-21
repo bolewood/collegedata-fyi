@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>collegedata.fyi · Design system</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/design-system/tokens.css">
+  <style>
+    :root { --serif: "IBM Plex Serif", Georgia, serif; --sans: "IBM Plex Sans", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, monospace; }
+    html, body { margin: 0; background: var(--paper); font-family: var(--sans); color: var(--ink); }
+    .page { max-width: 1040px; margin: 0 auto; padding: 64px 48px 96px; }
+    .sec { border-top: 1px solid var(--rule-strong); margin-top: 56px; padding-top: 32px; }
+    .sec:first-of-type { border-top: none; margin-top: 24px; padding-top: 0; }
+    .h-meta { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+    h1 { font-family: var(--serif); font-weight: 400; font-size: 56px; letter-spacing: -0.02em; margin: 8px 0 12px; line-height: 1; }
+    h2 { font-family: var(--serif); font-weight: 400; font-size: 30px; letter-spacing: -0.015em; margin: 0 0 6px; }
+    p.lede { font-family: var(--serif); font-style: italic; font-size: 18px; color: var(--ink-2); max-width: 640px; line-height: 1.5; }
+    .grid { display: grid; gap: 18px; }
+    .g-4 { grid-template-columns: repeat(4, 1fr); }
+    .g-3 { grid-template-columns: repeat(3, 1fr); }
+    .g-2 { grid-template-columns: repeat(2, 1fr); }
+    .swatch { border: 1px solid var(--rule-strong); background: #faf6ec; padding: 14px; border-radius: 2px; }
+    .swatch .chip { height: 72px; border: 1px solid var(--rule); border-radius: 2px; margin-bottom: 10px; }
+    .swatch .name { font-family: var(--mono); font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); }
+    .swatch .val { font-family: var(--mono); font-size: 12px; color: var(--ink); margin-top: 2px; }
+    .token-row { display: grid; grid-template-columns: 180px 1fr 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px dashed var(--rule); align-items: baseline; font-size: 14px; }
+    .token-row .k { font-family: var(--mono); font-size: 12px; color: var(--ink-3); letter-spacing: 0.03em; }
+    .token-row .v { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+    .type-row { display: grid; grid-template-columns: 220px 1fr; gap: 24px; padding: 18px 0; border-bottom: 1px dashed var(--rule); align-items: baseline; }
+    .type-row .meta-col { display: flex; flex-direction: column; gap: 2px; }
+    .demo { padding: 16px 18px; background: #faf6ec; border: 1px solid var(--rule-strong); border-radius: 2px; }
+    .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    code.inl { font-family: var(--mono); font-size: 12px; background: var(--paper-2); padding: 1px 5px; border-radius: 2px; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="h-meta">collegedata.fyi · Design system · v0.1</div>
+    <h1>Paper, ink, and one quiet green.</h1>
+    <p class="lede">A warm archival system for an open Common Data Set archive. IBM Plex Serif display, IBM Plex Sans body, muted forest accent, and a library of small components built for reading data — not selling software.</p>
+
+    <!-- BRAND -->
+    <section class="sec">
+      <div class="h-meta">§ Brand</div>
+      <h2>Wordmark</h2>
+      <div class="grid g-2" style="margin-top:16px">
+        <div class="swatch"><div class="name">F · Call-number (default)</div>
+          <div style="padding:22px 8px"><span style="font-family:var(--serif);font-size:28px;letter-spacing:-0.015em;display:inline-flex;gap:6px;align-items:center">
+            <span style="display:inline-flex;gap:3px"><span style="width:5px;height:5px;background:var(--ink);border-radius:50%"></span><span style="width:5px;height:5px;background:var(--ink);border-radius:50%"></span></span>
+            <span><em>collegedata</em><span style="opacity:.55">.fyi</span></span>
+          </span></div>
+          <div class="val" style="margin-top:6px">variant="dotted"</div>
+        </div>
+        <div class="swatch"><div class="name">Other variants shipped</div>
+          <div class="val" style="line-height:1.9;margin-top:8px">stamp · corner · bracket · monogram · rule · plain</div>
+          <div style="font-size:13px;color:var(--ink-2);margin-top:10px;font-family:var(--serif);font-style:italic">Call-number chosen for its quiet catalog feel; others remain in the component for contexts where a stronger mark is needed.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COLORS -->
+    <section class="sec">
+      <div class="h-meta">§ Colors</div>
+      <h2>Palette</h2>
+      <p class="lede" style="font-size:15px">Paper + ink + a single muted forest green. No blue. Ochre and brick are held back for rare emphasis — don't use them casually.</p>
+      <div class="grid g-4" style="margin-top:24px">
+        <div class="swatch"><div class="chip" style="background:var(--paper)"></div><div class="name">Paper</div><div class="val">#f1ece1 · --paper</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--paper-2)"></div><div class="name">Paper 2</div><div class="val">#e9e3d4 · --paper-2</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--paper-3)"></div><div class="name">Paper 3</div><div class="val">#ded6c3 · --paper-3</div></div>
+        <div class="swatch"><div class="chip" style="background:#faf6ec;border-color:var(--rule-strong)"></div><div class="name">Card cream</div><div class="val">#faf6ec</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--ink)"></div><div class="name">Ink</div><div class="val">#1c1e1b · --ink</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--ink-2)"></div><div class="name">Ink 2</div><div class="val">#3a3b37 · --ink-2</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--ink-3)"></div><div class="name">Ink 3</div><div class="val">#6b6a63 · --ink-3</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--ink-4)"></div><div class="name">Ink 4</div><div class="val">#a8a59a · --ink-4</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--forest)"></div><div class="name">Forest · accent</div><div class="val">#3f5b3a · --forest</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--forest-2)"></div><div class="name">Forest 2</div><div class="val">#5a7a52 · --forest-2</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--ochre)"></div><div class="name">Ochre · rare</div><div class="val">#8a6a2b · --ochre</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--brick)"></div><div class="name">Brick · alarm</div><div class="val">#8c2a1f · --brick</div></div>
+      </div>
+
+      <h2 style="margin-top:40px">Chart palette</h2>
+      <div class="grid g-3" style="margin-top:16px">
+        <div class="swatch"><div class="chip" style="background:var(--chart-ink)"></div><div class="name">Primary series</div><div class="val">--chart-ink · #1c1e1b</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--chart-accent)"></div><div class="name">Highlight / callout</div><div class="val">--chart-accent · #3f5b3a</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--paper-2);border:1px solid var(--chart-grid)"></div><div class="name">Grid</div><div class="val">--chart-grid · rgba(28,30,27,.08)</div></div>
+      </div>
+    </section>
+
+    <!-- TYPE -->
+    <section class="sec">
+      <div class="h-meta">§ Type</div>
+      <h2>Pairing</h2>
+      <div class="demo" style="margin-top:14px">
+        <div class="row" style="gap:32px">
+          <span style="font-family:var(--serif);font-size:42px;letter-spacing:-0.02em">Display · <em>Plex Serif</em></span>
+          <span style="font-family:var(--sans);font-size:24px">Body · Plex Sans</span>
+          <span style="font-family:var(--mono);font-size:13px;letter-spacing:0.04em">META · PLEX MONO</span>
+        </div>
+      </div>
+      <div style="margin-top:24px">
+        <div class="type-row">
+          <div class="meta-col"><span class="h-meta">display · h1</span><span style="font-family:var(--mono);font-size:12px;color:var(--ink-2)">56–76 / 1.0 / -0.02em</span></div>
+          <div style="font-family:var(--serif);font-size:56px;font-weight:400;letter-spacing:-0.02em;line-height:1">Straight from the source.</div>
+        </div>
+        <div class="type-row">
+          <div class="meta-col"><span class="h-meta">section · h2</span><span style="font-family:var(--mono);font-size:12px;color:var(--ink-2)">30 / 1.1 / -0.015em</span></div>
+          <div style="font-family:var(--serif);font-size:30px;font-weight:400;letter-spacing:-0.015em">Federal outcomes, held on file.</div>
+        </div>
+        <div class="type-row">
+          <div class="meta-col"><span class="h-meta">serif italic · lede</span><span style="font-family:var(--mono);font-size:12px;color:var(--ink-2)">18 / 1.55</span></div>
+          <div style="font-family:var(--serif);font-size:18px;font-style:italic;color:var(--ink-2);line-height:1.55">A quieter voice for captions and pull-lines.</div>
+        </div>
+        <div class="type-row">
+          <div class="meta-col"><span class="h-meta">body</span><span style="font-family:var(--mono);font-size:12px;color:var(--ink-2)">15–16 / 1.6</span></div>
+          <div style="font-family:var(--sans);font-size:16px;line-height:1.6;max-width:560px">Ninety-eight per cent of CDS pages in this archive have been structured into queryable JSON; the rest are held as PDFs awaiting reviewer clearance.</div>
+        </div>
+        <div class="type-row">
+          <div class="meta-col"><span class="h-meta">meta · mono</span><span style="font-family:var(--mono);font-size:12px;color:var(--ink-2)">11 / 0.08em / uppercase</span></div>
+          <div style="font-family:var(--mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3)">VOL. III · NO. 16 · SUNDAY 20 APRIL 2026</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SPACING / RULES -->
+    <section class="sec">
+      <div class="h-meta">§ Spacing · Rules</div>
+      <h2>Rules and separators</h2>
+      <div class="demo" style="margin-top:14px">
+        <div class="rule-2" style="padding-top:10px">Strong rule · <code class="inl">--rule-strong</code> · used above section bands</div>
+        <div class="rule" style="padding-top:10px;margin-top:10px">Hairline rule · <code class="inl">--rule</code> · used between list items</div>
+        <div class="rule-d" style="padding-top:10px;margin-top:10px">Dashed rule · for dense ledger rows</div>
+      </div>
+      <h2 style="margin-top:32px">Radius &amp; shadow</h2>
+      <div class="demo" style="margin-top:12px">Corners stay at <code class="inl">2px</code> — we are not in the rounded-card business. Elevation is achieved with thin rules, not shadows, except for <code class="inl">.cd-card</code> at focus, which may use a double-ruled underline to mimic catalog-drawer stacking.</div>
+    </section>
+
+    <!-- COMPONENTS -->
+    <section class="sec">
+      <div class="h-meta">§ Components</div>
+      <h2>Buttons</h2>
+      <div class="demo" style="margin-top:12px"><div class="row">
+        <button class="cd-btn">Primary</button>
+        <button class="cd-btn cd-btn--ghost">Ghost</button>
+      </div></div>
+      <h2 style="margin-top:28px">Chips</h2>
+      <div class="demo" style="margin-top:12px"><div class="row">
+        <span class="cd-chip">XLSX</span>
+        <span class="cd-chip">CDS C1</span>
+        <span class="cd-chip cd-chip--forest">Extracted</span>
+        <span class="cd-chip cd-chip--solid">Verified</span>
+      </div></div>
+      <h2 style="margin-top:28px">Cards</h2>
+      <div class="demo" style="margin-top:12px">
+        <div class="cd-card" style="padding:18px;max-width:420px">
+          <div class="h-meta" style="margin-bottom:4px">§ Featured recipe</div>
+          <div style="font-family:var(--serif);font-size:22px">Acceptance <em>vs.</em> yield</div>
+          <div style="font-size:13px;color:var(--ink-2);margin-top:4px;line-height:1.5">Two numbers, eighteen schools worth of context.</div>
+        </div>
+      </div>
+      <h2 style="margin-top:28px">Sparkline</h2>
+      <div class="demo" style="margin-top:12px">
+        <div style="font-family:var(--sans);font-size:16px;line-height:1.6;max-width:520px">
+          The archive holds <b style="font-family:var(--serif);font-style:italic">697 schools</b>
+          <svg width="44" height="14" style="vertical-align:baseline"><path d="M1.5 10 L 8 9 L 14.5 8 L 21 7 L 27.5 5 L 34 4 L 40.5 3" stroke="#3f5b3a" stroke-width="1.25" fill="none"/><circle cx="40.5" cy="3" r="1.6" fill="#3f5b3a"/></svg>
+          and <b style="font-family:var(--serif);font-style:italic">3,924 documents</b>
+          <svg width="44" height="14" style="vertical-align:baseline"><path d="M1.5 11 L 8 9 L 14.5 8 L 21 6 L 27.5 5 L 34 4 L 40.5 3" stroke="#3f5b3a" stroke-width="1.25" fill="none"/><circle cx="40.5" cy="3" r="1.6" fill="#3f5b3a"/></svg>,
+          covering 1998 through 2025.
+        </div>
+      </div>
+
+      <h2 style="margin-top:28px">Nav row</h2>
+      <div class="demo" style="margin-top:12px;padding:0">
+        <div style="padding:16px 22px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--rule)">
+          <span style="font-family:var(--serif);font-size:20px;letter-spacing:-0.015em;display:inline-flex;gap:6px;align-items:center">
+            <span style="display:inline-flex;gap:3px"><span style="width:4px;height:4px;background:var(--ink);border-radius:50%"></span><span style="width:4px;height:4px;background:var(--ink);border-radius:50%"></span></span>
+            <span><em>collegedata</em><span style="opacity:.55">.fyi</span></span>
+          </span>
+          <nav style="display:flex;gap:26px;font-size:13px;color:var(--ink-3)"><span>Schools</span><span>Recipes</span><span>About</span><span>API</span><span>GitHub</span></nav>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="h-meta">§ Usage</div>
+      <h2>Principles</h2>
+      <ol style="font-size:15px;line-height:1.7;color:var(--ink-2);max-width:640px;padding-left:22px">
+        <li>Read like a library, not a SaaS landing page.</li>
+        <li>One accent, used rarely. When forest appears, it means this.</li>
+        <li>Numbers are always tabular, always next to their source section (§C, §H…).</li>
+        <li>Rules, not shadows. Density earned, not decorated.</li>
+        <li>Never hide a source. Every number links back to its CDS cell.</li>
+      </ol>
+    </section>
+  </main>
+</body>
+</html>

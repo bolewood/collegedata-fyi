@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>collegedata.fyi — Redesign directions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link id="font-link" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Geist:wght@300..700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="tokens.css">
+  <style>
+    html, body { margin: 0; padding: 0; background: #f0eee9; }
+    body { font-family: "Geist", -apple-system, system-ui, sans-serif; }
+    /* Tweak panel */
+    .tw-panel {
+      position: fixed; bottom: 20px; right: 20px; z-index: 1000;
+      background: #1c1e1b; color: #f1ece1; padding: 14px 16px;
+      font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.06em;
+      border-radius: 2px; box-shadow: 0 8px 32px rgba(0,0,0,.25);
+      min-width: 220px; display: none;
+    }
+    .tw-panel.on { display: block; }
+    .tw-row { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .tw-row button {
+      background: transparent; color: #f1ece1; border: 1px solid rgba(255,255,255,.2);
+      padding: 8px 10px; font-family: inherit; font-size: 11px; letter-spacing: 0.06em;
+      cursor: pointer; text-align: left; border-radius: 2px;
+    }
+    .tw-row button.active { background: #3f5b3a; border-color: #3f5b3a; }
+    .tw-row button:hover { border-color: #f1ece1; }
+    .tw-title { text-transform: uppercase; opacity: .6; font-size: 10px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <div class="tw-panel" id="tw-panel">
+    <div class="tw-title">Tweaks · Type pairing</div>
+    <div class="tw-row" id="tw-type-row"></div>
+  </div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="wordmark.jsx"></script>
+  <script type="text/babel" src="wordmark-compare.jsx"></script>
+  <script type="text/babel" src="sparkline.jsx"></script>
+  <script type="text/babel" src="shared.jsx"></script>
+  <script type="text/babel" src="home-v1.jsx"></script>
+  <script type="text/babel" src="home-v2.jsx"></script>
+  <script type="text/babel" src="home-v3.jsx"></script>
+  <script type="text/babel" src="school.jsx"></script>
+  <script type="text/babel" src="recipe.jsx"></script>
+
+  <script type="text/babel">
+    const TWEAKS = /*EDITMODE-BEGIN*/{
+      "typePair": "IBM Plex Serif + Sans"
+    }/*EDITMODE-END*/;
+
+    const TYPE_PAIRS = [
+      { name: "Newsreader + Geist",
+        serif: "Newsreader", sans: "Geist", mono: "JetBrains Mono",
+        link: "family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Geist:wght@300..700&family=JetBrains+Mono:wght@400;500" },
+      { name: "GT Sectra-ish (Fraunces) + Inter",
+        serif: "Fraunces", sans: "Inter", mono: "JetBrains Mono",
+        link: "family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;500" },
+      { name: "IBM Plex Serif + Sans",
+        serif: "IBM Plex Serif", sans: "IBM Plex Sans", mono: "IBM Plex Mono",
+        link: "family=IBM+Plex+Serif:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500" },
+    ];
+
+    function applyPair(name) {
+      const p = TYPE_PAIRS.find(t => t.name === name) || TYPE_PAIRS[0];
+      document.getElementById("font-link").href =
+        `https://fonts.googleapis.com/css2?${p.link}&display=swap`;
+      document.documentElement.style.setProperty("--serif", `"${p.serif}", Georgia, serif`);
+      document.documentElement.style.setProperty("--sans", `"${p.sans}", -apple-system, system-ui, sans-serif`);
+      document.documentElement.style.setProperty("--mono", `"${p.mono}", ui-monospace, Menlo, monospace`);
+    }
+    applyPair(TWEAKS.typePair);
+
+    // Edit-mode protocol
+    const panel = document.getElementById("tw-panel");
+    const row = document.getElementById("tw-type-row");
+    function renderRow(current) {
+      row.innerHTML = "";
+      TYPE_PAIRS.forEach(p => {
+        const b = document.createElement("button");
+        b.textContent = p.name;
+        if (p.name === current) b.classList.add("active");
+        b.onclick = () => {
+          TWEAKS.typePair = p.name;
+          applyPair(p.name);
+          renderRow(p.name);
+          window.parent.postMessage({type:'__edit_mode_set_keys', edits:{typePair: p.name}}, '*');
+        };
+        row.appendChild(b);
+      });
+    }
+    renderRow(TWEAKS.typePair);
+
+    window.addEventListener("message", (e) => {
+      const d = e.data || {};
+      if (d.type === "__activate_edit_mode") panel.classList.add("on");
+      if (d.type === "__deactivate_edit_mode") panel.classList.remove("on");
+    });
+    window.parent.postMessage({type:'__edit_mode_available'}, '*');
+
+    // Canvas
+    const App = () => (
+      <DesignCanvas>
+        <DCSection id="wordmark" title="Wordmark explorations" subtitle="Tighter spacing + six alt glyph treatments. Pick one and I'll roll it through.">
+          <DCArtboard id="marks" label="Wordmark · 7 takes" width={1120} height={1180}><WordmarkCompare/></DCArtboard>
+        </DCSection>
+        <DCSection id="home" title="Home — three directions" subtitle="Paper · forest · archival marginalia. Same tokens, different voice.">
+          <DCArtboard id="v1" label="V1 · Moderate archival" width={W} height={1080}><HomeV1/></DCArtboard>
+          <DCArtboard id="v2" label="V2 · Catalog drawer" width={W} height={1080}><HomeV2/></DCArtboard>
+          <DCArtboard id="v3" label="V3 · Index page" width={W} height={1280}><HomeV3/></DCArtboard>
+        </DCSection>
+
+        <DCSection id="school" title="School detail" subtitle="Bethel University — documents, federal outcomes, net price by income.">
+          <DCArtboard id="bethel" label="School · Bethel University" width={W} height={1760}><School/></DCArtboard>
+        </DCSection>
+
+        <DCSection id="recipe" title="Recipe — Acceptance × Yield" subtitle="Scatter in the unified ink + forest chart palette.">
+          <DCArtboard id="ay" label="Recipe · Acceptance vs. yield" width={W} height={1620}><Recipe/></DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+    );
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+  </script>
+</body>
+</html>

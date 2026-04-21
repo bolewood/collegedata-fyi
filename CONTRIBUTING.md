@@ -56,6 +56,7 @@ The hardest part of the pipeline is extracting structured data from flattened PD
 - Architecture overview: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 - Schema reference: [`schemas/`](schemas/) (canonical 1,105-field CDS schema, keyed by stable question IDs).
 - Frontend: see [`web/README.md`](web/README.md).
+- **Visual system** (read before touching any UI): [`web/DESIGN_SYSTEM.md`](web/DESIGN_SYSTEM.md). Canonical tokens in [`web/src/app/tokens.css`](web/src/app/tokens.css); live reference page at [`/design-system/`](https://collegedata.fyi/design-system/); handoff source archive in [`docs/design/`](docs/design/).
 
 ## Pull request conventions
 
