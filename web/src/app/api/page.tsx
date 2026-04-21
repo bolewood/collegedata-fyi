@@ -74,9 +74,28 @@ export default function ApiDocsPage() {
             "canonical_year",
             "source_format",
             "source_url",
-            "storage_path",
             "extraction_status",
             "data_quality_flag",
+          ]}
+          allFields={[
+            "document_id",
+            "school_id",
+            "school_name",
+            "ipeds_id",
+            "sub_institutional",
+            "cds_year",
+            "detected_year",
+            "canonical_year",
+            "source_url",
+            "source_format",
+            "source_storage_path",
+            "participation_status",
+            "extraction_status",
+            "data_quality_flag",
+            "latest_canonical_artifact_id",
+            "discovered_at",
+            "last_verified_at",
+            "removed_at",
           ]}
         />
         <Resource
@@ -89,6 +108,18 @@ export default function ApiDocsPage() {
             "notes",
             "created_at",
           ]}
+          allFields={[
+            "id",
+            "document_id",
+            "kind",
+            "producer",
+            "producer_version",
+            "schema_version",
+            "notes",
+            "storage_path",
+            "sha256",
+            "created_at",
+          ]}
         />
         <Resource
           name="cds_documents"
@@ -96,10 +127,33 @@ export default function ApiDocsPage() {
           fields={[
             "id",
             "school_id",
+            "ipeds_id",
             "cds_year",
             "detected_year",
             "participation_status",
             "source_sha256",
+          ]}
+          allFields={[
+            "id",
+            "school_id",
+            "school_name",
+            "ipeds_id",
+            "sub_institutional",
+            "cds_year",
+            "detected_year",
+            "source_url",
+            "source_sha256",
+            "source_format",
+            "source_page_count",
+            "source_provenance",
+            "participation_status",
+            "extraction_status",
+            "data_quality_flag",
+            "discovered_at",
+            "last_verified_at",
+            "removed_at",
+            "created_at",
+            "updated_at",
           ]}
         />
         <Resource
@@ -116,6 +170,43 @@ export default function ApiDocsPage() {
             "graduation_rate_6yr",
             "pell_grant_rate",
           ]}
+          allFields={[
+            // CDS side
+            "document_id",
+            "school_id",
+            "school_name",
+            "ipeds_id",
+            "cds_year",
+            "source_format",
+            "source_storage_path",
+            "extraction_status",
+            "data_quality_flag",
+            "latest_canonical_artifact_id",
+            // Scorecard side
+            "scorecard_data_year",
+            "earnings_10yr_median",
+            "earnings_10yr_p25",
+            "earnings_10yr_p75",
+            "median_debt_completers",
+            "median_debt_monthly_payment",
+            "avg_net_price",
+            "net_price_0_30k",
+            "net_price_30k_48k",
+            "net_price_48k_75k",
+            "net_price_75k_110k",
+            "net_price_110k_plus",
+            "graduation_rate_6yr",
+            "grad_rate_pell",
+            "repayment_rate_3yr",
+            "default_rate_3yr",
+            "pell_grant_rate",
+            "federal_loan_rate",
+            "first_generation_share",
+            "median_family_income",
+            "retention_rate_ft",
+            "endowment_end",
+            "instructional_expenditure_fte",
+          ]}
         />
         <Resource
           name="scorecard_summary"
@@ -129,6 +220,58 @@ export default function ApiDocsPage() {
             "avg_net_price",
             "graduation_rate_6yr",
             "endowment_end",
+          ]}
+          allFields={[
+            // Identity
+            "ipeds_id",
+            "school_name",
+            "scorecard_data_year",
+            "refreshed_at",
+            // Earnings (Treasury/IRS)
+            "earnings_6yr_median",
+            "earnings_8yr_median",
+            "earnings_10yr_median",
+            "earnings_10yr_p25",
+            "earnings_10yr_p75",
+            // Debt (NSLDS)
+            "median_debt_completers",
+            "median_debt_noncompleters",
+            "median_debt_monthly_payment",
+            "cumulative_debt_p90",
+            "median_debt_pell",
+            // Net price (IPEDS)
+            "avg_net_price",
+            "net_price_0_30k",
+            "net_price_30k_48k",
+            "net_price_48k_75k",
+            "net_price_75k_110k",
+            "net_price_110k_plus",
+            // Completion
+            "graduation_rate_4yr",
+            "graduation_rate_6yr",
+            "graduation_rate_8yr",
+            "grad_rate_pell",
+            "transfer_out_rate",
+            // Repayment
+            "repayment_rate_3yr",
+            "default_rate_3yr",
+            // Student profile
+            "enrollment",
+            "pell_grant_rate",
+            "federal_loan_rate",
+            "first_generation_share",
+            "median_family_income",
+            "female_share",
+            "retention_rate_ft",
+            // Institutional context
+            "carnegie_basic",
+            "locale",
+            "historically_black",
+            "predominantly_black",
+            "hispanic_serving",
+            "endowment_end",
+            "instructional_expenditure_fte",
+            "faculty_salary_avg",
           ]}
         />
       </div>
@@ -241,15 +384,31 @@ const { data } = await supabase
   );
 }
 
+function FieldChip({ name }: { name: string }) {
+  return (
+    <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-700">
+      {name}
+    </code>
+  );
+}
+
 function Resource({
   name,
   description,
   fields,
+  allFields,
 }: {
   name: string;
   description: string;
+  /** Curated highlight fields shown by default (typically the ones most
+      useful for consumer queries). */
   fields: string[];
+  /** Complete alphabetized field list exposed by the table or view.
+      Revealed behind a `<details>` when strictly larger than `fields`. */
+  allFields?: string[];
 }) {
+  const highlighted = new Set(fields);
+  const extras = allFields?.filter((f) => !highlighted.has(f)) ?? [];
   return (
     <div className="rounded border border-gray-200 p-4">
       <div className="flex items-baseline justify-between gap-3">
@@ -270,14 +429,26 @@ function Resource({
       </p>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {fields.map((f) => (
-          <code
-            key={f}
-            className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-700"
-          >
-            {f}
-          </code>
+          <FieldChip key={f} name={f} />
         ))}
       </div>
+      {extras.length > 0 && (
+        <details className="mt-3 group">
+          <summary className="cursor-pointer select-none text-xs text-blue-700 hover:text-blue-900">
+            <span className="group-open:hidden">
+              Show all {allFields!.length} fields →
+            </span>
+            <span className="hidden group-open:inline">
+              Hide additional fields
+            </span>
+          </summary>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {extras.map((f) => (
+              <FieldChip key={f} name={f} />
+            ))}
+          </div>
+        </details>
+      )}
     </div>
   );
 }
