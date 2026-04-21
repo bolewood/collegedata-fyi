@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       archive_queue: {
@@ -23,6 +48,7 @@ export type Database = {
           enqueued_run_id: string
           id: string
           last_error: string | null
+          last_outcome: string | null
           processed_at: string | null
           school_id: string
           school_name: string
@@ -36,6 +62,7 @@ export type Database = {
           enqueued_run_id: string
           id?: string
           last_error?: string | null
+          last_outcome?: string | null
           processed_at?: string | null
           school_id: string
           school_name: string
@@ -49,6 +76,7 @@ export type Database = {
           enqueued_run_id?: string
           id?: string
           last_error?: string | null
+          last_outcome?: string | null
           processed_at?: string | null
           school_id?: string
           school_name?: string
@@ -108,6 +136,13 @@ export type Database = {
             referencedRelation: "cds_manifest"
             referencedColumns: ["document_id"]
           },
+          {
+            foreignKeyName: "cds_artifacts_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "cds_scorecard"
+            referencedColumns: ["document_id"]
+          },
         ]
       }
       cds_documents: {
@@ -119,6 +154,7 @@ export type Database = {
           discovered_at: string | null
           extraction_status: string
           id: string
+          ipeds_id: string | null
           last_verified_at: string | null
           participation_status: string
           removed_at: string | null
@@ -126,6 +162,7 @@ export type Database = {
           school_name: string
           source_format: string | null
           source_page_count: number | null
+          source_provenance: string
           source_sha256: string | null
           source_url: string | null
           sub_institutional: string | null
@@ -134,10 +171,12 @@ export type Database = {
         Insert: {
           cds_year: string
           created_at?: string
+          data_quality_flag?: string | null
           detected_year?: string | null
           discovered_at?: string | null
           extraction_status?: string
           id?: string
+          ipeds_id?: string | null
           last_verified_at?: string | null
           participation_status?: string
           removed_at?: string | null
@@ -145,6 +184,7 @@ export type Database = {
           school_name: string
           source_format?: string | null
           source_page_count?: number | null
+          source_provenance?: string
           source_sha256?: string | null
           source_url?: string | null
           sub_institutional?: string | null
@@ -153,10 +193,12 @@ export type Database = {
         Update: {
           cds_year?: string
           created_at?: string
+          data_quality_flag?: string | null
           detected_year?: string | null
           discovered_at?: string | null
           extraction_status?: string
           id?: string
+          ipeds_id?: string | null
           last_verified_at?: string | null
           participation_status?: string
           removed_at?: string | null
@@ -164,12 +206,101 @@ export type Database = {
           school_name?: string
           source_format?: string | null
           source_page_count?: number | null
+          source_provenance?: string
           source_sha256?: string | null
           source_url?: string | null
           sub_institutional?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      cds_llm_cache: {
+        Row: {
+          cache_read_tokens: number | null
+          cache_write_tokens: number | null
+          cleaner_version: string
+          created_at: string
+          document_id: string
+          estimated_cost_usd: number | null
+          id: string
+          input_tokens: number | null
+          markdown_sha256: string
+          missing_fields_sha256: string
+          model_name: string
+          output_tokens: number | null
+          prompt_version: string
+          response_json: Json | null
+          schema_version: string
+          section_name: string
+          source_sha256: string
+          status: string
+          strategy_version: string
+        }
+        Insert: {
+          cache_read_tokens?: number | null
+          cache_write_tokens?: number | null
+          cleaner_version?: string
+          created_at?: string
+          document_id: string
+          estimated_cost_usd?: number | null
+          id?: string
+          input_tokens?: number | null
+          markdown_sha256: string
+          missing_fields_sha256: string
+          model_name: string
+          output_tokens?: number | null
+          prompt_version: string
+          response_json?: Json | null
+          schema_version: string
+          section_name: string
+          source_sha256: string
+          status: string
+          strategy_version: string
+        }
+        Update: {
+          cache_read_tokens?: number | null
+          cache_write_tokens?: number | null
+          cleaner_version?: string
+          created_at?: string
+          document_id?: string
+          estimated_cost_usd?: number | null
+          id?: string
+          input_tokens?: number | null
+          markdown_sha256?: string
+          missing_fields_sha256?: string
+          model_name?: string
+          output_tokens?: number | null
+          prompt_version?: string
+          response_json?: Json | null
+          schema_version?: string
+          section_name?: string
+          source_sha256?: string
+          status?: string
+          strategy_version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cds_llm_cache_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "cds_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cds_llm_cache_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "cds_manifest"
+            referencedColumns: ["document_id"]
+          },
+          {
+            foreignKeyName: "cds_llm_cache_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "cds_scorecard"
+            referencedColumns: ["document_id"]
+          },
+        ]
       }
       cleaners: {
         Row: {
@@ -198,6 +329,198 @@ export type Database = {
         }
         Relationships: []
       }
+      school_hosting_observations: {
+        Row: {
+          auth_required: string | null
+          cms: string | null
+          file_storage: string | null
+          final_url_host: string | null
+          id: number
+          notes: string | null
+          observation_source: string
+          observed_at: string
+          origin_domain: string | null
+          outcome: string | null
+          outcome_reason: string | null
+          redirect_chain: Json | null
+          rendering: string | null
+          school_id: string
+          seed_url: string | null
+          waf: string | null
+        }
+        Insert: {
+          auth_required?: string | null
+          cms?: string | null
+          file_storage?: string | null
+          final_url_host?: string | null
+          id?: number
+          notes?: string | null
+          observation_source: string
+          observed_at?: string
+          origin_domain?: string | null
+          outcome?: string | null
+          outcome_reason?: string | null
+          redirect_chain?: Json | null
+          rendering?: string | null
+          school_id: string
+          seed_url?: string | null
+          waf?: string | null
+        }
+        Update: {
+          auth_required?: string | null
+          cms?: string | null
+          file_storage?: string | null
+          final_url_host?: string | null
+          id?: number
+          notes?: string | null
+          observation_source?: string
+          observed_at?: string
+          origin_domain?: string | null
+          outcome?: string | null
+          outcome_reason?: string | null
+          redirect_chain?: Json | null
+          rendering?: string | null
+          school_id?: string
+          seed_url?: string | null
+          waf?: string | null
+        }
+        Relationships: []
+      }
+      scorecard_summary: {
+        Row: {
+          avg_net_price: number | null
+          carnegie_basic: number | null
+          cumulative_debt_p90: number | null
+          default_rate_3yr: number | null
+          earnings_10yr_median: number | null
+          earnings_10yr_p25: number | null
+          earnings_10yr_p75: number | null
+          earnings_6yr_median: number | null
+          earnings_8yr_median: number | null
+          endowment_end: number | null
+          enrollment: number | null
+          faculty_salary_avg: number | null
+          federal_loan_rate: number | null
+          female_share: number | null
+          first_generation_share: number | null
+          grad_rate_pell: number | null
+          graduation_rate_4yr: number | null
+          graduation_rate_6yr: number | null
+          graduation_rate_8yr: number | null
+          hispanic_serving: boolean | null
+          historically_black: boolean | null
+          instructional_expenditure_fte: number | null
+          ipeds_id: string
+          locale: number | null
+          median_debt_completers: number | null
+          median_debt_monthly_payment: number | null
+          median_debt_noncompleters: number | null
+          median_debt_pell: number | null
+          median_family_income: number | null
+          net_price_0_30k: number | null
+          net_price_110k_plus: number | null
+          net_price_30k_48k: number | null
+          net_price_48k_75k: number | null
+          net_price_75k_110k: number | null
+          pell_grant_rate: number | null
+          predominantly_black: boolean | null
+          refreshed_at: string
+          repayment_rate_3yr: number | null
+          retention_rate_ft: number | null
+          school_name: string
+          scorecard_data_year: string
+          transfer_out_rate: number | null
+        }
+        Insert: {
+          avg_net_price?: number | null
+          carnegie_basic?: number | null
+          cumulative_debt_p90?: number | null
+          default_rate_3yr?: number | null
+          earnings_10yr_median?: number | null
+          earnings_10yr_p25?: number | null
+          earnings_10yr_p75?: number | null
+          earnings_6yr_median?: number | null
+          earnings_8yr_median?: number | null
+          endowment_end?: number | null
+          enrollment?: number | null
+          faculty_salary_avg?: number | null
+          federal_loan_rate?: number | null
+          female_share?: number | null
+          first_generation_share?: number | null
+          grad_rate_pell?: number | null
+          graduation_rate_4yr?: number | null
+          graduation_rate_6yr?: number | null
+          graduation_rate_8yr?: number | null
+          hispanic_serving?: boolean | null
+          historically_black?: boolean | null
+          instructional_expenditure_fte?: number | null
+          ipeds_id: string
+          locale?: number | null
+          median_debt_completers?: number | null
+          median_debt_monthly_payment?: number | null
+          median_debt_noncompleters?: number | null
+          median_debt_pell?: number | null
+          median_family_income?: number | null
+          net_price_0_30k?: number | null
+          net_price_110k_plus?: number | null
+          net_price_30k_48k?: number | null
+          net_price_48k_75k?: number | null
+          net_price_75k_110k?: number | null
+          pell_grant_rate?: number | null
+          predominantly_black?: boolean | null
+          refreshed_at?: string
+          repayment_rate_3yr?: number | null
+          retention_rate_ft?: number | null
+          school_name: string
+          scorecard_data_year: string
+          transfer_out_rate?: number | null
+        }
+        Update: {
+          avg_net_price?: number | null
+          carnegie_basic?: number | null
+          cumulative_debt_p90?: number | null
+          default_rate_3yr?: number | null
+          earnings_10yr_median?: number | null
+          earnings_10yr_p25?: number | null
+          earnings_10yr_p75?: number | null
+          earnings_6yr_median?: number | null
+          earnings_8yr_median?: number | null
+          endowment_end?: number | null
+          enrollment?: number | null
+          faculty_salary_avg?: number | null
+          federal_loan_rate?: number | null
+          female_share?: number | null
+          first_generation_share?: number | null
+          grad_rate_pell?: number | null
+          graduation_rate_4yr?: number | null
+          graduation_rate_6yr?: number | null
+          graduation_rate_8yr?: number | null
+          hispanic_serving?: boolean | null
+          historically_black?: boolean | null
+          instructional_expenditure_fte?: number | null
+          ipeds_id?: string
+          locale?: number | null
+          median_debt_completers?: number | null
+          median_debt_monthly_payment?: number | null
+          median_debt_noncompleters?: number | null
+          median_debt_pell?: number | null
+          median_family_income?: number | null
+          net_price_0_30k?: number | null
+          net_price_110k_plus?: number | null
+          net_price_30k_48k?: number | null
+          net_price_48k_75k?: number | null
+          net_price_75k_110k?: number | null
+          pell_grant_rate?: number | null
+          predominantly_black?: boolean | null
+          refreshed_at?: string
+          repayment_rate_3yr?: number | null
+          retention_rate_ft?: number | null
+          school_name?: string
+          scorecard_data_year?: string
+          transfer_out_rate?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       cds_manifest: {
@@ -209,6 +532,7 @@ export type Database = {
           discovered_at: string | null
           document_id: string | null
           extraction_status: string | null
+          ipeds_id: string | null
           last_verified_at: string | null
           latest_canonical_artifact_id: string | null
           participation_status: string | null
@@ -223,10 +547,12 @@ export type Database = {
         Insert: {
           canonical_year?: never
           cds_year?: string | null
+          data_quality_flag?: string | null
           detected_year?: string | null
           discovered_at?: string | null
           document_id?: string | null
           extraction_status?: string | null
+          ipeds_id?: string | null
           last_verified_at?: string | null
           latest_canonical_artifact_id?: never
           participation_status?: string | null
@@ -241,10 +567,12 @@ export type Database = {
         Update: {
           canonical_year?: never
           cds_year?: string | null
+          data_quality_flag?: string | null
           detected_year?: string | null
           discovered_at?: string | null
           document_id?: string | null
           extraction_status?: string | null
+          ipeds_id?: string | null
           last_verified_at?: string | null
           latest_canonical_artifact_id?: never
           participation_status?: string | null
@@ -255,6 +583,64 @@ export type Database = {
           source_storage_path?: never
           source_url?: string | null
           sub_institutional?: string | null
+        }
+        Relationships: []
+      }
+      cds_scorecard: {
+        Row: {
+          avg_net_price: number | null
+          cds_year: string | null
+          data_quality_flag: string | null
+          default_rate_3yr: number | null
+          document_id: string | null
+          earnings_10yr_median: number | null
+          earnings_10yr_p25: number | null
+          earnings_10yr_p75: number | null
+          endowment_end: number | null
+          extraction_status: string | null
+          federal_loan_rate: number | null
+          first_generation_share: number | null
+          grad_rate_pell: number | null
+          graduation_rate_6yr: number | null
+          instructional_expenditure_fte: number | null
+          ipeds_id: string | null
+          latest_canonical_artifact_id: string | null
+          median_debt_completers: number | null
+          median_debt_monthly_payment: number | null
+          median_family_income: number | null
+          net_price_0_30k: number | null
+          net_price_110k_plus: number | null
+          net_price_30k_48k: number | null
+          net_price_48k_75k: number | null
+          net_price_75k_110k: number | null
+          pell_grant_rate: number | null
+          repayment_rate_3yr: number | null
+          retention_rate_ft: number | null
+          school_id: string | null
+          school_name: string | null
+          scorecard_data_year: string | null
+          source_format: string | null
+          source_storage_path: string | null
+        }
+        Relationships: []
+      }
+      latest_school_hosting: {
+        Row: {
+          auth_required: string | null
+          cms: string | null
+          file_storage: string | null
+          final_url_host: string | null
+          notes: string | null
+          observation_source: string | null
+          observed_at: string | null
+          origin_domain: string | null
+          outcome: string | null
+          outcome_reason: string | null
+          redirect_chain: Json | null
+          rendering: string | null
+          school_id: string | null
+          seed_url: string | null
+          waf: string | null
         }
         Relationships: []
       }
@@ -270,6 +656,7 @@ export type Database = {
           enqueued_run_id: string
           id: string
           last_error: string | null
+          last_outcome: string | null
           processed_at: string | null
           school_id: string
           school_name: string
@@ -410,6 +797,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

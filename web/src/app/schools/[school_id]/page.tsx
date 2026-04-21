@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { fetchSchoolDocuments } from "@/lib/queries";
+import {
+  fetchSchoolDocuments,
+  fetchScorecardByIpedsId,
+} from "@/lib/queries";
 import { DocumentCard } from "@/components/DocumentCard";
+import { OutcomesSection } from "@/components/OutcomesSection";
 import { yearRange } from "@/lib/format";
 
 export const revalidate = 3600;
@@ -42,6 +46,12 @@ export default async function SchoolDetailPage({
   if (docs.length === 0) {
     notFound();
   }
+
+  // Every cds_documents row for a school carries the same ipeds_id, so we
+  // only need the first one. Scorecard data is per-school-per-vintage, not
+  // per-document, so one query returns everything.
+  const ipedsId = docs.find((d) => d.ipeds_id)?.ipeds_id ?? null;
+  const scorecard = await fetchScorecardByIpedsId(ipedsId);
 
   const name = docs[0].school_name;
   const years = docs
@@ -138,6 +148,14 @@ export default async function SchoolDetailPage({
           </div>
         </div>
       ))}
+
+      {scorecard ? (
+        <OutcomesSection scorecard={scorecard} />
+      ) : ipedsId ? (
+        <p className="mt-10 text-sm text-gray-500">
+          Federal outcomes data is not available for this institution.
+        </p>
+      ) : null}
     </div>
   );
 }

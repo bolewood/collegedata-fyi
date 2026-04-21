@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import {
   fetchDocumentsBySchoolAndYear,
   fetchExtract,
+  fetchScorecardByIpedsId,
 } from "@/lib/queries";
 import type { FieldValue, ArtifactNotes } from "@/lib/types";
 import { storageUrl, formatBadgeLabel } from "@/lib/format";
@@ -11,6 +12,8 @@ import { Badge } from "@/components/Badge";
 import { KeyStats } from "@/components/KeyStats";
 import { FieldsView } from "@/components/FieldsView";
 import { MarkdownView } from "@/components/MarkdownView";
+import { OutcomesBand } from "@/components/OutcomesBand";
+import { ScorecardVintageNote } from "@/components/ScorecardVintageNote";
 
 export const revalidate = 3600;
 
@@ -50,6 +53,11 @@ export default async function SchoolYearPage({
   if (docs.length === 0) {
     notFound();
   }
+
+  // Scorecard is per-school, not per-year — pull once at the page level
+  // and render under KeyStats in each document variant.
+  const ipedsId = docs.find((d) => d.ipeds_id)?.ipeds_id ?? null;
+  const scorecard = await fetchScorecardByIpedsId(ipedsId);
 
   const schoolName = docs[0].school_name;
 
@@ -112,13 +120,23 @@ export default async function SchoolYearPage({
 
       {/* Render each document variant */}
       {docs.map((doc) => (
-        <DocumentVariant key={doc.document_id} doc={doc} />
+        <DocumentVariant
+          key={doc.document_id}
+          doc={doc}
+          scorecard={scorecard}
+        />
       ))}
     </div>
   );
 }
 
-async function DocumentVariant({ doc }: { doc: Awaited<ReturnType<typeof fetchDocumentsBySchoolAndYear>>[number] }) {
+async function DocumentVariant({
+  doc,
+  scorecard,
+}: {
+  doc: Awaited<ReturnType<typeof fetchDocumentsBySchoolAndYear>>[number];
+  scorecard: Awaited<ReturnType<typeof fetchScorecardByIpedsId>>;
+}) {
   const pdfUrl = storageUrl(doc.source_storage_path);
   const isExtracted = doc.extraction_status === "extracted";
 
@@ -169,6 +187,21 @@ async function DocumentVariant({ doc }: { doc: Awaited<ReturnType<typeof fetchDo
       {hasValues && (
         <div className="mt-4">
           <KeyStats values={values} />
+        </div>
+      )}
+
+      {/* Federal outcomes — Scorecard data. Only render under the first
+          document variant; for schools with sub-institutional variants, the
+          Scorecard data is IPEDS-level and identical across them. */}
+      {scorecard && !doc.sub_institutional && (
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Federal outcomes
+          </h2>
+          <ScorecardVintageNote scorecard={scorecard} className="mt-1" />
+          <div className="mt-3">
+            <OutcomesBand scorecard={scorecard} />
+          </div>
         </div>
       )}
 

@@ -7,6 +7,9 @@ export type ManifestRow =
 export type ArtifactRow =
   Database["public"]["Tables"]["cds_artifacts"]["Row"];
 
+export type ScorecardSummary =
+  Database["public"]["Tables"]["scorecard_summary"]["Row"];
+
 // Artifact notes are typed as Json in the generated schema.
 // This interface describes the actual runtime shape written by the
 // extraction pipeline (Tier 2 and Tier 4 cleaners).

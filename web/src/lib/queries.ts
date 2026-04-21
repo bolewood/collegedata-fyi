@@ -7,6 +7,7 @@ import type {
   FieldValue,
   SchoolSummary,
   CorpusStats,
+  ScorecardSummary,
 } from "./types";
 
 // Documents with these participation_status values are excluded from every
@@ -208,3 +209,21 @@ export async function fetchExtract(documentId: string): Promise<{
     mergedValues,
   };
 }
+
+// One-row lookup into scorecard_summary. Hitting the table directly (not the
+// cds_scorecard view) avoids the per-document row replication — Scorecard
+// data is per-school-per-vintage, one row is all we need. Returns null when
+// the school has no IPEDS match, so the caller can cheaply decide whether
+// to render the Outcomes section.
+export const fetchScorecardByIpedsId = cache(async function fetchScorecardByIpedsId(
+  ipedsId: string | null | undefined,
+): Promise<ScorecardSummary | null> {
+  if (!ipedsId) return null;
+  const { data, error } = await supabase
+    .from("scorecard_summary")
+    .select("*")
+    .eq("ipeds_id", ipedsId)
+    .maybeSingle();
+  if (error) throw new Error(`fetchScorecardByIpedsId: ${error.message}`);
+  return data ?? null;
+});

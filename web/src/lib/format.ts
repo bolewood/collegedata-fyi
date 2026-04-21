@@ -56,6 +56,24 @@ export function storageUrl(path: string | null): string | null {
   return `${STORAGE_BASE_URL}/${path}`;
 }
 
+export function formatCurrency(
+  n: number | null | undefined,
+): string {
+  if (n == null) return "";
+  return `$${Math.round(n).toLocaleString("en-US")}`;
+}
+
+// Scorecard stores rates as 0-1 decimals (numeric(5,4) columns). Multiply by
+// 100 for display. Caller controls decimals — headline cards typically want
+// 0, context stats want 1 to avoid hiding interesting signal (e.g. 4.7% vs 5%).
+export function formatPercent(
+  n: number | null | undefined,
+  decimals = 0,
+): string {
+  if (n == null) return "";
+  return `${(n * 100).toFixed(decimals)}%`;
+}
+
 export function yearRange(
   earliest: string | null,
   latest: string | null
