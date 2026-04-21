@@ -5,7 +5,18 @@
 > College Scorecard. No account or API key is needed for collegedata.fyi;
 > Scorecard requires a free API key from [api.data.gov](https://api.data.gov/signup/).
 >
-> **Last updated.** 2026-04-16
+> **Now mostly historical.** As of 2026-04-20 the join is built into the
+> public API: `GET /rest/v1/cds_scorecard` returns one row per archived
+> CDS document with the curated Scorecard outcome slice attached
+> (earnings, debt, net price by income, completion, retention). Use the
+> built-in view for the common case; this manual recipe is still useful
+> when you need Scorecard fields outside the 41-column curated subset
+> (per-program earnings, full repayment-status breakdown,
+> race-stratified completion). See
+> [`tools/scorecard/README.md`](../../tools/scorecard/README.md) for the
+> curated subset and the data vintage currently loaded.
+>
+> **Last updated.** 2026-04-20
 
 ---
 
@@ -20,11 +31,12 @@ to every Title IV institution.
 | **College Scorecard** | Primary key: the `id` field on every record |
 | **collegedata.fyi** | `school_id` slug in `cds_manifest` maps to `ipeds_id` in [`schools.yaml`](../../tools/finder/schools.yaml) |
 
-> **Note (April 2026).** `ipeds_id` is not yet exposed as a column on
-> the `cds_manifest` PostgREST view. Until the V2 migration adds it
-> (see [V2 Scorecard summary table plan](scorecard-summary-table-v2-plan.md)),
-> use the `schools.yaml` crosswalk below or the `/ipeds_crosswalk`
-> endpoint once it ships.
+> **Note (April 2026, updated 2026-04-20).** `ipeds_id` is now exposed
+> on `cds_manifest` directly — `GET /rest/v1/cds_manifest?select=school_id,ipeds_id`
+> works. The manual `schools.yaml` crosswalk shown below remains useful
+> if you want the canonical mapping in code (e.g. for client-side joins
+> against a Scorecard API call) or for the ~130 `cds_documents` rows
+> whose slug variant doesn't yet match a `schools.yaml.id`.
 
 ---
 

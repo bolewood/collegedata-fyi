@@ -1,9 +1,27 @@
 # V2 Plan: Scorecard Summary Table
 
-> **Status.** Shipped 2026-04-20. Migrations + refresh tooling landed;
-> operator runs `tools/scorecard/refresh_summary.py` with each annual
-> Scorecard release. See [`tools/scorecard/README.md`](../../tools/scorecard/README.md)
-> for the runbook.
+> **Status.** Shipped + first load complete 2026-04-20. `scorecard_summary`
+> holds 6,322 rows (every Title-IV institution) from the March 2026
+> Scorecard release (data vintage 2022-23). The `cds_scorecard` view is
+> live at `https://api.collegedata.fyi/rest/v1/cds_scorecard`. See
+> [`tools/scorecard/README.md`](../../tools/scorecard/README.md) for the
+> operator runbook and the current state.
+>
+> **Deltas vs. this plan as written:**
+> - Final column count is 41, not 46. Three Pell/non-Pell debt and
+>   completion fields named in the original plan have either been
+>   renamed or removed from the Scorecard data dictionary between when
+>   this plan was written (2026-04-16) and the March 2026 release that
+>   actually shipped. `GRAD_DEBT_MDN_PELL` was renamed to `PELL_DEBT_MDN`
+>   (kept as `median_debt_pell`); `GRAD_DEBT_MDN_NOPELL` and
+>   `C150_4_NONPELL` were removed entirely (no replacement, columns
+>   dropped from `scorecard_summary` and `cds_scorecard`). Migration
+>   `20260420180000_scorecard_pell_remap.sql` covers the adaptation. The
+>   running schema-drift event log lives in
+>   [`tools/scorecard/README.md`](../../tools/scorecard/README.md).
+> - The pipeline is described as the project's "sixth pipeline" in the
+>   original phrasing; it shipped as the eighth (the architecture grew
+>   between plan and ship).
 >
 > **Last updated.** 2026-04-20
 

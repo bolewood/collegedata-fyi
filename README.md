@@ -48,20 +48,21 @@ curl 'https://api.collegedata.fyi/rest/v1/cds_artifacts?document_id=eq.<uuid>&ki
 1. A Supabase Edge Function runs on cron, discovers new or changed CDS documents at each school's Institutional Research URL, and records them in Postgres. The source file is downloaded and archived in Storage on first discovery so we still have it if the school later removes the original.
 2. A Python worker routes each document to the appropriate extractor based on its source format. Tiers that ship today: filled XLSX → template cell-position map + openpyxl (deterministic on the standard template layout); fillable PDF with AcroForm fields → deterministic direct read ([`tools/tier2_extractor/`](tools/tier2_extractor/)); flattened PDF → Docling layout extraction + a schema-targeting cleaner ([`tools/extraction_worker/tier4_cleaner.py`](tools/extraction_worker/tier4_cleaner.py)); image-only scans → force-OCR pass through the same Docling pipeline; structured HTML → HTML normalizer reusing the Tier 4 cleaner. Remaining tier scoped but not yet built: filled DOCX via Structured Document Tags ([PRD 007](docs/prd/007-tier3-docx-extraction.md)).
 3. All extractors produce output keyed to the CDS Initiative's canonical field IDs using the schema at [`schemas/`](schemas/). Cross-school queries join on that field ID regardless of which extractor produced the values.
-4. PostgREST exposes the manifest as a public read-only API at `api.collegedata.fyi`.
+4. PostgREST exposes the manifest as a public read-only API at `api.collegedata.fyi`. The `cds_scorecard` view at `/rest/v1/cds_scorecard` joins each archived CDS document with the federal College Scorecard (post-graduation earnings, federal debt, net price by income bracket, completion) — see [`tools/scorecard/README.md`](tools/scorecard/README.md).
 5. Community cleanup tools can register via `cleaners.yaml` and publish their own artifacts alongside the primary ones — see [ADR 0002](docs/decisions/0002-publish-raw-over-clean.md) for the rationale.
 
 Full architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Docs and decisions
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — six-pipeline map of the whole system (schema, corpus, discovery, extraction, consumer API, frontend)
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — eight-pipeline map of the whole system (schema, corpus, discovery, mirror, extraction, scorecard, consumer API, frontend)
 - [`docs/extraction-quality.md`](docs/extraction-quality.md) — current accuracy by tier, per-section corpus-wide coverage, and reproducible scoring commands
 - [`docs/recipes/`](docs/recipes/) — worked examples with real data: interactive visualizations, XLSX starters, and API queries. Start with [acceptance rate vs yield](docs/recipes/acceptance-vs-yield.md)
 - [`docs/v1-plan.md`](docs/v1-plan.md) — living project plan for V1
 - [`docs/prd/002-frontend.md`](docs/prd/002-frontend.md) — frontend PRD (reviewed via /autoplan: CEO + Design + Eng review)
 - [`docs/prd/003-ai-driven-data-quality.md`](docs/prd/003-ai-driven-data-quality.md) — AI-driven data-quality spike PRD (M1 only, approved via /autoplan)
 - [`docs/archive-pipeline.md`](docs/archive-pipeline.md) — deep dive on the discovery/archive queue
+- [`tools/scorecard/README.md`](tools/scorecard/README.md) — College Scorecard pipeline runbook (`/rest/v1/cds_scorecard` returns CDS docs joined with federal earnings, debt, net price by income, completion)
 - [`docs/research/cds-vs-college-scorecard.md`](docs/research/cds-vs-college-scorecard.md) — CDS vs College Scorecard schema comparison
 - [`docs/decisions/`](docs/decisions/) — Architectural Decision Records
 - [`docs/known-issues/`](docs/known-issues/) — per-school extraction quality notes

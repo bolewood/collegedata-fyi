@@ -55,8 +55,11 @@ COLUMN_MAP: dict[str, str | tuple[str, str]] = {
     "median_debt_noncompleters":      "WDRAW_DEBT_MDN",
     "median_debt_monthly_payment":    "GRAD_DEBT_MDN10YR",
     "cumulative_debt_p90":            "CUML_DEBT_P90",
-    "median_debt_pell":               "GRAD_DEBT_MDN_PELL",
-    "median_debt_non_pell":           "GRAD_DEBT_MDN_NOPELL",
+    # PELL_DEBT_MDN is the March-2026 rename of GRAD_DEBT_MDN_PELL.
+    # The non-Pell-debt counterpart was removed entirely from the
+    # Scorecard data dictionary, hence no median_debt_non_pell here —
+    # see migration 20260420180000_scorecard_pell_remap.sql.
+    "median_debt_pell":               "PELL_DEBT_MDN",
     "avg_net_price":                  ("NPT4_PUB", "NPT4_PRIV"),
     "net_price_0_30k":                ("NPT41_PUB", "NPT41_PRIV"),
     "net_price_30k_48k":              ("NPT42_PUB", "NPT42_PRIV"),
@@ -67,7 +70,10 @@ COLUMN_MAP: dict[str, str | tuple[str, str]] = {
     "graduation_rate_6yr":            "C150_4",
     "graduation_rate_8yr":            "C200_4",
     "grad_rate_pell":                 "C150_4_PELL",
-    "grad_rate_non_pell":             "C150_4_NONPELL",
+    # C150_4_NONPELL was removed from the Scorecard data dictionary
+    # (split into C150_4_LOANNOPELL + C150_4_NOLOANNOPELL); no clean
+    # synthesis without per-cohort weights, so the column was dropped
+    # — see migration 20260420180000_scorecard_pell_remap.sql.
     "transfer_out_rate":              "TRANS_4",
     "repayment_rate_3yr":             "RPY_3YR_RT",
     "default_rate_3yr":               "CDR3",

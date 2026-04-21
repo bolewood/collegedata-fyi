@@ -66,10 +66,11 @@ export default function ApiDocsPage() {
       <div className="mt-4 space-y-6">
         <Resource
           name="cds_manifest"
-          description="One row per archived CDS document. Joins schools, source URLs, format detection, and extraction status."
+          description="One row per archived CDS document. Joins schools, source URLs, format detection, and extraction status. Carries ipeds_id so federal-data joins are one query away."
           fields={[
             "school_id",
             "school_name",
+            "ipeds_id",
             "canonical_year",
             "source_format",
             "source_url",
@@ -99,6 +100,35 @@ export default function ApiDocsPage() {
             "detected_year",
             "participation_status",
             "source_sha256",
+          ]}
+        />
+        <Resource
+          name="cds_scorecard"
+          description="CDS manifest left-joined with the federal College Scorecard. One row per archived CDS document with post-graduation earnings, debt, net price by income bracket, completion rate, and retention attached. Answers 'should I apply here, and what happens if I do?' in a single GET. Currently joined to Scorecard 2022-23."
+          fields={[
+            "school_name",
+            "ipeds_id",
+            "cds_year",
+            "earnings_10yr_median",
+            "median_debt_completers",
+            "avg_net_price",
+            "net_price_0_30k",
+            "graduation_rate_6yr",
+            "pell_grant_rate",
+          ]}
+        />
+        <Resource
+          name="scorecard_summary"
+          description="Curated 41-column subset of the federal College Scorecard, one row per IPEDS UNITID (6,322 institutions — not just CDS-archived ones). Refreshed annually after each Scorecard release. For per-program earnings, race-stratified completion, or other Scorecard fields beyond the curated subset, query Scorecard directly."
+          fields={[
+            "ipeds_id",
+            "school_name",
+            "scorecard_data_year",
+            "earnings_10yr_median",
+            "median_debt_completers",
+            "avg_net_price",
+            "graduation_rate_6yr",
+            "endowment_end",
           ]}
         />
       </div>

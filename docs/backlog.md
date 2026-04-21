@@ -156,22 +156,29 @@ Reverse chronological.
 
 Ideas bigger than a single backlog item, captured here so they don't get dropped. These are not scheduled.
 
-### [SHIPPED 2026-04-20] Join CDS with College Scorecard via IPEDS unit ID
+### [SHIPPED + LOADED 2026-04-20] Join CDS with College Scorecard via IPEDS unit ID
 
-Shipped across three migrations + two Python scripts:
+Live in production. `GET /rest/v1/cds_scorecard` returns CDS documents joined to federal earnings, debt, net-price-by-income, completion, and retention. Total row counts at first load:
+
+- `scorecard_summary`: **6,322 rows** (every Title-IV institution in the March 2026 bundle, vintage `2022-23`).
+- `cds_documents.ipeds_id`: **3,794 of 4,131 rows** populated. The 130-row gap is from 10 slug variants where `cds_documents.school_id` doesn't match `schools.yaml.id`. See the runbook's "Slug rationalization" section for the cleanup path.
+- `cds_scorecard` view: live, returning real joined data (MIT tops earnings at $143,372 / 96.4% grad rate / $20,111 net price; Harvard's net-price-by-income range is $2,091 → $53,337).
+
+Shipped across four migrations + two Python scripts:
 
 - `20260420170000_ipeds_id.sql` — adds `ipeds_id` to `cds_documents`, exposes it in the `cds_manifest` view, wires it through `SchoolInput`/`InsertFreshArgs` so new archives populate it automatically from `schools.yaml`.
-- `20260420170100_scorecard_summary.sql` — 43-field curated subset of the College Scorecard Most-Recent-Institution data. One row per UNITID. RLS-gated public read.
-- `20260420170200_cds_scorecard_view.sql` — `cds_scorecard` view that left-joins the CDS manifest with a 20-column Scorecard outcome slice, answering "should I apply here, and what happens if I do?" in a single API call.
-- `tools/scorecard/backfill_ipeds_ids.py` — one-shot SQL generator / supabase-py writer to populate `ipeds_id` on rows inserted before the migration.
-- `tools/scorecard/refresh_summary.py` — annual CSV→upsert loader keyed on UNITID.
+- `20260420170100_scorecard_summary.sql` — initial 43-field curated subset of the College Scorecard Most-Recent-Institution data. One row per UNITID. RLS-gated public read.
+- `20260420170200_cds_scorecard_view.sql` — `cds_scorecard` view that left-joins the CDS manifest with a curated Scorecard outcome slice. `WITH (security_invoker = true)` so the view honors querying-user RLS instead of the view owner's.
+- `20260420180000_scorecard_pell_remap.sql` — adapts the table to the March 2026 Scorecard data dictionary. `GRAD_DEBT_MDN_PELL` was renamed (`PELL_DEBT_MDN`, remap-only); `GRAD_DEBT_MDN_NOPELL` and `C150_4_NONPELL` were removed entirely (columns dropped from `scorecard_summary` and the view). The schema-drift guard in `refresh_summary.py` caught these on first dry-run.
+- `tools/scorecard/backfill_ipeds_ids.py` — one-shot SQL generator / supabase-py writer to populate `ipeds_id` on rows inserted before the migration. Validates UNITIDs, escapes defensively, has a generator self-check + a column-exists preflight.
+- `tools/scorecard/refresh_summary.py` — annual CSV→upsert loader keyed on UNITID. Includes schema-drift abort, per-batch dedup, leading-zero normalization, and stable-order pagination for `--only-cds`.
 
-Operator runs refresh once a year after each Scorecard bulk release. See [`tools/scorecard/README.md`](../tools/scorecard/README.md) for the runbook.
+Operator runs `refresh_summary.py` once a year after each Scorecard bulk release. Full runbook: [`tools/scorecard/README.md`](../tools/scorecard/README.md), including the running schema-drift event log.
 
 **Research docs (still authoritative):**
 - [CDS vs. College Scorecard schema comparison](research/cds-vs-college-scorecard.md) — domain-by-domain field mapping that informed the 43-column selection
-- [Join recipe](research/scorecard-join-recipe.md) — manual-join curl/Python/SQL examples for consumers who need Scorecard columns beyond our curated subset
-- [Scorecard summary table plan](research/scorecard-summary-table-v2-plan.md) — the design doc this shipped against
+- [Join recipe](research/scorecard-join-recipe.md) — manual-join curl/Python/SQL examples; primarily useful now for Scorecard columns beyond the curated subset (per-program earnings, full repayment breakdowns)
+- [Scorecard summary table plan](research/scorecard-summary-table-v2-plan.md) — the design doc this shipped against (status flipped to "Shipped 2026-04-20")
 
 ### Cross-year time series as a first-class query
 
