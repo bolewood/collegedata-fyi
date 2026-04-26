@@ -116,9 +116,9 @@ export default function AboutPage() {
         <p>
           <strong style={{ fontWeight: 600, color: "var(--ink)" }}>collegedata.fyi</strong>{" "}
           is the index. We discover each school&apos;s CDS document, archive the
-          source file immediately (SHA-addressed, preserved forever), extract
-          the numbers into the CDS Initiative&apos;s own canonical 1,105-field
-          schema, and expose the result as a queryable API.
+          source file, map what we can into the CDS Initiative&apos;s own
+          canonical 1,105-field schema, and expose the result as a queryable
+          API.
         </p>
 
         <p>The pipeline has five stages:</p>
@@ -150,6 +150,29 @@ export default function AboutPage() {
             exposes everything through a public REST API.
           </li>
         </ol>
+
+        <p>
+          The important caveat is that these formats do not all extract with
+          the same reliability. Filled XLSX files and true fillable PDFs are
+          comparatively structured, so they map cleanly. Flattened PDFs are
+          much harder: once the form fields are gone, we have to reconstruct
+          the template from layout and text alone.
+        </p>
+
+        <p>
+          In practice that means year-specific cleaners. We build parsers for
+          the recurring table shapes and labels used by each CDS template
+          vintage, then keep refining them as we audit more schools. The
+          output is useful today, but it is not perfect, especially on
+          flattened PDFs, and some fields will improve as the cleaners get
+          better.
+        </p>
+
+        <p>
+          That&apos;s also why every school-year page links back to the original
+          source document. The structured extract is there to make the corpus
+          searchable and comparable; the PDF remains the ground truth.
+        </p>
 
         <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
           Open source

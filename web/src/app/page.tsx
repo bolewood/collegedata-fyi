@@ -119,8 +119,9 @@ export default async function HomePage() {
               textWrap: "balance",
             }}
           >
-            Every fact on this site is pulled verbatim from a school&rsquo;s own Common Data Set — archived as a PDF and
-            extracted cell-by-cell, so the numbers stay public even when the source page disappears.{" "}
+            Every fact on this site starts with a school&rsquo;s own Common Data Set. We archive the source file and map it
+            into a queryable schema; some formats extract cleanly, while flattened PDFs still need template-specific
+            cleaners that improve over time.{" "}
             <Link href="/about">Read the method.</Link>
           </p>
 
