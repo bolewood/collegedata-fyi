@@ -28,13 +28,21 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 ### Frontend polish
 
-- **Playwright smoke tests.** No automated frontend tests exist. Minimum: page-renders, search-works, PDF-link-resolves. Run post-deploy. **Effort:** ~30 minutes.
+- **Repo-native Playwright smoke tests.** Manual/local Playwright screenshot checks are being used for deploy smoke, but there is still no committed frontend smoke suite. Minimum: landing search works, `/browse` returns live rows + answerability metadata, school page source links resolve, and mobile filter layout does not overflow. **Effort:** ~45 minutes.
+
+- **Queryable browser CSV export pagination.** The `/browse` MVP exports the current browser result set through one Edge Function call capped at `page_size=500`. That is fine for current launch filters, but a broad export should page through all results or move export server-side before result sets grow. **Effort:** ~1 hour.
 
 - **OG images.** Per-school social cards with school name + key stats. Would improve link previews on Twitter/Slack/Discord. **Effort:** ~1 hour using Next.js OG image generation.
 
 - **Server-side stats RPC.** The landing page fetches the full manifest (~2,913 rows via paginated range queries) to compute 4 stats client-side. At 10K+ docs this becomes wasteful. Fix: Postgres function or view that returns pre-computed stats. **When:** when the corpus exceeds ~5,000 documents. Not urgent now.
 
 - **Singleton Supabase client per-request.** The current `supabase.ts` creates one module-level client shared across all requests. This works for the anon key (stateless) but doesn't follow the `@supabase/ssr` pattern recommended for Next.js server components. Low risk for a read-only app with no auth, but worth cleaning up if auth is ever added. **Effort:** ~15 minutes.
+
+### Queryable browser backend polish
+
+- **Wire `project_browser_data.py` into the extraction pipeline.** The PRD 010 projection worker is operator-run today (`python tools/browser_backend/project_browser_data.py --full-rebuild --apply`). New extraction artifacts will not automatically refresh `cds_fields` / `school_browser_rows` until the worker is invoked. Fix shape: call the document-level projection after successful extraction writes, or add a scheduled incremental refresh over recently updated documents. **Effort:** ~1-2 hours.
+
+- **Move `browser-search` ranking into SQL if it becomes hot.** The MVP Edge Function reads the materialized `school_browser_rows` table and applies the pure ranking contract in TypeScript. That kept the launch slice small and testable. If corpus size or traffic grows, port the same required-field and latest-per-school semantics into a Postgres RPC using window functions. **Effort:** ~2-3 hours.
 
 ### Larger features / future tiers
 
@@ -83,6 +91,10 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 ## Resolved
 
 Reverse chronological.
+
+### 2026-04-26
+
+- **[RESOLVED 2026-04-26] ~~Queryable school browser MVP (PRD 010).~~** Shipped backend + frontend. Backend surfaces: `cds_field_definitions`, `cds_metric_aliases`, `cds_selected_extraction_result`, `cds_fields`, `school_browser_rows`, and `browser-search`. Launch projection populated 113,836 field rows and 472 browser rows from 507 `2024-25+` documents. Frontend shipped at [`/browse`](https://www.collegedata.fyi/browse) with launch-certified filters, latest-per-school ranking, answerability counts, source links, pagination, and CSV export. Key semantics preserved: direct aliases only in `cds_fields`; derived `acceptance_rate` / `yield_rate` in the serving layer; `sub_institutional` preserved; rates stored fractionally; Tier 4 fallback cleaned overlay fills gaps only; `is blank` does not create a required field for answerability. Follow-ups remain open above for projection automation, SQL-side ranking, automated Playwright smoke tests, and export pagination.
 
 ### 2026-04-20
 
