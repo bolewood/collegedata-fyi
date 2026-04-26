@@ -130,8 +130,11 @@ export default async function HomePage() {
           </div>
 
           <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24, flexWrap: "wrap" }}>
+            <Link href="/browse" className="cd-btn">
+              Query schools
+            </Link>
             <Link href="/schools" className="cd-btn">
-              Browse all schools →
+              Browse all schools
             </Link>
             <Link href="/api" className="cd-btn cd-btn--ghost">
               API docs

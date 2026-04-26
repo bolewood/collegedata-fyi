@@ -16,13 +16,14 @@ Supabase to the browser. Complements [`docs/prd/002-frontend.md`](prd/002-fronte
 |-------|--------|-----|
 | Framework | Next.js 16 (App Router) | SSR/ISR for SEO, Vercel-native |
 | Language | TypeScript | Type safety on API responses |
-| Styling | Tailwind CSS | Fast to ship, system font stack |
-| Data client | @supabase/supabase-js | PostgREST queries with typed responses |
+| Styling | Tailwind CSS + project design tokens | Utility composition over the "paper, ink, and one quiet green" system |
+| Data client | @supabase/supabase-js + browser-search fetch client | PostgREST queries and the ranked browser Edge Function |
 | Analytics | @vercel/analytics | Zero-cookie, one line |
 | Hosting | Vercel | Auto-deploy from GitHub, custom domain |
 
-No additional dependencies. No state management library (React state is
-sufficient for a read-only viewer). No component library. No ORM.
+No additional component library. No ORM. Local state is React state; the
+browser MVP uses client-side state because filters are interactive and backed
+by one public Edge Function call.
 
 ---
 
@@ -45,6 +46,23 @@ Sortable, filterable table of every school with archived CDS data. Columns:
 school name (linked), document count, latest year, format badges. Client-side
 search filters by school name. Shares the same `fetchManifest()` data as
 the landing page.
+
+### `/browse` Queryable school browser (`web/src/app/browse/page.tsx`)
+
+Curated PRD 010 browser for the `school_browser_rows` serving table. The
+first public slice stays deliberately narrow: primary school rows,
+`2024-25+`, and launch-certified metrics only.
+
+**Default query behavior:**
+- `mode = latest_per_school`
+- `variant_scope = primary_only`
+- `min_year_start = 2024`
+- filter fields become answerability requirements except `is blank`
+
+The page calls the deployed `browser-search` Edge Function, displays the
+answerability summary returned by the backend, renders source links for each
+row, and exports the current curated result set as CSV. It does not expose
+arbitrary `cds_fields` filtering yet.
 
 ### `/schools/[school_id]` School detail (`web/src/app/schools/[school_id]/page.tsx`)
 
@@ -112,11 +130,18 @@ Browser
     -> supabase-js client (NEXT_PUBLIC_SUPABASE_ANON_KEY)
       -> https://isduwmygvmdozhpvzaix.supabase.co/rest/v1/
         -> Postgres (RLS: public SELECT on all tables/views)
+
+Browser
+  -> /browse client component
+    -> https://isduwmygvmdozhpvzaix.supabase.co/functions/v1/browser-search
+      -> school_browser_rows ranked latest-per-school query
 ```
 
-All data fetching happens server-side. The Supabase anon key is in the
-browser (it's designed to be public, RLS enforces read-only). No
-server-side auth, no write paths.
+Most page data fetching happens server-side. The `/browse` client component
+calls the public `browser-search` Edge Function directly so filter changes do
+not require a route transition. The Supabase anon key is in the browser (it's
+designed to be public, RLS enforces read-only). No server-side auth, no write
+paths.
 
 **Key queries:**
 
@@ -125,7 +150,8 @@ server-side auth, no write paths.
 | Landing + Directory | `cds_manifest` (all rows, paginated) | Range-based pagination to work around PostgREST 1,000-row cap |
 | School detail | `cds_manifest WHERE school_id = ?` | Ordered by canonical_year DESC |
 | Year detail | `cds_manifest WHERE school_id = ? AND canonical_year = ?` | Returns all sub-institutional variants |
-| Year detail (fields) | `cds_artifacts WHERE document_id = ? AND kind = 'canonical'` | Latest by created_at |
+| Year detail (fields) | `cds_artifacts WHERE document_id = ?` | Loads canonical + `tier4_llm_fallback`, then merges cleaner-wins |
+| Queryable browser | `browser-search` Edge Function | Ranked latest-per-school search over `school_browser_rows` with answerability metadata |
 
 **Deduplication:** `fetchSchoolDocuments` and `fetchDocumentsBySchoolAndYear`
 are wrapped in `React.cache()` so `generateMetadata()` and the page
@@ -141,6 +167,7 @@ component share the same Supabase response within a single render.
 |-----------|------|---------|
 | `StatsBar` | `components/StatsBar.tsx` | 4-column stat grid (schools, docs, year range, extraction %) |
 | `SchoolSearch` | `components/SchoolSearch.tsx` | Autocomplete input with keyboard nav, filters client-side |
+| `SchoolBrowser` | `components/SchoolBrowser.tsx` | PRD 010 browser filters, answerability stats, result table, pagination, CSV export |
 | `SchoolTable` | `components/SchoolTable.tsx` | Sortable/filterable school list with search input |
 | `DocumentCard` | `components/DocumentCard.tsx` | CDS year card with status badge, format badge, PDF link |
 | `KeyStats` | `components/KeyStats.tsx` | Grid of stat cards (acceptance rate, SAT, enrollment) |
@@ -162,6 +189,7 @@ component share the same Supabase response within a single render.
 |--------|------|---------|
 | `supabase.ts` | `lib/supabase.ts` | Supabase client singleton + Storage base URL |
 | `queries.ts` | `lib/queries.ts` | Typed query functions + client-side aggregation |
+| `browser-search.ts` | `lib/browser-search.ts` | Typed request/response wrapper for the `browser-search` Edge Function |
 | `types.ts` | `lib/types.ts` | TypeScript interfaces for API responses |
 | `format.ts` | `lib/format.ts` | Display formatters (badge labels, status colors, storage URLs) |
 | `labels.ts` | `lib/labels.ts` | Auto-generated CDS field ID to plain-English label map (1,105 fields from `cds_schema_2025_26.json`) |
@@ -191,19 +219,14 @@ back to displaying the raw field ID when no label is found.
 
 ## Visual design
 
-Minimal design system using Tailwind utility classes. No custom fonts
-(system font stack). No dark mode for V1.
+The canonical visual system is [`web/DESIGN_SYSTEM.md`](../web/DESIGN_SYSTEM.md)
+and [`web/src/app/tokens.css`](../web/src/app/tokens.css). The short version:
+paper background, ink text, one muted forest accent, rules instead of shadows,
+and tabular numbers. Do not introduce blue UI, large rounded cards, or
+marketing-style decoration.
 
-**Badge color map:**
-| Status | Classes |
-|--------|---------|
-| Extracted | `bg-green-100 text-green-800` |
-| Pending | `bg-yellow-100 text-yellow-800` |
-| Failed | `bg-red-100 text-red-800` |
-| Format | `bg-gray-100 text-gray-700` |
-
-**KeyStats:** Only renders cards for fields that have values. No "N/A"
-placeholders. If a school reports SAT but not ACT, only SAT appears.
+**KeyStats and browser rows:** only render values that exist. Do not invent
+confidence scoring or fill blanks with authoritative-looking placeholders.
 
 ---
 
@@ -261,7 +284,7 @@ Key items:
 
 - `supabase gen types` for typed Supabase client (currently using manual types)
 - Schema-version-aware labels (dependency resolved: structural schemas for 6 years now exist)
-- Playwright smoke tests
+- Automated Playwright smoke tests in the repo
 - OG images (per-school social cards)
+- Paginated full CSV export for `/browse` when result sets exceed the Edge Function page-size cap
 - Cross-year comparison views (V2)
-- Scorecard joined data (V2, see [`docs/research/scorecard-summary-table-v2-plan.md`](research/scorecard-summary-table-v2-plan.md))

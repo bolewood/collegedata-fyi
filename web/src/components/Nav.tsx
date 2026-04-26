@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Wordmark } from "./Wordmark";
 
 const NAV_LINKS = [
+  { href: "/browse", label: "Browser" },
   { href: "/schools", label: "Schools" },
   { href: "/recipes", label: "Recipes" },
   { href: "/about", label: "About" },
