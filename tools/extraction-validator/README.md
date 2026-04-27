@@ -132,7 +132,7 @@ model contains recoverable C9/C11/C12 structure before adding a VLM repair path.
 /Users/santhonys/docling-eval/bin/python \
   tools/extraction-validator/inspect_docling_native.py \
   --manifest .context/docling-spike/fixtures/manifest.json \
-  --config production
+  --config production-fast
 
 # Compare full current Tier 4 cleaner output between two Docling runs.
 /Users/santhonys/docling-eval/bin/python \
@@ -157,3 +157,19 @@ This is a spike harness, not production extraction code. A successful native-tab
 candidate still needs CDS-specific validation before it can influence browser data.
 The full-cleaner comparison is also not ground-truth scoring; it only compares
 how the existing markdown cleaner behaves on two Docling markdown serializations.
+
+Available Docling spike configs:
+
+| Config | Purpose |
+|---|---|
+| `production` / `production-fast` | Current Tier 4-like baseline: OCR on, table structure on, FAST tables, cell matching on. |
+| `docling-default` | Unmodified installed Docling defaults. |
+| `table-accurate` | One-variable change from production-fast: FAST tables to ACCURATE tables. |
+| `ocr-off` | One-variable change: disable OCR for text PDFs. |
+| `force-backend-text` | One-variable change: force embedded PDF text usage. |
+| `no-cell-matching` | One-variable change: disable table cell matching. |
+| `force-full-page-ocr` | One-variable change: OCR every page. |
+| `layout-keep-empty-clusters` | One-variable change: retain empty layout clusters. |
+| `layout-no-orphan-clusters` | One-variable change: disable orphan layout clusters. Current best screening result on the 2024-25+ fixture set. |
+| `layout-skip-cell-assignment` | One-variable change: skip layout cell assignment. |
+| `layout-no-orphan-table-accurate` | Combination arm: no orphan clusters plus ACCURATE tables. |

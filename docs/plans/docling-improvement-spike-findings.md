@@ -311,6 +311,50 @@ show a clear recovery advantage despite being slower. The three conflicts are ex
 why the next step should be ground-truth spot scoring or deterministic value
 validation before changing extraction precedence.
 
+## Systematic tuning pass
+
+The next tuning pass used the same corrected 2024-25+ ten-document fixture set and
+changed one Docling variable at a time from the production-fast baseline. Runtime was
+recorded in the run summaries but was not used as a decision criterion; the screening
+metric here is full Tier 4 cleaner field recovery, plus config-only fields,
+baseline-only fields, and conflicts.
+
+| Config | Total fields | Delta vs production-fast | Config-only | Baseline-only | Conflicts |
+|---|---:|---:|---:|---:|---:|
+| `production-fast` | 3,745 | baseline | 0 | 0 | 0 |
+| `table-accurate` | 3,723 | -22 | 75 | 97 | 3 |
+| `ocr-off` | 3,745 | +0 | 0 | 0 | 0 |
+| `force-backend-text` | 3,745 | +0 | 0 | 0 | 0 |
+| `no-cell-matching` | 3,728 | -17 | 98 | 115 | 7 |
+| `force-full-page-ocr` | 1,988 | -1,757 | 89 | 1,846 | 301 |
+| `layout-keep-empty-clusters` | 3,651 | -94 | 0 | 94 | 23 |
+| `layout-no-orphan-clusters` | 3,797 | +52 | 53 | 1 | 0 |
+| `layout-skip-cell-assignment` | 2,560 | -1,185 | 53 | 1,238 | 1 |
+| `layout-no-orphan-table-accurate` | 3,775 | +30 | 128 | 98 | 3 |
+
+The first genuinely promising tuning variable is:
+
+```python
+pipeline.layout_options.create_orphan_clusters = False
+```
+
+With production-fast table settings, that produced 52 net additional fields and no
+value conflicts against the baseline. The 53 config-only fields were concentrated in
+Section C admissions requirements:
+
+- Farmingdale State College: 5 new C5 high-school-unit fields.
+- Franklin and Marshall College: 13 new C5 high-school-unit fields.
+- Lehigh: 18 new C5 high-school-unit fields.
+- Kennesaw State University: 16 new C5 high-school-unit fields.
+- Gettysburg College: 1 new B field, while losing 1 I field.
+
+This result is promising but not yet safe to ship. Field count is only a screening
+metric; the new C5 values need ground-truth spot checks against source PDFs, and the
+single lost baseline field should be inspected. Still, this is materially better than
+the OCR/table-mode knobs: ACCURATE tables did not help overall, full-page OCR badly
+degraded these text PDFs, and the layout no-orphan setting improved recoverability
+without introducing conflicts in this sample.
+
 The narrower conclusion is stronger than the original audit but still bounded:
 native Docling tables appear sufficient to recover common SAT/ACT percentile rows
 from recent low-coverage flat PDFs. This is not yet ground-truth scoring. The
@@ -323,9 +367,10 @@ before it can write production browser fields.
 We are close on routing and extraction policy, but far off on the Docling data model
 best practices. The current pipeline uses Docling's conversion engine but mostly
 discards the structured representation that makes Docling valuable for table-heavy
-repair. The first implementation move should be to promote a narrow native-table
-parser/provenance path for C9-style academic profile fields, not to spend effort on
-Docling config tuning or a VLM repair script first.
+repair. The first implementation move should be to ground-truth the
+`layout-no-orphan-clusters` tuning win and then promote a narrow native-table
+parser/provenance path for academic profile fields. A VLM repair script should remain
+behind deterministic Docling/parser improvements.
 
 Red-team adjustment: the spike must not conclude "JSON parser works" from structure
 inspection alone. It needs either a narrow parser arm or a deliberately narrower

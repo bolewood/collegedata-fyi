@@ -27,6 +27,20 @@ from typing import Any, Iterable
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT_DIR = REPO_ROOT / ".context" / "docling-spike" / "native-runs"
+CONFIG_CHOICES = (
+    "production",
+    "production-fast",
+    "docling-default",
+    "table-accurate",
+    "ocr-off",
+    "force-backend-text",
+    "no-cell-matching",
+    "force-full-page-ocr",
+    "layout-keep-empty-clusters",
+    "layout-no-orphan-clusters",
+    "layout-skip-cell-assignment",
+    "layout-no-orphan-table-accurate",
+)
 
 
 def package_version(name: str) -> str | None:
@@ -186,22 +200,61 @@ def provenance(item: Any) -> dict[str, Any]:
     return {k: v for k, v in out.items() if v is not None}
 
 
+def apply_production_like_options(pipeline: Any, table_mode: Any) -> None:
+    pipeline.do_ocr = True
+    pipeline.do_table_structure = True
+    pipeline.table_structure_options.mode = table_mode
+    pipeline.table_structure_options.do_cell_matching = True
+    pipeline.images_scale = 1.0
+
+
 def build_converter(config: str, force_ocr: bool, generate_page_images: bool) -> Any:
     from docling.datamodel.base_models import InputFormat
     from docling.datamodel.pipeline_options import EasyOcrOptions, PdfPipelineOptions, TableFormerMode
     from docling.document_converter import DocumentConverter, PdfFormatOption
 
     pipeline = PdfPipelineOptions()
-    if config == "production":
-        pipeline.do_ocr = True
-        pipeline.do_table_structure = True
-        pipeline.table_structure_options.mode = TableFormerMode.FAST
-        pipeline.table_structure_options.do_cell_matching = True
-        pipeline.images_scale = 1.0
+    if config in ("production", "production-fast"):
+        apply_production_like_options(pipeline, TableFormerMode.FAST)
     elif config == "docling-default":
         # Keep current Docling defaults. This is useful because Docling 2.85
         # defaults to Heron layout and ACCURATE table structure.
         pass
+    elif config == "table-accurate":
+        # One-variable change from production-fast: TableFormer FAST -> ACCURATE.
+        apply_production_like_options(pipeline, TableFormerMode.ACCURATE)
+    elif config == "ocr-off":
+        # One-variable change from production-fast: disable OCR for text PDFs.
+        apply_production_like_options(pipeline, TableFormerMode.FAST)
+        pipeline.do_ocr = False
+    elif config == "force-backend-text":
+        # One-variable change from production-fast: require backend PDF text.
+        apply_production_like_options(pipeline, TableFormerMode.FAST)
+        pipeline.force_backend_text = True
+    elif config == "no-cell-matching":
+        # One-variable change from production-fast: disable table cell matching.
+        apply_production_like_options(pipeline, TableFormerMode.FAST)
+        pipeline.table_structure_options.do_cell_matching = False
+    elif config == "force-full-page-ocr":
+        # One-variable change from production-fast: OCR every page.
+        apply_production_like_options(pipeline, TableFormerMode.FAST)
+        pipeline.ocr_options = EasyOcrOptions(force_full_page_ocr=True)
+    elif config == "layout-keep-empty-clusters":
+        # One-variable change from production-fast: retain empty layout clusters.
+        apply_production_like_options(pipeline, TableFormerMode.FAST)
+        pipeline.layout_options.keep_empty_clusters = True
+    elif config == "layout-no-orphan-clusters":
+        # One-variable change from production-fast: disable orphan layout clusters.
+        apply_production_like_options(pipeline, TableFormerMode.FAST)
+        pipeline.layout_options.create_orphan_clusters = False
+    elif config == "layout-skip-cell-assignment":
+        # One-variable change from production-fast: skip layout cell assignment.
+        apply_production_like_options(pipeline, TableFormerMode.FAST)
+        pipeline.layout_options.skip_cell_assignment = True
+    elif config == "layout-no-orphan-table-accurate":
+        # Combination arm after isolated testing: no orphan clusters + ACCURATE tables.
+        apply_production_like_options(pipeline, TableFormerMode.ACCURATE)
+        pipeline.layout_options.create_orphan_clusters = False
     else:
         raise ValueError(f"unknown config: {config}")
 
@@ -315,7 +368,7 @@ def main() -> int:
     ap.add_argument("--pdf", type=Path, action="append", default=[])
     ap.add_argument("--pdf-dir", type=Path)
     ap.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
-    ap.add_argument("--config", choices=["production", "docling-default"], default="production")
+    ap.add_argument("--config", choices=CONFIG_CHOICES, default="production")
     ap.add_argument("--force-ocr", action="store_true")
     ap.add_argument("--generate-page-images", action="store_true")
     ap.add_argument("--print-json", action="store_true",
