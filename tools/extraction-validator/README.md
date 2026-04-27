@@ -133,6 +133,15 @@ model contains recoverable C9/C11/C12 structure before adding a VLM repair path.
   tools/extraction-validator/inspect_docling_native.py \
   --manifest .context/docling-spike/fixtures/manifest.json \
   --config production
+
+# Compare full current Tier 4 cleaner output between two Docling runs.
+/Users/santhonys/docling-eval/bin/python \
+  tools/extraction-validator/compare_docling_full_cleaner.py \
+  --manifest .context/docling-spike/fixtures/manifest.json \
+  --left-label production \
+  --right-label docling-default \
+  --left-dir .context/docling-spike/native-runs-production \
+  --right-dir .context/docling-spike/native-runs-docling-default
 ```
 
 Outputs are written under `.context/docling-spike/` by default. They include
@@ -146,3 +155,5 @@ the source corpus.
 
 This is a spike harness, not production extraction code. A successful native-table
 candidate still needs CDS-specific validation before it can influence browser data.
+The full-cleaner comparison is also not ground-truth scoring; it only compares
+how the existing markdown cleaner behaves on two Docling markdown serializations.

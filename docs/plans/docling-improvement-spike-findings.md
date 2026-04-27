@@ -120,6 +120,8 @@ Two spike tools now exist under `tools/extraction-validator/`:
 - `inspect_docling_native.py` runs Docling conversion over those PDFs and writes:
   markdown, Docling JSON, per-table CSV/HTML/markdown exports, table provenance, a
   rollup summary, package versions, and a narrow C9 SAT/ACT heuristic.
+- `compare_docling_full_cleaner.py` runs the existing full Tier 4 markdown cleaner
+  against two Docling run directories and compares all recovered canonical fields.
 
 Local Docling evaluation environment:
 
@@ -263,6 +265,51 @@ Totals:
 - 108 C9 field candidates were recovered.
 - Production-like Docling config runtime was 124.6s total.
 - Docling's current defaults recovered the same 108 candidates but took 203.9s.
+
+The same two run directories were then compared with the full existing Tier 4
+cleaner, not just the C9 heuristic:
+
+```bash
+/Users/santhonys/docling-eval/bin/python \
+  tools/extraction-validator/compare_docling_full_cleaner.py \
+  --manifest .context/docling-spike/failure-fixtures-2024-plus-v2/manifest.json \
+  --left-label production \
+  --right-label docling-default \
+  --left-dir .context/docling-spike/failure-native-runs-2024-plus-v2-production \
+  --right-dir .context/docling-spike/failure-native-runs-2024-plus-v2-docling-default \
+  --out .context/docling-spike/failure-native-runs-2024-plus-v2-full-cleaner-comparison.json
+```
+
+Full-cleaner comparison:
+
+| School | Year | Production fields | Docling default fields | Overlap | Production only | Default only | Conflicts |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Farmingdale State College | 2024-25 | 354 | 365 | 348 | 6 | 17 | 0 |
+| Franklin and Marshall College | 2024-25 | 367 | 336 | 334 | 33 | 2 | 0 |
+| DeSales University | 2024-25 | 344 | 359 | 344 | 0 | 15 | 1 |
+| Emory | 2024-25 | 378 | 379 | 376 | 2 | 3 | 0 |
+| Michigan State University | 2024-25 | 290 | 296 | 290 | 0 | 6 | 0 |
+| Dominican University | 2025-26 | 401 | 380 | 373 | 28 | 7 | 0 |
+| Gettysburg College | 2024-25 | 389 | 389 | 387 | 2 | 2 | 0 |
+| Lafayette College | 2025-26 | 416 | 409 | 397 | 19 | 12 | 1 |
+| Lehigh | 2025-26 | 338 | 343 | 337 | 1 | 6 | 1 |
+| Kennesaw State University | 2024-25 | 468 | 467 | 462 | 6 | 5 | 0 |
+
+Full-cleaner totals:
+
+- Production-like config: 3,745 canonical fields.
+- Docling default config: 3,723 canonical fields.
+- Overlap: 3,648 fields.
+- Production-only: 97 fields.
+- Default-only: 75 fields.
+- Conflicting shared values: 3 fields.
+
+This still is not ground-truth scoring. It tells us the current full markdown cleaner
+is broadly stable across both Docling serializations, production-like config is
+slightly ahead on total recovered fields in this sample, and Docling defaults do not
+show a clear recovery advantage despite being slower. The three conflicts are exactly
+why the next step should be ground-truth spot scoring or deterministic value
+validation before changing extraction precedence.
 
 The narrower conclusion is stronger than the original audit but still bounded:
 native Docling tables appear sufficient to recover common SAT/ACT percentile rows
