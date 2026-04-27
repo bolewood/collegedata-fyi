@@ -12,10 +12,10 @@ fields is a follow-up. For now, the markdown is stored as-is in the
 canonical artifact so the extraction_pending queue clears and consumers
 can read the full CDS content in a structured text format.
 
-Configuration: uses the "baseline" Docling config (TableFormer FAST,
-OCR on but not forced, 1x DPI) which scored 21/21 on critical C1
-fields across 3 schools in the bake-off. See
-tools/extraction-validator/bakeoff-results.md for the full comparison.
+Configuration: uses the tuned Tier 4 Docling config (TableFormer FAST,
+OCR on but not forced, 1x DPI, orphan layout clusters disabled). The
+no-orphan layout setting was selected in PRD 0111A's 2024-25+ spike because
+it increased full-cleaner field recovery without introducing conflicts.
 """
 
 from __future__ import annotations
@@ -27,7 +27,26 @@ from pathlib import Path
 
 
 PRODUCER_NAME = "tier4_docling"
-PRODUCER_VERSION = "0.1.0"
+PRODUCER_VERSION = "0.3.0"
+DOCLING_CONFIG_NAME = "production-fast-no-orphan-clusters"
+DOCLING_NATIVE_TABLES_VERSION = "docling_table_cells_compact_v1"
+
+
+def _extract_pdf_layout_text(pdf_path: Path) -> str:
+    """Best-effort embedded-text layout supplement for Docling blind spots."""
+    try:
+        import pypdf
+
+        reader = pypdf.PdfReader(str(pdf_path))
+        chunks = []
+        for page in reader.pages:
+            try:
+                chunks.append(page.extract_text(extraction_mode="layout") or "")
+            except Exception:
+                chunks.append(page.extract_text() or "")
+        return "\n\n".join(chunks)
+    except Exception:
+        return ""
 
 
 def extract(pdf_path: Path, force_ocr: bool = False) -> dict:
@@ -51,6 +70,7 @@ def extract(pdf_path: Path, force_ocr: bool = False) -> dict:
     pipeline.do_table_structure = True
     pipeline.table_structure_options.mode = TableFormerMode.FAST
     pipeline.table_structure_options.do_cell_matching = True
+    pipeline.layout_options.create_orphan_clusters = False
     pipeline.images_scale = 1.0
 
     converter = DocumentConverter(
@@ -69,19 +89,36 @@ def extract(pdf_path: Path, force_ocr: bool = False) -> dict:
 
     # Run the schema-targeting cleaner to map markdown → canonical fields.
     from tier4_cleaner import clean
-    values = clean(markdown)
+    from tier4_native_tables import compact_tables
+    pdf_layout_text = _extract_pdf_layout_text(pdf_path)
+    values = clean(markdown, supplemental_text=pdf_layout_text)
+    native_tables = compact_tables(doc)
 
     return {
         "producer": PRODUCER_NAME,
         "producer_version": PRODUCER_VERSION,
+        "docling_config": {
+            "name": DOCLING_CONFIG_NAME,
+            "do_ocr": pipeline.do_ocr,
+            "force_ocr": force_ocr,
+            "do_table_structure": pipeline.do_table_structure,
+            "table_structure_mode": str(pipeline.table_structure_options.mode.value),
+            "do_cell_matching": pipeline.table_structure_options.do_cell_matching,
+            "layout_create_orphan_clusters": pipeline.layout_options.create_orphan_clusters,
+            "native_tables_version": DOCLING_NATIVE_TABLES_VERSION,
+        },
         "source_pdf": pdf_path.name,
         "extracted_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "stats": {
             "markdown_length": len(markdown),
             "page_count": page_count,
             "schema_fields_populated": len(values),
+            "native_table_count": native_tables["table_count"],
+            "native_table_cell_count": native_tables["cell_count"],
+            "pdf_layout_text_length": len(pdf_layout_text),
         },
         "markdown": markdown,
+        "native_tables": native_tables,
         "values": values,
     }
 

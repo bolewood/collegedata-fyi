@@ -1,6 +1,6 @@
 # Extraction Quality
 
-*Last updated: April 2026 (post-drain: 2026-04-20)*
+*Last updated: April 27, 2026 (post Tier 4 v0.3 layout-overlay spike; corpus drain pending)*
 
 This document records current extraction accuracy across our pipeline. It's meant as an honest, calibrated self-assessment, not a marketing page. The numbers here are produced by reproducible scorers you can run yourself against our ground-truth fixtures in [`tools/extraction-validator/`](../tools/extraction-validator/).
 
@@ -22,6 +22,7 @@ The gap between the two is where the real work is.
 | Ground-truth score, hand-audited schools (average) | 94% |
 | Benchmark-school coverage, C1 admissions section (Tier 4) | 50-60% |
 | Benchmark-school coverage, 1,105-field schema (3-doc Tier 4 avg, post-Phase 6) | ~35-40% (Harvard 382, Yale 390, Dartmouth 343) |
+| Tier 4 v0.3 layout-overlay spike, 10-doc failure sample | 5,066 -> 5,602 fields (+536) |
 | **Actual corpus-wide fields per doc** (mean) | Tier 2: 582 · Tier 1: 297 · Tier 6: 152 · Tier 4: 58 · overall: 96 |
 | Tier 1 XLSX field coverage (median per doc) | 297 fields (~27% of schema) |
 | Tier 1 XLSX field coverage (max per doc) | 782 fields (~71% of schema) |
@@ -35,7 +36,7 @@ The extraction pipeline routes each document to a tier based on its source forma
 | 1 | Filled XLSX | Template cell-position map + openpyxl | ✅ Shipped 2026-04-20 | Parses the CDS Excel template's hidden lookup columns once; applies the map to any filled workbook. Deterministic on the standard template layout. 350 artifacts, median 307 fields/doc. |
 | 2 | Fillable PDF with AcroForm fields | `pypdf.get_fields()` | ✅ Shipped | Deterministic. Fields read directly from the PDF's form metadata. |
 | 3 | Filled DOCX | `python-docx` SDT reader | 📄 [PRD 007](prd/007-tier3-docx-extraction.md) | Word template has 1,204 Structured Document Tags whose `w:tag` values match schema `word_tag` exactly. ~30-50 addressable docs today (Kent State's 14 SDT-preserving files are the largest family). Not yet built. |
-| 4 | Flattened PDF (most common) | Docling layout extraction + schema-targeting cleaner | ✅ Shipped | The hardest tier. Most of this document is about Tier 4. [PRD 005](prd/005-full-schema-extraction.md) Phase 6 shipped 2026-04-20: section-family resolvers took the cleaner from 72 → ~380 fields (Harvard 382, Yale 390, Dartmouth 343). |
+| 4 | Flattened PDF (most common) | Docling layout extraction + schema-targeting cleaner | ✅ Shipped | The hardest tier. Most of this document is about Tier 4. [PRD 005](prd/005-full-schema-extraction.md) Phase 6 shipped 2026-04-20: section-family resolvers took the cleaner from 72 -> ~380 fields (Harvard 382, Yale 390, Dartmouth 343). Tier 4 v0.3 adds a deterministic embedded-text layout overlay for Docling blind spots; full corpus drain is the next measurement gate. |
 | 5 | Image-only scan | Tier 4 with `force_ocr=True` | ✅ Shipped 2026-04-20 | Same Docling pipeline, swaps in `EasyOcrOptions(force_full_page_ocr=True)`. Kennesaw State 2023-24 went from 0 fields (default lazy OCR) to 172 fields (force OCR) on 31 scanned pages. |
 | 6 | Structured HTML | `html_to_markdown` (BeautifulSoup + lxml) → `tier4_cleaner.clean` | ✅ Shipped 2026-04-20 | HTML normalizer + reuse of the Tier 4 cleaner. Archived HTML bytes are served as `text/plain` from the public Storage bucket to prevent XSS. MIT 2024-25 reference: 152 of 1,105 schema fields populated on first-drain without an alias table. See [PRD 008](prd/008-html-extraction.md). |
 
@@ -77,6 +78,37 @@ Hand-audited against full ground-truth fixtures for three schools:
 | Yale | 2024-25 | 26/29 (89.7%) | n/a |
 
 Average across the three schools: ~94%. These are schools with clean, well-structured CDS documents. Remaining misses are structural: Dartmouth's C10 is a Docling flat-text emission, Yale's H4/H6 are deferred to a later phase of the cleaner.
+
+### Layout-overlay cleaner spike (April 27, 2026)
+
+PRD 0111A's Docling spike found that the biggest immediate gain was not an LLM repair pass. It was retaining Docling's tuned markdown/native-table path and adding a deterministic supplemental text overlay from `pypdf` layout extraction for the places where Docling loses row/column context.
+
+The v0.3 cleaner still treats Docling/native table output as the primary substrate. The supplemental layout text is gap-fill only: it targets known CDS section shapes, writes canonical fields only when the source text pattern is deterministic, and leaves ambiguous or blank cells empty. There is no confidence scoring and no invented data.
+
+The spike was audited page-by-page on Farmingdale State College, then run autonomously on Kenyon and Michigan State. Against the same ten low-coverage Tier 4 fixture PDFs, the deterministic cleaner improved from 5,066 recovered fields after the Farmingdale pass to 5,602 after the Kenyon/Michigan State generalization pass.
+
+| PDF fixture | Before | After v0.3 | Delta |
+|---|---:|---:|---:|
+| DeSales University 2024-25 | 428 | 504 | +76 |
+| Dominican University 2025-26 | 532 | 587 | +55 |
+| Dominican University of California 2024-25 | 610 | 624 | +14 |
+| Emory 2024-25 | 506 | 564 | +58 |
+| Farmingdale State College 2024-25 | 631 | 635 | +4 |
+| Franklin and Marshall College 2024-25 | 527 | 568 | +41 |
+| Gettysburg College 2024-25 | 540 | 574 | +34 |
+| Kenyon 2024-25 | 402 | 479 | +77 |
+| Lafayette College 2025-26 | 554 | 581 | +27 |
+| Michigan State University 2024-25 | 336 | 486 | +150 |
+| **Total** | **5,066** | **5,602** | **+536** |
+
+The largest generalized wins were A-section contact/header fields, B5 graduation-rate grids, D transfer fields, E/F checkbox grids, G expense rows, H financial-aid tables, and J discipline rows. The Michigan State pass is the clearest evidence that the fixes generalized beyond the school being actively inspected: it moved from 336 to 486 fields while preserving the existing fixture counts elsewhere.
+
+Important limits:
+
+- Field count is a coverage screen, not semantic ground truth.
+- The overlay is optimized for 2024-25+ CDS layouts; older templates remain best-effort.
+- Some cells are intentionally left blank when the visible source cell is blank or when alignment is ambiguous.
+- Corpus-wide Tier 4 mean is still pending a full v0.3 drain.
 
 ### Corpus-wide coverage by section
 

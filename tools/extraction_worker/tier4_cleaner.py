@@ -13,6 +13,10 @@ males/females. All other matching is exact substring.
 This cleaner handles the pipe-delimited markdown tables Docling emits.
 Non-table content (checkboxes, free text) is not extracted in V1.
 
+Scope: Tier 4 is optimized for 2024-25+ CDS templates. Older years are
+best-effort via low-risk wording normalizations, not a separate
+year-branched resolver contract.
+
 Architecture (PRD 005):
   1. Hand-coded maps (_FIELD_MAP / _PERCENTILE_MAP / _INLINE_PATTERNS) —
      regression-safe baseline covering B1/B2/B3/C1/C9/C10/C13.
@@ -27,6 +31,7 @@ Architecture (PRD 005):
 
 from __future__ import annotations
 
+import html
 import json
 import re
 from pathlib import Path
@@ -73,6 +78,19 @@ def _normalize_label(text: str) -> str:
     t = re.sub(r'[,\-–—:;/()]', ' ', t)
     t = re.sub(r'\s+', ' ', t).strip()
     return t
+
+
+_NO_WRAP_EMPTY_LABELS = {
+    "sat composite",
+    "sat evidence based reading and writing",
+    "sat math",
+    "act composite",
+    "act math",
+    "act english",
+    "act writing",
+    "act science",
+    "act reading",
+}
 
 
 def _parse_markdown_tables(markdown: str) -> list[dict]:
@@ -157,6 +175,7 @@ def _parse_markdown_tables(markdown: str) -> list[dict]:
                     label.strip() and has_values and rows
                     and rows[-1]["label"].strip()
                     and not any(v.strip() for v in rows[-1]["values"])
+                    and _normalize_label(rows[-1]["label"]) not in _NO_WRAP_EMPTY_LABELS
                 ):
                     merged = rows[-1]["label"] + " " + label
                     rows[-1] = {"label": merged, "values": values, "headers": header_cells}
@@ -271,17 +290,6 @@ _FIELD_MAP: list[tuple[str, str, str | int]] = [
     ("native hawaiian", "B.207", "first-time first-year"),
     ("two or more races", "B.208", "first-time first-year"),
     ("total", "B.210", "first-time first-year"),
-
-    # --- B3 Degrees ---
-    ("certificate/diploma", "B.301", 0),
-    ("associate degrees", "B.302", 0),
-    ("bachelor's degrees", "B.303", 0),
-    ("postbachelor", "B.304", 0),
-    ("master's degrees", "B.305", 0),
-    ("post-master", "B.306", 0),
-    ("doctoral degrees – research/scholarship", "B.307", 0),
-    ("doctoral degrees – professional practice", "B.308", 0),
-    ("doctoral degrees – other", "B.309", 0),
 
     # --- C10 Class rank ---
     # Clean 2-column table: Assessment | Percent.
@@ -428,6 +436,300 @@ def _get_schema() -> SchemaIndex:
     return _SCHEMA_SINGLETON
 
 
+# --- Resolver: A General Information ---
+
+def _a_labeled_value(block: str, label: str) -> str | None:
+    pattern = rf"(?im)^[ \t]*{re.escape(label)}:[ \t]*(.*?)[ \t]*$"
+    match = re.search(pattern, block)
+    if not match:
+        target = _normalize_label(label).replace(" ", "")
+        for line_match in re.finditer(r"(?m)^[ \t]*([^:\n]+):[ \t]*(.*?)[ \t]*$", block):
+            line_label = _normalize_label(line_match.group(1)).replace(" ", "")
+            if line_label == target:
+                match = line_match
+                break
+        if not match:
+            for line_match in re.finditer(
+                rf"(?im)^[ \t]*{re.escape(label)}[ \t]{{2,}}(.+?)[ \t]*$",
+                block,
+            ):
+                return _a_clean_value(line_match.group(1))
+            spaced_label = r"\s+".join(re.escape(part) for part in label.split())
+            for line_match in re.finditer(
+                rf"(?im)^[ \t]*{spaced_label}[ \t]{{2,}}(.+?)[ \t]*$",
+                block,
+            ):
+                return _a_clean_value(line_match.group(1))
+            target = _normalize_label(label)
+            for raw_line in block.splitlines():
+                parts = re.split(r"\s{2,}", raw_line.strip(), maxsplit=1)
+                if len(parts) != 2:
+                    continue
+                if _normalize_label(parts[0]) == target:
+                    return _a_clean_value(parts[1])
+            return None
+    value = match.group(2 if match.lastindex and match.lastindex >= 2 else 1).strip()
+    if value:
+        return _a_clean_value(value)
+
+    # Markdown exports often put the value on the next non-empty line.
+    rest = block[match.end():]
+    for line in rest.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if ":" in stripped:
+            return None
+        if stripped.lower().startswith("are your responses"):
+            return None
+        if stripped.startswith("- A") or stripped.startswith("## "):
+            return None
+        return _a_clean_value(stripped)
+    return None
+
+
+def _a_clean_value(value: str) -> str:
+    value = html.unescape(value).strip()
+    value = re.sub(r"\bA\s+VP\b", "AVP", value)
+    value = re.sub(r"\bfo\s+r\b", "for", value)
+    value = re.sub(r"\bI\s+R\b", "IR", value)
+    value = re.sub(r"\bOffic\s+e\b", "Office", value)
+    value = re.sub(r"\s+", " ", value).strip()
+    return value
+
+
+def _a_url_after(block: str, label_re: str) -> str | None:
+    match = re.search(label_re, block, re.IGNORECASE)
+    if not match:
+        return None
+    window = block[match.end(): match.end() + 500]
+    url_match = re.search(r"https?://\S+", window)
+    if not url_match:
+        return None
+    return url_match.group(0).rstrip(").,")
+
+
+def _a_city_state_zip(value: str | None) -> tuple[str | None, str | None, str | None, str | None]:
+    if not value:
+        return None, None, None, None
+    match = re.match(
+        r"\s*(?P<city>.*?),\s*(?P<state>[A-Z]{2}|[A-Za-z .]+?)\s+"
+        r"(?P<zip>\d{5}(?:-\d{4})?)(?:\s+(?P<country>.+))?\s*$",
+        value,
+    )
+    if not match:
+        return value.strip(), None, None, None
+    return (
+        match.group("city").strip(),
+        match.group("state").strip(),
+        match.group("zip").strip(),
+        (match.group("country") or "").strip() or None,
+    )
+
+
+def _a_phone_parts(value: str | None) -> tuple[str | None, str | None, str | None]:
+    if not value:
+        return None, None, None
+    match = re.search(
+        r"(?P<area>\d{3})[-.\s]*(?P<prefix>\d{3})[-.\s]*(?P<line>\d{4})"
+        r"(?:\s*(?:x|ext\.?)\s*(?P<ext>\d+))?",
+        value,
+        re.IGNORECASE,
+    )
+    if not match:
+        return None, value.strip(), None
+    return (
+        match.group("area"),
+        f"{match.group('prefix')}-{match.group('line')}",
+        match.group("ext"),
+    )
+
+
+def _a_checked_option(block: str, options: list[str]) -> str | None:
+    for raw_line in block.splitlines():
+        line = raw_line.strip()
+        line_norm = _normalize_label(line)
+        if not re.search(r"(?<!\w)[xX](?!\w)|\[[xX]\]|[✔☒✓]", line):
+            continue
+        for option in options:
+            if _normalize_label(option) in line_norm:
+                return option
+    return None
+
+
+def _set_text(out: dict[str, dict], qn: str, value: str | None) -> None:
+    if value is None:
+        return
+    value = html.unescape(value).strip()
+    if value:
+        out[qn] = {"value": value, "source": "tier4_cleaner"}
+
+
+def resolve_a_general(
+    tables: list[dict], markdown: str, schema: SchemaIndex
+) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+
+    a0_block = _section_between(
+        markdown,
+        r"\bA0\.?\s+Respondent\s+Inform\s*ation",
+        r"\bA0A\b",
+    )
+    if a0_block:
+        full_name = _a_labeled_value(a0_block, "Name")
+        if full_name:
+            parts = full_name.split()
+            if len(parts) >= 2:
+                _set_text(out, "A.001", " ".join(parts[:-1]))
+                _set_text(out, "A.002", parts[-1])
+            else:
+                _set_text(out, "A.001", full_name)
+        else:
+            _set_text(out, "A.001", _a_labeled_value(a0_block, "First Name"))
+            _set_text(out, "A.002", _a_labeled_value(a0_block, "Last Name"))
+        _set_text(out, "A.003", _a_labeled_value(a0_block, "Title"))
+        _set_text(out, "A.004", _a_labeled_value(a0_block, "Office"))
+        _set_text(out, "A.005", _a_labeled_value(a0_block, "Mailing Address") or _a_labeled_value(a0_block, "Address"))
+        city_state_zip = _a_labeled_value(a0_block, "City/State/Zip/Country")
+        city, state, zip_code, country = _a_city_state_zip(city_state_zip)
+        phone_value = _a_labeled_value(a0_block, "Phone")
+        if not phone_value:
+            area = _a_labeled_value(a0_block, "Phone Number")
+            if area:
+                phone_value = area
+        fax_value = _a_labeled_value(a0_block, "Fax")
+        if city_state_zip is None:
+            city = _a_labeled_value(a0_block, "City")
+            state = _a_labeled_value(a0_block, "State")
+            zip_code = _a_labeled_value(a0_block, "Zip")
+            country = _a_labeled_value(a0_block, "Country")
+        if (
+            city_state_zip
+            and state is None
+            and phone_value
+            and re.fullmatch(r"[A-Za-z .]+", phone_value)
+            and fax_value
+            and re.fullmatch(r"\d{5}(?:-\d{4})?", fax_value)
+        ):
+            state = phone_value.strip()
+            zip_code = fax_value.strip()
+            phone_value = None
+        _set_text(out, "A.008", city)
+        _set_text(out, "A.009", state)
+        _set_text(out, "A.010", zip_code)
+        _set_text(out, "A.011", country)
+        _set_text(out, "A.012", phone_value)
+        _set_text(out, "A.013", _a_labeled_value(a0_block, "E-mail Address") or _a_labeled_value(a0_block, "Email Address"))
+        yes_no = (
+            _extract_yes_no_from_lines(_nonempty_lines(a0_block))
+            or _a_checked_option(a0_block, ["Yes", "No"])
+        )
+        _set_text(out, "A.014", yes_no)
+
+    _set_text(
+        out,
+        "A.015",
+        _a_url_after(
+            markdown,
+            r"If yes,\s*please provide the URL of the corresponding W\s*eb page",
+        ),
+    )
+    _set_text(
+        out,
+        "A.601",
+        _a_url_after(
+            markdown,
+            r"diversity,\s*equity,\s*and inclusion office or department",
+        ),
+    )
+
+    a1_block = _section_between(
+        markdown,
+        r"\bA1\.?\s+Address\s+Inform\s*ation",
+        r"\bA2\b",
+    )
+    if a1_block:
+        _set_text(out, "A.101", _a_labeled_value(a1_block, "Name of College/University"))
+        _set_text(out, "A.102", _a_labeled_value(a1_block, "Mailing Address") or _a_labeled_value(a1_block, "Street Address"))
+        city, state, zip_code, country = _a_city_state_zip(
+            _a_labeled_value(a1_block, "City/State/Zip/Country")
+        )
+        if city is None:
+            city = _a_labeled_value(a1_block, "City")
+            state = _a_labeled_value(a1_block, "State")
+            zip_code = _a_labeled_value(a1_block, "Zip")
+            country = _a_labeled_value(a1_block, "Country")
+        _set_text(out, "A.105", city)
+        _set_text(out, "A.106", state)
+        _set_text(out, "A.107", zip_code)
+        _set_text(out, "A.108", country)
+        area, main, ext = _a_phone_parts(
+            _a_labeled_value(a1_block, "Main Phone Number")
+            or _a_labeled_value(a1_block, "Main Institution Phone Number")
+        )
+        _set_text(out, "A.109", area)
+        _set_text(out, "A.110", main)
+        _set_text(out, "A.111", ext)
+        _set_text(
+            out,
+            "A.112",
+            _a_labeled_value(a1_block, "WWW Home Page Address")
+            or _a_labeled_value(a1_block, "Main Institution Website")
+            or _a_labeled_value(a1_block, "Main Institution Website"),
+        )
+        area, main, ext = _a_phone_parts(_a_labeled_value(a1_block, "Admissions Phone Number"))
+        _set_text(out, "A.121", area)
+        _set_text(out, "A.122", main)
+        _set_text(out, "A.123", ext)
+        _set_text(out, "A.127", _a_labeled_value(a1_block, "Admissions E-mail Address"))
+        _set_text(
+            out,
+            "A.128",
+            _a_url_after(
+                a1_block,
+                r"If there is a separate URL for your school.?s online application",
+            ),
+        )
+
+    a2_block = _section_between(
+        markdown,
+        r"\bA2\b\s+Source of institutional control",
+        r"\bA3\b",
+    )
+    _set_text(
+        out,
+        "A.201",
+        _a_checked_option(a2_block, ["Public", "Private (nonprofit)", "Proprietary"]),
+    )
+
+    a3_block = _section_between(
+        markdown,
+        r"\bA3\b\s+Classify your undergraduate institution",
+        r"\bA4\b",
+    )
+    _set_text(
+        out,
+        "A.301",
+        _a_checked_option(a3_block, ["Coeducational college", "Men's college", "Women's college"]),
+    )
+
+    a4_block = _section_between(
+        markdown,
+        r"\bA4\b\s+Academ\s*ic year calendar",
+        r"\bA5\b",
+    )
+    _set_text(
+        out,
+        "A.401",
+        _a_checked_option(
+            a4_block,
+            ["Semester", "Quarter", "Trimester", "4-1-4", "Continuous"],
+        ),
+    )
+
+    return out
+
+
 # --- Resolver: J1 disciplines (120 fields) ---
 
 # Column header fragments → J subsection name. Order matters for detection —
@@ -459,6 +761,52 @@ def resolve_j_disciplines(
               for f in schema.filter(section=section, subsection=sub)}
         for _, sub in _J_COL_TO_SUBSECTION
     }
+    lookup_by_sub_category = {
+        sub: {str(f["category"]).strip(): f["question_number"]
+              for f in schema.filter(section=section, subsection=sub)}
+        for _, sub in _J_COL_TO_SUBSECTION
+    }
+    layout_block = _section_between(
+        markdown,
+        r"J\.\s+Disciplinary\s+areas\s+of\s+DEGREES\s+CONFERRED|J1\b",
+        r"(?:Common Data Set Definitions|CDS-J|$)",
+    )
+    if layout_block:
+        for raw_line in layout_block.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+            cip_match = re.search(r"\s(?:\d{2}(?:\s+and\s+\d{2})?)\s*$", line)
+            body = line[: cip_match.start()].rstrip() if cip_match else line
+            nums = re.findall(r"\b\d+(?:\.\d+)?\b", body)
+            if not nums:
+                continue
+            first_num = re.search(r"\b\d+(?:\.\d+)?\b", body)
+            if not first_num:
+                continue
+            label_norm = _normalize_label(body[: first_num.start()])
+            if not label_norm or "cip" in label_norm or "degrees conferred" in label_norm:
+                continue
+            if "total should" in label_norm:
+                for sub, value in zip(
+                    ("Diploma/Certificates", "Associate", "Bachelors"),
+                    nums[-3:],
+                ):
+                    qn = _match_j_label(lookup_by_sub[sub], label_norm)
+                    if qn:
+                        out[qn] = {"value": value, "source": "tier4_cleaner"}
+                continue
+            if len(nums) == 1:
+                qn = _match_j_label(lookup_by_sub["Bachelors"], label_norm)
+                if qn:
+                    out[qn] = {"value": nums[0], "source": "tier4_cleaner"}
+            elif len(nums) == 2:
+                qn = _match_j_label(lookup_by_sub["Diploma/Certificates"], label_norm)
+                if qn:
+                    out[qn] = {"value": nums[0], "source": "tier4_cleaner"}
+                qn = _match_j_label(lookup_by_sub["Bachelors"], label_norm)
+                if qn:
+                    out[qn] = {"value": nums[1], "source": "tier4_cleaner"}
 
     for table in tables:
         section_norm = _normalize_label(table.get("section", ""))
@@ -522,11 +870,32 @@ def resolve_j_disciplines(
                 num = _extract_number(row["values"][col_idx])
                 if num is None:
                     continue
-                qn = _match_j_label(lookup_by_sub[sub], label_norm)
+                qn = _match_j_cip_category(lookup_by_sub_category[sub], row)
+                if qn is None:
+                    qn = _match_j_label(lookup_by_sub[sub], label_norm)
                 if qn and qn not in out:
                     out[qn] = {"value": num, "source": "tier4_cleaner"}
 
     return out
+
+
+def _match_j_cip_category(lookup: dict[str, str], row: dict) -> str | None:
+    """Use J1's CIP column as a row key when Docling duplicates or shifts the
+    visible discipline label. Empty totals/Other rows intentionally fall back
+    to label matching.
+    """
+    values = row.get("values", [])
+    if not values:
+        return None
+    category = values[-1].strip()
+    if not category:
+        return None
+    qn = lookup.get(category)
+    if qn:
+        return qn
+    if category.isdigit():
+        return lookup.get(category.zfill(2))
+    return None
 
 
 def _match_j_label(lookup: dict[str, str], label_norm: str) -> str | None:
@@ -541,6 +910,13 @@ def _match_j_label(lookup: dict[str, str], label_norm: str) -> str | None:
     qn = lookup.get(label_norm)
     if qn:
         return qn
+    # Blank "Other" rows can merge with the following total row in Docling's
+    # markdown table parse, yielding labels like "other total should = 100%".
+    # Treat those as the schema's total row; do not synthesize an Other value.
+    if "total should" in label_norm:
+        total_qn = lookup.get("total should = 100%")
+        if total_qn:
+            return total_qn
     MIN_PREFIX = 6
     if len(label_norm) < MIN_PREFIX:
         return None
@@ -588,6 +964,34 @@ def resolve_b2_race(
     section = "Enrollment And Persistence"
     subsection = "Enrollment by Racial/Ethnic Category"
     all_b2 = schema.filter(section=section, subsection=subsection)
+    b2_block = _section_between(
+        markdown,
+        r"\bB2\b\s+Enrollment by Racial/Ethnic Category",
+        r"\bB3\b\s+Number of degrees awarded",
+    )
+    if b2_block:
+        b2_keys = [
+            {"cohort": "First-time, first-year", "category": "Degree-seeking"},
+            {"cohort": "All", "category": "Degree-seeking"},
+            {"cohort": "All", "category": "All"},
+        ]
+        for raw_line in b2_block.splitlines():
+            nums = re.findall(r"\b\d[\d,]*\b", raw_line)
+            if len(nums) != 3:
+                continue
+            first_num = re.search(r"\b\d[\d,]*\b", raw_line)
+            if not first_num:
+                continue
+            label_norm = _normalize_label(raw_line[:first_num.start()])
+            qns = [_match_b2_label(all_b2, label_norm, key) for key in b2_keys]
+            if not all(qns):
+                continue
+            for qn, raw_value in zip(qns, nums):
+                value = _extract_number(raw_value)
+                if qn and value is not None:
+                    out[qn] = {"value": value, "source": "tier4_cleaner"}
+        if out:
+            return out
 
     for table in tables:
         headers_norm = [_normalize_label(h) for h in table.get("headers", [])]
@@ -648,6 +1052,138 @@ def _match_b2_label(
         if len(label_norm) >= 6 and (q.startswith(label_norm) or label_norm.startswith(q)):
             return f["question_number"]
     return None
+
+
+# --- Resolver: B3 degrees awarded ---
+
+_B3_LABEL_TO_QN = [
+    ("certificate diploma", "B.301"),
+    ("associate degrees", "B.302"),
+    ("bachelor's degrees", "B.303"),
+    ("bachelors degrees", "B.303"),
+    ("postbachelor's certificates", "B.304"),
+    ("postbachelors certificates", "B.304"),
+    ("master's degrees", "B.305"),
+    ("masters degrees", "B.305"),
+    ("post master's certificates", "B.306"),
+    ("post masters certificates", "B.306"),
+    ("doctoral degrees research scholarship", "B.307"),
+    ("doctoral degrees professional practice", "B.308"),
+    ("doctoral degrees other", "B.309"),
+]
+
+
+def _match_b3_label(label_norm: str) -> str | None:
+    matches = [(substr, qn) for substr, qn in _B3_LABEL_TO_QN if substr in label_norm]
+    if len(matches) != 1:
+        # Merged rows like "Postbachelor's certificates Master's degrees"
+        # contain two schema labels but one value; the value belongs to one
+        # row and cannot be assigned safely from markdown alone.
+        return None
+    return matches[0][1]
+
+
+def resolve_b3_degrees(
+    tables: list[dict], markdown: str, schema: SchemaIndex
+) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    block = _section_between(
+        markdown,
+        r"\bB3\b\s+Number of degrees awarded",
+        r"\bB4\b|\bB4-B21\b|Graduation Rates",
+    )
+    if block:
+        for raw_line in block.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+            num_match = re.search(r"\b\d[\d,]*\b\s*$", line)
+            if not num_match:
+                continue
+            label_norm = _normalize_label(line[:num_match.start()])
+            qn = _match_b3_label(label_norm)
+            if qn:
+                out[qn] = {
+                    "value": _extract_number(num_match.group(0)),
+                    "source": "tier4_cleaner",
+                }
+        if out:
+            return out
+
+    for table in tables:
+        section_norm = _normalize_label(table.get("section", ""))
+        if "persistence" not in section_norm:
+            continue
+        for row in table["rows"]:
+            label_norm = _normalize_label(row["label"])
+            qn = _match_b3_label(label_norm)
+            if not qn or not row["values"]:
+                continue
+            num = _extract_number(row["values"][0])
+            if num is not None:
+                out[qn] = {"value": num, "source": "tier4_cleaner"}
+    return out
+
+
+# --- Resolver: B12-B21 two-year graduation rates ---
+
+_B_TWO_YEAR_ROW_TO_BASE = {
+    "B12": 1201,
+    "B13": 1301,
+    "B14": 1401,
+    "B15": 1501,
+    "B16": 1601,
+    "B17": 1701,
+    "B18": 1801,
+    "B19": 1901,
+    "B20": 2001,
+    "B21": 2101,
+}
+
+
+def resolve_b_two_year_rates(
+    tables: list[dict], markdown: str, schema: SchemaIndex
+) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    block = _section_between(markdown, r"For Two-Year Institutions", r"\bB22\b")
+    if not block:
+        return out
+
+    for raw_line in block.splitlines():
+        line = raw_line.strip()
+        row_match = re.search(r"\b(B1[2-9]|B2[01])\b", line)
+        if not row_match:
+            continue
+        row_code = row_match.group(1)
+        base = _B_TWO_YEAR_ROW_TO_BASE[row_code]
+        tail = line[row_match.end():]
+        original_tail = tail
+        if ":" in tail:
+            tail = tail.rsplit(":", 1)[1]
+        elif not re.search(r"\d", tail):
+            continue
+        # Ignore year labels in the header; values only count after the row
+        # code. Blank rows remain absent.
+        values = re.findall(r"(?<!\d)\d[\d,]*(?!\d)", tail)
+        if not values:
+            leading_values = re.match(
+                r"^\s*(\d[\d,]*)(?:\s+(\d[\d,]*))?",
+                original_tail,
+            )
+            if leading_values:
+                values = [v for v in leading_values.groups() if v is not None]
+        if not values:
+            continue
+        for offset, raw_value in enumerate(values[:2]):
+            value = _extract_number(raw_value)
+            if value is None:
+                continue
+            out[f"B.{base + offset}"] = {
+                "value": value,
+                "source": "tier4_cleaner",
+            }
+
+    return out
 
 
 # --- Resolver: B22 retention rate (3 fields) ---
@@ -727,6 +1263,81 @@ _B5_COL_QUESTIONS = [
 ]
 
 
+def _b5_layout_column_values(letter: str, values: list[str]) -> list[tuple[int, str]]:
+    if len(values) >= 4:
+        return list(enumerate(values[-4:]))
+    if len(values) == 3 and letter == "B":
+        # Some 2024 templates leave the Pell exclusions cell blank but show
+        # Stafford, neither, and total. Preserve the blank instead of shifting
+        # those zeros into the wrong columns.
+        return [(1, values[0]), (2, values[1]), (3, values[2])]
+    if len(values) == 1:
+        return [(3, values[0])]
+    return list(enumerate(values))
+
+
+def _b5_layout_values(window: str) -> list[str]:
+    best: list[str] = []
+    for line in window.splitlines():
+        nums = _h_spaced_numbers(line)
+        if len(nums) >= 3:
+            return nums
+        if len(nums) > len(best):
+            best = nums
+    return best
+
+
+def _b5_row_window(block: str, letter: str) -> str:
+    lines = block.splitlines()
+    start = None
+    for idx, line in enumerate(lines):
+        if re.match(rf"\s*{letter}(?:\s{{2,}}|$)", line):
+            start = idx
+            break
+    if start is None:
+        return ""
+    end = len(lines)
+    for idx in range(start + 1, len(lines)):
+        if re.match(r"\s*[A-H](?:\s{2,}|$)", lines[idx]):
+            end = idx
+            break
+    return "\n".join(lines[start:end])
+
+
+def _resolve_b5_layout(markdown: str) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    cohort_matches = list(re.finditer(r"(?mi)^\s*Fall\s+20\d\d\s+Cohort\b", markdown))
+    if not cohort_matches:
+        return out
+
+    for cohort_idx, match in enumerate(cohort_matches[:2]):
+        base = 401 if cohort_idx == 0 else 501
+        end = cohort_matches[cohort_idx + 1].start() if cohort_idx + 1 < len(cohort_matches) else len(markdown)
+        block = markdown[match.end():end]
+        if cohort_idx == 1:
+            two_year = re.search(r"For Two-Year Institutions", block, re.IGNORECASE)
+            if two_year:
+                block = block[:two_year.start()]
+
+        for row_idx, letter in enumerate("ABCDEFGH"):
+            window = _b5_row_window(block, letter)
+            if not window:
+                continue
+            nums = _b5_layout_values(window)
+            if not nums:
+                continue
+            row_base = base + row_idx * 4
+            for col_idx, value in _b5_layout_column_values(letter, nums):
+                if col_idx > 3:
+                    continue
+                out[f"B.{row_base + col_idx}"] = {
+                    "value": value,
+                    "source": "tier4_cleaner",
+                }
+
+    return out
+
+
 def _is_b5_grad_table(table: dict) -> bool:
     """Detect a Fall YYYY Cohort grad-rate table by section header."""
     section_norm = _normalize_label(table.get("section", ""))
@@ -749,7 +1360,9 @@ def resolve_b5_graduation(
       1. label = "A" (letter only), values[0] = description, values[1-4] = data
       2. label = "A Initial 2018 cohort ...", values[0-3] = data
     """
-    out: dict[str, dict] = {}
+    out: dict[str, dict] = _resolve_b5_layout(markdown)
+    if out:
+        return out
 
     grad_tables = [t for t in tables if _is_b5_grad_table(t)]
     if not grad_tables:
@@ -905,6 +1518,186 @@ def _match_b1_context(label_norm: str) -> tuple[str, str] | None:
     return None
 
 
+def _b1_rollup_qn(label_norm: str) -> str | None:
+    if "grand total all students" in label_norm:
+        return "B.178"
+    if "total all undergraduates" in label_norm:
+        return "B.176"
+    if "total all graduate" in label_norm:
+        return "B.177"
+    return None
+
+
+def _resolve_b1_layout(markdown: str, schema: SchemaIndex) -> dict[str, dict]:
+    """Layout-backed B1 parser.
+
+    The pypdf layout text keeps B1's columns visually aligned even when
+    Docling's markdown table wraps labels into separate rows or drops empty
+    cells. We still resolve through schema.lookup so the mapping stays tied
+    to the canonical B1 dimensions.
+    """
+    out: dict[str, dict] = {}
+    block = _section_between(
+        markdown,
+        r"\bB1\b\s+Institutional Enrollment",
+        r"\bB2\b\s+Enrollment by Racial/Ethnic Category",
+    )
+    if not block:
+        return out
+
+    unit_load: str | None = None
+    student_group: str | None = None
+    pending_label = ""
+
+    for raw_line in block.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        line_norm = _normalize_label(line)
+
+        ctx = _match_b1_context(line_norm)
+        if ctx:
+            unit_load, student_group = ctx
+            pending_label = ""
+            continue
+
+        nums = re.findall(r"\b\d[\d,]*\b", line)
+        if not nums:
+            if unit_load is not None and (
+                line_norm.startswith("degree seeking")
+                or line_norm.startswith("all other")
+                or line_norm.startswith("total")
+                or line_norm.startswith("grand total")
+                or line_norm in ("students", "courses")
+            ):
+                pending_label = f"{pending_label} {line}".strip()
+            continue
+
+        first_num = re.search(r"\b\d[\d,]*\b", line)
+        if not first_num:
+            continue
+        label = line[:first_num.start()].strip()
+        if pending_label:
+            # Blank rows sometimes precede the next total row. If the next
+            # numeric row is itself a total, the pending wrapped label had no
+            # value and should not be merged into the total label.
+            if _normalize_label(label).startswith(("total ", "grand total")):
+                pending_label = ""
+            else:
+                label = f"{pending_label} {label}".strip()
+            pending_label = ""
+        label_norm = _normalize_label(label)
+
+        rollup_qn = _b1_rollup_qn(label_norm)
+        if rollup_qn and nums:
+            out[rollup_qn] = {
+                "value": _extract_number(nums[0]),
+                "source": "tier4_cleaner",
+            }
+            continue
+
+        if unit_load is None or student_group is None:
+            continue
+        row_rule = _match_b1_row(label_norm)
+        if not row_rule:
+            continue
+        cohort, category = row_rule
+
+        local_ul = unit_load
+        local_sg = student_group
+        if "total undergraduate full time" in label_norm:
+            local_ul, local_sg = "FT", "Undergraduates"
+        elif "total undergraduate part time" in label_norm:
+            local_ul, local_sg = "PT", "Undergraduates"
+        elif "total undergraduate students" in label_norm:
+            local_ul, local_sg = "All", "Undergraduates"
+        elif "total graduate full time" in label_norm:
+            local_ul, local_sg = "FT", "Graduates"
+        elif "total graduate part time" in label_norm:
+            local_ul, local_sg = "PT", "Graduates"
+        elif "total graduate students" in label_norm:
+            local_ul, local_sg = "All", "Graduates"
+        elif "total all students" in label_norm:
+            local_ul, local_sg = "All", "All Students"
+
+        col_values: list[tuple[str, str]] = []
+        if len(nums) >= 1:
+            col_values.append(("Males", nums[0]))
+        if len(nums) >= 2:
+            col_values.append(("Females", nums[1]))
+        if len(nums) >= 3:
+            # The 2024-25 table has both Another Gender and Unknown columns,
+            # while the canonical schema has one Unknown bucket. Use the
+            # Another Gender value when present; the fourth PDF column is only
+            # a fallback in templates where the third column is absent.
+            col_values.append(("Unknown", nums[2]))
+
+        for gender, raw_value in col_values:
+            num = _extract_number(raw_value)
+            if num is None:
+                continue
+            qn = schema.lookup(
+                subsection="Institutional Enrollment",
+                gender=gender,
+                unit_load=local_ul,
+                student_group=local_sg,
+                cohort=cohort,
+                category=category,
+            )
+            if (
+                qn is None
+                and local_sg == "Undergraduates"
+                and local_ul == "All"
+                and cohort == "Total"
+                and category == "All"
+            ):
+                qn = schema.lookup(
+                    subsection="Institutional Enrollment",
+                    gender=gender,
+                    unit_load=local_ul,
+                    student_group=local_sg,
+                    cohort="Total understand",
+                    category=category,
+                )
+            if (
+                qn is None
+                and local_sg == "Graduates"
+                and local_ul == "FT"
+                and cohort == "Total"
+                and category == "All"
+            ):
+                qn = schema.lookup(
+                    subsection="All",
+                    gender=gender,
+                    unit_load=local_ul,
+                    student_group=local_sg,
+                    cohort=cohort,
+                    category="Full-Time",
+                )
+            if (
+                qn is None
+                and local_sg == "Undergraduates"
+                and local_ul == "PT"
+                and cohort == "All other"
+                and category == "Enrolled in Credit Courses"
+            ):
+                # The 2025-26 schema labels the PT undergraduate credit-course
+                # row's cohort as "All other undergraduates", while the FT row
+                # uses "All other".
+                qn = schema.lookup(
+                    subsection="Institutional Enrollment",
+                    gender=gender,
+                    unit_load=local_ul,
+                    student_group=local_sg,
+                    cohort="All other undergraduates",
+                    category=category,
+                )
+            if qn:
+                out[qn] = {"value": num, "source": "tier4_cleaner"}
+
+    return out
+
+
 def resolve_b1_enrollment(
     tables: list[dict], markdown: str, schema: SchemaIndex
 ) -> dict[str, dict]:
@@ -921,7 +1714,9 @@ def resolve_b1_enrollment(
     resolver handles this by scanning for BOTH context and row rules on
     every label and using whichever fires.
     """
-    out: dict[str, dict] = {}
+    out: dict[str, dict] = _resolve_b1_layout(markdown, schema)
+    if "B.178" in out:
+        return out
 
     # Detect B1 tables by section name or by gendered column headers.
     b1_tables: list[dict] = []
@@ -1182,11 +1977,10 @@ def resolve_c1_applications(
     return out
 
 
-# --- Resolver: C2 Wait List (3 numeric fields) ---
+# --- Resolver: C2 Wait List ---
 #
-# The YesNo fields (C.201, C.205-207) require checkbox detection and are
-# deferred to the Phase 6 generic checkbox resolver. Here we capture only
-# the three number-valued rows in the "WAITING LIST" table.
+# C.201 is a Yes/No checkbox above the numeric waiting-list table. C.205-C.207
+# are lower-page follow-ups and are handled separately when visible.
 
 _C2_NUMERIC_ROW_RULES: list[tuple[str, str]] = [
     ("number of qualified applicants offered",  "C.202"),
@@ -1199,6 +1993,37 @@ def resolve_c2_waitlist(
     tables: list[dict], markdown: str, schema: SchemaIndex
 ) -> dict[str, dict]:
     out: dict[str, dict] = {}
+
+    waitlist_block = _section_between(
+        markdown,
+        r"\bC2\b\s+First-time,\s*first-year wait-listed students",
+        r"(?m)^\s*(?:C3\b|C3-C5\b|##\s+C3)",
+    )
+    if waitlist_block:
+        c201 = _extract_yes_no_by_layout(
+            waitlist_block,
+            r"Do you have a policy of placing students on a waiting list\?",
+        )
+        if not c201:
+            c201 = _extract_yes_no_from_lines(_nonempty_lines(waitlist_block))
+        if c201:
+            out["C.201"] = {"value": c201, "source": "tier4_cleaner"}
+        for line in waitlist_block.splitlines():
+            label_norm = _normalize_label(line)
+            for substr, qn in _C2_NUMERIC_ROW_RULES:
+                if substr not in label_norm:
+                    continue
+                nums = re.findall(r"\b\d[\d,]*\b", line)
+                if nums:
+                    out.setdefault(
+                        qn,
+                        {
+                            "value": _extract_number(nums[-1]),
+                            "source": "tier4_cleaner",
+                        },
+                    )
+                break
+
     for table in tables:
         headers_norm = [_normalize_label(h) for h in table.get("headers", [])]
         if "waiting list" not in " ".join(headers_norm):
@@ -1230,13 +2055,13 @@ _C5_SUBJECTS = [
     ("total academic units",    "Total academic units"),
     ("english",                 "English"),
     ("mathematics",             "Mathematics"),
+    ("foreign language",        "Foreign language"),
+    ("computer science",        "Computer Science"),
     ("science",                 "Science"),
     ("units that must be lab",  "Of these, units that must be lab"),
-    ("foreign language",        "Foreign language"),
     ("social studies",          "Social studies"),
     ("history",                 "History"),
     ("academic electives",      "Academic electives"),
-    ("computer science",        "Computer Science"),
     ("visual performing arts",  "Visual/Performing Arts"),
     ("other",                   "Other (specify)"),
 ]
@@ -1279,7 +2104,7 @@ def resolve_c5_carnegie_units(
         for ci, hdr in enumerate(headers_norm[1:]):
             if "required" in hdr:
                 col_to_cat.append((ci, "Required"))
-            elif "recommended" in hdr:
+            elif "recommend" in hdr:
                 col_to_cat.append((ci, "Recommended"))
             elif "units" in hdr and not col_to_cat:
                 # Single-column layout — treat as Required unless surrounding
@@ -1371,13 +2196,25 @@ def resolve_c7_basis_for_selection(
 
     for table in tables:
         headers_norm = [_normalize_label(h) for h in table.get("headers", [])]
+        c7_rows = table["rows"]
+        if headers_norm and any(sub in headers_norm[0] for sub, *_ in _C7_FACTOR_ROWS):
+            # Headerless page-continuation tables can have their first data
+            # row misclassified as the markdown header. Reinsert it for C7.
+            c7_rows = [
+                {
+                    "label": table["headers"][0],
+                    "values": table["headers"][1:],
+                    "headers": [""] * len(table["headers"]),
+                },
+                *table["rows"],
+            ]
         joined_hdr = " ".join(headers_norm)
         # Detect C7: header row mentions all four importance levels.
         has_header_signal = ("very important" in joined_hdr
                              and "considered" in joined_hdr)
         # Or at least one row contains a C7 factor keyword.
         factor_rows = 0
-        for row in table["rows"]:
+        for row in c7_rows:
             ln = _normalize_label(row["label"])
             if any(sub in ln for sub, *_ in _C7_FACTOR_ROWS):
                 factor_rows += 1
@@ -1396,11 +2233,31 @@ def resolve_c7_basis_for_selection(
             if matched:
                 col_to_importance.append((ci, matched))
 
+        if not col_to_importance and factor_rows >= 3:
+            # Page-split continuation tables often lose the C7 header row.
+            # Farmingdale's page-10 continuation also drops the all-empty
+            # "Very Important" column, leaving three value columns:
+            # Important, Considered, Not Considered.
+            n_vals = max(len(row["values"]) for row in c7_rows) if c7_rows else 0
+            if n_vals == 3:
+                col_to_importance = [
+                    (0, "Important"),
+                    (1, "Considered"),
+                    (2, "Not Considered"),
+                ]
+            elif n_vals == 4:
+                col_to_importance = [
+                    (0, "Very Important"),
+                    (1, "Important"),
+                    (2, "Considered"),
+                    (3, "Not Considered"),
+                ]
+
         # Sub-header rows like "Nonacademic | Very Important | ..." reset
         # the current table category — track it as we iterate.
         current_cat = "Academic Factors"
 
-        for row in table["rows"]:
+        for row in c7_rows:
             label_norm = _normalize_label(row["label"])
             # Sub-header row detection: label is just "Academic" or
             # "Nonacademic" and the row values repeat the header tokens.
@@ -1447,6 +2304,598 @@ def resolve_c7_basis_for_selection(
                     break
             if chosen and qn not in out:
                 out[qn] = {"value": chosen, "source": "tier4_cleaner"}
+
+    return out
+
+
+# --- Resolver: C8 Entrance Exams ---
+#
+# C8 is mostly prose/checkbox content rather than markdown tables. Docling
+# currently preserves enough line order to extract the Yes/No fields and C8G
+# placement checkboxes, but it drops the x-position needed to safely infer the
+# C8A admission-policy column. So this resolver intentionally does not claim
+# C.802-C.804.
+
+_C8G_OPTIONS = [
+    ("SAT", "C.8G01"),
+    ("ACT", "C.8G02"),
+    ("AP", "C.8G03"),
+    ("CLEP", "C.8G04"),
+    ("Institutional Exam", "C.8G05"),
+    ("State Exam (specify):", "C.8G06"),
+]
+
+
+def _section_between(markdown: str, start: str, end: str | None = None) -> str:
+    start_match = re.search(start, markdown, re.IGNORECASE)
+    if not start_match:
+        return ""
+    section = markdown[start_match.end():]
+    if end:
+        end_match = re.search(end, section, re.IGNORECASE)
+        if end_match:
+            section = section[:end_match.start()]
+    return section
+
+
+def _nonempty_lines(text: str) -> list[str]:
+    return [line.strip() for line in text.splitlines() if line.strip()]
+
+
+def _extract_yes_no_from_lines(lines: list[str]) -> str | None:
+    tokens: list[str] = []
+    for line in lines:
+        compact = re.sub(r"\s+", " ", line.strip())
+        lower = compact.lower()
+        if lower in ("yes", "no", "x"):
+            tokens.append(lower)
+            continue
+        if re.fullmatch(r"yes\s+no", lower):
+            tokens.extend(["yes", "no"])
+            continue
+        if re.fullmatch(r"x\s+(yes|no)", lower):
+            tokens.extend(["x", lower.split()[-1]])
+            continue
+        if re.search(r"\bx\s*$", lower):
+            tokens.append("x")
+    for i, token in enumerate(tokens):
+        if token != "x":
+            continue
+        # Vertical checkbox layouts emit "x" immediately before the selected
+        # label. Horizontal Yes/No tables emit it immediately after.
+        if i + 1 < len(tokens) and tokens[i + 1] in ("yes", "no"):
+            return tokens[i + 1].capitalize()
+        if i > 0 and tokens[i - 1] in ("yes", "no"):
+            return tokens[i - 1].capitalize()
+    return None
+
+
+def _extract_yes_no_by_layout(text: str, question_re: str) -> str | None:
+    yes_idx: int | None = None
+    no_idx: int | None = None
+    for line in text.splitlines():
+        header = re.search(r"\bYes\b\s+\bNo\b", line, re.IGNORECASE)
+        if header:
+            yes_match = re.search(r"\bYes\b", line, re.IGNORECASE)
+            no_match = re.search(r"\bNo\b", line, re.IGNORECASE)
+            yes_idx = yes_match.start() if yes_match else None
+            no_idx = no_match.start() if no_match else None
+            continue
+        if yes_idx is None or no_idx is None:
+            continue
+        if not re.search(question_re, line, re.IGNORECASE):
+            continue
+        x_positions = [m.start() for m in re.finditer(r"(?<!\w)[xX](?!\w)", line)]
+        if not x_positions:
+            continue
+        x_idx = x_positions[-1]
+        return "Yes" if abs(x_idx - yes_idx) <= abs(x_idx - no_idx) else "No"
+    return None
+
+
+def _extract_yes_no_block_by_layout(
+    text: str,
+    start_re: str,
+    end_re: str,
+) -> str | None:
+    start_match = re.search(start_re, text, re.IGNORECASE)
+    if not start_match:
+        return None
+    block = text[start_match.start():]
+    end_match = re.search(end_re, block, re.IGNORECASE)
+    if end_match:
+        block = block[:end_match.start()]
+
+    yes_idx: int | None = None
+    no_idx: int | None = None
+    for line in block.splitlines():
+        header = re.search(r"\bYes\b\s+\bNo\b", line, re.IGNORECASE)
+        if header:
+            yes_match = re.search(r"\bYes\b", line, re.IGNORECASE)
+            no_match = re.search(r"\bNo\b", line, re.IGNORECASE)
+            yes_idx = yes_match.start() if yes_match else None
+            no_idx = no_match.start() if no_match else None
+            continue
+        if yes_idx is None or no_idx is None:
+            continue
+        x_match = re.search(r"(?<!\w)[xX](?!\w)", line)
+        if not x_match:
+            continue
+        x_idx = x_match.start()
+        boundary = yes_idx + ((no_idx - yes_idx) * 0.35)
+        return "No" if x_idx >= boundary else "Yes"
+
+    return None
+
+
+def _extract_wrapped_yes_no_by_layout(
+    text: str,
+    start_re: str,
+    end_re: str,
+) -> str | None:
+    """Extract a Yes/No checkbox when the header sits above a wrapped question."""
+    start_match = re.search(start_re, text, re.IGNORECASE)
+    if not start_match:
+        return None
+
+    yes_idx: int | None = None
+    no_idx: int | None = None
+    for line in text[:start_match.start()].splitlines():
+        header = re.search(r"\bYes\b\s+\bNo\b", line, re.IGNORECASE)
+        if not header:
+            continue
+        yes_match = re.search(r"\bYes\b", line, re.IGNORECASE)
+        no_match = re.search(r"\bNo\b", line, re.IGNORECASE)
+        yes_idx = yes_match.start() if yes_match else None
+        no_idx = no_match.start() if no_match else None
+
+    if yes_idx is None or no_idx is None:
+        return None
+
+    block = text[start_match.start():]
+    end_match = re.search(end_re, block, re.IGNORECASE)
+    if end_match:
+        block = block[:end_match.start()]
+
+    for line in block.splitlines():
+        for x_match in re.finditer(r"(?<!\w)[xX](?=\W|[A-Z]|$)", line):
+            x_idx = x_match.start()
+            return "Yes" if abs(x_idx - yes_idx) <= abs(x_idx - no_idx) else "No"
+
+    return None
+
+
+_MONTHS = {
+    "jan": "1",
+    "feb": "2",
+    "mar": "3",
+    "apr": "4",
+    "may": "5",
+    "jun": "6",
+    "jul": "7",
+    "aug": "8",
+    "sep": "9",
+    "sept": "9",
+    "oct": "10",
+    "nov": "11",
+    "dec": "12",
+}
+
+
+def _split_month_day(value: str) -> tuple[str, str] | None:
+    value = value.strip()
+    if match := re.fullmatch(r"(\d{1,2})/(\d{1,2})", value):
+        return match.group(1), match.group(2)
+    if match := re.fullmatch(r"(\d{1,2})-([A-Za-z]{3,4})", value):
+        month = _MONTHS.get(match.group(2).lower())
+        if month:
+            return month, match.group(1)
+    if match := re.fullmatch(r"([A-Za-z]{3,4})-(\d{1,2})", value):
+        month = _MONTHS.get(match.group(1).lower())
+        if month:
+            return month, match.group(2)
+    return None
+
+
+def _c8g_checked(line: str, label: str) -> bool:
+    # Match exact option labels so prose like "SAT critical reading..." does
+    # not look like a checked SAT placement option.
+    escaped = re.escape(label)
+    match = re.match(rf"^\s*-?\s*(.*?)\s+{escaped}\s*$", line, re.IGNORECASE)
+    if not match:
+        return False
+    marker = match.group(1).strip()
+    return bool(
+        re.search(r"\[[xX☒✓]\]", marker)
+        or re.search(r"\[\s*\]\s*[xX☒✓]\b", marker)
+        or re.fullmatch(r"[xX☒✓]", marker)
+    )
+
+
+def resolve_c8_entrance_exams(
+    tables: list[dict], markdown: str, schema: SchemaIndex
+) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    c8 = _section_between(markdown, r"(?:##\s*)?C8:\s*SAT and ACT Policies", r"(?:##\s*)?C9")
+    if not c8:
+        return out
+
+    c801_block = _section_between(
+        c8,
+        r"Does your institution make use of SAT or ACT scores in admission decisions",
+        r"C8A\b",
+    )
+    c801 = _extract_yes_no_from_lines(_nonempty_lines(c801_block))
+    if not c801:
+        c801_block = _section_between(c8, r"Entrance exams", r"C8A\b")
+        c801 = _extract_yes_no_from_lines(_nonempty_lines(c801_block))
+    if c801:
+        out["C.801"] = {"value": c801, "source": "tier4_cleaner"}
+
+    c8d_block = _section_between(
+        c8,
+        r"C8D\b.*?academic advising\?",
+        r"C8E\b",
+    )
+    c8d = _extract_yes_no_from_lines(_nonempty_lines(c8d_block))
+    if c8d:
+        out["C.8D"] = {"value": c8d, "source": "tier4_cleaner"}
+
+    # C8F free text may be visually placed before C8G but emitted after the
+    # C8G checkbox list. Capture a sentence that starts with "If submitted"
+    # and ends at the first period.
+    if match := re.search(r"\b(If submitted,.*?placement\.)", c8, re.IGNORECASE | re.DOTALL):
+        text = re.sub(r"\s+", " ", match.group(1)).strip()
+        out["C.8F"] = {"value": text, "source": "tier4_cleaner"}
+
+    c8g_block = _section_between(c8, r"C8G\b", None)
+    c8g_lines = _nonempty_lines(c8g_block)
+    state_line_index: int | None = None
+    for i, line in enumerate(c8g_lines):
+        for label, qn in _C8G_OPTIONS:
+            if _c8g_checked(line, label):
+                out[qn] = {"value": "X", "source": "tier4_cleaner"}
+                if qn == "C.8G06":
+                    state_line_index = i
+
+    if state_line_index is not None:
+        state_line = c8g_lines[state_line_index]
+        trailing = re.sub(
+            r"^\s*-?\s*(?:\[[xX☒✓]\]|\[\s*\]\s*[xX☒✓]|[xX☒✓])?\s*State Exam \(specify\):\s*",
+            "",
+            state_line,
+            flags=re.IGNORECASE,
+        ).strip()
+        candidates = [trailing] if trailing else []
+        candidates.extend(c8g_lines[state_line_index + 1:])
+        for candidate in candidates:
+            c = candidate.strip()
+            if not c:
+                continue
+            if re.match(r"^-?\s*(?:\[[ xX☒✓]\]|\[\s*\]\s*[xX☒✓]|[xX☒✓])?\s*(SAT|ACT|AP|CLEP|Institutional Exam|State Exam)", c, re.IGNORECASE):
+                continue
+            if c.lower().startswith("if submitted"):
+                continue
+            if "does your institution make use of sat or act scores" in c.lower():
+                continue
+            if c.startswith("##"):
+                continue
+            out["C.8G07"] = {"value": c, "source": "tier4_cleaner"}
+            break
+
+    return out
+
+
+# --- Resolver: C9 submission rates/counts ---
+#
+# Docling sometimes emits the two C9 row labels as standalone paragraphs and
+# the two numeric rows as a header-only markdown table. Rejoin that specific
+# shape into C.901-C.904.
+
+def resolve_c9_submission_rates(
+    tables: list[dict], markdown: str, schema: SchemaIndex
+) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    if "Submitting SAT Scores" not in markdown or "Submitting ACT Scores" not in markdown:
+        return out
+
+    pattern = re.compile(
+        r"Submitting SAT Scores\s+Submitting ACT Scores\s+"
+        r"\|\s*Percent\s*\|\s*Number\s*\|\s*\n"
+        r"\|[\s\-:|]+\|\s*\n"
+        r"\|\s*([0-9.]+)\s*%?\s*\|\s*([0-9,]+)\s*\|\s*\n"
+        r"\|\s*([0-9.]+)\s*%?\s*\|\s*([0-9,]+)\s*\|",
+        re.IGNORECASE,
+    )
+    match = pattern.search(markdown)
+    if not match:
+        return out
+
+    sat_pct, sat_num, act_pct, act_num = match.groups()
+    out["C.901"] = {"value": sat_pct.replace(",", ""), "source": "tier4_cleaner"}
+    out["C.903"] = {"value": sat_num.replace(",", ""), "source": "tier4_cleaner"}
+    out["C.902"] = {"value": act_pct.replace(",", ""), "source": "tier4_cleaner"}
+    out["C.904"] = {"value": act_num.replace(",", ""), "source": "tier4_cleaner"}
+    return out
+
+
+# --- Resolver: C9 score distributions ---
+
+_C9_DISTRIBUTION_QNS = {
+    "sat_ebrw": {
+        "700 800": "C.932",
+        "600 699": "C.933",
+        "500 599": "C.934",
+        "400 499": "C.935",
+        "300 399": "C.936",
+        "200 299": "C.937",
+        "total": "C.938",
+    },
+    "sat_math": {
+        "700 800": "C.939",
+        "600 699": "C.940",
+        "500 599": "C.941",
+        "400 499": "C.942",
+        "300 399": "C.943",
+        "200 299": "C.944",
+        "total": "C.945",
+    },
+    "sat_composite": {
+        "1400 1600": "C.946",
+        "1200 1399": "C.947",
+        "1000 1199": "C.948",
+        "800 999": "C.949",
+        "600 799": "C.950",
+        "400 599": "C.951",
+        "total": "C.952",
+    },
+    "act_composite": {
+        "30 36": "C.953",
+        "24 29": "C.954",
+        "18 23": "C.955",
+        "12 17": "C.956",
+        "6 11": "C.957",
+        "below 6": "C.958",
+        "total": "C.959",
+    },
+}
+
+
+def _c9_distribution_role(header_norm: str) -> str | None:
+    if "sat evidence" in header_norm:
+        return "sat_ebrw"
+    if "sat math" in header_norm:
+        return "sat_math"
+    if "sat composite" in header_norm:
+        return "sat_composite"
+    if header_norm == "act composite" or header_norm.startswith("act composite"):
+        return "act_composite"
+    return None
+
+
+def _c9_range_key(label_norm: str) -> str | None:
+    if "totals should" in label_norm or label_norm == "total":
+        return "total"
+    if "below 6" in label_norm:
+        return "below 6"
+    match = re.search(r"\b(\d{1,4})\s+(\d{1,4})\b", label_norm)
+    if match:
+        return f"{match.group(1)} {match.group(2)}"
+    return None
+
+
+def resolve_c9_score_distributions(
+    tables: list[dict], markdown: str, schema: SchemaIndex
+) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    previous_single_role: str | None = None
+
+    for table in tables:
+        headers_norm = [_normalize_label(h) for h in table.get("headers", [])]
+        roles: list[tuple[int, str]] = []
+        if headers_norm and "score range" in headers_norm[0]:
+            for ci, hdr in enumerate(headers_norm[1:]):
+                role = _c9_distribution_role(hdr)
+                if role:
+                    roles.append((ci, role))
+        elif previous_single_role:
+            # SAT Composite is sometimes split across a page break; the
+            # continuation table has no header, just remaining range rows.
+            roles.append((0, previous_single_role))
+
+        if not roles:
+            previous_single_role = None
+            continue
+
+        previous_single_role = roles[0][1] if len(roles) == 1 else None
+        matched_any = False
+        for row in table["rows"]:
+            range_key = _c9_range_key(_normalize_label(row["label"]))
+            if not range_key:
+                continue
+            for col_idx, role in roles:
+                qn = _C9_DISTRIBUTION_QNS.get(role, {}).get(range_key)
+                if not qn or col_idx >= len(row["values"]):
+                    continue
+                num = _extract_number(row["values"][col_idx])
+                if num is None:
+                    continue
+                out.setdefault(qn, {"value": num, "source": "tier4_cleaner"})
+                matched_any = True
+        if not matched_any:
+            previous_single_role = None
+
+    return out
+
+
+# --- Resolver: C12 GPA summary ---
+
+def resolve_c12_gpa_summary(
+    tables: list[dict], markdown: str, schema: SchemaIndex
+) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    start_match = re.search(
+        r"Average high school GPA of all degree-seeking",
+        markdown,
+        re.IGNORECASE,
+    )
+    if not start_match:
+        return out
+    start = max(0, start_match.start() - 100)
+    c12 = markdown[start:]
+    end_match = re.search(r"C13\b", c12, re.IGNORECASE)
+    if end_match:
+        c12 = c12[:end_match.start()]
+
+    if match := re.search(r"students who submitted GPA:\s*([0-4](?:\.\d{1,2})?)\b", c12, re.IGNORECASE):
+        out["C.1201"] = {"value": match.group(1), "source": "tier4_cleaner"}
+    elif match := re.search(r"\b([0-4]\.\d{1,2})\s*Average high school GPA", c12, re.IGNORECASE):
+        out["C.1201"] = {"value": match.group(1), "source": "tier4_cleaner"}
+
+    pct_anchor = re.search(
+        r"Percent of total first-time,\s*first-year students who submitted high",
+        c12,
+        re.IGNORECASE,
+    )
+    if pct_anchor:
+        window = c12[pct_anchor.end(): pct_anchor.end() + 250]
+        if match := re.search(r"\b(\d+(?:\.\d+)?)\s*%", window):
+            out["C.1202"] = {"value": match.group(1), "source": "tier4_cleaner"}
+
+    return out
+
+
+# --- Resolver: C13-C19 Admission Policies ---
+
+def resolve_c13_application_fee(
+    tables: list[dict], markdown: str, schema: SchemaIndex
+) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    c13 = _section_between(markdown, r"C13\s+Application Fee", r"C14\b")
+    if not c13:
+        c13 = ""
+    else:
+        value = _extract_yes_no_by_layout(
+            c13,
+            r"Does your institution have an application fee\?",
+        )
+        if value:
+            out["C.1301"] = {"value": value, "source": "tier4_cleaner"}
+
+    # C13 continues across the page break in Farmingdale. The first
+    # continuation row loses its Yes/No header in layout text; the visual x is
+    # in the left/Yes box. Keep this claim scoped to that exact continuation
+    # row.
+    if re.search(r"Can it be waived for applicants with financial need\?.{0,200}\bx\b", markdown, re.IGNORECASE | re.DOTALL):
+        out["C.1303"] = {"value": "Yes", "source": "tier4_cleaner"}
+
+    if re.search(r"(?:^|\n)\s*(?:-\s*\[\s*\]\s*)?x\s+Same fee\b", markdown, re.IGNORECASE):
+        out["C.1304"] = {"value": "X", "source": "tier4_cleaner"}
+
+    c1305 = _extract_yes_no_by_layout(
+        markdown,
+        r"Can on-line application fee be waived for applicants",
+    )
+    if c1305:
+        out["C.1305"] = {"value": c1305, "source": "tier4_cleaner"}
+
+    c1401 = _extract_yes_no_by_layout(
+        markdown,
+        r"Does your institution have an application closing date\?",
+    )
+    if c1401:
+        out["C.1401"] = {"value": c1401, "source": "tier4_cleaner"}
+    if match := re.search(r"Application closing date \(fall\)\s+(\d{1,2}/\d{1,2})", markdown, re.IGNORECASE):
+        month_day = _split_month_day(match.group(1))
+        if month_day:
+            out["C.1402"] = {"value": month_day[0], "source": "tier4_cleaner"}
+            out["C.1403"] = {"value": month_day[1], "source": "tier4_cleaner"}
+    if match := re.search(r"Priority Date\s+(\d{1,2}/\d{1,2})", markdown, re.IGNORECASE):
+        month_day = _split_month_day(match.group(1))
+        if month_day:
+            out["C.1404"] = {"value": month_day[0], "source": "tier4_cleaner"}
+            out["C.1405"] = {"value": month_day[1], "source": "tier4_cleaner"}
+
+    c15 = _section_between(markdown, r"C15\b", r"C16\b")
+    c1501 = _extract_yes_no_by_layout(
+        c15,
+        r"Are first-time,\s*first-year students accepted for terms other than",
+    )
+    if not c1501 and re.search(r"\bx\s*Are first-time,\s*first-year students accepted for terms other than", c15, re.IGNORECASE):
+        c1501 = "Yes"
+    if c1501:
+        out["C.1501"] = {"value": c1501, "source": "tier4_cleaner"}
+
+    c16 = _section_between(markdown, r"C16\b", r"C17\b")
+    if re.search(r"(?:^|\n)\s*(?:-\s*\[\s*\]\s*)?x\s+On a rolling basis beginning\b", c16, re.IGNORECASE):
+        out["C.1601"] = {"value": "X", "source": "tier4_cleaner"}
+        if match := re.search(r"On a rolling basis beginning\s+(\d{1,2}-[A-Za-z]{3,4}|[A-Za-z]{3,4}-\d{1,2})", c16, re.IGNORECASE):
+            month_day = _split_month_day(match.group(1))
+            if month_day:
+                out["C.1602"] = {"value": month_day[0], "source": "tier4_cleaner"}
+                out["C.1603"] = {"value": month_day[1], "source": "tier4_cleaner"}
+
+    c17 = _section_between(markdown, r"C17\b", r"C18\b")
+    if re.search(r"(?:^|\n)\s*(?:-\s*\[\s*\]\s*)?x\s+Must reply by May 1st or within\b", c17, re.IGNORECASE):
+        if match := re.search(r"Must reply by May 1st or within\s+(\d+)\s+weeks", c17, re.IGNORECASE | re.DOTALL):
+            out["C.1705"] = {"value": match.group(1), "source": "tier4_cleaner"}
+    if match := re.search(r"Deadline for housing deposit \(MMD\w*\s+(\d{1,2}-[A-Za-z]{3,4}|[A-Za-z]{3,4}-\d{1,2})", c17, re.IGNORECASE):
+        month_day = _split_month_day(match.group(1))
+        if month_day:
+            out["C.1709"] = {"value": month_day[0], "source": "tier4_cleaner"}
+            out["C.1710"] = {"value": month_day[1], "source": "tier4_cleaner"}
+    if match := re.search(
+        r"Amount of housing deposit:\s+(?:(?:\d{1,2}-[A-Za-z]{3,4}|[A-Za-z]{3,4}-\d{1,2})\s+)?(\d+)",
+        c17,
+        re.IGNORECASE,
+    ):
+        out["C.1711"] = {"value": match.group(1), "source": "tier4_cleaner"}
+    if re.search(r"(?:^|\n)\s*(?:-\s*\[\s*\]\s*)?x\s+Yes,\s*in full\b", c17, re.IGNORECASE):
+        out["C.1712"] = {"value": "X", "source": "tier4_cleaner"}
+
+    c18 = _section_between(markdown, r"C18\b", r"C19\b")
+    c1801 = _extract_yes_no_by_layout(
+        c18,
+        r"Does your institution allow students to postpone enrollment after",
+    )
+    if c1801:
+        out["C.1801"] = {"value": c1801, "source": "tier4_cleaner"}
+    if match := re.search(r"maximum period of postponement:\s+(.+?)\s*(?:\n|$)", c18, re.IGNORECASE):
+        text = match.group(1).strip()
+        if text:
+            out["C.1802"] = {"value": text, "source": "tier4_cleaner"}
+
+    c19 = _section_between(markdown, r"C19\b", r"C20\b")
+    c1901 = _extract_yes_no_by_layout(
+        c19,
+        r"one year or more before high school",
+    )
+    if c1901:
+        out["C.1901"] = {"value": c1901, "source": "tier4_cleaner"}
+
+    c2101 = _extract_yes_no_block_by_layout(
+        markdown,
+        r"(?:^|\n)\s*C21\s+Early Decision",
+        r"(?:^|\n)\s*C22\s+Early action",
+    )
+    if c2101:
+        out["C.2101"] = {"value": c2101, "source": "tier4_cleaner"}
+
+    c2201 = _extract_yes_no_block_by_layout(
+        markdown,
+        r"(?:^|\n)\s*C22\s+Early action",
+        r"Is your early action plan",
+    )
+    if c2201:
+        out["C.2201"] = {"value": c2201, "source": "tier4_cleaner"}
+
+    c2206 = _extract_yes_no_block_by_layout(
+        markdown,
+        r"Is your early action plan",
+        r"(?:D\.\s*TRANSFER ADMISSION|CDS-C|$)",
+    )
+    if c2206:
+        out["C.2206"] = {"value": c2206, "source": "tier4_cleaner"}
 
     return out
 
@@ -1587,6 +3036,50 @@ def _i3_size_to_offset(size_label_norm: str) -> int | None:
     return None
 
 
+def _extract_i2_ratio_fields(text: str) -> dict[str, dict]:
+    """Extract I-2 ratio, student count, and faculty count from a compact
+    ratio row/block. The CDS prose has several Fall-year numbers nearby, so
+    prefer values adjacent to the actual ratio row and the "based on" phrase.
+    """
+    out: dict[str, dict] = {}
+    flat = " ".join(text.replace("|", " ").split())
+
+    ratio_patterns = [
+        r"(?i)student\s+to\s+faculty\s+ratio\s*:?\s*(\d{1,3}(?:\.\d+)?)\s*(?:to|:)\s*1\b",
+        r"(?i)student\s+to\s+faculty\s+ratio\s*:?\s*(\d{1,3}(?:\.\d+)?)\s*to\b",
+        r"(?i)^\s*(\d{1,3}(?:\.\d+)?)\s*(?:to|:)\s*1\b",
+        r"(?i)^\s*(\d{1,3}(?:\.\d+)?)\s*to\b",
+    ]
+    for pattern in ratio_patterns:
+        ratio_m = re.search(pattern, flat)
+        if ratio_m:
+            out["I.201"] = {
+                "value": _extract_number(ratio_m.group(1)),
+                "source": "tier4_cleaner",
+            }
+            break
+
+    student_m = re.search(
+        r"(?i)\bbased\s+on\s+(\d[\d,]*)\s+students?\b", flat
+    )
+    if not student_m:
+        student_m = re.search(r"(?i)\b(\d[\d,]*)\s+students?\b", flat)
+    if student_m:
+        value = _extract_number(student_m.group(1))
+        if value is not None:
+            out["I.202"] = {"value": value, "source": "tier4_cleaner"}
+
+    faculty_m = re.search(r"(?i)\band\s+(\d[\d,]*)\s+faculty\b", flat)
+    if not faculty_m:
+        faculty_m = re.search(r"(?i)\b(\d[\d,]*)\s+faculty\b", flat)
+    if faculty_m:
+        value = _extract_number(faculty_m.group(1))
+        if value is not None:
+            out["I.203"] = {"value": value, "source": "tier4_cleaner"}
+
+    return out
+
+
 def resolve_i_faculty(
     tables: list[dict], markdown: str, schema: SchemaIndex
 ) -> dict[str, dict]:
@@ -1640,39 +3133,61 @@ def resolve_i_faculty(
                 if qn not in out:
                     out[qn] = {"value": num, "source": "tier4_cleaner"}
 
-    # --- I2 ratio (inline) ---
-    # Pattern: "ratio ... X to Y" plus "(based on N students and M faculty)".
-    m = re.search(r"(?i)student[- ]to[- ]faculty ratio", markdown)
-    if m:
-        window = markdown[m.start(): m.start() + 600]
-        # Ratio itself — often "8:1" or "X to Y". Prefer "N:1" form.
-        ratio_m = re.search(r"\b(\d{1,3})\s*:\s*(\d{1,3})\b", window)
-        if not ratio_m:
-            # "X to 1" or "X  to Y" — two separate numbers with 'to' between
-            ratio_m = re.search(r"\b(\d{1,3})\s*to\s*(\d{1,3})\b", window,
-                                 re.IGNORECASE)
-        if ratio_m and "I.201" not in out:
-            out["I.201"] = {"value": f"{ratio_m.group(1)}:{ratio_m.group(2)}",
-                            "source": "tier4_cleaner"}
-        # Student count and faculty count
-        s_m = re.search(r"(\d[\d,]*)\s*students?", window, re.IGNORECASE)
-        f_m = re.search(r"(\d[\d,]*)\s*faculty", window, re.IGNORECASE)
-        if s_m and "I.202" not in out:
-            n = _extract_number(s_m.group(1))
-            if n:
-                out["I.202"] = {"value": n, "source": "tier4_cleaner"}
-        if f_m and "I.203" not in out:
-            n = _extract_number(f_m.group(1))
-            if n:
-                out["I.203"] = {"value": n, "source": "tier4_cleaner"}
+    # --- I2 ratio ---
+    # Prefer Docling table rows when present. In many 2024+ PDFs the row is
+    # split across two markdown rows; join the adjacent row before parsing.
+    for table in tables:
+        rows = table.get("rows", [])
+        for i, row in enumerate(rows):
+            row_text = " ".join([row["label"], *row["values"]])
+            if not re.search(r"(?i)student\s+to\s+faculty\s+ratio", row_text):
+                continue
+            next_text = ""
+            if i + 1 < len(rows):
+                next_row = rows[i + 1]
+                next_text = " ".join([next_row["label"], *next_row["values"]])
+            fields = _extract_i2_ratio_fields(f"{row_text} {next_text}")
+            for qn, rec in fields.items():
+                out.setdefault(qn, rec)
+
+    # Layout/plain-text fallback. Scan each actual ratio occurrence rather
+    # than the section heading, which avoids treating the Fall year as I.202.
+    for m in re.finditer(r"(?i)student\s+to\s+faculty\s+ratio", markdown):
+        window = markdown[m.start(): m.start() + 400]
+        fields = _extract_i2_ratio_fields(window)
+        if "I.201" not in fields and not re.search(r"(?i)\bbased\s+on\b", window):
+            continue
+        for qn, rec in fields.items():
+            out.setdefault(qn, rec)
 
     # --- I3 class size ---
     for table in tables:
         # Detect I3 by CLASS SECTIONS / CLASS SUB SECTIONS rows
-        rows_norm = [_normalize_label(r["label"]) for r in table["rows"]]
-        is_i3 = any("class section" in n or "class sub" in n for n in rows_norm)
+        row_text_norm = [
+            _normalize_label(" ".join([r["label"], *r["values"]]))
+            for r in table["rows"]
+        ]
+        is_i3 = any("class section" in n or "class sub" in n for n in row_text_norm)
         if not is_i3:
             continue
+
+        # Docling often shifts the I3 row label to the last value cell:
+        # | 53 | 323 | ... | 1331 | CLASS SECTIONS |
+        for row in table["rows"]:
+            joined_norm = _normalize_label(" ".join([row["label"], *row["values"]]))
+            if "class sub" in joined_norm:
+                base = 309
+            elif "class section" in joined_norm:
+                base = 301
+            else:
+                continue
+            cells = [row["label"], *row["values"]]
+            for size_idx, cell in enumerate(cells[:len(_I3_SIZE_RANGES)]):
+                num = _extract_number(cell)
+                if num is None:
+                    continue
+                qn = f"I.{base + size_idx}"
+                out.setdefault(qn, {"value": num, "source": "tier4_cleaner"})
 
         # Determine column → size index. Prefer the header row; fall back to
         # the first row whose values are the size labels themselves.
@@ -1728,7 +3243,8 @@ def resolve_i_faculty(
 #      rows (Books and supplies, Transportation, Other expenses) by
 #      positional matching against the schema's G.501-G.513 layout.
 #
-# Per-Credit-Hour, Tuition Policies (YesNo), and G0 URL are deferred.
+# G0/G2-G6 are layout-backed because Docling markdown tends to separate
+# headers, checked states, and values across unrelated paragraphs.
 
 # Row substring → (FY qn, UG qn) for G1 tuition+fees tables. Each row has
 # at most one matching pair; the resolver writes the value for each column
@@ -1744,9 +3260,9 @@ _G1_ROWS: list[tuple[str, str, str]] = [
     ("tuition nonresident",              "G.106", "G.110"),
     ("tuition",                          "G.101", "G.102"),
     ("required fees",                    "G.111", "G.115"),
-    ("food and housing on campus",       "G.112", "G.116"),
     ("housing only on campus",           "G.113", "G.117"),
     ("food only on campus",              "G.114", "G.118"),
+    ("food and housing on campus",       "G.112", "G.116"),
     ("comprehensive tuition and food",   "G.119", "G.119"),  # single-col
 ]
 
@@ -1771,6 +3287,124 @@ def resolve_g_expenses(
     tables: list[dict], markdown: str, schema: SchemaIndex
 ) -> dict[str, dict]:
     out: dict[str, dict] = {}
+
+    g_block = _section_between(
+        markdown,
+        r"(?:G\.\s*ANNUAL EXPENSES|G0\b)",
+        r"(?:H\.\s*FINANCIAL AID|CDS-H|$)",
+    )
+    if g_block:
+        if match := re.search(
+            r"G0\b.*?net price calculator:\s*((?:https?://)?\S+\.\S+)",
+            g_block,
+            re.IGNORECASE | re.DOTALL,
+        ):
+            out["G.001"] = {"value": match.group(1), "source": "tier4_cleaner"}
+
+        g1 = _section_between(g_block, r"G1\b", r"G2\b")
+        g1_line_rules = [
+            (r"^\s*Tuition:\s+\$?(\d[\d,]*)\s+\$?(\d[\d,]*)", ("G.101", "G.102")),
+            (r"^\s*Required Fees:\s+\$?(\d[\d,]*)\s+\$?(\d[\d,]*)", ("G.111", "G.115")),
+            (r"^\s*Food and housing \(on-campus\):\s+\$?(\d[\d,]*)\s+\$?(\d[\d,]*)", ("G.112", "G.116")),
+            (r"^\s*Housing Only \(on-campus\):\s+\$?(\d[\d,]*)\s+\$?(\d[\d,]*)", ("G.113", "G.117")),
+            (r"^\s*Food Only \(on-campus meal plan\):\s+\$?(\d[\d,]*)\s+\$?(\d[\d,]*)", ("G.114", "G.118")),
+        ]
+        for line in g1.splitlines():
+            for pattern, qns in g1_line_rules:
+                line_match = re.search(pattern, line, re.IGNORECASE)
+                if not line_match:
+                    continue
+                for qn, amount in zip(qns, line_match.groups()):
+                    out[qn] = {
+                        "value": amount.replace(",", ""),
+                        "source": "tier4_cleaner",
+                    }
+                break
+
+        if re.search(
+            r"(?:^|\n)\s*(?:-\s*)?x\s+Check here if your institution",
+            g_block,
+            re.IGNORECASE,
+        ):
+            out["G.002"] = {"value": "X", "source": "tier4_cleaner"}
+            if match := re.search(
+                r"costs of attendance will be available:\s*(\d{1,2}/\d{1,2}/\d{4})",
+                g_block,
+                re.IGNORECASE | re.DOTALL,
+            ):
+                out["G.003"] = {"value": match.group(1), "source": "tier4_cleaner"}
+
+        if match := re.search(
+            r"G2\b.*?full-time tuition\.\s*(\d+(?:\.\d+)?)",
+            g_block,
+            re.IGNORECASE | re.DOTALL,
+        ):
+            out["G.201"] = {"value": match.group(1), "source": "tier4_cleaner"}
+        else:
+            g2 = _section_between(g_block, r"G2\b", r"G3\b")
+            if match := re.search(
+                r"(\d+(?:\.\d+)?)\s*Number of credits per term",
+                g2,
+                re.IGNORECASE | re.DOTALL,
+            ):
+                out["G.201"] = {"value": match.group(1), "source": "tier4_cleaner"}
+            elif match := re.search(
+                r"Number of credits per term.*?stated\s*(\d+(?:\.\d+)?)\s*full-time tuition",
+                g2,
+                re.IGNORECASE | re.DOTALL,
+            ):
+                out["G.201"] = {"value": match.group(1), "source": "tier4_cleaner"}
+
+        g3 = _section_between(g_block, r"G3\b", r"G4\b")
+        if value := _extract_wrapped_yes_no_by_layout(g_block, r"G3\b", r"G4\b"):
+            out["G.301"] = {"value": value, "source": "tier4_cleaner"}
+        elif re.search(r"\bNo\b\s*\n?\s*x\b", g3, re.IGNORECASE):
+            out["G.301"] = {"value": "No", "source": "tier4_cleaner"}
+
+        g4 = _section_between(g_block, r"G4\b", r"G5\b")
+        if value := _extract_wrapped_yes_no_by_layout(g_block, r"G4\b", r"G5\b"):
+            out["G.401"] = {"value": value, "source": "tier4_cleaner"}
+        elif re.search(r"\bYes\b\s*\n?\s*x\b", g4, re.IGNORECASE) or re.search(
+            r"G4\b.*?\n\s*x\s*\n\s*program", g4, re.IGNORECASE | re.DOTALL
+        ):
+            out["G.401"] = {"value": "Yes", "source": "tier4_cleaner"}
+        if match := re.search(
+            r"reported in G1\?\s*(\d+(?:\.\d+)?)%",
+            g4,
+            re.IGNORECASE | re.DOTALL,
+        ):
+            out["G.401"] = {"value": "Yes", "source": "tier4_cleaner"}
+            out["G.402"] = {"value": match.group(1), "source": "tier4_cleaner"}
+
+        g5 = _section_between(g_block, r"G5\b", r"G6\b")
+        g5_rows = [
+            (r"Books and supplies:", ("G.501", "G.504", "G.508")),
+            (r"Transportation:", ("G.502", "G.506", "G.512")),
+            (r"Other expenses:", ("G.503", "G.507", "G.513")),
+        ]
+        for row_re, qns in g5_rows:
+            if match := re.search(row_re + r"\s*([^\n]+)", g5, re.IGNORECASE):
+                amounts = re.findall(r"\$?(\d[\d,]*(?:\.\d+)?)", match.group(1))
+                for qn, amount in zip(qns, amounts):
+                    out[qn] = {"value": amount.replace(",", ""), "source": "tier4_cleaner"}
+        if match := re.search(r"Food and housing total\*([^\n]*)", g5, re.IGNORECASE):
+            amounts = re.findall(r"\$?(\d[\d,]*(?:\.\d+)?)", match.group(1))
+            if amounts:
+                out["G.511"] = {
+                    "value": amounts[-1].replace(",", ""),
+                    "source": "tier4_cleaner",
+                }
+
+        g6 = _section_between(g_block, r"G6\b", r"(?:H\.\s*FINANCIAL AID|$)")
+        g6_rows = [
+            (r"In-district:", "G.602"),
+            (r"In-state \(out-of-district\):", "G.603"),
+            (r"Out-of-state:", "G.604"),
+            (r"NONRESIDENTS:", "G.605"),
+        ]
+        for row_re, qn in g6_rows:
+            if match := re.search(row_re + r"\s*\$?(\d[\d,]*(?:\.\d+)?)", g6, re.IGNORECASE):
+                out[qn] = {"value": match.group(1).replace(",", ""), "source": "tier4_cleaner"}
 
     for table in tables:
         hdr_norm = [_normalize_label(h) for h in table.get("headers", [])]
@@ -1845,18 +3479,18 @@ _H2A_LETTER_OFFSETS = {letter: idx for idx, letter in enumerate("NOPQ")}
 # H2: header-fragment → base question number for the 3 cohort columns.
 _H2_COL_BASES = [
     # (header fragment normalized, base offset for A→base+1)
+    ("less than full time",             226),  # H.227..H.239
     ("first time full time first year", 200),  # H.201..H.213
     ("first time first year",           200),  # shorter templates
     ("full time undergrad",             213),  # H.214..H.226
-    ("less than full time",             226),  # H.227..H.239
 ]
 
 # H2A: base offsets for N (offset 1) within each cohort column.
 _H2A_COL_BASES = [
+    ("less than full time",             "H.2A",  8),   # H.2A09-H.2A12
     ("first time full time first year", "H.2A",  0),   # H.2A01-H.2A04
     ("first time first year",           "H.2A",  0),
     ("full time undergrad",             "H.2A",  4),   # H.2A05-H.2A08
-    ("less than full time",             "H.2A",  8),   # H.2A09-H.2A12
 ]
 
 # H1: row substring → (need-based qn, non-need-based qn).
@@ -1872,8 +3506,8 @@ _H1_ROWS: list[tuple[str, str, str]] = [
     ("total scholarships",                                    "H.109", "H.121"),
     ("total self help",                                       "H.113", "H.124"),
     # Work-study and detail rows (more specific than "federal")
-    ("federal work study",                                    "H.111", ""),
     ("state and other",                                       "H.112", "H.123"),
+    ("federal work study",                                    "H.111", ""),
     ("student loans from all sources",                        "H.110", "H.122"),
     # Institutional/External scholarship rows (must beat "tuition waivers")
     ("institutional endowed scholarships",                    "H.107", "H.119"),
@@ -1889,10 +3523,300 @@ _H1_ROWS: list[tuple[str, str, str]] = [
 ]
 
 
+def _h_checked_option(block: str, label_re: str) -> bool:
+    return bool(
+        re.search(
+            rf"(?:^|\n)\s*(?:-\s*\[[xX]\]\s*)?[xX]\s+{label_re}",
+            block,
+            re.IGNORECASE,
+        )
+    )
+
+
+def _h_spaced_numbers(text: str) -> list[str]:
+    """Extract right-aligned H-table values without claiming prose years."""
+    values = re.findall(r"(?:^|\s{2,})(\$?\s*\d[\d,]*(?:\.\d+)?%?)", text)
+    out: list[str] = []
+    for value in values:
+        num = _extract_number(value)
+        if num is not None:
+            out.append(num)
+    return out
+
+
+def _h_row_window(block: str, letter: str) -> str:
+    lines = block.splitlines()
+    start = None
+    for idx, line in enumerate(lines):
+        if re.match(rf"\s*{letter}(?:\s+|$)", line):
+            start = idx
+            break
+    if start is None:
+        return ""
+    end = len(lines)
+    for idx in range(start + 1, len(lines)):
+        if re.match(r"\s*[A-Z](?:\s+|$)", lines[idx]) and lines[idx].strip()[0] in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+            end = idx
+            break
+    return "\n".join(lines[start:end])
+
+
+def _h_layout_h1_rows(block: str) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    row_defs = [
+        ("Total Scholarships/Grants", "H.109", "H.121"),
+        ("Federal Work-Study", "H.111", ""),
+        ("State and other", "H.112", "H.123"),
+        ("Student loans from all sources", "H.110", "H.122"),
+        ("State all states", "H.106", "H.118"),
+        ("Scholarships/grants from external", "H.108", "H.120"),
+        ("Total Self-Help", "H.113", "H.124"),
+        ("Institutional:", "H.107", "H.119"),
+        ("Parent Loans", "H.114", "H.125"),
+        ("Tuition Waivers", "H.115", "H.126"),
+        ("Athletic Awards", "H.116", "H.127"),
+        ("Federal", "H.105", "H.117"),
+    ]
+    lines = block.splitlines()
+    for idx, line in enumerate(lines):
+        line_norm = _normalize_label(line)
+        for label, need_qn, non_need_qn in row_defs:
+            if _normalize_label(label) not in line_norm:
+                continue
+            window = "\n".join(lines[idx: idx + 6])
+            amounts = [
+                amount.replace(",", "")
+                for amount in re.findall(r"\$\s*(\d[\d,]*(?:\.\d+)?)", window)
+            ]
+            if not amounts:
+                continue
+            if need_qn:
+                out.setdefault(need_qn, {"value": amounts[0], "source": "tier4_cleaner"})
+            if non_need_qn and len(amounts) > 1:
+                out.setdefault(non_need_qn, {"value": amounts[1], "source": "tier4_cleaner"})
+            break
+    return out
+
+
+def _h_layout_h2_rows(block: str) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    h2 = _section_between(block, r"H2\s+Number of Enrolled Students Awarded Aid", r"H2A\b")
+    if not h2:
+        return out
+    for letter, offset in _H2_LETTER_OFFSETS.items():
+        window = _h_row_window(h2, letter)
+        nums = _h_spaced_numbers(window)
+        if len(nums) >= 3:
+            column_values = nums[-3:]
+            bases = (200, 213, 226)
+        elif len(nums) == 2:
+            column_values = nums[-2:]
+            bases = (200, 213)
+        else:
+            continue
+        for value, base in zip(column_values, bases):
+            out[f"H.{base + offset + 1}"] = {"value": value, "source": "tier4_cleaner"}
+    return out
+
+
 def resolve_h_financial_aid(
     tables: list[dict], markdown: str, schema: SchemaIndex
 ) -> dict[str, dict]:
     out: dict[str, dict] = {}
+
+    h_block = _section_between(markdown, r"(?:H\.\s*FINANCIAL AID|H1\b)", r"(?:I\.\s*INSTRUCTIONAL FACULTY|CDS-I|$)")
+    if h_block:
+        if re.search(r"\bEstimated\b", h_block, re.IGNORECASE):
+            if match := re.search(r"\b(\d{4}-\d{4})\s+estimated\b", h_block, re.IGNORECASE):
+                out["H.101"] = {"value": f"{match.group(1)} estimated", "source": "tier4_cleaner"}
+        if re.search(r"(?:^|\n)\s*(?:-\s*\[[xX]\]\s*)?x\s+Federal methodology \(FM\)", h_block, re.IGNORECASE):
+            out["H.102"] = {"value": "X", "source": "tier4_cleaner"}
+
+        h5 = _section_between(h_block, r"H5\b", r"(?:Aid to Undergraduate|H6\b|$)")
+        h5_rows = {
+            "A": ("H.501", "H.506", "H.511"),
+            "B": ("H.502", "H.507", "H.512"),
+            "C": ("H.503", "H.508", "H.513"),
+            "D": ("H.504", "H.509", "H.514"),
+            "E": ("H.505", "H.510", "H.515"),
+        }
+        for letter, qns in h5_rows.items():
+            window = _h_row_window(h5, letter)
+            values = _h_spaced_numbers(window)
+            if len(values) >= 3:
+                count_qn, percent_qn, average_qn = qns
+                count, percent, average = values[-3:]
+                out[count_qn] = {"value": count, "source": "tier4_cleaner"}
+                out[percent_qn] = {"value": percent, "source": "tier4_cleaner"}
+                out[average_qn] = {"value": average, "source": "tier4_cleaner"}
+
+        h6 = _section_between(h_block, r"(?:^|\n)\s*H6\s+Indicate", r"(?:H7\b|CDS-H|$)")
+        if re.search(r"(?:^|\n)\s*(?:-\s*\[\s*\]\s*)?x\s+Institutional need-based scholarship", h6, re.IGNORECASE):
+            out["H.601"] = {"value": "X", "source": "tier4_cleaner"}
+        if re.search(r"(?:^|\n)\s*(?:-\s*\[\s*\]\s*)?x\s+Institutional non-need-based scholarship", h6, re.IGNORECASE):
+            out["H.602"] = {"value": "X", "source": "tier4_cleaner"}
+        if match := re.search(
+            r"non-need-based aid:\s*(\d[\d,]*)",
+            h6,
+            re.IGNORECASE | re.DOTALL,
+        ):
+            out["H.604"] = {"value": match.group(1).replace(",", ""), "source": "tier4_cleaner"}
+        if match := re.search(
+            r"Average dollar amount.*?nonresidents:\s*\$?\s*([\d,]+)",
+            h6,
+            re.IGNORECASE | re.DOTALL,
+        ):
+            out["H.605"] = {"value": match.group(1).replace(",", ""), "source": "tier4_cleaner"}
+        if match := re.search(
+            r"Total dollar amount of institutional financial aid awarded to undergraduate degree-?\s*seeking\s+nonresidents:\s*\$?\s*([\d,]+)",
+            h_block,
+            re.IGNORECASE | re.DOTALL,
+        ):
+            out["H.606"] = {"value": match.group(1).replace(",", ""), "source": "tier4_cleaner"}
+
+        h7 = _section_between(h_block, r"H7\b", r"(?:Process for First-Year Students|H8\b|$)")
+        for label, qn in [
+            (r"Institution['’]s own financial aid form", "H.701"),
+            (r"CSS/Financial Aid PROFILE", "H.702"),
+        ]:
+            if _h_checked_option(h7, label):
+                out[qn] = {"value": "X", "source": "tier4_cleaner"}
+        if _h_checked_option(h7, r"Other \(specify\):"):
+            out["H.703"] = {"value": "X", "source": "tier4_cleaner"}
+            if match := re.search(r"Other \(specify\):\s*(.+)", h7, re.IGNORECASE | re.DOTALL):
+                text = re.sub(r"\s+", " ", match.group(1)).strip()
+                text = re.sub(r"content-\s+assets", "content-assets", text)
+                if text:
+                    out["H.704"] = {"value": text, "source": "tier4_cleaner"}
+
+        h8 = _section_between(h_block, r"H8\b", r"H9\b")
+        for label, qn in [
+            (r"FAFSA\b", "H.801"),
+            (r"Institution['’]s own financial aid form", "H.802"),
+            (r"CSS PROFILE", "H.803"),
+            (r"State aid form", "H.804"),
+            (r"Noncustodial PROFILE", "H.805"),
+            (r"Business/Farm Supplement", "H.806"),
+            (r"Other \(specify\):", "H.807"),
+        ]:
+            if _h_checked_option(h8, label):
+                out[qn] = {"value": "X", "source": "tier4_cleaner"}
+
+        h9 = _section_between(h_block, r"H9\b", r"H10\b")
+        if match := re.search(
+            r"Priority date for filing required financial aid forms:\s*([0-9]{1,2}-[A-Za-z]{3,4}|[A-Za-z]{3,4}-[0-9]{1,2}|\d{1,2}/\d{1,2})",
+            h9,
+            re.IGNORECASE,
+        ):
+            month_day = _split_month_day(match.group(1))
+            if month_day:
+                out["H.901"] = {"value": "X", "source": "tier4_cleaner"}
+                out["H.902"] = {"value": month_day[0], "source": "tier4_cleaner"}
+                out["H.903"] = {"value": month_day[1], "source": "tier4_cleaner"}
+        if match := re.search(
+            r"Deadline for filing required financial aid forms:\s*([0-9]{1,2}-[A-Za-z]{3,4}|[A-Za-z]{3,4}-[0-9]{1,2}|\d{1,2}/\d{1,2})",
+            h9,
+            re.IGNORECASE,
+        ):
+            month_day = _split_month_day(match.group(1))
+            if month_day:
+                out["H.904"] = {"value": "X", "source": "tier4_cleaner"}
+                out["H.905"] = {"value": month_day[0], "source": "tier4_cleaner"}
+                out["H.906"] = {"value": month_day[1], "source": "tier4_cleaner"}
+
+        h10 = _section_between(h_block, r"H10\b", r"H11\b")
+        if re.search(r"(?:^|\n)\s*(?:-\s*\[\s*\]\s*)?x\s+Yes\b", h10, re.IGNORECASE):
+            out["H.1004"] = {"value": "X", "source": "tier4_cleaner"}
+        if match := re.search(
+            r"If yes, starting date:\s*([0-9]{1,2}-[A-Za-z]{3,4}|[A-Za-z]{3,4}-[0-9]{1,2}|\d{1,2}/\d{1,2})",
+            h10,
+            re.IGNORECASE,
+        ):
+            month_day = _split_month_day(match.group(1))
+            if month_day:
+                out["H.1005"] = {"value": month_day[0], "source": "tier4_cleaner"}
+                out["H.1006"] = {"value": month_day[1], "source": "tier4_cleaner"}
+
+        h11 = _section_between(h_block, r"H11\b", r"(?:Types of Aid Available|H12\b|$)")
+        if match := re.search(
+            r"Students must reply by \(date\):\s*([0-9]{1,2}-[A-Za-z]{3,4}|[A-Za-z]{3,4}-[0-9]{1,2}|\d{1,2}/\d{1,2})",
+            h11,
+            re.IGNORECASE,
+        ):
+            month_day = _split_month_day(match.group(1))
+            if month_day:
+                out["H.1101"] = {"value": month_day[0], "source": "tier4_cleaner"}
+                out["H.1102"] = {"value": month_day[1], "source": "tier4_cleaner"}
+
+        h12 = _section_between(h_block, r"H12\b", r"H13\b")
+        for label, qn in [
+            (r"Federal Direct Subsidized Loans", "H.1201"),
+            (r"Federal Direct Unsubsidized Loans", "H.1202"),
+            (r"Federal Direct PLUS Loans", "H.1203"),
+            (r"Federal Nursing Loans", "H.1204"),
+            (r"State Loans", "H.1205"),
+            (r"College/university loans from institutional funds", "H.1206"),
+        ]:
+            if _h_checked_option(h12, label):
+                out[qn] = {"value": "X", "source": "tier4_cleaner"}
+
+        h13 = _section_between(h_block, r"H13\b", r"(?:CDS-H|H14\b|$)")
+        for label, qn in [
+            (r"Federal Pell", "H.1301"),
+            (r"Federal SEOG", "H.1302"),
+            (r"State scholarships/grants", "H.1303"),
+            (r"Private scholarships", "H.1304"),
+        ]:
+            if re.search(r"(?:^|\n)\s*(?:-\s*\[\s*\]\s*)?x\s+" + label, h13, re.IGNORECASE):
+                out[qn] = {"value": "X", "source": "tier4_cleaner"}
+        if re.search(
+            r"(?:^|\n)\s*(?:-\s*\[\s*\]\s*)?x\s+College/university scholarship or grant aid from institutional funds",
+            h_block,
+            re.IGNORECASE,
+        ):
+            out["H.1305"] = {"value": "X", "source": "tier4_cleaner"}
+
+        h14 = _section_between(h_block, r"H14\b", r"H15\b")
+        h14_rows = [
+            (r"Academics", "H.1401", "H.1411"),
+            (r"Alumni affiliation", "H.1402", "H.1412"),
+            (r"Art", "H.1403", "H.1413"),
+            (r"Athletics", "H.1404", "H.1414"),
+            (r"Job skills", "H.1405", "H.1415"),
+            (r"Leadership", "H.1407", "H.1416"),
+            (r"Music/drama", "H.1408", "H.1417"),
+            (r"State/district residency", "H.1410", "H.1419"),
+        ]
+        for label, non_need_qn, need_qn in h14_rows:
+            if match := re.search(label + r"\s+x\s+x", h14, re.IGNORECASE):
+                out[non_need_qn] = {"value": "X", "source": "tier4_cleaner"}
+                out[need_qn] = {"value": "X", "source": "tier4_cleaner"}
+            elif re.search(label + r"\s+x\s*(?:\n|$)", h14, re.IGNORECASE):
+                out[non_need_qn] = {"value": "X", "source": "tier4_cleaner"}
+
+        if match := re.search(
+            r"H15\b.*?please\s+provide\s+details\s+below:\s*(.+?)\s*(?:CDS-H|I\.\s*INSTRUCTIONAL FACULTY|$)",
+            h_block,
+            re.IGNORECASE | re.DOTALL,
+        ):
+            text = re.sub(r"\s+", " ", match.group(1)).strip()
+            text = text.replace("on- campus", "on-campus")
+            text = re.sub(r"\bW e\b", "We", text)
+            text = re.split(r"\s+(?:-\s+\[|Students must reply by|H1[234]\b|##\s+)", text, maxsplit=1)[0].strip()
+            if (
+                re.fullmatch(r"Common Data Set\s+20\d{2}-\s*20\d{2}", text, re.IGNORECASE)
+                or "Non-Need Based" in text
+                or "| |" in text
+            ):
+                text = ""
+            if text:
+                out["H.1501"] = {"value": text, "source": "tier4_cleaner"}
+
+        h1_layout = _section_between(h_block, r"Aid Awarded", r"H2\b")
+        for qn, rec in _h_layout_h1_rows(h1_layout).items():
+            out.setdefault(qn, rec)
+        for qn, rec in _h_layout_h2_rows(h_block).items():
+            out.setdefault(qn, rec)
 
     # --- H1 Aid Awarded (need-based / non-need-based grid) ---
     for table in tables:
@@ -1945,7 +3869,16 @@ def resolve_h_financial_aid(
             ("first time" in hdr_str and "full time" in hdr_str)
             or ("undergrad" in hdr_str and "less than" in hdr_str)
         )
-        if not is_h2_like:
+        rows = table["rows"]
+        h2_continuation_rows = {
+            r["label"].strip()
+            for r in rows
+            if r["label"].strip() in {"I", "J", "K", "L", "M"}
+        }
+        is_h2_continuation = bool(h2_continuation_rows) and not any(
+            r["label"].strip() in set("ABCDEFGH") for r in rows
+        )
+        if not is_h2_like and not is_h2_continuation:
             continue
 
         # Map each value column index → (grid_kind, base_offset)
@@ -1967,7 +3900,6 @@ def resolve_h_financial_aid(
         # Determine which grid this table is: if any row label is a letter
         # in A-M treat as H2; if N-Q treat as H2A. Some tables mix both
         # (tables occasionally concatenate rows).
-        rows = table["rows"]
         has_h2_rows = any(r["label"].strip() in _H2_LETTER_OFFSETS for r in rows)
         has_h2a_rows = any(r["label"].strip() in _H2A_LETTER_OFFSETS for r in rows)
 
@@ -1975,7 +3907,18 @@ def resolve_h_financial_aid(
             letter = row["label"].strip()
             values = row["values"]
 
-            if letter in _H2_LETTER_OFFSETS and has_h2_rows:
+            if letter in _H2_LETTER_OFFSETS and is_h2_continuation:
+                ofs = _H2_LETTER_OFFSETS[letter] + 1
+                # Docling emits the I-M continuation table with blank
+                # headers and the prose label as the first value cell.
+                for raw, base in zip(values[1:4], (200, 213, 226)):
+                    num = _extract_number(raw)
+                    if num is None:
+                        continue
+                    qn = f"H.{base + ofs}"
+                    if qn not in out:
+                        out[qn] = {"value": num, "source": "tier4_cleaner"}
+            elif letter in _H2_LETTER_OFFSETS and has_h2_rows:
                 ofs = _H2_LETTER_OFFSETS[letter] + 1  # A=1, B=2, …, M=13
                 for col_idx, base in col_to_h2_base:
                     if col_idx >= len(values):
@@ -2042,10 +3985,267 @@ _D2_COL_GENDERS = [
 ]
 
 
+def _extract_number_unit(text: str) -> tuple[str, str] | None:
+    match = re.search(
+        r"\b(\d+(?:\.\d+)?)\s+(credit|credits|course|courses)(?=\s|[A-Z]|$)",
+        text,
+        re.IGNORECASE,
+    )
+    if not match:
+        return None
+    unit = match.group(2).lower()
+    if unit.endswith("s"):
+        unit = unit[:-1]
+    return match.group(1), unit
+
+
 def resolve_d_transfer(
     tables: list[dict], markdown: str, schema: SchemaIndex
 ) -> dict[str, dict]:
     out: dict[str, dict] = {}
+
+    d_full = _section_between(
+        markdown,
+        r"TRANSFER\s+ADMISSION",
+        r"(?:E\.\s*ACADEMIC\s+OFFERINGS|CDS-E|$)",
+    )
+    d_block = _section_between(markdown, r"TRANSFER\s+ADMISSION", r"D10\b")
+    if d_block:
+        if (
+            re.search(r"\bxDoes your institution enroll transfer students", d_block, re.IGNORECASE)
+            or re.search(r"Does your institution enroll transfer\s+students\?.{0,80}[✔xX]\s*Yes", d_block, re.IGNORECASE | re.DOTALL)
+        ):
+            out["D.101"] = {"value": "Yes", "source": "tier4_cleaner"}
+        if re.search(r"advanced standing credit by transferring credits earned from course work.{0,160}[✔xX]\s*Yes", d_block, re.IGNORECASE | re.DOTALL):
+            out["D.102"] = {"value": "Yes", "source": "tier4_cleaner"}
+        d102 = _extract_yes_no_by_layout(
+            d_block,
+            r"credit by transferring credits earned from course work",
+        )
+        if d102:
+            out["D.102"] = {"value": d102, "source": "tier4_cleaner"}
+
+        d2_rows = [
+            (r"\bM\s*en\b", ("D.201", "D.205", "D.209")),
+            (r"\bW\s*omen\b", ("D.202", "D.206", "D.210")),
+            (r"\bAnother\s+Gender\b", ("D.203", "D.207", "D.211")),
+            (r"\bTotal\b", ("D.204", "D.208", "D.212")),
+        ]
+        d2_section = _section_between(d_block, r"D2\b", r"D3-D11\b")
+        for row_re, qns in d2_rows:
+            match = re.search(
+                row_re + r"\s+(\d[\d,]*)\s+(\d[\d,]*)\s+(\d[\d,]*)",
+                d2_section,
+                re.IGNORECASE,
+            )
+            if match:
+                for qn, raw in zip(qns, match.groups()):
+                    out[qn] = {"value": raw.replace(",", ""), "source": "tier4_cleaner"}
+
+        if re.search(r"(?:^|\n)\s*[✔xX]\s+Fall\b", d_block, re.IGNORECASE):
+            out["D.301"] = {"value": "X", "source": "tier4_cleaner"}
+        if re.search(r"(?:^|\n)\s*[✔xX]\s+Winter\b", d_block, re.IGNORECASE):
+            out["D.302"] = {"value": "X", "source": "tier4_cleaner"}
+        if re.search(r"(?:^|\n)\s*[✔xX]\s+Spring\b", d_block, re.IGNORECASE):
+            out["D.303"] = {"value": "X", "source": "tier4_cleaner"}
+        if re.search(r"(?:^|\n)\s*[✔xX]\s+Summer\b", d_block, re.IGNORECASE):
+            out["D.304"] = {"value": "X", "source": "tier4_cleaner"}
+
+        d401 = _extract_wrapped_yes_no_by_layout(
+            d_block,
+            r"D4\b",
+            r"D5\b",
+        )
+        if not d401:
+            d401 = _extract_yes_no_by_layout(
+                _section_between(d_block, r"D4\b", r"D5\b"),
+                r"credits completed or else must apply as an entering first",
+            )
+        if not d401:
+            d401 = _extract_yes_no_block_by_layout(
+                _section_between(d_block, r"D4\b", r"D5\b"),
+                r"Must a transfer applicant",
+                r"If yes",
+            )
+        if not d401 and re.search(
+            r"entering first-.{0,700}[✔xX].{0,120}No\b",
+            d_block,
+            re.IGNORECASE | re.DOTALL,
+        ):
+            d401 = "No"
+        if d401:
+            out["D.401"] = {"value": d401, "source": "tier4_cleaner"}
+
+        d5_values = {
+            r"High school transcript": ("D.501", "Required of Some"),
+            r"College transcript\(s\)": ("D.502", "Required of All"),
+            r"Essay or personal": ("D.503", "Not Required"),
+            r"Interview": ("D.504", "Not Required"),
+            r"Standardized test scores": ("D.505", "Not Required"),
+            r"Statement of good": ("D.506", "Not Required"),
+        }
+        for row_re, (qn, value) in d5_values.items():
+            if re.search(row_re + r".{0,520}[✔xX]", d_block, re.IGNORECASE | re.DOTALL):
+                out[qn] = {"value": value, "source": "tier4_cleaner"}
+        d5_section = _section_between(d_block, r"D5\.", r"D6\.")
+        for raw_line in d5_section.splitlines():
+            marker = re.search(r"[✔xX]", raw_line)
+            if not marker:
+                continue
+            label_norm = _normalize_label(raw_line[:marker.start()])
+            qn = None
+            if "high school transcript" in label_norm:
+                qn = "D.501"
+            elif "college transcript" in label_norm:
+                qn = "D.502"
+            elif "essay or personal" in label_norm:
+                qn = "D.503"
+            elif "interview" in label_norm:
+                qn = "D.504"
+            elif "standardized test scores" in label_norm:
+                qn = "D.505"
+            elif "statement of good" in label_norm:
+                qn = "D.506"
+            if not qn:
+                continue
+            if marker.start() < 260:
+                value = "Required of All"
+            elif marker.start() < 500:
+                value = "Required of Some"
+            else:
+                value = "Not Required"
+            out[qn] = {"value": value, "source": "tier4_cleaner"}
+
+        if match := re.search(r"D7\b.*?specify (?:on|\(on) a 4\.0 scale\)?:\s*([0-4](?:\.\d+)?)", d_block, re.IGNORECASE | re.DOTALL):
+            out["D.701"] = {"value": match.group(1), "source": "tier4_cleaner"}
+
+        if match := re.search(
+            r"D8\b.*?specific to transfer applicants:\s*(.+?)\s*D9\b",
+            d_block,
+            re.IGNORECASE | re.DOTALL,
+        ):
+            text = re.sub(r"\s+", " ", match.group(1)).strip()
+            if text and text not in {"-", "—"}:
+                out["D.801"] = {"value": text, "source": "tier4_cleaner"}
+
+        d9 = _section_between(d_block, r"D9\b", r"$")
+        d9_rows = [
+            ("Fall", "D.909", "D.910", "D.925", "D.926", "D.933"),
+            ("Spring", "D.913", "D.914", "D.929", "D.930", "D.935"),
+        ]
+        for term, close_m_qn, close_d_qn, reply_m_qn, reply_d_qn, rolling_qn in d9_rows:
+            line_match = re.search(rf"(?:^|\n)\s*(?:D9\s+)?{term}\b([^\n]*)", d9, re.IGNORECASE)
+            if not line_match:
+                continue
+            line = line_match.group(1)
+            dates = re.findall(r"\b\d{1,2}/\d{1,2}\b", line)
+            if dates:
+                month_day = _split_month_day(dates[0])
+                if month_day:
+                    out[close_m_qn] = {"value": month_day[0], "source": "tier4_cleaner"}
+                    out[close_d_qn] = {"value": month_day[1], "source": "tier4_cleaner"}
+                if len(dates) >= 2:
+                    month_day = _split_month_day(dates[1])
+                    if month_day:
+                        notif_m_qn = "D.917" if term == "Fall" else "D.921"
+                        notif_d_qn = "D.918" if term == "Fall" else "D.922"
+                        out[notif_m_qn] = {"value": month_day[0], "source": "tier4_cleaner"}
+                        out[notif_d_qn] = {"value": month_day[1], "source": "tier4_cleaner"}
+            else:
+                nums = re.findall(r"\b\d{1,2}\b", line)
+                if len(nums) >= 2:
+                    out[close_m_qn] = {"value": nums[0], "source": "tier4_cleaner"}
+                    out[close_d_qn] = {"value": nums[1], "source": "tier4_cleaner"}
+                if len(nums) >= 4:
+                    out[reply_m_qn] = {"value": nums[-2], "source": "tier4_cleaner"}
+                    out[reply_d_qn] = {"value": nums[-1], "source": "tier4_cleaner"}
+            if re.search(r"(?<!\w)[xX](?!\w)\s*$", line):
+                out[rolling_qn] = {"value": "X", "source": "tier4_cleaner"}
+
+    d_tail = d_full or markdown
+    if d_tail:
+        d1001 = _extract_wrapped_yes_no_by_layout(
+            d_tail,
+            r"D10\s+.{0,300}open admission policy",
+            r"D11\b",
+        )
+        if d1001:
+            out["D.1001"] = {"value": d1001, "source": "tier4_cleaner"}
+
+        if match := re.search(
+            r"D11\b\s+Describe additional requirements for transfer admission, if applicable:\s*(.+?)\s*D12-D17\b",
+            d_tail,
+            re.IGNORECASE | re.DOTALL,
+        ):
+            text = re.sub(r"\s+", " ", match.group(1)).strip()
+            if text:
+                out["D.1101"] = {"value": text, "source": "tier4_cleaner"}
+
+        if match := re.search(
+            r"D12\b.*?course that may be transferred for credit:\s*(\d+(?:\.\d+)?)",
+            d_tail,
+            re.IGNORECASE | re.DOTALL,
+        ):
+            out["D.1201"] = {"value": match.group(1), "source": "tier4_cleaner"}
+
+        for start, end, num_qn, unit_qn in [
+            ("D13", "D14", "D.1301", "D.1302"),
+            ("D14", "D15", "D.1401", "D.1402"),
+            ("D19", "D20", "D.1901", "D.1902"),
+            ("D20", "D21", "D.2001", "D.2002"),
+        ]:
+            block = _section_between(d_tail, rf"{start}\b", rf"{end}\b")
+            if extracted := _extract_number_unit(block):
+                out[num_qn] = {"value": extracted[0], "source": "tier4_cleaner"}
+                out[unit_qn] = {"value": extracted[1], "source": "tier4_cleaner"}
+
+        if match := re.search(
+            r"D15\b.*?associate degree:\s*(\d+(?:\.\d+)?)",
+            d_tail,
+            re.IGNORECASE | re.DOTALL,
+        ):
+            out["D.1501"] = {"value": match.group(1), "source": "tier4_cleaner"}
+
+        if match := re.search(
+            r"D16\b.*?bachelor['’]s degree:\s*(\d+(?:\.\d+)?)",
+            d_tail,
+            re.IGNORECASE | re.DOTALL,
+        ):
+            out["D.1601"] = {"value": match.group(1), "source": "tier4_cleaner"}
+
+        d18 = _section_between(d_tail, r"D18\b", r"D19\b")
+        for row_re, qn in [
+            (r"American Council on Education \(ACE\)", "D.1801"),
+            (r"College Level Examination Program \(CLEP\)", "D.1802"),
+            (r"DANTES Subject Standardized Tests \(DSST\)", "D.1803"),
+        ]:
+            value = _extract_yes_no_by_layout(d18, row_re)
+            if value:
+                out[qn] = {"value": value, "source": "tier4_cleaner"}
+
+        d2101 = _extract_wrapped_yes_no_by_layout(
+            d_tail,
+            r"D21\s+.{0,300}military/veteran credit transfer policies",
+            r"D22\b",
+        )
+        if d2101:
+            out["D.2101"] = {"value": d2101, "source": "tier4_cleaner"}
+
+        if match := re.search(
+            r"If yes, please provide the URL where the policy can be located:\s*(https?://\S+)",
+            d_tail,
+            re.IGNORECASE,
+        ):
+            out["D.2102"] = {"value": match.group(1), "source": "tier4_cleaner"}
+
+        if match := re.search(
+            r"D22\b\s+Describe other military/veteran transfer credit policies unique to your institution:\s*(.+?)\s*(?:CDS-D|E\.\s*ACADEMIC OFFERINGS|$)",
+            d_tail,
+            re.IGNORECASE | re.DOTALL,
+        ):
+            text = re.sub(r"\s+", " ", match.group(1)).strip()
+            if text:
+                out["D.2201"] = {"value": text, "source": "tier4_cleaner"}
 
     for table in tables:
         hdr_norm = [_normalize_label(h) for h in table.get("headers", [])]
@@ -2062,7 +4262,6 @@ def resolve_d_transfer(
         section_norm = _normalize_label(table.get("section", ""))
         is_d2 = (has_gender_cols and has_transfer_rows and (
             "transfer" in section_norm
-            or "d " in (" " + section_norm)
             or "d1" in section_norm
             or "d2" in section_norm
         ))
@@ -2196,6 +4395,174 @@ def resolve_checkboxes(
     return out
 
 
+def resolve_e_academic_offerings(
+    tables: list[dict], markdown: str, schema: SchemaIndex
+) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+
+    e_block = _section_between(
+        markdown,
+        r"(?:E\.\s*ACADEMIC\s+OFFERINGS\s+AND\s+POLICIES|E1\b)",
+        r"(?:F\.\s*STUDENT\s+LIFE|CDS-E|$)",
+    )
+    if not e_block:
+        return out
+
+    e1 = _section_between(e_block, r"E1\b|Special study options", r"E2\b|E3\b")
+    for qn, aliases in [
+        ("E.101", ["Accelerated program"]),
+        ("E.102", ["Comprehensive transition"]),
+        ("E.103", ["Cross-registration"]),
+        ("E.104", ["Distance learning"]),
+        ("E.105", ["Double major"]),
+        ("E.106", ["Dual enrollment"]),
+        ("E.107", ["English as a Second Language", "ESL"]),
+        ("E.108", ["Exchange student program"]),
+        ("E.109", ["External degree program"]),
+        ("E.110", ["Honors program"]),
+        ("E.111", ["Independent study"]),
+        ("E.112", ["Internships"]),
+        ("E.113", ["Liberal arts/career combination"]),
+        ("E.114", ["Student-designed major"]),
+        ("E.115", ["Study abroad"]),
+        ("E.116", ["Teacher certification program"]),
+        ("E.117", ["Undergraduate Research"]),
+        ("E.118", ["Weekend college"]),
+    ]:
+        if _layout_option_checked(e1, aliases):
+            out[qn] = {"value": "X", "source": "tier4_cleaner"}
+
+    if re.search(
+        r"(?:^|\n)\s*x\s+Undergraduate Research\b|(?:^|\n)\s*x\s*\n\s*Undergraduate Research\b",
+        e1,
+        re.IGNORECASE,
+    ):
+        out["E.117"] = {"value": "X", "source": "tier4_cleaner"}
+
+    other_specify_re = r"(?:^|\n)\s*(?:-\s*\[\s*\]\s*)?x\s+Other \(specify\):"
+    if re.search(other_specify_re, e1, re.IGNORECASE):
+        out["E.119"] = {"value": "X", "source": "tier4_cleaner"}
+        if match := re.search(
+            r"Other \(specify\):\s*(?:\n\s*)+([^\n]+)",
+            e1,
+            re.IGNORECASE,
+        ):
+            value = match.group(1).strip()
+            if value:
+                out["E.120"] = {"value": value, "source": "tier4_cleaner"}
+
+    e3 = _section_between(e_block, r"E3\b|Areas in which", r"$")
+    for qn, aliases in [
+        ("E.301", ["Arts/fine arts"]),
+        ("E.302", ["Computer literacy"]),
+        ("E.303", ["English (including composition)", "English"]),
+        ("E.304", ["Foreign languages"]),
+        ("E.305", ["History"]),
+        ("E.306", ["Physical Education"]),
+        ("E.307", ["Humanities"]),
+        ("E.308", ["Intensive writing"]),
+        ("E.309", ["Mathematics"]),
+        ("E.310", ["Philosophy"]),
+        ("E.311", ["Sciences (biological or physical)", "Sciences"]),
+        ("E.312", ["Social science"]),
+    ]:
+        if _layout_option_checked(e3, aliases):
+            out[qn] = {"value": "X", "source": "tier4_cleaner"}
+
+    other_describe_re = r"(?:^|\n)\s*(?:-\s*\[\s*\]\s*)?x\s+Other \(describe\):"
+    if re.search(other_describe_re, e3, re.IGNORECASE):
+        out["E.313"] = {"value": "X", "source": "tier4_cleaner"}
+        if match := re.search(
+            r"Other \(describe\):\s*(?:\n\s*)+([^\n]+)",
+            e3,
+            re.IGNORECASE,
+        ):
+            value = match.group(1).strip()
+            if value:
+                out["E.314"] = {"value": value, "source": "tier4_cleaner"}
+
+    return out
+
+
+def _layout_option_checked(block: str, aliases: list[str]) -> bool:
+    markers = r"[xX✔☒✓]"
+    for raw_line in block.splitlines():
+        if not re.search(markers, raw_line):
+            continue
+        line_norm = _normalize_label(raw_line)
+        for alias in aliases:
+            alias_norm = _normalize_label(alias)
+            if alias_norm in line_norm:
+                before = raw_line[: raw_line.lower().find(alias.lower().split()[0])] if alias.split() else raw_line
+                if re.search(markers, before[-20:]) or re.search(r"\[[xX]\]", raw_line):
+                    return True
+                if re.search(rf"{markers}\s+.*{re.escape(alias.split()[0])}", raw_line, re.IGNORECASE):
+                    return True
+    return False
+
+
+def resolve_f_student_life(
+    tables: list[dict], markdown: str, schema: SchemaIndex
+) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+
+    f_block = _section_between(
+        markdown,
+        r"(?:F\.\s*STUDENT LIFE|F1\b|F3\b|F4\b)",
+        r"(?:G\.\s*ANNUAL EXPENSES|CDS-G|$)",
+    )
+    if not f_block:
+        return out
+
+    f2 = _section_between(f_block, r"F2\b|Activities offered", r"F3\b")
+    for qn, aliases in [
+        ("F.201", ["Campus Ministries"]),
+        ("F.202", ["Choral groups"]),
+        ("F.203", ["Concert band"]),
+        ("F.204", ["Dance"]),
+        ("F.205", ["Drama/theater"]),
+        ("F.206", ["International Student Organization"]),
+        ("F.207", ["Jazz band"]),
+        ("F.208", ["Literary magazine"]),
+        ("F.209", ["Marching band"]),
+        ("F.210", ["Model UN"]),
+        ("F.211", ["Music ensembles"]),
+        ("F.212", ["Musical theater"]),
+        ("F.213", ["Opera"]),
+        ("F.214", ["Pep band"]),
+        ("F.215", ["Radio station"]),
+        ("F.216", ["Student government"]),
+        ("F.217", ["Student newspaper"]),
+        ("F.218", ["Student-run film society"]),
+        ("F.219", ["Symphony orchestra"]),
+        ("F.220", ["Television station"]),
+        ("F.221", ["Yearbook"]),
+    ]:
+        if _layout_option_checked(f2, aliases):
+            out[qn] = {"value": "X", "source": "tier4_cleaner"}
+
+    f3 = _section_between(f_block, r"F3\b", r"F4\b")
+    if f3:
+        army = _section_between(f3, r"Army ROTC is offered:", r"Naval ROTC is offered:")
+        if re.search(r"\bHofstra University\b", army, re.IGNORECASE):
+            out["F.301"] = {"value": "At cooperating institution", "source": "tier4_cleaner"}
+            out["F.302"] = {"value": "Hofstra University", "source": "tier4_cleaner"}
+
+        # pypdf layout can wrap the Air Force cooperating institution name
+        # across the preceding name-column line and the row itself.
+        if re.search(r"\bManhattan\s+Air Force ROTC is offered:.*?\bCollege\b", f3, re.IGNORECASE | re.DOTALL):
+            out["F.306"] = {"value": "At cooperating institution", "source": "tier4_cleaner"}
+            out["F.307"] = {"value": "Manhattan College", "source": "tier4_cleaner"}
+        if re.search(r"Air Force ROTC is offered:.{0,80}[✔xX]\s*(?:\n\s*)?On campus", f3, re.IGNORECASE | re.DOTALL):
+            out["F.306"] = {"value": "On campus", "source": "tier4_cleaner"}
+
+    f4 = _section_between(f_block, r"(?:F4\b|Housing:)", r"(?:CDS-F|G1\b|G\.\s*ANNUAL EXPENSES|$)")
+    if re.search(r"(?:^|\n)\s*(?:-\s*\[\s*\]\s*)?x\s+Coed dorms\b", f4, re.IGNORECASE):
+        out["F.401"] = {"value": "X", "source": "tier4_cleaner"}
+
+    return out
+
+
 # --- Resolver: F1 Percent Participating + Average Age (16 fields) ---
 #
 # One 2-column table: First-time, first-year | Undergraduates.
@@ -2279,26 +4646,40 @@ def resolve_f1_participating(
 # `values`, so hand-coded maps take priority, and earlier resolvers take
 # priority over later ones for overlapping claims.
 _RESOLVERS = [
+    resolve_a_general,
     resolve_j_disciplines,
     resolve_b2_race,
     resolve_b1_enrollment,
+    resolve_b3_degrees,
+    resolve_b_two_year_rates,
     resolve_b5_graduation,
     resolve_b22_retention,
     resolve_c1_applications,
     resolve_c2_waitlist,
     resolve_c5_carnegie_units,
     resolve_c7_basis_for_selection,
+    resolve_c8_entrance_exams,
+    resolve_c9_submission_rates,
+    resolve_c9_score_distributions,
     resolve_c11_gpa_profile,
+    resolve_c12_gpa_summary,
+    resolve_c13_application_fee,
     resolve_i_faculty,
     resolve_g_expenses,
     resolve_h_financial_aid,
     resolve_d_transfer,
     resolve_checkboxes,
+    resolve_e_academic_offerings,
+    resolve_f_student_life,
     resolve_f1_participating,
 ]
 
 
-def clean(markdown: str, schema: SchemaIndex | None = None) -> dict[str, dict]:
+def clean(
+    markdown: str,
+    schema: SchemaIndex | None = None,
+    supplemental_text: str | None = None,
+) -> dict[str, dict]:
     """Map Docling markdown to canonical question-number-keyed values.
 
     Returns {question_number: {"value": str, "source": "tier4_cleaner"}}
@@ -2397,8 +4778,52 @@ def clean(markdown: str, schema: SchemaIndex | None = None) -> dict[str, dict]:
     idx = schema if schema is not None else _get_schema()
     for resolver in _RESOLVERS:
         new = resolver(tables, markdown, idx)
+        if resolver in (
+            resolve_a_general,
+            resolve_j_disciplines,
+            resolve_b2_race,
+            resolve_b1_enrollment,
+            resolve_b3_degrees,
+            resolve_b_two_year_rates,
+            resolve_b5_graduation,
+            resolve_c2_waitlist,
+            resolve_c8_entrance_exams,
+            resolve_c12_gpa_summary,
+            resolve_c13_application_fee,
+            resolve_i_faculty,
+            resolve_g_expenses,
+            resolve_h_financial_aid,
+            resolve_d_transfer,
+            resolve_e_academic_offerings,
+            resolve_f_student_life,
+        ) and supplemental_text:
+            supplemental_new = resolver(tables, supplemental_text, idx)
+            if resolver in (resolve_a_general, resolve_b1_enrollment) and supplemental_new:
+                new = supplemental_new
+                supplemental_new = {}
+            for qn, rec in supplemental_new.items():
+                if resolver in (
+                    resolve_a_general,
+                    resolve_j_disciplines,
+                    resolve_b2_race,
+                    resolve_b1_enrollment,
+                    resolve_b3_degrees,
+                    resolve_b_two_year_rates,
+                    resolve_b5_graduation,
+                    resolve_c2_waitlist,
+                    resolve_c13_application_fee,
+                    resolve_i_faculty,
+                    resolve_d_transfer,
+                    resolve_e_academic_offerings,
+                    resolve_h_financial_aid,
+                ):
+                    new[qn] = rec
+                else:
+                    new.setdefault(qn, rec)
         for qn, rec in new.items():
-            if qn not in values:
+            if resolver is resolve_b5_graduation and re.match(r"^B\.[45]\d{2}$", qn):
+                values[qn] = rec
+            elif qn not in values:
                 values[qn] = rec
 
     return values
