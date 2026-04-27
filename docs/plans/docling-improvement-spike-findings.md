@@ -122,6 +122,8 @@ Two spike tools now exist under `tools/extraction-validator/`:
   rollup summary, package versions, and a narrow C9 SAT/ACT heuristic.
 - `compare_docling_full_cleaner.py` runs the existing full Tier 4 markdown cleaner
   against two Docling run directories and compares all recovered canonical fields.
+- `compare_docling_native_tables.py` bypasses markdown table parsing and feeds rows
+  reconstructed from native Docling table cells into the existing resolver logic.
 
 Local Docling evaluation environment:
 
@@ -354,6 +356,55 @@ single lost baseline field should be inspected. Still, this is materially better
 the OCR/table-mode knobs: ACCURATE tables did not help overall, full-page OCR badly
 degraded these text PDFs, and the layout no-orphan setting improved recoverability
 without introducing conflicts in this sample.
+
+## Native JSON table parser arm
+
+The spike then tested the larger "markdown is lossy" hypothesis directly. Instead of
+parsing Docling's full-document markdown, `compare_docling_native_tables.py` reads
+`docling.json`, reconstructs table rows from native `table_cells`, and feeds those
+rows into the existing resolver logic. This is still not a purpose-built native
+parser; it is an adapter test that answers whether the current resolver stack can
+benefit from the native table model without going through `_parse_markdown_tables()`.
+
+Command:
+
+```bash
+/Users/santhonys/docling-eval/bin/python \
+  tools/extraction-validator/compare_docling_native_tables.py \
+  --manifest .context/docling-spike/failure-fixtures-2024-plus-v2/manifest.json \
+  --run-dir .context/docling-spike/tuning-2024-plus/layout-no-orphan-clusters \
+  --table-source json \
+  --out .context/docling-spike/tuning-2024-plus/compare-markdown-vs-native-json-layout-no-orphan.json
+```
+
+Result on the tuned `layout-no-orphan-clusters` run:
+
+| Path | Total fields |
+|---|---:|
+| Markdown cleaner | 3,797 |
+| Native JSON table adapter | 2,793 |
+| Markdown plus JSON-only candidates | 3,900 |
+
+Diff shape:
+
+- Native JSON table adapter overlapped 2,690 markdown fields.
+- Markdown-only fields: 1,107, concentrated in B, C, D, and I.
+- Native-JSON-only fields: 103, concentrated in J disciplines (64), I faculty (30),
+  C admissions (6), F student life (2), and B enrollment (1).
+- Remaining conflicts after numeric normalization: 119, concentrated in B and C.
+
+Interpretation:
+
+- Native JSON is not yet a drop-in replacement for the markdown cleaner. The existing
+  resolver stack has been tuned around Docling's markdown serialization, and native
+  table cells require their own row/header/section adapter.
+- Native JSON is still promising as an overlay/repair source: it surfaced 103
+  candidates the markdown path did not claim, especially in J and I.
+- The current adapter lacks enough section context and table-shape-specific logic to
+  recover all fields that the markdown serializer currently flattens conveniently.
+- The next native-parser step should not be a generic "feed all tables to old
+  resolvers" pass. It should be section-specific native parsers that use Docling cell
+  flags, row/column spans, page/table provenance, and explicit validation rules.
 
 The narrower conclusion is stronger than the original audit but still bounded:
 native Docling tables appear sufficient to recover common SAT/ACT percentile rows

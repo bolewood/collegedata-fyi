@@ -142,6 +142,13 @@ model contains recoverable C9/C11/C12 structure before adding a VLM repair path.
   --right-label docling-default \
   --left-dir .context/docling-spike/native-runs-production \
   --right-dir .context/docling-spike/native-runs-docling-default
+
+# Compare markdown table parsing with native Docling JSON table-cell parsing.
+/Users/santhonys/docling-eval/bin/python \
+  tools/extraction-validator/compare_docling_native_tables.py \
+  --manifest .context/docling-spike/fixtures/manifest.json \
+  --run-dir .context/docling-spike/native-runs-production \
+  --table-source json
 ```
 
 Outputs are written under `.context/docling-spike/` by default. They include
@@ -157,6 +164,9 @@ This is a spike harness, not production extraction code. A successful native-tab
 candidate still needs CDS-specific validation before it can influence browser data.
 The full-cleaner comparison is also not ground-truth scoring; it only compares
 how the existing markdown cleaner behaves on two Docling markdown serializations.
+The native-table comparison reuses the existing resolver logic but bypasses
+`_parse_markdown_tables()`, feeding rows reconstructed from Docling JSON table
+cells. Treat it as an adapter spike, not a production parser.
 
 Available Docling spike configs:
 
