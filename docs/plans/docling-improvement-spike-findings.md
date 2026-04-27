@@ -20,7 +20,9 @@ available to the browser projection or repair layers.
 There is one important exception: the extraction validator bakeoff already writes
 `doc.export_to_dict()` to `output.json`. So the project has already experimented with
 Docling JSON locally, but that capability has not been promoted into the production
-artifact contract.
+artifact contract. Important caveat: the harness still scores markdown. It does not
+prove a JSON/table parser would beat the current production cleaner unless the spike
+adds a narrow parser comparison arm.
 
 ## What approaches best practice
 
@@ -44,6 +46,11 @@ artifact contract.
 | Current Docling feature verification | Requirements say `docling>=2.0`; local global Python does not have Docling installed. | Installed worker version/features are not visible in this workspace; no pin to Heron/lossless JSON/schema extraction. | Current behavior may drift as Docling changes; spike cannot assume docs features exist in deployed worker. | Record runtime versions during spike and consider pinning once a config is chosen. |
 | Schema extraction beta | No `DocumentExtractor` usage. | Could be useful as candidate generation, but no evidence that it returns boxes/items. | Not a blocker; should not replace deterministic parser. | Test only as an optional comparison arm. Reject default-filled values. |
 | LLM fallback substrate | Fallback hashes and cites `notes.markdown`. | It inherits markdown lossiness. | A value can be valid relative to markdown but still not traceable to page/table/cell. | Keep fallback policy, but feed it better slices/evidence after Docling JSON is persisted. |
+| Fixture risk | Early PRD drafts named Harvard/Yale/Dartmouth as fixtures. | These are likely high-quality/easy publishers and can bias the conclusion. | Spike may prove JSON works on easy cases while missing the real Tier 4 failure population. | Sample from low-coverage `tier4_docling` `pdf_flat` artifacts first; keep elite docs as sanity checks only. |
+| Outcome thresholds | Outcome labels were qualitative. | No pre-committed line between "JSON helps" and "JSON should become primary." | Decision could become post-hoc and preference-driven. | Use explicit thresholds before running: 70% target-field recovery for Outcome A, 80% localization for Outcome C. |
+| Storage strategy | Initial recommendation allowed inline field or sidecar artifact. | Storage shape changes API/query performance and migration cost. | `select notes` patterns may balloon if large Docling JSON is stored inline. | Measure sample sizes and choose inline JSONB vs sidecar row vs object storage in the decision memo. |
+| Producer precedence | New Tier 4 producer/version would create newer artifacts. | Existing manifests often pick by recency. | Reprocessing can silently switch consumers to a worse artifact. | Require producer-precedence semantics before shipping a JSON-first producer broadly. |
+| Cache invalidation | `tier4_llm_fallback` cache is keyed by `markdown_sha256`. | JSON-first or serializer changes may invalidate existing cache entries. | Re-running fallback across thousands of docs has real cost. | Estimate cache impact and add serializer/config versioning before changing production markdown. |
 
 ## Code observations
 
@@ -58,29 +65,50 @@ artifact contract.
   the durable contract.
 - `tools/extraction-validator/run_matrix.py` already writes both `output.md` and
   `output.json` using `doc.export_to_dict()`. This is the easiest place to start the
-  spike because it avoids DB writes and already supports config comparisons.
+  spike because it avoids DB writes and already supports config comparisons. It still
+  validates markdown output, so it needs a new table/JSON parser arm before it can
+  support claims about production parser quality.
 - `tools/extraction_worker/tier4_llm_fallback.py` has a good "cleaner wins, fallback
   fills gaps" design, but its strategy is named `markdown_section_fill_gaps`, which is
   accurate: it is currently a markdown repair layer, not a document-model repair layer.
 
 ## Suggested next experiment
 
-Start with the validator harness, not production extraction:
+Start with the validator harness, not production extraction, but tighten the experiment:
 
-1. Pick 5-10 PDFs with known Tier 4 C9/C11/C12 gaps.
-2. Extend `run_matrix.py` or add a sibling inspector that writes:
+1. Record the exact Docling/docling-core/OCR versions from the worker environment.
+2. Pick 8-12 PDFs from real low-coverage `tier4_docling` `pdf_flat` artifacts, plus
+   1-2 elite sanity fixtures.
+3. Pre-commit thresholds:
+   - Outcome A: at least 70% C9/C11/C12 target-field recovery with a narrow parser.
+   - Outcome C: below 70% recovery but at least 80% page/table localization.
+   - Otherwise keep DeepSeek-OCR as the primary repair path.
+4. Add a narrow throwaway C9 parser if making claims about JSON/native-table recovery.
+   Without that parser, the spike can only conclude that native structure is present or
+   absent.
+5. Extend `run_matrix.py` or add a sibling inspector that writes:
    - markdown
    - Docling dict/JSON
    - table count
    - per-table DataFrame/CSV/HTML/markdown exports
    - page numbers and item refs if available
-3. Score whether native Docling tables expose the missing GPA/SAT/ACT fields.
-4. Only then decide whether PRD 011 should prioritize:
+6. Measure:
+   - target-field recovery
+   - localization success
+   - conversion failure rate
+   - sample JSON artifact size
+   - expected fallback cache invalidation
+7. Only then decide whether PRD 011 should prioritize:
    - native table parsing
    - better Docling options
    - page-image crop repair
-   - Docling beta extraction
    - DeepSeek-OCR sidecar repair
+
+Out of scope unless time remains:
+
+- Docling beta schema extraction
+- GraniteDocling / Small Docling
+- production artifact migration
 
 ## Initial conclusion
 
@@ -89,3 +117,7 @@ best practices. The current pipeline uses Docling's conversion engine but mostly
 discards the structured representation that makes Docling valuable for table-heavy
 repair. The first implementation move should be an artifact/inspector spike around
 Docling JSON and native tables, not a VLM repair script.
+
+Red-team adjustment: the spike must not conclude "JSON parser works" from structure
+inspection alone. It needs either a narrow parser arm or a deliberately narrower
+conclusion: "Docling JSON contains enough structure to justify a follow-on parser PRD."

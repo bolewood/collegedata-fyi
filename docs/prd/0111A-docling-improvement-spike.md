@@ -96,6 +96,24 @@ Docling markdown fails -> VLM/OCR repair
 These are concrete practices from the workshop transcript that should be validated
 against our codebase before any DeepSeek-OCR implementation.
 
+### Step 0: pin the actual runtime
+
+Before any fixture comparison, verify the exact Docling runtime used by the extraction
+worker. The project currently declares `docling>=2.0`, so local docs, a developer
+virtualenv, and the production worker may not be using the same behavior.
+
+Required checks:
+
+- run `pip show docling docling-core` inside the worker environment that actually runs
+  extraction
+- record `docling`, `docling-core`, OCR backend, and relevant model versions in the
+  findings doc
+- run the spike fixture set against that pinned version
+- if testing newer Docling features such as Heron or lossless JSON requires an upgrade,
+  make that a separate `post-upgrade` comparison arm
+
+Do not make a production recommendation based only on a newer local package.
+
 ### Verify documented capabilities against our installed version
 
 The current Docling docs advertise several capabilities that matter directly for this
@@ -285,6 +303,10 @@ concrete schema for the desired fields. The current docs also mark structured
 information extraction as beta, which is useful but should keep it out of the primary
 promotion path for now.
 
+This is not on the critical path for this spike. Test it only if the native
+Docling-document/table inspection leaves time. The main work is determining whether
+Docling JSON and native tables contain recoverable C9/C11/C12 structure.
+
 The current beta example uses:
 
 ```python
@@ -331,6 +353,9 @@ Practical check:
   extraction?
 - does it outperform native table parsing on malformed CDS fixtures?
 - can we prevent Pydantic defaults from being mistaken for extracted values?
+
+Default decision: out of scope unless Outcomes A/B/C cannot be distinguished from
+native document/table parsing alone.
 
 ### Track benchmark and annotation ecosystem, but do not wait for it
 
@@ -444,26 +469,18 @@ should not affect this spike unless a CDS table is represented as a chart image.
 
 ## Work plan
 
-### Step 1: Synthesize best practices
+### Step 1: Synthesize minimum best practices
 
 Read and summarize:
 
 - official Docling docs
-- Docling feature/what's-new page
-- Docling API examples
 - Docling core / `DoclingDocument` serialization docs
 - Docling table extraction docs/examples
 - Docling JSON/document model docs
 - Docling OCR configuration docs
-- Docling model/plugin integration docs, including whether DeepSeek-OCR is actually
-  supported in the current release
-- Docling beta information extraction example
-- Docling enrichment docs
-- Docling Serve / batch docs only insofar as they affect overnight processing
-- relevant talks or posts about Docling, Small Docling, and document-model design
-- the 2026-04-26 Docling workshop transcript attachment
-- the 2026-04-26 Docling overview talk transcript attachment
-- the 2026-04-26 Docling architecture/extraction talk transcript attachment
+- Docling conversion/pipeline options docs
+- Docling feature/what's-new page only for version-sensitive claims
+- the already-read 2026-04-26 transcript notes as context
 
 Deliverable:
 
@@ -528,25 +545,49 @@ Classify each recommendation:
 
 ### Step 3: Run a small comparison
 
-Use a tiny fixture set. Suggested sample:
+Use a tiny failure-stratified fixture set. Do not headline Harvard/Yale/Dartmouth
+unless they are known Tier 4 failures for the fields under test.
 
-- Harvard 2024-25
-- Yale 2024-25
-- Dartmouth 2024-25
-- 5 documents where current browser fields are missing or invalid
-- 5 documents where SAT/ACT/GPA fields are missing or malformed
+Suggested sample:
+
+- 8-12 `producer='tier4_docling'` flattened-PDF artifacts from the bottom quartile of
+  `notes.stats.schema_fields_populated`
+- at least 5 documents where C9/C11/C12 SAT/ACT/GPA fields are missing or malformed
 - 2 scanned or OCR-sensitive PDFs if easy to include
+- 1-2 elite/high-quality docs as sanity checks only
+- avoid XLSX/fillable-PDF fixtures unless testing regression from routing mistakes
+
+Preferred selection query shape:
+
+```sql
+select d.id, d.school_id, d.source_format, a.notes
+from public.cds_artifacts a
+join public.cds_documents d on d.id = a.document_id
+where a.producer = 'tier4_docling'
+  and a.kind = 'canonical'
+  and d.source_format = 'pdf_flat'
+order by (a.notes->'stats'->>'schema_fields_populated')::int asc
+limit 50;
+```
 
 Compare:
 
 1. Current Docling markdown + current cleaner
-2. Docling document JSON/table objects + a narrow parser
-3. Docling table DataFrame/native grid + a narrow parser
+2. Docling document JSON/table objects + a throwaway narrow C9 parser
+3. Docling table DataFrame/native grid + the same narrow C9 parser
 4. Docling document JSON/layout targeting + current cleaner context
 5. Alternate Docling layout/OCR/table/page-image options, including Heron/default
    behavior if configurable
-6. Optional: Docling schema-guided extraction for C9/C11/C12
+6. Optional, time permitting: Docling schema-guided extraction for C9/C11/C12
 7. Optional: GraniteDocling/Small Docling on selected page images
+
+Important scope guard:
+
+- If no parser is written, this spike can only conclude "native structure is present"
+  or "native structure is absent." It cannot claim JSON/table parsing beats the
+  production markdown cleaner.
+- If a parser is written, keep it intentionally narrow: C9 SAT/ACT rows first. C11/C12
+  can be inspected for structure presence unless time remains.
 
 Metrics:
 
@@ -566,6 +607,9 @@ Metrics:
 - schema-extraction evidence quality if tested
 - schema-extraction default/missing-value behavior if tested
 - regression risk to existing Tier 4 behavior
+- Docling conversion failure rate on the sampled corpus
+- whether production adoption invalidates existing `tier4_llm_fallback` cache entries
+- artifact storage size for markdown-only vs markdown + Docling JSON
 
 ### Step 4: Decision memo
 
@@ -577,16 +621,43 @@ Write a concise decision memo with:
 4. recommendations by priority
 5. how PRD 011 should change
 6. whether DeepSeek-OCR is still justified after Docling improvements
+7. cache, storage, and producer-precedence implications of any recommended production
+   change
+
+## Decision thresholds
+
+Set these thresholds before running the comparison:
+
+- **Outcome A: Docling JSON/native tables should become the primary academic-profile
+  path** if a narrow parser recovers at least 70% of target C9/C11/C12 fields on the
+  failure-stratified fixtures without OCR/VLM repair, with no C1 regression on sanity
+  fixtures.
+- **Outcome B: Docling config change is enough** if changing conversion options improves
+  target-field recovery by at least 20 percentage points over the current baseline and
+  does not materially increase runtime or regress existing cleaner output.
+- **Outcome C: Docling layout should feed repair** if field recovery stays below 70%
+  but Docling can localize at least 80% of missing target-field sections/pages/tables
+  well enough to generate repair crops.
+- **Outcome D: DeepSeek-OCR remains primary repair path** if native structure recovery
+  is below 70% and localization is below 80%, or if parser/storage/migration cost is
+  disproportionate to measured recovery.
+
+These are spike thresholds, not permanent product-quality gates. They exist to prevent
+post-hoc interpretation of a small sample.
 
 ## Expected outcomes
 
 ### Outcome A: Docling JSON fixes enough
 
-If Docling table objects recover much of C9/C11/C12, then:
+If Docling table objects meet the Outcome A threshold, then:
 
 - update PRD 011 to make Docling JSON parsing the primary academic-profile path
 - use DeepSeek-OCR only as a fallback for pages where Docling JSON fails validation
 - add a Tier 4 improvement task to persist Docling JSON for new artifacts
+- write a follow-on PRD for the JSON-mode cleaner, including dual-mode operation for
+  existing markdown-only artifacts
+- estimate `tier4_llm_fallback` cache invalidation cost before changing the markdown
+  serializer or producer output
 
 ### Outcome B: Docling config fixes enough
 
@@ -595,6 +666,7 @@ If better Docling options materially improve output, then:
 - implement the option changes in Tier 4/Tier 5
 - record extraction config in artifact provenance
 - run a targeted re-projection before considering VLM repair
+- bump producer/config version deliberately and document cache implications
 
 ### Outcome C: Docling layout helps, but parsing still fails
 
@@ -603,6 +675,7 @@ If Docling cannot recover the table but can locate the page/region, then:
 - keep DeepSeek-OCR repair in PRD 011
 - use Docling layout metadata for crop targeting
 - avoid full-page/full-PDF VLM calls where table crops are available
+- generate page images/crops on demand for repair, not by default across the corpus
 
 ### Outcome D: Docling is already maximized
 
@@ -649,6 +722,35 @@ These are hypotheses, not accepted facts:
   fixture comparison before broad reprocessing.
 - Chart understanding is backlog-only for now; it is not on the critical path for
   C9/C11/C12 unless schools publish those values only as chart images.
+- A JSON-first production path would need a migration plan: dual-mode cleaner support,
+  backfill/reprocessing cost, fallback cache strategy, storage strategy, and
+  producer-precedence semantics.
+
+## Candidate provenance shape
+
+Any follow-on implementation should make provenance explicit before exposing it through
+`cds_fields` or browser APIs.
+
+Candidate shape:
+
+```json
+{
+  "document_id": "uuid",
+  "artifact_id": "uuid",
+  "source_storage_path": "school/year/hash.pdf",
+  "page_no": 12,
+  "docling_item_ref": "#/texts/123",
+  "table_id": "table-7",
+  "cell_ref": {"row": 4, "col": 2},
+  "bbox": {"l": 10.0, "t": 20.0, "r": 200.0, "b": 260.0, "coord_origin": "top-left"},
+  "source_serializer": "docling-json",
+  "docling_version": "x.y.z",
+  "docling_core_version": "x.y.z",
+  "extraction_config_version": "tier4-docling-json-c9-v0"
+}
+```
+
+Treat this as a contract candidate, not an implementation requirement for the spike.
 
 ## Deliverables
 
@@ -657,6 +759,9 @@ These are hypotheses, not accepted facts:
 3. Small fixture comparison results
 4. PRD 011 revision recommendations
 5. Backlog updates for any deferred work
+6. Storage strategy recommendation: inline JSONB vs sidecar artifact vs object storage
+7. Producer-precedence recommendation for any new Tier 4 producer/version
+8. Cache-invalidation note for `tier4_llm_fallback`
 
 ## Timebox
 
@@ -665,6 +770,13 @@ This should be a one- to two-day spike.
 If the spike takes longer, it is probably turning into implementation. Stop and write
 the decision memo before changing production extraction behavior.
 
+Budget guidance:
+
+- Step 0/1 should take less than 25% of the spike.
+- Step 2/3 should take more than 60% of the spike.
+- Schema extraction, GraniteDocling, Small Docling, and DeepSeek-OCR integration are
+  optional only after the native table/document question is answered.
+
 ## Acceptance criteria
 
 The spike is complete when:
@@ -672,6 +784,10 @@ The spike is complete when:
 - Docling best practices have been summarized with sources.
 - Current Tier 4/Tier 5 code has been audited against those practices.
 - At least 10 representative documents/pages have been compared.
+- Fixtures were selected from real Tier 4 failure populations, not only elite/high
+  quality schools.
+- At least one comparison arm either includes a narrow parser or explicitly limits its
+  conclusion to structure presence.
 - We can answer whether to prioritize:
   - Docling JSON/table parsing
   - Docling option/config changes
