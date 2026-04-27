@@ -357,6 +357,17 @@ the OCR/table-mode knobs: ACCURATE tables did not help overall, full-page OCR ba
 degraded these text PDFs, and the layout no-orphan setting improved recoverability
 without introducing conflicts in this sample.
 
+Production follow-through:
+
+- `tier4_extractor.py` now uses `producer_version = "0.2.0"` for new
+  `tier4_docling` canonical artifacts.
+- The Tier 4 Docling config sets
+  `pipeline.layout_options.create_orphan_clusters = False`.
+- New artifacts record the config under `notes.docling_config`.
+- New artifacts persist compact native table cells under `notes.native_tables`.
+  This is intentionally not merged into `notes.values` yet; it is substrate for
+  deterministic native-table parsers and repair passes before any LLM fallback.
+
 ## Native JSON table parser arm
 
 The spike then tested the larger "markdown is lossy" hypothesis directly. Instead of

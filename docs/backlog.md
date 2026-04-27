@@ -12,6 +12,20 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 ### Near-term operational polish
 
+- **Ground-truth Tier 4 v0.2 native-table candidates before LLM repair.** New
+  `tier4_docling` artifacts preserve compact Docling native table cells and use
+  the no-orphan-clusters layout tuning. Before running the LLM repair broadly,
+  spot-check the 53 config-only fields from the tuning sample and the 103
+  native-JSON-only candidates surfaced by the native table adapter. Promote
+  section-specific native parsers only after deterministic validation.
+
+- **Invalidate or re-run stale Tier 4 LLM fallback after a Tier 4 v0.2 drain.**
+  Existing `tier4_llm_fallback` artifacts are keyed to the old markdown hash but
+  the selected-result view overlays the latest fallback by document. After
+  reprocessing the corpus with `tier4_docling` v0.2, either delete/re-run stale
+  fallback artifacts or tighten the selected-result contract to require fallback
+  artifacts to match the base artifact/version/hash.
+
 - **Cross-table inconsistency notes.** Some schools' CDS files are internally inconsistent (Yale's C1 says women=772 enrolled, B1 says 769 enrolled; HMC's C1 enrollees-by-gender doesn't match the by-status sub-block). Decide whether to record these in `docs/known-issues/{school}.md`, in a per-extract `_notes` field, or both. They are not extraction bugs.
 
 - **Header / metadata field fallback.** HMC's AcroForm has no value for `NAME` (school name, A.101) or respondent address fields, even though the visible PDF shows them. The Tier 2 extractor should probably mark these as "prefer external" so the manifest's `cds_documents.school_name` column is the canonical source for school identity.
