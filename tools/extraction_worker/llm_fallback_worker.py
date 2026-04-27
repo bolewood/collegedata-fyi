@@ -568,7 +568,7 @@ def main() -> int:
     ap.add_argument("--mode", choices=["shadow", "fill_gaps"], default="fill_gaps",
                     help="shadow = write artifact with values but don't merge; "
                          "fill_gaps = values merge (deterministic wins).")
-    ap.add_argument("--cleaner-version", default="0.2.0",
+    ap.add_argument("--cleaner-version", default="0.3.0",
                     help="Used in the cache key. Bump to invalidate cache on "
                          "cleaner changes that shrink the gap set.")
     ap.add_argument("--low-coverage-threshold", type=int, default=200,

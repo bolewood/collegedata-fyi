@@ -210,7 +210,7 @@ The cache key columns are grounded in what actually persists today:
 | `model_name` | `claude-haiku-4-5` (or override via `--model`) |
 | `prompt_version` | Defined in `tier4_llm_fallback.PROMPT_VERSION` |
 | `strategy_version` | Defined in `tier4_llm_fallback.STRATEGY_VERSION` |
-| `cleaner_version` | Operator-supplied (`--cleaner-version`, default `0.2.0`) |
+| `cleaner_version` | Operator-supplied (`--cleaner-version`, default `0.3.0`) |
 | `missing_fields_sha256` | sha256 of the sorted list of question numbers the cleaner left blank |
 
 Uniqueness is enforced by a dedicated unique index (not a table UNIQUE

@@ -359,7 +359,7 @@ without introducing conflicts in this sample.
 
 Production follow-through:
 
-- `tier4_extractor.py` now uses `producer_version = "0.2.0"` for new
+- `tier4_extractor.py` first used `producer_version = "0.2.0"` for new
   `tier4_docling` canonical artifacts.
 - The Tier 4 Docling config sets
   `pipeline.layout_options.create_orphan_clusters = False`.
@@ -373,6 +373,56 @@ Production follow-through:
   `Foreign language`. The C5 resolver now treats `recommend*` as recommended
   and prioritizes `Foreign language` / `Computer Science` before broader
   substring matches.
+
+## Layout-overlay cleaner pass
+
+The follow-up pass tested the bigger practical hypothesis from the Farmingdale page
+audit: when Docling loses table shape, the embedded PDF text layer can still preserve
+enough visual order for deterministic recovery. This is not an LLM repair path. The
+extractor now passes `pypdf` layout-mode text into `tier4_cleaner.clean()` as
+supplemental text, and the cleaner uses it only as a targeted gap-fill overlay for
+known CDS section shapes.
+
+Implementation follow-through:
+
+- `tier4_extractor.py` now uses `producer_version = "0.3.0"` for new
+  `tier4_docling` canonical artifacts so the corpus drain writes fresh rows instead
+  of treating v0.2 artifacts as current.
+- New artifacts record `notes.stats.pdf_layout_text_length`.
+- The cleaner scope is explicit: optimized for 2024-25+ CDS templates, with older
+  years handled best-effort through low-risk wording normalizations rather than a
+  year-branched resolver contract.
+- The overlay added deterministic resolvers for A general information, B graduation
+  grids, C admissions layouts, D transfer, E/F checkmark grids, G expenses, H aid,
+  I faculty/class-size, and J disciplinary areas. Ambiguous or visibly blank cells
+  remain blank.
+
+Measured against the same ten low-coverage 2024-25+ Tier 4 fixture PDFs:
+
+| Fixture | Post-Farmingdale pass | Post-v0.3 pass | Delta |
+|---|---:|---:|---:|
+| DeSales University 2024-25 | 428 | 504 | +76 |
+| Dominican University 2025-26 | 532 | 587 | +55 |
+| Dominican University of California 2024-25 | 610 | 624 | +14 |
+| Emory 2024-25 | 506 | 564 | +58 |
+| Farmingdale State College 2024-25 | 631 | 635 | +4 |
+| Franklin and Marshall College 2024-25 | 527 | 568 | +41 |
+| Gettysburg College 2024-25 | 540 | 574 | +34 |
+| Kenyon 2024-25 | 402 | 479 | +77 |
+| Lafayette College 2025-26 | 554 | 581 | +27 |
+| Michigan State University 2024-25 | 336 | 486 | +150 |
+| **Total** | **5,066** | **5,602** | **+536** |
+
+Verification:
+
+```bash
+PYTHONPATH=tools/extraction_worker \
+  /Users/santhonys/docling-eval/bin/python \
+  -m unittest discover -s tools/extraction_worker -p 'test_tier4_cleaner*.py'
+```
+
+Result: 45 tests passing. The ten-PDF fixture batch also completed successfully with
+no count regressions; the local comparison artifacts are in `.context/`.
 
 ## Native JSON table parser arm
 
