@@ -112,3 +112,37 @@ python run_matrix.py
 ```
 
 Re-run when considering a config change (new Docling version, new knob, new OCR backend). Not part of the routine validation loop.
+
+## Docling native-table spike
+
+PRD 0111A uses two helper scripts to test whether Docling's native document/table
+model contains recoverable C9/C11/C12 structure before adding a VLM repair path.
+
+```bash
+# Select low-coverage Tier 4 PDF fixtures and download the source PDFs.
+/Users/santhonys/docling-eval/bin/python \
+  tools/extraction-validator/select_docling_spike_fixtures.py \
+  --env .env.local \
+  --limit 12 \
+  --candidate-limit 300 \
+  --min-year 2024-25 \
+  --download
+
+# Inspect native Docling JSON/tables and run the narrow C9 heuristic.
+/Users/santhonys/docling-eval/bin/python \
+  tools/extraction-validator/inspect_docling_native.py \
+  --manifest .context/docling-spike/fixtures/manifest.json \
+  --config production
+```
+
+Outputs are written under `.context/docling-spike/` by default. They include
+markdown, Docling JSON, per-table CSV/HTML/markdown exports, package versions,
+table provenance, and `summary.json`.
+
+When `--min-year` is used, fixture selection filters by `cds_year` first and
+falls back to `detected_year` only when `cds_year` is missing. This keeps the
+spike aligned with the 2024-25+ MVP scope without hiding metadata mismatches in
+the source corpus.
+
+This is a spike harness, not production extraction code. A successful native-table
+candidate still needs CDS-specific validation before it can influence browser data.

@@ -1,6 +1,6 @@
 # Docling improvement spike findings
 
-**Status:** Rough initial code audit
+**Status:** Initial code audit plus native-table spike harness
 **Created:** 2026-04-26
 **Related:** [PRD 0111A](../prd/0111A-docling-improvement-spike.md), [PRD 011](../prd/011-academic-profile-llm-repair.md), [Extraction Quality](../extraction-quality.md)
 
@@ -110,13 +110,175 @@ Out of scope unless time remains:
 - GraniteDocling / Small Docling
 - production artifact migration
 
+## Operationalization started
+
+Two spike tools now exist under `tools/extraction-validator/`:
+
+- `select_docling_spike_fixtures.py` selects low-coverage `tier4_docling`
+  `pdf_flat` artifacts from Supabase and optionally downloads the source PDFs into
+  `.context/docling-spike/fixtures/`.
+- `inspect_docling_native.py` runs Docling conversion over those PDFs and writes:
+  markdown, Docling JSON, per-table CSV/HTML/markdown exports, table provenance, a
+  rollup summary, package versions, and a narrow C9 SAT/ACT heuristic.
+
+Local Docling evaluation environment:
+
+```text
+/Users/santhonys/docling-eval/bin/python
+docling==2.85.0
+docling-core==2.72.0
+docling-ibm-models==3.13.0
+docling-parse==5.8.0
+easyocr==1.7.2
+rapidocr==3.8.0
+torch==2.11.0
+pandas==2.3.3
+```
+
+Smoke commands:
+
+```bash
+/Users/santhonys/docling-eval/bin/python \
+  tools/extraction-validator/select_docling_spike_fixtures.py \
+  --env .env.local \
+  --limit 1 \
+  --candidate-limit 300 \
+  --download
+
+/Users/santhonys/docling-eval/bin/python \
+  tools/extraction-validator/inspect_docling_native.py \
+  --manifest .context/docling-spike/fixtures/manifest.json \
+  --config production \
+  --out-dir .context/docling-spike/native-runs-smoke
+```
+
+Smoke result on `farmingdale-state-college` 2024-25:
+
+- source artifact was `pdf_flat`, current Tier 4 artifact had 22 schema fields
+  populated
+- Docling production-like config converted 29 pages in about 16 seconds
+- native output contained 39 tables
+- table provenance included page number, bbox, and Docling item ref
+- the narrow C9 heuristic recovered:
+  - `sat_ebrw_p25/p50/p75 = 520/570/620`
+  - `sat_math_p25/p50/p75 = 520/570/620`
+  - `act_composite_p25/p50/p75 = 20/25/28`
+
+This is not enough to declare Outcome A. It is enough to prove the operational path:
+we can select real failure fixtures, download archived sources with the local anon
+Supabase env, run Docling native inspection, and produce parser-facing table evidence
+without touching production extraction.
+
+## Ivy sanity run
+
+Command:
+
+```bash
+/Users/santhonys/docling-eval/bin/python \
+  tools/extraction-validator/inspect_docling_native.py \
+  --manifest .context/docling-spike/ivy-fixtures/manifest.json \
+  --config production \
+  --out-dir .context/docling-spike/ivy-native-runs
+```
+
+Fixture set:
+
+- `harvard` 2024-25
+- `yale` 2024-25
+- `dartmouth` 2025-26
+- `princeton` 2024-25
+- `brown` 2024-25
+- `columbia` 2024-25
+
+Cornell was intentionally skipped for this Docling sanity run because recent Cornell
+artifacts are fillable PDF or XLSX, not Tier 4 flat PDFs.
+
+Results:
+
+| School | Pages | Native tables | Runtime | Narrow C9 fields recovered |
+|---|---:|---:|---:|---:|
+| Harvard 2024-25 | 32 | 41 | 12.7s | 9 |
+| Yale 2024-25 | 43 | 69 | 15.3s | 14 |
+| Dartmouth 2025-26 | 34 | 45 | 22.4s | 12 |
+| Princeton 2024-25 | 43 | 40 | 12.2s | 12 |
+| Brown 2024-25 | 37 | 95 | 22.0s | 14 |
+| Columbia 2024-25 | 50 | 41 | 16.4s | 14 |
+
+The narrow heuristic recovered SAT/ACT percentile rows for every Ivy fixture. It also
+found SAT/ACT submission rates for Yale, Brown, and Columbia. Harvard lacks a direct
+SAT composite row in this heuristic output because the table exposes EBRW and Math
+component rows; a production parser would need explicit rules for whether and how to
+derive composite values from component rows.
+
+This is a sanity set, not the failure-stratified decision set required by PRD 0111A.
+The takeaway is that native Docling tables are very usable on high-quality flat PDFs,
+with page/bbox/item provenance available for the relevant tables.
+
+## Recent failure-stratified run
+
+After the Ivy sanity check, the spike selected a corrected 2024-25+ fixture set from
+low-coverage `tier4_docling` `pdf_flat` canonical artifacts. Selection now filters by
+`cds_year` first and falls back to `detected_year` only when `cds_year` is missing,
+which avoids admitting stale-year documents because of detected-year noise.
+
+Command:
+
+```bash
+/Users/santhonys/docling-eval/bin/python \
+  tools/extraction-validator/select_docling_spike_fixtures.py \
+  --env .env.local \
+  --limit 10 \
+  --candidate-limit 600 \
+  --min-fields 20 \
+  --min-year 2024-25 \
+  --max-per-school 1 \
+  --download \
+  --out-dir .context/docling-spike/failure-fixtures-2024-plus-v2
+
+/Users/santhonys/docling-eval/bin/python \
+  tools/extraction-validator/inspect_docling_native.py \
+  --manifest .context/docling-spike/failure-fixtures-2024-plus-v2/manifest.json \
+  --config production \
+  --out-dir .context/docling-spike/failure-native-runs-2024-plus-v2-production
+```
+
+Results:
+
+| School | Year | Pages | Native tables | Runtime | Narrow C9 fields recovered |
+|---|---:|---:|---:|---:|---:|
+| Farmingdale State College | 2024-25 | 29 | 39 | 14.8s | 9 |
+| Franklin and Marshall College | 2024-25 | 28 | 37 | 10.3s | 9 |
+| DeSales University | 2024-25 | 30 | 39 | 11.4s | 9 |
+| Emory | 2024-25 | 26 | 43 | 11.6s | 12 |
+| Michigan State University | 2024-25 | 50 | 39 | 12.2s | 12 |
+| Dominican University | 2025-26 | 40 | 48 | 19.3s | 12 |
+| Gettysburg College | 2024-25 | 26 | 33 | 10.2s | 9 |
+| Lafayette College | 2025-26 | 43 | 39 | 12.4s | 12 |
+| Lehigh | 2025-26 | 24 | 37 | 10.7s | 12 |
+| Kennesaw State University | 2024-25 | 26 | 38 | 11.6s | 12 |
+
+Totals:
+
+- 10/10 documents produced C9 SAT/ACT candidates.
+- 108 C9 field candidates were recovered.
+- Production-like Docling config runtime was 124.6s total.
+- Docling's current defaults recovered the same 108 candidates but took 203.9s.
+
+The narrower conclusion is stronger than the original audit but still bounded:
+native Docling tables appear sufficient to recover common SAT/ACT percentile rows
+from recent low-coverage flat PDFs. This is not yet ground-truth scoring. The
+candidate parser still needs CDS-specific validation, conflict handling against
+existing deterministic values, and explicit support for older/non-standard C9 layouts
+before it can write production browser fields.
+
 ## Initial conclusion
 
 We are close on routing and extraction policy, but far off on the Docling data model
 best practices. The current pipeline uses Docling's conversion engine but mostly
 discards the structured representation that makes Docling valuable for table-heavy
-repair. The first implementation move should be an artifact/inspector spike around
-Docling JSON and native tables, not a VLM repair script.
+repair. The first implementation move should be to promote a narrow native-table
+parser/provenance path for C9-style academic profile fields, not to spend effort on
+Docling config tuning or a VLM repair script first.
 
 Red-team adjustment: the spike must not conclude "JSON parser works" from structure
 inspection alone. It needs either a narrow parser arm or a deliberately narrower
