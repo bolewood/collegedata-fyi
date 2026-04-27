@@ -367,6 +367,12 @@ Production follow-through:
 - New artifacts persist compact native table cells under `notes.native_tables`.
   This is intentionally not merged into `notes.values` yet; it is substrate for
   deterministic native-table parsers and repair passes before any LLM fallback.
+- A vision cross-check on Farmingdale page 9 confirmed the new C5 required-unit
+  fields and caught one additional deterministic cleaner bug: Docling truncated
+  the `Recommended` header to `Recommende` and wrapped a blank lab row into
+  `Foreign language`. The C5 resolver now treats `recommend*` as recommended
+  and prioritizes `Foreign language` / `Computer Science` before broader
+  substring matches.
 
 ## Native JSON table parser arm
 

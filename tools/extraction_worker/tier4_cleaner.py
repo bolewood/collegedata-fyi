@@ -1230,13 +1230,13 @@ _C5_SUBJECTS = [
     ("total academic units",    "Total academic units"),
     ("english",                 "English"),
     ("mathematics",             "Mathematics"),
+    ("foreign language",        "Foreign language"),
+    ("computer science",        "Computer Science"),
     ("science",                 "Science"),
     ("units that must be lab",  "Of these, units that must be lab"),
-    ("foreign language",        "Foreign language"),
     ("social studies",          "Social studies"),
     ("history",                 "History"),
     ("academic electives",      "Academic electives"),
-    ("computer science",        "Computer Science"),
     ("visual performing arts",  "Visual/Performing Arts"),
     ("other",                   "Other (specify)"),
 ]
@@ -1279,7 +1279,7 @@ def resolve_c5_carnegie_units(
         for ci, hdr in enumerate(headers_norm[1:]):
             if "required" in hdr:
                 col_to_cat.append((ci, "Required"))
-            elif "recommended" in hdr:
+            elif "recommend" in hdr:
                 col_to_cat.append((ci, "Recommended"))
             elif "units" in hdr and not col_to_cat:
                 # Single-column layout — treat as Required unless surrounding
