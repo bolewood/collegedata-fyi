@@ -101,8 +101,8 @@ export default async function Image({
       stats.push({ label: "SAT Composite", value: `${sat25}-${sat75}` });
     }
 
-    const act25 = getNum(values, "C.921");
-    const act75 = getNum(values, "C.923");
+    const act25 = getNum(values, "C.914");
+    const act75 = getNum(values, "C.916");
     if (act25 && act75) {
       stats.push({ label: "ACT Composite", value: `${act25}-${act75}` });
     }

@@ -34,6 +34,20 @@ export type BrowserRow = {
   retention_rate: number | string | null;
   avg_net_price: number | null;
   pell_rate: number | string | null;
+  sat_submit_rate: number | string | null;
+  act_submit_rate: number | string | null;
+  sat_composite_p25: number | null;
+  sat_composite_p50: number | null;
+  sat_composite_p75: number | null;
+  sat_ebrw_p25: number | null;
+  sat_ebrw_p50: number | null;
+  sat_ebrw_p75: number | null;
+  sat_math_p25: number | null;
+  sat_math_p50: number | null;
+  sat_math_p75: number | null;
+  act_composite_p25: number | null;
+  act_composite_p50: number | null;
+  act_composite_p75: number | null;
 };
 
 export type BrowserFilter = {
@@ -67,8 +81,18 @@ export type BrowserSearchResponse = {
     rows_returned: number;
     page: number;
     page_size: number;
+    academic_profile_filters: AcademicProfileFilterMetadata[];
   };
   rows: Record<string, unknown>[];
+};
+
+export type AcademicProfileFilterMetadata = {
+  field: string;
+  companion_submit_rate_field: string | null;
+  companion_required_for_comparison: boolean;
+  rows_with_value: number;
+  rows_with_companion_submit_rate: number | null;
+  rows_with_value_missing_companion_submit_rate: number | null;
 };
 
 const OPERATORS = new Set<FilterOperator>([
@@ -106,6 +130,20 @@ export const ALLOWED_FIELDS = new Set([
   "retention_rate",
   "avg_net_price",
   "pell_rate",
+  "sat_submit_rate",
+  "act_submit_rate",
+  "sat_composite_p25",
+  "sat_composite_p50",
+  "sat_composite_p75",
+  "sat_ebrw_p25",
+  "sat_ebrw_p50",
+  "sat_ebrw_p75",
+  "sat_math_p25",
+  "sat_math_p50",
+  "sat_math_p75",
+  "act_composite_p25",
+  "act_composite_p50",
+  "act_composite_p75",
 ]);
 
 const NUMERIC_FIELDS = new Set([
@@ -119,7 +157,38 @@ const NUMERIC_FIELDS = new Set([
   "retention_rate",
   "avg_net_price",
   "pell_rate",
+  "sat_submit_rate",
+  "act_submit_rate",
+  "sat_composite_p25",
+  "sat_composite_p50",
+  "sat_composite_p75",
+  "sat_ebrw_p25",
+  "sat_ebrw_p50",
+  "sat_ebrw_p75",
+  "sat_math_p25",
+  "sat_math_p50",
+  "sat_math_p75",
+  "act_composite_p25",
+  "act_composite_p50",
+  "act_composite_p75",
 ]);
+
+const ACADEMIC_PROFILE_COMPANIONS: Record<string, string> = {
+  sat_composite_p25: "sat_submit_rate",
+  sat_composite_p50: "sat_submit_rate",
+  sat_composite_p75: "sat_submit_rate",
+  sat_ebrw_p25: "sat_submit_rate",
+  sat_ebrw_p50: "sat_submit_rate",
+  sat_ebrw_p75: "sat_submit_rate",
+  sat_math_p25: "sat_submit_rate",
+  sat_math_p50: "sat_submit_rate",
+  sat_math_p75: "sat_submit_rate",
+  act_composite_p25: "act_submit_rate",
+  act_composite_p50: "act_submit_rate",
+  act_composite_p75: "act_submit_rate",
+};
+
+const COMPARISON_OPERATORS = new Set<FilterOperator>(["=", "!=", ">", ">=", "<", "<="]);
 
 export function isRequiredOperator(op: FilterOperator): boolean {
   return op !== "is blank";
@@ -229,9 +298,31 @@ export function searchBrowserRows(rows: BrowserRow[], input: BrowserSearchReques
       rows_returned: projectedRows.length,
       page,
       page_size: pageSize,
+      academic_profile_filters: academicProfileFilterMetadata(withRequired.map((item) => item.row), filters),
     },
     rows: projectedRows,
   };
+}
+
+function academicProfileFilterMetadata(
+  rowsWithRequiredFields: BrowserRow[],
+  filters: BrowserFilter[],
+): AcademicProfileFilterMetadata[] {
+  return filters
+    .filter((filter) => filter.field in ACADEMIC_PROFILE_COMPANIONS)
+    .map((filter) => {
+      const companion = ACADEMIC_PROFILE_COMPANIONS[filter.field];
+      const rowsWithValue = rowsWithRequiredFields.filter((row) => isPopulated(row, filter.field));
+      const rowsWithCompanion = rowsWithValue.filter((row) => isPopulated(row, companion)).length;
+      return {
+        field: filter.field,
+        companion_submit_rate_field: companion,
+        companion_required_for_comparison: COMPARISON_OPERATORS.has(filter.op),
+        rows_with_value: rowsWithValue.length,
+        rows_with_companion_submit_rate: rowsWithCompanion,
+        rows_with_value_missing_companion_submit_rate: rowsWithValue.length - rowsWithCompanion,
+      };
+    });
 }
 
 function normalizeRequest(input: BrowserSearchRequest): Required<BrowserSearchRequest> {
@@ -271,6 +362,14 @@ function normalizeRequest(input: BrowserSearchRequest): Required<BrowserSearchRe
       "yield_rate",
       "undergrad_enrollment_scorecard",
       "avg_net_price",
+      "sat_submit_rate",
+      "act_submit_rate",
+      "sat_composite_p25",
+      "sat_composite_p50",
+      "sat_composite_p75",
+      "act_composite_p25",
+      "act_composite_p50",
+      "act_composite_p75",
       "source_format",
       "data_quality_flag",
       "archive_url",

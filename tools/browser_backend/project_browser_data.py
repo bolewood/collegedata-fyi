@@ -47,12 +47,6 @@ BASE_PRODUCER_RANK = {
 }
 FALLBACK_PRODUCER = "tier4_llm_fallback"
 
-DIRECT_METRIC_ALIASES = {
-    "applied": "C.116",
-    "admitted": "C.117",
-    "first_year_enrolled": "C.118",
-}
-
 NOT_APPLICABLE_VALUES = {
     "n/a",
     "na",
@@ -71,6 +65,19 @@ class FieldDefinition:
     section: Optional[str]
     subsection: Optional[str]
     value_kind_hint: Optional[str]
+
+
+@dataclass(frozen=True)
+class MetricDefinition:
+    canonical_metric: str
+    field_id: str
+    value_kind: str
+    mvp_certified: bool
+    notes: str
+    browser_column: Optional[str] = None
+    min_value: Optional[Decimal] = None
+    max_value: Optional[Decimal] = None
+    integer_only: bool = False
 
 
 @dataclass(frozen=True)
@@ -93,6 +100,94 @@ class ParsedValue:
     value_bool: Optional[bool]
     value_kind: str
     value_status: str
+
+
+DIRECT_METRIC_DEFINITIONS = {
+    "applied": MetricDefinition(
+        "applied", "C.116", "number", True, "PRD 010 MVP direct field alias.", "applied",
+    ),
+    "admitted": MetricDefinition(
+        "admitted", "C.117", "number", True, "PRD 010 MVP direct field alias.", "admitted",
+    ),
+    "first_year_enrolled": MetricDefinition(
+        "first_year_enrolled", "C.118", "number", True, "PRD 010 MVP direct field alias.", "enrolled_first_year",
+    ),
+    "sat_submit_rate": MetricDefinition(
+        "sat_submit_rate", "C.901", "percent", True,
+        "PRD 012 direct field alias; stored fractionally and paired with SAT score interpretation.",
+        "sat_submit_rate",
+    ),
+    "act_submit_rate": MetricDefinition(
+        "act_submit_rate", "C.902", "percent", True,
+        "PRD 012 direct field alias; stored fractionally and paired with ACT score interpretation.",
+        "act_submit_rate",
+    ),
+    "sat_composite_p25": MetricDefinition(
+        "sat_composite_p25", "C.905", "number", True,
+        "PRD 012 direct SAT Composite 25th percentile field.",
+        "sat_composite_p25", Decimal("400"), Decimal("1600"), True,
+    ),
+    "sat_composite_p50": MetricDefinition(
+        "sat_composite_p50", "C.906", "number", True,
+        "PRD 012 direct SAT Composite 50th percentile field.",
+        "sat_composite_p50", Decimal("400"), Decimal("1600"), True,
+    ),
+    "sat_composite_p75": MetricDefinition(
+        "sat_composite_p75", "C.907", "number", True,
+        "PRD 012 direct SAT Composite 75th percentile field.",
+        "sat_composite_p75", Decimal("400"), Decimal("1600"), True,
+    ),
+    "sat_ebrw_p25": MetricDefinition(
+        "sat_ebrw_p25", "C.908", "number", True,
+        "PRD 012 direct SAT EBRW 25th percentile field.",
+        "sat_ebrw_p25", Decimal("200"), Decimal("800"), True,
+    ),
+    "sat_ebrw_p50": MetricDefinition(
+        "sat_ebrw_p50", "C.909", "number", True,
+        "PRD 012 direct SAT EBRW 50th percentile field.",
+        "sat_ebrw_p50", Decimal("200"), Decimal("800"), True,
+    ),
+    "sat_ebrw_p75": MetricDefinition(
+        "sat_ebrw_p75", "C.910", "number", True,
+        "PRD 012 direct SAT EBRW 75th percentile field.",
+        "sat_ebrw_p75", Decimal("200"), Decimal("800"), True,
+    ),
+    "sat_math_p25": MetricDefinition(
+        "sat_math_p25", "C.911", "number", True,
+        "PRD 012 direct SAT Math 25th percentile field.",
+        "sat_math_p25", Decimal("200"), Decimal("800"), True,
+    ),
+    "sat_math_p50": MetricDefinition(
+        "sat_math_p50", "C.912", "number", True,
+        "PRD 012 direct SAT Math 50th percentile field.",
+        "sat_math_p50", Decimal("200"), Decimal("800"), True,
+    ),
+    "sat_math_p75": MetricDefinition(
+        "sat_math_p75", "C.913", "number", True,
+        "PRD 012 direct SAT Math 75th percentile field.",
+        "sat_math_p75", Decimal("200"), Decimal("800"), True,
+    ),
+    "act_composite_p25": MetricDefinition(
+        "act_composite_p25", "C.914", "number", True,
+        "PRD 012 direct ACT Composite 25th percentile field.",
+        "act_composite_p25", Decimal("1"), Decimal("36"), True,
+    ),
+    "act_composite_p50": MetricDefinition(
+        "act_composite_p50", "C.915", "number", True,
+        "PRD 012 direct ACT Composite 50th percentile field.",
+        "act_composite_p50", Decimal("1"), Decimal("36"), True,
+    ),
+    "act_composite_p75": MetricDefinition(
+        "act_composite_p75", "C.916", "number", True,
+        "PRD 012 direct ACT Composite 75th percentile field.",
+        "act_composite_p75", Decimal("1"), Decimal("36"), True,
+    ),
+}
+
+DIRECT_METRIC_ALIASES = {
+    metric: definition.field_id
+    for metric, definition in DIRECT_METRIC_DEFINITIONS.items()
+}
 
 
 def load_env(env_path: Path = REPO_ROOT / ".env") -> dict[str, str]:
@@ -168,16 +263,16 @@ def field_definition_rows(definitions: dict[str, dict[str, FieldDefinition]]) ->
 def metric_alias_rows(definitions: dict[str, dict[str, FieldDefinition]]) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for schema_version, fields in definitions.items():
-        for canonical_metric, field_id in DIRECT_METRIC_ALIASES.items():
-            if field_id not in fields:
+        for metric in DIRECT_METRIC_DEFINITIONS.values():
+            if metric.field_id not in fields:
                 continue
             rows.append({
-                "canonical_metric": canonical_metric,
+                "canonical_metric": metric.canonical_metric,
                 "schema_version": schema_version,
-                "field_id": field_id,
-                "value_kind": "number",
-                "mvp_certified": True,
-                "notes": "PRD 010 MVP direct field alias. Derived rates are computed in school_browser_rows.",
+                "field_id": metric.field_id,
+                "value_kind": metric.value_kind,
+                "mvp_certified": metric.mvp_certified,
+                "notes": metric.notes,
             })
     return rows
 
@@ -334,9 +429,17 @@ def infer_value_kind(record: Any, definition: Optional[FieldDefinition], text: O
     return "text"
 
 
-def parse_field_value(record: Any, definition: Optional[FieldDefinition] = None) -> ParsedValue:
+def parse_field_value(
+    record: Any,
+    definition: Optional[FieldDefinition] = None,
+    metric: Optional[MetricDefinition] = None,
+) -> ParsedValue:
     text = display_value(record)
     kind = infer_value_kind(record, definition, text)
+    if metric and metric.value_kind == "percent":
+        kind = "percent"
+    elif metric and metric.value_kind == "number" and kind == "unknown":
+        kind = "number"
 
     if text is None:
         return ParsedValue(None, None, None, kind, "missing")
@@ -363,9 +466,21 @@ def parse_field_value(record: Any, definition: Optional[FieldDefinition] = None)
             parsed = normalize_fractional_percent(parsed, text)
             if parsed < 0 or parsed > 1:
                 return ParsedValue(text, None, None, kind, "parse_error")
+        if metric and not metric_value_is_valid(parsed, metric):
+            return ParsedValue(text, None, None, kind, "parse_error")
         return ParsedValue(text, parsed, None, kind, "reported")
 
     return ParsedValue(text, None, None, kind, "reported")
+
+
+def metric_value_is_valid(value: Decimal, metric: MetricDefinition) -> bool:
+    if metric.integer_only and value != value.to_integral_value():
+        return False
+    if metric.min_value is not None and value < metric.min_value:
+        return False
+    if metric.max_value is not None and value > metric.max_value:
+        return False
+    return True
 
 
 def parse_bool(text: str) -> Optional[bool]:
@@ -444,9 +559,9 @@ def build_projection_rows(
 
     schema_defs = definitions.get(selected.schema_version) or definitions.get(DEFAULT_SCHEMA_VERSION) or {}
     aliases_by_field = {
-        field_id: metric
-        for metric, field_id in DIRECT_METRIC_ALIASES.items()
-        if field_id in schema_defs
+        metric.field_id: metric
+        for metric in DIRECT_METRIC_DEFINITIONS.values()
+        if metric.field_id in schema_defs
     }
 
     field_rows: list[dict[str, Any]] = []
@@ -454,12 +569,13 @@ def build_projection_rows(
 
     for field_id, record in sorted(selected.values.items()):
         definition = schema_defs.get(field_id)
-        parsed = parse_field_value(record, definition)
+        metric = aliases_by_field.get(field_id)
+        parsed = parse_field_value(record, definition, metric)
         source_producer, source_version = selected.value_sources.get(
             field_id,
             (selected.base_producer, selected.base_producer_version),
         )
-        canonical_metric = aliases_by_field.get(field_id)
+        canonical_metric = metric.canonical_metric if metric else None
         row = {
             "document_id": document["document_id"],
             "school_id": document["school_id"],
@@ -542,6 +658,20 @@ def build_browser_row(
         "retention_rate": decimal_to_json(quantize_rate(scorecard.get("retention_rate_ft"))),
         "avg_net_price": scorecard.get("avg_net_price"),
         "pell_rate": decimal_to_json(quantize_rate(scorecard.get("pell_grant_rate"))),
+        "sat_submit_rate": decimal_to_json(metric_values.get("sat_submit_rate")),
+        "act_submit_rate": decimal_to_json(metric_values.get("act_submit_rate")),
+        "sat_composite_p25": int_from_decimal(metric_values.get("sat_composite_p25")),
+        "sat_composite_p50": int_from_decimal(metric_values.get("sat_composite_p50")),
+        "sat_composite_p75": int_from_decimal(metric_values.get("sat_composite_p75")),
+        "sat_ebrw_p25": int_from_decimal(metric_values.get("sat_ebrw_p25")),
+        "sat_ebrw_p50": int_from_decimal(metric_values.get("sat_ebrw_p50")),
+        "sat_ebrw_p75": int_from_decimal(metric_values.get("sat_ebrw_p75")),
+        "sat_math_p25": int_from_decimal(metric_values.get("sat_math_p25")),
+        "sat_math_p50": int_from_decimal(metric_values.get("sat_math_p50")),
+        "sat_math_p75": int_from_decimal(metric_values.get("sat_math_p75")),
+        "act_composite_p25": int_from_decimal(metric_values.get("act_composite_p25")),
+        "act_composite_p50": int_from_decimal(metric_values.get("act_composite_p50")),
+        "act_composite_p75": int_from_decimal(metric_values.get("act_composite_p75")),
     }
 
 
@@ -581,6 +711,11 @@ def project_document(
     if browser_row:
         client.table("school_browser_rows").upsert(browser_row, on_conflict="document_id").execute()
     return len(field_rows), bool(browser_row)
+
+
+def clear_projection_tables(client: Any) -> None:
+    client.table("cds_fields").delete().gte("year_start", MIN_YEAR_START).execute()
+    client.table("school_browser_rows").delete().gte("year_start", MIN_YEAR_START).execute()
 
 
 def fetch_artifacts(client: Any, document_id: str) -> list[dict[str, Any]]:
@@ -684,6 +819,10 @@ def main() -> int:
     client = make_client()
     if not args.skip_metadata:
         seed_metadata(client, definitions, args.apply)
+
+    if args.full_rebuild and args.apply:
+        print(f"clearing existing {MIN_YEAR_START}+ projection rows")
+        clear_projection_tables(client)
 
     docs = fetch_documents(client, args.document_id)
     total_fields = 0

@@ -17,6 +17,20 @@ def defs():
             "C.116": FieldDefinition("2025-26", "C.116", "Applied", "Admission", "Applications", "Number"),
             "C.117": FieldDefinition("2025-26", "C.117", "Admitted", "Admission", "Applications", "Number"),
             "C.118": FieldDefinition("2025-26", "C.118", "Enrolled", "Admission", "Applications", "Number"),
+            "C.901": FieldDefinition("2025-26", "C.901", "Percent Submitting SAT Scores", "Admission", "Profile", "Whole Number or Round to Nearest Tenth"),
+            "C.902": FieldDefinition("2025-26", "C.902", "Percent Submitting ACT Scores", "Admission", "Profile", "Whole Number or Round to Nearest Tenth"),
+            "C.905": FieldDefinition("2025-26", "C.905", "SAT Composite: 25th Percentile", "Admission", "Profile", "Whole Number or Round to Nearest Tenth"),
+            "C.906": FieldDefinition("2025-26", "C.906", "SAT Composite: 50th Percentile", "Admission", "Profile", "Whole Number or Round to Nearest Tenth"),
+            "C.907": FieldDefinition("2025-26", "C.907", "SAT Composite: 75th Percentile", "Admission", "Profile", "Whole Number or Round to Nearest Tenth"),
+            "C.908": FieldDefinition("2025-26", "C.908", "SAT EBRW: 25th Percentile", "Admission", "Profile", "Whole Number or Round to Nearest Tenth"),
+            "C.909": FieldDefinition("2025-26", "C.909", "SAT EBRW: 50th Percentile", "Admission", "Profile", "Whole Number or Round to Nearest Tenth"),
+            "C.910": FieldDefinition("2025-26", "C.910", "SAT EBRW: 75th Percentile", "Admission", "Profile", "Whole Number or Round to Nearest Tenth"),
+            "C.911": FieldDefinition("2025-26", "C.911", "SAT Math: 25th Percentile", "Admission", "Profile", "Whole Number or Round to Nearest Tenth"),
+            "C.912": FieldDefinition("2025-26", "C.912", "SAT Math: 50th Percentile", "Admission", "Profile", "Whole Number or Round to Nearest Tenth"),
+            "C.913": FieldDefinition("2025-26", "C.913", "SAT Math: 75th Percentile", "Admission", "Profile", "Whole Number or Round to Nearest Tenth"),
+            "C.914": FieldDefinition("2025-26", "C.914", "ACT Composite: 25th Percentile", "Admission", "Profile", "Whole Number or Round to Nearest Tenth"),
+            "C.915": FieldDefinition("2025-26", "C.915", "ACT Composite: 50th Percentile", "Admission", "Profile", "Whole Number or Round to Nearest Tenth"),
+            "C.916": FieldDefinition("2025-26", "C.916", "ACT Composite: 75th Percentile", "Admission", "Profile", "Whole Number or Round to Nearest Tenth"),
             "B.2203": FieldDefinition("2025-26", "B.2203", "Retention percentage", "Enrollment", "Retention", "Whole Number or Round to Nearest Tenth"),
         }
     }
@@ -57,6 +71,8 @@ class BrowserProjectionTests(unittest.TestCase):
         self.assertEqual(names, set(DIRECT_METRIC_ALIASES))
         self.assertNotIn("acceptance_rate", names)
         self.assertNotIn("yield_rate", names)
+        self.assertIn("sat_composite_p50", names)
+        self.assertIn("act_composite_p75", names)
 
         fields, browser = build_projection_rows(
             doc(),
@@ -73,6 +89,62 @@ class BrowserProjectionTests(unittest.TestCase):
         self.assertEqual(field_metrics, {"applied", "admitted", "first_year_enrolled"})
         self.assertEqual(browser["acceptance_rate"], "0.200000")
         self.assertEqual(browser["yield_rate"], "0.500000")
+
+    def test_sat_act_promoted_fields_project_to_browser_columns(self):
+        fields, browser = build_projection_rows(
+            doc(),
+            [
+                artifact(values={
+                    "C.901": {"value": "58%"},
+                    "C.902": {"value": "31"},
+                    "C.905": {"value": "1400"},
+                    "C.906": {"value": "1450.0"},
+                    "C.907": {"value": "1500"},
+                    "C.914": {"value": "32"},
+                    "C.915": {"value": "34"},
+                    "C.916": {"value": "35"},
+                })
+            ],
+            defs(),
+        )
+        metrics = {row["canonical_metric"]: row for row in fields if row["canonical_metric"]}
+        self.assertEqual(metrics["sat_submit_rate"]["value_num"], "0.58")
+        self.assertEqual(metrics["act_submit_rate"]["value_num"], "0.31")
+        self.assertEqual(metrics["sat_composite_p50"]["value_num"], "1450.0")
+        self.assertEqual(browser["sat_submit_rate"], "0.58")
+        self.assertEqual(browser["act_submit_rate"], "0.31")
+        self.assertEqual(browser["sat_composite_p25"], 1400)
+        self.assertEqual(browser["sat_composite_p50"], 1450)
+        self.assertEqual(browser["sat_composite_p75"], 1500)
+        self.assertEqual(browser["act_composite_p25"], 32)
+        self.assertEqual(browser["act_composite_p50"], 34)
+        self.assertEqual(browser["act_composite_p75"], 35)
+
+    def test_invalid_sat_act_values_are_parse_errors_and_not_browser_values(self):
+        fields, browser = build_projection_rows(
+            doc(),
+            [
+                artifact(values={
+                    "C.905": {"value": "399"},
+                    "C.906": {"value": "1450.5"},
+                    "C.907": {"value": "1601"},
+                    "C.914": {"value": "0"},
+                    "C.915": {"value": "33.5"},
+                    "C.916": {"value": "37"},
+                })
+            ],
+            defs(),
+        )
+        by_field = {row["field_id"]: row for row in fields}
+        for field_id in ("C.905", "C.906", "C.907", "C.914", "C.915", "C.916"):
+            self.assertEqual(by_field[field_id]["value_status"], "parse_error")
+            self.assertIsNone(by_field[field_id]["value_num"])
+        self.assertIsNone(browser["sat_composite_p25"])
+        self.assertIsNone(browser["sat_composite_p50"])
+        self.assertIsNone(browser["sat_composite_p75"])
+        self.assertIsNone(browser["act_composite_p25"])
+        self.assertIsNone(browser["act_composite_p50"])
+        self.assertIsNone(browser["act_composite_p75"])
 
     def test_sub_institutional_is_preserved(self):
         fields, browser = build_projection_rows(

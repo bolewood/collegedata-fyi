@@ -80,9 +80,9 @@ export function KeyStats({ values }: { values: Record<string, FieldValue> }) {
     stats.push({ label: "SAT Reading", value: `${satRead25}-${satRead75}` });
   }
 
-  // ACT Composite (C.921 = 25th, C.923 = 75th if they exist)
-  const act25 = getNum(values, "C.921");
-  const act75 = getNum(values, "C.923");
+  // ACT Composite (C.914 = 25th, C.916 = 75th)
+  const act25 = getNum(values, "C.914");
+  const act75 = getNum(values, "C.916");
   if (act25 && act75) {
     stats.push({ label: "ACT Composite", value: `${act25}-${act75}` });
   }

@@ -32,6 +32,20 @@ function row(overrides: Partial<BrowserRow>): BrowserRow {
     retention_rate: null,
     avg_net_price: null,
     pell_rate: null,
+    sat_submit_rate: null,
+    act_submit_rate: null,
+    sat_composite_p25: null,
+    sat_composite_p50: null,
+    sat_composite_p75: null,
+    sat_ebrw_p25: null,
+    sat_ebrw_p50: null,
+    sat_ebrw_p75: null,
+    sat_math_p25: null,
+    sat_math_p50: null,
+    sat_math_p75: null,
+    act_composite_p25: null,
+    act_composite_p50: null,
+    act_composite_p75: null,
     ...overrides,
   };
 }
@@ -158,6 +172,67 @@ Deno.test("not-equals does not match null", () => {
   const blank = row({ avg_net_price: null });
   assertEquals(filterMatches(blank, { field: "avg_net_price", op: "!=", value: 30000 }), false);
   assertEquals(filterMatches(blank, { field: "avg_net_price", op: "!=", value: null }), false);
+});
+
+Deno.test("SAT and ACT fields are filterable with companion answerability metadata", () => {
+  const result = searchBrowserRows(
+    [
+      row({
+        school_id: "a",
+        school_name: "A College",
+        sat_submit_rate: "0.58",
+        sat_composite_p50: 1450,
+      }),
+      row({
+        document_id: "00000000-0000-0000-0000-000000000002",
+        school_id: "b",
+        school_name: "B College",
+        sat_submit_rate: null,
+        sat_composite_p50: 1500,
+      }),
+      row({
+        document_id: "00000000-0000-0000-0000-000000000003",
+        school_id: "c",
+        school_name: "C College",
+        sat_submit_rate: "0.20",
+        sat_composite_p50: null,
+      }),
+    ],
+    {
+      filters: [{ field: "sat_composite_p50", op: ">=", value: 1400 }],
+      columns: ["school_id", "sat_submit_rate", "sat_composite_p50"],
+      sort: { field: "sat_composite_p50", direction: "asc" },
+    },
+  );
+
+  assertEquals(result.rows, [
+    { school_id: "a", sat_submit_rate: "0.58", sat_composite_p50: 1450 },
+    { school_id: "b", sat_submit_rate: null, sat_composite_p50: 1500 },
+  ]);
+  assertEquals(result.metadata.academic_profile_filters, [
+    {
+      field: "sat_composite_p50",
+      companion_submit_rate_field: "sat_submit_rate",
+      companion_required_for_comparison: true,
+      rows_with_value: 2,
+      rows_with_companion_submit_rate: 1,
+      rows_with_value_missing_companion_submit_rate: 1,
+    },
+  ]);
+});
+
+Deno.test("is blank academic-profile filters do not require submit-rate companions", () => {
+  const result = searchBrowserRows(
+    [row({ sat_submit_rate: null, sat_composite_p50: null })],
+    {
+      filters: [{ field: "sat_composite_p50", op: "is blank" }],
+      columns: ["sat_composite_p50"],
+    },
+  );
+
+  assertEquals(result.metadata.required_fields, []);
+  assertEquals(result.metadata.academic_profile_filters[0].companion_required_for_comparison, false);
+  assertEquals(result.rows, [{ sat_composite_p50: null }]);
 });
 
 Deno.test("unsupported fields are rejected", () => {

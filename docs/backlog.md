@@ -56,6 +56,8 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 - **Wire `project_browser_data.py` into the extraction pipeline.** The PRD 010 projection worker is operator-run today (`python tools/browser_backend/project_browser_data.py --full-rebuild --apply`). New extraction artifacts will not automatically refresh `cds_fields` / `school_browser_rows` until the worker is invoked. Fix shape: call the document-level projection after successful extraction writes, or add a scheduled incremental refresh over recently updated documents. **Effort:** ~1-2 hours.
 
+- **Audit Tier 1 XLSX academic-profile field mapping.** PRD 012 Phase 0 found SAT/ACT `cds_fields` parse errors in XLSX rows where C9 fields contain values such as "Very Important", "Important", "Considered", "Percent", or "Number". That points to schema/template alignment drift in the XLSX extractor for at least some 2024-25 workbooks. The PRD 012 browser projection now range-checks and nulls invalid score values, so these should not leak into `school_browser_rows`, but the underlying Tier 1 mapping still needs a focused audit before score fields are treated as launch-certified for XLSX publishers. **Effort:** ~2 hours.
+
 - **Move `browser-search` ranking into SQL if it becomes hot.** The MVP Edge Function reads the materialized `school_browser_rows` table and applies the pure ranking contract in TypeScript. That kept the launch slice small and testable. If corpus size or traffic grows, port the same required-field and latest-per-school semantics into a Postgres RPC using window functions. **Effort:** ~2-3 hours.
 
 ### Larger features / future tiers

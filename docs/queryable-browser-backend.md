@@ -6,8 +6,10 @@ Implemented for PRD 010. Backend and frontend MVP were deployed on
 ## Surfaces
 
 - `cds_field_definitions`: schema-local field labels and type hints.
-- `cds_metric_aliases`: direct-field aliases only. MVP aliases are `applied`,
-  `admitted`, and `first_year_enrolled`.
+- `cds_metric_aliases`: direct-field aliases only. Browser aliases currently
+  include the PRD 010 admissions funnel fields plus PRD 012 SAT/ACT
+  submission-rate and percentile fields. Derived metrics such as
+  `acceptance_rate` and `yield_rate` stay out of the alias table.
 - `cds_selected_extraction_result`: helper view that selects the strongest
   deterministic extraction result and merges `tier4_llm_fallback`
   `kind='cleaned'` values as a gap-filling overlay for Tier 4 rows.
@@ -57,13 +59,27 @@ Numeric percentages in the UI are displayed as `0..100%`, but request filters
 and table storage use fractional `0..1` values. CSV exports keep rate columns
 as fractional values and label them with `_fraction`.
 
+PRD 012 added SAT/ACT backend fields to `school_browser_rows`:
+
+- `sat_submit_rate`, `act_submit_rate`
+- `sat_composite_p25`, `sat_composite_p50`, `sat_composite_p75`
+- `sat_ebrw_p25`, `sat_ebrw_p50`, `sat_ebrw_p75`
+- `sat_math_p25`, `sat_math_p50`, `sat_math_p75`
+- `act_composite_p25`, `act_composite_p50`, `act_composite_p75`
+
+Score columns are nullable and range-checked before projection. Submit rates are
+stored fractionally in `0..1`. The Edge Function accepts these fields for
+filters/sorts and returns academic-profile companion metadata for score filters,
+including how many matching rows have a missing submit-rate companion. The public
+`/browse` UI does not yet expose score filters by default.
+
 ## Verification
 
 Primary checks:
 
 ```bash
 python3 -m unittest tools/browser_backend/project_browser_data_test.py
-python3 -m py_compile tools/browser_backend/project_browser_data.py tools/browser_backend/project_browser_data_test.py
+python3 -m py_compile tools/browser_backend/project_browser_data.py tools/browser_backend/project_browser_data_test.py tools/browser_backend/prd012_answerability.py
 deno test supabase/functions/_shared/*.test.ts supabase/functions/browser-search/*.test.ts
 cd web && npm exec tsc -- --noEmit
 cd web && npm run build
@@ -92,6 +108,14 @@ Production smoke checks used:
 - The first frontend intentionally does not expose arbitrary `cds_fields`
   filtering. It stays on the curated `school_browser_rows` contract until more
   fields are launch-certified.
+- GPA and class-rank remain in the long-form field substrate only. GPA scale
+  comparability and class-rank denominator semantics are not solved enough for
+  first-class browser columns.
+- The PRD 012 Phase 0 measurement found strong SAT/ACT coverage in `pdf_flat`
+  Tier 4 rows, but also found XLSX academic-profile parse errors that look like
+  schema/mapping drift. The projection validator nulls invalid score values
+  rather than letting them into browser columns; the XLSX mapping audit remains
+  a follow-up.
 
 ## Follow-ups
 

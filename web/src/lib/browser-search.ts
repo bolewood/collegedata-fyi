@@ -39,7 +39,21 @@ export type BrowserField =
   | "scorecard_data_year"
   | "retention_rate"
   | "avg_net_price"
-  | "pell_rate";
+  | "pell_rate"
+  | "sat_submit_rate"
+  | "act_submit_rate"
+  | "sat_composite_p25"
+  | "sat_composite_p50"
+  | "sat_composite_p75"
+  | "sat_ebrw_p25"
+  | "sat_ebrw_p50"
+  | "sat_ebrw_p75"
+  | "sat_math_p25"
+  | "sat_math_p50"
+  | "sat_math_p75"
+  | "act_composite_p25"
+  | "act_composite_p50"
+  | "act_composite_p75";
 
 export type BrowserSort = {
   field: BrowserField;
@@ -70,6 +84,14 @@ export type BrowserSearchMetadata = {
   rows_returned: number;
   page: number;
   page_size: number;
+  academic_profile_filters: {
+    field: string;
+    companion_submit_rate_field: string | null;
+    companion_required_for_comparison: boolean;
+    rows_with_value: number;
+    rows_with_companion_submit_rate: number | null;
+    rows_with_value_missing_companion_submit_rate: number | null;
+  }[];
 };
 
 export type BrowserRow = {
@@ -87,6 +109,20 @@ export type BrowserRow = {
   retention_rate: number | null;
   avg_net_price: number | null;
   pell_rate: number | null;
+  sat_submit_rate: number | null;
+  act_submit_rate: number | null;
+  sat_composite_p25: number | null;
+  sat_composite_p50: number | null;
+  sat_composite_p75: number | null;
+  sat_ebrw_p25: number | null;
+  sat_ebrw_p50: number | null;
+  sat_ebrw_p75: number | null;
+  sat_math_p25: number | null;
+  sat_math_p50: number | null;
+  sat_math_p75: number | null;
+  act_composite_p25: number | null;
+  act_composite_p50: number | null;
+  act_composite_p75: number | null;
   source_format: string | null;
   data_quality_flag: string | null;
   archive_url: string;
@@ -112,6 +148,20 @@ export const BROWSER_COLUMNS: BrowserField[] = [
   "retention_rate",
   "avg_net_price",
   "pell_rate",
+  "sat_submit_rate",
+  "act_submit_rate",
+  "sat_composite_p25",
+  "sat_composite_p50",
+  "sat_composite_p75",
+  "sat_ebrw_p25",
+  "sat_ebrw_p50",
+  "sat_ebrw_p75",
+  "sat_math_p25",
+  "sat_math_p50",
+  "sat_math_p75",
+  "act_composite_p25",
+  "act_composite_p50",
+  "act_composite_p75",
   "source_format",
   "data_quality_flag",
   "archive_url",
