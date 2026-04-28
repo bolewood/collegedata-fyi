@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { fetchSiteStats } from "@/lib/queries";
+import { formatCount, formatShortDate } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "API",
@@ -14,6 +16,8 @@ const ANON_KEY =
 
 const BASE = "https://api.collegedata.fyi";
 
+export const revalidate = 3600;
+
 function CodeBlock({ children }: { children: string }) {
   return (
     <pre className="mt-2 overflow-x-auto rounded border border-gray-200 bg-gray-50 px-4 py-3 text-xs leading-relaxed text-gray-800">
@@ -22,7 +26,10 @@ function CodeBlock({ children }: { children: string }) {
   );
 }
 
-export default function ApiDocsPage() {
+export default async function ApiDocsPage() {
+  const stats = await fetchSiteStats();
+  const scorecardVintage = stats.scorecard_data_year ?? "the current published Scorecard vintage";
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 text-gray-800">
       <h1 className="text-3xl font-bold text-gray-900">API</h1>
@@ -100,7 +107,7 @@ export default function ApiDocsPage() {
         />
         <Resource
           name="cds_artifacts"
-          description="Extracted field values keyed by canonical CDS question number (e.g. B.101). The notes JSON column holds { values: { 'B.101': { value, value_decoded, question, section, ... } } }."
+          description="Raw extraction artifacts keyed by document. Most consumers should prefer cds_fields for field-level queries or the selected-result helper semantics documented below."
           fields={[
             "document_id",
             "kind",
@@ -119,6 +126,99 @@ export default function ApiDocsPage() {
             "storage_path",
             "sha256",
             "created_at",
+          ]}
+        />
+        <Resource
+          name="cds_fields"
+          description={`${formatCount(stats.queryable_field_count)} normalized field rows from selected 2024-25+ extraction results. Use this for direct canonical-field queries across schools; derived metrics such as acceptance_rate live in school_browser_rows/browser-search.`}
+          fields={[
+            "school_id",
+            "school_name",
+            "canonical_year",
+            "field_id",
+            "canonical_metric",
+            "value_num",
+            "value_text",
+            "value_kind",
+            "sub_institutional",
+          ]}
+          allFields={[
+            "document_id",
+            "school_id",
+            "school_name",
+            "sub_institutional",
+            "ipeds_id",
+            "canonical_year",
+            "year_start",
+            "schema_version",
+            "field_id",
+            "canonical_metric",
+            "value_text",
+            "value_num",
+            "value_bool",
+            "value_kind",
+            "value_status",
+            "source_format",
+            "producer",
+            "producer_version",
+            "data_quality_flag",
+            "archive_url",
+            "updated_at",
+          ]}
+        />
+        <Resource
+          name="school_browser_rows"
+          description={`${formatCount(stats.browser_primary_row_count)} primary 2024-25+ rows across ${formatCount(stats.browser_school_count)} schools, refreshed ${formatShortDate(stats.browser_updated_at)}. This is the curated serving layer for the website browser and CSV exports.`}
+          fields={[
+            "school_id",
+            "school_name",
+            "canonical_year",
+            "applied",
+            "admitted",
+            "acceptance_rate",
+            "yield_rate",
+            "avg_net_price",
+            "sat_composite_p50",
+          ]}
+          allFields={[
+            "document_id",
+            "school_id",
+            "school_name",
+            "sub_institutional",
+            "ipeds_id",
+            "canonical_year",
+            "year_start",
+            "schema_version",
+            "source_format",
+            "producer",
+            "producer_version",
+            "data_quality_flag",
+            "archive_url",
+            "applied",
+            "admitted",
+            "enrolled_first_year",
+            "acceptance_rate",
+            "yield_rate",
+            "undergrad_enrollment_scorecard",
+            "scorecard_data_year",
+            "retention_rate",
+            "avg_net_price",
+            "pell_rate",
+            "sat_submit_rate",
+            "act_submit_rate",
+            "sat_composite_p25",
+            "sat_composite_p50",
+            "sat_composite_p75",
+            "sat_ebrw_p25",
+            "sat_ebrw_p50",
+            "sat_ebrw_p75",
+            "sat_math_p25",
+            "sat_math_p50",
+            "sat_math_p75",
+            "act_composite_p25",
+            "act_composite_p50",
+            "act_composite_p75",
+            "updated_at",
           ]}
         />
         <Resource
@@ -158,7 +258,7 @@ export default function ApiDocsPage() {
         />
         <Resource
           name="cds_scorecard"
-          description="CDS manifest left-joined with the federal College Scorecard. One row per archived CDS document with post-graduation earnings, debt, net price by income bracket, completion rate, and retention attached. Answers 'should I apply here, and what happens if I do?' in a single GET. Currently joined to Scorecard 2022-23."
+          description={`CDS manifest left-joined with the federal College Scorecard. One row per archived CDS document with post-graduation earnings, debt, net price by income bracket, completion rate, and retention attached. Currently joined to Scorecard ${scorecardVintage}.`}
           fields={[
             "school_name",
             "ipeds_id",
@@ -210,7 +310,7 @@ export default function ApiDocsPage() {
         />
         <Resource
           name="scorecard_summary"
-          description="Curated 41-column subset of the federal College Scorecard, one row per IPEDS UNITID (6,322 institutions — not just CDS-archived ones). Refreshed annually after each Scorecard release. For per-program earnings, race-stratified completion, or other Scorecard fields beyond the curated subset, query Scorecard directly."
+          description={`Curated federal College Scorecard subset, one row per IPEDS UNITID (${formatCount(stats.scorecard_institution_count)} institutions, not just CDS-archived ones). Refreshed ${formatShortDate(stats.scorecard_refreshed_at)} after the ${scorecardVintage} Scorecard load. For per-program earnings, race-stratified completion, or other fields beyond the curated subset, query Scorecard directly.`}
           fields={[
             "ipeds_id",
             "school_name",
@@ -279,6 +379,20 @@ export default function ApiDocsPage() {
       <h2 className="mt-10 text-xl font-semibold text-gray-900">Examples</h2>
 
       <h3 className="mt-6 text-base font-semibold text-gray-900">
+        Search the curated school browser
+      </h3>
+      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+        The browser uses an Edge Function so latest-per-school ranking can account
+        for required fields and null answerability. Percent and rate values are
+        stored as fractions from <code>0</code> to <code>1</code>.
+      </p>
+      <CodeBlock>{`curl '${BASE}/functions/v1/browser-search' \\
+  -H 'apikey: <anon key>' \\
+  -H 'Authorization: Bearer <anon key>' \\
+  -H 'content-type: application/json' \\
+  --data '{"mode":"latest_per_school","variant_scope":"primary_only","min_year_start":2024,"filters":[{"field":"acceptance_rate","op":"<=","value":0.1}],"page_size":10}'`}</CodeBlock>
+
+      <h3 className="mt-6 text-base font-semibold text-gray-900">
         List the most recent year for every school
       </h3>
       <CodeBlock>{`curl '${BASE}/rest/v1/cds_manifest?select=school_id,school_name,canonical_year&order=canonical_year.desc&limit=10' \\
@@ -296,13 +410,15 @@ export default function ApiDocsPage() {
         Fetch extracted field values for a document
       </h3>
       <p className="mt-2 text-sm leading-relaxed text-gray-700">
-        The <code>kind=eq.canonical</code> filter selects the deterministic
-        extractor output. To merge in the LLM fallback gap-fill, also fetch
+        The selected extraction contract chooses the deterministic canonical
+        artifact first. For Tier 4 Docling extracts, the LLM fallback cleaned row
+        can fill gaps, but deterministic values win conflicts. Raw consumers can
+        reproduce that behavior by fetching <code>kind=eq.canonical</code> plus
         rows with{" "}
         <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
           producer=eq.tier4_llm_fallback
         </code>{" "}
-        and overlay the canonical values on top.
+        and overlaying the canonical values on top.
       </p>
       <CodeBlock>{`curl '${BASE}/rest/v1/cds_artifacts?document_id=eq.<uuid>&kind=eq.canonical&select=notes' \\
   -H 'apikey: <anon key>' \\
@@ -343,7 +459,7 @@ const { data } = await supabase
         Original CDS files are hosted on Supabase Storage. Once you have a
         manifest row, build the public URL as{" "}
         <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
-          {BASE}/storage/v1/object/public/&lt;storage_path&gt;
+          {BASE}/storage/v1/object/public/sources/&lt;source_storage_path&gt;
         </code>
         . Every file is content-addressed by SHA-256.
       </p>

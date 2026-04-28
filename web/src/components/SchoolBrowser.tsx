@@ -336,13 +336,14 @@ export function SchoolBrowser() {
           }}
           className="browser-meta-grid"
         >
-          <MetaStat label="Matching schools" value={metadata ? metadata.total_rows.toLocaleString() : "..."} />
+          <MetaStat label="Schools in scope" value={metadata ? metadata.schools_in_scope.toLocaleString() : "..."} />
+          <MetaStat label="Matching filters" value={metadata ? metadata.total_rows.toLocaleString() : "..."} />
           <MetaStat label="With required fields" value={metadata ? metadata.schools_with_required_fields.toLocaleString() : "..."} />
           <MetaStat label="Missing fields" value={metadata ? metadata.schools_missing_required_fields.toLocaleString() : "..."} />
-          <MetaStat label="Failed filters" value={metadata ? metadata.schools_failing_filters.toLocaleString() : "..."} />
         </div>
         <p className="meta" style={{ marginTop: 14 }}>
           Latest primary school-year rows, 2024-25+. Required for answerability: {requiredLabels}.
+          {metadata ? ` Failed active filters: ${metadata.schools_failing_filters.toLocaleString()}.` : ""}
         </p>
       </section>
 

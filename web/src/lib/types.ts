@@ -65,3 +65,16 @@ export interface CorpusStats {
   extracted_count: number;
   extraction_pct: number;
 }
+
+export interface SiteStats extends CorpusStats {
+  schema_field_count: number | null;
+  queryable_field_count: number | null;
+  queryable_field_updated_at: string | null;
+  browser_row_count: number | null;
+  browser_primary_row_count: number | null;
+  browser_school_count: number | null;
+  browser_updated_at: string | null;
+  scorecard_institution_count: number | null;
+  scorecard_data_year: string | null;
+  scorecard_refreshed_at: string | null;
+}
