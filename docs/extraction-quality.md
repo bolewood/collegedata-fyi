@@ -54,7 +54,12 @@ When a school publishes their CDS as a filled Excel workbook, extraction is dete
 | Max fields populated (well-filled school) | 782 (~71% of schema) |
 | Accuracy on standard template | Deterministic (cell-position read, no heuristics) |
 
-The median is pulled down by schools that use older templates (the cell map is minted from the 2025-26 template) or partial fills. Shipping per-year templates would close the older-year gap.
+The median is pulled down by schools that use older templates or partial fills.
+PRD 014 M3 added year-aware schema/template dispatch for 2024-25 and 2025-26:
+2025-26 uses the hidden AA/AC lookup columns, while 2024-25 uses the reduced
+section-tab layout with question numbers in column A and answer cells in
+column C. Pre-2024 XLSX files still fall back to the latest canonical schema
+until older canonical mappings exist.
 
 ## Tier 2: fillable PDFs (deterministic)
 
@@ -111,6 +116,9 @@ Important limits:
 - Field count is a coverage screen, not semantic ground truth.
 - The overlay is optimized for 2024-25+ CDS layouts; older templates remain best-effort.
 - Some cells are intentionally left blank when the visible source cell is blank or when alignment is ambiguous.
+- PRD 014 M3 makes Tier 4's `SchemaIndex` year-aware, but the hand-coded
+  phrase matcher remains 2025-26-keyed until the follow-on M6 schema-derived
+  phrase matcher.
 
 The production browser projection was refreshed on April 28 after the v0.3 drain.
 For the `2024+` selected-result scope, the public substrate now contains:

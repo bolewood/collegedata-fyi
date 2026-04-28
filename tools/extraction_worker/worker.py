@@ -77,7 +77,7 @@ from collections import Counter
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import pypdf
 from supabase import Client, create_client
@@ -98,10 +98,24 @@ from tier2_extractor.extract import load_schema  # noqa: E402
 from html_to_markdown import html_to_markdown  # noqa: E402 (PRD 008 Tier 6)
 
 
+SCHEMA_DIR = _TOOLS_ROOT.parent / "schemas"
+TEMPLATE_DIR = SCHEMA_DIR / "templates"
+
+
 @dataclass(frozen=True)
 class ExtractionOutcome:
     action: str
     refresh_projection: bool = False
+
+
+@dataclass(frozen=True)
+class SchemaResolution:
+    schema: dict[str, Any]
+    schema_version: str
+    canonical_year: Optional[str]
+    fallback_used: bool
+    fallback_reason: Optional[str]
+    schema_path: Path
 
 
 def extraction_success(action: str) -> ExtractionOutcome:
@@ -128,6 +142,102 @@ def load_env(env_path: Path) -> dict[str, str]:
             value = value[1:-1]
         env[key] = value
     return env
+
+
+def canonical_schema_paths(schema_dir: Path = SCHEMA_DIR) -> list[Path]:
+    return [
+        path
+        for path in sorted(schema_dir.glob("cds_schema_*.json"))
+        if "-to-" not in path.name and not path.name.endswith(".structural.json")
+    ]
+
+
+def load_schema_registry(schema_dir: Path = SCHEMA_DIR) -> dict[str, tuple[Path, dict[str, Any]]]:
+    registry: dict[str, tuple[Path, dict[str, Any]]] = {}
+    for path in canonical_schema_paths(schema_dir):
+        schema = load_schema(path)
+        version = schema.get("schema_version")
+        if version:
+            registry[str(version)] = (path, schema)
+    if not registry:
+        raise RuntimeError(f"no canonical schemas found in {schema_dir}")
+    return registry
+
+
+def latest_schema_version(registry: dict[str, tuple[Path, dict[str, Any]]]) -> str:
+    def key(version: str) -> tuple[int, int]:
+        match = re.match(r"^((?:19|20)\d{2})-(\d{2})$", version)
+        if not match:
+            return (0, 0)
+        return (int(match.group(1)), int(match.group(2)))
+
+    return max(registry, key=key)
+
+
+def canonical_year_for_doc(doc: dict, detected_year: Optional[str] = None) -> Optional[str]:
+    return detected_year or doc.get("detected_year") or doc.get("canonical_year") or doc.get("cds_year")
+
+
+def resolve_schema_for_year(
+    canonical_year: Optional[str],
+    registry: dict[str, tuple[Path, dict[str, Any]]],
+) -> SchemaResolution:
+    if canonical_year and canonical_year in registry:
+        path, schema = registry[canonical_year]
+        return SchemaResolution(
+            schema=schema,
+            schema_version=str(schema.get("schema_version") or canonical_year),
+            canonical_year=canonical_year,
+            fallback_used=False,
+            fallback_reason=None,
+            schema_path=path,
+        )
+
+    fallback_version = latest_schema_version(registry)
+    path, schema = registry[fallback_version]
+    reason = "missing_canonical_year" if not canonical_year else f"no_schema_for_{canonical_year}"
+    return SchemaResolution(
+        schema=schema,
+        schema_version=str(schema.get("schema_version") or fallback_version),
+        canonical_year=canonical_year,
+        fallback_used=True,
+        fallback_reason=reason,
+        schema_path=path,
+    )
+
+
+def template_path_for_schema_version(schema_version: str) -> Path:
+    return TEMPLATE_DIR / f"cds_{schema_version}_template.xlsx"
+
+
+def build_cell_maps_for_schemas(
+    registry: dict[str, tuple[Path, dict[str, Any]]],
+) -> dict[str, dict[str, tuple[str, str]]]:
+    cell_maps: dict[str, dict[str, tuple[str, str]]] = {}
+    for schema_version in sorted(registry):
+        template_path = template_path_for_schema_version(schema_version)
+        if not template_path.exists():
+            continue
+        try:
+            cell_map = build_cell_map(template_path)
+        except Exception as e:
+            print(
+                f"Tier 1 cell map failed for {schema_version}: {e}",
+                flush=True,
+            )
+            continue
+        if cell_map:
+            cell_maps[schema_version] = cell_map
+            print(
+                f"Tier 1 cell map loaded for {schema_version}: {len(cell_map)} fields",
+                flush=True,
+            )
+        else:
+            print(
+                f"Tier 1 cell map unavailable for {schema_version}: template has no hidden lookup map",
+                flush=True,
+            )
+    return cell_maps
 
 
 def fetch_latest_source_path(client: Client, document_id: str) -> Optional[str]:
@@ -328,21 +438,38 @@ def sniff_format_from_bytes(data: bytes) -> str:
 
 
 def artifact_already_extracted(
-    client: Client, document_id: str, producer: str, producer_version: str
+    client: Client,
+    document_id: str,
+    producer: str,
+    producer_version: str,
+    schema_version: Optional[str] = None,
 ) -> bool:
     """Idempotency: if an artifact with the same (document, kind, producer,
     version) tuple already exists, skip writing a duplicate."""
-    result = (
+    query = (
         client.table("cds_artifacts")
         .select("id")
         .eq("document_id", document_id)
         .eq("kind", "canonical")
         .eq("producer", producer)
         .eq("producer_version", producer_version)
-        .limit(1)
-        .execute()
     )
+    if schema_version:
+        query = query.eq("schema_version", schema_version)
+    result = query.limit(1).execute()
     return bool(result.data)
+
+
+def attach_schema_metadata(canonical: dict, resolution: SchemaResolution) -> dict:
+    canonical["schema_version"] = resolution.schema_version
+    if resolution.fallback_used:
+        canonical["schema_fallback_used"] = True
+        canonical["schema_fallback_reason"] = resolution.fallback_reason
+        if resolution.canonical_year:
+            canonical["schema_year_proxy_for"] = resolution.canonical_year
+    else:
+        canonical["schema_fallback_used"] = False
+    return canonical
 
 
 def run_tier2(pdf_bytes: bytes, schema: dict) -> dict:
@@ -361,13 +488,14 @@ def _run_tier1(
     school_id: str,
     xlsx_bytes: bytes,
     source_format: str,
-    schema: dict,
+    resolution: SchemaResolution,
     cell_map: dict,
     dry_run: bool,
 ) -> ExtractionOutcome:
     """Tier 1 path: read filled CDS XLSX via template cell-position map."""
     try:
-        canonical = tier1_extract(xlsx_bytes, schema, cell_map)
+        canonical = tier1_extract(xlsx_bytes, resolution.schema, cell_map)
+        attach_schema_metadata(canonical, resolution)
     except Exception as e:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed", source_format)
@@ -377,7 +505,9 @@ def _run_tier1(
     producer_version = canonical["producer_version"]
 
     if not dry_run:
-        if artifact_already_extracted(client, document_id, producer, producer_version):
+        if artifact_already_extracted(
+            client, document_id, producer, producer_version, resolution.schema_version,
+        ):
             mark_extraction_status(client, document_id, "extracted", source_format)
             return extraction_no_project("already_extracted")
 
@@ -399,6 +529,8 @@ def _run_tier6(
     school_id: str,
     html_bytes: bytes,
     source_format: str,
+    resolution: SchemaResolution,
+    schema_index,
     dry_run: bool,
 ) -> ExtractionOutcome:
     """Tier 6 path (PRD 008): HTML → markdown → tier4_cleaner.
@@ -424,7 +556,7 @@ def _run_tier6(
         return extraction_no_project(f"tier6_html_error: {e}")
 
     try:
-        values = tier4_clean(markdown)
+        values = tier4_clean(markdown, schema=schema_index)
     except Exception as e:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed", source_format)
@@ -438,6 +570,8 @@ def _run_tier6(
     canonical: dict = {
         "producer": "tier6_html",
         "producer_version": "0.1.0",
+        "schema_version": resolution.schema_version,
+        "schema_fallback_used": resolution.fallback_used,
         "source_html": f"{document_id}.html",
         "extracted_at": __import__("datetime").datetime.now(
             __import__("datetime").timezone.utc,
@@ -449,12 +583,18 @@ def _run_tier6(
         "markdown": markdown,
         "values": values,
     }
+    if resolution.fallback_used:
+        canonical["schema_fallback_reason"] = resolution.fallback_reason
+        if resolution.canonical_year:
+            canonical["schema_year_proxy_for"] = resolution.canonical_year
 
     producer = canonical["producer"]
     producer_version = canonical["producer_version"]
 
     if not dry_run:
-        if artifact_already_extracted(client, document_id, producer, producer_version):
+        if artifact_already_extracted(
+            client, document_id, producer, producer_version, resolution.schema_version,
+        ):
             mark_extraction_status(client, document_id, "extracted", source_format)
             return extraction_no_project("already_extracted")
 
@@ -475,6 +615,8 @@ def _run_tier4(
     school_id: str,
     pdf_bytes: bytes,
     source_format: str,
+    resolution: SchemaResolution,
+    schema_index,
     dry_run: bool,
 ) -> ExtractionOutcome:
     """Tier 4 path: Docling baseline → markdown artifact.
@@ -486,7 +628,17 @@ def _run_tier4(
 
     force_ocr = source_format == "pdf_scanned"
     try:
-        canonical = tier4_extract(pdf_bytes, force_ocr=force_ocr)
+        canonical = tier4_extract(
+            pdf_bytes,
+            force_ocr=force_ocr,
+            schema=schema_index,
+            schema_version=resolution.schema_version,
+            schema_fallback_used=resolution.fallback_used,
+        )
+        if resolution.fallback_used:
+            canonical["schema_fallback_reason"] = resolution.fallback_reason
+            if resolution.canonical_year:
+                canonical["schema_year_proxy_for"] = resolution.canonical_year
     except Exception as e:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed", source_format)
@@ -496,7 +648,9 @@ def _run_tier4(
     producer_version = canonical["producer_version"]
 
     if not dry_run:
-        if artifact_already_extracted(client, document_id, producer, producer_version):
+        if artifact_already_extracted(
+            client, document_id, producer, producer_version, resolution.schema_version,
+        ):
             mark_extraction_status(client, document_id, "extracted", source_format)
             return extraction_no_project("already_extracted")
 
@@ -616,9 +770,9 @@ def refresh_browser_projection(
 def extract_one(
     client: Client,
     doc: dict,
-    schema: dict,
+    schema_registry: dict[str, tuple[Path, dict[str, Any]]],
     dry_run: bool,
-    cell_map: dict | None = None,
+    cell_maps: dict[str, dict[str, tuple[str, str]]] | None = None,
 ) -> ExtractionOutcome:
     """Process a single cds_documents row. Returns a short action string
     for logging. Does NOT raise — every failure is caught and recorded
@@ -675,21 +829,40 @@ def extract_one(
                 flush=True,
             )
 
+    canonical_year = canonical_year_for_doc(doc, detected_year)
+    resolution = resolve_schema_for_year(canonical_year, schema_registry)
+    if resolution.fallback_used:
+        print(
+            f"    schema_fallback: school={school_id} document={document_id} "
+            f"canonical_year={canonical_year or 'unknown'} "
+            f"using={resolution.schema_version} reason={resolution.fallback_reason}",
+            flush=True,
+        )
+
     source_format = doc.get("source_format") or sniff_format_from_bytes(pdf_bytes)
 
+    cell_map = (cell_maps or {}).get(resolution.schema_version)
     if source_format == "xlsx" and cell_map:
         return _run_tier1(
             client, document_id, school_id, pdf_bytes,
-            source_format, schema, cell_map, dry_run,
+            source_format, resolution, cell_map, dry_run,
+        )
+    if source_format == "xlsx" and not cell_map:
+        if not dry_run:
+            mark_extraction_status(client, document_id, "failed", source_format)
+        return extraction_no_project(
+            f"tier1_no_cell_map schema_version={resolution.schema_version}"
         )
 
     # Tier 6 (PRD 008): HTML → markdown → tier4_cleaner. Must run before
     # the "pdf_*" and "pdf_fillable" branches since the variable name
     # `pdf_bytes` is reused for raw source bytes regardless of format.
     if source_format == "html":
+        from tier4_cleaner import SchemaIndex
+        schema_index = SchemaIndex(resolution.schema_path)
         return _run_tier6(
             client, document_id, school_id, pdf_bytes,
-            source_format, dry_run,
+            source_format, resolution, schema_index, dry_run,
         )
 
     # pdf_scanned routes to Tier 4 too — Docling's do_ocr=True lazily runs
@@ -697,9 +870,11 @@ def extract_one(
     # is exactly the pdf_scanned case. If OCR quality is insufficient, a
     # follow-up can add a dedicated Tier 5 path with force_full_page_ocr=True.
     if source_format in ("pdf_flat", "pdf_scanned"):
+        from tier4_cleaner import SchemaIndex
+        schema_index = SchemaIndex(resolution.schema_path)
         return _run_tier4(
             client, document_id, school_id, pdf_bytes,
-            source_format, dry_run,
+            source_format, resolution, schema_index, dry_run,
         )
 
     if source_format != "pdf_fillable":
@@ -709,7 +884,8 @@ def extract_one(
 
     # Tier 2 path.
     try:
-        canonical = run_tier2(pdf_bytes, schema)
+        canonical = run_tier2(pdf_bytes, resolution.schema)
+        attach_schema_metadata(canonical, resolution)
     except Exception as e:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed", source_format)
@@ -719,7 +895,9 @@ def extract_one(
     producer_version = canonical["producer_version"]
 
     if not dry_run:
-        if artifact_already_extracted(client, document_id, producer, producer_version):
+        if artifact_already_extracted(
+            client, document_id, producer, producer_version, resolution.schema_version,
+        ):
             # Idempotent re-run: the row was already extracted with this
             # producer version at some earlier point. Mark extracted and
             # move on without writing a duplicate.
@@ -919,10 +1097,11 @@ def main() -> int:
     parser.add_argument("--env", default=".env")
     parser.add_argument(
         "--schema",
-        default="schemas/cds_schema_2025_26.json",
-        help="CDS schema JSON used by tier2_extractor. MVP uses 2025-26 "
-        "for all years; real fix is multi-schema loading once more "
-        "years exist.",
+        default=None,
+        help=(
+            "Debug override: force one CDS schema JSON for every document "
+            "and disable year-aware schema dispatch for this run."
+        ),
     )
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--school", default=None, help="Only process this school_id")
@@ -994,18 +1173,26 @@ def main() -> int:
             write=args.write,
         )
 
-    schema = load_schema(Path(args.schema))
+    if args.schema:
+        schema_path = Path(args.schema)
+        schema = load_schema(schema_path)
+        schema_version = str(schema.get("schema_version") or "override")
+        schema_registry = {schema_version: (schema_path, schema)}
+        print(
+            f"WARNING: --schema override forces schema_version={schema_version} "
+            "for every document; year-aware dispatch is disabled.",
+            file=sys.stderr,
+            flush=True,
+        )
+    else:
+        schema_registry = load_schema_registry()
+        print(
+            "Loaded canonical schemas: "
+            + ", ".join(sorted(schema_registry)),
+            flush=True,
+        )
 
-    # Build the Tier 1 cell map from the CDS template (once, reused for
-    # all xlsx docs in the run). The template ships with the repo.
-    _TEMPLATE_PATH = _TOOLS_ROOT.parent / "scratch" / "CDS-PDF-2025-2026-Excel_Template.xlsx"
-    cell_map = None
-    if _TEMPLATE_PATH.exists():
-        try:
-            cell_map = build_cell_map(_TEMPLATE_PATH)
-            print(f"Tier 1 cell map loaded: {len(cell_map)} fields", flush=True)
-        except Exception as e:
-            print(f"Tier 1 cell map failed: {e} (xlsx will fall through to stub)", flush=True)
+    cell_maps = build_cell_maps_for_schemas(schema_registry)
 
     query = client.table("cds_documents").select(
         "id, school_id, cds_year, detected_year, source_format, extraction_status",
@@ -1053,7 +1240,7 @@ def main() -> int:
 
     counts: Counter = Counter()
     for i, doc in enumerate(docs, 1):
-        outcome = extract_one(client, doc, schema, args.dry_run, cell_map)
+        outcome = extract_one(client, doc, schema_registry, args.dry_run, cell_maps)
         bucket = outcome.action.split(":")[0].split(" ")[0]
         counts[bucket] += 1
 

@@ -49,7 +49,13 @@ def _extract_pdf_layout_text(pdf_path: Path) -> str:
         return ""
 
 
-def extract(pdf_path: Path, force_ocr: bool = False) -> dict:
+def extract(
+    pdf_path: Path,
+    force_ocr: bool = False,
+    schema=None,
+    schema_version: str | None = None,
+    schema_fallback_used: bool = False,
+) -> dict:
     from docling.datamodel.base_models import InputFormat
     from docling.datamodel.pipeline_options import (
         EasyOcrOptions,
@@ -91,12 +97,14 @@ def extract(pdf_path: Path, force_ocr: bool = False) -> dict:
     from tier4_cleaner import clean
     from tier4_native_tables import compact_tables
     pdf_layout_text = _extract_pdf_layout_text(pdf_path)
-    values = clean(markdown, supplemental_text=pdf_layout_text)
+    values = clean(markdown, schema=schema, supplemental_text=pdf_layout_text)
     native_tables = compact_tables(doc)
 
-    return {
+    artifact = {
         "producer": PRODUCER_NAME,
         "producer_version": PRODUCER_VERSION,
+        "schema_version": schema_version or getattr(schema, "schema_version", None) or "2025-26",
+        "schema_fallback_used": schema_fallback_used,
         "docling_config": {
             "name": DOCLING_CONFIG_NAME,
             "do_ocr": pipeline.do_ocr,
@@ -121,10 +129,23 @@ def extract(pdf_path: Path, force_ocr: bool = False) -> dict:
         "native_tables": native_tables,
         "values": values,
     }
+    return artifact
 
 
-def extract_from_bytes(pdf_bytes: bytes, force_ocr: bool = False) -> dict:
+def extract_from_bytes(
+    pdf_bytes: bytes,
+    force_ocr: bool = False,
+    schema=None,
+    schema_version: str | None = None,
+    schema_fallback_used: bool = False,
+) -> dict:
     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=True) as tmp:
         tmp.write(pdf_bytes)
         tmp.flush()
-        return extract(Path(tmp.name), force_ocr=force_ocr)
+        return extract(
+            Path(tmp.name),
+            force_ocr=force_ocr,
+            schema=schema,
+            schema_version=schema_version,
+            schema_fallback_used=schema_fallback_used,
+        )

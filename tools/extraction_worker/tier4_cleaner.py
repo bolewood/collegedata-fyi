@@ -20,7 +20,7 @@ year-branched resolver contract.
 Architecture (PRD 005):
   1. Hand-coded maps (_FIELD_MAP / _PERCENTILE_MAP / _INLINE_PATTERNS) —
      regression-safe baseline covering B1/B2/B3/C1/C9/C10/C13.
-  2. SchemaIndex — lookup table built from cds_schema_2025_26.json that
+  2. SchemaIndex — lookup table built from the selected cds_schema JSON that
      supports filtering by (section, subsection, question_norm) plus
      dimensional keys (gender, cohort, unit_load, student_group, residency,
      category). Lazy-loaded on first use.
@@ -359,11 +359,19 @@ _INLINE_PATTERNS: list[tuple[str, str, str]] = [
 
 # --- Schema index and section-family resolvers (PRD 005) ---
 
-_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "cds_schema_2025_26.json"
+_SCHEMA_DIR = Path(__file__).resolve().parents[2] / "schemas"
+_DEFAULT_SCHEMA_PATH = _SCHEMA_DIR / "cds_schema_2025_26.json"
+
+
+def schema_path_for_year(canonical_year: str | None) -> Path:
+    if not canonical_year:
+        return _DEFAULT_SCHEMA_PATH
+    candidate = _SCHEMA_DIR / f"cds_schema_{canonical_year.replace('-', '_')}.json"
+    return candidate if candidate.exists() else _DEFAULT_SCHEMA_PATH
 
 
 class SchemaIndex:
-    """In-memory view of cds_schema_2025_26.json used by section-family resolvers.
+    """In-memory view of a cds_schema JSON used by section-family resolvers.
 
     Fields are pre-normalized (_q_norm) so resolvers can match Docling row
     labels directly. Filter() is a thin keyword-driven row scan; the schema
@@ -371,8 +379,10 @@ class SchemaIndex:
     """
 
     def __init__(self, schema_path: Path | None = None):
-        path = schema_path or _SCHEMA_PATH
+        path = schema_path or _DEFAULT_SCHEMA_PATH
         data = json.loads(path.read_text())
+        self.schema_path = path
+        self.schema_version = data.get("schema_version")
         self.fields: list[dict[str, Any]] = data["fields"]
         for f in self.fields:
             f["_q_norm"] = _normalize_label(f.get("question", ""))
@@ -425,15 +435,15 @@ class SchemaIndex:
         return None
 
 
-# Module-level lazy singleton so resolvers in hot paths don't re-read the JSON.
-_SCHEMA_SINGLETON: SchemaIndex | None = None
+# Module-level lazy cache so resolvers in hot paths don't re-read schema JSON.
+_SCHEMA_CACHE: dict[Path, SchemaIndex] = {}
 
 
-def _get_schema() -> SchemaIndex:
-    global _SCHEMA_SINGLETON
-    if _SCHEMA_SINGLETON is None:
-        _SCHEMA_SINGLETON = SchemaIndex()
-    return _SCHEMA_SINGLETON
+def _get_schema(canonical_year: str | None = None) -> SchemaIndex:
+    path = schema_path_for_year(canonical_year)
+    if path not in _SCHEMA_CACHE:
+        _SCHEMA_CACHE[path] = SchemaIndex(path)
+    return _SCHEMA_CACHE[path]
 
 
 # --- Resolver: A General Information ---
@@ -4679,6 +4689,7 @@ def clean(
     markdown: str,
     schema: SchemaIndex | None = None,
     supplemental_text: str | None = None,
+    canonical_year: str | None = None,
 ) -> dict[str, dict]:
     """Map Docling markdown to canonical question-number-keyed values.
 
@@ -4775,7 +4786,7 @@ def clean(
     # Each resolver returns its own claims. We only accept a claim if the
     # field isn't already populated by an earlier resolver or hand-coded map.
     # This preserves the regression-safe ordering: hand-coded > resolvers.
-    idx = schema if schema is not None else _get_schema()
+    idx = schema if schema is not None else _get_schema(canonical_year)
     for resolver in _RESOLVERS:
         new = resolver(tables, markdown, idx)
         if resolver in (
@@ -4837,12 +4848,12 @@ def main():
     args = parser.parse_args()
 
     md = args.markdown.read_text()
-    result = clean(md)
+    schema_index = SchemaIndex(args.schema) if args.schema else None
+    result = clean(md, schema=schema_index)
 
     schema_lookup = {}
-    if args.schema and args.schema.exists():
-        schema = json.load(args.schema.open())
-        schema_lookup = {f["question_number"]: f for f in schema["fields"]}
+    if schema_index is not None:
+        schema_lookup = {f["question_number"]: f for f in schema_index.fields}
 
     print(f"Extracted {len(result)} fields:\n")
     for qnum in sorted(result):

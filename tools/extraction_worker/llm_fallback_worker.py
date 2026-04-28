@@ -50,7 +50,7 @@ _HERE = Path(__file__).resolve().parent
 _REPO_ROOT = _HERE.parent.parent
 sys.path.insert(0, str(_HERE))
 
-from tier4_cleaner import SchemaIndex  # noqa: E402
+from tier4_cleaner import SchemaIndex, schema_path_for_year  # noqa: E402
 from subsection_slicer import slice_all, LocatedSlice, TARGET_SUBSECTIONS  # noqa: E402
 from tier4_llm_fallback import (  # noqa: E402
     build_cached_head,
@@ -102,6 +102,9 @@ def _find_eligible_docs(
     year_filter: str | None,
     limit: int | None,
     low_coverage_threshold: int,
+    schema_path_override: Path | None = None,
+    schema_version_override: str | None = None,
+    schema_cache: dict[Path, SchemaIndex] | None = None,
 ) -> list[dict[str, Any]]:
     """Return docs with a tier4_docling canonical artifact that should get the fallback.
 
@@ -125,10 +128,25 @@ def _find_eligible_docs(
         return []
     docs_by_id = {d["id"]: d for d in docs}
 
-    # 2. Fetch the latest tier4_docling canonical artifact for each candidate doc.
+    if schema_cache is None:
+        schema_cache = {}
+
+    expected_schema_by_doc: dict[str, str] = {}
+    for did, doc in docs_by_id.items():
+        _schema, schema_version, _fallback_used, _reason = _schema_for_doc(
+            doc,
+            schema_path_override=schema_path_override,
+            schema_version_override=schema_version_override,
+            cache=schema_cache,
+        )
+        expected_schema_by_doc[did] = schema_version
+
+    # 2. Fetch tier4_docling canonical artifacts and keep the newest artifact
+    # whose schema matches the document's resolved schema. A stale wrong-year
+    # base artifact must not seed an LLM repair overlay.
     arts = (
         client.table("cds_artifacts")
-        .select("id,document_id,notes,producer_version,created_at")
+        .select("id,document_id,notes,producer_version,schema_version,created_at")
         .eq("producer", "tier4_docling")
         .eq("kind", "canonical")
         .in_("document_id", list(docs_by_id.keys()))
@@ -139,7 +157,11 @@ def _find_eligible_docs(
     # Dedup by document_id (newest wins due to ordering).
     by_doc: dict[str, dict[str, Any]] = {}
     for art in arts:
-        by_doc.setdefault(art["document_id"], art)
+        did = art["document_id"]
+        expected_schema = expected_schema_by_doc.get(did)
+        if expected_schema and _artifact_schema_version(art) != expected_schema:
+            continue
+        by_doc.setdefault(did, art)
 
     eligible: list[dict[str, Any]] = []
     for did, art in by_doc.items():
@@ -167,6 +189,37 @@ def _find_eligible_docs(
     if limit:
         eligible = eligible[:limit]
     return eligible
+
+
+def _artifact_schema_version(artifact: dict[str, Any]) -> str | None:
+    notes = artifact.get("notes") or {}
+    if not isinstance(notes, dict):
+        notes = {}
+    schema_version = artifact.get("schema_version") or notes.get("schema_version")
+    return str(schema_version) if schema_version else None
+
+
+def _schema_for_doc(
+    doc: dict[str, Any],
+    *,
+    schema_path_override: Path | None,
+    schema_version_override: str | None,
+    cache: dict[Path, SchemaIndex],
+) -> tuple[SchemaIndex, str, bool, str | None]:
+    if schema_path_override is not None:
+        path = schema_path_override
+        fallback_used = False
+        reason = None
+    else:
+        requested = schema_version_override or doc.get("detected_year") or doc.get("cds_year")
+        path = schema_path_for_year(requested)
+        fallback_used = bool(requested and path.name != f"cds_schema_{str(requested).replace('-', '_')}.json")
+        reason = None if not fallback_used else f"no_schema_for_{requested}"
+    if path not in cache:
+        cache[path] = SchemaIndex(schema_path=path)
+    schema = cache[path]
+    schema_version = str(schema.schema_version or schema_version_override or "2025-26")
+    return schema, schema_version, fallback_used, reason
 
 
 # ---------------------------------------------------------------------------
@@ -266,6 +319,8 @@ def _process_doc(
     subsections: list[str],
     schema: SchemaIndex,
     schema_version: str,
+    schema_fallback_used: bool,
+    schema_fallback_reason: str | None,
     model: str,
     cleaner_version: str,
     mode: str,
@@ -275,6 +330,17 @@ def _process_doc(
 ) -> dict[str, Any]:
     doc = eligible_row["doc"]
     art = eligible_row["artifact"]
+    artifact_schema_version = _artifact_schema_version(art)
+    if artifact_schema_version != schema_version:
+        return {
+            "document_id": doc["id"],
+            "school_id": doc["school_id"],
+            "cds_year": doc["cds_year"],
+            "status": "base_schema_mismatch",
+            "artifact_schema_version": artifact_schema_version,
+            "expected_schema_version": schema_version,
+        }
+
     notes = art.get("notes") or {}
     markdown = notes.get("markdown") or ""
     already = notes.get("values") or {}
@@ -474,6 +540,7 @@ def _process_doc(
         "base_producer_version": art.get("producer_version"),
         "cleaner_version": cleaner_version,
         "schema_version": schema_version,
+        "schema_fallback_used": schema_fallback_used,
         "mode": mode,
         "markdown_sha256": markdown_sha256,
         "stats": {
@@ -488,6 +555,8 @@ def _process_doc(
         "values": accepted_values,
         "subsection_reports": per_sub,
     }
+    if schema_fallback_reason:
+        artifact_notes["schema_fallback_reason"] = schema_fallback_reason
 
     if not dry_run and accepted_values:
         _insert_fallback_artifact(
@@ -535,13 +604,6 @@ def _insert_fallback_artifact(
         notes_json = notes_json.replace("\x00", "").replace("\\u0000", "")
         artifact_notes = json.loads(notes_json)
 
-    # Replace any prior tier4_llm_fallback artifact for this doc so we never
-    # accumulate duplicates across re-runs. Keeps at most one fallback
-    # artifact per document; consumers see the latest result.
-    client.table("cds_artifacts").delete().eq(
-        "document_id", document_id
-    ).eq("producer", PRODUCER_NAME).execute()
-
     client.table("cds_artifacts").insert({
         "document_id": document_id,
         "kind": "cleaned",
@@ -565,8 +627,10 @@ def main() -> int:
                     help="Comma-separated school_ids; default = all")
     ap.add_argument("--year", default=None)
     ap.add_argument("--subsections", default=",".join(DEFAULT_TARGET_SUBSECTIONS))
-    ap.add_argument("--schema-version", default="2025-26")
-    ap.add_argument("--schema-path", default=None)
+    ap.add_argument("--schema-version", default=None,
+                    help="Override schema version for every document; default uses detected_year/cds_year.")
+    ap.add_argument("--schema-path", default=None,
+                    help="Debug override: force one schema JSON for every document.")
     ap.add_argument("--model", default=os.environ.get("TIER4_FALLBACK_MODEL", "claude-haiku-4-5"))
     ap.add_argument("--mode", choices=["shadow", "fill_gaps"], default="fill_gaps",
                     help="shadow = write artifact with values but don't merge; "
@@ -601,7 +665,7 @@ def main() -> int:
     school_filter = [s.strip() for s in args.school.split(",")] if args.school else None
 
     schema_path = Path(args.schema_path) if args.schema_path else None
-    schema = SchemaIndex(schema_path=schema_path)
+    schema_cache: dict[Path, SchemaIndex] = {}
 
     from supabase import create_client
     client = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
@@ -612,6 +676,9 @@ def main() -> int:
         year_filter=args.year,
         limit=args.limit,
         low_coverage_threshold=args.low_coverage_threshold,
+        schema_path_override=schema_path,
+        schema_version_override=args.schema_version,
+        schema_cache=schema_cache,
     )
     print(f"Eligible docs: {len(eligible)}")
     print(f"Model: {args.model}  Mode: {args.mode}  Subsections: {subsections}")
@@ -629,13 +696,22 @@ def main() -> int:
 
     for row in eligible:
         doc = row["doc"]
+        schema, schema_version, schema_fallback_used, schema_fallback_reason = _schema_for_doc(
+            doc,
+            schema_path_override=schema_path,
+            schema_version_override=args.schema_version,
+            cache=schema_cache,
+        )
         print(f"--- {doc['school_id']} {doc['cds_year']} ---")
+        print(f"Schema: {schema_version}{' fallback' if schema_fallback_used else ''}")
         rep = _process_doc(
             client,
             eligible_row=row,
             subsections=subsections,
             schema=schema,
-            schema_version=args.schema_version,
+            schema_version=schema_version,
+            schema_fallback_used=schema_fallback_used,
+            schema_fallback_reason=schema_fallback_reason,
             model=args.model,
             cleaner_version=args.cleaner_version,
             mode=args.mode,

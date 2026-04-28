@@ -8,9 +8,12 @@ SAT/ACT academic-profile fields after the Tier 4 v0.3 projection refresh.
 
 - `cds_field_definitions`: schema-local field labels and type hints.
 - `cds_metric_aliases`: direct-field aliases only. Browser aliases currently
-  include the PRD 010 admissions funnel fields plus PRD 012 SAT/ACT
-  submission-rate and percentile fields. Derived metrics such as
-  `acceptance_rate` and `yield_rate` stay out of the alias table.
+  include PRD 012 SAT/ACT submission-rate and percentile fields. Admissions
+  funnel metrics moved to PRD 014 derived formulas because 2024-25 and 2025-26
+  use different C.10x layouts.
+- `cds_canonical_field_equivalence`: source-schema field ids mapped into the
+  2025-26 reference frame with `direct`, `derived`, `preserved-only`, or
+  `unmapped` classifications.
 - `cds_selected_extraction_result`: helper view that selects the strongest
   deterministic extraction result and merges `tier4_llm_fallback`
   `kind='cleaned'` values as a gap-filling overlay for Tier 4 rows only when
@@ -33,8 +36,9 @@ python tools/browser_backend/project_browser_data.py --full-rebuild --apply
 python tools/browser_backend/project_browser_data.py --document-id <uuid> --apply
 ```
 
-The worker also seeds `cds_field_definitions` and `cds_metric_aliases` from the
-committed schema artifacts unless `--skip-metadata` is passed.
+The worker also seeds `cds_field_definitions`, `cds_metric_aliases`, and
+`cds_canonical_field_equivalence` from the committed schema/diff artifacts
+unless `--skip-metadata` is passed.
 
 Production projection history:
 
@@ -125,14 +129,26 @@ Production smoke checks used:
 
 ## Implementation Notes
 
-- `canonical_metric` is only used for direct field aliases. `acceptance_rate` and
-  `yield_rate` are derived in `school_browser_rows`.
+- `cds_fields.field_id` is the source schema field id. `canonical_field_id` is
+  the equivalent 2025-26 reference id when one exists; `equivalence_kind`
+  records whether the row is `direct`, `derived`, `preserved-only`, or
+  `unmapped`.
+- The Python projector now prefers a selected canonical artifact whose
+  `schema_version` matches `cds_documents.canonical_year`; fallback artifacts
+  marked with `notes.schema_fallback_used` lose to a year-matched non-fallback
+  artifact even when the fallback is newer.
+- Admissions browser metrics (`applied`, `admitted`, `enrolled_first_year`) are
+  evaluated through per-year formulas. For 2024-25, `applied` is
+  `C.101 + C.102 + C.103 + C.104`; for 2025-26 it is `C.116`.
+- `canonical_metric` is set on direct alias rows and on single-field derived
+  formula rows. Multi-field formula components remain source rows in
+  `cds_fields`; their aggregate lands in `school_browser_rows`.
 - `sub_institutional` is preserved in both public tables. Browser search defaults
   to `variant_scope = primary_only`, which filters to `sub_institutional IS NULL`.
 - Percent/rate storage is fractional `0..1`.
 - Some current Tier 4/Tier 6 artifacts do not carry `schema_version`; the
-  projector falls back to `2025-26` for the `2024-25+` MVP because that is the
-  only committed full schema JSON artifact today.
+  projector still has a legacy fallback to `2025-26`. PRD 014 M3 will make
+  extractor writes year-aware so new artifacts carry the actual schema version.
 - The `browser-search` Edge Function ranks over the materialized table after one
   paginated table read. That keeps the MVP small and testable. If corpus size or
   traffic makes this hot, move the same pure ranking contract into a Postgres RPC
