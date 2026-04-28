@@ -1,0 +1,59 @@
+name: Add or fix a school
+description: Share a Common Data Set URL or correction for a school we should track.
+title: "Add school: "
+labels:
+  - school-data
+  - discovery
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this when collegedata.fyi is missing a school, has the wrong Common Data Set URL, or needs a sub-institutional CDS variant added.
+  - type: input
+    id: school_name
+    attributes:
+      label: School name
+      placeholder: Example University
+    validations:
+      required: true
+  - type: input
+    id: school_url
+    attributes:
+      label: School website
+      placeholder: https://www.example.edu
+    validations:
+      required: false
+  - type: input
+    id: ipeds_id
+    attributes:
+      label: IPEDS UNITID, if known
+      placeholder: "123456"
+    validations:
+      required: false
+  - type: input
+    id: cds_url
+    attributes:
+      label: Common Data Set URL
+      description: Link to the CDS landing page or a direct PDF/XLSX/DOCX/HTML file.
+      placeholder: https://www.example.edu/institutional-research/common-data-set
+    validations:
+      required: true
+  - type: dropdown
+    id: request_type
+    attributes:
+      label: What needs to change?
+      options:
+        - Add a missing school
+        - Fix an existing school URL
+        - Add a historical CDS year
+        - Add a sub-institutional variant
+        - Mark school as not publishing CDS
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Include how you found the URL, whether it is official, and anything unusual about the page.
+    validations:
+      required: false
