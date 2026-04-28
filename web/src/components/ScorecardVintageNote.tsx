@@ -2,19 +2,25 @@ import type { ScorecardSummary } from "@/lib/types";
 
 export function ScorecardVintageNote({
   scorecard,
-  className = "",
 }: {
   scorecard: ScorecardSummary;
-  className?: string;
 }) {
   return (
-    <p className={`text-xs italic text-gray-500 ${className}`}>
+    <p
+      className="serif"
+      style={{
+        fontStyle: "italic",
+        fontSize: 13,
+        color: "var(--ink-3)",
+        margin: 0,
+        lineHeight: 1.5,
+      }}
+    >
       Federal data from the U.S. Department of Education&apos;s{" "}
       <a
         href="https://collegescorecard.ed.gov/"
         target="_blank"
         rel="noopener noreferrer"
-        className="underline hover:text-gray-700"
       >
         College Scorecard
       </a>
