@@ -192,6 +192,15 @@
   .cd-school-header__count { justify-content: flex-start; }
 }
 
+/* Recipe page layouts — reader's-guide and quadrant/band grids stack
+   under 720px so the marginalia label collapses above the body copy
+   instead of getting squeezed into a 200px gutter. */
+@media (max-width: 720px) {
+  .cd-recipe-guide      { grid-template-columns: 1fr !important; gap: 14px !important; }
+  .cd-recipe-quadrants  { grid-template-columns: 1fr !important; }
+  .cd-recipe-bands      { grid-template-columns: 1fr !important; }
+}
+
 /* Earnings distribution — full dollar labels at desktop, abbreviated $Xk
    on narrow screens so adjacent ticks don't overlap. The tick wrapper
    caps width to avoid bleed past its own column. */
