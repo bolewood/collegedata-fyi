@@ -35,6 +35,9 @@ def defs():
             "C.114": FieldDefinition("2024-25", "C.114", "Another gender part-time enrolled", "Admission", "Applications", "Number"),
             "C.115": FieldDefinition("2024-25", "C.115", "Unknown gender full-time enrolled", "Admission", "Applications", "Number"),
             "C.116": FieldDefinition("2024-25", "C.116", "Unknown gender part-time enrolled", "Admission", "Applications", "Number"),
+            "C.117": FieldDefinition("2024-25", "C.117", "Total applied", "Admission", "Applications", "Number"),
+            "C.118": FieldDefinition("2024-25", "C.118", "Total admitted", "Admission", "Applications", "Number"),
+            "C.119": FieldDefinition("2024-25", "C.119", "Total enrolled", "Admission", "Applications", "Number"),
             "C.901": FieldDefinition("2024-25", "C.901", "Submitting SAT Scores", "Admission", "Profile", "Whole Number or Round to Nearest Tenths"),
         },
         "2025-26": {
@@ -231,6 +234,54 @@ class BrowserProjectionTests(unittest.TestCase):
         by_field = {row["field_id"]: row for row in fields}
         self.assertEqual(by_field["C.103"]["equivalence_kind"], "unmapped")
         self.assertIsNone(by_field["C.103"]["canonical_field_id"])
+
+    def test_2024_admissions_derived_metrics_treat_missing_split_components_as_zero(self):
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2024-25"),
+            [
+                artifact(
+                    schema_version="2024-25",
+                    values={
+                        "C.101": {"value": "10"},
+                        "C.102": {"value": "20"},
+                        "C.105": {"value": "5"},
+                        "C.106": {"value": "10"},
+                        "C.109": {"value": "2"},
+                        "C.111": {"value": "4"},
+                    },
+                )
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["applied"], 30)
+        self.assertEqual(browser["admitted"], 15)
+        self.assertEqual(browser["enrolled_first_year"], 6)
+
+    def test_2024_admissions_derived_metrics_use_total_fallback_when_available(self):
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2024-25"),
+            [
+                artifact(
+                    schema_version="2024-25",
+                    values={
+                        "C.101": {"value": "10"},
+                        "C.102": {"value": "20"},
+                        "C.117": {"value": "35"},
+                        "C.105": {"value": "5"},
+                        "C.106": {"value": "10"},
+                        "C.118": {"value": "17"},
+                        "C.109": {"value": "2"},
+                        "C.119": {"value": "10"},
+                    },
+                )
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["applied"], 35)
+        self.assertEqual(browser["admitted"], 17)
+        self.assertEqual(browser["enrolled_first_year"], 10)
 
     def test_2024_direct_alias_uses_canonical_field_id(self):
         fields, browser = build_projection_rows(

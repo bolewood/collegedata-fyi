@@ -80,6 +80,14 @@ def _normalize_label(text: str) -> str:
     return t
 
 
+def _normalize_label_without_gender_rewrite(text: str) -> str:
+    """Normalize punctuation/spacing while preserving gender words."""
+    t = text.lower()
+    t = re.sub(r'[,\-–—:;/()]', ' ', t)
+    t = re.sub(r'\s+', ' ', t).strip()
+    return t
+
+
 _NO_WRAP_EMPTY_LABELS = {
     "sat composite",
     "sat evidence based reading and writing",
@@ -308,6 +316,10 @@ _FIELD_MAP: list[tuple[str, str, str | int]] = [
     ("submitting sat scores", "C.903", "number"),
     ("submitting act scores", "C.904", "number"),
 ]
+
+_SCHEMA_FIXED_C1_FIELD_MAP_QNS = {
+    f"C.{n:03d}" for n in range(101, 119)
+}
 
 # Percentile table: matched by assessment name + column position.
 _PERCENTILE_MAP: list[tuple[str, int, str]] = [
@@ -1875,17 +1887,34 @@ def resolve_c1_applications(
 
     c1_fields = schema.filter(subsection="Applications")
 
+    def _gender_matches(field_gender: str, target_gender: str) -> bool:
+        if field_gender == target_gender:
+            return True
+        aliases = {
+            "Males": {"Men"},
+            "Females": {"Women"},
+            "Another Gender": {"Another Gender"},
+            "Unknown": {"Students of unknown sex"},
+        }
+        return field_gender in aliases.get(target_gender, set())
+
     def _lookup(gender: str, residency: str, action: str,
                 unit_load: str = "All") -> str | None:
-        for f in c1_fields:
-            if f["gender"] != gender:
-                continue
-            if f["residency"] != residency:
-                continue
-            if f["unit_load"] != unit_load:
-                continue
-            if action in f["_q_norm"]:
-                return f["question_number"]
+        unit_loads = [unit_load]
+        if action == "enrolled" and unit_load == "FT":
+            unit_loads.append("All")
+        elif action == "enrolled" and unit_load == "All":
+            unit_loads.append("FT")
+        for candidate_unit_load in unit_loads:
+            for f in c1_fields:
+                if not _gender_matches(str(f["gender"]), gender):
+                    continue
+                if f["residency"] != residency:
+                    continue
+                if f["unit_load"] != candidate_unit_load:
+                    continue
+                if action in f["_q_norm"]:
+                    return f["question_number"]
         return None
 
     for table in tables:
@@ -1937,6 +1966,7 @@ def resolve_c1_applications(
 
         elif is_gender_table:
             for row in table["rows"]:
+                label_raw_norm = _normalize_label_without_gender_rewrite(row["label"])
                 label_norm = _normalize_label(row["label"])
                 if _c1_multiple_action_hits(label_norm):
                     continue
@@ -1944,12 +1974,14 @@ def resolve_c1_applications(
                 # Gender detection — use word boundaries so "women who"
                 # doesn't match "men who".
                 gender = None
-                if re.search(r"\bmen who\b", label_norm):
+                if re.search(r"\b(men|males?) who\b", label_raw_norm):
                     gender = "Males"
-                elif re.search(r"\bwomen who\b", label_norm):
+                elif re.search(r"\b(women|females?) who\b", label_raw_norm):
                     gender = "Females"
-                elif re.search(r"\b(another gender|unknown gender) who\b",
-                                label_norm):
+                elif re.search(r"\banother gender who\b", label_raw_norm):
+                    gender = "Another Gender"
+                elif re.search(r"\b(unknown gender|unknown sex) who\b",
+                                label_raw_norm):
                     gender = "Unknown"
                 if gender is None:
                     continue
@@ -4702,6 +4734,7 @@ def clean(
     """
     tables = _parse_markdown_tables(markdown)
     values: dict[str, dict] = {}
+    idx = schema if schema is not None else _get_schema(canonical_year)
 
     # Pre-normalize the map substrings once so _FIELD_MAP / _PERCENTILE_MAP
     # entries can be written in natural form (e.g. "another gender",
@@ -4722,6 +4755,11 @@ def clean(
 
             # --- Standard field map ---
             for substr, qnum, col_hint in field_map_norm:
+                if (
+                    idx.schema_version != "2025-26"
+                    and qnum in _SCHEMA_FIXED_C1_FIELD_MAP_QNS
+                ):
+                    continue
                 if substr not in label_norm:
                     continue
 
@@ -4786,7 +4824,6 @@ def clean(
     # Each resolver returns its own claims. We only accept a claim if the
     # field isn't already populated by an earlier resolver or hand-coded map.
     # This preserves the regression-safe ordering: hand-coded > resolvers.
-    idx = schema if schema is not None else _get_schema(canonical_year)
     for resolver in _RESOLVERS:
         new = resolver(tables, markdown, idx)
         if resolver in (

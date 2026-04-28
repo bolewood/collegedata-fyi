@@ -271,6 +271,12 @@ DERIVED_METRIC_DEFINITIONS = {
     if isinstance(definition.source_spec, DerivedFormula)
 }
 
+DERIVED_TOTAL_FALLBACK_FIELDS = {
+    ("2024-25", "applied"): "C.117",
+    ("2024-25", "admitted"): "C.118",
+    ("2024-25", "first_year_enrolled"): "C.119",
+}
+
 
 def load_env(env_path: Path = REPO_ROOT / ".env") -> dict[str, str]:
     env: dict[str, str] = {}
@@ -762,6 +768,21 @@ def evaluate_metric(
         parse_metric_component(field_id, selected, schema_defs, metric)
         for field_id in field_ids
     ]
+    if isinstance(metric.source_spec, DerivedFormula):
+        reported_values = [value for value in values if value is not None]
+        if not reported_values:
+            return None
+        if len(reported_values) != len(values):
+            fallback_field_id = DERIVED_TOTAL_FALLBACK_FIELDS.get(
+                (selected.schema_version, metric.canonical_metric)
+            )
+            if fallback_field_id:
+                fallback_value = parse_metric_component(
+                    fallback_field_id, selected, schema_defs, metric,
+                )
+                if fallback_value is not None:
+                    return fallback_value
+        return sum(reported_values, Decimal("0"))
     if any(value is None for value in values):
         return None
     return sum(values, Decimal("0"))

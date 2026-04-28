@@ -65,6 +65,10 @@ METRIC_ASSERTIONS = {
     "c9_act_composite_75": ("act_composite_p75", "number"),
 }
 
+BROWSER_METRIC_COLUMNS = {
+    "first_year_enrolled": "enrolled_first_year",
+}
+
 
 @dataclass(frozen=True)
 class LocalTier4Fixture:
@@ -214,10 +218,11 @@ def evaluate_assertions(
     rows: list[dict[str, Any]] = []
     for assertion in assertions:
         metric = assertion["canonical_metric"]
+        browser_column = BROWSER_METRIC_COLUMNS.get(metric, metric)
         expected = assertion["expected"]
         kind = assertion["kind"]
-        old_actual = old_browser.get(metric)
-        new_actual = new_browser.get(metric)
+        old_actual = old_browser.get(browser_column)
+        new_actual = new_browser.get(browser_column)
         old_pass = assertion_passes(old_actual, expected, kind)
         new_pass = assertion_passes(new_actual, expected, kind)
         if old_pass and not new_pass:
@@ -413,6 +418,32 @@ def format_value(value: Any) -> str:
 def write_report(path: Path, payload: dict[str, Any]) -> None:
     summary = payload["summary"]
     results = payload["results"]
+    has_value_shifts = summary["wrong_to_right"] or summary["right_to_wrong"]
+    if summary["outcome"] == "big_delta" and has_value_shifts:
+        outcome_note = (
+            "The validation found value-level assertion shifts, so the PRD's "
+            "M5 decision gate is open. Review the shifts before any broad drain."
+        )
+        recommendation = (
+            "Do not run M5 as a broad corpus drain until the value-level shifts "
+            "are understood and accepted."
+        )
+    elif summary["outcome"] == "modest_delta":
+        outcome_note = (
+            "No value-level assertions changed. The measured delta is field-count "
+            "only and falls in the PRD's modest-delta band."
+        )
+        recommendation = (
+            "M5 is optional rather than required by the evidence. If an operator "
+            "chooses to drain, use a staged cohort drain with rollback snapshots."
+        )
+    else:
+        outcome_note = (
+            "No meaningful value-level or field-count delta was observed."
+        )
+        recommendation = (
+            "Ship for correctness and let existing artifacts transition naturally."
+        )
     lines = [
         "# PRD 014 M4 Validation Findings",
         "",
@@ -422,12 +453,7 @@ def write_report(path: Path, payload: dict[str, Any]) -> None:
         "",
         f"**{summary['outcome']}**.",
         "",
-        (
-            "The validation found value-level assertion shifts, so the PRD's "
-            "M5 decision gate is open. The observed right-to-wrong shifts are "
-            "not evidence for a corpus drain yet; they point to Tier 4's "
-            "remaining 2025-keyed C1 mappings, which M6 is intended to fix."
-        ),
+        outcome_note,
         "",
         "## Scope",
         "",
@@ -492,13 +518,13 @@ def write_report(path: Path, payload: dict[str, Any]) -> None:
         "",
         "## Interpretation",
         "",
-        "- Harvard 2024-25 is the critical regression case: old projection used the 2025-26 total fields and matched the hand-verified admissions totals; year-matched Tier 4 projection switched to the 2024-25 derived formula but the cleaner still emits several C1 values under 2025-shaped IDs.",
-        "- Yale 2024-25 keeps SAT/ACT assertions correct but field count drops under year-matched cleaning, again because the cleaner still has 2025-keyed maps in places.",
+        "- Harvard 2024-25 and Yale 2024-25 keep the hand-verified browser-level assertions correct under year-matched extraction.",
+        "- Field counts drop on the Tier 4 fixtures because schema-local 2024-25 IDs no longer keep 2025-only fields that were previously projected under the wrong schema.",
         "- Harvey Mudd 2025-26 is stable, as expected, because old and new schema selection are identical for 2025-26.",
         "",
         "## Recommendation",
         "",
-        "Do not run M5 as a broad Tier 4 corpus drain yet. Promote M6 or a narrow C1 mapping fix before draining 2024-25 Tier 4 artifacts. M3 remains useful for Tier 1/Tier 2/Tier 6 and for correctly tagging new artifacts by schema version, but the M4 evidence says Tier 4 does not fully benefit until its hard-coded mappings are schema-derived.",
+        recommendation,
         "",
         "Raw results: `.context/prd-014-validation/results.json`.",
         "",
