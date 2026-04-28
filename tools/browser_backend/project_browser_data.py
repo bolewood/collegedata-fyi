@@ -740,13 +740,44 @@ def project_document(
     if not apply:
         return len(field_rows), bool(browser_row)
 
-    client.table("cds_fields").delete().eq("document_id", document_id).execute()
-    client.table("school_browser_rows").delete().eq("document_id", document_id).execute()
-    if field_rows:
-        _upsert_chunks(client, "cds_fields", field_rows, "document_id,schema_version,field_id")
-    if browser_row:
-        client.table("school_browser_rows").upsert(browser_row, on_conflict="document_id").execute()
+    replace_projection_rows(client, str(document_id), field_rows, browser_row)
     return len(field_rows), bool(browser_row)
+
+
+def replace_projection_rows(
+    client: Any,
+    document_id: str,
+    field_rows: list[dict[str, Any]],
+    browser_row: Optional[dict[str, Any]],
+) -> None:
+    """Atomically replace the public projection rows for one document."""
+    client.rpc(
+        "replace_browser_projection_for_document",
+        {
+            "p_document_id": document_id,
+            "p_field_rows": field_rows,
+            "p_browser_row": browser_row,
+        },
+    ).execute()
+
+
+def project_document_id(
+    client: Any,
+    document_id: str,
+    definitions: dict[str, dict[str, FieldDefinition]],
+    apply: bool = True,
+) -> tuple[int, bool]:
+    """Refresh projection rows for one cds_documents row.
+
+    This is the incremental API used by the extraction worker. It reuses the
+    same selected-result and row-building logic as the full rebuild command so
+    document-level refreshes cannot drift from batch projection semantics.
+    """
+    docs = fetch_documents(client, document_id)
+    if not docs:
+        print(f"{document_id}: no cds_manifest row found for projection")
+        return 0, False
+    return project_document(client, docs[0], definitions, apply)
 
 
 def clear_projection_tables(client: Any) -> None:

@@ -8,6 +8,8 @@ from tools.browser_backend.project_browser_data import (
     build_projection_rows,
     metric_alias_rows,
     parse_field_value,
+    project_document_id,
+    replace_projection_rows,
     select_extraction_result,
 )
 
@@ -73,6 +75,45 @@ def artifact(
         "created_at": created_at,
         "notes": notes,
     }
+
+
+class FakeResult:
+    def __init__(self, data=None):
+        self.data = data
+
+
+class FakeQuery:
+    def __init__(self, data=None):
+        self.data = data
+
+    def select(self, *_args, **_kwargs):
+        return self
+
+    def eq(self, *_args, **_kwargs):
+        return self
+
+    def limit(self, *_args, **_kwargs):
+        return self
+
+    def execute(self):
+        return FakeResult(self.data)
+
+
+class FakeRpcClient:
+    def __init__(self):
+        self.calls = []
+
+    def rpc(self, name, params):
+        self.calls.append((name, params))
+        return FakeQuery()
+
+
+class FakeTableClient:
+    def __init__(self, table_data):
+        self.table_data = table_data
+
+    def table(self, name):
+        return FakeQuery(self.table_data.get(name, []))
 
 
 class BrowserProjectionTests(unittest.TestCase):
@@ -287,6 +328,37 @@ class BrowserProjectionTests(unittest.TestCase):
         self.assertIsNotNone(selected)
         assert selected is not None
         self.assertEqual(selected.values["C.118"]["value"], "10")
+
+    def test_replace_projection_rows_uses_atomic_rpc(self):
+        client = FakeRpcClient()
+        field_rows = [{"document_id": "00000000-0000-0000-0000-000000000001"}]
+        browser_row = {"document_id": "00000000-0000-0000-0000-000000000001"}
+
+        replace_projection_rows(
+            client,
+            "00000000-0000-0000-0000-000000000001",
+            field_rows,
+            browser_row,
+        )
+
+        self.assertEqual(len(client.calls), 1)
+        name, params = client.calls[0]
+        self.assertEqual(name, "replace_browser_projection_for_document")
+        self.assertEqual(params["p_document_id"], "00000000-0000-0000-0000-000000000001")
+        self.assertEqual(params["p_field_rows"], field_rows)
+        self.assertEqual(params["p_browser_row"], browser_row)
+
+    def test_project_document_id_no_manifest_row_is_noop(self):
+        client = FakeTableClient({"cds_manifest": []})
+
+        count, has_browser_row = project_document_id(
+            client,
+            "00000000-0000-0000-0000-000000000001",
+            defs(),
+        )
+
+        self.assertEqual(count, 0)
+        self.assertFalse(has_browser_row)
 
 
 if __name__ == "__main__":
