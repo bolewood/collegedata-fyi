@@ -13,7 +13,9 @@ SAT/ACT academic-profile fields after the Tier 4 v0.3 projection refresh.
   `acceptance_rate` and `yield_rate` stay out of the alias table.
 - `cds_selected_extraction_result`: helper view that selects the strongest
   deterministic extraction result and merges `tier4_llm_fallback`
-  `kind='cleaned'` values as a gap-filling overlay for Tier 4 rows.
+  `kind='cleaned'` values as a gap-filling overlay for Tier 4 rows only when
+  the fallback matches the selected base artifact id or legacy markdown hash +
+  cleaner version.
 - `cds_fields`: materialized long-form field projection for `2024-25+`.
 - `school_browser_rows`: curated one-row-per-school-year serving table.
 - `browser-search` Supabase Edge Function: ranked latest-per-school search with

@@ -32,6 +32,13 @@ export interface FieldValue {
 
 export interface ArtifactNotes {
   values?: Record<string, FieldValue>;
+  producer?: string;
+  producer_version?: string;
+  base_artifact_id?: string;
+  base_producer?: string;
+  base_producer_version?: string;
+  cleaner_version?: string;
+  markdown_sha256?: string;
   stats?: {
     total_fields?: number;
     unmapped_count?: number;
@@ -44,7 +51,6 @@ export interface ArtifactNotes {
   markdown?: string;
   // tier4_llm_fallback-only fields
   mode?: "fill_gaps" | "shadow";
-  producer?: string;
 }
 
 // App-level aggregation types (not direct DB mirrors)

@@ -1,4 +1,5 @@
 import unittest
+import hashlib
 from decimal import Decimal
 
 from tools.browser_backend.project_browser_data import (
@@ -51,16 +52,26 @@ def doc(**overrides):
     return base
 
 
-def artifact(producer="tier2_acroform", values=None, kind="canonical", created_at="2026-01-01T00:00:00Z"):
+def artifact(
+    producer="tier2_acroform",
+    values=None,
+    kind="canonical",
+    created_at="2026-01-01T00:00:00Z",
+    producer_version="0.1.0",
+    notes_extra=None,
+):
+    notes = {"values": values or {}}
+    if notes_extra:
+        notes.update(notes_extra)
     return {
         "id": f"{producer}-{kind}",
         "document_id": "00000000-0000-0000-0000-000000000001",
         "kind": kind,
         "producer": producer,
-        "producer_version": "0.1.0",
+        "producer_version": producer_version,
         "schema_version": "2025-26" if kind == "canonical" else None,
         "created_at": created_at,
-        "notes": {"values": values or {}},
+        "notes": notes,
     }
 
 
@@ -194,10 +205,12 @@ class BrowserProjectionTests(unittest.TestCase):
             [
                 artifact(
                     producer="tier4_docling",
+                    producer_version="0.3.0",
                     values={
                         "C.116": {"value": "100"},
                         "C.117": {"value": "20"},
                     },
+                    notes_extra={"markdown": "current markdown"},
                 ),
                 artifact(
                     producer="tier4_llm_fallback",
@@ -207,6 +220,10 @@ class BrowserProjectionTests(unittest.TestCase):
                         "C.118": {"value": "10"},
                     },
                     created_at="2026-01-02T00:00:00Z",
+                    notes_extra={
+                        "base_artifact_id": "tier4_docling-canonical",
+                        "base_producer_version": "0.3.0",
+                    },
                 ),
             ],
         )
@@ -216,6 +233,60 @@ class BrowserProjectionTests(unittest.TestCase):
         self.assertEqual(selected.values["C.118"]["value"], "10")
         self.assertEqual(selected.value_sources["C.117"][0], "tier4_docling")
         self.assertEqual(selected.value_sources["C.118"][0], "tier4_llm_fallback")
+
+    def test_tier4_fallback_overlay_ignores_stale_base(self):
+        selected = select_extraction_result(
+            "00000000-0000-0000-0000-000000000001",
+            [
+                artifact(
+                    producer="tier4_docling",
+                    producer_version="0.3.0",
+                    values={"C.116": {"value": "100"}},
+                    notes_extra={"markdown": "fresh v0.3 markdown"},
+                ),
+                artifact(
+                    producer="tier4_llm_fallback",
+                    kind="cleaned",
+                    values={"C.118": {"value": "10"}},
+                    created_at="2026-01-02T00:00:00Z",
+                    notes_extra={
+                        "markdown_sha256": "not-the-fresh-markdown-hash",
+                        "cleaner_version": "0.2.0",
+                    },
+                ),
+            ],
+        )
+        self.assertIsNotNone(selected)
+        assert selected is not None
+        self.assertIsNone(selected.fallback_artifact_id)
+        self.assertNotIn("C.118", selected.values)
+
+    def test_legacy_tier4_fallback_overlay_matches_markdown_hash(self):
+        markdown = "legacy compatible markdown"
+        selected = select_extraction_result(
+            "00000000-0000-0000-0000-000000000001",
+            [
+                artifact(
+                    producer="tier4_docling",
+                    producer_version="0.3.0",
+                    values={"C.116": {"value": "100"}},
+                    notes_extra={"markdown": markdown},
+                ),
+                artifact(
+                    producer="tier4_llm_fallback",
+                    kind="cleaned",
+                    values={"C.118": {"value": "10"}},
+                    created_at="2026-01-02T00:00:00Z",
+                    notes_extra={
+                        "markdown_sha256": hashlib.sha256(markdown.encode("utf-8")).hexdigest(),
+                        "cleaner_version": "0.3.0",
+                    },
+                ),
+            ],
+        )
+        self.assertIsNotNone(selected)
+        assert selected is not None
+        self.assertEqual(selected.values["C.118"]["value"], "10")
 
 
 if __name__ == "__main__":

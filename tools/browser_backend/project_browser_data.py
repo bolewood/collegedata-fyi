@@ -24,6 +24,7 @@ Env:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -55,6 +56,37 @@ NOT_APPLICABLE_VALUES = {
     "not required",
     "not offered",
 }
+
+
+def _sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _fallback_matches_base(
+    base: dict[str, Any],
+    base_notes: dict[str, Any],
+    fallback: dict[str, Any],
+) -> bool:
+    fallback_notes = fallback.get("notes") or {}
+    if not isinstance(fallback_notes, dict):
+        return False
+
+    base_artifact_id = fallback_notes.get("base_artifact_id")
+    if base_artifact_id:
+        return (
+            str(base_artifact_id) == str(base.get("id"))
+            and (fallback_notes.get("base_producer_version") in (None, base.get("producer_version")))
+        )
+
+    markdown = base_notes.get("markdown")
+    markdown_sha256 = fallback_notes.get("markdown_sha256")
+    if not isinstance(markdown, str) or not markdown_sha256:
+        return False
+
+    return (
+        str(markdown_sha256) == _sha256_text(markdown)
+        and str(fallback_notes.get("cleaner_version") or "") == str(base.get("producer_version") or "")
+    )
 
 
 @dataclass(frozen=True)
@@ -337,9 +369,13 @@ def select_extraction_result(
             if artifact.get("kind") == "cleaned"
             and artifact.get("producer") == FALLBACK_PRODUCER
         ]
-        if fallback_candidates:
+        compatible_fallbacks = [
+            artifact for artifact in fallback_candidates
+            if _fallback_matches_base(base, base_notes, artifact)
+        ]
+        if compatible_fallbacks:
             fallback_artifact = sorted(
-                fallback_candidates,
+                compatible_fallbacks,
                 key=lambda row: (_created_at_key(row), str(row.get("id") or "")),
                 reverse=True,
             )[0]

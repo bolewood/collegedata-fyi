@@ -19,12 +19,14 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
   native-JSON-only candidates surfaced by the native table adapter. Promote
   section-specific native parsers only after deterministic validation.
 
-- **Invalidate or re-run stale Tier 4 LLM fallback after a Tier 4 v0.3 drain.**
-  Existing `tier4_llm_fallback` artifacts are keyed to the old markdown hash but
-  the selected-result view overlays the latest fallback by document. After
-  reprocessing the corpus with `tier4_docling` v0.3, either delete/re-run stale
-  fallback artifacts or tighten the selected-result contract to require fallback
-  artifacts to match the base artifact/version/hash.
+- **Re-run Tier 4 LLM fallback for v0.3-compatible artifacts.**
+  The selected-result contract now ignores stale fallbacks unless they match the
+  selected Tier 4 base artifact by `base_artifact_id` or legacy
+  `markdown_sha256 + cleaner_version`. The remaining work is operational:
+  re-run `llm_fallback_worker.py` for the v0.3 Tier 4 corpus so compatible
+  fallback values are available again where the deterministic cleaner still has
+  gaps, then refresh `cds_fields` / `school_browser_rows`. Until then, stale
+  fallback rows are preserved but excluded from public selected results.
 
 - **Cross-table inconsistency notes.** Some schools' CDS files are internally inconsistent (Yale's C1 says women=772 enrolled, B1 says 769 enrolled; HMC's C1 enrollees-by-gender doesn't match the by-status sub-block). Decide whether to record these in `docs/known-issues/{school}.md`, in a per-extract `_notes` field, or both. They are not extraction bugs.
 

@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { createHash } from "crypto";
 import { supabase } from "./supabase";
 import type {
   ManifestRow,
@@ -23,6 +24,35 @@ type UntypedSupabase = {
   // here so page code stays typed at the SiteStats boundary.
   from: (table: string) => any;
 };
+
+function sha256Text(value: string): string {
+  return createHash("sha256").update(value, "utf8").digest("hex");
+}
+
+function fallbackMatchesCanonical(
+  canonical: ArtifactRow | null,
+  fallback: ArtifactRow | null,
+): boolean {
+  if (!canonical || !fallback || canonical.producer !== "tier4_docling") return false;
+
+  const canonicalNotes = canonical.notes as ArtifactNotes | null;
+  const fallbackNotes = fallback.notes as ArtifactNotes | null;
+  if (!canonicalNotes || !fallbackNotes) return false;
+
+  if (fallbackNotes.base_artifact_id) {
+    return (
+      fallbackNotes.base_artifact_id === canonical.id &&
+      (!fallbackNotes.base_producer_version ||
+        fallbackNotes.base_producer_version === canonical.producer_version)
+    );
+  }
+
+  if (!canonicalNotes.markdown || !fallbackNotes.markdown_sha256) return false;
+  return (
+    fallbackNotes.markdown_sha256 === sha256Text(canonicalNotes.markdown) &&
+    (fallbackNotes.cleaner_version ?? "") === (canonical.producer_version ?? "")
+  );
+}
 
 async function optionalExactCount(
   table: string,
@@ -299,8 +329,11 @@ export async function fetchExtract(documentId: string): Promise<{
 
   const canonicalValues =
     ((canonicalRes.data?.notes as ArtifactNotes | null)?.values ?? {}) as Record<string, FieldValue>;
+  const compatibleFallback = fallbackMatchesCanonical(canonicalRes.data ?? null, fallbackRes.data ?? null)
+    ? fallbackRes.data
+    : null;
   const fallbackValues =
-    ((fallbackRes.data?.notes as ArtifactNotes | null)?.values ?? {}) as Record<string, FieldValue>;
+    ((compatibleFallback?.notes as ArtifactNotes | null)?.values ?? {}) as Record<string, FieldValue>;
 
   // Mode B merge: fallback is the base, canonical overlays on top so the
   // deterministic cleaner's values always win on collision.
@@ -311,7 +344,7 @@ export async function fetchExtract(documentId: string): Promise<{
 
   return {
     canonical: canonicalRes.data ?? null,
-    fallback: fallbackRes.data ?? null,
+    fallback: compatibleFallback,
     mergedValues,
   };
 }
