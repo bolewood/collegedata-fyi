@@ -1,0 +1,56 @@
+name: Contribute an extractor or cleaner
+description: Propose a parser, cleaner, LLM repair, or extraction-quality improvement.
+title: "Cleaner proposal: "
+labels:
+  - extraction-quality
+  - cleaner
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for tooling that improves structured extraction from CDS PDFs, XLSX, DOCX, HTML, scans, or Docling output.
+  - type: input
+    id: project_url
+    attributes:
+      label: Tool or branch URL
+      description: Link to your repo, branch, package, notebook, or proof of concept.
+      placeholder: https://github.com/you/cds-cleaner
+    validations:
+      required: false
+  - type: dropdown
+    id: target
+    attributes:
+      label: Target extraction surface
+      options:
+        - Tier 1 XLSX
+        - Tier 2 fillable PDF / AcroForm
+        - Tier 3 DOCX
+        - Tier 4 flattened PDF / Docling
+        - Tier 4 LLM fallback
+        - Tier 5 scanned PDF / OCR
+        - Tier 6 HTML
+        - Cross-tier validation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: fields
+    attributes:
+      label: Fields or sections improved
+      description: List CDS sections, field IDs, or examples such as C1 admissions, C9 SAT/ACT, H2A aid, or B1 enrollment.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Include before/after field counts, ground-truth checks, schools tested, or failure modes fixed.
+    validations:
+      required: true
+  - type: textarea
+    id: integration
+    attributes:
+      label: Integration notes
+      description: Explain whether this is a deterministic parser, fallback overlay, validation rule, or external package.
+    validations:
+      required: false

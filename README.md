@@ -2,6 +2,8 @@
 
 **College facts pulled straight from each school's Common Data Set.**
 
+Open-source Common Data Set API, searchable college admissions dataset, and preservation archive for U.S. higher education data.
+
 An open, reproducible library of US college data. We find each school's Common Data Set document, extract it into a canonical schema, and publish both the raw source file and the structured extract alongside a queryable manifest. No hand-cleaned numbers, no opinionated schema of our own — we use the one the CDS Initiative already publishes. Just ground truth you can build on top of.
 
 > **Status: V1 live at [collegedata.fyi](https://collegedata.fyi).** 697 schools indexed, 3,924 archived CDS documents, structured extraction on 3,841 of them (98%). Five of six extraction tiers shipped: filled XLSX (template cell-position map), fillable PDF (AcroForm), flattened PDF (Docling + schema-targeting cleaner), image-only scan (force-OCR), and structured HTML (HTML normalizer reusing the Tier 4 cleaner). DOCX is the only remaining tier and is scoped in [PRD 007](docs/prd/007-tier3-docx-extraction.md). GT scorer 94% on hand-audited schools; C1 admissions fields at 50-60% Tier 4 coverage corpus-wide. See [`docs/extraction-quality.md`](docs/extraction-quality.md) for full coverage by section, [`docs/known-issues/`](docs/known-issues/) for per-school notes.
@@ -52,6 +54,19 @@ curl 'https://api.collegedata.fyi/rest/v1/cds_artifacts?document_id=eq.<uuid>&ki
 5. Community cleanup tools can register via `cleaners.yaml` and publish their own artifacts alongside the primary ones — see [ADR 0002](docs/decisions/0002-publish-raw-over-clean.md) for the rationale.
 
 Full architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+## Ecosystem and related projects
+
+collegedata.fyi sits between official higher-education data systems and the document-processing tools needed to make decentralized CDS files queryable:
+
+- [Common Data Set Initiative](https://commondataset.org/) — the canonical CDS templates and field definitions this project follows.
+- [College Scorecard API](https://collegescorecard.ed.gov/data/api/) — federal outcomes, net-price, debt, completion, and earnings data; joined into `cds_scorecard`.
+- [IPEDS](https://nces.ed.gov/ipeds/) — federal postsecondary reporting system and the source of school identity metadata such as UNITID.
+- [Docling](https://github.com/docling-project/docling) — open-source document conversion toolkit used for flattened PDF, scanned PDF, and layout-aware extraction.
+- [UrbanInstitute/ipeds-scraper](https://github.com/UrbanInstitute/ipeds-scraper) — downloader for IPEDS complete data files.
+- [UrbanInstitute/education-data-package-r](https://github.com/UrbanInstitute/education-data-package-r) — R package for accessing education data including IPEDS and College Scorecard data.
+- [karllhughes/colleges](https://github.com/karllhughes/colleges) — open API of U.S. colleges and universities.
+- [kielni/ipeds-sql](https://github.com/kielni/ipeds-sql) — IPEDS data loaded into a SQL-friendly shape.
 
 ## Docs and decisions
 

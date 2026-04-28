@@ -1,0 +1,61 @@
+name: Report bad extracted data
+description: Flag a Common Data Set value that appears wrong, missing, or stale.
+title: "Extraction issue: "
+labels:
+  - extraction-quality
+  - data-error
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this when the source CDS is correct but collegedata.fyi extracted, normalized, or displayed the wrong value.
+  - type: input
+    id: school_id
+    attributes:
+      label: School ID or school name
+      placeholder: yale or Yale University
+    validations:
+      required: true
+  - type: input
+    id: cds_year
+    attributes:
+      label: CDS year
+      placeholder: 2024-25
+    validations:
+      required: true
+  - type: input
+    id: page_url
+    attributes:
+      label: collegedata.fyi page URL
+      placeholder: https://www.collegedata.fyi/schools/yale/2024-25
+    validations:
+      required: false
+  - type: input
+    id: field_id
+    attributes:
+      label: CDS field ID, if known
+      description: Examples include C.116, C.901, B.2203, H.209.
+      placeholder: C.116
+    validations:
+      required: false
+  - type: textarea
+    id: observed
+    attributes:
+      label: What collegedata.fyi shows
+      placeholder: "Example: Applied = 3,210"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What the source CDS shows
+      placeholder: "Example: Applied = 32,100 on page 8, section C1"
+    validations:
+      required: true
+  - type: textarea
+    id: source_evidence
+    attributes:
+      label: Source evidence
+      description: Page number, section, screenshot description, or link to the official source document.
+    validations:
+      required: false
