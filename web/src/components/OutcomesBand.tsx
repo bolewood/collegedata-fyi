@@ -1,7 +1,7 @@
 import type { ScorecardSummary } from "@/lib/types";
 import { formatCurrency, formatPercent } from "@/lib/format";
 
-function StatCard({
+function Kpi({
   label,
   value,
   hint,
@@ -11,17 +11,31 @@ function StatCard({
   hint?: string;
 }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white px-4 py-3">
-      <p className="text-xs text-gray-500 uppercase tracking-wide">{label}</p>
-      <p className="mt-1 text-xl font-semibold text-gray-900">{value}</p>
-      {hint && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
+    <div>
+      <div className="meta" style={{ marginBottom: 8 }}>
+        {label}
+      </div>
+      <div
+        className="serif stat-num"
+        style={{ fontSize: 34, lineHeight: 1, letterSpacing: "-0.02em" }}
+      >
+        {value}
+      </div>
+      {hint && (
+        <div
+          className="mono"
+          style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 6 }}
+        >
+          {hint}
+        </div>
+      )}
     </div>
   );
 }
 
 // Compact 4-card headline for federal Scorecard outcomes. Null fields drop
 // out, so a small school that doesn't report to Scorecard renders fewer
-// cards instead of a row of dashes.
+// cells instead of a row of dashes.
 export function OutcomesBand({ scorecard }: { scorecard: ScorecardSummary }) {
   const cards: { label: string; value: string; hint?: string }[] = [];
 
@@ -29,7 +43,7 @@ export function OutcomesBand({ scorecard }: { scorecard: ScorecardSummary }) {
     cards.push({
       label: "Median earnings",
       value: formatCurrency(scorecard.earnings_10yr_median),
-      hint: "10 years after enrollment",
+      hint: "10 yrs after enrollment",
     });
   }
   if (scorecard.graduation_rate_6yr != null) {
@@ -43,34 +57,32 @@ export function OutcomesBand({ scorecard }: { scorecard: ScorecardSummary }) {
     cards.push({
       label: "Average net price",
       value: formatCurrency(scorecard.avg_net_price),
-      hint: "Sticker minus grants",
+      hint: "sticker minus grants",
     });
   }
   if (scorecard.median_debt_completers != null) {
     cards.push({
-      label: "Median debt at graduation",
+      label: "Median debt at grad.",
       value: formatCurrency(scorecard.median_debt_completers),
-      hint: "Federal loans only",
+      hint: "federal loans only",
     });
   }
 
   if (cards.length === 0) return null;
 
-  // Tailwind JIT requires literal class names — can't interpolate grid cols.
-  // Pick the right class based on card count; 4 is the cap.
-  const colClass =
-    cards.length >= 4
-      ? "sm:grid-cols-4"
-      : cards.length === 3
-        ? "sm:grid-cols-3"
-        : cards.length === 2
-          ? "sm:grid-cols-2"
-          : "sm:grid-cols-1";
-
   return (
-    <div className={`grid grid-cols-2 gap-3 ${colClass}`}>
+    <div
+      className="rule-2"
+      style={{
+        marginTop: 20,
+        paddingTop: 24,
+        display: "grid",
+        gridTemplateColumns: `repeat(${cards.length}, 1fr)`,
+        gap: 32,
+      }}
+    >
       {cards.map((c) => (
-        <StatCard key={c.label} {...c} />
+        <Kpi key={c.label} {...c} />
       ))}
     </div>
   );

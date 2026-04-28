@@ -198,7 +198,7 @@ async function DocumentVariant({
           <h2 className="text-lg font-semibold text-gray-900">
             Federal outcomes
           </h2>
-          <ScorecardVintageNote scorecard={scorecard} className="mt-1" />
+          <div className="mt-1"><ScorecardVintageNote scorecard={scorecard} /></div>
           <div className="mt-3">
             <OutcomesBand scorecard={scorecard} />
           </div>
