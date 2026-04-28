@@ -1,15 +1,26 @@
 # Archive pipeline
 
 The archive pipeline is the bridge between discovery (the finder corpus and
-the M1a `discover` edge function) and extraction (the M2 Python worker). It
+the M1a `discover` edge function) and extraction (the Python worker). It
 takes every active school in `tools/finder/schools.yaml`, resolves its
 `discovery_seed_url` (renamed from `cds_url_hint` in PR 5 of the URL hint
 refactor — see [docs/plans/url-hint-refactor-and-hosting-jsonb.md](plans/url-hint-refactor-and-hosting-jsonb.md))
 to a direct document URL, downloads the bytes, hashes them, writes
 provenance rows to `cds_documents` + `cds_artifacts`, and uploads the
-source file to the `sources` Storage bucket. The M2 extractor then polls
+source file to the `sources` Storage bucket. The extraction worker then polls
 `cds_documents WHERE extraction_status = 'extraction_pending'` and does
 the structured extraction.
+
+As of April 28, 2026, this document covers the full operating chain:
+
+1. **Discovery / archive** in Supabase Edge Functions.
+2. **Structured extraction** in the Python worker across shipped Tiers 1, 2, 4, 5, and 6.
+3. **Tier 4 LLM fallback overlay** for selected low-coverage flattened PDFs.
+4. **Queryable browser projection** into `cds_fields` and `school_browser_rows`.
+
+The archive layer stores immutable source bytes and provenance. It does not
+decide which extracted values are canonical for consumers; that decision happens
+later in the extraction artifacts and browser projection layers.
 
 The resolver also writes a row to `school_hosting_observations` on every
 probe (gated by `HOSTING_OBSERVATIONS_ENABLED=true`), capturing inferred
@@ -22,10 +33,11 @@ most recent probe was `unchanged_verified` (30d), `auth_walled_*` (90d),
 `dead_url` (14d), etc. are skipped for the relevant window — typically
 ~67% of active schools per cron.
 
-Runs on Supabase Edge Functions + pg_cron + pg_net. One school per edge
-function invocation so the 400 s wall clock, 256 MB memory, and 2 s CPU
-caps never bind. Each monthly batch of ~840 schools drains in ~7 hours of
-wall clock.
+Archive discovery runs on Supabase Edge Functions + pg_cron + pg_net. One
+school per edge function invocation so the 400 s wall clock, 256 MB memory, and
+2 s CPU caps never bind. The active-school count changes with the finder corpus;
+the original ~840-school monthly batch drained in roughly seven hours of wall
+clock.
 
 ## Architecture
 
@@ -111,6 +123,33 @@ wall clock.
 └──────────────────────────────────────────────────────────────┘
 ```
 
+Downstream of the archive queue, the operator-run Python workers complete the
+data path:
+
+```
+cds_documents(extraction_pending)
+  └─ tools/extraction_worker/worker.py
+       ├─ xlsx         → tier1_xlsx canonical artifact
+       ├─ pdf_fillable → tier2_acroform canonical artifact
+       ├─ pdf_flat     → tier4_docling canonical artifact
+       ├─ pdf_scanned  → tier4_docling with forced OCR
+       └─ html         → tier6_html canonical artifact
+
+eligible tier4_docling artifacts
+  └─ tools/extraction_worker/llm_fallback_worker.py
+       └─ tier4_llm_fallback cleaned artifact
+
+selected extraction results
+  └─ tools/browser_backend/project_browser_data.py
+       ├─ cds_fields
+       └─ school_browser_rows
+```
+
+The selected-result contract is deterministic: choose the strongest base
+producer by rank (`tier1_xlsx`, `tier2_acroform`, `tier6_html`, then
+`tier4_docling`), and for Tier 4 rows overlay `tier4_llm_fallback` only as a
+gap-fill. Base deterministic values win conflicts.
+
 ### Files
 
 | Purpose | Path |
@@ -126,7 +165,11 @@ wall clock.
 | Resolver dev entry (dry-run, no writes) | `supabase/functions/discover/index.ts` |
 | Queue consumer (30 s cron target + `force_school` backfill) | `supabase/functions/archive-process/index.ts` |
 | Monthly seeder (daily cron target, deterministic per-month run_id) | `supabase/functions/archive-enqueue/index.ts` |
-| Unit tests (48 tests: year normalizer, HTML anchor extraction, `pickCandidates` multi-candidate selection, Brown 2020-04 regression, test-artifact deprioritization, Lafayette CDS-digit filename) | `supabase/functions/_shared/{year,resolve}.test.ts` |
+| Format badge / source-format presentation | `supabase/functions/_shared/format.ts`, `web/src/lib/format.ts` |
+| Extraction worker | `tools/extraction_worker/worker.py` |
+| Tier 4 LLM fallback worker | `tools/extraction_worker/llm_fallback_worker.py` |
+| Browser projection worker | `tools/browser_backend/project_browser_data.py` |
+| Unit tests (resolver, year normalizer, hosting inference, probe outcome cooldowns, schools.yaml validation, browser search) | `supabase/functions/**/*.test.ts` |
 
 ## Storage path convention
 
@@ -136,6 +179,12 @@ truly immutable and crash-safe. Consumers never construct these paths
 themselves — they read `cds_manifest.source_storage_path`, the view
 column that picks the most recent `cds_artifacts` row with `kind='source'`
 for each document.
+
+Supported source extensions are `pdf`, `xlsx`, `docx`, and `html`. Archived
+HTML is uploaded with `content-type: text/plain` even though the object suffix
+is `.html`; this prevents public Storage URLs from executing school-hosted
+scripts in the `sources` bucket. The extraction worker reads the bytes directly,
+so this XSS mitigation does not affect Tier 6 extraction.
 
 SHA-addressed paths replace the earlier `source.pdf` stable path because
 the stable-path + history-copy approach had crash windows without real
@@ -225,7 +274,7 @@ touching the database or Storage.
         -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
    ```
 
-   Expected response shape:
+   Expected response shape. Counts vary with the active corpus and cooldowns:
 
    ```json
    {
@@ -266,13 +315,58 @@ Response contains a `ResolveResult` per school with `kind` set to
 
 Capped at 10 schools per request to keep memory bounded.
 
+**Run extraction over archived pending rows:**
+
+```bash
+python tools/extraction_worker/worker.py
+python tools/extraction_worker/worker.py --limit 25
+python tools/extraction_worker/worker.py --school yale
+python tools/extraction_worker/worker.py --dry-run
+```
+
+The worker detects or backfills `source_format`, writes one canonical
+`cds_artifacts` row per successful extraction, and flips
+`cds_documents.extraction_status` to `extracted`. Shipped routes:
+
+| Source format | Producer | Notes |
+|---|---|---|
+| `xlsx` | `tier1_xlsx` | Deterministic template cell-position extraction. |
+| `pdf_fillable` | `tier2_acroform` | Deterministic AcroForm extraction. |
+| `pdf_flat` | `tier4_docling` | Docling + schema-targeting cleaner; v0.3 includes deterministic layout overlay. |
+| `pdf_scanned` | `tier4_docling` | Same Tier 4 route with forced OCR. |
+| `html` | `tier6_html` | HTML normalized to markdown, then passed through the Tier 4 cleaner. |
+| `docx` | none yet | Tier 3 is designed but not implemented. |
+
+**Run Tier 4 LLM fallback overlay:**
+
+```bash
+python tools/extraction_worker/llm_fallback_worker.py --limit 25
+python tools/extraction_worker/llm_fallback_worker.py --school yale
+```
+
+The fallback is not a replacement producer. It writes
+`producer='tier4_llm_fallback'`, `kind='cleaned'` artifacts for selected
+subsections. Consumers and the browser projection merge it as a gap-fill only;
+the deterministic cleaner wins conflicts.
+
+**Refresh browser/public query projections:**
+
+```bash
+python tools/browser_backend/project_browser_data.py --full-rebuild --apply
+python tools/browser_backend/project_browser_data.py --document-id <uuid> --apply
+```
+
+The projection is currently operator-run. New canonical artifacts do not
+automatically update `cds_fields` or `school_browser_rows` until this worker
+runs. This is tracked in [`docs/backlog.md`](backlog.md).
+
 **Queue health snapshot:**
 
 ```sql
 select status, count(*) from public.archive_queue group by status;
 ```
 
-The first full monthly drain (2026-04-14/15) produced `done: 535`,
+Historical note: the first full monthly drain (2026-04-14/15) produced `done: 535`,
 `failed_permanent: 302`, `ready/processing: 0`. The 302 failure
 bucket decomposes into: ~204 resolver "no year-bearing anchors"
 (~68% of all failures — addressed by [ADR 0007](decisions/0007-year-authority-moves-to-extraction.md)
@@ -300,15 +394,22 @@ Louisiana Tech / Michigan State / Montclair State (25 each),
 Dartmouth (22), Harvard (18), Lafayette (19 — was `failed_permanent`
 before Stage B). No schools lost rows; upsert semantics held.
 
-The 1,295 newly-archived rows have `detected_year = NULL` because
-the extraction worker has not yet processed them. A
-`--detect-year-only --write` backfill pass will populate the column
-across the expanded corpus.
+At the time, the 1,295 newly archived rows had `detected_year = NULL` because
+the extraction worker had not processed them yet. Later extraction drains
+populated `detected_year` and `cds_manifest.canonical_year` for public
+consumers.
 
 Earlier versions of this runbook projected a "healthy steady state"
 of `failed_permanent: <20` based on a 10-school hand-picked sample;
 that target did not survive contact with the real corpus and has
 been retired.
+
+Current high-level corpus counters are maintained in
+[`docs/extraction-quality.md`](extraction-quality.md). After the April 28 Tier 4
+v0.3 refresh and PRD 012 browser expansion, the public `2024+` projection had
+`217,910` `cds_fields` rows and `469` `school_browser_rows` rows. The projection
+clears stale rows on full rebuild, so browser-row counts can move down when old
+or non-qualifying rows are removed.
 
 **Recent cron executions:**
 
@@ -369,12 +470,14 @@ Then re-run step 4 of the setup to re-schedule the cron jobs.
 ## Test suite
 
 ```bash
-deno test --allow-net supabase/functions/_shared/
+deno test supabase/functions/_shared/*.test.ts supabase/functions/browser-search/*.test.ts
+python3 -m unittest tools/browser_backend/project_browser_data_test.py
+python3 -m py_compile tools/extraction_worker/worker.py tools/browser_backend/project_browser_data.py
 ```
 
-48 tests:
+The Deno suite now covers more than the original resolver-only archive tests:
 
-- **`year.test.ts`** (16 tests) — `YYYY-YY` canonicalization for the 7
+- **`year.test.ts`** — `YYYY-YY` canonicalization for the 7
   forms the corpus uses (long-long hyphen, long-long en-dash, underscore,
   space, long-short, short-short, no-separator 4-digit), millennium
   boundary, false positives (2021 is not a span), plausibility bounds,
@@ -384,7 +487,7 @@ deno test --allow-net supabase/functions/_shared/
   document year lives in `detected_year` and is tested by the Python
   extraction worker's harness, not here.
 
-- **`resolve.test.ts`** (32 tests) — HTML anchor extraction, relative
+- **`resolve.test.ts`** — HTML anchor extraction, relative
   href resolution, CDS keyword filtering (hostname doesn't false-match
   commondataset.org), section-file detection via filename, document
   vs subpage categorization, malformed HTML, `findBestSourceAnchor`
@@ -396,16 +499,50 @@ deno test --allow-net supabase/functions/_shared/
   multi-year landing page, single year-less candidate sentinel, mixed
   year-labeled + year-less drops, multi-candidate all-year-less null
   return, clean-vs-demoted partitioning, CSULB-style demoted fallback,
-  cross-subpage URL dedup, empty-list pass-through).
+  cross-subpage URL dedup, empty-list pass-through), parent-landing walks,
+  well-known CDS paths, Box URL rewrites, and Google Drive rewrites.
+
+- **`hosting.test.ts` / `probe_outcome.test.ts` / `schools.test.ts`** —
+  hosting-observation inference, auth-wall classification, cooldown windows,
+  school-token normalization, and schools.yaml validation helpers.
+
+- **`browser-search.test.ts`** — latest-per-school ranking, required-field
+  operator semantics, `is blank` answerability, null handling for `!=`, variant
+  scope, and SAT/ACT companion submit-rate metadata.
+
+- **`project_browser_data_test.py`** — selected-result projection semantics,
+  direct-vs-derived metric split, `sub_institutional` preservation, percent
+  normalization, Tier 4 fallback overlay behavior, and PRD 012 academic-profile
+  parsing/range checks.
 
 Integration tests against a local Supabase stack (claim RPC concurrency,
 NULL uniqueness, decision-table branches) are out of scope for this PR
 and listed as a follow-up. The migration's inline self-test provides
 basic regression coverage for the `NULLS NOT DISTINCT` constraint.
 
-## Production verification summary (as of 2026-04-14)
+## Production verification summary
 
-**Proven working in production:**
+### Current status (as of 2026-04-28)
+
+- Archive and extraction have produced `3,924` archived CDS documents and
+  `3,841` structured extraction artifacts across the public corpus.
+- Shipped extraction tiers are active for XLSX, fillable PDF, flattened PDF,
+  scanned PDF, and HTML. DOCX remains a designed-but-unbuilt Tier 3.
+- Tier 4 v0.3 deterministic layout-overlay extraction has been drained into
+  production and projected into the browser substrate.
+- Queryable browser projection after PRD 012:
+  - `217,910` `cds_fields` rows.
+  - `469` `school_browser_rows` rows.
+  - Mean projected `2024+` field rows per processed document moved from `224.5`
+    at PRD 010 launch to `433.2`.
+- Live smoke checks on April 28 returned HTTP 200 for `/browse` and
+  `/schools/mit/2024-25`; `browser-search` returned expected SAT answerability
+  metadata for a `sat_composite_p50 >= 1400` query.
+
+### Historical archive launch check (2026-04-14)
+
+The original archive-only production check remains useful as provenance for the
+queue and Storage path design:
 
 - Both migrations applied cleanly via `supabase db push`.
 - All three edge functions deployed successfully.
@@ -432,17 +569,30 @@ basic regression coverage for the `NULLS NOT DISTINCT` constraint.
 
 ## Known issues
 
-**Sub-institution schools.** Columbia (and any other school with a
-`sub_institutions` array) is intentionally excluded in V1 per
-`filterArchivable`. Follow-up: add a resolver path that matches landing
-page anchors against each `sub_institutions[i].label` to handle
+**Sub-institution schools.** The archive resolver still treats
+`sub_institutions` conservatively. Downstream public surfaces preserve
+`sub_institutional`, and `browser-search` defaults to primary rows where
+`sub_institutional IS NULL`, but discovery still needs a richer resolver path
+that can match landing-page anchors against each `sub_institutions[i].label` for
 multi-CDS schools.
 
-**Two duplicate school ids in schools.yaml.** `archive-enqueue` returned
-`enqueued: 837, skipped: 2` from 839 archivable inputs. The two skipped
-rows come from duplicate `(enqueued_run_id, school_id)` tuples —
-meaning schools.yaml has two entries sharing an id. Separate corpus
-cleanup task.
+**Projection freshness.** Extraction writes canonical artifacts, but
+`project_browser_data.py` is still operator-run. After a new extraction drain,
+`cds_fields` and `school_browser_rows` are stale until the projection worker is
+run. The backlog tracks wiring the projection into the extraction pipeline or a
+scheduled incremental refresh.
+
+**Tier 4 fallback artifact freshness.** Some `tier4_llm_fallback` artifacts were
+generated against older Tier 4 markdown hashes. The selected-result projection
+overlays the latest fallback by document, so after a Tier 4 v0.3 re-drain we
+should either invalidate/re-run stale fallbacks or tighten the selected-result
+contract to require a matching base artifact/version/hash.
+
+**XLSX academic-profile mapping audit.** PRD 012 found invalid SAT/ACT values in
+some XLSX-derived rows that look like template alignment drift. Browser
+projection range-checks and nulls those invalid score values, but the underlying
+Tier 1 mapping needs a focused audit before XLSX SAT/ACT fields are treated as
+fully launch-certified.
 
 **Documentation divergence for stable path.** Earlier docs referenced
 `sources/{school}/{year}/source.pdf` as the canonical path. The pipeline
