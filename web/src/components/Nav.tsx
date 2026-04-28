@@ -64,15 +64,29 @@ export function Nav() {
             href="https://github.com/bolewood/collegedata-fyi"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="GitHub (opens in new tab)"
             style={{
               textDecoration: "none",
               color: "var(--ink-3)",
               paddingBottom: 2,
               borderBottom: "1px solid transparent",
+              display: "inline-flex",
+              alignItems: "baseline",
+              gap: 4,
             }}
             className="nav-link"
           >
             GitHub
+            <span
+              aria-hidden="true"
+              style={{
+                fontSize: "0.75em",
+                color: "var(--ink-4)",
+                lineHeight: 1,
+              }}
+            >
+              ↗
+            </span>
           </a>
         </div>
       </div>
