@@ -5,6 +5,8 @@
 -- carry notes.base_artifact_id. Legacy artifacts can still match by the
 -- markdown hash + cleaner version recorded in notes.
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
+
 CREATE OR REPLACE VIEW public.cds_selected_extraction_result
 WITH (security_invoker = true) AS
 WITH ranked_base AS (
@@ -70,7 +72,7 @@ LEFT JOIN LATERAL (
         AND a.notes ? 'markdown_sha256'
         AND b.notes ? 'markdown'
         AND a.notes ->> 'markdown_sha256' =
-            encode(digest(convert_to(b.notes ->> 'markdown', 'UTF8'), 'sha256'), 'hex')
+            encode(extensions.digest(convert_to(b.notes ->> 'markdown', 'UTF8'), 'sha256'), 'hex')
         AND COALESCE(a.notes ->> 'cleaner_version', '') =
             COALESCE(b.producer_version, '')
       )
