@@ -1,6 +1,6 @@
 # Extraction Quality
 
-*Last updated: April 27, 2026 (post Tier 4 v0.3 layout-overlay spike; corpus drain pending)*
+*Last updated: April 28, 2026 (post Tier 4 v0.3 projection refresh and PRD 012 browser expansion)*
 
 This document records current extraction accuracy across our pipeline. It's meant as an honest, calibrated self-assessment, not a marketing page. The numbers here are produced by reproducible scorers you can run yourself against our ground-truth fixtures in [`tools/extraction-validator/`](../tools/extraction-validator/).
 
@@ -23,8 +23,11 @@ The gap between the two is where the real work is.
 | Benchmark-school coverage, C1 admissions section (Tier 4) | 50-60% |
 | Benchmark-school coverage, 1,105-field schema (3-doc Tier 4 avg, post-Phase 6) | ~35-40% (Harvard 382, Yale 390, Dartmouth 343) |
 | Tier 4 v0.3 layout-overlay spike, 10-doc failure sample | 5,066 -> 5,602 fields (+536) |
-| **Actual corpus-wide fields per doc** (mean) | Tier 2: 582 · Tier 1: 297 · Tier 6: 152 · Tier 4: 58 · overall: 96 |
-| Tier 1 XLSX field coverage (median per doc) | 297 fields (~27% of schema) |
+| `2024+` public field substrate after PRD 012 refresh | 217,910 field rows across 456 documents with fields |
+| `2024+` selected-document field coverage (mean / median) | 477.9 / 544 fields per document with fields |
+| PRD 010 launch -> PRD 012 refresh, `cds_fields` | 113,836 -> 217,910 field rows (+104,074, +91.4%) |
+| PRD 012 SAT/ACT browser answerability | SAT median 67.2% primary clean · ACT 75th 66.1% primary clean |
+| Tier 1 XLSX field coverage (median per doc) | 521 fields in the current `2024+` projection (~47% of schema) |
 | Tier 1 XLSX field coverage (max per doc) | 782 fields (~71% of schema) |
 
 ## Pipeline tiers
@@ -36,7 +39,7 @@ The extraction pipeline routes each document to a tier based on its source forma
 | 1 | Filled XLSX | Template cell-position map + openpyxl | ✅ Shipped 2026-04-20 | Parses the CDS Excel template's hidden lookup columns once; applies the map to any filled workbook. Deterministic on the standard template layout. 350 artifacts, median 307 fields/doc. |
 | 2 | Fillable PDF with AcroForm fields | `pypdf.get_fields()` | ✅ Shipped | Deterministic. Fields read directly from the PDF's form metadata. |
 | 3 | Filled DOCX | `python-docx` SDT reader | 📄 [PRD 007](prd/007-tier3-docx-extraction.md) | Word template has 1,204 Structured Document Tags whose `w:tag` values match schema `word_tag` exactly. ~30-50 addressable docs today (Kent State's 14 SDT-preserving files are the largest family). Not yet built. |
-| 4 | Flattened PDF (most common) | Docling layout extraction + schema-targeting cleaner | ✅ Shipped | The hardest tier. Most of this document is about Tier 4. [PRD 005](prd/005-full-schema-extraction.md) Phase 6 shipped 2026-04-20: section-family resolvers took the cleaner from 72 -> ~380 fields (Harvard 382, Yale 390, Dartmouth 343). Tier 4 v0.3 adds a deterministic embedded-text layout overlay for Docling blind spots; full corpus drain is the next measurement gate. |
+| 4 | Flattened PDF (most common) | Docling layout extraction + schema-targeting cleaner | ✅ Shipped | The hardest tier. Most of this document is about Tier 4. [PRD 005](prd/005-full-schema-extraction.md) Phase 6 shipped 2026-04-20: section-family resolvers took the cleaner from 72 -> ~380 fields (Harvard 382, Yale 390, Dartmouth 343). Tier 4 v0.3 adds a deterministic embedded-text layout overlay for Docling blind spots; the PRD 012 production projection now averages 430.6 field rows per Tier 4 document with fields in the `2024+` browser scope. |
 | 5 | Image-only scan | Tier 4 with `force_ocr=True` | ✅ Shipped 2026-04-20 | Same Docling pipeline, swaps in `EasyOcrOptions(force_full_page_ocr=True)`. Kennesaw State 2023-24 went from 0 fields (default lazy OCR) to 172 fields (force OCR) on 31 scanned pages. |
 | 6 | Structured HTML | `html_to_markdown` (BeautifulSoup + lxml) → `tier4_cleaner.clean` | ✅ Shipped 2026-04-20 | HTML normalizer + reuse of the Tier 4 cleaner. Archived HTML bytes are served as `text/plain` from the public Storage bucket to prevent XSS. MIT 2024-25 reference: 152 of 1,105 schema fields populated on first-drain without an alias table. See [PRD 008](prd/008-html-extraction.md). |
 
@@ -47,7 +50,7 @@ When a school publishes their CDS as a filled Excel workbook, extraction is dete
 | Metric | Value |
 |---|---|
 | Artifacts produced | 362 |
-| Median fields populated per doc | 307 (~28% of schema) |
+| Median fields populated per doc | 521 in the current `2024+` projection (~47% of schema); older full-corpus median was 307 |
 | Max fields populated (well-filled school) | 782 (~71% of schema) |
 | Accuracy on standard template | Deterministic (cell-position read, no heuristics) |
 
@@ -79,7 +82,7 @@ Hand-audited against full ground-truth fixtures for three schools:
 
 Average across the three schools: ~94%. These are schools with clean, well-structured CDS documents. Remaining misses are structural: Dartmouth's C10 is a Docling flat-text emission, Yale's H4/H6 are deferred to a later phase of the cleaner.
 
-### Layout-overlay cleaner spike (April 27, 2026)
+### Layout-overlay cleaner spike and production refresh (April 27-28, 2026)
 
 PRD 0111A's Docling spike found that the biggest immediate gain was not an LLM repair pass. It was retaining Docling's tuned markdown/native-table path and adding a deterministic supplemental text overlay from `pypdf` layout extraction for the places where Docling loses row/column context.
 
@@ -108,7 +111,45 @@ Important limits:
 - Field count is a coverage screen, not semantic ground truth.
 - The overlay is optimized for 2024-25+ CDS layouts; older templates remain best-effort.
 - Some cells are intentionally left blank when the visible source cell is blank or when alignment is ambiguous.
-- Corpus-wide Tier 4 mean is still pending a full v0.3 drain.
+
+The production browser projection was refreshed on April 28 after the v0.3 drain.
+For the `2024+` selected-result scope, the public substrate now contains:
+
+| Measure | PRD 010 launch | PRD 012 refresh | Delta |
+|---|---:|---:|---:|
+| `cds_fields` rows | 113,836 | 217,910 | +104,074 (+91.4%) |
+| `school_browser_rows` rows | 472 | 469 | -3 stale rows |
+| Processed documents | 507 | 503 | -4 stale/non-qualifying rows |
+| Mean field rows per processed document | 224.5 | 433.2 | +208.7 (+93.0%) |
+
+Within the refreshed `2024+` field substrate:
+
+| Source format | Field rows |
+|---|---:|
+| `pdf_flat` | 141,554 |
+| `pdf_fillable` | 53,016 |
+| `xlsx` | 23,082 |
+| `html` | 152 |
+| `pdf_scanned` | 106 |
+
+Documents with at least one projected field now average `477.9` fields, median
+`544`, max `802`. That is still coverage, not accuracy: field count does not prove
+each value is correct. But it is a strong signal that the deterministic v0.3
+overlay moved the flattened-PDF corpus from sparse extraction to useful browser
+substrate.
+
+PRD 012 also turned the improved C9 coverage into a measured backend expansion:
+
+| Browser metric | Field | Primary clean coverage | pdf_flat coverage |
+|---|---|---:|---:|
+| SAT submit rate | `C.901` | 65.4% | 67.2% |
+| ACT submit rate | `C.902` | 58.1% | 57.3% |
+| SAT Composite 50th | `C.906` | 67.2% | 71.9% |
+| ACT Composite 75th | `C.916` | 66.1% | 71.2% |
+
+Those fields are now queryable through the browser backend, with companion
+submit-rate metadata. GPA and class-rank remain long-form only because scale and
+denominator semantics need a better UI before becoming first-class browser filters.
 
 ### Corpus-wide coverage by section
 

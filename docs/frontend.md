@@ -51,7 +51,7 @@ the landing page.
 
 Curated PRD 010 browser for the `school_browser_rows` serving table. The
 first public slice stays deliberately narrow: primary school rows,
-`2024-25+`, and launch-certified metrics only.
+`2024-25+`, and launch-certified visible filters only.
 
 **Default query behavior:**
 - `mode = latest_per_school`
@@ -63,6 +63,11 @@ The page calls the deployed `browser-search` Edge Function, displays the
 answerability summary returned by the backend, renders source links for each
 row, and exports the current curated result set as CSV. It does not expose
 arbitrary `cds_fields` filtering yet.
+
+PRD 012 added SAT/ACT academic-profile fields to the backend contract and CSV
+export, but not to the default visible filter UI. Future score filters must pair
+score percentiles with submit-rate caveats because SAT/ACT score rows describe
+score submitters, not the entire admitted or enrolled class.
 
 ### `/schools/[school_id]` School detail (`web/src/app/schools/[school_id]/page.tsx`)
 
@@ -91,9 +96,10 @@ rate 2025" or "Stanford SAT scores 2024-25."
 2. School name + year heading
 3. Format badge + PDF download link
 4. **KeyStats block:** 4-8 stat cards showing acceptance rate, applications,
-   admitted, enrolled, SAT composite/math/reading ranges. Only renders cards
-   for fields that have values. Acceptance rate is computed from
+   admitted, enrolled, SAT composite/math/reading ranges, and ACT Composite
+   when available. Only renders cards for fields that have values. Acceptance rate is computed from
    `C.101+C.102+C.103` (applied) / `C.104+C.105+C.106` (admitted).
+   ACT Composite uses `C.914` and `C.916` for the 25th/75th percentile range.
 5. **FieldsView:** All extracted fields grouped by CDS section (A-J), each
    with a human-readable label from the 2025-26 schema and the extracted
    value. Shows a field count indicator ("47 of ~200 fields extracted").
@@ -151,7 +157,7 @@ paths.
 | School detail | `cds_manifest WHERE school_id = ?` | Ordered by canonical_year DESC |
 | Year detail | `cds_manifest WHERE school_id = ? AND canonical_year = ?` | Returns all sub-institutional variants |
 | Year detail (fields) | `cds_artifacts WHERE document_id = ?` | Loads canonical + `tier4_llm_fallback`, then merges cleaner-wins |
-| Queryable browser | `browser-search` Edge Function | Ranked latest-per-school search over `school_browser_rows` with answerability metadata |
+| Queryable browser | `browser-search` Edge Function | Ranked latest-per-school search over `school_browser_rows` with answerability metadata, including SAT/ACT submit-rate companion metadata for active score filters |
 
 **Deduplication:** `fetchSchoolDocuments` and `fetchDocumentsBySchoolAndYear`
 are wrapped in `React.cache()` so `generateMetadata()` and the page
@@ -167,7 +173,7 @@ component share the same Supabase response within a single render.
 |-----------|------|---------|
 | `StatsBar` | `components/StatsBar.tsx` | 4-column stat grid (schools, docs, year range, extraction %) |
 | `SchoolSearch` | `components/SchoolSearch.tsx` | Autocomplete input with keyboard nav, filters client-side |
-| `SchoolBrowser` | `components/SchoolBrowser.tsx` | PRD 010 browser filters, answerability stats, result table, pagination, CSV export |
+| `SchoolBrowser` | `components/SchoolBrowser.tsx` | PRD 010 browser filters, answerability stats, result table, pagination, CSV export. CSV includes PRD 012 SAT/ACT backend columns. |
 | `SchoolTable` | `components/SchoolTable.tsx` | Sortable/filterable school list with search input |
 | `DocumentCard` | `components/DocumentCard.tsx` | CDS year card with status badge, format badge, PDF link |
 | `KeyStats` | `components/KeyStats.tsx` | Grid of stat cards (acceptance rate, SAT, enrollment) |
@@ -226,7 +232,9 @@ and tabular numbers. Do not introduce blue UI, large rounded cards, or
 marketing-style decoration.
 
 **KeyStats and browser rows:** only render values that exist. Do not invent
-confidence scoring or fill blanks with authoritative-looking placeholders.
+confidence scoring or fill blanks with authoritative-looking placeholders. SAT/ACT
+browser fields should be described as submitter-profile values unless the UI also
+shows the submit-rate context.
 
 ---
 

@@ -108,6 +108,10 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 Reverse chronological.
 
+### 2026-04-28
+
+- **[RESOLVED 2026-04-28] ~~Browser academic-profile backend expansion (PRD 012).~~** Shipped SAT/ACT submission-rate and percentile columns into `school_browser_rows`, added companion submit-rate metadata to `browser-search`, and refreshed production after the Tier 4 v0.3 drain. Public `cds_fields` moved from 113,836 to 217,910 rows (+104,074, +91.4%); mean projected field rows per processed `2024+` document moved from 224.5 to 433.2. `school_browser_rows` now has 469 rows after stale projection rows were cleared before rebuild. SAT/ACT fields are backend-queryable and exported, but not exposed as default visible filters until the UI can show submit-rate context. Follow-ups remain open above for projection automation, the XLSX academic-profile mapping audit, and future score-filter UI.
+
 ### 2026-04-27
 
 - **[RESOLVED 2026-04-27] ~~Tier 4 v0.3 deterministic layout-overlay cleaner.~~** PRD 0111A's Docling improvement spike found a high-leverage path before LLM repair: keep the tuned Docling markdown/native-table pipeline, but pass embedded PDF layout text from `pypdf` into the cleaner as a supplemental, deterministic gap-fill overlay. The page-audit sequence covered Farmingdale, Kenyon, and Michigan State, then re-ran the same ten low-coverage 2024-25+ Tier 4 fixture PDFs. Total recovered canonical fields moved from 5,066 after the Farmingdale pass to 5,602 after the generalized v0.3 pass (+536), with Michigan State moving 336 -> 486. The overlay added coverage for A general information, B graduation grids, C admissions layouts, D transfer, E/F checkbox grids, G expenses, H aid, I faculty/class-size, and J disciplines while leaving ambiguous or visibly blank cells blank. Producer version bumped to `tier4_docling` `0.3.0` so the full corpus drain writes fresh artifacts. Follow-ups remain open above for stale LLM fallback invalidation and projection automation.

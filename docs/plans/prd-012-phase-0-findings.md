@@ -8,6 +8,21 @@ Promote SAT/ACT submission-rate and percentile fields to `school_browser_rows` b
 
 This is a backend/API expansion only. The public `/browse` UI should not add default score filters until the UI can pair scores with submit-rate caveats.
 
+## Before / After
+
+The PRD 012 production refresh materially changed the public browser substrate:
+
+| Measure | PRD 010 launch | PRD 012 refresh | Delta |
+|---|---:|---:|---:|
+| `cds_fields` rows | 113,836 | 217,910 | +104,074 (+91.4%) |
+| `school_browser_rows` rows | 472 | 469 | -3 stale rows |
+| Processed documents | 507 | 503 | -4 stale/non-qualifying rows |
+| Mean field rows per processed document | 224.5 | 433.2 | +208.7 (+93.0%) |
+
+This is a coverage improvement, not a blanket accuracy claim. Field count tells us
+that more deterministic values are reaching the public substrate; correctness still
+depends on producer-specific extraction quality and spot checks.
+
 ## Denominators
 
 | Metric | Count |
@@ -62,4 +77,3 @@ This is a backend/API expansion only. The public `/browse` UI should not add def
 - The backend does not hard-code a submit-rate threshold. `browser-search` reports companion submit-rate missingness for active SAT/ACT score filters.
 - GPA remains long-form only because scale comparability is not resolved.
 - Class-rank remains long-form only because denominator semantics are ambiguous without a dedicated UI.
-

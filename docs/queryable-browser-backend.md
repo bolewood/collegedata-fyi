@@ -1,7 +1,8 @@
 # Queryable Browser Backend Notes
 
 Implemented for PRD 010. Backend and frontend MVP were deployed on
-2026-04-26.
+2026-04-26. PRD 012 expanded the backend serving contract on 2026-04-28 with
+SAT/ACT academic-profile fields after the Tier 4 v0.3 projection refresh.
 
 ## Surfaces
 
@@ -33,11 +34,27 @@ python tools/browser_backend/project_browser_data.py --document-id <uuid> --appl
 The worker also seeds `cds_field_definitions` and `cds_metric_aliases` from the
 committed schema artifacts unless `--skip-metadata` is passed.
 
-Production launch projection populated:
+Production projection history:
 
-- `113,836` rows in `cds_fields`
-- `472` rows in `school_browser_rows`
-- from `507` documents in the `2024-25+` scope
+| Date | Change | `cds_fields` rows | `school_browser_rows` rows | Documents processed | Notes |
+|---|---|---:|---:|---:|---|
+| 2026-04-26 | PRD 010 launch | 113,836 | 472 | 507 | First browser substrate after launch projection. |
+| 2026-04-28 | PRD 012 + Tier 4 v0.3 refresh | 217,910 | 469 | 503 | Stale rows cleared before rebuild; SAT/ACT backend columns populated. |
+
+The PRD 012 refresh added `104,074` projected field rows, a `91.4%` increase
+over launch. Average field rows per processed document moved from about `224.5`
+to `433.2`. The browser row count dropped by three because `--full-rebuild` now
+clears stale `2024+` projection rows before repopulating.
+
+Current `2024+` field rows by selected source format:
+
+| Source format | Field rows |
+|---|---:|
+| `pdf_flat` | 141,554 |
+| `pdf_fillable` | 53,016 |
+| `xlsx` | 23,082 |
+| `html` | 152 |
+| `pdf_scanned` | 106 |
 
 The worker is currently operator-run. It is not yet wired into the extraction
 worker after every artifact write.
@@ -72,6 +89,19 @@ stored fractionally in `0..1`. The Edge Function accepts these fields for
 filters/sorts and returns academic-profile companion metadata for score filters,
 including how many matching rows have a missing submit-rate companion. The public
 `/browse` UI does not yet expose score filters by default.
+
+Production PRD 012 answerability, primary clean rows (`sub_institutional IS NULL`
+and no `data_quality_flag`), 2024+:
+
+| Metric | Field | Primary clean coverage | pdf_flat coverage | Latest-row coverage |
+|---|---|---:|---:|---:|
+| `sat_submit_rate` | `C.901` | 65.4% | 67.2% | 65.2% |
+| `act_submit_rate` | `C.902` | 58.1% | 57.3% | 57.8% |
+| `sat_composite_p50` | `C.906` | 67.2% | 71.9% | 68.0% |
+| `act_composite_p75` | `C.916` | 66.1% | 71.2% | 66.6% |
+
+Full Phase 0 output is in
+[`docs/plans/prd-012-phase-0-findings.md`](plans/prd-012-phase-0-findings.md).
 
 ## Verification
 
