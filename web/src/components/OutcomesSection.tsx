@@ -1,16 +1,21 @@
 import type { ScorecardSummary } from "@/lib/types";
-import { formatCurrency, formatPercent } from "@/lib/format";
+import { formatPercent } from "@/lib/format";
 import { OutcomesBand } from "./OutcomesBand";
 import { NetPriceByIncome } from "./NetPriceByIncome";
-import { ScorecardVintageNote } from "./ScorecardVintageNote";
+import { EarningsDistribution } from "./EarningsDistribution";
 
-function MiniCard({ label, value }: { label: string; value: string }) {
+function SmallKpi({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded border border-gray-200 bg-white px-3 py-2">
-      <p className="text-[11px] text-gray-500 uppercase tracking-wide">
+    <div>
+      <div className="meta" style={{ marginBottom: 4 }}>
         {label}
-      </p>
-      <p className="mt-0.5 text-base font-semibold text-gray-900">{value}</p>
+      </div>
+      <div
+        className="serif stat-num"
+        style={{ fontSize: 26, lineHeight: 1, letterSpacing: "-0.02em" }}
+      >
+        {value}
+      </div>
     </div>
   );
 }
@@ -18,10 +23,9 @@ function MiniCard({ label, value }: { label: string; value: string }) {
 type Stat = { label: string; value: string };
 
 // Full federal-outcomes section for the school landing page. Composes the
-// compact 4-card band, the net-price-by-income widget, and two secondary
-// stat grids (completion / retention, and student profile). Every grid
-// filters out null fields so the section shrinks gracefully for schools
-// with partial data.
+// 4-cell headline band, earnings spread, net-price-by-income widget, and
+// the completion / retention strip. Every grid filters out null fields so
+// the section shrinks gracefully for schools with partial Scorecard data.
 export function OutcomesSection({
   scorecard,
 }: {
@@ -30,134 +34,124 @@ export function OutcomesSection({
   const completion: Stat[] = [];
   if (scorecard.graduation_rate_4yr != null)
     completion.push({
-      label: "4-year grad",
+      label: "4-yr grad",
       value: formatPercent(scorecard.graduation_rate_4yr, 0),
     });
   if (scorecard.graduation_rate_6yr != null)
     completion.push({
-      label: "6-year grad",
+      label: "6-yr grad",
       value: formatPercent(scorecard.graduation_rate_6yr, 0),
     });
   if (scorecard.graduation_rate_8yr != null)
     completion.push({
-      label: "8-year grad",
+      label: "8-yr grad",
       value: formatPercent(scorecard.graduation_rate_8yr, 0),
     });
   if (scorecard.retention_rate_ft != null)
     completion.push({
-      label: "Retention (FT)",
+      label: "Retention",
       value: formatPercent(scorecard.retention_rate_ft, 0),
     });
   if (scorecard.grad_rate_pell != null)
     completion.push({
-      label: "Pell grad rate",
+      label: "Pell grad",
       value: formatPercent(scorecard.grad_rate_pell, 0),
     });
   if (scorecard.transfer_out_rate != null)
     completion.push({
-      label: "Transfer out",
+      label: "Transfer",
       value: formatPercent(scorecard.transfer_out_rate, 0),
     });
 
-  const profile: Stat[] = [];
-  if (scorecard.pell_grant_rate != null)
-    profile.push({
-      label: "Pell recipients",
-      value: formatPercent(scorecard.pell_grant_rate, 0),
-    });
-  if (scorecard.federal_loan_rate != null)
-    profile.push({
-      label: "With federal loans",
-      value: formatPercent(scorecard.federal_loan_rate, 0),
-    });
-  if (scorecard.first_generation_share != null)
-    profile.push({
-      label: "First-generation",
-      value: formatPercent(scorecard.first_generation_share, 0),
-    });
-  if (scorecard.median_family_income != null)
-    profile.push({
-      label: "Median family income",
-      value: formatCurrency(scorecard.median_family_income),
-    });
-  if (scorecard.enrollment != null)
-    profile.push({
-      label: "Undergraduate enrollment",
-      value: scorecard.enrollment.toLocaleString("en-US"),
-    });
-
-  const earningsRange: Stat[] = [];
-  if (scorecard.earnings_10yr_p25 != null)
-    earningsRange.push({
-      label: "25th percentile",
-      value: formatCurrency(scorecard.earnings_10yr_p25),
-    });
-  if (scorecard.earnings_10yr_median != null)
-    earningsRange.push({
-      label: "Median",
-      value: formatCurrency(scorecard.earnings_10yr_median),
-    });
-  if (scorecard.earnings_10yr_p75 != null)
-    earningsRange.push({
-      label: "75th percentile",
-      value: formatCurrency(scorecard.earnings_10yr_p75),
-    });
+  const hasEarnings =
+    scorecard.earnings_10yr_p25 != null &&
+    scorecard.earnings_10yr_median != null &&
+    scorecard.earnings_10yr_p75 != null;
 
   return (
-    <section className="mt-10">
-      <h2 className="text-lg font-semibold text-gray-900">Federal outcomes</h2>
-      <ScorecardVintageNote scorecard={scorecard} className="mt-1" />
-
-      <div className="mt-5">
-        <OutcomesBand scorecard={scorecard} />
-      </div>
-
-      {earningsRange.length >= 2 && (
-        <div className="mt-6">
-          <h3 className="text-sm font-semibold text-gray-900">
-            Earnings distribution, 10 years after enrollment
-          </h3>
-          <p className="mt-1 text-xs text-gray-500">
-            Federal-worker-and-not-enrolled cohort, reported in{" "}
-            {scorecard.scorecard_data_year} dollars.
-          </p>
-          <div className="mt-2 grid grid-cols-3 gap-2">
-            {earningsRange.map((s) => (
-              <MiniCard key={s.label} {...s} />
-            ))}
+    <>
+      <section style={{ marginTop: 56 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "space-between",
+            gap: 24,
+            flexWrap: "wrap",
+          }}
+        >
+          <div>
+            <div className="meta" style={{ marginBottom: 6 }}>
+              § Federal outcomes
+            </div>
+            <h2
+              className="serif"
+              style={{ fontSize: 32, margin: 0, letterSpacing: "-0.015em" }}
+            >
+              What federal data says
+            </h2>
+          </div>
+          <div
+            className="mono"
+            style={{
+              fontSize: 11,
+              color: "var(--ink-3)",
+              letterSpacing: "0.05em",
+              textAlign: "right",
+              maxWidth: 360,
+              lineHeight: 1.5,
+            }}
+          >
+            SRC · U.S. DEPT. OF ED., COLLEGE SCORECARD{" "}
+            {scorecard.scorecard_data_year}.<br />
+            OUTCOMES LAG THE CDS YEAR SHOWN ABOVE.
           </div>
         </div>
+
+        <OutcomesBand scorecard={scorecard} />
+      </section>
+
+      {hasEarnings && (
+        <section style={{ marginTop: 48 }}>
+          <div className="meta" style={{ marginBottom: 6 }}>
+            § Earnings distribution
+          </div>
+          <h3
+            className="serif"
+            style={{ fontSize: 22, margin: 0, letterSpacing: "-0.01em" }}
+          >
+            Ten years after enrollment, in {scorecard.scorecard_data_year}{" "}
+            dollars
+          </h3>
+          <EarningsDistribution scorecard={scorecard} />
+        </section>
       )}
 
-      <div className="mt-6">
+      <section style={{ marginTop: 48 }}>
         <NetPriceByIncome scorecard={scorecard} />
-      </div>
+      </section>
 
       {completion.length > 0 && (
-        <div className="mt-6">
-          <h3 className="text-sm font-semibold text-gray-900">
-            Completion and retention
-          </h3>
-          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <section style={{ marginTop: 48 }}>
+          <div className="meta" style={{ marginBottom: 6 }}>
+            §B · Completion and retention
+          </div>
+          <div
+            className="rule-2"
+            style={{
+              marginTop: 14,
+              paddingTop: 20,
+              display: "grid",
+              gridTemplateColumns: `repeat(${Math.min(completion.length, 6)}, 1fr)`,
+              gap: 24,
+            }}
+          >
             {completion.map((s) => (
-              <MiniCard key={s.label} {...s} />
+              <SmallKpi key={s.label} {...s} />
             ))}
           </div>
-        </div>
+        </section>
       )}
-
-      {profile.length > 0 && (
-        <div className="mt-6">
-          <h3 className="text-sm font-semibold text-gray-900">
-            Student profile
-          </h3>
-          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {profile.map((s) => (
-              <MiniCard key={s.label} {...s} />
-            ))}
-          </div>
-        </div>
-      )}
-    </section>
+    </>
   );
 }

@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import {
   fetchSchoolDocuments,
   fetchScorecardByIpedsId,
 } from "@/lib/queries";
 import { DocumentCard } from "@/components/DocumentCard";
 import { OutcomesSection } from "@/components/OutcomesSection";
+import { ScorecardVintageNote } from "@/components/ScorecardVintageNote";
+import { Sparkline } from "@/components/Sparkline";
 import { yearRange } from "@/lib/format";
+import type { ManifestRow } from "@/lib/types";
 
 export const revalidate = 3600;
 
@@ -35,6 +39,47 @@ export async function generateMetadata({
   };
 }
 
+// Italicize a trailing institution-type word ("University", "College", etc.)
+// to give the serif headline a bit of editorial rhythm. Keeps the leading
+// proper noun in roman; falls back to roman-only for names without a known
+// suffix.
+function splitInstitutionalSuffix(name: string): {
+  head: string;
+  tail: string | null;
+} {
+  const SUFFIXES = [
+    "University",
+    "College",
+    "Institute",
+    "Polytechnic",
+    "Academy",
+    "School",
+    "Seminary",
+    "Conservatory",
+  ];
+  for (const s of SUFFIXES) {
+    if (name.endsWith(` ${s}`)) {
+      return { head: name.slice(0, -s.length - 1), tail: s };
+    }
+  }
+  return { head: name, tail: null };
+}
+
+// Ascending step series of the school's archived document count over time.
+// Drives the small forest sparkline next to the count. One step per CDS
+// year archived; if everything was added at once the line goes flat and
+// the sparkline collapses to a baseline (which is fine).
+function archiveHistory(docs: ManifestRow[]): number[] {
+  const years = docs
+    .map((d) => d.canonical_year)
+    .filter((y): y is string => y != null)
+    .sort();
+  if (years.length === 0) return [];
+  const series: number[] = [];
+  for (let i = 0; i < years.length; i++) series.push(i + 1);
+  return series.length === 1 ? [0, 1] : series;
+}
+
 export default async function SchoolDetailPage({
   params,
 }: {
@@ -53,16 +98,14 @@ export default async function SchoolDetailPage({
   const ipedsId = docs.find((d) => d.ipeds_id)?.ipeds_id ?? null;
   const scorecard = await fetchScorecardByIpedsId(ipedsId);
 
-  const name = docs[0].school_name;
+  const name = docs[0].school_name ?? "Unknown school";
+  const { head, tail } = splitInstitutionalSuffix(name);
   const years = docs
     .map((d) => d.canonical_year)
     .filter((y): y is string => y != null)
     .sort();
 
-  // Check if this school has sub-institutional variants
   const hasSubs = docs.some((d) => d.sub_institutional != null);
-
-  // Group by sub_institutional if applicable
   const groups: { label: string | null; docs: typeof docs }[] = [];
   if (hasSubs) {
     const subMap = new Map<string | null, typeof docs>();
@@ -81,6 +124,9 @@ export default async function SchoolDetailPage({
 
   const schoolUrl = `https://www.collegedata.fyi/schools/${school_id}`;
   const uniqueYears = Array.from(new Set(years));
+  const earliestYear = years.length > 0 ? years[0]?.split("-")[0] : null;
+  const latestYear =
+    years.length > 0 ? years[years.length - 1]?.split("-")[0] : null;
 
   const jsonLd = [
     {
@@ -98,9 +144,6 @@ export default async function SchoolDetailPage({
         { "@type": "ListItem", position: 2, name, item: schoolUrl },
       ],
     },
-    // DataCatalog enumerates every archived year as a Dataset reference.
-    // Gives LLMs and search engines a one-stop index of what's in the archive
-    // for this school.
     {
       "@context": "https://schema.org",
       "@type": "DataCatalog",
@@ -120,42 +163,169 @@ export default async function SchoolDetailPage({
     },
   ];
 
+  const history = archiveHistory(docs);
+  const carnegieCode = scorecard?.carnegie_basic;
+
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
+    <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}
       />
-      <h1 className="text-2xl font-bold text-gray-900">{name}</h1>
-      <p className="text-gray-600 mt-1">
-        {docs.length} document{docs.length !== 1 ? "s" : ""} archived
-        {years.length > 0 && `, ${yearRange(years[0], years[years.length - 1])}`}
-      </p>
 
-      {groups.map((group) => (
-        <div key={group.label ?? "main"} className="mt-6">
-          {group.label && (
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">
-              {group.label}
-            </h2>
-          )}
-          <div className="space-y-2">
-            {group.docs.map((doc) => (
-              <DocumentCard key={doc.document_id} doc={doc} />
-            ))}
+      {/* Header */}
+      <header
+        className="cd-school-header"
+        style={{ paddingTop: 24, paddingBottom: 8 }}
+      >
+        <div>
+          <div
+            className="mono"
+            style={{
+              fontSize: 11,
+              color: "var(--ink-3)",
+              letterSpacing: "0.08em",
+              marginBottom: 12,
+              textTransform: "uppercase",
+            }}
+          >
+            <Link
+              href="/schools"
+              style={{
+                color: "var(--ink-3)",
+                textDecoration: "none",
+              }}
+            >
+              SCHOOLS
+            </Link>{" "}
+            / <span style={{ color: "var(--ink)" }}>{name.toUpperCase()}</span>
+          </div>
+          <h1
+            className="serif"
+            style={{
+              fontWeight: 400,
+              fontSize: "clamp(40px, 6vw, 58px)",
+              margin: 0,
+              letterSpacing: "-0.02em",
+              lineHeight: 1,
+            }}
+          >
+            {tail ? (
+              <>
+                {head} <span style={{ fontStyle: "italic" }}>{tail}</span>
+              </>
+            ) : (
+              name
+            )}
+          </h1>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 22,
+              marginTop: 16,
+              alignItems: "baseline",
+              color: "var(--ink-2)",
+              fontSize: 14,
+            }}
+          >
+            {ipedsId && (
+              <span
+                className="mono"
+                style={{
+                  fontSize: 11.5,
+                  color: "var(--ink-3)",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                IPEDS {ipedsId}
+              </span>
+            )}
+            {carnegieCode != null && (
+              <span
+                className="mono"
+                style={{
+                  fontSize: 11.5,
+                  color: "var(--ink-3)",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                CARNEGIE {carnegieCode}
+              </span>
+            )}
           </div>
         </div>
-      ))}
+
+        <div className="cd-school-header__aside">
+          <div className="meta cd-school-header__count">
+            <span className="cd-school-header__glyph">§</span>
+            <span>
+              {docs.length} document{docs.length !== 1 ? "s" : ""} archived
+            </span>
+            {earliestYear && latestYear && earliestYear !== latestYear && (
+              <span className="cd-school-header__years">
+                {earliestYear}&ndash;{latestYear}
+              </span>
+            )}
+          </div>
+          {history.length > 1 && (
+            <Sparkline data={history} w={120} h={26} color="var(--forest)" />
+          )}
+        </div>
+      </header>
+
+      {/* Documents ledger */}
+      <div className="rule-2" style={{ marginTop: 32, paddingTop: 20 }}>
+        {groups.map((group, gi) => (
+          <div key={group.label ?? "main"}>
+            {group.label && (
+              <h2
+                className="serif"
+                style={{
+                  fontSize: 18,
+                  margin: gi === 0 ? "0 0 8px" : "16px 0 8px",
+                  letterSpacing: "-0.005em",
+                }}
+              >
+                {group.label}
+              </h2>
+            )}
+            {group.docs.map((doc, i) => (
+              <DocumentCard
+                key={doc.document_id}
+                doc={doc}
+                isLast={
+                  gi === groups.length - 1 && i === group.docs.length - 1
+                }
+              />
+            ))}
+          </div>
+        ))}
+      </div>
 
       {scorecard ? (
         <OutcomesSection scorecard={scorecard} />
       ) : ipedsId ? (
-        <p className="mt-10 text-sm text-gray-500">
-          Federal outcomes data is not available for this institution.
+        <p
+          className="mono"
+          style={{
+            marginTop: 56,
+            fontSize: 12,
+            color: "var(--ink-3)",
+            letterSpacing: "0.05em",
+          }}
+        >
+          FEDERAL OUTCOMES DATA NOT AVAILABLE FOR THIS INSTITUTION.
         </p>
       ) : null}
+
+      {scorecard && (
+        <div style={{ marginTop: 24 }}>
+          <ScorecardVintageNote scorecard={scorecard} />
+        </div>
+      )}
     </div>
   );
 }
