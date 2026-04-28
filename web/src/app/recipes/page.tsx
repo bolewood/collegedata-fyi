@@ -28,7 +28,7 @@ const RECIPES: Recipe[] = [
       "Scatter plot of how selective a school looks on paper (acceptance rate) against how selective it actually is in practice (yield). Four quadrants with teeth: selective-and-desired, loved-despite-openness, selective-but-second-choice, accessible-and-optional.",
     audience:
       "Students and parents building a target list; counselors calibrating reach/match/safety.",
-    demoPath: "/recipes/acceptance-vs-yield-demo.html",
+    demoPath: "/recipes/acceptance-vs-yield",
     writeupUrl:
       "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/acceptance-vs-yield.md",
     sections: "C1, B1, B22",
@@ -46,7 +46,7 @@ const RECIPES: Recipe[] = [
       "Line chart of SAT submission percentage over time for seven well-documented schools (Yale 2009\u20132024, Caltech 2002\u20132020, MIT, Princeton, Stanford, Harvard, Wake Forest). Uses the submission rate as an honest proxy for effective test-optional policy \u2014 written disclosures lie, enrollment numbers don't.",
     audience:
       "Students deciding whether a school's \u201ctest-optional\u201d is real; reporters tracking the post-COVID reversion.",
-    demoPath: "/recipes/test-optional-tracker-demo.html",
+    demoPath: "/recipes/test-optional-tracker",
     writeupUrl:
       "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/test-optional-tracker.md",
     sections: "C8, C9",
@@ -102,9 +102,9 @@ export default function RecipesPage() {
                   margin: 0,
                 }}
               >
-                <a href={r.demoPath} style={{ textDecoration: "none", color: "inherit" }}>
+                <Link href={r.demoPath} style={{ textDecoration: "none", color: "inherit" }}>
                   {r.title}
-                </a>
+                </Link>
               </h2>
               <span className="mono" style={{ fontSize: 11, color: "var(--ink-3)", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>
                 CDS {r.sections}
@@ -118,9 +118,9 @@ export default function RecipesPage() {
               {r.audience}
             </p>
             <div style={{ marginTop: 14, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
-              <a href={r.demoPath} className="cd-btn" style={{ padding: "8px 14px", fontSize: 13 }}>
+              <Link href={r.demoPath} className="cd-btn" style={{ padding: "8px 14px", fontSize: 13 }}>
                 Open demo →
-              </a>
+              </Link>
               <a
                 href={r.writeupUrl}
                 target="_blank"
