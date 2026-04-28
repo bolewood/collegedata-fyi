@@ -24,6 +24,7 @@ Env:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -55,6 +56,37 @@ NOT_APPLICABLE_VALUES = {
     "not required",
     "not offered",
 }
+
+
+def _sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _fallback_matches_base(
+    base: dict[str, Any],
+    base_notes: dict[str, Any],
+    fallback: dict[str, Any],
+) -> bool:
+    fallback_notes = fallback.get("notes") or {}
+    if not isinstance(fallback_notes, dict):
+        return False
+
+    base_artifact_id = fallback_notes.get("base_artifact_id")
+    if base_artifact_id:
+        return (
+            str(base_artifact_id) == str(base.get("id"))
+            and (fallback_notes.get("base_producer_version") in (None, base.get("producer_version")))
+        )
+
+    markdown = base_notes.get("markdown")
+    markdown_sha256 = fallback_notes.get("markdown_sha256")
+    if not isinstance(markdown, str) or not markdown_sha256:
+        return False
+
+    return (
+        str(markdown_sha256) == _sha256_text(markdown)
+        and str(fallback_notes.get("cleaner_version") or "") == str(base.get("producer_version") or "")
+    )
 
 
 @dataclass(frozen=True)
@@ -337,9 +369,13 @@ def select_extraction_result(
             if artifact.get("kind") == "cleaned"
             and artifact.get("producer") == FALLBACK_PRODUCER
         ]
-        if fallback_candidates:
+        compatible_fallbacks = [
+            artifact for artifact in fallback_candidates
+            if _fallback_matches_base(base, base_notes, artifact)
+        ]
+        if compatible_fallbacks:
             fallback_artifact = sorted(
-                fallback_candidates,
+                compatible_fallbacks,
                 key=lambda row: (_created_at_key(row), str(row.get("id") or "")),
                 reverse=True,
             )[0]
@@ -704,13 +740,44 @@ def project_document(
     if not apply:
         return len(field_rows), bool(browser_row)
 
-    client.table("cds_fields").delete().eq("document_id", document_id).execute()
-    client.table("school_browser_rows").delete().eq("document_id", document_id).execute()
-    if field_rows:
-        _upsert_chunks(client, "cds_fields", field_rows, "document_id,schema_version,field_id")
-    if browser_row:
-        client.table("school_browser_rows").upsert(browser_row, on_conflict="document_id").execute()
+    replace_projection_rows(client, str(document_id), field_rows, browser_row)
     return len(field_rows), bool(browser_row)
+
+
+def replace_projection_rows(
+    client: Any,
+    document_id: str,
+    field_rows: list[dict[str, Any]],
+    browser_row: Optional[dict[str, Any]],
+) -> None:
+    """Atomically replace the public projection rows for one document."""
+    client.rpc(
+        "replace_browser_projection_for_document",
+        {
+            "p_document_id": document_id,
+            "p_field_rows": field_rows,
+            "p_browser_row": browser_row,
+        },
+    ).execute()
+
+
+def project_document_id(
+    client: Any,
+    document_id: str,
+    definitions: dict[str, dict[str, FieldDefinition]],
+    apply: bool = True,
+) -> tuple[int, bool]:
+    """Refresh projection rows for one cds_documents row.
+
+    This is the incremental API used by the extraction worker. It reuses the
+    same selected-result and row-building logic as the full rebuild command so
+    document-level refreshes cannot drift from batch projection semantics.
+    """
+    docs = fetch_documents(client, document_id)
+    if not docs:
+        print(f"{document_id}: no cds_manifest row found for projection")
+        return 0, False
+    return project_document(client, docs[0], definitions, apply)
 
 
 def clear_projection_tables(client: Any) -> None:

@@ -148,7 +148,28 @@ selected extraction results
 The selected-result contract is deterministic: choose the strongest base
 producer by rank (`tier1_xlsx`, `tier2_acroform`, `tier6_html`, then
 `tier4_docling`), and for Tier 4 rows overlay `tier4_llm_fallback` only as a
-gap-fill. Base deterministic values win conflicts.
+gap-fill when the fallback matches the selected base artifact. New fallback
+artifacts match by `notes.base_artifact_id`; legacy rows match by
+`notes.markdown_sha256 == sha256(base.notes.markdown)` and
+`notes.cleaner_version == base.producer_version`. Base deterministic values
+win conflicts.
+
+Projection freshness has two paths:
+
+- Incremental extraction drains refresh `cds_fields` and
+  `school_browser_rows` for each document that writes a new canonical artifact.
+  This keeps newly written artifacts visible in the browser without a separate
+  full rebuild. Idempotent `already_extracted` rows skip projection to avoid
+  thousands of unnecessary API calls during status-check re-runs. The write
+  replacement uses `replace_browser_projection_for_document(...)`, so the
+  per-document `cds_fields` and `school_browser_rows` delete/insert sequence is
+  one Postgres transaction. Use `--skip-projection-refresh` only when
+  intentionally isolating extraction from serving-table side effects.
+- Worker drains do not reseed `cds_field_definitions` or `cds_metric_aliases`
+  by default. Add `--seed-projection-metadata` after schema or alias changes.
+- Full rebuilds remain the operator tool after migrations, projection logic
+  changes, metadata changes, or corpus-wide fallback backfills:
+  `python tools/browser_backend/project_browser_data.py --full-rebuild --apply`.
 
 ### Files
 
@@ -169,6 +190,8 @@ gap-fill. Base deterministic values win conflicts.
 | Extraction worker | `tools/extraction_worker/worker.py` |
 | Tier 4 LLM fallback worker | `tools/extraction_worker/llm_fallback_worker.py` |
 | Browser projection worker | `tools/browser_backend/project_browser_data.py` |
+| Atomic document projection replacement RPC | `supabase/migrations/20260428170000_atomic_browser_projection_refresh.sql` |
+| Minimal CI | `.github/workflows/ci.yml` |
 | Unit tests (resolver, year normalizer, hosting inference, probe outcome cooldowns, schools.yaml validation, browser search) | `supabase/functions/**/*.test.ts` |
 
 ## Storage path convention
@@ -584,9 +607,10 @@ scheduled incremental refresh.
 
 **Tier 4 fallback artifact freshness.** Some `tier4_llm_fallback` artifacts were
 generated against older Tier 4 markdown hashes. The selected-result projection
-overlays the latest fallback by document, so after a Tier 4 v0.3 re-drain we
-should either invalidate/re-run stale fallbacks or tighten the selected-result
-contract to require a matching base artifact/version/hash.
+now excludes stale fallbacks unless they match the selected base artifact by
+base artifact id or legacy markdown hash + cleaner version. The follow-up is
+to re-run the fallback worker for the v0.3 corpus, then refresh browser
+projections so compatible fallback values are visible again.
 
 **XLSX academic-profile mapping audit.** PRD 012 found invalid SAT/ACT values in
 some XLSX-derived rows that look like template alignment drift. Browser

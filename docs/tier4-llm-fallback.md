@@ -1,6 +1,6 @@
 # Tier 4 LLM Fallback
 
-*Last updated: 2026-04-20 (Phase 1 shipped)*
+*Last updated: 2026-04-28 (fallback/base compatibility contract added)*
 
 Schema-aware LLM repair layer that runs after the deterministic Tier 4 cleaner
 to fill in subsections the hand-coded resolvers can't reach. Scoped, cached,
@@ -39,6 +39,14 @@ The LLM fallback:
 **Mode B (`fill_gaps`)** is the only shipped merge policy: the deterministic
 cleaner always wins; the LLM only populates question numbers the cleaner
 left blank.
+
+**Compatibility gate:** a fallback artifact is only mergeable with the
+selected `tier4_docling` base artifact it was generated against. New fallback
+artifacts stamp `notes.base_artifact_id` and `notes.base_producer_version`.
+Legacy fallback artifacts may still merge only when
+`notes.markdown_sha256 == sha256(base.notes.markdown)` and
+`notes.cleaner_version == base.producer_version`. If neither check passes, the
+fallback is stale and must be ignored until re-run.
 
 Measured on the 2024-25 corpus (244 docs backfilled 2026-04-20):
 **mean 28.2 fields added per doc**, median 30, `$14.08` total spend
@@ -230,6 +238,35 @@ Bump `PROMPT_VERSION` in `tools/extraction_worker/tier4_llm_fallback.py` and
 re-run the worker to regenerate. The old cache rows stay (they're cheap to
 keep) and the new `(prompt_version, ...)` key forces fresh LLM calls.
 
+### Artifact compatibility
+
+Cache correctness and consumer merge correctness are related but separate:
+
+- `cds_llm_cache` prevents re-billing the same model call.
+- `cds_artifacts` controls what public consumers can merge.
+
+The public merge contract is stricter than "latest fallback for document":
+
+1. Choose the selected deterministic base artifact by producer precedence.
+2. If the base producer is not `tier4_docling`, do not merge LLM fallback.
+3. If the base producer is `tier4_docling`, merge only a fallback artifact
+   compatible with that exact base:
+   - preferred: `fallback.notes.base_artifact_id == base.id`
+   - legacy: `fallback.notes.markdown_sha256 == sha256(base.notes.markdown)`
+     and `fallback.notes.cleaner_version == base.producer_version`
+4. If no compatible fallback exists, expose cleaner-only values.
+
+This matters after a Docling/cleaner re-drain. A fallback generated from old
+markdown may still be the newest `tier4_llm_fallback` row for that document,
+but it is no longer evidence-compatible with the selected base artifact. It
+must not be overlaid onto v0.3 values.
+
+Implementation surfaces that must share this rule:
+
+- `public.cds_selected_extraction_result`
+- `tools/browser_backend/project_browser_data.py`
+- `web/src/lib/queries.ts::fetchExtract`
+
 ---
 
 ## Consumer integration
@@ -250,8 +287,9 @@ curl -sH "apikey: $ANON" \
   "https://api.collegedata.fyi/rest/v1/cds_artifacts?document_id=eq.$DOC&producer=eq.tier4_llm_fallback"
 ```
 
-Merge rule for Mode B: start with the fallback `notes.values` as the base,
-overlay the cleaner `notes.values` on top. Cleaner wins on any collision.
+Merge rule for Mode B: after the compatibility gate passes, start with the
+fallback `notes.values` as the base, overlay the cleaner `notes.values` on
+top. Cleaner wins on any collision.
 
 `cds_llm_cache` is not publicly readable — it's an internal response cache,
 not consumer-facing data.

@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { createHash } from "crypto";
 import { supabase } from "./supabase";
 import type {
   ManifestRow,
@@ -8,6 +9,7 @@ import type {
   SchoolSummary,
   CorpusStats,
   ScorecardSummary,
+  SiteStats,
 } from "./types";
 
 // Documents with these participation_status values are excluded from every
@@ -17,7 +19,57 @@ import type {
 // can query cds_documents directly via PostgREST.
 const PUBLIC_EXCLUDED_STATUSES = ["withdrawn", "verified_absent"];
 
-export async function fetchManifest(): Promise<ManifestRow[]> {
+type UntypedSupabase = {
+  // Generated DB types can lag migrations. Keep dynamic stats queries isolated
+  // here so page code stays typed at the SiteStats boundary.
+  from: (table: string) => any;
+};
+
+function sha256Text(value: string): string {
+  return createHash("sha256").update(value, "utf8").digest("hex");
+}
+
+function fallbackMatchesCanonical(
+  canonical: ArtifactRow | null,
+  fallback: ArtifactRow | null,
+): boolean {
+  if (!canonical || !fallback || canonical.producer !== "tier4_docling") return false;
+
+  const canonicalNotes = canonical.notes as ArtifactNotes | null;
+  const fallbackNotes = fallback.notes as ArtifactNotes | null;
+  if (!canonicalNotes || !fallbackNotes) return false;
+
+  if (fallbackNotes.base_artifact_id) {
+    return (
+      fallbackNotes.base_artifact_id === canonical.id &&
+      (!fallbackNotes.base_producer_version ||
+        fallbackNotes.base_producer_version === canonical.producer_version)
+    );
+  }
+
+  if (!canonicalNotes.markdown || !fallbackNotes.markdown_sha256) return false;
+  return (
+    fallbackNotes.markdown_sha256 === sha256Text(canonicalNotes.markdown) &&
+    (fallbackNotes.cleaner_version ?? "") === (canonical.producer_version ?? "")
+  );
+}
+
+async function optionalExactCount(
+  table: string,
+  build?: (query: any) => any,
+): Promise<number | null> {
+  const raw = supabase as unknown as UntypedSupabase;
+  const base = raw.from(table).select("*", { count: "exact", head: true });
+  const query = build ? build(base) : base;
+  const { count, error } = await query;
+  if (error) {
+    console.warn(`Failed to count ${table}: ${error.message}`);
+    return null;
+  }
+  return count ?? 0;
+}
+
+export const fetchManifest = cache(async function fetchManifest(): Promise<ManifestRow[]> {
   const PAGE_SIZE = 1000;
   const allRows: ManifestRow[] = [];
   let from = 0;
@@ -39,7 +91,7 @@ export async function fetchManifest(): Promise<ManifestRow[]> {
   }
 
   return allRows;
-}
+});
 
 export function aggregateSchools(rows: ManifestRow[]): SchoolSummary[] {
   const map = new Map<string, SchoolSummary>();
@@ -99,6 +151,90 @@ export function computeStats(rows: ManifestRow[]): CorpusStats {
       rows.length > 0 ? Math.round((extracted / rows.length) * 100) : 0,
   };
 }
+
+export const fetchSiteStats = cache(async function fetchSiteStats(): Promise<SiteStats> {
+  const raw = supabase as unknown as UntypedSupabase;
+
+  const [
+    manifest,
+    schemaFieldCount,
+    queryableFieldCount,
+    queryableFieldLatest,
+    browserRowCount,
+    browserPrimaryRows,
+    browserRowsForSchools,
+    browserLatest,
+    scorecardInstitutionCount,
+    scorecardLatest,
+  ] = await Promise.all([
+    fetchManifest(),
+    optionalExactCount("cds_field_definitions"),
+    optionalExactCount("cds_fields", (q) => q.gte("year_start", 2024)),
+    raw
+      .from("cds_fields")
+      .select("updated_at")
+      .gte("year_start", 2024)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    optionalExactCount("school_browser_rows", (q) => q.gte("year_start", 2024)),
+    optionalExactCount("school_browser_rows", (q) =>
+      q.gte("year_start", 2024).is("sub_institutional", null),
+    ),
+    raw
+      .from("school_browser_rows")
+      .select("school_id")
+      .gte("year_start", 2024)
+      .is("sub_institutional", null),
+    raw
+      .from("school_browser_rows")
+      .select("updated_at")
+      .gte("year_start", 2024)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    optionalExactCount("scorecard_summary"),
+    raw
+      .from("scorecard_summary")
+      .select("scorecard_data_year,refreshed_at")
+      .order("scorecard_data_year", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  if (queryableFieldLatest.error) {
+    console.warn(`Failed to fetch cds_fields refresh time: ${queryableFieldLatest.error.message}`);
+  }
+  if (browserRowsForSchools.error) {
+    console.warn(`Failed to fetch browser school count: ${browserRowsForSchools.error.message}`);
+  }
+  if (browserLatest.error) {
+    console.warn(`Failed to fetch browser refresh time: ${browserLatest.error.message}`);
+  }
+  if (scorecardLatest.error) {
+    console.warn(`Failed to fetch scorecard refresh time: ${scorecardLatest.error.message}`);
+  }
+
+  const browserSchoolCount = browserRowsForSchools.error
+    ? null
+    : new Set((browserRowsForSchools.data ?? []).map((row: { school_id: string | null }) => row.school_id).filter(Boolean)).size;
+
+  return {
+    ...computeStats(manifest),
+    schema_field_count: schemaFieldCount,
+    queryable_field_count: queryableFieldCount,
+    queryable_field_updated_at: queryableFieldLatest.error
+      ? null
+      : queryableFieldLatest.data?.updated_at ?? null,
+    browser_row_count: browserRowCount,
+    browser_primary_row_count: browserPrimaryRows,
+    browser_school_count: browserSchoolCount,
+    browser_updated_at: browserLatest.error ? null : browserLatest.data?.updated_at ?? null,
+    scorecard_institution_count: scorecardInstitutionCount,
+    scorecard_data_year: scorecardLatest.error ? null : scorecardLatest.data?.scorecard_data_year ?? null,
+    scorecard_refreshed_at: scorecardLatest.error ? null : scorecardLatest.data?.refreshed_at ?? null,
+  };
+});
 
 export const fetchSchoolDocuments = cache(async function fetchSchoolDocuments(
   schoolId: string
@@ -193,8 +329,11 @@ export async function fetchExtract(documentId: string): Promise<{
 
   const canonicalValues =
     ((canonicalRes.data?.notes as ArtifactNotes | null)?.values ?? {}) as Record<string, FieldValue>;
+  const compatibleFallback = fallbackMatchesCanonical(canonicalRes.data ?? null, fallbackRes.data ?? null)
+    ? fallbackRes.data
+    : null;
   const fallbackValues =
-    ((fallbackRes.data?.notes as ArtifactNotes | null)?.values ?? {}) as Record<string, FieldValue>;
+    ((compatibleFallback?.notes as ArtifactNotes | null)?.values ?? {}) as Record<string, FieldValue>;
 
   // Mode B merge: fallback is the base, canonical overlays on top so the
   // deterministic cleaner's values always win on collision.
@@ -205,7 +344,7 @@ export async function fetchExtract(documentId: string): Promise<{
 
   return {
     canonical: canonicalRes.data ?? null,
-    fallback: fallbackRes.data ?? null,
+    fallback: compatibleFallback,
     mergedValues,
   };
 }

@@ -95,14 +95,11 @@ the v0.3 drain:
 python tools/browser_backend/project_browser_data.py --full-rebuild --apply
 ```
 
-Before doing that refresh, resolve the stale Tier 4 fallback overlay policy. The
-v0.3 extractor is verified in code as `tier4_docling` `producer_version = "0.3.0"`
+Post-implementation note: the stale Tier 4 fallback overlay policy was resolved
+by requiring `tier4_llm_fallback` artifacts to match the selected base artifact
+by `base_artifact_id` or legacy `markdown_sha256 + cleaner_version`. The v0.3
+extractor is verified in code as `tier4_docling` `producer_version = "0.3.0"`
 ([`tools/extraction_worker/tier4_extractor.py`](../../tools/extraction_worker/tier4_extractor.py)).
-
-- either skip `tier4_llm_fallback` overlays when the base artifact is
-  `tier4_docling` `0.3.0`
-- or require fallback artifacts to match the base artifact/version/hash
-- or delete and re-run fallback artifacts against v0.3 base artifacts
 
 Old fallback artifacts were produced against older markdown/config outputs. Mixing
 them into v0.3 base values would create rows whose deterministic and fallback values

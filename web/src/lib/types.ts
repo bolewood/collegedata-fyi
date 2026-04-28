@@ -32,6 +32,13 @@ export interface FieldValue {
 
 export interface ArtifactNotes {
   values?: Record<string, FieldValue>;
+  producer?: string;
+  producer_version?: string;
+  base_artifact_id?: string;
+  base_producer?: string;
+  base_producer_version?: string;
+  cleaner_version?: string;
+  markdown_sha256?: string;
   stats?: {
     total_fields?: number;
     unmapped_count?: number;
@@ -44,7 +51,6 @@ export interface ArtifactNotes {
   markdown?: string;
   // tier4_llm_fallback-only fields
   mode?: "fill_gaps" | "shadow";
-  producer?: string;
 }
 
 // App-level aggregation types (not direct DB mirrors)
@@ -64,4 +70,17 @@ export interface CorpusStats {
   latest_year: string | null;
   extracted_count: number;
   extraction_pct: number;
+}
+
+export interface SiteStats extends CorpusStats {
+  schema_field_count: number | null;
+  queryable_field_count: number | null;
+  queryable_field_updated_at: string | null;
+  browser_row_count: number | null;
+  browser_primary_row_count: number | null;
+  browser_school_count: number | null;
+  browser_updated_at: string | null;
+  scorecard_institution_count: number | null;
+  scorecard_data_year: string | null;
+  scorecard_refreshed_at: string | null;
 }

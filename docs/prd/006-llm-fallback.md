@@ -2,8 +2,19 @@
 
 **Status:** Draft (rev 2 — incorporates PRD 005 execution learnings)
 **Created:** 2026-04-19
-**Updated:** 2026-04-20
+**Updated:** 2026-04-28
 **Related:** [PRD 003](003-ai-driven-data-quality.md), [PRD 005](005-full-schema-extraction.md), [Tier 4 cleaner learnings](../research/tier4-cleaner-learnings-for-llm-fallback.md), [ADR 0006](../decisions/0006-tiered-extraction-strategy.md), [ADR 0007](../decisions/0007-year-authority-moves-to-extraction.md), [docs/ARCHITECTURE.md](../ARCHITECTURE.md)
+
+---
+
+> **Post-ship contract update (2026-04-28):** After the Tier 4 v0.3 Docling
+> drain, selected-result consumers must not merge the latest fallback by
+> document alone. A `tier4_llm_fallback` artifact is mergeable only when it
+> matches the selected `tier4_docling` base artifact by
+> `notes.base_artifact_id`, or for legacy artifacts by
+> `notes.markdown_sha256 == sha256(base.notes.markdown)` plus
+> `notes.cleaner_version == base.producer_version`. Stale fallbacks are ignored
+> until re-run.
 
 ---
 

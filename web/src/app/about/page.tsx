@@ -121,7 +121,7 @@ export default function AboutPage() {
           API.
         </p>
 
-        <p>The pipeline has five stages:</p>
+        <p>The pipeline has six stages:</p>
 
         <ol className="ml-6 list-decimal space-y-2 marker:text-gray-400">
           <li>
@@ -146,8 +146,14 @@ export default function AboutPage() {
             cleaner, and scanned image PDFs via OCR.
           </li>
           <li>
+            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Projection pipeline</strong>{" "}
+            turns selected extraction results into normalized field rows and a
+            curated browser table for launch-certified comparison metrics.
+          </li>
+          <li>
             <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Consumer pipeline</strong>{" "}
-            exposes everything through a public REST API.
+            exposes the archive, field substrate, browser rows, and federal
+            outcome joins through the website and public REST API.
           </li>
         </ol>
 

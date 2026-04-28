@@ -53,6 +53,8 @@ Usage:
     python tools/extraction_worker/worker.py --limit 10      # test subset
     python tools/extraction_worker/worker.py --school yale   # one school
     python tools/extraction_worker/worker.py --dry-run       # no writes
+    python tools/extraction_worker/worker.py --skip-projection-refresh
+    python tools/extraction_worker/worker.py --seed-projection-metadata
     python tools/extraction_worker/worker.py --schema schemas/cds_schema_2024_25.json
 
 Setup (one-time):
@@ -72,6 +74,7 @@ import re
 import sys
 import tempfile
 from collections import Counter
+from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 from typing import Optional
@@ -93,6 +96,20 @@ from tier1_extractor.extract import build_cell_map, extract_from_bytes as tier1_
 from tier2_extractor.extract import extract as tier2_extract  # noqa: E402
 from tier2_extractor.extract import load_schema  # noqa: E402
 from html_to_markdown import html_to_markdown  # noqa: E402 (PRD 008 Tier 6)
+
+
+@dataclass(frozen=True)
+class ExtractionOutcome:
+    action: str
+    refresh_projection: bool = False
+
+
+def extraction_success(action: str) -> ExtractionOutcome:
+    return ExtractionOutcome(action, refresh_projection=True)
+
+
+def extraction_no_project(action: str) -> ExtractionOutcome:
+    return ExtractionOutcome(action, refresh_projection=False)
 
 
 def load_env(env_path: Path) -> dict[str, str]:
@@ -347,14 +364,14 @@ def _run_tier1(
     schema: dict,
     cell_map: dict,
     dry_run: bool,
-) -> str:
+) -> ExtractionOutcome:
     """Tier 1 path: read filled CDS XLSX via template cell-position map."""
     try:
         canonical = tier1_extract(xlsx_bytes, schema, cell_map)
     except Exception as e:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed", source_format)
-        return f"tier1_error: {e}"
+        return extraction_no_project(f"tier1_error: {e}")
 
     producer = canonical["producer"]
     producer_version = canonical["producer_version"]
@@ -362,18 +379,18 @@ def _run_tier1(
     if not dry_run:
         if artifact_already_extracted(client, document_id, producer, producer_version):
             mark_extraction_status(client, document_id, "extracted", source_format)
-            return "already_extracted"
+            return extraction_no_project("already_extracted")
 
         try:
             insert_canonical_artifact(client, document_id, canonical)
         except Exception as e:
             mark_extraction_status(client, document_id, "failed", source_format)
-            return f"artifact_insert_error: {e}"
+            return extraction_no_project(f"artifact_insert_error: {e}")
 
         mark_extraction_status(client, document_id, "extracted", source_format)
 
     fields = canonical.get("stats", {}).get("schema_fields_populated", 0)
-    return f"tier1_extracted ({fields} fields)"
+    return extraction_success(f"tier1_extracted ({fields} fields)")
 
 
 def _run_tier6(
@@ -383,7 +400,7 @@ def _run_tier6(
     html_bytes: bytes,
     source_format: str,
     dry_run: bool,
-) -> str:
+) -> ExtractionOutcome:
     """Tier 6 path (PRD 008): HTML → markdown → tier4_cleaner.
 
     The normalizer (html_to_markdown) emits the same pipe-delimited markdown
@@ -404,19 +421,19 @@ def _run_tier6(
     except Exception as e:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed", source_format)
-        return f"tier6_html_error: {e}"
+        return extraction_no_project(f"tier6_html_error: {e}")
 
     try:
         values = tier4_clean(markdown)
     except Exception as e:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed", source_format)
-        return f"tier6_clean_error: {e}"
+        return extraction_no_project(f"tier6_clean_error: {e}")
 
     if len(values) < MIN_HTML_FIELDS:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed", source_format)
-        return f"html_no_tables ({len(values)} fields)"
+        return extraction_no_project(f"html_no_tables ({len(values)} fields)")
 
     canonical: dict = {
         "producer": "tier6_html",
@@ -439,17 +456,17 @@ def _run_tier6(
     if not dry_run:
         if artifact_already_extracted(client, document_id, producer, producer_version):
             mark_extraction_status(client, document_id, "extracted", source_format)
-            return "already_extracted"
+            return extraction_no_project("already_extracted")
 
         try:
             insert_canonical_artifact(client, document_id, canonical)
         except Exception as e:
             mark_extraction_status(client, document_id, "failed", source_format)
-            return f"artifact_insert_error: {e}"
+            return extraction_no_project(f"artifact_insert_error: {e}")
 
         mark_extraction_status(client, document_id, "extracted", source_format)
 
-    return f"tier6_extracted ({len(values)} fields, {len(markdown)} md chars)"
+    return extraction_success(f"tier6_extracted ({len(values)} fields, {len(markdown)} md chars)")
 
 
 def _run_tier4(
@@ -459,7 +476,7 @@ def _run_tier4(
     pdf_bytes: bytes,
     source_format: str,
     dry_run: bool,
-) -> str:
+) -> ExtractionOutcome:
     """Tier 4 path: Docling baseline → markdown artifact.
 
     For pdf_scanned, forces full-page EasyOCR since Docling's auto OCR
@@ -473,7 +490,7 @@ def _run_tier4(
     except Exception as e:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed", source_format)
-        return f"tier4_error: {e}"
+        return extraction_no_project(f"tier4_error: {e}")
 
     producer = canonical["producer"]
     producer_version = canonical["producer_version"]
@@ -481,13 +498,13 @@ def _run_tier4(
     if not dry_run:
         if artifact_already_extracted(client, document_id, producer, producer_version):
             mark_extraction_status(client, document_id, "extracted", source_format)
-            return "already_extracted"
+            return extraction_no_project("already_extracted")
 
         try:
             insert_canonical_artifact(client, document_id, canonical)
         except Exception as e:
             mark_extraction_status(client, document_id, "failed", source_format)
-            return f"artifact_insert_error: {e}"
+            return extraction_no_project(f"artifact_insert_error: {e}")
 
         mark_extraction_status(client, document_id, "extracted", source_format)
 
@@ -495,7 +512,7 @@ def _run_tier4(
     md_len = stats.get("markdown_length", 0)
     pages = stats.get("page_count", 0)
     fields = stats.get("schema_fields_populated", 0)
-    return f"tier4_extracted ({fields} fields, {md_len} chars, {pages} pages)"
+    return extraction_success(f"tier4_extracted ({fields} fields, {md_len} chars, {pages} pages)")
 
 
 def mark_extraction_status(
@@ -571,13 +588,38 @@ def insert_canonical_artifact(
     }).execute()
 
 
+def load_projection_definitions() -> dict:
+    from browser_backend.project_browser_data import load_schema_definitions
+
+    definitions = load_schema_definitions()
+    if not definitions:
+        raise RuntimeError("no browser projection schema definitions found")
+    return definitions
+
+
+def seed_projection_metadata(client: Client, definitions: dict) -> None:
+    from browser_backend.project_browser_data import seed_metadata
+
+    seed_metadata(client, definitions, True)
+
+
+def refresh_browser_projection(
+    client: Client,
+    document_id: str,
+    definitions: dict,
+) -> tuple[int, bool]:
+    from browser_backend.project_browser_data import project_document_id
+
+    return project_document_id(client, document_id, definitions, apply=True)
+
+
 def extract_one(
     client: Client,
     doc: dict,
     schema: dict,
     dry_run: bool,
     cell_map: dict | None = None,
-) -> str:
+) -> ExtractionOutcome:
     """Process a single cds_documents row. Returns a short action string
     for logging. Does NOT raise — every failure is caught and recorded
     as extraction_status='failed' with a category for the summary."""
@@ -588,14 +630,14 @@ def extract_one(
     if not storage_path:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed")
-        return "no_source_artifact"
+        return extraction_no_project("no_source_artifact")
 
     try:
         pdf_bytes = download_source(client, storage_path)
     except Exception as e:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed")
-        return f"download_error: {e}"
+        return extraction_no_project(f"download_error: {e}")
 
     # Year detection. ADR 0007 Stage B: extraction is write-authoritative
     # for academic year. Writes detected_year when a valid span is found
@@ -663,7 +705,7 @@ def extract_one(
     if source_format != "pdf_fillable":
         if not dry_run:
             mark_extraction_status(client, document_id, "failed", source_format)
-        return f"stub_{source_format}"
+        return extraction_no_project(f"stub_{source_format}")
 
     # Tier 2 path.
     try:
@@ -671,7 +713,7 @@ def extract_one(
     except Exception as e:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed", source_format)
-        return f"tier2_error: {e}"
+        return extraction_no_project(f"tier2_error: {e}")
 
     producer = canonical["producer"]
     producer_version = canonical["producer_version"]
@@ -682,13 +724,13 @@ def extract_one(
             # producer version at some earlier point. Mark extracted and
             # move on without writing a duplicate.
             mark_extraction_status(client, document_id, "extracted", source_format)
-            return "already_extracted"
+            return extraction_no_project("already_extracted")
 
         try:
             insert_canonical_artifact(client, document_id, canonical)
         except Exception as e:
             mark_extraction_status(client, document_id, "failed", source_format)
-            return f"artifact_insert_error: {e}"
+            return extraction_no_project(f"artifact_insert_error: {e}")
 
         mark_extraction_status(client, document_id, "extracted", source_format)
 
@@ -697,7 +739,7 @@ def extract_one(
     _populated = stats.get("schema_fields_populated", 0)
     _total = stats.get("schema_fields_total", 0)
     _unmapped = stats.get("unmapped_acroform_fields", 0)
-    return f"extracted ({_populated}/{_total} fields, {_unmapped} unmapped)"
+    return extraction_success(f"extracted ({_populated}/{_total} fields, {_unmapped} unmapped)")
 
 
 def run_detect_year_only(
@@ -886,6 +928,25 @@ def main() -> int:
     parser.add_argument("--school", default=None, help="Only process this school_id")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
+        "--skip-projection-refresh",
+        action="store_true",
+        help=(
+            "Do not refresh cds_fields and school_browser_rows after each "
+            "successful extraction. By default, non-dry-run drains keep the "
+            "browser projection fresh document-by-document."
+        ),
+    )
+    parser.add_argument(
+        "--seed-projection-metadata",
+        action="store_true",
+        help=(
+            "Before refreshing document projections, upsert "
+            "cds_field_definitions and cds_metric_aliases. This is normally "
+            "only needed after schema or alias changes; full rebuilds seed "
+            "metadata through project_browser_data.py."
+        ),
+    )
+    parser.add_argument(
         "--include-failed",
         action="store_true",
         help="Also process rows with extraction_status='failed' (for retry runs)",
@@ -971,18 +1032,70 @@ def main() -> int:
         flush=True,
     )
 
+    projection_definitions: dict | None = None
+    projection_enabled = not args.dry_run and not args.skip_projection_refresh
+    projection_counts: Counter = Counter()
+    if projection_enabled:
+        try:
+            projection_definitions = load_projection_definitions()
+            if args.seed_projection_metadata:
+                seed_projection_metadata(client, projection_definitions)
+        except Exception as e:
+            projection_enabled = False
+            projection_counts["setup_error"] += 1
+            message = str(e).splitlines()[0][:200]
+            print(
+                "browser projection refresh disabled: "
+                f"{type(e).__name__}: {message}",
+                file=sys.stderr,
+                flush=True,
+            )
+
     counts: Counter = Counter()
     for i, doc in enumerate(docs, 1):
-        action = extract_one(client, doc, schema, args.dry_run, cell_map)
-        bucket = action.split(":")[0].split(" ")[0]
+        outcome = extract_one(client, doc, schema, args.dry_run, cell_map)
+        bucket = outcome.action.split(":")[0].split(" ")[0]
         counts[bucket] += 1
-        print(f"[{i:4d}/{len(docs)}] {doc['school_id']}: {action}", flush=True)
+
+        projection_note = ""
+        if (
+            projection_enabled
+            and projection_definitions is not None
+            and outcome.refresh_projection
+        ):
+            try:
+                field_count, has_browser_row = refresh_browser_projection(
+                    client,
+                    str(doc["id"]),
+                    projection_definitions,
+                )
+                projection_counts["documents"] += 1
+                projection_counts["fields"] += field_count
+                projection_counts["browser_rows"] += int(has_browser_row)
+                projection_note = (
+                    f"; projected {field_count} fields, "
+                    f"browser_row={'yes' if has_browser_row else 'no'}"
+                )
+            except Exception as e:
+                projection_counts["errors"] += 1
+                message = str(e).splitlines()[0][:200]
+                projection_note = f"; projection_error={type(e).__name__}: {message}"
+
+        print(f"[{i:4d}/{len(docs)}] {doc['school_id']}: {outcome.action}{projection_note}", flush=True)
 
     print()
     print("=== extraction results ===")
     for bucket, n in counts.most_common():
         print(f"  {bucket:30s} {n:5d}")
     print(f"  {'total':30s} {sum(counts.values()):5d}")
+    if projection_enabled or projection_counts:
+        print()
+        print("=== browser projection refresh ===")
+        for bucket in ("documents", "fields", "browser_rows", "errors", "setup_error"):
+            if projection_counts[bucket]:
+                print(f"  {bucket:30s} {projection_counts[bucket]:5d}")
+        if projection_counts["errors"] or projection_counts["setup_error"]:
+            return 2
     return 0
 
 

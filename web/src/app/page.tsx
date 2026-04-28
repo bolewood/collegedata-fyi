@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { fetchManifest, aggregateSchools, computeStats } from "@/lib/queries";
+import { fetchManifest, aggregateSchools, fetchSiteStats } from "@/lib/queries";
+import { formatCount, formatShortDate } from "@/lib/format";
 import type { ManifestRow } from "@/lib/types";
 import { SchoolSearch } from "@/components/SchoolSearch";
 
@@ -63,15 +64,15 @@ function latestDrain(rows: ManifestRow[]): DrainEntry[] {
 }
 
 export default async function HomePage() {
-  const manifest = await fetchManifest();
+  const [manifest, stats] = await Promise.all([fetchManifest(), fetchSiteStats()]);
   const schools = aggregateSchools(manifest);
-  const stats = computeStats(manifest);
   const drain = latestDrain(manifest);
 
   const schoolsValue = stats.total_schools.toLocaleString();
   const docsValue = stats.total_documents.toLocaleString();
   const yearRangeValue = compactYearRange(stats.earliest_year, stats.latest_year);
-  const pctValue = `${stats.extraction_pct}%`;
+  const queryableFieldsValue = formatCount(stats.queryable_field_count);
+  const browserRowsValue = formatCount(stats.browser_primary_row_count);
 
   return (
     <div className="mx-auto max-w-5xl" style={{ padding: "0 24px" }}>
@@ -169,9 +170,9 @@ export default async function HomePage() {
           }}
         >
           <StatCell label="Schools archived" value={schoolsValue} note={`${stats.extracted_count.toLocaleString()} extracted`} />
-          <StatCell label="CDS documents" value={docsValue} note={`${stats.extraction_pct}% structured`} />
-          <StatCell label="Year range" value={yearRangeValue} note={`${stats.total_documents.toLocaleString()} docs across the span`} />
-          <StatCell label="Structured extraction" value={pctValue} note="last manifest drain" />
+          <StatCell label="CDS documents" value={docsValue} note={`${yearRangeValue} source span`} />
+          <StatCell label="Queryable fields" value={queryableFieldsValue} note={`${formatCount(stats.schema_field_count)} field schema`} />
+          <StatCell label="Browser rows" value={browserRowsValue} note={`${formatCount(stats.browser_school_count)} schools; refreshed ${formatShortDate(stats.browser_updated_at)}`} />
         </div>
       </section>
 
