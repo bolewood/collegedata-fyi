@@ -68,10 +68,8 @@ export function NetPriceByIncome({
           return (
             <div
               key={r.label}
+              className="cd-price-row"
               style={{
-                display: "grid",
-                gridTemplateColumns: "170px 1fr 90px",
-                gap: 20,
                 alignItems: "center",
                 padding: "14px 0",
                 borderBottom:
@@ -80,10 +78,14 @@ export function NetPriceByIncome({
                     : "1px dashed var(--rule)",
               }}
             >
-              <span style={{ fontSize: 14, color: "var(--ink-2)" }}>
+              <span
+                className="cd-price-band"
+                style={{ fontSize: 14, color: "var(--ink-2)" }}
+              >
                 {r.label}
               </span>
               <div
+                className="cd-price-bar"
                 style={{
                   height: 18,
                   background: "var(--paper-2)",
@@ -99,26 +101,22 @@ export function NetPriceByIncome({
                     background: r.isModal ? "var(--forest)" : "var(--ink)",
                   }}
                 />
-                {r.isModal && (
-                  <span
-                    className="mono"
-                    style={{
-                      position: "absolute",
-                      right: -94,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      fontSize: 10.5,
-                      color: "var(--forest)",
-                      letterSpacing: "0.05em",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    ← MODAL BRACKET
-                  </span>
-                )}
               </div>
               <span
-                className="mono nums"
+                className="mono cd-price-marker"
+                aria-hidden={!r.isModal}
+                style={{
+                  fontSize: 10.5,
+                  color: "var(--forest)",
+                  letterSpacing: "0.05em",
+                  whiteSpace: "nowrap",
+                  visibility: r.isModal ? "visible" : "hidden",
+                }}
+              >
+                ← MODAL BRACKET
+              </span>
+              <span
+                className="mono nums cd-price-value"
                 style={{ fontSize: 14, textAlign: "right" }}
               >
                 {formatCurrency(r.value)}

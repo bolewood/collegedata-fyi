@@ -79,6 +79,8 @@
 }
 .cd-chip--solid { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .cd-chip--forest { background: var(--forest); color: var(--paper); border-color: var(--forest); }
+.cd-chip--brick { background: transparent; color: var(--brick); border-color: var(--brick); }
+.cd-chip--ochre { background: transparent; color: var(--ochre); border-color: var(--ochre); }
 
 /* Buttons */
 .cd-btn {
@@ -141,4 +143,84 @@
 @media (max-width: 640px) {
   .cd-nav-row { flex-wrap: wrap; row-gap: 10px; }
   .cd-nav-links { width: 100%; justify-content: flex-start; gap: 18px; font-size: 13px; flex-wrap: wrap; }
+}
+
+/* School page header — desktop puts the count + sparkline on the right
+   gutter; mobile stacks under the title with a hairline rule and inline
+   row so "§", count, and year range stay on one line with breathing room. */
+.cd-school-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  align-items: end;
+}
+.cd-school-header__aside {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.cd-school-header__count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.cd-school-header__glyph {
+  font-family: var(--serif);
+  font-size: 14px;
+  font-style: italic;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-3);
+}
+.cd-school-header__years::before {
+  content: "·";
+  margin-right: 8px;
+  color: var(--ink-4);
+}
+@media (max-width: 640px) {
+  .cd-school-header { grid-template-columns: 1fr; gap: 18px; }
+  .cd-school-header__aside {
+    text-align: left;
+    align-items: flex-start;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule);
+  }
+  .cd-school-header__count { justify-content: flex-start; }
+}
+
+/* Earnings distribution — full dollar labels at desktop, abbreviated $Xk
+   on narrow screens so adjacent ticks don't overlap. The tick wrapper
+   caps width to avoid bleed past its own column. */
+.cd-earnings-tick { max-width: 33%; }
+.cd-earnings-tick__value { font-size: 20px; margin-top: 2px; }
+.cd-earnings-tick__full { display: inline; }
+.cd-earnings-tick__short { display: none; }
+@media (max-width: 640px) {
+  .cd-earnings-tick__value { font-size: 16px; }
+  .cd-earnings-tick__full  { display: none; }
+  .cd-earnings-tick__short { display: inline; }
+}
+
+/* Net price by family income — fixed columns so the modal-bracket caption
+   never collides with the dollar value. The marker column reserves its
+   width even when the row is non-modal (visibility: hidden), so bars stay
+   aligned across rows. Collapses to a 2-row stack on narrow viewports. */
+.cd-price-row {
+  display: grid;
+  grid-template-columns: 170px 1fr 110px 90px;
+  gap: 20px;
+}
+@media (max-width: 640px) {
+  .cd-price-row {
+    grid-template-columns: 1fr 88px;
+    gap: 4px 14px;
+  }
+  .cd-price-band   { grid-column: 1; grid-row: 1; }
+  .cd-price-value  { grid-column: 2; grid-row: 1; }
+  .cd-price-bar    { grid-column: 1 / -1; grid-row: 2; }
+  .cd-price-marker { grid-column: 1 / -1; grid-row: 3; text-align: right; }
 }

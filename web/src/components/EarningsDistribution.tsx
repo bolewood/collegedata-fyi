@@ -86,6 +86,7 @@ export function EarningsDistribution({
         ].map((t) => (
           <div
             key={t.label}
+            className="cd-earnings-tick"
             style={{
               position: "absolute",
               top: 44,
@@ -104,8 +105,13 @@ export function EarningsDistribution({
             >
               {t.label.toUpperCase()}
             </div>
-            <div className="serif nums" style={{ fontSize: 20, marginTop: 2 }}>
-              ${t.v.toLocaleString("en-US")}
+            <div className="serif nums cd-earnings-tick__value">
+              <span className="cd-earnings-tick__full">
+                ${t.v.toLocaleString("en-US")}
+              </span>
+              <span className="cd-earnings-tick__short">
+                ${Math.round(t.v / 1000)}k
+              </span>
             </div>
           </div>
         ))}
