@@ -177,14 +177,8 @@ export default async function SchoolDetailPage({
 
       {/* Header */}
       <header
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr auto",
-          gap: 32,
-          alignItems: "end",
-          paddingTop: 24,
-          paddingBottom: 8,
-        }}
+        className="cd-school-header"
+        style={{ paddingTop: 24, paddingBottom: 8 }}
       >
         <div>
           <div
@@ -264,11 +258,16 @@ export default async function SchoolDetailPage({
           </div>
         </div>
 
-        <div style={{ textAlign: "right" }}>
-          <div className="meta" style={{ marginBottom: 6 }}>
-            § {docs.length} document{docs.length !== 1 ? "s" : ""} archived
+        <div className="cd-school-header__aside">
+          <div className="meta cd-school-header__count">
+            <span className="cd-school-header__glyph">§</span>
+            <span>
+              {docs.length} document{docs.length !== 1 ? "s" : ""} archived
+            </span>
             {earliestYear && latestYear && earliestYear !== latestYear && (
-              <> · {earliestYear} – {latestYear}</>
+              <span className="cd-school-header__years">
+                {earliestYear}&ndash;{latestYear}
+              </span>
             )}
           </div>
           {history.length > 1 && (
