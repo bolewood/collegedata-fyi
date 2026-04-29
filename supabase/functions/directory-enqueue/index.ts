@@ -303,6 +303,46 @@ function parseParams(url: URL): Params | { error: string } {
 
 // ─── Loaders ─────────────────────────────────────────────────────────
 
+// PostgREST caps responses at PGRST_DB_MAX_ROWS (default 1,000 on this
+// project — verified empirically). `.limit(20000)` is silently truncated.
+// All loaders that can return more than 1K rows must paginate via .range()
+// so the cap applies per-page instead of per-query.
+//
+// The five loaders touch tables of varying size:
+//   institution_directory in-scope     ~3,000 rows  → must paginate
+//   institution_slug_crosswalk yaml   ~2,300 rows  → must paginate
+//   cds_documents (all rows)          ~4,000 rows  → must paginate
+//   archive_queue ready/processing    ~10 rows     → safe single page
+//   archive_queue terminals (95d)     ~1,000 rows  → paginate defensively
+//
+// PAGE_SIZE matches the server cap so each page is a full read. HARD_CAP
+// stops a runaway loop if a table grows unexpectedly large or the server
+// stops respecting our termination conditions.
+const PAGE_SIZE = 1000;
+const HARD_CAP = 50_000;
+
+// PostgrestFilterBuilder is a thenable, not a real Promise. PromiseLike
+// accepts anything with a .then() method so the caller can pass the
+// builder directly without an extra wrapper.
+type PagedQueryResult = {
+  data: unknown[] | null;
+  error: { message: string } | null;
+};
+
+async function fetchPaged<T>(
+  build: (start: number, end: number) => PromiseLike<PagedQueryResult>,
+): Promise<{ rows: T[] } | { error: string }> {
+  const out: T[] = [];
+  for (let start = 0; start < HARD_CAP; start += PAGE_SIZE) {
+    const { data, error } = await build(start, start + PAGE_SIZE - 1);
+    if (error) return { error: error.message };
+    const page = (data ?? []) as T[];
+    out.push(...page);
+    if (page.length < PAGE_SIZE) return { rows: out };
+  }
+  return { error: `pagination hit HARD_CAP (${HARD_CAP}) — table grew faster than expected; raise the cap or narrow the query` };
+}
+
 async function loadDirectoryRows(
   supabase: SupabaseClient,
   params: Params,
@@ -310,39 +350,40 @@ async function loadDirectoryRows(
   // Pull all in-scope rows with a website_url. We do operator filters
   // (state, min_enrollment) in TS since selectCandidates needs the
   // skip-reason counts to reflect each filter.
-  let query = supabase
-    .from("institution_directory")
-    .select(
-      "ipeds_id, school_id, school_name, state, website_url, undergraduate_enrollment",
-    )
-    .eq("in_scope", true)
-    .not("website_url", "is", null)
-    .limit(20000);
-  // PostgREST default is 1,000 rows — well under the ~5,500 in-scope
-  // directory rows we expect after schools.yaml exclusions. Bump to
-  // 20K to comfortably cover Scorecard's full Title-IV universe.
-  if (params.state) {
-    // Pre-filter at the DB to keep the response small when an operator
-    // targets one state. selectCandidates still re-applies the filter
-    // for skip-reason accounting, but on a smaller candidate pool
-    // there's nothing to count there.
-    query = query.eq("state", params.state);
-  }
-  const { data, error } = await query;
-  if (error) return { error: error.message };
-  return { rows: (data ?? []) as DirectoryRow[] };
+  return await fetchPaged<DirectoryRow>((start, end) => {
+    let query = supabase
+      .from("institution_directory")
+      .select(
+        "ipeds_id, school_id, school_name, state, website_url, undergraduate_enrollment",
+      )
+      .eq("in_scope", true)
+      .not("website_url", "is", null)
+      .order("ipeds_id", { ascending: true })
+      .range(start, end);
+    if (params.state) {
+      // Pre-filter at the DB to keep the response small when an operator
+      // targets one state. selectCandidates still re-applies the filter
+      // for skip-reason accounting, but on a smaller candidate pool
+      // there's nothing to count there.
+      query = query.eq("state", params.state);
+    }
+    return query;
+  });
 }
 
 async function loadSchoolsYamlIpeds(
   supabase: SupabaseClient,
 ): Promise<{ ipeds: Set<string> } | { error: string }> {
-  const { data, error } = await supabase
-    .from("institution_slug_crosswalk")
-    .select("ipeds_id")
-    .eq("source", "schools_yaml")
-    .limit(20000);
-  if (error) return { error: error.message };
-  return { ipeds: new Set((data ?? []).map((r) => r.ipeds_id as string)) };
+  const result = await fetchPaged<{ ipeds_id: string }>((start, end) =>
+    supabase
+      .from("institution_slug_crosswalk")
+      .select("ipeds_id")
+      .eq("source", "schools_yaml")
+      .order("ipeds_id", { ascending: true })
+      .range(start, end)
+  );
+  if ("error" in result) return result;
+  return { ipeds: new Set(result.rows.map((r) => r.ipeds_id)) };
 }
 
 async function loadSchoolsWithCds(
@@ -351,24 +392,30 @@ async function loadSchoolsWithCds(
   // cds_documents holds one row per (school, sub-institutional, year).
   // We just need the distinct school_ids; PostgREST has no DISTINCT but
   // dedup'ing in JS over a few thousand rows is trivial.
-  const { data, error } = await supabase
-    .from("cds_documents")
-    .select("school_id")
-    .limit(20000);
-  if (error) return { error: error.message };
-  return { schoolIds: new Set((data ?? []).map((r) => r.school_id as string)) };
+  const result = await fetchPaged<{ school_id: string }>((start, end) =>
+    supabase
+      .from("cds_documents")
+      .select("school_id")
+      .order("school_id", { ascending: true })
+      .range(start, end)
+  );
+  if ("error" in result) return result;
+  return { schoolIds: new Set(result.rows.map((r) => r.school_id)) };
 }
 
 async function loadInFlightSchools(
   supabase: SupabaseClient,
 ): Promise<{ schoolIds: Set<string> } | { error: string }> {
-  const { data, error } = await supabase
-    .from("archive_queue")
-    .select("school_id")
-    .in("status", ["ready", "processing"])
-    .limit(20000);
-  if (error) return { error: error.message };
-  return { schoolIds: new Set((data ?? []).map((r) => r.school_id as string)) };
+  const result = await fetchPaged<{ school_id: string }>((start, end) =>
+    supabase
+      .from("archive_queue")
+      .select("school_id")
+      .in("status", ["ready", "processing"])
+      .order("school_id", { ascending: true })
+      .range(start, end)
+  );
+  if ("error" in result) return result;
+  return { schoolIds: new Set(result.rows.map((r) => r.school_id)) };
 }
 
 async function loadLatestTerminals(
@@ -378,18 +425,24 @@ async function loadLatestTerminals(
   // (auth_walled_*); rows older than that can never be in cooldown.
   const coolWindowMs = 95 * 24 * 60 * 60 * 1000;
   const cutoff = new Date(Date.now() - coolWindowMs).toISOString();
-  const { data, error } = await supabase
-    .from("archive_queue")
-    .select("school_id, processed_at, last_outcome")
-    .in("status", ["done", "failed_permanent"])
-    .not("last_outcome", "is", null)
-    .not("processed_at", "is", null)
-    .gte("processed_at", cutoff)
-    .limit(20000);
-  if (error) return { error: error.message };
+  const result = await fetchPaged<{
+    school_id: string;
+    processed_at: string;
+    last_outcome: string;
+  }>((start, end) =>
+    supabase
+      .from("archive_queue")
+      .select("school_id, processed_at, last_outcome")
+      .in("status", ["done", "failed_permanent"])
+      .not("last_outcome", "is", null)
+      .not("processed_at", "is", null)
+      .gte("processed_at", cutoff)
+      .order("processed_at", { ascending: true })
+      .range(start, end)
+  );
+  if ("error" in result) return result;
   const latest = new Map<string, LatestTerminal>();
-  for (const row of data ?? []) {
-    const r = row as { school_id: string; processed_at: string; last_outcome: string };
+  for (const r of result.rows) {
     const prior = latest.get(r.school_id);
     if (!prior || r.processed_at > prior.processed_at) {
       latest.set(r.school_id, {
