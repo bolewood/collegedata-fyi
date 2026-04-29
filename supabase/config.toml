@@ -422,6 +422,17 @@ verify_jwt = true
 import_map = "./functions/directory-enqueue/deno.json"
 entrypoint = "./functions/directory-enqueue/index.ts"
 
+[functions.refresh-coverage]
+enabled = true
+# pg_cron + operator entry point for the M3 institution_cds_coverage
+# refresh (PRD 015 M3). Calls refresh_institution_cds_coverage() RPC
+# which does an atomic TRUNCATE+INSERT inside a single transaction.
+# Same auth pattern as archive-enqueue. Hit by pg_cron every 15 minutes
+# via refresh_coverage_cron migration.
+verify_jwt = true
+import_map = "./functions/refresh-coverage/deno.json"
+entrypoint = "./functions/refresh-coverage/index.ts"
+
 [functions.archive-upload]
 enabled = true
 # Operator upload endpoint. Accepts multipart POST with a downloaded

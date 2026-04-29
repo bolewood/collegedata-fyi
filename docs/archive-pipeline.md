@@ -214,6 +214,8 @@ low-field docs, extraction counts, and projection counts.
 | Queue consumer (30 s cron target + `force_school` backfill) | `supabase/functions/archive-process/index.ts` |
 | Monthly seeder (daily cron target, deterministic per-month run_id) | `supabase/functions/archive-enqueue/index.ts` |
 | Operator-triggered seeder for Scorecard-only directory rows (PRD 015 M2) | `supabase/functions/directory-enqueue/index.ts` |
+| Public-safe coverage table refresh, on 15-min pg_cron (PRD 015 M3) | `supabase/functions/refresh-coverage/index.ts` |
+| Coverage table + status precedence + atomic refresh RPC (PRD 015 M3) | `supabase/migrations/<ts>_institution_cds_coverage.sql` |
 | Format badge / source-format presentation | `supabase/functions/_shared/format.ts`, `web/src/lib/format.ts` |
 | Extraction worker | `tools/extraction_worker/worker.py` |
 | Tier 4 LLM fallback worker | `tools/extraction_worker/llm_fallback_worker.py` |
@@ -280,13 +282,15 @@ touching the database or Storage.
    supabase db push
    ```
 
-2. Deploy all four edge functions:
+2. Deploy all five edge functions:
 
    ```bash
-   supabase functions deploy discover archive-process archive-enqueue directory-enqueue
+   supabase functions deploy discover archive-process archive-enqueue directory-enqueue refresh-coverage
    ```
 
    `directory-enqueue` is operator-triggered only — no pg_cron entry.
+   `refresh-coverage` runs on a 15-minute pg_cron tick (operators can also
+   curl it for ad-hoc refresh after a manual archive drain).
 
 3. Create the two Vault secrets in the dashboard SQL editor. These are
    required for pg_cron to authenticate its `net.http_post` calls:
@@ -389,6 +393,42 @@ Rows are inserted with `source = 'institution_directory'` and flow
 through the same `archive-process` worker as schools.yaml-sourced rows.
 The worker runs every 30 seconds, so a 50-school batch drains in ~25
 minutes with the existing single-row claim cadence.
+
+**Refresh the public coverage table on demand** (PRD 015 M3 — pg_cron
+hits this every 15 minutes; manual invocation is for after-batch
+debugging or when 15 minutes feels too long):
+
+```bash
+cd /Users/santhonys/Projects/Owen/colleges/collegedata-fyi
+set -a && source .env && set +a
+
+curl -X POST "$SUPABASE_URL/functions/v1/refresh-coverage" \
+     -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
+```
+
+Response includes the rebuild row count, duration, and a histogram by
+`coverage_status` so operators can spot precedence regressions at a
+glance:
+
+```json
+{
+  "rows_written": 6322,
+  "refresh_duration_ms": 412,
+  "total_duration_ms": 1106,
+  "coverage_status_histogram": {
+    "out_of_scope": 3398,
+    "not_checked": 2853,
+    "no_public_cds_found": 9,
+    "cds_available_current": 60,
+    "cds_available_stale": 2
+  }
+}
+```
+
+A wildly different histogram (e.g., zero `cds_available_current` when
+schools.yaml has dozens of extracted documents) means the precedence
+logic in `derive_coverage_status()` has regressed — read it from
+`/supabase/migrations/<ts>_institution_cds_coverage.sql` to debug.
 
 **Force-archive one school** (e.g. to re-try a `failed_permanent` row or
 debug a resolver regression):
