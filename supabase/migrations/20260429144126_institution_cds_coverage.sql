@@ -170,42 +170,77 @@ language sql
 immutable
 set search_path = public
 as $$
+  -- The freshness signal is the archive_queue last_outcome, NOT the
+  -- cds_documents row's cds_year. A school with an extracted 2022-23
+  -- doc and a recent no_pdfs_found terminal is cds_available_stale —
+  -- our most recent attempt found nothing newer, so the doc we hold
+  -- is the older state, not the latest. Branching on last_outcome
+  -- first makes that distinction visible.
   select case
     when p_in_scope = false then 'out_of_scope'::public.coverage_status_t
-    -- Newest found year IS the newest extracted year → fully current.
+
+    -- ── Latest discovery FOUND a source (or re-confirmed one) ──
+    -- inserted / refreshed / unchanged_verified / unchanged_repaired
+    -- mean the resolver successfully reached a CDS source. Status is
+    -- driven by the extraction state of the doc we now have.
+    when p_last_outcome in ('inserted', 'refreshed', 'unchanged_verified', 'unchanged_repaired') then
+      case
+        when p_latest_extracted_year is not null
+             and (p_latest_found_year is null
+                  or p_latest_extracted_year >= p_latest_found_year)
+          then 'cds_available_current'::public.coverage_status_t
+        when p_latest_found_extraction_status = 'failed'
+             and p_latest_extracted_year is not null
+             and p_latest_found_year > p_latest_extracted_year
+          then 'latest_found_extract_failed_with_prior_available'::public.coverage_status_t
+        when p_latest_found_extraction_status = 'failed'
+          then 'extract_failed'::public.coverage_status_t
+        when p_latest_found_extraction_status in ('discovered', 'extraction_pending')
+          then 'cds_found_processing'::public.coverage_status_t
+        else 'cds_available_current'::public.coverage_status_t
+      end
+
+    -- ── Latest discovery FOUND NOTHING ──
+    -- Older usable extraction → stale; nothing → no_public_cds_found.
+    -- (transient is grouped here: archive-process retries until
+    -- failed_permanent, and a terminal transient is the worst case
+    -- after retries.)
+    when p_last_outcome in ('no_pdfs_found', 'dead_url', 'wrong_content_type',
+                            'transient', 'permanent_other', 'blocked_url',
+                            'file_too_large') then
+      case
+        when p_latest_extracted_year is not null
+          then 'cds_available_stale'::public.coverage_status_t
+        else 'no_public_cds_found'::public.coverage_status_t
+      end
+
+    -- ── Latest discovery BLOCKED by auth wall ──
+    -- Older usable extraction exists → stale (with a baked-in
+    -- inaccessible note in coverage_status_summary). No older →
+    -- the resolver can't reach the source publicly.
+    when p_last_outcome in ('auth_walled_microsoft', 'auth_walled_okta', 'auth_walled_google') then
+      case
+        when p_latest_extracted_year is not null
+          then 'cds_available_stale'::public.coverage_status_t
+        else 'source_not_automatically_accessible'::public.coverage_status_t
+      end
+
+    -- ── No queue history (legacy data, manual uploads, etc.) ──
+    -- Fall back to cds_documents alone.
     when p_latest_extracted_year is not null
          and (p_latest_found_year is null
               or p_latest_extracted_year >= p_latest_found_year)
       then 'cds_available_current'::public.coverage_status_t
-    -- Newer source found, extraction in flight, no older fallback.
     when p_latest_found_extraction_status in ('discovered', 'extraction_pending')
          and p_latest_extracted_year is null
       then 'cds_found_processing'::public.coverage_status_t
-    -- Newer source found, extraction failed, older usable extraction exists.
     when p_latest_found_extraction_status = 'failed'
          and p_latest_extracted_year is not null
          and p_latest_found_year > p_latest_extracted_year
       then 'latest_found_extract_failed_with_prior_available'::public.coverage_status_t
-    -- Source found, extraction failed, no older fallback.
     when p_latest_found_extraction_status = 'failed'
-         and p_latest_extracted_year is null
       then 'extract_failed'::public.coverage_status_t
-    -- Latest discovery hit an auth wall.
-    when p_last_outcome in ('auth_walled_microsoft', 'auth_walled_okta', 'auth_walled_google')
-         and p_latest_extracted_year is not null
-      then 'cds_available_stale'::public.coverage_status_t
-    when p_last_outcome in ('auth_walled_microsoft', 'auth_walled_okta', 'auth_walled_google')
-      then 'source_not_automatically_accessible'::public.coverage_status_t
-    -- Latest discovery probed and found nothing.
-    when p_last_outcome in ('no_pdfs_found', 'dead_url', 'wrong_content_type',
-                            'transient', 'permanent_other', 'blocked_url',
-                            'file_too_large')
-         and p_latest_extracted_year is not null
-      then 'cds_available_stale'::public.coverage_status_t
-    when p_last_outcome in ('no_pdfs_found', 'dead_url', 'wrong_content_type',
-                            'transient', 'permanent_other', 'blocked_url',
-                            'file_too_large')
-      then 'no_public_cds_found'::public.coverage_status_t
+
     -- Resolver has never attempted this school.
     else 'not_checked'::public.coverage_status_t
   end;
@@ -508,17 +543,20 @@ grant execute on function public.refresh_institution_cds_coverage() to service_r
 
 do $$
 declare
-  ipeds_current     constant text := '9999001';
-  ipeds_failed      constant text := '9999002';
-  ipeds_stale       constant text := '9999003';
-  ipeds_processing  constant text := '9999004';
-  ipeds_unchecked   constant text := '9999005';
-  ipeds_no_cds      constant text := '9999006';
-  ipeds_override    constant text := '9999007';
+  ipeds_current      constant text := '9999001';
+  ipeds_failed       constant text := '9999002';
+  ipeds_stale        constant text := '9999003';
+  ipeds_processing   constant text := '9999004';
+  ipeds_unchecked    constant text := '9999005';
+  ipeds_no_cds       constant text := '9999006';
+  ipeds_override     constant text := '9999007';
+  ipeds_queue_ok     constant text := '9999008';
+  ipeds_auth_walled  constant text := '9999009';
 
-  doc_current_id   uuid := gen_random_uuid();
-  doc_old_id       uuid := gen_random_uuid();
-  doc_old_stale_id uuid := gen_random_uuid();
+  doc_current_id      uuid := gen_random_uuid();
+  doc_old_id          uuid := gen_random_uuid();
+  doc_old_stale_id    uuid := gen_random_uuid();
+  doc_queue_ok_id     uuid := gen_random_uuid();
 
   s text;
 begin
@@ -531,8 +569,10 @@ begin
     (ipeds_stale,      '__test_stale__',      'Test Stale Univ',      '2024', true, null),
     (ipeds_processing, '__test_processing__', 'Test Processing Univ', '2024', true, null),
     (ipeds_unchecked,  '__test_unchecked__',  'Test Unchecked Univ',  '2024', true, null),
-    (ipeds_no_cds,     '__test_no_cds__',     'Test NoCDS Univ',      '2024', true, null),
-    (ipeds_override,   '__test_override__',   'Test Override Univ',   '2024', true, null);
+    (ipeds_no_cds,      '__test_no_cds__',      'Test NoCDS Univ',       '2024', true, null),
+    (ipeds_override,    '__test_override__',    'Test Override Univ',    '2024', true, null),
+    (ipeds_queue_ok,    '__test_queue_ok__',    'Test QueueOk Univ',     '2024', true, null),
+    (ipeds_auth_walled, '__test_auth_walled__', 'Test AuthWalled Univ',  '2024', true, null);
 
   -- Scenario 1: extracted == found, current state.
   insert into public.cds_documents (id, school_id, school_name, cds_year, source_url, participation_status, extraction_status)
@@ -580,6 +620,29 @@ begin
           'Confirmed via IR contact 2025-08-01: school does not publish CDS.',
           'self_test');
 
+  -- Scenario 8: queue terminal=unchanged_verified + extracted doc.
+  -- Schools.yaml-sourced happy path. Latest probe re-confirmed the
+  -- existing source; doc is current.
+  insert into public.cds_documents (id, school_id, school_name, cds_year, source_url, participation_status, extraction_status)
+  values (doc_queue_ok_id, '__test_queue_ok__', 'Test QueueOk Univ', '2024-25',
+          'https://test.example/qok.pdf', 'published', 'extracted');
+  insert into public.archive_queue (
+    enqueued_run_id, school_id, school_name, cds_url_hint, status, last_outcome, processed_at
+  ) values (
+    gen_random_uuid(), '__test_queue_ok__', 'Test QueueOk Univ',
+    'https://test.example/', 'done', 'unchanged_verified', now()
+  );
+
+  -- Scenario 9: queue terminal=auth_walled_microsoft + no extracted doc.
+  -- Resolver reached an SSO host; the source can't be archived
+  -- automatically. No older fallback.
+  insert into public.archive_queue (
+    enqueued_run_id, school_id, school_name, cds_url_hint, status, last_outcome, processed_at, source
+  ) values (
+    gen_random_uuid(), '__test_auth_walled__', 'Test AuthWalled Univ',
+    'https://test.example/', 'failed_permanent', 'auth_walled_microsoft', now(), 'institution_directory'
+  );
+
   perform public.refresh_institution_cds_coverage();
 
   select coverage_status::text into s
@@ -622,6 +685,18 @@ begin
     from public.institution_cds_coverage where ipeds_id = ipeds_override;
   if s is distinct from 'verified_absent' then
     raise exception 'M3 self-test FAIL scenario 7: expected verified_absent, got %', s;
+  end if;
+
+  select coverage_status::text into s
+    from public.institution_cds_coverage where ipeds_id = ipeds_queue_ok;
+  if s is distinct from 'cds_available_current' then
+    raise exception 'M3 self-test FAIL scenario 8: expected cds_available_current, got %', s;
+  end if;
+
+  select coverage_status::text into s
+    from public.institution_cds_coverage where ipeds_id = ipeds_auth_walled;
+  if s is distinct from 'source_not_automatically_accessible' then
+    raise exception 'M3 self-test FAIL scenario 9: expected source_not_automatically_accessible, got %', s;
   end if;
 
   -- Sanity: can_submit_source maps correctly.
