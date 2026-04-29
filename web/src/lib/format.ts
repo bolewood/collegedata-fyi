@@ -119,3 +119,55 @@ export function dataQualityLabel(flag: string | null): string | null {
 export function dataQualityColor(): string {
   return "bg-amber-100 text-amber-800";
 }
+
+// Display-time formatter for an extracted CDS field value. The DB stores
+// raw strings as the PDF surfaced them ("$45,612", "12000", "98.5"); we
+// reformat at render based on the schema's `value_type` so exports keep
+// the source representation. Falls back to the original string whenever
+// parsing fails so an unexpected value never disappears from the page.
+export function formatFieldValue(
+  raw: string,
+  valueType?: string | null,
+): string {
+  const value = raw.trim();
+  if (!value) return value;
+  if (value === "—" || value.toLowerCase().startsWith("not provided")) {
+    return value;
+  }
+
+  const numeric = parseFloat(value.replace(/[$,%\s]/g, ""));
+  if (Number.isNaN(numeric)) return value;
+
+  switch (valueType) {
+    case "Nearest $1":
+      return `$${Math.round(numeric).toLocaleString("en-US")}`;
+    case "Nearest 1%":
+      return `${Math.round(numeric)}%`;
+    case "Round to Nearest Hundredths":
+    case "Whole Number or Round to Nearest Hundredths":
+      return numeric.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    case "Whole Number or Round to Nearest Tenth":
+      if (!Number.isInteger(numeric)) {
+        return numeric.toLocaleString("en-US", {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+        });
+      }
+      return numeric.toLocaleString("en-US");
+    case "Number":
+    case "Numbers":
+      // Only re-format if the raw input was clearly numeric — preserves
+      // strings like "Required for some" that happen to begin with a digit.
+      if (/^[\d,.\s$]+$/.test(value)) {
+        return Number.isInteger(numeric)
+          ? numeric.toLocaleString("en-US")
+          : numeric.toLocaleString("en-US", { maximumFractionDigits: 2 });
+      }
+      return value;
+    default:
+      return value;
+  }
+}
