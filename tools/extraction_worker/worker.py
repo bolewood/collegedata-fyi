@@ -75,9 +75,10 @@ import sys
 import tempfile
 from collections import Counter
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import pypdf
 from supabase import Client, create_client
@@ -102,6 +103,36 @@ from html_to_markdown import html_to_markdown  # noqa: E402 (PRD 008 Tier 6)
 class ExtractionOutcome:
     action: str
     refresh_projection: bool = False
+
+
+def utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def parsed_field_count(action: str) -> int | None:
+    match = re.search(r"\((\d+)(?:/\d+)? fields\b", action)
+    return int(match.group(1)) if match else None
+
+
+def is_failure_action(action: str) -> bool:
+    if action == "already_extracted":
+        return False
+    if action == "no_source_artifact" or action.startswith("stub_"):
+        return True
+    if "_error" in action or action.endswith("_no_tables"):
+        return True
+    return False
+
+
+def mean_or_none(values: list[int]) -> float | None:
+    if not values:
+        return None
+    return round(sum(values) / len(values), 2)
+
+
+def write_run_summary(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
 
 
 def extraction_success(action: str) -> ExtractionOutcome:
@@ -947,6 +978,22 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--summary-json",
+        type=Path,
+        default=None,
+        help=(
+            "Write a small machine-readable run summary for ops workflows. "
+            "Includes processed count, failures, mean field count, low-field "
+            "docs, and projection refresh counters."
+        ),
+    )
+    parser.add_argument(
+        "--low-field-threshold",
+        type=int,
+        default=25,
+        help="Field-count threshold for low-field docs in --summary-json.",
+    )
+    parser.add_argument(
         "--include-failed",
         action="store_true",
         help="Also process rows with extraction_status='failed' (for retry runs)",
@@ -1020,11 +1067,29 @@ def main() -> int:
     if args.limit:
         query = query.limit(args.limit)
 
+    started_at = utc_now_iso()
     docs = query.execute().data or []
     if not docs:
         print(
             "No rows to process. Try --include-failed to re-process earlier failures.",
         )
+        if args.summary_json:
+            write_run_summary(args.summary_json, {
+                "started_at": started_at,
+                "finished_at": utc_now_iso(),
+                "dry_run": args.dry_run,
+                "limit": args.limit,
+                "school": args.school,
+                "include_failed": args.include_failed,
+                "low_field_threshold": args.low_field_threshold,
+                "processed_count": 0,
+                "failure_count": 0,
+                "mean_fields": None,
+                "low_field_docs": [],
+                "extraction_counts": {},
+                "projection_counts": {},
+                "documents": [],
+            })
         return 0
 
     print(
@@ -1052,12 +1117,31 @@ def main() -> int:
             )
 
     counts: Counter = Counter()
+    summary_docs: list[dict[str, Any]] = []
+    field_counts: list[int] = []
+    low_field_docs: list[dict[str, Any]] = []
+    failure_count = 0
     for i, doc in enumerate(docs, 1):
         outcome = extract_one(client, doc, schema, args.dry_run, cell_map)
         bucket = outcome.action.split(":")[0].split(" ")[0]
         counts[bucket] += 1
+        fields = parsed_field_count(outcome.action)
+        if fields is not None:
+            field_counts.append(fields)
+            if fields < args.low_field_threshold:
+                low_field_docs.append({
+                    "document_id": str(doc["id"]),
+                    "school_id": doc["school_id"],
+                    "source_format": doc.get("source_format"),
+                    "field_count": fields,
+                    "action": outcome.action,
+                })
+        failed = is_failure_action(outcome.action)
+        failure_count += int(failed)
 
         projection_note = ""
+        projection_field_count: int | None = None
+        projection_browser_row: bool | None = None
         if (
             projection_enabled
             and projection_definitions is not None
@@ -1072,6 +1156,8 @@ def main() -> int:
                 projection_counts["documents"] += 1
                 projection_counts["fields"] += field_count
                 projection_counts["browser_rows"] += int(has_browser_row)
+                projection_field_count = field_count
+                projection_browser_row = has_browser_row
                 projection_note = (
                     f"; projected {field_count} fields, "
                     f"browser_row={'yes' if has_browser_row else 'no'}"
@@ -1081,6 +1167,17 @@ def main() -> int:
                 message = str(e).splitlines()[0][:200]
                 projection_note = f"; projection_error={type(e).__name__}: {message}"
 
+        summary_docs.append({
+            "document_id": str(doc["id"]),
+            "school_id": doc["school_id"],
+            "canonical_year": doc.get("detected_year") or doc.get("cds_year"),
+            "source_format": doc.get("source_format"),
+            "action": outcome.action,
+            "field_count": fields,
+            "failed": failed,
+            "projection_field_count": projection_field_count,
+            "projection_browser_row": projection_browser_row,
+        })
         print(f"[{i:4d}/{len(docs)}] {doc['school_id']}: {outcome.action}{projection_note}", flush=True)
 
     print()
@@ -1095,7 +1192,41 @@ def main() -> int:
             if projection_counts[bucket]:
                 print(f"  {bucket:30s} {projection_counts[bucket]:5d}")
         if projection_counts["errors"] or projection_counts["setup_error"]:
+            if args.summary_json:
+                write_run_summary(args.summary_json, {
+                    "started_at": started_at,
+                    "finished_at": utc_now_iso(),
+                    "dry_run": args.dry_run,
+                    "limit": args.limit,
+                    "school": args.school,
+                    "include_failed": args.include_failed,
+                    "low_field_threshold": args.low_field_threshold,
+                    "processed_count": len(docs),
+                    "failure_count": failure_count,
+                    "mean_fields": mean_or_none(field_counts),
+                    "low_field_docs": low_field_docs,
+                    "extraction_counts": dict(counts),
+                    "projection_counts": dict(projection_counts),
+                    "documents": summary_docs,
+                })
             return 2
+    if args.summary_json:
+        write_run_summary(args.summary_json, {
+            "started_at": started_at,
+            "finished_at": utc_now_iso(),
+            "dry_run": args.dry_run,
+            "limit": args.limit,
+            "school": args.school,
+            "include_failed": args.include_failed,
+            "low_field_threshold": args.low_field_threshold,
+            "processed_count": len(docs),
+            "failure_count": failure_count,
+            "mean_fields": mean_or_none(field_counts),
+            "low_field_docs": low_field_docs,
+            "extraction_counts": dict(counts),
+            "projection_counts": dict(projection_counts),
+            "documents": summary_docs,
+        })
     return 0
 
 

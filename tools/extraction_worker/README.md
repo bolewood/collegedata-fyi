@@ -35,12 +35,57 @@ python worker.py
 # Work one school at a time (useful for debugging a specific case)
 python worker.py --school yale --limit 1
 
+# Run a bounded drain and write the same summary JSON used by ops Actions
+python worker.py --limit 25 \
+    --seed-projection-metadata \
+    --summary-json ../../scratch/extraction-summary.json
+
+# Isolate extraction from browser serving-table writes
+python worker.py --skip-projection-refresh --limit 10
+
 # Content-based year detection only, no extraction writes
 python worker.py --detect-year-only                 # report
 python worker.py --detect-year-only --write         # backfill detected_year
 ```
 
 Env vars (read from `.env` at the repo root): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `ANTHROPIC_API_KEY` (for the LLM fallback — PRD 006).
+
+## GitHub Actions ops workflow
+
+`.github/workflows/ops-extraction-worker.yml` is the bounded production-ish
+wrapper around `worker.py`. It is separate from PR CI and is meant for small
+pending-row drains, not corpus-wide Docling/OCR work.
+
+The workflow supports both a daily scheduled drain and manual dispatch. Manual
+inputs are `limit`, `school`, `include_failed`, `seed_projection_metadata`, and
+`low_field_threshold`. GitHub-hosted runs reject `limit` values over 100; full
+corpus drains should run on an operator laptop or a self-hosted runner.
+
+Required GitHub Secrets:
+
+| Secret | Purpose |
+|---|---|
+| `SUPABASE_URL` | Supabase project URL for worker reads/writes. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service-role credential for archive, artifact, and projection writes. |
+
+Each workflow run uploads an `extraction-worker-summary` artifact containing
+`summary.json` and `worker.log`. The JSON is designed for quick triage:
+
+| Field | Meaning |
+|---|---|
+| `processed_count` | Number of rows claimed for the run. |
+| `failure_count` | Rows that ended in an error state. |
+| `mean_fields` | Mean populated canonical field count across successful artifacts. |
+| `low_field_docs` | Documents below `--low-field-threshold`, with school/source details. |
+| `extraction_counts` | Result buckets from the extraction pass. |
+| `projection_counts` | Browser projection writes, skipped rows, and projection errors. |
+
+## CI workflow
+
+`.github/workflows/ci.yml` is intentionally minimal. It runs Python unit tests
+for the extraction worker/browser projection, Deno tests for Supabase functions,
+and the Next.js typecheck/build. It does not perform live extraction, service
+role writes, projection rebuilds, or full Docling corpus drains.
 
 ## LLM fallback benchmark (PRD 006, Phase 0)
 

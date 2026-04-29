@@ -1,201 +1,428 @@
-# PRD 007: Tier 3 DOCX Extraction
+# PRD 007: Tier 3 DOCX extraction
 
-**Status:** Draft
-**Created:** 2026-04-20
+**Status:** Draft v2 — implementation plan only  
+**Created:** 2026-04-20  
+**Revised:** 2026-04-29  
+**Author:** Anthony + Codex  
+**Related:** [ADR 0006](../decisions/0006-tiered-extraction-strategy.md), [ADR 0007](../decisions/0007-year-authority-moves-to-extraction.md), [PRD 005](005-full-schema-extraction.md), [PRD 014](014-cross-year-canonical-schema.md), [Docling document converter](https://docling-project.github.io/docling/reference/document_converter/)
 
 ---
 
 ## Context
 
-The Tier 3 path (filled DOCX → canonical JSON) is a stub. Schools that publish
-their CDS as a filled Word document currently fail extraction. Two close observations
-motivate building Tier 3 now:
+Tier 3 is the last unbuilt first-party extraction tier. Schools that publish
+their Common Data Set as a filled Word document currently route to
+`source_format='docx'` and fail at extraction time, or worse, route as `xlsx`
+because XLSX and DOCX are both ZIP containers.
 
-1. **Clean template tags exist.** The CDS Initiative's Word template ships with
-   **1,204 Structured Document Tags (SDTs)** whose `w:tag` values match the schema's
-   `word_tag` field exactly (`a0_first_name`, `a0_last_name`, …). For schools that fill
-   the template without destroying its structure, extraction is as deterministic as
-   Tier 2 (AcroForm read): iterate SDTs, look up the tag in the schema, emit the
-   value.
-2. **There is meaningful real-corpus demand.** Measured on the current corpus:
-   - Kent State (all 8 campuses × multiple years, ~14 docs): preserves SDTs.
-     Sample doc has **769 populated SDTs out of 804** (70% of the 1,105-field
-     schema). Cleaner-per-field fidelity exceeds Tier 4 Docling by 6× on the same
-     documents.
-   - James Madison, others: likely SDT-preserving (to be verified).
-   - Saint Louis University: typed directly into the template, SDTs stripped but
-     table structure intact (33 tables).
+This tier matters less by raw count than Tier 4, but it matters because the
+best-case DOCX path is more deterministic than PDF parsing:
 
-Per the extraction status snapshot: 183 documents remain failed after the full drain.
-Of those, ~18 are real DOCX files and another ~90 are xlsx-extension files where
-some unknown subset is actually DOCX content. A rough upper bound on Tier 3 addressable
-corpus is **30–50 documents today**, with more to come as discovery expands.
+- The CDS Word template contains Structured Document Tags (SDTs). Their
+  `w:tag` values correspond to schema `word_tag` values, the same pattern as
+  Tier 2's `pdf_tag` lookup.
+- Kent State's campus-family DOCX files are the known high-value case: prior
+  inspection found hundreds of populated SDTs per document.
+- James Madison and other DOCX publishers are plausible additional wins.
+- Saint Louis-like documents may preserve visible Word tables while stripping
+  SDTs. Those need a fallback, not a hard fail.
+- Some archived `.docx` links are not CDS files at all, especially
+  CDS Initiative "Summary of Changes" documents. Tier 3 should detect and
+  report those cleanly rather than treating them as extraction bugs.
 
-## Premises
+Docling changes the plan. Its current converter supports DOCX input and emits
+the same general `DoclingDocument`/Markdown structures we already use for PDFs.
+That does **not** make Docling the primary DOCX extractor: Word SDTs are a
+stronger source of truth than layout inference. It does make Docling a useful
+fallback and diagnostic path for SDT-stripped DOCX files.
 
-1. **The template is the key.** Every SDT tag in the CDS Word template corresponds
-   directly to a `word_tag` in `schemas/cds_schema_2025_26.json`. This is an exact
-   parallel to Tier 2's `pdf_tag` → `question_number` mapping. The extractor is
-   essentially a 50-line script.
-2. **SDT-preserving is the common case.** Schools that fill the template in Word
-   and export as DOCX preserve SDTs. Kent State confirms this pattern (769/804
-   populated). Schools that copy content into a blank Word doc or paste from another
-   source will strip SDTs — those are the fallback case.
-3. **Format detection needs a fix.** The current sniffer misroutes DOCX files with
-   `.xlsx` extensions (UPenn, UW, Vanderbilt) because it only looks at the ZIP magic
-   bytes. Tier 1 fails them, and they never reach Tier 3. The right fix is to peek
-   at the inner file list before routing: `xl/workbook.xml` → xlsx, `word/document.xml`
-   → docx.
-4. **The corpus is small but growing.** Tier 3 won't unlock thousands of docs like
-   Tier 4 did. But Kent State alone contributes 14 docs at higher fidelity than Tier
-   4 can reach, and the broader "typed-in-Word" pattern will appear more as the
-   discovery pipeline covers more smaller schools.
+## Product goal
 
-## What to build
+Turn DOCX from "known unsupported tier" into a useful deterministic extraction
+path for template-preserving Word files, while creating a measured fallback path
+for SDT-stripped Word documents.
 
-### Primary path: SDT-based extraction (Tier 3a)
+Success is not "parse every Word document." Success is:
 
-Create `tools/tier3_extractor/extract.py` following the Tier 2 shape exactly:
-
-```
-def read_sdts(docx_path: Path) -> dict:
-    """Return {tag: value_string} for every SDT with a populated text value."""
-    doc = Document(str(docx_path))
-    sdts = doc.element.body.findall('.//' + qn('w:sdt'))
-    result = {}
-    for sdt in sdts:
-        tag_elem = sdt.find('.//' + qn('w:tag'))
-        if tag_elem is None:
-            continue
-        tag = tag_elem.get(qn('w:val'))
-        # Skip placeholder-showing SDTs (user never typed)
-        if sdt.find('.//' + qn('w:showingPlcHdr')) is not None:
-            continue
-        # Concatenate all w:t runs inside this SDT
-        text = ''.join(t.text or '' for t in sdt.findall('.//' + qn('w:t'))).strip()
-        if text and 'Click or tap' not in text:
-            result[tag] = text
-    return result
-
-def extract(docx_path: Path, schema: dict) -> dict:
-    sdts = read_sdts(docx_path)
-    word_tag_to_field = {f['word_tag']: f for f in schema['fields'] if f['word_tag']}
-
-    values = {}
-    unmapped = []
-    for tag, raw in sdts.items():
-        field = word_tag_to_field.get(tag)
-        if field is None:
-            unmapped.append({"word_tag": tag, "value": raw})
-            continue
-        values[field["question_number"]] = {
-            "value": raw,
-            "word_tag": tag,
-            "question": field.get("question"),
-            # ... same shape as tier2 output
-        }
-
-    return {
-        "producer": "tier3_docx",
-        "producer_version": "0.1.0",
-        "schema_version": schema["schema_version"],
-        # ... stats, values, unmapped
-    }
-```
-
-This is ~80 lines of real code plus the standard CLI wrapper. The schema's 1,080 unique
-`word_tag` values make the mapping deterministic.
-
-### Fallback path: table-position extraction (Tier 3b — deferred)
-
-For schools that strip SDTs (Saint Louis pattern), fall back to reading Word tables
-by position. The CDS Word template has 75 tables in a known order. Each table maps
-to a known CDS subsection. Saint Louis's 33 tables is a subset — the school likely
-omitted the respondent-info and other text-only sections but kept the data tables.
-
-This is its own parser design (similar complexity to the Tier 4 Docling cleaner) and
-is **deferred to a follow-up PRD**. The SDT-based path unlocks the Kent State family
-and most template-preserving schools without it.
-
-### Format routing fix
-
-Update `sniff_format_from_bytes` in `tools/extraction_worker/worker.py` to distinguish
-DOCX from XLSX within ZIP-signatured files:
-
-```python
-if len(data) >= 4 and data[:4] == b"PK\x03\x04":
-    # Both xlsx and docx are ZIPs. Peek at the inner file list to disambiguate.
-    import zipfile
-    from io import BytesIO
-    try:
-        with zipfile.ZipFile(BytesIO(data)) as zf:
-            names = zf.namelist()
-            if any(n.startswith("word/") for n in names):
-                return "docx"
-            if any(n.startswith("xl/") for n in names):
-                return "xlsx"
-    except zipfile.BadZipFile:
-        return "other"
-    return "other"
-```
-
-This is a one-function change and fixes the UPenn/UW/Vanderbilt misrouting. The
-existing xlsx fallback in Tier 1 already correctly rejects DOCX files at read time
-with `"File contains no valid workbook part"` — but reclassifying them upstream lets
-Tier 3 pick them up.
-
-### Worker routing
-
-Add `_run_tier3` following the `_run_tier2` shape. Route `source_format == "docx"` to
-it. If Tier 3 finds zero SDTs (the Saint Louis case), mark the doc as failed with
-reason `tier3_no_sdts` rather than trying to extract — the Tier 3b fallback will
-handle those in a later PRD.
-
-## Files modified
-
-| File | Change |
-|---|---|
-| `tools/tier3_extractor/extract.py` | **New.** SDT-based reader, ~100 lines. |
-| `tools/tier3_extractor/requirements.txt` | **New.** `python-docx>=1.0`. |
-| `tools/tier3_extractor/README.md` | **New.** Usage, tier strategy. |
-| `tools/extraction_worker/worker.py` | Fix `sniff_format_from_bytes` to peek at ZIP contents. Add `_run_tier3`. Route docx format. Update routing docstring. |
-
-## Verification plan
-
-1. **Unit test against Kent State docs.** Expect ≥700 fields populated on Kent State
-   main campus 2025-26. Verify sample field values against the source DOCX opened
-   in Word.
-2. **Re-probe misrouted files.** Re-run the tier probe on the 91 failed-xlsx docs
-   with the fixed sniffer. Confirm the UPenn/UW/Vanderbilt-class files reclassify as
-   docx.
-3. **Re-run extraction on all failed docx + newly-reclassified docs.** Expected
-   outcomes:
-   - Kent State family (14 docs): all succeed via SDT path, >700 fields each
-   - Summary-of-changes false positives (Stanford/Georgetown/UPenn/Vanderbilt 2025-26):
-     fail with `tier3_no_sdts` (correct — the archived file genuinely isn't a CDS).
-     These should be flagged for re-discovery.
-   - Saint Louis: fails with `tier3_no_sdts`, gets deferred to Tier 3b.
-4. **Verify no regressions.** Existing Tier 1/2/4 extractions must remain unchanged.
-   Run a 10-doc sample of each tier before and after.
-
-## Risks
-
-| Risk | Mitigation |
-|---|---|
-| Discovery pipeline wrongly archived non-CDS files (Summary of Changes) as 2025-26 CDS at multiple schools | Out of scope for this PRD. Flag as a discovery pipeline bug. Tier 3 correctly fails these with `tier3_no_sdts`; they get re-discovered later. |
-| SDT nesting: some SDTs may contain other SDTs (nested tags) | Use `.findall(.//w:sdt)` which descends into nested SDTs. Schema lookup ensures only valid `word_tag` values create artifacts — nested/unknown tags land in `unmapped_fields`. |
-| Value type coercion (YesNo, checkbox, date) | Mirror Tier 2's `decode_button_value` pattern if the schema has `value_options` for that field. Otherwise emit raw string. |
-| python-docx dependency weight | Small (~200KB). Already a project dep — extraction_worker requirements mention it as Tier 3 target. Just needs to move from aspirational to actual. |
-| Tier 3b (table-position fallback) is non-trivial | Explicitly deferred. This PRD ships the 80% case; the table-position fallback is its own PRD once we understand how common SDT-stripping is across the corpus. |
+1. SDT-preserving DOCX files produce canonical artifacts with high field counts.
+2. DOCX-vs-XLSX routing is content-based and no longer extension/magic-byte-only.
+3. SDT-stripped DOCX files get classified into actionable buckets:
+   `docx_no_sdts_but_tables`, `docx_not_cds`, `docx_docling_failed`,
+   or `docx_unstructured`.
+4. Browser projection refresh works exactly like other tiers after successful
+   canonical artifact writes.
 
 ## Non-goals
 
-- **Table-position extraction for SDT-stripped DOCX files** (the Saint Louis case).
-  Deferred to a follow-up PRD.
-- **Reconciling discovery pipeline errors** that archived non-CDS files at legit
-  schools (Stanford 2025-26 is actually the CDS Initiative's summary doc). This is a
-  discovery problem, not an extraction problem.
-- **Schema versioning for older DOCX templates.** The 2025-26 `word_tag` values are
-  the canonical ones; older CDS templates used different tag sets. If a pre-2024
-  DOCX shows up with an older tag scheme, the unmapped tags get logged and we extend
-  the schema. Not in scope here.
+- No broad Docling DOCX corpus drain in PR CI.
+- No LLM repair for DOCX in this PRD.
+- No attempt to support legacy `.doc` binary Word files.
+- No promise that Docling fallback reaches Tier 4-quality field counts on day
+  one.
+- No manual, school-specific DOCX parser unless validation proves one narrow
+  school family is worth a targeted exception.
+
+## Strategy
+
+Use a three-lane pipeline, ordered from most deterministic to most heuristic.
+
+### Lane A — OOXML SDT reader, primary path
+
+Read DOCX as Office Open XML directly and extract populated `w:sdt` controls.
+Map each SDT tag to `schema.fields[*].word_tag`, then emit canonical values by
+question number.
+
+This is the Tier 3 equivalent of Tier 2:
+
+| Tier | Source signal | Mapping key | Expected reliability |
+|---|---|---|---|
+| Tier 2 fillable PDF | AcroForm fields | `pdf_tag` | deterministic |
+| Tier 3 DOCX Lane A | Word SDTs | `word_tag` | deterministic |
+
+Implementation should prefer direct OOXML traversal over high-level
+`python-docx` APIs for the core reader. `python-docx` is fine as a helper, but
+direct XML access makes it easier to handle:
+
+- nested SDTs
+- checkbox SDTs
+- dropdown/date controls
+- placeholder markers
+- repeated section controls
+- field tags attached below different XML levels
+
+If a DOCX has enough mapped, populated SDTs, Lane A wins and no fallback runs.
+
+### Lane B — Docling DOCX structural adapter, fallback path
+
+If Lane A has no mapped SDTs, run Docling on the DOCX and inspect the converted
+document:
+
+1. Export Markdown and pass it through the existing Tier 4 cleaner.
+2. If Docling exposes native table structures for DOCX, adapt those tables into
+   the same shape consumed by `tier4_native_tables.py`.
+3. Record fallback diagnostics even when field count is low.
+
+This is not a separate hand-written Word table parser at first. The creative
+move is to reuse the Tier 4 cleaner's hard-won table/label logic across DOCX
+documents by normalizing DOCX tables into the same table stream. If it works,
+we avoid building "Tier 3b" from scratch. If it does not, the diagnostics tell
+us exactly which table shapes fail.
+
+Lane B artifact producer should be explicit:
+
+- `tier3_docx` for Lane A SDT extraction
+- `tier3_docx_docling` or `tier3_docx_fallback` for Docling fallback
+
+Selected-result logic can prefer Lane A over Lane B for the same document and
+schema version.
+
+### Lane C — render-to-PDF experiment, last resort
+
+For DOCX files with no SDTs and poor Docling-native table output, test a small
+experiment:
+
+1. Render DOCX to PDF with LibreOffice headless.
+2. Run the existing Tier 4 Docling PDF extractor/cleaner on that rendered PDF.
+3. Compare output to Lane B.
+
+This is deliberately **not** part of the default extractor. It is an M4
+validation experiment because it adds operational weight and can introduce
+rendering artifacts. It may be useful for a small class of Word documents whose
+visual layout is clean but whose DOCX XML is awkward.
+
+## Data model and artifact contract
+
+No new table is required.
+
+Successful DOCX extraction writes `cds_artifacts`:
+
+```json
+{
+  "kind": "canonical",
+  "producer": "tier3_docx",
+  "producer_version": "0.1.0",
+  "schema_version": "2025-26",
+  "notes": {
+    "producer": "tier3_docx",
+    "producer_version": "0.1.0",
+    "source_format": "docx",
+    "schema_version": "2025-26",
+    "extraction_path": "sdt",
+    "stats": {
+      "sdt_count": 1204,
+      "mapped_sdt_count": 804,
+      "populated_sdt_count": 769,
+      "values_count": 769,
+      "unmapped_sdt_count": 0
+    },
+    "values": {
+      "C.101": {
+        "value": "1234",
+        "word_tag": "c1_total_first_time_first_year_males_who_applied_total",
+        "question": "..."
+      }
+    },
+    "unmapped_fields": []
+  }
+}
+```
+
+Fallback artifacts use the same canonical shape, with:
+
+```json
+{
+  "producer": "tier3_docx_docling",
+  "extraction_path": "docling_markdown",
+  "fallback_reason": "no_mapped_sdts"
+}
+```
+
+The worker should mark unrecoverable DOCX documents as `failed` with a specific
+reason in logs/artifact notes rather than a generic `stub_docx`.
+
+Suggested failure categories:
+
+| Category | Meaning |
+|---|---|
+| `docx_not_cds` | The file is a summary/change/instructions document, not a filled CDS. |
+| `docx_no_mapped_sdts` | SDTs exist, but none map to schema `word_tag`. |
+| `docx_no_sdts_but_tables` | No SDTs, but visible Word tables exist; fallback candidate. |
+| `docx_docling_failed` | Docling could not convert the DOCX. |
+| `docx_low_fields` | Extraction succeeded but field count is below threshold. |
+
+## Format routing
+
+Fix routing before extraction work.
+
+The current ZIP-signature logic is insufficient. `PK\x03\x04` means "ZIP
+container", not "XLSX". Routing should inspect inner ZIP entries:
+
+| Inner path | Source format |
+|---|---|
+| `word/document.xml` | `docx` |
+| `xl/workbook.xml` | `xlsx` |
+| neither | `other` |
+
+This belongs in the shared sniffing path used by the worker and any tier probe.
+It should not trust filename extension or content-type when bytes disagree.
+
+## Year detection
+
+ADR 0007 made extraction content authoritative for year. DOCX needs parity:
+
+1. Extract plain text from `word/document.xml`.
+2. Search the same year patterns used by PDF detection.
+3. Persist `cds_documents.detected_year` when a unique year span is found.
+4. Do not use the URL/archive `cds_year` as authority.
+
+Docling's text export can be a fallback for year detection, but direct OOXML
+text should be faster and less brittle for DOCX.
+
+## Milestones
+
+### M0 — Corpus and fixture audit
+
+**Goal:** know what DOCX work actually exists before building.
+
+Tasks:
+
+- Query current `cds_documents` for `source_format='docx'`, failed
+  ZIP-routed `xlsx` rows, and manual URLs ending in `.docx`.
+- Download a fixture set into `.context/tier3-docx-fixtures/`.
+- Classify each fixture:
+  - SDT-preserving filled CDS
+  - SDT-stripped but table-preserving CDS
+  - summary/instructions/wrong file
+  - corrupt/unsupported
+- Pick at least:
+  - 3 Kent State-family SDT-preserving docs
+  - 1 James Madison candidate
+  - 1 Saint Louis-style table-only doc
+  - 2 wrong-file summary docs
+
+Exit criteria:
+
+- `docs/plans/prd-007-fixture-audit.md` records counts, school IDs, and
+  expected extraction path per fixture.
+
+### M1 — ZIP sniffer and DOCX year detection
+
+**Goal:** route DOCX correctly without extracting it yet.
+
+Tasks:
+
+- Update byte sniffer to distinguish DOCX vs XLSX by inner ZIP paths.
+- Add DOCX text extraction for year detection.
+- Add unit fixtures for ZIP sniffing:
+  - minimal DOCX
+  - minimal XLSX
+  - ZIP with neither
+  - malformed ZIP
+- Verify no regression for PDF routing.
+
+Exit criteria:
+
+- Misrouted DOCX-as-XLSX rows can be reclassified.
+- Worker still fails DOCX as unimplemented, but for the right reason.
+
+### M2 — Lane A SDT extractor
+
+**Goal:** deterministic canonical artifacts for SDT-preserving DOCX.
+
+Tasks:
+
+- Create `tools/tier3_extractor/extract.py`.
+- Build `word_tag -> schema field` index.
+- Read SDTs directly from OOXML.
+- Skip placeholders.
+- Decode common controls:
+  - plain text
+  - checkbox/boolean
+  - dropdown values
+  - dates
+- Emit canonical JSON in the same shape as Tier 1/Tier 2 artifacts.
+- Track stats and unmapped SDTs.
+- Add CLI for local inspection.
+
+Exit criteria:
+
+- Kent State-family fixture produces hundreds of mapped values.
+- Hand-checked sample values match the source DOCX.
+- Wrong-file summary docs do not produce plausible canonical artifacts.
+
+### M3 — Worker integration and projection refresh
+
+**Goal:** DOCX drains behave like every other extraction tier.
+
+Tasks:
+
+- Add `source_format == "docx"` worker route.
+- Add dependency to extraction worker requirements.
+- Write `producer='tier3_docx'`, version `0.1.0`.
+- Respect existing artifact compatibility checks.
+- Refresh browser projection after successful DOCX extraction.
+- Add summary/log counters for DOCX-specific failure categories.
+
+Exit criteria:
+
+- Running the worker on a single SDT-preserving DOCX writes a canonical artifact
+  and projection rows.
+- Running on a wrong-file DOCX fails cleanly with `docx_not_cds` or equivalent.
+
+### M4 — Docling fallback spike
+
+**Goal:** decide whether Docling is good enough for SDT-stripped Word docs.
+
+Tasks:
+
+- Run Docling `DocumentConverter` on the SDT-stripped fixtures.
+- Export Markdown and run Tier 4 cleaner against it.
+- If Docling exposes native DOCX tables, adapt them to the native-table overlay
+  path and compare against Markdown-only.
+- Compare against a render-to-PDF experiment on the same fixtures.
+- Record per-fixture:
+  - field count
+  - parse errors
+  - value-level spot checks
+  - runtime
+  - failure class
+
+Exit criteria:
+
+- Decision documented:
+  - ship Lane B fallback now
+  - defer Lane B and only classify table-only DOCX
+  - invest in a bespoke Word table parser
+
+### M5 — Small production drain
+
+**Goal:** ship the high-confidence DOCX subset.
+
+Tasks:
+
+- Requeue only SDT-preserving DOCX fixtures/candidates first.
+- Drain with bounded ops worker or laptop run.
+- Refresh projection document-by-document.
+- Write a short findings report with:
+  - docs processed
+  - successes/failures
+  - mean fields
+  - low-field docs
+  - wrong-file count
+  - remaining table-only candidates
+
+Exit criteria:
+
+- Known Kent State-family DOCX files are extracted.
+- Queue is clean.
+- Backlog has follow-ups for table-only DOCX if needed.
+
+## Validation
+
+### Unit tests
+
+- ZIP sniffer distinguishes XLSX/DOCX.
+- DOCX year detection handles normal CDS title text.
+- SDT reader extracts nested/plain SDTs.
+- Placeholder SDTs are skipped.
+- Checkbox/dropdown/date SDTs decode predictably.
+- Unknown `word_tag` values go to `unmapped_fields`.
+
+### Fixture tests
+
+For each curated fixture:
+
+- expected extraction path
+- expected minimum field count
+- expected failure category if not extractable
+- 5-10 hand-checked field assertions for successful fixtures
+
+### Regression tests
+
+- Tier 1 XLSX sample still routes as XLSX.
+- Tier 2 PDF sample still routes as PDF.
+- Tier 4 PDF sample still routes as PDF and extracts.
+- Wrong-file DOCX does not create a canonical artifact with misleading values.
+
+## Operational plan
+
+DOCX is suitable for the ops worker path, not regular PR CI:
+
+- PR CI runs unit/fixture tests only.
+- Manual GitHub Action or laptop run drains pending DOCX rows.
+- Full corpus probing can run from a laptop because it downloads source files.
+- The drain summary should flag `docx_low_fields` and `docx_not_cds` so discovery
+  cleanup can follow.
+
+## Risks and mitigations
+
+| Risk | Mitigation |
+|---|---|
+| Some DOCX files are official templates but have no SDTs | Lane B/M4 measures Docling fallback before building a bespoke table parser. |
+| Summary-of-changes DOCX files look CDS-ish by URL | Add explicit wrong-file classifier; do not write canonical artifacts from low-confidence files. |
+| Word tags drift by year | Use PRD 014 schema dispatch. Unknown tags stay unmapped until the year schema is added. |
+| Docling DOCX conversion loses table semantics | Treat Docling as fallback only; compare Markdown vs native tables vs render-to-PDF before shipping Lane B broadly. |
+| LibreOffice rendering is operationally heavy | Keep it as an experiment, not default extraction. |
+| python-docx hides SDT details | Core Lane A reader should traverse OOXML directly; use python-docx only where it helps. |
+
+## Decision points
+
+1. **After M0:** Is the current DOCX corpus big enough to justify immediate
+   implementation, or should this wait for more DOCX publishers?
+2. **After M2:** Are SDT-preserving results strong enough to ship Lane A alone?
+3. **After M4:** Is Docling fallback good enough for table-only DOCX, or should
+   table-only documents remain deferred?
+
+## Recommended path
+
+Build M1-M3 first. That is the boring, high-confidence slice:
+
+- content-based DOCX routing
+- direct SDT extraction
+- worker integration
+- projection refresh
+
+Then pause. Run M4 as a measurement spike before committing to table-only DOCX
+support. If Docling gets enough fields from SDT-stripped Word tables, ship Lane B.
+If it does not, leave those documents classified and defer a bespoke Word table
+parser until the corpus justifies it.
