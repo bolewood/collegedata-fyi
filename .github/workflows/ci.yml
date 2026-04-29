@@ -33,6 +33,8 @@ jobs:
         run: python -m unittest tools.browser_backend.project_browser_data_test
       - name: Run Tier 4 cleaner tests
         run: python -m unittest discover -s tools/extraction_worker -p "test_*.py"
+      - name: Run scorecard loader tests
+        run: python -m unittest tools.scorecard.test_load_directory
 
   migrations:
     # Structural sanity checks on supabase/migrations/. Verifies every

@@ -21,6 +21,8 @@ is below.
 
 - [`backfill_ipeds_ids.py`](./backfill_ipeds_ids.py) — one-shot fill of `cds_documents.ipeds_id` for rows inserted before the migration shipped. New rows pick up `ipeds_id` automatically via the archive edge functions (`_shared/archive.ts` reads it off `SchoolInput`).
 - [`refresh_summary.py`](./refresh_summary.py) — annual upsert of `scorecard_summary` from the Scorecard Most-Recent Institution CSV. Schema-drift guard catches renamed columns; per-row dedup prevents `ON CONFLICT` failures; `--only-cds` scopes to schools we actually have CDS docs for.
+- [`load_directory.py`](./load_directory.py) — PRD 015 M1. Refreshes `institution_directory` and `institution_slug_crosswalk` from the same Scorecard CSV. Applies the MVP in-scope filter (active, undergraduate-serving, two-or-four-year, degree-granting) and records `exclusion_reason` on out-of-scope rows. Preserves `schools.yaml` slugs where IPEDS IDs match; generates deterministic slugs for Scorecard-only rows with collision resolution `state → city → ipeds_id`. Writes a refresh summary to `scratch/scorecard/directory-refresh-<year>.json`.
+- [`test_load_directory.py`](./test_load_directory.py) — unit tests for the loader's pure functions (slug determinism, collision tiers, schools.yaml preservation, in-scope filter, UNITID normalization, crosswalk construction).
 
 ## Migrations
 
@@ -32,6 +34,7 @@ Apply in order — the third depends on the first via `cds_manifest.ipeds_id`, a
 | `20260420170100_scorecard_summary.sql` | Creates `scorecard_summary` (43 columns, PK on `ipeds_id`, RLS-gated public read). |
 | `20260420170200_cds_scorecard_view.sql` | Creates the joined `cds_scorecard` view with `WITH (security_invoker = true)`. |
 | `20260420180000_scorecard_pell_remap.sql` | Drops `median_debt_non_pell` and `grad_rate_non_pell` (Scorecard removed the underlying CSV columns between the V2 plan and the March 2026 release). Recreates `cds_scorecard` without those fields. |
+| `20260429113212_institution_directory.sql` | PRD 015 M1. Adds `institution_directory` (one row per Title-IV institution, with `in_scope` flag) and `institution_slug_crosswalk` (every alias for an institution → its canonical `school_id`). RLS-gated public read. Populated by `load_directory.py`. |
 
 ## First-time setup
 
