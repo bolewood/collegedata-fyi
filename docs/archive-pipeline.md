@@ -17,6 +17,7 @@ As of April 28, 2026, this document covers the full operating chain:
 2. **Structured extraction** in the Python worker across shipped Tiers 1, 2, 4, 5, and 6.
 3. **Tier 4 LLM fallback overlay** for selected low-coverage flattened PDFs.
 4. **Queryable browser projection** into `cds_fields` and `school_browser_rows`.
+5. **GitHub Actions wrappers** for boring PR CI and bounded ops drains.
 
 The archive layer stores immutable source bytes and provenance. It does not
 decide which extracted values are canonical for consumers; that decision happens
@@ -171,6 +172,32 @@ Projection freshness has two paths:
   changes, metadata changes, or corpus-wide fallback backfills:
   `python tools/browser_backend/project_browser_data.py --full-rebuild --apply`.
 
+### GitHub Actions workers
+
+There are two Actions surfaces, and they are intentionally separate:
+
+- `.github/workflows/ci.yml` is boring PR/push CI. It runs Python unit tests
+  for the browser projection and extraction worker, Deno tests for Supabase
+  functions, and the Next.js typecheck/build. It deliberately does not run
+  Docling corpus drains, live extraction work, projection rebuilds, or any
+  service-role database writes.
+- `.github/workflows/ops-extraction-worker.yml` is the bounded ops path for
+  production-ish extraction work. It runs on a small daily schedule and can be
+  started manually with `limit`, `school`, `include_failed`,
+  `seed_projection_metadata`, and `low_field_threshold` inputs. It requires
+  `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` GitHub Secrets, installs the
+  extraction worker dependencies, then calls `tools/extraction_worker/worker.py`
+  with `--limit`, `--summary-json`, and the requested filters. Projection
+  refresh is enabled by default; metadata seeding is controlled by the workflow
+  input.
+
+The ops workflow caps GitHub-hosted runs at 100 rows. Full corpus drains,
+large Docling/OCR backfills, and expensive repair experiments still belong on a
+laptop or self-hosted runner. Every ops run uploads an
+`extraction-worker-summary` artifact containing `summary.json` and
+`worker.log`; the summary includes processed count, failures, mean fields,
+low-field docs, extraction counts, and projection counts.
+
 ### Files
 
 | Purpose | Path |
@@ -192,6 +219,7 @@ Projection freshness has two paths:
 | Browser projection worker | `tools/browser_backend/project_browser_data.py` |
 | Atomic document projection replacement RPC | `supabase/migrations/20260428170000_atomic_browser_projection_refresh.sql` |
 | Minimal CI | `.github/workflows/ci.yml` |
+| Bounded ops extraction worker workflow | `.github/workflows/ops-extraction-worker.yml` |
 | Unit tests (resolver, year normalizer, hosting inference, probe outcome cooldowns, schools.yaml validation, browser search) | `supabase/functions/**/*.test.ts` |
 
 ## Storage path convention
