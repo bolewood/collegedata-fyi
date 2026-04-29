@@ -58,15 +58,6 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 ### Queryable browser backend polish
 
-- **Scheduled/manual ops worker path.** The extraction worker now refreshes
-  `cds_fields` / `school_browser_rows` document-by-document after successful
-  extraction writes, and full rebuilds remain available via
-  `project_browser_data.py --full-rebuild --apply`. Remaining operational work:
-  add a manual-dispatch or scheduled GitHub Action for small pending-row drains,
-  followed by a projection summary artifact with processed count, failures,
-  mean fields, and low-field docs. Keep full-corpus Docling drains on a laptop
-  or self-hosted runner, not regular hosted CI. **Effort:** ~1-2 hours.
-
 - **Audit Tier 1 XLSX academic-profile field mapping.** PRD 012 Phase 0 found SAT/ACT `cds_fields` parse errors in XLSX rows where C9 fields contain values such as "Very Important", "Important", "Considered", "Percent", or "Number". That points to schema/template alignment drift in the XLSX extractor for at least some 2024-25 workbooks. The PRD 012 browser projection now range-checks and nulls invalid score values, so these should not leak into `school_browser_rows`, but the underlying Tier 1 mapping still needs a focused audit before score fields are treated as launch-certified for XLSX publishers. **Effort:** ~2 hours.
 
 - **Move `browser-search` ranking into SQL if it becomes hot.** The MVP Edge Function reads the materialized `school_browser_rows` table and applies the pure ranking contract in TypeScript. That kept the launch slice small and testable. If corpus size or traffic grows, port the same required-field and latest-per-school semantics into a Postgres RPC using window functions. **Effort:** ~2-3 hours.
@@ -121,9 +112,11 @@ Reverse chronological.
 
 ### 2026-04-28
 
+- **[RESOLVED 2026-04-28] ~~Scheduled/manual ops worker path.~~** Added `.github/workflows/ops-extraction-worker.yml`, separate from PR CI. It supports a daily small pending-row drain and manual dispatch with `limit`, `school`, `include_failed`, and low-field threshold inputs. GitHub-hosted runs are capped at 100 rows; full Docling corpus drains stay on a laptop or self-hosted runner. `worker.py` now writes `--summary-json` with processed count, failures, mean fields, low-field docs, extraction counts, and browser projection counts, and the workflow uploads that summary plus the worker log as an artifact.
+
 - **[RESOLVED 2026-04-28] ~~Incremental browser projection refresh + minimal CI.~~** Extraction drains now refresh `cds_fields` and `school_browser_rows` per newly written canonical artifact, with `--skip-projection-refresh` available for isolation runs and `--seed-projection-metadata` available after schema/alias changes. Per-document replacement is atomic through `replace_browser_projection_for_document(...)`. Full projection rebuilds remain the operator path after migrations or projection logic changes. Added minimal GitHub Actions CI for Python unit tests, Supabase Deno tests, and a Next.js build.
 
-- **[RESOLVED 2026-04-28] ~~Browser academic-profile backend expansion (PRD 012).~~** Shipped SAT/ACT submission-rate and percentile columns into `school_browser_rows`, added companion submit-rate metadata to `browser-search`, and refreshed production after the Tier 4 v0.3 drain. Public `cds_fields` moved from 113,836 to 217,910 rows (+104,074, +91.4%); mean projected field rows per processed `2024+` document moved from 224.5 to 433.2. `school_browser_rows` now has 469 rows after stale projection rows were cleared before rebuild. SAT/ACT fields are backend-queryable and exported, but not exposed as default visible filters until the UI can show submit-rate context. Follow-ups remain open above for the scheduled ops worker path, the XLSX academic-profile mapping audit, and future score-filter UI.
+- **[RESOLVED 2026-04-28] ~~Browser academic-profile backend expansion (PRD 012).~~** Shipped SAT/ACT submission-rate and percentile columns into `school_browser_rows`, added companion submit-rate metadata to `browser-search`, and refreshed production after the Tier 4 v0.3 drain. Public `cds_fields` moved from 113,836 to 217,910 rows (+104,074, +91.4%); mean projected field rows per processed `2024+` document moved from 224.5 to 433.2. `school_browser_rows` now has 469 rows after stale projection rows were cleared before rebuild. SAT/ACT fields are backend-queryable and exported, but not exposed as default visible filters until the UI can show submit-rate context. Follow-ups remain open above for the XLSX academic-profile mapping audit and future score-filter UI.
 
 ### 2026-04-27
 
