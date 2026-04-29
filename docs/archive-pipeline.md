@@ -376,6 +376,17 @@ python3 tools/ops/directory_enqueue_batches.py --apply --batches 75,150,250
 # If local polling is interrupted after enqueue, resume the same run_id
 # without enqueueing another batch.
 python3 tools/ops/directory_enqueue_batches.py --resume-run-id <run_id>
+
+# Overnight mode from an operator Mac: keep the machine awake, stream logs,
+# drain repeated 25-row batches, stop on permanent_other spikes, and warn
+# on transient-heavy batches without stopping.
+caffeinate -dimsu python3 -u tools/ops/directory_enqueue_batches.py \
+  --apply \
+  --batches 25,25,25,25,25,25,25,25,25,25 \
+  --poll-interval-seconds 30 \
+  --stall-timeout-minutes 20 \
+  --max-transient-rate 0.25 \
+  --max-permanent-other-rate 0.05
 ```
 
 The wrapper reads `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` from
@@ -410,8 +421,13 @@ Batch gate:
 
 Stop the rollout if any of these happen:
 
-- More than 10% of a batch ends with unexpected `last_outcome` values
-  `transient` or `permanent_other`.
+- More than 5% of a batch ends with unexpected `permanent_other`
+  outcomes.
+- `transient` outcomes exceed the configured warning gate and the run
+  was started with `--stop-on-transient-gate`. For overnight drains,
+  transient-heavy batches are logged and reviewed in the morning because
+  they usually mean flaky school infrastructure rather than product
+  corruption.
 - The queue stalls for more than 20 minutes with no additional terminal
   rows.
 - `directory-enqueue` or `refresh-coverage` returns an auth, load, or

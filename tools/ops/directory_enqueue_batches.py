@@ -24,7 +24,8 @@ from typing import Any, Callable, Iterable
 
 
 ACTIVE_QUEUE_STATUSES = {"ready", "processing"}
-UNEXPECTED_OUTCOMES = {"transient", "permanent_other"}
+TRANSIENT_OUTCOME = "transient"
+PERMANENT_OTHER_OUTCOME = "permanent_other"
 WATCH_STATUSES = [
     "not_checked",
     "no_public_cds_found",
@@ -37,6 +38,12 @@ DEFAULT_BATCHES = [25, 75, 150, 250]
 
 class OpsError(RuntimeError):
     """Raised for operator-visible failures that should stop the rollout."""
+
+
+def configure_output_buffering() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(line_buffering=True)
 
 
 @dataclass(frozen=True)
@@ -253,15 +260,20 @@ def summarize_queue_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
     outcomes = Counter(row.get("last_outcome") for row in rows if row.get("last_outcome"))
     active = sum(statuses.get(status, 0) for status in ACTIVE_QUEUE_STATUSES)
     terminal = len(rows) - active
-    unexpected = sum(outcomes.get(outcome, 0) for outcome in UNEXPECTED_OUTCOMES)
+    transient = outcomes.get(TRANSIENT_OUTCOME, 0)
+    permanent_other = outcomes.get(PERMANENT_OTHER_OUTCOME, 0)
     return {
         "total": len(rows),
         "active": active,
         "terminal": terminal,
         "statuses": dict(statuses),
         "last_outcomes": dict(outcomes),
-        "unexpected_outcomes": unexpected,
-        "unexpected_outcome_rate": unexpected / len(rows) if rows else 0.0,
+        "transient_outcomes": transient,
+        "transient_outcome_rate": transient / len(rows) if rows else 0.0,
+        "permanent_other_outcomes": permanent_other,
+        "permanent_other_outcome_rate": permanent_other / len(rows) if rows else 0.0,
+        "unexpected_outcomes": transient + permanent_other,
+        "unexpected_outcome_rate": (transient + permanent_other) / len(rows) if rows else 0.0,
     }
 
 
@@ -340,14 +352,34 @@ def assert_histogram_plausible(before: dict[str, int], after: dict[str, int]) ->
         raise OpsError("Coverage histogram lost all not_checked rows")
 
 
-def enforce_unexpected_outcome_gate(summary: dict[str, Any], max_rate: float) -> None:
-    rate = float(summary.get("unexpected_outcome_rate", 0.0))
+def enforce_outcome_gates(
+    summary: dict[str, Any],
+    *,
+    max_transient_rate: float,
+    max_permanent_other_rate: float,
+    stop_on_transient_gate: bool,
+) -> None:
     total = int(summary.get("total", 0))
-    if total and rate > max_rate:
+    if not total:
+        return
+
+    permanent_other_rate = float(summary.get("permanent_other_outcome_rate", 0.0))
+    if permanent_other_rate > max_permanent_other_rate:
         raise OpsError(
-            f"Unexpected archive outcomes exceeded gate: {rate:.1%} > {max_rate:.1%} "
-            f"({summary.get('unexpected_outcomes', 0)} of {total})"
+            f"permanent_other outcomes exceeded gate: {permanent_other_rate:.1%} > "
+            f"{max_permanent_other_rate:.1%} "
+            f"({summary.get('permanent_other_outcomes', 0)} of {total})"
         )
+
+    transient_rate = float(summary.get("transient_outcome_rate", 0.0))
+    if transient_rate > max_transient_rate:
+        message = (
+            f"transient outcomes exceeded warning gate: {transient_rate:.1%} > "
+            f"{max_transient_rate:.1%} ({summary.get('transient_outcomes', 0)} of {total})"
+        )
+        if stop_on_transient_gate:
+            raise OpsError(message)
+        print(f"WARNING: {message}")
 
 
 def run_batch(
@@ -360,7 +392,9 @@ def run_batch(
     timeout_seconds: int,
     poll_interval_seconds: int,
     stall_timeout_seconds: int,
-    unexpected_outcome_rate: float,
+    max_transient_rate: float,
+    max_permanent_other_rate: float,
+    stop_on_transient_gate: bool,
 ) -> dict[str, Any]:
     print(f"\n== Batch limit={limit} ==")
     before = fetch_coverage_histogram(client)
@@ -439,7 +473,12 @@ def run_batch(
     logger.write("refresh", **refresh_report)
     print_histogram("Coverage after", after)
     print_json("Watched status delta", delta)
-    enforce_unexpected_outcome_gate(queue_summary, unexpected_outcome_rate)
+    enforce_outcome_gates(
+        queue_summary,
+        max_transient_rate=max_transient_rate,
+        max_permanent_other_rate=max_permanent_other_rate,
+        stop_on_transient_gate=stop_on_transient_gate,
+    )
 
     return {
         "dry_run": dry_run_report,
@@ -458,7 +497,9 @@ def resume_run(
     timeout_seconds: int,
     poll_interval_seconds: int,
     stall_timeout_seconds: int,
-    unexpected_outcome_rate: float,
+    max_transient_rate: float,
+    max_permanent_other_rate: float,
+    stop_on_transient_gate: bool,
 ) -> dict[str, Any]:
     print(f"\n== Resume run_id={run_id} ==")
     before = fetch_coverage_histogram(client)
@@ -492,7 +533,12 @@ def resume_run(
     logger.write("resume_refresh", **refresh_report)
     print_histogram("Coverage after", after)
     print_json("Watched status delta", delta)
-    enforce_unexpected_outcome_gate(queue_summary, unexpected_outcome_rate)
+    enforce_outcome_gates(
+        queue_summary,
+        max_transient_rate=max_transient_rate,
+        max_permanent_other_rate=max_permanent_other_rate,
+        stop_on_transient_gate=stop_on_transient_gate,
+    )
 
     return {"run_id": run_id, "queue": queue_summary, "refresh": refresh_report}
 
@@ -544,12 +590,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--poll-interval-seconds", type=int, default=30)
     parser.add_argument("--timeout-minutes", type=int, default=360)
     parser.add_argument("--stall-timeout-minutes", type=int, default=20)
-    parser.add_argument("--unexpected-outcome-rate", type=float, default=0.10)
+    parser.add_argument("--max-transient-rate", type=float, default=0.25, help="Warn when terminal transient outcomes exceed this rate")
+    parser.add_argument("--max-permanent-other-rate", type=float, default=0.05, help="Stop when terminal permanent_other outcomes exceed this rate")
+    parser.add_argument("--stop-on-transient-gate", action="store_true", help="Treat --max-transient-rate as a stop gate instead of a warning")
     parser.add_argument("--baseline-sample-size", type=int, default=10)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
+    configure_output_buffering()
     parser = build_parser()
     args = parser.parse_args(argv)
 
@@ -576,7 +625,9 @@ def main(argv: list[str] | None = None) -> int:
                 timeout_seconds=args.timeout_minutes * 60,
                 poll_interval_seconds=args.poll_interval_seconds,
                 stall_timeout_seconds=args.stall_timeout_minutes * 60,
-                unexpected_outcome_rate=args.unexpected_outcome_rate,
+                max_transient_rate=args.max_transient_rate,
+                max_permanent_other_rate=args.max_permanent_other_rate,
+                stop_on_transient_gate=args.stop_on_transient_gate,
             )
             logger.write("completed", reports=[report])
             print(f"\nCompleted. JSONL log: {logger.path}")
@@ -613,7 +664,9 @@ def main(argv: list[str] | None = None) -> int:
                     timeout_seconds=args.timeout_minutes * 60,
                     poll_interval_seconds=args.poll_interval_seconds,
                     stall_timeout_seconds=args.stall_timeout_minutes * 60,
-                    unexpected_outcome_rate=args.unexpected_outcome_rate,
+                    max_transient_rate=args.max_transient_rate,
+                    max_permanent_other_rate=args.max_permanent_other_rate,
+                    stop_on_transient_gate=args.stop_on_transient_gate,
                 )
             )
 

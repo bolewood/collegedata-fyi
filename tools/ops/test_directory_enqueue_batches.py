@@ -107,7 +107,9 @@ class DirectoryEnqueueBatchTests(unittest.TestCase):
                     timeout_seconds=60,
                     poll_interval_seconds=1,
                     stall_timeout_seconds=30,
-                    unexpected_outcome_rate=0.10,
+                    max_transient_rate=0.25,
+                    max_permanent_other_rate=0.05,
+                    stop_on_transient_gate=False,
                 )
 
         self.assertFalse(report["applied"])
@@ -130,7 +132,9 @@ class DirectoryEnqueueBatchTests(unittest.TestCase):
                     timeout_seconds=60,
                     poll_interval_seconds=1,
                     stall_timeout_seconds=30,
-                    unexpected_outcome_rate=0.10,
+                    max_transient_rate=0.25,
+                    max_permanent_other_rate=0.05,
+                    stop_on_transient_gate=False,
                 )
             log_lines = logger.path.read_text(encoding="utf-8").splitlines()
 
@@ -213,6 +217,42 @@ class DirectoryEnqueueBatchTests(unittest.TestCase):
             ),
             {"cds_available_current": 2, "extract_failed": 1, "not_checked": -3},
         )
+
+    def test_transient_gate_warns_without_stopping_by_default(self):
+        summary = batches.summarize_queue_rows(
+            [
+                {"status": "failed_permanent", "last_outcome": "transient"},
+                {"status": "failed_permanent", "last_outcome": "transient"},
+                {"status": "failed_permanent", "last_outcome": "no_pdfs_found"},
+                {"status": "done", "last_outcome": "marked_removed"},
+            ]
+        )
+
+        with redirect_stdout(StringIO()) as out:
+            batches.enforce_outcome_gates(
+                summary,
+                max_transient_rate=0.25,
+                max_permanent_other_rate=0.05,
+                stop_on_transient_gate=False,
+            )
+
+        self.assertIn("WARNING: transient outcomes exceeded", out.getvalue())
+
+    def test_permanent_other_gate_stops(self):
+        summary = batches.summarize_queue_rows(
+            [
+                {"status": "failed_permanent", "last_outcome": "permanent_other"},
+                {"status": "failed_permanent", "last_outcome": "no_pdfs_found"},
+            ]
+        )
+
+        with self.assertRaises(batches.OpsError):
+            batches.enforce_outcome_gates(
+                summary,
+                max_transient_rate=0.25,
+                max_permanent_other_rate=0.05,
+                stop_on_transient_gate=False,
+            )
 
 
 class FakeClock:
