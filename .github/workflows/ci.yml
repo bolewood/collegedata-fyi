@@ -34,6 +34,30 @@ jobs:
       - name: Run Tier 4 cleaner tests
         run: python -m unittest discover -s tools/extraction_worker -p "test_*.py"
 
+  migrations:
+    # Spin up the local Supabase stack and apply every migration in
+    # supabase/migrations/ via `supabase db reset`. Catches malformed
+    # SQL, ordering bugs, and the kind of drift where a migration is
+    # applied to prod from a feature branch but never lands on main —
+    # the next contributor's fresh `supabase db reset` would fail on
+    # whatever depended on the missing schema change. PRD 014's
+    # canonical_field_equivalence.sql was exactly that scenario.
+    #
+    # Slow (~2-3 min for the docker pull + container boot) but uses the
+    # canonical Supabase tooling so storage/auth/extensions schemas are
+    # set up the way migrations expect.
+    name: Migrations apply cleanly
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start local Supabase (DB only — skip heavy services)
+        run: supabase start -x studio,imgproxy,inbucket,realtime,edge-runtime,vector,pgbouncer
+      - name: Verify migrations applied via db reset
+        run: supabase db reset --no-seed
+
   deno:
     name: Supabase function tests
     runs-on: ubuntu-latest

@@ -59,6 +59,24 @@ tools/extraction_worker/.venv/
 # Operational run logs — too noisy for the repo
 drain-*.log
 
+# Operational outputs from tools/ scripts. Anything that's a one-off
+# run artifact (audit JSON dumps, CSV worklists, drain logs) should be
+# written to scratch/ instead of into tools/. These patterns are a
+# safety net for legacy scripts that still write here directly.
+tools/data_quality/*.json
+tools/data_quality/*.jsonl
+tools/data_quality/*.csv
+tools/data_quality/kids-worklist/
+tools/mirrors/**/*.jsonl
+
+# Repo-root operational artifacts (handoff archives, ad-hoc screenshots,
+# data dumps). Anchored to repo root with leading slash so files inside
+# tracked subdirs are unaffected.
+/*.png
+/*.zip
+/*.csv
+/*.jsonl
+
 # Playwright MCP local browser profile / cache
 .playwright-mcp/
 .vercel
