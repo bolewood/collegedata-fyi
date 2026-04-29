@@ -213,6 +213,7 @@ low-field docs, extraction counts, and projection counts.
 | Resolver dev entry (dry-run, no writes) | `supabase/functions/discover/index.ts` |
 | Queue consumer (30 s cron target + `force_school` backfill) | `supabase/functions/archive-process/index.ts` |
 | Monthly seeder (daily cron target, deterministic per-month run_id) | `supabase/functions/archive-enqueue/index.ts` |
+| Operator-triggered seeder for Scorecard-only directory rows (PRD 015 M2) | `supabase/functions/directory-enqueue/index.ts` |
 | Format badge / source-format presentation | `supabase/functions/_shared/format.ts`, `web/src/lib/format.ts` |
 | Extraction worker | `tools/extraction_worker/worker.py` |
 | Tier 4 LLM fallback worker | `tools/extraction_worker/llm_fallback_worker.py` |
@@ -279,11 +280,13 @@ touching the database or Storage.
    supabase db push
    ```
 
-2. Deploy all three edge functions:
+2. Deploy all four edge functions:
 
    ```bash
-   supabase functions deploy discover archive-process archive-enqueue
+   supabase functions deploy discover archive-process archive-enqueue directory-enqueue
    ```
+
+   `directory-enqueue` is operator-triggered only — no pg_cron entry.
 
 3. Create the two Vault secrets in the dashboard SQL editor. These are
    required for pg_cron to authenticate its `net.http_post` calls:
@@ -339,6 +342,53 @@ touching the database or Storage.
    ```
 
 ### Day-two operations
+
+**Enqueue Scorecard-only directory schools for discovery** (PRD 015 M2 —
+the path that turns `not_checked` rows into real archive attempts so
+coverage status precedence has actual data to read). Operator-triggered;
+no cron. `limit` is required so every batch is sized intentionally:
+
+```bash
+cd /Users/santhonys/Projects/Owen/colleges/collegedata-fyi
+set -a && source .env && set +a
+
+# Dry-run: see what the next batch of 50 high-enrollment schools would be.
+curl -X POST "$SUPABASE_URL/functions/v1/directory-enqueue?limit=50&dry_run=true" \
+     -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
+
+# Real run: enqueue 50 in-scope schools with at least 2,000 undergrads.
+curl -X POST "$SUPABASE_URL/functions/v1/directory-enqueue?limit=50&min_enrollment=2000" \
+     -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
+
+# State-scoped run.
+curl -X POST "$SUPABASE_URL/functions/v1/directory-enqueue?limit=25&state=NY" \
+     -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
+```
+
+Response shape:
+
+```json
+{
+  "mode": "enqueue",
+  "run_id": "<uuid>",
+  "enqueued": 50,
+  "considered": 5421,
+  "skipped_existing": 0,
+  "skipped": {
+    "schools_yaml_covered": 837,
+    "already_has_cds": 0,
+    "in_flight": 0,
+    "cooldown": 0,
+    "no_website_url": 12,
+    "below_min_enrollment": 4522
+  }
+}
+```
+
+Rows are inserted with `source = 'institution_directory'` and flow
+through the same `archive-process` worker as schools.yaml-sourced rows.
+The worker runs every 30 seconds, so a 50-school batch drains in ~25
+minutes with the existing single-row claim cadence.
 
 **Force-archive one school** (e.g. to re-try a `failed_permanent` row or
 debug a resolver regression):

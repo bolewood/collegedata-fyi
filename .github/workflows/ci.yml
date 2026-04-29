@@ -95,7 +95,7 @@ jobs:
         with:
           deno-version: v2.x
       - name: Run Deno tests
-        run: deno test --allow-env --allow-read supabase/functions/_shared/*.test.ts supabase/functions/browser-search/*.test.ts
+        run: deno test --allow-env --allow-read supabase/functions/_shared/*.test.ts supabase/functions/browser-search/*.test.ts supabase/functions/directory-enqueue/*.test.ts
 
   web:
     name: Next.js build
