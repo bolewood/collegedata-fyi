@@ -92,38 +92,45 @@ declare
   found_count int;
   first_school text;
 begin
+  -- Fixture names embed the sentinel "m4xq" so prod data can never
+  -- collide with the test queries. A self-test that searched for
+  -- common words like "arts" or "college" would race with real
+  -- in-scope rows for the LIMIT slots and fail nondeterministically
+  -- depending on prod enrollment counts.
   insert into public.institution_directory (
     ipeds_id, school_id, school_name, scorecard_data_year, in_scope, exclusion_reason, undergraduate_enrollment
   ) values
-    (ipeds_a, '__test_search_alpha__', 'Alpha University',          '2024', true, null, 5000),
-    (ipeds_b, '__test_search_beta__',  'Beta College',              '2024', true, null, 1000),
-    (ipeds_c, '__test_search_gamma__', 'Gamma School of the Arts',  '2024', true, null, 500);
+    (ipeds_a, '__test_search_alpha__', 'M4xq Alpha University',     '2024', true, null, 5000),
+    (ipeds_b, '__test_search_beta__',  'M4xq Beta College',         '2024', true, null, 1000),
+    (ipeds_c, '__test_search_gamma__', 'Gamma School of the M4xq',  '2024', true, null, 500);
 
   perform public.refresh_institution_cds_coverage();
 
   -- Exact name match returns the right row.
   select count(*) into found_count
-    from public.search_institutions('Alpha University', 5)
+    from public.search_institutions('M4xq Alpha University', 5)
    where school_id = '__test_search_alpha__';
   if found_count <> 1 then
-    raise exception 'M4 search self-test FAIL: exact match for "Alpha University" returned % rows', found_count;
+    raise exception 'M4 search self-test FAIL: exact match for fixture returned % rows', found_count;
   end if;
 
-  -- Prefix match returns Beta first (only one Beta).
+  -- Prefix match: "M4xq Beta" is unique to fixtures.
   select school_id into first_school
-    from public.search_institutions('beta', 5)
+    from public.search_institutions('m4xq beta', 5)
    where school_id like '__test_search_%'
    order by 1 limit 1;
   if first_school is distinct from '__test_search_beta__' then
-    raise exception 'M4 search self-test FAIL: prefix "beta" did not return beta first, got %', first_school;
+    raise exception 'M4 search self-test FAIL: prefix "m4xq beta" did not return beta first, got %', first_school;
   end if;
 
-  -- Substring match catches name-internal tokens.
+  -- Substring match catches name-internal tokens. The sentinel "m4xq"
+  -- appears at the end of Gamma's name, exercising the substring
+  -- branch (school_name does NOT start with "m4xq" for Gamma).
   select count(*) into found_count
-    from public.search_institutions('arts', 5)
+    from public.search_institutions('m4xq', 1000)
    where school_id = '__test_search_gamma__';
   if found_count <> 1 then
-    raise exception 'M4 search self-test FAIL: substring "arts" did not return Gamma School of the Arts';
+    raise exception 'M4 search self-test FAIL: substring "m4xq" did not return Gamma fixture';
   end if;
 
   -- Empty query returns zero rows (length filter).
