@@ -96,14 +96,12 @@ create table public.institution_cds_coverage (
 
   can_submit_source          boolean not null,
 
-  search_text                text generated always as (
-    lower(
-      school_name
-      || ' ' || coalesce(array_to_string(aliases, ' '), '')
-      || ' ' || coalesce(city, '')
-      || ' ' || coalesce(state, '')
-    )
-  ) stored,
+  -- search_text is populated at refresh time, not as a generated
+  -- column: array_to_string is STABLE (locale-dependent), not
+  -- IMMUTABLE, which Postgres rejects for STORED generation
+  -- expressions. Computing in the refresh function gives the same
+  -- result without that constraint.
+  search_text                text not null,
 
   updated_at                 timestamptz not null default now()
 );
@@ -434,6 +432,7 @@ begin
     latest_field_count,
     last_checked_at,
     can_submit_source,
+    search_text,
     updated_at
   )
   select
@@ -473,6 +472,16 @@ begin
       'source_not_automatically_accessible',
       'not_checked'
     )                                                              as can_submit_source,
+    -- Computed at refresh time rather than via a generated column
+    -- because array_to_string is STABLE (locale-dependent), not
+    -- IMMUTABLE, and Postgres rejects STABLE expressions in STORED
+    -- generation. Same result, no immutability constraint.
+    lower(
+      school_name
+      || ' ' || coalesce(array_to_string(aliases, ' '), '')
+      || ' ' || coalesce(city, '')
+      || ' ' || coalesce(state, '')
+    )                                                              as search_text,
     now()                                                          as updated_at
   from resolved;
 
