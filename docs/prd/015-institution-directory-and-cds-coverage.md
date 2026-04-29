@@ -1,6 +1,6 @@
 # PRD 015: Institution directory and CDS coverage transparency
 
-**Status:** Draft, revised after review
+**Status:** Shipped (M0–M6) 2026-04-29; M7 (first-party submission backend) deferred to backlog under "trigger-on-volume"
 **Created:** 2026-04-29
 **Updated:** 2026-04-29
 **Author:** Codex + Anthony
@@ -535,7 +535,9 @@ different question: "What do we know about this institution's CDS availability?"
 
 ## Implementation Milestones
 
-### M0: Scope and Status Contract
+> **Status legend:** ✅ shipped (with PR + commit reference) · 🗂 deferred to backlog · ⏳ in flight
+
+### M0: Scope and Status Contract ✅ shipped 2026-04-29
 
 - Lock MVP scope to active, undergraduate-serving, degree-granting Title-IV
   institutions.
@@ -543,7 +545,7 @@ different question: "What do we know about this institution's CDS availability?"
 - Finalize the public coverage status vocabulary and precedence.
 - Write the public copy map for each status.
 
-### M1: Directory and Slug Substrate
+### M1: Directory and Slug Substrate ✅ shipped 2026-04-29 (PR #20, hotfix #21)
 
 - Add `institution_directory` migration.
 - Add directory loader using the exact Scorecard columns listed above.
@@ -552,7 +554,9 @@ different question: "What do we know about this institution's CDS availability?"
 - Preserve existing `schools.yaml` slugs where IPEDS IDs match.
 - Add tests for slug determinism and collision cases.
 
-### M2: Scorecard-Only Discovery Enrollment
+**Shipped:** `tools/scorecard/load_directory.py` populates 6,322 directory rows + ~6,500 crosswalk rows on prod. `schools.yaml` self-collision pre-pass picks the largest-UGDS IPEDS as canonical and demotes the rest to auto-slug + state suffix.
+
+### M2: Scorecard-Only Discovery Enrollment ✅ shipped 2026-04-29 (PRs #22, #23)
 
 - Add an enqueue path for in-scope directory institutions missing resolver
   attempts.
@@ -560,7 +564,9 @@ different question: "What do we know about this institution's CDS availability?"
 - Persist no-candidate and inaccessible-attempt outcomes.
 - Keep run limits operator-controlled; no full discovery drain in PR CI.
 
-### M3: Public-Safe Coverage Table
+**Shipped:** `archive_queue.source` column distinguishes `schools_yaml` from `institution_directory`. `directory-enqueue` edge function (operator-triggered, no cron) seeds the queue with 10/50/100-school batches; first live batch on 2026-04-29 produced 9 `no_public_cds_found` + 1 `transient` outcome — exactly the honest-failure data M3 needs. Pagination hotfix (#23) handled the PostgREST 1K row cap.
+
+### M3: Public-Safe Coverage Table ✅ shipped 2026-04-29 (PRs #24, #25, #26)
 
 - Add `institution_cds_coverage` as a materialized serving table.
 - Build refresh job/function from directory + discovery + extraction state.
@@ -568,27 +574,35 @@ different question: "What do we know about this institution's CDS availability?"
 - Add status precedence tests.
 - Add indexes for search and coverage filters.
 
-### M4: Search Over All In-Scope Institutions
+**Shipped:** `coverage_status_t` Postgres ENUM (10 values, shared by the materialized table and the override table). `derive_coverage_status()` SQL helper encodes the 9-rule precedence with `archive_queue.last_outcome` as the freshness anchor (a precedence-semantics bug found by the inline self-test on first prod push and fixed in #26: the doc's `cds_year` is NOT the freshness signal — the resolver's most recent attempt is). `refresh_institution_cds_coverage()` does atomic `TRUNCATE+INSERT` inside a single transaction, sub-second lock window. 9-scenario inline self-test guards every status path. 15-minute pg_cron tick on `refresh-coverage` removes one item from the manual operator runbook. Production state at launch: 571 `cds_available_current`, 87 `cds_available_stale`, 136 `no_public_cds_found`, 2,119 `not_checked`.
+
+### M4: Search Over All In-Scope Institutions ✅ shipped 2026-04-29 (PRs #27, #28)
 
 - Change search to query `institution_cds_coverage`.
 - Return missing-CDS and not-yet-checked schools as first-class results.
 - Add coverage badges to search results.
 - Preserve latest-per-school CDS ranking where CDS data exists.
 
-### M5: Directory-Only School Pages
+**Shipped:** `search_institutions(p_query, p_limit)` SQL RPC backs the homepage autocomplete; `SchoolSearch` rewritten to call it via debounced (220ms) requests. `CoverageBadge` component maps status → cd-chip variants from `tokens.css`. Decision: search means homepage autocomplete, not `/browse` (filtering by acceptance/yield requires CDS data — schools without CDS would clutter `/browse` rather than help). Cross-linking from search badges back to `/coverage` deferred per scoping. Live: typing "Rice" returns Rice with `cds_available_stale`, "tarrant county" returns `no_public_cds_found` — the PRD's headline product moment.
+
+### M5: Directory-Only School Pages ✅ shipped 2026-04-29 (PR #29)
 
 - Allow school detail routes for directory-only schools.
 - Render Scorecard baseline metrics via existing `scorecard_summary` data.
 - Add the CDS coverage panel and source-submission CTA.
 - Add metadata/OG behavior for directory-only schools.
 
-### M6: Coverage Page
+**Shipped:** `/schools/[school_id]` falls through to `fetchInstitutionCoverage` when `fetchSchoolDocuments` is empty; renders `DirectoryOnlySchoolPage` with name + location + coverage badge + summary + Scorecard `OutcomesSection` + Formspree-backed `SubmissionForm`. Form is env-driven (`NEXT_PUBLIC_FORMSPREE_ENDPOINT`) with mailto fallback to `anthony+collegedata@bolewood.com` so the CTA is never broken.
+
+### M6: Coverage Page ✅ shipped 2026-04-29 (PR #30)
 
 - Build `/coverage` with status counts and sortable missing-CDS table.
 - Add filters by state, enrollment band, status, and last checked recency.
 - Link coverage status from school pages and search result badges.
 
-### M7: Submission Path
+**Shipped:** `/coverage` route with histogram banner, virtualized sortable table via `@tanstack/react-virtual` (only ~20 of 2,353 default-filtered rows mount in DOM), URL-persisted filter state for shareable views, methodology note grounding the tone (factual, never alarmist). Default view "missing CDS only"; one-click toggle for full universe. Cross-linking from search badges to `/coverage` was deferred per scoping discussion.
+
+### M7: Submission Path 🗂 deferred to backlog (PR #31)
 
 - MVP: `mailto:` or lightweight form that captures school, URL, and note.
 - Later: reuse the public upload/moderation plan from backlog if submissions
@@ -596,12 +610,16 @@ different question: "What do we know about this institution's CDS availability?"
 - Store accepted source links as resolver hints, not direct canonical claims,
   until archived and extracted.
 
-### M8: Ops and Refresh
+**Deferred:** M5 ships a Formspree-backed form that routes submissions to `anthony+collegedata@bolewood.com`. The first-party backend (table + edge function + operator review surface) is on the backlog under "Trigger-on-volume" (`docs/backlog.md`) — build trigger is roughly 10+ submissions/week or first abuse pattern. The M5 `SubmissionForm` is already env-driven so swapping endpoints is a one-config change.
+
+### M8: Ops and Refresh ⏳ partial
 
 - Add an operator report for coverage status deltas after archive drains.
 - Add a periodic "not checked recently" report.
 - Keep Scorecard refresh annual and separate from CDS extraction drains.
 - Do not add full discovery, extraction, or Docling corpus drains to PR CI.
+
+**Status:** The 15-minute `refresh-coverage` cron means coverage state is always current; the per-refresh histogram in the edge function response gives operators a regression signal at a glance. Dedicated operator reports (status deltas, "not checked recently") are not yet built and live on the backlog.
 
 ## Design Notes
 

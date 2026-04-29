@@ -23,10 +23,11 @@ We also archive source files on discovery, because some schools do occasionally 
 
 ## What's here
 
-- **[collegedata.fyi](https://collegedata.fyi)** — a public frontend for browsing, searching, and downloading archived CDS documents
+- **[collegedata.fyi](https://collegedata.fyi)** — a public frontend for browsing, searching, and downloading archived CDS documents, plus an institution directory of every active Title-IV school whether or not we have a CDS for it
 - **Source files** (PDF, XLSX, DOCX) for each school + year combination we've found, archived on discovery
 - **Canonical structured extracts** keyed to the CDS Initiative's own field IDs (A.001, B.101, C.101, ...), with provenance linking every value back to the source
-- **A public API** at `https://api.collegedata.fyi` that tracks discovery status, last-verified dates, participation status, and per-document provenance
+- **An institution directory and coverage transparency layer** ([PRD 015](docs/prd/015-institution-directory-and-cds-coverage.md)) — every active, undergraduate-serving Title-IV institution gets a searchable identity page and an honest CDS coverage status (`CDS available` / `Older CDS available` / `No public CDS found` / `Not checked yet`). The public coverage table at [`/coverage`](https://collegedata.fyi/coverage) makes the gap visible.
+- **A public API** at `https://api.collegedata.fyi` that tracks discovery status, last-verified dates, participation status, per-document provenance, and per-institution coverage state
 - **An extensible artifact model** so community cleanup tools can publish their own extracts alongside the primary ones without replacing them
 
 ## Quick look
@@ -70,7 +71,7 @@ collegedata.fyi sits between official higher-education data systems and the docu
 
 ## Docs and decisions
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — eight-pipeline map of the whole system (schema, corpus, discovery, mirror, extraction, scorecard, consumer API, frontend)
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — nine-pipeline map of the whole system (schema, corpus, discovery, mirror, extraction, scorecard, institution directory + coverage, consumer API, frontend)
 - [`docs/extraction-quality.md`](docs/extraction-quality.md) — current accuracy by tier, per-section corpus-wide coverage, and reproducible scoring commands
 - [`docs/recipes/`](docs/recipes/) — worked examples with real data: interactive visualizations, XLSX starters, and API queries. Start with [acceptance rate vs yield](docs/recipes/acceptance-vs-yield.md)
 - [`docs/v1-plan.md`](docs/v1-plan.md) — living project plan for V1
