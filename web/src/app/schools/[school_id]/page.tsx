@@ -11,6 +11,7 @@ import { OutcomesSection } from "@/components/OutcomesSection";
 import { ScorecardVintageNote } from "@/components/ScorecardVintageNote";
 import { Sparkline } from "@/components/Sparkline";
 import { CoverageBadge } from "@/components/CoverageBadge";
+import { SubmissionForm } from "@/components/SubmissionForm";
 import { yearRange } from "@/lib/format";
 import type { ManifestRow, InstitutionCoverage } from "@/lib/types";
 
@@ -360,24 +361,26 @@ export default async function SchoolDetailPage({
   );
 }
 
-// PRD 015 M4 — minimal directory-only school page.
+// PRD 015 M5 — directory-only school page.
 //
 // Renders for in-scope institution_cds_coverage rows that have no
-// cds_documents row yet (most often: not_checked, no_public_cds_found,
+// cds_documents row yet (typically not_checked, no_public_cds_found,
 // source_not_automatically_accessible, verified_absent). The page
-// delivers on the search-promised result without faking CDS data we
-// don't have.
+// delivers on the search-promised result, gives federal Scorecard
+// baseline data so the school still feels first-class, and invites a
+// source submission when can_submit_source is true.
 //
-// PRD M5 will elaborate this with Scorecard baseline metrics + a
-// proper source-submission CTA. The v1 here is the smallest thing
-// that breaks the search-then-404 dead-end.
-function DirectoryOnlySchoolPage({
+// M4 originally shipped this as a search-dead-end stub. M5 layers on
+// the federal outcomes section + the Formspree-backed submission form.
+async function DirectoryOnlySchoolPage({
   coverage,
   school_id,
 }: {
   coverage: InstitutionCoverage;
   school_id: string;
 }) {
+  const scorecard = await fetchScorecardByIpedsId(coverage.ipeds_id);
+
   const { head, tail } = splitInstitutionalSuffix(coverage.school_name);
   const location = [coverage.city, coverage.state].filter(Boolean).join(", ");
   const lastChecked = coverage.last_checked_at
@@ -497,17 +500,49 @@ function DirectoryOnlySchoolPage({
         )}
       </section>
 
+      {coverage.can_submit_source && (
+        <SubmissionForm
+          school_id={school_id}
+          school_name={coverage.school_name}
+          coverage_status={coverage.coverage_status}
+        />
+      )}
+
+      {scorecard ? (
+        <div style={{ marginTop: 56 }}>
+          <OutcomesSection scorecard={scorecard} />
+        </div>
+      ) : (
+        <p
+          className="mono"
+          style={{
+            marginTop: 56,
+            fontSize: 12,
+            color: "var(--ink-3)",
+            letterSpacing: "0.05em",
+          }}
+        >
+          FEDERAL OUTCOMES DATA NOT AVAILABLE FOR THIS INSTITUTION.
+        </p>
+      )}
+
+      {scorecard && (
+        <div style={{ marginTop: 24 }}>
+          <ScorecardVintageNote scorecard={scorecard} />
+        </div>
+      )}
+
       <p
         style={{
-          marginTop: 32,
+          marginTop: 40,
           fontSize: 14,
           color: "var(--ink-3)",
           maxWidth: 640,
         }}
       >
-        We track every active, undergraduate-serving Title-IV institution.
-        When we archive a public Common Data Set for this school, full
-        outcomes will appear here. <Link href="/about">Read the method</Link>.
+        We track every active, undergraduate-serving Title-IV institution
+        and refresh CDS coverage every 15 minutes. Federal data above
+        comes from College Scorecard. <Link href="/about">Read the method</Link>.
       </p>
     </div>
   );
