@@ -12,6 +12,7 @@ class FakeClient:
         self.function_calls = []
         self.rest_calls = []
         self.queue_pages = []
+        self.queue_errors = []
         self.coverage_rows = [
             {"coverage_status": "not_checked"},
             {"coverage_status": "not_checked"},
@@ -74,6 +75,8 @@ class FakeClient:
                 }
             ]
         if table == "archive_queue" and "enqueued_run_id" in params:
+            if self.queue_errors:
+                raise self.queue_errors.pop(0)
             if self.queue_pages:
                 return self.queue_pages.pop(0)
             return [
@@ -181,6 +184,26 @@ class DirectoryEnqueueBatchTests(unittest.TestCase):
                     now=clock.now,
                     sleep=clock.sleep,
                 )
+
+    def test_polling_retries_transient_read_error(self):
+        client = FakeClient()
+        client.queue_errors = [batches.OpsError("temporary timeout")]
+        client.queue_pages = [[{"school_id": "school-1", "status": "done", "last_outcome": "no_pdfs_found"}]]
+        clock = FakeClock()
+
+        with redirect_stdout(StringIO()):
+            drained = batches.poll_until_drained(
+                client,
+                "run-id",
+                timeout_seconds=60,
+                poll_interval_seconds=5,
+                stall_timeout_seconds=30,
+                now=clock.now,
+                sleep=clock.sleep,
+            )
+
+        self.assertEqual(drained["summary"]["active"], 0)
+        self.assertEqual(clock.sleeps, [5])
 
     def test_histogram_delta(self):
         self.assertEqual(

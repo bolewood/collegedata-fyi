@@ -372,6 +372,10 @@ python3 tools/ops/directory_enqueue_batches.py --apply --limit 25
 
 # Continue only after the canary looks sane.
 python3 tools/ops/directory_enqueue_batches.py --apply --batches 75,150,250
+
+# If local polling is interrupted after enqueue, resume the same run_id
+# without enqueueing another batch.
+python3 tools/ops/directory_enqueue_batches.py --resume-run-id <run_id>
 ```
 
 The wrapper reads `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` from

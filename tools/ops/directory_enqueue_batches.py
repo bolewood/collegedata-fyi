@@ -281,7 +281,21 @@ def poll_until_drained(
     last_terminal = -1
 
     while True:
-        rows = fetch_queue_rows(client, run_id)
+        try:
+            rows = fetch_queue_rows(client, run_id)
+        except OpsError as exc:
+            if logger:
+                logger.write("poll_error", run_id=run_id, error=str(exc))
+            elapsed = now() - started
+            stalled = now() - last_progress_at
+            if elapsed >= timeout_seconds:
+                raise TimeoutError(f"Timed out waiting for run_id={run_id} after poll errors") from exc
+            if stalled >= stall_timeout_seconds:
+                raise TimeoutError(f"Queue polling stalled for run_id={run_id} after {int(stalled)} seconds") from exc
+            print(f"Polling read failed for run_id={run_id}; retrying: {exc}")
+            sleep(poll_interval_seconds)
+            continue
+
         summary = summarize_queue_rows(rows)
         if logger:
             logger.write("poll", run_id=run_id, queue=summary)
@@ -409,7 +423,6 @@ def run_batch(
     queue_summary = drained["summary"]
     logger.write("drained", run_id=run_id, queue=queue_summary)
     print_json("Queue drained", queue_summary)
-    enforce_unexpected_outcome_gate(queue_summary, unexpected_outcome_rate)
 
     refresh = refresh_coverage(client)
     after = refresh.get("coverage_status_histogram") or fetch_coverage_histogram(client)
@@ -426,6 +439,7 @@ def run_batch(
     logger.write("refresh", **refresh_report)
     print_histogram("Coverage after", after)
     print_json("Watched status delta", delta)
+    enforce_unexpected_outcome_gate(queue_summary, unexpected_outcome_rate)
 
     return {
         "dry_run": dry_run_report,
@@ -434,6 +448,53 @@ def run_batch(
         "refresh": refresh_report,
         "applied": True,
     }
+
+
+def resume_run(
+    client: Any,
+    *,
+    run_id: str,
+    logger: JsonlLogger,
+    timeout_seconds: int,
+    poll_interval_seconds: int,
+    stall_timeout_seconds: int,
+    unexpected_outcome_rate: float,
+) -> dict[str, Any]:
+    print(f"\n== Resume run_id={run_id} ==")
+    before = fetch_coverage_histogram(client)
+    logger.write("resume_coverage_before", run_id=run_id, histogram=before)
+    print_histogram("Coverage before resume refresh", before)
+
+    drained = poll_until_drained(
+        client,
+        run_id,
+        timeout_seconds=timeout_seconds,
+        poll_interval_seconds=poll_interval_seconds,
+        stall_timeout_seconds=stall_timeout_seconds,
+        logger=logger,
+    )
+    queue_summary = drained["summary"]
+    logger.write("resume_drained", run_id=run_id, queue=queue_summary)
+    print_json("Queue drained", queue_summary)
+
+    refresh = refresh_coverage(client)
+    after = refresh.get("coverage_status_histogram") or fetch_coverage_histogram(client)
+    assert_histogram_plausible(before, after)
+    delta = watched_histogram_delta(before, after)
+    refresh_report = {
+        "run_id": run_id,
+        "rows_written": refresh.get("rows_written"),
+        "refresh_duration_ms": refresh.get("refresh_duration_ms"),
+        "total_duration_ms": refresh.get("total_duration_ms"),
+        "coverage_after": after,
+        "watched_delta": delta,
+    }
+    logger.write("resume_refresh", **refresh_report)
+    print_histogram("Coverage after", after)
+    print_json("Watched status delta", delta)
+    enforce_unexpected_outcome_gate(queue_summary, unexpected_outcome_rate)
+
+    return {"run_id": run_id, "queue": queue_summary, "refresh": refresh_report}
 
 
 def print_queue_progress(run_id: str, summary: dict[str, Any]) -> None:
@@ -475,6 +536,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--limit", type=int, help="Run one batch with this explicit limit")
     parser.add_argument("--batches", help="Comma-separated staged limits; default: 25,75,150,250")
     parser.add_argument("--apply", action="store_true", help="Actually enqueue, poll, refresh, and gate each batch")
+    parser.add_argument("--resume-run-id", help="Poll, refresh, and gate an already-enqueued directory run")
     parser.add_argument("--min-enrollment", type=int, help="Pass min_enrollment through to directory-enqueue")
     parser.add_argument("--state", help="Pass a two-letter state filter through to directory-enqueue")
     parser.add_argument("--force-recheck", action="store_true", help="Pass force_recheck=true; do not use for first top-500 pass")
@@ -505,6 +567,20 @@ def main(argv: list[str] | None = None) -> int:
             force_recheck=args.force_recheck,
             uniform_cooldown_days=args.uniform_cooldown_days,
         )
+
+        if args.resume_run_id:
+            report = resume_run(
+                client,
+                run_id=args.resume_run_id,
+                logger=logger,
+                timeout_seconds=args.timeout_minutes * 60,
+                poll_interval_seconds=args.poll_interval_seconds,
+                stall_timeout_seconds=args.stall_timeout_minutes * 60,
+                unexpected_outcome_rate=args.unexpected_outcome_rate,
+            )
+            logger.write("completed", reports=[report])
+            print(f"\nCompleted. JSONL log: {logger.path}")
+            return 0
 
         baseline = {
             "coverage": fetch_coverage_histogram(client),
