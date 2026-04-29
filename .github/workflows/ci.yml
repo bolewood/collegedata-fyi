@@ -61,6 +61,9 @@ jobs:
       - name: Install web dependencies
         working-directory: web
         run: npm ci
+      - name: Typecheck web app
+        working-directory: web
+        run: npm run typecheck
       - name: Build web app
         working-directory: web
         run: npm run build
