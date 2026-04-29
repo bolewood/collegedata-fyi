@@ -272,6 +272,42 @@ export const fetchInstitutionCoverage = cache(
   },
 );
 
+// PRD 015 M6 — every public-visible institution_cds_coverage row.
+//
+// Powers the /coverage accountability page. Returns ALL rows where
+// coverage_status != 'out_of_scope' (RLS already enforces this for
+// anon, but we duplicate the filter as defense-in-depth).
+//
+// Pagination loop because PostgREST's PGRST_DB_MAX_ROWS caps each
+// response at 1,000 — we need ~3,000 rows for the public table. Pages
+// of 1,000 with .range() iterate until a short page signals end.
+// Same pattern as directory-enqueue's loaders. HARD_CAP stops a
+// runaway loop if the table grows unexpectedly.
+export const fetchCoverageRows = cache(async function fetchCoverageRows(): Promise<
+  InstitutionCoverage[]
+> {
+  const PAGE = 1000;
+  const HARD_CAP = 50_000;
+  const out: InstitutionCoverage[] = [];
+  for (let start = 0; start < HARD_CAP; start += PAGE) {
+    const { data, error } = await (supabase as unknown as UntypedSupabase)
+      .from("institution_cds_coverage")
+      .select(
+        "ipeds_id, school_id, school_name, city, state, website_url, undergraduate_enrollment, coverage_status, coverage_label, coverage_summary, latest_available_cds_year, last_checked_at, can_submit_source",
+      )
+      .neq("coverage_status", "out_of_scope")
+      .order("school_name", { ascending: true })
+      .range(start, start + PAGE - 1);
+    if (error) {
+      throw new Error(`Failed to fetch coverage rows: ${error.message}`);
+    }
+    const page = (data as InstitutionCoverage[]) ?? [];
+    out.push(...page);
+    if (page.length < PAGE) break;
+  }
+  return out;
+});
+
 export const fetchSchoolDocuments = cache(async function fetchSchoolDocuments(
   schoolId: string
 ): Promise<ManifestRow[]> {
