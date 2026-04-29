@@ -412,6 +412,16 @@ verify_jwt = true
 import_map = "./functions/archive-enqueue/deno.json"
 entrypoint = "./functions/archive-enqueue/index.ts"
 
+[functions.directory-enqueue]
+enabled = true
+# Operator-triggered seeder for in-scope institution_directory rows
+# (PRD 015 M2). Same auth pattern as archive-enqueue: verify_jwt=true
+# + in-handler service-role bearer compare. No pg_cron — operators
+# pass ?limit=N every run so batch size is always intentional.
+verify_jwt = true
+import_map = "./functions/directory-enqueue/deno.json"
+entrypoint = "./functions/directory-enqueue/index.ts"
+
 [functions.archive-upload]
 enabled = true
 # Operator upload endpoint. Accepts multipart POST with a downloaded
