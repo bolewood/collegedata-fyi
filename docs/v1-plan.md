@@ -1,7 +1,7 @@
 # collegedata.fyi — V1 Project Plan
 
-**Status:** Draft, ready to start
-**Last updated:** 2026-04-11
+**Status:** V1 live; PRD 015 (institution directory + CDS coverage transparency) shipped 2026-04-29
+**Last updated:** 2026-04-29
 **Canonical domain:** collegedata.fyi (API at `api.collegedata.fyi`)
 
 > This is a living document. Update it when decisions change rather than freezing it in time. Point-in-time decisions and their rationale are preserved as ADRs in [`docs/decisions/`](decisions/).
