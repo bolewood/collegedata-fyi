@@ -388,6 +388,8 @@ Data infrastructure runs on **Supabase** (single vendor per ADR 0001). The front
 | API custom domain | Supabase | `api.collegedata.fyi` → PostgREST |
 | PostgREST API | Supabase | Automatic from Postgres + RLS policies |
 | Python extraction worker | External | Local laptop for V1, GitHub Actions cron for scale |
+| Ops extraction workflow | GitHub Actions | Scheduled/manual bounded pending-row drains via `.github/workflows/ops-extraction-worker.yml`; capped for hosted runners |
+| PR CI workflow | GitHub Actions | Python unit tests, Supabase Deno tests, and Next.js typecheck/build via `.github/workflows/ci.yml`; no corpus drains |
 | **Frontend** | **Vercel** | Next.js at `collegedata.fyi`, consumes PostgREST API |
 | Offline corpus tools | Local | Pure Python, no Supabase interaction |
 | Offline schema tools | Local | Pure Python, no Supabase interaction |

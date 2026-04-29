@@ -192,6 +192,68 @@
   .cd-school-header__count { justify-content: flex-start; }
 }
 
+/* FieldsView textbook layout — sticky section/subsection index in the
+   left gutter, KV groups in the right body. Gutter collapses to a stacked
+   block on narrow viewports so the page still scans at phone widths. */
+.cd-fields__layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 36px;
+  margin-top: 20px;
+}
+/* Don't shrink the gutter cell to its content — sticky needs its parent
+   to be as tall as the body so the index stays pinned all the way down. */
+.cd-fields__gutter { align-self: stretch; }
+.cd-fields__gutter-sticky {
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding-right: 8px;
+}
+.cd-fields__gutter-section {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--serif);
+  font-size: 16px;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 4px;
+  margin-bottom: 6px;
+  letter-spacing: -0.005em;
+}
+.cd-fields__gutter-section:hover { color: var(--forest-ink); }
+.cd-fields__gutter-letter {
+  font-style: italic;
+  color: var(--forest);
+  width: 24px;
+  flex-shrink: 0;
+}
+.cd-fields__gutter-sub {
+  display: block;
+  padding: 2px 0 2px 32px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+  text-decoration: none;
+  line-height: 1.5;
+}
+.cd-fields__gutter-sub:hover { color: var(--ink); }
+@media (max-width: 800px) {
+  .cd-fields__layout { grid-template-columns: 1fr; gap: 18px; }
+  .cd-fields__gutter-sticky {
+    position: static;
+    max-height: 280px;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 14px 16px;
+    background: #faf6ec;
+  }
+}
+
 /* Recipe page layouts — reader's-guide and quadrant/band grids stack
    under 720px so the marginalia label collapses above the body copy
    instead of getting squeezed into a 200px gutter. */

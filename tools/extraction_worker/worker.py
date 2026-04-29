@@ -21,8 +21,18 @@ Routing (driven by cds_documents.source_format):
     pdf_scanned     → Tier 4 with lazy OCR: same Docling pipeline. do_ocr=True
                       triggers EasyOCR on pages with no extractable text,
                       which is exactly the pdf_scanned case.
-    docx            → not yet implemented (Tier 3; python-docx read of
-                      the Word template)
+    docx            → not yet implemented. PRD 007 originally proposed a
+                      direct OOXML SDT reader (Tier 3 Lane A); on
+                      benchmarking against the only SDT-preserving
+                      publisher (Kent State, 1 file shared by 8 campus
+                      rows), Tier 4 on a Word-rendered PDF produced 450
+                      mapped fields vs Lane A's 492, a 9% gap that did
+                      not justify the new tier and dependency. Deferred
+                      pending a second SDT-preserving DOCX publisher.
+                      Inner-ZIP sniff still ships so DOCX vs XLSX is now
+                      content-based — JMU and Stanford reroute correctly
+                      and a future docx→pdf headless-conversion path can
+                      slot in without revisiting routing.
     html            → Tier 6 (PRD 008): html_to_markdown() normalizes the
                       bytes to the markdown shape that tier4_cleaner
                       already consumes. No bespoke parser — reuses the
@@ -73,8 +83,10 @@ import json
 import re
 import sys
 import tempfile
+import zipfile
 from collections import Counter
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Optional
@@ -116,6 +128,34 @@ class SchemaResolution:
     fallback_used: bool
     fallback_reason: Optional[str]
     schema_path: Path
+def utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def parsed_field_count(action: str) -> int | None:
+    match = re.search(r"\((\d+)(?:/\d+)? fields\b", action)
+    return int(match.group(1)) if match else None
+
+
+def is_failure_action(action: str) -> bool:
+    if action == "already_extracted":
+        return False
+    if action == "no_source_artifact" or action.startswith("stub_"):
+        return True
+    if "_error" in action or action.endswith("_no_tables"):
+        return True
+    return False
+
+
+def mean_or_none(values: list[int]) -> float | None:
+    if not values:
+        return None
+    return round(sum(values) / len(values), 2)
+
+
+def write_run_summary(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
 
 
 def extraction_success(action: str) -> ExtractionOutcome:
@@ -398,6 +438,114 @@ def detect_year_from_pdf_bytes(data: bytes, max_pages: int = 10) -> Optional[str
     return None
 
 
+_DOCX_TAG_STRIPPER = re.compile(r"<[^>]+>")
+
+
+def _docx_collect_year_spans(xml: str) -> set[str]:
+    """Strip OOXML tags and run the canonical year regex against the
+    resulting plain text. Word splits text into many ``<w:t>`` runs, so
+    tag stripping flattens runs to whitespace before regex matching.
+
+    Headers commonly carry the ``Common Data Set 2024-2025`` title (and
+    sometimes only the headers carry it — JMU's body has no title at
+    all). Caller is expected to feed each XML part separately or as a
+    concatenation."""
+    text = _DOCX_TAG_STRIPPER.sub(" ", xml)
+    spans: set[str] = set()
+    for pattern in _YEAR_PATTERNS:
+        for m in pattern.finditer(text):
+            span = _normalize_year_span(m.group(1), m.group(2))
+            if span:
+                spans.add(span)
+    return spans
+
+
+def detect_year_from_docx_bytes(data: bytes) -> Optional[str]:
+    """Extract the canonical CDS academic-year string from a DOCX. Reads
+    ``word/document.xml`` plus every ``word/header*.xml`` part, strips
+    OOXML tags, and runs the same year patterns used for PDFs.
+
+    Strict invariant matches PDF detection: zero hits OR multiple
+    distinct valid spans → None. Conservative by design — corrupting a
+    school's year is worse than missing detection."""
+    if len(data) < 4 or data[:4] != b"PK\x03\x04":
+        return None
+    try:
+        zf = zipfile.ZipFile(BytesIO(data))
+    except (zipfile.BadZipFile, ValueError, EOFError) as e:
+        print(
+            f"    docx_error: ZipFile init failed: {type(e).__name__}: {e}",
+            file=sys.stderr,
+            flush=True,
+        )
+        return None
+
+    spans: set[str] = set()
+    targets = ["word/document.xml"]
+    targets.extend(
+        sorted(
+            n for n in zf.namelist()
+            if n.startswith("word/header") and n.endswith(".xml")
+        )
+    )
+    for name in targets:
+        try:
+            xml = zf.read(name).decode("utf-8", "replace")
+        except KeyError:
+            continue
+        except Exception as e:
+            print(
+                f"    docx_error: read {name} failed: {type(e).__name__}: {e}",
+                file=sys.stderr,
+                flush=True,
+            )
+            continue
+        spans |= _docx_collect_year_spans(xml)
+
+    if len(spans) == 1:
+        return next(iter(spans))
+    return None
+
+
+def detect_year_from_bytes(data: bytes) -> Optional[str]:
+    """Format-aware year detection. Dispatches by magic bytes so callers
+    can run year detection before knowing the source_format. Returns
+    None for unsupported formats (HTML, OCR-only PDF without text,
+    etc.) — the caller treats None as "undetected"."""
+    if len(data) >= 4 and data[:4] == b"%PDF":
+        return detect_year_from_pdf_bytes(data)
+    if len(data) >= 4 and data[:4] == b"PK\x03\x04":
+        # Only DOCX has a meaningful CDS title; XLSX year detection is
+        # not implemented and the original path was PDF-only anyway.
+        if sniff_zip_inner_format(data) == "docx":
+            return detect_year_from_docx_bytes(data)
+    return None
+
+
+def sniff_zip_inner_format(data: bytes) -> str:
+    """Distinguish DOCX from XLSX (and other ZIPs) by inspecting inner
+    entries. Both formats share the PK\\x03\\x04 magic, so magic alone is
+    insufficient. Per PRD 007: ``word/document.xml`` → docx,
+    ``xl/workbook.xml`` → xlsx, otherwise → other.
+
+    Returns "docx", "xlsx", or "other". Returns "other" on malformed ZIPs.
+    """
+    try:
+        zf = zipfile.ZipFile(BytesIO(data))
+        names = zf.namelist()
+    except (zipfile.BadZipFile, ValueError, EOFError):
+        return "other"
+    has_word = any(n.startswith("word/") for n in names)
+    has_xl = any(n.startswith("xl/") for n in names)
+    if has_word and not has_xl:
+        return "docx"
+    if has_xl and not has_word:
+        return "xlsx"
+    # Both or neither: ambiguous container, treat as other rather than
+    # guessing. Real CDS files have not been observed with both prefixes.
+    return "other"
+
+
 def sniff_format_from_bytes(data: bytes) -> str:
     """Best-effort format detection when cds_documents.source_format is null.
     Returns one of the extraction_status enum values the migration allows
@@ -419,7 +567,11 @@ def sniff_format_from_bytes(data: bytes) -> str:
         except Exception:
             return "other"
     if len(data) >= 4 and data[:4] == b"PK\x03\x04":
-        return "xlsx"  # or docx; tier probe distinguishes via filename
+        # Inspect inner ZIP entries to distinguish DOCX from XLSX. PRD 007
+        # M1: prior logic returned "xlsx" for any ZIP and relied on the
+        # tier probe's filename heuristic, which silently misroutes any
+        # extensionless URL (e.g. Kent State's ``TU CDS_2025-2026-Final``).
+        return sniff_zip_inner_format(data)
     # HTML sniff (PRD 008). Runs after binary magic so a PDF/ZIP with a
     # stray "<html" byte sequence doesn't mis-route. Matches the
     # storage.ts sniffBytesForExt logic on the discovery side.
@@ -802,7 +954,7 @@ def extract_one(
     # its role in the unique constraint. Consumer queries read
     # cds_manifest.canonical_year which COALESCEs detected_year over
     # cds_year.
-    detected_year = detect_year_from_pdf_bytes(pdf_bytes)
+    detected_year = detect_year_from_bytes(pdf_bytes)
     stored_year = doc.get("cds_year")
     stored_detected = doc.get("detected_year")
     if detected_year and detected_year != stored_detected:
@@ -996,7 +1148,10 @@ def run_detect_year_only(
             download_errors.append((school_id, str(e)[:80]))
             print(f"[{i:4d}/{len(docs)}] {school_id}: download_error", flush=True)
             continue
-        if len(pdf_bytes) < 4 or pdf_bytes[:4] != b"%PDF":
+        is_pdf = len(pdf_bytes) >= 4 and pdf_bytes[:4] == b"%PDF"
+        is_zip = len(pdf_bytes) >= 4 and pdf_bytes[:4] == b"PK\x03\x04"
+        is_docx = is_zip and sniff_zip_inner_format(pdf_bytes) == "docx"
+        if not (is_pdf or is_docx):
             counts["non_pdf"] += 1
             non_pdf.append((school_id, doc.get("source_format") or "?"))
             print(
@@ -1004,7 +1159,7 @@ def run_detect_year_only(
                 flush=True,
             )
             continue
-        detected = detect_year_from_pdf_bytes(pdf_bytes)
+        detected = detect_year_from_bytes(pdf_bytes)
         if detected is None:
             counts["undetected"] += 1
             undetecteds.append((school_id, stored_year or ""))
@@ -1126,6 +1281,22 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--summary-json",
+        type=Path,
+        default=None,
+        help=(
+            "Write a small machine-readable run summary for ops workflows. "
+            "Includes processed count, failures, mean field count, low-field "
+            "docs, and projection refresh counters."
+        ),
+    )
+    parser.add_argument(
+        "--low-field-threshold",
+        type=int,
+        default=25,
+        help="Field-count threshold for low-field docs in --summary-json.",
+    )
+    parser.add_argument(
         "--include-failed",
         action="store_true",
         help="Also process rows with extraction_status='failed' (for retry runs)",
@@ -1207,11 +1378,29 @@ def main() -> int:
     if args.limit:
         query = query.limit(args.limit)
 
+    started_at = utc_now_iso()
     docs = query.execute().data or []
     if not docs:
         print(
             "No rows to process. Try --include-failed to re-process earlier failures.",
         )
+        if args.summary_json:
+            write_run_summary(args.summary_json, {
+                "started_at": started_at,
+                "finished_at": utc_now_iso(),
+                "dry_run": args.dry_run,
+                "limit": args.limit,
+                "school": args.school,
+                "include_failed": args.include_failed,
+                "low_field_threshold": args.low_field_threshold,
+                "processed_count": 0,
+                "failure_count": 0,
+                "mean_fields": None,
+                "low_field_docs": [],
+                "extraction_counts": {},
+                "projection_counts": {},
+                "documents": [],
+            })
         return 0
 
     print(
@@ -1239,12 +1428,31 @@ def main() -> int:
             )
 
     counts: Counter = Counter()
+    summary_docs: list[dict[str, Any]] = []
+    field_counts: list[int] = []
+    low_field_docs: list[dict[str, Any]] = []
+    failure_count = 0
     for i, doc in enumerate(docs, 1):
         outcome = extract_one(client, doc, schema_registry, args.dry_run, cell_maps)
         bucket = outcome.action.split(":")[0].split(" ")[0]
         counts[bucket] += 1
+        fields = parsed_field_count(outcome.action)
+        if fields is not None:
+            field_counts.append(fields)
+            if fields < args.low_field_threshold:
+                low_field_docs.append({
+                    "document_id": str(doc["id"]),
+                    "school_id": doc["school_id"],
+                    "source_format": doc.get("source_format"),
+                    "field_count": fields,
+                    "action": outcome.action,
+                })
+        failed = is_failure_action(outcome.action)
+        failure_count += int(failed)
 
         projection_note = ""
+        projection_field_count: int | None = None
+        projection_browser_row: bool | None = None
         if (
             projection_enabled
             and projection_definitions is not None
@@ -1259,6 +1467,8 @@ def main() -> int:
                 projection_counts["documents"] += 1
                 projection_counts["fields"] += field_count
                 projection_counts["browser_rows"] += int(has_browser_row)
+                projection_field_count = field_count
+                projection_browser_row = has_browser_row
                 projection_note = (
                     f"; projected {field_count} fields, "
                     f"browser_row={'yes' if has_browser_row else 'no'}"
@@ -1268,6 +1478,17 @@ def main() -> int:
                 message = str(e).splitlines()[0][:200]
                 projection_note = f"; projection_error={type(e).__name__}: {message}"
 
+        summary_docs.append({
+            "document_id": str(doc["id"]),
+            "school_id": doc["school_id"],
+            "canonical_year": doc.get("detected_year") or doc.get("cds_year"),
+            "source_format": doc.get("source_format"),
+            "action": outcome.action,
+            "field_count": fields,
+            "failed": failed,
+            "projection_field_count": projection_field_count,
+            "projection_browser_row": projection_browser_row,
+        })
         print(f"[{i:4d}/{len(docs)}] {doc['school_id']}: {outcome.action}{projection_note}", flush=True)
 
     print()
@@ -1282,7 +1503,41 @@ def main() -> int:
             if projection_counts[bucket]:
                 print(f"  {bucket:30s} {projection_counts[bucket]:5d}")
         if projection_counts["errors"] or projection_counts["setup_error"]:
+            if args.summary_json:
+                write_run_summary(args.summary_json, {
+                    "started_at": started_at,
+                    "finished_at": utc_now_iso(),
+                    "dry_run": args.dry_run,
+                    "limit": args.limit,
+                    "school": args.school,
+                    "include_failed": args.include_failed,
+                    "low_field_threshold": args.low_field_threshold,
+                    "processed_count": len(docs),
+                    "failure_count": failure_count,
+                    "mean_fields": mean_or_none(field_counts),
+                    "low_field_docs": low_field_docs,
+                    "extraction_counts": dict(counts),
+                    "projection_counts": dict(projection_counts),
+                    "documents": summary_docs,
+                })
             return 2
+    if args.summary_json:
+        write_run_summary(args.summary_json, {
+            "started_at": started_at,
+            "finished_at": utc_now_iso(),
+            "dry_run": args.dry_run,
+            "limit": args.limit,
+            "school": args.school,
+            "include_failed": args.include_failed,
+            "low_field_threshold": args.low_field_threshold,
+            "processed_count": len(docs),
+            "failure_count": failure_count,
+            "mean_fields": mean_or_none(field_counts),
+            "low_field_docs": low_field_docs,
+            "extraction_counts": dict(counts),
+            "projection_counts": dict(projection_counts),
+            "documents": summary_docs,
+        })
     return 0
 
 
