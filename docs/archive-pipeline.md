@@ -350,7 +350,72 @@ touching the database or Storage.
 **Enqueue Scorecard-only directory schools for discovery** (PRD 015 M2 —
 the path that turns `not_checked` rows into real archive attempts so
 coverage status precedence has actual data to read). Operator-triggered;
-no cron. `limit` is required so every batch is sized intentionally:
+no cron. `limit` is required so every batch is sized intentionally.
+
+For the production launch backlog, use the controlled batch wrapper
+instead of one-off curls. The launch state still had ~2.1K
+`not_checked` rows; the first reduction pass targets the top 500
+highest-enrollment remaining institutions in staged batches:
+`25 -> 75 -> 150 -> 250`. This keeps PRD 015's scope intact: no CI
+drain, no pg_cron drain, and no automatic full-universe discovery.
+
+```bash
+cd /Users/santhonys/Projects/Owen/colleges/collegedata-fyi
+
+# Inspect baseline counts, current in-flight rows, and the next 25 picks.
+# This is dry-run-only; it never enqueues archive_queue rows.
+python3 tools/ops/directory_enqueue_batches.py --limit 25
+
+# First canary: dry-run, enqueue 25, wait for the run_id to drain,
+# refresh coverage, print deltas, and write JSONL under scratch/.
+python3 tools/ops/directory_enqueue_batches.py --apply --limit 25
+
+# Continue only after the canary looks sane.
+python3 tools/ops/directory_enqueue_batches.py --apply --batches 75,150,250
+```
+
+The wrapper reads `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` from
+`.env`, calls `directory-enqueue?dry_run=true` before every real enqueue,
+polls `archive_queue` for that run's `ready`/`processing` rows, calls
+`refresh-coverage` after the run drains, then prints before/after
+coverage histograms and watched status deltas for:
+
+- `not_checked`
+- `no_public_cds_found`
+- `source_not_automatically_accessible`
+- `cds_available_current`
+- `extract_failed`
+
+It also records every baseline, dry-run, enqueue, poll, drain, and
+refresh event as JSONL in `scratch/directory-enqueue-runs/`. That
+directory is intentionally uncommitted operator evidence.
+
+Batch gate:
+
+1. Capture the baseline that the wrapper prints: coverage histogram,
+   top `not_checked` schools by enrollment, and current in-flight
+   `archive_queue` rows with `source='institution_directory'`.
+2. Dry-run every batch. Continue to the real enqueue only if the sample
+   schools and skipped buckets look sane.
+3. Wait for each `run_id` to drain before starting the next batch.
+4. Run `refresh-coverage` immediately after each drained batch; the
+   wrapper does this automatically in `--apply` mode.
+5. Do not use `--force-recheck` for the first top-500 pass. The first
+   pass should respect cooldowns, existing-CDS rows, in-flight rows, and
+   schools.yaml exclusions.
+
+Stop the rollout if any of these happen:
+
+- More than 10% of a batch ends with unexpected `last_outcome` values
+  `transient` or `permanent_other`.
+- The queue stalls for more than 20 minutes with no additional terminal
+  rows.
+- `directory-enqueue` or `refresh-coverage` returns an auth, load, or
+  enqueue error.
+- The coverage histogram is wildly implausible, for example the total
+  row count shifts unexpectedly or a known-good bucket disappears.
+
+Raw curl remains useful for debugging the Edge Function directly:
 
 ```bash
 cd /Users/santhonys/Projects/Owen/colleges/collegedata-fyi
