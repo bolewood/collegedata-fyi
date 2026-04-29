@@ -108,9 +108,7 @@ export function SubmissionForm({
           § Submitted
         </div>
         <p style={{ margin: 0, fontSize: 15, lineHeight: 1.55 }}>
-          Thanks. We&rsquo;ll review the link for {school_name} and
-          archive it if it&rsquo;s a public CDS source. If we have
-          questions we&rsquo;ll reach out to the email you provided.
+          {`Thanks. We’ll review the link for ${school_name} and archive it if it’s a public CDS source. If we have questions we’ll reach out to the email you provided.`}
         </p>
       </div>
     );
@@ -127,8 +125,7 @@ export function SubmissionForm({
         § Help us find this one
       </div>
       <p style={{ margin: "0 0 20px", fontSize: 15, lineHeight: 1.55 }}>
-        Know where {school_name} publishes its Common Data Set? Send us
-        the link and we&rsquo;ll archive it.
+        {`Know where ${school_name} publishes its Common Data Set? Send us the link and we’ll archive it.`}
       </p>
 
       <input type="hidden" name="school_id" value={school_id} />
