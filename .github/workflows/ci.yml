@@ -34,6 +34,56 @@ jobs:
       - name: Run Tier 4 cleaner tests
         run: python -m unittest discover -s tools/extraction_worker -p "test_*.py"
 
+  migrations:
+    # Structural sanity checks on supabase/migrations/. Verifies every
+    # file has a 14-digit timestamp prefix, that no two prefixes
+    # collide, and that filenames sort the way an apply order expects.
+    # Catches typo'd timestamps and duplicate filenames before they
+    # corrupt the apply sequence.
+    #
+    # Why not a full `supabase db reset` replay? Several migrations
+    # contain DO-block verifications that assume production data is
+    # present (e.g. `20260415160009_detected_year.sql` raises if a
+    # COALESCE returns null on an empty database). A clean CI database
+    # has no rows, so those checks fail. The actual "this migration is
+    # in production but not in main" drift cannot be detected from CI
+    # without prod credentials — that's a process safeguard documented
+    # in CLAUDE.md, not a code one. Manual `supabase db reset` against
+    # a seeded local DB is the canonical full-replay smoke test.
+    name: Migration filename hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate migration filenames
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(supabase/migrations/*.sql)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "::error::No migration files found"
+            exit 1
+          fi
+          fail=0
+          declare -A seen_prefix
+          for f in "${files[@]}"; do
+            base=$(basename "$f")
+            if [[ ! "$base" =~ ^[0-9]{14}_[a-z0-9_]+\.sql$ ]]; then
+              echo "::error file=$f::Migration filename must match YYYYMMDDHHMMSS_snake_case.sql"
+              fail=1
+            fi
+            prefix="${base:0:14}"
+            if [[ -n "${seen_prefix[$prefix]:-}" ]]; then
+              echo "::error file=$f::Duplicate migration timestamp $prefix (also in ${seen_prefix[$prefix]})"
+              fail=1
+            fi
+            seen_prefix[$prefix]="$base"
+          done
+          # Verify lexical order matches numeric timestamp order — they
+          # should always agree since the prefix is fixed-width, but
+          # this catches the rare hand-crafted variant.
+          ls -1 supabase/migrations/*.sql | LC_ALL=C sort -c
+          exit $fail
+
   deno:
     name: Supabase function tests
     runs-on: ubuntu-latest

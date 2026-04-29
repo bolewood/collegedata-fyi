@@ -15,6 +15,27 @@ Open-source archive of U.S. college Common Data Set (CDS) documents.
 - `tools/` — Python extraction pipeline, schema builder, corpus tools
 - `schemas/` — Canonical CDS schema JSON (1,105 fields)
 - `docs/` — Architecture, PRDs, ADRs, research, backlog
+- `scratch/` — Throwaway operational outputs (gitignored). Default
+  destination for any one-off run artifact: audit/drain JSON dumps,
+  CSV worklists, screenshots, ZIP handoffs, debug exports. Scripts
+  that emit these should write to `scratch/<tool-name>/` rather than
+  into `tools/` or the repo root, so working trees stay clean and
+  nothing important hides among the dumps.
+
+## Migrations
+
+Migrations are applied to production **only from `main`**, never from a
+feature branch. Out-of-band applies (running a migration against prod
+from an unmerged branch) leave production ahead of `main` and break
+fresh `supabase db reset` for everyone else — don't do this.
+
+CI runs a `Migration filename hygiene` check on every PR (timestamp
+prefix uniqueness + sort order). Full replay against a clean DB is a
+manual pre-merge step (`supabase db reset` locally), not CI — several
+migrations contain verification DO blocks that assume production data,
+which would always fail in a clean CI database. The actual drift
+between prod and `main` isn't detectable from CI without prod
+credentials anyway; it's a policy safeguard.
 
 ## Skill routing
 
