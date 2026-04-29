@@ -10,6 +10,62 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 ## Open
 
+### Coverage data quality (PRD 015 audit, 2026-04-29)
+
+A reconciliation between the homepage's `697 schools` (distinct `school_id`s
+in `cds_manifest`) and the `/coverage` page's `2,924 in-scope` (rows in
+`institution_cds_coverage` excluding `out_of_scope`) surfaced three
+data-quality items not blocking shipment but worth tracking:
+
+- **Slug fragmentation between schools.yaml and Scorecard slugs.** ~5–7
+  schools (UVA, U Washington Seattle Campus, Texas A&M College Station,
+  Rutgers New Brunswick, Georgia Tech, Tulane, Virginia Tech) appear in
+  `cds_documents` under long Scorecard-style `school_id` values
+  (`university-of-virginia-main-campus`) while `institution_directory`
+  uses the canonical short slugs from schools.yaml (`uva`). Same school,
+  two `school_id` values, no row-level reconciliation. The mirror
+  pipeline (College Transitions ingest) is the likely originator
+  because it slugifies Scorecard `INSTNM`. Effect: each affected school
+  shows up twice in the homepage's distinct-school count, and the
+  Scorecard-slug variant has zero coverage row at all so it disappears
+  from `/coverage`. **Fix shape:** either canonicalize at archive time
+  via the `institution_slug_crosswalk` (rewrite `cds_documents.school_id`
+  for any IPEDS that has a `schools_yaml`-source crosswalk row pointing
+  at a different canonical), or add the Scorecard slugs to the crosswalk
+  with `source='redirect'` so consumers can resolve through the
+  crosswalk. **Effort:** ~2 hours: a one-shot migration that walks
+  `cds_documents` + `institution_slug_crosswalk` joining on `ipeds_id`,
+  plus an archive-time guard so the mirror pipeline can't re-introduce
+  the divergence. **Affected schools (sample IPEDS):** UVA 234076,
+  U Washington Seattle 236948, Tulane 160755.
+
+- **Two schools missing from the Scorecard CSV entirely.** Bucknell
+  (IPEDS 211158) and Drexel (212160) are absent from both
+  `scorecard_summary` and `institution_directory`. We have CDS data for
+  both via `schools.yaml`, so they show up as `cds_manifest` rows but
+  have no coverage row. **Cause:** the March 2026 / 2022-23-vintage
+  Scorecard CSV from the federal data release doesn't include these
+  IPEDS. Could be a data-publication gap upstream or a federal-reporting
+  exemption granted to specific private universities for that cycle.
+  **Fix shape:** either (a) supplement `institution_directory` with a
+  manual `directory_source='operator_manual'` row keyed by IPEDS (the
+  loader already accepts this column), populated from IPEDS HD CSV
+  rather than Scorecard; or (b) flag upstream and wait for the next
+  Scorecard release to fix it. **Effort:** ~30 min for option (a) on a
+  per-IPEDS basis if more schools surface; ~0 for option (b).
+
+- **Stale system-office entries with CDS rows.** Four administrative
+  entities are in `cds_manifest` but should not have CDS docs:
+  `university-of-maine-system-central-office`,
+  `university-of-houston-system-administration`,
+  `university-of-hawaii-system-office`,
+  `the-university-of-texas-system-office`. The Maine entry already has
+  a partial backlog item below in "operational polish" — this groups
+  it with the others. **Fix:** flip `participation_status` to
+  `verified_absent` on each row (preserves history per the existing
+  takedown pattern in ADR 0008) and `extraction_status` to
+  `not_applicable`. **Effort:** ~10 minutes if done in a batch UPDATE.
+
 ### Near-term operational polish
 
 - **Ground-truth Tier 4 native-table candidates before LLM repair.** New
