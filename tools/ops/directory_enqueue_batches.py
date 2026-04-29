@@ -160,7 +160,7 @@ def directory_enqueue_params(limit: int, options: DirectoryEnqueueOptions, *, dr
     if options.force_recheck:
         params["force_recheck"] = "true"
     if options.uniform_cooldown_days is not None:
-        params["uniform_cooldown_days"] = str(options.uniform_cooldown_days)
+        params["cooldown_days"] = str(options.uniform_cooldown_days)
     return params
 
 

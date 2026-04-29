@@ -118,6 +118,16 @@ class DirectoryEnqueueBatchTests(unittest.TestCase):
             [("directory-enqueue", {"limit": "25", "dry_run": "true"})],
         )
 
+    def test_cooldown_override_uses_edge_function_param_name(self):
+        params = batches.directory_enqueue_params(
+            25,
+            batches.DirectoryEnqueueOptions(uniform_cooldown_days=1),
+            dry_run=True,
+        )
+
+        self.assertEqual(params["cooldown_days"], "1")
+        self.assertNotIn("uniform_cooldown_days", params)
+
     def test_real_enqueue_records_run_id_and_refreshes_after_drain(self):
         client = FakeClient()
         with tempfile.TemporaryDirectory() as tmp:
