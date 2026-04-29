@@ -29,7 +29,7 @@ consumers can verify.
 
 Usage:
     python tools/schema_builder/decode_checkboxes.py \\
-        scratch/CDS-PDF-2025-2026_PDF_Template.pdf \\
+        schemas/templates/cds_2025-26_template.pdf \\
         schemas/cds_schema_2025_26.json
 
 The schema JSON is modified in-place. Run build_from_xlsx.py first if

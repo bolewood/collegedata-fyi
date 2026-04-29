@@ -44,7 +44,7 @@ _HERE = Path(__file__).resolve().parent
 _REPO_ROOT = _HERE.parent.parent
 sys.path.insert(0, str(_HERE))
 
-from tier4_cleaner import SchemaIndex, clean  # noqa: E402
+from tier4_cleaner import SchemaIndex, clean, schema_path_for_year  # noqa: E402
 from subsection_slicer import slice_all, LocatedSlice  # noqa: E402
 from tier4_llm_fallback import (  # noqa: E402
     build_cached_head,
@@ -359,8 +359,9 @@ def main() -> int:
     for k, v in env.items():
         os.environ.setdefault(k, v)
 
-    schema_path = Path(args.schema_path) if args.schema_path else None
+    schema_path = Path(args.schema_path) if args.schema_path else schema_path_for_year(args.schema_version)
     schema = SchemaIndex(schema_path=schema_path)
+    args.schema_version = str(schema.schema_version or args.schema_version)
 
     from supabase import create_client
     client = create_client(

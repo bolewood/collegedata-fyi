@@ -20,7 +20,7 @@ year-branched resolver contract.
 Architecture (PRD 005):
   1. Hand-coded maps (_FIELD_MAP / _PERCENTILE_MAP / _INLINE_PATTERNS) —
      regression-safe baseline covering B1/B2/B3/C1/C9/C10/C13.
-  2. SchemaIndex — lookup table built from cds_schema_2025_26.json that
+  2. SchemaIndex — lookup table built from the selected cds_schema JSON that
      supports filtering by (section, subsection, question_norm) plus
      dimensional keys (gender, cohort, unit_load, student_group, residency,
      category). Lazy-loaded on first use.
@@ -75,6 +75,14 @@ def _normalize_label(text: str) -> str:
     # labels. Parentheses matter because pre-2020 CDS templates sometimes
     # include parentheticals like "first-year (freshman)" that would
     # otherwise block substring matching of "first-year men".
+    t = re.sub(r'[,\-–—:;/()]', ' ', t)
+    t = re.sub(r'\s+', ' ', t).strip()
+    return t
+
+
+def _normalize_label_without_gender_rewrite(text: str) -> str:
+    """Normalize punctuation/spacing while preserving gender words."""
+    t = text.lower()
     t = re.sub(r'[,\-–—:;/()]', ' ', t)
     t = re.sub(r'\s+', ' ', t).strip()
     return t
@@ -309,6 +317,10 @@ _FIELD_MAP: list[tuple[str, str, str | int]] = [
     ("submitting act scores", "C.904", "number"),
 ]
 
+_SCHEMA_FIXED_C1_FIELD_MAP_QNS = {
+    f"C.{n:03d}" for n in range(101, 119)
+}
+
 # Percentile table: matched by assessment name + column position.
 _PERCENTILE_MAP: list[tuple[str, int, str]] = [
     # (row_label_substring, value_column_index, question_number)
@@ -359,11 +371,19 @@ _INLINE_PATTERNS: list[tuple[str, str, str]] = [
 
 # --- Schema index and section-family resolvers (PRD 005) ---
 
-_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "cds_schema_2025_26.json"
+_SCHEMA_DIR = Path(__file__).resolve().parents[2] / "schemas"
+_DEFAULT_SCHEMA_PATH = _SCHEMA_DIR / "cds_schema_2025_26.json"
+
+
+def schema_path_for_year(canonical_year: str | None) -> Path:
+    if not canonical_year:
+        return _DEFAULT_SCHEMA_PATH
+    candidate = _SCHEMA_DIR / f"cds_schema_{canonical_year.replace('-', '_')}.json"
+    return candidate if candidate.exists() else _DEFAULT_SCHEMA_PATH
 
 
 class SchemaIndex:
-    """In-memory view of cds_schema_2025_26.json used by section-family resolvers.
+    """In-memory view of a cds_schema JSON used by section-family resolvers.
 
     Fields are pre-normalized (_q_norm) so resolvers can match Docling row
     labels directly. Filter() is a thin keyword-driven row scan; the schema
@@ -371,8 +391,10 @@ class SchemaIndex:
     """
 
     def __init__(self, schema_path: Path | None = None):
-        path = schema_path or _SCHEMA_PATH
+        path = schema_path or _DEFAULT_SCHEMA_PATH
         data = json.loads(path.read_text())
+        self.schema_path = path
+        self.schema_version = data.get("schema_version")
         self.fields: list[dict[str, Any]] = data["fields"]
         for f in self.fields:
             f["_q_norm"] = _normalize_label(f.get("question", ""))
@@ -425,15 +447,15 @@ class SchemaIndex:
         return None
 
 
-# Module-level lazy singleton so resolvers in hot paths don't re-read the JSON.
-_SCHEMA_SINGLETON: SchemaIndex | None = None
+# Module-level lazy cache so resolvers in hot paths don't re-read schema JSON.
+_SCHEMA_CACHE: dict[Path, SchemaIndex] = {}
 
 
-def _get_schema() -> SchemaIndex:
-    global _SCHEMA_SINGLETON
-    if _SCHEMA_SINGLETON is None:
-        _SCHEMA_SINGLETON = SchemaIndex()
-    return _SCHEMA_SINGLETON
+def _get_schema(canonical_year: str | None = None) -> SchemaIndex:
+    path = schema_path_for_year(canonical_year)
+    if path not in _SCHEMA_CACHE:
+        _SCHEMA_CACHE[path] = SchemaIndex(path)
+    return _SCHEMA_CACHE[path]
 
 
 # --- Resolver: A General Information ---
@@ -1865,17 +1887,34 @@ def resolve_c1_applications(
 
     c1_fields = schema.filter(subsection="Applications")
 
+    def _gender_matches(field_gender: str, target_gender: str) -> bool:
+        if field_gender == target_gender:
+            return True
+        aliases = {
+            "Males": {"Men"},
+            "Females": {"Women"},
+            "Another Gender": {"Another Gender"},
+            "Unknown": {"Students of unknown sex"},
+        }
+        return field_gender in aliases.get(target_gender, set())
+
     def _lookup(gender: str, residency: str, action: str,
                 unit_load: str = "All") -> str | None:
-        for f in c1_fields:
-            if f["gender"] != gender:
-                continue
-            if f["residency"] != residency:
-                continue
-            if f["unit_load"] != unit_load:
-                continue
-            if action in f["_q_norm"]:
-                return f["question_number"]
+        unit_loads = [unit_load]
+        if action == "enrolled" and unit_load == "FT":
+            unit_loads.append("All")
+        elif action == "enrolled" and unit_load == "All":
+            unit_loads.append("FT")
+        for candidate_unit_load in unit_loads:
+            for f in c1_fields:
+                if not _gender_matches(str(f["gender"]), gender):
+                    continue
+                if f["residency"] != residency:
+                    continue
+                if f["unit_load"] != candidate_unit_load:
+                    continue
+                if action in f["_q_norm"]:
+                    return f["question_number"]
         return None
 
     for table in tables:
@@ -1927,6 +1966,7 @@ def resolve_c1_applications(
 
         elif is_gender_table:
             for row in table["rows"]:
+                label_raw_norm = _normalize_label_without_gender_rewrite(row["label"])
                 label_norm = _normalize_label(row["label"])
                 if _c1_multiple_action_hits(label_norm):
                     continue
@@ -1934,12 +1974,14 @@ def resolve_c1_applications(
                 # Gender detection — use word boundaries so "women who"
                 # doesn't match "men who".
                 gender = None
-                if re.search(r"\bmen who\b", label_norm):
+                if re.search(r"\b(men|males?) who\b", label_raw_norm):
                     gender = "Males"
-                elif re.search(r"\bwomen who\b", label_norm):
+                elif re.search(r"\b(women|females?) who\b", label_raw_norm):
                     gender = "Females"
-                elif re.search(r"\b(another gender|unknown gender) who\b",
-                                label_norm):
+                elif re.search(r"\banother gender who\b", label_raw_norm):
+                    gender = "Another Gender"
+                elif re.search(r"\b(unknown gender|unknown sex) who\b",
+                                label_raw_norm):
                     gender = "Unknown"
                 if gender is None:
                     continue
@@ -4679,6 +4721,7 @@ def clean(
     markdown: str,
     schema: SchemaIndex | None = None,
     supplemental_text: str | None = None,
+    canonical_year: str | None = None,
 ) -> dict[str, dict]:
     """Map Docling markdown to canonical question-number-keyed values.
 
@@ -4691,6 +4734,7 @@ def clean(
     """
     tables = _parse_markdown_tables(markdown)
     values: dict[str, dict] = {}
+    idx = schema if schema is not None else _get_schema(canonical_year)
 
     # Pre-normalize the map substrings once so _FIELD_MAP / _PERCENTILE_MAP
     # entries can be written in natural form (e.g. "another gender",
@@ -4711,6 +4755,11 @@ def clean(
 
             # --- Standard field map ---
             for substr, qnum, col_hint in field_map_norm:
+                if (
+                    idx.schema_version != "2025-26"
+                    and qnum in _SCHEMA_FIXED_C1_FIELD_MAP_QNS
+                ):
+                    continue
                 if substr not in label_norm:
                     continue
 
@@ -4775,7 +4824,6 @@ def clean(
     # Each resolver returns its own claims. We only accept a claim if the
     # field isn't already populated by an earlier resolver or hand-coded map.
     # This preserves the regression-safe ordering: hand-coded > resolvers.
-    idx = schema if schema is not None else _get_schema()
     for resolver in _RESOLVERS:
         new = resolver(tables, markdown, idx)
         if resolver in (
@@ -4837,12 +4885,12 @@ def main():
     args = parser.parse_args()
 
     md = args.markdown.read_text()
-    result = clean(md)
+    schema_index = SchemaIndex(args.schema) if args.schema else None
+    result = clean(md, schema=schema_index)
 
     schema_lookup = {}
-    if args.schema and args.schema.exists():
-        schema = json.load(args.schema.open())
-        schema_lookup = {f["question_number"]: f for f in schema["fields"]}
+    if schema_index is not None:
+        schema_lookup = {f["question_number"]: f for f in schema_index.fields}
 
     print(f"Extracted {len(result)} fields:\n")
     for qnum in sorted(result):

@@ -4,8 +4,10 @@ from decimal import Decimal
 
 from tools.browser_backend.project_browser_data import (
     DIRECT_METRIC_ALIASES,
+    DIRECT_METRIC_DEFINITIONS,
     FieldDefinition,
     build_projection_rows,
+    metric_field_ids_for_year,
     metric_alias_rows,
     parse_field_value,
     project_document_id,
@@ -16,6 +18,28 @@ from tools.browser_backend.project_browser_data import (
 
 def defs():
     return {
+        "2024-25": {
+            "C.101": FieldDefinition("2024-25", "C.101", "Men applied", "Admission", "Applications", "Number"),
+            "C.102": FieldDefinition("2024-25", "C.102", "Women applied", "Admission", "Applications", "Number"),
+            "C.103": FieldDefinition("2024-25", "C.103", "Another gender applied", "Admission", "Applications", "Number"),
+            "C.104": FieldDefinition("2024-25", "C.104", "Unknown gender applied", "Admission", "Applications", "Number"),
+            "C.105": FieldDefinition("2024-25", "C.105", "Men admitted", "Admission", "Applications", "Number"),
+            "C.106": FieldDefinition("2024-25", "C.106", "Women admitted", "Admission", "Applications", "Number"),
+            "C.107": FieldDefinition("2024-25", "C.107", "Another gender admitted", "Admission", "Applications", "Number"),
+            "C.108": FieldDefinition("2024-25", "C.108", "Unknown gender admitted", "Admission", "Applications", "Number"),
+            "C.109": FieldDefinition("2024-25", "C.109", "Men full-time enrolled", "Admission", "Applications", "Number"),
+            "C.110": FieldDefinition("2024-25", "C.110", "Men part-time enrolled", "Admission", "Applications", "Number"),
+            "C.111": FieldDefinition("2024-25", "C.111", "Women full-time enrolled", "Admission", "Applications", "Number"),
+            "C.112": FieldDefinition("2024-25", "C.112", "Women part-time enrolled", "Admission", "Applications", "Number"),
+            "C.113": FieldDefinition("2024-25", "C.113", "Another gender full-time enrolled", "Admission", "Applications", "Number"),
+            "C.114": FieldDefinition("2024-25", "C.114", "Another gender part-time enrolled", "Admission", "Applications", "Number"),
+            "C.115": FieldDefinition("2024-25", "C.115", "Unknown gender full-time enrolled", "Admission", "Applications", "Number"),
+            "C.116": FieldDefinition("2024-25", "C.116", "Unknown gender part-time enrolled", "Admission", "Applications", "Number"),
+            "C.117": FieldDefinition("2024-25", "C.117", "Total applied", "Admission", "Applications", "Number"),
+            "C.118": FieldDefinition("2024-25", "C.118", "Total admitted", "Admission", "Applications", "Number"),
+            "C.119": FieldDefinition("2024-25", "C.119", "Total enrolled", "Admission", "Applications", "Number"),
+            "C.901": FieldDefinition("2024-25", "C.901", "Submitting SAT Scores", "Admission", "Profile", "Whole Number or Round to Nearest Tenths"),
+        },
         "2025-26": {
             "C.116": FieldDefinition("2025-26", "C.116", "Applied", "Admission", "Applications", "Number"),
             "C.117": FieldDefinition("2025-26", "C.117", "Admitted", "Admission", "Applications", "Number"),
@@ -61,6 +85,7 @@ def artifact(
     created_at="2026-01-01T00:00:00Z",
     producer_version="0.1.0",
     notes_extra=None,
+    schema_version="2025-26",
 ):
     notes = {"values": values or {}}
     if notes_extra:
@@ -71,7 +96,7 @@ def artifact(
         "kind": kind,
         "producer": producer,
         "producer_version": producer_version,
-        "schema_version": "2025-26" if kind == "canonical" else None,
+        "schema_version": schema_version,
         "created_at": created_at,
         "notes": notes,
     }
@@ -171,6 +196,110 @@ class BrowserProjectionTests(unittest.TestCase):
         self.assertEqual(browser["act_composite_p25"], 32)
         self.assertEqual(browser["act_composite_p50"], 34)
         self.assertEqual(browser["act_composite_p75"], 35)
+
+    def test_2024_admissions_metrics_derive_from_gender_split_fields(self):
+        fields, browser = build_projection_rows(
+            doc(canonical_year="2024-25"),
+            [
+                artifact(
+                    schema_version="2024-25",
+                    values={
+                        "C.101": {"value": "10"},
+                        "C.102": {"value": "20"},
+                        "C.103": {"value": "3"},
+                        "C.104": {"value": "2"},
+                        "C.105": {"value": "5"},
+                        "C.106": {"value": "10"},
+                        "C.107": {"value": "1"},
+                        "C.108": {"value": "1"},
+                        "C.109": {"value": "2"},
+                        "C.110": {"value": "1"},
+                        "C.111": {"value": "4"},
+                        "C.112": {"value": "1"},
+                        "C.113": {"value": "1"},
+                        "C.114": {"value": "0"},
+                        "C.115": {"value": "1"},
+                        "C.116": {"value": "0"},
+                    },
+                )
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["applied"], 35)
+        self.assertEqual(browser["admitted"], 17)
+        self.assertEqual(browser["enrolled_first_year"], 10)
+        self.assertEqual(browser["acceptance_rate"], "0.485714")
+        self.assertEqual(browser["yield_rate"], "0.588235")
+        by_field = {row["field_id"]: row for row in fields}
+        self.assertEqual(by_field["C.103"]["equivalence_kind"], "unmapped")
+        self.assertIsNone(by_field["C.103"]["canonical_field_id"])
+
+    def test_2024_admissions_derived_metrics_treat_missing_split_components_as_zero(self):
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2024-25"),
+            [
+                artifact(
+                    schema_version="2024-25",
+                    values={
+                        "C.101": {"value": "10"},
+                        "C.102": {"value": "20"},
+                        "C.105": {"value": "5"},
+                        "C.106": {"value": "10"},
+                        "C.109": {"value": "2"},
+                        "C.111": {"value": "4"},
+                    },
+                )
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["applied"], 30)
+        self.assertEqual(browser["admitted"], 15)
+        self.assertEqual(browser["enrolled_first_year"], 6)
+
+    def test_2024_admissions_derived_metrics_use_total_fallback_when_available(self):
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2024-25"),
+            [
+                artifact(
+                    schema_version="2024-25",
+                    values={
+                        "C.101": {"value": "10"},
+                        "C.102": {"value": "20"},
+                        "C.117": {"value": "35"},
+                        "C.105": {"value": "5"},
+                        "C.106": {"value": "10"},
+                        "C.118": {"value": "17"},
+                        "C.109": {"value": "2"},
+                        "C.119": {"value": "10"},
+                    },
+                )
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["applied"], 35)
+        self.assertEqual(browser["admitted"], 17)
+        self.assertEqual(browser["enrolled_first_year"], 10)
+
+    def test_2024_direct_alias_uses_canonical_field_id(self):
+        fields, browser = build_projection_rows(
+            doc(canonical_year="2024-25"),
+            [
+                artifact(
+                    schema_version="2024-25",
+                    values={"C.901": {"value": "62"}},
+                )
+            ],
+            defs(),
+        )
+
+        by_field = {row["field_id"]: row for row in fields}
+        self.assertEqual(by_field["C.901"]["canonical_field_id"], "C.901")
+        self.assertEqual(by_field["C.901"]["equivalence_kind"], "direct")
+        self.assertEqual(by_field["C.901"]["canonical_metric"], "sat_submit_rate")
+        self.assertEqual(browser["sat_submit_rate"], "0.62")
 
     def test_invalid_sat_act_values_are_parse_errors_and_not_browser_values(self):
         fields, browser = build_projection_rows(
@@ -275,6 +404,61 @@ class BrowserProjectionTests(unittest.TestCase):
         self.assertEqual(selected.value_sources["C.117"][0], "tier4_docling")
         self.assertEqual(selected.value_sources["C.118"][0], "tier4_llm_fallback")
 
+    def test_tier4_fallback_overlay_requires_matching_schema_version(self):
+        selected = select_extraction_result(
+            "00000000-0000-0000-0000-000000000001",
+            [
+                artifact(
+                    producer="tier4_docling",
+                    producer_version="0.3.0",
+                    values={"C.116": {"value": "100"}},
+                    schema_version="2025-26",
+                    notes_extra={"markdown": "current markdown"},
+                ),
+                artifact(
+                    producer="tier4_llm_fallback",
+                    kind="cleaned",
+                    values={"C.118": {"value": "10"}},
+                    created_at="2026-01-02T00:00:00Z",
+                    schema_version="2024-25",
+                    notes_extra={
+                        "base_artifact_id": "tier4_docling-canonical",
+                        "base_producer_version": "0.3.0",
+                    },
+                ),
+            ],
+        )
+
+        self.assertIsNotNone(selected)
+        assert selected is not None
+        self.assertIsNone(selected.fallback_artifact_id)
+        self.assertNotIn("C.118", selected.values)
+
+    def test_selected_result_prefers_year_matched_non_fallback_artifact(self):
+        selected = select_extraction_result(
+            "00000000-0000-0000-0000-000000000001",
+            [
+                artifact(
+                    values={"C.116": {"value": "999"}},
+                    created_at="2026-01-03T00:00:00Z",
+                    notes_extra={"schema_fallback_used": True},
+                    schema_version="2025-26",
+                ),
+                artifact(
+                    values={"C.101": {"value": "10"}},
+                    created_at="2026-01-01T00:00:00Z",
+                    schema_version="2024-25",
+                ),
+            ],
+            expected_schema_version="2024-25",
+        )
+
+        self.assertIsNotNone(selected)
+        assert selected is not None
+        self.assertEqual(selected.schema_version, "2024-25")
+        self.assertIn("C.101", selected.values)
+        self.assertNotIn("C.116", selected.values)
+
     def test_tier4_fallback_overlay_ignores_stale_base(self):
         selected = select_extraction_result(
             "00000000-0000-0000-0000-000000000001",
@@ -328,6 +512,12 @@ class BrowserProjectionTests(unittest.TestCase):
         self.assertIsNotNone(selected)
         assert selected is not None
         self.assertEqual(selected.values["C.118"]["value"], "10")
+
+    def test_derived_metric_formula_requires_explicit_schema_year(self):
+        metric = DIRECT_METRIC_DEFINITIONS["applied"]
+
+        self.assertEqual(metric_field_ids_for_year(metric, "2025-26"), ("C.116",))
+        self.assertIsNone(metric_field_ids_for_year(metric, "2026-27"))
 
     def test_replace_projection_rows_uses_atomic_rpc(self):
         client = FakeRpcClient()

@@ -30,8 +30,9 @@ import re
 import sys
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from functools import lru_cache
 from pathlib import Path
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Tuple, Union
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -71,6 +72,11 @@ def _fallback_matches_base(
     if not isinstance(fallback_notes, dict):
         return False
 
+    base_schema_version = artifact_schema_version(base)
+    fallback_schema_version = artifact_schema_version(fallback)
+    if not base_schema_version or fallback_schema_version != base_schema_version:
+        return False
+
     base_artifact_id = fallback_notes.get("base_artifact_id")
     if base_artifact_id:
         return (
@@ -100,9 +106,22 @@ class FieldDefinition:
 
 
 @dataclass(frozen=True)
+class DirectAlias:
+    field_id: str
+
+
+@dataclass(frozen=True)
+class DerivedFormula:
+    per_year_formulas: dict[str, Tuple[str, ...]]
+
+
+SourceSpec = Union[DirectAlias, DerivedFormula]
+
+
+@dataclass(frozen=True)
 class MetricDefinition:
     canonical_metric: str
-    field_id: str
+    source_spec: SourceSpec
     value_kind: str
     mvp_certified: bool
     notes: str
@@ -136,89 +155,126 @@ class ParsedValue:
 
 DIRECT_METRIC_DEFINITIONS = {
     "applied": MetricDefinition(
-        "applied", "C.116", "number", True, "PRD 010 MVP direct field alias.", "applied",
+        "applied",
+        DerivedFormula({
+            "2024-25": ("C.101", "C.102", "C.103", "C.104"),
+            "2025-26": ("C.116",),
+        }),
+        "number",
+        True,
+        "PRD 014 derived admissions metric; 2024-25 is gender-split, 2025-26 uses a total field.",
+        "applied",
     ),
     "admitted": MetricDefinition(
-        "admitted", "C.117", "number", True, "PRD 010 MVP direct field alias.", "admitted",
+        "admitted",
+        DerivedFormula({
+            "2024-25": ("C.105", "C.106", "C.107", "C.108"),
+            "2025-26": ("C.117",),
+        }),
+        "number",
+        True,
+        "PRD 014 derived admissions metric; 2024-25 is gender-split, 2025-26 uses a total field.",
+        "admitted",
     ),
     "first_year_enrolled": MetricDefinition(
-        "first_year_enrolled", "C.118", "number", True, "PRD 010 MVP direct field alias.", "enrolled_first_year",
+        "first_year_enrolled",
+        DerivedFormula({
+            "2024-25": ("C.109", "C.110", "C.111", "C.112", "C.113", "C.114", "C.115", "C.116"),
+            "2025-26": ("C.118",),
+        }),
+        "number",
+        True,
+        "PRD 014 derived admissions metric; 2024-25 is gender and unit-load split, 2025-26 uses a total field.",
+        "enrolled_first_year",
     ),
     "sat_submit_rate": MetricDefinition(
-        "sat_submit_rate", "C.901", "percent", True,
+        "sat_submit_rate", DirectAlias("C.901"), "percent", True,
         "PRD 012 direct field alias; stored fractionally and paired with SAT score interpretation.",
         "sat_submit_rate",
     ),
     "act_submit_rate": MetricDefinition(
-        "act_submit_rate", "C.902", "percent", True,
+        "act_submit_rate", DirectAlias("C.902"), "percent", True,
         "PRD 012 direct field alias; stored fractionally and paired with ACT score interpretation.",
         "act_submit_rate",
     ),
     "sat_composite_p25": MetricDefinition(
-        "sat_composite_p25", "C.905", "number", True,
+        "sat_composite_p25", DirectAlias("C.905"), "number", True,
         "PRD 012 direct SAT Composite 25th percentile field.",
         "sat_composite_p25", Decimal("400"), Decimal("1600"), True,
     ),
     "sat_composite_p50": MetricDefinition(
-        "sat_composite_p50", "C.906", "number", True,
+        "sat_composite_p50", DirectAlias("C.906"), "number", True,
         "PRD 012 direct SAT Composite 50th percentile field.",
         "sat_composite_p50", Decimal("400"), Decimal("1600"), True,
     ),
     "sat_composite_p75": MetricDefinition(
-        "sat_composite_p75", "C.907", "number", True,
+        "sat_composite_p75", DirectAlias("C.907"), "number", True,
         "PRD 012 direct SAT Composite 75th percentile field.",
         "sat_composite_p75", Decimal("400"), Decimal("1600"), True,
     ),
     "sat_ebrw_p25": MetricDefinition(
-        "sat_ebrw_p25", "C.908", "number", True,
+        "sat_ebrw_p25", DirectAlias("C.908"), "number", True,
         "PRD 012 direct SAT EBRW 25th percentile field.",
         "sat_ebrw_p25", Decimal("200"), Decimal("800"), True,
     ),
     "sat_ebrw_p50": MetricDefinition(
-        "sat_ebrw_p50", "C.909", "number", True,
+        "sat_ebrw_p50", DirectAlias("C.909"), "number", True,
         "PRD 012 direct SAT EBRW 50th percentile field.",
         "sat_ebrw_p50", Decimal("200"), Decimal("800"), True,
     ),
     "sat_ebrw_p75": MetricDefinition(
-        "sat_ebrw_p75", "C.910", "number", True,
+        "sat_ebrw_p75", DirectAlias("C.910"), "number", True,
         "PRD 012 direct SAT EBRW 75th percentile field.",
         "sat_ebrw_p75", Decimal("200"), Decimal("800"), True,
     ),
     "sat_math_p25": MetricDefinition(
-        "sat_math_p25", "C.911", "number", True,
+        "sat_math_p25", DirectAlias("C.911"), "number", True,
         "PRD 012 direct SAT Math 25th percentile field.",
         "sat_math_p25", Decimal("200"), Decimal("800"), True,
     ),
     "sat_math_p50": MetricDefinition(
-        "sat_math_p50", "C.912", "number", True,
+        "sat_math_p50", DirectAlias("C.912"), "number", True,
         "PRD 012 direct SAT Math 50th percentile field.",
         "sat_math_p50", Decimal("200"), Decimal("800"), True,
     ),
     "sat_math_p75": MetricDefinition(
-        "sat_math_p75", "C.913", "number", True,
+        "sat_math_p75", DirectAlias("C.913"), "number", True,
         "PRD 012 direct SAT Math 75th percentile field.",
         "sat_math_p75", Decimal("200"), Decimal("800"), True,
     ),
     "act_composite_p25": MetricDefinition(
-        "act_composite_p25", "C.914", "number", True,
+        "act_composite_p25", DirectAlias("C.914"), "number", True,
         "PRD 012 direct ACT Composite 25th percentile field.",
         "act_composite_p25", Decimal("1"), Decimal("36"), True,
     ),
     "act_composite_p50": MetricDefinition(
-        "act_composite_p50", "C.915", "number", True,
+        "act_composite_p50", DirectAlias("C.915"), "number", True,
         "PRD 012 direct ACT Composite 50th percentile field.",
         "act_composite_p50", Decimal("1"), Decimal("36"), True,
     ),
     "act_composite_p75": MetricDefinition(
-        "act_composite_p75", "C.916", "number", True,
+        "act_composite_p75", DirectAlias("C.916"), "number", True,
         "PRD 012 direct ACT Composite 75th percentile field.",
         "act_composite_p75", Decimal("1"), Decimal("36"), True,
     ),
 }
 
 DIRECT_METRIC_ALIASES = {
-    metric: definition.field_id
+    metric: definition.source_spec.field_id
     for metric, definition in DIRECT_METRIC_DEFINITIONS.items()
+    if isinstance(definition.source_spec, DirectAlias)
+}
+
+DERIVED_METRIC_DEFINITIONS = {
+    metric: definition
+    for metric, definition in DIRECT_METRIC_DEFINITIONS.items()
+    if isinstance(definition.source_spec, DerivedFormula)
+}
+
+DERIVED_TOTAL_FALLBACK_FIELDS = {
+    ("2024-25", "applied"): "C.117",
+    ("2024-25", "admitted"): "C.118",
+    ("2024-25", "first_year_enrolled"): "C.119",
 }
 
 
@@ -296,12 +352,14 @@ def metric_alias_rows(definitions: dict[str, dict[str, FieldDefinition]]) -> lis
     rows: list[dict[str, Any]] = []
     for schema_version, fields in definitions.items():
         for metric in DIRECT_METRIC_DEFINITIONS.values():
-            if metric.field_id not in fields:
+            if not isinstance(metric.source_spec, DirectAlias):
+                continue
+            if metric.source_spec.field_id not in fields:
                 continue
             rows.append({
                 "canonical_metric": metric.canonical_metric,
                 "schema_version": schema_version,
-                "field_id": metric.field_id,
+                "field_id": metric.source_spec.field_id,
                 "value_kind": metric.value_kind,
                 "mvp_certified": metric.mvp_certified,
                 "notes": metric.notes,
@@ -309,14 +367,93 @@ def metric_alias_rows(definitions: dict[str, dict[str, FieldDefinition]]) -> lis
     return rows
 
 
+def canonical_field_equivalence_rows(
+    definitions: dict[str, dict[str, FieldDefinition]],
+) -> list[dict[str, Any]]:
+    rows_by_key: dict[tuple[str, str], dict[str, Any]] = {}
+
+    for schema_version, fields in definitions.items():
+        for field_id in fields:
+            rows_by_key[(schema_version, field_id)] = {
+                "schema_version": schema_version,
+                "field_id": field_id,
+                "canonical_field_id": field_id,
+                "equivalence_kind": "direct",
+                "derivation_formula": None,
+            }
+
+    for (schema_version, field_id), (canonical_field_id, kind) in load_field_equivalences().items():
+        rows_by_key[(schema_version, field_id)] = {
+            "schema_version": schema_version,
+            "field_id": field_id,
+            "canonical_field_id": canonical_field_id,
+            "equivalence_kind": kind,
+            "derivation_formula": None,
+        }
+
+    for metric in DERIVED_METRIC_DEFINITIONS.values():
+        assert isinstance(metric.source_spec, DerivedFormula)
+        for schema_version, field_ids in metric.source_spec.per_year_formulas.items():
+            rows_by_key[(schema_version, metric.canonical_metric)] = {
+                "schema_version": schema_version,
+                "field_id": metric.canonical_metric,
+                "canonical_field_id": field_ids[0],
+                "equivalence_kind": "derived",
+                "derivation_formula": " + ".join(field_ids),
+            }
+
+    return list(rows_by_key.values())
+
+
 def _created_at_key(row: dict[str, Any]) -> str:
     return str(row.get("created_at") or "")
+
+
+def artifact_schema_version(row: dict[str, Any]) -> Optional[str]:
+    notes = row.get("notes") or {}
+    if not isinstance(notes, dict):
+        notes = {}
+    schema_version = row.get("schema_version") or notes.get("schema_version")
+    return str(schema_version) if schema_version else None
+
+
+def artifact_schema_fallback_used(row: dict[str, Any]) -> bool:
+    notes = row.get("notes") or {}
+    if not isinstance(notes, dict):
+        return False
+    return bool(notes.get("schema_fallback_used"))
+
+
+def sort_base_candidates(
+    candidates: list[dict[str, Any]],
+    expected_schema_version: Optional[str] = None,
+) -> list[dict[str, Any]]:
+    sorted_candidates = sorted(
+        candidates,
+        key=lambda row: (_created_at_key(row), str(row.get("id") or "")),
+        reverse=True,
+    )
+    sorted_candidates = sorted(
+        sorted_candidates,
+        key=lambda row: BASE_PRODUCER_RANK.get(str(row.get("producer")), 99),
+    )
+    sorted_candidates = sorted(
+        sorted_candidates,
+        key=lambda row: 1 if artifact_schema_fallback_used(row) else 0,
+    )
+    if expected_schema_version:
+        sorted_candidates = sorted(
+            sorted_candidates,
+            key=lambda row: 0 if artifact_schema_version(row) == expected_schema_version else 1,
+        )
+    return sorted_candidates
 
 
 def select_extraction_result(
     document_id: str,
     artifacts: list[dict[str, Any]],
     fallback_schema_version: str = DEFAULT_SCHEMA_VERSION,
+    expected_schema_version: Optional[str] = None,
 ) -> Optional[SelectedExtractionResult]:
     base_candidates = [
         artifact for artifact in artifacts
@@ -326,35 +463,14 @@ def select_extraction_result(
     if not base_candidates:
         return None
 
-    base = sorted(
-        base_candidates,
-        key=lambda row: (
-            BASE_PRODUCER_RANK.get(str(row.get("producer")), 99),
-            _created_at_key(row),
-            str(row.get("id") or ""),
-        ),
-    )[0]
-    # Lowest rank wins; within that family newest wins.
-    same_family = [
-        artifact for artifact in base_candidates
-        if artifact.get("producer") == base.get("producer")
-    ]
-    base = sorted(
-        same_family,
-        key=lambda row: (_created_at_key(row), str(row.get("id") or "")),
-        reverse=True,
-    )[0]
+    base = sort_base_candidates(base_candidates, expected_schema_version)[0]
 
     base_notes = base.get("notes") or {}
     if not isinstance(base_notes, dict):
         base_notes = {}
     base_values = _values_dict(base_notes)
 
-    schema_version = (
-        base.get("schema_version")
-        or base_notes.get("schema_version")
-        or fallback_schema_version
-    )
+    schema_version = artifact_schema_version(base) or fallback_schema_version
 
     merged_values: dict[str, Any] = dict(base_values)
     value_sources = {
@@ -574,6 +690,104 @@ def int_from_decimal(value: Optional[Decimal]) -> Optional[int]:
         return None
 
 
+@lru_cache(maxsize=1)
+def load_field_equivalences(schema_dir: Path = SCHEMA_DIR) -> dict[tuple[str, str], tuple[Optional[str], str]]:
+    equivalences: dict[tuple[str, str], tuple[Optional[str], str]] = {}
+
+    # Identity mappings for canonical schemas in this checkout.
+    for schema_version, fields in load_schema_definitions(schema_dir).items():
+        for field_id in fields:
+            equivalences[(schema_version, field_id)] = (field_id, "direct")
+
+    for path in sorted(schema_dir.glob("cds_schema_*-to-*.diff.json")):
+        try:
+            diff = json.loads(path.read_text())
+        except json.JSONDecodeError:
+            continue
+        source_version = diff.get("source_schema_version")
+        if not source_version:
+            continue
+        for record in diff.get("fields", []):
+            field_id = record.get("field_id")
+            kind = record.get("equivalence_kind")
+            if not field_id or not kind:
+                continue
+            equivalences[(str(source_version), str(field_id))] = (
+                record.get("canonical_field_id"),
+                str(kind),
+            )
+
+    return equivalences
+
+
+def field_equivalence(
+    schema_version: str,
+    field_id: str,
+) -> tuple[Optional[str], str]:
+    return load_field_equivalences().get((schema_version, field_id), (field_id, "direct"))
+
+
+def direct_metrics_by_canonical_field() -> dict[str, MetricDefinition]:
+    out = {}
+    for metric in DIRECT_METRIC_DEFINITIONS.values():
+        if isinstance(metric.source_spec, DirectAlias):
+            out[metric.source_spec.field_id] = metric
+    return out
+
+
+def metric_field_ids_for_year(metric: MetricDefinition, schema_version: str) -> Optional[Tuple[str, ...]]:
+    if isinstance(metric.source_spec, DirectAlias):
+        return (metric.source_spec.field_id,)
+    return metric.source_spec.per_year_formulas.get(schema_version)
+
+
+def parse_metric_component(
+    field_id: str,
+    selected: SelectedExtractionResult,
+    schema_defs: dict[str, FieldDefinition],
+    metric: MetricDefinition,
+) -> Optional[Decimal]:
+    if field_id not in selected.values:
+        return None
+    definition = schema_defs.get(field_id)
+    parsed = parse_field_value(selected.values[field_id], definition, metric)
+    if parsed.value_status != "reported" or parsed.value_num is None:
+        return None
+    return parsed.value_num
+
+
+def evaluate_metric(
+    metric: MetricDefinition,
+    selected: SelectedExtractionResult,
+    schema_defs: dict[str, FieldDefinition],
+) -> Optional[Decimal]:
+    field_ids = metric_field_ids_for_year(metric, selected.schema_version)
+    if not field_ids:
+        return None
+    values = [
+        parse_metric_component(field_id, selected, schema_defs, metric)
+        for field_id in field_ids
+    ]
+    if isinstance(metric.source_spec, DerivedFormula):
+        reported_values = [value for value in values if value is not None]
+        if not reported_values:
+            return None
+        if len(reported_values) != len(values):
+            fallback_field_id = DERIVED_TOTAL_FALLBACK_FIELDS.get(
+                (selected.schema_version, metric.canonical_metric)
+            )
+            if fallback_field_id:
+                fallback_value = parse_metric_component(
+                    fallback_field_id, selected, schema_defs, metric,
+                )
+                if fallback_value is not None:
+                    return fallback_value
+        return sum(reported_values, Decimal("0"))
+    if any(value is None for value in values):
+        return None
+    return sum(values, Decimal("0"))
+
+
 def build_projection_rows(
     document: dict[str, Any],
     artifacts: list[dict[str, Any]],
@@ -589,23 +803,29 @@ def build_projection_rows(
         str(document["document_id"]),
         artifacts,
         DEFAULT_SCHEMA_VERSION,
+        expected_schema_version=str(canonical_year) if canonical_year else None,
     )
     if selected is None:
         return [], None
 
     schema_defs = definitions.get(selected.schema_version) or definitions.get(DEFAULT_SCHEMA_VERSION) or {}
-    aliases_by_field = {
-        metric.field_id: metric
-        for metric in DIRECT_METRIC_DEFINITIONS.values()
-        if metric.field_id in schema_defs
-    }
+    direct_metrics = direct_metrics_by_canonical_field()
+    derived_formula_single_fields = {}
+    for metric in DERIVED_METRIC_DEFINITIONS.values():
+        field_ids = metric_field_ids_for_year(metric, selected.schema_version)
+        if field_ids and len(field_ids) == 1:
+            derived_formula_single_fields[field_ids[0]] = metric
 
     field_rows: list[dict[str, Any]] = []
     metric_values: dict[str, Decimal] = {}
 
     for field_id, record in sorted(selected.values.items()):
         definition = schema_defs.get(field_id)
-        metric = aliases_by_field.get(field_id)
+        canonical_field_id, equivalence_kind = field_equivalence(selected.schema_version, field_id)
+        metric = (
+            direct_metrics.get(canonical_field_id or "")
+            or derived_formula_single_fields.get(field_id)
+        )
         parsed = parse_field_value(record, definition, metric)
         source_producer, source_version = selected.value_sources.get(
             field_id,
@@ -622,6 +842,8 @@ def build_projection_rows(
             "year_start": year_start,
             "schema_version": selected.schema_version,
             "field_id": field_id,
+            "canonical_field_id": canonical_field_id,
+            "equivalence_kind": equivalence_kind,
             "canonical_metric": canonical_metric,
             "value_text": parsed.value_text,
             "value_num": decimal_to_json(parsed.value_num),
@@ -637,6 +859,11 @@ def build_projection_rows(
         field_rows.append(row)
         if canonical_metric and parsed.value_status == "reported" and parsed.value_num is not None:
             metric_values[canonical_metric] = parsed.value_num
+
+    for metric in DERIVED_METRIC_DEFINITIONS.values():
+        value = evaluate_metric(metric, selected, schema_defs)
+        if value is not None:
+            metric_values[metric.canonical_metric] = value
 
     browser_row = build_browser_row(document, selected, metric_values, scorecard)
     return field_rows, browser_row
@@ -714,11 +941,22 @@ def build_browser_row(
 def seed_metadata(client: Any, definitions: dict[str, dict[str, FieldDefinition]], apply: bool) -> None:
     def_rows = field_definition_rows(definitions)
     alias_rows = metric_alias_rows(definitions)
-    print(f"metadata: {len(def_rows)} field definitions, {len(alias_rows)} metric aliases")
+    equivalence_rows = canonical_field_equivalence_rows(definitions)
+    print(
+        f"metadata: {len(def_rows)} field definitions, "
+        f"{len(alias_rows)} metric aliases, "
+        f"{len(equivalence_rows)} field equivalences"
+    )
     if not apply:
         return
     _upsert_chunks(client, "cds_field_definitions", def_rows, "schema_version,field_id")
     _upsert_chunks(client, "cds_metric_aliases", alias_rows, "canonical_metric,schema_version,field_id")
+    _upsert_chunks(
+        client,
+        "cds_canonical_field_equivalence",
+        equivalence_rows,
+        "schema_version,field_id",
+    )
 
 
 def project_document(

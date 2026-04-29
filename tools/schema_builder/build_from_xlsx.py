@@ -12,7 +12,7 @@ year.
 
 Usage:
     python tools/schema_builder/build_from_xlsx.py \\
-        scratch/CDS-PDF-2025-2026-Excel_Template.xlsx \\
+        schemas/templates/cds_2025-26_template.xlsx \\
         schemas/cds_schema_2025_26.json
 
 The output is a JSON document with:
@@ -26,19 +26,34 @@ The output is a JSON document with:
 
 import argparse
 import json
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 
 import openpyxl
 
 
 ANSWER_SHEET_NAME = "Answer Sheet"
-EXPECTED_HEADERS = [
-    "Sort Order",
+OUTPUT_COLUMNS = {
+    "sort_order": "Sort Order",
+    "question_number": "Question Number",
+    "pdf_tag": "US News PDF Tag",
+    "word_tag": "Word Tag",
+    "question": "Question",
+    "section": "Section",
+    "subsection": "Sub-Section",
+    "category": "Category",
+    "student_group": "Student Group",
+    "cohort": "Cohort",
+    "residency": "Residency",
+    "unit_load": "Unit load",
+    "gender": "Gender",
+    "value_type": "Value type",
+}
+REQUIRED_HEADERS = {
     "Question Number",
-    "US News PDF Tag",
-    "Word Tag",
     "Question",
     "Answer",
     "Section",
@@ -50,7 +65,9 @@ EXPECTED_HEADERS = [
     "Unit load",
     "Gender",
     "Value type",
-]
+}
+OPTIONAL_HEADERS = {"Sort Order", "US News PDF Tag", "Word Tag"}
+ALLOWED_HEADERS = REQUIRED_HEADERS | OPTIONAL_HEADERS
 
 
 def _clean(v):
@@ -58,6 +75,44 @@ def _clean(v):
         return None
     s = str(v).strip()
     return s if s else None
+
+
+def normalize_question_number(raw: str) -> str:
+    value = _clean(raw)
+    if value is None:
+        raise ValueError("question number is empty")
+
+    m = re.match(r"^([A-Z])\.?(.+)$", value)
+    if not m:
+        raise ValueError(f"unparseable question number: {raw!r}")
+
+    section, rest = m.groups()
+    if rest.isdigit():
+        rest = rest.zfill(3)
+    return f"{section}.{rest}"
+
+
+def _header_index(header: list[Optional[str]]) -> dict[str, int]:
+    index = {}
+    for i, name in enumerate(header):
+        if name is None:
+            continue
+        if name not in ALLOWED_HEADERS:
+            raise ValueError(
+                f"Unexpected Answer Sheet header at column {i + 1}: {name!r}. "
+                f"The template structure may have changed for a new CDS year."
+            )
+        if name in index:
+            raise ValueError(f"Duplicate Answer Sheet header: {name!r}")
+        index[name] = i
+
+    missing = sorted(REQUIRED_HEADERS - set(index))
+    if missing:
+        raise ValueError(
+            "Answer Sheet is missing required header(s): " + ", ".join(missing)
+        )
+
+    return index
 
 
 def build_schema(xlsx_path: Path) -> dict:
@@ -70,52 +125,52 @@ def build_schema(xlsx_path: Path) -> dict:
     ws = wb[ANSWER_SHEET_NAME]
 
     header = [_clean(c.value) for c in ws[1]]
-    for i, expected in enumerate(EXPECTED_HEADERS):
-        if i >= len(header) or header[i] != expected:
-            raise ValueError(
-                f"Unexpected Answer Sheet header at column {i + 1}: "
-                f"got {header[i]!r}, expected {expected!r}. "
-                f"The template structure may have changed for a new CDS year."
-            )
+    header_index = _header_index(header)
+    has_sort_order = OUTPUT_COLUMNS["sort_order"] in header_index
+    has_pdf_tag = OUTPUT_COLUMNS["pdf_tag"] in header_index
 
     fields = []
     sections_seen = []
     sections_set = set()
 
-    for row in ws.iter_rows(min_row=2, values_only=True):
-        if not row or len(row) < 15:
+    rows = ws.iter_rows(min_row=2, values_only=True)
+    for row_ordinal, row in enumerate(rows, start=1):
+        if not row:
             continue
-        question_number = _clean(row[1])
+        question_number = _clean(_row_value(row, header_index, "question_number"))
         if not question_number:
             continue
 
-        pdf_tag = _clean(row[2])
-        section = _clean(row[6])
+        normalized_question_number = normalize_question_number(question_number)
+        pdf_tag = _clean(_row_value(row, header_index, "pdf_tag"))
+        section = _clean(_row_value(row, header_index, "section"))
 
         if section and section not in sections_set:
             sections_set.add(section)
             sections_seen.append(section)
 
+        sort_order = _row_value(row, header_index, "sort_order")
         field = {
-            "sort_order": int(row[0]) if row[0] is not None else None,
-            "question_number": question_number,
+            "sort_order": int(sort_order) if sort_order is not None else row_ordinal,
+            "question_number": normalized_question_number,
             "pdf_tag": pdf_tag,
-            "word_tag": _clean(row[3]),
-            "question": _clean(row[4]),
+            "word_tag": _clean(_row_value(row, header_index, "word_tag")),
+            "question": _clean(_row_value(row, header_index, "question")),
             "section": section,
-            "subsection": _clean(row[7]),
-            "category": _clean(row[8]),
-            "student_group": _clean(row[9]),
-            "cohort": _clean(row[10]),
-            "residency": _clean(row[11]),
-            "unit_load": _clean(row[12]),
-            "gender": _clean(row[13]),
-            "value_type": _clean(row[14]),
-            "computed": pdf_tag is None,
+            "subsection": _clean(_row_value(row, header_index, "subsection")),
+            "category": _clean(_row_value(row, header_index, "category")),
+            "student_group": _clean(_row_value(row, header_index, "student_group")),
+            "cohort": _clean(_row_value(row, header_index, "cohort")),
+            "residency": _clean(_row_value(row, header_index, "residency")),
+            "unit_load": _clean(_row_value(row, header_index, "unit_load")),
+            "gender": _clean(_row_value(row, header_index, "gender")),
+            "value_type": _clean(_row_value(row, header_index, "value_type")),
+            "computed": has_pdf_tag and pdf_tag is None,
         }
         fields.append(field)
 
-    fields.sort(key=lambda f: f["sort_order"] if f["sort_order"] is not None else 10**9)
+    if has_sort_order:
+        fields.sort(key=lambda f: f["sort_order"] if f["sort_order"] is not None else 10**9)
 
     return {
         "schema_version": _infer_year_from_filename(xlsx_path.name),
@@ -133,6 +188,14 @@ def build_schema(xlsx_path: Path) -> dict:
     }
 
 
+def _row_value(row: tuple, header_index: dict[str, int], column: str):
+    header = OUTPUT_COLUMNS[column]
+    idx = header_index.get(header)
+    if idx is None or idx >= len(row):
+        return None
+    return row[idx]
+
+
 def _infer_year_from_filename(name: str) -> str:
     import re
 
@@ -140,6 +203,9 @@ def _infer_year_from_filename(name: str) -> str:
     if m:
         y1, y2 = m.group(1), m.group(2)
         return f"{y1}-{y2[-2:]}"
+    m = re.search(r"(\d{4})[-_](\d{2})", name)
+    if m:
+        return f"{m.group(1)}-{m.group(2)}"
     return "unknown"
 
 

@@ -20,11 +20,11 @@ This is the **Tier 1** extraction path:
 
 ## How it works
 
-`build_cell_map(template_path)` opens the template in formula mode (not data-only), walks every `CDS-*` sheet's hidden columns AA and AC, and parses each `=IF($D$4<>"",$D$4,"")`-style formula to extract the target cell reference. The result is a `{question_number: (sheet_name, cell_ref)}` map with 1,105 entries covering the full 2025-26 schema.
+`build_cell_map(template_path)` opens the template in formula mode (not data-only). For the 2025-26 template, it walks every `CDS-*` sheet's hidden columns AA and AC, and parses each `=IF($D$4<>"",$D$4,"")`-style formula to extract the target cell reference. For the reduced 2024-25 answer sheet, where the hidden formula columns are not published, it falls back to the section-tab layout and maps each visible `Question Number` row to the adjacent `Answer` cell. The result is a `{question_number: (sheet_name, cell_ref)}` map with one entry per schema field for the selected template year.
 
 `extract(xlsx_path, schema, cell_map)` opens the filled workbook in data-only mode, reads the value at each mapped cell, and emits canonical JSON keyed by `question_number`. Missing sheets are flagged in the stats; missing cells count as empty.
 
-The cell map is computed once at worker init and reused across every xlsx doc in a drain — parsing the template takes ~2s, extracting a filled workbook takes ~1s.
+The extraction worker computes one cell map per canonical schema at startup and picks the map that matches the document's resolved schema year. Parsing each template takes ~2s; extracting a filled workbook takes ~1s.
 
 ## Usage
 
@@ -102,7 +102,7 @@ Corpus-wide: **289 tier1_xlsx artifacts** written across the first full drain (2
 
 ## Known gaps
 
-1. **Older template years map to older cell positions.** The committed template is 2025-26. Filled XLSXs from 2019-20 or earlier use a different layout — the cell map parsed from the 2025-26 template misses those positions. The extractor still runs but populates fewer fields. Fix: ship a per-year set of templates and pick the right one based on `cds_documents.cds_year` or the filled file's detected year.
+1. **Only shipped canonical years get deterministic maps.** The worker currently ships 2024-25 and 2025-26 templates. Filled XLSXs from 2019-20 or other unshipped years can use different cell positions; those docs fall back to the latest known schema unless a template/schema pair is added for that year.
 2. **Custom template variants.** Some schools post an Excel file that looks like a CDS but uses a custom layout (no standard section tabs, or renamed tabs). These fail with `"File contains no valid workbook part"` or populate zero fields. Route them to Tier 4 via PDF conversion as a fallback.
 3. **Format-sniffer false positives.** The worker's `sniff_format_from_bytes` currently returns `xlsx` for any ZIP file starting with `PK\x03\x04` — including DOCX files. When Tier 1 hits a DOCX, openpyxl raises `"File contains no valid workbook part"` and the worker marks the doc failed. PRD 007 adds an inner-file-list peek to the sniffer so DOCX routes to Tier 3 instead.
 4. **No type coercion.** Every value is emitted as a string, matching the Tier 2 pattern. Downstream consumers coerce per field using the schema's `value_type` metadata.
@@ -111,5 +111,5 @@ Corpus-wide: **289 tier1_xlsx artifacts** written across the first full drain (2
 
 - [`tools/tier2_extractor/`](../tier2_extractor/) — the AcroForm Tier 2 extractor; Tier 1 mirrors its output shape
 - [`tools/schema_builder/`](../schema_builder/) — builds the canonical schema JSON from the same Excel template
-- [`scratch/CDS-PDF-2025-2026-Excel_Template.xlsx`](../../scratch/) — the 2025-26 template Tier 1 parses for its cell map
+- [`schemas/templates/cds_2024-25_template.xlsx`](../../schemas/templates/) and [`schemas/templates/cds_2025-26_template.xlsx`](../../schemas/templates/) — templates Tier 1 parses for year-specific cell maps
 - [`docs/decisions/0006-tiered-extraction-strategy.md`](../../docs/decisions/0006-tiered-extraction-strategy.md) — tier ladder rationale

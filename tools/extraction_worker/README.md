@@ -137,6 +137,27 @@ Routing is driven by `cds_documents.source_format`, which `tier_probe/probe.py` 
 
 Stub tiers fail fast with a reason in `last_error` so the row exits the pending queue and an operator can see the gap.
 
+## Year-aware schema dispatch
+
+PRD 014 M3 made schema selection year-aware for deterministic extraction paths.
+The worker loads all canonical `schemas/cds_schema_*.json` files at startup,
+then chooses the schema for each document from `detected_year || cds_year`.
+If no matching canonical schema exists, the worker uses the most recent
+available schema and records `notes.schema_fallback_used: true`,
+`notes.schema_fallback_reason`, and `notes.schema_version` on the artifact.
+
+Tier 1 uses a schema-matched template cell map when one exists. The 2025-26
+template uses hidden AA/AC lookup columns; the 2024-25 template uses the
+reduced section-tab layout with question numbers in column A and answer cells
+in column C. Tier 2 joins AcroForm values against the selected schema. Tier 4,
+Tier 5, and Tier 6 pass a year-matched `SchemaIndex` into the cleaner for
+schema filters and value metadata.
+
+Known limitation: Tier 4's hand-coded phrase/field maps are still maintained
+against the 2025-26 reference frame. M3 makes `SchemaIndex.filter()` and schema
+metadata year-aware, but the full phrase-matcher conversion is deferred to
+PRD 014 M6.
+
 ## Year detection (ADR 0007)
 
 `worker.py` runs `detect_year_from_pdf_bytes()` on every archived PDF and writes the result to `cds_documents.detected_year`. This is the authoritative year per [ADR 0007](../../docs/decisions/0007-year-authority-moves-to-extraction.md) — the content-derived year wins over the URL-derived guess that the resolver makes. Strict prefix-anchored regex ladder, `y2 = y1 + 1` span validation, collect-all-unique across pages 1-10. Recall ~80% on PDFs; the rest remain `detected_year IS NULL` and consumers fall back to `cds_year` via `cds_manifest.canonical_year`.

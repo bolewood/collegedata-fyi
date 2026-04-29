@@ -29,7 +29,7 @@ Usage:
     python tools/tier1_extractor/extract.py \\
         path/to/filled.xlsx \\
         schemas/cds_schema_2025_26.json \\
-        --template scratch/CDS-PDF-2025-2026-Excel_Template.xlsx
+        --template schemas/templates/cds_2025-26_template.xlsx
 
 Env: none required (pure local file processing).
 """
@@ -51,7 +51,17 @@ PRODUCER_VERSION = "0.1.0"
 
 # Default template path relative to the repo root.
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_TEMPLATE = _REPO_ROOT / "scratch" / "CDS-PDF-2025-2026-Excel_Template.xlsx"
+DEFAULT_TEMPLATE = _REPO_ROOT / "schemas" / "templates" / "cds_2025-26_template.xlsx"
+
+
+def normalize_question_number(raw: str) -> str:
+    m = re.match(r"^([A-Z])\.?(.+)$", str(raw).strip())
+    if not m:
+        return str(raw).strip()
+    section, rest = m.groups()
+    if rest.isdigit():
+        rest = rest.zfill(3)
+    return f"{section}.{rest}"
 
 
 def build_cell_map(template_path: Path) -> dict[str, tuple[str, str]]:
@@ -90,7 +100,35 @@ def build_cell_map(template_path: Path) -> dict[str, tuple[str, str]]:
                 cell_ref = f"{m.group(1)}{m.group(2)}"
                 cell_map[str(qnum)] = (sheet_name, cell_ref)
 
+    if not cell_map:
+        cell_map = build_reduced_layout_cell_map(wb)
+
     wb.close()
+    return cell_map
+
+
+def build_reduced_layout_cell_map(wb) -> dict[str, tuple[str, str]]:
+    """Build a cell map for reduced templates whose section tabs have
+    Question Number / Question / Answer columns directly in A/B/C.
+
+    The 2024-25 template has no hidden AA/AC lookup layer. Filled copies
+    still put answers in column C next to each canonical question number,
+    so column A + C is the deterministic map.
+    """
+    cell_map: dict[str, tuple[str, str]] = {}
+    for sheet_name in wb.sheetnames:
+        if not sheet_name.startswith("CDS-"):
+            continue
+        ws = wb[sheet_name]
+        header = [ws.cell(row=1, column=i).value for i in range(1, 4)]
+        if header[:3] != ["Question Number", "Question", "Answer"]:
+            continue
+        for row_idx in range(2, ws.max_row + 1):
+            qnum = ws.cell(row=row_idx, column=1).value
+            if not qnum:
+                continue
+            normalized = normalize_question_number(str(qnum))
+            cell_map[normalized] = (sheet_name, f"C{row_idx}")
     return cell_map
 
 
@@ -181,7 +219,7 @@ def main():
         "--template",
         type=Path,
         default=DEFAULT_TEMPLATE,
-        help="Path to the CDS Excel template (default: scratch/CDS-PDF-2025-2026-Excel_Template.xlsx)",
+        help="Path to the CDS Excel template (default: schemas/templates/cds_2025-26_template.xlsx)",
     )
     parser.add_argument(
         "--output",
