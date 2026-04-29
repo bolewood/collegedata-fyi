@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { fetchManifest, aggregateSchools, fetchSiteStats } from "@/lib/queries";
+import { fetchManifest, fetchSiteStats } from "@/lib/queries";
 import { formatCount, formatShortDate } from "@/lib/format";
 import type { ManifestRow } from "@/lib/types";
 import { SchoolSearch } from "@/components/SchoolSearch";
@@ -65,7 +65,6 @@ function latestDrain(rows: ManifestRow[]): DrainEntry[] {
 
 export default async function HomePage() {
   const [manifest, stats] = await Promise.all([fetchManifest(), fetchSiteStats()]);
-  const schools = aggregateSchools(manifest);
   const drain = latestDrain(manifest);
 
   const schoolsValue = stats.total_schools.toLocaleString();
@@ -127,7 +126,7 @@ export default async function HomePage() {
           </p>
 
           <div style={{ marginTop: 36, maxWidth: 560, marginInline: "auto" }}>
-            <SchoolSearch schools={schools} />
+            <SchoolSearch />
           </div>
 
           <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24, flexWrap: "wrap" }}>

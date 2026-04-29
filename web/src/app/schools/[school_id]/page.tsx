@@ -4,13 +4,15 @@ import Link from "next/link";
 import {
   fetchSchoolDocuments,
   fetchScorecardByIpedsId,
+  fetchInstitutionCoverage,
 } from "@/lib/queries";
 import { DocumentCard } from "@/components/DocumentCard";
 import { OutcomesSection } from "@/components/OutcomesSection";
 import { ScorecardVintageNote } from "@/components/ScorecardVintageNote";
 import { Sparkline } from "@/components/Sparkline";
+import { CoverageBadge } from "@/components/CoverageBadge";
 import { yearRange } from "@/lib/format";
-import type { ManifestRow } from "@/lib/types";
+import type { ManifestRow, InstitutionCoverage } from "@/lib/types";
 
 export const revalidate = 3600;
 
@@ -21,7 +23,26 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { school_id } = await params;
   const docs = await fetchSchoolDocuments(school_id);
-  if (docs.length === 0) return { title: "School Not Found" };
+  if (docs.length === 0) {
+    // PRD 015 M4 — directory-only schools render a coverage stub.
+    // Title reflects the school name (not "Not Found") so the browser
+    // tab and OG share match what the user sees.
+    const coverage = await fetchInstitutionCoverage(school_id);
+    if (coverage) {
+      const path = `/schools/${school_id}`;
+      return {
+        title: `${coverage.school_name} - ${coverage.coverage_label}`,
+        description: coverage.coverage_summary,
+        alternates: { canonical: path },
+        openGraph: {
+          url: path,
+          title: coverage.school_name,
+          description: coverage.coverage_summary,
+        },
+      };
+    }
+    return { title: "School Not Found" };
+  }
 
   const name = docs[0].school_name;
   const years = docs
@@ -89,6 +110,15 @@ export default async function SchoolDetailPage({
   const docs = await fetchSchoolDocuments(school_id);
 
   if (docs.length === 0) {
+    // PRD 015 M4 — directory-only stub. Search now returns Title-IV
+    // schools that have no archived CDS yet; clicking those slugs
+    // would otherwise hit a 404, contradicting the search promise.
+    // If we have a coverage row, render the minimal panel; otherwise
+    // genuine 404.
+    const coverage = await fetchInstitutionCoverage(school_id);
+    if (coverage && coverage.coverage_status !== "out_of_scope") {
+      return <DirectoryOnlySchoolPage coverage={coverage} school_id={school_id} />;
+    }
     notFound();
   }
 
@@ -326,6 +356,159 @@ export default async function SchoolDetailPage({
           <ScorecardVintageNote scorecard={scorecard} />
         </div>
       )}
+    </div>
+  );
+}
+
+// PRD 015 M4 — minimal directory-only school page.
+//
+// Renders for in-scope institution_cds_coverage rows that have no
+// cds_documents row yet (most often: not_checked, no_public_cds_found,
+// source_not_automatically_accessible, verified_absent). The page
+// delivers on the search-promised result without faking CDS data we
+// don't have.
+//
+// PRD M5 will elaborate this with Scorecard baseline metrics + a
+// proper source-submission CTA. The v1 here is the smallest thing
+// that breaks the search-then-404 dead-end.
+function DirectoryOnlySchoolPage({
+  coverage,
+  school_id,
+}: {
+  coverage: InstitutionCoverage;
+  school_id: string;
+}) {
+  const { head, tail } = splitInstitutionalSuffix(coverage.school_name);
+  const location = [coverage.city, coverage.state].filter(Boolean).join(", ");
+  const lastChecked = coverage.last_checked_at
+    ? new Date(coverage.last_checked_at).toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      })
+    : null;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollegeOrUniversity",
+    name: coverage.school_name,
+    url: `https://www.collegedata.fyi/schools/${school_id}`,
+    description: coverage.coverage_summary,
+  };
+
+  return (
+    <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
+
+      <header style={{ paddingTop: 48, paddingBottom: 32 }}>
+        <div className="meta" style={{ marginBottom: 16 }}>
+          § Institution directory
+        </div>
+        <h1
+          style={{
+            fontFamily: "var(--serif)",
+            fontWeight: 400,
+            fontSize: "clamp(36px, 5.5vw, 56px)",
+            lineHeight: 1.05,
+            margin: 0,
+            letterSpacing: "-0.02em",
+          }}
+        >
+          {head}
+          {tail && (
+            <>
+              {" "}
+              <span style={{ fontStyle: "italic", color: "var(--ink-2)" }}>{tail}</span>
+            </>
+          )}
+        </h1>
+        {location && (
+          <div
+            className="mono"
+            style={{ marginTop: 12, fontSize: 13, color: "var(--ink-3)" }}
+          >
+            {location}
+            {coverage.undergraduate_enrollment != null && (
+              <span style={{ marginLeft: 16 }}>
+                {coverage.undergraduate_enrollment.toLocaleString()} undergraduates
+              </span>
+            )}
+          </div>
+        )}
+      </header>
+
+      <section
+        className="cd-card"
+        style={{ padding: "28px 32px", marginTop: 8 }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+            marginBottom: 16,
+          }}
+        >
+          <CoverageBadge
+            status={coverage.coverage_status}
+            label={coverage.coverage_label}
+          />
+          {lastChecked && (
+            <span
+              className="mono"
+              style={{ fontSize: 11, color: "var(--ink-3)", letterSpacing: "0.05em" }}
+            >
+              LAST CHECKED {lastChecked.toUpperCase()}
+            </span>
+          )}
+        </div>
+        <p
+          style={{
+            margin: 0,
+            fontSize: 16,
+            lineHeight: 1.55,
+            color: "var(--ink)",
+            maxWidth: 640,
+          }}
+        >
+          {coverage.coverage_summary}
+        </p>
+        {coverage.website_url && (
+          <p
+            className="mono"
+            style={{ marginTop: 20, fontSize: 12, color: "var(--ink-3)" }}
+          >
+            School website:{" "}
+            <a
+              href={coverage.website_url.startsWith("http")
+                ? coverage.website_url
+                : `https://${coverage.website_url}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {coverage.website_url.replace(/^https?:\/\//, "")}
+            </a>
+          </p>
+        )}
+      </section>
+
+      <p
+        style={{
+          marginTop: 32,
+          fontSize: 14,
+          color: "var(--ink-3)",
+          maxWidth: 640,
+        }}
+      >
+        We track every active, undergraduate-serving Title-IV institution.
+        When we archive a public Common Data Set for this school, full
+        outcomes will appear here. <Link href="/about">Read the method</Link>.
+      </p>
     </div>
   );
 }

@@ -63,6 +63,53 @@ export interface SchoolSummary {
   has_extracted: boolean;
 }
 
+// PRD 015 M3 — coverage_status_t enum from
+// supabase/migrations/20260429144126_institution_cds_coverage.sql.
+// Out_of_scope is hidden by RLS for anon/authenticated, so it should
+// never appear in any payload reaching the frontend, but it's listed
+// here so the union type stays exhaustive against the DB enum.
+export type CoverageStatus =
+  | "cds_available_current"
+  | "cds_available_stale"
+  | "cds_found_processing"
+  | "latest_found_extract_failed_with_prior_available"
+  | "extract_failed"
+  | "source_not_automatically_accessible"
+  | "no_public_cds_found"
+  | "verified_absent"
+  | "not_checked"
+  | "out_of_scope";
+
+// search_institutions() RPC return shape (PRD 015 M4).
+export interface InstitutionSearchResult {
+  school_id: string;
+  school_name: string;
+  city: string | null;
+  state: string | null;
+  coverage_status: CoverageStatus;
+  coverage_label: string;
+  latest_available_cds_year: string | null;
+}
+
+// fetchInstitutionCoverage() return shape — a single row from
+// institution_cds_coverage for the school detail page directory-only
+// stub (PRD 015 M4 stub for M5).
+export interface InstitutionCoverage {
+  ipeds_id: string;
+  school_id: string;
+  school_name: string;
+  city: string | null;
+  state: string | null;
+  website_url: string | null;
+  undergraduate_enrollment: number | null;
+  coverage_status: CoverageStatus;
+  coverage_label: string;
+  coverage_summary: string;
+  latest_available_cds_year: string | null;
+  last_checked_at: string | null;
+  can_submit_source: boolean;
+}
+
 export interface CorpusStats {
   total_schools: number;
   total_documents: number;

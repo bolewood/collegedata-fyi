@@ -10,6 +10,7 @@ import type {
   CorpusStats,
   ScorecardSummary,
   SiteStats,
+  InstitutionCoverage,
 } from "./types";
 
 // Documents with these participation_status values are excluded from every
@@ -235,6 +236,41 @@ export const fetchSiteStats = cache(async function fetchSiteStats(): Promise<Sit
     scorecard_refreshed_at: scorecardLatest.error ? null : scorecardLatest.data?.refreshed_at ?? null,
   };
 });
+
+// PRD 015 M4 — institution_cds_coverage row by school_id.
+//
+// Used by the school detail page when fetchSchoolDocuments returns
+// empty: if a coverage row exists, render the directory-only stub
+// (name, location, badge, summary). Returns null when the slug isn't
+// in the materialized table at all (or the table itself is missing
+// in a pre-migration environment), in which case the page genuinely
+// 404s.
+//
+// Tolerant of all errors: this is a defensive stub fetch whose only
+// failure mode should be "render a 404." Throwing would surface a
+// 500 to the user for a slug that simply has no coverage row, which
+// is strictly worse UX than showing the not-found page. RLS already
+// hides out_of_scope rows from anon.
+export const fetchInstitutionCoverage = cache(
+  async function fetchInstitutionCoverage(
+    schoolId: string,
+  ): Promise<InstitutionCoverage | null> {
+    try {
+      const { data, error } = await (supabase as unknown as UntypedSupabase)
+        .from("institution_cds_coverage")
+        .select(
+          "ipeds_id, school_id, school_name, city, state, website_url, undergraduate_enrollment, coverage_status, coverage_label, coverage_summary, latest_available_cds_year, last_checked_at, can_submit_source",
+        )
+        .eq("school_id", schoolId)
+        .maybeSingle();
+
+      if (error) return null;
+      return (data as InstitutionCoverage | null) ?? null;
+    } catch {
+      return null;
+    }
+  },
+);
 
 export const fetchSchoolDocuments = cache(async function fetchSchoolDocuments(
   schoolId: string

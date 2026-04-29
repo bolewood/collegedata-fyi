@@ -2,47 +2,97 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import type { SchoolSummary } from "@/lib/types";
+import { supabase } from "@/lib/supabase";
+import type { InstitutionSearchResult } from "@/lib/types";
+import { CoverageBadge } from "./CoverageBadge";
 
-export function SchoolSearch({ schools }: { schools: SchoolSummary[] }) {
+// PRD 015 M4 — server-backed autocomplete over institution_cds_coverage.
+// Calls the search_institutions RPC with a debounced query so missing-
+// CDS and not-yet-checked schools surface as first-class results. The
+// RPC ranks name-exact > prefix > substring; we just render the order
+// it returns.
+//
+// Replaces the prior in-memory ILIKE that only knew about CDS-backed
+// schools (see git blame for the swap).
+
+const DEBOUNCE_MS = 220;
+
+export function SchoolSearch() {
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState<InstitutionSearchResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
-
-  const filtered = query.length > 0
-    ? schools.filter((s) =>
-        s.school_name.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 10)
-    : [];
+  // Generation counter so a slow network response can never overwrite
+  // a fresher one. Each new query increments; only the latest gen
+  // commits to state.
+  const genRef = useRef(0);
 
   useEffect(() => {
-    setSelectedIndex(0);
+    const trimmed = query.trim();
+    if (trimmed.length === 0) {
+      setResults([]);
+      setIsLoading(false);
+      return;
+    }
+    const gen = ++genRef.current;
+    setIsLoading(true);
+    const timer = setTimeout(async () => {
+      // database.types.ts lags new RPCs until regenerated; cast to a
+      // permissive shape so the call typechecks. Same pattern queries.ts
+      // uses for tables that aren't in the generated type yet.
+      const rpcClient = supabase as unknown as {
+        rpc: (
+          fn: string,
+          args: Record<string, unknown>,
+        ) => Promise<{
+          data: InstitutionSearchResult[] | null;
+          error: { message: string } | null;
+        }>;
+      };
+      const { data, error } = await rpcClient.rpc("search_institutions", {
+        p_query: trimmed,
+        p_limit: 10,
+      });
+      if (gen !== genRef.current) return; // a newer query has fired
+      setIsLoading(false);
+      if (error) {
+        setResults([]);
+        return;
+      }
+      setResults(data ?? []);
+      setSelectedIndex(0);
+    }, DEBOUNCE_MS);
+    return () => clearTimeout(timer);
   }, [query]);
 
   function handleSelect(schoolId: string) {
     setIsOpen(false);
     setQuery("");
+    setResults([]);
     router.push(`/schools/${schoolId}`);
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (!isOpen || filtered.length === 0) return;
+    if (!isOpen || results.length === 0) return;
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setSelectedIndex((i) => Math.min(i + 1, filtered.length - 1));
+      setSelectedIndex((i) => Math.min(i + 1, results.length - 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setSelectedIndex((i) => Math.max(i - 1, 0));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      handleSelect(filtered[selectedIndex].school_id);
+      handleSelect(results[selectedIndex].school_id);
     } else if (e.key === "Escape") {
       setIsOpen(false);
     }
   }
+
+  const showDropdown = isOpen && (results.length > 0 || (isLoading && query.trim().length > 0));
 
   return (
     <div className="relative w-full max-w-lg mx-auto">
@@ -57,28 +107,88 @@ export function SchoolSearch({ schools }: { schools: SchoolSummary[] }) {
         onFocus={() => setIsOpen(true)}
         onBlur={() => setTimeout(() => setIsOpen(false), 200)}
         onKeyDown={handleKeyDown}
-        placeholder={`Search ${schools.length} schools...`}
-        className="w-full rounded-lg border border-gray-300 px-4 py-3 text-lg shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+        placeholder="Search schools by name, alias, or city..."
+        className="w-full px-4 py-3"
+        style={{
+          border: "1px solid var(--rule-strong)",
+          background: "#faf6ec",
+          color: "var(--ink)",
+          fontFamily: "var(--sans)",
+          fontSize: 16,
+          borderRadius: 2,
+          outline: "none",
+        }}
+        onFocusCapture={(e) => {
+          e.currentTarget.style.borderColor = "var(--forest)";
+        }}
+        onBlurCapture={(e) => {
+          e.currentTarget.style.borderColor = "var(--rule-strong)";
+        }}
       />
-      {isOpen && filtered.length > 0 && (
+      {showDropdown && (
         <ul
           ref={listRef}
-          className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-80 overflow-auto"
+          className="absolute z-10 mt-1 w-full overflow-auto"
+          style={{
+            background: "#faf6ec",
+            border: "1px solid var(--rule-strong)",
+            borderRadius: 2,
+            maxHeight: 360,
+          }}
         >
-          {filtered.map((school, i) => (
+          {results.length === 0 && isLoading && (
             <li
-              key={school.school_id}
-              onMouseDown={() => handleSelect(school.school_id)}
-              className={`px-4 py-2.5 cursor-pointer text-sm ${
-                i === selectedIndex
-                  ? "bg-blue-50 text-blue-900"
-                  : "text-gray-700 hover:bg-gray-50"
-              }`}
+              className="px-4 py-3 mono"
+              style={{ color: "var(--ink-3)", fontSize: 12 }}
             >
-              <span className="font-medium">{school.school_name}</span>
-              <span className="ml-2 text-gray-400">
-                {school.doc_count} doc{school.doc_count !== 1 ? "s" : ""}
-              </span>
+              Searching…
+            </li>
+          )}
+          {results.map((r, i) => (
+            <li
+              key={r.school_id}
+              onMouseDown={() => handleSelect(r.school_id)}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr auto",
+                gap: 12,
+                alignItems: "baseline",
+                padding: "10px 14px",
+                cursor: "pointer",
+                background: i === selectedIndex ? "var(--paper-2)" : "transparent",
+                borderTop: i === 0 ? "none" : "1px solid var(--rule)",
+              }}
+            >
+              <div style={{ minWidth: 0 }}>
+                <div
+                  style={{
+                    fontFamily: "var(--serif)",
+                    fontSize: 17,
+                    color: "var(--ink)",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {r.school_name}
+                </div>
+                {(r.city || r.state) && (
+                  <div
+                    className="mono"
+                    style={{
+                      fontSize: 11,
+                      color: "var(--ink-3)",
+                      marginTop: 2,
+                    }}
+                  >
+                    {[r.city, r.state].filter(Boolean).join(", ")}
+                    {r.latest_available_cds_year && (
+                      <span style={{ marginLeft: 12 }}>
+                        CDS {r.latest_available_cds_year}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <CoverageBadge status={r.coverage_status} label={r.coverage_label} />
             </li>
           ))}
         </ul>
