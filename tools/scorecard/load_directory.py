@@ -194,17 +194,60 @@ def assign_slugs(
     claimed: set[str] = set()
     collisions: list[dict[str, Any]] = []
 
-    # Pass 1: schools.yaml-preserved slugs. We claim these even when
-    # the matching scorecard row is out-of-scope, so a Scorecard-only
-    # row can never steal a slug that belongs to a curated school.
-    yaml_ipeds = {ipeds for ipeds in schools_yaml_map}
+    # Pre-pass: detect schools.yaml self-collisions where multiple IPEDS
+    # claim the same slug. Pre-existing data bug in tools/finder/schools.yaml
+    # — 12 duplicated slugs spanning ~25 entries as of 2026-04-29
+    # (bethel-university across 3 IPEDS, anderson-university across 2,
+    # etc.). Pick the IPEDS with the largest UGDS as the canonical winner;
+    # the losers fall through to Pass 2's auto-slug + collision tier
+    # treatment. Their schools.yaml-claimed slug becomes a non-primary
+    # alias in the crosswalk so existing search/redirect URLs keep working.
+    by_yaml_slug: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in rows:
+        slug = schools_yaml_map.get(row["ipeds_id"])
+        if slug:
+            by_yaml_slug[slug].append(row)
+
+    yaml_winners: dict[str, str] = {}  # ipeds_id → preserved slug
+    yaml_demoted: dict[str, str] = {}  # ipeds_id → demoted yaml slug (becomes alias)
+    for slug, claimants in by_yaml_slug.items():
+        if len(claimants) == 1:
+            yaml_winners[claimants[0]["ipeds_id"]] = slug
+            continue
+        # Collision. Sort by UGDS descending; tie-break on ipeds_id for determinism.
+        ranked = sorted(
+            claimants,
+            key=lambda r: (-(r.get("undergraduate_enrollment") or 0), r["ipeds_id"]),
+        )
+        winner = ranked[0]
+        yaml_winners[winner["ipeds_id"]] = slug
+        for loser in ranked[1:]:
+            yaml_demoted[loser["ipeds_id"]] = slug
+            collisions.append(
+                {
+                    "ipeds_id": loser["ipeds_id"],
+                    "school_name": loser["school_name"],
+                    "base_slug": slug,
+                    "resolved_slug": "(deferred to scorecard tier)",
+                    "tier": "yaml_self_collision",
+                    "winner_ipeds": winner["ipeds_id"],
+                }
+            )
+
+    # Pass 1: assign winners. Losers stay unassigned and flow into Pass 2
+    # where they get auto-slug treatment based on their INSTNM.
     for row in rows:
         ipeds = row["ipeds_id"]
-        if ipeds in yaml_ipeds:
-            slug = schools_yaml_map[ipeds]
+        if ipeds in yaml_winners:
+            slug = yaml_winners[ipeds]
             assigned[ipeds] = slug
             claimed.add(slug)
             row["_slug_source"] = "schools_yaml"
+        elif ipeds in yaml_demoted:
+            # Block the demoted yaml slug from being stolen by other rows
+            # whose auto-base happens to match it — the winner already
+            # claimed it.
+            claimed.add(yaml_demoted[ipeds])
 
     # Pass 2: bucket remaining rows by base_slug, escalate collisions.
     pending = [r for r in rows if r["ipeds_id"] not in assigned]
@@ -333,12 +376,18 @@ def build_crosswalk_rows(
     primary row (its school_id). When a schools.yaml ID and the
     Scorecard auto-slug differ, both end up in the table — schools.yaml
     as primary, the auto-generated as a non-primary alias for redirect
-    resolution."""
+    resolution. When schools.yaml self-collides (same slug claimed by
+    multiple IPEDS), the loser IPEDS still get the schools.yaml slug
+    as a non-primary alias so legacy URLs keep resolving."""
     out: list[dict[str, Any]] = []
     for row in directory_rows:
         ipeds = row["ipeds_id"]
         primary = row["school_id"]
-        source = "schools_yaml" if ipeds in schools_yaml_map else "scorecard"
+        yaml_slug = schools_yaml_map.get(ipeds)
+        # Source tag: schools_yaml when this ipeds's primary equals its
+        # yaml claim. If yaml-demoted (yaml_slug exists but primary is
+        # auto-generated), the primary is scorecard-source.
+        source = "schools_yaml" if yaml_slug and yaml_slug == primary else "scorecard"
         out.append(
             {
                 "ipeds_id": ipeds,
@@ -351,7 +400,7 @@ def build_crosswalk_rows(
         # Auto-generated slug as a non-primary alias when the curated
         # schools.yaml slug differs from what the loader would compute
         # — useful when an operator searches by INSTNM tokens.
-        if ipeds in schools_yaml_map:
+        if yaml_slug and yaml_slug == primary:
             try:
                 auto = base_slug(row["school_name"])
             except ValueError:
@@ -366,6 +415,19 @@ def build_crosswalk_rows(
                         "is_primary": False,
                     }
                 )
+        # Yaml-demoted ipeds: keep the schools.yaml-claimed slug as a
+        # non-primary alias so search and any prior public links to
+        # it still resolve to this institution.
+        if yaml_slug and yaml_slug != primary:
+            out.append(
+                {
+                    "ipeds_id": ipeds,
+                    "school_id": primary,
+                    "alias": yaml_slug,
+                    "source": "schools_yaml",
+                    "is_primary": False,
+                }
+            )
     return out
 
 
