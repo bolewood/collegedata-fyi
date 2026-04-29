@@ -36,14 +36,22 @@ We also archive source files on discovery, because some schools do occasionally 
 
 **Query the API:**
 ```bash
+ANON_KEY="<copy the public anon key from https://www.collegedata.fyi/api>"
+
 # List all schools in the manifest
-curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?select=school_id,school_name,canonical_year&order=school_name'
+curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?select=school_id,school_name,canonical_year&order=school_name' \
+  -H "apikey: $ANON_KEY" \
+  -H "Authorization: Bearer $ANON_KEY"
 
 # Find a specific school's documents
-curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?school_id=eq.yale&order=canonical_year.desc'
+curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?school_id=eq.yale&order=canonical_year.desc' \
+  -H "apikey: $ANON_KEY" \
+  -H "Authorization: Bearer $ANON_KEY"
 
 # Get the structured extract for a document
-curl 'https://api.collegedata.fyi/rest/v1/cds_artifacts?document_id=eq.<uuid>&kind=eq.canonical'
+curl 'https://api.collegedata.fyi/rest/v1/cds_artifacts?document_id=eq.<uuid>&kind=eq.canonical' \
+  -H "apikey: $ANON_KEY" \
+  -H "Authorization: Bearer $ANON_KEY"
 ```
 
 ## How it works

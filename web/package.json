@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "typecheck": "tsc --noEmit",
-    "start": "next start"
+    "start": "next start",
+    "test:smoke": "playwright test"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.3",
@@ -19,6 +20,7 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

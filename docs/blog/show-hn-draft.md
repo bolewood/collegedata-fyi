@@ -28,7 +28,7 @@ I fixed that.
 
 - 697 schools indexed, 3,924 archived CDS documents, 98% extracted to a canonical 1,105-field schema
 - Five of six extraction tiers running: filled XLSX (template cell-position map), fillable PDF (AcroForm direct read), flat PDF (Docling + schema-targeting cleaner), image-only scan (force-OCR), and structured HTML (normalizer that reuses the flat-PDF cleaner). DOCX is the only tier still pending
-- Public read-only REST API at `api.collegedata.fyi` — query the whole corpus without a login
+- Public read-only REST API at `api.collegedata.fyi` — query the whole corpus with a public anon key, no account required
 - Public LLM-citable endpoint at `/api/facts/{school_id}` with the most-asked fields in a flat JSON shape
 - 94% accuracy on hand-audited schools (Harvard, Yale, Dartmouth, Harvey Mudd)
 - Source files archived on first discovery. If a school removes their CDS, the archive retains the original
@@ -41,7 +41,7 @@ I fixed that.
 
 - Browse: https://collegedata.fyi
 - A big-name example: https://www.collegedata.fyi/schools/mit (four years of CDS, all HTML-sourced)
-- The API, no auth: `curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?school_id=eq.yale&order=canonical_year.desc'`
+- API docs and key: https://www.collegedata.fyi/api
 - LLM-friendly facts: `curl 'https://www.collegedata.fyi/api/facts/mit'`
 - Code: https://github.com/bolewood/collegedata-fyi (MIT license)
 

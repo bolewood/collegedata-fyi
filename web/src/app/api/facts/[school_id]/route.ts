@@ -107,7 +107,7 @@ export async function GET(
       B_126_ft_women_enrolled: readValue(mergedValues, "B.126"),
     },
     note:
-      "Values extracted from the school's own Common Data Set document. Pipeline source: https://github.com/bolewood/collegedata-fyi. For the full 1,105-field extract, see /api/facts/{school_id}/full or query /rest/v1/cds_artifacts directly.",
+      "Values extracted from the school's own Common Data Set document. Pipeline source: https://github.com/bolewood/collegedata-fyi. For the full extract, query /rest/v1/cds_artifacts directly using the public anon-key instructions at /api.",
   };
 
   return NextResponse.json(body, {

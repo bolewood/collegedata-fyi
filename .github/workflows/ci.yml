@@ -119,3 +119,11 @@ jobs:
       - name: Build web app
         working-directory: web
         run: npm run build
+      - name: Install Playwright browser
+        working-directory: web
+        run: npx playwright install --with-deps chromium
+      - name: Run frontend smoke tests
+        working-directory: web
+        env:
+          PLAYWRIGHT_WEB_SERVER_COMMAND: "npm run start"
+        run: npm run test:smoke
