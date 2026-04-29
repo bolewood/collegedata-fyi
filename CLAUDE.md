@@ -25,12 +25,17 @@ Open-source archive of U.S. college Common Data Set (CDS) documents.
 ## Migrations
 
 Migrations are applied to production **only from `main`**, never from a
-feature branch. CI's "Migrations apply cleanly" job replays every file
-under `supabase/migrations/` against a fresh local Supabase on every PR
-to catch malformed SQL and ordering bugs. Out-of-band applies (running
-a migration against prod from an unmerged branch) leave production
-ahead of `main` and break fresh `supabase db reset` for everyone else
-— don't do this.
+feature branch. Out-of-band applies (running a migration against prod
+from an unmerged branch) leave production ahead of `main` and break
+fresh `supabase db reset` for everyone else — don't do this.
+
+CI runs a `Migration filename hygiene` check on every PR (timestamp
+prefix uniqueness + sort order). Full replay against a clean DB is a
+manual pre-merge step (`supabase db reset` locally), not CI — several
+migrations contain verification DO blocks that assume production data,
+which would always fail in a clean CI database. The actual drift
+between prod and `main` isn't detectable from CI without prod
+credentials anyway; it's a policy safeguard.
 
 ## Skill routing
 
