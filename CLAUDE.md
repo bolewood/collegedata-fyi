@@ -29,6 +29,26 @@ feature branch. Out-of-band applies (running a migration against prod
 from an unmerged branch) leave production ahead of `main` and break
 fresh `supabase db reset` for everyone else — don't do this.
 
+**The agent applies migrations after a PR merges, not the user.** Once
+a migration PR is merged, the agent's standard sequence is:
+
+```
+cd /Users/santhonys/Projects/Owen/colleges/collegedata-fyi
+git switch main && git pull --ff-only
+supabase db push --linked
+```
+
+(`supabase` CLI is at `/opt/homebrew/bin/supabase`; the project is
+already linked. Credentials live in `~/Projects/Owen/colleges/collegedata-fyi/.env`
+as `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`.)
+
+The user shouldn't need to drive `supabase db push` manually — that's
+the operational step that follows every migration PR merge. The
+"migrations only from main" rule is still load-bearing: the apply
+must happen from a fresh `main` checkout, never from a feature
+branch, never from a Conductor worktree pinned to a not-yet-merged
+branch.
+
 CI runs a `Migration filename hygiene` check on every PR (timestamp
 prefix uniqueness + sort order). Full replay against a clean DB is a
 manual pre-merge step (`supabase db reset` locally), not CI — several

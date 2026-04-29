@@ -177,6 +177,37 @@ class AssignSlugsTests(unittest.TestCase):
         assigned, _ = assign_slugs(rows, {"000001": "harvard"})
         self.assertEqual(assigned["000001"], "harvard")
 
+    def test_schools_yaml_self_collision_picks_largest_ugds(self):
+        # Three schools.yaml entries claim the same slug across different
+        # IPEDS — pre-existing data bug we have to handle (e.g. three
+        # bethel-university entries in tools/finder/schools.yaml).
+        # Winner is the largest-UGDS row; losers fall through to
+        # auto-slug + state-tier disambiguation.
+        rows = [
+            {**self._row("000001", "Bethel University", state="IN"),
+             "undergraduate_enrollment": 1008},
+            {**self._row("000002", "Bethel University", state="MN"),
+             "undergraduate_enrollment": 1871},
+            {**self._row("000003", "Bethel University", state="TN"),
+             "undergraduate_enrollment": 1547},
+        ]
+        yaml_map = {
+            "000001": "bethel-university",
+            "000002": "bethel-university",
+            "000003": "bethel-university",
+        }
+        assigned, collisions = assign_slugs(rows, yaml_map)
+        # Largest UGDS (000002, MN) wins the canonical slug.
+        self.assertEqual(assigned["000002"], "bethel-university")
+        # Losers fall through to state-tier auto-slug — the demoted
+        # yaml slug "bethel-university" is in claimed, so even though
+        # their auto-base might match, escalation kicks in.
+        self.assertEqual(assigned["000001"], "bethel-university-in")
+        self.assertEqual(assigned["000003"], "bethel-university-tn")
+        # The yaml_self_collision tier shows up in the report.
+        kinds = {c["tier"] for c in collisions}
+        self.assertIn("yaml_self_collision", kinds)
+
     def test_schools_yaml_blocks_unrelated_scorecard_collision(self):
         # schools.yaml claims "harvard-university" via a curated slug.
         # A separate Scorecard row whose INSTNM also normalizes to
