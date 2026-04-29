@@ -16,10 +16,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from tools.scorecard.load_directory import (  # noqa: E402
+    DEFAULT_SCHOOLS_YAML,
     _scope_decision,
     assign_slugs,
     base_slug,
     build_crosswalk_rows,
+    load_schools_yaml,
     normalize_ipeds,
 )
 
@@ -276,6 +278,17 @@ class BuildCrosswalkRowsTests(unittest.TestCase):
         self.assertEqual(cw[0]["alias"], "tiny-college")
         self.assertTrue(cw[0]["is_primary"])
         self.assertEqual(cw[0]["source"], "scorecard")
+
+
+class SchoolsYamlRegressionTests(unittest.TestCase):
+    def test_launch_critical_ipeds_ids_match_nces(self):
+        # These two IDs were stale in schools.yaml and caused CDS-backed
+        # rows to miss the Scorecard directory join before launch.
+        claims = load_schools_yaml(DEFAULT_SCHOOLS_YAML)
+        self.assertEqual(claims["211291"], "bucknell")
+        self.assertEqual(claims["212054"], "drexel")
+        self.assertNotIn("211158", claims)
+        self.assertNotIn("212160", claims)
 
 
 if __name__ == "__main__":

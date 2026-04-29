@@ -10,62 +10,6 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 ## Open
 
-### Coverage data quality (PRD 015 audit, 2026-04-29)
-
-A reconciliation between the homepage's `697 schools` (distinct `school_id`s
-in `cds_manifest`) and the `/coverage` page's `2,924 in-scope` (rows in
-`institution_cds_coverage` excluding `out_of_scope`) surfaced three
-data-quality items not blocking shipment but worth tracking:
-
-- **Slug fragmentation between schools.yaml and Scorecard slugs.** ~5–7
-  schools (UVA, U Washington Seattle Campus, Texas A&M College Station,
-  Rutgers New Brunswick, Georgia Tech, Tulane, Virginia Tech) appear in
-  `cds_documents` under long Scorecard-style `school_id` values
-  (`university-of-virginia-main-campus`) while `institution_directory`
-  uses the canonical short slugs from schools.yaml (`uva`). Same school,
-  two `school_id` values, no row-level reconciliation. The mirror
-  pipeline (College Transitions ingest) is the likely originator
-  because it slugifies Scorecard `INSTNM`. Effect: each affected school
-  shows up twice in the homepage's distinct-school count, and the
-  Scorecard-slug variant has zero coverage row at all so it disappears
-  from `/coverage`. **Fix shape:** either canonicalize at archive time
-  via the `institution_slug_crosswalk` (rewrite `cds_documents.school_id`
-  for any IPEDS that has a `schools_yaml`-source crosswalk row pointing
-  at a different canonical), or add the Scorecard slugs to the crosswalk
-  with `source='redirect'` so consumers can resolve through the
-  crosswalk. **Effort:** ~2 hours: a one-shot migration that walks
-  `cds_documents` + `institution_slug_crosswalk` joining on `ipeds_id`,
-  plus an archive-time guard so the mirror pipeline can't re-introduce
-  the divergence. **Affected schools (sample IPEDS):** UVA 234076,
-  U Washington Seattle 236948, Tulane 160755.
-
-- **Two schools missing from the Scorecard CSV entirely.** Bucknell
-  (IPEDS 211158) and Drexel (212160) are absent from both
-  `scorecard_summary` and `institution_directory`. We have CDS data for
-  both via `schools.yaml`, so they show up as `cds_manifest` rows but
-  have no coverage row. **Cause:** the March 2026 / 2022-23-vintage
-  Scorecard CSV from the federal data release doesn't include these
-  IPEDS. Could be a data-publication gap upstream or a federal-reporting
-  exemption granted to specific private universities for that cycle.
-  **Fix shape:** either (a) supplement `institution_directory` with a
-  manual `directory_source='operator_manual'` row keyed by IPEDS (the
-  loader already accepts this column), populated from IPEDS HD CSV
-  rather than Scorecard; or (b) flag upstream and wait for the next
-  Scorecard release to fix it. **Effort:** ~30 min for option (a) on a
-  per-IPEDS basis if more schools surface; ~0 for option (b).
-
-- **Stale system-office entries with CDS rows.** Four administrative
-  entities are in `cds_manifest` but should not have CDS docs:
-  `university-of-maine-system-central-office`,
-  `university-of-houston-system-administration`,
-  `university-of-hawaii-system-office`,
-  `the-university-of-texas-system-office`. The Maine entry already has
-  a partial backlog item below in "operational polish" — this groups
-  it with the others. **Fix:** flip `participation_status` to
-  `verified_absent` on each row (preserves history per the existing
-  takedown pattern in ADR 0008) and `extraction_status` to
-  `not_applicable`. **Effort:** ~10 minutes if done in a batch UPDATE.
-
 ### Near-term operational polish
 
 - **Ground-truth Tier 4 native-table candidates before LLM repair.** New
@@ -99,8 +43,6 @@ data-quality items not blocking shipment but worth tracking:
 - **Two schools pointing at the same archived file (U Maine System Central Office + U Southern Maine) — production DB cleanup pending.** schools.yaml side fixed 2026-04-15 in commit `59982f7` (flipped `university-of-maine-system-central-office` to `scrape_policy: verified_absent`). **Still pending: production DB cleanup.** The stale `cds_documents` row (id `6d0ef326-ce81-4f11-8214-125e29c1cd4f`, cds_year `2025-26`, status `extraction_pending`) and its `archive_queue` entry are still live. Operator action: either `UPDATE public.cds_documents SET participation_status = 'verified_absent', extraction_status = 'not_applicable' WHERE id = '6d0ef326-ce81-4f11-8214-125e29c1cd4f';` (preserves history) or `DELETE` outright; plus `DELETE FROM public.archive_queue WHERE school_id = 'university-of-maine-system-central-office';`. Broader class: `schools.yaml` entries populated via `last_method: brave` with `search_fallback_tried: true` should have their hint URLs cross-validated against the school's own domain before being accepted — a separate follow-up.
 
 ### Frontend polish
-
-- **Repo-native Playwright smoke tests.** Manual/local Playwright screenshot checks are being used for deploy smoke, but there is still no committed frontend smoke suite. Minimum: landing search works, `/browse` returns live rows + answerability metadata, school page source links resolve, and mobile filter layout does not overflow. **Effort:** ~45 minutes.
 
 - **Queryable browser CSV export pagination.** The `/browse` MVP exports the current browser result set through one Edge Function call capped at `page_size=500`. That is fine for current launch filters, but a broad export should page through all results or move export server-side before result sets grow. **Effort:** ~1 hour.
 
@@ -167,6 +109,35 @@ data-quality items not blocking shipment but worth tracking:
 ## Resolved
 
 Reverse chronological.
+
+### 2026-04-29
+
+- **[RESOLVED 2026-04-29] ~~Coverage data-quality launch cleanup.~~**
+  The PRD 015 audit found three launch-trust issues in the coverage layer:
+  slug fragmentation between schools.yaml canonical slugs and Scorecard-style
+  mirror slugs, Bucknell/Drexel missing from `/coverage`, and stale
+  administrative system-office rows with CDS documents. Shipped
+  `20260429190000_launch_coverage_data_quality.sql`: corrects Bucknell and
+  Drexel IPEDS IDs in existing rows, repairs their `institution_directory`
+  / `institution_slug_crosswalk` canonical slugs, canonicalizes
+  non-conflicting `cds_documents` rows through the primary schools.yaml
+  crosswalk, preserves remaining old aliases as redirects, marks the four
+  system offices `verified_absent` / `not_applicable`, deletes their
+  queue entries, and refreshes `institution_cds_coverage`. Also corrected
+  `tools/finder/schools.yaml` so future loads preserve `bucknell` and
+  `drexel`, with a regression test pinning their NCES UNITIDs.
+
+- **[RESOLVED 2026-04-29] ~~Repo-native Playwright smoke tests.~~**
+  Added `web/tests/smoke.spec.ts` and `web/playwright.config.ts` with
+  smoke coverage for homepage institution search, `/coverage`, `/browse`
+  live rows + source-link HTTP resolution, `/api/facts/mit` JSON, and
+  mobile body-overflow checks. The web CI job now installs Chromium and
+  runs `npm run test:smoke` against the production Next build.
+
+- **[RESOLVED 2026-04-29] ~~API launch copy drift.~~** README curl examples
+  now include the required public Supabase anon key headers, the Show HN
+  draft no longer claims raw PostgREST is headerless, and the facts endpoint
+  no longer links to a nonexistent `/api/facts/{school_id}/full` route.
 
 ### 2026-04-28
 

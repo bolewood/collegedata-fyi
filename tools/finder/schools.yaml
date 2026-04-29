@@ -155,7 +155,7 @@ schools:
 - id: bucknell
   name: Bucknell University
   domain: bucknell.edu
-  ipeds_id: '211158'
+  ipeds_id: '211291'
   scrape_policy: active
   discovery_seed_url: https://www.bucknell.edu/commondataset/
   probe_state:
@@ -228,7 +228,7 @@ schools:
 - id: drexel
   name: Drexel University
   domain: drexel.edu
-  ipeds_id: '212160'
+  ipeds_id: '212054'
   scrape_policy: active
   discovery_seed_url: https://drexel.edu/institutionalresearch/~/media/Drexel/Provost-Group/InstitutionalResearch/Documents/Factbook/CDS_2020-2021.pdf
   probe_state:
