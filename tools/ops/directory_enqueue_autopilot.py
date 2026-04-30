@@ -118,20 +118,37 @@ def is_official_host(url: str, root_domain: str) -> bool:
 
 
 def is_high_signal(row: dict[str, Any], min_enrollment: int) -> bool:
+    return high_signal_score(row, min_enrollment) > 0
+
+
+def high_signal_score(row: dict[str, Any], min_enrollment: int) -> int:
     enrollment = row.get("undergraduate_enrollment")
     try:
         enrollment_int = int(enrollment)
     except (TypeError, ValueError):
         enrollment_int = 0
+    score = 0
     if enrollment_int >= min_enrollment:
-        return True
+        score += 100 + min(enrollment_int // 1000, 50)
     name = str(row.get("school_name") or "").lower()
     state = str(row.get("state") or "")
-    return (
-        enrollment_int >= min_enrollment // 2
-        and state
-        and (" university" in name or "state university" in name)
+    recognizable_patterns = (
+        "state university",
+        "university of ",
+        "california state university",
+        "pennsylvania state university",
+        "suny ",
+        "cuny ",
+        "texas a&m",
+        "university-",
     )
+    if state and any(pattern in name for pattern in recognizable_patterns):
+        score += 80
+    elif state and " university" in name and enrollment_int >= min_enrollment // 2:
+        score += 45
+    elif state and " college" in name and enrollment_int >= min_enrollment:
+        score += 20
+    return score
 
 
 def infer_year(text: str) -> str | None:
@@ -363,10 +380,18 @@ def repair_high_signal_failures(
         if row.get("last_outcome") == "no_pdfs_found" and row.get("school_id")
     ]
     metadata = fetch_directory_rows_by_school_id(client, [str(row["school_id"]) for row in failed])
-    high_signal = [
-        metadata[str(row["school_id"])]
+    scored_high_signal = [
+        (
+            high_signal_score(metadata[str(row["school_id"])], options.min_enrollment),
+            metadata[str(row["school_id"])],
+        )
         for row in failed
-        if str(row["school_id"]) in metadata and is_high_signal(metadata[str(row["school_id"])], options.min_enrollment)
+        if str(row["school_id"]) in metadata
+    ]
+    high_signal = [
+        row
+        for score, row in sorted(scored_high_signal, key=lambda item: item[0], reverse=True)
+        if score > 0
     ][: options.max_per_batch]
 
     brave_api_key = os.environ.get("BRAVE_API_KEY")

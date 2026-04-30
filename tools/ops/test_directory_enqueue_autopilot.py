@@ -24,6 +24,23 @@ class DirectoryEnqueueAutopilotTests(unittest.TestCase):
             "undergraduate_enrollment": 1800,
         }, 10000))
 
+    def test_high_signal_scores_state_university_above_generic_college(self):
+        state_university = {
+            "school_name": "Savannah State University",
+            "state": "GA",
+            "undergraduate_enrollment": 2833,
+        }
+        generic_college = {
+            "school_name": "Bismarck State College",
+            "state": "ND",
+            "undergraduate_enrollment": 2839,
+        }
+
+        self.assertGreater(
+            autopilot.high_signal_score(state_university, 5000),
+            autopilot.high_signal_score(generic_college, 5000),
+        )
+
     def test_extract_document_candidates_picks_current_official_pdf(self):
         html = b"""
         <html><body>
