@@ -452,3 +452,28 @@ export function filterArchivable(schools: SchoolEntry[]): ArchivableSchool[] {
   }
   return out;
 }
+
+// IPEDS rows that directory-enqueue must not probe from the Scorecard
+// website fallback. This is intentionally narrower than "every row in
+// schools.yaml": unknown/no-seed YAML rows are the discovery tail and can
+// safely flow through the operator-controlled directory path. Curated
+// active-seed rows stay owned by archive-enqueue, and verified_absent rows
+// stay owned by manual coverage overrides.
+export function directoryProtectedIpeds(schools: SchoolEntry[]): Set<string> {
+  const out = new Set<string>();
+  for (const s of schools) {
+    const ipeds = s.ipeds_id?.trim();
+    if (!ipeds) continue;
+
+    if (s.scrape_policy === "verified_absent") {
+      out.add(ipeds);
+      continue;
+    }
+
+    const seed = (s.discovery_seed_url ?? s.cds_url_hint)?.trim();
+    if (s.scrape_policy === "active" && seed) {
+      out.add(ipeds);
+    }
+  }
+  return out;
+}

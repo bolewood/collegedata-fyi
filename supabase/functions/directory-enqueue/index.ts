@@ -4,9 +4,9 @@
 // Companion to archive-enqueue. Both write to archive_queue, but they
 // pull from different universes:
 //
-//   archive-enqueue     reads tools/finder/schools.yaml. Daily cron.
-//                       Source of truth for hand-curated, actively
-//                       scraped schools. Source = 'schools_yaml'.
+//   archive-enqueue     reads tools/finder/schools.yaml. Source of truth
+//                       for hand-curated, actively scraped schools.
+//                       Source = 'schools_yaml'.
 //
 //   directory-enqueue   (this function) reads institution_directory.
 //                       Operator-triggered, no cron. Targets the Scorecard
@@ -38,9 +38,10 @@
 //      coverage status flips off `not_checked`, and are the schools
 //      where missing-CDS visibility matters most.
 //
-//   4. Schools already covered by schools.yaml are skipped. archive-enqueue
-//      owns those; double-enqueueing would race the cooldown logic.
-//      Excluded by joining institution_slug_crosswalk.
+//   4. Curated schools.yaml rows are skipped. archive-enqueue owns active
+//      rows with explicit seed URLs, and manual overrides own
+//      verified_absent rows. Unknown/no-seed YAML rows can still flow
+//      through this operator-controlled directory path.
 //
 //   5. cooldown / in-flight / has-cds checks all use the existing
 //      archive_queue + cds_documents tables. directory-sourced rows
@@ -61,6 +62,10 @@ import {
   selectCandidates,
 } from "./select.ts";
 import { ProbeOutcome } from "../_shared/probe_outcome.ts";
+import {
+  directoryProtectedIpeds,
+  fetchSchoolsYaml,
+} from "../_shared/schools.ts";
 
 Deno.serve(async (req: Request) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -106,7 +111,7 @@ Deno.serve(async (req: Request) => {
     terminalResult,
   ] = await Promise.all([
     loadDirectoryRows(supabase, params),
-    loadSchoolsYamlIpeds(supabase),
+    loadSchoolsYamlIpeds(),
     loadSchoolsWithCds(supabase),
     loadInFlightSchools(supabase),
     loadLatestTerminals(supabase),
@@ -371,19 +376,13 @@ async function loadDirectoryRows(
   });
 }
 
-async function loadSchoolsYamlIpeds(
-  supabase: SupabaseClient,
-): Promise<{ ipeds: Set<string> } | { error: string }> {
-  const result = await fetchPaged<{ ipeds_id: string }>((start, end) =>
-    supabase
-      .from("institution_slug_crosswalk")
-      .select("ipeds_id")
-      .eq("source", "schools_yaml")
-      .order("ipeds_id", { ascending: true })
-      .range(start, end)
-  );
-  if ("error" in result) return result;
-  return { ipeds: new Set(result.rows.map((r) => r.ipeds_id)) };
+async function loadSchoolsYamlIpeds(): Promise<{ ipeds: Set<string> } | { error: string }> {
+  try {
+    const result = await fetchSchoolsYaml();
+    return { ipeds: directoryProtectedIpeds(result.entries) };
+  } catch (e) {
+    return { error: `schools.yaml fetch failed: ${(e as Error).message}` };
+  }
 }
 
 async function loadSchoolsWithCds(

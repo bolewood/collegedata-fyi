@@ -1,5 +1,6 @@
 import { assertEquals, assertRejects } from "jsr:@std/assert";
 import {
+  directoryProtectedIpeds,
   filterArchivable,
   normalizeSchoolToken,
   resolveSchoolName,
@@ -98,6 +99,38 @@ Deno.test("filterArchivable threads ipeds_id through when present", () => {
   // ipeds_id is conditionally spread — absent in the output when the
   // schools.yaml entry has none. This guards the optional contract.
   assertEquals("ipeds_id" in mit, false);
+});
+
+Deno.test("directoryProtectedIpeds protects only curated YAML-owned rows", () => {
+  const fixtures: SchoolEntry[] = [
+    {
+      id: "active-seed",
+      name: "Active With Seed",
+      ipeds_id: "111111",
+      scrape_policy: "active",
+      discovery_seed_url: "https://example.edu/cds/",
+    },
+    {
+      id: "active-no-seed",
+      name: "Active Missing Seed",
+      ipeds_id: "222222",
+      scrape_policy: "active",
+    },
+    {
+      id: "unknown",
+      name: "Unknown Discovery Tail",
+      ipeds_id: "333333",
+      scrape_policy: "unknown",
+    },
+    {
+      id: "verified-absent",
+      name: "Verified Absent",
+      ipeds_id: "444444",
+      scrape_policy: "verified_absent",
+    },
+  ];
+
+  assertEquals(directoryProtectedIpeds(fixtures), new Set(["111111", "444444"]));
 });
 
 // resolveSchoolName's fail-closed behavior when the id is unknown cannot be

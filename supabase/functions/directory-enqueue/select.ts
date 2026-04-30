@@ -30,11 +30,10 @@ export interface LatestTerminal {
 
 export interface SelectionInputs {
   rows: DirectoryRow[];
-  // IPEDS UNITIDs already covered by the schools.yaml universe.
-  // Loaded from institution_slug_crosswalk WHERE source = 'schools_yaml'.
-  // archive-enqueue is the canonical writer for these — directory-enqueue
-  // must skip them so the same school doesn't end up enqueued twice on
-  // overlapping cron + manual runs.
+  // IPEDS UNITIDs still protected by the schools.yaml path. This is not
+  // every schools.yaml row: unknown/no-seed YAML rows can flow through
+  // directory-enqueue, while active-seed and verified_absent rows stay
+  // under the curated/manual paths.
   schoolsYamlIpeds: Set<string>;
   // school_ids that already have any cds_documents row. Per PRD: "Enqueue
   // in-scope institutions that have no cds_documents row and no recent

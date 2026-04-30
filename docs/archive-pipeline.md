@@ -417,7 +417,16 @@ Batch gate:
    wrapper does this automatically in `--apply` mode.
 5. Do not use `--force-recheck` for the first top-500 pass. The first
    pass should respect cooldowns, existing-CDS rows, in-flight rows, and
-   schools.yaml exclusions.
+   curated schools.yaml exclusions.
+
+`schools_yaml_covered` means "protected from the directory fallback,"
+not "present anywhere in schools.yaml." Active schools with explicit
+seed URLs remain owned by `archive-enqueue`, and `verified_absent` rows
+remain manual/override-owned. YAML rows with `scrape_policy: unknown`
+or `active` without a seed URL can be probed by `directory-enqueue`
+using the Scorecard website URL, which closes the old dead zone where
+those rows were neither archivable by `archive-enqueue` nor eligible for
+directory batches.
 
 Stop the rollout if any of these happen:
 
