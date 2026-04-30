@@ -387,6 +387,24 @@ caffeinate -dimsu python3 -u tools/ops/directory_enqueue_batches.py \
   --stall-timeout-minutes 20 \
   --max-transient-rate 0.25 \
   --max-permanent-other-rate 0.05
+
+# Unattended mode with high-signal repair after each drained batch.
+# This remains operator-controlled: no cron, no CI drain, and explicit
+# batch limits. Repairs are conservative: only high-enrollment failed
+# rows are probed, only official-domain documents are force-archived,
+# and third-party/cached search hits are skipped.
+caffeinate -dimsu python3 -u tools/ops/directory_enqueue_autopilot.py \
+  --apply \
+  --batch-size 25 \
+  --max-batches 8 \
+  --uniform-cooldown-days 1 \
+  --poll-interval-seconds 30 \
+  --stall-timeout-minutes 20 \
+  --max-transient-rate 0.25 \
+  --max-permanent-other-rate 0.05 \
+  --repair-min-enrollment 10000 \
+  --repair-max-per-batch 5 \
+  --repair-bing-fallback
 ```
 
 The wrapper reads `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` from
@@ -404,6 +422,20 @@ coverage histograms and watched status deltas for:
 It also records every baseline, dry-run, enqueue, poll, drain, and
 refresh event as JSONL in `scratch/directory-enqueue-runs/`. That
 directory is intentionally uncommitted operator evidence.
+
+For unattended launch drains, `directory_enqueue_autopilot.py` wraps the
+same batch workflow and then audits only the just-drained
+`last_outcome='no_pdfs_found'` rows above the configured enrollment
+threshold. Its repair ladder is intentionally narrow:
+
+1. Try the free official-domain pattern ladder from `tools/finder/probe_urls.py`.
+2. Optionally try Bing HTML search with `site:<school-domain> "Common Data Set"`.
+3. Accept only URLs on the school's own root domain/subdomains.
+4. If the hit is a landing page, archive only direct PDF/XLSX/DOCX links
+   whose text or URL says CDS/Common Data Set.
+5. Refresh coverage after any successful repair. Extraction can be run
+   inline with `--extract-repaired` when the local worker environment has
+   the dependencies installed.
 
 Batch gate:
 

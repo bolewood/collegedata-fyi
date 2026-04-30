@@ -75,6 +75,13 @@ class SupabaseClient:
             url = f"{url}?{query}"
         return self._request_json("POST", url, headers=self._headers())
 
+    def post_function_json(self, name: str, body: dict[str, Any], params: dict[str, str] | None = None) -> dict[str, Any]:
+        query = urllib.parse.urlencode(params or {})
+        url = f"{self.supabase_url}/functions/v1/{name}"
+        if query:
+            url = f"{url}?{query}"
+        return self._request_json("POST", url, headers=self._headers(), body=json.dumps(body).encode("utf-8"))
+
     def _headers(self) -> dict[str, str]:
         return {
             "Authorization": f"Bearer {self.service_role_key}",
@@ -82,8 +89,8 @@ class SupabaseClient:
             "Content-Type": "application/json",
         }
 
-    def _request_json(self, method: str, url: str, *, headers: dict[str, str]) -> Any:
-        request = urllib.request.Request(url, method=method, headers=headers)
+    def _request_json(self, method: str, url: str, *, headers: dict[str, str], body: bytes | None = None) -> Any:
+        request = urllib.request.Request(url, data=body, method=method, headers=headers)
         try:
             with urllib.request.urlopen(request, timeout=60) as response:
                 body = response.read().decode("utf-8")
@@ -223,7 +230,7 @@ def fetch_queue_rows(client: Any, run_id: str) -> list[dict[str, Any]]:
         client,
         "archive_queue",
         {
-            "select": "school_id,school_name,status,last_outcome,processed_at,attempts,last_error",
+            "select": "school_id,school_name,cds_url_hint,status,last_outcome,processed_at,attempts,last_error",
             "source": "eq.institution_directory",
             "enqueued_run_id": f"eq.{run_id}",
             "order": "school_name.asc",
