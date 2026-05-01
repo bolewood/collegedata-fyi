@@ -423,6 +423,19 @@ It also records every baseline, dry-run, enqueue, poll, drain, and
 refresh event as JSONL in `scratch/directory-enqueue-runs/`. That
 directory is intentionally uncommitted operator evidence.
 
+After each applied batch, both `directory_enqueue_batches.py` and
+`directory_enqueue_autopilot.py` run an extraction backlog audit unless
+`--skip-extraction-backlog-audit` is passed. The audit reads
+`cds_documents WHERE extraction_status='extraction_pending'`, prints the
+pending count, oldest pending age, source-format buckets, oldest rows, and
+high-enrollment pending rows, then writes the result into the JSONL run log.
+By default it stops the wrapper if any pending row is older than 24 hours.
+Use `--extraction-max-pending-age-hours N` to change that gate and
+`--extraction-max-pending-count N` to add a hard backlog-size gate. During
+launch drains, pass `--extraction-audit-github` to also require a recent
+successful `.github/workflows/ops-extraction-worker.yml` run; the default
+GitHub success freshness gate is 30 hours.
+
 For unattended launch drains, `directory_enqueue_autopilot.py` wraps the
 same batch workflow and then audits only the just-drained
 `last_outcome='no_pdfs_found'` rows above the configured enrollment
@@ -447,7 +460,11 @@ Batch gate:
 3. Wait for each `run_id` to drain before starting the next batch.
 4. Run `refresh-coverage` immediately after each drained batch; the
    wrapper does this automatically in `--apply` mode.
-5. Do not use `--force-recheck` for the first top-500 pass. The first
+5. Review the extraction backlog audit after each drained batch. Stop and
+   run the extraction worker if the oldest pending row is older than 24
+   hours, if high-enrollment rows are piling up, or if the GitHub ops
+   worker has not succeeded recently.
+6. Do not use `--force-recheck` for the first top-500 pass. The first
    pass should respect cooldowns, existing-CDS rows, in-flight rows, and
    curated schools.yaml exclusions.
 
@@ -585,11 +602,21 @@ Capped at 10 schools per request to keep memory bounded.
 **Run extraction over archived pending rows:**
 
 ```bash
+python tools/ops/extraction_backlog_audit.py
+python tools/ops/extraction_backlog_audit.py --skip-github
 python tools/extraction_worker/worker.py
 python tools/extraction_worker/worker.py --limit 25
 python tools/extraction_worker/worker.py --school yale
 python tools/extraction_worker/worker.py --dry-run
 ```
+
+`tools/ops/extraction_backlog_audit.py` is the pre-flight/status check for
+the worker. It writes JSON reports to `scratch/extraction-backlog-audits/`
+and exits non-zero when the configured gates fail. The default gate is:
+oldest pending extraction row must be no older than 24 hours. The optional
+GitHub gate checks the bounded ops workflow's last success so missing
+secrets or a broken scheduled drain do not stay hidden behind healthy
+archive/coverage numbers.
 
 The worker detects or backfills `source_format`, writes one canonical
 `cds_artifacts` row per successful extraction, and flips

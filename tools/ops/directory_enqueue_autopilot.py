@@ -31,6 +31,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from tools.finder import probe_urls
 from tools.ops import directory_enqueue_batches as batches
+from tools.ops import extraction_backlog_audit
 
 
 DOC_EXTENSIONS = (".pdf", ".xlsx", ".docx")
@@ -484,6 +485,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--extract-repaired", action="store_true")
     parser.add_argument("--extraction-python", default=".context/extraction-venv/bin/python")
     parser.add_argument("--extraction-limit", type=int, default=3)
+    parser.add_argument("--skip-extraction-backlog-audit", action="store_true")
+    parser.add_argument("--extraction-max-pending-age-hours", type=float, default=24.0)
+    parser.add_argument("--extraction-max-pending-count", type=int)
+    parser.add_argument("--extraction-audit-sample-limit", type=int, default=15)
+    parser.add_argument("--extraction-audit-github", action="store_true")
+    parser.add_argument("--extraction-audit-github-repo", default=extraction_backlog_audit.DEFAULT_GITHUB_REPO)
+    parser.add_argument("--extraction-audit-github-workflow", default=extraction_backlog_audit.DEFAULT_GITHUB_WORKFLOW)
+    parser.add_argument("--extraction-max-github-success-age-hours", type=float, default=30.0)
+    parser.add_argument("--fail-on-extraction-pending-growth", action="store_true")
     return parser
 
 
@@ -511,6 +521,7 @@ def main(argv: list[str] | None = None) -> int:
 
         print(f"Writing JSONL log to {logger.path}")
         reports: list[dict[str, Any]] = []
+        previous_pending_count: int | None = None
         for batch_number in range(1, args.max_batches + 1):
             print(f"\n## Autopilot batch {batch_number}/{args.max_batches}")
             report = batches.run_batch(
@@ -541,7 +552,46 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 batches.print_json("High-signal repair", repair_report)
 
-            reports.append({"batch": report, "repair": repair_report})
+            extraction_audit_report = None
+            if args.apply and not args.skip_extraction_backlog_audit:
+                extraction_audit_report = extraction_backlog_audit.build_audit(
+                    client,
+                    sample_limit=args.extraction_audit_sample_limit,
+                    include_github=args.extraction_audit_github,
+                    github_repo=args.extraction_audit_github_repo,
+                    github_workflow=args.extraction_audit_github_workflow,
+                    github_limit=20,
+                )
+                gate_failures = extraction_backlog_audit.evaluate_gates(
+                    extraction_audit_report,
+                    extraction_backlog_audit.AuditThresholds(
+                        max_pending_age_hours=args.extraction_max_pending_age_hours,
+                        max_pending_count=args.extraction_max_pending_count,
+                        max_github_success_age_hours=(
+                            args.extraction_max_github_success_age_hours
+                            if args.extraction_audit_github
+                            else None
+                        ),
+                        fail_on_pending_growth=args.fail_on_extraction_pending_growth,
+                    ),
+                    previous_pending_count=previous_pending_count,
+                )
+                previous_pending_count = int(extraction_audit_report.get("pending_count") or 0)
+                logger.write(
+                    "extraction_backlog_audit",
+                    batch_number=batch_number,
+                    audit=extraction_audit_report,
+                    gate_failures=gate_failures,
+                )
+                extraction_backlog_audit.print_audit(extraction_audit_report, gate_failures)
+                if gate_failures:
+                    raise batches.OpsError("extraction backlog gate failed: " + "; ".join(gate_failures))
+
+            reports.append({
+                "batch": report,
+                "repair": repair_report,
+                "extraction_backlog_audit": extraction_audit_report,
+            })
             if not report.get("applied"):
                 break
 

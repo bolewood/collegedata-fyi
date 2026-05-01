@@ -601,6 +601,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-permanent-other-rate", type=float, default=0.05, help="Stop when terminal permanent_other outcomes exceed this rate")
     parser.add_argument("--stop-on-transient-gate", action="store_true", help="Treat --max-transient-rate as a stop gate instead of a warning")
     parser.add_argument("--baseline-sample-size", type=int, default=10)
+    parser.add_argument("--skip-extraction-backlog-audit", action="store_true")
+    parser.add_argument("--extraction-max-pending-age-hours", type=float, default=24.0)
+    parser.add_argument("--extraction-max-pending-count", type=int)
+    parser.add_argument("--extraction-audit-sample-limit", type=int, default=15)
+    parser.add_argument("--extraction-audit-github", action="store_true")
+    parser.add_argument("--extraction-audit-github-repo", default="bolewood/collegedata-fyi")
+    parser.add_argument("--extraction-audit-github-workflow", default="Ops extraction worker")
+    parser.add_argument("--extraction-max-github-success-age-hours", type=float, default=30.0)
+    parser.add_argument("--fail-on-extraction-pending-growth", action="store_true")
     return parser
 
 
@@ -624,6 +633,37 @@ def main(argv: list[str] | None = None) -> int:
             uniform_cooldown_days=args.uniform_cooldown_days,
         )
 
+        def audit_extraction_backlog(previous_pending_count: int | None) -> tuple[dict[str, Any], int]:
+            from tools.ops import extraction_backlog_audit
+
+            audit = extraction_backlog_audit.build_audit(
+                client,
+                sample_limit=args.extraction_audit_sample_limit,
+                include_github=args.extraction_audit_github,
+                github_repo=args.extraction_audit_github_repo,
+                github_workflow=args.extraction_audit_github_workflow,
+                github_limit=20,
+            )
+            gate_failures = extraction_backlog_audit.evaluate_gates(
+                audit,
+                extraction_backlog_audit.AuditThresholds(
+                    max_pending_age_hours=args.extraction_max_pending_age_hours,
+                    max_pending_count=args.extraction_max_pending_count,
+                    max_github_success_age_hours=(
+                        args.extraction_max_github_success_age_hours
+                        if args.extraction_audit_github
+                        else None
+                    ),
+                    fail_on_pending_growth=args.fail_on_extraction_pending_growth,
+                ),
+                previous_pending_count=previous_pending_count,
+            )
+            logger.write("extraction_backlog_audit", audit=audit, gate_failures=gate_failures)
+            extraction_backlog_audit.print_audit(audit, gate_failures)
+            if gate_failures:
+                raise OpsError("extraction backlog gate failed: " + "; ".join(gate_failures))
+            return audit, int(audit.get("pending_count") or 0)
+
         if args.resume_run_id:
             report = resume_run(
                 client,
@@ -636,6 +676,8 @@ def main(argv: list[str] | None = None) -> int:
                 max_permanent_other_rate=args.max_permanent_other_rate,
                 stop_on_transient_gate=args.stop_on_transient_gate,
             )
+            if not args.skip_extraction_backlog_audit:
+                audit_extraction_backlog(None)
             logger.write("completed", reports=[report])
             print(f"\nCompleted. JSONL log: {logger.path}")
             return 0
@@ -660,22 +702,26 @@ def main(argv: list[str] | None = None) -> int:
         print_json("Current in-flight directory rows", baseline["in_flight_directory_rows"])
 
         reports = []
+        previous_pending_count: int | None = None
         for limit in batches:
-            reports.append(
-                run_batch(
-                    client,
-                    limit=limit,
-                    apply=args.apply,
-                    options=options,
-                    logger=logger,
-                    timeout_seconds=args.timeout_minutes * 60,
-                    poll_interval_seconds=args.poll_interval_seconds,
-                    stall_timeout_seconds=args.stall_timeout_minutes * 60,
-                    max_transient_rate=args.max_transient_rate,
-                    max_permanent_other_rate=args.max_permanent_other_rate,
-                    stop_on_transient_gate=args.stop_on_transient_gate,
-                )
+            report = run_batch(
+                client,
+                limit=limit,
+                apply=args.apply,
+                options=options,
+                logger=logger,
+                timeout_seconds=args.timeout_minutes * 60,
+                poll_interval_seconds=args.poll_interval_seconds,
+                stall_timeout_seconds=args.stall_timeout_minutes * 60,
+                max_transient_rate=args.max_transient_rate,
+                max_permanent_other_rate=args.max_permanent_other_rate,
+                stop_on_transient_gate=args.stop_on_transient_gate,
             )
+            extraction_audit = None
+            if args.apply and not args.skip_extraction_backlog_audit and report.get("applied"):
+                extraction_audit, previous_pending_count = audit_extraction_backlog(previous_pending_count)
+            report["extraction_backlog_audit"] = extraction_audit
+            reports.append(report)
 
         logger.write("completed", reports=reports)
         print(f"\nCompleted. JSONL log: {logger.path}")
