@@ -350,7 +350,150 @@ touching the database or Storage.
 **Enqueue Scorecard-only directory schools for discovery** (PRD 015 M2 —
 the path that turns `not_checked` rows into real archive attempts so
 coverage status precedence has actual data to read). Operator-triggered;
-no cron. `limit` is required so every batch is sized intentionally:
+no cron. `limit` is required so every batch is sized intentionally.
+
+For the production launch backlog, use the controlled batch wrapper
+instead of one-off curls. The launch state still had ~2.1K
+`not_checked` rows; the first reduction pass targets the top 500
+highest-enrollment remaining institutions in staged batches:
+`25 -> 75 -> 150 -> 250`. This keeps PRD 015's scope intact: no CI
+drain, no pg_cron drain, and no automatic full-universe discovery.
+
+```bash
+cd /Users/santhonys/Projects/Owen/colleges/collegedata-fyi
+
+# Inspect baseline counts, current in-flight rows, and the next 25 picks.
+# This is dry-run-only; it never enqueues archive_queue rows.
+python3 tools/ops/directory_enqueue_batches.py --limit 25
+
+# First canary: dry-run, enqueue 25, wait for the run_id to drain,
+# refresh coverage, print deltas, and write JSONL under scratch/.
+python3 tools/ops/directory_enqueue_batches.py --apply --limit 25
+
+# Continue only after the canary looks sane.
+python3 tools/ops/directory_enqueue_batches.py --apply --batches 75,150,250
+
+# If local polling is interrupted after enqueue, resume the same run_id
+# without enqueueing another batch.
+python3 tools/ops/directory_enqueue_batches.py --resume-run-id <run_id>
+
+# Overnight mode from an operator Mac: keep the machine awake, stream logs,
+# drain repeated 25-row batches, stop on permanent_other spikes, and warn
+# on transient-heavy batches without stopping.
+caffeinate -dimsu python3 -u tools/ops/directory_enqueue_batches.py \
+  --apply \
+  --batches 25,25,25,25,25,25,25,25,25,25 \
+  --poll-interval-seconds 30 \
+  --stall-timeout-minutes 20 \
+  --max-transient-rate 0.25 \
+  --max-permanent-other-rate 0.05
+
+# Unattended mode with high-signal repair after each drained batch.
+# This remains operator-controlled: no cron, no CI drain, and explicit
+# batch limits. Repairs are conservative: only high-enrollment failed
+# rows are probed, only official-domain documents are force-archived,
+# and third-party/cached search hits are skipped.
+caffeinate -dimsu python3 -u tools/ops/directory_enqueue_autopilot.py \
+  --apply \
+  --batch-size 25 \
+  --max-batches 8 \
+  --uniform-cooldown-days 1 \
+  --poll-interval-seconds 30 \
+  --stall-timeout-minutes 20 \
+  --max-transient-rate 0.25 \
+  --max-permanent-other-rate 0.05 \
+  --repair-min-enrollment 10000 \
+  --repair-max-per-batch 5 \
+  --repair-bing-fallback
+```
+
+The wrapper reads `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` from
+`.env`, calls `directory-enqueue?dry_run=true` before every real enqueue,
+polls `archive_queue` for that run's `ready`/`processing` rows, calls
+`refresh-coverage` after the run drains, then prints before/after
+coverage histograms and watched status deltas for:
+
+- `not_checked`
+- `no_public_cds_found`
+- `source_not_automatically_accessible`
+- `cds_available_current`
+- `extract_failed`
+
+It also records every baseline, dry-run, enqueue, poll, drain, and
+refresh event as JSONL in `scratch/directory-enqueue-runs/`. That
+directory is intentionally uncommitted operator evidence.
+
+After each applied batch, both `directory_enqueue_batches.py` and
+`directory_enqueue_autopilot.py` run an extraction backlog audit unless
+`--skip-extraction-backlog-audit` is passed. The audit reads
+`cds_documents WHERE extraction_status='extraction_pending'`, prints the
+pending count, oldest pending age, source-format buckets, oldest rows, and
+high-enrollment pending rows, then writes the result into the JSONL run log.
+By default it stops the wrapper if any pending row is older than 24 hours.
+Use `--extraction-max-pending-age-hours N` to change that gate and
+`--extraction-max-pending-count N` to add a hard backlog-size gate. During
+launch drains, pass `--extraction-audit-github` to also require a recent
+successful `.github/workflows/ops-extraction-worker.yml` run; the default
+GitHub success freshness gate is 30 hours.
+
+For unattended launch drains, `directory_enqueue_autopilot.py` wraps the
+same batch workflow and then audits only the just-drained
+`last_outcome='no_pdfs_found'` rows above the configured enrollment
+threshold. Its repair ladder is intentionally narrow:
+
+1. Try the free official-domain pattern ladder from `tools/finder/probe_urls.py`.
+2. Optionally try Bing HTML search with `site:<school-domain> "Common Data Set"`.
+3. Accept only URLs on the school's own root domain/subdomains.
+4. If the hit is a landing page, archive only direct PDF/XLSX/DOCX links
+   whose text or URL says CDS/Common Data Set.
+5. Refresh coverage after any successful repair. Extraction can be run
+   inline with `--extract-repaired` when the local worker environment has
+   the dependencies installed.
+
+Batch gate:
+
+1. Capture the baseline that the wrapper prints: coverage histogram,
+   top `not_checked` schools by enrollment, and current in-flight
+   `archive_queue` rows with `source='institution_directory'`.
+2. Dry-run every batch. Continue to the real enqueue only if the sample
+   schools and skipped buckets look sane.
+3. Wait for each `run_id` to drain before starting the next batch.
+4. Run `refresh-coverage` immediately after each drained batch; the
+   wrapper does this automatically in `--apply` mode.
+5. Review the extraction backlog audit after each drained batch. Stop and
+   run the extraction worker if the oldest pending row is older than 24
+   hours, if high-enrollment rows are piling up, or if the GitHub ops
+   worker has not succeeded recently.
+6. Do not use `--force-recheck` for the first top-500 pass. The first
+   pass should respect cooldowns, existing-CDS rows, in-flight rows, and
+   curated schools.yaml exclusions.
+
+`schools_yaml_covered` means "protected from the directory fallback,"
+not "present anywhere in schools.yaml." Active schools with explicit
+seed URLs remain owned by `archive-enqueue`, and `verified_absent` rows
+remain manual/override-owned. YAML rows with `scrape_policy: unknown`
+or `active` without a seed URL can be probed by `directory-enqueue`
+using the Scorecard website URL, which closes the old dead zone where
+those rows were neither archivable by `archive-enqueue` nor eligible for
+directory batches.
+
+Stop the rollout if any of these happen:
+
+- More than 5% of a batch ends with unexpected `permanent_other`
+  outcomes.
+- `transient` outcomes exceed the configured warning gate and the run
+  was started with `--stop-on-transient-gate`. For overnight drains,
+  transient-heavy batches are logged and reviewed in the morning because
+  they usually mean flaky school infrastructure rather than product
+  corruption.
+- The queue stalls for more than 20 minutes with no additional terminal
+  rows.
+- `directory-enqueue` or `refresh-coverage` returns an auth, load, or
+  enqueue error.
+- The coverage histogram is wildly implausible, for example the total
+  row count shifts unexpectedly or a known-good bucket disappears.
+
+Raw curl remains useful for debugging the Edge Function directly:
 
 ```bash
 cd /Users/santhonys/Projects/Owen/colleges/collegedata-fyi
@@ -459,11 +602,21 @@ Capped at 10 schools per request to keep memory bounded.
 **Run extraction over archived pending rows:**
 
 ```bash
+python tools/ops/extraction_backlog_audit.py
+python tools/ops/extraction_backlog_audit.py --skip-github
 python tools/extraction_worker/worker.py
 python tools/extraction_worker/worker.py --limit 25
 python tools/extraction_worker/worker.py --school yale
 python tools/extraction_worker/worker.py --dry-run
 ```
+
+`tools/ops/extraction_backlog_audit.py` is the pre-flight/status check for
+the worker. It writes JSON reports to `scratch/extraction-backlog-audits/`
+and exits non-zero when the configured gates fail. The default gate is:
+oldest pending extraction row must be no older than 24 hours. The optional
+GitHub gate checks the bounded ops workflow's last success so missing
+secrets or a broken scheduled drain do not stay hidden behind healthy
+archive/coverage numbers.
 
 The worker detects or backfills `source_format`, writes one canonical
 `cds_artifacts` row per successful extraction, and flips
