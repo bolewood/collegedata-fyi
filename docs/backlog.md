@@ -42,6 +42,25 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 - **Two schools pointing at the same archived file (U Maine System Central Office + U Southern Maine) — production DB cleanup pending.** schools.yaml side fixed 2026-04-15 in commit `59982f7` (flipped `university-of-maine-system-central-office` to `scrape_policy: verified_absent`). **Still pending: production DB cleanup.** The stale `cds_documents` row (id `6d0ef326-ce81-4f11-8214-125e29c1cd4f`, cds_year `2025-26`, status `extraction_pending`) and its `archive_queue` entry are still live. Operator action: either `UPDATE public.cds_documents SET participation_status = 'verified_absent', extraction_status = 'not_applicable' WHERE id = '6d0ef326-ce81-4f11-8214-125e29c1cd4f';` (preserves history) or `DELETE` outright; plus `DELETE FROM public.archive_queue WHERE school_id = 'university-of-maine-system-central-office';`. Broader class: `schools.yaml` entries populated via `last_method: brave` with `search_fallback_tried: true` should have their hint URLs cross-validated against the school's own domain before being accepted — a separate follow-up.
 
+### Trigger-on-volume
+
+- **PRD 015 M7 — first-party CDS source submission backend.** Replace
+  Formspree on the school detail + coverage pages with first-party
+  intake: an `archive-submit` edge function that writes into a new
+  `source_submissions` table (school_id, url, note, submitter_email,
+  ip, submitted_at, status), plus an operator review surface (probably
+  `/operator/submissions` behind service-role auth) to triage
+  accepted/rejected and feed accepted URLs into the resolver as hints.
+  **Why deferred:** Formspree handles low-volume submissions fine and
+  every submission already routes to `anthony+collegedata@bolewood.com`.
+  Build this when inbox volume makes the manual workflow expensive —
+  rough trigger is ~10+ submissions per week, or when the first abuse
+  pattern appears (spam / off-topic / non-CDS URLs requiring filter).
+  **Shape:** ~1 day of work — table + RLS + edge function + minimal
+  operator page + swap the SubmissionForm endpoint via env var. The
+  M5 SubmissionForm component already accepts an env-driven endpoint,
+  so the frontend swap is one config change.
+
 ### Frontend polish
 
 - **Queryable browser CSV export pagination.** The `/browse` MVP exports the current browser result set through one Edge Function call capped at `page_size=500`. That is fine for current launch filters, but a broad export should page through all results or move export server-side before result sets grow. **Effort:** ~1 hour.
