@@ -130,6 +130,9 @@ export default async function HomePage() {
           </div>
 
           <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24, flexWrap: "wrap" }}>
+            <Link href="/match" className="cd-btn">
+              Build match list
+            </Link>
             <Link href="/browse" className="cd-btn">
               Query schools
             </Link>
