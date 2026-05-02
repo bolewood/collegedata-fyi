@@ -2407,11 +2407,14 @@ def _extract_yes_no_from_lines(lines: list[str]) -> str | None:
         if token != "x":
             continue
         # Vertical checkbox layouts emit "x" immediately before the selected
-        # label. Horizontal Yes/No tables emit it immediately after.
-        if i > 0 and tokens[i - 1] in ("yes", "no"):
-            return tokens[i - 1].capitalize()
+        # label. When Docling emits "Yes, x, No", the marker belongs to the
+        # following "No" checkbox; horizontal Yes/No tables emit it after both
+        # labels, so only fall back to the previous label when there is no
+        # following Yes/No token.
         if i + 1 < len(tokens) and tokens[i + 1] in ("yes", "no"):
             return tokens[i + 1].capitalize()
+        if i > 0 and tokens[i - 1] in ("yes", "no"):
+            return tokens[i - 1].capitalize()
     return None
 
 
