@@ -48,6 +48,24 @@ export type BrowserRow = {
   act_composite_p25: number | null;
   act_composite_p50: number | null;
   act_composite_p75: number | null;
+  ed_offered: boolean | null;
+  ed_applicants: number | null;
+  ed_admitted: number | null;
+  ed_has_second_deadline: boolean | null;
+  ea_offered: boolean | null;
+  ea_restrictive: boolean | null;
+  wait_list_policy: boolean | null;
+  wait_list_offered: number | null;
+  wait_list_accepted: number | null;
+  wait_list_admitted: number | null;
+  c711_first_gen_factor: string | null;
+  c712_legacy_factor: string | null;
+  c713_geography_factor: string | null;
+  c714_state_residency_factor: string | null;
+  c718_demonstrated_interest_factor: string | null;
+  app_fee_amount: number | null;
+  app_fee_waiver_offered: boolean | null;
+  admission_strategy_card_quality: string | null;
 };
 
 export type BrowserFilter = {
@@ -144,6 +162,24 @@ export const ALLOWED_FIELDS = new Set([
   "act_composite_p25",
   "act_composite_p50",
   "act_composite_p75",
+  "ed_offered",
+  "ed_applicants",
+  "ed_admitted",
+  "ed_has_second_deadline",
+  "ea_offered",
+  "ea_restrictive",
+  "wait_list_policy",
+  "wait_list_offered",
+  "wait_list_accepted",
+  "wait_list_admitted",
+  "c711_first_gen_factor",
+  "c712_legacy_factor",
+  "c713_geography_factor",
+  "c714_state_residency_factor",
+  "c718_demonstrated_interest_factor",
+  "app_fee_amount",
+  "app_fee_waiver_offered",
+  "admission_strategy_card_quality",
 ]);
 
 const NUMERIC_FIELDS = new Set([
@@ -171,6 +207,12 @@ const NUMERIC_FIELDS = new Set([
   "act_composite_p25",
   "act_composite_p50",
   "act_composite_p75",
+  "ed_applicants",
+  "ed_admitted",
+  "wait_list_offered",
+  "wait_list_accepted",
+  "wait_list_admitted",
+  "app_fee_amount",
 ]);
 
 const ACADEMIC_PROFILE_COMPANIONS: Record<string, string> = {
@@ -370,6 +412,24 @@ function normalizeRequest(input: BrowserSearchRequest): Required<BrowserSearchRe
       "act_composite_p25",
       "act_composite_p50",
       "act_composite_p75",
+      "ed_offered",
+      "ed_applicants",
+      "ed_admitted",
+      "ed_has_second_deadline",
+      "ea_offered",
+      "ea_restrictive",
+      "wait_list_policy",
+      "wait_list_offered",
+      "wait_list_accepted",
+      "wait_list_admitted",
+      "c711_first_gen_factor",
+      "c712_legacy_factor",
+      "c713_geography_factor",
+      "c714_state_residency_factor",
+      "c718_demonstrated_interest_factor",
+      "app_fee_amount",
+      "app_fee_waiver_offered",
+      "admission_strategy_card_quality",
       "source_format",
       "data_quality_flag",
       "archive_url",

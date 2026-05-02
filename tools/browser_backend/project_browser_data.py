@@ -690,6 +690,188 @@ def int_from_decimal(value: Optional[Decimal]) -> Optional[int]:
         return None
 
 
+def selected_parsed_value(
+    selected: SelectedExtractionResult,
+    schema_defs: dict[str, FieldDefinition],
+    field_id: str,
+) -> ParsedValue:
+    if field_id not in selected.values:
+        return ParsedValue(None, None, None, "unknown", "missing")
+    return parse_field_value(selected.values[field_id], schema_defs.get(field_id))
+
+
+def selected_int(
+    selected: SelectedExtractionResult,
+    schema_defs: dict[str, FieldDefinition],
+    field_id: str,
+) -> Optional[int]:
+    parsed = selected_parsed_value(selected, schema_defs, field_id)
+    if parsed.value_status != "reported":
+        return None
+    return int_from_decimal(parsed.value_num)
+
+
+def selected_bool(
+    selected: SelectedExtractionResult,
+    schema_defs: dict[str, FieldDefinition],
+    field_id: str,
+) -> Optional[bool]:
+    parsed = selected_parsed_value(selected, schema_defs, field_id)
+    if parsed.value_status != "reported":
+        return None
+    return parsed.value_bool
+
+
+def selected_text(
+    selected: SelectedExtractionResult,
+    schema_defs: dict[str, FieldDefinition],
+    field_id: str,
+) -> Optional[str]:
+    parsed = selected_parsed_value(selected, schema_defs, field_id)
+    if parsed.value_status != "reported":
+        return None
+    return parsed.value_text
+
+
+def has_reported_value(selected: SelectedExtractionResult, field_id: str) -> bool:
+    return bool(display_value(selected.values.get(field_id)))
+
+
+def admission_strategy_values(
+    selected: SelectedExtractionResult,
+    schema_defs: dict[str, FieldDefinition],
+    applied: Optional[int],
+    admitted: Optional[int],
+    yield_rate: Optional[Decimal],
+) -> dict[str, Any]:
+    if selected.schema_version == "2024-25":
+        ed_applicants_field = "C.2106"
+        ed_admitted_field = "C.2107"
+        ed_second_deadline_fields = ("C.2104", "C.2105")
+    else:
+        ed_applicants_field = "C.2110"
+        ed_admitted_field = "C.2111"
+        ed_second_deadline_fields = ("C.2106", "C.2107", "C.2108", "C.2109")
+
+    ed_offered = selected_bool(selected, schema_defs, "C.2101")
+    ed_applicants = selected_int(selected, schema_defs, ed_applicants_field)
+    ed_admitted = selected_int(selected, schema_defs, ed_admitted_field)
+    ed_has_second_deadline = any(
+        has_reported_value(selected, field_id) for field_id in ed_second_deadline_fields
+    )
+    ea_offered = selected_bool(selected, schema_defs, "C.2201")
+    ea_restrictive = selected_bool(selected, schema_defs, "C.2206")
+
+    wait_list_policy = selected_bool(selected, schema_defs, "C.201")
+    wait_list_offered = selected_int(selected, schema_defs, "C.202")
+    wait_list_accepted = selected_int(selected, schema_defs, "C.203")
+    wait_list_admitted = selected_int(selected, schema_defs, "C.204")
+
+    c711_first_gen_factor = selected_text(selected, schema_defs, "C.711")
+    c712_legacy_factor = selected_text(selected, schema_defs, "C.712")
+    c713_geography_factor = selected_text(selected, schema_defs, "C.713")
+    c714_state_residency_factor = selected_text(selected, schema_defs, "C.714")
+    c718_demonstrated_interest_factor = selected_text(selected, schema_defs, "C.718")
+
+    app_fee_amount = selected_int(selected, schema_defs, "C.1302")
+    app_fee_waiver_offered = selected_bool(selected, schema_defs, "C.1305")
+
+    ed_math_inconsistent = False
+    if ed_applicants is not None and ed_admitted is not None:
+        ed_math_inconsistent = (
+            ed_applicants < 0
+            or ed_admitted < 0
+            or ed_admitted > ed_applicants
+            or (admitted is not None and admitted > 0 and ed_admitted > admitted)
+        )
+
+    wait_list_math_inconsistent = False
+    if wait_list_offered is not None and wait_list_accepted is not None:
+        wait_list_math_inconsistent = (
+            wait_list_offered < 0
+            or wait_list_accepted < 0
+            or wait_list_accepted > wait_list_offered
+        )
+    if wait_list_accepted is not None and wait_list_admitted is not None:
+        wait_list_math_inconsistent = (
+            wait_list_math_inconsistent
+            or wait_list_admitted < 0
+            or wait_list_admitted > wait_list_accepted
+        )
+
+    ed_offered_effective = (
+        ed_offered is True
+        or (
+            ed_applicants is not None
+            and ed_applicants > 0
+            and ed_admitted is not None
+            and not ed_math_inconsistent
+        )
+    )
+    wait_list_policy_effective = (
+        wait_list_policy is True
+        or (
+            wait_list_offered is not None
+            and wait_list_accepted is not None
+            and wait_list_admitted is not None
+            and not wait_list_math_inconsistent
+        )
+    )
+
+    has_valid_ed_rate = (
+        ed_offered_effective
+        and ed_applicants is not None
+        and ed_applicants > 0
+        and ed_admitted is not None
+        and not ed_math_inconsistent
+    )
+    has_valid_wait_list = (
+        wait_list_policy_effective
+        and wait_list_offered is not None
+        and wait_list_accepted is not None
+        and wait_list_admitted is not None
+        and not wait_list_math_inconsistent
+    )
+    important_factors = {
+        (c711_first_gen_factor or "").lower(),
+        (c712_legacy_factor or "").lower(),
+        (c713_geography_factor or "").lower(),
+        (c714_state_residency_factor or "").lower(),
+        (c718_demonstrated_interest_factor or "").lower(),
+    }
+    has_important_factor = bool(important_factors.intersection({"important", "very important"}))
+
+    if ed_math_inconsistent:
+        quality = "ed_math_inconsistent"
+    elif wait_list_math_inconsistent:
+        quality = "wait_list_math_inconsistent"
+    elif not any([has_valid_ed_rate, yield_rate is not None, has_valid_wait_list, has_important_factor, ea_offered is True]):
+        quality = "insufficient_data"
+    else:
+        quality = "ok"
+
+    return {
+        "ed_offered": ed_offered_effective,
+        "ed_applicants": ed_applicants,
+        "ed_admitted": ed_admitted,
+        "ed_has_second_deadline": ed_has_second_deadline,
+        "ea_offered": ea_offered,
+        "ea_restrictive": ea_restrictive,
+        "wait_list_policy": wait_list_policy_effective,
+        "wait_list_offered": wait_list_offered,
+        "wait_list_accepted": wait_list_accepted,
+        "wait_list_admitted": wait_list_admitted,
+        "c711_first_gen_factor": c711_first_gen_factor,
+        "c712_legacy_factor": c712_legacy_factor,
+        "c713_geography_factor": c713_geography_factor,
+        "c714_state_residency_factor": c714_state_residency_factor,
+        "c718_demonstrated_interest_factor": c718_demonstrated_interest_factor,
+        "app_fee_amount": app_fee_amount,
+        "app_fee_waiver_offered": app_fee_waiver_offered,
+        "admission_strategy_card_quality": quality,
+    }
+
+
 @lru_cache(maxsize=1)
 def load_field_equivalences(schema_dir: Path = SCHEMA_DIR) -> dict[tuple[str, str], tuple[Optional[str], str]]:
     equivalences: dict[tuple[str, str], tuple[Optional[str], str]] = {}
@@ -865,7 +1047,7 @@ def build_projection_rows(
         if value is not None:
             metric_values[metric.canonical_metric] = value
 
-    browser_row = build_browser_row(document, selected, metric_values, scorecard)
+    browser_row = build_browser_row(document, selected, metric_values, schema_defs, scorecard)
     return field_rows, browser_row
 
 
@@ -873,6 +1055,7 @@ def build_browser_row(
     document: dict[str, Any],
     selected: SelectedExtractionResult,
     metric_values: dict[str, Decimal],
+    schema_defs: dict[str, FieldDefinition],
     scorecard: Optional[dict[str, Any]] = None,
 ) -> Optional[dict[str, Any]]:
     if document.get("data_quality_flag") == "wrong_file":
@@ -890,6 +1073,14 @@ def build_browser_row(
     yield_rate = None
     if admitted and enrolled is not None and admitted > 0:
         yield_rate = quantize_rate(Decimal(enrolled) / Decimal(admitted))
+
+    admission_strategy = admission_strategy_values(
+        selected,
+        schema_defs,
+        applied,
+        admitted,
+        yield_rate,
+    )
 
     scorecard = scorecard or {}
     has_scorecard_values = any(
@@ -935,6 +1126,7 @@ def build_browser_row(
         "act_composite_p25": int_from_decimal(metric_values.get("act_composite_p25")),
         "act_composite_p50": int_from_decimal(metric_values.get("act_composite_p50")),
         "act_composite_p75": int_from_decimal(metric_values.get("act_composite_p75")),
+        **admission_strategy,
     }
 
 

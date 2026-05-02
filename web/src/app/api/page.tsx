@@ -168,7 +168,7 @@ export default async function ApiDocsPage() {
         />
         <Resource
           name="school_browser_rows"
-          description={`${formatCount(stats.browser_primary_row_count)} primary 2024-25+ rows across ${formatCount(stats.browser_school_count)} schools, refreshed ${formatShortDate(stats.browser_updated_at)}. This is the curated serving layer for the website browser and CSV exports.`}
+          description={`${formatCount(stats.browser_primary_row_count)} primary 2024-25+ rows across ${formatCount(stats.browser_school_count)} schools, refreshed ${formatShortDate(stats.browser_updated_at)}. This is the curated serving layer for the website browser, CSV exports, and the per-school academic positioning and admission strategy cards.`}
           fields={[
             "school_id",
             "school_name",
@@ -177,6 +177,10 @@ export default async function ApiDocsPage() {
             "admitted",
             "acceptance_rate",
             "yield_rate",
+            "ed_offered",
+            "ed_applicants",
+            "ed_admitted",
+            "ea_offered",
             "avg_net_price",
             "sat_composite_p50",
           ]}
@@ -218,6 +222,24 @@ export default async function ApiDocsPage() {
             "act_composite_p25",
             "act_composite_p50",
             "act_composite_p75",
+            "ed_offered",
+            "ed_applicants",
+            "ed_admitted",
+            "ed_has_second_deadline",
+            "ea_offered",
+            "ea_restrictive",
+            "wait_list_policy",
+            "wait_list_offered",
+            "wait_list_accepted",
+            "wait_list_admitted",
+            "c711_first_gen_factor",
+            "c712_legacy_factor",
+            "c713_geography_factor",
+            "c714_state_residency_factor",
+            "c718_demonstrated_interest_factor",
+            "app_fee_amount",
+            "app_fee_waiver_offered",
+            "admission_strategy_card_quality",
             "updated_at",
           ]}
         />
@@ -391,6 +413,39 @@ export default async function ApiDocsPage() {
   -H 'Authorization: Bearer <anon key>' \\
   -H 'content-type: application/json' \\
   --data '{"mode":"latest_per_school","variant_scope":"primary_only","min_year_start":2024,"filters":[{"field":"acceptance_rate","op":"<=","value":0.1}],"page_size":10}'`}</CodeBlock>
+
+      <h3 className="mt-6 text-base font-semibold text-gray-900">
+        Fetch academic positioning data for one school
+      </h3>
+      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+        The academic positioning card reads the already-public{" "}
+        <code>school_browser_rows</code> resource. SAT/ACT submit rates are stored
+        as fractions, and the card links to{" "}
+        <Link href="/methodology/positioning" className="text-blue-700 underline hover:text-blue-900">
+          its methodology
+        </Link>{" "}
+        instead of exposing a separate scoring endpoint.
+      </p>
+      <CodeBlock>{`curl '${BASE}/rest/v1/school_browser_rows?school_id=eq.bowdoin&select=school_id,school_name,canonical_year,acceptance_rate,sat_submit_rate,act_submit_rate,sat_composite_p25,sat_composite_p50,sat_composite_p75,act_composite_p25,act_composite_p50,act_composite_p75' \\
+  -H 'apikey: <anon key>' \\
+  -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
+
+      <h3 className="mt-6 text-base font-semibold text-gray-900">
+        Fetch admission strategy data for one school
+      </h3>
+      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+        Admission strategy fields are also served from{" "}
+        <code>school_browser_rows</code>. ED counts are published when the CDS reports
+        them; EA is limited to offered/restrictive flags because CDS C.22 does not
+        include EA applicant or admit counts. The card methodology is documented at{" "}
+        <Link href="/methodology/admission-strategy" className="text-blue-700 underline hover:text-blue-900">
+          /methodology/admission-strategy
+        </Link>
+        .
+      </p>
+      <CodeBlock>{`curl '${BASE}/rest/v1/school_browser_rows?school_id=eq.bowdoin&select=school_id,school_name,canonical_year,applied,admitted,yield_rate,ed_offered,ed_applicants,ed_admitted,ed_has_second_deadline,ea_offered,ea_restrictive,wait_list_policy,wait_list_offered,wait_list_accepted,wait_list_admitted,c711_first_gen_factor,c712_legacy_factor,c718_demonstrated_interest_factor,app_fee_amount,app_fee_waiver_offered,admission_strategy_card_quality' \\
+  -H 'apikey: <anon key>' \\
+  -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 
       <h3 className="mt-6 text-base font-semibold text-gray-900">
         List the most recent year for every school

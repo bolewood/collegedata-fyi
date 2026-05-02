@@ -38,12 +38,46 @@ def defs():
             "C.117": FieldDefinition("2024-25", "C.117", "Total applied", "Admission", "Applications", "Number"),
             "C.118": FieldDefinition("2024-25", "C.118", "Total admitted", "Admission", "Applications", "Number"),
             "C.119": FieldDefinition("2024-25", "C.119", "Total enrolled", "Admission", "Applications", "Number"),
+            "C.201": FieldDefinition("2024-25", "C.201", "Wait list policy", "Admission", "Wait List", "YN"),
+            "C.202": FieldDefinition("2024-25", "C.202", "Wait list offered", "Admission", "Wait List", "Number"),
+            "C.203": FieldDefinition("2024-25", "C.203", "Wait list accepted", "Admission", "Wait List", "Number"),
+            "C.204": FieldDefinition("2024-25", "C.204", "Wait list admitted", "Admission", "Wait List", "Number"),
+            "C.2101": FieldDefinition("2024-25", "C.2101", "ED offered", "Admission", "Early Decision", "YN"),
+            "C.2104": FieldDefinition("2024-25", "C.2104", "Other ED closing date", "Admission", "Early Decision", "MM-DD"),
+            "C.2106": FieldDefinition("2024-25", "C.2106", "ED applicants", "Admission", "Early Decision", "Number"),
+            "C.2107": FieldDefinition("2024-25", "C.2107", "ED admitted", "Admission", "Early Decision", "Number"),
+            "C.2201": FieldDefinition("2024-25", "C.2201", "EA offered", "Admission", "Early Action", "YN"),
+            "C.2206": FieldDefinition("2024-25", "C.2206", "EA restrictive", "Admission", "Early Action", "YN"),
+            "C.711": FieldDefinition("2024-25", "C.711", "First generation", "Admission", "Factors", "Text"),
+            "C.712": FieldDefinition("2024-25", "C.712", "Legacy", "Admission", "Factors", "Text"),
+            "C.713": FieldDefinition("2024-25", "C.713", "Geography", "Admission", "Factors", "Text"),
+            "C.714": FieldDefinition("2024-25", "C.714", "State residency", "Admission", "Factors", "Text"),
+            "C.718": FieldDefinition("2024-25", "C.718", "Interest", "Admission", "Factors", "Text"),
+            "C.1302": FieldDefinition("2024-25", "C.1302", "Application fee", "Admission", "Application", "Number"),
+            "C.1305": FieldDefinition("2024-25", "C.1305", "Fee waiver", "Admission", "Application", "YN"),
             "C.901": FieldDefinition("2024-25", "C.901", "Submitting SAT Scores", "Admission", "Profile", "Whole Number or Round to Nearest Tenths"),
         },
         "2025-26": {
             "C.116": FieldDefinition("2025-26", "C.116", "Applied", "Admission", "Applications", "Number"),
             "C.117": FieldDefinition("2025-26", "C.117", "Admitted", "Admission", "Applications", "Number"),
             "C.118": FieldDefinition("2025-26", "C.118", "Enrolled", "Admission", "Applications", "Number"),
+            "C.201": FieldDefinition("2025-26", "C.201", "Wait list policy", "Admission", "Wait List", "YesNo"),
+            "C.202": FieldDefinition("2025-26", "C.202", "Wait list offered", "Admission", "Wait List", "Number"),
+            "C.203": FieldDefinition("2025-26", "C.203", "Wait list accepted", "Admission", "Wait List", "Number"),
+            "C.204": FieldDefinition("2025-26", "C.204", "Wait list admitted", "Admission", "Wait List", "Number"),
+            "C.2101": FieldDefinition("2025-26", "C.2101", "ED offered", "Admission", "Early Decision", "YesNo"),
+            "C.2106": FieldDefinition("2025-26", "C.2106", "Other ED closing month", "Admission", "Early Decision", "MM"),
+            "C.2110": FieldDefinition("2025-26", "C.2110", "ED applicants", "Admission", "Early Decision", "Number"),
+            "C.2111": FieldDefinition("2025-26", "C.2111", "ED admitted", "Admission", "Early Decision", "Number"),
+            "C.2201": FieldDefinition("2025-26", "C.2201", "EA offered", "Admission", "Early Action", "YesNo"),
+            "C.2206": FieldDefinition("2025-26", "C.2206", "EA restrictive", "Admission", "Early Action", "YesNo"),
+            "C.711": FieldDefinition("2025-26", "C.711", "First generation", "Admission", "Factors", "Text"),
+            "C.712": FieldDefinition("2025-26", "C.712", "Legacy", "Admission", "Factors", "Text"),
+            "C.713": FieldDefinition("2025-26", "C.713", "Geography", "Admission", "Factors", "Text"),
+            "C.714": FieldDefinition("2025-26", "C.714", "State residency", "Admission", "Factors", "Text"),
+            "C.718": FieldDefinition("2025-26", "C.718", "Interest", "Admission", "Factors", "Text"),
+            "C.1302": FieldDefinition("2025-26", "C.1302", "Application fee", "Admission", "Application", "Number"),
+            "C.1305": FieldDefinition("2025-26", "C.1305", "Fee waiver", "Admission", "Application", "YesNo"),
             "C.901": FieldDefinition("2025-26", "C.901", "Percent Submitting SAT Scores", "Admission", "Profile", "Whole Number or Round to Nearest Tenth"),
             "C.902": FieldDefinition("2025-26", "C.902", "Percent Submitting ACT Scores", "Admission", "Profile", "Whole Number or Round to Nearest Tenth"),
             "C.905": FieldDefinition("2025-26", "C.905", "SAT Composite: 25th Percentile", "Admission", "Profile", "Whole Number or Round to Nearest Tenth"),
@@ -326,6 +360,138 @@ class BrowserProjectionTests(unittest.TestCase):
         self.assertIsNone(browser["act_composite_p25"])
         self.assertIsNone(browser["act_composite_p50"])
         self.assertIsNone(browser["act_composite_p75"])
+
+    def test_admission_strategy_columns_project_from_2025_schema(self):
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2025-26"),
+            [
+                artifact(
+                    schema_version="2025-26",
+                    values={
+                        "C.116": {"value": "1000"},
+                        "C.117": {"value": "100"},
+                        "C.118": {"value": "50"},
+                        "C.2101": {"value": "Yes"},
+                        "C.2106": {"value": "1"},
+                        "C.2110": {"value": "200"},
+                        "C.2111": {"value": "40"},
+                        "C.2201": {"value": "Yes"},
+                        "C.2206": {"value": "No"},
+                        "C.201": {"value": "Yes"},
+                        "C.202": {"value": "300"},
+                        "C.203": {"value": "150"},
+                        "C.204": {"value": "30"},
+                        "C.711": {"value": "Important"},
+                        "C.712": {"value": "Considered"},
+                        "C.713": {"value": "Not Considered"},
+                        "C.714": {"value": "Important"},
+                        "C.718": {"value": "Very Important"},
+                        "C.1302": {"value": "$85"},
+                        "C.1305": {"value": "Yes"},
+                    },
+                )
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["ed_offered"], True)
+        self.assertEqual(browser["ed_applicants"], 200)
+        self.assertEqual(browser["ed_admitted"], 40)
+        self.assertEqual(browser["ed_has_second_deadline"], True)
+        self.assertEqual(browser["ea_offered"], True)
+        self.assertEqual(browser["ea_restrictive"], False)
+        self.assertEqual(browser["wait_list_policy"], True)
+        self.assertEqual(browser["wait_list_offered"], 300)
+        self.assertEqual(browser["wait_list_accepted"], 150)
+        self.assertEqual(browser["wait_list_admitted"], 30)
+        self.assertEqual(browser["c711_first_gen_factor"], "Important")
+        self.assertEqual(browser["c714_state_residency_factor"], "Important")
+        self.assertEqual(browser["c718_demonstrated_interest_factor"], "Very Important")
+        self.assertEqual(browser["app_fee_amount"], 85)
+        self.assertEqual(browser["app_fee_waiver_offered"], True)
+        self.assertEqual(browser["admission_strategy_card_quality"], "ok")
+
+    def test_admission_strategy_quality_flags_ed_math(self):
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2025-26"),
+            [
+                artifact(
+                    schema_version="2025-26",
+                    values={
+                        "C.116": {"value": "1000"},
+                        "C.117": {"value": "100"},
+                        "C.118": {"value": "50"},
+                        "C.2101": {"value": "Yes"},
+                        "C.2110": {"value": "40"},
+                        "C.2111": {"value": "41"},
+                    },
+                )
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["admission_strategy_card_quality"], "ed_math_inconsistent")
+
+    def test_admission_strategy_infers_ed_offered_from_valid_counts(self):
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2025-26"),
+            [
+                artifact(
+                    schema_version="2025-26",
+                    values={
+                        "C.116": {"value": "1000"},
+                        "C.117": {"value": "100"},
+                        "C.2110": {"value": "200"},
+                        "C.2111": {"value": "40"},
+                    },
+                )
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["ed_offered"], True)
+        self.assertEqual(browser["admission_strategy_card_quality"], "ok")
+
+    def test_admission_strategy_infers_wait_list_policy_from_valid_counts(self):
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2025-26"),
+            [
+                artifact(
+                    schema_version="2025-26",
+                    values={
+                        "C.116": {"value": "1000"},
+                        "C.117": {"value": "100"},
+                        "C.202": {"value": "300"},
+                        "C.203": {"value": "150"},
+                        "C.204": {"value": "30"},
+                    },
+                )
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["wait_list_policy"], True)
+        self.assertEqual(browser["admission_strategy_card_quality"], "ok")
+
+    def test_admission_strategy_app_fee_only_is_insufficient(self):
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2025-26"),
+            [
+                artifact(
+                    schema_version="2025-26",
+                    values={
+                        "C.116": {"value": "1000"},
+                        "C.117": {"value": "100"},
+                        "C.1302": {"value": "$85"},
+                        "C.1305": {"value": "Yes"},
+                    },
+                )
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["app_fee_amount"], 85)
+        self.assertEqual(browser["admission_strategy_card_quality"], "insufficient_data")
 
     def test_sub_institutional_is_preserved(self):
         fields, browser = build_projection_rows(
