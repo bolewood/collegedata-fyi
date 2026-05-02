@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Wordmark } from "./Wordmark";
 
 const NAV_LINKS = [
+  { href: "/match", label: "Match" },
   { href: "/browse", label: "Browser" },
   { href: "/schools", label: "Schools" },
   { href: "/coverage", label: "Coverage" },

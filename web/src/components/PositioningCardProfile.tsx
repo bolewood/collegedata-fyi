@@ -191,12 +191,12 @@ export function PositioningCardProfile({ school }: { school: SchoolAcademicProfi
       <div className="positioning-profile__details">
         <div>
           <span className="mono">Your SAT</span>
-          <strong>{profile.sat ?? "not entered"}</strong>
+          <strong>{profile.sat ?? "n/a"}</strong>
           {result && <small>{formatPercentile(result.satPercentile)}</small>}
         </div>
         <div>
           <span className="mono">Your ACT</span>
-          <strong>{profile.act ?? "not entered"}</strong>
+          <strong>{profile.act ?? "n/a"}</strong>
           {result && <small>{formatPercentile(result.actPercentile)}</small>}
         </div>
         <div>

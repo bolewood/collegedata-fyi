@@ -14,6 +14,13 @@ import type {
 } from "./types";
 import type { SchoolAcademicProfile } from "./positioning";
 import type { AdmissionStrategyQuality, AdmissionStrategySchool } from "./admission-strategy";
+import {
+  carnegieBucket,
+  controlFromScorecard,
+  regionFromState,
+  testPolicySignal,
+  type MatchBuilderSchool,
+} from "./list-builder";
 
 // Documents with these participation_status values are excluded from every
 // public-facing manifest query. 'withdrawn' = takedown per ADR 0008.
@@ -37,6 +44,25 @@ export type BrowserAcademicProfileRow = SchoolAcademicProfile & {
 export type BrowserAdmissionStrategyRow = AdmissionStrategySchool & {
   documentId: string;
   yearStart: number | null;
+};
+
+type DirectoryContextRow = {
+  school_id: string | null;
+  state: string | null;
+  control: number | null;
+};
+
+type ScorecardContextRow = {
+  ipeds_id: string | null;
+  carnegie_basic: number | null;
+};
+
+type GpaContextRow = {
+  school_id: string | null;
+  field_id: string | null;
+  value_num: unknown;
+  value_text: unknown;
+  year_start: unknown;
 };
 
 function sha256Text(value: string): string {
@@ -78,6 +104,29 @@ function normalizeRate(value: unknown): number | null {
   const parsed = numberOrNull(value);
   if (parsed == null) return null;
   return parsed > 1 ? parsed / 100 : parsed;
+}
+
+async function fetchPagedTableRows<T>(
+  table: string,
+  select: string,
+  build?: (query: any) => any,
+): Promise<T[]> {
+  const PAGE = 1000;
+  const HARD_CAP = 50_000;
+  const raw = supabase as unknown as UntypedSupabase;
+  const out: T[] = [];
+
+  for (let start = 0; start < HARD_CAP; start += PAGE) {
+    const base = raw.from(table).select(select).range(start, start + PAGE - 1);
+    const query = build ? build(base) : base;
+    const { data, error } = await query;
+    if (error) throw new Error(`Failed to fetch ${table}: ${error.message}`);
+    const page = (data as T[]) ?? [];
+    out.push(...page);
+    if (page.length < PAGE) break;
+  }
+
+  return out;
 }
 
 async function optionalExactCount(
@@ -394,6 +443,154 @@ export const fetchBrowserRowBySchoolId = cache(
       console.warn(`fetchBrowserRowBySchoolId: ${String(error)}`);
       return null;
     }
+  },
+);
+
+export const fetchMatchBuilderSchools = cache(
+  async function fetchMatchBuilderSchools(): Promise<MatchBuilderSchool[]> {
+    type BrowserRow = {
+      document_id: string | null;
+      school_id: string | null;
+      school_name: string | null;
+      canonical_year: string | null;
+      year_start: unknown;
+      acceptance_rate: unknown;
+      sat_submit_rate: unknown;
+      act_submit_rate: unknown;
+      sat_composite_p25: unknown;
+      sat_composite_p50: unknown;
+      sat_composite_p75: unknown;
+      act_composite_p25: unknown;
+      act_composite_p50: unknown;
+      act_composite_p75: unknown;
+      data_quality_flag: string | null;
+      archive_url: string | null;
+      ipeds_id: string | null;
+    };
+
+    const browserRows = await fetchPagedTableRows<BrowserRow>(
+      "school_browser_rows",
+      "document_id, school_id, school_name, canonical_year, year_start, acceptance_rate, sat_submit_rate, act_submit_rate, sat_composite_p25, sat_composite_p50, sat_composite_p75, act_composite_p25, act_composite_p50, act_composite_p75, data_quality_flag, archive_url, ipeds_id",
+      (query) =>
+        query
+          .gte("year_start", 2024)
+          .is("sub_institutional", null)
+          .order("school_id", { ascending: true })
+          .order("year_start", { ascending: false }),
+    );
+
+    const latestBySchool = new Map<string, BrowserRow>();
+    for (const row of browserRows) {
+      if (!row.school_id) continue;
+      if (!latestBySchool.has(row.school_id)) latestBySchool.set(row.school_id, row);
+    }
+
+    const schoolIds = Array.from(latestBySchool.keys());
+    const ipedsIds = Array.from(
+      new Set(
+        Array.from(latestBySchool.values())
+          .map((row) => row.ipeds_id)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    );
+
+    const [directoryRows, scorecardRows, gpaRows] = await Promise.all([
+      fetchPagedTableRows<DirectoryContextRow>(
+        "institution_directory",
+        "school_id, state, control",
+        (query) => query.in("school_id", schoolIds),
+      ),
+      ipedsIds.length === 0
+        ? Promise.resolve([] as ScorecardContextRow[])
+        : fetchPagedTableRows<ScorecardContextRow>(
+            "scorecard_summary",
+            "ipeds_id, carnegie_basic",
+            (query) => query.in("ipeds_id", ipedsIds),
+          ),
+      fetchPagedTableRows<GpaContextRow>(
+        "cds_fields",
+        "school_id, field_id, value_num, value_text, year_start",
+        (query) =>
+          query
+            .gte("year_start", 2024)
+            .is("sub_institutional", null)
+            .in("school_id", schoolIds)
+            .in("field_id", ["C.1201", "C.1202"])
+            .order("school_id", { ascending: true })
+            .order("year_start", { ascending: false }),
+      ),
+    ]);
+
+    const directoryBySchool = new Map(
+      directoryRows
+        .filter((row): row is DirectoryContextRow & { school_id: string } => Boolean(row.school_id))
+        .map((row) => [row.school_id, row]),
+    );
+    const scorecardByIpeds = new Map(
+      scorecardRows
+        .filter((row): row is ScorecardContextRow & { ipeds_id: string } => Boolean(row.ipeds_id))
+        .map((row) => [row.ipeds_id, row]),
+    );
+    const gpaBySchool = new Map<string, Pick<SchoolAcademicProfile, "avgHsGpa" | "hsGpaSubmitRate">>();
+    for (const row of gpaRows) {
+      if (!row.school_id) continue;
+      const current = gpaBySchool.get(row.school_id) ?? {
+        avgHsGpa: null,
+        hsGpaSubmitRate: null,
+      };
+      if (row.field_id === "C.1201" && current.avgHsGpa == null) {
+        current.avgHsGpa = numberOrNull(row.value_num ?? row.value_text);
+      }
+      if (row.field_id === "C.1202" && current.hsGpaSubmitRate == null) {
+        current.hsGpaSubmitRate = normalizeRate(row.value_num ?? row.value_text);
+      }
+      gpaBySchool.set(row.school_id, current);
+    }
+
+    return Array.from(latestBySchool.values())
+      .map((row) => {
+        const schoolId = String(row.school_id);
+        const directory = directoryBySchool.get(schoolId);
+        const scorecard = row.ipeds_id ? scorecardByIpeds.get(row.ipeds_id) : null;
+        const satSubmitRate = normalizeRate(row.sat_submit_rate);
+        const actSubmitRate = normalizeRate(row.act_submit_rate);
+        const control = controlFromScorecard(directory?.control);
+        const state = directory?.state ?? null;
+        const carnegieBasic = scorecard?.carnegie_basic ?? null;
+        const gpa = gpaBySchool.get(schoolId) ?? {
+          avgHsGpa: null,
+          hsGpaSubmitRate: null,
+        };
+
+        return {
+          documentId: String(row.document_id),
+          schoolId,
+          schoolName: String(row.school_name ?? schoolId),
+          schoolUrl: `/schools/${schoolId}`,
+          cdsYear: String(row.canonical_year),
+          yearStart: numberOrNull(row.year_start),
+          archiveUrl: row.archive_url ?? null,
+          acceptanceRate: normalizeRate(row.acceptance_rate),
+          satSubmitRate,
+          actSubmitRate,
+          satCompositeP25: numberOrNull(row.sat_composite_p25),
+          satCompositeP50: numberOrNull(row.sat_composite_p50),
+          satCompositeP75: numberOrNull(row.sat_composite_p75),
+          actCompositeP25: numberOrNull(row.act_composite_p25),
+          actCompositeP50: numberOrNull(row.act_composite_p50),
+          actCompositeP75: numberOrNull(row.act_composite_p75),
+          avgHsGpa: gpa.avgHsGpa,
+          hsGpaSubmitRate: gpa.hsGpaSubmitRate,
+          dataQualityFlag: row.data_quality_flag ?? null,
+          state,
+          control,
+          region: regionFromState(state),
+          carnegieBasic,
+          carnegieBucket: carnegieBucket(carnegieBasic),
+          testPolicySignal: testPolicySignal(satSubmitRate, actSubmitRate),
+        };
+      })
+      .sort((a, b) => a.schoolName.localeCompare(b.schoolName));
   },
 );
 

@@ -9,10 +9,10 @@ import {
   fetchAvgGpaBySchoolId,
   fetchAdmissionStrategyBySchoolId,
 } from "@/lib/queries";
-import { DocumentCard } from "@/components/DocumentCard";
 import { OutcomesSection } from "@/components/OutcomesSection";
 import { PositioningCard } from "@/components/PositioningCard";
 import { AdmissionStrategyCard } from "@/components/AdmissionStrategyCard";
+import { SchoolDocumentsLedger } from "@/components/SchoolDocumentsLedger";
 import { ScorecardVintageNote } from "@/components/ScorecardVintageNote";
 import { Sparkline } from "@/components/Sparkline";
 import { CoverageBadge } from "@/components/CoverageBadge";
@@ -334,34 +334,7 @@ export default async function SchoolDetailPage({
         </div>
       </header>
 
-      {/* Documents ledger */}
-      <div className="rule-2" style={{ marginTop: 32, paddingTop: 20 }}>
-        {groups.map((group, gi) => (
-          <div key={group.label ?? "main"}>
-            {group.label && (
-              <h2
-                className="serif"
-                style={{
-                  fontSize: 18,
-                  margin: gi === 0 ? "0 0 8px" : "16px 0 8px",
-                  letterSpacing: "-0.005em",
-                }}
-              >
-                {group.label}
-              </h2>
-            )}
-            {group.docs.map((doc, i) => (
-              <DocumentCard
-                key={doc.document_id}
-                doc={doc}
-                isLast={
-                  gi === groups.length - 1 && i === group.docs.length - 1
-                }
-              />
-            ))}
-          </div>
-        ))}
-      </div>
+      <SchoolDocumentsLedger groups={groups} />
 
       {positioningSchool && (
         <PositioningCard
