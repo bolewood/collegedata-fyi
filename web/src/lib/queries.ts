@@ -12,6 +12,7 @@ import type {
   SiteStats,
   InstitutionCoverage,
 } from "./types";
+import type { SchoolAcademicProfile } from "./positioning";
 
 // Documents with these participation_status values are excluded from every
 // public-facing manifest query. 'withdrawn' = takedown per ADR 0008.
@@ -24,6 +25,12 @@ type UntypedSupabase = {
   // Generated DB types can lag migrations. Keep dynamic stats queries isolated
   // here so page code stays typed at the SiteStats boundary.
   from: (table: string) => any;
+};
+
+export type BrowserAcademicProfileRow = SchoolAcademicProfile & {
+  documentId: string;
+  archiveUrl: string | null;
+  yearStart: number | null;
 };
 
 function sha256Text(value: string): string {
@@ -53,6 +60,18 @@ function fallbackMatchesCanonical(
     fallbackNotes.markdown_sha256 === sha256Text(canonicalNotes.markdown) &&
     (fallbackNotes.cleaner_version ?? "") === (canonical.producer_version ?? "")
   );
+}
+
+function numberOrNull(value: unknown): number | null {
+  if (value == null || value === "") return null;
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function normalizeRate(value: unknown): number | null {
+  const parsed = numberOrNull(value);
+  if (parsed == null) return null;
+  return parsed > 1 ? parsed / 100 : parsed;
 }
 
 async function optionalExactCount(
@@ -322,6 +341,96 @@ export const fetchSchoolDocuments = cache(async function fetchSchoolDocuments(
     throw new Error(`Failed to fetch school documents: ${error.message}`);
   return data ?? [];
 });
+
+export const fetchBrowserRowBySchoolId = cache(
+  async function fetchBrowserRowBySchoolId(
+    schoolId: string,
+  ): Promise<BrowserAcademicProfileRow | null> {
+    try {
+      const { data, error } = await (supabase as unknown as UntypedSupabase)
+        .from("school_browser_rows")
+        .select(
+          "document_id, school_id, school_name, canonical_year, year_start, acceptance_rate, sat_submit_rate, act_submit_rate, sat_composite_p25, sat_composite_p50, sat_composite_p75, act_composite_p25, act_composite_p50, act_composite_p75, data_quality_flag, archive_url",
+        )
+        .eq("school_id", schoolId)
+        .gte("year_start", 2024)
+        .is("sub_institutional", null)
+        .order("year_start", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error || !data) {
+        if (error) console.warn(`fetchBrowserRowBySchoolId: ${error.message}`);
+        return null;
+      }
+
+      return {
+        documentId: String(data.document_id),
+        schoolId: String(data.school_id),
+        schoolName: String(data.school_name),
+        cdsYear: String(data.canonical_year),
+        yearStart: numberOrNull(data.year_start),
+        acceptanceRate: normalizeRate(data.acceptance_rate),
+        satSubmitRate: normalizeRate(data.sat_submit_rate),
+        actSubmitRate: normalizeRate(data.act_submit_rate),
+        satCompositeP25: numberOrNull(data.sat_composite_p25),
+        satCompositeP50: numberOrNull(data.sat_composite_p50),
+        satCompositeP75: numberOrNull(data.sat_composite_p75),
+        actCompositeP25: numberOrNull(data.act_composite_p25),
+        actCompositeP50: numberOrNull(data.act_composite_p50),
+        actCompositeP75: numberOrNull(data.act_composite_p75),
+        avgHsGpa: null,
+        hsGpaSubmitRate: null,
+        dataQualityFlag: data.data_quality_flag ?? null,
+        archiveUrl: data.archive_url ?? null,
+      };
+    } catch (error) {
+      console.warn(`fetchBrowserRowBySchoolId: ${String(error)}`);
+      return null;
+    }
+  },
+);
+
+export const fetchAvgGpaBySchoolId = cache(
+  async function fetchAvgGpaBySchoolId(
+    schoolId: string,
+  ): Promise<Pick<SchoolAcademicProfile, "avgHsGpa" | "hsGpaSubmitRate">> {
+    try {
+      const { data, error } = await (supabase as unknown as UntypedSupabase)
+        .from("cds_fields")
+        .select("field_id, value_num, value_text, year_start")
+        .eq("school_id", schoolId)
+        .gte("year_start", 2024)
+        .is("sub_institutional", null)
+        .in("field_id", ["C.1201", "C.1202"])
+        .order("year_start", { ascending: false });
+
+      if (error || !data) {
+        if (error) console.warn(`fetchAvgGpaBySchoolId: ${error.message}`);
+        return { avgHsGpa: null, hsGpaSubmitRate: null };
+      }
+
+      const latestYear = Math.max(
+        ...data
+          .map((row: { year_start: unknown }) => numberOrNull(row.year_start))
+          .filter((year: number | null): year is number => year != null),
+      );
+      const rows = Number.isFinite(latestYear)
+        ? data.filter((row: { year_start: unknown }) => numberOrNull(row.year_start) === latestYear)
+        : data;
+
+      const avg = rows.find((row: { field_id: string }) => row.field_id === "C.1201");
+      const submit = rows.find((row: { field_id: string }) => row.field_id === "C.1202");
+      return {
+        avgHsGpa: numberOrNull(avg?.value_num ?? avg?.value_text),
+        hsGpaSubmitRate: normalizeRate(submit?.value_num ?? submit?.value_text),
+      };
+    } catch (error) {
+      console.warn(`fetchAvgGpaBySchoolId: ${String(error)}`);
+      return { avgHsGpa: null, hsGpaSubmitRate: null };
+    }
+  },
+);
 
 export const fetchDocumentsBySchoolAndYear = cache(async function fetchDocumentsBySchoolAndYear(
   schoolId: string,

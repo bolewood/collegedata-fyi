@@ -168,7 +168,7 @@ export default async function ApiDocsPage() {
         />
         <Resource
           name="school_browser_rows"
-          description={`${formatCount(stats.browser_primary_row_count)} primary 2024-25+ rows across ${formatCount(stats.browser_school_count)} schools, refreshed ${formatShortDate(stats.browser_updated_at)}. This is the curated serving layer for the website browser and CSV exports.`}
+          description={`${formatCount(stats.browser_primary_row_count)} primary 2024-25+ rows across ${formatCount(stats.browser_school_count)} schools, refreshed ${formatShortDate(stats.browser_updated_at)}. This is the curated serving layer for the website browser, CSV exports, and the per-school academic positioning card.`}
           fields={[
             "school_id",
             "school_name",
@@ -391,6 +391,22 @@ export default async function ApiDocsPage() {
   -H 'Authorization: Bearer <anon key>' \\
   -H 'content-type: application/json' \\
   --data '{"mode":"latest_per_school","variant_scope":"primary_only","min_year_start":2024,"filters":[{"field":"acceptance_rate","op":"<=","value":0.1}],"page_size":10}'`}</CodeBlock>
+
+      <h3 className="mt-6 text-base font-semibold text-gray-900">
+        Fetch academic positioning data for one school
+      </h3>
+      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+        The academic positioning card reads the already-public{" "}
+        <code>school_browser_rows</code> resource. SAT/ACT submit rates are stored
+        as fractions, and the card links to{" "}
+        <Link href="/methodology/positioning" className="text-blue-700 underline hover:text-blue-900">
+          its methodology
+        </Link>{" "}
+        instead of exposing a separate scoring endpoint.
+      </p>
+      <CodeBlock>{`curl '${BASE}/rest/v1/school_browser_rows?school_id=eq.bowdoin&select=school_id,school_name,canonical_year,acceptance_rate,sat_submit_rate,act_submit_rate,sat_composite_p25,sat_composite_p50,sat_composite_p75,act_composite_p25,act_composite_p50,act_composite_p75' \\
+  -H 'apikey: <anon key>' \\
+  -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 
       <h3 className="mt-6 text-base font-semibold text-gray-900">
         List the most recent year for every school

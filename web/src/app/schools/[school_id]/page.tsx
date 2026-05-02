@@ -5,14 +5,17 @@ import {
   fetchSchoolDocuments,
   fetchScorecardByIpedsId,
   fetchInstitutionCoverage,
+  fetchBrowserRowBySchoolId,
+  fetchAvgGpaBySchoolId,
 } from "@/lib/queries";
 import { DocumentCard } from "@/components/DocumentCard";
 import { OutcomesSection } from "@/components/OutcomesSection";
+import { PositioningCard } from "@/components/PositioningCard";
 import { ScorecardVintageNote } from "@/components/ScorecardVintageNote";
 import { Sparkline } from "@/components/Sparkline";
 import { CoverageBadge } from "@/components/CoverageBadge";
 import { SubmissionForm } from "@/components/SubmissionForm";
-import { yearRange } from "@/lib/format";
+import { storageUrl, yearRange } from "@/lib/format";
 import type { ManifestRow, InstitutionCoverage } from "@/lib/types";
 
 export const revalidate = 3600;
@@ -127,7 +130,14 @@ export default async function SchoolDetailPage({
   // only need the first one. Scorecard data is per-school-per-vintage, not
   // per-document, so one query returns everything.
   const ipedsId = docs.find((d) => d.ipeds_id)?.ipeds_id ?? null;
-  const scorecard = await fetchScorecardByIpedsId(ipedsId);
+  const [scorecard, browserRow, gpaProfile] = await Promise.all([
+    fetchScorecardByIpedsId(ipedsId),
+    fetchBrowserRowBySchoolId(school_id),
+    fetchAvgGpaBySchoolId(school_id),
+  ]);
+  const positioningSchool = browserRow
+    ? { ...browserRow, ...gpaProfile }
+    : null;
 
   const name = docs[0].school_name ?? "Unknown school";
   const { head, tail } = splitInstitutionalSuffix(name);
@@ -196,6 +206,13 @@ export default async function SchoolDetailPage({
 
   const history = archiveHistory(docs);
   const carnegieCode = scorecard?.carnegie_basic;
+  const positioningSourceDoc = positioningSchool
+    ? docs.find((doc) => doc.canonical_year === positioningSchool.cdsYear) ?? docs[0]
+    : null;
+  const positioningSourceHref =
+    storageUrl(positioningSourceDoc?.source_storage_path ?? null) ??
+    positioningSchool?.archiveUrl ??
+    null;
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8">
@@ -335,6 +352,13 @@ export default async function SchoolDetailPage({
           </div>
         ))}
       </div>
+
+      {positioningSchool && (
+        <PositioningCard
+          school={positioningSchool}
+          sourceHref={positioningSourceHref}
+        />
+      )}
 
       {scorecard ? (
         <OutcomesSection scorecard={scorecard} />
