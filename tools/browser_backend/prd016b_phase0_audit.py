@@ -147,7 +147,8 @@ def selected_values_with_tier4_rerun(
 def fetch_browser_rows(client: Any, limit: int | None) -> list[dict[str, Any]]:
     select_cols = (
         "document_id,school_id,school_name,canonical_year,year_start,producer,"
-        "applied,admitted,acceptance_rate"
+        "applied,admitted,acceptance_rate,ed_offered,ea_offered,ea_restrictive,"
+        "ed_applicants,ed_admitted,ed_has_second_deadline"
     )
     page_size = 1000
     offset = 0
@@ -172,23 +173,17 @@ def fetch_browser_rows(client: Any, limit: int | None) -> list[dict[str, Any]]:
 
 
 def audit_row(client: Any, row: dict[str, Any]) -> AuditRow | None:
-    artifacts = pbd.fetch_artifacts(client, str(row["document_id"]))
-    selected = pbd.select_extraction_result(
-        str(row["document_id"]),
-        artifacts,
-        expected_schema_version=str(row.get("canonical_year") or ""),
-    )
-    if selected is None:
-        return None
-
-    values = selected_values_with_tier4_rerun(selected, artifacts)
-    canonical = canonical_values(selected.schema_version, values)
-
-    ed_offered = bool_from_text(canonical.get("C.2101"))
-    ea_offered = bool_from_text(canonical.get("C.2201"))
-    ea_restrictive = bool_from_text(canonical.get("C.2206"))
-    ed_applicants = decimal_int(canonical.get(CANONICAL_ED_APPLICANTS))
-    ed_admitted = decimal_int(canonical.get(CANONICAL_ED_ADMITTED))
+    ed_offered = row.get("ed_offered")
+    if not isinstance(ed_offered, bool):
+        ed_offered = bool_from_text(ed_offered)
+    ea_offered = row.get("ea_offered")
+    if not isinstance(ea_offered, bool):
+        ea_offered = bool_from_text(ea_offered)
+    ea_restrictive = row.get("ea_restrictive")
+    if not isinstance(ea_restrictive, bool):
+        ea_restrictive = bool_from_text(ea_restrictive)
+    ed_applicants = decimal_int(row.get("ed_applicants"))
+    ed_admitted = decimal_int(row.get("ed_admitted"))
     applied = decimal_int(row.get("applied"))
     admitted = decimal_int(row.get("admitted"))
     verifier_rejection = None
@@ -203,7 +198,7 @@ def audit_row(client: Any, row: dict[str, Any]) -> AuditRow | None:
         school_id=str(row["school_id"]),
         school_name=str(row["school_name"]),
         canonical_year=str(row["canonical_year"]),
-        producer=selected.base_producer,
+        producer=str(row.get("producer") or "unknown"),
         applied=applied,
         admitted=admitted,
         ed_offered=ed_offered,
@@ -211,7 +206,7 @@ def audit_row(client: Any, row: dict[str, Any]) -> AuditRow | None:
         ea_restrictive=ea_restrictive,
         ed_applicants=ed_applicants,
         ed_admitted=ed_admitted,
-        ed_has_second_deadline=has_second_deadline(selected.schema_version, values),
+        ed_has_second_deadline=bool(row.get("ed_has_second_deadline")),
         ed_answerable=(
             ed_applicants is not None
             and ed_admitted is not None
