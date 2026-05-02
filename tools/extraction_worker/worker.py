@@ -1260,6 +1260,23 @@ def main() -> int:
     )
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--school", default=None, help="Only process this school_id")
+    parser.add_argument(
+        "--source-format",
+        default=None,
+        help=(
+            "Comma-separated source_format filter, e.g. "
+            "pdf_flat,pdf_scanned. Useful for scoped operator re-drains."
+        ),
+    )
+    parser.add_argument(
+        "--min-year-start",
+        type=int,
+        default=None,
+        help=(
+            "Only process rows whose detected_year/cds_year starts at or after "
+            "this year, e.g. 2024. Applied before --limit."
+        ),
+    )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
         "--skip-projection-refresh",
@@ -1364,6 +1381,11 @@ def main() -> int:
         )
 
     cell_maps = build_cell_maps_for_schemas(schema_registry)
+    source_formats = [
+        value.strip()
+        for value in (args.source_format or "").split(",")
+        if value.strip()
+    ]
 
     query = client.table("cds_documents").select(
         "id, school_id, cds_year, detected_year, source_format, extraction_status",
@@ -1374,12 +1396,26 @@ def main() -> int:
         query = query.eq("extraction_status", "extraction_pending")
     if args.school:
         query = query.eq("school_id", args.school)
+    if source_formats:
+        query = query.in_("source_format", source_formats)
     query = query.order("school_id")
-    if args.limit:
-        query = query.limit(args.limit)
 
     started_at = utc_now_iso()
     docs = query.execute().data or []
+    if args.min_year_start is not None:
+        def row_start_year(row: dict[str, Any]) -> int | None:
+            year = row.get("detected_year") or row.get("cds_year") or ""
+            try:
+                return int(str(year)[:4])
+            except Exception:
+                return None
+
+        docs = [
+            doc for doc in docs
+            if (row_start_year(doc) or 0) >= args.min_year_start
+        ]
+    if args.limit:
+        docs = docs[:args.limit]
     if not docs:
         print(
             "No rows to process. Try --include-failed to re-process earlier failures.",

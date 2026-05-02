@@ -43,6 +43,9 @@ python worker.py --limit 25 \
 # Isolate extraction from browser serving-table writes
 python worker.py --skip-projection-refresh --limit 10
 
+# Scoped operator re-drain: only 2024+ Tier 4/Tier 5 PDFs
+python worker.py --source-format pdf_flat,pdf_scanned --min-year-start 2024
+
 # Content-based year detection only, no extraction writes
 python worker.py --detect-year-only                 # report
 python worker.py --detect-year-only --write         # backfill detected_year
