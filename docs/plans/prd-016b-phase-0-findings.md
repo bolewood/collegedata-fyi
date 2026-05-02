@@ -1,29 +1,29 @@
 # PRD 016B Phase 0 Findings
 
-Generated: `2026-05-02T16:32:09.225693+00:00`
+Generated: `2026-05-02T20:54:23.425796+00:00`
 
 ## Summary
 
-- Rows audited: `476`
-- ED-count answerability: `90` / `476` (`18.9%`)
-- ED-offered answerability: `58` / `69` (`84.1%`)
-- EA-offered rows: `31`
-- ED-or-EA-offered rows: `90`; ED-count answerable for `58` (`64.4%`)
-- Top-200-by-applicants answerability: `57` / `200` (`28.5%`)
-- Top-200 ED-offered answerability: `38` / `45` (`84.4%`)
-- Top-200 EA-offered rows: `19`
-- Top-200 ED-or-EA-offered rows: `58`; ED-count answerable for `38` (`65.5%`)
-- ED second-deadline signal: `19` rows (`4.0%`)
-- ED share of admitted distribution: `{'count': 85, 'p25': 0.0257, 'p50': 0.0969, 'p75': 0.2046, 'p90': 0.2941}`
-- Verifier rejections: `{'ed_admitted_gt_ed_applicants': 4}`
+- Rows audited: `469`
+- ED-count answerability: `104` / `469` (`22.2%`)
+- ED-offered answerability: `104` / `145` (`71.7%`)
+- EA-offered rows: `114`
+- ED-or-EA-offered rows: `190`; ED-count answerable for `104` (`54.7%`)
+- Top-200-by-applicants answerability: `68` / `200` (`34.0%`)
+- Top-200 ED-offered answerability: `68` / `97` (`70.1%`)
+- Top-200 EA-offered rows: `82`
+- Top-200 ED-or-EA-offered rows: `128`; ED-count answerable for `68` (`53.1%`)
+- ED second-deadline signal: `67` rows (`14.3%`)
+- ED share of admitted distribution: `{'count': 96, 'p25': 0.0325, 'p50': 0.1002, 'p75': 0.2432, 'p90': 0.3057}`
+- Verifier rejections: `{'ed_admitted_gt_ed_applicants': 6}`
 
 ## Producer Answerability
 
 | Producer | Answerable | Total | Pct |
 |---|---:|---:|---:|
-| tier1_xlsx | 6 | 53 | 11.3% |
-| tier2_acroform | 32 | 85 | 37.6% |
-| tier4_docling | 52 | 337 | 15.4% |
+| tier1_xlsx | 4 | 48 | 8.3% |
+| tier2_acroform | 32 | 81 | 39.5% |
+| tier4_docling | 68 | 339 | 20.1% |
 | tier6_html | 0 | 1 | 0.0% |
 
 ## Threshold Decisions
