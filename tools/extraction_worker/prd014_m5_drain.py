@@ -32,8 +32,8 @@ DEFAULT_OUT_DIR = REPO_ROOT / ".context" / "prd-014-m5"
 PRODUCER_BY_FORMAT = {
     "xlsx": ("tier1_xlsx", "0.1.0"),
     "pdf_fillable": ("tier2_acroform", "0.2.0"),
-    "pdf_flat": ("tier4_docling", "0.3.0"),
-    "pdf_scanned": ("tier4_docling", "0.3.0"),
+    "pdf_flat": ("tier4_docling", "0.3.1"),
+    "pdf_scanned": ("tier4_docling", "0.3.1"),
     "html": ("tier6_html", "0.1.0"),
 }
 
