@@ -1210,9 +1210,35 @@ def project_document_id(
     return project_document(client, docs[0], definitions, apply)
 
 
+def fetch_projected_document_ids(client: Any, table: str) -> set[str]:
+    document_ids: set[str] = set()
+    page_size = 1000
+    offset = 0
+    while True:
+        result = (
+            client.table(table)
+            .select("document_id")
+            .gte("year_start", MIN_YEAR_START)
+            .range(offset, offset + page_size - 1)
+            .execute()
+        )
+        batch = result.data or []
+        for row in batch:
+            document_id = row.get("document_id")
+            if document_id:
+                document_ids.add(str(document_id))
+        if len(batch) < page_size:
+            break
+        offset += page_size
+    return document_ids
+
+
 def clear_projection_tables(client: Any) -> None:
-    client.table("cds_fields").delete().gte("year_start", MIN_YEAR_START).execute()
-    client.table("school_browser_rows").delete().gte("year_start", MIN_YEAR_START).execute()
+    document_ids = fetch_projected_document_ids(client, "school_browser_rows")
+    document_ids.update(fetch_projected_document_ids(client, "cds_fields"))
+    print(f"clearing projection rows for {len(document_ids)} document(s)")
+    for document_id in sorted(document_ids):
+        replace_projection_rows(client, document_id, [], None)
 
 
 def fetch_artifacts(client: Any, document_id: str) -> list[dict[str, Any]]:
