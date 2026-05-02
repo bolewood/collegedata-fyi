@@ -63,6 +63,15 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 ### Frontend polish
 
+- **Academic positioning v1.1 follow-ups from pre-merge review.** Confirm
+  whether the range strip should plot the student's score as a tick or whether
+  the v1 right-column score display is the intended design decision; add focused
+  component tests for empty, loaded, ACT-null, test-optional, stale-CDS, and
+  wrong-file states; broaden scoring fixtures beyond the current spread variants;
+  surface GPA submit rate (`C.1202`) and the user's selected GPA scale in the
+  card; consider route-mocked Playwright fixtures so live Bowdoin/MIT extraction
+  changes cannot make the e2e flaky. **Effort:** ~0.5-1 day.
+
 - **Queryable browser CSV export pagination.** The `/browse` MVP exports the current browser result set through one Edge Function call capped at `page_size=500`. That is fine for current launch filters, but a broad export should page through all results or move export server-side before result sets grow. **Effort:** ~1 hour.
 
 - **OG images.** Per-school social cards with school name + key stats. Would improve link previews on Twitter/Slack/Discord. **Effort:** ~1 hour using Next.js OG image generation.
@@ -74,6 +83,15 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 - **FieldsView Phase 2 — reconstructed CDS tables.** Phase 1 (PR #14) shipped the textbook gutter with per-subsection KV groups; the design's reference (`fields-c.jsx` / `fields-b.jsx` from the Claude Design handoff) goes further and renders each subsection as the actual CDS table it came from — Men/Women/Total columns on B1, importance-level dot matrix on C7, P25/P50/P75 on C9, income brackets on H2A. The schema already carries the pivot dimensions (`category`, `cohort`, `student_group`, `gender`, `residency`, `unit_load`) on every field; we just need to (1) thread those dimensions through `FieldValue` so the frontend can read them — today the `tier4_cleaner` populates `section`/`subsection` but not the others — and (2) write small per-subsection layout descriptors that say "rows = these dim values, cols = these dim values" for the top ~15 high-traffic subsections (B1, B2, C1, C7, C9, C11, H2A, H6, J1, etc.). Long-tail subsections continue to render as KV rows from Phase 1. **Also part of this work:** "— not provided" rendering for known-but-missing fields, gated on per-CDS-year schema awareness so older years don't show fields-that-didn't-exist as missing. **Effort:** ~1-2 days (~half day to thread dimensions, ~1 day for the 15 layout descriptors and the reconstruction loop).
 
 ### Queryable browser backend polish
+
+- **GPA scale-resolution sprint for academic positioning.** PRD 016 deliberately
+  keeps GPA out of tier scoring because CDS C.12 does not consistently state
+  whether average high-school GPA is weighted, unweighted, or on another local
+  scale. Focused follow-up: extract scale evidence from source PDFs where
+  available, define an `unknown_scale` fallback, manually audit 100 schools
+  across selectivity tiers, and decide whether `school_browser_rows` can ever
+  responsibly carry normalized GPA. Until then, the positioning card displays
+  school average GPA beside the entered GPA only. **Effort:** focused sprint.
 
 - **Audit Tier 1 XLSX academic-profile field mapping.** PRD 012 Phase 0 found SAT/ACT `cds_fields` parse errors in XLSX rows where C9 fields contain values such as "Very Important", "Important", "Considered", "Percent", or "Number". That points to schema/template alignment drift in the XLSX extractor for at least some 2024-25 workbooks. The PRD 012 browser projection now range-checks and nulls invalid score values, so these should not leak into `school_browser_rows`, but the underlying Tier 1 mapping still needs a focused audit before score fields are treated as launch-certified for XLSX publishers. **Effort:** ~2 hours.
 

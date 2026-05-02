@@ -2389,26 +2389,29 @@ def _extract_yes_no_from_lines(lines: list[str]) -> str | None:
     for line in lines:
         compact = re.sub(r"\s+", " ", line.strip())
         lower = compact.lower()
-        if lower in ("yes", "no", "x"):
-            tokens.append(lower)
+        if lower in ("yes", "no", "n/a", "na"):
+            tokens.append("no" if lower in ("n/a", "na") else lower)
+            continue
+        if re.fullmatch(r"[x☒✓✔]", compact, re.IGNORECASE):
+            tokens.append("x")
             continue
         if re.fullmatch(r"yes\s+no", lower):
             tokens.extend(["yes", "no"])
             continue
-        if re.fullmatch(r"x\s+(yes|no)", lower):
+        if re.fullmatch(r"[x☒✓✔]\s+(yes|no)", compact, re.IGNORECASE):
             tokens.extend(["x", lower.split()[-1]])
             continue
-        if re.search(r"\bx\s*$", lower):
+        if re.search(r"(?:\bx\b|[☒✓✔])\s*$", compact, re.IGNORECASE):
             tokens.append("x")
     for i, token in enumerate(tokens):
         if token != "x":
             continue
         # Vertical checkbox layouts emit "x" immediately before the selected
         # label. Horizontal Yes/No tables emit it immediately after.
-        if i + 1 < len(tokens) and tokens[i + 1] in ("yes", "no"):
-            return tokens[i + 1].capitalize()
         if i > 0 and tokens[i - 1] in ("yes", "no"):
             return tokens[i - 1].capitalize()
+        if i + 1 < len(tokens) and tokens[i + 1] in ("yes", "no"):
+            return tokens[i + 1].capitalize()
     return None
 
 
@@ -2427,7 +2430,10 @@ def _extract_yes_no_by_layout(text: str, question_re: str) -> str | None:
             continue
         if not re.search(question_re, line, re.IGNORECASE):
             continue
-        x_positions = [m.start() for m in re.finditer(r"(?<!\w)[xX](?!\w)", line)]
+        x_positions = [
+            m.start()
+            for m in re.finditer(r"(?<!\w)[xX](?!\w)|[☒✓✔]", line)
+        ]
         if not x_positions:
             continue
         x_idx = x_positions[-1]
@@ -2460,7 +2466,7 @@ def _extract_yes_no_block_by_layout(
             continue
         if yes_idx is None or no_idx is None:
             continue
-        x_match = re.search(r"(?<!\w)[xX](?!\w)", line)
+        x_match = re.search(r"(?<!\w)[xX](?!\w)|[☒✓✔]", line)
         if not x_match:
             continue
         x_idx = x_match.start()
@@ -2537,6 +2543,133 @@ def _split_month_day(value: str) -> tuple[str, str] | None:
         if month:
             return month, match.group(2)
     return None
+
+
+def _compact_block_text(text: str) -> str:
+    """Collapse Docling layout/table text so line-oriented regexes can share code."""
+    text = text.replace("|", " ")
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
+
+
+def _extract_number_after_label(text: str, label_re: str) -> str | None:
+    compact = _compact_block_text(text)
+    match = re.search(
+        rf"{label_re}\s*:?\s*([\d,]+)\b",
+        compact,
+        re.IGNORECASE,
+    )
+    if not match:
+        return None
+    return _extract_number(match.group(1))
+
+
+def _extract_date_after_label(text: str, label_re: str) -> str | None:
+    compact = _compact_block_text(text)
+    match = re.search(
+        rf"{label_re}\s*:?\s*((?:\d{{1,2}}/[0-9]{{1,2}})|(?:\d{{1,2}}-[A-Za-z]{{3,4}})|(?:[A-Za-z]{{3,4}}-\d{{1,2}}))",
+        compact,
+        re.IGNORECASE,
+    )
+    return match.group(1) if match else None
+
+
+def _month_number(value: str) -> str | None:
+    value = value.strip()
+    if re.fullmatch(r"\d{1,2}", value):
+        return value
+    return _MONTHS.get(value[:4].lower()) or _MONTHS.get(value[:3].lower())
+
+
+def _extract_month_or_day_after_label(text: str, label_re: str) -> str | None:
+    compact = _compact_block_text(text)
+    match = re.search(
+        rf"{label_re}\s*:?\s*([A-Za-z]{{3,9}}|\d{{1,2}})\b",
+        compact,
+        re.IGNORECASE,
+    )
+    return match.group(1) if match else None
+
+
+def _extract_c21_layout_date_pairs(text: str) -> list[tuple[str, str]]:
+    pairs: list[tuple[str, str]] = []
+    date_re = r"(?:\d{1,2}/\d{1,2}|\d{1,2}-[A-Za-z]{3,4}|[A-Za-z]{3,4}-\d{1,2})"
+    for line in text.splitlines():
+        dates = re.findall(date_re, line)
+        if len(dates) >= 2:
+            pairs.append((dates[0], dates[1]))
+    return pairs
+
+
+def _extract_c21_layout_count_pair(text: str) -> tuple[str, str] | None:
+    """Extract Docling's value-only C.21 count row.
+
+    Some flattened PDFs emit the C.21 table values before the row labels:
+    `Yes`, then date values, then `<applications> <admitted>`. This fallback is
+    scoped to C.21 blocks and ignores lines containing date separators.
+    """
+    pairs: list[tuple[str, str]] = []
+    scalar_counts: list[str] = []
+    month_re = re.compile(
+        r"\b(?:jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|sept|september|oct|october|nov|november|dec|december)\b",
+        re.IGNORECASE,
+    )
+
+    def is_probable_year(value: str) -> bool:
+        return bool(re.fullmatch(r"202[0-9]", value))
+
+    for line in text.splitlines():
+        if "/" in line or re.search(r"\d{1,2}-[A-Za-z]{3,4}|[A-Za-z]{3,4}-\d{1,2}", line):
+            continue
+        if re.search(r"\b(?:initiated|cycle|removed from cds)\b", line, re.IGNORECASE):
+            continue
+        if month_re.search(line):
+            continue
+        nums = re.findall(r"\b\d[\d,]*\b", line)
+        if len(nums) == 2:
+            first = _extract_number(nums[0])
+            second = _extract_number(nums[1])
+            if first and second and not (is_probable_year(first) or is_probable_year(second)):
+                pairs.append((first, second))
+        elif len(nums) == 1 and re.fullmatch(r"\s*\d[\d,]*\s*", line):
+            num = _extract_number(nums[0])
+            if num and not is_probable_year(num):
+                scalar_counts.append(num)
+    if pairs:
+        return pairs[-1]
+    if len(scalar_counts) >= 2:
+        return scalar_counts[0], scalar_counts[1]
+    return None
+
+
+def _extract_leading_yes_no(text: str) -> str | None:
+    for line in _nonempty_lines(text):
+        normalized = line.strip().lower()
+        if normalized in ("yes", "no"):
+            return normalized.capitalize()
+        if normalized in ("n/a", "na"):
+            return "No"
+    return None
+
+
+def _extract_yes_or_no_prompt_answers(text: str) -> list[str]:
+    answers: list[str] = []
+    expect_answer = False
+    for line in _nonempty_lines(text):
+        normalized = line.strip().lower()
+        if re.fullmatch(r"yes\s+or\s+no", normalized):
+            expect_answer = True
+            continue
+        if not expect_answer:
+            continue
+        if normalized in ("yes", "no"):
+            answers.append(normalized.capitalize())
+            expect_answer = False
+            continue
+        if normalized in ("n/a", "na"):
+            answers.append("No")
+            expect_answer = False
+    return answers
 
 
 def _c8g_checked(line: str, label: str) -> bool:
@@ -2915,19 +3048,117 @@ def resolve_c13_application_fee(
     if c1901:
         out["C.1901"] = {"value": c1901, "source": "tier4_cleaner"}
 
-    c2101 = _extract_yes_no_block_by_layout(
-        markdown,
-        r"(?:^|\n)\s*C21\s+Early Decision",
-        r"(?:^|\n)\s*C22\s+Early action",
-    )
+    c21_start_re = r"(?:^|\n)\s*(?:[-*]\s*)?(?:##\s*)?C21\s+Early Decision"
+    c22_start_re = r"(?:^|\n)\s*(?:[-*]\s*)?(?:##\s*)?C22\s+Early action"
+
+    c2101 = _extract_yes_no_block_by_layout(markdown, c21_start_re, c22_start_re)
     if c2101:
         out["C.2101"] = {"value": c2101, "source": "tier4_cleaner"}
 
+    c21 = _section_between(
+        markdown,
+        c21_start_re,
+        c22_start_re,
+    )
+    if c21:
+        if "C.2101" not in out:
+            c2101 = _extract_yes_no_from_lines(_nonempty_lines(c21))
+            if not c2101:
+                c21_prompt_answers = _extract_yes_or_no_prompt_answers(c21)
+                c2101 = c21_prompt_answers[0] if c21_prompt_answers else None
+            if c2101:
+                out["C.2101"] = {"value": c2101, "source": "tier4_cleaner"}
+        applications = _extract_number_after_label(
+            c21,
+            r"Number of early decision applications received by your institution",
+        )
+        admitted = _extract_number_after_label(
+            c21,
+            r"Number of applicants admitted under early decision plan",
+        )
+        if not applications or not admitted:
+            layout_counts = _extract_c21_layout_count_pair(c21)
+            if layout_counts:
+                applications = applications or layout_counts[0]
+                admitted = admitted or layout_counts[1]
+        if applications and admitted:
+            out["C.2101"] = {"value": "Yes", "source": "tier4_cleaner"}
+        if idx_is_2024 := (schema.schema_version == "2024-25"):
+            if applications:
+                out["C.2106"] = {"value": applications, "source": "tier4_cleaner"}
+            if admitted:
+                out["C.2107"] = {"value": admitted, "source": "tier4_cleaner"}
+        else:
+            if applications:
+                out["C.2110"] = {"value": applications, "source": "tier4_cleaner"}
+            if admitted:
+                out["C.2111"] = {"value": admitted, "source": "tier4_cleaner"}
+
+        if idx_is_2024:
+            other_closing = _extract_date_after_label(
+                c21,
+                r"Other early decision plan closing date",
+            )
+            other_notification = _extract_date_after_label(
+                c21,
+                r"Other early decision plan notification date",
+            )
+            layout_date_pairs = _extract_c21_layout_date_pairs(c21)
+            if (not other_closing or not other_notification) and len(layout_date_pairs) > 1:
+                other_closing = other_closing or layout_date_pairs[1][0]
+                other_notification = other_notification or layout_date_pairs[1][1]
+            if other_closing:
+                out["C.2104"] = {"value": other_closing, "source": "tier4_cleaner"}
+            if other_notification:
+                out["C.2105"] = {"value": other_notification, "source": "tier4_cleaner"}
+        else:
+            layout_date_pairs = _extract_c21_layout_date_pairs(c21)
+            layout_other_pair = layout_date_pairs[1] if len(layout_date_pairs) > 1 else None
+            for label, month_qn, day_qn in [
+                (
+                    r"Other early decision plan closing date",
+                    "C.2106",
+                    "C.2107",
+                ),
+                (
+                    r"Other early decision plan notification date",
+                    "C.2108",
+                    "C.2109",
+                ),
+            ]:
+                combined = _extract_date_after_label(c21, label)
+                month_day = _split_month_day(combined) if combined else None
+                if not month_day:
+                    month_raw = _extract_month_or_day_after_label(
+                        c21,
+                        rf"{label}\s*:?\s*Month",
+                    )
+                    day_raw = _extract_month_or_day_after_label(
+                        c21,
+                        rf"{label}\s*:?\s*Day",
+                    )
+                    month = _month_number(month_raw) if month_raw else None
+                    day = day_raw if day_raw and re.fullmatch(r"\d{1,2}", day_raw) else None
+                    month_day = (month, day) if month and day else None
+                if not month_day and layout_other_pair and month_qn == "C.2106":
+                    month_day = _split_month_day(layout_other_pair[0])
+                if month_day:
+                    out[month_qn] = {"value": month_day[0], "source": "tier4_cleaner"}
+                    out[day_qn] = {"value": month_day[1], "source": "tier4_cleaner"}
+
     c2201 = _extract_yes_no_block_by_layout(
         markdown,
-        r"(?:^|\n)\s*C22\s+Early action",
+        c22_start_re,
         r"Is your early action plan",
     )
+    c22 = _section_between(
+        markdown,
+        c22_start_re,
+        r"(?:^|\n)\s*(?:##\s*)?(?:D1-D2|D\.\s*TRANSFER ADMISSION|D1\b)",
+    )
+    c22_prompt_answers = _extract_yes_or_no_prompt_answers(c22) if c22 else []
+    if not c2201 and c22_prompt_answers:
+        c2201 = c22_prompt_answers[0]
     if c2201:
         out["C.2201"] = {"value": c2201, "source": "tier4_cleaner"}
 
@@ -2936,6 +3167,8 @@ def resolve_c13_application_fee(
         r"Is your early action plan",
         r"(?:D\.\s*TRANSFER ADMISSION|CDS-C|$)",
     )
+    if not c2206 and len(c22_prompt_answers) > 1:
+        c2206 = c22_prompt_answers[1]
     if c2206:
         out["C.2206"] = {"value": c2206, "source": "tier4_cleaner"}
 
