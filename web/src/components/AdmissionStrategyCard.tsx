@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   computeAdmissionStrategy,
   formatRate,
+  interestIsRelevant,
   type AdmissionFactorImportance,
   type AdmissionStrategySchool,
 } from "@/lib/admission-strategy";
@@ -114,7 +115,10 @@ export function AdmissionStrategyCard({
   const showWaitListSuppressed = school.quality === "wait_list_math_inconsistent";
   const showWaitList =
     !showWaitListSuppressed &&
-    school.waitListPolicy === true &&
+    (school.waitListPolicy === true ||
+      (school.waitListOffered != null &&
+        school.waitListAccepted != null &&
+        school.waitListAdmitted != null)) &&
     (school.waitListOffered != null ||
       school.waitListAccepted != null ||
       school.waitListAdmitted != null ||
@@ -227,7 +231,7 @@ export function AdmissionStrategyCard({
             </div>
           )}
 
-          {important(school.demonstratedInterestFactor) && (
+          {interestIsRelevant(school.demonstratedInterestFactor) && (
             <div className="admission-strategy-panel admission-strategy-panel--accent">
               <div className="meta">§ Demonstrated interest</div>
               <p>

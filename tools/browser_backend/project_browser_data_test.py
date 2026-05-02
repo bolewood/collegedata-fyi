@@ -432,6 +432,67 @@ class BrowserProjectionTests(unittest.TestCase):
 
         self.assertEqual(browser["admission_strategy_card_quality"], "ed_math_inconsistent")
 
+    def test_admission_strategy_infers_ed_offered_from_valid_counts(self):
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2025-26"),
+            [
+                artifact(
+                    schema_version="2025-26",
+                    values={
+                        "C.116": {"value": "1000"},
+                        "C.117": {"value": "100"},
+                        "C.2110": {"value": "200"},
+                        "C.2111": {"value": "40"},
+                    },
+                )
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["ed_offered"], True)
+        self.assertEqual(browser["admission_strategy_card_quality"], "ok")
+
+    def test_admission_strategy_infers_wait_list_policy_from_valid_counts(self):
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2025-26"),
+            [
+                artifact(
+                    schema_version="2025-26",
+                    values={
+                        "C.116": {"value": "1000"},
+                        "C.117": {"value": "100"},
+                        "C.202": {"value": "300"},
+                        "C.203": {"value": "150"},
+                        "C.204": {"value": "30"},
+                    },
+                )
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["wait_list_policy"], True)
+        self.assertEqual(browser["admission_strategy_card_quality"], "ok")
+
+    def test_admission_strategy_app_fee_only_is_insufficient(self):
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2025-26"),
+            [
+                artifact(
+                    schema_version="2025-26",
+                    values={
+                        "C.116": {"value": "1000"},
+                        "C.117": {"value": "100"},
+                        "C.1302": {"value": "$85"},
+                        "C.1305": {"value": "Yes"},
+                    },
+                )
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["app_fee_amount"], 85)
+        self.assertEqual(browser["admission_strategy_card_quality"], "insufficient_data")
+
     def test_sub_institutional_is_preserved(self):
         fields, browser = build_projection_rows(
             doc(sub_institutional="general-studies"),

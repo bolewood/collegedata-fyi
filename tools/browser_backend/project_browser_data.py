@@ -787,19 +787,46 @@ def admission_strategy_values(
 
     wait_list_math_inconsistent = False
     if wait_list_offered is not None and wait_list_accepted is not None:
-        wait_list_math_inconsistent = wait_list_accepted > wait_list_offered
+        wait_list_math_inconsistent = (
+            wait_list_offered < 0
+            or wait_list_accepted < 0
+            or wait_list_accepted > wait_list_offered
+        )
     if wait_list_accepted is not None and wait_list_admitted is not None:
-        wait_list_math_inconsistent = wait_list_math_inconsistent or wait_list_admitted > wait_list_accepted
+        wait_list_math_inconsistent = (
+            wait_list_math_inconsistent
+            or wait_list_admitted < 0
+            or wait_list_admitted > wait_list_accepted
+        )
+
+    ed_offered_effective = (
+        ed_offered is True
+        or (
+            ed_applicants is not None
+            and ed_applicants > 0
+            and ed_admitted is not None
+            and not ed_math_inconsistent
+        )
+    )
+    wait_list_policy_effective = (
+        wait_list_policy is True
+        or (
+            wait_list_offered is not None
+            and wait_list_accepted is not None
+            and wait_list_admitted is not None
+            and not wait_list_math_inconsistent
+        )
+    )
 
     has_valid_ed_rate = (
-        ed_offered is True
+        ed_offered_effective
         and ed_applicants is not None
         and ed_applicants > 0
         and ed_admitted is not None
         and not ed_math_inconsistent
     )
     has_valid_wait_list = (
-        wait_list_policy is True
+        wait_list_policy_effective
         and wait_list_offered is not None
         and wait_list_accepted is not None
         and wait_list_admitted is not None
@@ -813,25 +840,24 @@ def admission_strategy_values(
         (c718_demonstrated_interest_factor or "").lower(),
     }
     has_important_factor = bool(important_factors.intersection({"important", "very important"}))
-    has_app_fee = app_fee_amount is not None or app_fee_waiver_offered is not None
 
     if ed_math_inconsistent:
         quality = "ed_math_inconsistent"
     elif wait_list_math_inconsistent:
         quality = "wait_list_math_inconsistent"
-    elif not any([has_valid_ed_rate, yield_rate is not None, has_valid_wait_list, has_important_factor, has_app_fee]):
+    elif not any([has_valid_ed_rate, yield_rate is not None, has_valid_wait_list, has_important_factor, ea_offered is True]):
         quality = "insufficient_data"
     else:
         quality = "ok"
 
     return {
-        "ed_offered": ed_offered,
+        "ed_offered": ed_offered_effective,
         "ed_applicants": ed_applicants,
         "ed_admitted": ed_admitted,
         "ed_has_second_deadline": ed_has_second_deadline,
         "ea_offered": ea_offered,
         "ea_restrictive": ea_restrictive,
-        "wait_list_policy": wait_list_policy,
+        "wait_list_policy": wait_list_policy_effective,
         "wait_list_offered": wait_list_offered,
         "wait_list_accepted": wait_list_accepted,
         "wait_list_admitted": wait_list_admitted,

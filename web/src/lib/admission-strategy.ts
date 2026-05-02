@@ -52,6 +52,7 @@ export type AdmissionStrategyDerived = {
 };
 
 const HIDDEN_DOCUMENT_FLAGS = new Set(["wrong_file", "blank_template", "low_coverage"]);
+// Phase 0 corpus p75 of ED admit share for 2024-25+ rows.
 export const HIGH_ED_SHARE_THRESHOLD = 0.1951;
 
 function safeRate(numerator: number | null, denominator: number | null): number | null {
@@ -64,12 +65,20 @@ function important(value: string | null): boolean {
   return value === "Important" || value === "Very Important";
 }
 
+export function interestIsRelevant(value: string | null): boolean {
+  return value === "Considered" || important(value);
+}
+
 export function computeAdmissionStrategy(
   school: AdmissionStrategySchool,
 ): AdmissionStrategyDerived {
   const edCountsValid =
     school.quality !== "ed_math_inconsistent" &&
-    school.edOffered === true &&
+    (school.edOffered === true ||
+      (school.edApplicants != null &&
+        school.edApplicants > 0 &&
+        school.edAdmitted != null &&
+        school.edAdmitted <= school.edApplicants)) &&
     school.edApplicants != null &&
     school.edApplicants > 0 &&
     school.edAdmitted != null;
@@ -96,7 +105,12 @@ export function computeAdmissionStrategy(
 
   const waitListValid =
     school.quality !== "wait_list_math_inconsistent" &&
-    school.waitListPolicy === true;
+    (school.waitListPolicy === true ||
+      (school.waitListOffered != null &&
+        school.waitListAccepted != null &&
+        school.waitListAdmitted != null &&
+        school.waitListAccepted <= school.waitListOffered &&
+        school.waitListAdmitted <= school.waitListAccepted));
   const waitListOfferRate = waitListValid
     ? safeRate(school.waitListOffered, school.applied)
     : null;
@@ -120,9 +134,7 @@ export function computeAdmissionStrategy(
       waitListOfferRate != null ||
       waitListConditionalAdmitRate != null ||
       hasFactorSignal ||
-      school.eaOffered != null ||
-      school.appFeeAmount != null ||
-      school.appFeeWaiverOffered != null);
+      school.eaOffered === true);
 
   return {
     edAdmitRate,

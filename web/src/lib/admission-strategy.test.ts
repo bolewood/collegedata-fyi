@@ -61,6 +61,40 @@ describe("computeAdmissionStrategy", () => {
     expect(result.hasRenderableContent).toBe(true);
   });
 
+  it("treats valid ED counts as an offered ED round", () => {
+    const result = computeAdmissionStrategy({
+      ...base,
+      edOffered: null,
+      edApplicants: 120,
+      edAdmitted: 24,
+    });
+
+    expect(result.edAdmitRate).toBe(0.2);
+    expect(result.hasRenderableContent).toBe(true);
+  });
+
+  it("treats valid wait-list counts as a wait-list policy", () => {
+    const result = computeAdmissionStrategy({
+      ...base,
+      edOffered: false,
+      edApplicants: null,
+      edAdmitted: null,
+      waitListPolicy: null,
+      waitListOffered: 200,
+      waitListAccepted: 100,
+      waitListAdmitted: 10,
+      yieldRate: null,
+      firstGenFactor: null,
+      demonstratedInterestFactor: null,
+      appFeeAmount: null,
+      appFeeWaiverOffered: null,
+    });
+
+    expect(result.waitListOfferRate).toBe(0.2);
+    expect(result.waitListConditionalAdmitRate).toBe(0.1);
+    expect(result.hasRenderableContent).toBe(true);
+  });
+
   it("renders EA-only schools without inventing an EA admit rate", () => {
     const result = computeAdmissionStrategy({
       ...base,
@@ -103,6 +137,32 @@ describe("computeAdmissionStrategy", () => {
       appFeeAmount: null,
       appFeeWaiverOffered: null,
       quality: "insufficient_data",
+    });
+
+    expect(result.hasRenderableContent).toBe(false);
+  });
+
+  it("does not render app-fee-only cards", () => {
+    const result = computeAdmissionStrategy({
+      ...base,
+      edOffered: null,
+      edApplicants: null,
+      edAdmitted: null,
+      eaOffered: null,
+      eaRestrictive: null,
+      yieldRate: null,
+      waitListPolicy: null,
+      waitListOffered: null,
+      waitListAccepted: null,
+      waitListAdmitted: null,
+      firstGenFactor: null,
+      legacyFactor: null,
+      geographyFactor: null,
+      stateResidencyFactor: null,
+      demonstratedInterestFactor: null,
+      appFeeAmount: 85,
+      appFeeWaiverOffered: true,
+      quality: "ok",
     });
 
     expect(result.hasRenderableContent).toBe(false);
