@@ -201,6 +201,25 @@ class BrowserProjectionTests(unittest.TestCase):
         self.assertEqual(browser["acceptance_rate"], "0.200000")
         self.assertEqual(browser["yield_rate"], "0.500000")
 
+    def test_impossible_derived_rates_are_omitted_from_browser_row(self):
+        _fields, browser = build_projection_rows(
+            doc(),
+            [
+                artifact(values={
+                    "C.116": {"value": "100"},
+                    "C.117": {"value": "120"},
+                    "C.118": {"value": "240"},
+                })
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["applied"], 100)
+        self.assertEqual(browser["admitted"], 120)
+        self.assertEqual(browser["enrolled_first_year"], 240)
+        self.assertIsNone(browser["acceptance_rate"])
+        self.assertIsNone(browser["yield_rate"])
+
     def test_sat_act_promoted_fields_project_to_browser_columns(self):
         fields, browser = build_projection_rows(
             doc(),

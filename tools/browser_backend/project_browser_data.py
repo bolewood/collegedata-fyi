@@ -675,6 +675,13 @@ def quantize_rate(value: Any) -> Optional[Decimal]:
     return decimal.quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
 
 
+def quantize_fractional_rate(value: Any) -> Optional[Decimal]:
+    rate = quantize_rate(value)
+    if rate is None or rate < 0 or rate > 1:
+        return None
+    return rate
+
+
 def decimal_to_json(value: Optional[Decimal]) -> Optional[str]:
     if value is None:
         return None
@@ -1068,11 +1075,11 @@ def build_browser_row(
 
     acceptance_rate = None
     if applied and admitted is not None and applied > 0:
-        acceptance_rate = quantize_rate(Decimal(admitted) / Decimal(applied))
+        acceptance_rate = quantize_fractional_rate(Decimal(admitted) / Decimal(applied))
 
     yield_rate = None
     if admitted and enrolled is not None and admitted > 0:
-        yield_rate = quantize_rate(Decimal(enrolled) / Decimal(admitted))
+        yield_rate = quantize_fractional_rate(Decimal(enrolled) / Decimal(admitted))
 
     admission_strategy = admission_strategy_values(
         selected,
