@@ -113,6 +113,52 @@ class Tier1ExtractTests(unittest.TestCase):
         self.assertEqual(result["values"]["C.916"]["value"], "29")
         self.assertEqual(result["stats"]["academic_profile_fields_recovered"], 16)
 
+    def test_recovers_freshman_c9_header_and_clears_blank_visible_rows(self):
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "CDS-C"
+        ws["B10"] = "Percent and number of first-time, first-year (freshman) students enrolled in Fall 2024 who submitted national standardized (SAT/ACT) test scores."
+        ws["B13"] = "SAT Evidence-Based Reading and Writing"
+        ws["C13"] = 600
+        ws["D13"] = 660
+        ws["E13"] = 720
+        ws["B14"] = "SAT Math"
+        ws["B20"] = "C10: Class Rank"
+        ws["C30"] = "2025-05-01 00:00:00"
+        ws["D30"] = 60
+
+        schema = {
+            "schema_version": "2024-25",
+            "fields": [
+                {
+                    "question_number": f"C.{i}",
+                    "word_tag": None,
+                    "question": f"C.{i}",
+                    "section": "First-Time, First-Year Admission",
+                    "subsection": "First-time, first-year Profile",
+                    "value_type": "Number",
+                }
+                for i in range(908, 914)
+            ],
+        }
+        cell_map = {
+            "C.910": ("CDS-C", "D30"),
+            "C.911": ("CDS-C", "C30"),
+            "C.912": ("CDS-C", "C30"),
+        }
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx") as tmp:
+            wb.save(tmp.name)
+            result = extract(Path(tmp.name), schema, cell_map)
+
+        self.assertEqual(result["values"]["C.908"]["value"], "600")
+        self.assertEqual(result["values"]["C.909"]["value"], "660")
+        self.assertEqual(result["values"]["C.910"]["value"], "720")
+        self.assertNotIn("C.911", result["values"])
+        self.assertNotIn("C.912", result["values"])
+        self.assertNotIn("C.913", result["values"])
+        self.assertEqual(result["stats"]["academic_profile_fields_recovered"], 5)
+
 
 if __name__ == "__main__":
     unittest.main()

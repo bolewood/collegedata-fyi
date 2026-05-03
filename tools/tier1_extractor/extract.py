@@ -48,7 +48,7 @@ from openpyxl.utils import get_column_letter
 
 
 PRODUCER_NAME = "tier1_xlsx"
-PRODUCER_VERSION = "0.2.0"
+PRODUCER_VERSION = "0.2.1"
 MIN_TEMPLATE_FIELDS_BEFORE_FALLBACK = 25
 
 # Default template path relative to the repo root.
@@ -274,7 +274,7 @@ def recover_c9_academic_profile_values(
             for col_idx in range(1, min(ws.max_column, 12) + 1)
         ]
         row_text = " ".join(_norm_label(v) for v in row_values if v is not None)
-        if "percent and number of first time first year students" in row_text and "sat act" in row_text:
+        if _is_c9_header(row_text):
             in_c9 = True
             continue
         if in_c9 and ("c10" in row_text or "class rank" in row_text):
@@ -295,22 +295,25 @@ def recover_c9_academic_profile_values(
         if not label_col:
             continue
 
-        right_values = [
-            ws.cell(row=row_idx, column=col_idx).value
-            for col_idx in range(label_col + 1, min(ws.max_column, label_col + 8) + 1)
-        ]
-        usable = [value for value in right_values if _is_c9_value(value)]
-        if label in submit_rows and len(usable) >= 2:
+        if label in submit_rows:
             percent_q, count_q = submit_rows[label]
-            recovered[percent_q] = usable[0]
-            recovered[count_q] = usable[1]
-        elif label in score_rows and len(usable) >= 3:
-            for qnum, value in zip(score_rows[label], usable[:3]):
-                recovered[qnum] = value
+            percent_value = ws.cell(row=row_idx, column=label_col + 1).value
+            count_value = ws.cell(row=row_idx, column=label_col + 2).value
+            recovered[percent_q] = percent_value if _is_c9_value(percent_value) else None
+            recovered[count_q] = count_value if _is_c9_value(count_value) else None
+        elif label in score_rows:
+            for offset, qnum in enumerate(score_rows[label], start=1):
+                raw_value = ws.cell(row=row_idx, column=label_col + offset).value
+                recovered[qnum] = raw_value if _is_c9_value(raw_value) else None
 
     count = 0
     for qnum, raw_value in recovered.items():
         if qnum not in qnum_to_field:
+            continue
+        if raw_value is None:
+            if qnum in values:
+                del values[qnum]
+                count += 1
             continue
         value = str(raw_value).strip()
         if not value:
@@ -320,6 +323,15 @@ def recover_c9_academic_profile_values(
         values[qnum] = _field_record(qnum, value, qnum_to_field)
         count += 1
     return count
+
+
+def _is_c9_header(row_text: str) -> bool:
+    return (
+        "percent and number" in row_text
+        and "first time first year" in row_text
+        and "students" in row_text
+        and "sat act" in row_text
+    )
 
 
 def _field_record(qnum: str, value: str, qnum_to_field: dict[str, dict]) -> dict:
