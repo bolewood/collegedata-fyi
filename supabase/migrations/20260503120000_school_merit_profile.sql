@@ -43,6 +43,9 @@ section_h AS (
     MAX(f.value_num) FILTER (WHERE f.field_id = 'H.2A05' AND f.value_status = 'reported') AS non_need_aid_recipients_all_ft,
     MAX(f.value_num) FILTER (WHERE f.field_id = 'H.2A06' AND f.value_status = 'reported') AS avg_non_need_grant_all_ft,
 
+    -- H.6 and H.14 are checkbox-like fields. The numeric truthy branch catches
+    -- legacy "1" checkbox marks only; counts/dollar values are not expected
+    -- for these field IDs and should be audited upstream if they appear.
     BOOL_OR(
       COALESCE(f.value_bool, false)
       OR LOWER(COALESCE(f.value_text, '')) IN ('x', 'yes', 'true', 'checked')

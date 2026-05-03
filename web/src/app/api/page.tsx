@@ -15,6 +15,8 @@ const ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzZHV3bXlndm1kb3pocHZ6YWl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDk3NTksImV4cCI6MjA5MTY4NTc1OX0.fYZOIHyrOWzidgc-CVxWCY5Fe9pQk12-6YjDIS6y9qs";
 
 const BASE = "https://api.collegedata.fyi";
+const API_LINK_CLASS = "text-[var(--forest)] underline hover:text-[var(--forest-ink)]";
+const API_LINK_SMALL_CLASS = "text-xs text-[var(--forest)] underline hover:text-[var(--forest-ink)]";
 
 export const revalidate = 3600;
 
@@ -36,7 +38,7 @@ export default async function ApiDocsPage() {
       <p className="mt-3 text-base leading-relaxed text-gray-600">
         The full collegedata.fyi corpus is exposed as a public, read-only{" "}
         <a
-          className="text-blue-700 underline hover:text-blue-900"
+          className={API_LINK_CLASS}
           href="https://postgrest.org/"
           target="_blank"
           rel="noopener noreferrer"
@@ -494,7 +496,7 @@ export default async function ApiDocsPage() {
         The academic positioning card reads the already-public{" "}
         <code>school_browser_rows</code> resource. SAT/ACT submit rates are stored
         as fractions, and the card links to{" "}
-        <Link href="/methodology/positioning" className="text-blue-700 underline hover:text-blue-900">
+        <Link href="/methodology/positioning" className={API_LINK_CLASS}>
           its methodology
         </Link>{" "}
         instead of exposing a separate scoring endpoint.
@@ -511,7 +513,7 @@ export default async function ApiDocsPage() {
         <code>school_browser_rows</code>. ED counts are published when the CDS reports
         them; EA is limited to offered/restrictive flags because CDS C.22 does not
         include EA applicant or admit counts. The card methodology is documented at{" "}
-        <Link href="/methodology/admission-strategy" className="text-blue-700 underline hover:text-blue-900">
+        <Link href="/methodology/admission-strategy" className={API_LINK_CLASS}>
           /methodology/admission-strategy
         </Link>
         .
@@ -528,7 +530,7 @@ export default async function ApiDocsPage() {
         primary CDS Section H view joined to Scorecard affordability and outcome
         fields. H2A non-need award values are source-reported institutional facts,
         not personalized price estimates. The card methodology is documented at{" "}
-        <Link href="/methodology/merit-profile" className="text-blue-700 underline hover:text-blue-900">
+        <Link href="/methodology/merit-profile" className={API_LINK_CLASS}>
           /methodology/merit-profile
         </Link>
         .
@@ -575,7 +577,7 @@ export default async function ApiDocsPage() {
       <p className="mt-2 text-sm leading-relaxed text-gray-700">
         The same{" "}
         <a
-          className="text-blue-700 underline hover:text-blue-900"
+          className={API_LINK_CLASS}
           href="https://github.com/supabase/supabase-js"
           target="_blank"
           rel="noopener noreferrer"
@@ -617,7 +619,7 @@ const { data } = await supabase
         Initiative&apos;s 2025-26 XLSX template. The full schema is checked
         into the repo at{" "}
         <a
-          className="text-blue-700 underline hover:text-blue-900"
+          className={API_LINK_CLASS}
           href="https://github.com/bolewood/collegedata-fyi/blob/main/schemas"
           target="_blank"
           rel="noopener noreferrer"
@@ -632,14 +634,14 @@ const { data } = await supabase
       <div className="mt-10 border-t border-gray-200 pt-6 text-sm text-gray-500">
         Found something missing or wrong? Open an issue on{" "}
         <a
-          className="text-blue-700 underline hover:text-blue-900"
+          className={API_LINK_CLASS}
           href="https://github.com/bolewood/collegedata-fyi/issues"
           target="_blank"
           rel="noopener noreferrer"
         >
           GitHub
         </a>
-        , or browse the <Link href="/schools" className="text-blue-700 underline hover:text-blue-900">school directory</Link>.
+        , or browse the <Link href="/schools" className={API_LINK_CLASS}>school directory</Link>.
       </div>
     </div>
   );
@@ -680,7 +682,7 @@ function Resource({
           href={`${BASE}/rest/v1/${name}?limit=1&apikey=${ANON_KEY}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-blue-700 underline hover:text-blue-900"
+          className={API_LINK_SMALL_CLASS}
         >
           try it →
         </a>
@@ -695,7 +697,7 @@ function Resource({
       </div>
       {extras.length > 0 && (
         <details className="mt-3 group">
-          <summary className="cursor-pointer select-none text-xs text-blue-700 hover:text-blue-900">
+          <summary className="cursor-pointer select-none text-xs text-[var(--forest)] hover:text-[var(--forest-ink)]">
             <span className="group-open:hidden">
               Show all {allFields!.length} fields →
             </span>

@@ -29,6 +29,16 @@ function yesNo(value: boolean | null): string {
   return "n/a";
 }
 
+function recipientShareLine(profile: MeritProfileRow): string {
+  if (profile.nonNeedAidShareFirstYearFt != null) {
+    return `${percent(profile.nonNeedAidShareFirstYearFt)} of first-year full-time students`;
+  }
+  if (profile.avgNonNeedGrantFirstYearFt != null) {
+    return "Average no-need grant reported; recipient count not reported";
+  }
+  return "H2A first-year fields not reported";
+}
+
 function StatBlock({
   label,
   value,
@@ -52,10 +62,6 @@ function StatBlock({
 export function MeritProfileCard({ profile, sourceHref }: MeritProfileCardProps) {
   if (profile.cdsMeritFieldCount === 0) return null;
 
-  const hasFirstYearMerit =
-    profile.avgNonNeedGrantFirstYearFt != null ||
-    profile.nonNeedAidRecipientsFirstYearFt != null ||
-    profile.nonNeedAidShareFirstYearFt != null;
   const qualityLabel =
     profile.meritProfileQuality === "strong"
       ? "Core merit fields reported"
@@ -89,11 +95,7 @@ export function MeritProfileCard({ profile, sourceHref }: MeritProfileCardProps)
             <strong className="serif stat-num">
               {count(profile.nonNeedAidRecipientsFirstYearFt)}
             </strong>
-            <small>
-              {hasFirstYearMerit
-                ? `${percent(profile.nonNeedAidShareFirstYearFt)} of first-year full-time students`
-                : "H2A first-year fields not reported"}
-            </small>
+            <small>{recipientShareLine(profile)}</small>
           </div>
         </div>
 
