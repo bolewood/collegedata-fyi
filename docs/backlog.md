@@ -76,7 +76,7 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 - **OG images.** Per-school social cards with school name + key stats. Would improve link previews on Twitter/Slack/Discord. **Effort:** ~1 hour using Next.js OG image generation.
 
-- **Server-side stats RPC.** The landing page fetches the full manifest (~2,913 rows via paginated range queries) to compute 4 stats client-side. At 10K+ docs this becomes wasteful. Fix: Postgres function or view that returns pre-computed stats. **When:** when the corpus exceeds ~5,000 documents. Not urgent now.
+- **Server-side stats RPC.** The landing page fetches public count/table data to compute stats. At 10K+ docs this becomes wasteful. Fix: Postgres function or view that returns pre-computed stats. **When:** when the corpus exceeds ~5,000 documents. Not urgent now.
 
 - **Singleton Supabase client per-request.** The current `supabase.ts` creates one module-level client shared across all requests. This works for the anon key (stateless) but doesn't follow the `@supabase/ssr` pattern recommended for Next.js server components. Low risk for a read-only app with no auth, but worth cleaning up if auth is ever added. **Effort:** ~15 minutes.
 
@@ -99,9 +99,9 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 ### Larger features / future tiers
 
-- **Tier 3 DOCX extractor (PRD 007).** Revised plan shipped 2026-04-29 in [PRD 007](prd/007-tier3-docx-extraction.md). Primary path is a deterministic OOXML SDT reader keyed by schema `word_tag` values, same lookup pattern as Tier 2. Fallback path is a measured Docling DOCX structural adapter that reuses Tier 4 cleaner/table logic for SDT-stripped Word files before considering any bespoke Word-table parser. Addressable corpus today is ~30-50 documents (Kent State's 14 SDT-preserving files are the largest family). Includes a format-sniffer fix so DOCX files misidentified as xlsx route correctly.
+- **Tier 3 DOCX extractor (PRD 007).** Revised plan shipped 2026-04-29 in [PRD 007](prd/007-tier3-docx-extraction.md). Primary path is a deterministic OOXML SDT reader keyed by schema `word_tag` values, same lookup pattern as Tier 2. Fallback path is a measured Docling DOCX structural adapter that reuses Tier 4 cleaner/table logic for SDT-stripped Word files before considering any bespoke Word-table parser. Addressable corpus today is ~30-50 documents (Kent State's 14 SDT-preserving files are the largest family). The format sniffer now routes DOCX correctly; the remaining work is the extractor itself.
 
-- **Tier 4 cleaner — continue resolver coverage beyond ~380.** [PRD 005](prd/005-full-schema-extraction.md)'s Phase 6 architecture shipped 2026-04-20 (commit `aecca9b`): the section-family resolver framework backed by a shared `SchemaIndex` took the cleaner from 72 → ~380 fields (Harvard 382, Yale 390, Dartmouth 343). See Resolved section below for the full shipped details. Remaining work is continuing to add resolvers for the thinner sections — the ceiling is 1,105 fields but most sections beyond the current ~380 are either the LLM fallback's territory (PRD 006, shipped) or Docling structural-failure cases (flat-text table recovery, below). Not urgent; add resolvers opportunistically when a specific school reports missing fields.
+- **Tier 4 cleaner — continue resolver coverage beyond the core product surfaces.** [PRD 005](prd/005-full-schema-extraction.md)'s Phase 6 architecture shipped 2026-04-20 (commit `aecca9b`): the section-family resolver framework backed by a shared `SchemaIndex` took the cleaner from 72 -> ~380 fields (Harvard 382, Yale 390, Dartmouth 343). PRD 016B and PRD 018 added targeted C21/C22 and H1/H2/H2A coverage. Remaining work is continuing to add resolvers for thinner sections as specific schools surface gaps; the ceiling is 1,105 fields, but full-schema parity is not urgent.
 
 - **Tier 4 cleaner — Docling flat-text table recovery.** Dartmouth's C10 and Harvard's Submitting SAT/ACT block are cases where Docling emitted a two-column table as two sequential paragraphs (all labels first, then all values in the same order) instead of interleaved table rows. Current cleaner has no recovery path for this shape — the `_INLINE_PATTERNS` fallback handles single-field cases but not these multi-row column-flattened ones. **Fix shape:** detect consecutive N-line blocks of label-like paragraphs (each starting with "Percent..." or matching the row-label pattern of a known table) followed by N value-like paragraphs (e.g. `\d+%`), and pair them positionally. Only worth building if corpus survey shows many schools hitting this pattern — currently it's a known miss for ~2 fields per affected school.
 
@@ -146,6 +146,45 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 ## Resolved
 
 Reverse chronological.
+
+### 2026-05-03
+
+- **[RESOLVED 2026-05-03] ~~Source routing and fresh CDS extraction priority.~~**
+  The extraction worker now orders pending/retry rows by recency before older
+  backlog rows, and both the CLI and ops workflow expose `--min-year-start` for
+  fresh-year drains. ZIP source sniffing is content-aware, so DOCX no longer
+  routes as XLSX; headless/archiver downloads preserve document-like response
+  bytes even when publisher headers are misleading. This cleared the 2025-26
+  pending queue after the manual fresh-year drain: 101 extracted, 16 failed, 1
+  not applicable, 0 pending.
+
+- **[RESOLVED 2026-05-03] ~~PRD 018 merit profile data asset.~~**
+  Shipped `school_merit_profile`, joining latest primary 2024-25+ CDS Section H
+  merit/need-aid fields to selected Scorecard affordability/outcome fields.
+  Targeted H1/H2/H2A cleaner work and redrains populate the school-page
+  `MeritProfileCard` and the public API. The card copy explicitly treats H2A
+  as school-reported institutional grant data, not a personalized estimate.
+
+- **[RESOLVED 2026-05-03] ~~PRD 017 match list builder.~~**
+  Shipped `/match` with `MatchListBuilder`, list ranking helpers, local-only
+  save/share codes, directory/Scorecard enrichment, and school-page document
+  ledger cleanup. The default sort puts stronger-fit schools first and long CDS
+  histories now show the three most recent files before the expandable ledger.
+
+- **[RESOLVED 2026-05-03] ~~PRD 016B admission strategy card and redrain.~~**
+  Shipped `AdmissionStrategyCard`, `school_browser_rows` admission-strategy
+  columns, C21/C22 Tier 4 cleaner coverage, effective ED/wait-list semantics,
+  `admission_strategy_card_quality`, and the targeted Tier 4 redrain. The
+  implementation uses ED and EA names directly rather than a vague "early plan"
+  label in product copy.
+
+### 2026-05-02
+
+- **[RESOLVED 2026-05-02] ~~PRD 016 academic positioning card.~~**
+  Shipped school-page academic positioning backed by `school_browser_rows`
+  SAT/ACT bands, selectivity context, localStorage-only student profile state,
+  methodology page copy, and unit tests for fit tiering. GPA remains caveated
+  because CDS C.12 scale semantics are not consistently machine-resolvable.
 
 ### 2026-04-29
 
@@ -269,7 +308,7 @@ Ideas bigger than a single backlog item, captured here so they don't get dropped
 Live in production. `GET /rest/v1/cds_scorecard` returns CDS documents joined to federal earnings, debt, net-price-by-income, completion, and retention. Total row counts at first load:
 
 - `scorecard_summary`: **6,322 rows** (every Title-IV institution in the March 2026 bundle, vintage `2022-23`).
-- `cds_documents.ipeds_id`: **3,794 of 4,131 rows** populated. The 130-row gap is from 10 slug variants where `cds_documents.school_id` doesn't match `schools.yaml.id`. See the runbook's "Slug rationalization" section for the cleanup path.
+- `cds_documents.ipeds_id`: **3,794 of 3,950 public manifest rows** populated. The remaining gap is from legacy slug variants and non-Title-IV / non-school rows where `cds_documents.school_id` doesn't match a current Scorecard directory row. See the runbook's "Slug rationalization" section for the cleanup path.
 - `cds_scorecard` view: live, returning real joined data (MIT tops earnings at $143,372 / 96.4% grad rate / $20,111 net price; Harvard's net-price-by-income range is $2,091 → $53,337).
 
 Shipped across four migrations + two Python scripts:

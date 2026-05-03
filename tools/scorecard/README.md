@@ -1,9 +1,11 @@
 # Scorecard pipeline
 
-The eighth and most-recent of the project's pipelines. Loads a curated
+Loads a curated
 43-column subset of the federal [College Scorecard](https://collegescorecard.ed.gov/data/)
 into `scorecard_summary`, joined to the CDS archive on IPEDS UNITID and
-exposed via the public PostgREST API at `/rest/v1/cds_scorecard`.
+exposed via the public PostgREST API at `/rest/v1/cds_scorecard`. The same
+Scorecard load now feeds the PRD 015 institution directory/coverage layer,
+PRD 017 match-list enrichment, and PRD 018 `school_merit_profile` context.
 
 The design rationale, the field-by-field selection, and the list of
 deliberately-excluded Scorecard fields live in
@@ -14,8 +16,10 @@ is below.
 ## What's live right now
 
 - **`scorecard_summary` — 6,322 rows** of Scorecard 2022-23 data, one per IPEDS UNITID. Every Title-IV institution.
-- **`cds_documents.ipeds_id` — 3,794 of 4,131 rows** populated. The 130-row gap (~10 distinct school_ids) is from slug variants written by the discovery pipeline that don't match `schools.yaml` entries (e.g. `university-of-minnesota-twin-cities` not in YAML; `caltech` is, but the discovery slug is something else). See "Slug rationalization" below.
-- **`cds_scorecard` view — joins live**. One row per CDS document with the Scorecard outcome slice attached. NULLs on the Scorecard side mean either the school has no IPEDS match (the 130 above) or the school dropped out of the federal Title-IV list.
+- **`institution_directory` — 6,322 rows** refreshed from the same Scorecard CSV, with in-scope flags and deterministic slugs for PRD 015 coverage.
+- **`cds_documents.ipeds_id` — 3,794 of 3,950 manifest rows populated** via the public manifest view; the remaining gap is mostly legacy slug variants and non-Title-IV / non-school rows. See "Slug rationalization" below.
+- **`cds_scorecard` view — joins live**. One row per CDS document with the Scorecard outcome slice attached. NULLs on the Scorecard side mean either the school has no IPEDS match or the school dropped out of the federal Title-IV list.
+- **`school_merit_profile` — 383 rows** joining latest primary Section H CDS merit/need-aid facts to selected Scorecard affordability and outcome fields.
 
 ## Files
 
@@ -35,6 +39,7 @@ Apply in order — the third depends on the first via `cds_manifest.ipeds_id`, a
 | `20260420170200_cds_scorecard_view.sql` | Creates the joined `cds_scorecard` view with `WITH (security_invoker = true)`. |
 | `20260420180000_scorecard_pell_remap.sql` | Drops `median_debt_non_pell` and `grad_rate_non_pell` (Scorecard removed the underlying CSV columns between the V2 plan and the March 2026 release). Recreates `cds_scorecard` without those fields. |
 | `20260429113212_institution_directory.sql` | PRD 015 M1. Adds `institution_directory` (one row per Title-IV institution, with `in_scope` flag) and `institution_slug_crosswalk` (every alias for an institution → its canonical `school_id`). RLS-gated public read. Populated by `load_directory.py`. |
+| `20260503120000_school_merit_profile.sql` | PRD 018. Creates `school_merit_profile`, latest primary 2024-25+ Section H CDS merit/need-aid facts plus selected Scorecard affordability/outcome fields. |
 
 ## First-time setup
 
@@ -90,6 +95,10 @@ curl "https://api.collegedata.fyi/rest/v1/cds_scorecard?school_id=eq.harvard&sel
 
 # Full Scorecard subset (all 6,322 institutions, not just CDS-archived ones)
 curl "https://api.collegedata.fyi/rest/v1/scorecard_summary?ipeds_id=eq.166027&select=*" \
+  -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
+
+# Latest CDS merit/need-aid profile plus Scorecard context
+curl "https://api.collegedata.fyi/rest/v1/school_merit_profile?school_id=eq.yale&select=school_name,canonical_year,merit_profile_quality,avg_non_need_grant_first_year_ft,avg_net_price,earnings_10yr_median" \
   -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
 ```
 

@@ -10,7 +10,7 @@
 > CDS document with the curated Scorecard outcome slice attached
 > (earnings, debt, net price by income, completion, retention). Use the
 > built-in view for the common case; this manual recipe is still useful
-> when you need Scorecard fields outside the 41-column curated subset
+> when you need Scorecard fields outside the 43-column curated subset
 > (per-program earnings, full repayment-status breakdown,
 > race-stratified completion). See
 > [`tools/scorecard/README.md`](../../tools/scorecard/README.md) for the

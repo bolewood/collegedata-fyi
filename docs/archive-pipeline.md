@@ -11,13 +11,15 @@ source file to the `sources` Storage bucket. The extraction worker then polls
 `cds_documents WHERE extraction_status = 'extraction_pending'` and does
 the structured extraction.
 
-As of April 28, 2026, this document covers the full operating chain:
+As of May 3, 2026, this document covers the full operating chain:
 
 1. **Discovery / archive** in Supabase Edge Functions.
 2. **Structured extraction** in the Python worker across shipped Tiers 1, 2, 4, 5, and 6.
 3. **Tier 4 LLM fallback overlay** for selected low-coverage flattened PDFs.
 4. **Queryable browser projection** into `cds_fields` and `school_browser_rows`.
-5. **GitHub Actions wrappers** for boring PR CI and bounded ops drains.
+5. **Institution coverage / fit-data projections** into `institution_cds_coverage`,
+   `school_browser_rows`, and `school_merit_profile`.
+6. **GitHub Actions wrappers** for boring PR CI and bounded ops drains.
 
 The archive layer stores immutable source bytes and provenance. It does not
 decide which extracted values are canonical for consumers; that decision happens
@@ -699,11 +701,12 @@ that target did not survive contact with the real corpus and has
 been retired.
 
 Current high-level corpus counters are maintained in
-[`docs/extraction-quality.md`](extraction-quality.md). After the April 28 Tier 4
-v0.3 refresh and PRD 012 browser expansion, the public `2024+` projection had
-`217,910` `cds_fields` rows and `469` `school_browser_rows` rows. The projection
-clears stale rows on full rebuild, so browser-row counts can move down when old
-or non-qualifying rows are removed.
+[`docs/extraction-quality.md`](extraction-quality.md). After the May 3 PRD
+016B/018 drains and source-routing cleanup, production has `3,950` archived CDS
+documents, `3,792` extracted rows, `200,957` `cds_fields` rows, `475`
+`school_browser_rows`, and `383` `school_merit_profile` rows. Projection counts
+can move down after cleanup because full rebuilds remove stale or
+non-qualifying selected-result rows before repopulating.
 
 **Recent cron executions:**
 
@@ -816,22 +819,21 @@ basic regression coverage for the `NULLS NOT DISTINCT` constraint.
 
 ## Production verification summary
 
-### Current status (as of 2026-04-28)
+### Current status (as of 2026-05-03)
 
-- Archive and extraction have produced `3,924` archived CDS documents and
-  `3,841` structured extraction artifacts across the public corpus.
+- Archive and extraction have produced `3,950` archived CDS documents and
+  `3,792` extracted documents across the public corpus.
 - Shipped extraction tiers are active for XLSX, fillable PDF, flattened PDF,
   scanned PDF, and HTML. DOCX remains a designed-but-unbuilt Tier 3.
-- Tier 4 v0.3 deterministic layout-overlay extraction has been drained into
-  production and projected into the browser substrate.
-- Queryable browser projection after PRD 012:
-  - `217,910` `cds_fields` rows.
-  - `469` `school_browser_rows` rows.
-  - Mean projected `2024+` field rows per processed document moved from `224.5`
-    at PRD 010 launch to `433.2`.
-- Live smoke checks on April 28 returned HTTP 200 for `/browse` and
-  `/schools/mit/2024-25`; `browser-search` returned expected SAT answerability
-  metadata for a `sat_composite_p50 >= 1400` query.
+- Tier 4 v0.3 layout-overlay extraction, PRD 016B admission-strategy cleanup,
+  and PRD 018 H1/H2/H2A merit-profile cleanup have been drained into
+  production and projected into public serving tables.
+- The worker now prioritizes fresh CDS rows first; manual 2025-26 drain status:
+  101 extracted, 16 failed, 1 not applicable, 0 pending.
+- Public serving tables:
+  - `200,957` `cds_fields` rows.
+  - `475` `school_browser_rows` rows.
+  - `383` `school_merit_profile` rows.
 
 ### Historical archive launch check (2026-04-14)
 

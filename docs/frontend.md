@@ -31,9 +31,11 @@ by one public Edge Function call.
 
 ### `/` Landing page (`web/src/app/page.tsx`)
 
-Search-first design. The hero is an autocomplete text input that filters
-617 schools as you type. Below it, a stats bar shows live corpus numbers
-pulled from the API (total schools, documents, year range, extraction %).
+Search-first design. The hero is an autocomplete text input backed by the
+PRD 015 `search_institutions` RPC, so it can return directory-only institutions
+with coverage badges as well as schools with archived CDS data. Below it, a
+stats bar shows live corpus numbers pulled from the API (institutions, documents,
+field rows, extraction %).
 
 **Data flow:** `fetchManifest()` returns all rows from `cds_manifest` via
 paginated range queries (PostgREST caps at 1,000 rows per request).
@@ -86,6 +88,11 @@ This prevents dead-end navigation to year pages with no structured data.
 CDS files per year show each variant with its `sub_institutional` label.
 Documents are grouped by sub-institution when more than one exists.
 
+Large document archives use `SchoolDocumentsLedger`: the school page shows the
+three most recent CDS files first and tucks older files into an expandable
+ledger so the school-page product cards are not pushed below a long historical
+document list.
+
 ### `/schools/[school_id]/[year]` Year detail (`web/src/app/schools/[school_id]/[year]/page.tsx`)
 
 The SEO answer page. Designed to rank for queries like "Yale acceptance
@@ -113,6 +120,32 @@ on the same page with their own KeyStats and FieldsView sections.
 
 **SEO:** Schema.org `Dataset` JSON-LD markup. Unique `<title>` and
 `<meta description>` per page via `generateMetadata()`.
+
+### `/coverage` Coverage dashboard (`web/src/app/coverage/page.tsx`)
+
+PRD 015 accountability page. Server-fetches `institution_cds_coverage`;
+`CoverageDashboard` renders a histogram, status/state/enrollment/recency
+filters, and a virtualized sortable table. The default view emphasizes schools
+where a CDS is missing or not current.
+
+### `/match` Match list builder (`web/src/app/match/page.tsx`)
+
+PRD 017 client-heavy builder. It reads `school_browser_rows`, directory rows,
+and Scorecard enrichment, ranks schools with the same profile model used by the
+academic positioning card, and supports local save/share codes without writing
+student profile data to the backend.
+
+### `/methodology/*` Methodology pages
+
+Static methodology pages explain the academic positioning, admission strategy,
+and merit profile cards. Keep these pages factual and source-semantics focused;
+they are not marketing pages and should not imply personalized admissions or aid
+predictions.
+
+### `/api` API page (`web/src/app/api/page.tsx`)
+
+Public API docs page. Documents the required anon-key headers, PostgREST
+resources, `browser-search`, and the PRD 018 `school_merit_profile` view.
 
 ### `/about` About page (`web/src/app/about/page.tsx`)
 
@@ -158,6 +191,9 @@ paths.
 | Year detail | `cds_manifest WHERE school_id = ? AND canonical_year = ?` | Returns all sub-institutional variants |
 | Year detail (fields) | `cds_artifacts WHERE document_id = ?` | Loads canonical + `tier4_llm_fallback`, then merges cleaner-wins |
 | Queryable browser | `browser-search` Edge Function | Ranked latest-per-school search over `school_browser_rows` with answerability metadata, including SAT/ACT submit-rate companion metadata for active score filters |
+| School positioning/admission cards | `school_browser_rows WHERE school_id = ?` | Latest primary row with SAT/ACT, admissions, ED/EA, wait-list, and C7/app-fee columns |
+| Match builder | `school_browser_rows` + `institution_directory` + `scorecard_summary` | Client-side ranked school list, with local-only profile persistence |
+| Merit profile | `school_merit_profile WHERE school_id = ?` | Latest primary Section H merit/need-aid facts plus Scorecard context |
 
 **Deduplication:** `fetchSchoolDocuments` and `fetchDocumentsBySchoolAndYear`
 are wrapped in `React.cache()` so `generateMetadata()` and the page
@@ -174,6 +210,11 @@ component share the same Supabase response within a single render.
 | `StatsBar` | `components/StatsBar.tsx` | 4-column stat grid (schools, docs, year range, extraction %) |
 | `SchoolSearch` | `components/SchoolSearch.tsx` | Autocomplete input with keyboard nav, filters client-side |
 | `SchoolBrowser` | `components/SchoolBrowser.tsx` | PRD 010 browser filters, answerability stats, result table, pagination, CSV export. CSV includes PRD 012 SAT/ACT backend columns. |
+| `PositioningCard` | `components/PositioningCard.tsx` | PRD 016 academic fit card. Compares a local student profile against school SAT/ACT bands and selectivity context. |
+| `AdmissionStrategyCard` | `components/AdmissionStrategyCard.tsx` | PRD 016B card for ED/EA, wait-list, yield, C7 factors, and application-fee signals from `school_browser_rows`. |
+| `MatchListBuilder` | `components/MatchListBuilder.tsx` | PRD 017 ranked list-builder experience for `/match`. |
+| `MeritProfileCard` | `components/MeritProfileCard.tsx` | PRD 018 Section H + Scorecard merit/aid profile card. |
+| `SchoolDocumentsLedger` | `components/SchoolDocumentsLedger.tsx` | Collapses long CDS-document histories after the three most recent files. |
 | `SchoolTable` | `components/SchoolTable.tsx` | Sortable/filterable school list with search input |
 | `DocumentCard` | `components/DocumentCard.tsx` | CDS year card with status badge, format badge, PDF link |
 | `KeyStats` | `components/KeyStats.tsx` | Grid of stat cards (acceptance rate, SAT, enrollment) |
@@ -196,6 +237,10 @@ component share the same Supabase response within a single render.
 | `supabase.ts` | `lib/supabase.ts` | Supabase client singleton + Storage base URL |
 | `queries.ts` | `lib/queries.ts` | Typed query functions + client-side aggregation |
 | `browser-search.ts` | `lib/browser-search.ts` | Typed request/response wrapper for the `browser-search` Edge Function |
+| `positioning.ts` | `lib/positioning.ts` | Student-profile fit tiering and academic-positioning copy logic |
+| `admission-strategy.ts` | `lib/admission-strategy.ts` | ED/EA/wait-list/admission-factor calculations and quality gating |
+| `list-builder.ts` | `lib/list-builder.ts` | PRD 017 match ranking, tiering, and list presentation helpers |
+| `savecode.ts` | `lib/savecode.ts` | Stateless local profile/list share code encoding |
 | `types.ts` | `lib/types.ts` | TypeScript interfaces for API responses |
 | `format.ts` | `lib/format.ts` | Display formatters (badge labels, status colors, storage URLs) |
 | `labels.ts` | `lib/labels.ts` | Auto-generated CDS field ID to plain-English label map (1,105 fields from `cds_schema_2025_26.json`) |
@@ -231,10 +276,12 @@ paper background, ink text, one muted forest accent, rules instead of shadows,
 and tabular numbers. Do not introduce blue UI, large rounded cards, or
 marketing-style decoration.
 
-**KeyStats and browser rows:** only render values that exist. Do not invent
-confidence scoring or fill blanks with authoritative-looking placeholders. SAT/ACT
-browser fields should be described as submitter-profile values unless the UI also
-shows the submit-rate context.
+**KeyStats, product cards, and browser rows:** only render values that exist.
+Do not invent confidence scoring or fill blanks with authoritative-looking
+placeholders. SAT/ACT browser fields should be described as submitter-profile
+values unless the UI also shows the submit-rate context. Merit profile copy must
+preserve the distinction between school-reported Section H non-need grants and
+a personalized award estimate.
 
 ---
 

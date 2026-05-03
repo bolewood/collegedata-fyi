@@ -3,6 +3,8 @@
 Implemented for PRD 010. Backend and frontend MVP were deployed on
 2026-04-26. PRD 012 expanded the backend serving contract on 2026-04-28 with
 SAT/ACT academic-profile fields after the Tier 4 v0.3 projection refresh.
+PRD 016, 016B, 017, and 018 now use the same serving substrate for academic
+positioning, admission strategy, match-list building, and merit profile data.
 
 ## Surfaces
 
@@ -21,6 +23,9 @@ SAT/ACT academic-profile fields after the Tier 4 v0.3 projection refresh.
   cleaner version.
 - `cds_fields`: materialized long-form field projection for `2024-25+`.
 - `school_browser_rows`: curated one-row-per-school-year serving table.
+- `school_merit_profile`: PRD 018 view exposing latest primary 2024-25+ CDS
+  Section H merit/need-aid facts per school, left-joined to selected Scorecard
+  affordability and outcome fields.
 - `browser-search` Supabase Edge Function: ranked latest-per-school search with
   answerability metadata.
 - `/browse`: public MVP browser page backed by the Edge Function. The first UI
@@ -46,6 +51,7 @@ Production projection history:
 |---|---|---:|---:|---:|---|
 | 2026-04-26 | PRD 010 launch | 113,836 | 472 | 507 | First browser substrate after launch projection. |
 | 2026-04-28 | PRD 012 + Tier 4 v0.3 refresh | 217,910 | 469 | 503 | Stale rows cleared before rebuild; SAT/ACT backend columns populated. |
+| 2026-05-03 | PRD 016B/018 + fresh-row drains | 200,957 | 475 | n/a | Admission strategy columns, merit profile view, and targeted redrains. Lower `cds_fields` count is expected after source-routing cleanup and current selected-result filtering. |
 
 The PRD 012 refresh added `104,074` projected field rows, a `91.4%` increase
 over launch. Average field rows per processed document moved from about `224.5`
@@ -56,14 +62,15 @@ Current `2024+` field rows by selected source format:
 
 | Source format | Field rows |
 |---|---:|
-| `pdf_flat` | 141,554 |
-| `pdf_fillable` | 53,016 |
-| `xlsx` | 23,082 |
-| `html` | 152 |
-| `pdf_scanned` | 106 |
+| `pdf_flat` | 138,145 |
+| `pdf_fillable` | 45,014 |
+| `xlsx` | 17,524 |
+| `html` | 173 |
+| `pdf_scanned` | 101 |
 
-The worker is currently operator-run. It is not yet wired into the extraction
-worker after every artifact write.
+The full rebuild worker remains operator-run. Incremental projection refresh is
+wired into `tools/extraction_worker/worker.py` after successful canonical writes
+unless `--skip-projection-refresh` is passed.
 
 ## Frontend Contract
 
@@ -95,6 +102,32 @@ stored fractionally in `0..1`. The Edge Function accepts these fields for
 filters/sorts and returns academic-profile companion metadata for score filters,
 including how many matching rows have a missing submit-rate companion. The public
 `/browse` UI does not yet expose score filters by default.
+
+PRD 016B added admission-strategy fields to `school_browser_rows`:
+
+- `ed_offered`, `ed_applicants`, `ed_admitted`,
+  `ed_has_second_deadline`
+- `ea_offered`, `ea_restrictive`
+- `wait_list_policy`, `wait_list_offered`, `wait_list_accepted`,
+  `wait_list_admitted`
+- selected C7 factors: first-generation, alumni/ae relation, geographical
+  residence, state residency, demonstrated interest
+- `app_fee_amount`, `app_fee_waiver_offered`
+- `admission_strategy_card_quality`
+
+The projector stores effective booleans for ED and wait-list policy when valid
+counts prove the policy exists even if the source checkbox was blank or missed.
+Math-inconsistent rows are flagged so cards can suppress rate calculations.
+
+PRD 017's `/match` page reads `school_browser_rows` plus directory and
+Scorecard enrichment to rank schools against the same student-profile model used
+by PRD 016 positioning. The save/share code is stateless and client-side; no
+profile data is written to the backend.
+
+PRD 018's `school_merit_profile` is a read-only view, not part of
+`school_browser_rows`. It keeps Section H aid semantics separate from the
+browser table because merit-aid rows need more copy, caveats, and Scorecard
+context than a flat browser column should carry.
 
 Production PRD 012 answerability, primary clean rows (`sub_institutional IS NULL`
 and no `data_quality_flag`), 2024+:
@@ -140,6 +173,10 @@ Production smoke checks used:
 - Admissions browser metrics (`applied`, `admitted`, `enrolled_first_year`) are
   evaluated through per-year formulas. For 2024-25, `applied` is
   `C.101 + C.102 + C.103 + C.104`; for 2025-26 it is `C.116`.
+- Admission strategy columns are sourced from C21/C22, C2 wait-list rows, C7
+  factor rows, and app-fee/waiver fields. The card-quality enum is intentionally
+  part of the data contract so consumers can tell unknown from known-but-
+  internally-inconsistent.
 - `canonical_metric` is set on direct alias rows and on single-field derived
   formula rows. Multi-field formula components remain source rows in
   `cds_fields`; their aggregate lands in `school_browser_rows`.
@@ -169,8 +206,6 @@ Production smoke checks used:
 
 Tracked in [`docs/backlog.md`](backlog.md):
 
-- wire the projection worker into the extraction pipeline or a scheduled refresh
 - move browser ranking into a SQL RPC/window-function path if traffic or corpus
   size makes the Edge Function table-read approach hot
-- add repo-native Playwright smoke tests
 - paginate CSV export beyond the current Edge Function page-size cap

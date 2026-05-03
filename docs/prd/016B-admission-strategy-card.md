@@ -1,6 +1,6 @@
 # PRD 016B: Admission strategy card — round-stratified ED admit rate, yield, wait-list, and admission factors (v1)
 
-**Status:** Approved 2026-05-02 after dual-voice adversarial review (Codex + independent subagent). Ready to implement *after Phase 0 measurement gate*.
+**Status:** Shipped 2026-05-03. Phase 0 gate passed, C21/C22 Tier 4 cleanup and targeted redrain shipped, `school_browser_rows` admission-strategy columns are live, and `AdmissionStrategyCard` is on school pages with ED/EA names and quality gating.
 **Created:** 2026-05-02
 **Author:** Anthony + Claude
 **Related:** [PRD 010](010-queryable-data-browser.md), [PRD 012](012-browser-field-expansion-after-v03.md), [PRD 015](015-institution-directory-and-cds-coverage.md), [PRD 016](016-academic-positioning-card.md), [PRD 017](017-match-list-builder.md) (deferred), [PRD 018](018-open-college-fit-data.md) (deferred)
