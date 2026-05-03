@@ -1,6 +1,6 @@
 # PRD 018: Open college fit data — merit-aid + Scorecard intelligence (v3)
 
-**Status:** Defined, not started. Pursue **after** PRD 016, **possibly instead of** PRD 017.
+**Status:** H2A extraction-quality sprint complete. Targeted Tier 4 redrain moved direct first-year institutional non-need grant aid coverage to 66.8%; next decision is public merit profile with caveats vs. a second H2A cleanup pass.
 **Created:** 2026-05-01
 **Author:** Anthony + Claude (autoplan)
 **Related:** [PRD 016](016-academic-positioning-card.md), [PRD 017](017-match-list-builder.md), [PRD 010](010-queryable-data-browser.md), [PRD 012](012-browser-field-expansion-after-v03.md), [Scorecard pipeline](../../tools/scorecard/README.md), [autoplan record](../../.claude/plans/system-instruction-you-are-working-starry-candle.md)

@@ -3822,6 +3822,15 @@ def _h_spaced_numbers(text: str) -> list[str]:
     return out
 
 
+def _h_cell_numbers(text: str) -> list[str]:
+    out: list[str] = []
+    for value in re.findall(r"\$?\s*\d[\d,]*(?:\.\d+)?", text):
+        num = _extract_number(value)
+        if num is not None:
+            out.append(num)
+    return out
+
+
 def _h_row_window(block: str, letter: str) -> str:
     lines = block.splitlines()
     start = None
@@ -3895,6 +3904,38 @@ def _h_layout_h2_rows(block: str) -> dict[str, dict]:
         for value, base in zip(column_values, bases):
             out[f"H.{base + offset + 1}"] = {"value": value, "source": "tier4_cleaner"}
     return out
+
+
+def _h2a_row_letter(row: dict) -> str | None:
+    label = row["label"].strip()
+    if label in _H2A_LETTER_OFFSETS:
+        return label
+
+    label_norm = _normalize_label(" ".join([row["label"], *row.get("values", [])[:1]]))
+    if (
+        "number of students in line a" in label_norm
+        and "no financial need" in label_norm
+        and "institutional non need based scholarship" in label_norm
+    ):
+        return "N"
+    if (
+        "average dollar amount" in label_norm
+        and "institutional non need based scholarship" in label_norm
+        and "students in line n" in label_norm
+    ):
+        return "O"
+    if (
+        "number of students in line a" in label_norm
+        and "institutional non need based athletic scholarship" in label_norm
+    ):
+        return "P"
+    if (
+        "average dollar amount" in label_norm
+        and "institutional non need based athletic" in label_norm
+        and "students in line p" in label_norm
+    ):
+        return "Q"
+    return None
 
 
 def resolve_h_financial_aid(
@@ -4155,8 +4196,14 @@ def resolve_h_financial_aid(
         }
         is_h2_continuation = bool(h2_continuation_rows) and not any(
             r["label"].strip() in set("ABCDEFGH") for r in rows
-        )
-        if not is_h2_like and not is_h2_continuation:
+        ) and not is_h2_like
+        h2a_continuation_rows = {
+            r["label"].strip()
+            for r in rows
+            if r["label"].strip() in _H2A_LETTER_OFFSETS
+        }
+        is_h2a_continuation = bool(h2a_continuation_rows) and not any(hdr_norm)
+        if not is_h2_like and not is_h2_continuation and not is_h2a_continuation:
             continue
 
         # Map each value column index → (grid_kind, base_offset)
@@ -4179,11 +4226,12 @@ def resolve_h_financial_aid(
         # in A-M treat as H2; if N-Q treat as H2A. Some tables mix both
         # (tables occasionally concatenate rows).
         has_h2_rows = any(r["label"].strip() in _H2_LETTER_OFFSETS for r in rows)
-        has_h2a_rows = any(r["label"].strip() in _H2A_LETTER_OFFSETS for r in rows)
+        has_h2a_rows = any(_h2a_row_letter(r) for r in rows)
 
         for row in rows:
             letter = row["label"].strip()
             values = row["values"]
+            h2a_letter = _h2a_row_letter(row)
 
             if letter in _H2_LETTER_OFFSETS and is_h2_continuation:
                 ofs = _H2_LETTER_OFFSETS[letter] + 1
@@ -4198,6 +4246,49 @@ def resolve_h_financial_aid(
                         out[qn] = {"value": num, "source": "tier4_cleaner"}
             elif letter in _H2_LETTER_OFFSETS and has_h2_rows:
                 ofs = _H2_LETTER_OFFSETS[letter] + 1  # A=1, B=2, …, M=13
+                label_norm = _normalize_label(" ".join([row["label"], *values[:1]]))
+                if (
+                    letter == "I"
+                    and "exclude any resources that were awarded to replace efc" in label_norm
+                ):
+                    for col_idx, base in col_to_h2_base:
+                        if col_idx >= len(values):
+                            continue
+                        num = _extract_number(values[col_idx])
+                        if num is None:
+                            continue
+                        qn = f"H.{base + _H2_LETTER_OFFSETS['J'] + 1}"
+                        if qn not in out:
+                            out[qn] = {"value": num, "source": "tier4_cleaner"}
+                    continue
+                if (
+                    letter == "K"
+                    and "average need based scholarship and grant award" in label_norm
+                    and "average need based self help award" in label_norm
+                ):
+                    for col_idx, base in col_to_h2_base:
+                        if col_idx >= len(values):
+                            continue
+                        nums = _h_cell_numbers(values[col_idx])
+                        for row_letter, num in zip(("K", "L"), nums[:2]):
+                            qn = f"H.{base + _H2_LETTER_OFFSETS[row_letter] + 1}"
+                            if qn not in out:
+                                out[qn] = {"value": num, "source": "tier4_cleaner"}
+                    continue
+                if (
+                    letter == "L"
+                    and "average need based loan" in label_norm
+                ):
+                    for col_idx, base in col_to_h2_base:
+                        if col_idx >= len(values):
+                            continue
+                        num = _extract_number(values[col_idx])
+                        if num is None:
+                            continue
+                        qn = f"H.{base + _H2_LETTER_OFFSETS['M'] + 1}"
+                        if qn not in out:
+                            out[qn] = {"value": num, "source": "tier4_cleaner"}
+                    continue
                 for col_idx, base in col_to_h2_base:
                     if col_idx >= len(values):
                         continue
@@ -4207,17 +4298,26 @@ def resolve_h_financial_aid(
                     qn = f"H.{base + ofs}"
                     if qn not in out:
                         out[qn] = {"value": num, "source": "tier4_cleaner"}
-            elif letter in _H2A_LETTER_OFFSETS and has_h2a_rows:
-                ofs = _H2A_LETTER_OFFSETS[letter] + 1  # N=1, O=2, P=3, Q=4
-                for col_idx, base_ofs in col_to_h2a_offset:
-                    if col_idx >= len(values):
-                        continue
-                    num = _extract_number(values[col_idx])
-                    if num is None:
-                        continue
-                    qn = f"H.2A{base_ofs + ofs:02d}"
-                    if qn not in out:
-                        out[qn] = {"value": num, "source": "tier4_cleaner"}
+            elif h2a_letter and has_h2a_rows:
+                ofs = _H2A_LETTER_OFFSETS[h2a_letter] + 1  # N=1, O=2, P=3, Q=4
+                if col_to_h2a_offset:
+                    for col_idx, base_ofs in col_to_h2a_offset:
+                        if col_idx >= len(values):
+                            continue
+                        num = _extract_number(values[col_idx])
+                        if num is None:
+                            continue
+                        qn = f"H.2A{base_ofs + ofs:02d}"
+                        if qn not in out:
+                            out[qn] = {"value": num, "source": "tier4_cleaner"}
+                elif is_h2a_continuation and len(values) >= 4:
+                    for raw, base_ofs in zip(values[1:4], (0, 4, 8)):
+                        num = _extract_number(raw)
+                        if num is None:
+                            continue
+                        qn = f"H.2A{base_ofs + ofs:02d}"
+                        if qn not in out:
+                            out[qn] = {"value": num, "source": "tier4_cleaner"}
 
     # --- H4 Bachelor's degree graduates count (inline) ---
     # Anchor: the *actual* H4 question line, not the preceding prose that
