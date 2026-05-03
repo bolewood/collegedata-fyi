@@ -200,62 +200,62 @@ DIRECT_METRIC_DEFINITIONS = {
     "sat_composite_p25": MetricDefinition(
         "sat_composite_p25", DirectAlias("C.905"), "number", True,
         "PRD 012 direct SAT Composite 25th percentile field.",
-        "sat_composite_p25", Decimal("400"), Decimal("1600"), True,
+        "sat_composite_p25", Decimal("400"), Decimal("1600"),
     ),
     "sat_composite_p50": MetricDefinition(
         "sat_composite_p50", DirectAlias("C.906"), "number", True,
         "PRD 012 direct SAT Composite 50th percentile field.",
-        "sat_composite_p50", Decimal("400"), Decimal("1600"), True,
+        "sat_composite_p50", Decimal("400"), Decimal("1600"),
     ),
     "sat_composite_p75": MetricDefinition(
         "sat_composite_p75", DirectAlias("C.907"), "number", True,
         "PRD 012 direct SAT Composite 75th percentile field.",
-        "sat_composite_p75", Decimal("400"), Decimal("1600"), True,
+        "sat_composite_p75", Decimal("400"), Decimal("1600"),
     ),
     "sat_ebrw_p25": MetricDefinition(
         "sat_ebrw_p25", DirectAlias("C.908"), "number", True,
         "PRD 012 direct SAT EBRW 25th percentile field.",
-        "sat_ebrw_p25", Decimal("200"), Decimal("800"), True,
+        "sat_ebrw_p25", Decimal("200"), Decimal("800"),
     ),
     "sat_ebrw_p50": MetricDefinition(
         "sat_ebrw_p50", DirectAlias("C.909"), "number", True,
         "PRD 012 direct SAT EBRW 50th percentile field.",
-        "sat_ebrw_p50", Decimal("200"), Decimal("800"), True,
+        "sat_ebrw_p50", Decimal("200"), Decimal("800"),
     ),
     "sat_ebrw_p75": MetricDefinition(
         "sat_ebrw_p75", DirectAlias("C.910"), "number", True,
         "PRD 012 direct SAT EBRW 75th percentile field.",
-        "sat_ebrw_p75", Decimal("200"), Decimal("800"), True,
+        "sat_ebrw_p75", Decimal("200"), Decimal("800"),
     ),
     "sat_math_p25": MetricDefinition(
         "sat_math_p25", DirectAlias("C.911"), "number", True,
         "PRD 012 direct SAT Math 25th percentile field.",
-        "sat_math_p25", Decimal("200"), Decimal("800"), True,
+        "sat_math_p25", Decimal("200"), Decimal("800"),
     ),
     "sat_math_p50": MetricDefinition(
         "sat_math_p50", DirectAlias("C.912"), "number", True,
         "PRD 012 direct SAT Math 50th percentile field.",
-        "sat_math_p50", Decimal("200"), Decimal("800"), True,
+        "sat_math_p50", Decimal("200"), Decimal("800"),
     ),
     "sat_math_p75": MetricDefinition(
         "sat_math_p75", DirectAlias("C.913"), "number", True,
         "PRD 012 direct SAT Math 75th percentile field.",
-        "sat_math_p75", Decimal("200"), Decimal("800"), True,
+        "sat_math_p75", Decimal("200"), Decimal("800"),
     ),
     "act_composite_p25": MetricDefinition(
         "act_composite_p25", DirectAlias("C.914"), "number", True,
         "PRD 012 direct ACT Composite 25th percentile field.",
-        "act_composite_p25", Decimal("1"), Decimal("36"), True,
+        "act_composite_p25", Decimal("1"), Decimal("36"),
     ),
     "act_composite_p50": MetricDefinition(
         "act_composite_p50", DirectAlias("C.915"), "number", True,
         "PRD 012 direct ACT Composite 50th percentile field.",
-        "act_composite_p50", Decimal("1"), Decimal("36"), True,
+        "act_composite_p50", Decimal("1"), Decimal("36"),
     ),
     "act_composite_p75": MetricDefinition(
         "act_composite_p75", DirectAlias("C.916"), "number", True,
         "PRD 012 direct ACT Composite 75th percentile field.",
-        "act_composite_p75", Decimal("1"), Decimal("36"), True,
+        "act_composite_p75", Decimal("1"), Decimal("36"),
     ),
 }
 
@@ -697,6 +697,15 @@ def int_from_decimal(value: Optional[Decimal]) -> Optional[int]:
         return None
 
 
+def rounded_int_from_decimal(value: Optional[Decimal]) -> Optional[int]:
+    if value is None:
+        return None
+    try:
+        return int(value.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+    except (InvalidOperation, ValueError, OverflowError):
+        return None
+
+
 def selected_parsed_value(
     selected: SelectedExtractionResult,
     schema_defs: dict[str, FieldDefinition],
@@ -1121,18 +1130,18 @@ def build_browser_row(
         "pell_rate": decimal_to_json(quantize_rate(scorecard.get("pell_grant_rate"))),
         "sat_submit_rate": decimal_to_json(metric_values.get("sat_submit_rate")),
         "act_submit_rate": decimal_to_json(metric_values.get("act_submit_rate")),
-        "sat_composite_p25": int_from_decimal(metric_values.get("sat_composite_p25")),
-        "sat_composite_p50": int_from_decimal(metric_values.get("sat_composite_p50")),
-        "sat_composite_p75": int_from_decimal(metric_values.get("sat_composite_p75")),
-        "sat_ebrw_p25": int_from_decimal(metric_values.get("sat_ebrw_p25")),
-        "sat_ebrw_p50": int_from_decimal(metric_values.get("sat_ebrw_p50")),
-        "sat_ebrw_p75": int_from_decimal(metric_values.get("sat_ebrw_p75")),
-        "sat_math_p25": int_from_decimal(metric_values.get("sat_math_p25")),
-        "sat_math_p50": int_from_decimal(metric_values.get("sat_math_p50")),
-        "sat_math_p75": int_from_decimal(metric_values.get("sat_math_p75")),
-        "act_composite_p25": int_from_decimal(metric_values.get("act_composite_p25")),
-        "act_composite_p50": int_from_decimal(metric_values.get("act_composite_p50")),
-        "act_composite_p75": int_from_decimal(metric_values.get("act_composite_p75")),
+        "sat_composite_p25": rounded_int_from_decimal(metric_values.get("sat_composite_p25")),
+        "sat_composite_p50": rounded_int_from_decimal(metric_values.get("sat_composite_p50")),
+        "sat_composite_p75": rounded_int_from_decimal(metric_values.get("sat_composite_p75")),
+        "sat_ebrw_p25": rounded_int_from_decimal(metric_values.get("sat_ebrw_p25")),
+        "sat_ebrw_p50": rounded_int_from_decimal(metric_values.get("sat_ebrw_p50")),
+        "sat_ebrw_p75": rounded_int_from_decimal(metric_values.get("sat_ebrw_p75")),
+        "sat_math_p25": rounded_int_from_decimal(metric_values.get("sat_math_p25")),
+        "sat_math_p50": rounded_int_from_decimal(metric_values.get("sat_math_p50")),
+        "sat_math_p75": rounded_int_from_decimal(metric_values.get("sat_math_p75")),
+        "act_composite_p25": rounded_int_from_decimal(metric_values.get("act_composite_p25")),
+        "act_composite_p50": rounded_int_from_decimal(metric_values.get("act_composite_p50")),
+        "act_composite_p75": rounded_int_from_decimal(metric_values.get("act_composite_p75")),
         **admission_strategy,
     }
 

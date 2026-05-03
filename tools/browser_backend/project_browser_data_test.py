@@ -360,25 +360,44 @@ class BrowserProjectionTests(unittest.TestCase):
             [
                 artifact(values={
                     "C.905": {"value": "399"},
-                    "C.906": {"value": "1450.5"},
                     "C.907": {"value": "1601"},
                     "C.914": {"value": "0"},
-                    "C.915": {"value": "33.5"},
                     "C.916": {"value": "37"},
                 })
             ],
             defs(),
         )
         by_field = {row["field_id"]: row for row in fields}
-        for field_id in ("C.905", "C.906", "C.907", "C.914", "C.915", "C.916"):
+        for field_id in ("C.905", "C.907", "C.914", "C.916"):
             self.assertEqual(by_field[field_id]["value_status"], "parse_error")
             self.assertIsNone(by_field[field_id]["value_num"])
         self.assertIsNone(browser["sat_composite_p25"])
-        self.assertIsNone(browser["sat_composite_p50"])
         self.assertIsNone(browser["sat_composite_p75"])
         self.assertIsNone(browser["act_composite_p25"])
-        self.assertIsNone(browser["act_composite_p50"])
         self.assertIsNone(browser["act_composite_p75"])
+
+    def test_sat_act_decimal_scores_are_preserved_and_browser_rounded(self):
+        fields, browser = build_projection_rows(
+            doc(),
+            [
+                artifact(values={
+                    "C.906": {"value": "1450.5"},
+                    "C.908": {"value": "477.5"},
+                    "C.915": {"value": "33.5"},
+                })
+            ],
+            defs(),
+        )
+        by_field = {row["field_id"]: row for row in fields}
+        self.assertEqual(by_field["C.906"]["value_status"], "reported")
+        self.assertEqual(by_field["C.906"]["value_num"], "1450.5")
+        self.assertEqual(by_field["C.908"]["value_status"], "reported")
+        self.assertEqual(by_field["C.908"]["value_num"], "477.5")
+        self.assertEqual(by_field["C.915"]["value_status"], "reported")
+        self.assertEqual(by_field["C.915"]["value_num"], "33.5")
+        self.assertEqual(browser["sat_composite_p50"], 1451)
+        self.assertEqual(browser["sat_ebrw_p25"], 478)
+        self.assertEqual(browser["act_composite_p50"], 34)
 
     def test_admission_strategy_columns_project_from_2025_schema(self):
         _fields, browser = build_projection_rows(

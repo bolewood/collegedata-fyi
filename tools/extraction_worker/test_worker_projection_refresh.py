@@ -3,6 +3,7 @@ from __future__ import annotations
 import unittest
 
 from worker import (
+    annotate_tier2_unmapped_fields,
     extraction_no_project,
     extraction_success,
     is_failure_action,
@@ -65,6 +66,32 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
             "yale",
             "uw",
         ])
+
+    def test_tier2_unmapped_fields_get_quality_warning(self):
+        canonical = {
+            "stats": {"unmapped_acroform_fields": 2},
+            "unmapped_fields": [
+                {"pdf_tag": "custom_field_1", "value": "x"},
+                {"pdf_tag": "legacy_tag", "value": "y"},
+            ],
+        }
+
+        count = annotate_tier2_unmapped_fields(canonical)
+
+        self.assertEqual(count, 2)
+        self.assertEqual(canonical["quality_warnings"][0]["code"], "tier2_unmapped_acroform_fields")
+        self.assertEqual(canonical["quality_warnings"][0]["sample_pdf_tags"], [
+            "custom_field_1",
+            "legacy_tag",
+        ])
+
+    def test_tier2_unmapped_fields_noops_when_clean(self):
+        canonical = {"stats": {"unmapped_acroform_fields": 0}}
+
+        count = annotate_tier2_unmapped_fields(canonical)
+
+        self.assertEqual(count, 0)
+        self.assertNotIn("quality_warnings", canonical)
 
 
 if __name__ == "__main__":

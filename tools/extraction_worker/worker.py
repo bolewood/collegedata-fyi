@@ -668,6 +668,38 @@ def run_tier2(pdf_bytes: bytes, schema: dict) -> dict:
         return tier2_extract(Path(tmp.name), schema)
 
 
+def annotate_tier2_unmapped_fields(canonical: dict) -> int:
+    """Promote Tier 2 unmapped AcroForm tags into an explicit warning.
+
+    The Tier 2 extractor already preserves `unmapped_fields` and a stats count
+    in the artifact notes. This annotation gives operators and downstream
+    consumers a stable quality-warning hook without introducing a new
+    extraction status enum.
+    """
+    stats = canonical.get("stats") or {}
+    unmapped_count = int(stats.get("unmapped_acroform_fields") or 0)
+    if unmapped_count <= 0:
+        return 0
+    unmapped_fields = canonical.get("unmapped_fields") or []
+    sample_tags = [
+        str(item.get("pdf_tag"))
+        for item in unmapped_fields[:10]
+        if isinstance(item, dict) and item.get("pdf_tag")
+    ]
+    warnings_list = canonical.setdefault("quality_warnings", [])
+    warnings_list.append({
+        "code": "tier2_unmapped_acroform_fields",
+        "severity": "warning",
+        "count": unmapped_count,
+        "sample_pdf_tags": sample_tags,
+        "message": (
+            "Populated AcroForm fields were present in the source PDF but did "
+            "not map to the selected CDS schema."
+        ),
+    })
+    return unmapped_count
+
+
 def _run_tier1(
     client: Client,
     document_id: str,
@@ -1083,6 +1115,20 @@ def extract_one(
     try:
         canonical = run_tier2(pdf_bytes, resolution.schema)
         attach_schema_metadata(canonical, resolution)
+        unmapped_count = annotate_tier2_unmapped_fields(canonical)
+        if unmapped_count:
+            sample_tags = [
+                item.get("pdf_tag")
+                for item in (canonical.get("unmapped_fields") or [])[:5]
+                if isinstance(item, dict)
+            ]
+            print(
+                f"    tier2_unmapped_warning: school={school_id} "
+                f"document={document_id} count={unmapped_count} "
+                f"sample_tags={sample_tags}",
+                file=sys.stderr,
+                flush=True,
+            )
     except Exception as e:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed", source_format)
