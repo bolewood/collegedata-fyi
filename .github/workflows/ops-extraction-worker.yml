@@ -25,6 +25,10 @@ on:
         description: "Field-count threshold for low-field docs in the summary."
         required: false
         default: "25"
+      min_year_start:
+        description: "Optional minimum CDS start year for targeted fresh-file drains, e.g. 2025."
+        required: false
+        default: ""
   schedule:
     # Small daily pending-row drain. Full corpus drains belong on manual
     # operator machines or a self-hosted runner, not regular hosted CI.
@@ -48,6 +52,7 @@ jobs:
       INPUT_INCLUDE_FAILED: ${{ github.event_name == 'workflow_dispatch' && inputs.include_failed || false }}
       INPUT_SEED_PROJECTION_METADATA: ${{ github.event_name != 'workflow_dispatch' || inputs.seed_projection_metadata }}
       INPUT_LOW_FIELD_THRESHOLD: ${{ github.event_name == 'workflow_dispatch' && inputs.low_field_threshold || '25' }}
+      INPUT_MIN_YEAR_START: ${{ github.event_name == 'workflow_dispatch' && inputs.min_year_start || '' }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:
@@ -84,6 +89,10 @@ jobs:
             echo "low_field_threshold must be an integer" >&2
             exit 2
           fi
+          if [[ -n "${INPUT_MIN_YEAR_START}" ]] && ! [[ "${INPUT_MIN_YEAR_START}" =~ ^[0-9]+$ ]]; then
+            echo "min_year_start must be an integer when provided" >&2
+            exit 2
+          fi
 
           mkdir -p ops-summary
           {
@@ -106,6 +115,9 @@ jobs:
           fi
           if [[ -n "${INPUT_SCHOOL}" ]]; then
             args+=(--school "${INPUT_SCHOOL}")
+          fi
+          if [[ -n "${INPUT_MIN_YEAR_START}" ]]; then
+            args+=(--min-year-start "${INPUT_MIN_YEAR_START}")
           fi
 
           python tools/extraction_worker/worker.py "${args[@]}" | tee ops-summary/worker.log

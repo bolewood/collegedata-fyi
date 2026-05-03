@@ -153,6 +153,29 @@ def mean_or_none(values: list[int]) -> float | None:
     return round(sum(values) / len(values), 2)
 
 
+def row_start_year(row: dict[str, Any]) -> int | None:
+    year = row.get("detected_year") or row.get("cds_year") or ""
+    try:
+        return int(str(year)[:4])
+    except Exception:
+        return None
+
+
+def discovered_at_sort_value(row: dict[str, Any]) -> int:
+    value = str(row.get("discovered_at") or "")
+    digits = "".join(ch for ch in value if ch.isdigit())
+    if not digits:
+        return 0
+    return int(digits[:20])
+
+
+def pending_doc_priority_key(row: dict[str, Any]) -> tuple[int, int, str]:
+    """Sort pending rows so fresh/current files beat older alphabetical backlog."""
+    year = row_start_year(row) or -1
+    school_id = str(row.get("school_id") or "")
+    return (-year, -discovered_at_sort_value(row), school_id)
+
+
 def write_run_summary(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
@@ -1388,7 +1411,7 @@ def main() -> int:
     ]
 
     query = client.table("cds_documents").select(
-        "id, school_id, cds_year, detected_year, source_format, extraction_status",
+        "id, school_id, cds_year, detected_year, source_format, extraction_status, discovered_at",
     )
     if args.include_failed:
         query = query.in_("extraction_status", ["extraction_pending", "failed"])
@@ -1403,17 +1426,11 @@ def main() -> int:
     started_at = utc_now_iso()
     docs = query.execute().data or []
     if args.min_year_start is not None:
-        def row_start_year(row: dict[str, Any]) -> int | None:
-            year = row.get("detected_year") or row.get("cds_year") or ""
-            try:
-                return int(str(year)[:4])
-            except Exception:
-                return None
-
         docs = [
             doc for doc in docs
             if (row_start_year(doc) or 0) >= args.min_year_start
         ]
+    docs = sorted(docs, key=pending_doc_priority_key)
     if args.limit:
         docs = docs[:args.limit]
     if not docs:
