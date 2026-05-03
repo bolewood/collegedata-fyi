@@ -11,6 +11,8 @@ import type {
   ScorecardSummary,
   SiteStats,
   InstitutionCoverage,
+  MeritProfileQuality,
+  MeritProfileRow,
 } from "./types";
 import type { SchoolAcademicProfile } from "./positioning";
 import type { AdmissionStrategyQuality, AdmissionStrategySchool } from "./admission-strategy";
@@ -104,6 +106,17 @@ function normalizeRate(value: unknown): number | null {
   const parsed = numberOrNull(value);
   if (parsed == null) return null;
   return parsed > 1 ? parsed / 100 : parsed;
+}
+
+function boolOrNull(value: unknown): boolean | null {
+  if (value == null) return null;
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "t", "yes", "y", "x", "1"].includes(normalized)) return true;
+    if (["false", "f", "no", "n", "0"].includes(normalized)) return false;
+  }
+  return null;
 }
 
 async function fetchPagedTableRows<T>(
@@ -691,6 +704,90 @@ export const fetchAvgGpaBySchoolId = cache(
     } catch (error) {
       console.warn(`fetchAvgGpaBySchoolId: ${String(error)}`);
       return { avgHsGpa: null, hsGpaSubmitRate: null };
+    }
+  },
+);
+
+export const fetchMeritProfileBySchoolId = cache(
+  async function fetchMeritProfileBySchoolId(
+    schoolId: string,
+  ): Promise<MeritProfileRow | null> {
+    try {
+      const { data, error } = await (supabase as unknown as UntypedSupabase)
+        .from("school_merit_profile")
+        .select(
+          "document_id, school_id, school_name, sub_institutional, ipeds_id, canonical_year, year_start, schema_version, source_format, producer, producer_version, data_quality_flag, archive_url, first_year_ft_students, all_ft_undergrads, need_grants_total, non_need_grants_total, aid_recipients_first_year_ft, aid_recipients_all_ft, avg_aid_package_first_year_ft, avg_aid_package_all_ft, avg_need_grant_first_year_ft, avg_need_grant_all_ft, avg_need_self_help_first_year_ft, avg_need_self_help_all_ft, non_need_aid_recipients_first_year_ft, avg_non_need_grant_first_year_ft, non_need_aid_recipients_all_ft, avg_non_need_grant_all_ft, non_need_aid_share_first_year_ft, non_need_aid_share_all_ft, institutional_need_aid_nonresident, institutional_non_need_aid_nonresident, avg_international_aid, institutional_aid_academics, cds_merit_core_count, cds_merit_field_count, merit_profile_quality, scorecard_data_year, earnings_6yr_median, earnings_8yr_median, earnings_10yr_median, earnings_10yr_p25, earnings_10yr_p75, median_debt_completers, median_debt_monthly_payment, avg_net_price, net_price_0_30k, net_price_30k_48k, net_price_48k_75k, net_price_75k_110k, net_price_110k_plus, graduation_rate_6yr, pell_grant_rate, federal_loan_rate, retention_rate_ft",
+        )
+        .eq("school_id", schoolId)
+        .limit(1)
+        .maybeSingle();
+
+      if (error || !data) {
+        if (error) console.warn(`fetchMeritProfileBySchoolId: ${error.message}`);
+        return null;
+      }
+
+      return {
+        documentId: String(data.document_id),
+        schoolId: String(data.school_id),
+        schoolName: String(data.school_name),
+        subInstitutional: data.sub_institutional ?? null,
+        ipedsId: data.ipeds_id ?? null,
+        cdsYear: String(data.canonical_year),
+        yearStart: numberOrNull(data.year_start),
+        schemaVersion: data.schema_version ?? null,
+        sourceFormat: data.source_format ?? null,
+        producer: data.producer ?? null,
+        producerVersion: data.producer_version ?? null,
+        dataQualityFlag: data.data_quality_flag ?? null,
+        archiveUrl: data.archive_url ?? null,
+        firstYearFtStudents: numberOrNull(data.first_year_ft_students),
+        allFtUndergrads: numberOrNull(data.all_ft_undergrads),
+        needGrantsTotal: numberOrNull(data.need_grants_total),
+        nonNeedGrantsTotal: numberOrNull(data.non_need_grants_total),
+        aidRecipientsFirstYearFt: numberOrNull(data.aid_recipients_first_year_ft),
+        aidRecipientsAllFt: numberOrNull(data.aid_recipients_all_ft),
+        avgAidPackageFirstYearFt: numberOrNull(data.avg_aid_package_first_year_ft),
+        avgAidPackageAllFt: numberOrNull(data.avg_aid_package_all_ft),
+        avgNeedGrantFirstYearFt: numberOrNull(data.avg_need_grant_first_year_ft),
+        avgNeedGrantAllFt: numberOrNull(data.avg_need_grant_all_ft),
+        avgNeedSelfHelpFirstYearFt: numberOrNull(data.avg_need_self_help_first_year_ft),
+        avgNeedSelfHelpAllFt: numberOrNull(data.avg_need_self_help_all_ft),
+        nonNeedAidRecipientsFirstYearFt: numberOrNull(data.non_need_aid_recipients_first_year_ft),
+        avgNonNeedGrantFirstYearFt: numberOrNull(data.avg_non_need_grant_first_year_ft),
+        nonNeedAidRecipientsAllFt: numberOrNull(data.non_need_aid_recipients_all_ft),
+        avgNonNeedGrantAllFt: numberOrNull(data.avg_non_need_grant_all_ft),
+        nonNeedAidShareFirstYearFt: normalizeRate(data.non_need_aid_share_first_year_ft),
+        nonNeedAidShareAllFt: normalizeRate(data.non_need_aid_share_all_ft),
+        institutionalNeedAidNonresident: boolOrNull(data.institutional_need_aid_nonresident),
+        institutionalNonNeedAidNonresident: boolOrNull(data.institutional_non_need_aid_nonresident),
+        avgInternationalAid: numberOrNull(data.avg_international_aid),
+        institutionalAidAcademics: boolOrNull(data.institutional_aid_academics),
+        cdsMeritCoreCount: numberOrNull(data.cds_merit_core_count) ?? 0,
+        cdsMeritFieldCount: numberOrNull(data.cds_merit_field_count) ?? 0,
+        meritProfileQuality: (data.merit_profile_quality ?? "missing") as MeritProfileQuality,
+        scorecardDataYear: data.scorecard_data_year ?? null,
+        earnings6yrMedian: numberOrNull(data.earnings_6yr_median),
+        earnings8yrMedian: numberOrNull(data.earnings_8yr_median),
+        earnings10yrMedian: numberOrNull(data.earnings_10yr_median),
+        earnings10yrP25: numberOrNull(data.earnings_10yr_p25),
+        earnings10yrP75: numberOrNull(data.earnings_10yr_p75),
+        medianDebtCompleters: numberOrNull(data.median_debt_completers),
+        medianDebtMonthlyPayment: numberOrNull(data.median_debt_monthly_payment),
+        avgNetPrice: numberOrNull(data.avg_net_price),
+        netPrice0_30k: numberOrNull(data.net_price_0_30k),
+        netPrice30k_48k: numberOrNull(data.net_price_30k_48k),
+        netPrice48k_75k: numberOrNull(data.net_price_48k_75k),
+        netPrice75k_110k: numberOrNull(data.net_price_75k_110k),
+        netPrice110kPlus: numberOrNull(data.net_price_110k_plus),
+        graduationRate6yr: normalizeRate(data.graduation_rate_6yr),
+        pellGrantRate: normalizeRate(data.pell_grant_rate),
+        federalLoanRate: normalizeRate(data.federal_loan_rate),
+        retentionRateFt: normalizeRate(data.retention_rate_ft),
+      };
+    } catch (error) {
+      console.warn(`fetchMeritProfileBySchoolId: ${String(error)}`);
+      return null;
     }
   },
 );

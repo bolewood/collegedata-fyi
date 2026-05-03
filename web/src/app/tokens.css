@@ -674,6 +674,143 @@
   .admission-strategy-stats { grid-template-columns: 1fr; }
 }
 
+/* Merit profile card. H-section financial-aid facts sit beside Scorecard
+   affordability context, while the caveat keeps source-reported award data
+   from reading like a price prediction. */
+.merit-profile-card {
+  margin-top: 40px;
+  padding-top: 24px;
+}
+.merit-profile-card__body {
+  margin-top: 10px;
+  padding: 28px 32px 22px;
+}
+.merit-profile-card__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+  gap: 28px;
+  align-items: start;
+}
+.merit-profile-card__title {
+  margin: 0;
+  max-width: 620px;
+  font-size: clamp(26px, 3vw, 34px);
+  line-height: 1.05;
+}
+.merit-profile-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 16px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--forest-ink);
+}
+.merit-profile-flags span {
+  border-top: 1px solid var(--rule);
+  padding-top: 8px;
+}
+.merit-profile-context {
+  border-left: 1px solid var(--rule-strong);
+  padding-left: 20px;
+}
+.merit-profile-context strong {
+  display: block;
+  margin: 6px 0;
+  font-size: 38px;
+  font-weight: 400;
+  line-height: 1;
+}
+.merit-profile-context small {
+  display: block;
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.merit-profile-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 26px;
+}
+.merit-profile-stat {
+  border-top: 2px solid var(--ink);
+  padding-top: 12px;
+}
+.merit-profile-stat--muted {
+  border-top-color: var(--rule-strong);
+}
+.merit-profile-stat span,
+.merit-profile-stat small {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  line-height: 1.45;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.merit-profile-stat strong {
+  display: block;
+  margin: 6px 0 5px;
+  font-size: 34px;
+  font-weight: 400;
+  line-height: 1;
+}
+.merit-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 22px;
+}
+.merit-profile-panel {
+  border-top: 1px solid var(--rule);
+  padding-top: 14px;
+}
+.merit-profile-panel p {
+  margin: 8px 0 0;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.merit-profile-caveat {
+  margin-top: 22px;
+  border: 1px solid var(--rule-strong);
+  padding: 14px 16px;
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.merit-profile-caveat strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ink);
+}
+.merit-profile-card__source {
+  margin-top: 26px;
+  padding-top: 14px;
+  font-size: 10.5px;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+@media (max-width: 820px) {
+  .merit-profile-card__body { padding: 24px 20px 20px; }
+  .merit-profile-card__head,
+  .merit-profile-grid {
+    grid-template-columns: 1fr;
+  }
+  .merit-profile-context {
+    border-left: 0;
+    border-top: 1px solid var(--rule);
+    padding-left: 0;
+    padding-top: 14px;
+  }
+  .merit-profile-stats { grid-template-columns: 1fr; }
+}
+
 /* Match list builder. Dense enough for repeated counselor use, with source
    links and export controls kept close to the ranking surface. */
 .match-page {

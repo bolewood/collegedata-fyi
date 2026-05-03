@@ -8,10 +8,12 @@ import {
   fetchBrowserRowBySchoolId,
   fetchAvgGpaBySchoolId,
   fetchAdmissionStrategyBySchoolId,
+  fetchMeritProfileBySchoolId,
 } from "@/lib/queries";
 import { OutcomesSection } from "@/components/OutcomesSection";
 import { PositioningCard } from "@/components/PositioningCard";
 import { AdmissionStrategyCard } from "@/components/AdmissionStrategyCard";
+import { MeritProfileCard } from "@/components/MeritProfileCard";
 import { SchoolDocumentsLedger } from "@/components/SchoolDocumentsLedger";
 import { ScorecardVintageNote } from "@/components/ScorecardVintageNote";
 import { Sparkline } from "@/components/Sparkline";
@@ -132,11 +134,12 @@ export default async function SchoolDetailPage({
   // only need the first one. Scorecard data is per-school-per-vintage, not
   // per-document, so one query returns everything.
   const ipedsId = docs.find((d) => d.ipeds_id)?.ipeds_id ?? null;
-  const [scorecard, browserRow, gpaProfile, admissionStrategySchool] = await Promise.all([
+  const [scorecard, browserRow, gpaProfile, admissionStrategySchool, meritProfile] = await Promise.all([
     fetchScorecardByIpedsId(ipedsId),
     fetchBrowserRowBySchoolId(school_id),
     fetchAvgGpaBySchoolId(school_id),
     fetchAdmissionStrategyBySchoolId(school_id),
+    fetchMeritProfileBySchoolId(school_id),
   ]);
   const positioningSchool = browserRow
     ? { ...browserRow, ...gpaProfile }
@@ -222,6 +225,13 @@ export default async function SchoolDetailPage({
   const admissionStrategySourceHref =
     storageUrl(admissionStrategySourceDoc?.source_storage_path ?? null) ??
     admissionStrategySchool?.archiveUrl ??
+    null;
+  const meritProfileSourceDoc = meritProfile
+    ? docs.find((doc) => doc.canonical_year === meritProfile.cdsYear) ?? docs[0]
+    : null;
+  const meritProfileSourceHref =
+    storageUrl(meritProfileSourceDoc?.source_storage_path ?? null) ??
+    meritProfile?.archiveUrl ??
     null;
 
   return (
@@ -347,6 +357,13 @@ export default async function SchoolDetailPage({
         <AdmissionStrategyCard
           school={admissionStrategySchool}
           sourceHref={admissionStrategySourceHref}
+        />
+      )}
+
+      {meritProfile && (
+        <MeritProfileCard
+          profile={meritProfile}
+          sourceHref={meritProfileSourceHref}
         />
       )}
 

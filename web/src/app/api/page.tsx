@@ -244,6 +244,79 @@ export default async function ApiDocsPage() {
           ]}
         />
         <Resource
+          name="school_merit_profile"
+          description="Latest primary 2024-25+ CDS Section H merit and need-aid facts per school, joined to selected College Scorecard affordability and outcome fields. Used by the school-page merit profile."
+          fields={[
+            "school_id",
+            "school_name",
+            "canonical_year",
+            "first_year_ft_students",
+            "non_need_aid_recipients_first_year_ft",
+            "avg_non_need_grant_first_year_ft",
+            "non_need_aid_share_first_year_ft",
+            "avg_net_price",
+            "graduation_rate_6yr",
+          ]}
+          allFields={[
+            "document_id",
+            "school_id",
+            "school_name",
+            "sub_institutional",
+            "ipeds_id",
+            "canonical_year",
+            "year_start",
+            "schema_version",
+            "source_format",
+            "producer",
+            "producer_version",
+            "data_quality_flag",
+            "archive_url",
+            "first_year_ft_students",
+            "all_ft_undergrads",
+            "need_grants_total",
+            "non_need_grants_total",
+            "aid_recipients_first_year_ft",
+            "aid_recipients_all_ft",
+            "avg_aid_package_first_year_ft",
+            "avg_aid_package_all_ft",
+            "avg_need_grant_first_year_ft",
+            "avg_need_grant_all_ft",
+            "avg_need_self_help_first_year_ft",
+            "avg_need_self_help_all_ft",
+            "non_need_aid_recipients_first_year_ft",
+            "avg_non_need_grant_first_year_ft",
+            "non_need_aid_recipients_all_ft",
+            "avg_non_need_grant_all_ft",
+            "non_need_aid_share_first_year_ft",
+            "non_need_aid_share_all_ft",
+            "institutional_need_aid_nonresident",
+            "institutional_non_need_aid_nonresident",
+            "avg_international_aid",
+            "institutional_aid_academics",
+            "cds_merit_core_count",
+            "cds_merit_field_count",
+            "merit_profile_quality",
+            "scorecard_data_year",
+            "earnings_6yr_median",
+            "earnings_8yr_median",
+            "earnings_10yr_median",
+            "earnings_10yr_p25",
+            "earnings_10yr_p75",
+            "median_debt_completers",
+            "median_debt_monthly_payment",
+            "avg_net_price",
+            "net_price_0_30k",
+            "net_price_30k_48k",
+            "net_price_48k_75k",
+            "net_price_75k_110k",
+            "net_price_110k_plus",
+            "graduation_rate_6yr",
+            "pell_grant_rate",
+            "federal_loan_rate",
+            "retention_rate_ft",
+          ]}
+        />
+        <Resource
           name="cds_documents"
           description="Raw archive table — one row per (school, sub-institution, year). Most consumers should prefer cds_manifest."
           fields={[
@@ -444,6 +517,23 @@ export default async function ApiDocsPage() {
         .
       </p>
       <CodeBlock>{`curl '${BASE}/rest/v1/school_browser_rows?school_id=eq.bowdoin&select=school_id,school_name,canonical_year,applied,admitted,yield_rate,ed_offered,ed_applicants,ed_admitted,ed_has_second_deadline,ea_offered,ea_restrictive,wait_list_policy,wait_list_offered,wait_list_accepted,wait_list_admitted,c711_first_gen_factor,c712_legacy_factor,c718_demonstrated_interest_factor,app_fee_amount,app_fee_waiver_offered,admission_strategy_card_quality' \\
+  -H 'apikey: <anon key>' \\
+  -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
+
+      <h3 className="mt-6 text-base font-semibold text-gray-900">
+        Fetch merit-aid context for one school
+      </h3>
+      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+        Merit profile data comes from <code>school_merit_profile</code>, a latest
+        primary CDS Section H view joined to Scorecard affordability and outcome
+        fields. H2A non-need award values are source-reported institutional facts,
+        not personalized price estimates. The card methodology is documented at{" "}
+        <Link href="/methodology/merit-profile" className="text-blue-700 underline hover:text-blue-900">
+          /methodology/merit-profile
+        </Link>
+        .
+      </p>
+      <CodeBlock>{`curl '${BASE}/rest/v1/school_merit_profile?school_id=eq.bowdoin&select=school_id,school_name,canonical_year,first_year_ft_students,non_need_aid_recipients_first_year_ft,avg_non_need_grant_first_year_ft,non_need_aid_share_first_year_ft,avg_net_price,graduation_rate_6yr,earnings_10yr_median' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 
