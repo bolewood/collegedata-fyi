@@ -1,6 +1,6 @@
 # PRD 016: Academic positioning card (v1)
 
-**Status:** Approved 2026-05-01, ready to implement
+**Status:** Shipped 2026-05-02. Academic positioning card, profile controls, methodology page, and fit-tier tests are live on school pages.
 **Created:** 2026-05-01
 **Author:** Anthony + Claude (autoplan-reviewed)
 **Related:** [PRD 010](010-queryable-data-browser.md), [PRD 012](012-browser-field-expansion-after-v03.md), [PRD 015](015-institution-directory-and-cds-coverage.md), [PRD 017](017-match-list-builder.md) (deferred), [PRD 018](018-open-college-fit-data.md) (deferred), [Design skeleton](../design/positioning-card-skeleton.md), [autoplan record](../../.claude/plans/system-instruction-you-are-working-starry-candle.md)

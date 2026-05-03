@@ -17,9 +17,9 @@ Run once per archive drain, or any time a new batch of documents lands in `extra
 |---|---|---|
 | `pdf_fillable` | PDF with an AcroForm that has ≥1 populated field | Tier 2 (deterministic `pypdf.get_fields()` extraction) |
 | `pdf_flat` | PDF with no AcroForm but extractable text | Tier 4 (Docling markdown + cleaner) |
-| `pdf_scanned` | PDF with no AcroForm and no extractable text | Tier 5 (OCR — not yet implemented) |
-| `xlsx` | XLSX magic bytes `PK\x03\x04` + `.xlsx` content | Tier 1 (openpyxl Answer Sheet — not yet implemented) |
-| `docx` | DOCX magic bytes `PK\x03\x04` + `word/document.xml` | Tier 3 (python-docx — not yet implemented) |
+| `pdf_scanned` | PDF with no AcroForm and no extractable text | Tier 5 (Tier 4 with force-OCR) |
+| `xlsx` | ZIP magic bytes + XLSX workbook internals | Tier 1 (openpyxl template/embedded answer-column extraction) |
+| `docx` | ZIP magic bytes + `word/document.xml` | Tier 3 (python-docx SDT reader — not yet implemented) |
 | `other` | Parse error or unexpected content type | Fails fast; operator investigates |
 
 ## Usage
@@ -50,14 +50,19 @@ Env vars (read from `.env` at the repo root): `SUPABASE_URL`, `SUPABASE_SERVICE_
 
 Prints a per-row log (`school_id / cds_year → source_format`) and a final distribution histogram so you can see the tier breakdown at a glance.
 
-## Known distribution (April 2026)
+## Known distribution (May 2026)
 
-The 2026-04-16 probe of a 32-school sample measured:
-- 84% `pdf_flat` (→ Tier 4)
-- 6% `pdf_fillable` (→ Tier 2, the high-accuracy path)
-- 10% other / miscellaneous
+Current production `cds_manifest` source-format distribution:
 
-The full-corpus distribution across 1,675 docs will surface as the extraction worker drains.
+- 3,390 `pdf_flat` (Tier 4)
+- 362 `xlsx` (Tier 1)
+- 127 `pdf_fillable` (Tier 2)
+- 20 `pdf_scanned` (Tier 5)
+- 9 `html` (Tier 6)
+- 11 `docx` (Tier 3 pending)
+
+PR #44 made ZIP classification content-aware, so DOCX files no longer route as
+XLSX just because both formats start with `PK\x03\x04`.
 
 ## See also
 

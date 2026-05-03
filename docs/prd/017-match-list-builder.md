@@ -1,6 +1,6 @@
 # PRD 017: Match list-builder microsite (v2)
 
-**Status:** In implementation. Activated by operator decision after PRD 016B gate and Tier 4 re-drain cleared on 2026-05-02.
+**Status:** Shipped 2026-05-03. Activated by operator decision after PRD 016B gate and Tier 4 re-drain cleared on 2026-05-02; delivered at `/match` with local-only save/share codes, Scorecard/directory enrichment, and strong-fit default sorting.
 **Created:** 2026-05-01
 **Author:** Anthony + Claude (autoplan)
 **Related:** [PRD 016](016-academic-positioning-card.md), [PRD 018](018-open-college-fit-data.md), [autoplan record](../../.claude/plans/system-instruction-you-are-working-starry-candle.md)

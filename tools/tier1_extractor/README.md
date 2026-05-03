@@ -22,7 +22,7 @@ This is the **Tier 1** extraction path:
 
 `build_cell_map(template_path)` opens the template in formula mode (not data-only). For the 2025-26 template, it walks every `CDS-*` sheet's hidden columns AA and AC, and parses each `=IF($D$4<>"",$D$4,"")`-style formula to extract the target cell reference. For the reduced 2024-25 answer sheet, where the hidden formula columns are not published, it falls back to the section-tab layout and maps each visible `Question Number` row to the adjacent `Answer` cell. The result is a `{question_number: (sheet_name, cell_ref)}` map with one entry per schema field for the selected template year.
 
-`extract(xlsx_path, schema, cell_map)` opens the filled workbook in data-only mode, reads the value at each mapped cell, and emits canonical JSON keyed by `question_number`. Missing sheets are flagged in the stats; missing cells count as empty.
+`extract(xlsx_path, schema, cell_map)` opens the filled workbook in data-only mode, reads the value at each mapped cell, and emits canonical JSON keyed by `question_number`. Missing sheets are flagged in the stats; missing cells count as empty. If the template map produces fewer than 25 populated fields, the extractor scans the workbook for embedded `Question Number` / `Answer` columns and uses that workbook-native cell map only when it recovers more fields.
 
 The extraction worker computes one cell map per canonical schema at startup and picks the map that matches the document's resolved schema year. Parsing each template takes ~2s; extracting a filled workbook takes ~1s.
 
@@ -73,7 +73,8 @@ Example summary:
     "cell_map_fields_total": 1105,
     "schema_fields_populated": 711,
     "empty_cells": 394,
-    "missing_sheets": []
+    "missing_sheets": [],
+    "extraction_layout": "template_cell_map"
   },
   "values": {
     "A.001": {
@@ -95,16 +96,19 @@ Same shape as Tier 2's output (keyed by canonical `question_number`) so downstre
 | XLSX | Fields populated | Result |
 |---|---:|---|
 | Missouri S&T 2025-26 | 711 / 1105 (64%) | End-to-end dry run, every sampled value matches source |
+| Virginia Tech 2025-26 | 680+ | Embedded answer-column fallback, production drain |
 | Aims Community College 2022-23 | 274 / 1105 (25%) | Drain pass |
 | Adelphi University (multiple years) | 36-58 | Drain pass, older template years |
 
-Corpus-wide: **289 tier1_xlsx artifacts** written across the first full drain (2026-04-20), median 307 fields populated, max 782.
+Corpus-wide: **362 XLSX source rows** are currently routed through Tier 1. In
+the `2024+` projection, the median populated field count is 521 and the max is
+782. Older template years and partial fills remain lower.
 
 ## Known gaps
 
 1. **Only shipped canonical years get deterministic maps.** The worker currently ships 2024-25 and 2025-26 templates. Filled XLSXs from 2019-20 or other unshipped years can use different cell positions; those docs fall back to the latest known schema unless a template/schema pair is added for that year.
-2. **Custom template variants.** Some schools post an Excel file that looks like a CDS but uses a custom layout (no standard section tabs, or renamed tabs). These fail with `"File contains no valid workbook part"` or populate zero fields. Route them to Tier 4 via PDF conversion as a fallback.
-3. **Format-sniffer false positives.** The worker's `sniff_format_from_bytes` currently returns `xlsx` for any ZIP file starting with `PK\x03\x04` — including DOCX files. When Tier 1 hits a DOCX, openpyxl raises `"File contains no valid workbook part"` and the worker marks the doc failed. PRD 007 adds an inner-file-list peek to the sniffer so DOCX routes to Tier 3 instead.
+2. **Custom template variants.** Some schools post an Excel file that looks like a CDS but uses a custom layout (no standard section tabs, no stable question/answer columns, or renamed tabs). These can still populate zero fields. Route them to Tier 4 via PDF conversion as a fallback.
+3. **DOCX is routed, not extracted.** ZIP internals are now inspected before routing, so DOCX no longer lands in Tier 1 as fake XLSX. Those rows correctly route to Tier 3, whose extractor is still pending PRD 007.
 4. **No type coercion.** Every value is emitted as a string, matching the Tier 2 pattern. Downstream consumers coerce per field using the schema's `value_type` metadata.
 
 ## See also

@@ -10,7 +10,7 @@
 
 1. Show HN: I archived every US college's Common Data Set so the data doesn't get memory-holed
 2. Show HN: An open, reproducible archive of every US college's Common Data Set
-3. Show HN: collegedata.fyi — open Common Data Set archive, queryable API, 697 schools
+3. Show HN: collegedata.fyi — open Common Data Set archive, queryable API, 6,322-school directory
 
 Recommended: option 1. Preservation-archive framing is the emotional hook; "data doesn't get memory-holed" is the part that generates discussion.
 
@@ -26,16 +26,17 @@ I fixed that.
 
 **What shipped:**
 
-- 697 schools indexed, 3,924 archived CDS documents, 98% extracted to a canonical 1,105-field schema
+- 6,322 institutions indexed, 3,950 archived CDS documents, 3,792 extracted to a canonical 1,105-field schema
 - Five of six extraction tiers running: filled XLSX (template cell-position map), fillable PDF (AcroForm direct read), flat PDF (Docling + schema-targeting cleaner), image-only scan (force-OCR), and structured HTML (normalizer that reuses the flat-PDF cleaner). DOCX is the only tier still pending
 - Public read-only REST API at `api.collegedata.fyi` — query the whole corpus with a public anon key, no account required
+- Queryable browser, coverage dashboard, academic positioning, admission strategy, match list builder, and merit profile data built on top of the archive
 - Public LLM-citable endpoint at `/api/facts/{school_id}` with the most-asked fields in a flat JSON shape
 - 94% accuracy on hand-audited schools (Harvard, Yale, Dartmouth, Harvey Mudd)
 - Source files archived on first discovery. If a school removes their CDS, the archive retains the original
 
 **Why the archive angle matters:** schools occasionally remove historical CDS PDFs during site migrations, domain changes, or because IR staff thinks "nobody looks at these anyway." MIT removed every CDS older than 2021 during a 2024 domain migration; the archive has those years because discovery ran before the migration. That's the part that makes this a preservation project, not just a scraping project.
 
-**The trick that made this cheap:** the CDS Initiative publishes a canonical machine-readable schema in the 2025-26 Excel template. I extract it programmatically (1,105 fields, stable question numbers, cross-year-consistent) so every school's data lands in the same shape. No schema design work; the Common Data Set Initiative already did it. A meaningful minority of schools publish their CDS as unflattened fillable PDFs — for those, extraction is a 20-line job via `pypdf.get_fields()`. For the rest (flat PDFs, most common), Docling + a schema-targeting cleaner handles 72 canonical fields plus an LLM fallback for the thin sections.
+**The trick that made this cheap:** the CDS Initiative publishes a canonical machine-readable schema in the 2025-26 Excel template. I extract it programmatically (1,105 fields, stable question numbers, cross-year-consistent) so every school's data lands in the same shape. No schema design work; the Common Data Set Initiative already did it. A meaningful minority of schools publish their CDS as unflattened fillable PDFs — for those, extraction is a 20-line job via `pypdf.get_fields()`. For the rest (flat PDFs, most common), Docling + a schema-targeting cleaner handles the high-value sections, with deterministic layout overlays and an LLM fallback for thin structural-failure cases.
 
 **Try it:**
 

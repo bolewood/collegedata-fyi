@@ -1,6 +1,6 @@
 # Extraction Quality
 
-*Last updated: April 28, 2026 (post Tier 4 v0.3 projection refresh and PRD 012 browser expansion)*
+*Last updated: May 3, 2026 (post PRD 015-018, fresh-row worker prioritization, and source-routing cleanup)*
 
 This document records current extraction accuracy across our pipeline. It's meant as an honest, calibrated self-assessment, not a marketing page. The numbers here are produced by reproducible scorers you can run yourself against our ground-truth fixtures in [`tools/extraction-validator/`](../tools/extraction-validator/).
 
@@ -15,20 +15,22 @@ The gap between the two is where the real work is.
 
 | Measure | Value |
 |---|---|
-| Schools indexed | 697 |
-| Archived CDS documents | 3,924 |
-| Documents with structured extraction | 3,841 (98%) |
-| Extraction artifacts by tier | 3,364 Tier 4+5 · 350 Tier 1 · 123 Tier 2 · 4 Tier 6 |
+| Institutions indexed | 6,322 Scorecard directory rows; 2,924 public in-scope coverage rows |
+| Archived CDS documents | 3,950 |
+| Documents with structured extraction | 3,792 (96.0%); 35 pending, 110 failed, 13 not applicable |
+| Documents by source format | 3,390 `pdf_flat` · 362 `xlsx` · 127 `pdf_fillable` · 20 `pdf_scanned` · 9 `html` · 11 `docx` |
 | Ground-truth score, hand-audited schools (average) | 94% |
-| Benchmark-school coverage, C1 admissions section (Tier 4) | 50-60% |
-| Benchmark-school coverage, 1,105-field schema (3-doc Tier 4 avg, post-Phase 6) | ~35-40% (Harvard 382, Yale 390, Dartmouth 343) |
+| Benchmark-school coverage, C1 admissions section (Tier 4) | Launch benchmark 50-60%; C21/C22 early-plan coverage materially improved in PRD 016B |
+| Benchmark-school coverage, 1,105-field schema (3-doc Tier 4 avg, post-Phase 6) | ~35-40% baseline; subsequent targeted resolvers improve product-critical sections rather than claiming full-schema parity |
 | Tier 4 v0.3 layout-overlay spike, 10-doc failure sample | 5,066 -> 5,602 fields (+536) |
-| `2024+` public field substrate after PRD 012 refresh | 217,910 field rows across 456 documents with fields |
-| `2024+` selected-document field coverage (mean / median) | 477.9 / 544 fields per document with fields |
+| Public long-form field substrate | 200,957 `cds_fields` rows |
+| Public browser serving rows | 475 `school_browser_rows` rows |
+| Public merit-profile rows | 383 `school_merit_profile` rows |
 | PRD 010 launch -> PRD 012 refresh, `cds_fields` | 113,836 -> 217,910 field rows (+104,074, +91.4%) |
 | PRD 012 SAT/ACT browser answerability | SAT median 67.2% primary clean · ACT 75th 66.1% primary clean |
 | Tier 1 XLSX field coverage (median per doc) | 521 fields in the current `2024+` projection (~47% of schema) |
 | Tier 1 XLSX field coverage (max per doc) | 782 fields (~71% of schema) |
+| 2025-26 extraction freshness | 118 archived 2025-26 rows: 101 extracted, 16 failed, 1 not applicable, 0 pending after the May 3 manual fresh-year drain |
 
 ## Pipeline tiers
 
@@ -36,10 +38,10 @@ The extraction pipeline routes each document to a tier based on its source forma
 
 | Tier | Input shape | Extractor | Status | Notes |
 |---|---|---|---|---|
-| 1 | Filled XLSX | Template cell-position map + openpyxl | ✅ Shipped 2026-04-20 | Parses the CDS Excel template's hidden lookup columns once; applies the map to any filled workbook. Deterministic on the standard template layout. 350 artifacts, median 307 fields/doc. |
+| 1 | Filled XLSX | Template/embedded answer-column cell map + openpyxl | ✅ Shipped 2026-04-20; hardened 2026-05-03 | Parses the CDS Excel template's hidden lookup columns once; applies the map to any filled workbook. Falls back to workbook-native Question Number / Answer columns when the standard template map produces near-zero fields. Deterministic on standard or embedded-answer layouts. |
 | 2 | Fillable PDF with AcroForm fields | `pypdf.get_fields()` | ✅ Shipped | Deterministic. Fields read directly from the PDF's form metadata. |
-| 3 | Filled DOCX | OOXML SDT reader + measured Docling fallback | 📄 [PRD 007](prd/007-tier3-docx-extraction.md) | Word template has 1,204 Structured Document Tags whose `w:tag` values match schema `word_tag` exactly. SDT-preserving DOCX should be deterministic; Docling fallback is planned for SDT-stripped Word tables. ~30-50 addressable docs today. Not yet built. |
-| 4 | Flattened PDF (most common) | Docling layout extraction + schema-targeting cleaner | ✅ Shipped | The hardest tier. Most of this document is about Tier 4. [PRD 005](prd/005-full-schema-extraction.md) Phase 6 shipped 2026-04-20: section-family resolvers took the cleaner from 72 -> ~380 fields (Harvard 382, Yale 390, Dartmouth 343). Tier 4 v0.3 adds a deterministic embedded-text layout overlay for Docling blind spots; the PRD 012 production projection now averages 430.6 field rows per Tier 4 document with fields in the `2024+` browser scope. |
+| 3 | Filled DOCX | OOXML SDT reader + measured Docling fallback | 📄 [PRD 007](prd/007-tier3-docx-extraction.md) | Word template has 1,204 Structured Document Tags whose `w:tag` values match schema `word_tag` exactly. SDT-preserving DOCX should be deterministic; Docling fallback is planned for SDT-stripped Word tables. The probe/worker now correctly route DOCX bytes to `source_format='docx'` instead of false-positive XLSX. Extractor not yet built. |
+| 4 | Flattened PDF (most common) | Docling layout extraction + schema-targeting cleaner | ✅ Shipped | The hardest tier. Most of this document is about Tier 4. [PRD 005](prd/005-full-schema-extraction.md) Phase 6 shipped 2026-04-20: section-family resolvers took the cleaner from 72 -> ~380 fields (Harvard 382, Yale 390, Dartmouth 343). Tier 4 v0.3 adds a deterministic embedded-text layout overlay. PRD 016B added C21/C22 early decision/action extraction and quality checks; PRD 018 added H1/H2/H2A merit/aid improvements for the school-page merit profile. |
 | 5 | Image-only scan | Tier 4 with `force_ocr=True` | ✅ Shipped 2026-04-20 | Same Docling pipeline, swaps in `EasyOcrOptions(force_full_page_ocr=True)`. Kennesaw State 2023-24 went from 0 fields (default lazy OCR) to 172 fields (force OCR) on 31 scanned pages. |
 | 6 | Structured HTML | `html_to_markdown` (BeautifulSoup + lxml) → `tier4_cleaner.clean` | ✅ Shipped 2026-04-20 | HTML normalizer + reuse of the Tier 4 cleaner. Archived HTML bytes are served as `text/plain` from the public Storage bucket to prevent XSS. MIT 2024-25 reference: 152 of 1,105 schema fields populated on first-drain without an alias table. See [PRD 008](prd/008-html-extraction.md). |
 
@@ -60,6 +62,14 @@ PRD 014 M3 added year-aware schema/template dispatch for 2024-25 and 2025-26:
 section-tab layout with question numbers in column A and answer cells in
 column C. Pre-2024 XLSX files still fall back to the latest canonical schema
 until older canonical mappings exist.
+
+PR #44 added an embedded answer-column fallback. Some school-published
+workbooks preserve their own `Question Number` / `Answer` columns even when
+they do not match the official template's cell positions. If the template map
+yields fewer than 25 populated fields, Tier 1 scans each worksheet for
+workbook-native question/answer columns and uses that map only when it recovers
+more fields. This is still deterministic; it is a second cell-map source, not
+fuzzy layout parsing.
 
 ## Tier 2: fillable PDFs (deterministic)
 
@@ -159,6 +169,34 @@ Those fields are now queryable through the browser backend, with companion
 submit-rate metadata. GPA and class-rank remain long-form only because scale and
 denominator semantics need a better UI before becoming first-class browser filters.
 
+### Product-surface targeted cleanup (May 2-3, 2026)
+
+PRD 016B and PRD 018 deliberately improved product-critical sections instead
+of claiming full-schema completion:
+
+- **Admission strategy:** Tier 4 now reads C21 early decision and C22 early
+  action fields, including ED applicants/admitted, second-deadline hints,
+  EA/restrictive-EA flags, wait-list counts, selected C7 factor rows, and
+  application-fee fields. `school_browser_rows` stores effective flags and
+  `admission_strategy_card_quality` so the frontend can suppress or caveat
+  inconsistent rows instead of making the card look more certain than the
+  source permits.
+- **Merit profile:** Tier 4 now handles more H1/H2/H2A layouts, including
+  non-need institutional scholarship/grant rows used by
+  `school_merit_profile`. The public view is explicitly school-reported CDS
+  Section H data plus Scorecard affordability/outcome context; it is not a
+  personalized merit-aid estimator.
+- **Fresh-year drain:** The worker now prioritizes rows by
+  `detected_year/cds_year` recency and `discovered_at` before older backlog
+  rows. Manual drains can also use `--min-year-start` and the GitHub Actions
+  ops workflow exposes `min_year_start`, so newly published 2025-26 files clear
+  before stale historical PDFs.
+- **Source routing:** ZIP bytes are now inspected internally before routing:
+  XLSX requires workbook content and DOCX requires `word/document.xml`.
+  Headless/archiver downloads also preserve document-like response bytes even
+  when hosting headers are misleading. This fixed DOCX-as-XLSX failures and
+  reduced false failures from WAF/interstitial handling.
+
 ### Corpus-wide coverage by section
 
 The single-digit averages mask wide section-to-section variance. These numbers are from the three-document benchmark (Harvard, Yale, Dartmouth 2024-25), post-Phase 6 expansion of the cleaner from 72 to ~380 fields:
@@ -239,14 +277,15 @@ Corpus-wide surveys are available via [`corpus_survey_tier4.py`](../tools/extrac
 
 Most of the structural work is shipped. What's left is either opportunistic coverage expansion or the one remaining tier.
 
-- **[PRD 005: Full-schema extraction](prd/005-full-schema-extraction.md)** — ✅ Phase 6 shipped 2026-04-20. Section-family resolvers took the Tier 4 cleaner from 72 → ~380 fields. Continuing to add resolvers for thinner sections is opportunistic work, triggered by specific school gaps.
+- **[PRD 005: Full-schema extraction](prd/005-full-schema-extraction.md)** — ✅ Phase 6 shipped 2026-04-20. Section-family resolvers took the Tier 4 cleaner from 72 -> ~380 fields. PRD 016B and PRD 018 continued that pattern for high-value C21/C22 and H1/H2/H2A surfaces. Continuing to add resolvers for thinner sections is opportunistic work, triggered by specific school gaps.
 - **[PRD 006: LLM fallback](prd/006-llm-fallback.md)** — ✅ Shipped 2026-04-20. Schema-aware Claude Haiku pass for structural-failure modes the deterministic cleaner can't recover. 244 2024-25 docs backfilled with mean 28.2 fields added per doc beyond the pre-Phase-6 cleaner baseline. Cache keyed on source+markdown+prompt sha so re-runs cost $0. See [`docs/tier4-llm-fallback.md`](tier4-llm-fallback.md) for the operator runbook.
 - **[PRD 007: Tier 3 DOCX extraction](prd/007-tier3-docx-extraction.md)** — the only remaining tier. Ships the SDT-based DOCX reader first, then evaluates Docling as a fallback for SDT-stripped Word tables. Unlocks Kent State's campus family (14 docs, SDT-preserving) and other structured-DOCX publications. Addressable corpus today is ~30-50 documents.
 
 Quality improvements fall into three categories, roughly in priority order:
 
-1. **Better upstream extraction** on flattened PDFs. Evaluating commercial document-extraction APIs against our ground-truth fixtures. A meaningful quality jump here would unlock most of the sections currently below 30% fill rate.
-2. **LLM fallback** for the structural failure modes the deterministic cleaner cannot recover. Prompts designed against the failure-mode catalog.
-3. **Community cleaners** for school-specific and template-specific variants. The [`cleaners.yaml`](../cleaners.yaml) registry is built for this; see [`CONTRIBUTING.md`](../CONTRIBUTING.md).
+1. **DOCX Tier 3.** The extractor is now the only missing tier. The probe/worker route DOCX correctly; the SDT reader still needs to ship.
+2. **Failed-row triage by root cause.** Remaining failures are mostly DOCX not implemented, publisher pages that return auth/WAF/interstitial HTML instead of source bytes, malformed/empty publisher files, and a small set of low/zero-field extracts that need school-specific inspection.
+3. **Better upstream extraction** on flattened PDFs. Evaluating commercial document-extraction APIs against our ground-truth fixtures. A meaningful quality jump here would unlock most of the sections currently below 30% fill rate.
+4. **Community cleaners** for school-specific and template-specific variants. The [`cleaners.yaml`](../cleaners.yaml) registry is built for this; see [`CONTRIBUTING.md`](../CONTRIBUTING.md).
 
 Contributions that directly advance any of these categories are especially welcome.

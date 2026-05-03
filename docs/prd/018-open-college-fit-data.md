@@ -1,6 +1,6 @@
 # PRD 018: Open college fit data — merit-aid + Scorecard intelligence (v3)
 
-**Status:** Product slice in progress. H2A extraction-quality sprint complete; targeted Tier 4 redrain moved direct first-year institutional non-need grant aid coverage to 66.8%, and the public `school_merit_profile` contract is being added as a latest-primary-CDS view with explicit caveats.
+**Status:** Shipped 2026-05-03. H2A extraction-quality sprint complete; targeted Tier 4 redrain moved direct first-year institutional non-need grant aid coverage to 66.8%; `school_merit_profile` is live as a latest-primary-CDS view with explicit caveats; the school-page `MeritProfileCard`, methodology page, API docs, and Sheets template are in production.
 **Created:** 2026-05-01
 **Author:** Anthony + Claude (autoplan)
 **Related:** [PRD 016](016-academic-positioning-card.md), [PRD 017](017-match-list-builder.md), [PRD 010](010-queryable-data-browser.md), [PRD 012](012-browser-field-expansion-after-v03.md), [Scorecard pipeline](../../tools/scorecard/README.md), [autoplan record](../../.claude/plans/system-instruction-you-are-working-starry-candle.md)
@@ -24,7 +24,7 @@ Decision tree at activation time, copied from PRD 017:
 - Both signals strong → build both, in parallel if budget allows, sequenced otherwise.
 - Neither signal → stop and revisit the audience hypothesis.
 
-## What ships (when activated)
+## What shipped
 
 ### `school_merit_profile` denormalized view
 
