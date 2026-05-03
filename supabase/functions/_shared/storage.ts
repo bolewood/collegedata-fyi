@@ -17,13 +17,16 @@ export function buildSourcePath(
   return `${schoolId}/${cdsYear}/${sha256}.${ext}`;
 }
 
-export function extForContentType(contentType: string | null, fallbackUrl: string): string | null {
+export function extForContentTypeOnly(contentType: string | null): "pdf" | "xlsx" | "docx" | "html" | null {
   const ct = (contentType ?? "").toLowerCase();
   if (ct.includes("application/pdf")) return "pdf";
   if (ct.includes("officedocument.spreadsheetml.sheet")) return "xlsx";
   if (ct.includes("officedocument.wordprocessingml.document")) return "docx";
   if (ct.includes("text/html")) return "html";
+  return null;
+}
 
+export function extForUrl(fallbackUrl: string): "pdf" | "xlsx" | "docx" | "html" | null {
   const lower = fallbackUrl.toLowerCase();
   if (lower.endsWith(".pdf") || lower.includes(".pdf?")) return "pdf";
   if (lower.endsWith(".xlsx") || lower.includes(".xlsx?")) return "xlsx";
@@ -31,6 +34,10 @@ export function extForContentType(contentType: string | null, fallbackUrl: strin
   if (lower.endsWith(".html") || lower.endsWith(".htm") ||
       lower.includes(".html?") || lower.includes(".htm?")) return "html";
   return null;
+}
+
+export function extForContentType(contentType: string | null, fallbackUrl: string): string | null {
+  return extForContentTypeOnly(contentType) ?? extForUrl(fallbackUrl);
 }
 
 // Magic-byte sniffer. Used as a last-resort fallback when content-type
@@ -98,11 +105,18 @@ export function extForResponse(
   finalUrl: string,
   bytes: Uint8Array,
 ): "pdf" | "xlsx" | "docx" | "html" | null {
-  const fromCt = extForContentType(contentType, finalUrl);
-  if (fromCt === "pdf" || fromCt === "xlsx" || fromCt === "docx" || fromCt === "html") {
-    return fromCt;
+  const fromBytes = sniffBytesForExt(bytes);
+  const fromCt = extForContentTypeOnly(contentType);
+  const fromUrl = extForUrl(finalUrl);
+
+  // WAF / auth challenges commonly return an HTML page at a URL ending in
+  // .pdf. Bytes are authoritative; do not archive those pages as PDFs.
+  if (fromBytes === "html" && (fromCt !== "html" || fromUrl !== "html")) {
+    return null;
   }
-  return sniffBytesForExt(bytes);
+
+  if (fromBytes) return fromBytes;
+  return fromCt ?? fromUrl;
 }
 
 // XSS mitigation (PRD 008): the `sources` Storage bucket is public-read,

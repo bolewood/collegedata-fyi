@@ -10,6 +10,7 @@ import unittest
 import zipfile
 
 from worker import (
+    choose_source_format,
     detect_year_from_bytes,
     detect_year_from_docx_bytes,
     sniff_format_from_bytes,
@@ -103,6 +104,19 @@ class SniffFormatFromBytesTest(unittest.TestCase):
 
     def test_unknown_bytes_route_other(self):
         self.assertEqual(sniff_format_from_bytes(b"\x00\x01garbage"), "other")
+
+    def test_choose_source_format_prefers_html_bytes_over_stale_pdf_label(self):
+        fmt, corrected = choose_source_format(
+            "pdf_flat",
+            b"<!DOCTYPE html><html><body>challenge</body></html>",
+        )
+        self.assertEqual(fmt, "html")
+        self.assertTrue(corrected)
+
+    def test_choose_source_format_keeps_declared_when_sniff_unknown(self):
+        fmt, corrected = choose_source_format("pdf_flat", b"\x00\x01garbage")
+        self.assertEqual(fmt, "pdf_flat")
+        self.assertFalse(corrected)
 
 
 class DetectYearFromDocxBytesTest(unittest.TestCase):

@@ -112,6 +112,7 @@ from html_to_markdown import html_to_markdown  # noqa: E402 (PRD 008 Tier 6)
 
 SCHEMA_DIR = _TOOLS_ROOT.parent / "schemas"
 TEMPLATE_DIR = SCHEMA_DIR / "templates"
+MIN_TIER1_FIELDS = 5
 
 
 @dataclass(frozen=True)
@@ -141,6 +142,8 @@ def is_failure_action(action: str) -> bool:
     if action == "already_extracted":
         return False
     if action == "no_source_artifact" or action.startswith("stub_"):
+        return True
+    if "_low_fields" in action:
         return True
     if "_error" in action or action.endswith("_no_tables"):
         return True
@@ -612,6 +615,14 @@ def sniff_format_from_bytes(data: bytes) -> str:
     return "other"
 
 
+def choose_source_format(declared: Optional[str], data: bytes) -> tuple[str, bool]:
+    """Choose the extraction route, preferring byte sniff over stale DB labels."""
+    sniffed = sniff_format_from_bytes(data)
+    if sniffed != "other" and sniffed != declared:
+        return sniffed, True
+    return declared or sniffed, False
+
+
 def artifact_already_extracted(
     client: Client,
     document_id: str,
@@ -678,6 +689,12 @@ def _run_tier1(
 
     producer = canonical["producer"]
     producer_version = canonical["producer_version"]
+    fields = canonical.get("stats", {}).get("schema_fields_populated", 0)
+
+    if fields < MIN_TIER1_FIELDS:
+        if not dry_run:
+            mark_extraction_status(client, document_id, "failed", source_format)
+        return extraction_no_project(f"tier1_low_fields ({fields} fields)")
 
     if not dry_run:
         if artifact_already_extracted(
@@ -694,7 +711,6 @@ def _run_tier1(
 
         mark_extraction_status(client, document_id, "extracted", source_format)
 
-    fields = canonical.get("stats", {}).get("schema_fields_populated", 0)
     return extraction_success(f"tier1_extracted ({fields} fields)")
 
 
@@ -1014,7 +1030,13 @@ def extract_one(
             flush=True,
         )
 
-    source_format = doc.get("source_format") or sniff_format_from_bytes(pdf_bytes)
+    source_format, format_corrected = choose_source_format(doc.get("source_format"), pdf_bytes)
+    if format_corrected:
+        print(
+            f"    format_correction: school={school_id} document={document_id} "
+            f"stored={doc.get('source_format') or 'null'} detected={source_format}",
+            flush=True,
+        )
 
     cell_map = (cell_maps or {}).get(resolution.schema_version)
     if source_format == "xlsx" and cell_map:

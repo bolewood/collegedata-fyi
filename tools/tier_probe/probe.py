@@ -43,6 +43,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import zipfile
 from collections import Counter
 from io import BytesIO
 from pathlib import Path
@@ -95,12 +96,19 @@ def detect_format(storage_path: str, data: bytes) -> tuple[str, dict]:
     if "." in storage_path:
         ext = storage_path.rsplit(".", 1)[-1].lower()
 
-    if ext == "xlsx":
-        return "xlsx", {"bytes": len(data)}
-    if ext == "docx":
-        return "docx", {"bytes": len(data)}
-    if ext != "pdf":
-        return "other", {"reason": f"unknown extension '{ext}'", "bytes": len(data)}
+    byte_format = sniff_format_from_bytes(data)
+    if byte_format == "html":
+        return "other", {
+            "reason": f"html bytes archived at .{ext or 'unknown'} path",
+            "bytes": len(data),
+        }
+    if byte_format in {"xlsx", "docx"}:
+        return byte_format, {"bytes": len(data)}
+    if byte_format == "other":
+        return "other", {
+            "reason": f"unknown bytes for extension '{ext or 'none'}'",
+            "bytes": len(data),
+        }
 
     try:
         reader = pypdf.PdfReader(BytesIO(data))
@@ -154,6 +162,32 @@ def detect_format(storage_path: str, data: bytes) -> tuple[str, dict]:
     if total_text >= TEXT_SCANNED_THRESHOLD:
         return "pdf_flat", diag
     return "pdf_scanned", diag
+
+
+def sniff_format_from_bytes(data: bytes) -> str:
+    if data.startswith(b"%PDF"):
+        return "pdf"
+    if data.startswith(b"PK\x03\x04"):
+        try:
+            names = zipfile.ZipFile(BytesIO(data)).namelist()
+        except (zipfile.BadZipFile, ValueError, EOFError):
+            return "other"
+        has_word = any(n.startswith("word/") for n in names)
+        has_xl = any(n.startswith("xl/") for n in names)
+        if has_word and not has_xl:
+            return "docx"
+        if has_xl and not has_word:
+            return "xlsx"
+        return "other"
+    head = data[:512].decode("utf-8", errors="ignore").lower().lstrip()
+    if (
+        head.startswith("<!doctype html")
+        or head.startswith("<html")
+        or head.startswith("<head")
+        or (head.startswith("<?xml") and "<html" in head)
+    ):
+        return "html"
+    return "other"
 
 
 def fetch_latest_source_artifact(client: Client, document_id: str) -> dict | None:

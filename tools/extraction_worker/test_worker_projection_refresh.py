@@ -29,6 +29,7 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
         self.assertFalse(is_failure_action("tier4_extracted (289 fields, 48 pages)"))
         self.assertTrue(is_failure_action("tier4_error: boom"))
         self.assertTrue(is_failure_action("stub_docx"))
+        self.assertTrue(is_failure_action("tier1_low_fields (0 fields)"))
         self.assertTrue(is_failure_action("no_source_artifact"))
 
     def test_summary_mean_rounding(self):
