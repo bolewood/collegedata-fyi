@@ -37,7 +37,9 @@ import re
 import sys
 import time
 import yaml
+import zipfile
 from datetime import datetime, timezone
+from io import BytesIO
 from pathlib import Path
 from typing import Optional
 
@@ -45,8 +47,12 @@ _TOOLS_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_TOOLS_ROOT / "extraction_worker"))
 from worker import load_env
 
-from playwright.sync_api import sync_playwright
 from supabase import create_client
+
+try:
+    from playwright.sync_api import sync_playwright
+except ModuleNotFoundError:  # pragma: no cover - exercised by operator envs
+    sync_playwright = None
 
 
 UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
@@ -58,16 +64,28 @@ DOCX_MAGIC = XLSX_MAGIC
 
 
 def detect_ext(body: bytes, content_type: str, url: str) -> Optional[str]:
-    """Same semantics as archive.ts extForResponse — content-type first,
-    URL suffix second, magic bytes third."""
+    """Same semantics as archive.ts extForResponse: bytes are authoritative."""
+    byte_ext = sniff_ext_from_bytes(body)
     ct = (content_type or "").lower()
+    url_ext = ext_from_url(url)
+
+    # Cloudflare/WAF challenges often come back as HTML at a .pdf URL. Never
+    # let the URL suffix turn those bytes into a source PDF.
+    if byte_ext == "html":
+        return None
+    if byte_ext:
+        return byte_ext
+
     if "application/pdf" in ct:
         return "pdf"
     if "officedocument.spreadsheetml.sheet" in ct:
         return "xlsx"
     if "officedocument.wordprocessingml.document" in ct:
         return "docx"
-    # URL suffix
+    return url_ext
+
+
+def ext_from_url(url: str) -> Optional[str]:
     u = url.lower().split("?")[0].split("#")[0]
     if u.endswith(".pdf"):
         return "pdf"
@@ -75,15 +93,34 @@ def detect_ext(body: bytes, content_type: str, url: str) -> Optional[str]:
         return "xlsx"
     if u.endswith(".docx"):
         return "docx"
-    # Magic bytes
+    if u.endswith(".html") or u.endswith(".htm"):
+        return "html"
+    return None
+
+
+def sniff_ext_from_bytes(body: bytes) -> Optional[str]:
     if body.startswith(PDF_MAGIC):
         return "pdf"
     if body.startswith(XLSX_MAGIC):
-        # xlsx vs docx distinguished by internal zip structure; skip for now.
-        # Peek at the central directory filename to tell them apart.
-        if b"word/" in body[:4096]:
+        try:
+            names = zipfile.ZipFile(BytesIO(body)).namelist()
+        except (zipfile.BadZipFile, ValueError, EOFError):
+            return None
+        has_word = any(n.startswith("word/") for n in names)
+        has_xl = any(n.startswith("xl/") for n in names)
+        if has_word and not has_xl:
             return "docx"
-        return "xlsx"
+        if has_xl and not has_word:
+            return "xlsx"
+        return None
+    head = body[:512].decode("utf-8", errors="ignore").lower().lstrip()
+    if (
+        head.startswith("<!doctype html")
+        or head.startswith("<html")
+        or head.startswith("<head")
+        or (head.startswith("<?xml") and "<html" in head)
+    ):
+        return "html"
     return None
 
 
@@ -287,6 +324,12 @@ def main() -> int:
 
     env = load_env(Path(args.env))
     sb = create_client(env["SUPABASE_URL"], env["SUPABASE_SERVICE_ROLE_KEY"])
+    if sync_playwright is None:
+        print(
+            "ERROR: playwright not installed. Run: pip install playwright && playwright install chromium",
+            file=sys.stderr,
+        )
+        return 2
 
     total_attempted = 0
     total_inserted = 0

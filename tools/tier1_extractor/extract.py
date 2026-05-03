@@ -44,10 +44,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import openpyxl
+from openpyxl.utils import get_column_letter
 
 
 PRODUCER_NAME = "tier1_xlsx"
-PRODUCER_VERSION = "0.1.0"
+PRODUCER_VERSION = "0.2.0"
+MIN_TEMPLATE_FIELDS_BEFORE_FALLBACK = 25
 
 # Default template path relative to the repo root.
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -140,11 +142,58 @@ def load_schema(schema_path: Path) -> dict:
 def extract(xlsx_path: Path, schema: dict, cell_map: dict[str, tuple[str, str]]) -> dict:
     """Extract values from a filled CDS XLSX using the template cell map."""
     wb = openpyxl.load_workbook(str(xlsx_path), data_only=True, read_only=True)
-    available_sheets = set(wb.sheetnames)
-
-    # Build question_number → schema field lookup.
     qnum_to_field = {f["question_number"]: f for f in schema["fields"]}
+    values, missing_sheets, empty_count = extract_values_from_cell_map(
+        wb,
+        cell_map,
+        qnum_to_field,
+    )
+    extraction_layout = "template_cell_map"
 
+    # Some schools publish populated workbooks where the hidden lookup layer
+    # itself is filled as a tabular export: Question Number / Question /
+    # Answer columns, often in AA/AB/AC. The standard template cell map points
+    # to the visible input cells and can produce zero coverage there. If that
+    # happens, fall back to the workbook's own answer columns.
+    if len(values) < MIN_TEMPLATE_FIELDS_BEFORE_FALLBACK:
+        embedded_map = build_embedded_answer_cell_map(wb)
+        if embedded_map:
+            fallback_values, fallback_missing, fallback_empty = extract_values_from_cell_map(
+                wb,
+                embedded_map,
+                qnum_to_field,
+            )
+            if len(fallback_values) > len(values):
+                values = fallback_values
+                missing_sheets = fallback_missing
+                empty_count = fallback_empty
+                extraction_layout = "embedded_answer_columns"
+
+    wb.close()
+
+    return {
+        "producer": PRODUCER_NAME,
+        "producer_version": PRODUCER_VERSION,
+        "schema_version": schema.get("schema_version"),
+        "source_xlsx": xlsx_path.name,
+        "extracted_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "stats": {
+            "cell_map_fields_total": len(cell_map),
+            "schema_fields_populated": len(values),
+            "empty_cells": empty_count,
+            "missing_sheets": sorted(missing_sheets),
+            "extraction_layout": extraction_layout,
+        },
+        "values": values,
+    }
+
+
+def extract_values_from_cell_map(
+    wb,
+    cell_map: dict[str, tuple[str, str]],
+    qnum_to_field: dict[str, dict],
+) -> tuple[dict, set[str], int]:
+    available_sheets = set(wb.sheetnames)
     values = {}
     missing_sheets = set()
     empty_count = 0
@@ -179,22 +228,43 @@ def extract(xlsx_path: Path, schema: dict, cell_map: dict[str, tuple[str, str]])
             "value_type": field.get("value_type"),
         }
 
-    wb.close()
+    return values, missing_sheets, empty_count
 
-    return {
-        "producer": PRODUCER_NAME,
-        "producer_version": PRODUCER_VERSION,
-        "schema_version": schema.get("schema_version"),
-        "source_xlsx": xlsx_path.name,
-        "extracted_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "stats": {
-            "cell_map_fields_total": len(cell_map),
-            "schema_fields_populated": len(values),
-            "empty_cells": empty_count,
-            "missing_sheets": sorted(missing_sheets),
-        },
-        "values": values,
-    }
+
+def build_embedded_answer_cell_map(wb) -> dict[str, tuple[str, str]]:
+    """Build qnum → answer-cell map from workbook-native answer columns."""
+    cell_map: dict[str, tuple[str, str]] = {}
+    for sheet_name in wb.sheetnames:
+        if not sheet_name.startswith("CDS-"):
+            continue
+        ws = wb[sheet_name]
+        header_row, qnum_col, answer_col = find_question_answer_columns(ws)
+        if not header_row:
+            continue
+        for row_idx in range(header_row + 1, ws.max_row + 1):
+            raw_qnum = ws.cell(row=row_idx, column=qnum_col).value
+            if not raw_qnum:
+                continue
+            qnum = normalize_question_number(str(raw_qnum))
+            cell_map[qnum] = (sheet_name, f"{get_column_letter(answer_col)}{row_idx}")
+    return cell_map
+
+
+def find_question_answer_columns(ws) -> tuple[int | None, int | None, int | None]:
+    max_col = min(ws.max_column, 40)
+    for row_idx in range(1, min(ws.max_row, 10) + 1):
+        labels: dict[str, int] = {}
+        for col_idx in range(1, max_col + 1):
+            value = ws.cell(row=row_idx, column=col_idx).value
+            if value is None:
+                continue
+            label = re.sub(r"\s+", " ", str(value).strip().lower())
+            labels[label] = col_idx
+        qnum_col = labels.get("question number") or labels.get("question numer")
+        answer_col = labels.get("answer")
+        if qnum_col and answer_col:
+            return row_idx, qnum_col, answer_col
+    return None, None, None
 
 
 def extract_from_bytes(
