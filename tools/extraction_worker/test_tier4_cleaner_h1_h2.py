@@ -90,6 +90,33 @@ Which needs-analysis methodology does your institution use in awarding instituti
         self.assertEqual(values["H.2A09"]["value"], "0")
         self.assertEqual(values["H.2A10"]["value"], "0")
 
+    def test_h2a_split_table_missing_n_letter_and_headerless_o_p_q_continuation(self):
+        markdown = """
+| Number of Enrolled Students Awarded Non-need- based Scholarships and Grants | First-time Full-time First-year Students | Full-time Undergrad (Incl. First-year.) | Less Than Full-time Undergrad |
+|---|---|---|---|
+| Number of students in line a who had no financial need and who were awarded institutional non-need-based scholarship or grant aid (exclude those who were awarded athletic awards and tuition benefits) | 226 | 1,208 | 19 |
+
+| O   | Average dollar amount of institutional non-need-based scholarship and grant aid awarded to students in line n        | $ 12,649   | $ 10,188   | $ 9,066   |
+|-----|----------------------------------------------------------------------------------------------------------------------|------------|------------|-----------|
+| P   | Number of students in line a who were awarded an institutional non-need-based athletic scholarship or grant          | 36         | 149        | 3         |
+| Q   | Average dollar amount of institutional non-need-based athletic scholarships and grants awarded to students in line p | $ 17,848   | $ 19,922   | $ 8,186   |
+"""
+
+        values = clean(markdown)
+
+        self.assertEqual(values["H.2A01"]["value"], "226")
+        self.assertEqual(values["H.2A02"]["value"], "12649")
+        self.assertEqual(values["H.2A03"]["value"], "36")
+        self.assertEqual(values["H.2A04"]["value"], "17848")
+        self.assertEqual(values["H.2A05"]["value"], "1208")
+        self.assertEqual(values["H.2A06"]["value"], "10188")
+        self.assertEqual(values["H.2A07"]["value"], "149")
+        self.assertEqual(values["H.2A08"]["value"], "19922")
+        self.assertEqual(values["H.2A09"]["value"], "19")
+        self.assertEqual(values["H.2A10"]["value"], "9066")
+        self.assertEqual(values["H.2A11"]["value"], "3")
+        self.assertEqual(values["H.2A12"]["value"], "8186")
+
     def test_h2_i_m_blank_header_continuation_table(self):
         markdown = """
 | I   | On average, the percentage of need that was met of students who were awarded any need-based aid. | 59%     | 55%     | 39%     |
@@ -117,6 +144,33 @@ Which needs-analysis methodology does your institution use in awarding instituti
         self.assertEqual(values["H.237"]["value"], "4164")
         self.assertEqual(values["H.238"]["value"], "3348")
         self.assertEqual(values["H.239"]["value"], "3343")
+
+    def test_h2_split_j_label_and_combined_k_l_cells(self):
+        markdown = """
+|    | Number of Enrolled Students Awarded Aid | First-time Full- time First-year Students | Full-time Undergrad (Incl. First-Year) | Less Than Full-time Undergrad |
+|----|-----------------------------------------|--------------------------------------------|-----------------------------------------|--------------------------------|
+| I  | On average, the percentage of need that was met of students who were awarded any need-based aid. Exclude any aid that was awarded in excess of need as well as any resources that were awarded to replace EFC (PLUS loans, unsubsidized loans, and private alternative loans) | 85.5% | 77.9% | 58.6% |
+|    | Exclude any resources that were awarded to replace EFC (PLUS loans, unsubsidized loans, and private alternative loans) | $ 29,751 | $ 27,265 | $ 17,967 |
+| K  | Average need-based scholarship and grant award of those in line e Average need-based self-help award (excluding PLUS | $ 25,236 $ 6,027 | $ 24,200 $ 6,786 | $ 15,366 $ 8,995 |
+| L  | loans, unsubsidized loans, and private alternative loans) of those in line f Average need-based loan (excluding PLUS loans, | $ 7,283 | $ 8,153 | $ |
+"""
+
+        values = clean(markdown)
+
+        self.assertEqual(values["H.209"]["value"], "85.5")
+        self.assertEqual(values["H.210"]["value"], "29751")
+        self.assertEqual(values["H.211"]["value"], "25236")
+        self.assertEqual(values["H.212"]["value"], "6027")
+        self.assertEqual(values["H.213"]["value"], "7283")
+        self.assertEqual(values["H.222"]["value"], "77.9")
+        self.assertEqual(values["H.223"]["value"], "27265")
+        self.assertEqual(values["H.224"]["value"], "24200")
+        self.assertEqual(values["H.225"]["value"], "6786")
+        self.assertEqual(values["H.226"]["value"], "8153")
+        self.assertEqual(values["H.235"]["value"], "58.6")
+        self.assertEqual(values["H.236"]["value"], "17967")
+        self.assertEqual(values["H.237"]["value"], "15366")
+        self.assertEqual(values["H.238"]["value"], "8995")
 
     def test_kenyon_layout_h1_h2_rows(self):
         supplemental = """

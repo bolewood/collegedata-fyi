@@ -1,6 +1,6 @@
 # PRD 018: Open college fit data — merit-aid + Scorecard intelligence (v3)
 
-**Status:** Defined, not started. Pursue **after** PRD 016, **possibly instead of** PRD 017.
+**Status:** Product slice in progress. H2A extraction-quality sprint complete; targeted Tier 4 redrain moved direct first-year institutional non-need grant aid coverage to 66.8%, and the public `school_merit_profile` contract is being added as a latest-primary-CDS view with explicit caveats.
 **Created:** 2026-05-01
 **Author:** Anthony + Claude (autoplan)
 **Related:** [PRD 016](016-academic-positioning-card.md), [PRD 017](017-match-list-builder.md), [PRD 010](010-queryable-data-browser.md), [PRD 012](012-browser-field-expansion-after-v03.md), [Scorecard pipeline](../../tools/scorecard/README.md), [autoplan record](../../.claude/plans/system-instruction-you-are-working-starry-candle.md)
@@ -46,7 +46,9 @@ Plus, joined from `scorecard_summary`:
 - Median earnings 6/8/10 years post-enrollment
 - Pell share
 
-The view exposes a single row per (school, latest-CDS-year) with both the CDS-derived merit numbers and the federal Scorecard outcome data side-by-side. This is the same pattern PRD 012's `school_browser_rows` follows for academic profile, applied to financial fit.
+The view exposes a single row per latest primary 2024-25+ school with both the CDS-derived merit numbers and the federal Scorecard outcome data side-by-side. This is the same pattern PRD 012's `school_browser_rows` follows for academic profile, applied to financial fit.
+
+Implementation note: v1 is a SQL view over `cds_fields` plus `school_browser_rows` and `scorecard_summary`, not a separate projection worker. That keeps the contract easy to review and automatically benefits from future extraction re-drains.
 
 ### Public PostgREST endpoint + documentation
 
@@ -127,12 +129,10 @@ The pattern is identical to PRD 010 / 012 — a denormalized view on top of `cds
 This is illustrative; re-scope at activation.
 
 **New:**
-- `tools/merit_backend/project_merit_data.py` — projection script
 - `supabase/migrations/<ts>_school_merit_profile.sql` — view or materialized table
 - `web/src/app/methodology/merit-profile/page.tsx` — methodology
-- `web/src/app/schools/[school_id]/fit/page.tsx` — thin UI (or section in existing page)
+- `web/src/app/schools/[school_id]/page.tsx` — thin existing-page section
 - `web/src/components/MeritProfileCard.tsx` — visual
-- `web/src/components/NetPriceByIncomeChart.tsx` — visual
 - `tools/sheets/merit-profile-template.csv` — Google Sheets template seed
 - `docs/prd/018-open-college-fit-data.md` — this file, expanded
 
@@ -157,7 +157,7 @@ This is illustrative; re-scope at activation.
 To be filled in at activation time. Sketch:
 
 1. The scoping spike completes and reports H-section answerability.
-2. Projection script produces a `school_merit_profile` populated for 200+ schools at >60% field completeness.
+2. `school_merit_profile` returns latest primary rows for the browser corpus with >60% core H-section answerability.
 3. PostgREST endpoint returns expected shapes; contract test passes.
 4. Google Sheets template imports the API correctly via `IMPORTDATA()`.
 5. Manual spot checks: 5 schools across selectivity (Bowdoin, MIT, UMD, Texas A&M, Berea) — verify the merit profile matches the published CDS PDF.

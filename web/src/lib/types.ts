@@ -10,6 +10,67 @@ export type ArtifactRow =
 export type ScorecardSummary =
   Database["public"]["Tables"]["scorecard_summary"]["Row"];
 
+export type MeritProfileQuality = "strong" | "partial" | "limited" | "missing";
+
+export interface MeritProfileRow {
+  documentId: string;
+  schoolId: string;
+  schoolName: string;
+  subInstitutional: string | null;
+  ipedsId: string | null;
+  cdsYear: string;
+  yearStart: number | null;
+  schemaVersion: string | null;
+  sourceFormat: string | null;
+  producer: string | null;
+  producerVersion: string | null;
+  dataQualityFlag: string | null;
+  archiveUrl: string | null;
+  firstYearFtStudents: number | null;
+  allFtUndergrads: number | null;
+  needGrantsTotal: number | null;
+  nonNeedGrantsTotal: number | null;
+  aidRecipientsFirstYearFt: number | null;
+  aidRecipientsAllFt: number | null;
+  avgAidPackageFirstYearFt: number | null;
+  avgAidPackageAllFt: number | null;
+  avgNeedGrantFirstYearFt: number | null;
+  avgNeedGrantAllFt: number | null;
+  avgNeedSelfHelpFirstYearFt: number | null;
+  avgNeedSelfHelpAllFt: number | null;
+  nonNeedAidRecipientsFirstYearFt: number | null;
+  avgNonNeedGrantFirstYearFt: number | null;
+  nonNeedAidRecipientsAllFt: number | null;
+  avgNonNeedGrantAllFt: number | null;
+  nonNeedAidShareFirstYearFt: number | null;
+  nonNeedAidShareAllFt: number | null;
+  institutionalNeedAidNonresident: boolean | null;
+  institutionalNonNeedAidNonresident: boolean | null;
+  avgInternationalAid: number | null;
+  institutionalAidAcademics: boolean | null;
+  cdsMeritCoreCount: number;
+  cdsMeritFieldCount: number;
+  meritProfileQuality: MeritProfileQuality;
+  scorecardDataYear: string | null;
+  earnings6yrMedian: number | null;
+  earnings8yrMedian: number | null;
+  earnings10yrMedian: number | null;
+  earnings10yrP25: number | null;
+  earnings10yrP75: number | null;
+  medianDebtCompleters: number | null;
+  medianDebtMonthlyPayment: number | null;
+  avgNetPrice: number | null;
+  netPrice0_30k: number | null;
+  netPrice30k_48k: number | null;
+  netPrice48k_75k: number | null;
+  netPrice75k_110k: number | null;
+  netPrice110kPlus: number | null;
+  graduationRate6yr: number | null;
+  pellGrantRate: number | null;
+  federalLoanRate: number | null;
+  retentionRateFt: number | null;
+}
+
 // Artifact notes are typed as Json in the generated schema.
 // This interface describes the actual runtime shape written by the
 // extraction pipeline (Tier 2 and Tier 4 cleaners).
