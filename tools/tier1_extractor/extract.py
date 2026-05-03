@@ -169,6 +169,12 @@ def extract(xlsx_path: Path, schema: dict, cell_map: dict[str, tuple[str, str]])
                 empty_count = fallback_empty
                 extraction_layout = "embedded_answer_columns"
 
+    academic_profile_recovered = recover_c9_academic_profile_values(
+        wb,
+        qnum_to_field,
+        values,
+    )
+
     wb.close()
 
     return {
@@ -183,6 +189,7 @@ def extract(xlsx_path: Path, schema: dict, cell_map: dict[str, tuple[str, str]])
             "empty_cells": empty_count,
             "missing_sheets": sorted(missing_sheets),
             "extraction_layout": extraction_layout,
+            "academic_profile_fields_recovered": academic_profile_recovered,
         },
         "values": values,
     }
@@ -229,6 +236,119 @@ def extract_values_from_cell_map(
         }
 
     return values, missing_sheets, empty_count
+
+
+def recover_c9_academic_profile_values(
+    wb,
+    qnum_to_field: dict[str, dict],
+    values: dict,
+) -> int:
+    """Recover C9 SAT/ACT profile fields from visible row labels.
+
+    Some school-published XLSX files preserve the CDS-C visible tables but shift
+    row positions relative to the official template. For academic profile rows,
+    the visible row labels and column order are stable enough to use as the
+    deterministic source of truth, and this avoids publishing application-date
+    cells as SAT Math percentiles when a workbook removed earlier template rows.
+    """
+    if "CDS-C" not in wb.sheetnames:
+        return 0
+    ws = wb["CDS-C"]
+    recovered: dict[str, object] = {}
+
+    submit_rows = {
+        "submitting sat scores": ("C.901", "C.903"),
+        "submitting act scores": ("C.902", "C.904"),
+    }
+    score_rows = {
+        "sat composite": ("C.905", "C.906", "C.907"),
+        "sat evidence based reading and writing": ("C.908", "C.909", "C.910"),
+        "sat math": ("C.911", "C.912", "C.913"),
+        "act composite": ("C.914", "C.915", "C.916"),
+    }
+
+    in_c9 = False
+    for row_idx in range(1, ws.max_row + 1):
+        row_values = [
+            ws.cell(row=row_idx, column=col_idx).value
+            for col_idx in range(1, min(ws.max_column, 12) + 1)
+        ]
+        row_text = " ".join(_norm_label(v) for v in row_values if v is not None)
+        if "percent and number of first time first year students" in row_text and "sat act" in row_text:
+            in_c9 = True
+            continue
+        if in_c9 and ("c10" in row_text or "class rank" in row_text):
+            break
+        if not in_c9:
+            continue
+
+        label_col = None
+        label = ""
+        for col_idx, value in enumerate(row_values, start=1):
+            normalized = _norm_label(value)
+            if not normalized:
+                continue
+            if normalized in submit_rows or normalized in score_rows:
+                label_col = col_idx
+                label = normalized
+            break
+        if not label_col:
+            continue
+
+        right_values = [
+            ws.cell(row=row_idx, column=col_idx).value
+            for col_idx in range(label_col + 1, min(ws.max_column, label_col + 8) + 1)
+        ]
+        usable = [value for value in right_values if _is_c9_value(value)]
+        if label in submit_rows and len(usable) >= 2:
+            percent_q, count_q = submit_rows[label]
+            recovered[percent_q] = usable[0]
+            recovered[count_q] = usable[1]
+        elif label in score_rows and len(usable) >= 3:
+            for qnum, value in zip(score_rows[label], usable[:3]):
+                recovered[qnum] = value
+
+    count = 0
+    for qnum, raw_value in recovered.items():
+        if qnum not in qnum_to_field:
+            continue
+        value = str(raw_value).strip()
+        if not value:
+            continue
+        if values.get(qnum, {}).get("value") == value:
+            continue
+        values[qnum] = _field_record(qnum, value, qnum_to_field)
+        count += 1
+    return count
+
+
+def _field_record(qnum: str, value: str, qnum_to_field: dict[str, dict]) -> dict:
+    field = qnum_to_field.get(qnum, {})
+    return {
+        "value": value,
+        "word_tag": field.get("word_tag"),
+        "question": field.get("question"),
+        "section": field.get("section"),
+        "subsection": field.get("subsection"),
+        "value_type": field.get("value_type"),
+    }
+
+
+def _norm_label(value) -> str:
+    if value is None:
+        return ""
+    text = str(value).strip().lower()
+    text = text.replace("&", " and ")
+    text = re.sub(r"[^a-z0-9]+", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _is_c9_value(value) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, bool):
+        return False
+    return bool(str(value).strip())
 
 
 def build_embedded_answer_cell_map(wb) -> dict[str, tuple[str, str]]:
