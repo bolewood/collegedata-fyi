@@ -18,6 +18,7 @@ const baseSchool: MatchBuilderSchool = {
   cdsYear: "2025-26",
   yearStart: 2025,
   archiveUrl: "https://example.com/base.pdf",
+  ipedsId: "100001",
   acceptanceRate: 0.4,
   satSubmitRate: 0.6,
   actSubmitRate: 0.4,
@@ -77,6 +78,54 @@ describe("match list helpers", () => {
         sort: "fit",
       }).map((school) => school.schoolId),
     ).toEqual(["base"]);
+  });
+
+  it("dedupes stale alias rows when the match profile is identical", () => {
+    const rows = rankMatchSchools({ act: 33 }, [
+      {
+        ...baseSchool,
+        documentId: "alias-doc",
+        schoolId: "georgia-institute-of-technology-main-campus",
+        schoolName: "Georgia Institute of Technology",
+        schoolUrl: "/schools/georgia-institute-of-technology-main-campus",
+        ipedsId: null,
+        acceptanceRate: 0.133386,
+        satCompositeP25: 1370,
+        satCompositeP50: 1460,
+        satCompositeP75: 1530,
+        actCompositeP25: 31,
+        actCompositeP50: 33,
+        actCompositeP75: 35,
+      },
+      {
+        ...baseSchool,
+        documentId: "canonical-doc",
+        schoolId: "georgia-tech",
+        schoolName: "Georgia Institute of Technology",
+        schoolUrl: "/schools/georgia-tech",
+        ipedsId: "139755",
+        acceptanceRate: 0.133386,
+        satCompositeP25: 1370,
+        satCompositeP50: 1460,
+        satCompositeP75: 1530,
+        actCompositeP25: 31,
+        actCompositeP50: 33,
+        actCompositeP75: 35,
+      },
+    ]);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].schoolId).toBe("georgia-tech");
+    expect(rows[0].documentId).toBe("canonical-doc");
+  });
+
+  it("keeps same-name schools separate when their IPEDS IDs differ", () => {
+    const rows = rankMatchSchools({ sat: 1350 }, [
+      { ...baseSchool, schoolId: "same-name-a", schoolName: "Example College", ipedsId: "100001" },
+      { ...baseSchool, schoolId: "same-name-b", schoolName: "Example College", ipedsId: "200002" },
+    ]);
+
+    expect(rows.map((row) => row.schoolId).sort()).toEqual(["same-name-a", "same-name-b"]);
   });
 
   it("keeps very selective schools visible when the academic fit is strong", () => {

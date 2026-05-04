@@ -24,6 +24,7 @@ export type MatchBuilderSchool = SchoolAcademicProfile & {
   archiveUrl: string | null;
   yearStart: number | null;
   schoolUrl: string;
+  ipedsId: string | null;
   state: string | null;
   control: SchoolControl;
   region: Region;
@@ -175,6 +176,64 @@ export function isRankableSchool(school: MatchBuilderSchool): boolean {
   return hasTestData;
 }
 
+function normalizedSchoolName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function nearlyEqual(a: number | null, b: number | null): boolean {
+  if (a == null || b == null) return a == null && b == null;
+  return Math.abs(a - b) < 0.000001;
+}
+
+function sameMatchProfile(a: MatchBuilderSchool, b: MatchBuilderSchool): boolean {
+  return (
+    nearlyEqual(a.acceptanceRate, b.acceptanceRate) &&
+    nearlyEqual(a.satCompositeP25, b.satCompositeP25) &&
+    nearlyEqual(a.satCompositeP50, b.satCompositeP50) &&
+    nearlyEqual(a.satCompositeP75, b.satCompositeP75) &&
+    nearlyEqual(a.actCompositeP25, b.actCompositeP25) &&
+    nearlyEqual(a.actCompositeP50, b.actCompositeP50) &&
+    nearlyEqual(a.actCompositeP75, b.actCompositeP75)
+  );
+}
+
+function shouldCollapseAliasDuplicate(a: MatchBuilderSchool, b: MatchBuilderSchool): boolean {
+  if (normalizedSchoolName(a.schoolName) !== normalizedSchoolName(b.schoolName)) return false;
+  if (!sameMatchProfile(a, b)) return false;
+  if (a.ipedsId != null && b.ipedsId != null && a.ipedsId !== b.ipedsId) return false;
+  return true;
+}
+
+function preferMatchDuplicate(a: MatchBuilderSchool, b: MatchBuilderSchool): MatchBuilderSchool {
+  if (a.ipedsId != null && b.ipedsId == null) return a;
+  if (b.ipedsId != null && a.ipedsId == null) return b;
+  const yearDelta = (b.yearStart ?? -1) - (a.yearStart ?? -1);
+  if (yearDelta > 0) return b;
+  if (yearDelta < 0) return a;
+  return a.schoolId.localeCompare(b.schoolId) <= 0 ? a : b;
+}
+
+export function dedupeMatchSchools(schools: MatchBuilderSchool[]): MatchBuilderSchool[] {
+  const groups = new Map<string, MatchBuilderSchool[]>();
+  for (const school of schools) {
+    const key = normalizedSchoolName(school.schoolName);
+    const siblings = groups.get(key) ?? [];
+    const duplicateIndex = siblings.findIndex((sibling) => shouldCollapseAliasDuplicate(sibling, school));
+    if (duplicateIndex === -1) {
+      siblings.push(school);
+    } else {
+      siblings[duplicateIndex] = preferMatchDuplicate(siblings[duplicateIndex], school);
+    }
+    groups.set(key, siblings);
+  }
+  return Array.from(groups.values()).flat();
+}
+
 export function applyMatchFilters(
   schools: MatchBuilderSchool[],
   filters: MatchFilters,
@@ -209,7 +268,7 @@ export function rankMatchSchools(
   schools: MatchBuilderSchool[],
   filters: MatchFilters = DEFAULT_MATCH_FILTERS,
 ): RankedMatchSchool[] {
-  return applyMatchFilters(schools, filters)
+  return dedupeMatchSchools(applyMatchFilters(schools, filters))
     .map((school) => {
       const result = scorePosition(profile, school);
       const bestPercentile = Math.max(result.satPercentile ?? -1, result.actPercentile ?? -1);

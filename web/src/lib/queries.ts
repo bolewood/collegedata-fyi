@@ -597,6 +597,7 @@ export const fetchMatchBuilderSchools = cache(
           schoolId,
           schoolName: String(row.school_name ?? schoolId),
           schoolUrl: `/schools/${schoolId}`,
+          ipedsId: row.ipeds_id ?? null,
           cdsYear: String(row.canonical_year),
           yearStart: numberOrNull(row.year_start),
           archiveUrl: row.archive_url ?? null,
