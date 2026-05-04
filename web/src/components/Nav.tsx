@@ -4,14 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Wordmark } from "./Wordmark";
 
-const NAV_LINKS = [
+const PRIMARY_NAV_LINKS = [
   { href: "/match", label: "Match" },
   { href: "/browse", label: "Browser" },
   { href: "/schools", label: "Schools" },
+  { href: "/api", label: "API" },
+];
+
+const SECONDARY_NAV_LINKS = [
   { href: "/coverage", label: "Coverage" },
   { href: "/recipes", label: "Recipes" },
   { href: "/about", label: "About" },
-  { href: "/api", label: "API" },
 ];
 
 // A nav link is "active" when the user is on that section. Section pages
@@ -41,7 +44,7 @@ export function Nav() {
           <Wordmark variant="dotted" size={20} />
         </Link>
         <div className="cd-nav-links">
-          {NAV_LINKS.map((l) => {
+          {PRIMARY_NAV_LINKS.map((l) => {
             const active = isActive(pathname, l.href);
             return (
               <Link
@@ -62,36 +65,82 @@ export function Nav() {
               </Link>
             );
           })}
-          <a
-            href="https://github.com/bolewood/collegedata-fyi"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="GitHub (opens in new tab)"
-            style={{
-              textDecoration: "none",
-              color: "var(--ink-3)",
-              paddingBottom: 2,
-              borderBottom: "1px solid transparent",
-              display: "inline-flex",
-              alignItems: "baseline",
-              gap: 4,
-            }}
-            className="nav-link"
-          >
-            GitHub
-            <span
-              aria-hidden="true"
-              style={{
-                fontSize: "0.75em",
-                color: "var(--ink-4)",
-                lineHeight: 1,
-              }}
-            >
-              ↗
-            </span>
-          </a>
+          <span className="cd-nav-secondary">
+            {SECONDARY_NAV_LINKS.map((l) => {
+              const active = isActive(pathname, l.href);
+              return (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  aria-current={active ? "page" : undefined}
+                  style={{
+                    textDecoration: "none",
+                    color: active ? "var(--ink)" : "var(--ink-3)",
+                    paddingBottom: 2,
+                    borderBottom: active
+                      ? "1px solid var(--ink)"
+                      : "1px solid transparent",
+                  }}
+                  className="nav-link"
+                >
+                  {l.label}
+                </Link>
+              );
+            })}
+            <GitHubNavLink />
+          </span>
+          <details className="cd-nav-more">
+            <summary>More</summary>
+            <div>
+              {SECONDARY_NAV_LINKS.map((l) => (
+                <Link key={l.href} href={l.href}>
+                  {l.label}
+                </Link>
+              ))}
+              <a
+                href="https://github.com/bolewood/collegedata-fyi"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                GitHub ↗
+              </a>
+            </div>
+          </details>
         </div>
       </div>
     </nav>
+  );
+}
+
+function GitHubNavLink() {
+  return (
+    <a
+      href="https://github.com/bolewood/collegedata-fyi"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="GitHub (opens in new tab)"
+      style={{
+        textDecoration: "none",
+        color: "var(--ink-3)",
+        paddingBottom: 2,
+        borderBottom: "1px solid transparent",
+        display: "inline-flex",
+        alignItems: "baseline",
+        gap: 4,
+      }}
+      className="nav-link"
+    >
+      GitHub
+      <span
+        aria-hidden="true"
+        style={{
+          fontSize: "0.75em",
+          color: "var(--ink-4)",
+          lineHeight: 1,
+        }}
+      >
+        ↗
+      </span>
+    </a>
   );
 }

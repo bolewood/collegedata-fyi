@@ -314,13 +314,14 @@ export default async function SchoolDetailPage({
             {carnegieCode != null && (
               <span
                 className="mono"
+                title="Federal College Scorecard Carnegie basic classification code"
                 style={{
                   fontSize: 11.5,
                   color: "var(--ink-3)",
                   letterSpacing: "0.05em",
                 }}
               >
-                CARNEGIE {carnegieCode}
+                CARNEGIE CLASS {carnegieCode}
               </span>
             )}
           </div>

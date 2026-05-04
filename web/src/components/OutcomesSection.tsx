@@ -142,7 +142,7 @@ export function OutcomesSection({
               marginTop: 14,
               paddingTop: 20,
               display: "grid",
-              gridTemplateColumns: `repeat(${Math.min(completion.length, 6)}, 1fr)`,
+              gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
               gap: 24,
             }}
           >

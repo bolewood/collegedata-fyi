@@ -23,6 +23,23 @@ function statusChipClass(status: string): string {
   }
 }
 
+function downloadLabel(format: string | null): string {
+  switch (format) {
+    case "xlsx":
+      return "Download XLSX";
+    case "docx":
+      return "Download DOCX";
+    case "html":
+      return "Download HTML";
+    case "pdf_fillable":
+    case "pdf_flat":
+    case "pdf_scanned":
+      return "Download PDF";
+    default:
+      return "Download source";
+  }
+}
+
 // One row of the documents ledger. Year sits in display serif; the format
 // and status are mono chips; download/view actions are right-aligned. Last
 // row drops the dashed separator so the ledger ends on a hairline rule.
@@ -45,19 +62,15 @@ export function DocumentCard({
     ? formatBadgeLabel(doc.source_format)
     : null;
 
-  const rowStyle: React.CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: "96px 1fr auto",
-    gap: 20,
-    alignItems: "center",
-    padding: "16px 0",
-    borderBottom: isLast
-      ? "1px solid var(--rule)"
-      : "1px dashed var(--rule)",
-  };
-
   return (
-    <div style={rowStyle}>
+    <div
+      className="document-card-row"
+      style={{
+        borderBottom: isLast
+          ? "1px solid var(--rule)"
+          : "1px dashed var(--rule)",
+      }}
+    >
       <span
         className="serif nums"
         style={{ fontSize: 24, letterSpacing: "-0.01em" }}
@@ -97,14 +110,7 @@ export function DocumentCard({
         )}
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          gap: 18,
-          alignItems: "center",
-          fontSize: 13,
-        }}
-      >
+      <div className="document-card-row__actions">
         {canLink && (
           <Link href={`/schools/${doc.school_id}/${doc.canonical_year}`}>
             View fields →
@@ -112,7 +118,7 @@ export function DocumentCard({
         )}
         {pdfUrl ? (
           <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
-            Download PDF
+            {downloadLabel(doc.source_format)}
           </a>
         ) : sourceUrl ? (
           <a href={sourceUrl} target="_blank" rel="noopener noreferrer">

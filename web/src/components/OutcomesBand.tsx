@@ -72,12 +72,12 @@ export function OutcomesBand({ scorecard }: { scorecard: ScorecardSummary }) {
 
   return (
     <div
-      className="rule-2"
+      className="rule-2 outcomes-band"
       style={{
         marginTop: 20,
         paddingTop: 24,
         display: "grid",
-        gridTemplateColumns: `repeat(${cards.length}, 1fr)`,
+        gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
         gap: 32,
       }}
     >

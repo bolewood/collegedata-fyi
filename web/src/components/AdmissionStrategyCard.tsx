@@ -242,16 +242,17 @@ export function AdmissionStrategyCard({
           )}
         </div>
 
-        <div className="admission-strategy-card__source rule mono">
-          § SOURCE: COMMON DATA SET {school.cdsYear} · §C.21 §C.22 §C.2 §C.7 §C.13 ·{" "}
-          <Link href="/methodology/admission-strategy">METHOD →</Link>
+        <div className="admission-strategy-card__source card-source-actions rule mono">
+          <span>§ SOURCE: COMMON DATA SET {school.cdsYear} · §C.21 §C.22 §C.2 §C.7 §C.13</span>
+          <span>
+            <Link href="/methodology/admission-strategy">METHOD →</Link>
+          </span>
           {sourceHref ? (
-            <>
-              {" "}·{" "}
+            <span>
               <a href={sourceHref} target="_blank" rel="noopener noreferrer">
                 ARCHIVED SOURCE →
               </a>
-            </>
+            </span>
           ) : null}
         </div>
       </div>

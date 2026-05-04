@@ -18,6 +18,12 @@ function formatScore(value: number | null): string {
   return value == null ? "-" : value.toLocaleString();
 }
 
+function submitRateCaption(submitRate: number | null): string {
+  return submitRate == null
+    ? "SUBMIT RATE NOT REPORTED"
+    : `FROM THE ${formatPercent(submitRate)} OF ADMITS WHO SUBMITTED SCORES`;
+}
+
 function RangeStrip({
   label,
   p25,
@@ -50,7 +56,7 @@ function RangeStrip({
       <div className="positioning-range__caption">
         {hasRange ? (
           <>
-            § FROM THE {formatPercent(submitRate)} OF ADMITS WHO SUBMITTED SCORES · {year} CDS ·{" "}
+            § {submitRateCaption(submitRate)} · {year} CDS ·{" "}
             <Link href="/methodology/positioning">METHOD →</Link>
           </>
         ) : (
@@ -104,15 +110,14 @@ export function PositioningCard({ school, sourceHref }: PositioningCardProps) {
           <PositioningCardProfile school={school} />
         </div>
 
-        <div className="positioning-card__source rule mono">
-          § SOURCE: COMMON DATA SET {school.cdsYear} · §C.7 §C.9 §C.11 §C.12
+        <div className="positioning-card__source card-source-actions rule mono">
+          <span>§ SOURCE: COMMON DATA SET {school.cdsYear} · §C.7 §C.9 §C.11 §C.12</span>
           {sourceHref ? (
-            <>
-              {" "}·{" "}
+            <span>
               <a href={sourceHref} target="_blank" rel="noopener noreferrer">
                 ARCHIVED SOURCE →
               </a>
-            </>
+            </span>
           ) : null}
         </div>
       </div>
