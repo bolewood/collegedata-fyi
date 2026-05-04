@@ -1099,9 +1099,16 @@
   line-height: 1.4;
   text-transform: uppercase;
 }
+.match-school-row__fitline {
+  margin-top: 7px;
+  color: var(--forest);
+  font-size: 11px;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
 .match-school-row__metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
   gap: 10px;
 }
 .match-school-row__metrics > div {
@@ -1119,9 +1126,10 @@
   display: block;
   margin-top: 4px;
   font-family: var(--serif);
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 400;
-  line-height: 1;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
 }
 .match-school-row__actions {
   grid-column: 1 / -1;
@@ -1198,6 +1206,6 @@
     grid-template-columns: 1.2fr 1.8fr;
   }
   .match-school-row__metrics {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
   }
 }
