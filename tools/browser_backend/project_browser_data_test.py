@@ -58,6 +58,21 @@ def defs():
             "C.901": FieldDefinition("2024-25", "C.901", "Submitting SAT Scores", "Admission", "Profile", "Whole Number or Round to Nearest Tenths"),
         },
         "2025-26": {
+            "C.101": FieldDefinition("2025-26", "C.101", "Males applied", "Admission", "Applications", "Number"),
+            "C.102": FieldDefinition("2025-26", "C.102", "Females applied", "Admission", "Applications", "Number"),
+            "C.103": FieldDefinition("2025-26", "C.103", "Unknown sex applied", "Admission", "Applications", "Number"),
+            "C.104": FieldDefinition("2025-26", "C.104", "Males admitted", "Admission", "Applications", "Number"),
+            "C.105": FieldDefinition("2025-26", "C.105", "Females admitted", "Admission", "Applications", "Number"),
+            "C.106": FieldDefinition("2025-26", "C.106", "Unknown sex admitted", "Admission", "Applications", "Number"),
+            "C.107": FieldDefinition("2025-26", "C.107", "Males enrolled", "Admission", "Applications", "Number"),
+            "C.108": FieldDefinition("2025-26", "C.108", "Females enrolled", "Admission", "Applications", "Number"),
+            "C.109": FieldDefinition("2025-26", "C.109", "Unknown sex enrolled", "Admission", "Applications", "Number"),
+            "C.110": FieldDefinition("2025-26", "C.110", "Males full-time enrolled", "Admission", "Applications", "Number"),
+            "C.111": FieldDefinition("2025-26", "C.111", "Males part-time enrolled", "Admission", "Applications", "Number"),
+            "C.112": FieldDefinition("2025-26", "C.112", "Females full-time enrolled", "Admission", "Applications", "Number"),
+            "C.113": FieldDefinition("2025-26", "C.113", "Females part-time enrolled", "Admission", "Applications", "Number"),
+            "C.114": FieldDefinition("2025-26", "C.114", "Unknown sex full-time enrolled", "Admission", "Applications", "Number"),
+            "C.115": FieldDefinition("2025-26", "C.115", "Unknown sex part-time enrolled", "Admission", "Applications", "Number"),
             "C.116": FieldDefinition("2025-26", "C.116", "Applied", "Admission", "Applications", "Number"),
             "C.117": FieldDefinition("2025-26", "C.117", "Admitted", "Admission", "Applications", "Number"),
             "C.118": FieldDefinition("2025-26", "C.118", "Enrolled", "Admission", "Applications", "Number"),
@@ -219,6 +234,51 @@ class BrowserProjectionTests(unittest.TestCase):
         self.assertEqual(browser["enrolled_first_year"], 240)
         self.assertIsNone(browser["acceptance_rate"])
         self.assertIsNone(browser["yield_rate"])
+
+    def test_2025_admissions_metrics_fall_back_to_gender_split_components(self):
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2025-26"),
+            [
+                artifact(values={
+                    "C.101": {"value": "22,819"},
+                    "C.102": {"value": "27,445"},
+                    "C.103": {"value": "0"},
+                    "C.104": {"value": "1,189"},
+                    "C.105": {"value": "1,198"},
+                    "C.106": {"value": "0"},
+                    "C.107": {"value": "799"},
+                    "C.108": {"value": "834"},
+                    "C.109": {"value": "0"},
+                })
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["applied"], 50264)
+        self.assertEqual(browser["admitted"], 2387)
+        self.assertEqual(browser["enrolled_first_year"], 1633)
+        self.assertEqual(browser["acceptance_rate"], "0.047489")
+        self.assertEqual(browser["yield_rate"], "0.684122")
+
+    def test_2025_zero_total_fields_defer_to_positive_gender_components(self):
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2025-26"),
+            [
+                artifact(values={
+                    "C.101": {"value": "100"},
+                    "C.102": {"value": "120"},
+                    "C.104": {"value": "10"},
+                    "C.105": {"value": "12"},
+                    "C.116": {"value": "0"},
+                    "C.117": {"value": "0"},
+                })
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["applied"], 220)
+        self.assertEqual(browser["admitted"], 22)
+        self.assertEqual(browser["acceptance_rate"], "0.100000")
 
     def test_sat_act_promoted_fields_project_to_browser_columns(self):
         fields, browser = build_projection_rows(

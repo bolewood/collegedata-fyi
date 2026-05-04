@@ -492,10 +492,27 @@ export const fetchMatchBuilderSchools = cache(
           .order("year_start", { ascending: false }),
     );
 
-    const latestBySchool = new Map<string, BrowserRow>();
+    function hasMatchTestData(row: BrowserRow): boolean {
+      return numberOrNull(row.sat_composite_p50) != null || numberOrNull(row.act_composite_p50) != null;
+    }
+
+    function hasMatchAdmitRate(row: BrowserRow): boolean {
+      return normalizeRate(row.acceptance_rate) != null;
+    }
+
+    const rowsBySchool = new Map<string, BrowserRow[]>();
     for (const row of browserRows) {
       if (!row.school_id) continue;
-      if (!latestBySchool.has(row.school_id)) latestBySchool.set(row.school_id, row);
+      const rows = rowsBySchool.get(row.school_id) ?? [];
+      rows.push(row);
+      rowsBySchool.set(row.school_id, rows);
+    }
+
+    const latestBySchool = new Map<string, BrowserRow>();
+    for (const [schoolId, rows] of rowsBySchool) {
+      const completeMatchRow = rows.find((row) => hasMatchTestData(row) && hasMatchAdmitRate(row));
+      const testOnlyRow = rows.find(hasMatchTestData);
+      latestBySchool.set(schoolId, completeMatchRow ?? testOnlyRow ?? rows[0]);
     }
 
     const schoolIds = Array.from(latestBySchool.keys());

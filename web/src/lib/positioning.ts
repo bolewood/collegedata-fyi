@@ -39,6 +39,7 @@ export type Caveat =
   | "stale_cds"
   | "student_not_submitting"
   | "data_incomplete"
+  | "no_admit_rate"
   | "sub_15_admit_rate_suppression";
 
 export type PositionResult = {
@@ -181,6 +182,7 @@ export function scorePosition(
   if (!hasSatAnchors && !hasActAnchors) caveats.add("no_test_data");
   if ((school.satSubmitRate ?? 1) < LOW_SUBMIT_RATE) caveats.add("low_sat_submit_rate");
   if (!sat && !act) caveats.add("student_not_submitting");
+  if (school.acceptanceRate == null) caveats.add("no_admit_rate");
 
   const satPercentile =
     sat != null && hasSatAnchors
