@@ -11,6 +11,14 @@ on:
         description: "Optional school_id filter."
         required: false
         default: ""
+      document_ids:
+        description: "Optional comma-separated cds_documents.id filter."
+        required: false
+        default: ""
+      requeue_document_ids:
+        description: "Optional comma-separated cds_documents.id values to mark extraction_pending before draining."
+        required: false
+        default: ""
       include_failed:
         description: "Retry failed rows as well as pending rows."
         type: boolean
@@ -49,6 +57,8 @@ jobs:
     env:
       INPUT_LIMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.limit || '25' }}
       INPUT_SCHOOL: ${{ github.event_name == 'workflow_dispatch' && inputs.school || '' }}
+      INPUT_DOCUMENT_IDS: ${{ github.event_name == 'workflow_dispatch' && inputs.document_ids || '' }}
+      INPUT_REQUEUE_DOCUMENT_IDS: ${{ github.event_name == 'workflow_dispatch' && inputs.requeue_document_ids || '' }}
       INPUT_INCLUDE_FAILED: ${{ github.event_name == 'workflow_dispatch' && inputs.include_failed || false }}
       INPUT_SEED_PROJECTION_METADATA: ${{ github.event_name != 'workflow_dispatch' || inputs.seed_projection_metadata }}
       INPUT_LOW_FIELD_THRESHOLD: ${{ github.event_name == 'workflow_dispatch' && inputs.low_field_threshold || '25' }}
@@ -101,6 +111,32 @@ jobs:
           } > .env.ops
           chmod 600 .env.ops
 
+          if [[ -n "${INPUT_REQUEUE_DOCUMENT_IDS}" ]]; then
+            python - <<'PY'
+import os
+from supabase import create_client
+
+url = os.environ["SUPABASE_URL"]
+key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+document_ids = [
+    value.strip()
+    for value in os.environ["INPUT_REQUEUE_DOCUMENT_IDS"].split(",")
+    if value.strip()
+]
+client = create_client(url, key)
+changed = 0
+for document_id in document_ids:
+    result = (
+        client.table("cds_documents")
+        .update({"extraction_status": "extraction_pending"})
+        .eq("id", document_id)
+        .execute()
+    )
+    changed += len(result.data or [])
+print(f"Requeued {changed} document(s).")
+PY
+          fi
+
           args=(
             --env .env.ops
             --limit "${INPUT_LIMIT}"
@@ -115,6 +151,9 @@ jobs:
           fi
           if [[ -n "${INPUT_SCHOOL}" ]]; then
             args+=(--school "${INPUT_SCHOOL}")
+          fi
+          if [[ -n "${INPUT_DOCUMENT_IDS}" ]]; then
+            args+=(--document-ids "${INPUT_DOCUMENT_IDS}")
           fi
           if [[ -n "${INPUT_MIN_YEAR_START}" ]]; then
             args+=(--min-year-start "${INPUT_MIN_YEAR_START}")

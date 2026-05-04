@@ -1352,6 +1352,15 @@ def main() -> int:
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--school", default=None, help="Only process this school_id")
     parser.add_argument(
+        "--document-ids",
+        default=None,
+        help=(
+            "Comma-separated cds_documents.id values to process. Still honors "
+            "extraction_status filtering, so use after requeueing extracted "
+            "documents to extraction_pending."
+        ),
+    )
+    parser.add_argument(
         "--source-format",
         default=None,
         help=(
@@ -1477,6 +1486,11 @@ def main() -> int:
         for value in (args.source_format or "").split(",")
         if value.strip()
     ]
+    document_ids = [
+        value.strip()
+        for value in (args.document_ids or "").split(",")
+        if value.strip()
+    ]
 
     query = client.table("cds_documents").select(
         "id, school_id, cds_year, detected_year, source_format, extraction_status, discovered_at",
@@ -1487,6 +1501,8 @@ def main() -> int:
         query = query.eq("extraction_status", "extraction_pending")
     if args.school:
         query = query.eq("school_id", args.school)
+    if document_ids:
+        query = query.in_("id", document_ids)
     if source_formats:
         query = query.in_("source_format", source_formats)
     query = query.order("school_id")
