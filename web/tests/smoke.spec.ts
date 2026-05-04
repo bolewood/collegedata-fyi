@@ -45,7 +45,7 @@ test("browser loads live rows and source links resolve", async ({ page, request 
   await expect(page.getByText("Browser query failed")).toHaveCount(0);
   await expect(page.getByText(/Showing 1-/)).toBeVisible();
 
-  const source = page.locator("tbody a.cd-chip").first();
+  const source = page.locator('[data-testid="browser-source-link"]:visible').first();
   await expect(source).toBeVisible();
   const href = await source.getAttribute("href");
   expect(href).toBeTruthy();

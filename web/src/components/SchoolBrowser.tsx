@@ -407,7 +407,13 @@ export function SchoolBrowser() {
                   {formatCurrency(row.avg_net_price) || "-"}
                 </td>
                 <td style={{ padding: "12px 0 12px 10px" }}>
-                  <a href={row.archive_url} target="_blank" rel="noopener noreferrer" className="cd-chip">
+                  <a
+                    href={row.archive_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="cd-chip"
+                    data-testid="browser-source-link"
+                  >
                     {formatBadgeLabel(row.source_format)}
                   </a>
                 </td>
@@ -525,7 +531,13 @@ function BrowserResultCard({ row }: { row: BrowserRow }) {
         <CardMetric label="Admitted" value={row.admitted == null ? "-" : Math.round(row.admitted).toLocaleString()} />
       </div>
       <div className="rule" style={{ marginTop: 12, paddingTop: 10 }}>
-        <a href={row.archive_url} target="_blank" rel="noopener noreferrer" className="cd-chip">
+        <a
+          href={row.archive_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="cd-chip"
+          data-testid="browser-source-link"
+        >
           {formatBadgeLabel(row.source_format)} source
         </a>
       </div>
