@@ -2,16 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { HeaderSchoolSearch } from "./HeaderSchoolSearch";
 import { Wordmark } from "./Wordmark";
 
 const PRIMARY_NAV_LINKS = [
   { href: "/match", label: "Match" },
-  { href: "/browse", label: "Browser" },
   { href: "/schools", label: "Schools" },
   { href: "/api", label: "API" },
 ];
 
 const SECONDARY_NAV_LINKS = [
+  { href: "/browse", label: "Browser" },
   { href: "/coverage", label: "Coverage" },
   { href: "/recipes", label: "Recipes" },
   { href: "/about", label: "About" },
@@ -28,6 +29,7 @@ function isActive(pathname: string | null, href: string): boolean {
 
 export function Nav() {
   const pathname = usePathname();
+  const secondaryActive = SECONDARY_NAV_LINKS.some((l) => isActive(pathname, l.href));
 
   return (
     <nav
@@ -43,6 +45,7 @@ export function Nav() {
         <Link href="/" style={{ textDecoration: "none" }}>
           <Wordmark variant="dotted" size={20} />
         </Link>
+        <HeaderSchoolSearch />
         <div className="cd-nav-links">
           {PRIMARY_NAV_LINKS.map((l) => {
             const active = isActive(pathname, l.href);
@@ -65,32 +68,8 @@ export function Nav() {
               </Link>
             );
           })}
-          <span className="cd-nav-secondary">
-            {SECONDARY_NAV_LINKS.map((l) => {
-              const active = isActive(pathname, l.href);
-              return (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  aria-current={active ? "page" : undefined}
-                  style={{
-                    textDecoration: "none",
-                    color: active ? "var(--ink)" : "var(--ink-3)",
-                    paddingBottom: 2,
-                    borderBottom: active
-                      ? "1px solid var(--ink)"
-                      : "1px solid transparent",
-                  }}
-                  className="nav-link"
-                >
-                  {l.label}
-                </Link>
-              );
-            })}
-            <GitHubNavLink />
-          </span>
-          <details className="cd-nav-more">
-            <summary>More</summary>
+          <details className="cd-nav-more" data-active={secondaryActive ? "true" : "false"}>
+            <summary aria-current={secondaryActive ? "page" : undefined}>More</summary>
             <div>
               {SECONDARY_NAV_LINKS.map((l) => (
                 <Link key={l.href} href={l.href}>
@@ -109,38 +88,5 @@ export function Nav() {
         </div>
       </div>
     </nav>
-  );
-}
-
-function GitHubNavLink() {
-  return (
-    <a
-      href="https://github.com/bolewood/collegedata-fyi"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="GitHub (opens in new tab)"
-      style={{
-        textDecoration: "none",
-        color: "var(--ink-3)",
-        paddingBottom: 2,
-        borderBottom: "1px solid transparent",
-        display: "inline-flex",
-        alignItems: "baseline",
-        gap: 4,
-      }}
-      className="nav-link"
-    >
-      GitHub
-      <span
-        aria-hidden="true"
-        style={{
-          fontSize: "0.75em",
-          color: "var(--ink-4)",
-          lineHeight: 1,
-        }}
-      >
-        ↗
-      </span>
-    </a>
   );
 }
