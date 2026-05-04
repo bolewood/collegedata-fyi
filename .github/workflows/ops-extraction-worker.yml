@@ -112,29 +112,29 @@ jobs:
           chmod 600 .env.ops
 
           if [[ -n "${INPUT_REQUEUE_DOCUMENT_IDS}" ]]; then
-            python - <<'PY'
-import os
-from supabase import create_client
+          python - <<'PY'
+          import os
+          from supabase import create_client
 
-url = os.environ["SUPABASE_URL"]
-key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
-document_ids = [
-    value.strip()
-    for value in os.environ["INPUT_REQUEUE_DOCUMENT_IDS"].split(",")
-    if value.strip()
-]
-client = create_client(url, key)
-changed = 0
-for document_id in document_ids:
-    result = (
-        client.table("cds_documents")
-        .update({"extraction_status": "extraction_pending"})
-        .eq("id", document_id)
-        .execute()
-    )
-    changed += len(result.data or [])
-print(f"Requeued {changed} document(s).")
-PY
+          url = os.environ["SUPABASE_URL"]
+          key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+          document_ids = [
+              value.strip()
+              for value in os.environ["INPUT_REQUEUE_DOCUMENT_IDS"].split(",")
+              if value.strip()
+          ]
+          client = create_client(url, key)
+          changed = 0
+          for document_id in document_ids:
+              result = (
+                  client.table("cds_documents")
+                  .update({"extraction_status": "extraction_pending"})
+                  .eq("id", document_id)
+                  .execute()
+              )
+              changed += len(result.data or [])
+          print(f"Requeued {changed} document(s).")
+          PY
           fi
 
           args=(
