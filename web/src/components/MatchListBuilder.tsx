@@ -27,6 +27,10 @@ const ACADEMIC_FIT_SEQUENCE: AcademicFit[] = [
   "unknown",
 ];
 
+function fitSectionId(fit: AcademicFit): string {
+  return `match-fit-${fit.replace(/_/g, "-")}`;
+}
+
 type MatchProfile = StudentProfile & {
   state?: string;
   intendedMajor?: string;
@@ -98,6 +102,15 @@ export function MatchListBuilder({
     [filters, hasScoreInput, profile, schools],
   );
   const grouped = useMemo(() => groupRankedSchools(ranked), [ranked]);
+  const fitSummaries = useMemo(
+    () =>
+      ACADEMIC_FIT_SEQUENCE.map((fit) => ({
+        fit,
+        count: grouped[fit].length,
+        id: fitSectionId(fit),
+      })),
+    [grouped],
+  );
   const shareCode = profile ? encodeProfileCode(profile) : null;
   const shareHref =
     typeof window === "undefined" || !shareCode
@@ -297,23 +310,50 @@ export function MatchListBuilder({
             <p>Add a SAT or ACT score to rank schools against published CDS score bands.</p>
           </div>
         ) : (
-          ACADEMIC_FIT_SEQUENCE.map((fit) => {
-            const rows = grouped[fit];
-            if (rows.length === 0) return null;
-            return (
-              <section key={fit} className="match-tier-group">
-                <div className="match-tier-group__head">
-                  <h3 className="serif">{academicFitLabel(fit)}</h3>
-                  <span className="mono">{rows.length}</span>
-                </div>
-                <div className="match-tier-group__rows">
-                  {rows.map((school) => (
-                    <SchoolListItem key={school.documentId} school={school} />
-                  ))}
-                </div>
-              </section>
-            );
-          })
+          <>
+            <nav className="match-fit-summary" aria-label="Academic fit sections">
+              {fitSummaries.map(({ fit, count, id }) => {
+                const className = `match-fit-summary__item match-fit-summary__item--${fit}`;
+                const contents = (
+                  <>
+                    <span className="match-fit-summary__count mono">{count}</span>
+                    <span>{academicFitLabel(fit)}</span>
+                  </>
+                );
+                return count > 0 ? (
+                  <a key={fit} href={`#${id}`} className={className}>
+                    {contents}
+                  </a>
+                ) : (
+                  <span key={fit} className={`${className} match-fit-summary__item--empty`}>
+                    {contents}
+                  </span>
+                );
+              })}
+            </nav>
+
+            {ACADEMIC_FIT_SEQUENCE.map((fit) => {
+              const rows = grouped[fit];
+              if (rows.length === 0) return null;
+              return (
+                <section
+                  key={fit}
+                  id={fitSectionId(fit)}
+                  className={`match-tier-group match-tier-group--${fit}`}
+                >
+                  <div className="match-tier-group__head">
+                    <h3 className="serif">{academicFitLabel(fit)}</h3>
+                    <span className="mono">{rows.length}</span>
+                  </div>
+                  <div className="match-tier-group__rows">
+                    {rows.map((school) => (
+                      <SchoolListItem key={school.documentId} school={school} />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </>
         )}
       </section>
     </div>
