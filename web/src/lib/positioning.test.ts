@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  classifyAcademicFit,
+  classifyAdmissionsOutlook,
   classifyTier,
   interpolatePercentile,
   scorePosition,
@@ -62,11 +64,48 @@ describe("classifyTier", () => {
   });
 });
 
+describe("academic fit and admissions outlook", () => {
+  it("separates test-band strength from admit-rate selectivity", () => {
+    const school = {
+      ...baseSchool,
+      acceptanceRate: 0.045,
+      actCompositeP25: 34,
+      actCompositeP50: 35,
+      actCompositeP75: 35,
+    };
+
+    expect(classifyAcademicFit(null, 36, school)).toBe("strong_academic_fit");
+    expect(classifyAdmissionsOutlook(school.acceptanceRate)).toBe("high_reach");
+
+    const result = scorePosition({ act: 36 }, school);
+    expect(result.academicFit).toBe("strong_academic_fit");
+    expect(result.admissionsOutlook).toBe("high_reach");
+    expect(result.tier).toBe("long_shot");
+  });
+
+  it("flags scores two ACT points above the 75th percentile as above range", () => {
+    expect(classifyAcademicFit(null, 34, baseSchool)).toBe("above_range");
+  });
+
+  it("keeps academic fit even when admit rate is missing", () => {
+    const result = scorePosition(
+      { act: 32 },
+      { ...baseSchool, acceptanceRate: null },
+    );
+
+    expect(result.academicFit).toBe("strong_academic_fit");
+    expect(result.admissionsOutlook).toBe("unknown");
+    expect(result.caveats).toContain("no_admit_rate");
+  });
+});
+
 describe("scorePosition", () => {
   it("scores SAT and emits a positional sentence", () => {
     const result = scorePosition({ sat: 1350, gpa: 3.7 }, baseSchool);
     expect(result.satPercentile).toBe(63);
     expect(result.tier).toBe("strong_fit");
+    expect(result.academicFit).toBe("in_range");
+    expect(result.admissionsOutlook).toBe("possible");
     expect(result.positionalSentence).toContain("within the middle 50%");
     expect(result.positionalSentence).toContain("admits 30%");
   });

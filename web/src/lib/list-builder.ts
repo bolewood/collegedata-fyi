@@ -1,9 +1,10 @@
 import {
   scorePosition,
+  type AcademicFit,
+  type AdmissionsOutlook,
   type PositionResult,
   type SchoolAcademicProfile,
   type StudentProfile,
-  type Tier,
 } from "./positioning";
 
 export type SchoolControl = "public" | "private_nonprofit" | "private_for_profit" | "unknown";
@@ -57,13 +58,20 @@ export const DEFAULT_MATCH_FILTERS: MatchFilters = {
   sort: "fit",
 };
 
-const TIER_ORDER: Record<Tier, number> = {
-  strong_fit: 0,
-  likely: 1,
+const ACADEMIC_FIT_ORDER: Record<AcademicFit, number> = {
+  strong_academic_fit: 0,
+  above_range: 1,
+  in_range: 2,
+  below_range: 3,
+  unknown: 4,
+};
+
+const OUTLOOK_ORDER: Record<AdmissionsOutlook, number> = {
+  high_reach: 0,
+  reach: 1,
   possible: 2,
-  unlikely: 3,
-  long_shot: 4,
-  unknown: 5,
+  likely: 3,
+  unknown: 4,
 };
 
 const REGION_BY_STATE: Record<string, Region> = {
@@ -219,8 +227,8 @@ export function rankMatchSchools(
       };
     })
     .sort((a, b) => {
-      const tierDelta = TIER_ORDER[a.result.tier] - TIER_ORDER[b.result.tier];
-      if (tierDelta !== 0) return tierDelta;
+      const fitDelta = ACADEMIC_FIT_ORDER[a.result.academicFit] - ACADEMIC_FIT_ORDER[b.result.academicFit];
+      if (fitDelta !== 0) return fitDelta;
       if (filters.sort === "admit_rate") {
         const admitDelta = (b.acceptanceRate ?? -1) - (a.acceptanceRate ?? -1);
         if (admitDelta !== 0) return admitDelta;
@@ -228,26 +236,29 @@ export function rankMatchSchools(
       if (filters.sort === "name") {
         return a.schoolName.localeCompare(b.schoolName);
       }
+      const outlookDelta = OUTLOOK_ORDER[a.result.admissionsOutlook] - OUTLOOK_ORDER[b.result.admissionsOutlook];
+      if (outlookDelta !== 0) return outlookDelta;
+      const selectivityDelta = (a.acceptanceRate ?? 1) - (b.acceptanceRate ?? 1);
+      if (selectivityDelta !== 0) return selectivityDelta;
       const scoreDelta = b.rankScore - a.rankScore;
       if (scoreDelta !== 0) return scoreDelta;
       return a.schoolName.localeCompare(b.schoolName);
     });
 }
 
-export function groupRankedSchools(rows: RankedMatchSchool[]): Record<Tier, RankedMatchSchool[]> {
+export function groupRankedSchools(rows: RankedMatchSchool[]): Record<AcademicFit, RankedMatchSchool[]> {
   return rows.reduce(
     (groups, row) => {
-      groups[row.result.tier].push(row);
+      groups[row.result.academicFit].push(row);
       return groups;
     },
     {
-      likely: [],
-      strong_fit: [],
-      possible: [],
-      unlikely: [],
-      long_shot: [],
+      strong_academic_fit: [],
+      above_range: [],
+      in_range: [],
+      below_range: [],
       unknown: [],
-    } as Record<Tier, RankedMatchSchool[]>,
+    } as Record<AcademicFit, RankedMatchSchool[]>,
   );
 }
 
@@ -262,6 +273,8 @@ export function rankedSchoolsCsv(rows: RankedMatchSchool[]): string {
   const header = [
     "school_name",
     "school_url",
+    "academic_fit",
+    "admissions_outlook",
     "tier",
     "best_percentile",
     "admit_rate",
@@ -271,6 +284,8 @@ export function rankedSchoolsCsv(rows: RankedMatchSchool[]): string {
   const body = rows.map((row) => [
     row.schoolName,
     row.schoolUrl,
+    row.result.academicFit,
+    row.result.admissionsOutlook,
     row.result.tier,
     row.bestPercentile,
     row.acceptanceRate == null ? null : Number((row.acceptanceRate * 100).toFixed(1)),

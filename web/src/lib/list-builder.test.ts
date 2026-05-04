@@ -79,15 +79,43 @@ describe("match list helpers", () => {
     ).toEqual(["base"]);
   });
 
-  it("ranks schools into the same tier model as positioning", () => {
+  it("keeps very selective schools visible when the academic fit is strong", () => {
+    const rows = rankMatchSchools({ act: 36 }, [
+      {
+        ...baseSchool,
+        schoolId: "mit",
+        schoolName: "Massachusetts Institute of Technology",
+        acceptanceRate: 0.04,
+        actCompositeP25: 35,
+        actCompositeP50: 35,
+        actCompositeP75: 36,
+      },
+      {
+        ...baseSchool,
+        schoolId: "likely",
+        schoolName: "Likely College",
+        acceptanceRate: 0.65,
+        actCompositeP25: 24,
+        actCompositeP50: 27,
+        actCompositeP75: 30,
+      },
+    ]);
+
+    expect(rows.map((row) => row.schoolId)).toEqual(["mit", "likely"]);
+    expect(rows[0].result.academicFit).toBe("strong_academic_fit");
+    expect(rows[0].result.admissionsOutlook).toBe("high_reach");
+    expect(rows[0].result.tier).toBe("unknown");
+  });
+
+  it("sorts equal academic fits by selectivity by default", () => {
     const rows = rankMatchSchools({ sat: 1350 }, [
       { ...baseSchool, schoolId: "likely", schoolName: "Likely College", acceptanceRate: 0.65 },
       { ...baseSchool, schoolId: "possible", schoolName: "Possible College", acceptanceRate: 0.2 },
       { ...baseSchool, schoolId: "long", schoolName: "Long Shot College", acceptanceRate: 0.08 },
     ]);
 
-    expect(rows.map((row) => row.schoolId)).toEqual(["likely", "possible", "long"]);
-    expect(rows[0].result.tier).toBe("likely");
+    expect(rows.map((row) => row.schoolId)).toEqual(["long", "possible", "likely"]);
+    expect(rows.map((row) => row.result.academicFit)).toEqual(["in_range", "in_range", "in_range"]);
   });
 
   it("keeps schools with score bands even when admit rate is missing", () => {
@@ -105,10 +133,12 @@ describe("match list helpers", () => {
 
     expect(rows.map((row) => row.schoolId)).toEqual(["missing-rate"]);
     expect(rows[0].result.tier).toBe("unknown");
+    expect(rows[0].result.academicFit).toBe("strong_academic_fit");
+    expect(rows[0].result.admissionsOutlook).toBe("unknown");
     expect(rows[0].result.caveats).toContain("no_admit_rate");
   });
 
-  it("puts strong-fit schools before likely schools by default", () => {
+  it("puts possible-outlook schools before likely schools within the same academic fit", () => {
     const rows = rankMatchSchools({ sat: 1350 }, [
       { ...baseSchool, schoolId: "likely", schoolName: "Likely College", acceptanceRate: 0.65 },
       { ...baseSchool, schoolId: "strong", schoolName: "Strong Fit College", acceptanceRate: 0.35 },
@@ -143,9 +173,11 @@ describe("match list helpers", () => {
   it("exports counselor-friendly CSV rows", () => {
     const csv = rankedSchoolsCsv(rankMatchSchools({ sat: 1350 }, [baseSchool]));
     expect(csv.split("\n")[0]).toBe(
-      "school_name,school_url,tier,best_percentile,admit_rate,cds_year,source_pdf_url",
+      "school_name,school_url,academic_fit,admissions_outlook,tier,best_percentile,admit_rate,cds_year,source_pdf_url",
     );
     expect(csv).toContain("Base College");
+    expect(csv).toContain("in_range");
+    expect(csv).toContain("possible");
     expect(csv).toContain("strong_fit");
   });
 });

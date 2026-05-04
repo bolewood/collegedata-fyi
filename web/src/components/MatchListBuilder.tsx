@@ -15,11 +15,17 @@ import {
   type TestPolicySignal,
 } from "@/lib/list-builder";
 import { decodeProfileCode, encodeProfileCode } from "@/lib/savecode";
-import { tierLabel, type StudentProfile, type Tier } from "@/lib/positioning";
+import { academicFitLabel, type AcademicFit, type StudentProfile } from "@/lib/positioning";
 import { SchoolListItem } from "./SchoolListItem";
 
 const STORAGE_KEY = "cdfyi.matchProfile.v1";
-const TIER_SEQUENCE: Tier[] = ["strong_fit", "likely", "possible", "unlikely", "long_shot", "unknown"];
+const ACADEMIC_FIT_SEQUENCE: AcademicFit[] = [
+  "strong_academic_fit",
+  "above_range",
+  "in_range",
+  "below_range",
+  "unknown",
+];
 
 type MatchProfile = StudentProfile & {
   state?: string;
@@ -279,7 +285,7 @@ export function MatchListBuilder({
         <div className="match-results-head">
           <div>
             <div className="meta">Ranked list</div>
-            <h2 className="serif">Schools grouped by fit tier.</h2>
+            <h2 className="serif">Schools grouped by academic fit.</h2>
           </div>
           <div className="match-results-count mono">
             {hasScoreInput ? `${ranked.length} schools` : "Enter SAT or ACT"}
@@ -291,13 +297,13 @@ export function MatchListBuilder({
             <p>Add a SAT or ACT score to rank schools against published CDS score bands.</p>
           </div>
         ) : (
-          TIER_SEQUENCE.map((tier) => {
-            const rows = grouped[tier];
+          ACADEMIC_FIT_SEQUENCE.map((fit) => {
+            const rows = grouped[fit];
             if (rows.length === 0) return null;
             return (
-              <section key={tier} className="match-tier-group">
+              <section key={fit} className="match-tier-group">
                 <div className="match-tier-group__head">
-                  <h3 className="serif">{tierLabel(tier)}</h3>
+                  <h3 className="serif">{academicFitLabel(fit)}</h3>
                   <span className="mono">{rows.length}</span>
                 </div>
                 <div className="match-tier-group__rows">
