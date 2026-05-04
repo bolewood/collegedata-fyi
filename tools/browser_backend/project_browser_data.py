@@ -277,6 +277,19 @@ DERIVED_TOTAL_FALLBACK_FIELDS = {
     ("2024-25", "first_year_enrolled"): "C.119",
 }
 
+DERIVED_COMPONENT_FALLBACK_FIELDS = {
+    ("2025-26", "applied"): (
+        ("C.101", "C.102", "C.103"),
+    ),
+    ("2025-26", "admitted"): (
+        ("C.104", "C.105", "C.106"),
+    ),
+    ("2025-26", "first_year_enrolled"): (
+        ("C.107", "C.108", "C.109"),
+        ("C.110", "C.111", "C.112", "C.113", "C.114", "C.115"),
+    ),
+}
+
 
 def load_env(env_path: Path = REPO_ROOT / ".env") -> dict[str, str]:
     env: dict[str, str] = {}
@@ -968,8 +981,13 @@ def evaluate_metric(
     ]
     if isinstance(metric.source_spec, DerivedFormula):
         reported_values = [value for value in values if value is not None]
+        component_fallback_value = evaluate_component_fallback_metric(
+            metric,
+            selected,
+            schema_defs,
+        )
         if not reported_values:
-            return None
+            return component_fallback_value
         if len(reported_values) != len(values):
             fallback_field_id = DERIVED_TOTAL_FALLBACK_FIELDS.get(
                 (selected.schema_version, metric.canonical_metric)
@@ -980,10 +998,34 @@ def evaluate_metric(
                 )
                 if fallback_value is not None:
                     return fallback_value
-        return sum(reported_values, Decimal("0"))
+        total = sum(reported_values, Decimal("0"))
+        if total == 0 and component_fallback_value is not None and component_fallback_value > 0:
+            return component_fallback_value
+        return total
     if any(value is None for value in values):
         return None
     return sum(values, Decimal("0"))
+
+
+def evaluate_component_fallback_metric(
+    metric: MetricDefinition,
+    selected: SelectedExtractionResult,
+    schema_defs: dict[str, FieldDefinition],
+) -> Optional[Decimal]:
+    fallback_groups = DERIVED_COMPONENT_FALLBACK_FIELDS.get(
+        (selected.schema_version, metric.canonical_metric)
+    )
+    if not fallback_groups:
+        return None
+    for field_ids in fallback_groups:
+        values = [
+            parse_metric_component(field_id, selected, schema_defs, metric)
+            for field_id in field_ids
+        ]
+        reported_values = [value for value in values if value is not None]
+        if reported_values:
+            return sum(reported_values, Decimal("0"))
+    return None
 
 
 def build_projection_rows(

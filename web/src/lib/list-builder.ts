@@ -164,7 +164,7 @@ export function testPolicySignal(
 
 export function isRankableSchool(school: MatchBuilderSchool): boolean {
   const hasTestData = school.satCompositeP50 != null || school.actCompositeP50 != null;
-  return hasTestData && school.acceptanceRate != null;
+  return hasTestData;
 }
 
 export function applyMatchFilters(

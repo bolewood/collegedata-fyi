@@ -90,6 +90,24 @@ describe("match list helpers", () => {
     expect(rows[0].result.tier).toBe("likely");
   });
 
+  it("keeps schools with score bands even when admit rate is missing", () => {
+    const rows = rankMatchSchools({ act: 36 }, [
+      {
+        ...baseSchool,
+        schoolId: "missing-rate",
+        schoolName: "Missing Rate Institute",
+        acceptanceRate: null,
+        actCompositeP25: 34,
+        actCompositeP50: 35,
+        actCompositeP75: 36,
+      },
+    ]);
+
+    expect(rows.map((row) => row.schoolId)).toEqual(["missing-rate"]);
+    expect(rows[0].result.tier).toBe("unknown");
+    expect(rows[0].result.caveats).toContain("no_admit_rate");
+  });
+
   it("puts strong-fit schools before likely schools by default", () => {
     const rows = rankMatchSchools({ sat: 1350 }, [
       { ...baseSchool, schoolId: "likely", schoolName: "Likely College", acceptanceRate: 0.65 },

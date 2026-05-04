@@ -30,13 +30,15 @@ function caveatLabel(caveat: Caveat): string {
       return "no test data";
     case "data_incomplete":
       return "incomplete data";
+    case "no_admit_rate":
+      return "no admit rate";
   }
 }
 
 export function SchoolListItem({ school }: { school: RankedMatchSchool }) {
   const caveats = school.result.caveats
     .filter((caveat) =>
-      ["low_sat_submit_rate", "stale_cds", "sub_15_admit_rate_suppression", "data_incomplete"].includes(caveat),
+      ["low_sat_submit_rate", "stale_cds", "sub_15_admit_rate_suppression", "data_incomplete", "no_admit_rate"].includes(caveat),
     )
     .slice(0, 2);
 
