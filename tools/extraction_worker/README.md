@@ -49,8 +49,16 @@ python worker.py --skip-projection-refresh --limit 10
 # Scoped operator re-drain: only 2024+ Tier 4/Tier 5 PDFs
 python worker.py --source-format pdf_flat,pdf_scanned --min-year-start 2024
 
-# Targeted operator re-drain after requeueing specific document IDs
-python worker.py --document-ids <uuid>,<uuid> --limit 2
+# Targeted managed Docling re-drain on an operator laptop.
+# This requeues the documents, processes only those IDs, and refreshes
+# cds_fields/school_browser_rows as each document finishes.
+python worker.py \
+    --env /Users/santhonys/Projects/Owen/colleges/collegedata-fyi/.env \
+    --requeue-document-ids <uuid>,<uuid> \
+    --limit 2 \
+    --min-year-start 2024 \
+    --seed-projection-metadata \
+    --summary-json ../../.context/local-redrain/summary.json
 
 # Fresh-year drain: process the newest archived CDS rows before old backlog
 python worker.py --min-year-start 2025 --include-failed --limit 25
@@ -62,11 +70,23 @@ python worker.py --detect-year-only --write         # backfill detected_year
 
 Env vars (read from `.env` at the repo root): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `ANTHROPIC_API_KEY` (for the LLM fallback — PRD 006).
 
+## Managed Docling runs
+
+Managed Docling drains should run locally on an operator MacBook by default.
+Local runs have more CPU headroom, no 60-minute GitHub-hosted timeout, and can
+write complete logs under `.context/`. GitHub Actions is for automation: the
+small scheduled backlog drain, CI, and other unattended jobs.
+
+For extractor or cleaner changes, bump the relevant `producer_version` before
+re-draining. The worker is idempotent by `(document_id, producer,
+producer_version, schema_version)` and will otherwise skip matching artifacts as
+`already_extracted`.
+
 ## GitHub Actions ops workflow
 
 `.github/workflows/ops-extraction-worker.yml` is the bounded production-ish
-wrapper around `worker.py`. It is separate from PR CI and is meant for small
-pending-row drains, not corpus-wide Docling/OCR work.
+wrapper around `worker.py`. It is separate from PR CI and is meant for the
+scheduled automation path, not managed Docling re-drains.
 
 The workflow supports both a daily scheduled drain and manual dispatch. Manual
 inputs are `limit`, `school`, `source_format`, `min_year_start`,

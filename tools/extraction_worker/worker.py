@@ -1361,6 +1361,16 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--requeue-document-ids",
+        default=None,
+        help=(
+            "Comma-separated cds_documents.id values to mark extraction_pending "
+            "before processing. If --document-ids is omitted, these IDs also "
+            "become the processing filter. Intended for local managed Docling "
+            "redrains."
+        ),
+    )
+    parser.add_argument(
         "--source-format",
         default=None,
         help=(
@@ -1491,6 +1501,29 @@ def main() -> int:
         for value in (args.document_ids or "").split(",")
         if value.strip()
     ]
+    requeue_document_ids = [
+        value.strip()
+        for value in (args.requeue_document_ids or "").split(",")
+        if value.strip()
+    ]
+    if requeue_document_ids and not document_ids:
+        document_ids = requeue_document_ids
+    if requeue_document_ids and not args.dry_run:
+        changed = 0
+        for document_id in requeue_document_ids:
+            result = (
+                client.table("cds_documents")
+                .update({"extraction_status": "extraction_pending"})
+                .eq("id", document_id)
+                .execute()
+            )
+            changed += len(result.data or [])
+        print(f"Requeued {changed} document(s).", flush=True)
+    elif requeue_document_ids:
+        print(
+            f"Would requeue {len(requeue_document_ids)} document(s) (dry run).",
+            flush=True,
+        )
 
     query = client.table("cds_documents").select(
         "id, school_id, cds_year, detected_year, source_format, extraction_status, discovered_at",
