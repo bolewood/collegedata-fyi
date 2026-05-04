@@ -77,8 +77,8 @@ export default function PositioningMethodologyPage() {
           </FieldUse>
           <FieldUse field="C.12" title="High-school GPA">
             C.12 provides average high-school GPA and the percent submitting GPA. v1 displays
-            the school average beside your entered GPA, but GPA never contributes to a tier
-            because weighted and unweighted scales are not consistently documented.
+            the school average beside your entered GPA, but GPA never contributes to academic
+            fit because weighted and unweighted scales are not consistently documented.
           </FieldUse>
           <FieldUse field="C.1 / C.2" title="Applicant, admitted, and enrolled counts">
             C.1 and C.2 supply applicant and admit counts. The serving layer derives admit
@@ -116,9 +116,9 @@ export default function PositioningMethodologyPage() {
         </p>
         <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
           Selective admissions also include institutional priorities that are absent from
-          CDS. When an admit rate is under 15% and a score is inside the middle 50%, the
-          card suppresses the tier label because a small numeric edge would overstate what
-          the public data can say.
+          CDS. The match list separates academic fit from admissions outlook, so a student
+          can be a strong academic fit at a school that remains a high reach because of its
+          admit rate.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
           Current cards read 2024-25 or newer CDS rows. If a future card uses a CDS

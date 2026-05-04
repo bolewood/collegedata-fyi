@@ -7,7 +7,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "Match List Builder",
   description:
-    "Build a college match list from Common Data Set score bands, admit rates, and archived source documents.",
+    "Build a college match list from Common Data Set score bands, academic fit, admit rates, and archived source documents.",
   alternates: { canonical: "/match" },
 };
 
@@ -24,8 +24,8 @@ export default async function MatchPage({
         <div className="meta">Match list builder</div>
         <h1 className="serif">Build a school list from source-backed admissions data.</h1>
         <p>
-          Enter one profile, filter the corpus, and export a counselor-friendly list with fit tier,
-          percentile, admit rate, CDS year, and source PDF.
+          Enter one profile, filter the corpus, and export a counselor-friendly list with academic
+          fit, admissions outlook, percentile, admit rate, CDS year, and source PDF.
         </p>
       </header>
 

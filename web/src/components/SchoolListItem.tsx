@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { tierLabel, type Caveat } from "@/lib/positioning";
+import { academicFitLabel, admissionsOutlookLabel, type Caveat } from "@/lib/positioning";
 import type { RankedMatchSchool } from "@/lib/list-builder";
 
 function formatPercent(value: number | null): string {
@@ -21,7 +21,7 @@ function caveatLabel(caveat: Caveat): string {
     case "stale_cds":
       return "stale CDS";
     case "sub_15_admit_rate_suppression":
-      return "tier suppressed";
+      return "selectivity caution";
     case "no_sat_data":
       return "no SAT";
     case "no_act_data":
@@ -51,12 +51,19 @@ export function SchoolListItem({ school }: { school: RankedMatchSchool }) {
         <div className="match-school-row__meta mono">
           {school.state ?? "state n/a"} · {school.cdsYear} CDS · admit {formatPercent(school.acceptanceRate)}
         </div>
+        <div className="match-school-row__fitline mono">
+          {academicFitLabel(school.result.academicFit)} · {admissionsOutlookLabel(school.result.admissionsOutlook)}
+        </div>
       </div>
 
       <div className="match-school-row__metrics">
         <div>
-          <span className="mono">Tier</span>
-          <strong>{tierLabel(school.result.tier)}</strong>
+          <span className="mono">Academic</span>
+          <strong>{academicFitLabel(school.result.academicFit)}</strong>
+        </div>
+        <div>
+          <span className="mono">Outlook</span>
+          <strong>{admissionsOutlookLabel(school.result.admissionsOutlook)}</strong>
         </div>
         <div>
           <span className="mono">Best pct</span>
