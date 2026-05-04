@@ -141,7 +141,11 @@ def _parse_markdown_tables(markdown: str) -> list[dict]:
             nominal_header_cells = [
                 c.strip() for c in table_lines[0].split("|")[1:-1]
             ]
-            header_looks_like_data = any(
+            has_percentile_headers = any(
+                re.search(r"\b(?:25|50|75)(?:th)?\s+percentile\b", c, re.IGNORECASE)
+                for c in nominal_header_cells[1:]
+            )
+            header_looks_like_data = not has_percentile_headers and any(
                 re.search(r"\d", c) for c in nominal_header_cells[1:]
             )
             if header_looks_like_data:
@@ -224,6 +228,58 @@ def _extract_number(value_str: str) -> str | None:
         return s
     except ValueError:
         return None
+
+
+def _c9_percentile_header_roles(headers_norm: list[str]) -> dict[int, str]:
+    roles: dict[int, str] = {}
+    for value_idx, header in enumerate(headers_norm[1:]):
+        if "mean" in header or "average" in header:
+            continue
+        if re.search(r"\b25(?:th)?\b", header):
+            roles[value_idx] = "p25"
+        elif re.search(r"\b50(?:th)?\b", header):
+            roles[value_idx] = "p50"
+        elif re.search(r"\b75(?:th)?\b", header):
+            roles[value_idx] = "p75"
+    return roles
+
+
+def _c9_percentile_qn(
+    label_norm: str,
+    col_idx: int,
+    headers_norm: list[str],
+) -> str | None:
+    roles_by_col = _c9_percentile_header_roles(headers_norm)
+    if roles_by_col:
+        role = roles_by_col.get(col_idx)
+        if not role:
+            return None
+    else:
+        fallback_roles = ("p25", "p50", "p75")
+        if col_idx >= len(fallback_roles):
+            return None
+        role = fallback_roles[col_idx]
+
+    for row_label, qns in _PERCENTILE_QNS.items():
+        if _normalize_label(row_label) in label_norm:
+            return qns[role]
+    return None
+
+
+def _is_plausible_c9_percentile_value(qnum: str, value: str) -> bool:
+    try:
+        num = float(value)
+    except ValueError:
+        return False
+
+    field_num = int(qnum.split(".")[1])
+    if 905 <= field_num <= 907:
+        return 400 <= num <= 1600
+    if 908 <= field_num <= 913:
+        return 200 <= num <= 800
+    if 914 <= field_num <= 922:
+        return 0 <= num <= 36
+    return True
 
 
 # Mapping from schema question text fragments to question numbers.
@@ -321,29 +377,17 @@ _SCHEMA_FIXED_C1_FIELD_MAP_QNS = {
     f"C.{n:03d}" for n in range(101, 119)
 }
 
-# Percentile table: matched by assessment name + column position.
-_PERCENTILE_MAP: list[tuple[str, int, str]] = [
-    # (row_label_substring, value_column_index, question_number)
-    # Column order in C9 percentile table: 25th, 50th, 75th
-    ("sat composite", 0, "C.905"),       # 25th
-    ("sat composite", 1, "C.906"),       # 50th
-    ("sat composite", 2, "C.907"),       # 75th
-    ("sat evidence-based reading", 0, "C.908"),
-    ("sat evidence-based reading", 1, "C.909"),
-    ("sat evidence-based reading", 2, "C.910"),
-    ("sat math", 0, "C.911"),
-    ("sat math", 1, "C.912"),
-    ("sat math", 2, "C.913"),
-    ("act composite", 0, "C.914"),
-    ("act composite", 1, "C.915"),
-    ("act composite", 2, "C.916"),
-    ("act math", 0, "C.917"),
-    ("act math", 1, "C.918"),
-    ("act math", 2, "C.919"),
-    ("act english", 0, "C.920"),
-    ("act english", 1, "C.921"),
-    ("act english", 2, "C.922"),
-]
+# C9 percentile tables normally use 25th/50th/75th columns, but some schools
+# publish 25th/75th/50th/mean. Keep row matching by assessment label while
+# mapping columns by header role whenever Docling preserves the headers.
+_PERCENTILE_QNS: dict[str, dict[str, str]] = {
+    "sat composite": {"p25": "C.905", "p50": "C.906", "p75": "C.907"},
+    "sat evidence-based reading": {"p25": "C.908", "p50": "C.909", "p75": "C.910"},
+    "sat math": {"p25": "C.911", "p50": "C.912", "p75": "C.913"},
+    "act composite": {"p25": "C.914", "p50": "C.915", "p75": "C.916"},
+    "act math": {"p25": "C.917", "p50": "C.918", "p75": "C.919"},
+    "act english": {"p25": "C.920", "p50": "C.921", "p75": "C.922"},
+}
 
 
 # Inline-regex patterns for fields that aren't in table rows. Each entry is
@@ -2797,6 +2841,110 @@ def resolve_c9_submission_rates(
     return out
 
 
+# --- Resolver: C9 percentile anchors from layout text ---
+
+_C9_PERCENTILE_CODE_QNS = {
+    str(n): f"C.{n:03d}" for n in range(905, 923)
+}
+
+
+def _c9_section_text(markdown: str) -> str:
+    start_match = re.search(
+        r"(?:^|\n)\s*(?:#{1,4}\s*)?C9\b|Percent and number of .*SAT/ACT.*test scores",
+        markdown,
+        re.IGNORECASE,
+    )
+    if not start_match:
+        return markdown
+    section = markdown[start_match.start():]
+    end_match = re.search(r"(?:^|\n)\s*(?:#{1,4}\s*)?C10\b", section, re.IGNORECASE)
+    if end_match:
+        section = section[:end_match.start()]
+    return section
+
+
+def _c9_percentile_roles_from_context(context: str) -> list[str]:
+    def line_roles(line: str) -> list[str]:
+        roles: list[str] = []
+        for match in re.finditer(
+            r"\b(25(?:th)?|50(?:th)?|75(?:th)?)\s+percentile\b|\b(?:average|mean)\b",
+            line,
+            re.IGNORECASE,
+        ):
+            token = match.group(1)
+            if token:
+                if token.startswith("25"):
+                    roles.append("p25")
+                elif token.startswith("50"):
+                    roles.append("p50")
+                else:
+                    roles.append("p75")
+            else:
+                roles.append("mean")
+        return roles
+
+    for line in reversed(context.splitlines()[-8:]):
+        roles = line_roles(line)
+        if {"p25", "p50", "p75"}.issubset(set(roles)):
+            return roles
+    return ["p25", "p50", "p75"]
+
+
+def resolve_c9_percentile_anchors(
+    tables: list[dict], markdown: str, schema: SchemaIndex
+) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    section = _c9_section_text(markdown)
+
+    # Schema-fixed exports sometimes preserve the C905/C914 codes as text
+    # even when markdown table reconstruction is noisy. Use the final number
+    # on the line and reject impossible score values such as 100.00 totals.
+    for line in section.splitlines():
+        code_match = re.search(r"\bC\.?\s*(90[5-9]|91[0-9]|92[0-2])\b", line, re.IGNORECASE)
+        if not code_match:
+            continue
+        qn = _C9_PERCENTILE_CODE_QNS[code_match.group(1)]
+        tail = line[code_match.end():]
+        numbers = re.findall(r"\b\d+(?:\.\d+)?\b", tail.replace(",", ""))
+        if not numbers:
+            continue
+        value = numbers[-1]
+        if _is_plausible_c9_percentile_value(qn, value):
+            out.setdefault(qn, {"value": value, "source": "tier4_cleaner"})
+
+    # Layout text can contain clean rows without C-codes, for example:
+    #   ACT Composite (0 - 36) 31 32 34
+    # Infer column roles from the closest preceding percentile header.
+    section_no_ranges = re.sub(r"\(\s*\d+\s*[-–—]\s*\d+\s*\)", " ", section)
+    for line_match in re.finditer(r"^.*$", section_no_ranges, re.MULTILINE):
+        line = line_match.group(0)
+        if re.search(r"\bC\.?\s*(?:90[5-9]|91[0-9]|92[0-2])\b", line, re.IGNORECASE):
+            continue
+        label_norm = _normalize_label(line)
+        if not label_norm or "submitting" in label_norm or "score range" in label_norm:
+            continue
+
+        qns_by_role = None
+        for row_label, candidate in _PERCENTILE_QNS.items():
+            if _normalize_label(row_label) in label_norm:
+                qns_by_role = candidate
+                break
+        if not qns_by_role:
+            continue
+
+        numbers = re.findall(r"\b\d+(?:\.\d+)?\b", line.replace(",", ""))
+        if len(numbers) < 3:
+            continue
+        context = section_no_ranges[max(0, line_match.start() - 600):line_match.start()]
+        roles = _c9_percentile_roles_from_context(context)
+        for value, role in zip(numbers, roles):
+            qn = qns_by_role.get(role)
+            if qn and _is_plausible_c9_percentile_value(qn, value):
+                out.setdefault(qn, {"value": value, "source": "tier4_cleaner"})
+
+    return out
+
+
 # --- Resolver: C9 score distributions ---
 
 _C9_DISTRIBUTION_QNS = {
@@ -5038,6 +5186,7 @@ _RESOLVERS = [
     resolve_c7_basis_for_selection,
     resolve_c8_entrance_exams,
     resolve_c9_submission_rates,
+    resolve_c9_percentile_anchors,
     resolve_c9_score_distributions,
     resolve_c11_gpa_profile,
     resolve_c12_gpa_summary,
@@ -5080,7 +5229,6 @@ def clean(
     def _norm_hint(ch):
         return _normalize_label(ch) if isinstance(ch, str) else ch
     field_map_norm = [(_normalize_label(s), qn, _norm_hint(ch)) for s, qn, ch in _FIELD_MAP]
-    percentile_map_norm = [(_normalize_label(s), ci, qn) for s, ci, qn in _PERCENTILE_MAP]
 
     for table in tables:
         section_norm = _normalize_label(table["section"])
@@ -5134,13 +5282,17 @@ def clean(
                     values[qnum] = {"value": num, "source": "tier4_cleaner"}
 
             # --- Percentile table ---
-            for substr, col_idx, qnum in percentile_map_norm:
-                if substr not in label_norm:
+            for col_idx, value in enumerate(row["values"]):
+                qnum = _c9_percentile_qn(label_norm, col_idx, headers_norm)
+                if not qnum:
                     continue
-                if col_idx < len(row["values"]):
-                    num = _extract_number(row["values"][col_idx])
-                    if num and qnum not in values:
-                        values[qnum] = {"value": num, "source": "tier4_cleaner"}
+                num = _extract_number(value)
+                if (
+                    num is not None
+                    and _is_plausible_c9_percentile_value(qnum, num)
+                    and qnum not in values
+                ):
+                    values[qnum] = {"value": num, "source": "tier4_cleaner"}
 
     # --- Inline patterns (non-table fields) ---
     # Runs after table extraction so table matches take precedence.
@@ -5172,6 +5324,7 @@ def clean(
             resolve_b5_graduation,
             resolve_c2_waitlist,
             resolve_c8_entrance_exams,
+            resolve_c9_percentile_anchors,
             resolve_c12_gpa_summary,
             resolve_c13_application_fee,
             resolve_i_faculty,

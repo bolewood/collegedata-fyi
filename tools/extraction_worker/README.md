@@ -49,6 +49,9 @@ python worker.py --skip-projection-refresh --limit 10
 # Scoped operator re-drain: only 2024+ Tier 4/Tier 5 PDFs
 python worker.py --source-format pdf_flat,pdf_scanned --min-year-start 2024
 
+# Targeted operator re-drain after requeueing specific document IDs
+python worker.py --document-ids <uuid>,<uuid> --limit 2
+
 # Fresh-year drain: process the newest archived CDS rows before old backlog
 python worker.py --min-year-start 2025 --include-failed --limit 25
 
