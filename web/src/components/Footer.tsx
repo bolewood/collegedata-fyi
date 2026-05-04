@@ -10,7 +10,7 @@ export function Footer() {
       }}
     >
       <div
-        className="mx-auto max-w-5xl"
+        className="mx-auto max-w-5xl cd-footer-inner"
         style={{
           padding: "32px 24px 56px",
           display: "grid",
@@ -28,7 +28,7 @@ export function Footer() {
             CDS Initiative template.
           </div>
         </div>
-        <div style={{ display: "flex", gap: 24, alignSelf: "end" }}>
+        <div className="cd-footer-links" style={{ display: "flex", gap: 24, alignSelf: "end" }}>
           <a href="https://github.com/bolewood/collegedata-fyi" target="_blank" rel="noopener noreferrer">
             GitHub
           </a>

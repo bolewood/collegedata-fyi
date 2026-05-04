@@ -79,5 +79,6 @@ tools/mirrors/**/*.jsonl
 
 # Playwright MCP local browser profile / cache
 .playwright-mcp/
+.gstack/
 .vercel
 .env*.local

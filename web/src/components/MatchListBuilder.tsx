@@ -179,8 +179,9 @@ export function MatchListBuilder({
             <input name="act" type="number" inputMode="numeric" min="1" max="36" step="1" defaultValue={profile?.act ?? ""} />
           </label>
           <label>
-            <span>Home state</span>
+            <span>Student home state</span>
             <input name="state" type="text" maxLength={2} placeholder="OK" defaultValue={profile?.state ?? ""} />
+            <small>Used for residency context, not school location.</small>
           </label>
           <label>
             <span>Intended major</span>
@@ -194,7 +195,7 @@ export function MatchListBuilder({
         <form className="match-filter-form rule" onChange={onFilterChange}>
           <div className="meta">Filters</div>
           <label>
-            <span>Control</span>
+            <span>School type</span>
             <select name="control" defaultValue={filters.control}>
               <option value="all">All</option>
               <option value={"public" as SchoolControl}>Public</option>

@@ -72,7 +72,7 @@ export default async function BrowsePage() {
             <BrowserHeroStat label="Schools in scope" value={formatCount(stats.browser_school_count)} />
             <BrowserHeroStat label="Primary rows" value={formatCount(stats.browser_primary_row_count)} />
             <BrowserHeroStat label="Queryable fields" value={formatCount(stats.queryable_field_count)} />
-            <BrowserHeroStat label="Projection refreshed" value={formatShortDate(stats.browser_updated_at)} />
+            <BrowserHeroStat label="Data refreshed" value={formatShortDate(stats.browser_updated_at)} />
           </div>
         </div>
       </section>

@@ -249,31 +249,31 @@ export function SchoolBrowser() {
           className="browser-filter-grid"
         >
           <FilterInput
-            label="Enrollment at least"
+            label="Minimum undergrad enrollment"
             value={filters.undergradMin}
             onChange={(v) => updateFilter("undergradMin", v)}
             suffix="students"
           />
           <FilterInput
-            label="Acceptance at most"
+            label="Maximum acceptance rate"
             value={filters.acceptanceMax}
             onChange={(v) => updateFilter("acceptanceMax", v)}
             suffix="%"
           />
           <FilterInput
-            label="Yield at least"
+            label="Minimum yield"
             value={filters.yieldMin}
             onChange={(v) => updateFilter("yieldMin", v)}
             suffix="%"
           />
           <FilterInput
-            label="Net price at most"
+            label="Maximum average net price"
             value={filters.netPriceMax}
             onChange={(v) => updateFilter("netPriceMax", v)}
             suffix="$"
           />
           <FilterInput
-            label="Retention at least"
+            label="Minimum retention"
             value={filters.retentionMin}
             onChange={(v) => updateFilter("retentionMin", v)}
             suffix="%"
@@ -341,9 +341,11 @@ export function SchoolBrowser() {
           <MetaStat label="With required fields" value={metadata ? metadata.schools_with_required_fields.toLocaleString() : "..."} />
           <MetaStat label="Missing fields" value={metadata ? metadata.schools_missing_required_fields.toLocaleString() : "..."} />
         </div>
-        <p className="meta" style={{ marginTop: 14 }}>
-          Latest primary school-year rows, 2024-25+. Required for answerability: {requiredLabels}.
-          {metadata ? ` Failed active filters: ${metadata.schools_failing_filters.toLocaleString()}.` : ""}
+        <p className="meta" style={{ marginTop: 14, lineHeight: 1.55 }}>
+          Latest primary school-year rows, 2024-25+. Fields needed for the current filters: {requiredLabels}.
+          {metadata ? ` Filtered out by your criteria: ${metadata.schools_failing_filters.toLocaleString()}.` : ""}
+          {" "}
+          <Link href="/match">Looking for fit ranking? Use Match.</Link>
         </p>
       </section>
 
@@ -354,7 +356,13 @@ export function SchoolBrowser() {
         </div>
       )}
 
-      <div style={{ overflowX: "auto", opacity: loading ? 0.62 : 1 }}>
+      <div className="browser-mobile-results" style={{ opacity: loading ? 0.62 : 1 }}>
+        {rows.map((row) => (
+          <BrowserResultCard key={row.document_id} row={row} />
+        ))}
+      </div>
+
+      <div className="browser-table-wrap" style={{ overflowX: "auto", opacity: loading ? 0.62 : 1 }}>
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 940, fontSize: 14 }}>
           <thead>
             <tr className="meta" style={{ textAlign: "left", borderBottom: "1px solid var(--rule-strong)" }}>
@@ -399,7 +407,13 @@ export function SchoolBrowser() {
                   {formatCurrency(row.avg_net_price) || "-"}
                 </td>
                 <td style={{ padding: "12px 0 12px 10px" }}>
-                  <a href={row.archive_url} target="_blank" rel="noopener noreferrer" className="cd-chip">
+                  <a
+                    href={row.archive_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="cd-chip"
+                    data-testid="browser-source-link"
+                  >
                     {formatBadgeLabel(row.source_format)}
                   </a>
                 </td>
@@ -461,13 +475,81 @@ export function SchoolBrowser() {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
           }
         }
+        .browser-mobile-results {
+          display: none;
+        }
         @media (max-width: 560px) {
           .browser-filter-grid,
           .browser-meta-grid {
             grid-template-columns: 1fr !important;
           }
+          .browser-table-wrap {
+            display: none;
+          }
+          .browser-mobile-results {
+            display: grid;
+            gap: 12px;
+          }
         }
       `}</style>
+    </div>
+  );
+}
+
+function BrowserResultCard({ row }: { row: BrowserRow }) {
+  return (
+    <article className="cd-card" style={{ padding: 14 }}>
+      <div style={{ display: "flex", gap: 10, alignItems: "flex-start", justifyContent: "space-between" }}>
+        <div style={{ minWidth: 0 }}>
+          <Link href={`/schools/${row.school_id}`} style={{ fontFamily: "var(--serif)", fontSize: 19, lineHeight: 1.15 }}>
+            {row.school_name}
+          </Link>
+          {row.sub_institutional && (
+            <div className="meta" style={{ marginTop: 4 }}>{row.sub_institutional}</div>
+          )}
+        </div>
+        <span className="mono" style={{ flexShrink: 0, color: "var(--ink-3)", fontSize: 12 }}>
+          {row.canonical_year}
+        </span>
+      </div>
+      {row.data_quality_flag && (
+        <div className="cd-chip" style={{ marginTop: 8 }}>{row.data_quality_flag.replaceAll("_", " ")}</div>
+      )}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+          gap: "10px 12px",
+          marginTop: 14,
+        }}
+      >
+        <CardMetric label="Enrollment" value={row.undergrad_enrollment_scorecard == null ? "-" : Math.round(row.undergrad_enrollment_scorecard).toLocaleString()} />
+        <CardMetric label="Accept" value={formatPercent(row.acceptance_rate, 1) || "-"} />
+        <CardMetric label="Yield" value={formatPercent(row.yield_rate, 1) || "-"} />
+        <CardMetric label="Net price" value={formatCurrency(row.avg_net_price) || "-"} />
+        <CardMetric label="Applied" value={row.applied == null ? "-" : Math.round(row.applied).toLocaleString()} />
+        <CardMetric label="Admitted" value={row.admitted == null ? "-" : Math.round(row.admitted).toLocaleString()} />
+      </div>
+      <div className="rule" style={{ marginTop: 12, paddingTop: 10 }}>
+        <a
+          href={row.archive_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="cd-chip"
+          data-testid="browser-source-link"
+        >
+          {formatBadgeLabel(row.source_format)} source
+        </a>
+      </div>
+    </article>
+  );
+}
+
+function CardMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ borderTop: "1px solid var(--rule)", paddingTop: 7 }}>
+      <div className="meta" style={{ marginBottom: 4 }}>{label}</div>
+      <div className="nums" style={{ fontFamily: "var(--serif)", fontSize: 22, lineHeight: 1 }}>{value}</div>
     </div>
   );
 }

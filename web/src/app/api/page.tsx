@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { fetchSiteStats } from "@/lib/queries";
 import { formatCount, formatShortDate } from "@/lib/format";
+import { CopyButton } from "@/components/CopyButton";
 
 export const metadata: Metadata = {
   title: "API",
@@ -22,9 +23,14 @@ export const revalidate = 3600;
 
 function CodeBlock({ children }: { children: string }) {
   return (
-    <pre className="mt-2 overflow-x-auto rounded border border-gray-200 bg-gray-50 px-4 py-3 text-xs leading-relaxed text-gray-800">
-      <code>{children}</code>
-    </pre>
+    <div className="relative mt-2">
+      <div className="absolute right-2 top-2">
+        <CopyButton text={children} />
+      </div>
+      <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded border border-gray-200 bg-gray-50 px-4 py-3 pr-16 text-xs leading-relaxed text-gray-800">
+        <code>{children}</code>
+      </pre>
+    </div>
   );
 }
 
@@ -46,7 +52,7 @@ export default async function ApiDocsPage() {
           PostgREST
         </a>{" "}
         API at{" "}
-        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-sm">{BASE}</code>
+        <code className="break-all rounded bg-gray-100 px-1.5 py-0.5 text-sm">{BASE}</code>
         . Every page on this site is built from the same endpoints documented
         below.
       </p>
@@ -605,7 +611,7 @@ const { data } = await supabase
       <p className="mt-2 text-sm leading-relaxed text-gray-700">
         Original CDS files are hosted on Supabase Storage. Once you have a
         manifest row, build the public URL as{" "}
-        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+        <code className="break-all rounded bg-gray-100 px-1.5 py-0.5 text-xs">
           {BASE}/storage/v1/object/public/sources/&lt;source_storage_path&gt;
         </code>
         . Every file is content-addressed by SHA-256.
@@ -674,8 +680,8 @@ function Resource({
   const extras = allFields?.filter((f) => !highlighted.has(f)) ?? [];
   return (
     <div className="rounded border border-gray-200 p-4">
-      <div className="flex items-baseline justify-between gap-3">
-        <code className="text-sm font-semibold text-gray-900">
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <code className="min-w-0 break-all text-sm font-semibold text-gray-900">
           GET /rest/v1/{name}
         </code>
         <a

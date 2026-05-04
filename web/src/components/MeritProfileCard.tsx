@@ -29,6 +29,16 @@ function yesNo(value: boolean | null): string {
   return "n/a";
 }
 
+function hasCoreMeritFacts(profile: MeritProfileRow): boolean {
+  return (
+    profile.nonNeedAidRecipientsFirstYearFt != null ||
+    profile.nonNeedAidShareFirstYearFt != null ||
+    profile.avgNonNeedGrantFirstYearFt != null ||
+    profile.avgAidPackageFirstYearFt != null ||
+    profile.avgNeedGrantFirstYearFt != null
+  );
+}
+
 function recipientShareLine(profile: MeritProfileRow): string {
   if (profile.nonNeedAidShareFirstYearFt != null) {
     return `${percent(profile.nonNeedAidShareFirstYearFt)} of first-year full-time students`;
@@ -70,6 +80,40 @@ export function MeritProfileCard({ profile, sourceHref }: MeritProfileCardProps)
         : profile.meritProfileQuality === "limited"
           ? "Limited merit profile"
           : "Merit profile unavailable";
+  const meritStats = [
+    profile.avgNonNeedGrantFirstYearFt == null
+      ? null
+      : {
+          label: "Avg no-need grant",
+          value: currency(profile.avgNonNeedGrantFirstYearFt),
+          note: "H2A first-year full-time students with no financial need",
+        },
+    profile.avgAidPackageFirstYearFt == null
+      ? null
+      : {
+          label: "Avg aid package",
+          value: currency(profile.avgAidPackageFirstYearFt),
+          note: "H2 first-year full-time aid recipients",
+        },
+    profile.avgNeedGrantFirstYearFt == null
+      ? null
+      : {
+          label: "Avg need grant",
+          value: currency(profile.avgNeedGrantFirstYearFt),
+          note: "H2 first-year full-time need-based grant aid",
+        },
+    profile.avgNetPrice == null
+      ? null
+      : {
+          label: "Avg net price",
+          value: currency(profile.avgNetPrice),
+          note: "Federal Scorecard, all aided students",
+          muted: true,
+        },
+  ].filter(
+    (stat): stat is { label: string; value: string; note: string; muted?: boolean } =>
+      stat != null,
+  );
 
   return (
     <section className="merit-profile-card rule-2" aria-labelledby="merit-profile-title">
@@ -80,6 +124,12 @@ export function MeritProfileCard({ profile, sourceHref }: MeritProfileCardProps)
             <h2 id="merit-profile-title" className="serif merit-profile-card__title">
               What this school reports giving.
             </h2>
+            {!hasCoreMeritFacts(profile) && (
+              <p className="merit-profile-missing">
+                This CDS does not report the core H2A no-need grant fields. Federal
+                affordability context is still shown below when available.
+              </p>
+            )}
             <div className="merit-profile-flags mono">
               <span>{qualityLabel}</span>
               {profile.institutionalAidAcademics === true && (
@@ -93,35 +143,21 @@ export function MeritProfileCard({ profile, sourceHref }: MeritProfileCardProps)
           <div className="merit-profile-context">
             <span className="meta">No-need grant recipients</span>
             <strong className="serif stat-num">
-              {count(profile.nonNeedAidRecipientsFirstYearFt)}
+              {profile.nonNeedAidRecipientsFirstYearFt == null
+                ? "Not reported"
+                : count(profile.nonNeedAidRecipientsFirstYearFt)}
             </strong>
             <small>{recipientShareLine(profile)}</small>
           </div>
         </div>
 
-        <div className="merit-profile-stats">
-          <StatBlock
-            label="Avg no-need grant"
-            value={currency(profile.avgNonNeedGrantFirstYearFt)}
-            note="H2A first-year full-time students with no financial need"
-          />
-          <StatBlock
-            label="Avg aid package"
-            value={currency(profile.avgAidPackageFirstYearFt)}
-            note="H2 first-year full-time aid recipients"
-          />
-          <StatBlock
-            label="Avg need grant"
-            value={currency(profile.avgNeedGrantFirstYearFt)}
-            note="H2 first-year full-time need-based grant aid"
-          />
-          <StatBlock
-            label="Avg net price"
-            value={currency(profile.avgNetPrice)}
-            note="Federal Scorecard, all aided students"
-            muted
-          />
-        </div>
+        {meritStats.length > 0 && (
+          <div className="merit-profile-stats">
+            {meritStats.map((stat) => (
+              <StatBlock key={stat.label} {...stat} />
+            ))}
+          </div>
+        )}
 
         <div className="merit-profile-grid">
           <div className="merit-profile-panel">
@@ -152,16 +188,17 @@ export function MeritProfileCard({ profile, sourceHref }: MeritProfileCardProps)
           income, assets, residency, application round, program, and school policy.
         </div>
 
-        <div className="merit-profile-card__source rule mono">
-          § SOURCE: COMMON DATA SET {profile.cdsYear} · §H.2 §H.2A §H.6 §H.14 ·{" "}
-          <Link href="/methodology/merit-profile">METHOD →</Link>
+        <div className="merit-profile-card__source card-source-actions rule mono">
+          <span>§ SOURCE: COMMON DATA SET {profile.cdsYear} · §H.2 §H.2A §H.6 §H.14</span>
+          <span>
+            <Link href="/methodology/merit-profile">METHOD →</Link>
+          </span>
           {sourceHref ? (
-            <>
-              {" "}·{" "}
+            <span>
               <a href={sourceHref} target="_blank" rel="noopener noreferrer">
                 ARCHIVED SOURCE →
               </a>
-            </>
+            </span>
           ) : null}
         </div>
       </div>

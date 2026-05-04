@@ -196,7 +196,7 @@ export default async function HomePage() {
             {drain.map((r, i) => (
               <div
                 key={`${r.school}-${i}`}
-                className="rule"
+                className="rule cd-drain-row"
                 style={{
                   display: "grid",
                   gridTemplateColumns: "96px 1fr auto auto",
@@ -222,6 +222,8 @@ export default async function HomePage() {
           .cd-marginalia-left, .cd-marginalia-right { display: none !important; }
           .cd-stat-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 24px !important; }
           .cd-drain { grid-template-columns: 1fr !important; gap: 16px !important; }
+          .cd-drain-row { grid-template-columns: 88px 1fr auto !important; gap: 10px 12px !important; }
+          .cd-drain-row span:nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
         }
       `}</style>
     </div>

@@ -174,14 +174,17 @@ export function SchoolSearch() {
                   <div
                     className="mono"
                     style={{
+                      display: "flex",
+                      gap: 8,
+                      flexWrap: "wrap",
                       fontSize: 11,
                       color: "var(--ink-3)",
                       marginTop: 2,
                     }}
                   >
-                    {[r.city, r.state].filter(Boolean).join(", ")}
+                    <span>{[r.city, r.state].filter(Boolean).join(", ")}</span>
                     {r.latest_available_cds_year && (
-                      <span style={{ marginLeft: 12 }}>
+                      <span>
                         CDS {r.latest_available_cds_year}
                       </span>
                     )}
