@@ -680,5 +680,8 @@ This estimate excludes the mandatory two-day pre-PRD editorial spike.
   candidates stay operator-only until explicitly published.
 - The projector now writes an annual-report seed with watchlist freshness,
   themed event sections, extraction blockers, and methodology caveats.
+- Human review is supported by `tools/change_intelligence/review_change_event.py`,
+  which records a verdict and can publish confirmed events to the public
+  school-page card.
 - `/changes` remains the next implementation slice after event projection is
   calibrated.

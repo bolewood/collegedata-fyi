@@ -27,3 +27,20 @@ groups generated events into freshness, admissions pressure,
 international-student signals, aid shifts, reporting gaps, and
 extraction-quality blockers. Treat every `major` event and every
 `newly_missing` event as requiring source-PDF review before public reporting.
+
+Record human review and optionally publish a confirmed event:
+
+```bash
+python tools/change_intelligence/review_change_event.py \
+  --env /path/to/.env \
+  --event-id EVENT_ID \
+  --reviewer "Anthony" \
+  --verdict confirmed \
+  --source-page "2025 p. 12" \
+  --source-page "2024 p. 11" \
+  --notes "Checked the C9 table in both archived PDFs." \
+  --publish
+```
+
+Use `--publish` only after a confirmed verdict. Non-confirmed verdicts update
+`verification_status` and keep `public_visible = false`.
