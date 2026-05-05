@@ -445,7 +445,7 @@ _INLINE_PATTERNS: list[tuple[str, str, str]] = [
     # as free text rather than in the first table column, so the row-based
     # extractor can't find them. The anchor is the SAT label text, the
     # window captures the first N% that follows.
-    (r"submitting sat scores", r"(\d+)\s*%", "C.901"),
+    (r"submitting sat scores", r"(\d+(?:\.\d+)?)\s*%", "C.901"),
 ]
 
 
@@ -2857,19 +2857,61 @@ def resolve_c9_submission_rates(
     if "Submitting SAT Scores" not in markdown or "Submitting ACT Scores" not in markdown:
         return out
 
-    pattern = re.compile(
-        r"Submitting SAT Scores\s+Submitting ACT Scores\s+"
-        r"\|\s*Percent\s*\|\s*Number\s*\|\s*\n"
-        r"\|[\s\-:|]+\|\s*\n"
-        r"\|\s*([0-9.]+)\s*%?\s*\|\s*([0-9,]+)\s*\|\s*\n"
-        r"\|\s*([0-9.]+)\s*%?\s*\|\s*([0-9,]+)\s*\|",
+    labels = re.search(
+        r"Submitting SAT Scores\s+Submitting ACT Scores",
+        markdown,
         re.IGNORECASE,
     )
-    match = pattern.search(markdown)
-    if not match:
+    if not labels:
         return out
 
-    sat_pct, sat_num, act_pct, act_num = match.groups()
+    window = markdown[labels.end(): labels.end() + 1200]
+    table_match = re.search(
+        r"(\|\s*Percent\s*\|\s*Number\s*\|\s*\n"
+        r"\|[\s\-:|]+\|\s*\n"
+        r"\|\s*[0-9.]+\s*%?\s*\|\s*[0-9,]+\s*\|\s*\n"
+        r"\|\s*[0-9.]+\s*%?\s*\|\s*[0-9,]+\s*\|)",
+        window,
+        re.IGNORECASE,
+    )
+    if not table_match:
+        table_match = re.search(
+            r"(\|\s*[0-9.]+\s*%?\s*\|\s*[0-9,]+\s*\|\s*\n"
+            r"\|[\s\-:|]+\|\s*\n"
+            r"\|\s*[0-9.]+\s*%?\s*\|\s*[0-9,]+\s*\|)",
+            window,
+            re.IGNORECASE,
+        )
+    if not table_match:
+        return out
+
+    rows = [
+        line.strip()
+        for line in table_match.group(1).splitlines()
+        if line.strip().startswith("|")
+        and not re.match(r"^\|[\s\-:|]+\|$", line.strip())
+        and "percent" not in line.lower()
+    ]
+    if len(rows) < 2:
+        return out
+
+    def row_values(row: str) -> tuple[str, str] | None:
+        cells = [cell.strip() for cell in row.split("|")[1:-1]]
+        if len(cells) < 2:
+            return None
+        pct = _extract_number(cells[0])
+        num = _extract_number(cells[1])
+        if pct is None or num is None:
+            return None
+        return pct, num
+
+    sat = row_values(rows[0])
+    act = row_values(rows[1])
+    if not sat or not act:
+        return out
+
+    sat_pct, sat_num = sat
+    act_pct, act_num = act
     out["C.901"] = {"value": sat_pct.replace(",", ""), "source": "tier4_cleaner"}
     out["C.903"] = {"value": sat_num.replace(",", ""), "source": "tier4_cleaner"}
     out["C.902"] = {"value": act_pct.replace(",", ""), "source": "tier4_cleaner"}

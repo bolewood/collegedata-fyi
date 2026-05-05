@@ -6,6 +6,45 @@ from tier4_cleaner import clean
 
 
 class Tier4CleanerC9Test(unittest.TestCase):
+    def test_c9_submission_rates_decimal_table_without_headers(self):
+        markdown = """
+## C9 Percent and number of first-time, first-year students enrolled in Fall 2024 who submitted national standardized (SAT/ACT) test scores.
+
+Submitting SAT Scores Submitting ACT Scores
+
+| 50.3%   |   857 |
+|---------|-------|
+| 19.0%   |   324 |
+"""
+
+        values = clean(markdown)
+
+        self.assertEqual(values["C.901"]["value"], "50.3")
+        self.assertEqual(values["C.902"]["value"], "19.0")
+        self.assertEqual(values["C.903"]["value"], "857")
+        self.assertEqual(values["C.904"]["value"], "324")
+
+    def test_c9_submission_rates_labels_separated_from_percent_table(self):
+        markdown = """
+## C9 Percent and number of first-time, first-year students enrolled in Fall 2025 who submitted national standardized (SAT/ACT) test scores.
+
+Submitting SAT Scores Submitting ACT Scores
+
+For each assessment listed below, report the score that represents the 25th percentile.
+
+| Percent   | Number   |
+|-----------|----------|
+| 56%       | 1,022    |
+| 21%       | 385      |
+"""
+
+        values = clean(markdown)
+
+        self.assertEqual(values["C.901"]["value"], "56")
+        self.assertEqual(values["C.902"]["value"], "21")
+        self.assertEqual(values["C.903"]["value"], "1022")
+        self.assertEqual(values["C.904"]["value"], "385")
+
     def test_c9_split_submission_labels_and_blank_sat_composite(self):
         markdown = """
 ## C9 Percent and number of first-time, first-year students enrolled in Fall 2024 who submitted national standardized (SAT/ACT) test scores.
