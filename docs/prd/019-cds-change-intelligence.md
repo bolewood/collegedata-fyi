@@ -678,5 +678,7 @@ This estimate excludes the mandatory two-day pre-PRD editorial spike.
 - School-page `WhatChangedCard` is wired behind `public_visible` plus
   `verification_status in ('not_required', 'confirmed')`, so generated
   candidates stay operator-only until explicitly published.
-- `/changes` and annual report generation remain the next implementation slice
-  after event projection is calibrated.
+- The projector now writes an annual-report seed with watchlist freshness,
+  themed event sections, extraction blockers, and methodology caveats.
+- `/changes` remains the next implementation slice after event projection is
+  calibrated.

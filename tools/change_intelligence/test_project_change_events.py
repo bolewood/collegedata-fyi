@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from project_change_events import (
     FieldRule,
     build_events,
     classify_field_change,
     selectivity_band,
+    school_year_coverage,
+    write_report,
 )
 
 
@@ -156,6 +160,42 @@ class ChangeEventClassificationTests(unittest.TestCase):
 
         self.assertIsNotNone(event)
         self.assertEqual(event["event_type"], "quality_regression")
+
+    def test_school_year_coverage_counts_pairable_watchlist_schools(self):
+        rows = [
+            row(school_id="a", year_start=2024, canonical_year="2024-25"),
+            row(school_id="a", year_start=2025, canonical_year="2025-26"),
+            row(school_id="b", year_start=2025, canonical_year="2025-26"),
+        ]
+
+        coverage = school_year_coverage(rows, {"a", "b", "c"}, 2024, 2025)
+
+        self.assertEqual(coverage["watchlist_size"], 3)
+        self.assertEqual(coverage["with_prior"], 1)
+        self.assertEqual(coverage["with_latest"], 2)
+        self.assertEqual(coverage["pairable"], 1)
+
+    def test_write_report_includes_annual_seed_sections_and_caveats(self):
+        prior = row(acceptance_rate=0.19)
+        latest = row(
+            document_id="00000000-0000-0000-0000-000000000002",
+            canonical_year="2025-26",
+            year_start=2025,
+            acceptance_rate=0.24,
+        )
+        event = classify_field_change(prior, latest, ACCEPTANCE, RULES)
+        assert event is not None
+
+        with TemporaryDirectory() as d:
+            path = Path(d) / "report.md"
+            write_report([event], path, 2024, 2025, [prior, latest], {"test-college"})
+            text = path.read_text()
+
+        self.assertIn("## Freshness and coverage", text)
+        self.assertIn("## Biggest admissions-pressure signals", text)
+        self.assertIn("## Reporting gaps and silences worth reviewing", text)
+        self.assertIn("CDS events describe what changed", text)
+        self.assertIn("Test College", text)
 
 
 if __name__ == "__main__":

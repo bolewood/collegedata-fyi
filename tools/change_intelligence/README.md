@@ -21,3 +21,9 @@ generated events with `--apply`.
 Rules live in `tools/change_intelligence/rules.yaml`. The first slice compares
 the launch admissions/test fields already projected in `school_browser_rows`.
 Raw-field follow-up work should use `cds_field_observations`.
+
+The Markdown report is an annual-report seed, not publish-ready copy. It
+groups generated events into freshness, admissions pressure,
+international-student signals, aid shifts, reporting gaps, and
+extraction-quality blockers. Treat every `major` event and every
+`newly_missing` event as requiring source-PDF review before public reporting.
