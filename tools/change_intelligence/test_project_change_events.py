@@ -6,10 +6,12 @@ from tempfile import TemporaryDirectory
 
 from project_change_events import (
     FieldRule,
+    apply_existing_review_state,
     build_events,
     classify_field_change,
     selectivity_band,
     school_year_coverage,
+    stale_unreviewed_event_ids,
     write_report,
 )
 
@@ -196,6 +198,51 @@ class ChangeEventClassificationTests(unittest.TestCase):
         self.assertIn("## Reporting gaps and silences worth reviewing", text)
         self.assertIn("CDS events describe what changed", text)
         self.assertIn("Test College", text)
+
+    def test_existing_review_state_preserves_public_visibility(self):
+        events = [
+            {
+                "id": "reviewed",
+                "verification_status": "candidate",
+                "public_visible": False,
+            },
+            {
+                "id": "fresh",
+                "verification_status": "not_required",
+                "public_visible": False,
+            },
+        ]
+        existing = [
+            {
+                "id": "reviewed",
+                "verification_status": "confirmed",
+                "public_visible": True,
+            },
+            {
+                "id": "fresh",
+                "verification_status": "not_required",
+                "public_visible": False,
+            },
+        ]
+
+        apply_existing_review_state(events, existing)
+
+        self.assertEqual(events[0]["verification_status"], "confirmed")
+        self.assertTrue(events[0]["public_visible"])
+        self.assertEqual(events[1]["verification_status"], "not_required")
+        self.assertFalse(events[1]["public_visible"])
+
+    def test_stale_delete_keeps_reviewed_events(self):
+        existing = [
+            {"id": "regenerated", "verification_status": "not_required", "public_visible": False},
+            {"id": "stale-candidate", "verification_status": "candidate", "public_visible": False},
+            {"id": "stale-rejected", "verification_status": "extractor_noise", "public_visible": False},
+            {"id": "stale-public", "verification_status": "confirmed", "public_visible": True},
+        ]
+
+        stale = stale_unreviewed_event_ids(existing, {"regenerated"})
+
+        self.assertEqual(stale, ["stale-candidate"])
 
 
 if __name__ == "__main__":

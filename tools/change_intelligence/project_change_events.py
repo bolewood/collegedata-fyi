@@ -35,6 +35,7 @@ DEFAULT_WATCHLIST = REPO_ROOT / "data" / "watchlists" / "change_intelligence_cal
 DEFAULT_REPORT_DIR = REPO_ROOT / ".context" / "reports"
 
 BAD_FLAGS = {"wrong_file", "blank_template", "low_coverage"}
+REVIEWED_STATUSES = {"confirmed", "extractor_noise", "ambiguous", "not_reportable"}
 PRODUCER_FAMILY = {
     "tier1_xlsx": "tier1",
     "tier2_acroform": "tier2",
@@ -638,36 +639,80 @@ def write_report(
     path.write_text("\n".join(lines) + "\n")
 
 
-def persist_events(client: Any, events: list[dict[str, Any]], to_year: int, watchlist: set[str] | None) -> None:
-    existing_status: dict[str, str] = {}
-    event_ids = [event["id"] for event in events]
-    for i in range(0, len(event_ids), 100):
-        rows = (
-            client.table("cds_field_change_events")
-            .select("id,verification_status")
-            .in_("id", event_ids[i:i + 100])
-            .execute()
-            .data
-            or []
-        )
-        existing_status.update({row["id"]: row.get("verification_status") for row in rows})
+def apply_existing_review_state(
+    events: list[dict[str, Any]],
+    existing_rows: list[dict[str, Any]],
+) -> None:
+    existing_by_id = {row["id"]: row for row in existing_rows}
     for event in events:
-        status = existing_status.get(event["id"])
-        if status in {"confirmed", "extractor_noise", "ambiguous", "not_reportable"}:
+        existing = existing_by_id.get(event["id"])
+        if not existing:
+            continue
+        status = existing.get("verification_status")
+        if status in REVIEWED_STATUSES:
             event["verification_status"] = status
+            event["public_visible"] = bool(existing.get("public_visible"))
 
+
+def stale_unreviewed_event_ids(
+    existing_rows: list[dict[str, Any]],
+    current_event_ids: set[str],
+) -> list[str]:
+    stale: list[str] = []
+    for row in existing_rows:
+        if row.get("id") in current_event_ids:
+            continue
+        if row.get("verification_status") in REVIEWED_STATUSES:
+            continue
+        if row.get("public_visible"):
+            continue
+        stale.append(row["id"])
+    return stale
+
+
+def fetch_existing_events_in_scope(
+    client: Any,
+    to_year: int,
+    watchlist: set[str] | None,
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
     if watchlist:
         schools = sorted(watchlist)
-        for i in range(0, len(watchlist), 100):
-            (
+        for i in range(0, len(schools), 100):
+            chunk = schools[i:i + 100]
+            rows.extend(
                 client.table("cds_field_change_events")
-                .delete()
+                .select("id,verification_status,public_visible")
                 .eq("to_year_start", to_year)
-                .in_("school_id", schools[i:i + 100])
+                .in_("school_id", chunk)
                 .execute()
+                .data
+                or []
             )
-    else:
-        client.table("cds_field_change_events").delete().eq("to_year_start", to_year).execute()
+        return rows
+    return (
+        client.table("cds_field_change_events")
+        .select("id,verification_status,public_visible")
+        .eq("to_year_start", to_year)
+        .execute()
+        .data
+        or []
+    )
+
+
+def persist_events(client: Any, events: list[dict[str, Any]], to_year: int, watchlist: set[str] | None) -> None:
+    existing_rows = fetch_existing_events_in_scope(client, to_year, watchlist)
+    event_ids = {event["id"] for event in events}
+    apply_existing_review_state(events, existing_rows)
+
+    stale_ids = stale_unreviewed_event_ids(existing_rows, event_ids)
+    for i in range(0, len(stale_ids), 100):
+        (
+            client.table("cds_field_change_events")
+            .delete()
+            .in_("id", stale_ids[i:i + 100])
+            .execute()
+        )
     for i in range(0, len(events), 100):
         client.table("cds_field_change_events").upsert(events[i:i + 100]).execute()
 
