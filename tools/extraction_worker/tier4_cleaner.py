@@ -2014,8 +2014,75 @@ def resolve_c1_applications(
                                           "unknown gender who")):
                 gender_hits += 1
         is_gender_table = gender_hits >= 1
+        is_compact_gender_table = (
+            "men" in joined_hdr
+            and "women" in joined_hdr
+            and any(
+                _normalize_label(r["label"]) in {
+                    "applied",
+                    "admitted",
+                    "full time enrolled",
+                    "part time enrolled",
+                }
+                for r in table["rows"][:8]
+            )
+        )
 
-        if is_residency:
+        if is_compact_gender_table:
+            col_to_gender: list[tuple[int, str]] = []
+            raw_headers = [str(h).strip().lower() for h in table.get("headers", [])]
+            for ci, hdr in enumerate(raw_headers[1:]):
+                hdr_norm = _normalize_label_without_gender_rewrite(hdr)
+                if hdr_norm == "men" or hdr_norm == "males":
+                    col_to_gender.append((ci, "Males"))
+                elif hdr_norm == "women" or hdr_norm == "females":
+                    col_to_gender.append((ci, "Females"))
+                elif "another gender" in hdr_norm:
+                    col_to_gender.append((ci, "Another Gender"))
+                elif "unknown" in hdr_norm:
+                    col_to_gender.append((ci, "Unknown"))
+                elif hdr_norm == "total":
+                    col_to_gender.append((ci, "All"))
+
+            total_enrolled = 0
+            saw_total_enrolled = False
+            for row in table["rows"]:
+                label_norm = _normalize_label(row["label"])
+                if label_norm == "applied":
+                    action = "applied"
+                    unit_load = "All"
+                elif label_norm == "admitted":
+                    action = "admitted"
+                    unit_load = "All"
+                elif label_norm == "full time enrolled":
+                    action = "enrolled"
+                    unit_load = "FT"
+                elif label_norm == "part time enrolled":
+                    action = "enrolled"
+                    unit_load = "PT"
+                else:
+                    continue
+
+                for col_idx, gender in col_to_gender:
+                    if col_idx >= len(row["values"]):
+                        continue
+                    num = _extract_number(row["values"][col_idx])
+                    if num is None:
+                        continue
+                    if gender == "All" and action == "enrolled":
+                        total_enrolled += int(float(num))
+                        saw_total_enrolled = True
+                        continue
+                    qn = _lookup(gender, "All", action, unit_load=unit_load)
+                    if qn and qn not in out:
+                        out[qn] = {"value": num, "source": "tier4_cleaner"}
+
+            if saw_total_enrolled:
+                qn = _lookup("All", "All", "enrolled")
+                if qn and qn not in out:
+                    out[qn] = {"value": str(total_enrolled), "source": "tier4_cleaner"}
+
+        elif is_residency:
             # Map each value column index → residency key.
             col_to_res: list[tuple[int, str]] = []
             for ci, hdr in enumerate(headers_norm[1:]):
@@ -2916,6 +2983,49 @@ def resolve_c9_submission_rates(
     out["C.903"] = {"value": sat_num.replace(",", ""), "source": "tier4_cleaner"}
     out["C.902"] = {"value": act_pct.replace(",", ""), "source": "tier4_cleaner"}
     out["C.904"] = {"value": act_num.replace(",", ""), "source": "tier4_cleaner"}
+    return out
+
+
+def resolve_c9_combined_submission_percentile_table(
+    tables: list[dict], markdown: str, schema: SchemaIndex
+) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    for table in tables:
+        for row in table["rows"]:
+            values = row.get("values") or []
+            if len(values) < 6:
+                continue
+            label_norm = _normalize_label(row.get("label") or "")
+
+            if label_norm.startswith("sat"):
+                pct = _extract_number(values[0])
+                num = _extract_number(values[1])
+                if pct is not None:
+                    out.setdefault("C.901", {"value": pct, "source": "tier4_cleaner"})
+                if num is not None:
+                    out.setdefault("C.903", {"value": num, "source": "tier4_cleaner"})
+            elif label_norm == "act":
+                pct = _extract_number(values[0])
+                num = _extract_number(values[1])
+                if pct is not None:
+                    out.setdefault("C.902", {"value": pct, "source": "tier4_cleaner"})
+                if num is not None:
+                    out.setdefault("C.904", {"value": num, "source": "tier4_cleaner"})
+
+            assessment_norm = _normalize_label(values[2])
+            qns_by_role = None
+            for row_label, candidate in _PERCENTILE_QNS.items():
+                if _normalize_label(row_label) in assessment_norm:
+                    qns_by_role = candidate
+                    break
+            if not qns_by_role:
+                continue
+
+            for value, role in zip(values[3:6], ("p25", "p50", "p75")):
+                qn = qns_by_role.get(role)
+                num = _extract_number(value)
+                if qn and num is not None and _is_plausible_c9_percentile_value(qn, num):
+                    out.setdefault(qn, {"value": num, "source": "tier4_cleaner"})
     return out
 
 
@@ -5264,6 +5374,7 @@ _RESOLVERS = [
     resolve_c7_basis_for_selection,
     resolve_c8_entrance_exams,
     resolve_c9_submission_rates,
+    resolve_c9_combined_submission_percentile_table,
     resolve_c9_percentile_anchors,
     resolve_c9_score_distributions,
     resolve_c11_gpa_profile,

@@ -754,6 +754,7 @@ def _run_tier1(
     cell_map: dict,
     source_artifact: dict,
     dry_run: bool,
+    force_reextract: bool = False,
 ) -> ExtractionOutcome:
     """Tier 1 path: read filled CDS XLSX via template cell-position map."""
     try:
@@ -775,7 +776,7 @@ def _run_tier1(
         return extraction_no_project(f"tier1_low_fields ({fields} fields)")
 
     if not dry_run:
-        if artifact_already_extracted(
+        if not force_reextract and artifact_already_extracted(
             client, document_id, producer, producer_version,
             resolution.schema_version, canonical.get("source_sha256"),
         ):
@@ -805,6 +806,7 @@ def _run_tier6(
     schema_index,
     source_artifact: dict,
     dry_run: bool,
+    force_reextract: bool = False,
 ) -> ExtractionOutcome:
     """Tier 6 path (PRD 008): HTML → markdown → tier4_cleaner.
 
@@ -869,7 +871,7 @@ def _run_tier6(
     quality_flag = low_field_quality_flag(fields)
 
     if not dry_run:
-        if artifact_already_extracted(
+        if not force_reextract and artifact_already_extracted(
             client, document_id, producer, producer_version,
             resolution.schema_version, canonical.get("source_sha256"),
         ):
@@ -905,6 +907,7 @@ def _run_tier4(
     schema_index,
     source_artifact: dict,
     dry_run: bool,
+    force_reextract: bool = False,
 ) -> ExtractionOutcome:
     """Tier 4 path: Docling baseline → markdown artifact.
 
@@ -939,7 +942,7 @@ def _run_tier4(
     quality_flag = low_field_quality_flag(fields)
 
     if not dry_run:
-        if artifact_already_extracted(
+        if not force_reextract and artifact_already_extracted(
             client, document_id, producer, producer_version,
             resolution.schema_version, canonical.get("source_sha256"),
         ):
@@ -1136,6 +1139,7 @@ def extract_one(
     schema_registry: dict[str, tuple[Path, dict[str, Any]]],
     dry_run: bool,
     cell_maps: dict[str, dict[str, tuple[str, str]]] | None = None,
+    force_reextract: bool = False,
 ) -> ExtractionOutcome:
     """Process a single cds_documents row. Returns a short action string
     for logging. Does NOT raise — every failure is caught and recorded
@@ -1224,6 +1228,7 @@ def extract_one(
         return _run_tier1(
             client, document_id, school_id, pdf_bytes,
             source_format, resolution, cell_map, source_artifact, dry_run,
+            force_reextract,
         )
     if source_format == "xlsx" and not cell_map:
         if not dry_run:
@@ -1241,6 +1246,7 @@ def extract_one(
         return _run_tier6(
             client, document_id, school_id, pdf_bytes,
             source_format, resolution, schema_index, source_artifact, dry_run,
+            force_reextract,
         )
 
     # pdf_scanned routes to Tier 4 too — Docling's do_ocr=True lazily runs
@@ -1253,6 +1259,7 @@ def extract_one(
         return _run_tier4(
             client, document_id, school_id, pdf_bytes,
             source_format, resolution, schema_index, source_artifact, dry_run,
+            force_reextract,
         )
 
     if source_format != "pdf_fillable":
@@ -1288,7 +1295,7 @@ def extract_one(
     producer_version = canonical["producer_version"]
 
     if not dry_run:
-        if artifact_already_extracted(
+        if not force_reextract and artifact_already_extracted(
             client, document_id, producer, producer_version,
             resolution.schema_version, canonical.get("source_sha256"),
         ):
@@ -1540,6 +1547,15 @@ def main() -> int:
     )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
+        "--force-reextract",
+        action="store_true",
+        help=(
+            "Write a fresh canonical artifact even when the same document, "
+            "producer version, schema, and source hash were already extracted. "
+            "Use for managed local re-drains after cleaner-only code changes."
+        ),
+    )
+    parser.add_argument(
         "--skip-projection-refresh",
         action="store_true",
         help=(
@@ -1754,7 +1770,14 @@ def main() -> int:
     low_field_docs: list[dict[str, Any]] = []
     failure_count = 0
     for i, doc in enumerate(docs, 1):
-        outcome = extract_one(client, doc, schema_registry, args.dry_run, cell_maps)
+        outcome = extract_one(
+            client,
+            doc,
+            schema_registry,
+            args.dry_run,
+            cell_maps,
+            force_reextract=args.force_reextract,
+        )
         bucket = outcome.action.split(":")[0].split(" ")[0]
         counts[bucket] += 1
         fields = parsed_field_count(outcome.action)

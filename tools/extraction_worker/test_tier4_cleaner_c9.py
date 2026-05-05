@@ -45,6 +45,39 @@ For each assessment listed below, report the score that represents the 25th perc
         self.assertEqual(values["C.903"]["value"], "1022")
         self.assertEqual(values["C.904"]["value"], "385")
 
+    def test_c9_combined_submission_and_percentile_table(self):
+        markdown = """
+C9. Percent and number of first-time, first-year students enrolled in Fall 2024 who submitted national standardized (SAT/ACT) test scores.
+
+|       | %Submitting   |   Number |                                        | Percentiles 25th   | 50th   | 75th   |
+|-------|---------------|----------|----------------------------------------|--------------------|--------|--------|
+| SAT I | 33%           |     1083 | SAT Evidence-Based Reading and Writing | 690                | 720    | 750    |
+|       |               |          | SAT Math                               | 730                | 760    | 780    |
+| ACT   | 10%           |      330 | SAT Composite                          | 1430               | 1470   | 1510   |
+|       |               |          | ACT Composite                          | 32                 | 33     | 34     |
+|       |               |          | ACT English                            | 33                 | 35     | 35     |
+|       |               |          | ACT Math                               | 29                 | 32     | 35     |
+"""
+
+        values = clean(markdown)
+
+        self.assertEqual(values["C.901"]["value"], "33")
+        self.assertEqual(values["C.902"]["value"], "10")
+        self.assertEqual(values["C.903"]["value"], "1083")
+        self.assertEqual(values["C.904"]["value"], "330")
+        self.assertEqual(values["C.905"]["value"], "1430")
+        self.assertEqual(values["C.906"]["value"], "1470")
+        self.assertEqual(values["C.907"]["value"], "1510")
+        self.assertEqual(values["C.908"]["value"], "690")
+        self.assertEqual(values["C.909"]["value"], "720")
+        self.assertEqual(values["C.910"]["value"], "750")
+        self.assertEqual(values["C.911"]["value"], "730")
+        self.assertEqual(values["C.912"]["value"], "760")
+        self.assertEqual(values["C.913"]["value"], "780")
+        self.assertEqual(values["C.914"]["value"], "32")
+        self.assertEqual(values["C.915"]["value"], "33")
+        self.assertEqual(values["C.916"]["value"], "34")
+
     def test_c9_split_submission_labels_and_blank_sat_composite(self):
         markdown = """
 ## C9 Percent and number of first-time, first-year students enrolled in Fall 2024 who submitted national standardized (SAT/ACT) test scores.
