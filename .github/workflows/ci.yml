@@ -39,6 +39,8 @@ jobs:
           python -m unittest tools.tier1_extractor.test_extract
       - name: Run scorecard loader tests
         run: python -m unittest tools.scorecard.test_load_directory
+      - name: Run change intelligence tests
+        run: python -m unittest discover -s tools/change_intelligence -p "test_*.py"
 
   migrations:
     # Structural sanity checks on supabase/migrations/. Verifies every

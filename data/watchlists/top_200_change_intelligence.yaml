@@ -1,0 +1,72 @@
+version: 0.1.0
+status: operator_seed_v0
+description: >
+  Operator-only PRD 019 watchlist seed. This is intentionally not a public
+  ranking. v0 starts with the calibration subset plus high-recognition schools
+  already important to the product; later passes should expand this toward the
+  full Top 200 recipe from the PRD using application volume, flagship publics,
+  and public/operator-reviewed LAC recognition.
+schools:
+  - { school_id: harvard, segment: high_selectivity_private }
+  - { school_id: yale, segment: high_selectivity_private }
+  - { school_id: princeton, segment: high_selectivity_private }
+  - { school_id: mit, segment: high_selectivity_private }
+  - { school_id: stanford, segment: high_selectivity_private }
+  - { school_id: duke, segment: high_selectivity_private }
+  - { school_id: northwestern, segment: high_selectivity_private }
+  - { school_id: vanderbilt, segment: high_selectivity_private }
+  - { school_id: amherst-college, segment: high_selectivity_private }
+  - { school_id: bowdoin-college, segment: high_selectivity_private }
+  - { school_id: brown, segment: high_selectivity_private }
+  - { school_id: dartmouth, segment: high_selectivity_private }
+  - { school_id: cornell, segment: high_selectivity_private }
+  - { school_id: university-of-pennsylvania, segment: high_selectivity_private }
+  - { school_id: caltech, segment: high_selectivity_private }
+  - { school_id: rice, segment: high_selectivity_private }
+  - { school_id: notre-dame, segment: high_selectivity_private }
+  - { school_id: washington-university-in-st-louis, segment: high_selectivity_private }
+  - { school_id: emory, segment: high_selectivity_private }
+  - { school_id: georgetown, segment: high_selectivity_private }
+  - { school_id: williams-college, segment: high_selectivity_lac }
+  - { school_id: pomona-college, segment: high_selectivity_lac }
+  - { school_id: swarthmore-college, segment: high_selectivity_lac }
+  - { school_id: wellesley-college, segment: high_selectivity_lac }
+  - { school_id: carleton-college, segment: high_selectivity_lac }
+  - { school_id: middlebury-college, segment: high_selectivity_lac }
+  - { school_id: grinnell-college, segment: high_selectivity_lac }
+  - { school_id: haverford-college, segment: high_selectivity_lac }
+  - { school_id: smith-college, segment: high_selectivity_lac }
+  - { school_id: barnard, segment: high_selectivity_lac }
+  - { school_id: uc-berkeley, segment: flagship_public }
+  - { school_id: ucla, segment: flagship_public }
+  - { school_id: university-of-michigan, segment: flagship_public }
+  - { school_id: university-of-virginia, segment: flagship_public }
+  - { school_id: university-of-north-carolina-at-chapel-hill, segment: flagship_public }
+  - { school_id: georgia-tech, segment: flagship_public }
+  - { school_id: texas-am, segment: flagship_public }
+  - { school_id: ohio-state, segment: flagship_public }
+  - { school_id: university-of-wisconsin-madison, segment: flagship_public }
+  - { school_id: university-of-florida, segment: flagship_public }
+  - { school_id: university-of-washington, segment: flagship_public }
+  - { school_id: university-of-illinois-urbana-champaign, segment: flagship_public }
+  - { school_id: penn-state, segment: flagship_public }
+  - { school_id: university-of-texas-at-austin, segment: flagship_public }
+  - { school_id: university-of-georgia, segment: flagship_public }
+  - { school_id: university-of-maryland-college-park, segment: flagship_public }
+  - { school_id: university-of-minnesota-twin-cities, segment: flagship_public }
+  - { school_id: university-of-pittsburgh, segment: flagship_public }
+  - { school_id: university-of-arizona, segment: flagship_public }
+  - { school_id: university-of-oregon, segment: flagship_public }
+  - { school_id: columbia, segment: international_heavy }
+  - { school_id: nyu, segment: international_heavy }
+  - { school_id: northeastern, segment: international_heavy }
+  - { school_id: usc, segment: international_heavy }
+  - { school_id: boston-university, segment: international_heavy }
+  - { school_id: carnegie-mellon, segment: international_heavy }
+  - { school_id: university-of-rochester, segment: international_heavy }
+  - { school_id: case-western-reserve-university, segment: international_heavy }
+  - { school_id: arizona-state, segment: broad_access_or_edge }
+  - { school_id: university-of-cincinnati, segment: broad_access_or_edge }
+  - { school_id: george-mason-university, segment: broad_access_or_edge }
+  - { school_id: kent-state, segment: broad_access_or_edge }
+  - { school_id: university-of-texas-at-dallas, segment: broad_access_or_edge }

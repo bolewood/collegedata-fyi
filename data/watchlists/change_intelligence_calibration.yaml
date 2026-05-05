@@ -1,0 +1,72 @@
+version: 0.1.0
+description: >
+  PRD 019 calibration subset. Operator-only seed used to tune thresholds before
+  generating report-bound change events.
+schools:
+  # High-selectivity private universities and liberal arts colleges.
+  - school_id: harvard
+    segment: high_selectivity_private
+  - school_id: yale
+    segment: high_selectivity_private
+  - school_id: princeton
+    segment: high_selectivity_private
+  - school_id: mit
+    segment: high_selectivity_private
+  - school_id: stanford
+    segment: high_selectivity_private
+  - school_id: duke
+    segment: high_selectivity_private
+  - school_id: northwestern
+    segment: high_selectivity_private
+  - school_id: vanderbilt
+    segment: high_selectivity_private
+  - school_id: amherst-college
+    segment: high_selectivity_private
+  - school_id: bowdoin-college
+    segment: high_selectivity_private
+
+  # Flagship or high-application public universities.
+  - school_id: uc-berkeley
+    segment: flagship_public
+  - school_id: ucla
+    segment: flagship_public
+  - school_id: university-of-michigan
+    segment: flagship_public
+  - school_id: university-of-virginia
+    segment: flagship_public
+  - school_id: university-of-north-carolina-at-chapel-hill
+    segment: flagship_public
+  - school_id: georgia-tech
+    segment: flagship_public
+  - school_id: texas-am
+    segment: flagship_public
+  - school_id: ohio-state
+    segment: flagship_public
+  - school_id: university-of-wisconsin-madison
+    segment: flagship_public
+  - school_id: university-of-florida
+    segment: flagship_public
+
+  # International-heavy universities.
+  - school_id: columbia
+    segment: international_heavy
+  - school_id: nyu
+    segment: international_heavy
+  - school_id: northeastern
+    segment: international_heavy
+  - school_id: usc
+    segment: international_heavy
+  - school_id: boston-university
+    segment: international_heavy
+
+  # Broad-access / regional / extraction-edge calibration.
+  - school_id: arizona-state
+    segment: broad_access_or_edge
+  - school_id: university-of-cincinnati
+    segment: broad_access_or_edge
+  - school_id: george-mason-university
+    segment: broad_access_or_edge
+  - school_id: kent-state
+    segment: broad_access_or_edge
+  - school_id: university-of-texas-at-dallas
+    segment: broad_access_or_edge

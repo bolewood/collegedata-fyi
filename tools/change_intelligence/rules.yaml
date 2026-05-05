@@ -1,0 +1,167 @@
+version: 0.1.0
+description: >
+  PRD 019 launch rules for deterministic year-over-year CDS change events.
+  Probability fields use fractional values and percentage-point thresholds.
+
+global:
+  bad_quality_flags:
+    - wrong_file
+    - blank_template
+    - low_coverage
+  source_provenance_severity_cap: watch
+  newly_missing_requires_same_producer_version: true
+  human_verification:
+    major: candidate
+    newly_missing: candidate
+
+selectivity_bands:
+  high_selectivity:
+    max_admit_rate: 0.20
+  selective:
+    min_admit_rate: 0.20
+    max_admit_rate: 0.50
+  broad_access:
+    min_admit_rate: 0.50
+  unknown_selectivity: {}
+
+fields:
+  acceptance_rate:
+    label: Admit rate
+    family: admissions_pressure
+    source: school_browser_rows
+    column: acceptance_rate
+    value_kind: rate
+    thresholds:
+      unknown_selectivity: { notable_pp: 0.03, major_pp: 0.06 }
+      high_selectivity: { notable_pp: 0.02, major_pp: 0.03 }
+      selective: { notable_pp: 0.03, major_pp: 0.06 }
+      broad_access: { notable_pp: 0.05, major_pp: 0.10 }
+
+  yield_rate:
+    label: Yield rate
+    family: admissions_pressure
+    source: school_browser_rows
+    column: yield_rate
+    value_kind: rate
+    thresholds:
+      unknown_selectivity: { notable_pp: 0.04, major_pp: 0.08 }
+      high_selectivity: { notable_pp: 0.03, major_pp: 0.05 }
+      selective: { notable_pp: 0.04, major_pp: 0.08 }
+      broad_access: { notable_pp: 0.06, major_pp: 0.12 }
+
+  applied:
+    label: First-year applicants
+    family: admissions_pressure
+    source: school_browser_rows
+    column: applied
+    value_kind: count
+    thresholds:
+      default: { notable_abs: 1000, major_abs: 5000, notable_relative: 0.10, major_relative: 0.25, min_denominator: 500 }
+
+  admitted:
+    label: First-year admits
+    family: admissions_pressure
+    source: school_browser_rows
+    column: admitted
+    value_kind: count
+    thresholds:
+      default: { notable_abs: 500, major_abs: 2500, notable_relative: 0.10, major_relative: 0.25, min_denominator: 250 }
+
+  enrolled_first_year:
+    label: Enrolled first-years
+    family: admissions_pressure
+    source: school_browser_rows
+    column: enrolled_first_year
+    value_kind: count
+    thresholds:
+      default: { notable_abs: 100, major_abs: 500, notable_relative: 0.08, major_relative: 0.20, min_denominator: 100 }
+
+  ed_applicants:
+    label: Early decision applicants
+    family: admissions_pressure
+    source: school_browser_rows
+    column: ed_applicants
+    value_kind: count
+    thresholds:
+      default: { notable_abs: 50, major_abs: 200, notable_relative: 0.15, major_relative: 0.35, min_denominator: 50 }
+
+  ed_admitted:
+    label: Early decision admits
+    family: admissions_pressure
+    source: school_browser_rows
+    column: ed_admitted
+    value_kind: count
+    thresholds:
+      default: { notable_abs: 25, major_abs: 100, notable_relative: 0.15, major_relative: 0.35, min_denominator: 25 }
+
+  sat_submit_rate:
+    label: SAT submit rate
+    family: admissions_pressure
+    source: school_browser_rows
+    column: sat_submit_rate
+    value_kind: rate
+    thresholds:
+      default: { notable_pp: 0.05, major_pp: 0.10 }
+
+  act_submit_rate:
+    label: ACT submit rate
+    family: admissions_pressure
+    source: school_browser_rows
+    column: act_submit_rate
+    value_kind: rate
+    thresholds:
+      default: { notable_pp: 0.05, major_pp: 0.10 }
+
+  sat_composite_p25:
+    label: SAT composite 25th percentile
+    family: admissions_pressure
+    source: school_browser_rows
+    column: sat_composite_p25
+    value_kind: score_sat
+    thresholds:
+      default: { notable_abs: 30, major_abs: 80 }
+
+  sat_composite_p50:
+    label: SAT composite 50th percentile
+    family: admissions_pressure
+    source: school_browser_rows
+    column: sat_composite_p50
+    value_kind: score_sat
+    thresholds:
+      default: { notable_abs: 30, major_abs: 80 }
+
+  sat_composite_p75:
+    label: SAT composite 75th percentile
+    family: admissions_pressure
+    source: school_browser_rows
+    column: sat_composite_p75
+    value_kind: score_sat
+    thresholds:
+      default: { notable_abs: 30, major_abs: 80 }
+
+  act_composite_p25:
+    label: ACT composite 25th percentile
+    family: admissions_pressure
+    source: school_browser_rows
+    column: act_composite_p25
+    value_kind: score_act
+    thresholds:
+      default: { notable_abs: 1, major_abs: 3 }
+
+  act_composite_p50:
+    label: ACT composite 50th percentile
+    family: admissions_pressure
+    source: school_browser_rows
+    column: act_composite_p50
+    value_kind: score_act
+    thresholds:
+      default: { notable_abs: 1, major_abs: 3 }
+
+  act_composite_p75:
+    label: ACT composite 75th percentile
+    family: admissions_pressure
+    source: school_browser_rows
+    column: act_composite_p75
+    value_kind: score_act
+    thresholds:
+      default: { notable_abs: 1, major_abs: 3 }

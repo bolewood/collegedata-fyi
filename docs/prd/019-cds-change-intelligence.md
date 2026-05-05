@@ -1,6 +1,6 @@
 # PRD 019: CDS change intelligence and reporting gaps
 
-**Status:** Draft, candidate next strategic PRD.
+**Status:** In implementation. Phase 1 core projection slice started 2026-05-05.
 **Created:** 2026-05-05
 **Author:** Anthony + Codex
 **Related:** [PRD 014](014-cross-year-canonical-schema.md), [PRD 016B](016B-admission-strategy-card.md), [PRD 017](017-match-list-builder.md), [PRD 018](018-open-college-fit-data.md), [Queryable browser backend](../queryable-browser-backend.md)
@@ -664,3 +664,16 @@ This estimate excludes the mandatory two-day pre-PRD editorial spike.
   `cds_field_change_events`.
 - `/changes` starts operator-only and becomes public after threshold calibration
   and the first editorial review.
+
+## Implementation notes
+
+- Phase 1 v0 ships the deterministic event substrate first:
+  `cds_field_observations`, `cds_field_change_events`,
+  `cds_field_change_event_reviews`,
+  `tools/change_intelligence/project_change_events.py`, and
+  `tools/change_intelligence/rules.yaml`.
+- The first projector compares the launch admissions/test fields already
+  materialized in `school_browser_rows`. Raw-field comparisons should build on
+  `cds_field_observations` after the calibration subset is reviewed.
+- School-page `WhatChangedCard`, `/changes`, and annual report generation remain
+  the next implementation slice after event projection is calibrated.
