@@ -107,7 +107,12 @@ select
   d.last_verified_at,
   d.updated_at as document_updated_at,
   q.last_outcome,
-  q.last_attempted_at as last_challenge_at,
+  -- archive_queue's terminal-state timestamp is processed_at (set when
+  -- the row transitions to status='done' or 'failed_permanent'). For a
+  -- bot-challenge row this records when we last confirmed the WAF wall
+  -- was still in place. The view is named for the operator-facing
+  -- meaning ("last challenge at"), not the underlying column.
+  q.processed_at as last_challenge_at,
   q.last_error
 from public.cds_documents d
 left join public.archive_queue q
