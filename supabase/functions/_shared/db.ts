@@ -106,6 +106,11 @@ export interface InsertFreshArgs {
   // (e.g., 'mirror_college_transitions'). See migration
   // 20260419100000_source_provenance.sql for the enum domain.
   source_provenance?: string;
+  // HTTP Last-Modified header at fetch time, parsed to ISO 8601. Null
+  // when the source host doesn't emit one. Persisted into
+  // cds_documents.source_http_last_modified by migration
+  // 20260505160000_archive_observability.sql for freshness audits.
+  source_http_last_modified?: string | null;
 }
 
 // Used for the "no existing row" branch. Inserts cds_documents + the first
@@ -132,6 +137,7 @@ export async function insertFreshDocument(
       last_verified_at: nowIso,
       extraction_status: "extraction_pending",
       source_provenance: args.source_provenance ?? "school_direct",
+      source_http_last_modified: args.source_http_last_modified ?? null,
     })
     .select("id")
     .single();
@@ -163,6 +169,10 @@ export interface RefreshArgs {
   // operator override" which is school_direct by definition unless
   // otherwise stated.
   source_provenance?: string;
+  // HTTP Last-Modified at refresh time. Captured fresh on every
+  // re-archive; clears Stale value if the school stopped emitting
+  // the header. Null is the correct "not reported by host" value.
+  source_http_last_modified?: string | null;
 }
 
 // Used when a new SHA is seen for an existing (school, year) row.
@@ -192,6 +202,7 @@ export async function refreshDocumentWithNewSha(
       participation_status: "published",
       removed_at: null,
       source_provenance: args.source_provenance ?? "school_direct",
+      source_http_last_modified: args.source_http_last_modified ?? null,
     })
     .eq("id", args.document_id);
   if (updErr) {

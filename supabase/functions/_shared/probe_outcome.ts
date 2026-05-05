@@ -36,7 +36,15 @@ export type ProbeOutcome =
   | "file_too_large" //         exceeds MAX_SOURCE_BYTES
   | "blocked_url" //            SSRF guard or unsafe URL filter rejected the URL
   | "transient" //              5xx, timeout, network blip; will retry next cron
-  | "permanent_other"; //       unclassified permanent failure (should be rare)
+  | "permanent_other" //        unclassified permanent failure (should be rare)
+  | "bot_challenge"; //         Cloudflare/Imperva WAF returned a verification
+//                              challenge instead of the file. Distinct from
+//                              wrong_content_type (school link returns
+//                              generic HTML) and auth_walled_* (real SSO).
+//                              Manual download via tools/finder/manual_urls.yaml
+//                              is the expected mitigation. Surfaced via
+//                              public.bot_challenged_documents view +
+//                              ops-extraction-worker GitHub-issue notification.
 
 export const PROBE_OUTCOME_VALUES: ProbeOutcome[] = [
   "inserted",
@@ -54,6 +62,7 @@ export const PROBE_OUTCOME_VALUES: ProbeOutcome[] = [
   "blocked_url",
   "transient",
   "permanent_other",
+  "bot_challenge",
 ];
 
 // Hosts that, when reached as the final URL of a redirect chain,
@@ -120,6 +129,12 @@ export const DEFAULT_COOLDOWN_DAYS: Record<ProbeOutcome, number> = {
   blocked_url: 30,
   transient: 0,
   permanent_other: 30,
+  // bot_challenge: 7d. Long enough that the daily extraction cron does not
+  // re-fire identical GitHub issues; short enough that a school's WAF policy
+  // change is picked up within a week. The mitigation (manual upload) takes
+  // operator-time, not cron-time, so the cooldown isn't really about backoff
+  // — it's about how often we want to surface the same "still blocked" fact.
+  bot_challenge: 7,
 };
 
 // Best-effort categorisation of pre-existing free-text error messages
@@ -142,6 +157,24 @@ export function categoriseLegacyError(
   }
   if (m.includes(".okta.com")) return "auth_walled_okta";
   if (m.includes("accounts.google.com")) return "auth_walled_google";
+
+  // Bot-challenge — match BEFORE generic HTTP-status patterns so a 403
+  // from Cloudflare lands as bot_challenge instead of being mis-bucketed
+  // as transient. Patterns reflect the canonical strings emitted by
+  // archive.ts when WAF detection fires plus the body markers Cloudflare
+  // and Imperva inject into challenge responses.
+  if (
+    m.includes("bot challenge") ||
+    m.includes("cloudflare bot") ||
+    m.includes("imperva bot") ||
+    m.includes("just a moment") ||
+    m.includes("cf-mitigated") ||
+    m.includes("cf-chl-") ||
+    m.includes("__cf_chl_") ||
+    m.includes("incapsula incident")
+  ) {
+    return "bot_challenge";
+  }
 
   // HTTP-status-specific
   if (m.includes("http 404") || m.includes("http 410") || m.includes("upstream_gone")) {

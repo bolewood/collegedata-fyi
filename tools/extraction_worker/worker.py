@@ -997,6 +997,53 @@ def clear_recoverable_quality_flag(client: Client, document_id: str) -> None:
     ).execute()
 
 
+def write_source_metadata(
+    client: Client,
+    document_id: str,
+    data: bytes,
+    source_format: Optional[str],
+) -> None:
+    """Persist embedded source-file metadata to cds_documents.
+
+    Best-effort — failures swallowed so metadata capture never blocks
+    extraction. Reads /CreationDate, /ModDate, /Producer (PDF) or
+    dcterms:created, dcterms:modified, /creator (XLSX) and writes to
+    source_creation_date / source_modification_date / source_producer
+    columns added by migration 20260505160000_archive_observability.sql.
+
+    Why best-effort: pypdf and openpyxl both occasionally raise on
+    malformed bytes. The extraction tier paths have their own error
+    handling and would still proceed; this metadata is supplementary
+    signal, not blocking. See tools/extraction_worker/source_metadata.py
+    for the parsing logic.
+    """
+    try:
+        from source_metadata import extract_source_metadata
+        meta = extract_source_metadata(data, source_format)
+    except Exception:
+        return
+    # Only write when we actually have non-null fields. An empty dict means
+    # the format was HTML/DOCX/unknown or the bytes wouldn't parse — in
+    # both cases we leave the columns alone rather than overwriting
+    # potentially-good prior values with NULL.
+    payload = {k: v for k, v in meta.items() if v is not None}
+    if not payload:
+        return
+    try:
+        client.table("cds_documents").update(payload).eq(
+            "id", document_id,
+        ).execute()
+    except Exception:
+        # Persistent failure shouldn't break extraction. Log via stderr
+        # so operators see the issue in worker.log.
+        print(
+            f"    source_metadata: persist failed for {document_id} "
+            f"({source_format})",
+            file=sys.stderr,
+            flush=True,
+        )
+
+
 def write_detected_year(
     client: Client,
     document_id: str,
@@ -1163,6 +1210,14 @@ def extract_one(
             f"stored={doc.get('source_format') or 'null'} detected={source_format}",
             flush=True,
         )
+
+    # Capture embedded source-file metadata (PDF /CreationDate, /ModDate,
+    # /Producer or XLSX dcterms:created, dcterms:modified, /creator) and
+    # persist to cds_documents. Best-effort: failures here never block
+    # extraction. See tools/extraction_worker/source_metadata.py and
+    # migration 20260505160000_archive_observability.sql.
+    if not dry_run:
+        write_source_metadata(client, document_id, pdf_bytes, source_format)
 
     cell_map = (cell_maps or {}).get(resolution.schema_version)
     if source_format == "xlsx" and cell_map:

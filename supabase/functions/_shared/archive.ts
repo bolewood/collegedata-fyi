@@ -12,7 +12,7 @@ import {
   ResolveResult,
   USER_AGENT,
 } from "./resolve.ts";
-import { inferHosting, type HostingInference } from "./hosting.ts";
+import { inferHosting, inferWaf, type HostingInference } from "./hosting.ts";
 import {
   bumpVerified,
   fetchDocumentForSchoolYear,
@@ -521,9 +521,8 @@ async function archiveOneCandidate(
   options: { source_provenance?: string } = {},
 ): Promise<CandidateOutcome> {
   // Download with a hard memory + wall clock cap.
-  const { bytes, sha256, contentType, finalUrl } = await downloadWithCaps(
-    resolved.url,
-  );
+  const { bytes, sha256, contentType, finalUrl, httpLastModified } =
+    await downloadWithCaps(resolved.url);
   // extForResponse tries content-type → URL suffix → magic-byte sniff.
   // The magic-byte path is what rescues Google Drive (serves everything
   // as application/octet-stream) and any other host whose download
@@ -596,6 +595,7 @@ async function archiveOneCandidate(
       source_sha256: sha256,
       storage_path: storagePath,
       source_provenance: options.source_provenance,
+      source_http_last_modified: httpLastModified,
     });
     return {
       action: "inserted",
@@ -661,6 +661,7 @@ async function archiveOneCandidate(
     source_sha256: sha256,
     storage_path: storagePath,
     source_provenance: options.source_provenance,
+    source_http_last_modified: httpLastModified,
   });
   return {
     action: "refreshed",
@@ -731,6 +732,72 @@ interface DownloadResult {
   sha256: string;
   contentType: string;
   finalUrl: string;
+  // HTTP Last-Modified header from the source server, parsed to ISO 8601.
+  // Null when the host doesn't emit one (e.g., Google Drive, dynamic CDN
+  // pages) or when the header doesn't parse as a valid date. Persisted
+  // to cds_documents.source_http_last_modified for freshness audits and
+  // PRD 019's change-intelligence layer.
+  httpLastModified: string | null;
+}
+
+// Markers Cloudflare and Imperva inject into challenge response bodies.
+// When the WAF response code is anything (200, 403, 503) but the body
+// contains one of these strings, the response is a bot challenge — not
+// a real document. Detected against the lowercased first 8 KB of body
+// bytes. Patterns are deliberately broad enough to catch both the
+// classic "Just a moment..." page and the cf-mitigated header path,
+// and the Imperva equivalent. False-positive risk is low because real
+// CDS PDFs are binary and don't contain these phrases.
+const BOT_CHALLENGE_BODY_MARKERS = [
+  "just a moment",
+  "checking your browser",
+  "attention required",
+  "cf-mitigated",
+  "cf-chl-",
+  "__cf_chl_",
+  "incapsula incident",
+  "verify you are human",
+];
+
+// Returns a bot-challenge waf signal name when the response shows a WAF
+// fingerprint (header) AND the body matches a known challenge marker.
+// Both signals are required: a WAF-fronted PDF is fine on its own; a
+// challenge-shaped body without WAF headers is suspicious but ambiguous.
+function detectBotChallenge(
+  resp: Response,
+  bytes: Uint8Array,
+): "cloudflare" | "imperva" | null {
+  const headers: Record<string, string> = {};
+  resp.headers.forEach((v, k) => {
+    headers[k.toLowerCase()] = v;
+  });
+  const waf = inferWaf(headers);
+  if (waf !== "cloudflare" && waf !== "imperva") return null;
+
+  // Check the first ~8 KB only. Challenge HTML is small; real PDFs/XLSX
+  // start with magic bytes that won't decode cleanly as text — irrelevant
+  // because we look for ASCII markers regardless.
+  const sniff = bytes.subarray(0, Math.min(bytes.length, 8192));
+  let bodyText: string;
+  try {
+    bodyText = new TextDecoder("utf-8", { fatal: false })
+      .decode(sniff)
+      .toLowerCase();
+  } catch {
+    return null;
+  }
+
+  for (const marker of BOT_CHALLENGE_BODY_MARKERS) {
+    if (bodyText.includes(marker)) return waf;
+  }
+  // Header-only signal: cf-mitigated: challenge is the canonical
+  // Cloudflare bot-challenge response header even when the body is
+  // unparseable. inferWaf already saw cf-ray; check the explicit
+  // mitigation marker too.
+  if ((headers["cf-mitigated"] ?? "").toLowerCase() === "challenge") {
+    return waf;
+  }
+  return null;
 }
 
 async function downloadWithCaps(url: string): Promise<DownloadResult> {
@@ -819,11 +886,47 @@ async function downloadWithCaps(url: string): Promise<DownloadResult> {
     offset += chunk.byteLength;
   }
 
+  // Bot-challenge detection runs against the assembled body before SHA
+  // and any storage write. A WAF challenge response that we mistook for
+  // a real document would (a) get a sha256 that's stable across attempts
+  // (the challenge HTML rarely changes) and (b) propagate downstream as
+  // a "successful" archive of garbage bytes. Catching it here is the
+  // right boundary: zero bytes get stored, zero artifacts get written,
+  // and the failure is classified specifically enough that the operator
+  // notification path can target it.
+  const wafChallenge = detectBotChallenge(resp, bytes);
+  if (wafChallenge) {
+    throw new PermanentError(
+      `${wafChallenge} bot challenge at ${resp.url} (HTTP ${resp.status})`,
+      "bot_challenge",
+    );
+  }
+
   const hashBuf = await crypto.subtle.digest("SHA-256", bytes);
   const hashBytes = new Uint8Array(hashBuf);
   const sha256 = Array.from(hashBytes)
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 
-  return { bytes, sha256, contentType, finalUrl: resp.url };
+  // Parse HTTP Last-Modified to ISO 8601. RFC 7231 dates round-trip
+  // through `new Date(str).toISOString()` cleanly; an invalid header
+  // value yields NaN and we drop it. Many hosts (Google Drive's
+  // usercontent endpoint, dynamic CDN pages) emit no Last-Modified
+  // at all — null is the correct value there.
+  const lastModRaw = resp.headers.get("last-modified");
+  let httpLastModified: string | null = null;
+  if (lastModRaw) {
+    const parsed = new Date(lastModRaw);
+    if (!Number.isNaN(parsed.getTime())) {
+      httpLastModified = parsed.toISOString();
+    }
+  }
+
+  return {
+    bytes,
+    sha256,
+    contentType,
+    finalUrl: resp.url,
+    httpLastModified,
+  };
 }

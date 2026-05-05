@@ -48,6 +48,12 @@ concurrency:
 
 permissions:
   contents: read
+  # issues: write is needed by the bot-challenge notification step,
+  # which mints a GitHub issue per (school_id, cds_year) when the
+  # archive flow detects a Cloudflare/Imperva challenge response.
+  # See migration 20260505160000_archive_observability.sql for the
+  # SQL view that powers the dedup check.
+  issues: write
 
 jobs:
   drain-pending:
@@ -191,3 +197,120 @@ jobs:
           name: extraction-worker-summary
           path: ops-summary/
           if-no-files-found: warn
+
+      - name: Notify on bot-challenged documents
+        # Notify the operator (via GitHub issues) about any document whose
+        # source archive failed because a WAF returned a bot challenge.
+        # Reads public.bot_challenged_documents (added by migration
+        # 20260505160000_archive_observability.sql), creates one issue per
+        # (school_id, cds_year), deduped by issue title so a daily run
+        # that finds the same blocked docs won't spam.
+        #
+        # Runs only on the scheduled cron, not on workflow_dispatch — the
+        # operator running an ad-hoc dispatch already knows the state.
+        # always() so a failed extraction step doesn't suppress the
+        # notification check.
+        if: always() && github.event_name == 'schedule'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${SUPABASE_URL}" || -z "${SUPABASE_SERVICE_ROLE_KEY}" ]]; then
+            echo "Skipping bot-challenge notification (no Supabase secrets)." >&2
+            exit 0
+          fi
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          import sys
+          from supabase import create_client
+
+          url = os.environ["SUPABASE_URL"]
+          key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+          repo = os.environ["REPO"]
+
+          client = create_client(url, key)
+          try:
+              rows = client.table("bot_challenged_documents").select("*").execute().data or []
+          except Exception as exc:
+              # View may not be deployed yet (e.g., migration pending).
+              # Fail silently so the cron doesn't error.
+              print(f"bot_challenged_documents query failed: {exc}", file=sys.stderr)
+              sys.exit(0)
+          if not rows:
+              print("No bot-challenged documents.")
+              sys.exit(0)
+          print(f"Found {len(rows)} bot-challenged document(s); checking issues...")
+          minted = 0
+          for row in rows:
+              school = row.get("school_id") or "?"
+              year = row.get("cds_year") or "?"
+              title = f"bot_challenge: {school} {year} — manual upload required"
+              # Dedup: skip if any open issue with this exact title exists.
+              search = subprocess.run(
+                  [
+                      "gh", "issue", "list",
+                      "--repo", repo,
+                      "--state", "open",
+                      "--search", f'in:title "{title}"',
+                      "--json", "number,title",
+                  ],
+                  capture_output=True, text=True, check=False,
+              )
+              if search.returncode == 0:
+                  try:
+                      existing = json.loads(search.stdout or "[]")
+                  except json.JSONDecodeError:
+                      existing = []
+                  if any(item.get("title") == title for item in existing):
+                      continue
+              # Mint a new issue with structured details so the operator
+              # can act without re-discovering context.
+              source_url = row.get("source_url") or "(no source url)"
+              waf_outcome = row.get("last_outcome") or "bot_challenge"
+              last_error = row.get("last_error") or "(no error string)"
+              last_at = row.get("last_challenge_at") or "(unknown)"
+              body = (
+                  f"School `{school}` year `{year}` is blocked behind a WAF.\n\n"
+                  f"- Outcome: `{waf_outcome}`\n"
+                  f"- Source URL: {source_url}\n"
+                  f"- Last challenge at: {last_at}\n"
+                  f"- Provenance: {row.get('source_provenance') or 'school_direct'}\n"
+                  f"- Last error: `{last_error}`\n\n"
+                  "## Manual upload\n\n"
+                  "1. Download the PDF/XLSX from the source URL in your browser.\n"
+                  "2. Add it to `tools/finder/manual_urls.yaml` under "
+                  f"`{school}.manual_urls` (or use whichever manual-upload "
+                  "flow the project standardizes on).\n"
+                  "3. Run the manual archive flow against that entry.\n"
+                  "4. Close this issue when the row's "
+                  "`extraction_status` is no longer `failed`.\n\n"
+                  "_Auto-generated by `.github/workflows/ops-extraction-worker.yml` "
+                  "from `public.bot_challenged_documents`._"
+              )
+              create = subprocess.run(
+                  [
+                      "gh", "issue", "create",
+                      "--repo", repo,
+                      "--title", title,
+                      "--body", body,
+                      "--label", "bot_challenge,archiver",
+                  ],
+                  capture_output=True, text=True, check=False,
+              )
+              if create.returncode == 0:
+                  minted += 1
+                  print(f"Minted issue: {title}")
+              else:
+                  # Don't fail the run; missing labels or repo permissions
+                  # shouldn't block the cron.
+                  print(
+                      f"Issue create failed for {title}: "
+                      f"{create.stderr.strip() or create.stdout.strip()}",
+                      file=sys.stderr,
+                  )
+          print(f"Minted {minted} new issue(s).")
+          PY
