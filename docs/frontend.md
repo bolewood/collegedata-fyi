@@ -93,6 +93,11 @@ three most recent CDS files first and tucks older files into an expandable
 ledger so the school-page product cards are not pushed below a long historical
 document list.
 
+PRD 019 adds `WhatChangedCard`, but it intentionally renders only after an event
+has cleared the public change-event gate. Generated change candidates stay
+operator-only in `cds_field_change_events` until `verification_status` is
+`not_required` or `confirmed` and `public_visible = true`.
+
 ### `/schools/[school_id]/[year]` Year detail (`web/src/app/schools/[school_id]/[year]/page.tsx`)
 
 The SEO answer page. Designed to rank for queries like "Yale acceptance
@@ -134,6 +139,19 @@ PRD 017 client-heavy builder. It reads `school_browser_rows`, directory rows,
 and Scorecard enrichment, ranks schools with the same profile model used by the
 academic positioning card, and supports local save/share codes without writing
 student profile data to the backend.
+
+### `/changes` Operator digest (`web/src/app/changes/page.tsx`)
+
+PRD 019 internal review surface. This route is disabled unless
+`CHANGE_INTELLIGENCE_DIGEST_ENABLED=true` is present in the server environment,
+and it requires `SUPABASE_SERVICE_ROLE_KEY` because it reads generated candidate
+events before they are public. It exports `noindex` metadata and is not linked
+from public navigation.
+
+The digest groups generated events into admissions changes,
+international-student signals, aid/affordability shifts, reporting gaps, and
+extraction-quality blockers. It is an operator calibration surface, not a public
+claims page.
 
 ### `/methodology/*` Methodology pages
 
@@ -194,6 +212,8 @@ paths.
 | School positioning/admission cards | `school_browser_rows WHERE school_id = ?` | Latest primary row with SAT/ACT, admissions, ED/EA, wait-list, and C7/app-fee columns |
 | Match builder | `school_browser_rows` + `institution_directory` + `scorecard_summary` | Client-side ranked school list, with local-only profile persistence |
 | Merit profile | `school_merit_profile WHERE school_id = ?` | Latest primary Section H merit/need-aid facts plus Scorecard context |
+| What changed card | `cds_field_change_events WHERE school_id = ? AND public_visible = true` | Public-reviewed PRD 019 events only; RLS also requires `verification_status in ('not_required','confirmed')` |
+| Operator changes digest | service-role `cds_field_change_events` query | Server-only route, disabled unless explicitly enabled by env var |
 
 **Deduplication:** `fetchSchoolDocuments` and `fetchDocumentsBySchoolAndYear`
 are wrapped in `React.cache()` so `generateMetadata()` and the page
@@ -214,6 +234,7 @@ component share the same Supabase response within a single render.
 | `AdmissionStrategyCard` | `components/AdmissionStrategyCard.tsx` | PRD 016B card for ED/EA, wait-list, yield, C7 factors, and application-fee signals from `school_browser_rows`. |
 | `MatchListBuilder` | `components/MatchListBuilder.tsx` | PRD 017 ranked list-builder experience for `/match`. |
 | `MeritProfileCard` | `components/MeritProfileCard.tsx` | PRD 018 Section H + Scorecard merit/aid profile card. |
+| `WhatChangedCard` | `components/WhatChangedCard.tsx` | PRD 019 public-reviewed year-over-year CDS change events. Hides when the school has no published events. |
 | `SchoolDocumentsLedger` | `components/SchoolDocumentsLedger.tsx` | Collapses long CDS-document histories after the three most recent files. |
 | `SchoolTable` | `components/SchoolTable.tsx` | Sortable/filterable school list with search input |
 | `DocumentCard` | `components/DocumentCard.tsx` | CDS year card with status badge, format badge, PDF link |
@@ -240,6 +261,7 @@ component share the same Supabase response within a single render.
 | `positioning.ts` | `lib/positioning.ts` | Student-profile fit tiering and academic-positioning copy logic |
 | `admission-strategy.ts` | `lib/admission-strategy.ts` | ED/EA/wait-list/admission-factor calculations and quality gating |
 | `list-builder.ts` | `lib/list-builder.ts` | PRD 017 match ranking, tiering, and list presentation helpers |
+| `change-intelligence-admin.ts` | `lib/change-intelligence-admin.ts` | Server-only service-role query helper for the gated `/changes` digest |
 | `savecode.ts` | `lib/savecode.ts` | Stateless local profile/list share code encoding |
 | `types.ts` | `lib/types.ts` | TypeScript interfaces for API responses |
 | `format.ts` | `lib/format.ts` | Display formatters (badge labels, status colors, storage URLs) |
@@ -319,6 +341,16 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
 Set in Vercel dashboard for production, in `web/.env.local` for local dev.
 The `.env.local` file is gitignored.
 
+Operator-only PRD 019 digest, disabled by default:
+
+```
+CHANGE_INTELLIGENCE_DIGEST_ENABLED=true
+SUPABASE_SERVICE_ROLE_KEY=<service role key>
+```
+
+Do not expose the service-role key to client components. The public school-page
+card uses the anon client and RLS-filtered rows only.
+
 ---
 
 ## Development
@@ -342,4 +374,6 @@ Key items:
 - Automated Playwright smoke tests in the repo
 - OG images (per-school social cards)
 - Paginated full CSV export for `/browse` when result sets exceed the Edge Function page-size cap
-- Cross-year comparison views (V2)
+- Public `/changes` launch, methodology page, and report charts after PRD 019
+  calibration and human verification
+- Cross-year comparison views beyond PRD 019's operator/reporting scope (V2)

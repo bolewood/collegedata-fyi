@@ -12,6 +12,49 @@ export type ScorecardSummary =
 
 export type MeritProfileQuality = "strong" | "partial" | "limited" | "missing";
 
+export type ChangeEventSeverity = "watch" | "notable" | "major";
+
+export type ChangeEventType =
+  | "material_delta"
+  | "newly_missing"
+  | "newly_reported"
+  | "reappeared"
+  | "format_changed"
+  | "producer_changed"
+  | "quality_regression"
+  | "quality_recovered"
+  | "card_quality_changed";
+
+export type ChangeEventVerificationStatus =
+  | "not_required"
+  | "candidate"
+  | "confirmed"
+  | "extractor_noise"
+  | "ambiguous"
+  | "not_reportable";
+
+export interface ChangeEventRow {
+  id: string;
+  schoolId: string;
+  schoolName: string;
+  fieldKey: string;
+  fieldLabel: string;
+  fieldFamily: string;
+  fromYear: string;
+  toYear: string;
+  toYearStart: number | null;
+  eventType: ChangeEventType;
+  severity: ChangeEventSeverity;
+  fromValue: string | null;
+  toValue: string | null;
+  absoluteDelta: number | null;
+  relativeDelta: number | null;
+  summary: string;
+  fromArchiveUrl: string | null;
+  toArchiveUrl: string | null;
+  verificationStatus: ChangeEventVerificationStatus;
+}
+
 export interface MeritProfileRow {
   documentId: string;
   schoolId: string;

@@ -9,11 +9,13 @@ import {
   fetchAvgGpaBySchoolId,
   fetchAdmissionStrategyBySchoolId,
   fetchMeritProfileBySchoolId,
+  fetchChangeEventsBySchoolId,
 } from "@/lib/queries";
 import { OutcomesSection } from "@/components/OutcomesSection";
 import { PositioningCard } from "@/components/PositioningCard";
 import { AdmissionStrategyCard } from "@/components/AdmissionStrategyCard";
 import { MeritProfileCard } from "@/components/MeritProfileCard";
+import { WhatChangedCard } from "@/components/WhatChangedCard";
 import { SchoolDocumentsLedger } from "@/components/SchoolDocumentsLedger";
 import { ScorecardVintageNote } from "@/components/ScorecardVintageNote";
 import { Sparkline } from "@/components/Sparkline";
@@ -134,12 +136,13 @@ export default async function SchoolDetailPage({
   // only need the first one. Scorecard data is per-school-per-vintage, not
   // per-document, so one query returns everything.
   const ipedsId = docs.find((d) => d.ipeds_id)?.ipeds_id ?? null;
-  const [scorecard, browserRow, gpaProfile, admissionStrategySchool, meritProfile] = await Promise.all([
+  const [scorecard, browserRow, gpaProfile, admissionStrategySchool, meritProfile, changeEvents] = await Promise.all([
     fetchScorecardByIpedsId(ipedsId),
     fetchBrowserRowBySchoolId(school_id),
     fetchAvgGpaBySchoolId(school_id),
     fetchAdmissionStrategyBySchoolId(school_id),
     fetchMeritProfileBySchoolId(school_id),
+    fetchChangeEventsBySchoolId(school_id),
   ]);
   const positioningSchool = browserRow
     ? { ...browserRow, ...gpaProfile }
@@ -367,6 +370,8 @@ export default async function SchoolDetailPage({
           sourceHref={meritProfileSourceHref}
         />
       )}
+
+      <WhatChangedCard events={changeEvents} />
 
       {scorecard ? (
         <OutcomesSection scorecard={scorecard} />

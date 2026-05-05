@@ -11,6 +11,10 @@ import type {
   ScorecardSummary,
   SiteStats,
   InstitutionCoverage,
+  ChangeEventRow,
+  ChangeEventSeverity,
+  ChangeEventType,
+  ChangeEventVerificationStatus,
   MeritProfileQuality,
   MeritProfileRow,
 } from "./types";
@@ -806,6 +810,56 @@ export const fetchMeritProfileBySchoolId = cache(
     } catch (error) {
       console.warn(`fetchMeritProfileBySchoolId: ${String(error)}`);
       return null;
+    }
+  },
+);
+
+export const fetchChangeEventsBySchoolId = cache(
+  async function fetchChangeEventsBySchoolId(
+    schoolId: string,
+  ): Promise<ChangeEventRow[]> {
+    try {
+      const { data, error } = await (supabase as unknown as UntypedSupabase)
+        .from("cds_field_change_events")
+        .select(
+          "id, school_id, school_name, field_key, field_label, field_family, from_year, to_year, to_year_start, event_type, severity, from_value, to_value, absolute_delta, relative_delta, summary, from_archive_url, to_archive_url, verification_status",
+        )
+        .eq("school_id", schoolId)
+        .eq("public_visible", true)
+        .in("verification_status", ["not_required", "confirmed"])
+        .order("to_year_start", { ascending: false })
+        .order("severity", { ascending: true })
+        .limit(5);
+
+      if (error || !data) {
+        if (error) console.warn(`fetchChangeEventsBySchoolId: ${error.message}`);
+        return [];
+      }
+
+      return data.map((row: any) => ({
+        id: String(row.id),
+        schoolId: String(row.school_id),
+        schoolName: String(row.school_name ?? schoolId),
+        fieldKey: String(row.field_key),
+        fieldLabel: String(row.field_label ?? row.field_key),
+        fieldFamily: String(row.field_family ?? "other"),
+        fromYear: String(row.from_year),
+        toYear: String(row.to_year),
+        toYearStart: numberOrNull(row.to_year_start),
+        eventType: row.event_type as ChangeEventType,
+        severity: row.severity as ChangeEventSeverity,
+        fromValue: row.from_value == null ? null : String(row.from_value),
+        toValue: row.to_value == null ? null : String(row.to_value),
+        absoluteDelta: numberOrNull(row.absolute_delta),
+        relativeDelta: numberOrNull(row.relative_delta),
+        summary: String(row.summary ?? ""),
+        fromArchiveUrl: row.from_archive_url ?? null,
+        toArchiveUrl: row.to_archive_url ?? null,
+        verificationStatus: row.verification_status as ChangeEventVerificationStatus,
+      }));
+    } catch (error) {
+      console.warn(`fetchChangeEventsBySchoolId: ${String(error)}`);
+      return [];
     }
   },
 );

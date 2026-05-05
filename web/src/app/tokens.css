@@ -1007,6 +1007,244 @@
   .merit-profile-stats { grid-template-columns: 1fr; }
 }
 
+/* PRD 019 change intelligence. Only public-reviewed events render here;
+   operator candidates stay behind RLS until explicitly published. */
+.what-changed-card {
+  margin-top: 40px;
+  padding-top: 24px;
+}
+.what-changed-card__body {
+  margin-top: 10px;
+  padding: 28px 32px 22px;
+}
+.what-changed-card__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+  gap: 28px;
+  align-items: start;
+}
+.what-changed-card__title {
+  margin: 0;
+  max-width: 620px;
+  font-size: clamp(26px, 3vw, 34px);
+  line-height: 1.05;
+}
+.what-changed-card__head p {
+  margin: 12px 0 0;
+  max-width: 640px;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.what-changed-card__count {
+  border-left: 1px solid var(--rule-strong);
+  padding-left: 20px;
+}
+.what-changed-card__count strong {
+  display: block;
+  margin: 6px 0;
+  font-size: 38px;
+  font-weight: 400;
+  line-height: 1;
+}
+.what-changed-card__count small {
+  display: block;
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.what-changed-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.what-changed-event {
+  border-top: 2px solid var(--rule-strong);
+  padding-top: 14px;
+}
+.what-changed-event__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 10px;
+  align-items: center;
+  color: var(--ink-3);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+.what-changed-severity {
+  border: 1px solid var(--rule-strong);
+  padding: 1px 6px;
+}
+.what-changed-severity--major {
+  border-color: var(--brick);
+  color: var(--brick);
+}
+.what-changed-severity--notable {
+  border-color: var(--ochre);
+  color: var(--ochre);
+}
+.what-changed-severity--watch {
+  color: var(--ink-3);
+}
+.what-changed-event h3 {
+  margin: 10px 0 0;
+  font-size: 16px;
+  line-height: 1.35;
+}
+.what-changed-event p {
+  margin: 7px 0 0;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.what-changed-event__values {
+  margin-top: 10px;
+  color: var(--forest-ink);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+.what-changed-event__sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 12px;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+}
+.what-changed-card__source {
+  margin-top: 26px;
+  padding-top: 14px;
+  font-size: 10.5px;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+@media (max-width: 820px) {
+  .what-changed-card__body { padding: 24px 20px 20px; }
+  .what-changed-card__head,
+  .what-changed-list {
+    grid-template-columns: 1fr;
+  }
+  .what-changed-card__count {
+    border-left: 0;
+    border-top: 1px solid var(--rule);
+    padding-left: 0;
+    padding-top: 14px;
+  }
+}
+
+/* Operator-only change digest. Disabled by default at the route level; this is
+   a dense review surface rather than a public marketing page. */
+.change-digest-title {
+  margin: 12px 0 0;
+  font-size: clamp(40px, 6vw, 64px);
+  line-height: 1;
+}
+.change-digest-lede {
+  margin: 18px 0 0;
+  max-width: 720px;
+  color: var(--ink-2);
+  font-size: 17px;
+  line-height: 1.6;
+}
+.change-digest-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 30px;
+}
+.change-digest-summary > div {
+  border-top: 2px solid var(--ink);
+  padding-top: 12px;
+}
+.change-digest-summary span {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.change-digest-summary strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1;
+}
+.change-digest-note {
+  margin-top: 16px;
+  color: var(--ink-3);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+.change-digest-section {
+  margin-top: 36px;
+  padding-top: 18px;
+}
+.change-digest-table-wrap {
+  margin-top: 12px;
+  overflow-x: auto;
+  border: 1px solid var(--rule-strong);
+  background: #faf6ec;
+}
+.change-digest-table {
+  width: 100%;
+  min-width: 880px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.change-digest-table th,
+.change-digest-table td {
+  border-bottom: 1px solid var(--rule);
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+.change-digest-table th {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.change-digest-table td {
+  color: var(--ink-2);
+  line-height: 1.45;
+}
+.change-digest-table td:first-child {
+  color: var(--ink);
+  min-width: 220px;
+}
+.change-digest-table td:first-child span {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.change-digest-empty {
+  margin: 12px 0 0;
+  color: var(--ink-3);
+  font-size: 14px;
+}
+@media (max-width: 720px) {
+  .change-digest-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* Match list builder. Dense enough for repeated counselor use, with source
    links and export controls kept close to the ranking surface. */
 .match-page {

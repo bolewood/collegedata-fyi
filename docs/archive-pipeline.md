@@ -11,7 +11,7 @@ source file to the `sources` Storage bucket. The extraction worker then polls
 `cds_documents WHERE extraction_status = 'extraction_pending'` and does
 the structured extraction.
 
-As of May 3, 2026, this document covers the full operating chain:
+As of May 5, 2026, this document covers the full operating chain:
 
 1. **Discovery / archive** in Supabase Edge Functions.
 2. **Structured extraction** in the Python worker across shipped Tiers 1, 2, 4, 5, and 6.
@@ -19,7 +19,9 @@ As of May 3, 2026, this document covers the full operating chain:
 4. **Queryable browser projection** into `cds_fields` and `school_browser_rows`.
 5. **Institution coverage / fit-data projections** into `institution_cds_coverage`,
    `school_browser_rows`, and `school_merit_profile`.
-6. **GitHub Actions wrappers** for boring PR CI and bounded ops drains.
+6. **Change intelligence projection** into `cds_field_change_events`, plus
+   human review before any public/reporting surface.
+7. **GitHub Actions wrappers** for boring PR CI and bounded ops drains.
 
 The archive layer stores immutable source bytes and provenance. It does not
 decide which extracted values are canonical for consumers; that decision happens
@@ -146,6 +148,17 @@ selected extraction results
   └─ tools/browser_backend/project_browser_data.py
        ├─ cds_fields
        └─ school_browser_rows
+
+comparable primary browser rows
+  └─ tools/change_intelligence/project_change_events.py
+       ├─ cds_field_change_events
+       ├─ .context/reports/*.csv
+       └─ .context/reports/*.md
+
+human-reviewed change events
+  └─ tools/change_intelligence/review_change_event.py
+       ├─ cds_field_change_event_reviews
+       └─ public_visible=true only for confirmed published events
 ```
 
 The selected-result contract is deterministic: choose the strongest base
@@ -174,14 +187,36 @@ Projection freshness has two paths:
   changes, metadata changes, or corpus-wide fallback backfills:
   `python tools/browser_backend/project_browser_data.py --full-rebuild --apply`.
 
+### Change intelligence projection
+
+PRD 019 sits downstream of `school_browser_rows`; it does not run inside the
+archive or extraction worker. The operator flow is:
+
+1. Make sure the relevant latest/prior CDS rows have been extracted and browser
+   projection has been refreshed.
+2. Run `tools/change_intelligence/project_change_events.py` against either the
+   calibration watchlist or the operator-curated Top 200 watchlist.
+3. Inspect the generated CSV/Markdown report under `.context/reports/`.
+4. Persist events with `--apply` only when the migration is present and the
+   watchlist/run scope is intentional.
+5. Use `tools/change_intelligence/review_change_event.py` to record human
+   verdicts. `--publish` is allowed only for `confirmed` events and flips
+   `public_visible=true`.
+
+The public RLS policy exposes only events where `public_visible=true` and
+`verification_status in ('not_required', 'confirmed')`. Major events and
+`newly_missing` candidates should be treated as unpublishable until the raw PDFs
+have been checked.
+
 ### GitHub Actions workers
 
 There are two Actions surfaces, and they are intentionally separate:
 
 - `.github/workflows/ci.yml` is boring PR/push CI. It runs Python unit tests
-  for the browser projection and extraction worker, Deno tests for Supabase
-  functions, and the Next.js typecheck/build. It deliberately does not run
-  Docling corpus drains, live extraction work, projection rebuilds, or any
+  for the browser projection, extraction worker, and PRD 019 change
+  intelligence tools, Deno tests for Supabase functions, and the Next.js
+  typecheck/build. It deliberately does not run Docling corpus drains, live
+  extraction work, projection rebuilds, change-event `--apply`, or any
   service-role database writes.
 - `.github/workflows/ops-extraction-worker.yml` is the bounded ops path for
   production-ish extraction work. It runs on a small daily schedule and can be

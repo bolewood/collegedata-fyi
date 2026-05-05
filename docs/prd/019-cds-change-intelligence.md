@@ -1,9 +1,11 @@
 # PRD 019: CDS change intelligence and reporting gaps
 
-**Status:** Draft, candidate next strategic PRD.
+**Status:** Alpha implementation shipped 2026-05-05. Core projection, review
+workflow, report seed, school-page public gate, and operator digest exist;
+public report launch remains pending.
 **Created:** 2026-05-05
 **Author:** Anthony + Codex
-**Related:** [PRD 014](014-cross-year-canonical-schema.md), [PRD 016B](016B-admission-strategy-card.md), [PRD 017](017-match-list-builder.md), [PRD 018](018-open-college-fit-data.md), [Queryable browser backend](../queryable-browser-backend.md)
+**Related:** [PRD 014](014-cross-year-canonical-schema.md), [PRD 016B](016B-admission-strategy-card.md), [PRD 017](017-match-list-builder.md), [PRD 018](018-open-college-fit-data.md), [Queryable browser backend](../queryable-browser-backend.md), [PRD 019 spike and QA](../plans/prd-019-spike-and-qa.md)
 
 ---
 
@@ -63,6 +65,17 @@ Decision gate:
   proceed to Phase 0.
 - If not, demote the annual-report/op-ed framing and re-scope v1 as a small
   school-page "What Changed" card.
+
+Outcome:
+
+- Spike passed. See [`docs/plans/prd-019-spike-and-qa.md`](../plans/prd-019-spike-and-qa.md).
+- The spike found 85 schools with pairable 2024-25/2025-26 primary rows, 392
+  candidate events, 282 clean comparable events, and 31 reporting-status
+  candidates requiring human review.
+- The first calibration dry-run over the 30-school subset produced 36 events,
+  including 2 major, 11 notable, and 4 human-review candidates. Only 4 of the
+  30 calibration schools were latest/prior pairable at that moment, so Top 200
+  freshness remains the main launch blocker.
 
 ## External sources to cite in product/editorial work
 
@@ -664,3 +677,25 @@ This estimate excludes the mandatory two-day pre-PRD editorial spike.
   `cds_field_change_events`.
 - `/changes` starts operator-only and becomes public after threshold calibration
   and the first editorial review.
+
+## Implementation notes
+
+- Phase 1 v0 ships the deterministic event substrate first:
+  `cds_field_observations`, `cds_field_change_events`,
+  `cds_field_change_event_reviews`,
+  `tools/change_intelligence/project_change_events.py`, and
+  `tools/change_intelligence/rules.yaml`.
+- The first projector compares the launch admissions/test fields already
+  materialized in `school_browser_rows`. Raw-field comparisons should build on
+  `cds_field_observations` after the calibration subset is reviewed.
+- School-page `WhatChangedCard` is wired behind `public_visible` plus
+  `verification_status in ('not_required', 'confirmed')`, so generated
+  candidates stay operator-only until explicitly published.
+- The projector now writes an annual-report seed with watchlist freshness,
+  themed event sections, extraction blockers, and methodology caveats.
+- Human review is supported by `tools/change_intelligence/review_change_event.py`,
+  which records a verdict and can publish confirmed events to the public
+  school-page card.
+- `/changes` exists as a server-only operator digest gated by
+  `CHANGE_INTELLIGENCE_DIGEST_ENABLED=true` and `SUPABASE_SERVICE_ROLE_KEY`.
+  It is not linked publicly and is `noindex`.

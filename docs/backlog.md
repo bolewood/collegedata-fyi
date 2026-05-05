@@ -84,6 +84,24 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 ### Queryable browser backend polish
 
+- **PRD 019 Top 200 freshness and review gate.** Core change-intelligence
+  substrate is shipped, but public reporting is blocked on enough pairable
+  latest/prior CDS rows for the watchlist and human verification of every
+  `major` and report-bound `newly_missing` event. First calibration dry-run:
+  30 schools, 4 pairable latest/prior rows, 36 events, 2 major, 11 notable,
+  4 review candidates. Next work: refresh/drain more 2025-26 watchlist rows,
+  apply the projector intentionally, and review/publish only confirmed events
+  with `tools/change_intelligence/review_change_event.py`. **Effort:** scoped
+  operational drain + review pass.
+
+- **PRD 019 public methodology/report layer.** The deterministic projector,
+  annual-report seed, school-page card, review CLI, and operator-only `/changes`
+  digest exist. Still open: public methodology page for change intelligence,
+  publication-grade annual report, charts, and public `/changes` launch after
+  calibration. Keep external macro context (WICHE, Census, IIE, NAFSA) out of
+  `cds_field_change_events`; it belongs in report/editorial copy. **Effort:**
+  depends on freshness and review queue size.
+
 - **GPA scale-resolution sprint for academic positioning.** PRD 016 deliberately
   keeps GPA out of tier scoring because CDS C.12 does not consistently state
   whether average high-school GPA is weighted, unweighted, or on another local
@@ -98,23 +116,6 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 - **Move `browser-search` ranking into SQL if it becomes hot.** The MVP Edge Function reads the materialized `school_browser_rows` table and applies the pure ranking contract in TypeScript. That kept the launch slice small and testable. If corpus size or traffic grows, port the same required-field and latest-per-school semantics into a Postgres RPC using window functions. **Effort:** ~2-3 hours.
 
 ### Larger features / future tiers
-
-- **PRD 019 — CDS change intelligence and reporting gaps.** Track material
-  year-over-year CDS deltas, newly missing fields, recovered fields, and
-  watchlist freshness for an operator-curated Top 200 panel. Strategic goal:
-  turn collegedata.fyi from a source archive into a source-backed early-warning
-  system for admissions, aid, international-enrollment, and reporting changes.
-  Before building the full projector, run a two-day spike over five
-  high-leverage admissions/reporting fields to prove there are enough real,
-  surprising deltas to justify the annual-report/op-ed framing. The PRD now
-  treats producer changes, schema-version renames, source-provenance crossings,
-  and section-quality regressions as explicit comparability gates before any
-  "newly missing" event can become reportable.
-  External macro context comes from WICHE's high-school graduate projections,
-  Census birth-trend data, and IIE/NAFSA international-student enrollment
-  reporting; the product evidence layer remains deterministic CDS comparisons.
-  See [PRD 019](prd/019-cds-change-intelligence.md). **Effort:** ~1-2 weeks for
-  first projector + school-page card; ~2-4 weeks for publication-grade report.
 
 - **Tier 3 DOCX extractor (PRD 007).** Revised plan shipped 2026-04-29 in [PRD 007](prd/007-tier3-docx-extraction.md). Primary path is a deterministic OOXML SDT reader keyed by schema `word_tag` values, same lookup pattern as Tier 2. Fallback path is a measured Docling DOCX structural adapter that reuses Tier 4 cleaner/table logic for SDT-stripped Word files before considering any bespoke Word-table parser. Addressable corpus today is ~30-50 documents (Kent State's 14 SDT-preserving files are the largest family). The format sniffer now routes DOCX correctly; the remaining work is the extractor itself.
 
@@ -163,6 +164,19 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 ## Resolved
 
 Reverse chronological.
+
+### 2026-05-05
+
+- **[RESOLVED 2026-05-05] ~~PRD 019 change intelligence alpha.~~**
+  Shipped the deterministic PRD 019 substrate: `cds_field_observations`,
+  `cds_field_change_events`, `cds_field_change_event_reviews`, calibration and
+  Top 200 watchlist seeds, `tools/change_intelligence/project_change_events.py`,
+  `rules.yaml`, annual Markdown/CSV report seed output, review/publish CLI,
+  public-gated `WhatChangedCard`, and the operator-only `/changes` digest. The
+  pre-PRD spike passed with 85 pairable schools, 392 candidate events, 282 clean
+  comparable events, and 31 reporting-status candidates. Public reporting remains
+  gated by watchlist freshness and human verification; follow-ups stay open
+  above.
 
 ### 2026-05-03
 

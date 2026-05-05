@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# collegedata.fyi web app
 
-## Getting Started
+Next.js 16 frontend for [collegedata.fyi](https://collegedata.fyi).
 
-First, run the development server:
+The full frontend architecture is documented in [`../docs/frontend.md`](../docs/frontend.md).
+Read [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) before changing UI.
+
+## What this app renders
+
+- `/` search-first home page backed by the `search_institutions` RPC.
+- `/schools` and `/schools/[school_id]` school directory/detail pages.
+- School-page cards for academic profile, admission strategy, merit/aid profile,
+  and PRD 019 public-reviewed change intelligence.
+- `/browse` queryable CDS browser.
+- `/match` local-only match-list builder.
+- `/coverage` public institution coverage dashboard.
+- `/changes` operator-only PRD 019 digest, disabled by default.
+- Static methodology, API, about, and recipe pages.
+
+## Development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run typecheck
+npm test
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Required environment
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://isduwmygvmdozhpvzaix.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Optional source-submission form:
 
-## Learn More
+```bash
+NEXT_PUBLIC_FORMSPREE_ENDPOINT=<formspree endpoint>
+```
 
-To learn more about Next.js, take a look at the following resources:
+Operator-only PRD 019 digest:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+CHANGE_INTELLIGENCE_DIGEST_ENABLED=true
+SUPABASE_SERVICE_ROLE_KEY=<service role key>
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Never import the service-role key into client components. Public pages use anon
+queries plus RLS; `/changes` uses `src/lib/change-intelligence-admin.ts`, which
+is marked `server-only`.
