@@ -7,6 +7,7 @@ from worker import (
     extraction_no_project,
     extraction_success,
     is_failure_action,
+    low_field_quality_flag,
     mean_or_none,
     parsed_field_count,
     pending_doc_priority_key,
@@ -36,6 +37,11 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
     def test_summary_mean_rounding(self):
         self.assertEqual(mean_or_none([1, 2, 4]), 2.33)
         self.assertIsNone(mean_or_none([]))
+
+    def test_low_field_quality_flag(self):
+        self.assertEqual(low_field_quality_flag(0), "blank_template")
+        self.assertEqual(low_field_quality_flag(24), "low_coverage")
+        self.assertIsNone(low_field_quality_flag(25))
 
     def test_pending_doc_priority_prefers_recent_cds_year(self):
         rows = [

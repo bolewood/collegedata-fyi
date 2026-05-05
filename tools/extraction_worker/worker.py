@@ -113,6 +113,7 @@ from html_to_markdown import html_to_markdown  # noqa: E402 (PRD 008 Tier 6)
 SCHEMA_DIR = _TOOLS_ROOT.parent / "schemas"
 TEMPLATE_DIR = SCHEMA_DIR / "templates"
 MIN_TIER1_FIELDS = 5
+MIN_TIER4_FIELDS = 25
 
 
 @dataclass(frozen=True)
@@ -148,6 +149,12 @@ def is_failure_action(action: str) -> bool:
     if "_error" in action or action.endswith("_no_tables"):
         return True
     return False
+
+
+def low_field_quality_flag(fields: int, threshold: int = MIN_TIER4_FIELDS) -> str | None:
+    if fields >= threshold:
+        return None
+    return "blank_template" if fields == 0 else "low_coverage"
 
 
 def mean_or_none(values: list[int]) -> float | None:
@@ -733,6 +740,7 @@ def _run_tier1(
             client, document_id, producer, producer_version, resolution.schema_version,
         ):
             mark_extraction_status(client, document_id, "extracted", source_format)
+            clear_recoverable_quality_flag(client, document_id)
             return extraction_no_project("already_extracted")
 
         try:
@@ -742,6 +750,7 @@ def _run_tier1(
             return extraction_no_project(f"artifact_insert_error: {e}")
 
         mark_extraction_status(client, document_id, "extracted", source_format)
+        clear_recoverable_quality_flag(client, document_id)
 
     return extraction_success(f"tier1_extracted ({fields} fields)")
 
@@ -813,12 +822,19 @@ def _run_tier6(
 
     producer = canonical["producer"]
     producer_version = canonical["producer_version"]
+    stats = canonical.get("stats", {})
+    fields = int(stats.get("schema_fields_populated") or 0)
+    quality_flag = low_field_quality_flag(fields)
 
     if not dry_run:
         if artifact_already_extracted(
             client, document_id, producer, producer_version, resolution.schema_version,
         ):
             mark_extraction_status(client, document_id, "extracted", source_format)
+            if quality_flag:
+                mark_document_quality_flag(client, document_id, quality_flag)
+            else:
+                clear_recoverable_quality_flag(client, document_id)
             return extraction_no_project("already_extracted")
 
         try:
@@ -828,6 +844,10 @@ def _run_tier6(
             return extraction_no_project(f"artifact_insert_error: {e}")
 
         mark_extraction_status(client, document_id, "extracted", source_format)
+        if quality_flag:
+            mark_document_quality_flag(client, document_id, quality_flag)
+        else:
+            clear_recoverable_quality_flag(client, document_id)
 
     return extraction_success(f"tier6_extracted ({len(values)} fields, {len(markdown)} md chars)")
 
@@ -869,12 +889,19 @@ def _run_tier4(
 
     producer = canonical["producer"]
     producer_version = canonical["producer_version"]
+    stats = canonical.get("stats", {})
+    fields = int(stats.get("schema_fields_populated") or 0)
+    quality_flag = low_field_quality_flag(fields)
 
     if not dry_run:
         if artifact_already_extracted(
             client, document_id, producer, producer_version, resolution.schema_version,
         ):
             mark_extraction_status(client, document_id, "extracted", source_format)
+            if quality_flag:
+                mark_document_quality_flag(client, document_id, quality_flag)
+            else:
+                clear_recoverable_quality_flag(client, document_id)
             return extraction_no_project("already_extracted")
 
         try:
@@ -884,11 +911,13 @@ def _run_tier4(
             return extraction_no_project(f"artifact_insert_error: {e}")
 
         mark_extraction_status(client, document_id, "extracted", source_format)
+        if quality_flag:
+            mark_document_quality_flag(client, document_id, quality_flag)
+        else:
+            clear_recoverable_quality_flag(client, document_id)
 
-    stats = canonical.get("stats", {})
     md_len = stats.get("markdown_length", 0)
     pages = stats.get("page_count", 0)
-    fields = stats.get("schema_fields_populated", 0)
     return extraction_success(f"tier4_extracted ({fields} fields, {md_len} chars, {pages} pages)")
 
 
@@ -902,6 +931,24 @@ def mark_extraction_status(
     if source_format is not None:
         update["source_format"] = source_format
     client.table("cds_documents").update(update).eq("id", document_id).execute()
+
+
+def mark_document_quality_flag(
+    client: Client,
+    document_id: str,
+    flag: str | None,
+) -> None:
+    client.table("cds_documents").update(
+        {"data_quality_flag": flag},
+    ).eq("id", document_id).execute()
+
+
+def clear_recoverable_quality_flag(client: Client, document_id: str) -> None:
+    client.table("cds_documents").update(
+        {"data_quality_flag": None},
+    ).eq("id", document_id).in_(
+        "data_quality_flag", ["blank_template", "low_coverage"],
+    ).execute()
 
 
 def write_detected_year(
