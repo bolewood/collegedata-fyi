@@ -29,9 +29,10 @@ from pathlib import Path
 
 
 PRODUCER_NAME = "tier4_docling"
-PRODUCER_VERSION = "0.3.6"
+PRODUCER_VERSION = "0.3.7"
 DOCLING_CONFIG_NAME = "production-fast-no-orphan-clusters"
 DOCLING_NATIVE_TABLES_VERSION = "docling_table_cells_compact_v1"
+SCANNED_ADMISSIONS_OCR_MAX_PAGE = 35
 
 
 def _extract_pdf_layout_text(pdf_path: Path) -> str:
@@ -88,12 +89,18 @@ def _visual_ocr_candidate_pages(pdf_path: Path) -> list[int]:
         return []
 
 
-def _extract_visual_ocr_text(pdf_path: Path) -> tuple[str, list[int]]:
+def _extract_visual_ocr_text(
+    pdf_path: Path,
+    *,
+    fallback_page_count: int | None = None,
+) -> tuple[str, list[int]]:
     """Best-effort Tesseract supplement for visually rendered table values."""
     if not shutil.which("pdftoppm") or not shutil.which("tesseract"):
         return "", []
 
     pages = _visual_ocr_candidate_pages(pdf_path)
+    if not pages and fallback_page_count:
+        pages = list(range(1, min(fallback_page_count, SCANNED_ADMISSIONS_OCR_MAX_PAGE) + 1))
     if not pages:
         return "", []
 
@@ -206,7 +213,15 @@ def extract(
     visual_ocr_text = ""
     visual_ocr_pages: list[int] = []
     if _needs_visual_ocr_supplement(markdown, values):
-        visual_ocr_text, visual_ocr_pages = _extract_visual_ocr_text(pdf_path)
+        # Scanned PDFs have no embedded text layer for pypdf to select pages
+        # from. If Docling's full-page OCR still left admissions values blank,
+        # use a bounded Tesseract pass over the front CDS sections instead of
+        # silently skipping the visual supplement.
+        fallback_page_count = page_count if force_ocr else None
+        visual_ocr_text, visual_ocr_pages = _extract_visual_ocr_text(
+            pdf_path,
+            fallback_page_count=fallback_page_count,
+        )
         if visual_ocr_text:
             # Put OCR first. Section slicers such as C9 stop at the first
             # C10 boundary they see; if embedded layout text comes first and
