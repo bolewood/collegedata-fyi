@@ -99,6 +99,23 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 ### Larger features / future tiers
 
+- **PRD 019 — CDS change intelligence and reporting gaps.** Track material
+  year-over-year CDS deltas, newly missing fields, recovered fields, and
+  watchlist freshness for an operator-curated Top 200 panel. Strategic goal:
+  turn collegedata.fyi from a source archive into a source-backed early-warning
+  system for admissions, aid, international-enrollment, and reporting changes.
+  Before building the full projector, run a two-day spike over five
+  high-leverage admissions/reporting fields to prove there are enough real,
+  surprising deltas to justify the annual-report/op-ed framing. The PRD now
+  treats producer changes, schema-version renames, source-provenance crossings,
+  and section-quality regressions as explicit comparability gates before any
+  "newly missing" event can become reportable.
+  External macro context comes from WICHE's high-school graduate projections,
+  Census birth-trend data, and IIE/NAFSA international-student enrollment
+  reporting; the product evidence layer remains deterministic CDS comparisons.
+  See [PRD 019](prd/019-cds-change-intelligence.md). **Effort:** ~1-2 weeks for
+  first projector + school-page card; ~2-4 weeks for publication-grade report.
+
 - **Tier 3 DOCX extractor (PRD 007).** Revised plan shipped 2026-04-29 in [PRD 007](prd/007-tier3-docx-extraction.md). Primary path is a deterministic OOXML SDT reader keyed by schema `word_tag` values, same lookup pattern as Tier 2. Fallback path is a measured Docling DOCX structural adapter that reuses Tier 4 cleaner/table logic for SDT-stripped Word files before considering any bespoke Word-table parser. Addressable corpus today is ~30-50 documents (Kent State's 14 SDT-preserving files are the largest family). The format sniffer now routes DOCX correctly; the remaining work is the extractor itself.
 
 - **Tier 4 cleaner — continue resolver coverage beyond the core product surfaces.** [PRD 005](prd/005-full-schema-extraction.md)'s Phase 6 architecture shipped 2026-04-20 (commit `aecca9b`): the section-family resolver framework backed by a shared `SchemaIndex` took the cleaner from 72 -> ~380 fields (Harvard 382, Yale 390, Dartmouth 343). PRD 016B and PRD 018 added targeted C21/C22 and H1/H2/H2A coverage. Remaining work is continuing to add resolvers for thinner sections as specific schools surface gaps; the ceiling is 1,105 fields, but full-schema parity is not urgent.
