@@ -5634,6 +5634,7 @@ def clean(
     # This preserves the regression-safe ordering: hand-coded > resolvers.
     for resolver in _RESOLVERS:
         new = resolver(tables, markdown, idx)
+        supplemental_override_qns: set[str] = set()
         if resolver in (
             resolve_a_general,
             resolve_j_disciplines,
@@ -5680,10 +5681,18 @@ def clean(
                     resolve_h_financial_aid,
                 ):
                     new[qn] = rec
+                    if resolver in (
+                        resolve_c1_applications,
+                        resolve_c9_submission_rates,
+                        resolve_c9_percentile_anchors,
+                    ):
+                        supplemental_override_qns.add(qn)
                 else:
                     new.setdefault(qn, rec)
         for qn, rec in new.items():
-            if resolver is resolve_b5_graduation and re.match(r"^B\.[45]\d{2}$", qn):
+            if qn in supplemental_override_qns:
+                values[qn] = rec
+            elif resolver is resolve_b5_graduation and re.match(r"^B\.[45]\d{2}$", qn):
                 values[qn] = rec
             elif qn not in values:
                 values[qn] = rec
