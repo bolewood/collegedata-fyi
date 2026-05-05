@@ -9,6 +9,7 @@ Some tools also produce CSV batches for human contributors (the kids worklist pi
 | File | Purpose |
 |---|---|
 | `audit_manifest.py` | Post-ingest data-quality audit. Reads canonical artifacts, flags documents with <5 populated fields as `blank_template` or `low_coverage`, optionally writes `data_quality_flag` back to `cds_documents`. Frontend surfaces this as an amber badge. |
+| `audit_visual_ocr_candidates.py` | Finds Tier 4 PDFs with C1/C9 labels present but key admissions/test-score values absent. Use it to queue managed local re-drains through the visual-OCR supplement and to confirm which documents were repaired by `tier4_docling` 0.3.5+. |
 | `completeness_report.py` | Top-to-bottom funnel pivot per `cds_year`: corpus → discovered → archived → extracted → high_quality. Default window = past 5 CDS years. Output: terminal table + optional JSON. Use this to size the coverage picture before scoping any discovery work. |
 | `active_schools_missing_recent.py` | Per-school CSV of which active schools lack docs for which recent years. Feeds the kids worklist; also useful standalone for operator spot-checks. |
 | `kids_worklist.py` | Generates batched Google-Sheets-ready CSVs (50 schools per batch, sorted highest-yield first) of active schools missing recent years. Queries `latest_school_hosting` to skip auth-walled schools, prefers `browse_url` over `discovery_seed_url`, and surfaces a `hosting_note` so contributors know what to expect (Box folder, JS-rendered, "needs landing page", etc.). Applies `tools/finder/school_overrides.yaml` on top of DB observations. Output: `tools/data_quality/kids-worklist/batch-NNN.csv`. |
@@ -24,6 +25,10 @@ tools/extraction_worker/.venv/bin/python tools/data_quality/completeness_report.
 
 # "Which CDS files look broken?" — audit canonical artifacts
 tools/extraction_worker/.venv/bin/python tools/data_quality/audit_manifest.py --write
+
+# "Which extracted PDFs likely need visual OCR?" — emit a re-drain review CSV
+tools/extraction_worker/.venv/bin/python tools/data_quality/audit_visual_ocr_candidates.py \
+    --csv-output .context/reports/visual-ocr-candidates.csv
 
 # "Generate a kids worklist" — regenerates 16 batch CSVs
 tools/extraction_worker/.venv/bin/python tools/data_quality/kids_worklist.py
@@ -41,6 +46,7 @@ All tools read `.env` at the repo root for `SUPABASE_URL` and `SUPABASE_SERVICE_
 `tools/data_quality/` accumulates JSON/JSONL/CSV output files from the above tools. These are deliberately left out of git — they're point-in-time snapshots and would churn noisily. Examples:
 
 - `audit-report-YYYYMMDD.json` — output of `audit_manifest.py`
+- `visual-ocr-candidates.csv` — output of `audit_visual_ocr_candidates.py`
 - `completeness-YYYYMMDD.json` — output of `completeness_report.py`
 - `full-drain-YYYYMMDD.jsonl` — output of `force_resolve_missing.py --all`
 - `active-schools-missing-recent.csv` — output of `active_schools_missing_recent.py`
