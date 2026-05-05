@@ -22386,7 +22386,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://uair.arizona.edu/sites/default/files/cds_2010-11.pdf
+  discovery_seed_url: https://uair.arizona.edu/content/common-data-set
 - id: university-of-arkansas
   name: University of Arkansas
   domain: uark.edu

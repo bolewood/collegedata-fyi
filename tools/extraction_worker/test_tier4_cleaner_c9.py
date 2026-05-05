@@ -78,6 +78,46 @@ C9. Percent and number of first-time, first-year students enrolled in Fall 2024 
         self.assertEqual(values["C.915"]["value"], "33")
         self.assertEqual(values["C.916"]["value"], "34")
 
+    def test_c9_visual_ocr_layout_lines(self):
+        markdown = """
+C9. Percent and number of first-time, first-year students enrolled in Fall 2024 who submitted national standardized (SAT/ACT) test scores.
+
+Percent Number
+Submitting SAT Scores 11 1031
+Submitting ACT Scores 18 1692
+
+Assessment 25th Percentile 50th Percentile 75th Percentile
+Score Score Score
+
+SAT Composite 1130 1240 1340
+Reading and Writing 560 620 670
+SAT Math 560 620 680
+ACT Composite 21 24 28
+ACT Math 21 24 28
+ACT English 20 24 29
+ACT Science 21 24 27
+ACT Reading 21 25 30
+"""
+
+        values = clean(markdown)
+
+        self.assertEqual(values["C.901"]["value"], "11")
+        self.assertEqual(values["C.902"]["value"], "18")
+        self.assertEqual(values["C.903"]["value"], "1031")
+        self.assertEqual(values["C.904"]["value"], "1692")
+        self.assertEqual(values["C.905"]["value"], "1130")
+        self.assertEqual(values["C.906"]["value"], "1240")
+        self.assertEqual(values["C.907"]["value"], "1340")
+        self.assertEqual(values["C.908"]["value"], "560")
+        self.assertEqual(values["C.909"]["value"], "620")
+        self.assertEqual(values["C.910"]["value"], "670")
+        self.assertEqual(values["C.911"]["value"], "560")
+        self.assertEqual(values["C.912"]["value"], "620")
+        self.assertEqual(values["C.913"]["value"], "680")
+        self.assertEqual(values["C.914"]["value"], "21")
+        self.assertEqual(values["C.915"]["value"], "24")
+        self.assertEqual(values["C.916"]["value"], "28")
+
     def test_c9_split_submission_labels_and_blank_sat_composite(self):
         markdown = """
 ## C9 Percent and number of first-time, first-year students enrolled in Fall 2024 who submitted national standardized (SAT/ACT) test scores.

@@ -1997,6 +1997,107 @@ def resolve_c1_applications(
                     return f["question_number"]
         return None
 
+    def _apply_layout_lines(text: str) -> None:
+        gender_sums: dict[tuple[str, str], int] = {}
+        for raw_line in text.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+
+            gender_match = re.search(
+                r"total\s+"
+                r"(?:(full|part)[-\s]?time,\s*)?"
+                r"first[-\s]time,\s*first[-\s]year\s+"
+                r"(men|women|of another gender|of unknown gender|another gender|unknown gender)"
+                r"\s+who\s+(applied|were admitted|enrolled)\s+([0-9][0-9,]*)\b",
+                line,
+                re.IGNORECASE,
+            )
+            if gender_match:
+                load_raw, gender_raw, action_raw, value = gender_match.groups()
+                gender_norm = _normalize_label_without_gender_rewrite(gender_raw)
+                if gender_norm in {"men", "males"}:
+                    gender = "Males"
+                elif gender_norm in {"women", "females"}:
+                    gender = "Females"
+                elif "another gender" in gender_norm:
+                    gender = "Another Gender"
+                else:
+                    gender = "Unknown"
+
+                action = "admitted" if "admitted" in action_raw.lower() else (
+                    "applied" if "applied" in action_raw.lower() else "enrolled"
+                )
+                unit_load = "All"
+                if action == "enrolled" and load_raw:
+                    unit_load = "FT" if load_raw.lower().startswith("full") else "PT"
+
+                num = _extract_number(value)
+                qn = None
+                if not (action == "enrolled" and not load_raw):
+                    qn = _lookup(gender, "All", action, unit_load=unit_load)
+                if qn and num is not None:
+                    out.setdefault(qn, {"value": num, "source": "tier4_cleaner"})
+                if num is not None:
+                    if unit_load == "All" or action != "enrolled":
+                        gender_sums[(action, "All")] = (
+                            gender_sums.get((action, "All"), 0) + int(float(num))
+                        )
+                    elif action == "enrolled":
+                        gender_sums[(action, "FTPT")] = (
+                            gender_sums.get((action, "FTPT"), 0) + int(float(num))
+                        )
+                continue
+
+            residency_norm = _normalize_label(line)
+            if "degree seeking" not in residency_norm:
+                continue
+            action = None
+            if "who were admitted" in residency_norm:
+                action = "admitted"
+            elif "who applied" in residency_norm:
+                action = "applied"
+            elif "enrolled" in residency_norm:
+                action = "enrolled"
+            if not action:
+                continue
+
+            numbers = re.findall(r"\b\d[\d,]*\b", line)
+            if len(numbers) < 4:
+                continue
+            if len(numbers) >= 5:
+                ordered = [
+                    ("In-State", numbers[-5]),
+                    ("Out-of-State", numbers[-4]),
+                    ("Nonresidents", numbers[-3]),
+                    ("Unknown", numbers[-2]),
+                    ("All", numbers[-1]),
+                ]
+            else:
+                ordered = [
+                    ("In-State", numbers[-4]),
+                    ("Out-of-State", numbers[-3]),
+                    ("Nonresidents", numbers[-2]),
+                    ("All", numbers[-1]),
+                ]
+            for residency, value in ordered:
+                num = _extract_number(value)
+                qn = _lookup("All", residency, action)
+                if qn and num is not None:
+                    out.setdefault(qn, {"value": num, "source": "tier4_cleaner"})
+
+        for action in ("applied", "admitted", "enrolled"):
+            qn = _lookup("All", "All", action)
+            if not qn or qn in out:
+                continue
+            total = gender_sums.get((action, "All"))
+            if total is None and action == "enrolled":
+                total = gender_sums.get((action, "FTPT"))
+            if total is not None:
+                out[qn] = {"value": str(total), "source": "tier4_cleaner"}
+
+    _apply_layout_lines(markdown)
+
     for table in tables:
         headers_norm = [_normalize_label(h) for h in table.get("headers", [])]
         joined_hdr = " ".join(headers_norm)
@@ -2924,6 +3025,20 @@ def resolve_c9_submission_rates(
     if "Submitting SAT Scores" not in markdown or "Submitting ACT Scores" not in markdown:
         return out
 
+    for test_name, pct_qn, num_qn in (
+        ("SAT", "C.901", "C.903"),
+        ("ACT", "C.902", "C.904"),
+    ):
+        line_match = re.search(
+            rf"Submitting\s+{test_name}\s+Scores\s+([0-9.]+)%?\s+([0-9][0-9,]*)\b",
+            markdown,
+            re.IGNORECASE,
+        )
+        if line_match:
+            pct, num = line_match.groups()
+            out.setdefault(pct_qn, {"value": pct.replace(",", ""), "source": "tier4_cleaner"})
+            out.setdefault(num_qn, {"value": num.replace(",", ""), "source": "tier4_cleaner"})
+
     labels = re.search(
         r"Submitting SAT Scores\s+Submitting ACT Scores",
         markdown,
@@ -3117,6 +3232,8 @@ def resolve_c9_percentile_anchors(
             if _normalize_label(row_label) in label_norm:
                 qns_by_role = candidate
                 break
+        if not qns_by_role and "reading and writing" in label_norm:
+            qns_by_role = _PERCENTILE_QNS.get("sat evidence-based reading")
         if not qns_by_role:
             continue
 
@@ -5525,8 +5642,10 @@ def clean(
             resolve_b3_degrees,
             resolve_b_two_year_rates,
             resolve_b5_graduation,
+            resolve_c1_applications,
             resolve_c2_waitlist,
             resolve_c8_entrance_exams,
+            resolve_c9_submission_rates,
             resolve_c9_percentile_anchors,
             resolve_c12_gpa_summary,
             resolve_c13_application_fee,
@@ -5550,7 +5669,10 @@ def clean(
                     resolve_b3_degrees,
                     resolve_b_two_year_rates,
                     resolve_b5_graduation,
+                    resolve_c1_applications,
                     resolve_c2_waitlist,
+                    resolve_c9_submission_rates,
+                    resolve_c9_percentile_anchors,
                     resolve_c13_application_fee,
                     resolve_i_faculty,
                     resolve_d_transfer,

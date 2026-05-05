@@ -42,6 +42,57 @@ class Tier4CleanerC1C2Test(unittest.TestCase):
         self.assertEqual(values["C.118"]["value"], "8749")
         self.assertEqual(values["C.119"]["value"], "3268")
 
+    def test_c1_visual_ocr_layout_lines(self):
+        markdown = """
+FIRST-TIME, FIRST-YEAR STUDENT APPLICANTS TOTAL
+Total first-time, first-year men who applied 25635
+Total first-time, first-year women who applied 32704
+Total first-time, first-year of another gender who applied
+Total first-time, first-year of unknown gender who applied
+
+FIRST-TIME, FIRST-YEAR STUDENT ADMITS TOTAL
+Total first-time, first-year men who were admitted 21436
+Total first-time, first-year women who were admitted 28816
+
+FIRST-TIME, FIRST-YEAR STUDENT ENROLLEES TOTAL
+Total first-time, first-year men who enrolled 3714
+Total first-time, first-year women who enrolled 5526
+
+FIRST-TIME, FIRST-YEAR STUDENT ENROLLEES BY STATUS TOTAL
+Total full-time, first-time, first-year men who enrolled 3528
+Total part-time, first-time, first-year men who enrolled 186
+Total full-time, first-time, first-year women who enrolled 5280
+Total part-time, first-time, first-year women who enrolled 246
+
+FIRST-TIME, FIRST-YEAR STUDENT APPLICANTS IN-STATE OUT.OF- INTERNATIONAL] UNKNOWN | TOTAL
+Total first-time, first-year (degree-seeking) who applied 15064 34044 9231 58339
+Total first-time, first-year (degree-seeking) who were admitted} 13619 31303 5330 50252
+Total first-time, first-year (degree-seeking) enrolled 4983 3914 343 9240
+"""
+
+        values = clean(
+            markdown,
+            schema=SchemaIndex(REPO_ROOT / "schemas" / "cds_schema_2024_25.json"),
+        )
+
+        self.assertEqual(values["C.101"]["value"], "25635")
+        self.assertEqual(values["C.102"]["value"], "32704")
+        self.assertEqual(values["C.105"]["value"], "21436")
+        self.assertEqual(values["C.106"]["value"], "28816")
+        self.assertEqual(values["C.109"]["value"], "3528")
+        self.assertEqual(values["C.110"]["value"], "186")
+        self.assertEqual(values["C.111"]["value"], "5280")
+        self.assertEqual(values["C.112"]["value"], "246")
+        self.assertEqual(values["C.117"]["value"], "58339")
+        self.assertEqual(values["C.118"]["value"], "50252")
+        self.assertEqual(values["C.119"]["value"], "9240")
+        self.assertEqual(values["C.120"]["value"], "15064")
+        self.assertEqual(values["C.123"]["value"], "34044")
+        self.assertEqual(values["C.126"]["value"], "9231")
+        self.assertEqual(values["C.122"]["value"], "4983")
+        self.assertEqual(values["C.125"]["value"], "3914")
+        self.assertEqual(values["C.128"]["value"], "343")
+
     def test_c2_waitlist_policy_and_counts_from_layout(self):
         supplemental = """
 C2   First-time, first-year wait-listed students
