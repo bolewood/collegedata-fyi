@@ -7,6 +7,21 @@ For the spike/QA results that justified this pipeline, see
 
 ## Operator flow
 
+Audit watchlist freshness and produce a targeted local redrain queue:
+
+```bash
+python tools/change_intelligence/audit_watchlist_freshness.py \
+  --env /path/to/.env \
+  --watchlist data/watchlists/top_200_change_intelligence.yaml \
+  --out-dir .context/reports/prd019-top200-freshness \
+  --redrain-limit 25
+```
+
+The audit writes `freshness-audit.md`, `freshness-detail.csv`,
+`redrain-targets.csv`, `redrain-document-ids.txt`, and `summary.json`.
+Use the generated document-id list with the local extraction worker for managed
+Docling re-drains.
+
 Dry-run the calibration subset:
 
 ```bash
