@@ -1,6 +1,6 @@
 # Extraction Quality
 
-*Last updated: May 3, 2026 (post PRD 015-018, fresh-row worker prioritization, and source-routing cleanup)*
+*Last updated: May 5, 2026 (post PRD 019 spike/QA, change-event projection alpha, fresh-row worker prioritization, and source-routing cleanup)*
 
 This document records current extraction accuracy across our pipeline. It's meant as an honest, calibrated self-assessment, not a marketing page. The numbers here are produced by reproducible scorers you can run yourself against our ground-truth fixtures in [`tools/extraction-validator/`](../tools/extraction-validator/).
 
@@ -26,6 +26,8 @@ The gap between the two is where the real work is.
 | Public long-form field substrate | 200,957 `cds_fields` rows |
 | Public browser serving rows | 475 `school_browser_rows` rows |
 | Public merit-profile rows | 383 `school_merit_profile` rows |
+| PRD 019 admissions/reporting spike | 85 schools with pairable 2024-25/2025-26 primary rows; 392 candidate events, 282 clean comparable events, 31 reporting-status candidates requiring review |
+| PRD 019 calibration dry-run | 30-school subset, 4 latest/prior pairable schools, 36 generated events, 2 major, 11 notable, 4 human-review candidates |
 | PRD 010 launch -> PRD 012 refresh, `cds_fields` | 113,836 -> 217,910 field rows (+104,074, +91.4%) |
 | PRD 012 SAT/ACT browser answerability | SAT median 67.2% primary clean · ACT 75th 66.1% primary clean |
 | Tier 1 XLSX field coverage (median per doc) | 521 fields in the current `2024+` projection (~47% of schema) |
@@ -196,6 +198,35 @@ of claiming full-schema completion:
   Headless/archiver downloads also preserve document-like response bytes even
   when hosting headers are misleading. This fixed DOCX-as-XLSX failures and
   reduced false failures from WAF/interstitial handling.
+
+### PRD 019 change-intelligence spike and QA (May 5, 2026)
+
+PRD 019 is not an extractor by itself. It is a downstream quality consumer that
+tests whether extracted data is stable enough to support year-over-year change
+events. The spike and first calibration pass are therefore useful extraction QA:
+they show both real signal and where false deltas can be fabricated by producer
+or quality drift.
+
+The pre-PRD admissions/reporting spike compared five high-leverage field groups
+over schools with both 2024-25 and 2025-26 primary rows. It found:
+
+- 85 schools with pairable primary rows.
+- 392 candidate events.
+- 282 clean comparable events after gating out provenance/quality noise.
+- 31 reporting-status candidates requiring human review.
+
+The first deterministic projector calibration run used the 30-school PRD 019
+subset and produced:
+
+- 4 pairable latest/prior schools in the current calibration subset.
+- 36 generated events: 2 major, 11 notable, 23 watch.
+- 4 human-review candidates.
+
+The important QA outcome is the gate design, not the raw event count. `major`
+events and `newly_missing` events are candidates until a human checks the source
+PDFs. Producer changes, source-provenance crossings, and document-quality
+regressions are explicit event types or severity caps, not silent inputs to a
+"school stopped reporting" claim.
 
 ### Corpus-wide coverage by section
 

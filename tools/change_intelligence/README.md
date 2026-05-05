@@ -2,6 +2,9 @@
 
 PRD 019 deterministic event projection.
 
+For the spike/QA results that justified this pipeline, see
+[`docs/plans/prd-019-spike-and-qa.md`](../../docs/plans/prd-019-spike-and-qa.md).
+
 ## Operator flow
 
 Dry-run the calibration subset:

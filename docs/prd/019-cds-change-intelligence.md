@@ -1,9 +1,11 @@
 # PRD 019: CDS change intelligence and reporting gaps
 
-**Status:** In implementation. Phase 1 core projection slice started 2026-05-05.
+**Status:** Alpha implementation shipped 2026-05-05. Core projection, review
+workflow, report seed, school-page public gate, and operator digest exist;
+public report launch remains pending.
 **Created:** 2026-05-05
 **Author:** Anthony + Codex
-**Related:** [PRD 014](014-cross-year-canonical-schema.md), [PRD 016B](016B-admission-strategy-card.md), [PRD 017](017-match-list-builder.md), [PRD 018](018-open-college-fit-data.md), [Queryable browser backend](../queryable-browser-backend.md)
+**Related:** [PRD 014](014-cross-year-canonical-schema.md), [PRD 016B](016B-admission-strategy-card.md), [PRD 017](017-match-list-builder.md), [PRD 018](018-open-college-fit-data.md), [Queryable browser backend](../queryable-browser-backend.md), [PRD 019 spike and QA](../plans/prd-019-spike-and-qa.md)
 
 ---
 
@@ -63,6 +65,17 @@ Decision gate:
   proceed to Phase 0.
 - If not, demote the annual-report/op-ed framing and re-scope v1 as a small
   school-page "What Changed" card.
+
+Outcome:
+
+- Spike passed. See [`docs/plans/prd-019-spike-and-qa.md`](../plans/prd-019-spike-and-qa.md).
+- The spike found 85 schools with pairable 2024-25/2025-26 primary rows, 392
+  candidate events, 282 clean comparable events, and 31 reporting-status
+  candidates requiring human review.
+- The first calibration dry-run over the 30-school subset produced 36 events,
+  including 2 major, 11 notable, and 4 human-review candidates. Only 4 of the
+  30 calibration schools were latest/prior pairable at that moment, so Top 200
+  freshness remains the main launch blocker.
 
 ## External sources to cite in product/editorial work
 

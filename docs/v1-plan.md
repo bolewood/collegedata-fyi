@@ -1,7 +1,7 @@
 # collegedata.fyi — V1 Project Plan
 
-**Status:** V1 live; PRD 015 (institution directory + CDS coverage transparency) shipped 2026-04-29
-**Last updated:** 2026-04-29
+**Status:** V1 live; PRD 019 change-intelligence alpha shipped 2026-05-05
+**Last updated:** 2026-05-05
 **Canonical domain:** collegedata.fyi (API at `api.collegedata.fyi`)
 
 > This is a living document. Update it when decisions change rather than freezing it in time. Point-in-time decisions and their rationale are preserved as ADRs in [`docs/decisions/`](decisions/).
@@ -196,6 +196,21 @@ Supabase free-tier limits could bite if the corpus grows faster than expected. S
 ## What V1 does not try to be
 
 Not a data product for non-technical users. Not a replacement for IPEDS. Not a CDS authoring tool. Not a ranking or comparison site. Not a clean normalized dataset. All of those are possible V2+ directions, but they all depend on the V1 foundation existing first.
+
+## Product layers built on the V1 foundation
+
+The original V1 foundation now supports several higher-level products:
+institution coverage transparency (PRD 015), academic positioning (PRD 016),
+admission strategy (PRD 016B), match-list building (PRD 017), merit profile data
+(PRD 018), and change intelligence (PRD 019).
+
+PRD 019 is intentionally an alpha/operator capability. The deterministic event
+substrate can compare selected primary CDS rows year over year and generate
+source-linked change events, but public reporting is gated by review. The
+school-page card only shows events that are explicitly marked public after
+verification, and the `/changes` digest is disabled unless operator env vars are
+present. See [`docs/plans/prd-019-spike-and-qa.md`](plans/prd-019-spike-and-qa.md)
+for the spike results and launch gates.
 
 ## Open questions
 
