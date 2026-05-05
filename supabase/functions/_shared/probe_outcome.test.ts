@@ -161,6 +161,68 @@ Deno.test("categoriseLegacyError: empty string → null", () => {
   assertEquals(categoriseLegacyError(""), null);
 });
 
+// ─── bot_challenge ──────────────────────────────────────────────────────────
+
+Deno.test("categoriseLegacyError: Cloudflare 'Just a moment' body → bot_challenge", () => {
+  // Canonical Cloudflare challenge HTML head fragment. Body markers
+  // are case-folded by categoriseLegacyError before matching.
+  assertEquals(
+    categoriseLegacyError(
+      "unknown content type for https://www.williams.edu/.../CDS.pdf: " +
+        "text/html; bytes start with <!DOCTYPE html>... <title>Just a moment...</title>",
+    ),
+    "bot_challenge",
+  );
+});
+
+Deno.test("categoriseLegacyError: cf-mitigated header marker → bot_challenge", () => {
+  // Cloudflare emits cf-mitigated: challenge on bot-challenge responses.
+  // archive.ts surfaces this in the error message when WAF is detected.
+  assertEquals(
+    categoriseLegacyError(
+      "PermanentError: cloudflare bot challenge at https://oira.jhu.edu/cds.pdf (HTTP 403, cf-mitigated: challenge)",
+    ),
+    "bot_challenge",
+  );
+});
+
+Deno.test("categoriseLegacyError: explicit 'bot challenge' phrase → bot_challenge", () => {
+  // The new typed-error path emits "<waf> bot challenge at <url>" — make
+  // sure the categoriser still returns bot_challenge if we ever hit the
+  // legacy path with that string.
+  assertEquals(
+    categoriseLegacyError(
+      "PermanentError: imperva bot challenge at https://example.edu/cds.pdf",
+    ),
+    "bot_challenge",
+  );
+});
+
+Deno.test("categoriseLegacyError: bot_challenge wins over wrong_content_type", () => {
+  // When a Cloudflare challenge is delivered as text/html, the message
+  // contains both "bytes do not match PDF/XLSX/DOCX magic" AND
+  // "Just a moment". The bot-challenge match must come first because
+  // "Just a moment" is a much more specific signal than the generic
+  // content-type / magic-byte miss.
+  const msg =
+    "unknown content type for https://x.edu/cds.pdf: text/html, bytes do not match PDF/XLSX/DOCX magic; preview: <html><title>Just a Moment...</title></html>";
+  assertEquals(categoriseLegacyError(msg), "bot_challenge");
+});
+
+Deno.test("DEFAULT_COOLDOWN_DAYS: bot_challenge has a 7d window", () => {
+  // Long enough that daily cron does not re-fire identical issues;
+  // short enough that policy changes are picked up within a week.
+  assertEquals(DEFAULT_COOLDOWN_DAYS["bot_challenge"], 7);
+});
+
+Deno.test("PROBE_OUTCOME_VALUES: includes bot_challenge", () => {
+  // Make sure the runtime list and the type union stay in sync. The
+  // CHECK constraint at archive_queue_last_outcome_valid mirrors this.
+  if (!PROBE_OUTCOME_VALUES.includes("bot_challenge")) {
+    throw new Error("bot_challenge missing from PROBE_OUTCOME_VALUES");
+  }
+});
+
 // ─── DEFAULT_COOLDOWN_DAYS ──────────────────────────────────────────────────
 
 Deno.test("DEFAULT_COOLDOWN_DAYS: every ProbeOutcome has a window", () => {
