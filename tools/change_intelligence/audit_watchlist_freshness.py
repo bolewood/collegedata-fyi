@@ -8,6 +8,7 @@ This operator script answers three questions:
 1. Which watchlist schools have prior/latest browser rows?
 2. Which missing rows already have archived documents that can be re-drained?
 3. Which selected Tier 4 rows were produced by an older cleaner version?
+4. Which selected rows are section-only source fragments?
 """
 
 from __future__ import annotations
@@ -36,6 +37,18 @@ DEFAULT_OUT_DIR = REPO_ROOT / ".context" / "reports" / "prd019-top200-freshness"
 CURRENT_TIER4_VERSION = "0.3.4"
 REDRAIN_FORMATS = {"pdf_flat", "pdf_scanned"}
 BAD_FLAGS = {"wrong_file", "blank_template", "low_coverage"}
+SECTION_HINTS = {
+    "section_a": ("-a-", "general-information"),
+    "section_b": ("-b-", "enrollment-and-persistence"),
+    "section_c": ("-c-", "first-time-first-year"),
+    "section_d": ("-d-", "transfer-admission"),
+    "section_e": ("-e-", "academic-offerings"),
+    "section_f": ("-f-", "student-life"),
+    "section_g": ("-g-", "annual-expenses"),
+    "section_h": ("-h-", "financial-aid"),
+    "section_i": ("-i-", "instructional-faculty"),
+    "section_j": ("-j-", "degrees"),
+}
 
 
 @dataclass(frozen=True)
@@ -273,6 +286,27 @@ def needs_tier4_redrain(row: dict[str, Any] | None) -> bool:
     )
 
 
+def section_scope(source_url: str | None) -> str:
+    url = (source_url or "").lower()
+    if not url:
+        return ""
+    for label, needles in SECTION_HINTS.items():
+        if all(needle in url for needle in needles):
+            return label
+    return ""
+
+
+def row_source_url(row: dict[str, Any] | None, docs_by_id: dict[str, dict[str, Any]]) -> str:
+    if not row:
+        return ""
+    doc = docs_by_id.get(str(row.get("document_id") or "")) or {}
+    return str(doc.get("source_url") or "")
+
+
+def row_section_scope(row: dict[str, Any] | None, docs_by_id: dict[str, dict[str, Any]]) -> str:
+    return section_scope(row_source_url(row, docs_by_id))
+
+
 def target_doc_ids_for_school(
     school_id: str,
     docs: list[dict[str, Any]],
@@ -350,6 +384,7 @@ def write_markdown(summary: dict[str, Any], rows: list[dict[str, Any]], targets:
         f"- Latest-year rows: {summary['with_latest']}",
         f"- Pairable rows: {summary['pairable']} ({summary['pairable_pct']:.1%})",
         f"- Pairable with >=3 useful launch fields in both years: {summary['pairable_useful']} ({summary['pairable_useful_pct']:.1%})",
+        f"- Selected section-fragment rows: {summary['section_fragment_rows']}",
         f"- Targeted redrain documents: {summary['target_document_count']}",
         "",
         "## Redrain Targets",
@@ -373,14 +408,15 @@ def write_markdown(summary: dict[str, Any], rows: list[dict[str, Any]], targets:
         "",
         "## Watchlist Detail",
         "",
-        "| # | School | Segment | Prior | Latest | Useful Prior | Useful Latest | Status |",
-        "|---:|---|---|---|---|---:|---:|---|",
+        "| # | School | Segment | Prior | Latest | Useful Prior | Useful Latest | Section Scope | Status |",
+        "|---:|---|---|---|---|---:|---:|---|---|",
     ])
     for row in rows:
         lines.append(
             f"| {row['ordinal']} | {row['school_id']} | {row['segment']} | "
             f"{row['prior_status']} | {row['latest_status']} | "
-            f"{row['prior_useful_fields']} | {row['latest_useful_fields']} | {row['status']} |"
+            f"{row['prior_useful_fields']} | {row['latest_useful_fields']} | "
+            f"{row['section_scope']} | {row['status']} |"
         )
     path.write_text("\n".join(lines) + "\n")
 
@@ -403,8 +439,10 @@ def main() -> int:
     documents = fetch_documents(client, school_ids)
     selected = select_browser_rows(browser_rows)
     docs_by_school: dict[str, list[dict[str, Any]]] = {}
+    docs_by_id: dict[str, dict[str, Any]] = {}
     for doc in documents:
         docs_by_school.setdefault(str(doc["school_id"]), []).append(doc)
+        docs_by_id[str(doc["id"])] = doc
 
     detail_rows: list[dict[str, Any]] = []
     redrain_targets: list[dict[str, Any]] = []
@@ -413,6 +451,10 @@ def main() -> int:
         latest = selected.get((school.school_id, args.to_year))
         prior_useful = useful_field_count(prior)
         latest_useful = useful_field_count(latest)
+        prior_scope = row_section_scope(prior, docs_by_id)
+        latest_scope = row_section_scope(latest, docs_by_id)
+        selected_scopes = [scope for scope in (prior_scope, latest_scope) if scope]
+        scope_status = "/".join(selected_scopes)
         school_docs = docs_by_school.get(school.school_id, [])
         target_docs = target_doc_ids_for_school(
             school.school_id,
@@ -443,6 +485,11 @@ def main() -> int:
             "latest_status": f"{latest.get('producer')}@{latest.get('producer_version')}" if latest else "missing",
             "prior_useful_fields": prior_useful,
             "latest_useful_fields": latest_useful,
+            "prior_section_scope": prior_scope,
+            "latest_section_scope": latest_scope,
+            "section_scope": scope_status,
+            "prior_source_url": row_source_url(prior, docs_by_id),
+            "latest_source_url": row_source_url(latest, docs_by_id),
             "prior_doc_candidates": sum(1 for doc in school_docs if doc_year(doc) == args.from_year),
             "latest_doc_candidates": sum(1 for doc in school_docs if doc_year(doc) == args.to_year),
             "status": status,
@@ -471,6 +518,10 @@ def main() -> int:
         "with_latest": sum(1 for row in detail_rows if row["latest_document_id"]),
         "pairable": sum(1 for row in detail_rows if row["prior_document_id"] and row["latest_document_id"]),
         "pairable_useful": sum(1 for row in detail_rows if row["status"] == "pairable_useful"),
+        "section_fragment_rows": sum(
+            int(bool(row["prior_section_scope"])) + int(bool(row["latest_section_scope"]))
+            for row in detail_rows
+        ),
         "target_document_count": len(limited_targets),
         "all_target_document_count": len(redrain_targets),
         "target_document_ids": [row["document_id"] for row in limited_targets],
