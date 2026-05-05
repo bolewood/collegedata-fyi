@@ -1007,6 +1007,139 @@
   .merit-profile-stats { grid-template-columns: 1fr; }
 }
 
+/* PRD 019 change intelligence. Only public-reviewed events render here;
+   operator candidates stay behind RLS until explicitly published. */
+.what-changed-card {
+  margin-top: 40px;
+  padding-top: 24px;
+}
+.what-changed-card__body {
+  margin-top: 10px;
+  padding: 28px 32px 22px;
+}
+.what-changed-card__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+  gap: 28px;
+  align-items: start;
+}
+.what-changed-card__title {
+  margin: 0;
+  max-width: 620px;
+  font-size: clamp(26px, 3vw, 34px);
+  line-height: 1.05;
+}
+.what-changed-card__head p {
+  margin: 12px 0 0;
+  max-width: 640px;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.what-changed-card__count {
+  border-left: 1px solid var(--rule-strong);
+  padding-left: 20px;
+}
+.what-changed-card__count strong {
+  display: block;
+  margin: 6px 0;
+  font-size: 38px;
+  font-weight: 400;
+  line-height: 1;
+}
+.what-changed-card__count small {
+  display: block;
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.what-changed-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.what-changed-event {
+  border-top: 2px solid var(--rule-strong);
+  padding-top: 14px;
+}
+.what-changed-event__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 10px;
+  align-items: center;
+  color: var(--ink-3);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+.what-changed-severity {
+  border: 1px solid var(--rule-strong);
+  padding: 1px 6px;
+}
+.what-changed-severity--major {
+  border-color: var(--brick);
+  color: var(--brick);
+}
+.what-changed-severity--notable {
+  border-color: var(--ochre);
+  color: var(--ochre);
+}
+.what-changed-severity--watch {
+  color: var(--ink-3);
+}
+.what-changed-event h3 {
+  margin: 10px 0 0;
+  font-size: 16px;
+  line-height: 1.35;
+}
+.what-changed-event p {
+  margin: 7px 0 0;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.what-changed-event__values {
+  margin-top: 10px;
+  color: var(--forest-ink);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+.what-changed-event__sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 12px;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+}
+.what-changed-card__source {
+  margin-top: 26px;
+  padding-top: 14px;
+  font-size: 10.5px;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+@media (max-width: 820px) {
+  .what-changed-card__body { padding: 24px 20px 20px; }
+  .what-changed-card__head,
+  .what-changed-list {
+    grid-template-columns: 1fr;
+  }
+  .what-changed-card__count {
+    border-left: 0;
+    border-top: 1px solid var(--rule);
+    padding-left: 0;
+    padding-top: 14px;
+  }
+}
+
 /* Match list builder. Dense enough for repeated counselor use, with source
    links and export controls kept close to the ranking surface. */
 .match-page {

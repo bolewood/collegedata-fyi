@@ -675,5 +675,8 @@ This estimate excludes the mandatory two-day pre-PRD editorial spike.
 - The first projector compares the launch admissions/test fields already
   materialized in `school_browser_rows`. Raw-field comparisons should build on
   `cds_field_observations` after the calibration subset is reviewed.
-- School-page `WhatChangedCard`, `/changes`, and annual report generation remain
-  the next implementation slice after event projection is calibrated.
+- School-page `WhatChangedCard` is wired behind `public_visible` plus
+  `verification_status in ('not_required', 'confirmed')`, so generated
+  candidates stay operator-only until explicitly published.
+- `/changes` and annual report generation remain the next implementation slice
+  after event projection is calibrated.
