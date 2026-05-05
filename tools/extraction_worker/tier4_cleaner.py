@@ -88,6 +88,42 @@ def _normalize_label_without_gender_rewrite(text: str) -> str:
     return t
 
 
+def _normalize_compact_question_number(text: str) -> str | None:
+    """Normalize CDS export row IDs like A101 or C901 to schema qnums."""
+    m = re.match(r"^\s*([A-J])\.?(\d{1,3}[A-Z]?)\s*$", str(text).strip(), re.IGNORECASE)
+    if not m:
+        return None
+    section, rest = m.groups()
+    rest = rest.upper()
+    if rest.isdigit():
+        rest = rest.zfill(3)
+    return f"{section.upper()}.{rest}"
+
+
+def _direct_qnum_value(row: dict) -> str | None:
+    """Choose the response cell from a question-number-led table row."""
+    values = [str(v).strip() for v in row.get("values", [])]
+    headers = [str(h).strip().lower() for h in row.get("headers", [])]
+    if not values:
+        return None
+
+    for header_idx, header in enumerate(headers[1:], start=0):
+        if header_idx >= len(values):
+            continue
+        if "response" in header or "answer" in header:
+            value = values[header_idx]
+            if value:
+                return value
+
+    # Pitt-style exports usually put the prompt in values[0] and the answer
+    # in the last populated cell. Walking backward avoids treating the prompt
+    # text as the value.
+    for value in reversed(values[1:] if len(values) > 1 else values):
+        if value:
+            return value
+    return None
+
+
 _NO_WRAP_EMPTY_LABELS = {
     "sat composite",
     "sat evidence based reading and writing",
@@ -5229,6 +5265,7 @@ def clean(
     def _norm_hint(ch):
         return _normalize_label(ch) if isinstance(ch, str) else ch
     field_map_norm = [(_normalize_label(s), qn, _norm_hint(ch)) for s, qn, ch in _FIELD_MAP]
+    schema_qnums = {f["question_number"] for f in idx.fields}
 
     for table in tables:
         section_norm = _normalize_label(table["section"])
@@ -5236,6 +5273,19 @@ def clean(
         for row in table["rows"]:
             label_norm = _normalize_label(row["label"])
             headers_norm = [_normalize_label(h) for h in row.get("headers", [])]
+
+            # --- Direct question-number rows ---
+            # Some school exports use compact CDS row IDs as the first column
+            # (e.g. A101, C901) instead of natural-language labels. Normalize
+            # those to schema keys (A.101, C.901) and read the response cell.
+            direct_qnum = _normalize_compact_question_number(row["label"])
+            if direct_qnum in schema_qnums and direct_qnum not in values:
+                direct_value = _direct_qnum_value(row)
+                if direct_value:
+                    values[direct_qnum] = {
+                        "value": direct_value,
+                        "source": "tier4_cleaner",
+                    }
 
             # --- Standard field map ---
             for substr, qnum, col_hint in field_map_norm:

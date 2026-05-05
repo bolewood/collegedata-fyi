@@ -1,16 +1,45 @@
 from __future__ import annotations
 
 import unittest
+from types import SimpleNamespace
 
 from worker import (
     annotate_tier2_unmapped_fields,
+    artifact_already_extracted,
+    attach_source_metadata,
     extraction_no_project,
     extraction_success,
     is_failure_action,
+    low_field_quality_flag,
     mean_or_none,
     parsed_field_count,
     pending_doc_priority_key,
 )
+
+
+class _FakeArtifactQuery:
+    def __init__(self, rows):
+        self.rows = rows
+
+    def select(self, _columns):
+        return self
+
+    def eq(self, _column, _value):
+        return self
+
+    def limit(self, _count):
+        return self
+
+    def execute(self):
+        return SimpleNamespace(data=self.rows)
+
+
+class _FakeClient:
+    def __init__(self, rows):
+        self.rows = rows
+
+    def table(self, _name):
+        return _FakeArtifactQuery(self.rows)
 
 
 class WorkerProjectionRefreshTests(unittest.TestCase):
@@ -36,6 +65,46 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
     def test_summary_mean_rounding(self):
         self.assertEqual(mean_or_none([1, 2, 4]), 2.33)
         self.assertIsNone(mean_or_none([]))
+
+    def test_low_field_quality_flag(self):
+        self.assertEqual(low_field_quality_flag(0), "blank_template")
+        self.assertEqual(low_field_quality_flag(24), "low_coverage")
+        self.assertIsNone(low_field_quality_flag(25))
+
+    def test_attach_source_metadata_records_latest_source(self):
+        canonical = {}
+
+        attach_source_metadata(canonical, {
+            "sha256": "abc123",
+            "storage_path": "upitt/2025-26/abc123.pdf",
+        })
+
+        self.assertEqual(canonical["source_sha256"], "abc123")
+        self.assertEqual(canonical["source_storage_path"], "upitt/2025-26/abc123.pdf")
+        self.assertEqual(canonical["source_artifact"]["sha256"], "abc123")
+
+    def test_artifact_idempotency_requires_matching_source_sha_when_known(self):
+        client = _FakeClient([
+            {"id": "old", "notes": {"source_sha256": "old-sha"}},
+            {"id": "new", "notes": {"source_artifact": {"sha256": "new-sha"}}},
+        ])
+
+        self.assertTrue(artifact_already_extracted(
+            client, "doc", "tier4_docling", "0.3.4", "2025-26", "new-sha",
+        ))
+        self.assertFalse(artifact_already_extracted(
+            client, "doc", "tier4_docling", "0.3.4", "2025-26", "missing-sha",
+        ))
+
+    def test_artifact_idempotency_treats_legacy_notes_as_stale_when_source_known(self):
+        client = _FakeClient([{"id": "legacy", "notes": {"stats": {}}}])
+
+        self.assertFalse(artifact_already_extracted(
+            client, "doc", "tier4_docling", "0.3.4", "2025-26", "current-sha",
+        ))
+        self.assertTrue(artifact_already_extracted(
+            client, "doc", "tier4_docling", "0.3.4", "2025-26",
+        ))
 
     def test_pending_doc_priority_prefers_recent_cds_year(self):
         rows = [

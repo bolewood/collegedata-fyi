@@ -113,6 +113,7 @@ from html_to_markdown import html_to_markdown  # noqa: E402 (PRD 008 Tier 6)
 SCHEMA_DIR = _TOOLS_ROOT.parent / "schemas"
 TEMPLATE_DIR = SCHEMA_DIR / "templates"
 MIN_TIER1_FIELDS = 5
+MIN_TIER4_FIELDS = 25
 
 
 @dataclass(frozen=True)
@@ -148,6 +149,12 @@ def is_failure_action(action: str) -> bool:
     if "_error" in action or action.endswith("_no_tables"):
         return True
     return False
+
+
+def low_field_quality_flag(fields: int, threshold: int = MIN_TIER4_FIELDS) -> str | None:
+    if fields >= threshold:
+        return None
+    return "blank_template" if fields == 0 else "low_coverage"
 
 
 def mean_or_none(values: list[int]) -> float | None:
@@ -306,10 +313,10 @@ def build_cell_maps_for_schemas(
     return cell_maps
 
 
-def fetch_latest_source_path(client: Client, document_id: str) -> Optional[str]:
+def fetch_latest_source_artifact(client: Client, document_id: str) -> Optional[dict]:
     result = (
         client.table("cds_artifacts")
-        .select("storage_path")
+        .select("storage_path,sha256")
         .eq("document_id", document_id)
         .eq("kind", "source")
         .order("created_at", desc=True)
@@ -317,7 +324,12 @@ def fetch_latest_source_path(client: Client, document_id: str) -> Optional[str]:
         .execute()
     )
     rows = result.data or []
-    return rows[0]["storage_path"] if rows else None
+    return rows[0] if rows else None
+
+
+def fetch_latest_source_path(client: Client, document_id: str) -> Optional[str]:
+    artifact = fetch_latest_source_artifact(client, document_id)
+    return artifact["storage_path"] if artifact else None
 
 
 def download_source(client: Client, storage_path: str) -> bytes:
@@ -629,12 +641,18 @@ def artifact_already_extracted(
     producer: str,
     producer_version: str,
     schema_version: Optional[str] = None,
+    source_sha256: Optional[str] = None,
 ) -> bool:
     """Idempotency: if an artifact with the same (document, kind, producer,
-    version) tuple already exists, skip writing a duplicate."""
+    version, schema, source sha) tuple already exists, skip writing a duplicate.
+
+    The source sha check matters when a document row is refreshed in place with
+    a corrected or republished PDF. Older canonical artifacts may not carry
+    source provenance; those are treated as stale when source_sha256 is known.
+    """
     query = (
         client.table("cds_artifacts")
-        .select("id")
+        .select("id,notes")
         .eq("document_id", document_id)
         .eq("kind", "canonical")
         .eq("producer", producer)
@@ -642,8 +660,34 @@ def artifact_already_extracted(
     )
     if schema_version:
         query = query.eq("schema_version", schema_version)
-    result = query.limit(1).execute()
-    return bool(result.data)
+    result = query.limit(10).execute()
+    rows = result.data or []
+    if not source_sha256:
+        return bool(rows)
+    for row in rows:
+        notes = row.get("notes") or {}
+        if notes.get("source_sha256") == source_sha256:
+            return True
+        source_artifact = notes.get("source_artifact")
+        if isinstance(source_artifact, dict) and source_artifact.get("sha256") == source_sha256:
+            return True
+    return False
+
+
+def attach_source_metadata(canonical: dict, source_artifact: dict) -> None:
+    source_sha256 = source_artifact.get("sha256")
+    source_storage_path = source_artifact.get("storage_path")
+    if source_sha256:
+        canonical["source_sha256"] = source_sha256
+    if source_storage_path:
+        canonical["source_storage_path"] = source_storage_path
+    if source_sha256 or source_storage_path:
+        canonical["source_artifact"] = {
+            k: v for k, v in {
+                "sha256": source_sha256,
+                "storage_path": source_storage_path,
+            }.items() if v
+        }
 
 
 def attach_schema_metadata(canonical: dict, resolution: SchemaResolution) -> dict:
@@ -708,12 +752,14 @@ def _run_tier1(
     source_format: str,
     resolution: SchemaResolution,
     cell_map: dict,
+    source_artifact: dict,
     dry_run: bool,
 ) -> ExtractionOutcome:
     """Tier 1 path: read filled CDS XLSX via template cell-position map."""
     try:
         canonical = tier1_extract(xlsx_bytes, resolution.schema, cell_map)
         attach_schema_metadata(canonical, resolution)
+        attach_source_metadata(canonical, source_artifact)
     except Exception as e:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed", source_format)
@@ -730,9 +776,11 @@ def _run_tier1(
 
     if not dry_run:
         if artifact_already_extracted(
-            client, document_id, producer, producer_version, resolution.schema_version,
+            client, document_id, producer, producer_version,
+            resolution.schema_version, canonical.get("source_sha256"),
         ):
             mark_extraction_status(client, document_id, "extracted", source_format)
+            clear_recoverable_quality_flag(client, document_id)
             return extraction_no_project("already_extracted")
 
         try:
@@ -742,6 +790,7 @@ def _run_tier1(
             return extraction_no_project(f"artifact_insert_error: {e}")
 
         mark_extraction_status(client, document_id, "extracted", source_format)
+        clear_recoverable_quality_flag(client, document_id)
 
     return extraction_success(f"tier1_extracted ({fields} fields)")
 
@@ -754,6 +803,7 @@ def _run_tier6(
     source_format: str,
     resolution: SchemaResolution,
     schema_index,
+    source_artifact: dict,
     dry_run: bool,
 ) -> ExtractionOutcome:
     """Tier 6 path (PRD 008): HTML → markdown → tier4_cleaner.
@@ -810,15 +860,24 @@ def _run_tier6(
         canonical["schema_fallback_reason"] = resolution.fallback_reason
         if resolution.canonical_year:
             canonical["schema_year_proxy_for"] = resolution.canonical_year
+    attach_source_metadata(canonical, source_artifact)
 
     producer = canonical["producer"]
     producer_version = canonical["producer_version"]
+    stats = canonical.get("stats", {})
+    fields = int(stats.get("schema_fields_populated") or 0)
+    quality_flag = low_field_quality_flag(fields)
 
     if not dry_run:
         if artifact_already_extracted(
-            client, document_id, producer, producer_version, resolution.schema_version,
+            client, document_id, producer, producer_version,
+            resolution.schema_version, canonical.get("source_sha256"),
         ):
             mark_extraction_status(client, document_id, "extracted", source_format)
+            if quality_flag:
+                mark_document_quality_flag(client, document_id, quality_flag)
+            else:
+                clear_recoverable_quality_flag(client, document_id)
             return extraction_no_project("already_extracted")
 
         try:
@@ -828,6 +887,10 @@ def _run_tier6(
             return extraction_no_project(f"artifact_insert_error: {e}")
 
         mark_extraction_status(client, document_id, "extracted", source_format)
+        if quality_flag:
+            mark_document_quality_flag(client, document_id, quality_flag)
+        else:
+            clear_recoverable_quality_flag(client, document_id)
 
     return extraction_success(f"tier6_extracted ({len(values)} fields, {len(markdown)} md chars)")
 
@@ -840,6 +903,7 @@ def _run_tier4(
     source_format: str,
     resolution: SchemaResolution,
     schema_index,
+    source_artifact: dict,
     dry_run: bool,
 ) -> ExtractionOutcome:
     """Tier 4 path: Docling baseline → markdown artifact.
@@ -862,6 +926,7 @@ def _run_tier4(
             canonical["schema_fallback_reason"] = resolution.fallback_reason
             if resolution.canonical_year:
                 canonical["schema_year_proxy_for"] = resolution.canonical_year
+        attach_source_metadata(canonical, source_artifact)
     except Exception as e:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed", source_format)
@@ -869,12 +934,20 @@ def _run_tier4(
 
     producer = canonical["producer"]
     producer_version = canonical["producer_version"]
+    stats = canonical.get("stats", {})
+    fields = int(stats.get("schema_fields_populated") or 0)
+    quality_flag = low_field_quality_flag(fields)
 
     if not dry_run:
         if artifact_already_extracted(
-            client, document_id, producer, producer_version, resolution.schema_version,
+            client, document_id, producer, producer_version,
+            resolution.schema_version, canonical.get("source_sha256"),
         ):
             mark_extraction_status(client, document_id, "extracted", source_format)
+            if quality_flag:
+                mark_document_quality_flag(client, document_id, quality_flag)
+            else:
+                clear_recoverable_quality_flag(client, document_id)
             return extraction_no_project("already_extracted")
 
         try:
@@ -884,11 +957,13 @@ def _run_tier4(
             return extraction_no_project(f"artifact_insert_error: {e}")
 
         mark_extraction_status(client, document_id, "extracted", source_format)
+        if quality_flag:
+            mark_document_quality_flag(client, document_id, quality_flag)
+        else:
+            clear_recoverable_quality_flag(client, document_id)
 
-    stats = canonical.get("stats", {})
     md_len = stats.get("markdown_length", 0)
     pages = stats.get("page_count", 0)
-    fields = stats.get("schema_fields_populated", 0)
     return extraction_success(f"tier4_extracted ({fields} fields, {md_len} chars, {pages} pages)")
 
 
@@ -902,6 +977,24 @@ def mark_extraction_status(
     if source_format is not None:
         update["source_format"] = source_format
     client.table("cds_documents").update(update).eq("id", document_id).execute()
+
+
+def mark_document_quality_flag(
+    client: Client,
+    document_id: str,
+    flag: str | None,
+) -> None:
+    client.table("cds_documents").update(
+        {"data_quality_flag": flag},
+    ).eq("id", document_id).execute()
+
+
+def clear_recoverable_quality_flag(client: Client, document_id: str) -> None:
+    client.table("cds_documents").update(
+        {"data_quality_flag": None},
+    ).eq("id", document_id).in_(
+        "data_quality_flag", ["blank_template", "low_coverage"],
+    ).execute()
 
 
 def write_source_metadata(
@@ -1050,11 +1143,12 @@ def extract_one(
     document_id = doc["id"]
     school_id = doc["school_id"]
 
-    storage_path = fetch_latest_source_path(client, document_id)
-    if not storage_path:
+    source_artifact = fetch_latest_source_artifact(client, document_id)
+    if not source_artifact:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed")
         return extraction_no_project("no_source_artifact")
+    storage_path = source_artifact["storage_path"]
 
     try:
         pdf_bytes = download_source(client, storage_path)
@@ -1062,14 +1156,6 @@ def extract_one(
         if not dry_run:
             mark_extraction_status(client, document_id, "failed")
         return extraction_no_project(f"download_error: {e}")
-
-    # Capture embedded source-file metadata (PDF /CreationDate, /ModDate,
-    # /Producer or XLSX dcterms:created, dcterms:modified, /creator) and
-    # persist to cds_documents. Best-effort: failures here never block
-    # extraction. See tools/extraction_worker/source_metadata.py and
-    # migration 20260505160000_archive_observability.sql.
-    if not dry_run:
-        write_source_metadata(client, document_id, pdf_bytes, source_format)
 
     # Year detection. ADR 0007 Stage B: extraction is write-authoritative
     # for academic year. Writes detected_year when a valid span is found
@@ -1125,11 +1211,19 @@ def extract_one(
             flush=True,
         )
 
+    # Capture embedded source-file metadata (PDF /CreationDate, /ModDate,
+    # /Producer or XLSX dcterms:created, dcterms:modified, /creator) and
+    # persist to cds_documents. Best-effort: failures here never block
+    # extraction. See tools/extraction_worker/source_metadata.py and
+    # migration 20260505160000_archive_observability.sql.
+    if not dry_run:
+        write_source_metadata(client, document_id, pdf_bytes, source_format)
+
     cell_map = (cell_maps or {}).get(resolution.schema_version)
     if source_format == "xlsx" and cell_map:
         return _run_tier1(
             client, document_id, school_id, pdf_bytes,
-            source_format, resolution, cell_map, dry_run,
+            source_format, resolution, cell_map, source_artifact, dry_run,
         )
     if source_format == "xlsx" and not cell_map:
         if not dry_run:
@@ -1146,7 +1240,7 @@ def extract_one(
         schema_index = SchemaIndex(resolution.schema_path)
         return _run_tier6(
             client, document_id, school_id, pdf_bytes,
-            source_format, resolution, schema_index, dry_run,
+            source_format, resolution, schema_index, source_artifact, dry_run,
         )
 
     # pdf_scanned routes to Tier 4 too — Docling's do_ocr=True lazily runs
@@ -1158,7 +1252,7 @@ def extract_one(
         schema_index = SchemaIndex(resolution.schema_path)
         return _run_tier4(
             client, document_id, school_id, pdf_bytes,
-            source_format, resolution, schema_index, dry_run,
+            source_format, resolution, schema_index, source_artifact, dry_run,
         )
 
     if source_format != "pdf_fillable":
@@ -1170,6 +1264,7 @@ def extract_one(
     try:
         canonical = run_tier2(pdf_bytes, resolution.schema)
         attach_schema_metadata(canonical, resolution)
+        attach_source_metadata(canonical, source_artifact)
         unmapped_count = annotate_tier2_unmapped_fields(canonical)
         if unmapped_count:
             sample_tags = [
@@ -1194,7 +1289,8 @@ def extract_one(
 
     if not dry_run:
         if artifact_already_extracted(
-            client, document_id, producer, producer_version, resolution.schema_version,
+            client, document_id, producer, producer_version,
+            resolution.schema_version, canonical.get("source_sha256"),
         ):
             # Idempotent re-run: the row was already extracted with this
             # producer version at some earlier point. Mark extracted and

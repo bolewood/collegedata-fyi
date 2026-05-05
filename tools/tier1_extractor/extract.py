@@ -201,16 +201,18 @@ def extract_values_from_cell_map(
     qnum_to_field: dict[str, dict],
 ) -> tuple[dict, set[str], int]:
     available_sheets = set(wb.sheetnames)
+    sheet_aliases = build_sheet_aliases(available_sheets)
     values = {}
     missing_sheets = set()
     empty_count = 0
 
     for qnum, (sheet_name, cell_ref) in cell_map.items():
-        if sheet_name not in available_sheets:
+        resolved_sheet_name = sheet_name if sheet_name in available_sheets else sheet_aliases.get(sheet_name)
+        if not resolved_sheet_name:
             missing_sheets.add(sheet_name)
             continue
 
-        ws = wb[sheet_name]
+        ws = wb[resolved_sheet_name]
         try:
             val = ws[cell_ref].value
         except Exception:
@@ -238,6 +240,35 @@ def extract_values_from_cell_map(
     return values, missing_sheets, empty_count
 
 
+def build_sheet_aliases(available_sheets: set[str]) -> dict[str, str]:
+    """Map official template tab names to common school-published variants."""
+    aliases: dict[str, str] = {}
+    for section in "ABCDEFGHIJ":
+        official = f"CDS-{section}"
+        if official not in available_sheets and section in available_sheets:
+            aliases[official] = section
+    descriptive_aliases = {
+        "CDS-A": ("Information",),
+        "CDS-B": ("Enrollment",),
+        "CDS-C": ("Admission", "Admissions"),
+        "CDS-D": ("Transfer",),
+        "CDS-E": ("Academic",),
+        "CDS-F": ("Student Life",),
+        "CDS-G": ("Expenses",),
+        "CDS-H": ("Financial Aid",),
+        "CDS-I": ("Faculty",),
+        "CDS-J": ("Degrees",),
+    }
+    for official, candidates in descriptive_aliases.items():
+        if official in available_sheets or official in aliases:
+            continue
+        for candidate in candidates:
+            if candidate in available_sheets:
+                aliases[official] = candidate
+                break
+    return aliases
+
+
 def recover_c9_academic_profile_values(
     wb,
     qnum_to_field: dict[str, dict],
@@ -251,9 +282,11 @@ def recover_c9_academic_profile_values(
     deterministic source of truth, and this avoids publishing application-date
     cells as SAT Math percentiles when a workbook removed earlier template rows.
     """
-    if "CDS-C" not in wb.sheetnames:
+    available_sheets = set(wb.sheetnames)
+    sheet_name = "CDS-C" if "CDS-C" in available_sheets else build_sheet_aliases(available_sheets).get("CDS-C")
+    if not sheet_name:
         return 0
-    ws = wb["CDS-C"]
+    ws = wb[sheet_name]
     recovered: dict[str, object] = {}
 
     submit_rows = {
@@ -268,11 +301,8 @@ def recover_c9_academic_profile_values(
     }
 
     in_c9 = False
-    for row_idx in range(1, ws.max_row + 1):
-        row_values = [
-            ws.cell(row=row_idx, column=col_idx).value
-            for col_idx in range(1, min(ws.max_column, 12) + 1)
-        ]
+    for row in ws.iter_rows(max_col=12):
+        row_values = [cell.value for cell in row]
         row_text = " ".join(_norm_label(v) for v in row_values if v is not None)
         if _is_c9_header(row_text):
             in_c9 = True
@@ -297,13 +327,13 @@ def recover_c9_academic_profile_values(
 
         if label in submit_rows:
             percent_q, count_q = submit_rows[label]
-            percent_value = ws.cell(row=row_idx, column=label_col + 1).value
-            count_value = ws.cell(row=row_idx, column=label_col + 2).value
+            percent_value = _row_value(row_values, label_col)
+            count_value = _row_value(row_values, label_col + 1)
             recovered[percent_q] = percent_value if _is_c9_value(percent_value) else None
             recovered[count_q] = count_value if _is_c9_value(count_value) else None
         elif label in score_rows:
             for offset, qnum in enumerate(score_rows[label], start=1):
-                raw_value = ws.cell(row=row_idx, column=label_col + offset).value
+                raw_value = _row_value(row_values, label_col - 1 + offset)
                 recovered[qnum] = raw_value if _is_c9_value(raw_value) else None
 
     count = 0
@@ -323,6 +353,12 @@ def recover_c9_academic_profile_values(
         values[qnum] = _field_record(qnum, value, qnum_to_field)
         count += 1
     return count
+
+
+def _row_value(row_values: list, zero_based_index: int):
+    if zero_based_index < 0 or zero_based_index >= len(row_values):
+        return None
+    return row_values[zero_based_index]
 
 
 def _is_c9_header(row_text: str) -> bool:

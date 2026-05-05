@@ -12,6 +12,77 @@ from extract import extract
 
 
 class Tier1ExtractTests(unittest.TestCase):
+    def test_uses_short_section_tab_aliases_for_template_cell_map(self):
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "A"
+        ws["D4"] = "Alias University"
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx") as tmp:
+            wb.save(tmp.name)
+            schema = {
+                "schema_version": "2025-26",
+                "fields": [{
+                    "question_number": "A.101",
+                    "word_tag": "institution_name",
+                    "question": "Name of College/University:",
+                    "section": "General Information",
+                    "subsection": "Institutional Contact Information",
+                    "value_type": "Text",
+                }],
+            }
+            result = extract(
+                Path(tmp.name),
+                schema,
+                {"A.101": ("CDS-A", "D4")},
+            )
+
+        self.assertEqual(result["stats"]["extraction_layout"], "template_cell_map")
+        self.assertEqual(result["stats"]["schema_fields_populated"], 1)
+        self.assertEqual(result["values"]["A.101"]["value"], "Alias University")
+        self.assertEqual(result["stats"]["missing_sheets"], [])
+
+    def test_uses_descriptive_section_tab_aliases_for_c9_recovery(self):
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Admissions"
+        ws["B10"] = "Percent and number of first-time, first-year students enrolled in Fall 2025 who submitted national standardized (SAT/ACT) test scores."
+        ws["B13"] = "Submitting SAT Scores"
+        ws["C13"] = 0.55
+        ws["D13"] = 2833
+        ws["B18"] = "SAT Composite"
+        ws["C18"] = 1140
+        ws["D18"] = 1250
+        ws["E18"] = 1350
+
+        schema = {
+            "schema_version": "2025-26",
+            "fields": [
+                {
+                    "question_number": qnum,
+                    "word_tag": None,
+                    "question": qnum,
+                    "section": "First-Time, First-Year Admission",
+                    "subsection": "First-time, first-year Profile",
+                    "value_type": "Number",
+                }
+                for qnum in ("C.901", "C.903", "C.905", "C.906", "C.907")
+            ],
+        }
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx") as tmp:
+            wb.save(tmp.name)
+            result = extract(
+                Path(tmp.name),
+                schema,
+                {"C.901": ("CDS-C", "C99")},
+            )
+
+        self.assertEqual(result["values"]["C.901"]["value"], "0.55")
+        self.assertEqual(result["values"]["C.903"]["value"], "2833")
+        self.assertEqual(result["values"]["C.905"]["value"], "1140")
+        self.assertEqual(result["values"]["C.907"]["value"], "1350")
+
     def test_falls_back_to_embedded_answer_columns(self):
         wb = openpyxl.Workbook()
         ws = wb.active

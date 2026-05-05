@@ -6,6 +6,28 @@ from tier4_cleaner import clean
 
 
 class Tier4CleanerAGeneralTest(unittest.TestCase):
+    def test_question_number_led_export_rows(self):
+        markdown = """
+## 2024-2025 Common Data Set Pittsburgh Campus
+## A. GENERAL INFORMATION
+| A1   | Address Information Address Information | Response Text Response Text |
+|------|-----------------------------------------|-----------------------------|
+| A101 | Name of College/University:             | University of Pittsburgh    |
+| A102 | Mailing Address:                        | 4200 Fifth Avenue           |
+
+| A2   | Source of institutional control (Check only one): | Response 'x' |
+|------|---------------------------------------------------|--------------|
+| A201 | Public                                            | X            |
+| A202 | Private (nonprofit)                               |              |
+
+"""
+
+        values = clean(markdown)
+
+        self.assertEqual(values["A.101"]["value"], "University of Pittsburgh")
+        self.assertEqual(values["A.102"]["value"], "4200 Fifth Avenue")
+        self.assertEqual(values["A.201"]["value"], "X")
+
     def test_page_one_general_information_from_layout_text(self):
         supplemental = """
 A0   Respondent Information (Not for Publication)
