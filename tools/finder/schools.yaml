@@ -109,7 +109,7 @@ schools:
   domain: bu.edu
   ipeds_id: '164988'
   scrape_policy: active
-  discovery_seed_url: https://www.bu.edu/asir/files/2020/02/cds-2018.pdf
+  discovery_seed_url: https://www.bu.edu/asir/bu-facts/common-data-set/
   probe_state:
     last_probed_at: '2026-04-14T15:35:44Z'
     last_result: found
