@@ -44,3 +44,13 @@ python tools/change_intelligence/review_change_event.py \
 
 Use `--publish` only after a confirmed verdict. Non-confirmed verdicts update
 `verification_status` and keep `public_visible = false`.
+
+The web `/changes` digest is disabled unless the server environment includes:
+
+```bash
+CHANGE_INTELLIGENCE_DIGEST_ENABLED=true
+SUPABASE_SERVICE_ROLE_KEY=...
+```
+
+The route is intended for operator review only and is not linked from public
+navigation.

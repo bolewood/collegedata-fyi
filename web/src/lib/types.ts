@@ -25,7 +25,13 @@ export type ChangeEventType =
   | "quality_recovered"
   | "card_quality_changed";
 
-export type ChangeEventVerificationStatus = "not_required" | "confirmed";
+export type ChangeEventVerificationStatus =
+  | "not_required"
+  | "candidate"
+  | "confirmed"
+  | "extractor_noise"
+  | "ambiguous"
+  | "not_reportable";
 
 export interface ChangeEventRow {
   id: string;

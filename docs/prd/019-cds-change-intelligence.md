@@ -683,5 +683,6 @@ This estimate excludes the mandatory two-day pre-PRD editorial spike.
 - Human review is supported by `tools/change_intelligence/review_change_event.py`,
   which records a verdict and can publish confirmed events to the public
   school-page card.
-- `/changes` remains the next implementation slice after event projection is
-  calibrated.
+- `/changes` exists as a server-only operator digest gated by
+  `CHANGE_INTELLIGENCE_DIGEST_ENABLED=true` and `SUPABASE_SERVICE_ROLE_KEY`.
+  It is not linked publicly and is `noindex`.
