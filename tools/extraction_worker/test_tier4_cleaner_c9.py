@@ -312,6 +312,78 @@ ACT Composite 28 33 32 31
         self.assertEqual(values["C.915"]["value"], "32")
         self.assertEqual(values["C.916"]["value"], "33")
 
+    def test_c9_percentile_single_label_lines_ignore_distribution_ranges(self):
+        markdown = """
+## C9 Percent and number of first-time, first-year students enrolled in Fall 2024 who submitted national standardized (SAT/ACT) test scores.
+
+SAT Composite: 25th Percentile 1330
+SAT Composite: 50th Percentile 1410
+SAT Composite: 75th Percentile 1480
+SAT Evidence-Based Reading and Writing: 25th Percentile 650
+SAT Evidence-Based Reading and Writing: 50th Percentile 700
+SAT Evidence-Based Reading and Writing: 75th Percentile 730
+SAT Math: 25th Percentile 660
+SAT Math: 50th Percentile 720
+SAT Math: 75th Percentile 770
+ACT Composite: 25th Percentile 30
+ACT Composite: 50th Percentile 32
+ACT Composite: 75th Percentile 33
+
+| Score Range  | SAT Composite |
+|--------------|---------------|
+| 1400-1600    | 55%           |
+| 1200-1399    | 35%           |
+
+| Score Range  | ACT Composite |
+|--------------|---------------|
+| 18-23        | 2%            |
+| 12-17        | 0%            |
+"""
+
+        values = clean(markdown)
+
+        self.assertEqual(values["C.905"]["value"], "1330")
+        self.assertEqual(values["C.906"]["value"], "1410")
+        self.assertEqual(values["C.907"]["value"], "1480")
+        self.assertEqual(values["C.908"]["value"], "650")
+        self.assertEqual(values["C.910"]["value"], "730")
+        self.assertEqual(values["C.911"]["value"], "660")
+        self.assertEqual(values["C.913"]["value"], "770")
+        self.assertEqual(values["C.914"]["value"], "30")
+        self.assertEqual(values["C.915"]["value"], "32")
+        self.assertEqual(values["C.916"]["value"], "33")
+
+    def test_c9_does_not_infer_missing_sat_composite_from_score_ranges(self):
+        markdown = """
+## C9 Percent and number of first-time, first-year students enrolled in Fall 2024 who submitted national standardized (SAT/ACT) test scores.
+
+| Assessment                             | 25th Percentile | 50th Percentile | 75th Percentile |
+|----------------------------------------|-----------------|-----------------|-----------------|
+| SAT Evidence-Based Reading and Writing | 640             | 680             | 720             |
+| SAT Math                               | 640             | 680             | 740             |
+| ACT Composite                          | 29              | 31              | 33              |
+
+| Score Range | SAT Composite |
+|-------------|---------------|
+| 1400-1600   | 42%           |
+| 1200-1399   | 44%           |
+
+C946   SAT Composite: 1400-1600 39%
+C947   SAT Composite: 1200-1399 55%
+"""
+
+        values = clean(markdown)
+
+        self.assertNotIn("C.905", values)
+        self.assertNotIn("C.906", values)
+        self.assertNotIn("C.907", values)
+        self.assertEqual(values["C.908"]["value"], "640")
+        self.assertEqual(values["C.910"]["value"], "720")
+        self.assertEqual(values["C.911"]["value"], "640")
+        self.assertEqual(values["C.913"]["value"], "740")
+        self.assertEqual(values["C.914"]["value"], "29")
+        self.assertEqual(values["C.916"]["value"], "33")
+
 
 if __name__ == "__main__":
     unittest.main()

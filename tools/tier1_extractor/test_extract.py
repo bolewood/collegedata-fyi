@@ -184,6 +184,74 @@ class Tier1ExtractTests(unittest.TestCase):
         self.assertEqual(result["values"]["C.916"]["value"], "29")
         self.assertEqual(result["stats"]["academic_profile_fields_recovered"], 16)
 
+    def test_recovers_shifted_c1_application_rows_by_label(self):
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Admission"
+        rows = [
+            ("B12", "Total first-time, first-year men who applied", "E12", 13836),
+            ("B13", "Total first-time, first-year women who applied", "E13", 17880),
+            ("B14", "Total first-time, first-year men who were admitted", "E14", 9914),
+            ("B15", "Total first-time, first-year women who were admitted", "E15", 13532),
+            ("B16", "Total full-time, first-time, first-year men who enrolled", "E16", 2525),
+            ("B17", "Total part-time, first-time, first-year men who enrolled", "E17", 222),
+            ("B18", "Total full-time, first-time, first-year women who enrolled", "E18", 3253),
+            ("B19", "Total part-time, first-time, first-year women who enrolled", "E19", 218),
+            ("B30", "Total first-time, first-year students who applied", "E30", 31716),
+            ("B31", "Total first-time, first-year students who were admitted", "E31", 23446),
+            ("B32", "Total first-time, first-year students who enrolled", "E32", 6218),
+        ]
+        for label_cell, label, value_cell, value in rows:
+            ws[label_cell] = label
+            ws[value_cell] = value
+
+        schema = {
+            "schema_version": "2024-25",
+            "fields": [
+                {
+                    "question_number": qnum,
+                    "word_tag": None,
+                    "question": question,
+                    "section": "First-Time, First-Year Admission",
+                    "subsection": "Applications",
+                    "value_type": "Number",
+                    "gender": gender,
+                    "residency": "All",
+                    "unit_load": unit_load,
+                }
+                for qnum, gender, unit_load, question in [
+                    ("C.101", "Men", "All", "Total first-time, first-year men who applied"),
+                    ("C.102", "Women", "All", "Total first-time, first-year women who applied"),
+                    ("C.105", "Men", "All", "Total first-time, first-year men who were admitted"),
+                    ("C.106", "Women", "All", "Total first-time, first-year women who were admitted"),
+                    ("C.109", "Men", "All", "Total full-time, first-time, first-year men who enrolled"),
+                    ("C.110", "Men", "PT", "Total part-time, first-time, first-year men who enrolled"),
+                    ("C.111", "Women", "FT", "Total full-time, first-time, first-year women who enrolled"),
+                    ("C.112", "Women", "PT", "Total part-time, first-time, first-year women who enrolled"),
+                    ("C.117", "All", "All", "Total first-time, first-year students who applied"),
+                    ("C.118", "All", "All", "Total first-time, first-year students who were admitted"),
+                    ("C.119", "All", "All", "Total first-time, first-year students who enrolled"),
+                ]
+            ],
+        }
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx") as tmp:
+            wb.save(tmp.name)
+            result = extract(Path(tmp.name), schema, {"C.101": ("CDS-C", "D999")})
+
+        self.assertEqual(result["values"]["C.101"]["value"], "13836")
+        self.assertEqual(result["values"]["C.102"]["value"], "17880")
+        self.assertEqual(result["values"]["C.105"]["value"], "9914")
+        self.assertEqual(result["values"]["C.106"]["value"], "13532")
+        self.assertEqual(result["values"]["C.109"]["value"], "2525")
+        self.assertEqual(result["values"]["C.110"]["value"], "222")
+        self.assertEqual(result["values"]["C.111"]["value"], "3253")
+        self.assertEqual(result["values"]["C.112"]["value"], "218")
+        self.assertEqual(result["values"]["C.117"]["value"], "31716")
+        self.assertEqual(result["values"]["C.118"]["value"], "23446")
+        self.assertEqual(result["values"]["C.119"]["value"], "6218")
+        self.assertEqual(result["stats"]["application_fields_recovered"], 11)
+
     def test_recovers_freshman_c9_header_and_clears_blank_visible_rows(self):
         wb = openpyxl.Workbook()
         ws = wb.active

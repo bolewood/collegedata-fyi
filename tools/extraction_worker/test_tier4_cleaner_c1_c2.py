@@ -124,6 +124,35 @@ Total part-time, first-time first-year (freshman) who enrolled: 0 0 0 0 0
         self.assertEqual(values["C.117"]["value"], "3859")
         self.assertEqual(values["C.118"]["value"], "1804")
 
+    def test_c1_compact_gender_columns_without_another_or_unknown(self):
+        markdown = """
+C1 First-time, first-year students
+
+Men Women Total
+Total first-time, first-year students who applied 48,101 50,209 98,310
+Total first-time, first-year students admitted 6,684 8,689 15,373
+Total first-time, first-year students enrolled 3,199 4,079 7,278
+Full-time, first-time, first-year students enrolled 3,188 4,064 7,252
+Part-time, first-time, first-year students enrolled 11 15 26
+"""
+
+        values = clean(
+            markdown,
+            schema=SchemaIndex(REPO_ROOT / "schemas" / "cds_schema_2024_25.json"),
+        )
+
+        self.assertEqual(values["C.101"]["value"], "48101")
+        self.assertEqual(values["C.102"]["value"], "50209")
+        self.assertEqual(values["C.105"]["value"], "6684")
+        self.assertEqual(values["C.106"]["value"], "8689")
+        self.assertEqual(values["C.109"]["value"], "3188")
+        self.assertEqual(values["C.110"]["value"], "11")
+        self.assertEqual(values["C.111"]["value"], "4064")
+        self.assertEqual(values["C.112"]["value"], "15")
+        self.assertEqual(values["C.117"]["value"], "98310")
+        self.assertEqual(values["C.118"]["value"], "15373")
+        self.assertEqual(values["C.119"]["value"], "7278")
+
     def test_c1_application_data_line_stacks(self):
         markdown = """
 Common Data Set

@@ -2072,29 +2072,38 @@ def resolve_c1_applications(
                 continue
 
             compact_match = re.search(
-                r"total\s+"
+                r"(?:total\s+)?"
                 r"(?:(full|part)[-\s]?time,\s*)?"
                 r"first[-\s]time,?\s*first[-\s]year"
-                r"(?:\s+\([^)]*\))?\s+who\s+"
-                r"(applied|were admitted|enrolled):?\s+"
+                r"(?:\s+\([^)]*\))?(?:\s+students)?\s+(?:who\s+)?"
+                r"(applied|were admitted|admitted|enrolled):?\s+"
                 r"([0-9][0-9,\s]+[0-9])\s*$",
                 line,
                 re.IGNORECASE,
             )
-            if compact_match:
+            if compact_match and "degree seeking" not in _normalize_label(line):
                 load_raw, action_raw, raw_numbers = compact_match.groups()
                 numbers = re.findall(r"\d[\d,]*", raw_numbers)
-                if len(numbers) >= 5:
+                if len(numbers) >= 3:
                     action = "admitted" if "admitted" in action_raw.lower() else (
                         "applied" if "applied" in action_raw.lower() else "enrolled"
                     )
                     unit_load = "All"
                     if action == "enrolled" and load_raw:
                         unit_load = "FT" if load_raw.lower().startswith("full") else "PT"
-                    for gender, value in zip(
-                        ("Males", "Females", "Another Gender", "Unknown", "All"),
-                        numbers[-5:],
-                    ):
+                    if len(numbers) >= 5:
+                        ordered = list(zip(
+                            ("Males", "Females", "Another Gender", "Unknown", "All"),
+                            numbers[-5:],
+                        ))
+                    elif len(numbers) == 4:
+                        ordered = list(zip(
+                            ("Males", "Females", "Another Gender", "All"),
+                            numbers[-4:],
+                        ))
+                    else:
+                        ordered = list(zip(("Males", "Females", "All"), numbers[-3:]))
+                    for gender, value in ordered:
                         num = _extract_number(value)
                         if num is None:
                             continue
@@ -2102,6 +2111,8 @@ def resolve_c1_applications(
                             gender_sums[("enrolled", "FTPT")] = (
                                 gender_sums.get(("enrolled", "FTPT"), 0) + int(float(num))
                             )
+                            continue
+                        if gender != "All" and action == "enrolled" and unit_load == "All":
                             continue
                         qn = _lookup_compact_gender_column(gender, action, unit_load)
                         if qn:
@@ -3515,6 +3526,10 @@ def resolve_c9_percentile_anchors(
         line = line_match.group(0)
         if re.search(r"\bC\.?\s*(?:90[5-9]|91[0-9]|92[0-2])\b", line, re.IGNORECASE):
             continue
+        if re.search(r"\bC\.?\s*9(?:2[3-9]|[3-5]\d)\b", line, re.IGNORECASE):
+            continue
+        if re.search(r"\b\d+\s*[-–—]\s*\d+\b", line):
+            continue
         label_norm = _normalize_label(line)
         if not label_norm or "submitting" in label_norm or "score range" in label_norm:
             continue
@@ -3530,6 +3545,23 @@ def resolve_c9_percentile_anchors(
             continue
 
         numbers = re.findall(r"\b\d+(?:\.\d+)?\b", line.replace(",", ""))
+        single_role_match = re.search(
+            r"\b(25(?:th)?|50(?:th)?|75(?:th)?)\s+percentile\b",
+            line,
+            re.IGNORECASE,
+        )
+        if single_role_match and numbers:
+            role_token = single_role_match.group(1)
+            role = (
+                "p25" if role_token.startswith("25")
+                else "p50" if role_token.startswith("50")
+                else "p75"
+            )
+            qn = qns_by_role.get(role)
+            value = numbers[-1]
+            if qn and _is_plausible_c9_percentile_value(qn, value):
+                out.setdefault(qn, {"value": value, "source": "tier4_cleaner"})
+            continue
         if len(numbers) < 3:
             continue
         context = section_no_ranges[max(0, line_match.start() - 600):line_match.start()]
@@ -5894,8 +5926,14 @@ def clean(
                     values[qnum] = {"value": num, "source": "tier4_cleaner"}
 
             # --- Percentile table ---
+            row_label_norm = _normalize_label(row["label"])
+            row_text = " ".join([str(row.get("label") or ""), *[str(v) for v in row.get("values") or []]])
+            if re.search(r"\b\d+\s*[-–—]\s*\d+\b", row_text):
+                continue
+            if re.search(r"\bC\.?\s*9(?:2[3-9]|[3-5]\d)\b", row_text, re.IGNORECASE):
+                continue
             for col_idx, value in enumerate(row["values"]):
-                qnum = _c9_percentile_qn(label_norm, col_idx, headers_norm)
+                qnum = _c9_percentile_qn(row_label_norm, col_idx, headers_norm)
                 if not qnum:
                     continue
                 num = _extract_number(value)
