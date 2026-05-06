@@ -55,18 +55,24 @@ export async function generateMetadata({
   }
 
   const name = docs[0].school_name;
+  const coverage = await fetchInstitutionCoverage(school_id);
+  const location = formatLocation(coverage);
   const years = docs
     .map((d) => d.canonical_year)
     .filter((y): y is string => y != null)
     .sort();
   const path = `/schools/${school_id}`;
-  const description = `${docs.length} archived Common Data Set document${docs.length !== 1 ? "s" : ""} for ${name}, ${yearRange(years[0], years[years.length - 1])}.`;
+  const archiveCount = `${docs.length} CDS document${docs.length !== 1 ? "s" : ""}`;
+  const locationLead = location ? ` for ${location}` : "";
+  const description =
+    `Download ${name} Common Data Set files${locationLead}. Browse extracted admissions, enrollment, financial aid, SAT/ACT, and source links. ${archiveCount}, ${yearRange(years[0], years[years.length - 1])}.`;
+  const title = `${name} Common Data Set (CDS) Archive`;
 
   return {
-    title: `${name} - Common Data Set Archive`,
+    title,
     description,
     alternates: { canonical: path },
-    openGraph: { url: path, title: `${name} - Common Data Set Archive`, description },
+    openGraph: { url: path, title, description },
   };
 }
 
@@ -94,6 +100,14 @@ function splitInstitutionalSuffix(name: string): {
     }
   }
   return { head: name, tail: null };
+}
+
+function formatLocation(
+  source: Pick<InstitutionCoverage, "city" | "state"> | null | undefined,
+): string | null {
+  if (!source) return null;
+  const parts = [source.city, source.state].filter(Boolean);
+  return parts.length > 0 ? parts.join(", ") : null;
 }
 
 // Ascending step series of the school's archived document count over time.
@@ -136,13 +150,22 @@ export default async function SchoolDetailPage({
   // only need the first one. Scorecard data is per-school-per-vintage, not
   // per-document, so one query returns everything.
   const ipedsId = docs.find((d) => d.ipeds_id)?.ipeds_id ?? null;
-  const [scorecard, browserRow, gpaProfile, admissionStrategySchool, meritProfile, changeEvents] = await Promise.all([
+  const [
+    scorecard,
+    browserRow,
+    gpaProfile,
+    admissionStrategySchool,
+    meritProfile,
+    changeEvents,
+    coverage,
+  ] = await Promise.all([
     fetchScorecardByIpedsId(ipedsId),
     fetchBrowserRowBySchoolId(school_id),
     fetchAvgGpaBySchoolId(school_id),
     fetchAdmissionStrategyBySchoolId(school_id),
     fetchMeritProfileBySchoolId(school_id),
     fetchChangeEventsBySchoolId(school_id),
+    fetchInstitutionCoverage(school_id),
   ]);
   const positioningSchool = browserRow
     ? { ...browserRow, ...gpaProfile }
@@ -150,6 +173,7 @@ export default async function SchoolDetailPage({
 
   const name = docs[0].school_name ?? "Unknown school";
   const { head, tail } = splitInstitutionalSuffix(name);
+  const location = formatLocation(coverage);
   const years = docs
     .map((d) => d.canonical_year)
     .filter((y): y is string => y != null)
@@ -185,6 +209,15 @@ export default async function SchoolDetailPage({
       name,
       url: schoolUrl,
       description: `Common Data Set archive for ${name}. ${docs.length} document${docs.length !== 1 ? "s" : ""} archived${years.length > 0 ? `, ${yearRange(years[0], years[years.length - 1])}` : ""}.`,
+      ...(coverage?.city || coverage?.state
+        ? {
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: coverage.city ?? undefined,
+              addressRegion: coverage.state ?? undefined,
+            },
+          }
+        : {}),
     },
     {
       "@context": "https://schema.org",
@@ -302,6 +335,18 @@ export default async function SchoolDetailPage({
               fontSize: 14,
             }}
           >
+            {location && (
+              <span
+                className="mono"
+                style={{
+                  fontSize: 11.5,
+                  color: "var(--ink)",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                {location.toUpperCase()}
+              </span>
+            )}
             {ipedsId && (
               <span
                 className="mono"
@@ -419,7 +464,7 @@ async function DirectoryOnlySchoolPage({
   const scorecard = await fetchScorecardByIpedsId(coverage.ipeds_id);
 
   const { head, tail } = splitInstitutionalSuffix(coverage.school_name);
-  const location = [coverage.city, coverage.state].filter(Boolean).join(", ");
+  const location = formatLocation(coverage);
   const lastChecked = coverage.last_checked_at
     ? new Date(coverage.last_checked_at).toLocaleDateString("en-US", {
         month: "long",

@@ -15,7 +15,12 @@ import {
   type TestPolicySignal,
 } from "@/lib/list-builder";
 import { decodeProfileCode, encodeProfileCode } from "@/lib/savecode";
-import { academicFitLabel, type AcademicFit, type StudentProfile } from "@/lib/positioning";
+import {
+  academicFitLabel,
+  academicFitSubtitle,
+  type AcademicFit,
+  type StudentProfile,
+} from "@/lib/positioning";
 import { SchoolListItem } from "./SchoolListItem";
 
 const STORAGE_KEY = "cdfyi.matchProfile.v1";
@@ -342,7 +347,12 @@ export function MatchListBuilder({
                   className={`match-tier-group match-tier-group--${fit}`}
                 >
                   <div className="match-tier-group__head">
-                    <h3 className="serif">{academicFitLabel(fit)}</h3>
+                    <div className="match-tier-group__head-text">
+                      <h3 className="serif">{academicFitLabel(fit)}</h3>
+                      {academicFitSubtitle(fit) ? (
+                        <p className="match-tier-group__sub">{academicFitSubtitle(fit)}</p>
+                      ) : null}
+                    </div>
                     <span className="mono">{rows.length}</span>
                   </div>
                   <div className="match-tier-group__rows">
