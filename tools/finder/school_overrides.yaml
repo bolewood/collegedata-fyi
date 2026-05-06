@@ -127,3 +127,90 @@ overrides:
         The dmi.illinois.edu subdomain is effectively invisible to
         Brave's index — site:illinois.edu "Common Data Set" returns
         zero results. Per-school manual resolution only.
+
+  # PRD 019 source-mapping repairs, 2026-05-06. These schools surfaced
+  # false current/prior documents in the Top 200 freshness audit.
+  - school_id: upenn
+    browse_url: https://ira.upenn.edu/penn-numbers/common-data-set
+    direct_archive_urls:
+      - { url: https://upenn.box.com/s/ckv4frz37rzxa4u6bdiv2h4yzykqm4ef, year: "2024-25" }
+      - { url: https://upenn.box.com/s/0btxxmu1lmxgj1dc2pfzqewoun6miyn4, year: "2023-24" }
+    hosting_override:
+      file_storage: box
+      cms: custom
+      auth_required: none
+      notes: >-
+        Penn official CDS page publishes Box links; as of 2026-05-06 it
+        lists 2024-25 as the newest CDS. Do not archive commondataset.org
+        reference files such as the 2025-26 Summary of Changes docx as
+        Penn's CDS.
+
+  - school_id: osu
+    browse_url: https://irp.osu.edu/institutional-data-and-reports
+    direct_archive_urls:
+      - { url: https://irp.osu.edu/sites/default/files/documents/2026/03/CDS-2025-2026-OSU-Columbus-Campus.pdf, year: "2025-26" }
+      - { url: https://irp.osu.edu/media/276, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      notes: >-
+        OSU publishes multiple campus CDS files on one page. The canonical
+        school_id osu maps to Columbus Campus only; reject Lima, Mansfield,
+        Marion, Newark, and Wooster/ATI campus files for this row.
+
+  - school_id: the-university-of-tennessee-knoxville
+    browse_url: https://irsa.utk.edu/reporting/common-data-set/
+    direct_archive_urls:
+      - { url: http://irsa.utk.edu/wp-content/uploads/sites/107/2026/02/CDS_2025-26_All.pdf, year: "2025-26" }
+      - { url: http://irsa.utk.edu/wp-content/uploads/sites/107/2026/01/CDS_2024-2025_All.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: wordpress
+      notes: >-
+        Current-year page includes section files and definitions alongside
+        the full CDS. Prior years live in the Reporting Archive. Prefer
+        *_All.pdf or *_Full.pdf; reject Definitions and section Appendix
+        PDFs as source-mapping false positives.
+
+  - school_id: university-of-illinois-chicago
+    browse_url: https://oir.uic.edu/institutional-research/common-data-set/
+    direct_archive_urls:
+      - { url: https://oir.uic.edu/wp-content/uploads/sites/213/2026/04/CDS_2025_2026.xlsx, year: "2025-26" }
+      - { url: https://oir.uic.edu/wp-content/uploads/sites/213/2025/04/CDS_UNL_2024_2025_section_C.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: mixed
+      cms: wordpress
+      auth_required: none
+      notes: >-
+        Public page exposes the current workbook and prior-year sections;
+        the previous-years Box archive is NetID-gated. For 2024-25, use
+        Section C for admissions change intelligence and reject Appendix
+        PDFs as source-mapping false positives.
+
+  - school_id: university-of-kansas
+    browse_url: https://aire.ku.edu/common-data-set/
+    direct_archive_urls:
+      - { url: https://aire.ku.edu/sites/aire/files/files/CDS/2025-2026/C.pdf, year: "2025-26" }
+      - { url: https://aire.ku.edu/sites/aire/files/files/CDS/2024-2025/C.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      notes: >-
+        KU publishes current-year CDS by section and older years as full
+        PDFs on a separate archive page. For admissions freshness, prefer
+        Section C when no full current-year PDF is available; do not let
+        Section J become the canonical document for the year.
+
+  - school_id: occidental-college
+    browse_url: https://www.oxy.edu/offices-services/institutional-research/institutional-data/common-data-set
+    direct_archive_urls:
+      - { url: https://www.oxy.edu/sites/default/files/assets/Institutional_Research/CDS_C_2526_0.pdf, year: "2025-26" }
+      - { url: https://www.oxy.edu/sites/default/files/assets/Institutional_Research/CDS%202023-24.pdf, year: "2023-24" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      notes: >-
+        Oxy publishes 2025-26 by section while older years are full files.
+        For admissions freshness, prefer Section C when no full current-year
+        PDF is available; do not let Section J become the canonical 2025-26
+        document.

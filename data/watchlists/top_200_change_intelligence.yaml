@@ -1,72 +1,406 @@
-version: 0.1.0
-status: operator_seed_v0
-description: >
-  Operator-only PRD 019 watchlist seed. This is intentionally not a public
-  ranking. v0 starts with the calibration subset plus high-recognition schools
-  already important to the product; later passes should expand this toward the
-  full Top 200 recipe from the PRD using application volume, flagship publics,
-  and public/operator-reviewed LAC recognition.
+version: 0.2.0
+status: operator_top200_v1
+description: 'Operator-only PRD 019 Top 200 watchlist. Expanded from the v0 seed using the PRD recipe: latest available CDS
+  C1 application volume, curated flagship publics, curated high-recognition LACs, then application-volume supplements to reach
+  200 after overlap. Not a public ranking.'
 schools:
-  - { school_id: harvard, segment: high_selectivity_private }
-  - { school_id: yale, segment: high_selectivity_private }
-  - { school_id: princeton, segment: high_selectivity_private }
-  - { school_id: mit, segment: high_selectivity_private }
-  - { school_id: stanford, segment: high_selectivity_private }
-  - { school_id: duke, segment: high_selectivity_private }
-  - { school_id: northwestern, segment: high_selectivity_private }
-  - { school_id: vanderbilt, segment: high_selectivity_private }
-  - { school_id: amherst-college, segment: high_selectivity_private }
-  - { school_id: bowdoin-college, segment: high_selectivity_private }
-  - { school_id: brown, segment: high_selectivity_private }
-  - { school_id: dartmouth, segment: high_selectivity_private }
-  - { school_id: cornell, segment: high_selectivity_private }
-  - { school_id: university-of-pennsylvania, segment: high_selectivity_private }
-  - { school_id: caltech, segment: high_selectivity_private }
-  - { school_id: rice, segment: high_selectivity_private }
-  - { school_id: notre-dame, segment: high_selectivity_private }
-  - { school_id: washington-university-in-st-louis, segment: high_selectivity_private }
-  - { school_id: emory, segment: high_selectivity_private }
-  - { school_id: georgetown, segment: high_selectivity_private }
-  - { school_id: williams-college, segment: high_selectivity_lac }
-  - { school_id: pomona-college, segment: high_selectivity_lac }
-  - { school_id: swarthmore-college, segment: high_selectivity_lac }
-  - { school_id: wellesley-college, segment: high_selectivity_lac }
-  - { school_id: carleton-college, segment: high_selectivity_lac }
-  - { school_id: middlebury-college, segment: high_selectivity_lac }
-  - { school_id: grinnell-college, segment: high_selectivity_lac }
-  - { school_id: haverford-college, segment: high_selectivity_lac }
-  - { school_id: smith-college, segment: high_selectivity_lac }
-  - { school_id: barnard, segment: high_selectivity_lac }
-  - { school_id: uc-berkeley, segment: flagship_public }
-  - { school_id: ucla, segment: flagship_public }
-  - { school_id: university-of-michigan, segment: flagship_public }
-  - { school_id: university-of-virginia, segment: flagship_public }
-  - { school_id: university-of-north-carolina-at-chapel-hill, segment: flagship_public }
-  - { school_id: georgia-tech, segment: flagship_public }
-  - { school_id: texas-am, segment: flagship_public }
-  - { school_id: ohio-state, segment: flagship_public }
-  - { school_id: university-of-wisconsin-madison, segment: flagship_public }
-  - { school_id: university-of-florida, segment: flagship_public }
-  - { school_id: university-of-washington, segment: flagship_public }
-  - { school_id: university-of-illinois-urbana-champaign, segment: flagship_public }
-  - { school_id: penn-state, segment: flagship_public }
-  - { school_id: university-of-texas-at-austin, segment: flagship_public }
-  - { school_id: university-of-georgia, segment: flagship_public }
-  - { school_id: university-of-maryland-college-park, segment: flagship_public }
-  - { school_id: university-of-minnesota-twin-cities, segment: flagship_public }
-  - { school_id: university-of-pittsburgh, segment: flagship_public }
-  - { school_id: university-of-arizona, segment: flagship_public }
-  - { school_id: university-of-oregon, segment: flagship_public }
-  - { school_id: columbia, segment: international_heavy }
-  - { school_id: nyu, segment: international_heavy }
-  - { school_id: northeastern, segment: international_heavy }
-  - { school_id: usc, segment: international_heavy }
-  - { school_id: boston-university, segment: international_heavy }
-  - { school_id: carnegie-mellon, segment: international_heavy }
-  - { school_id: university-of-rochester, segment: international_heavy }
-  - { school_id: case-western-reserve-university, segment: international_heavy }
-  - { school_id: arizona-state, segment: broad_access_or_edge }
-  - { school_id: university-of-cincinnati, segment: broad_access_or_edge }
-  - { school_id: george-mason-university, segment: broad_access_or_edge }
-  - { school_id: kent-state, segment: broad_access_or_edge }
-  - { school_id: university-of-texas-at-dallas, segment: broad_access_or_edge }
+- school_id: harvard
+  segment: high_selectivity_private
+- school_id: yale
+  segment: high_selectivity_private
+- school_id: princeton
+  segment: high_selectivity_private
+- school_id: mit
+  segment: high_selectivity_private
+- school_id: stanford
+  segment: high_selectivity_private
+- school_id: duke
+  segment: high_selectivity_private
+- school_id: northwestern
+  segment: high_selectivity_private
+- school_id: vanderbilt
+  segment: high_selectivity_private
+- school_id: amherst
+  segment: high_selectivity_private
+- school_id: bowdoin
+  segment: high_selectivity_private
+- school_id: brown
+  segment: high_selectivity_private
+- school_id: dartmouth
+  segment: high_selectivity_private
+- school_id: cornell
+  segment: high_selectivity_private
+- school_id: upenn
+  segment: high_selectivity_private
+- school_id: california-institute-of-technology
+  segment: high_selectivity_private
+- school_id: rice
+  segment: high_selectivity_private
+- school_id: university-of-notre-dame
+  segment: high_selectivity_private
+- school_id: washington-university-in-st-louis
+  segment: high_selectivity_private
+- school_id: emory
+  segment: high_selectivity_private
+- school_id: georgetown
+  segment: high_selectivity_private
+- school_id: williams-college
+  segment: high_selectivity_lac
+- school_id: pomona-college
+  segment: high_selectivity_lac
+- school_id: swarthmore
+  segment: high_selectivity_lac
+- school_id: wellesley-college
+  segment: high_selectivity_lac
+- school_id: carleton-college
+  segment: high_selectivity_lac
+- school_id: middlebury-college
+  segment: high_selectivity_lac
+- school_id: grinnell-college
+  segment: high_selectivity_lac
+- school_id: haverford-college
+  segment: high_selectivity_lac
+- school_id: smith-college
+  segment: high_selectivity_lac
+- school_id: barnard
+  segment: high_selectivity_lac
+- school_id: uc-berkeley
+  segment: flagship_public
+- school_id: ucla
+  segment: flagship_public
+- school_id: umich
+  segment: flagship_public
+- school_id: uva
+  segment: flagship_public
+- school_id: unc
+  segment: flagship_public
+- school_id: georgia-tech
+  segment: flagship_public
+- school_id: texas-am
+  segment: flagship_public
+- school_id: osu
+  segment: flagship_public
+- school_id: uw-madison
+  segment: flagship_public
+- school_id: uf
+  segment: flagship_public
+- school_id: uw
+  segment: flagship_public
+- school_id: university-of-illinois-urbana-champaign
+  segment: flagship_public
+- school_id: penn-state
+  segment: flagship_public
+- school_id: ut-austin
+  segment: flagship_public
+- school_id: uga
+  segment: flagship_public
+- school_id: umd
+  segment: flagship_public
+- school_id: university-of-minnesota-twin-cities
+  segment: flagship_public
+- school_id: upitt
+  segment: flagship_public
+- school_id: university-of-arizona
+  segment: flagship_public
+- school_id: university-of-oregon
+  segment: flagship_public
+- school_id: columbia
+  segment: international_heavy
+- school_id: nyu
+  segment: international_heavy
+- school_id: northeastern
+  segment: international_heavy
+- school_id: usc
+  segment: international_heavy
+- school_id: boston-university
+  segment: international_heavy
+- school_id: carnegie-mellon
+  segment: international_heavy
+- school_id: university-of-rochester
+  segment: international_heavy
+- school_id: case-western-reserve-university
+  segment: international_heavy
+- school_id: arizona-state-university-campus-immersion
+  segment: broad_access_or_edge
+- school_id: university-of-cincinnati-main-campus
+  segment: broad_access_or_edge
+- school_id: george-mason-university
+  segment: broad_access_or_edge
+- school_id: kent-state-university-at-kent
+  segment: broad_access_or_edge
+- school_id: the-university-of-texas-at-dallas
+  segment: broad_access_or_edge
+- school_id: uc-san-diego
+  segment: application_volume
+- school_id: uc-irvine
+  segment: application_volume
+- school_id: uc-santa-barbara
+  segment: application_volume
+- school_id: uc-davis
+  segment: application_volume
+- school_id: california-state-university-long-beach
+  segment: application_volume
+- school_id: california-polytechnic-state-university-san-luis-obispo
+  segment: application_volume
+- school_id: university-of-california-santa-cruz
+  segment: application_volume
+- school_id: colorado
+  segment: flagship_public
+- school_id: university-of-south-florida
+  segment: application_volume
+- school_id: stony-brook-university
+  segment: application_volume
+- school_id: clemson
+  segment: application_volume
+- school_id: university-of-miami
+  segment: application_volume
+- school_id: virginia-polytechnic-institute-and-state-university
+  segment: application_volume
+- school_id: university-of-california-riverside
+  segment: application_volume
+- school_id: the-university-of-alabama
+  segment: flagship_public
+- school_id: university-of-connecticut
+  segment: flagship_public
+- school_id: university-of-central-florida
+  segment: application_volume
+- school_id: the-university-of-tennessee-knoxville
+  segment: flagship_public
+- school_id: binghamton-university
+  segment: application_volume
+- school_id: university-of-south-carolina-columbia
+  segment: flagship_public
+- school_id: university-of-south-carolina-aiken
+  segment: application_volume
+- school_id: california-state-polytechnic-university-pomona
+  segment: application_volume
+- school_id: university-of-massachusetts-amherst
+  segment: flagship_public
+- school_id: baylor-university
+  segment: application_volume
+- school_id: johns-hopkins
+  segment: application_volume
+- school_id: loyola-university-chicago
+  segment: application_volume
+- school_id: uchicago
+  segment: application_volume
+- school_id: university-of-north-texas
+  segment: application_volume
+- school_id: university-at-buffalo
+  segment: flagship_public
+- school_id: northern-arizona-university
+  segment: application_volume
+- school_id: colorado-mesa-university
+  segment: application_volume
+- school_id: san-jose-state-university
+  segment: application_volume
+- school_id: boston-college
+  segment: application_volume
+- school_id: university-of-houston
+  segment: application_volume
+- school_id: kennesaw-state-university
+  segment: application_volume
+- school_id: tufts
+  segment: application_volume
+- school_id: cuny-city-college
+  segment: application_volume
+- school_id: texas-tech-university
+  segment: application_volume
+- school_id: howard-university
+  segment: application_volume
+- school_id: georgia-state-university
+  segment: application_volume
+- school_id: university-of-mississippi
+  segment: flagship_public
+- school_id: tulane-university-of-louisiana
+  segment: application_volume
+- school_id: university-of-arkansas
+  segment: flagship_public
+- school_id: california-state-university-los-angeles
+  segment: application_volume
+- school_id: college-of-charleston
+  segment: application_volume
+- school_id: university-of-california-merced
+  segment: application_volume
+- school_id: university-of-kentucky
+  segment: flagship_public
+- school_id: oregon-state-university
+  segment: application_volume
+- school_id: university-of-illinois-chicago
+  segment: application_volume
+- school_id: rochester-institute-of-technology
+  segment: application_volume
+- school_id: california-state-university-sacramento
+  segment: application_volume
+- school_id: grand-valley-state-university
+  segment: application_volume
+- school_id: gwu
+  segment: application_volume
+- school_id: university-of-rhode-island
+  segment: flagship_public
+- school_id: east-carolina-university
+  segment: application_volume
+- school_id: university-of-vermont
+  segment: flagship_public
+- school_id: hofstra-university
+  segment: application_volume
+- school_id: university-of-san-francisco
+  segment: application_volume
+- school_id: appalachian-state-university
+  segment: application_volume
+- school_id: southern-methodist-university
+  segment: application_volume
+- school_id: university-of-north-carolina-at-charlotte
+  segment: application_volume
+- school_id: villanova-university
+  segment: application_volume
+- school_id: university-of-alaska-fairbanks
+  segment: flagship_public
+- school_id: udel
+  segment: flagship_public
+- school_id: university-of-hawaii-at-manoa
+  segment: flagship_public
+- school_id: university-of-idaho
+  segment: flagship_public
+- school_id: indiana-bloomington
+  segment: flagship_public
+- school_id: university-of-iowa
+  segment: flagship_public
+- school_id: university-of-kansas
+  segment: flagship_public
+- school_id: louisiana-state-university-and-agricultural-and-mechanical
+  segment: flagship_public
+- school_id: university-of-maine
+  segment: flagship_public
+- school_id: university-of-missouri-columbia
+  segment: flagship_public
+- school_id: montana-state-university
+  segment: flagship_public
+- school_id: university-of-nebraska-lincoln
+  segment: flagship_public
+- school_id: university-of-nevada-reno
+  segment: flagship_public
+- school_id: university-of-new-hampshire-main-campus
+  segment: flagship_public
+- school_id: rutgers
+  segment: flagship_public
+- school_id: university-of-new-mexico-main-campus
+  segment: flagship_public
+- school_id: university-of-north-dakota
+  segment: flagship_public
+- school_id: university-of-oklahoma-norman-campus
+  segment: flagship_public
+- school_id: claremont-mckenna
+  segment: high_recognition_lac
+- school_id: davidson-college
+  segment: high_recognition_lac
+- school_id: vassar-college
+  segment: high_recognition_lac
+- school_id: washington-and-lee
+  segment: high_recognition_lac
+- school_id: colby
+  segment: high_recognition_lac
+- school_id: hamilton
+  segment: high_recognition_lac
+- school_id: wesleyan-university
+  segment: high_recognition_lac
+- school_id: colgate-university
+  segment: high_recognition_lac
+- school_id: bates
+  segment: high_recognition_lac
+- school_id: macalester-college
+  segment: high_recognition_lac
+- school_id: harvey-mudd
+  segment: high_recognition_lac
+- school_id: university-of-richmond
+  segment: high_recognition_lac
+- school_id: colorado-college
+  segment: high_recognition_lac
+- school_id: kenyon
+  segment: high_recognition_lac
+- school_id: scripps-college
+  segment: high_recognition_lac
+- school_id: bryn-mawr-college
+  segment: high_recognition_lac
+- school_id: bucknell
+  segment: high_recognition_lac
+- school_id: lafayette-college
+  segment: high_recognition_lac
+- school_id: college-of-the-holy-cross
+  segment: high_recognition_lac
+- school_id: oberlin
+  segment: high_recognition_lac
+- school_id: reed-college
+  segment: high_recognition_lac
+- school_id: franklin-and-marshall-college
+  segment: high_recognition_lac
+- school_id: denison-university
+  segment: high_recognition_lac
+- school_id: trinity-college
+  segment: high_recognition_lac
+- school_id: union-college
+  segment: high_recognition_lac
+- school_id: rhodes-college
+  segment: high_recognition_lac
+- school_id: skidmore-college
+  segment: high_recognition_lac
+- school_id: dickinson-college
+  segment: high_recognition_lac
+- school_id: furman-university
+  segment: high_recognition_lac
+- school_id: centre-college
+  segment: high_recognition_lac
+- school_id: occidental-college
+  segment: high_recognition_lac
+- school_id: whitman-college
+  segment: high_recognition_lac
+- school_id: gettysburg-college
+  segment: high_recognition_lac
+- school_id: depauw-university
+  segment: high_recognition_lac
+- school_id: st-olaf-college
+  segment: high_recognition_lac
+- school_id: the-college-of-wooster
+  segment: high_recognition_lac
+- school_id: mount-holyoke-college
+  segment: high_recognition_lac
+- school_id: connecticut-college
+  segment: high_recognition_lac
+- school_id: winona-state-university
+  segment: application_volume_supplement
+- school_id: loyola-marymount-university
+  segment: application_volume_supplement
+- school_id: texas-christian-university
+  segment: application_volume_supplement
+- school_id: illinois-state-university
+  segment: application_volume_supplement
+- school_id: coastal-carolina-university
+  segment: application_volume_supplement
+- school_id: california-state-university-san-marcos
+  segment: application_volume_supplement
+- school_id: florida-gulf-coast-university
+  segment: application_volume_supplement
+- school_id: university-of-north-carolina-wilmington
+  segment: application_volume_supplement
+- school_id: marquette-university
+  segment: application_volume_supplement
+- school_id: lehigh
+  segment: application_volume_supplement
+- school_id: santa-clara-university
+  segment: application_volume_supplement
+- school_id: stephen-f-austin-state-university
+  segment: application_volume_supplement
+- school_id: university-of-denver
+  segment: application_volume_supplement
+- school_id: fairfield-university
+  segment: application_volume_supplement
+- school_id: north-carolina-central-university
+  segment: application_volume_supplement
+- school_id: florida-institute-of-technology
+  segment: application_volume_supplement
+- school_id: wayne-state-university
+  segment: application_volume_supplement
+- school_id: rpi
+  segment: application_volume_supplement
+- school_id: american-university
+  segment: application_volume_supplement

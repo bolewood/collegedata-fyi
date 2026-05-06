@@ -1997,12 +1997,62 @@ def resolve_c1_applications(
                     return f["question_number"]
         return None
 
+    def _lookup_compact_gender_column(gender: str, action: str, unit_load: str) -> str | None:
+        if action == "enrolled" and unit_load in {"FT", "PT"}:
+            load_phrase = "full time" if unit_load == "FT" else "part time"
+            for f in c1_fields:
+                if not _gender_matches(str(f["gender"]), gender):
+                    continue
+                if f["residency"] != "All":
+                    continue
+                q_norm = str(f["_q_norm"])
+                if action in q_norm and load_phrase in q_norm:
+                    return f["question_number"]
+        return _lookup(gender, "All", action, unit_load=unit_load)
+
     def _apply_layout_lines(text: str) -> None:
         gender_sums: dict[tuple[str, str], int] = {}
         for raw_line in text.splitlines():
             line = raw_line.strip()
             if not line:
                 continue
+
+            compact_match = re.search(
+                r"total\s+"
+                r"(?:(full|part)[-\s]?time,\s*)?"
+                r"first[-\s]time,?\s*first[-\s]year"
+                r"(?:\s+\([^)]*\))?\s+who\s+"
+                r"(applied|were admitted|enrolled):?\s+"
+                r"([0-9][0-9,\s]+[0-9])\s*$",
+                line,
+                re.IGNORECASE,
+            )
+            if compact_match:
+                load_raw, action_raw, raw_numbers = compact_match.groups()
+                numbers = re.findall(r"\d[\d,]*", raw_numbers)
+                if len(numbers) >= 5:
+                    action = "admitted" if "admitted" in action_raw.lower() else (
+                        "applied" if "applied" in action_raw.lower() else "enrolled"
+                    )
+                    unit_load = "All"
+                    if action == "enrolled" and load_raw:
+                        unit_load = "FT" if load_raw.lower().startswith("full") else "PT"
+                    for gender, value in zip(
+                        ("Males", "Females", "Another Gender", "Unknown", "All"),
+                        numbers[-5:],
+                    ):
+                        num = _extract_number(value)
+                        if num is None:
+                            continue
+                        if gender == "All" and action == "enrolled" and unit_load in {"FT", "PT"}:
+                            gender_sums[("enrolled", "FTPT")] = (
+                                gender_sums.get(("enrolled", "FTPT"), 0) + int(float(num))
+                            )
+                            continue
+                        qn = _lookup_compact_gender_column(gender, action, unit_load)
+                        if qn:
+                            out.setdefault(qn, {"value": num, "source": "tier4_cleaner"})
+                    continue
 
             gender_match = re.search(
                 r"total\s+"
@@ -2035,7 +2085,7 @@ def resolve_c1_applications(
                 num = _extract_number(value)
                 qn = None
                 if not (action == "enrolled" and not load_raw):
-                    qn = _lookup(gender, "All", action, unit_load=unit_load)
+                    qn = _lookup_compact_gender_column(gender, action, unit_load)
                 if qn and num is not None:
                     out.setdefault(qn, {"value": num, "source": "tier4_cleaner"})
                 if num is not None:
@@ -2096,7 +2146,75 @@ def resolve_c1_applications(
             if total is not None:
                 out[qn] = {"value": str(total), "source": "tier4_cleaner"}
 
+    def _apply_ku_application_data_blocks(text: str) -> None:
+        """Parse section PDFs that render C1 as label/value line stacks.
+
+        KU's current Section C PDFs use headings like "Application Data by
+        Sex", then separate non-table lines for headers, labels, and values:
+        `Applications`, `9,704`, `12,483`, `22,187`. Docling often preserves
+        that as plain lines rather than a structured table.
+        """
+        lines = _nonempty_lines(text)
+
+        def _numbers_after_label(start: int, label: str, count: int) -> list[str] | None:
+            label_norm = _normalize_label(label)
+            for pos in range(start, min(len(lines), start + 60)):
+                line_norm = _normalize_label(lines[pos])
+                if line_norm != label_norm and not line_norm.startswith(f"{label_norm} "):
+                    continue
+                same_line_numbers = re.findall(r"\b\d[\d,]*\b", lines[pos])
+                if len(same_line_numbers) >= count:
+                    return same_line_numbers[-count:]
+                values: list[str] = []
+                cursor = pos + 1
+                while cursor < len(lines) and len(values) < count:
+                    num = _extract_number(lines[cursor])
+                    if num is not None:
+                        values.append(str(num))
+                    elif values:
+                        break
+                    cursor += 1
+                return values if len(values) == count else None
+            return None
+
+        for idx, line in enumerate(lines):
+            if _normalize_label(line) == "application data by sex":
+                row_specs = [
+                    ("Applications", "applied", "All"),
+                    ("Admits", "admitted", "All"),
+                    ("Enrolled", "enrolled", "All"),
+                    ("Full-time", "enrolled", "FT"),
+                    ("Part-time", "enrolled", "PT"),
+                ]
+                for label, action, unit_load in row_specs:
+                    values = _numbers_after_label(idx, label, 3)
+                    if not values:
+                        continue
+                    for gender, value in zip(("Males", "Females", "All"), values):
+                        qn = _lookup_compact_gender_column(gender, action, unit_load)
+                        if qn and qn not in out:
+                            out[qn] = {"value": value, "source": "tier4_cleaner"}
+
+            if _normalize_label(line) == "application data by residency":
+                row_specs = [
+                    ("Applications", "applied"),
+                    ("Admits", "admitted"),
+                    ("Enrolled", "enrolled"),
+                ]
+                for label, action in row_specs:
+                    values = _numbers_after_label(idx, label, 4)
+                    if not values:
+                        continue
+                    for residency, value in zip(
+                        ("In-State", "Out-of-State", "Nonresidents", "All"),
+                        values,
+                    ):
+                        qn = _lookup("All", residency, action)
+                        if qn and qn not in out:
+                            out[qn] = {"value": value, "source": "tier4_cleaner"}
+
     _apply_layout_lines(markdown)
+    _apply_ku_application_data_blocks(markdown)
 
     for table in tables:
         headers_norm = [_normalize_label(h) for h in table.get("headers", [])]
@@ -2174,7 +2292,7 @@ def resolve_c1_applications(
                         total_enrolled += int(float(num))
                         saw_total_enrolled = True
                         continue
-                    qn = _lookup(gender, "All", action, unit_load=unit_load)
+                    qn = _lookup_compact_gender_column(gender, action, unit_load)
                     if qn and qn not in out:
                         out[qn] = {"value": num, "source": "tier4_cleaner"}
 
@@ -3022,7 +3140,8 @@ def resolve_c9_submission_rates(
     tables: list[dict], markdown: str, schema: SchemaIndex
 ) -> dict[str, dict]:
     out: dict[str, dict] = {}
-    if "Submitting SAT Scores" not in markdown or "Submitting ACT Scores" not in markdown:
+    lowered = markdown.lower()
+    if "submitting sat scores" not in lowered or "submitting act scores" not in lowered:
         return out
 
     for test_name, pct_qn, num_qn in (
@@ -3038,6 +3157,26 @@ def resolve_c9_submission_rates(
             pct, num = line_match.groups()
             out.setdefault(pct_qn, {"value": pct.replace(",", ""), "source": "tier4_cleaner"})
             out.setdefault(num_qn, {"value": num.replace(",", ""), "source": "tier4_cleaner"})
+
+    def form_value_after(label: str) -> str | None:
+        match = re.search(label, markdown, re.IGNORECASE)
+        if not match:
+            return None
+        window = markdown[match.end(): match.end() + 120]
+        value_match = re.search(r"(?<!\d)(\d[\d,]*(?:\.\d+)?)", window)
+        if not value_match:
+            return None
+        return value_match.group(1).replace(",", "")
+
+    for label, qn in (
+        (r"percent[ \t]+submitting[ \t]+sat[ \t]+scores", "C.901"),
+        (r"percent[ \t]+submitting[ \t]+act[ \t]+scores", "C.902"),
+        (r"number[ \t]+submitting[ \t]+sat[ \t]+scores", "C.903"),
+        (r"number[ \t]+submitting[ \t]+act[ \t]+scores", "C.904"),
+    ):
+        value = form_value_after(label)
+        if value is not None:
+            out.setdefault(qn, {"value": value, "source": "tier4_cleaner"})
 
     labels = re.search(
         r"Submitting SAT Scores\s+Submitting ACT Scores",

@@ -437,6 +437,32 @@ def artifact_schema_fallback_used(row: dict[str, Any]) -> bool:
     return bool(notes.get("schema_fallback_used"))
 
 
+def artifact_is_unusable_label_acroform(row: dict[str, Any]) -> bool:
+    """Tier 2 can be worse than Tier 4 when AcroForm tags are prompt labels.
+
+    These artifacts have many populated AcroForm fields, but almost none match
+    the selected schema. Keep the artifact for audit, but do not let producer
+    precedence make it the browser projection source when a usable layout
+    extraction exists for the same document.
+    """
+    if row.get("producer") != "tier2_acroform":
+        return False
+    notes = row.get("notes") or {}
+    if not isinstance(notes, dict):
+        return False
+    stats = notes.get("stats") or {}
+    if not isinstance(stats, dict):
+        return False
+    acroform_fields = int(stats.get("acroform_fields_total") or 0)
+    mapped_fields = int(stats.get("schema_fields_populated") or 0)
+    unmapped_fields = int(stats.get("unmapped_acroform_fields") or 0)
+    if acroform_fields < 50:
+        return False
+    if mapped_fields >= 5:
+        return False
+    return unmapped_fields >= int(acroform_fields * 0.8)
+
+
 def sort_base_candidates(
     candidates: list[dict[str, Any]],
     expected_schema_version: Optional[str] = None,
@@ -449,6 +475,10 @@ def sort_base_candidates(
     sorted_candidates = sorted(
         sorted_candidates,
         key=lambda row: BASE_PRODUCER_RANK.get(str(row.get("producer")), 99),
+    )
+    sorted_candidates = sorted(
+        sorted_candidates,
+        key=lambda row: 1 if artifact_is_unusable_label_acroform(row) else 0,
     )
     sorted_candidates = sorted(
         sorted_candidates,

@@ -9,6 +9,11 @@ import tier4_extractor
 
 
 class Tier4ExtractorVisualOcrTest(unittest.TestCase):
+    def test_visual_ocr_trigger_normalizes_whitespace(self):
+        text = "Percent  Number\nSubmitting SAT  Scores\nSubmitting ACT Scores"
+
+        self.assertTrue(tier4_extractor._matches_visual_ocr_trigger(text))
+
     def test_scanned_fallback_pages_when_text_layer_has_no_candidates(self):
         calls: list[list[str]] = []
 

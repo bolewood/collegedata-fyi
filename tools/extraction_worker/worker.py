@@ -114,6 +114,7 @@ SCHEMA_DIR = _TOOLS_ROOT.parent / "schemas"
 TEMPLATE_DIR = SCHEMA_DIR / "templates"
 MIN_TIER1_FIELDS = 5
 MIN_TIER4_FIELDS = 25
+MIN_TIER2_LABEL_FALLBACK_ACROFORM_FIELDS = 50
 
 
 @dataclass(frozen=True)
@@ -744,6 +745,26 @@ def annotate_tier2_unmapped_fields(canonical: dict) -> int:
     return unmapped_count
 
 
+def should_fallback_tier2_to_tier4(canonical: dict) -> bool:
+    """Detect fillable PDFs whose AcroForm fields are populated but unusable.
+
+    Some schools publish fillable PDFs whose field names are visible prompt labels
+    ("Men_10", "Closing Date_5") instead of canonical CDS tags
+    ("AP_RECD_1ST_MEN_N"). Exact Tier 2 mapping will recover almost nothing even
+    though the PDF has real data. In that case, treat Tier 2 as a failed route and
+    let the Tier 4 layout cleaner parse the visible tables.
+    """
+    stats = canonical.get("stats") or {}
+    acroform_fields = int(stats.get("acroform_fields_total") or 0)
+    mapped_fields = int(stats.get("schema_fields_populated") or 0)
+    unmapped_fields = int(stats.get("unmapped_acroform_fields") or 0)
+    if acroform_fields < MIN_TIER2_LABEL_FALLBACK_ACROFORM_FIELDS:
+        return False
+    if mapped_fields >= MIN_TIER1_FIELDS:
+        return False
+    return unmapped_fields >= int(acroform_fields * 0.8)
+
+
 def _run_tier1(
     client: Client,
     document_id: str,
@@ -1285,6 +1306,26 @@ def extract_one(
                 f"sample_tags={sample_tags}",
                 file=sys.stderr,
                 flush=True,
+            )
+        if should_fallback_tier2_to_tier4(canonical):
+            print(
+                f"    tier2_label_acroform_fallback: school={school_id} "
+                f"document={document_id} "
+                f"mapped={canonical.get('stats', {}).get('schema_fields_populated', 0)} "
+                f"unmapped={unmapped_count}",
+                file=sys.stderr,
+                flush=True,
+            )
+            from tier4_cleaner import SchemaIndex
+            schema_index = SchemaIndex(resolution.schema_path)
+            outcome = _run_tier4(
+                client, document_id, school_id, pdf_bytes,
+                source_format, resolution, schema_index, source_artifact, dry_run,
+                force_reextract,
+            )
+            return ExtractionOutcome(
+                action=f"tier2_label_acroform_fallback_{outcome.action}",
+                refresh_projection=outcome.refresh_projection,
             )
     except Exception as e:
         if not dry_run:

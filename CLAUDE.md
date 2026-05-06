@@ -22,6 +22,19 @@ Open-source archive of U.S. college Common Data Set (CDS) documents.
   into `tools/` or the repo root, so working trees stay clean and
   nothing important hides among the dumps.
 
+## Data quality loop
+
+When doing whack-a-mole CDS data improvements, treat each fix as a signal about the
+whole corpus, not a one-off.
+
+- For canary-style extraction issues, search the corpus for other documents with the
+  same failure shape and redrain the similar files after the parser/cleaner fix.
+- For finding/discovery issues, find and archive the most recent two CDS years when
+  available, then add a durable finder or archiver hint so the next year's document
+  can be found automatically.
+- Close the loop across current state, prior-year baseline, future discovery, and
+  similar files before calling the issue handled.
+
 ## Migrations
 
 Migrations are applied to production **only from `main`**, never from a

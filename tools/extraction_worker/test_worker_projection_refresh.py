@@ -14,6 +14,7 @@ from worker import (
     mean_or_none,
     parsed_field_count,
     pending_doc_priority_key,
+    should_fallback_tier2_to_tier4,
 )
 
 
@@ -161,6 +162,39 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
 
         self.assertEqual(count, 0)
         self.assertNotIn("quality_warnings", canonical)
+
+    def test_tier2_label_acroform_falls_back_to_tier4(self):
+        canonical = {
+            "stats": {
+                "acroform_fields_total": 581,
+                "schema_fields_populated": 0,
+                "unmapped_acroform_fields": 581,
+            },
+        }
+
+        self.assertTrue(should_fallback_tier2_to_tier4(canonical))
+
+    def test_tier2_partial_schema_match_does_not_fallback_to_tier4(self):
+        canonical = {
+            "stats": {
+                "acroform_fields_total": 732,
+                "schema_fields_populated": 576,
+                "unmapped_acroform_fields": 156,
+            },
+        }
+
+        self.assertFalse(should_fallback_tier2_to_tier4(canonical))
+
+    def test_tier2_tiny_acroform_does_not_fallback_to_tier4(self):
+        canonical = {
+            "stats": {
+                "acroform_fields_total": 1,
+                "schema_fields_populated": 0,
+                "unmapped_acroform_fields": 1,
+            },
+        }
+
+        self.assertFalse(should_fallback_tier2_to_tier4(canonical))
 
 
 if __name__ == "__main__":

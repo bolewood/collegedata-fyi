@@ -93,6 +93,114 @@ Total first-time, first-year (degree-seeking) enrolled 4983 3914 343 9240
         self.assertEqual(values["C.125"]["value"], "3914")
         self.assertEqual(values["C.128"]["value"], "343")
 
+    def test_c1_visual_ocr_compact_gender_columns(self):
+        markdown = """
+Applications
+C1. First-time, first-year (freshman) students:
+
+Men Women _| Another Un- Total
+Gender reported
+Total first-time, first-year (freshman) who applied: 21,054 12,942 871 0 34,867
+Total first-time, first-year (freshman) who were admitted: 2,140 1,628 91 0 3,859
+Total full-time, first-time first-year (freshman) who enrolled: 1,060 700 44 0 1804
+Total part-time, first-time first-year (freshman) who enrolled: 0 0 0 0 0
+"""
+
+        values = clean(
+            markdown,
+            schema=SchemaIndex(REPO_ROOT / "schemas" / "cds_schema_2025_26.json"),
+        )
+
+        self.assertEqual(values["C.101"]["value"], "21054")
+        self.assertEqual(values["C.102"]["value"], "12942")
+        self.assertEqual(values["C.103"]["value"], "0")
+        self.assertEqual(values["C.104"]["value"], "2140")
+        self.assertEqual(values["C.105"]["value"], "1628")
+        self.assertEqual(values["C.106"]["value"], "0")
+        self.assertEqual(values["C.110"]["value"], "1060")
+        self.assertEqual(values["C.112"]["value"], "700")
+        self.assertEqual(values["C.114"]["value"], "0")
+        self.assertEqual(values["C.116"]["value"], "34867")
+        self.assertEqual(values["C.117"]["value"], "3859")
+        self.assertEqual(values["C.118"]["value"], "1804")
+
+    def test_c1_application_data_line_stacks(self):
+        markdown = """
+Common Data Set
+Section C. First-time Freshman Admissions
+2024-2025
+University of Kansas
+
+Application Data by Sex
+Men
+Women
+Total
+Applications
+9,927
+12,436
+22,363
+Admits
+9,166
+11,739
+20,905
+Enrolled
+2,336
+2,987
+5,323
+Full-time
+2,309
+2,960
+5,269
+Part-time
+27
+27
+54
+
+Application Data by Residency
+In-State
+Out-of-State
+International
+Total
+Applications
+7,334
+14,503
+526
+22,363
+Admits
+6,919
+13,495
+491
+20,905
+Enrolled
+2,928
+2,300
+95
+5,323
+"""
+
+        values = clean(
+            markdown,
+            schema=SchemaIndex(REPO_ROOT / "schemas" / "cds_schema_2024_25.json"),
+        )
+
+        self.assertEqual(values["C.101"]["value"], "9927")
+        self.assertEqual(values["C.102"]["value"], "12436")
+        self.assertEqual(values["C.105"]["value"], "9166")
+        self.assertEqual(values["C.106"]["value"], "11739")
+        self.assertEqual(values["C.109"]["value"], "2336")
+        self.assertEqual(values["C.110"]["value"], "27")
+        self.assertEqual(values["C.111"]["value"], "2987")
+        self.assertEqual(values["C.112"]["value"], "27")
+        self.assertEqual(values["C.117"]["value"], "22363")
+        self.assertEqual(values["C.118"]["value"], "20905")
+        self.assertEqual(values["C.119"]["value"], "5323")
+        self.assertEqual(values["C.120"]["value"], "7334")
+        self.assertEqual(values["C.123"]["value"], "14503")
+        self.assertEqual(values["C.126"]["value"], "526")
+        self.assertEqual(values["C.122"]["value"], "2928")
+        self.assertEqual(values["C.125"]["value"], "2300")
+        self.assertEqual(values["C.128"]["value"], "95")
+
     def test_c2_waitlist_policy_and_counts_from_layout(self):
         supplemental = """
 C2   First-time, first-year wait-listed students

@@ -121,6 +121,27 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 - **Tier 4 cleaner — continue resolver coverage beyond the core product surfaces.** [PRD 005](prd/005-full-schema-extraction.md)'s Phase 6 architecture shipped 2026-04-20 (commit `aecca9b`): the section-family resolver framework backed by a shared `SchemaIndex` took the cleaner from 72 -> ~380 fields (Harvard 382, Yale 390, Dartmouth 343). PRD 016B and PRD 018 added targeted C21/C22 and H1/H2/H2A coverage. Remaining work is continuing to add resolvers for thinner sections as specific schools surface gaps; the ceiling is 1,105 fields, but full-schema parity is not urgent.
 
+- **Logical CDS assembly for schools that publish by section.** Some schools
+  publish one CDS year as multiple section PDFs instead of a single A-J file
+  (recent examples: KU, CMU, Oxy, UTK current-year section pages). The current
+  resolver can choose Section C for admissions change intelligence, but that is
+  only a tactical repair: it still loses the rest of the CDS for browser fields,
+  merit profile data, and future sections. Future shape: archive each original
+  section file as its own source/component with URL + hash provenance, then
+  create a derived logical "assembled CDS" artifact ordered A through J. Run
+  extraction/projection against the assembled artifact while preserving links
+  back to the original component sources. Track `partial_sections` metadata so
+  a year with only A-C published is visibly partial rather than silently
+  complete. Prefer a real full CDS when present; assemble only when the school
+  clearly publishes section fragments for one year. **Why it matters:** avoids
+  one-off Section C repairs, gives sectionized publishers normal year-over-year
+  comparability, and keeps provenance clean. **Risks / design questions:**
+  section/year mismatch on sloppy pages, handling later section additions,
+  uniqueness/modeling for one logical school-year built from multiple URLs, and
+  whether the derived artifact should be a physical merged PDF or a logical
+  extraction bundle. **Effort:** probably a small PRD / 1-2 day implementation
+  after the current PRD 019 freshness drain, with KU/CMU/Oxy as fixtures.
+
 - **Tier 4 cleaner — Docling flat-text table recovery.** Dartmouth's C10 and Harvard's Submitting SAT/ACT block are cases where Docling emitted a two-column table as two sequential paragraphs (all labels first, then all values in the same order) instead of interleaved table rows. Current cleaner has no recovery path for this shape — the `_INLINE_PATTERNS` fallback handles single-field cases but not these multi-row column-flattened ones. **Fix shape:** detect consecutive N-line blocks of label-like paragraphs (each starting with "Percent..." or matching the row-label pattern of a known table) followed by N value-like paragraphs (e.g. `\d+%`), and pair them positionally. Only worth building if corpus survey shows many schools hitting this pattern — currently it's a known miss for ~2 fields per affected school.
 
 - **Retire `cds_year` as discovery output (ADR 0007 follow-up / "Stage D").** ADR 0007 Stage C landed as docs-only because `normalizeYear` turned out to be load-bearing inside `pickCandidates` — it's the partitioning signal that lets a multi-year landing page like Lafayette's 19-year archive fan out into 19 distinct `cds_documents` rows without colliding on `UNIQUE (school_id, sub_institutional, cds_year)`. Deleting `_shared/year.ts` cleanly requires first dropping `cds_year` from that unique constraint and rekeying on something URL-derived. **What to build:** (1) migration replacing `UNIQUE (school_id, sub_institutional, cds_year)` with `UNIQUE (school_id, sub_institutional, source_url_hash)` (or `source_sha256` if we're willing to couple uniqueness to the file contents rather than the source URL — tradeoff is whether a republished identical PDF at a new URL should be a new row); (2) rework `pickCandidates` in `supabase/functions/_shared/resolve.ts` to partition on URL uniqueness instead of `year`, with `chosen = dedupe-by-url(clean-set)` and no year-based branching; (3) delete `supabase/functions/_shared/year.ts` and `_shared/year.test.ts`; (4) remove the `cds_year` NOT NULL constraint or drop the column entirely depending on whether `cds_manifest` consumers still read it; (5) update `cds_manifest.canonical_year` expression to draw only from `detected_year` (falling back to NULL/"unknown" for undetected rows); (6) re-run the full-corpus drain and compare fan-out vs the pre-Stage-D baseline. **Why it matters:** closes the loop on ADR 0007. Today `cds_year` is a best-effort URL guess that Stage B already overrides via `detected_year`; keeping it as a NOT NULL unique-constraint participant means the resolver still has to produce plausible-looking year strings (or `UNKNOWN_YEAR_SENTINEL`) and the year module cannot be deleted. This is dead weight with an active footgun — any future resolver work has to reason about URL year parsing even though the result is purely decorative. **Effort:** ~3-4 hours including the migration, test updates, and a re-drain. Not urgent — `detected_year` already gives consumers the right answer via `cds_manifest.canonical_year`. Defer until the schema is otherwise due for a migration. **Cross-references:** [ADR 0007](decisions/0007-year-authority-moves-to-extraction.md) Shipped section; `supabase/functions/_shared/year.ts` header comment.

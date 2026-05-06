@@ -21,6 +21,7 @@ it increased full-cleaner field recovery without introducing conflicts.
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 import tempfile
@@ -29,10 +30,28 @@ from pathlib import Path
 
 
 PRODUCER_NAME = "tier4_docling"
-PRODUCER_VERSION = "0.3.7"
+PRODUCER_VERSION = "0.3.8"
 DOCLING_CONFIG_NAME = "production-fast-no-orphan-clusters"
 DOCLING_NATIVE_TABLES_VERSION = "docling_table_cells_compact_v1"
 SCANNED_ADMISSIONS_OCR_MAX_PAGE = 35
+
+
+def _matches_visual_ocr_trigger(text: str) -> bool:
+    normalized = re.sub(r"\s+", " ", text.lower())
+    triggers = (
+        "c1. first-time",
+        "first-time, first-year student applicants",
+        "residency breakdowns for total applicants",
+        "total first-time, first-year (degree-seeking) who applied",
+        "c2. first time",
+        "c2. first-time",
+        "waiting listtotal",
+        "c9. percent",
+        "percent and number of first-time",
+        "submitting sat scores",
+        "percent of first-time, first-year students with scores in each range",
+    )
+    return any(trigger in normalized for trigger in triggers)
 
 
 def _extract_pdf_layout_text(pdf_path: Path) -> str:
@@ -65,24 +84,12 @@ def _visual_ocr_candidate_pages(pdf_path: Path) -> list[int]:
 
         reader = pypdf.PdfReader(str(pdf_path))
         pages: set[int] = set()
-        triggers = (
-            "c1. first-time",
-            "first-time, first-year student applicants",
-            "residency breakdowns for total applicants",
-            "total first-time, first-year (degree-seeking) who applied",
-            "c2. first time",
-            "c2. first-time",
-            "waiting listtotal",
-            "c9. percent and number",
-            "submitting sat scores",
-        )
         for idx, page in enumerate(reader.pages, start=1):
             try:
                 text = page.extract_text() or ""
             except Exception:
                 text = ""
-            lowered = text.lower()
-            if any(trigger in lowered for trigger in triggers):
+            if _matches_visual_ocr_trigger(text):
                 pages.add(idx)
         return sorted(pages)
     except Exception:

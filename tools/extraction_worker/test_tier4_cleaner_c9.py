@@ -118,6 +118,30 @@ ACT Reading 21 25 30
         self.assertEqual(values["C.915"]["value"], "24")
         self.assertEqual(values["C.916"]["value"], "28")
 
+    def test_c9_form_style_submission_values_on_following_lines(self):
+        markdown = """
+Score that represents the 25th and 75th percentile score for students who enrolled in Fall 2024 (CDS C9)
+
+(2 Percent submitting SAT scores RQ
+| 13 |
+
+(2 Number submitting SAT scores ro
+| 365 |
+
+(2 Percent submitting ACT scores RQ
+L2 |
+
+(2 Number submitting ACT scores ro
+[ 47 |
+"""
+
+        values = clean(markdown)
+
+        self.assertEqual(values["C.901"]["value"], "13")
+        self.assertEqual(values["C.902"]["value"], "2")
+        self.assertEqual(values["C.903"]["value"], "365")
+        self.assertEqual(values["C.904"]["value"], "47")
+
     def test_c9_split_submission_labels_and_blank_sat_composite(self):
         markdown = """
 ## C9 Percent and number of first-time, first-year students enrolled in Fall 2024 who submitted national standardized (SAT/ACT) test scores.

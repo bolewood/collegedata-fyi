@@ -34,7 +34,7 @@ from supabase import Client, create_client
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_WATCHLIST = REPO_ROOT / "data" / "watchlists" / "top_200_change_intelligence.yaml"
 DEFAULT_OUT_DIR = REPO_ROOT / ".context" / "reports" / "prd019-top200-freshness"
-CURRENT_TIER4_VERSION = "0.3.4"
+CURRENT_TIER4_VERSION = "0.3.8"
 REDRAIN_FORMATS = {"pdf_flat", "pdf_scanned"}
 BAD_FLAGS = {"wrong_file", "blank_template", "low_coverage"}
 SECTION_HINTS = {

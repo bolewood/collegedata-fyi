@@ -413,7 +413,7 @@ schools:
   domain: osu.edu
   ipeds_id: '204796'
   scrape_policy: active
-  discovery_seed_url: https://irp.osu.edu/sites/default/files/documents/2025/11/CDS-2024-2025-The-Ohio-State-University-Columbus.pdf
+  discovery_seed_url: https://irp.osu.edu/institutional-data-and-reports
   probe_state:
     last_probed_at: '2026-04-14T15:35:52Z'
     last_result: found
@@ -5905,6 +5905,22 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
+- id: connecticut-college
+  name: Connecticut College
+  domain: conncoll.edu
+  ipeds_id: '128902'
+  scrape_policy: active
+  probe_state:
+    last_probed_at: '2026-05-06T17:00:00Z'
+    last_result: found
+    last_method: manual
+    patterns_tried: 0
+    search_fallback_tried: true
+  discovery_seed_url: https://www.conncoll.edu/institutional-research/conn-facts/
+  browse_url: https://www.conncoll.edu/institutional-research/conn-facts/
+  notes: Manually resolved 2026-05-06 from a public CDS submission. Homepage
+    probing missed this institutional-research facts page, but the page lists
+    current and historical Common Data Set PDF links.
 - id: converse-university
   name: Converse University
   domain: converse.edu
@@ -15144,7 +15160,7 @@ schools:
   domain: oxy.edu
   ipeds_id: '120254'
   scrape_policy: active
-  discovery_seed_url: https://oxy.edu/common-data-set/
+  discovery_seed_url: https://www.oxy.edu/offices-services/institutional-research/institutional-data/common-data-set
   probe_state:
     last_probed_at: '2026-04-14T07:16:29Z'
     last_result: found
@@ -21305,7 +21321,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://irsa.utk.edu/common-data-set/
+  discovery_seed_url: https://irsa.utk.edu/reporting/common-data-set/
 - id: the-university-of-tennessee-martin
   name: The University of Tennessee-Martin
   domain: utm.edu

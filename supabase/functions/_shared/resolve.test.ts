@@ -69,10 +69,14 @@ Deno.test("extractCdsAnchors: commondataset.org documents are excluded even when
 });
 
 Deno.test("extractCdsAnchors: section marker detected", () => {
-  const html = `<a href="/files/cds-section-d-2024-25.pdf">Common Data Set Section D 2024-25</a>`;
+  const html = `
+    <a href="/files/cds-section-d-2024-25.pdf">Common Data Set Section D 2024-25</a>
+    <a href="/files/CDS_C_2526_0.pdf">Admissions</a>
+    <a href="/CDS/2025-2026/J.pdf">Degrees Conferred</a>
+  `;
   const anchors = extractCdsAnchors(html, BASE);
-  assertEquals(anchors.length, 1);
-  assertEquals(anchors[0].is_section_file, true);
+  assertEquals(anchors.length, 3);
+  assertEquals(anchors.every((a) => a.is_section_file), true);
 });
 
 Deno.test("extractCdsAnchors: HTML subpage categorized", () => {
@@ -483,8 +487,8 @@ Deno.test("pickCandidates: clean beats demoted when a clean sibling exists", () 
     {
       url: "https://ex.edu/cds2024-25_test.pdf",
       filename: "cds2024-25_test.pdf",
-      link_text: "CDS 2024-25 (Test)",
-      year: "2024-25",
+      link_text: "CDS 2023-24 (Test)",
+      year: "2023-24",
       year_source: "filename" as const,
       kind: "document" as const,
       is_section_file: false,
@@ -506,6 +510,90 @@ Deno.test("pickCandidates: clean beats demoted when a clean sibling exists", () 
   assertEquals(result.length, 1);
   assertEquals(result[0].filename, "cds2023-24.pdf");
   assertEquals(result[0].is_test_artifact, false);
+});
+
+Deno.test("pickCandidates: section-only years select Section C instead of Section J", () => {
+  const anchors = [
+    {
+      url: "https://aire.ku.edu/sites/aire/files/files/CDS/2025-2026/C.pdf",
+      filename: "C.pdf",
+      link_text: "C. First-Time, First-Year Admission",
+      year: "2025-26",
+      year_source: "url_path" as const,
+      kind: "document" as const,
+      is_section_file: true,
+      is_test_artifact: false,
+    },
+    {
+      url: "https://aire.ku.edu/sites/aire/files/files/CDS/2025-2026/J.pdf",
+      filename: "J.pdf",
+      link_text: "J. Degrees Conferred",
+      year: "2025-26",
+      year_source: "url_path" as const,
+      kind: "document" as const,
+      is_section_file: true,
+      is_test_artifact: false,
+    },
+  ];
+  const result = pickCandidates(anchors, "landing");
+  assertExists(result);
+  assertEquals(result.length, 1);
+  assertEquals(result[0].filename, "C.pdf");
+});
+
+Deno.test("pickCandidates: older full CDS and current sectionized CDS can coexist", () => {
+  const anchors = [
+    {
+      url: "https://www.oxy.edu/sites/default/files/assets/Institutional_Research/CDS_C_2526_0.pdf",
+      filename: "CDS_C_2526_0.pdf",
+      link_text: "Admissions",
+      year: "2025-26",
+      year_source: "filename" as const,
+      kind: "document" as const,
+      is_section_file: true,
+      is_test_artifact: false,
+    },
+    {
+      url: "https://www.oxy.edu/sites/default/files/assets/Institutional_Research/CDS_J_2526.pdf",
+      filename: "CDS_J_2526.pdf",
+      link_text: "Degrees Conferred",
+      year: "2025-26",
+      year_source: "filename" as const,
+      kind: "document" as const,
+      is_section_file: true,
+      is_test_artifact: false,
+    },
+    {
+      url: "https://www.oxy.edu/sites/default/files/assets/Institutional_Research/CDS%202023-24.pdf",
+      filename: "CDS 2023-24.pdf",
+      link_text: "CDS 2023-24",
+      year: "2023-24",
+      year_source: "filename" as const,
+      kind: "document" as const,
+      is_section_file: false,
+      is_test_artifact: false,
+    },
+  ];
+  const result = pickCandidates(anchors, "landing");
+  assertExists(result);
+  assertEquals(result.map((r) => r.filename).sort(), [
+    "CDS 2023-24.pdf",
+    "CDS_C_2526_0.pdf",
+  ]);
+});
+
+Deno.test("pickCandidates: reference-only documents are skipped", () => {
+  const anchors = [{
+    url: "https://ex.edu/CDS_2024-2025_Definitions_.pdf",
+    filename: "CDS_2024-2025_Definitions_.pdf",
+    link_text: "Common Data Set Definitions",
+    year: "2024-25",
+    year_source: "filename" as const,
+    kind: "document" as const,
+    is_section_file: false,
+    is_test_artifact: false,
+  }];
+  assertEquals(pickCandidates(anchors, "landing"), []);
 });
 
 Deno.test("pickCandidates: falls back to demoted set when no clean siblings exist (CSULB)", () => {
