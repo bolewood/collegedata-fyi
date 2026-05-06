@@ -201,6 +201,81 @@ Enrolled
         self.assertEqual(values["C.125"]["value"], "2300")
         self.assertEqual(values["C.128"]["value"], "95")
 
+    def test_c1_tableau_layout_block_2025_schema(self):
+        markdown = """
+Common Data Set
+
+C. FIRST-TIME, FIRST-YEAR ADMISSION
+
+C1. Applications
+
+Category                                   Unit load                               Males                                Females                                Unknown
+Applied                                    All                                     5365                                   7096                                     9
+Admitted                                   All                                      418                                    471                                     1
+Enrolled                                   Full-Time                                199                                    221                                     1
+                                           Part-Time
+                                           All                                      199                                    221                                     1
+
+C2. First-time, first-year wait-listed students
+"""
+
+        values = clean(
+            markdown,
+            schema=SchemaIndex(REPO_ROOT / "schemas" / "cds_schema_2025_26.json"),
+        )
+
+        self.assertEqual(values["C.101"]["value"], "5365")
+        self.assertEqual(values["C.102"]["value"], "7096")
+        self.assertEqual(values["C.103"]["value"], "9")
+        self.assertEqual(values["C.104"]["value"], "418")
+        self.assertEqual(values["C.105"]["value"], "471")
+        self.assertEqual(values["C.106"]["value"], "1")
+        self.assertEqual(values["C.107"]["value"], "199")
+        self.assertEqual(values["C.108"]["value"], "221")
+        self.assertEqual(values["C.109"]["value"], "1")
+        self.assertEqual(values["C.110"]["value"], "199")
+        self.assertEqual(values["C.112"]["value"], "221")
+        self.assertEqual(values["C.114"]["value"], "1")
+        self.assertEqual(values["C.116"]["value"], "12470")
+        self.assertEqual(values["C.117"]["value"], "890")
+        self.assertEqual(values["C.118"]["value"], "421")
+
+    def test_c1_tableau_layout_block_2024_schema(self):
+        markdown = """
+Common Data Set
+
+C. FIRST-TIME, FIRST-YEAR ADMISSION
+
+C1. First-time, first-year students
+
+Category              Unit load                          Men                              Women                          Another Gender                         Unknown
+Applied               All                               5283                                6956                                10                                  0
+Admitted              All                                401                                466                                  1                                  0
+Enrolled              Full-Time                          194                                242                                  0                                  0
+                      Part-Time                            0                                  0                                  0                                  0
+
+C2. First-time, first-year wait-listed students
+"""
+
+        values = clean(
+            markdown,
+            schema=SchemaIndex(REPO_ROOT / "schemas" / "cds_schema_2024_25.json"),
+        )
+
+        self.assertEqual(values["C.101"]["value"], "5283")
+        self.assertEqual(values["C.102"]["value"], "6956")
+        self.assertEqual(values["C.103"]["value"], "10")
+        self.assertEqual(values["C.104"]["value"], "0")
+        self.assertEqual(values["C.105"]["value"], "401")
+        self.assertEqual(values["C.106"]["value"], "466")
+        self.assertEqual(values["C.107"]["value"], "1")
+        self.assertEqual(values["C.108"]["value"], "0")
+        self.assertEqual(values["C.109"]["value"], "194")
+        self.assertEqual(values["C.111"]["value"], "242")
+        self.assertEqual(values["C.117"]["value"], "12249")
+        self.assertEqual(values["C.118"]["value"], "868")
+        self.assertEqual(values["C.119"]["value"], "436")
+
     def test_c1_compact_question_lines(self):
         markdown = """
 ## C. First-time, First-year Admission

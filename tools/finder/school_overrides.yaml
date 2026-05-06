@@ -471,18 +471,16 @@ overrides:
 
   - school_id: pomona-college
     browse_url: https://www.pomona.edu/administration/institutional-research/information-center/common-data-set
-    direct_archive_urls:
-      - { url: https://tableau.campus.pomona.edu/views/CDS2025-26/A_GeneralInformation, year: "2025-26" }
-      - { url: https://tableau.campus.pomona.edu/views/CDS2024-25/A_GeneralInformation, year: "2024-25" }
     hosting_override:
       file_storage: mixed
       cms: drupal
       rendering: js_required
       notes: >-
         Pomona's official page lists 2025-2026 and 2024-2025 CDS as Tableau
-        views, not PDFs. Do not archive the bare Tableau shell as a useful
-        source row until a Tableau extraction/export path exists; older years
-        remain Box-hosted PDFs.
+        views, not direct PDFs. Do not feed the bare Tableau shell URLs to
+        force_urls. Operator-exported PDFs from the Tableau Download UI are
+        valid manual-upload sources; Tier 4 0.3.9 recovers C1/C9 from this
+        Tableau PDF layout. Older years remain Box-hosted PDFs.
 
   - school_id: harvard
     browse_url: https://oira.harvard.edu/common-data-set/

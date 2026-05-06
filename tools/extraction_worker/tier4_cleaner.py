@@ -2267,8 +2267,107 @@ def resolve_c1_applications(
                         if qn and qn not in out:
                             out[qn] = {"value": value, "source": "tier4_cleaner"}
 
+    def _apply_tableau_c1_layout_block(text: str) -> None:
+        """Parse Tableau PDF exports that preserve C1 only in layout text.
+
+        Pomona's official CDS Tableau views export a PDF text layer where C1
+        appears as ordinary layout lines, not a Markdown table:
+
+            Category Unit load Males Females Unknown
+            Applied All 5365 7096 9
+            Admitted All 418 471 1
+            Enrolled Full-Time 199 221 1
+                     Part-Time
+                     All 199 221 1
+
+        Docling sees enough of the document for C9, but misses C1. The pypdf
+        layout supplement keeps these rows intact enough to recover counts.
+        """
+        c1 = _section_between(
+            text,
+            r"\bC1\.",
+            r"\bC2\.",
+        )
+        if not c1:
+            return
+
+        lines = [ln.strip() for ln in c1.splitlines() if ln.strip()]
+        header = " ".join(lines[:8])
+        header_norm = _normalize_label_without_gender_rewrite(header)
+        if "category" not in header_norm or "unit load" not in header_norm:
+            return
+        if not any(tok in header_norm for tok in ("men", "males")):
+            return
+        if not any(tok in header_norm for tok in ("women", "females")):
+            return
+
+        genders = ["Males", "Females"]
+        if "another gender" in header_norm:
+            genders.append("Another Gender")
+        if "unknown" in header_norm:
+            genders.append("Unknown")
+
+        enrolled_total_by_gender = {gender: 0 for gender in genders}
+        saw_enrolled_parts = False
+
+        def _record_gender_values(action: str, unit_load: str, values: list[str]) -> None:
+            nonlocal saw_enrolled_parts
+            for gender, value in zip(genders, values):
+                num = _extract_number(value)
+                if num is None:
+                    continue
+                if action == "enrolled" and unit_load in {"FT", "PT"}:
+                    enrolled_total_by_gender[gender] = (
+                        enrolled_total_by_gender.get(gender, 0) + int(float(num))
+                    )
+                    saw_enrolled_parts = True
+                qn = _lookup_compact_gender_column(gender, action, unit_load)
+                if qn and qn not in out:
+                    out[qn] = {"value": num, "source": "tier4_cleaner"}
+
+            total = sum(
+                int(float(_extract_number(value) or 0))
+                for value in values[:len(genders)]
+            )
+            total_qn = _lookup("All", "All", action)
+            if total_qn and total_qn not in out and action in {"applied", "admitted"}:
+                out[total_qn] = {"value": str(total), "source": "tier4_cleaner"}
+            elif total_qn and total_qn not in out and action == "enrolled" and unit_load == "All":
+                out[total_qn] = {"value": str(total), "source": "tier4_cleaner"}
+
+        for line in lines:
+            line_norm = _normalize_label(line)
+            numbers = re.findall(r"\b\d[\d,]*\b", line)
+            if len(numbers) < len(genders):
+                continue
+            values = numbers[-len(genders):]
+
+            if line_norm.startswith("applied all "):
+                _record_gender_values("applied", "All", values)
+            elif line_norm.startswith("admitted all "):
+                _record_gender_values("admitted", "All", values)
+            elif line_norm.startswith("enrolled full time "):
+                _record_gender_values("enrolled", "FT", values)
+            elif line_norm.startswith("part time "):
+                _record_gender_values("enrolled", "PT", values)
+            elif line_norm.startswith("all "):
+                _record_gender_values("enrolled", "All", values)
+
+        if saw_enrolled_parts:
+            for gender, total in enrolled_total_by_gender.items():
+                if total == 0:
+                    continue
+                qn = _lookup_compact_gender_column(gender, "enrolled", "All")
+                if qn and qn not in out:
+                    out[qn] = {"value": str(total), "source": "tier4_cleaner"}
+            total_qn = _lookup("All", "All", "enrolled")
+            total_all = sum(enrolled_total_by_gender.values())
+            if total_qn and total_qn not in out and total_all:
+                out[total_qn] = {"value": str(total_all), "source": "tier4_cleaner"}
+
     _apply_layout_lines(markdown)
     _apply_ku_application_data_blocks(markdown)
+    _apply_tableau_c1_layout_block(markdown)
 
     for table in tables:
         headers_norm = [_normalize_label(h) for h in table.get("headers", [])]

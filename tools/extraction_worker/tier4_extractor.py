@@ -30,7 +30,7 @@ from pathlib import Path
 
 
 PRODUCER_NAME = "tier4_docling"
-PRODUCER_VERSION = "0.3.8"
+PRODUCER_VERSION = "0.3.9"
 DOCLING_CONFIG_NAME = "production-fast-no-orphan-clusters"
 DOCLING_NATIVE_TABLES_VERSION = "docling_table_cells_compact_v1"
 SCANNED_ADMISSIONS_OCR_MAX_PAGE = 35
