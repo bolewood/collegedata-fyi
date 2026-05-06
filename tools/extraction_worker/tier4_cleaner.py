@@ -124,6 +124,60 @@ def _direct_qnum_value(row: dict) -> str | None:
     return None
 
 
+def _direct_qnum_line_value(line: str) -> tuple[str, str] | None:
+    """Extract values from line-oriented exports like ``C117 ... 15,411``.
+
+    Some PDF-to-text paths flatten a CDS row to a single line instead of a
+    markdown table. Keep this conservative: require a compact CDS row id at
+    line start and a response-looking value at the end of the line.
+    """
+    m = re.match(r"^\s*([A-J]\.?\d{1,3}[A-Z]?)\b\s+(.+?)\s*$", line, re.IGNORECASE)
+    if not m:
+        return None
+    qnum = _normalize_compact_question_number(m.group(1))
+    if not qnum:
+        return None
+
+    rest = m.group(2).strip()
+    if not rest:
+        return None
+
+    if ":" in rest:
+        tail = rest.rsplit(":", 1)[1].strip()
+        if _looks_like_direct_line_value(tail):
+            return qnum, _clean_direct_line_value(tail)
+
+    m_value = re.search(
+        r"(?i)(?:^|\s)([xyn]|-?\$?\d[\d,]*(?:\.\d+)?%?|\d{1,2}-[a-z]{3,9})\s*$",
+        rest,
+    )
+    if not m_value:
+        return None
+    return qnum, _clean_direct_line_value(m_value.group(1))
+
+
+def _looks_like_direct_line_value(value: str) -> bool:
+    value = value.strip()
+    if not value:
+        return False
+    if re.fullmatch(r"(?i)[xyn]", value):
+        return True
+    if re.fullmatch(r"-?\$?\d[\d,]*(?:\.\d+)?%?", value):
+        return True
+    if re.fullmatch(r"(?i)\d{1,2}-[a-z]{3,9}", value):
+        return True
+    if re.match(r"(?i)^https?://", value):
+        return True
+    return False
+
+
+def _clean_direct_line_value(value: str) -> str:
+    value = value.strip()
+    if re.fullmatch(r"-?\$?\d[\d,]*(?:\.\d+)?%?", value):
+        return value.replace(",", "").replace("$", "")
+    return value
+
+
 _NO_WRAP_EMPTY_LABELS = {
     "sat composite",
     "sat evidence based reading and writing",
@@ -1997,6 +2051,335 @@ def resolve_c1_applications(
                     return f["question_number"]
         return None
 
+    def _lookup_compact_gender_column(gender: str, action: str, unit_load: str) -> str | None:
+        if action == "enrolled" and unit_load in {"FT", "PT"}:
+            load_phrase = "full time" if unit_load == "FT" else "part time"
+            for f in c1_fields:
+                if not _gender_matches(str(f["gender"]), gender):
+                    continue
+                if f["residency"] != "All":
+                    continue
+                q_norm = str(f["_q_norm"])
+                if action in q_norm and load_phrase in q_norm:
+                    return f["question_number"]
+        return _lookup(gender, "All", action, unit_load=unit_load)
+
+    def _apply_layout_lines(text: str) -> None:
+        gender_sums: dict[tuple[str, str], int] = {}
+        for raw_line in text.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+
+            compact_match = re.search(
+                r"(?:total\s+)?"
+                r"(?:(full|part)[-\s]?time,\s*)?"
+                r"first[-\s]time,?\s*first[-\s]year"
+                r"(?:\s+\([^)]*\))?(?:\s+students)?\s+(?:who\s+)?"
+                r"(applied|were admitted|admitted|enrolled):?\s+"
+                r"([0-9][0-9,\s]+[0-9])\s*$",
+                line,
+                re.IGNORECASE,
+            )
+            if compact_match and "degree seeking" not in _normalize_label(line):
+                load_raw, action_raw, raw_numbers = compact_match.groups()
+                numbers = re.findall(r"\d[\d,]*", raw_numbers)
+                if len(numbers) >= 3:
+                    action = "admitted" if "admitted" in action_raw.lower() else (
+                        "applied" if "applied" in action_raw.lower() else "enrolled"
+                    )
+                    unit_load = "All"
+                    if action == "enrolled" and load_raw:
+                        unit_load = "FT" if load_raw.lower().startswith("full") else "PT"
+                    if len(numbers) >= 5:
+                        ordered = list(zip(
+                            ("Males", "Females", "Another Gender", "Unknown", "All"),
+                            numbers[-5:],
+                        ))
+                    elif len(numbers) == 4:
+                        ordered = list(zip(
+                            ("Males", "Females", "Another Gender", "All"),
+                            numbers[-4:],
+                        ))
+                    else:
+                        ordered = list(zip(("Males", "Females", "All"), numbers[-3:]))
+                    for gender, value in ordered:
+                        num = _extract_number(value)
+                        if num is None:
+                            continue
+                        if gender == "All" and action == "enrolled" and unit_load in {"FT", "PT"}:
+                            gender_sums[("enrolled", "FTPT")] = (
+                                gender_sums.get(("enrolled", "FTPT"), 0) + int(float(num))
+                            )
+                            continue
+                        if gender != "All" and action == "enrolled" and unit_load == "All":
+                            continue
+                        qn = _lookup_compact_gender_column(gender, action, unit_load)
+                        if qn:
+                            out.setdefault(qn, {"value": num, "source": "tier4_cleaner"})
+                    continue
+
+            gender_match = re.search(
+                r"total\s+"
+                r"(?:(full|part)[-\s]?time,\s*)?"
+                r"first[-\s]time,\s*first[-\s]year\s+"
+                r"(men|women|of another gender|of unknown gender|another gender|unknown gender)"
+                r"\s+who\s+(applied|were admitted|enrolled)\s+([0-9][0-9,]*)\b",
+                line,
+                re.IGNORECASE,
+            )
+            if gender_match:
+                load_raw, gender_raw, action_raw, value = gender_match.groups()
+                gender_norm = _normalize_label_without_gender_rewrite(gender_raw)
+                if gender_norm in {"men", "males"}:
+                    gender = "Males"
+                elif gender_norm in {"women", "females"}:
+                    gender = "Females"
+                elif "another gender" in gender_norm:
+                    gender = "Another Gender"
+                else:
+                    gender = "Unknown"
+
+                action = "admitted" if "admitted" in action_raw.lower() else (
+                    "applied" if "applied" in action_raw.lower() else "enrolled"
+                )
+                unit_load = "All"
+                if action == "enrolled" and load_raw:
+                    unit_load = "FT" if load_raw.lower().startswith("full") else "PT"
+
+                num = _extract_number(value)
+                qn = None
+                if not (action == "enrolled" and not load_raw):
+                    qn = _lookup_compact_gender_column(gender, action, unit_load)
+                if qn and num is not None:
+                    out.setdefault(qn, {"value": num, "source": "tier4_cleaner"})
+                if num is not None:
+                    if unit_load == "All" or action != "enrolled":
+                        gender_sums[(action, "All")] = (
+                            gender_sums.get((action, "All"), 0) + int(float(num))
+                        )
+                    elif action == "enrolled":
+                        gender_sums[(action, "FTPT")] = (
+                            gender_sums.get((action, "FTPT"), 0) + int(float(num))
+                        )
+                continue
+
+            residency_norm = _normalize_label(line)
+            if "degree seeking" not in residency_norm:
+                continue
+            action = None
+            if "who were admitted" in residency_norm:
+                action = "admitted"
+            elif "who applied" in residency_norm:
+                action = "applied"
+            elif "enrolled" in residency_norm:
+                action = "enrolled"
+            if not action:
+                continue
+
+            numbers = re.findall(r"\b\d[\d,]*\b", line)
+            if len(numbers) < 4:
+                continue
+            if len(numbers) >= 5:
+                ordered = [
+                    ("In-State", numbers[-5]),
+                    ("Out-of-State", numbers[-4]),
+                    ("Nonresidents", numbers[-3]),
+                    ("Unknown", numbers[-2]),
+                    ("All", numbers[-1]),
+                ]
+            else:
+                ordered = [
+                    ("In-State", numbers[-4]),
+                    ("Out-of-State", numbers[-3]),
+                    ("Nonresidents", numbers[-2]),
+                    ("All", numbers[-1]),
+                ]
+            for residency, value in ordered:
+                num = _extract_number(value)
+                qn = _lookup("All", residency, action)
+                if qn and num is not None:
+                    out.setdefault(qn, {"value": num, "source": "tier4_cleaner"})
+
+        for action in ("applied", "admitted", "enrolled"):
+            qn = _lookup("All", "All", action)
+            if not qn or qn in out:
+                continue
+            total = gender_sums.get((action, "All"))
+            if total is None and action == "enrolled":
+                total = gender_sums.get((action, "FTPT"))
+            if total is not None:
+                out[qn] = {"value": str(total), "source": "tier4_cleaner"}
+
+    def _apply_ku_application_data_blocks(text: str) -> None:
+        """Parse section PDFs that render C1 as label/value line stacks.
+
+        KU's current Section C PDFs use headings like "Application Data by
+        Sex", then separate non-table lines for headers, labels, and values:
+        `Applications`, `9,704`, `12,483`, `22,187`. Docling often preserves
+        that as plain lines rather than a structured table.
+        """
+        lines = _nonempty_lines(text)
+
+        def _numbers_after_label(start: int, label: str, count: int) -> list[str] | None:
+            label_norm = _normalize_label(label)
+            for pos in range(start, min(len(lines), start + 60)):
+                line_norm = _normalize_label(lines[pos])
+                if line_norm != label_norm and not line_norm.startswith(f"{label_norm} "):
+                    continue
+                same_line_numbers = re.findall(r"\b\d[\d,]*\b", lines[pos])
+                if len(same_line_numbers) >= count:
+                    return same_line_numbers[-count:]
+                values: list[str] = []
+                cursor = pos + 1
+                while cursor < len(lines) and len(values) < count:
+                    num = _extract_number(lines[cursor])
+                    if num is not None:
+                        values.append(str(num))
+                    elif values:
+                        break
+                    cursor += 1
+                return values if len(values) == count else None
+            return None
+
+        for idx, line in enumerate(lines):
+            if _normalize_label(line) == "application data by sex":
+                row_specs = [
+                    ("Applications", "applied", "All"),
+                    ("Admits", "admitted", "All"),
+                    ("Enrolled", "enrolled", "All"),
+                    ("Full-time", "enrolled", "FT"),
+                    ("Part-time", "enrolled", "PT"),
+                ]
+                for label, action, unit_load in row_specs:
+                    values = _numbers_after_label(idx, label, 3)
+                    if not values:
+                        continue
+                    for gender, value in zip(("Males", "Females", "All"), values):
+                        qn = _lookup_compact_gender_column(gender, action, unit_load)
+                        if qn and qn not in out:
+                            out[qn] = {"value": value, "source": "tier4_cleaner"}
+
+            if _normalize_label(line) == "application data by residency":
+                row_specs = [
+                    ("Applications", "applied"),
+                    ("Admits", "admitted"),
+                    ("Enrolled", "enrolled"),
+                ]
+                for label, action in row_specs:
+                    values = _numbers_after_label(idx, label, 4)
+                    if not values:
+                        continue
+                    for residency, value in zip(
+                        ("In-State", "Out-of-State", "Nonresidents", "All"),
+                        values,
+                    ):
+                        qn = _lookup("All", residency, action)
+                        if qn and qn not in out:
+                            out[qn] = {"value": value, "source": "tier4_cleaner"}
+
+    def _apply_tableau_c1_layout_block(text: str) -> None:
+        """Parse Tableau PDF exports that preserve C1 only in layout text.
+
+        Pomona's official CDS Tableau views export a PDF text layer where C1
+        appears as ordinary layout lines, not a Markdown table:
+
+            Category Unit load Males Females Unknown
+            Applied All 5365 7096 9
+            Admitted All 418 471 1
+            Enrolled Full-Time 199 221 1
+                     Part-Time
+                     All 199 221 1
+
+        Docling sees enough of the document for C9, but misses C1. The pypdf
+        layout supplement keeps these rows intact enough to recover counts.
+        """
+        c1 = _section_between(
+            text,
+            r"\bC1\.",
+            r"\bC2\.",
+        )
+        if not c1:
+            return
+
+        lines = [ln.strip() for ln in c1.splitlines() if ln.strip()]
+        header = " ".join(lines[:8])
+        header_norm = _normalize_label_without_gender_rewrite(header)
+        if "category" not in header_norm or "unit load" not in header_norm:
+            return
+        if not any(tok in header_norm for tok in ("men", "males")):
+            return
+        if not any(tok in header_norm for tok in ("women", "females")):
+            return
+
+        genders = ["Males", "Females"]
+        if "another gender" in header_norm:
+            genders.append("Another Gender")
+        if "unknown" in header_norm:
+            genders.append("Unknown")
+
+        enrolled_total_by_gender = {gender: 0 for gender in genders}
+        saw_enrolled_parts = False
+
+        def _record_gender_values(action: str, unit_load: str, values: list[str]) -> None:
+            nonlocal saw_enrolled_parts
+            for gender, value in zip(genders, values):
+                num = _extract_number(value)
+                if num is None:
+                    continue
+                if action == "enrolled" and unit_load in {"FT", "PT"}:
+                    enrolled_total_by_gender[gender] = (
+                        enrolled_total_by_gender.get(gender, 0) + int(float(num))
+                    )
+                    saw_enrolled_parts = True
+                qn = _lookup_compact_gender_column(gender, action, unit_load)
+                if qn and qn not in out:
+                    out[qn] = {"value": num, "source": "tier4_cleaner"}
+
+            total = sum(
+                int(float(_extract_number(value) or 0))
+                for value in values[:len(genders)]
+            )
+            total_qn = _lookup("All", "All", action)
+            if total_qn and total_qn not in out and action in {"applied", "admitted"}:
+                out[total_qn] = {"value": str(total), "source": "tier4_cleaner"}
+            elif total_qn and total_qn not in out and action == "enrolled" and unit_load == "All":
+                out[total_qn] = {"value": str(total), "source": "tier4_cleaner"}
+
+        for line in lines:
+            line_norm = _normalize_label(line)
+            numbers = re.findall(r"\b\d[\d,]*\b", line)
+            if len(numbers) < len(genders):
+                continue
+            values = numbers[-len(genders):]
+
+            if line_norm.startswith("applied all "):
+                _record_gender_values("applied", "All", values)
+            elif line_norm.startswith("admitted all "):
+                _record_gender_values("admitted", "All", values)
+            elif line_norm.startswith("enrolled full time "):
+                _record_gender_values("enrolled", "FT", values)
+            elif line_norm.startswith("part time "):
+                _record_gender_values("enrolled", "PT", values)
+            elif line_norm.startswith("all "):
+                _record_gender_values("enrolled", "All", values)
+
+        if saw_enrolled_parts:
+            for gender, total in enrolled_total_by_gender.items():
+                if total == 0:
+                    continue
+                qn = _lookup_compact_gender_column(gender, "enrolled", "All")
+                if qn and qn not in out:
+                    out[qn] = {"value": str(total), "source": "tier4_cleaner"}
+            total_qn = _lookup("All", "All", "enrolled")
+            total_all = sum(enrolled_total_by_gender.values())
+            if total_qn and total_qn not in out and total_all:
+                out[total_qn] = {"value": str(total_all), "source": "tier4_cleaner"}
+
+    _apply_layout_lines(markdown)
+    _apply_ku_application_data_blocks(markdown)
+    _apply_tableau_c1_layout_block(markdown)
+
     for table in tables:
         headers_norm = [_normalize_label(h) for h in table.get("headers", [])]
         joined_hdr = " ".join(headers_norm)
@@ -2014,8 +2397,75 @@ def resolve_c1_applications(
                                           "unknown gender who")):
                 gender_hits += 1
         is_gender_table = gender_hits >= 1
+        is_compact_gender_table = (
+            "men" in joined_hdr
+            and "women" in joined_hdr
+            and any(
+                _normalize_label(r["label"]) in {
+                    "applied",
+                    "admitted",
+                    "full time enrolled",
+                    "part time enrolled",
+                }
+                for r in table["rows"][:8]
+            )
+        )
 
-        if is_residency:
+        if is_compact_gender_table:
+            col_to_gender: list[tuple[int, str]] = []
+            raw_headers = [str(h).strip().lower() for h in table.get("headers", [])]
+            for ci, hdr in enumerate(raw_headers[1:]):
+                hdr_norm = _normalize_label_without_gender_rewrite(hdr)
+                if hdr_norm == "men" or hdr_norm == "males":
+                    col_to_gender.append((ci, "Males"))
+                elif hdr_norm == "women" or hdr_norm == "females":
+                    col_to_gender.append((ci, "Females"))
+                elif "another gender" in hdr_norm:
+                    col_to_gender.append((ci, "Another Gender"))
+                elif "unknown" in hdr_norm:
+                    col_to_gender.append((ci, "Unknown"))
+                elif hdr_norm == "total":
+                    col_to_gender.append((ci, "All"))
+
+            total_enrolled = 0
+            saw_total_enrolled = False
+            for row in table["rows"]:
+                label_norm = _normalize_label(row["label"])
+                if label_norm == "applied":
+                    action = "applied"
+                    unit_load = "All"
+                elif label_norm == "admitted":
+                    action = "admitted"
+                    unit_load = "All"
+                elif label_norm == "full time enrolled":
+                    action = "enrolled"
+                    unit_load = "FT"
+                elif label_norm == "part time enrolled":
+                    action = "enrolled"
+                    unit_load = "PT"
+                else:
+                    continue
+
+                for col_idx, gender in col_to_gender:
+                    if col_idx >= len(row["values"]):
+                        continue
+                    num = _extract_number(row["values"][col_idx])
+                    if num is None:
+                        continue
+                    if gender == "All" and action == "enrolled":
+                        total_enrolled += int(float(num))
+                        saw_total_enrolled = True
+                        continue
+                    qn = _lookup_compact_gender_column(gender, action, unit_load)
+                    if qn and qn not in out:
+                        out[qn] = {"value": num, "source": "tier4_cleaner"}
+
+            if saw_total_enrolled:
+                qn = _lookup("All", "All", "enrolled")
+                if qn and qn not in out:
+                    out[qn] = {"value": str(total_enrolled), "source": "tier4_cleaner"}
+
+        elif is_residency:
             # Map each value column index → residency key.
             col_to_res: list[tuple[int, str]] = []
             for ci, hdr in enumerate(headers_norm[1:]):
@@ -2854,8 +3304,43 @@ def resolve_c9_submission_rates(
     tables: list[dict], markdown: str, schema: SchemaIndex
 ) -> dict[str, dict]:
     out: dict[str, dict] = {}
-    if "Submitting SAT Scores" not in markdown or "Submitting ACT Scores" not in markdown:
+    lowered = markdown.lower()
+    if "submitting sat scores" not in lowered or "submitting act scores" not in lowered:
         return out
+
+    for test_name, pct_qn, num_qn in (
+        ("SAT", "C.901", "C.903"),
+        ("ACT", "C.902", "C.904"),
+    ):
+        line_match = re.search(
+            rf"Submitting\s+{test_name}\s+Scores\s+([0-9.]+)%?\s+([0-9][0-9,]*)\b",
+            markdown,
+            re.IGNORECASE,
+        )
+        if line_match:
+            pct, num = line_match.groups()
+            out.setdefault(pct_qn, {"value": pct.replace(",", ""), "source": "tier4_cleaner"})
+            out.setdefault(num_qn, {"value": num.replace(",", ""), "source": "tier4_cleaner"})
+
+    def form_value_after(label: str) -> str | None:
+        match = re.search(label, markdown, re.IGNORECASE)
+        if not match:
+            return None
+        window = markdown[match.end(): match.end() + 120]
+        value_match = re.search(r"(?<!\d)(\d[\d,]*(?:\.\d+)?)", window)
+        if not value_match:
+            return None
+        return value_match.group(1).replace(",", "")
+
+    for label, qn in (
+        (r"percent[ \t]+submitting[ \t]+sat[ \t]+scores", "C.901"),
+        (r"percent[ \t]+submitting[ \t]+act[ \t]+scores", "C.902"),
+        (r"number[ \t]+submitting[ \t]+sat[ \t]+scores", "C.903"),
+        (r"number[ \t]+submitting[ \t]+act[ \t]+scores", "C.904"),
+    ):
+        value = form_value_after(label)
+        if value is not None:
+            out.setdefault(qn, {"value": value, "source": "tier4_cleaner"})
 
     labels = re.search(
         r"Submitting SAT Scores\s+Submitting ACT Scores",
@@ -2916,6 +3401,49 @@ def resolve_c9_submission_rates(
     out["C.903"] = {"value": sat_num.replace(",", ""), "source": "tier4_cleaner"}
     out["C.902"] = {"value": act_pct.replace(",", ""), "source": "tier4_cleaner"}
     out["C.904"] = {"value": act_num.replace(",", ""), "source": "tier4_cleaner"}
+    return out
+
+
+def resolve_c9_combined_submission_percentile_table(
+    tables: list[dict], markdown: str, schema: SchemaIndex
+) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    for table in tables:
+        for row in table["rows"]:
+            values = row.get("values") or []
+            if len(values) < 6:
+                continue
+            label_norm = _normalize_label(row.get("label") or "")
+
+            if label_norm.startswith("sat"):
+                pct = _extract_number(values[0])
+                num = _extract_number(values[1])
+                if pct is not None:
+                    out.setdefault("C.901", {"value": pct, "source": "tier4_cleaner"})
+                if num is not None:
+                    out.setdefault("C.903", {"value": num, "source": "tier4_cleaner"})
+            elif label_norm == "act":
+                pct = _extract_number(values[0])
+                num = _extract_number(values[1])
+                if pct is not None:
+                    out.setdefault("C.902", {"value": pct, "source": "tier4_cleaner"})
+                if num is not None:
+                    out.setdefault("C.904", {"value": num, "source": "tier4_cleaner"})
+
+            assessment_norm = _normalize_label(values[2])
+            qns_by_role = None
+            for row_label, candidate in _PERCENTILE_QNS.items():
+                if _normalize_label(row_label) in assessment_norm:
+                    qns_by_role = candidate
+                    break
+            if not qns_by_role:
+                continue
+
+            for value, role in zip(values[3:6], ("p25", "p50", "p75")):
+                qn = qns_by_role.get(role)
+                num = _extract_number(value)
+                if qn and num is not None and _is_plausible_c9_percentile_value(qn, num):
+                    out.setdefault(qn, {"value": num, "source": "tier4_cleaner"})
     return out
 
 
@@ -2998,6 +3526,10 @@ def resolve_c9_percentile_anchors(
         line = line_match.group(0)
         if re.search(r"\bC\.?\s*(?:90[5-9]|91[0-9]|92[0-2])\b", line, re.IGNORECASE):
             continue
+        if re.search(r"\bC\.?\s*9(?:2[3-9]|[3-5]\d)\b", line, re.IGNORECASE):
+            continue
+        if re.search(r"\b\d+\s*[-–—]\s*\d+\b", line):
+            continue
         label_norm = _normalize_label(line)
         if not label_norm or "submitting" in label_norm or "score range" in label_norm:
             continue
@@ -3007,10 +3539,29 @@ def resolve_c9_percentile_anchors(
             if _normalize_label(row_label) in label_norm:
                 qns_by_role = candidate
                 break
+        if not qns_by_role and "reading and writing" in label_norm:
+            qns_by_role = _PERCENTILE_QNS.get("sat evidence-based reading")
         if not qns_by_role:
             continue
 
         numbers = re.findall(r"\b\d+(?:\.\d+)?\b", line.replace(",", ""))
+        single_role_match = re.search(
+            r"\b(25(?:th)?|50(?:th)?|75(?:th)?)\s+percentile\b",
+            line,
+            re.IGNORECASE,
+        )
+        if single_role_match and numbers:
+            role_token = single_role_match.group(1)
+            role = (
+                "p25" if role_token.startswith("25")
+                else "p50" if role_token.startswith("50")
+                else "p75"
+            )
+            qn = qns_by_role.get(role)
+            value = numbers[-1]
+            if qn and _is_plausible_c9_percentile_value(qn, value):
+                out.setdefault(qn, {"value": value, "source": "tier4_cleaner"})
+            continue
         if len(numbers) < 3:
             continue
         context = section_no_ranges[max(0, line_match.start() - 600):line_match.start()]
@@ -5264,6 +5815,7 @@ _RESOLVERS = [
     resolve_c7_basis_for_selection,
     resolve_c8_entrance_exams,
     resolve_c9_submission_rates,
+    resolve_c9_combined_submission_percentile_table,
     resolve_c9_percentile_anchors,
     resolve_c9_score_distributions,
     resolve_c11_gpa_profile,
@@ -5374,8 +5926,14 @@ def clean(
                     values[qnum] = {"value": num, "source": "tier4_cleaner"}
 
             # --- Percentile table ---
+            row_label_norm = _normalize_label(row["label"])
+            row_text = " ".join([str(row.get("label") or ""), *[str(v) for v in row.get("values") or []]])
+            if re.search(r"\b\d+\s*[-–—]\s*\d+\b", row_text):
+                continue
+            if re.search(r"\bC\.?\s*9(?:2[3-9]|[3-5]\d)\b", row_text, re.IGNORECASE):
+                continue
             for col_idx, value in enumerate(row["values"]):
-                qnum = _c9_percentile_qn(label_norm, col_idx, headers_norm)
+                qnum = _c9_percentile_qn(row_label_norm, col_idx, headers_norm)
                 if not qnum:
                     continue
                 num = _extract_number(value)
@@ -5385,6 +5943,19 @@ def clean(
                     and qnum not in values
                 ):
                     values[qnum] = {"value": num, "source": "tier4_cleaner"}
+
+    for line in markdown.splitlines():
+        parsed_line = _direct_qnum_line_value(line)
+        if not parsed_line:
+            continue
+        qnum, direct_value = parsed_line
+        if (
+            re.match(r"^C\.9\d\d$", qnum)
+            and not _is_plausible_c9_percentile_value(qnum, direct_value)
+        ):
+            continue
+        if qnum in schema_qnums and qnum not in values:
+            values[qnum] = {"value": direct_value, "source": "tier4_cleaner"}
 
     # --- Inline patterns (non-table fields) ---
     # Runs after table extraction so table matches take precedence.
@@ -5406,6 +5977,7 @@ def clean(
     # This preserves the regression-safe ordering: hand-coded > resolvers.
     for resolver in _RESOLVERS:
         new = resolver(tables, markdown, idx)
+        supplemental_override_qns: set[str] = set()
         if resolver in (
             resolve_a_general,
             resolve_j_disciplines,
@@ -5414,8 +5986,10 @@ def clean(
             resolve_b3_degrees,
             resolve_b_two_year_rates,
             resolve_b5_graduation,
+            resolve_c1_applications,
             resolve_c2_waitlist,
             resolve_c8_entrance_exams,
+            resolve_c9_submission_rates,
             resolve_c9_percentile_anchors,
             resolve_c12_gpa_summary,
             resolve_c13_application_fee,
@@ -5439,7 +6013,10 @@ def clean(
                     resolve_b3_degrees,
                     resolve_b_two_year_rates,
                     resolve_b5_graduation,
+                    resolve_c1_applications,
                     resolve_c2_waitlist,
+                    resolve_c9_submission_rates,
+                    resolve_c9_percentile_anchors,
                     resolve_c13_application_fee,
                     resolve_i_faculty,
                     resolve_d_transfer,
@@ -5447,10 +6024,18 @@ def clean(
                     resolve_h_financial_aid,
                 ):
                     new[qn] = rec
+                    if resolver in (
+                        resolve_c1_applications,
+                        resolve_c9_submission_rates,
+                        resolve_c9_percentile_anchors,
+                    ):
+                        supplemental_override_qns.add(qn)
                 else:
                     new.setdefault(qn, rec)
         for qn, rec in new.items():
-            if resolver is resolve_b5_graduation and re.match(r"^B\.[45]\d{2}$", qn):
+            if qn in supplemental_override_qns:
+                values[qn] = rec
+            elif resolver is resolve_b5_graduation and re.match(r"^B\.[45]\d{2}$", qn):
                 values[qn] = rec
             elif qn not in values:
                 values[qn] = rec

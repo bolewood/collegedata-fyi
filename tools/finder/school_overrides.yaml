@@ -127,3 +127,640 @@ overrides:
         The dmi.illinois.edu subdomain is effectively invisible to
         Brave's index — site:illinois.edu "Common Data Set" returns
         zero results. Per-school manual resolution only.
+
+  # PRD 019 source-mapping repairs, 2026-05-06. These schools surfaced
+  # false current/prior documents in the Top 200 freshness audit.
+  - school_id: upenn
+    browse_url: https://ira.upenn.edu/penn-numbers/common-data-set
+    direct_archive_urls:
+      - { url: https://upenn.box.com/s/ckv4frz37rzxa4u6bdiv2h4yzykqm4ef, year: "2024-25" }
+      - { url: https://upenn.box.com/s/0btxxmu1lmxgj1dc2pfzqewoun6miyn4, year: "2023-24" }
+    hosting_override:
+      file_storage: box
+      cms: custom
+      auth_required: none
+      notes: >-
+        Penn official CDS page publishes Box links; as of 2026-05-06 it
+        lists 2024-25 as the newest CDS. Do not archive commondataset.org
+        reference files such as the 2025-26 Summary of Changes docx as
+        Penn's CDS.
+
+  - school_id: johns-hopkins
+    browse_url: https://oira.jhu.edu/common-data-set/
+    direct_archive_urls:
+      - { url: https://oira.jhu.edu/wp-content/uploads/2025-2026-CDS-Johns-Hopkins-University.pdf, year: "2025-26" }
+      - { url: "https://drive.usercontent.google.com/download?id=1493J-a9EGTyGekgy-NAohQ_LSEQ3jtDp&export=download", year: "2024-25" }
+    hosting_override:
+      file_storage: mixed
+      cms: wordpress
+      waf: cloudflare
+      notes: >-
+        JHU's current same-origin PDF may return a Cloudflare challenge to
+        non-browser archive fetches. Prefer the official OIRA landing page,
+        but use the WAF-aware headless downloader and reject HTML challenge
+        bodies before inserting source artifacts.
+
+  - school_id: williams-college
+    browse_url: https://www.williams.edu/institutional-research/common-data-set/
+    direct_archive_urls:
+      - { url: https://www.williams.edu/institutional-research/files/2026/04/Williams-CDS-2025-2026-V2.pdf, year: "2025-26" }
+      - { url: https://www.williams.edu/institutional-research/files/2025/06/CDS_2024_2025_Williams_V5.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: wordpress
+      waf: cloudflare
+      notes: >-
+        Williams publishes recent CDS PDFs on its IR landing page, but direct
+        archive fetches can receive a Cloudflare challenge page. Use the
+        WAF-aware headless downloader and verify source bytes are real PDFs.
+
+  - school_id: kent-state-university-at-kent
+    browse_url: https://www.kent.edu/ir/common-dataset-cds
+    direct_archive_urls:
+      - { url: "https://www-s3-live.kent.edu/s3fs-root/s3fs-public/file/TU%20CDS_2025-2026-Final_web_1.docx?VersionId=8b11OcfWwv3GOtnZg.urP8_ZlgTVDMTY", year: "2025-26" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      waf: none
+      notes: >-
+        Kent publishes an SDT-preserving DOCX. The current worker stubs native
+        docx extraction, so browser projection relies on the existing
+        operator-generated Word-to-PDF Tier 4 canonical artifact until a
+        durable docx-to-PDF route is implemented.
+
+  - school_id: osu
+    browse_url: https://irp.osu.edu/institutional-data-and-reports
+    direct_archive_urls:
+      - { url: https://irp.osu.edu/sites/default/files/documents/2026/03/CDS-2025-2026-OSU-Columbus-Campus.pdf, year: "2025-26" }
+      - { url: https://irp.osu.edu/media/276, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      notes: >-
+        OSU publishes multiple campus CDS files on one page. The canonical
+        school_id osu maps to Columbus Campus only; reject Lima, Mansfield,
+        Marion, Newark, and Wooster/ATI campus files for this row.
+
+  - school_id: the-university-of-tennessee-knoxville
+    browse_url: https://irsa.utk.edu/reporting/common-data-set/
+    direct_archive_urls:
+      - { url: http://irsa.utk.edu/wp-content/uploads/sites/107/2026/02/CDS_2025-26_All.pdf, year: "2025-26" }
+      - { url: http://irsa.utk.edu/wp-content/uploads/sites/107/2026/01/CDS_2024-2025_All.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: wordpress
+      notes: >-
+        Current-year page includes section files and definitions alongside
+        the full CDS. Prior years live in the Reporting Archive. Prefer
+        *_All.pdf or *_Full.pdf; reject Definitions and section Appendix
+        PDFs as source-mapping false positives.
+
+  - school_id: university-of-illinois-chicago
+    browse_url: https://oir.uic.edu/institutional-research/common-data-set/
+    direct_archive_urls:
+      - { url: https://oir.uic.edu/wp-content/uploads/sites/213/2026/04/CDS_2025_2026.xlsx, year: "2025-26" }
+      - { url: https://oir.uic.edu/wp-content/uploads/sites/213/2025/04/CDS_UNL_2024_2025_section_C.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: mixed
+      cms: wordpress
+      auth_required: none
+      notes: >-
+        Public page exposes the current workbook and prior-year sections;
+        the previous-years Box archive is NetID-gated. For 2024-25, use
+        Section C for admissions change intelligence and reject Appendix
+        PDFs as source-mapping false positives.
+
+  - school_id: university-of-kansas
+    browse_url: https://aire.ku.edu/common-data-set/
+    direct_archive_urls:
+      - { url: https://aire.ku.edu/sites/aire/files/files/CDS/2025-2026/C.pdf, year: "2025-26" }
+      - { url: https://aire.ku.edu/sites/aire/files/files/CDS/2024-2025/C.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      notes: >-
+        KU publishes current-year CDS by section and older years as full
+        PDFs on a separate archive page. For admissions freshness, prefer
+        Section C when no full current-year PDF is available; do not let
+        Section J become the canonical document for the year.
+
+  - school_id: occidental-college
+    browse_url: https://www.oxy.edu/offices-services/institutional-research/institutional-data/common-data-set
+    direct_archive_urls:
+      - { url: https://www.oxy.edu/sites/default/files/assets/Institutional_Research/CDS_C_2526_0.pdf, year: "2025-26" }
+      - { url: https://www.oxy.edu/sites/default/files/assets/Institutional_Research/CDS%202023-24.pdf, year: "2023-24" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      notes: >-
+        Oxy publishes 2025-26 by section while older years are full files.
+        For admissions freshness, prefer Section C when no full current-year
+        PDF is available; do not let Section J become the canonical 2025-26
+        document.
+
+  # PRD 019 archive/finder backfill repairs, 2026-05-06.
+  - school_id: cornell
+    browse_url: https://irp.cornell.edu/common-data-set/
+    direct_archive_urls:
+      - { url: https://irp.cornell.edu/wp-content/uploads/2026/04/CDS-Cornell-2025-2026.xlsx, year: "2025-26" }
+      - { url: https://irp.dpb.cornell.edu/wp-content/uploads/2025/07/CDS-2024-2025-v6-print.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: wordpress
+      notes: >-
+        Cornell posts recent CDS files on the IRP Common Data Set page.
+        Current 2025-26 is XLSX; 2024-25 was PDF. The old irp.dpb.cornell.edu
+        host redirects from historical links and should still be accepted.
+
+  - school_id: uc-berkeley
+    browse_url: https://opa.berkeley.edu/campus-data/common-data-set
+    direct_archive_urls:
+      - { url: "https://docs.google.com/spreadsheets/d/1INsGFH6MhaO-MFMBZ1Dngcn84FeN-hc0BLS0-v8TL_k/export?format=xlsx", year: "2025-26" }
+      - { url: "https://docs.google.com/spreadsheets/d/11BnFbit7JcrmFMi9iV_TMkzhUyCQ_dQHS0V8weuOHPM/export?format=xlsx", year: "2024-25" }
+    hosting_override:
+      file_storage: google_drive
+      cms: custom
+      notes: >-
+        Berkeley publishes CDS workbooks as Google Sheets from the OPA
+        landing page. Archive via explicit export?format=xlsx URLs; browser
+        share links are not stable source artifacts.
+
+  - school_id: umd
+    browse_url: https://irpa.umd.edu/InstitutionalData/cds.html
+    direct_archive_urls:
+      - { url: https://irpa.umd.edu/InstitutionalData/CommonDataSet/CDS_2025-2026.xlsx, year: "2025-26" }
+      - { url: https://irpa.umd.edu/InstitutionalData/CommonDataSet/CDS_2024-2025.xlsx, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: custom
+      notes: >-
+        UMD's CDS landing page exposes workbook links from a CommonDataSet
+        subdirectory. Preserve the InstitutionalData/CommonDataSet prefix;
+        root-relative guesses such as /CDS_2025-2026.xlsx return 404.
+
+  - school_id: arizona-state-university-campus-immersion
+    browse_url: https://uoia.asu.edu/common-data-set
+    direct_archive_urls:
+      - { url: https://uoia.asu.edu/sites/g/files/litvpz1436/files/2026-04/CDS%202025-26%20-%20ASU%20Campus%20Immersion.pdf, year: "2025-26" }
+      - { url: https://uoia.asu.edu/sites/g/files/litvpz1436/files/2025-04/ASU%20Campus%20Immersion%20-%20Common%20Data%20Set%202024-25.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      notes: >-
+        ASU Campus Immersion CDS files moved to UOIA. Reject stale provost
+        blank-template artifacts and keep the Campus Immersion campus scope;
+        ASU Online and other ASU rows are separate source-mapping targets.
+
+  - school_id: university-of-cincinnati-main-campus
+    browse_url: https://www.uc.edu/about/provost/offices/ir/common-data-set.html
+    direct_archive_urls:
+      - { url: https://www.uc.edu/content/dam/refresh/provost-62/offices/ir/2025-2026ay/CDS-2024-2025-University%20of%20Cincinnati%20Clifton%20FINAL%20Update%20072125%20Tuition%20Information.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: custom
+      notes: >-
+        Cincinnati posts recent CDS PDFs under dated provost DAM folders.
+        The canonical slug is university-of-cincinnati-main-campus, but the
+        school name in the source is University of Cincinnati Clifton.
+        No official 2025-26 CDS found as of 2026-05-06.
+
+  - school_id: uchicago
+    browse_url: https://data.uchicago.edu/common-data-set/
+    direct_archive_urls:
+      - { url: https://data.uchicago.edu/files/2025/08/CDS_2024-2025_to_publish.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: wordpress
+      notes: >-
+        UChicago now publishes CDS PDFs on data.uchicago.edu. The 2024-25
+        PDF is current on the page as of 2026-05-06; no official 2025-26
+        CDS found yet.
+
+  - school_id: centre-college
+    browse_url: https://www.centre.edu/about/college-policies-initiatives/common-data-set
+    direct_archive_urls:
+      - { url: https://www.centre.edu/documents/2025-2026-common-data, year: "2025-26" }
+    hosting_override:
+      file_storage: same_origin
+      cms: custom
+      notes: >-
+        Centre publishes the current CDS from its Common Data Set landing
+        page using an extensionless document URL. Accept by content type and
+        document content, not URL suffix. The page did not list 2024-25 as of
+        2026-05-06.
+
+  - school_id: mit
+    browse_url: https://ir.mit.edu/project-topic/common-data-set/
+    hosting_override:
+      file_storage: same_origin
+      cms: wordpress
+      waf: cloudflare
+      notes: >-
+        MIT publishes CDS as year-specific HTML project pages. The newest
+        visible page found as of 2026-05-06 was 2024-25; no 2025-26 source
+        was found. Existing 2024-25 browser projection needs extraction QA
+        before narrative use because admissions values appear transposed.
+
+  - school_id: vanderbilt
+    browse_url: https://www.vanderbilt.edu/dsa/common-data-set/
+    hosting_override:
+      file_storage: same_origin
+      cms: wordpress
+      notes: >-
+        Vanderbilt publishes CDS workbooks on its DSA page. The newest
+        official source found as of 2026-05-06 was 2024-25; no 2025-26
+        source was found. Existing 2024-25 extraction is sparse and should
+        be handled as extraction QA, not source discovery.
+
+  - school_id: uw-madison
+    browse_url: https://data.wisc.edu/common-data-set/
+    hosting_override:
+      file_storage: same_origin
+      cms: wordpress
+      notes: >-
+        UW-Madison's public page listed 2024-2025 as the current CDS as of
+        2026-05-06; no 2025-26 source was found. Existing 2024-25 extraction
+        has implausible zero admissions counts and should be extraction QA.
+
+  - school_id: rutgers
+    browse_url: https://oirap.rutgers.edu/cds/
+    hosting_override:
+      file_storage: same_origin
+      cms: custom
+      notes: >-
+        Rutgers-New Brunswick public OIRAP CDS page still appeared to top
+        out at 2023-24 as of 2026-05-06. No official 2024-25 or 2025-26
+        source was found during the PRD 019 archive-gap pass.
+
+  - school_id: colby
+    browse_url: https://www.colby.edu/people/offices-directory/institutional-research/common-data-set/
+    hosting_override:
+      file_storage: same_origin
+      cms: wordpress
+      waf: cloudflare
+      notes: >-
+        Colby's official page was Cloudflare-blocked to local fetches during
+        the 2026-05-06 PRD 019 pass, and search did not reveal public 2024-25
+        or 2025-26 CDS files. Treat as source discovery/WAF follow-up.
+
+  - school_id: college-of-the-holy-cross
+    browse_url: https://www.holycross.edu/institutional-research-and-assessment/common-data-set
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      notes: >-
+        Holy Cross' public Common Data Set page appeared to top out at
+        2023-24 as of 2026-05-06. No official 2024-25 or 2025-26 source was
+        found during the PRD 019 archive-gap pass.
+
+  # PRD 019 current-year live checks, 2026-05-06.
+  - school_id: princeton
+    browse_url: https://ir.princeton.edu/other-university-data/common-data-set
+    direct_archive_urls:
+      - { url: https://ir.princeton.edu/sites/g/files/toruqf2041/files/documents/CDS_2526_Princeton_v1.3.pdf, year: "2025-26" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      waf: cloudflare
+      notes: >-
+        Princeton's IR Common Data Set page lists 2025-2026 as current, but
+        local page fetches can return 403. The direct official PDF URL works
+        and should be preferred for archive backfill.
+
+  - school_id: wellesley-college
+    browse_url: https://www.wellesley.edu/about-us/offices-departments/office-of-institutional-research/public-data
+    direct_archive_urls:
+      - { url: "https://wellesley-college.files.svdcdn.com/production/administrative-departments/OIR/CDS_2025-2026-FINAL.pdf?dm=1773253066", year: "2025-26" }
+      - { url: "https://wellesley-college.files.svdcdn.com/production/administrative-departments/OIR/CDS_2024-2025-FINAL-1.pdf?dm=1762194243", year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: custom
+      notes: >-
+        Wellesley's public data page lists current and historical CDS files.
+        The current source is hosted on wellesley-college.files.svdcdn.com
+        with cache-busting query parameters, so preserve the full URL.
+
+  - school_id: middlebury-college
+    browse_url: https://www.middlebury.edu/assessment-institutional-research/institutional-data/historical-data
+    direct_archive_urls:
+      - { url: "https://www.middlebury.edu/sites/default/files/2026-04/Fall%202025%20CDS%20FINAL.pdf?fv=WuqVl12_", year: "2024-25" }
+      - { url: "https://www.middlebury.edu/sites/default/files/2025-04/Middlebury%20CDS%202024_2025.pdf?fv=_3Gr6e2c", year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      notes: >-
+        Middlebury's Historical Data page labels the 2026-04 Fall 2025 PDF as
+        2025-2026, but the file text says Common Data Set 2024-2025 and the
+        extractor correctly projects it as 2024-25. Treat this as current-year
+        not recovered until Middlebury posts a file whose content identifies
+        as 2025-26.
+
+  - school_id: haverford-college
+    browse_url: https://www.haverford.edu/president/institutional-research/common-data-set
+    direct_archive_urls:
+      - { url: https://www.haverford.edu/sites/default/files/Office/President/CDS-2025-26.pdf, year: "2025-26" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      waf: cloudflare
+      notes: >-
+        Haverford's public CDS page can return 403 to local fetches, but
+        search surfaced the official 2025-26 PDF. The PDF title still says
+        Common Data Set 2024-2025 while sections reference Fall 2025; keep
+        the explicit archive year hint.
+
+  - school_id: pomona-college
+    browse_url: https://www.pomona.edu/administration/institutional-research/information-center/common-data-set
+    hosting_override:
+      file_storage: mixed
+      cms: drupal
+      rendering: js_required
+      notes: >-
+        Pomona's official page lists 2025-2026 and 2024-2025 CDS as Tableau
+        views, not direct PDFs. Do not feed the bare Tableau shell URLs to
+        force_urls. Operator-exported PDFs from the Tableau Download UI are
+        valid manual-upload sources; Tier 4 0.3.9 recovers C1/C9 from this
+        Tableau PDF layout. Older years remain Box-hosted PDFs.
+
+  - school_id: harvard
+    browse_url: https://oira.harvard.edu/common-data-set/
+    hosting_override:
+      file_storage: same_origin
+      cms: wordpress
+      notes: >-
+        Harvard's OIRA page still listed 2024-2025 as the latest CDS on
+        2026-05-06. No official 2025-26 source was found during the current
+        live-check pass.
+
+  - school_id: duke
+    browse_url: https://provost.duke.edu/administrative-resources/institutional-research/
+    hosting_override:
+      file_storage: same_origin
+      cms: wordpress
+      notes: >-
+        Duke's Institutional Research page lists CDS files through 2024-2025
+        only as of 2026-05-06. The 2024-25 source is an XLSX; no official
+        2025-26 source was found.
+
+  - school_id: northwestern
+    browse_url: https://enrollment.northwestern.edu/data/common-data-set.html
+    hosting_override:
+      file_storage: same_origin
+      cms: static
+      notes: >-
+        Northwestern's Common Data Set page listed 2024-2025 as current on
+        2026-05-06. Tested likely 2025-2026 PDF patterns under
+        enrollment.northwestern.edu/data; no current source found.
+
+  - school_id: amherst
+    browse_url: https://www.amherst.edu/offices/institutional-research/common-data-sets
+    hosting_override:
+      file_storage: google_drive
+      cms: custom
+      waf: unknown
+      notes: >-
+        Amherst's CDS page returned 405 to local fetches during the
+        2026-05-06 live check, and search did not surface an official
+        2025-26 CDS. Existing 2024-25 source is archived from Google Drive.
+
+  - school_id: california-institute-of-technology
+    browse_url: https://finance.caltech.edu/Resources/cds
+    hosting_override:
+      file_storage: same_origin
+      cms: custom
+      notes: >-
+        Caltech's Financial Services CDS page listed FY2024-25 as current on
+        2026-05-06. No official 2025-26 CDS source was found.
+
+  - school_id: rice
+    browse_url: https://ideas.rice.edu/common-data-set
+    hosting_override:
+      file_storage: same_origin
+      cms: wordpress
+      waf: cloudflare
+      notes: >-
+        Rice's IDEAS Common Data Set page listed 2024-25 as current on
+        2026-05-06. No official 2025-26 source was found.
+
+  - school_id: washington-university-in-st-louis
+    browse_url: https://washu.edu/about/compliance-policies/registrar/student-consumer-information/
+    hosting_override:
+      file_storage: same_origin
+      cms: wordpress
+      notes: >-
+        WashU's Student Consumer Information page listed Current Year:
+        2024-25 CDS on 2026-05-06. No official 2025-26 source was found.
+
+  - school_id: emory
+    browse_url: https://provost.emory.edu/planning-administration/data/common-data-set.html
+    hosting_override:
+      file_storage: same_origin
+      cms: custom
+      notes: >-
+        Emory's institutional reporting page listed 2024-2025 as current on
+        2026-05-06. No official 2025-26 source was found.
+
+  - school_id: grinnell-college
+    browse_url: https://www.grinnell.edu/about/leadership/offices-services/institutional-research/common-data-set
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      notes: >-
+        Grinnell's public CDS page listed 2024-25 as current on 2026-05-06.
+        The page notes recent CDS requests may require contacting AIR staff;
+        no public 2025-26 source was found.
+
+  - school_id: barnard
+    browse_url: https://barnard.edu/institutional-effectiveness/common-data-set
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      notes: >-
+        Barnard's Institutional Effectiveness page listed 2024-25 as current
+        on 2026-05-06. A guessed 2025-26 inline-file PDF returned 404; no
+        official current source was found.
+
+  # PRD 019 public flagship current-year checks, 2026-05-06.
+  - school_id: ucla
+    browse_url: https://apb.ucla.edu/campus-statistics/common-data-set-undergraduate-profile
+    direct_archive_urls:
+      - { url: https://apb.ucla.edu/file/d1ab04b3-ee89-4cf2-9124-8dc0471b5e5a, year: "2025-26" }
+      - { url: https://apb.ucla.edu/file/cedc749a-fd65-4935-b9ee-8a551f6de2fc, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: custom
+      notes: >-
+        UCLA publishes current CDS PDFs behind extensionless /file/<uuid>
+        URLs. Accept by response content type and source bytes, not URL
+        suffix; 2025-26 and 2024-25 were force-archived from these official
+        APB links during the PRD 019 group 4 pass.
+
+  - school_id: uva
+    browse_url: https://ira.virginia.edu/data-analytics/common-data-set-initiatve
+    direct_archive_urls:
+      - { url: https://ira.virginia.edu/sites/g/files/jsddwu1106/files/2025-03/CDS_2024-2025_508.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      notes: >-
+        UVA's official page path is misspelled "initiatve". As of
+        2026-05-06 it explicitly says 2025-26 CDS Report coming soon and
+        lists 2024-25 as the newest PDF.
+
+  - school_id: unc
+    browse_url: https://oira.unc.edu/reports/reports-archives/common-data-set/
+    direct_archive_urls:
+      - { url: https://oira.unc.edu/wp-content/uploads/sites/297/2025/08/CDS_UNCCH_2024-25_20250829.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: wordpress
+      notes: >-
+        UNC-Chapel Hill's OIRA archive listed 2024-25 as the newest public
+        CDS on 2026-05-06. No official 2025-26 source was found.
+
+  - school_id: uf
+    browse_url: https://ir.aa.ufl.edu/reports/cds-reports/
+    direct_archive_urls:
+      - { url: https://data-apps.ir.aa.ufl.edu/public/cds/CDS_2024-2025_UFMAIN_Post_v4_ADA5.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: custom
+      notes: >-
+        UF's CDS Reports page listed 2024-25 and 2023-24 only on
+        2026-05-06. No official 2025-26 source was found.
+
+  - school_id: penn-state
+    browse_url: https://opair.psu.edu/project/common-data-set/
+    hosting_override:
+      file_storage: sharepoint
+      cms: wordpress
+      auth_required: none
+      notes: >-
+        Penn State's OPAIR page links to a SharePoint folder labeled Access
+        Files Here. The current canonical archive rows are Penn State York
+        campus PDFs, not University Park/main-campus CDS files; reject York
+        sources for the penn-state slug and handle the SharePoint folder as
+        source-mapping follow-up.
+
+  - school_id: ut-austin
+    browse_url: https://reports.utexas.edu/common-data-set/pdf
+    direct_archive_urls:
+      - { url: https://utexas.app.box.com/s/d9izqb6s8dw2xxg5h5sunxyhrnef2ay6, year: "2024-25" }
+    hosting_override:
+      file_storage: box
+      cms: drupal
+      notes: >-
+        UT Austin's PDF Common Data Set Reports page listed historical Box
+        links through 2024-25 on 2026-05-06; no 2025-26 source was listed.
+
+  - school_id: university-of-minnesota-twin-cities
+    browse_url: https://idr.umn.edu/institutional-metrics-compliance-reporting/common-data-set
+    direct_archive_urls:
+      - { url: https://idr.umn.edu/sites/idr.umn.edu/files/cds_2024_2025_tc_2.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      notes: >-
+        UMN's page separates Rochester and Twin Cities files. For this slug,
+        use only Twin Cities Campus CDS links; the newest Twin Cities link
+        visible on 2026-05-06 was 2024-2025.
+
+  - school_id: university-of-arizona
+    browse_url: https://uair.arizona.edu/content/common-data-set
+    direct_archive_urls:
+      - { url: https://uair.arizona.edu/sites/default/files/2025-03/CDS-2024-2025-FINAL.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      notes: >-
+        Arizona's UAIR page listed 2024-2025 as the newest report on
+        2026-05-06. No official 2025-26 source was found.
+
+  - school_id: university-of-oregon
+    browse_url: https://ir.uoregon.edu/uo-overview/common-data-set
+    direct_archive_urls:
+      - { url: "https://uoregon.sharepoint.com/:b:/s/UOInstitutionalResearchPublicMaterials/IQCLb9PtNAxlQJCsPE6Rb8vcAVNYDIH7gnTYVb6ekL74NGU?e=QOIWky", year: "2025-26" }
+      - { url: "https://uoregon.sharepoint.com/:b:/s/UOInstitutionalResearchPublicMaterials/EW5k4dUJKOROg-jLajeQUE4B9IdCoV7T8DoI8Fys7Eghkw?e=9y4y4S", year: "2024-25" }
+    hosting_override:
+      file_storage: sharepoint
+      cms: drupal
+      auth_required: none
+      notes: >-
+        Oregon publishes current CDS files as public SharePoint file links.
+        archive-process cannot reliably fetch the viewer URL directly; use
+        the WAF/headless downloader to capture the SharePoint download.aspx
+        bytes before extraction.
+
+  - school_id: colorado
+    browse_url: https://data.colorado.edu/reports/common-data-set
+    hosting_override:
+      file_storage: sharepoint
+      cms: drupal
+      waf: cloudflare
+      notes: >-
+        CU Boulder's Data & Analytics Common Data Set report points to a
+        SharePoint folder and labels the covered academic term as 2025.
+        The page is public, but the folder needs manual or headless source
+        discovery to identify the specific CDS file before archive.
+
+  - school_id: the-university-of-alabama
+    browse_url: https://oira.ua.edu/reports/commonDataSet/
+    direct_archive_urls:
+      - { url: https://oira.ua.edu/d/sites/all/files/reports26/CDS%202025-26%20FINAL%209Dec2025.pdf, year: "2025-26" }
+      - { url: https://oira.ua.edu/d/sites/all/files/reports25/UA%20CDS%202024-25%20FINAL%2022aJan2025.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      notes: >-
+        Alabama publishes direct annual CDS PDFs under reportsYY folders.
+        The 2025-26 and 2024-25 files were force-archived and redrained in
+        the PRD 019 group 4 pass.
+
+  - school_id: university-of-connecticut
+    browse_url: https://bpir.uconn.edu/home/institutional-research/data-resources/common-data-set/
+    direct_archive_urls:
+      - { url: https://bpir.media.uconn.edu/wp-content/uploads/sites/3452/2025/07/UConn_CDS_2024_2025.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: wordpress
+      notes: >-
+        UConn BPIR listed 2024-25 as the newest public CDS on 2026-05-06.
+        No official 2025-26 source was found.
+
+  - school_id: university-of-south-carolina-columbia
+    browse_url: https://sc.edu/about/offices_and_divisions/institutional_research_assessment_and_analytics/institutional_effectiveness/common_data_set/
+    direct_archive_urls:
+      - { url: http://oiraa.dw.sc.edu/cds/cds2024/cds_2024-2025.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: custom
+      notes: >-
+        South Carolina's Institutional Research page listed 2024-25 as the
+        newest CDS on 2026-05-06. No official 2025-26 source was found.
+
+  - school_id: university-of-massachusetts-amherst
+    browse_url: https://www.umass.edu/uair/data/common-data-set
+    direct_archive_urls:
+      - { url: https://www.umass.edu/uair/media/1062/download, year: "2025-26" }
+      - { url: https://www.umass.edu/uair/media/1059/download, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      notes: >-
+        UMass Amherst publishes recent CDS files via extensionless media
+        download URLs. Accept by source bytes; 2025-26 and 2024-25 were
+        force-archived and redrained during the PRD 019 group 4 pass.
+
+  - school_id: uw
+    browse_url: https://www.washington.edu/opb/uw-data/external-reporting/common-data-set/
+    direct_archive_urls:
+      - { url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2026/02/27111247/CDS_2025-2026_Seattle.pdf, year: "2025-26" }
+      - { url: https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/162/2025/04/01121035/CDS_2024-2025_Seattle.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: wordpress
+      notes: >-
+        The canonical uw slug maps to University of Washington Seattle.
+        Reject Tacoma and Bothell CDS files for this slug; 2025-26 and
+        2024-25 Seattle PDFs were refreshed from the official OPB page in
+        the PRD 019 group 5 source-mapping pass.

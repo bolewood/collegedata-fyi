@@ -47,6 +47,12 @@ schools:
     urls:
     - url: https://oira.jhu.edu/wp-content/uploads/2025-2026-CDS-Johns-Hopkins-University.pdf
       year: 2025-26
+  johns-hopkins:
+    school_name: Johns Hopkins University
+    landing_url: https://oira.jhu.edu/common-data-set/
+    urls:
+    - url: https://oira.jhu.edu/wp-content/uploads/2025-2026-CDS-Johns-Hopkins-University.pdf
+      year: 2025-26
   new-york-university:
     school_name: New York University
     landing_url: https://www.nyu.edu/employees/resources-and-services/administrative-services/institutional-research/self-service-reporting-resources/factbook.html
@@ -87,6 +93,14 @@ schools:
       year: 2023-24
     - url: https://www.williams.edu/institutional-research/files/2023/06/CDS_2022_2023_Williams_June2023.pdf
       year: 2022-23
+  williams-college:
+    school_name: Williams College
+    landing_url: https://www.williams.edu/institutional-research/common-data-set/
+    urls:
+    - url: https://www.williams.edu/institutional-research/files/2026/04/Williams-CDS-2025-2026-V2.pdf
+      year: 2025-26
+    - url: https://www.williams.edu/institutional-research/files/2025/06/CDS_2024_2025_Williams_V5.pdf
+      year: 2024-25
   fordham-university:
     school_name: Fordham University
     landing_url: https://www.fordham.edu/about/leadership-and-administration/administrative-offices/office-of-the-provost/provost-office-units/institutional-research-and-assessment/consumer-information/common-data-set/

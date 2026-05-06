@@ -88,7 +88,7 @@ STARTING_URLS: dict[str, str] = {
     "stevens-institute-of-technology": "https://www.stevens.edu/institutional-research-and-analytics/common-data-set",
     "marquette-university": "https://www.marquette.edu/institutional-research-analysis/common-data-set.php",
     "boston-college": "https://www.bc.edu/bc-web/offices/institutional-research-planning.html",
-    "boston-university": "https://www.bu.edu/asir/bu-institutional-datasets/common-data-set/",
+    "boston-university": "https://www.bu.edu/asir/bu-facts/common-data-set/",
     "william-and-mary": "https://www.wm.edu/offices/ir/university_data/cds/",
     "pomona-college": "https://www.pomona.edu/administration/institutional-research/common-data-sets",
     "wellesley-college": "https://www.wellesley.edu/institutionalplanningandassessment/institutional-research/common-data-set",

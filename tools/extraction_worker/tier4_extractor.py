@@ -21,15 +21,37 @@ it increased full-cleaner field recovery without introducing conflicts.
 from __future__ import annotations
 
 import json
+import re
+import shutil
+import subprocess
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
 
 PRODUCER_NAME = "tier4_docling"
-PRODUCER_VERSION = "0.3.4"
+PRODUCER_VERSION = "0.3.10"
 DOCLING_CONFIG_NAME = "production-fast-no-orphan-clusters"
 DOCLING_NATIVE_TABLES_VERSION = "docling_table_cells_compact_v1"
+SCANNED_ADMISSIONS_OCR_MAX_PAGE = 35
+
+
+def _matches_visual_ocr_trigger(text: str) -> bool:
+    normalized = re.sub(r"\s+", " ", text.lower())
+    triggers = (
+        "c1. first-time",
+        "first-time, first-year student applicants",
+        "residency breakdowns for total applicants",
+        "total first-time, first-year (degree-seeking) who applied",
+        "c2. first time",
+        "c2. first-time",
+        "waiting listtotal",
+        "c9. percent",
+        "percent and number of first-time",
+        "submitting sat scores",
+        "percent of first-time, first-year students with scores in each range",
+    )
+    return any(trigger in normalized for trigger in triggers)
 
 
 def _extract_pdf_layout_text(pdf_path: Path) -> str:
@@ -47,6 +69,102 @@ def _extract_pdf_layout_text(pdf_path: Path) -> str:
         return "\n\n".join(chunks)
     except Exception:
         return ""
+
+
+def _visual_ocr_candidate_pages(pdf_path: Path) -> list[int]:
+    """Return 1-indexed pages where visual OCR can recover high-value fields.
+
+    Some PDFs have a normal text layer for labels but render filled-in values
+    as drawing commands. Docling and pypdf then see blank cells even though the
+    source PDF visibly contains the numbers. Keep this supplement focused on
+    admissions pages so low-field documents do not trigger a full-corpus OCR tax.
+    """
+    try:
+        import pypdf
+
+        reader = pypdf.PdfReader(str(pdf_path))
+        pages: set[int] = set()
+        for idx, page in enumerate(reader.pages, start=1):
+            try:
+                text = page.extract_text() or ""
+            except Exception:
+                text = ""
+            if _matches_visual_ocr_trigger(text):
+                pages.add(idx)
+        return sorted(pages)
+    except Exception:
+        return []
+
+
+def _extract_visual_ocr_text(
+    pdf_path: Path,
+    *,
+    fallback_page_count: int | None = None,
+) -> tuple[str, list[int]]:
+    """Best-effort Tesseract supplement for visually rendered table values."""
+    if not shutil.which("pdftoppm") or not shutil.which("tesseract"):
+        return "", []
+
+    pages = _visual_ocr_candidate_pages(pdf_path)
+    if not pages and fallback_page_count:
+        pages = list(range(1, min(fallback_page_count, SCANNED_ADMISSIONS_OCR_MAX_PAGE) + 1))
+    if not pages:
+        return "", []
+
+    chunks: list[str] = []
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp = Path(tmp_dir)
+        for page_no in pages:
+            prefix = tmp / f"page_{page_no}"
+            try:
+                subprocess.run(
+                    [
+                        "pdftoppm",
+                        "-f",
+                        str(page_no),
+                        "-l",
+                        str(page_no),
+                        "-png",
+                        "-r",
+                        "160",
+                        str(pdf_path),
+                        str(prefix),
+                    ],
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=30,
+                )
+                images = sorted(tmp.glob(f"page_{page_no}-*.png"))
+                if not images:
+                    continue
+                ocr = subprocess.run(
+                    ["tesseract", str(images[0]), "stdout", "--psm", "4"],
+                    check=True,
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                    timeout=30,
+                ).stdout
+            except Exception:
+                continue
+            if ocr.strip():
+                chunks.append(f"\n\n--- OCR PAGE {page_no} ---\n{ocr}")
+    return "\n".join(chunks), pages
+
+
+def _needs_visual_ocr_supplement(markdown: str, values: dict[str, dict]) -> bool:
+    if len(values) >= 100:
+        return False
+    c1_missing = (
+        "first-time, first-year student" in markdown.lower()
+        and not any(qn in values for qn in ("C.101", "C.117", "C.118", "C.119"))
+    )
+    c9_missing = (
+        "submitting sat scores" in markdown.lower()
+        and not any(qn in values for qn in ("C.901", "C.903", "C.905", "C.914"))
+    )
+    return c1_missing or c9_missing
 
 
 def extract(
@@ -97,7 +215,26 @@ def extract(
     from tier4_cleaner import clean
     from tier4_native_tables import compact_tables
     pdf_layout_text = _extract_pdf_layout_text(pdf_path)
-    values = clean(markdown, schema=schema, supplemental_text=pdf_layout_text)
+    supplemental_text = pdf_layout_text
+    values = clean(markdown, schema=schema, supplemental_text=supplemental_text)
+    visual_ocr_text = ""
+    visual_ocr_pages: list[int] = []
+    if _needs_visual_ocr_supplement(markdown, values):
+        # Scanned PDFs have no embedded text layer for pypdf to select pages
+        # from. If Docling's full-page OCR still left admissions values blank,
+        # use a bounded Tesseract pass over the front CDS sections instead of
+        # silently skipping the visual supplement.
+        fallback_page_count = page_count if force_ocr else None
+        visual_ocr_text, visual_ocr_pages = _extract_visual_ocr_text(
+            pdf_path,
+            fallback_page_count=fallback_page_count,
+        )
+        if visual_ocr_text:
+            # Put OCR first. Section slicers such as C9 stop at the first
+            # C10 boundary they see; if embedded layout text comes first and
+            # has blank cells, the later OCR repair block would be hidden.
+            supplemental_text = f"{visual_ocr_text}\n\n{pdf_layout_text}"
+            values = clean(markdown, schema=schema, supplemental_text=supplemental_text)
     native_tables = compact_tables(doc)
 
     artifact = {
@@ -124,6 +261,8 @@ def extract(
             "native_table_count": native_tables["table_count"],
             "native_table_cell_count": native_tables["cell_count"],
             "pdf_layout_text_length": len(pdf_layout_text),
+            "visual_ocr_text_length": len(visual_ocr_text),
+            "visual_ocr_pages": visual_ocr_pages,
         },
         "markdown": markdown,
         "native_tables": native_tables,

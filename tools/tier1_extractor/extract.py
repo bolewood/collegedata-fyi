@@ -48,7 +48,7 @@ from openpyxl.utils import get_column_letter
 
 
 PRODUCER_NAME = "tier1_xlsx"
-PRODUCER_VERSION = "0.2.1"
+PRODUCER_VERSION = "0.2.2"
 MIN_TEMPLATE_FIELDS_BEFORE_FALLBACK = 25
 
 # Default template path relative to the repo root.
@@ -174,6 +174,11 @@ def extract(xlsx_path: Path, schema: dict, cell_map: dict[str, tuple[str, str]])
         qnum_to_field,
         values,
     )
+    application_fields_recovered = recover_c1_application_values(
+        wb,
+        qnum_to_field,
+        values,
+    )
 
     wb.close()
 
@@ -190,6 +195,7 @@ def extract(xlsx_path: Path, schema: dict, cell_map: dict[str, tuple[str, str]])
             "missing_sheets": sorted(missing_sheets),
             "extraction_layout": extraction_layout,
             "academic_profile_fields_recovered": academic_profile_recovered,
+            "application_fields_recovered": application_fields_recovered,
         },
         "values": values,
     }
@@ -355,6 +361,145 @@ def recover_c9_academic_profile_values(
     return count
 
 
+def recover_c1_application_values(
+    wb,
+    qnum_to_field: dict[str, dict],
+    values: dict,
+) -> int:
+    """Recover shifted C1 admissions rows from visible workbook labels.
+
+    Several schools publish the standard 2024-25 workbook with C1 answers in
+    the visible table's Total / residency columns instead of the template's
+    mapped answer cells. The row labels and section-C column order are stable
+    enough to recover the C1 values deterministically.
+    """
+    available_sheets = set(wb.sheetnames)
+    sheet_name = "CDS-C" if "CDS-C" in available_sheets else build_sheet_aliases(available_sheets).get("CDS-C")
+    if not sheet_name:
+        return 0
+    ws = wb[sheet_name]
+    recovered: dict[str, object] = {}
+
+    def lookup(gender: str, residency: str, action: str, unit_load: str = "All") -> str | None:
+        target_gender_aliases = {
+            "Males": {"men", "male", "males"},
+            "Females": {"women", "female", "females"},
+            "Another Gender": {"another gender"},
+            "Unknown": {"unknown", "students of unknown sex", "unknown gender"},
+            "All": {"all"},
+        }[gender]
+        for qnum, field in qnum_to_field.items():
+            if not str(qnum).startswith("C.1"):
+                continue
+            field_gender = _norm_label(field.get("gender"))
+            if field_gender not in target_gender_aliases:
+                continue
+            if str(field.get("residency") or "All") != residency:
+                continue
+            question = _norm_label(field.get("question"))
+            if action == "admitted":
+                if "admitted" not in question:
+                    continue
+            elif action == "applied":
+                if "applied" not in question:
+                    continue
+            elif action == "enrolled":
+                if "enrolled" not in question:
+                    continue
+                if unit_load == "FT" and "full time" not in question and field.get("unit_load") != "FT":
+                    continue
+                if unit_load == "PT" and "part time" not in question and field.get("unit_load") != "PT":
+                    continue
+                if unit_load == "All" and ("full time" in question or "part time" in question):
+                    continue
+            return qnum
+        return None
+
+    def first_number_after_label(row_values: list, label_col: int) -> object | None:
+        for value in row_values[label_col:]:
+            if _is_number_like(value):
+                return value
+        return None
+
+    for row in ws.iter_rows(max_col=12):
+        row_values = [cell.value for cell in row]
+        label_col = None
+        label = ""
+        for idx, value in enumerate(row_values):
+            normalized = _norm_label(value)
+            if "first time first year" in normalized and (
+                "applied" in normalized
+                or "admitted" in normalized
+                or "enrolled" in normalized
+            ):
+                label_col = idx
+                label = normalized
+                break
+        if label_col is None:
+            continue
+
+        action = None
+        if "admitted" in label:
+            action = "admitted"
+        elif "applied" in label:
+            action = "applied"
+        elif "enrolled" in label:
+            action = "enrolled"
+        if not action:
+            continue
+
+        gender = None
+        if " men " in f" {label} ":
+            gender = "Males"
+        elif " women " in f" {label} ":
+            gender = "Females"
+        elif "another gender" in label:
+            gender = "Another Gender"
+        elif "unknown gender" in label or "unknown sex" in label:
+            gender = "Unknown"
+
+        unit_load = "All"
+        if action == "enrolled":
+            if "full time" in label:
+                unit_load = "FT"
+            elif "part time" in label:
+                unit_load = "PT"
+
+        if gender:
+            value = first_number_after_label(row_values, label_col + 1)
+            qnum = lookup(gender, "All", action, unit_load)
+            if qnum and value is not None:
+                recovered[qnum] = value
+            continue
+
+        if " who " not in label:
+            continue
+
+        numeric_values = [value for value in row_values[label_col + 1:] if _is_number_like(value)]
+        if not numeric_values:
+            continue
+        for residency, value in zip(
+            ("All", "In-State", "Out-of-State", "Nonresidents", "Unknown"),
+            numeric_values,
+        ):
+            qnum = lookup("All", residency, action)
+            if qnum:
+                recovered[qnum] = value
+
+    count = 0
+    for qnum, raw_value in recovered.items():
+        if qnum not in qnum_to_field:
+            continue
+        value = str(raw_value).strip()
+        if not value:
+            continue
+        if values.get(qnum, {}).get("value") == value:
+            continue
+        values[qnum] = _field_record(qnum, value, qnum_to_field)
+        count += 1
+    return count
+
+
 def _row_value(row_values: list, zero_based_index: int):
     if zero_based_index < 0 or zero_based_index >= len(row_values):
         return None
@@ -397,6 +542,14 @@ def _is_c9_value(value) -> bool:
     if isinstance(value, bool):
         return False
     return bool(str(value).strip())
+
+
+def _is_number_like(value) -> bool:
+    if value is None or isinstance(value, bool):
+        return False
+    if isinstance(value, (int, float)):
+        return True
+    return bool(re.fullmatch(r"\s*\d[\d,]*(?:\.\d+)?\s*", str(value)))
 
 
 def build_embedded_answer_cell_map(wb) -> dict[str, tuple[str, str]]:

@@ -723,6 +723,68 @@ class BrowserProjectionTests(unittest.TestCase):
         self.assertIn("C.101", selected.values)
         self.assertNotIn("C.116", selected.values)
 
+    def test_selected_result_skips_unusable_label_acroform_tier2(self):
+        selected = select_extraction_result(
+            "00000000-0000-0000-0000-000000000001",
+            [
+                artifact(
+                    producer="tier2_acroform",
+                    values={},
+                    schema_version="2024-25",
+                    notes_extra={
+                        "stats": {
+                            "acroform_fields_total": 581,
+                            "schema_fields_populated": 0,
+                            "unmapped_acroform_fields": 581,
+                        },
+                    },
+                ),
+                artifact(
+                    producer="tier4_docling",
+                    values={"C.101": {"value": "5746"}},
+                    schema_version="2024-25",
+                    created_at="2026-01-02T00:00:00Z",
+                ),
+            ],
+            expected_schema_version="2024-25",
+        )
+
+        self.assertIsNotNone(selected)
+        assert selected is not None
+        self.assertEqual(selected.base_producer, "tier4_docling")
+        self.assertEqual(selected.values["C.101"]["value"], "5746")
+
+    def test_selected_result_keeps_usable_tier2_over_tier4(self):
+        selected = select_extraction_result(
+            "00000000-0000-0000-0000-000000000001",
+            [
+                artifact(
+                    producer="tier2_acroform",
+                    values={"C.101": {"value": "576"}},
+                    schema_version="2024-25",
+                    notes_extra={
+                        "stats": {
+                            "acroform_fields_total": 732,
+                            "schema_fields_populated": 576,
+                            "unmapped_acroform_fields": 156,
+                        },
+                    },
+                ),
+                artifact(
+                    producer="tier4_docling",
+                    values={"C.101": {"value": "999"}},
+                    schema_version="2024-25",
+                    created_at="2026-01-02T00:00:00Z",
+                ),
+            ],
+            expected_schema_version="2024-25",
+        )
+
+        self.assertIsNotNone(selected)
+        assert selected is not None
+        self.assertEqual(selected.base_producer, "tier2_acroform")
+        self.assertEqual(selected.values["C.101"]["value"], "576")
+
     def test_tier4_fallback_overlay_ignores_stale_base(self):
         selected = select_extraction_result(
             "00000000-0000-0000-0000-000000000001",

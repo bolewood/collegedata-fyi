@@ -40,9 +40,39 @@ const DOCUMENT_EXT_RE = /\.(pdf|xlsx|docx)(\?|#|$)/i;
 // The earlier broader regex produced false positives when legit full-CDS
 // anchors had link text like "Enrollment and First-Time Information" in
 // the school's IR page hierarchy. Filenames are the only reliable signal.
-// "section [a-j]" suffix or explicit "section-d" prefix is the canonical
-// marker across the corpus.
-const SECTION_MARKER_RE = /\bsection[-_ ]?[a-j]\b/i;
+// Cover both explicit `section_C` filenames and section-only publisher
+// layouts such as KU's `/CDS/2025-2026/C.pdf` and Oxy's
+// `CDS_C_2526_0.pdf`.
+const EXPLICIT_SECTION_MARKER_RE = /(?:^|[-_ .])section[-_ ]?([a-j])(?:[-_ .]|$)/i;
+const CDS_SECTION_FILENAME_RE = /\bcds[-_ ]?([a-j])(?:[-_ .]|\d|$)/i;
+const SINGLE_SECTION_FILENAME_RE = /^([a-j])\d*\.pdf$/i;
+
+// Reference/supporting artifacts from school CDS pages. These often carry
+// "CDS" and a year in the URL but are not institutional responses.
+const REFERENCE_ARTIFACT_RE =
+  /(?:^|[-_ .])(?:appendix|definition|definitions|instructions|template|blank|glossary|summary[-_ ]?of[-_ ]?changes)(?:[-_ .]|$)/i;
+
+function sectionLetterFromFilename(filename: string): string | null {
+  const explicit = filename.match(EXPLICIT_SECTION_MARKER_RE);
+  if (explicit) return explicit[1].toUpperCase();
+
+  const cdsSection = filename.match(CDS_SECTION_FILENAME_RE);
+  if (cdsSection) return cdsSection[1].toUpperCase();
+
+  const single = filename.match(SINGLE_SECTION_FILENAME_RE);
+  if (single) return single[1].toUpperCase();
+
+  return null;
+}
+
+function isSectionFile(filename: string): boolean {
+  return sectionLetterFromFilename(filename) !== null ||
+    /(?:^|[-_ .])section[-_ ]?(?:appendix|definitions?)(?:[-_ .]|$)/i.test(filename);
+}
+
+function isReferenceArtifact(filename: string): boolean {
+  return REFERENCE_ARTIFACT_RE.test(filename);
+}
 
 // Staging artifacts schools leave behind on their CMS. CSULB's
 // cds_url_hint landing page exposes `cds_2015-2016_test.pdf` twice
@@ -471,7 +501,7 @@ export function extractCdsAnchors(html: string, baseUrl: string): CdsAnchor[] {
       // Section marker checked only against filename. Link text like
       // "Enrollment and General Information" on a CDS overview page would
       // otherwise flag a full CDS as a section file and demote it.
-      is_section_file: SECTION_MARKER_RE.test(filename),
+      is_section_file: isSectionFile(filename),
       is_test_artifact: TEST_ARTIFACT_RE.test(filename),
     });
   }
@@ -589,10 +619,11 @@ export function findDownloadLinks(html: string, baseUrl: string): CdsAnchor[] {
 // Stage B).
 //
 //   1. Full CDS beats section files
-//   2. Non-test files beat test/draft/backup staging artifacts
-//   3. Anchors with a year beat anchors without
-//   4. More recent year beats older
-//   5. Within ties, document order wins (earlier in HTML = more prominent)
+//   2. Non-reference files beat definitions/appendices/templates
+//   3. Non-test files beat test/draft/backup staging artifacts
+//   4. Anchors with a year beat anchors without
+//   5. More recent year beats older
+//   6. Within ties, document order wins (earlier in HTML = more prominent)
 export function findBestSourceAnchor(
   anchors: CdsAnchor[],
 ): CdsAnchor | null {
@@ -603,6 +634,9 @@ export function findBestSourceAnchor(
     if (a.is_section_file !== b.is_section_file) {
       return a.is_section_file ? 1 : -1;
     }
+    const aReference = isReferenceArtifact(a.filename);
+    const bReference = isReferenceArtifact(b.filename);
+    if (aReference !== bReference) return aReference ? 1 : -1;
     if (a.is_test_artifact !== b.is_test_artifact) {
       return a.is_test_artifact ? 1 : -1;
     }
@@ -628,28 +662,14 @@ export function findBestSourceAnchor(
 //
 //   1. Deduplicate by URL. extractCdsAnchors already does intra-HTML
 //      dedup; this also catches duplicates across subpage walk results.
-//   2. Partition into clean vs demoted (section files + test
-//      artifacts). If the clean set is non-empty, use it; otherwise
-//      fall back to the demoted set so schools whose only archivable
-//      file is a `_test` upload (CSULB) still ship.
-//   3. Within the chosen set:
-//      - **All have URL years** → return every candidate as its own
-//        ResolvedDocument. This is the Lafayette / NMU multi-year
-//        historical archive case.
-//      - **Exactly one candidate, no URL year** → return it with
-//        cds_year = UNKNOWN_YEAR_SENTINEL. This is the direct-doc
-//        no-year-in-filename case. Single row per school, no
-//        collision.
-//      - **Mixed: some have years, some don't** → keep only the
-//        year-known candidates. Year-less ones are dropped. They
-//        would otherwise collide in the unique key with each other
-//        or with each others' sentinels.
-//      - **Multiple candidates, none have years** → return null.
-//        Caller emits no_cds_found with a "Stage B limitation"
-//        reason. Out of scope for this PR; tracked as a follow-up
-//        because the real fix needs either a per-candidate
-//        disambiguator in cds_year (ugly) or the unique constraint
-//        to drop cds_year entirely (riskier).
+//   2. Drop reference artifacts (definitions, appendices, templates).
+//   3. For each year, choose one candidate:
+//      - full clean CDS
+//      - full test/draft artifact if that is the only full response
+//      - Section C when the school publishes the current year by section
+//   4. Year-less candidates keep the older collision-avoidance behavior:
+//      one year-less candidate is allowed only when no year-known
+//      candidate exists; multiple year-less candidates return null.
 //
 // Return value of null means "fail this school with no_cds_found."
 // Empty array means "no document-kind anchors at all" — caller's
@@ -668,29 +688,40 @@ export function pickCandidates(
     const key = d.url.split("#")[0];
     if (!byUrl.has(key)) byUrl.set(key, d);
   }
-  const unique = Array.from(byUrl.values());
+  const unique = Array.from(byUrl.values())
+    .filter((d) => !isReferenceArtifact(d.filename));
 
-  const clean = unique.filter(
-    (d) => !d.is_section_file && !d.is_test_artifact,
-  );
-  const set = clean.length > 0 ? clean : unique;
+  const withYear = unique.filter((a) => a.year !== null);
+  const withoutYear = unique.filter((a) => a.year === null);
 
-  const withYear = set.filter((a) => a.year !== null);
-  const withoutYear = set.filter((a) => a.year === null);
+  let chosen: CdsAnchor[] = [];
+  if (withYear.length > 0) {
+    const byYear = new Map<string, CdsAnchor[]>();
+    for (const d of withYear) {
+      const year = d.year!;
+      byYear.set(year, [...(byYear.get(year) ?? []), d]);
+    }
 
-  let chosen: CdsAnchor[];
-  if (withoutYear.length === 0) {
-    chosen = withYear;
-  } else if (set.length === 1) {
+    for (const [, group] of byYear) {
+      const fullClean = group.filter((d) => !d.is_section_file && !d.is_test_artifact);
+      const fullTest = group.filter((d) => !d.is_section_file && d.is_test_artifact);
+      const sectionC = group.filter((d) => sectionLetterFromFilename(d.filename) === "C");
+      const pool = fullClean.length > 0
+        ? fullClean
+        : fullTest.length > 0
+        ? fullTest
+        : sectionC;
+      if (pool.length > 0) chosen.push(pool[0]);
+    }
+  } else if (unique.length === 1) {
     // Single year-less candidate — sentinel is safe, no collision.
-    chosen = set;
-  } else if (withYear.length > 0) {
-    // Mixed set. Drop year-less to avoid collisions; keep year-known.
-    chosen = withYear;
-  } else {
+    chosen = unique;
+  } else if (withoutYear.length > 1) {
     // Multiple year-less candidates. Out of Stage B scope.
     return null;
   }
+
+  if (chosen.length === 0) return [];
 
   return chosen.map((d) => ({
     url: d.url,
@@ -911,7 +942,7 @@ export async function resolveCdsForSchool(
       url: hint,
       cds_year: year ?? UNKNOWN_YEAR_SENTINEL,
       filename,
-      is_section_file: SECTION_MARKER_RE.test(filename),
+      is_section_file: isSectionFile(filename),
       is_test_artifact: TEST_ARTIFACT_RE.test(filename),
       discovered_via: "direct",
     };
@@ -991,7 +1022,7 @@ export async function resolveCdsForSchool(
         url: landing.finalUrl,
         cds_year: year ?? UNKNOWN_YEAR_SENTINEL,
         filename,
-        is_section_file: SECTION_MARKER_RE.test(filename),
+        is_section_file: isSectionFile(filename),
         is_test_artifact: TEST_ARTIFACT_RE.test(filename),
         discovered_via: "direct",
       }],
@@ -1064,7 +1095,7 @@ export async function resolveCdsForSchool(
           year,
           year_source: (year ? "filename" : "unknown") as YearSource,
           kind: "document" as AnchorKind,
-          is_section_file: SECTION_MARKER_RE.test(filename),
+          is_section_file: isSectionFile(filename),
           is_test_artifact: TEST_ARTIFACT_RE.test(filename),
         }];
       }
@@ -1086,7 +1117,7 @@ export async function resolveCdsForSchool(
           year: sub.year,
           year_source: sub.year_source,
           kind: "document" as AnchorKind,
-          is_section_file: SECTION_MARKER_RE.test(filename),
+          is_section_file: isSectionFile(filename),
           is_test_artifact: TEST_ARTIFACT_RE.test(filename),
         }];
       }
