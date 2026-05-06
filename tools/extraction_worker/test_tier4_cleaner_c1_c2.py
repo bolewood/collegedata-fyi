@@ -201,6 +201,46 @@ Enrolled
         self.assertEqual(values["C.125"]["value"], "2300")
         self.assertEqual(values["C.128"]["value"], "95")
 
+    def test_c1_compact_question_lines(self):
+        markdown = """
+## C. First-time, First-year Admission
+
+C101 Total first-time, first-year men who applied 7,224
+C102 Total first-time, first-year women who applied 8,044
+C104 Total first-time, first-year men who were admitted 621
+C105 Total first-time, first-year women who were admitted 654
+C107 Total first-time, first-year men who enrolled 238
+C108 Total first-time, first-year women who enrolled 306
+C116 Total first-time, first-year students who applied 15,411
+C117 Total first-time, first-year students who were admitted 1,272
+C118 Total first-time, first-year students who enrolled 547
+C201 Do you have a policy of placing students on a waiting list? Y
+C202 Number of qualified applicants offered a place on waiting list: 2,303
+C203 Number accepting a place on the waiting list: 858
+C204 Number of wait-listed students admitted: 113
+C802 SAT or ACT Not required for admission, but considered if submitted
+"""
+
+        values = clean(
+            markdown,
+            schema=SchemaIndex(REPO_ROOT / "schemas" / "cds_schema_2025_26.json"),
+        )
+
+        self.assertEqual(values["C.101"]["value"], "7224")
+        self.assertEqual(values["C.102"]["value"], "8044")
+        self.assertEqual(values["C.104"]["value"], "621")
+        self.assertEqual(values["C.105"]["value"], "654")
+        self.assertEqual(values["C.107"]["value"], "238")
+        self.assertEqual(values["C.108"]["value"], "306")
+        self.assertEqual(values["C.116"]["value"], "15411")
+        self.assertEqual(values["C.117"]["value"], "1272")
+        self.assertEqual(values["C.118"]["value"], "547")
+        self.assertEqual(values["C.201"]["value"], "Y")
+        self.assertEqual(values["C.202"]["value"], "2303")
+        self.assertEqual(values["C.203"]["value"], "858")
+        self.assertEqual(values["C.204"]["value"], "113")
+        self.assertNotIn("C.802", values)
+
     def test_c2_waitlist_policy_and_counts_from_layout(self):
         supplemental = """
 C2   First-time, first-year wait-listed students

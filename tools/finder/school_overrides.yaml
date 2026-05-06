@@ -145,6 +145,49 @@ overrides:
         reference files such as the 2025-26 Summary of Changes docx as
         Penn's CDS.
 
+  - school_id: johns-hopkins
+    browse_url: https://oira.jhu.edu/common-data-set/
+    direct_archive_urls:
+      - { url: https://oira.jhu.edu/wp-content/uploads/2025-2026-CDS-Johns-Hopkins-University.pdf, year: "2025-26" }
+      - { url: https://drive.usercontent.google.com/download?id=1493J-a9EGTyGekgy-NAohQ_LSEQ3jtDp&export=download, year: "2024-25" }
+    hosting_override:
+      file_storage: mixed
+      cms: wordpress
+      waf: cloudflare
+      notes: >-
+        JHU's current same-origin PDF may return a Cloudflare challenge to
+        non-browser archive fetches. Prefer the official OIRA landing page,
+        but use the WAF-aware headless downloader and reject HTML challenge
+        bodies before inserting source artifacts.
+
+  - school_id: williams-college
+    browse_url: https://www.williams.edu/institutional-research/common-data-set/
+    direct_archive_urls:
+      - { url: https://www.williams.edu/institutional-research/files/2026/04/Williams-CDS-2025-2026-V2.pdf, year: "2025-26" }
+      - { url: https://www.williams.edu/institutional-research/files/2025/06/CDS_2024_2025_Williams_V5.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: wordpress
+      waf: cloudflare
+      notes: >-
+        Williams publishes recent CDS PDFs on its IR landing page, but direct
+        archive fetches can receive a Cloudflare challenge page. Use the
+        WAF-aware headless downloader and verify source bytes are real PDFs.
+
+  - school_id: kent-state-university-at-kent
+    browse_url: https://www.kent.edu/ir/common-dataset-cds
+    direct_archive_urls:
+      - { url: https://www-s3-live.kent.edu/s3fs-root/s3fs-public/file/TU%20CDS_2025-2026-Final_web_1.docx?VersionId=8b11OcfWwv3GOtnZg.urP8_ZlgTVDMTY, year: "2025-26" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      waf: none
+      notes: >-
+        Kent publishes an SDT-preserving DOCX. The current worker stubs native
+        docx extraction, so browser projection relies on the existing
+        operator-generated Word-to-PDF Tier 4 canonical artifact until a
+        durable docx-to-PDF route is implemented.
+
   - school_id: osu
     browse_url: https://irp.osu.edu/institutional-data-and-reports
     direct_archive_urls:

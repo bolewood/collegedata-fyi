@@ -124,6 +124,60 @@ def _direct_qnum_value(row: dict) -> str | None:
     return None
 
 
+def _direct_qnum_line_value(line: str) -> tuple[str, str] | None:
+    """Extract values from line-oriented exports like ``C117 ... 15,411``.
+
+    Some PDF-to-text paths flatten a CDS row to a single line instead of a
+    markdown table. Keep this conservative: require a compact CDS row id at
+    line start and a response-looking value at the end of the line.
+    """
+    m = re.match(r"^\s*([A-J]\.?\d{1,3}[A-Z]?)\b\s+(.+?)\s*$", line, re.IGNORECASE)
+    if not m:
+        return None
+    qnum = _normalize_compact_question_number(m.group(1))
+    if not qnum:
+        return None
+
+    rest = m.group(2).strip()
+    if not rest:
+        return None
+
+    if ":" in rest:
+        tail = rest.rsplit(":", 1)[1].strip()
+        if _looks_like_direct_line_value(tail):
+            return qnum, _clean_direct_line_value(tail)
+
+    m_value = re.search(
+        r"(?i)(?:^|\s)([xyn]|-?\$?\d[\d,]*(?:\.\d+)?%?|\d{1,2}-[a-z]{3,9})\s*$",
+        rest,
+    )
+    if not m_value:
+        return None
+    return qnum, _clean_direct_line_value(m_value.group(1))
+
+
+def _looks_like_direct_line_value(value: str) -> bool:
+    value = value.strip()
+    if not value:
+        return False
+    if re.fullmatch(r"(?i)[xyn]", value):
+        return True
+    if re.fullmatch(r"-?\$?\d[\d,]*(?:\.\d+)?%?", value):
+        return True
+    if re.fullmatch(r"(?i)\d{1,2}-[a-z]{3,9}", value):
+        return True
+    if re.match(r"(?i)^https?://", value):
+        return True
+    return False
+
+
+def _clean_direct_line_value(value: str) -> str:
+    value = value.strip()
+    if re.fullmatch(r"-?\$?\d[\d,]*(?:\.\d+)?%?", value):
+        return value.replace(",", "").replace("$", "")
+    return value
+
+
 _NO_WRAP_EMPTY_LABELS = {
     "sat composite",
     "sat evidence based reading and writing",
@@ -5752,6 +5806,19 @@ def clean(
                     and qnum not in values
                 ):
                     values[qnum] = {"value": num, "source": "tier4_cleaner"}
+
+    for line in markdown.splitlines():
+        parsed_line = _direct_qnum_line_value(line)
+        if not parsed_line:
+            continue
+        qnum, direct_value = parsed_line
+        if (
+            re.match(r"^C\.9\d\d$", qnum)
+            and not _is_plausible_c9_percentile_value(qnum, direct_value)
+        ):
+            continue
+        if qnum in schema_qnums and qnum not in values:
+            values[qnum] = {"value": direct_value, "source": "tier4_cleaner"}
 
     # --- Inline patterns (non-table fields) ---
     # Runs after table extraction so table matches take precedence.
