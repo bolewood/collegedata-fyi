@@ -37,6 +37,13 @@ import {
   resolveSchoolName,
   UnknownSchoolError,
 } from "../_shared/schools.ts";
+import {
+  buildAttemptBudgetExhaustedUpdate,
+  hasExceededAttemptBudget,
+  isEmptyClaimResult,
+  MAX_ATTEMPTS,
+  type ArchiveQueueRow,
+} from "./queue.ts";
 
 // Relaxed client typing. supabase-js v2's strict generics collapse to never
 // when no Database type parameter is supplied, which breaks .update() with
@@ -44,22 +51,6 @@ import {
 // restores ergonomic typing for this project.
 // deno-lint-ignore no-explicit-any
 type Client = SupabaseClient<any, any, any>;
-
-const MAX_ATTEMPTS = 3;
-
-interface ArchiveQueueRow {
-  id: string;
-  enqueued_run_id: string;
-  school_id: string;
-  school_name: string;
-  cds_url_hint: string;
-  status: string;
-  attempts: number;
-  last_error: string | null;
-  enqueued_at: string;
-  claimed_at: string | null;
-  processed_at: string | null;
-}
 
 Deno.serve(async (req: Request) => {
   // ── Auth: require the service role key via Bearer ────────────────────
@@ -232,7 +223,7 @@ async function runQueueClaim(
     return json({ error: `claim failed: ${claimErr.message}` }, 500);
   }
 
-  if (!claimed) {
+  if (isEmptyClaimResult(claimed)) {
     logEvent({ event: "queue_drained" });
     return json({ status: "queue_drained" });
   }
@@ -255,6 +246,41 @@ async function runQueueClaim(
     return json({ error: "RPC returned row with null claimed_at" }, 500);
   }
   const claimLease: string = row.claimed_at;
+
+  if (hasExceededAttemptBudget(row)) {
+    const update = buildAttemptBudgetExhaustedUpdate(
+      row,
+      new Date().toISOString(),
+    );
+    const { error: updErr } = await supabase
+      .from("archive_queue")
+      .update(update)
+      .eq("id", row.id)
+      .eq("claimed_at", claimLease);
+    if (updErr) {
+      logEvent({
+        event: "attempt_budget_terminal_update_failed",
+        id: row.id,
+        school_id: row.school_id,
+        attempts,
+        error: updErr.message,
+      });
+      return json({ error: `terminal update failed: ${updErr.message}` }, 500);
+    }
+    logEvent({
+      event: "attempt_budget_exhausted",
+      id: row.id,
+      school_id: row.school_id,
+      attempts,
+    });
+    return json({
+      status: "failed_permanent",
+      reason: "attempt_budget_exhausted_before_processing",
+      school_id: row.school_id,
+      attempts,
+    });
+  }
+
   let finalStatus: "ready" | "done" | "failed_permanent" = "ready";
   let finalError: string | null = null;
   let outcome: ArchiveOutcome | null = null;

@@ -161,5 +161,12 @@ flowchart TD
 
 # Full browser projection rebuild after a projection/schema change.
 python tools/browser_backend/project_browser_data.py --full-rebuild --apply
-```
 
+# One-command automation health check: GitHub Actions, pg_cron,
+# async Edge Function HTTP responses, archive queue, extraction movement,
+# and coverage freshness.
+python3 tools/ops/automation_health.py \
+  --env /path/to/.env \
+  --markdown-out scratch/automation-health.md \
+  --json-out scratch/automation-health.json
+```
