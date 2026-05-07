@@ -165,8 +165,9 @@ Schema work that improves older-year support:
 - Completed: generate the missing 2024-25 structural schema from the template
   already in `schemas/templates/`.
 - Completed: add conservative canonical overlays for 2019-20 through 2023-24
-  C1/C9 by matching structural row/column labels against the 2025-26 canonical
-  schema and preserving ambiguous drift as explicit unmapped QA reasons.
+  C1/C7/C9 by matching structural row/column labels against the 2025-26
+  canonical schema and preserving ambiguous drift as explicit unmapped QA
+  reasons.
 - Add any older official XLSX templates only when they expand the historical
   product surface we actually intend to render.
 
@@ -534,4 +535,7 @@ Reason:
 - extraction coverage is already a focus area, so renderer bugs will be easy to
   distinguish from extractor gaps
 
-Once C1/C9 pass the accessibility bar, add C7 and H2A.
+C7 schema overlays are already prepared for older years, but the renderer should
+still start with C1/C9. Once those pass the accessibility bar, add C7. H2A needs
+a separate older-template parser pass before historical completeness can be
+claimed.

@@ -2,7 +2,7 @@
 Build conservative canonical overlays for historical structural CDS schemas.
 
 The 2019-20 through 2023-24 templates do not carry canonical question numbers
-on their per-section tabs. This tool maps the high-value C1/C9 rows back to
+on their per-section tabs. This tool maps the high-value C1/C7/C9 rows back to
 the current canonical schema where the semantics are clear enough to support a
 cross-year table view.
 
@@ -55,6 +55,34 @@ C1_TARGETS = {
     ("Applied", "All", "All", "Unknown"): "C.128",
     ("Admitted", "All", "All", "Unknown"): "C.129",
     ("Enrolled", "All", "All", "Unknown"): "C.130",
+}
+
+C7_TARGETS = {
+    "rigor of secondary school record": "C.701",
+    "class rank": "C.702",
+    "academic gpa": "C.703",
+    "standardized test scores": "C.704",
+    "application essay": "C.705",
+    "recommendation(s)": "C.706",
+    "interview": "C.707",
+    "extracurricular activities": "C.708",
+    "talent/ability": "C.709",
+    "character/personal qualities": "C.710",
+    "first generation": "C.711",
+    "alumni/ae relation": "C.712",
+    "geographical residence": "C.713",
+    "state residency": "C.714",
+    "religious affiliation/commitment": "C.715",
+    "volunteer work": "C.716",
+    "work experience": "C.717",
+    "level of applicant’s interest": "C.718",
+}
+
+C7_CHOICE_HEADERS = {
+    "very important",
+    "important",
+    "considered",
+    "not considered",
 }
 
 C9_SUBMISSION_TARGETS = {
@@ -162,6 +190,22 @@ def _c1_mapping(question: dict[str, Any], column: dict[str, Any]) -> tuple[str |
     return None, "no_c1_target"
 
 
+def _c7_mapping(question: dict[str, Any], column: dict[str, Any]) -> tuple[str | None, str]:
+    label = _norm(question.get("row_label"))
+    header = _norm(column.get("header"))
+    if header not in C7_CHOICE_HEADERS:
+        return None, "not_c7_importance_choice"
+    if label in {"academic", "nonacademic"}:
+        return None, "not_c7_factor_row"
+
+    qnum = C7_TARGETS.get(label)
+    if qnum:
+        return qnum, "rule:c7_factor_importance_choice"
+    if label == "racial/ethnic status":
+        return None, "no_2025_target_for_c7_factor"
+    return None, "not_c7_factor_row"
+
+
 def _percentile_key(header: str | None) -> str | None:
     value = _norm(header)
     if "25" in value:
@@ -229,12 +273,14 @@ def build_overlay(source_schema: dict[str, Any], target_schema: dict[str, Any]) 
         if section["section"] != "C":
             continue
         for subsection in section["subsections"]:
-            if subsection["id"] not in {"C1", "C9"}:
+            if subsection["id"] not in {"C1", "C7", "C9"}:
                 continue
             for question in subsection["questions"]:
                 for column in question["columns"]:
                     if subsection["id"] == "C1":
                         target_qnum, method = _c1_mapping(question, column)
+                    elif subsection["id"] == "C7":
+                        target_qnum, method = _c7_mapping(question, column)
                     else:
                         target_qnum, method = _c9_mapping(question, column)
 
@@ -253,18 +299,28 @@ def build_overlay(source_schema: dict[str, Any], target_schema: dict[str, Any]) 
                             "canonical_question": target["question"],
                             "confidence": "high",
                             "method": method,
+                            **(
+                                {"source_choice_value": column.get("header")}
+                                if subsection["id"] == "C7"
+                                else {}
+                            ),
                         })
-                    elif method not in {"not_c1_value_row", "not_c9_core_value_row"}:
+                    elif method not in {
+                        "not_c1_value_row",
+                        "not_c7_factor_row",
+                        "not_c7_importance_choice",
+                        "not_c9_core_value_row",
+                    }:
                         unmapped.append({**record, "reason": method})
 
     return {
         "schema_version": source_schema["schema_version"],
-        "overlay_version": "c1_c9_v1",
+        "overlay_version": "core_table_v1",
         "target_canonical_schema_version": target_schema["schema_version"],
         "source_structural_schema": (
             f"cds_schema_{source_schema['schema_version'].replace('-', '_')}.structural.json"
         ),
-        "scope": ["C1", "C9"],
+        "scope": ["C1", "C7", "C9"],
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "mapping_count": len(mappings),
         "unmapped_count": len(unmapped),
@@ -278,7 +334,7 @@ def _schema_path_for_year(year: str) -> Path:
 
 
 def _overlay_path_for_year(year: str) -> Path:
-    return Path(f"schemas/cds_schema_{year}.c1_c9_overlay.json")
+    return Path(f"schemas/cds_schema_{year}.core_table_overlay.json")
 
 
 def main() -> None:

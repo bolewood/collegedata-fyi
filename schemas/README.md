@@ -9,7 +9,7 @@ Canonical and structural CDS schemas extracted from the commondataset.org Excel 
 | `cds_schema_2024_25.json` | `Answer Sheet` | 2024-25 | Canonical question_numbers (A.001, B.101, ...), section hierarchy. The source Answer Sheet omits pdf_tag and word_tag metadata. |
 | `cds_schema_2025_26.json` | `Answer Sheet` | 2025-26 | Canonical question_numbers (A.001, B.101, ...), pdf_tag, word_tag, section hierarchy, value_options decoder |
 | `cds_schema_YYYY_YY.structural.json` | `CDS-A` through `CDS-J` | 2019-20 through 2025-26 | Per-year structural layout: subsections, row labels, column headers, answer-cell refs. Includes canonical question_numbers only when the source sheet provides them. |
-| `cds_schema_YYYY_YY.c1_c9_overlay.json` | Structural schema + 2025-26 canonical schema | 2019-20 through 2023-24 | Conservative C1/C9 mappings from older visual templates to current canonical question_numbers, plus explicit unmapped QA reasons. |
+| `cds_schema_YYYY_YY.core_table_overlay.json` | Structural schema + 2025-26 canonical schema | 2019-20 through 2023-24 | Conservative C1/C7/C9 mappings from older visual templates to current canonical question_numbers, plus explicit unmapped QA reasons. |
 
 The Answer Sheet tab exists in the 2024-25 and 2025-26 templates. It is the CDS Initiative's machine-readable canonical spec and is the authoritative source for question_numbers. The 2024-25 Answer Sheet is reduced: it omits `Sort Order`, `US News PDF Tag`, and `Word Tag`, so the generated schema records `pdf_tag: null` and `word_tag: null` until follow-on synthesis fills those gaps.
 
@@ -19,7 +19,7 @@ Older templates do not have an Answer Sheet, so `cds_schema_YYYY_YY.structural.j
 
 - `tools/schema_builder/build_from_xlsx.py` — Answer Sheet → canonical schema for 2024-25 and later canonical template years.
 - `tools/schema_builder/build_from_tabs.py` — per-section tabs → structural schema. Works across all years.
-- `tools/schema_builder/build_c1_c9_overlay.py` — historical structural schema → C1/C9 canonical overlay against the 2025-26 schema.
+- `tools/schema_builder/build_core_table_overlay.py` — historical structural schema → C1/C7/C9 canonical overlay against the 2025-26 schema.
 - `tools/schema_builder/canonical_diff.py` — canonical schema → classified cross-year diff and validated `pdf_tag` synthesis for reduced Answer Sheet years.
 - `tools/schema_builder/decode_checkboxes.py` — folds per-field checkbox value lists into the canonical schema (runs after `build_from_xlsx.py`).
 
@@ -31,7 +31,7 @@ Older templates do not have an Answer Sheet, so `cds_schema_YYYY_YY.structural.j
 
 ## Cross-year coverage
 
-| Year | Canonical | Structural | C1/C9 overlay | XLSX source |
+| Year | Canonical | Structural | Core table overlay | XLSX source |
 |---|---|---|---|---|
 | 2019-20 | — | ✅ | ✅ | commondataset.org/wp-content/uploads/2020/04/CDS_2019-2020.xlsx |
 | 2020-21 | — | ✅ | ✅ | commondataset.org/wp-content/uploads/2020/11/CDS_2020-2021.xlsx |
@@ -59,4 +59,4 @@ Official templates needed to reproduce canonical schemas live in `schemas/templa
 ## Next steps
 
 - Wire the 2024-25 to 2025-26 semantic diff into the database equivalence layer described in PRD 014.
-- Expand historical overlays beyond C1/C9 only when a product slice needs those sections; each expansion should keep unmapped rows explicit for QA.
+- Expand historical overlays beyond C1/C7/C9 only when a product slice needs those sections; each expansion should keep unmapped rows explicit for QA.

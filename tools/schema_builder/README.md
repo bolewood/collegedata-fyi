@@ -129,16 +129,16 @@ python tools/schema_builder/build_from_tabs.py \
 ```
 
 For older template years that do not have an Answer Sheet, attach conservative
-canonical overlays for the high-value C1/C9 product slice:
+canonical overlays for the high-value C1/C7/C9 product slice:
 
 ```bash
-python tools/schema_builder/build_c1_c9_overlay.py
+python tools/schema_builder/build_core_table_overlay.py
 ```
 
-The C1/C9 overlays map only rows whose semantics are clear against the 2025-26
-canonical schema. Ambiguous drift, such as older "another gender" rows or
-gender-specific residency breakdowns without a 2025-26 equivalent, remains in
-`unmapped` with a reason for QA.
+The core table overlays map only rows whose semantics are clear against the
+2025-26 canonical schema. Ambiguous drift, such as older "another gender" rows,
+gender-specific residency breakdowns, or removed C7 factors without a 2025-26
+equivalent, remains in `unmapped` with a reason for QA.
 
 ## Known limitations
 
