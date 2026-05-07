@@ -1,0 +1,604 @@
+{
+  "schema_version": "2023-24",
+  "overlay_version": "c1_c9_v1",
+  "target_canonical_schema_version": "2025-26",
+  "source_structural_schema": "cds_schema_2023_24.structural.json",
+  "scope": [
+    "C1",
+    "C9"
+  ],
+  "generated_at": "2026-05-07T23:05:12Z",
+  "mapping_count": 41,
+  "unmapped_count": 17,
+  "mappings": [
+    {
+      "subsection": "C1",
+      "source_row": 12,
+      "row_label": "Total first-time, first-year men who applied",
+      "column_header": null,
+      "cell_ref": "CDS-C!C12",
+      "canonical_question_number": "C.101",
+      "canonical_question": "Total first-time, first-year males who applied",
+      "confidence": "high",
+      "method": "rule:c1_category_gender_unit_load_residency"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 13,
+      "row_label": "Total first-time, first-year women who applied",
+      "column_header": null,
+      "cell_ref": "CDS-C!C13",
+      "canonical_question_number": "C.102",
+      "canonical_question": "Total first-time, first-year females who applied",
+      "confidence": "high",
+      "method": "rule:c1_category_gender_unit_load_residency"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 17,
+      "row_label": "Total first-time, first-year men who were admitted",
+      "column_header": null,
+      "cell_ref": "CDS-C!C17",
+      "canonical_question_number": "C.104",
+      "canonical_question": "Total first-time, first-year males who were admitted",
+      "confidence": "high",
+      "method": "rule:c1_category_gender_unit_load_residency"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 18,
+      "row_label": "Total first-time, first-year women who were admitted",
+      "column_header": null,
+      "cell_ref": "CDS-C!C18",
+      "canonical_question_number": "C.105",
+      "canonical_question": "Total first-time, first-year females who were admitted",
+      "confidence": "high",
+      "method": "rule:c1_category_gender_unit_load_residency"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 22,
+      "row_label": "Total full-time, first-time, first-year men who enrolled",
+      "column_header": null,
+      "cell_ref": "CDS-C!C22",
+      "canonical_question_number": "C.110",
+      "canonical_question": "Total full-time, first-time, first-year males who enrolled",
+      "confidence": "high",
+      "method": "rule:c1_category_gender_unit_load_residency"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 23,
+      "row_label": "Total part-time, first-time, first-year men who enrolled",
+      "column_header": null,
+      "cell_ref": "CDS-C!C23",
+      "canonical_question_number": "C.111",
+      "canonical_question": "Total part-time, first-time, first-year males who enrolled",
+      "confidence": "high",
+      "method": "rule:c1_category_gender_unit_load_residency"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 24,
+      "row_label": "Total full-time, first-time, first-year women who enrolled",
+      "column_header": null,
+      "cell_ref": "CDS-C!C24",
+      "canonical_question_number": "C.112",
+      "canonical_question": "Total full-time, first-time, first-year females who enrolled",
+      "confidence": "high",
+      "method": "rule:c1_category_gender_unit_load_residency"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 25,
+      "row_label": "Total part-time, first-time, first-year women who enrolled",
+      "column_header": null,
+      "cell_ref": "CDS-C!C25",
+      "canonical_question_number": "C.113",
+      "canonical_question": "Total part-time, first-time, first-year females who enrolled",
+      "confidence": "high",
+      "method": "rule:c1_category_gender_unit_load_residency"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 31,
+      "row_label": "Total first-time, first-year men who applied",
+      "column_header": "Total",
+      "cell_ref": "CDS-C!I31",
+      "canonical_question_number": "C.101",
+      "canonical_question": "Total first-time, first-year males who applied",
+      "confidence": "high",
+      "method": "rule:c1_category_gender_unit_load_residency"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 32,
+      "row_label": "Total first-time, first-year women who applied",
+      "column_header": "Total",
+      "cell_ref": "CDS-C!I32",
+      "canonical_question_number": "C.102",
+      "canonical_question": "Total first-time, first-year females who applied",
+      "confidence": "high",
+      "method": "rule:c1_category_gender_unit_load_residency"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 177,
+      "row_label": "Submitting SAT Scores",
+      "column_header": "Percent",
+      "cell_ref": "CDS-C!C177",
+      "canonical_question_number": "C.901",
+      "canonical_question": "Percent Submitting SAT Scores",
+      "confidence": "high",
+      "method": "rule:c9_submission"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 177,
+      "row_label": "Submitting SAT Scores",
+      "column_header": "Number",
+      "cell_ref": "CDS-C!D177",
+      "canonical_question_number": "C.903",
+      "canonical_question": "Number Submitting SAT Scores",
+      "confidence": "high",
+      "method": "rule:c9_submission"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 178,
+      "row_label": "Submitting ACT Scores",
+      "column_header": "Percent",
+      "cell_ref": "CDS-C!C178",
+      "canonical_question_number": "C.902",
+      "canonical_question": "Percent Submitting ACT Scores",
+      "confidence": "high",
+      "method": "rule:c9_submission"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 178,
+      "row_label": "Submitting ACT Scores",
+      "column_header": "Number",
+      "cell_ref": "CDS-C!D178",
+      "canonical_question_number": "C.904",
+      "canonical_question": "Number Submitting ACT Scores",
+      "confidence": "high",
+      "method": "rule:c9_submission"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 185,
+      "row_label": "SAT Composite",
+      "column_header": "25th Percentile",
+      "cell_ref": "CDS-C!C185",
+      "canonical_question_number": "C.905",
+      "canonical_question": "SAT Composite: 25th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 185,
+      "row_label": "SAT Composite",
+      "column_header": "50th Percentile",
+      "cell_ref": "CDS-C!D185",
+      "canonical_question_number": "C.906",
+      "canonical_question": "SAT Composite: 50th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 185,
+      "row_label": "SAT Composite",
+      "column_header": "75th Percentile",
+      "cell_ref": "CDS-C!E185",
+      "canonical_question_number": "C.907",
+      "canonical_question": "SAT Composite: 75th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 186,
+      "row_label": "SAT Evidence-Based Reading and Writing",
+      "column_header": "25th Percentile",
+      "cell_ref": "CDS-C!C186",
+      "canonical_question_number": "C.908",
+      "canonical_question": "SAT Evidence-Based Reading and Writing: 25th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 186,
+      "row_label": "SAT Evidence-Based Reading and Writing",
+      "column_header": "50th Percentile",
+      "cell_ref": "CDS-C!D186",
+      "canonical_question_number": "C.909",
+      "canonical_question": "SAT Evidence-Based Reading and Writing: 50th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 186,
+      "row_label": "SAT Evidence-Based Reading and Writing",
+      "column_header": "75th Percentile",
+      "cell_ref": "CDS-C!E186",
+      "canonical_question_number": "C.910",
+      "canonical_question": "SAT Evidence-Based Reading and Writing: 75th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 187,
+      "row_label": "SAT Math",
+      "column_header": "25th Percentile",
+      "cell_ref": "CDS-C!C187",
+      "canonical_question_number": "C.911",
+      "canonical_question": "SAT Math: 25th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 187,
+      "row_label": "SAT Math",
+      "column_header": "50th Percentile",
+      "cell_ref": "CDS-C!D187",
+      "canonical_question_number": "C.912",
+      "canonical_question": "SAT Math: 50th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 187,
+      "row_label": "SAT Math",
+      "column_header": "75th Percentile",
+      "cell_ref": "CDS-C!E187",
+      "canonical_question_number": "C.913",
+      "canonical_question": "SAT Math: 75th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 188,
+      "row_label": "ACT Composite",
+      "column_header": "25th Percentile",
+      "cell_ref": "CDS-C!C188",
+      "canonical_question_number": "C.914",
+      "canonical_question": "ACT Composite: 25th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 188,
+      "row_label": "ACT Composite",
+      "column_header": "50th Percentile",
+      "cell_ref": "CDS-C!D188",
+      "canonical_question_number": "C.915",
+      "canonical_question": "ACT Composite: 50th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 188,
+      "row_label": "ACT Composite",
+      "column_header": "75th Percentile",
+      "cell_ref": "CDS-C!E188",
+      "canonical_question_number": "C.916",
+      "canonical_question": "ACT Composite: 75th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 189,
+      "row_label": "ACT Math",
+      "column_header": "25th Percentile",
+      "cell_ref": "CDS-C!C189",
+      "canonical_question_number": "C.917",
+      "canonical_question": "ACT Math: 25th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 189,
+      "row_label": "ACT Math",
+      "column_header": "50th Percentile",
+      "cell_ref": "CDS-C!D189",
+      "canonical_question_number": "C.918",
+      "canonical_question": "ACT Math: 50th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 189,
+      "row_label": "ACT Math",
+      "column_header": "75th Percentile",
+      "cell_ref": "CDS-C!E189",
+      "canonical_question_number": "C.919",
+      "canonical_question": "ACT Math: 75th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 190,
+      "row_label": "ACT English",
+      "column_header": "25th Percentile",
+      "cell_ref": "CDS-C!C190",
+      "canonical_question_number": "C.920",
+      "canonical_question": "ACT English: 25th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 190,
+      "row_label": "ACT English",
+      "column_header": "50th Percentile",
+      "cell_ref": "CDS-C!D190",
+      "canonical_question_number": "C.921",
+      "canonical_question": "ACT English: 50th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 190,
+      "row_label": "ACT English",
+      "column_header": "75th Percentile",
+      "cell_ref": "CDS-C!E190",
+      "canonical_question_number": "C.922",
+      "canonical_question": "ACT English: 75th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 191,
+      "row_label": "ACT Writing",
+      "column_header": "25th Percentile",
+      "cell_ref": "CDS-C!C191",
+      "canonical_question_number": "C.923",
+      "canonical_question": "ACT Writing: 25th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 191,
+      "row_label": "ACT Writing",
+      "column_header": "50th Percentile",
+      "cell_ref": "CDS-C!D191",
+      "canonical_question_number": "C.924",
+      "canonical_question": "ACT Writing: 50th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 191,
+      "row_label": "ACT Writing",
+      "column_header": "75th Percentile",
+      "cell_ref": "CDS-C!E191",
+      "canonical_question_number": "C.925",
+      "canonical_question": "ACT Writing: 75th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 192,
+      "row_label": "ACT Science",
+      "column_header": "25th Percentile",
+      "cell_ref": "CDS-C!C192",
+      "canonical_question_number": "C.926",
+      "canonical_question": "ACT Science: 25th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 192,
+      "row_label": "ACT Science",
+      "column_header": "50th Percentile",
+      "cell_ref": "CDS-C!D192",
+      "canonical_question_number": "C.927",
+      "canonical_question": "ACT Science: 50th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 192,
+      "row_label": "ACT Science",
+      "column_header": "75th Percentile",
+      "cell_ref": "CDS-C!E192",
+      "canonical_question_number": "C.928",
+      "canonical_question": "ACT Science: 75th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 193,
+      "row_label": "ACT Reading",
+      "column_header": "25th Percentile",
+      "cell_ref": "CDS-C!C193",
+      "canonical_question_number": "C.929",
+      "canonical_question": "ACT Reading: 25th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 193,
+      "row_label": "ACT Reading",
+      "column_header": "50th Percentile",
+      "cell_ref": "CDS-C!D193",
+      "canonical_question_number": "C.930",
+      "canonical_question": "ACT Reading: 50th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    },
+    {
+      "subsection": "C9",
+      "source_row": 193,
+      "row_label": "ACT Reading",
+      "column_header": "75th Percentile",
+      "cell_ref": "CDS-C!E193",
+      "canonical_question_number": "C.931",
+      "canonical_question": "ACT Reading: 75th Percentile",
+      "confidence": "high",
+      "method": "rule:c9_percentile"
+    }
+  ],
+  "unmapped": [
+    {
+      "subsection": "C1",
+      "source_row": 14,
+      "row_label": "Total first-time, first-year another gender who applied",
+      "column_header": null,
+      "cell_ref": "CDS-C!C14",
+      "reason": "no_2025_target_for_another_gender"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 19,
+      "row_label": "Total first-time, first-year another gender who were admitted",
+      "column_header": null,
+      "cell_ref": "CDS-C!C19",
+      "reason": "no_2025_target_for_another_gender"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 26,
+      "row_label": "Total full-time, first-time, first-year another gender who enrolled",
+      "column_header": null,
+      "cell_ref": "CDS-C!C26",
+      "reason": "no_2025_target_for_another_gender"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 27,
+      "row_label": "Total part-time, first-time, first-year another gender who enrolled",
+      "column_header": null,
+      "cell_ref": "CDS-C!C27",
+      "reason": "no_2025_target_for_another_gender"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 31,
+      "row_label": "Total first-time, first-year men who applied",
+      "column_header": "In-State",
+      "cell_ref": "CDS-C!E31",
+      "reason": "gender_specific_residency_not_in_2025_schema"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 31,
+      "row_label": "Total first-time, first-year men who applied",
+      "column_header": "Out-of-State",
+      "cell_ref": "CDS-C!F31",
+      "reason": "gender_specific_residency_not_in_2025_schema"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 31,
+      "row_label": "Total first-time, first-year men who applied",
+      "column_header": "International",
+      "cell_ref": "CDS-C!G31",
+      "reason": "gender_specific_residency_not_in_2025_schema"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 31,
+      "row_label": "Total first-time, first-year men who applied",
+      "column_header": "Unknown",
+      "cell_ref": "CDS-C!H31",
+      "reason": "gender_specific_residency_not_in_2025_schema"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 32,
+      "row_label": "Total first-time, first-year women who applied",
+      "column_header": "In-State",
+      "cell_ref": "CDS-C!E32",
+      "reason": "gender_specific_residency_not_in_2025_schema"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 32,
+      "row_label": "Total first-time, first-year women who applied",
+      "column_header": "Out-of-State",
+      "cell_ref": "CDS-C!F32",
+      "reason": "gender_specific_residency_not_in_2025_schema"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 32,
+      "row_label": "Total first-time, first-year women who applied",
+      "column_header": "International",
+      "cell_ref": "CDS-C!G32",
+      "reason": "gender_specific_residency_not_in_2025_schema"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 32,
+      "row_label": "Total first-time, first-year women who applied",
+      "column_header": "Unknown",
+      "cell_ref": "CDS-C!H32",
+      "reason": "gender_specific_residency_not_in_2025_schema"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 33,
+      "row_label": "Total first-time, first-year another gender who applied",
+      "column_header": "In-State",
+      "cell_ref": "CDS-C!E33",
+      "reason": "no_2025_target_for_another_gender"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 33,
+      "row_label": "Total first-time, first-year another gender who applied",
+      "column_header": "Out-of-State",
+      "cell_ref": "CDS-C!F33",
+      "reason": "no_2025_target_for_another_gender"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 33,
+      "row_label": "Total first-time, first-year another gender who applied",
+      "column_header": "International",
+      "cell_ref": "CDS-C!G33",
+      "reason": "no_2025_target_for_another_gender"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 33,
+      "row_label": "Total first-time, first-year another gender who applied",
+      "column_header": "Unknown",
+      "cell_ref": "CDS-C!H33",
+      "reason": "no_2025_target_for_another_gender"
+    },
+    {
+      "subsection": "C1",
+      "source_row": 33,
+      "row_label": "Total first-time, first-year another gender who applied",
+      "column_header": "Total",
+      "cell_ref": "CDS-C!I33",
+      "reason": "no_2025_target_for_another_gender"
+    }
+  ]
+}

@@ -1,6 +1,8 @@
 # schema_builder
 
 Builds the canonical CDS schema JSON from the official commondataset.org Excel template.
+It also contains the structural-schema and overlay helpers used for historical
+template support.
 
 ## Why this exists
 
@@ -117,6 +119,26 @@ python tools/schema_builder/decode_checkboxes.py \
     schemas/templates/cds_2024-25_template.pdf \
     schemas/cds_schema_2024_25.json
 ```
+
+Generate the 2024-25 structural schema from the row-metadata per-section tabs:
+
+```bash
+python tools/schema_builder/build_from_tabs.py \
+    schemas/templates/cds_2024-25_template.xlsx \
+    schemas/cds_schema_2024_25.structural.json
+```
+
+For older template years that do not have an Answer Sheet, attach conservative
+canonical overlays for the high-value C1/C9 product slice:
+
+```bash
+python tools/schema_builder/build_c1_c9_overlay.py
+```
+
+The C1/C9 overlays map only rows whose semantics are clear against the 2025-26
+canonical schema. Ambiguous drift, such as older "another gender" rows or
+gender-specific residency breakdowns without a 2025-26 equivalent, remains in
+`unmapped` with a reason for QA.
 
 ## Known limitations
 
