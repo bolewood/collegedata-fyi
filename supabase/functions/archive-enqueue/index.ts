@@ -1,21 +1,20 @@
-// archive-enqueue — monthly seeder for the archive pipeline.
+// archive-enqueue — cadence-aware seeder for the archive pipeline.
 //
 // Invoked daily by pg_cron (PR 5). The daily cadence (rather than monthly)
 // exists so a transient schools.yaml fetch failure on any given day
-// self-heals on the next tick, instead of losing a whole month of
-// enqueueing. Idempotency is guaranteed by a deterministic run_id derived
-// from the current calendar month: within a month, repeated calls are
-// no-ops for rows that already landed, because the archive_queue
-// UNIQUE (enqueued_run_id, school_id) constraint fires under ignoreDuplicates
-// and skips them.
+// self-heals on the next tick. Idempotency is guaranteed by a deterministic
+// run_id: weekly during March-June freshness season, monthly the rest of
+// the year. Repeated calls within the same cadence bucket are no-ops for
+// rows that already landed, because the archive_queue UNIQUE
+// (enqueued_run_id, school_id) constraint fires under ignoreDuplicates and
+// skips them.
 //
-// At the start of each new calendar month, run_id changes, which seeds a
-// fresh batch alongside any unprocessed rows from the prior month.
-// archive-process claims in enqueued_at order so older batches drain
-// first.
+// At the start of each new cadence bucket, run_id changes, which seeds a
+// fresh batch alongside any unprocessed rows from the prior bucket.
+// archive-process claims in enqueued_at order so older batches drain first.
 //
 // Operator retry semantics: re-running archive-enqueue within the same
-// calendar month is a no-op for existing rows, including rows that are
+// cadence bucket is a no-op for existing rows, including rows that are
 // currently in status='failed_permanent'. This is deliberate. To retry
 // a specific failed row, use the archive-process operator backfill:
 //
@@ -39,10 +38,11 @@ import {
   fetchSchoolsYaml,
   filterArchivable,
 } from "../_shared/schools.ts";
+import { ProbeOutcome } from "../_shared/probe_outcome.ts";
 import {
-  DEFAULT_COOLDOWN_DAYS,
-  ProbeOutcome,
-} from "../_shared/probe_outcome.ts";
+  archiveCooldownDaysForOutcome,
+  archiveEnqueueRunId,
+} from "./schedule.ts";
 
 Deno.serve(async (req: Request) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -58,14 +58,15 @@ Deno.serve(async (req: Request) => {
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-  // run_id is deterministic on the calendar month (UTC). Daily cron calls
-  // within the same month collide on the unique (run_id, school_id) index
-  // and no-op via ignoreDuplicates. At the start of a new month, run_id
-  // changes, seeding a fresh batch. Operators can override via ?run_id=...
-  // when manually reprocessing or testing.
+  // run_id is deterministic on the cadence bucket (UTC): weekly during
+  // March-June freshness season, monthly otherwise. Daily cron calls within
+  // the same bucket collide on the unique (run_id, school_id) index and no-op
+  // via ignoreDuplicates. Operators can override via ?run_id=... when manually
+  // reprocessing or testing.
   const url = new URL(req.url);
   const overrideRunId = url.searchParams.get("run_id");
-  const runId = overrideRunId ?? await monthlyRunId(new Date());
+  const now = new Date();
+  const runId = overrideRunId ?? await archiveEnqueueRunId(now);
 
   const started = Date.now();
   logEvent({ event: "enqueue_start", run_id: runId });
@@ -109,10 +110,10 @@ Deno.serve(async (req: Request) => {
   }
 
   // Cooldown: skip schools whose most recent terminal row has an
-  // outcome whose DEFAULT_COOLDOWN_DAYS window hasn't elapsed yet.
+  // outcome whose archive cadence window hasn't elapsed yet.
   // PR 2 expanded this from a single hardcoded check on
   // unchanged_verified to a per-outcome policy:
-  //   unchanged_verified → 30d
+  //   unchanged_verified → 7d during March-June, 30d otherwise
   //   auth_walled_*      → 90d (rarely change)
   //   dead_url           → 14d (schools fix broken URLs in days/weeks)
   //   no_pdfs_found      → 14d
@@ -182,11 +183,12 @@ Deno.serve(async (req: Request) => {
           });
         }
       }
-      const now = Date.now();
+      const nowMs = now.getTime();
       for (const [schoolId, latest] of latestBySchool) {
-        const cooldownDays = uniformDays ?? DEFAULT_COOLDOWN_DAYS[latest.last_outcome] ?? 0;
+        const cooldownDays = uniformDays ??
+          archiveCooldownDaysForOutcome(latest.last_outcome, now);
         if (cooldownDays <= 0) continue;
-        const elapsedMs = now - new Date(latest.processed_at).getTime();
+        const elapsedMs = nowMs - new Date(latest.processed_at).getTime();
         if (elapsedMs < cooldownDays * 24 * 60 * 60 * 1000) {
           inCooldown.add(schoolId);
         }
@@ -286,30 +288,6 @@ Deno.serve(async (req: Request) => {
   });
 });
 
-// Deterministic UUID derived from the (year, month) of the supplied date.
-// Ensures repeated archive-enqueue calls within the same calendar month
-// collide on the unique (run_id, school_id) index so existing rows are
-// no-ops and only new schools land. First byte of the uuid v5-style layout
-// is tagged with namespace string 'archive-enqueue:' so a future skill
-// or tool with a different key doesn't collide with our namespace.
-async function monthlyRunId(now: Date): Promise<string> {
-  const yyyy = now.getUTCFullYear().toString().padStart(4, "0");
-  const mm = (now.getUTCMonth() + 1).toString().padStart(2, "0");
-  const key = `archive-enqueue:${yyyy}-${mm}`;
-  const data = new TextEncoder().encode(key);
-  const hashBuf = await crypto.subtle.digest("SHA-256", data);
-  const hex = Array.from(new Uint8Array(hashBuf).slice(0, 16))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-  return (
-    hex.slice(0, 8) + "-" +
-    hex.slice(8, 12) + "-" +
-    hex.slice(12, 16) + "-" +
-    hex.slice(16, 20) + "-" +
-    hex.slice(20, 32)
-  );
-}
-
 function logEvent(payload: Record<string, unknown>): void {
   console.log(JSON.stringify({
     ts: new Date().toISOString(),
@@ -331,7 +309,10 @@ function json(body: unknown, status = 200): Response {
 // Accept both service-role credential formats. See archive-process/index.ts
 // for the full explanation — legacy JWT (eyJ...) and new sb_secret_ format
 // both need to work during the Supabase key rotation transition window.
-function isServiceRoleAuth(authHeader: string, envServiceRoleKey: string): boolean {
+function isServiceRoleAuth(
+  authHeader: string,
+  envServiceRoleKey: string,
+): boolean {
   if (!authHeader.startsWith("Bearer ")) return false;
   const token = authHeader.slice(7).trim();
   if (!token) return false;

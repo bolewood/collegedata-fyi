@@ -32,7 +32,8 @@ export async function generateMetadata({
   const doc = docs[0];
   const path = `/schools/${school_id}/${year}`;
   const title = `${doc.school_name} Common Data Set ${year}`;
-  const description = `Common Data Set ${year} for ${doc.school_name}. Admissions, enrollment, financial aid, and more, extracted from the official CDS document.`;
+  const description =
+    `View ${doc.school_name} Common Data Set ${year}: official source download plus extracted admissions, enrollment, SAT/ACT, financial aid, and field-level CDS data.`;
 
   return {
     title,

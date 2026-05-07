@@ -1477,10 +1477,19 @@
   gap: 12px;
   padding-bottom: 8px;
 }
+.match-tier-group__head-text {
+  min-width: 0;
+}
 .match-tier-group__head h3 {
   margin: 0;
   font-size: 28px;
   line-height: 1;
+}
+.match-tier-group__sub {
+  margin: 6px 0 0;
+  color: var(--ink-3);
+  font-size: 13px;
+  line-height: 1.4;
 }
 .match-tier-group__head span {
   color: var(--ink-3);

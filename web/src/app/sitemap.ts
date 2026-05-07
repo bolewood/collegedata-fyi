@@ -36,6 +36,46 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.5,
     },
+    {
+      url: `${SITE_URL}/api`,
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
+      url: `${SITE_URL}/methodology`,
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
+      url: `${SITE_URL}/methodology/positioning`,
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    {
+      url: `${SITE_URL}/methodology/admission-strategy`,
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    {
+      url: `${SITE_URL}/methodology/merit-profile`,
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    {
+      url: `${SITE_URL}/recipes`,
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
+      url: `${SITE_URL}/recipes/acceptance-vs-yield`,
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    {
+      url: `${SITE_URL}/recipes/test-optional-tracker`,
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
   ];
 
   const schoolPages: MetadataRoute.Sitemap = schools.map((s) => ({
@@ -58,5 +98,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
-  return [...staticPages, ...schoolPages, ...yearPages];
+  return [...staticPages, ...schoolPages, ...yearPages].filter((entry, index, entries) =>
+    entries.findIndex((candidate) => candidate.url === entry.url) === index
+  );
 }

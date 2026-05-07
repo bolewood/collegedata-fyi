@@ -175,6 +175,21 @@ export function academicFitLabel(fit: AcademicFit): string {
   }
 }
 
+export function academicFitSubtitle(fit: AcademicFit): string | null {
+  switch (fit) {
+    case "strong_academic_fit":
+      return "Your score is at or above the 75th percentile of recent admits.";
+    case "above_range":
+      return "Your score is well above the 75th percentile (more than 100 SAT or 2 ACT points past it).";
+    case "in_range":
+      return "Your score lands in the middle 50% of recent admits (25th–75th percentile).";
+    case "below_range":
+      return "Your score is below the 25th percentile of recent admits.";
+    case "unknown":
+      return null;
+  }
+}
+
 export function admissionsOutlookLabel(outlook: AdmissionsOutlook): string {
   switch (outlook) {
     case "likely":

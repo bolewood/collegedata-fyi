@@ -1,6 +1,6 @@
 # collegedata.fyi — Architecture
 
-How the pieces fit together at runtime. Complements [`docs/v1-plan.md`](v1-plan.md) (engineering plan, data model details) and [`docs/prd/001-collegedata-fyi-v1.md`](prd/001-collegedata-fyi-v1.md) (product-level framing).
+How the pieces fit together at runtime. Complements [`docs/v1-plan.md`](v1-plan.md) (engineering plan, data model details), [`docs/prd/001-collegedata-fyi-v1.md`](prd/001-collegedata-fyi-v1.md) (product-level framing), and the focused [data extraction pipeline map](data-extraction-pipeline.md) for operator cadence, storage, and known extraction issues.
 
 ---
 
