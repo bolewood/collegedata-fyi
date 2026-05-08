@@ -85,6 +85,42 @@ describe("buildReconstructedTables", () => {
     ]);
   });
 
+  it("builds B2 as a race and ethnicity cohort table", () => {
+    const tables = buildReconstructedTables({
+      "B.201": field("25", "Nonresidents"),
+      "B.202": field("80", "Hispanic/Latino"),
+      "B.211": field("120", "Nonresidents"),
+      "B.212": field("420", "Hispanic/Latino"),
+      "B.221": field("150", "Nonresidents"),
+      "B.222": field("500", "Hispanic/Latino"),
+      "B.230": field("2500", "TOTAL"),
+    });
+
+    const b2 = tables.find((table) => table.key === "b2-race-ethnicity");
+
+    expect(b2?.columns).toEqual([
+      "First-time first-year",
+      "Degree-seeking undergraduates",
+      "Total undergraduates",
+    ]);
+    expect(b2?.rows[0].cells.map((cell) => cell.display)).toEqual([
+      "25",
+      "120",
+      "150",
+    ]);
+    expect(b2?.rows[1].cells.map((cell) => cell.display)).toEqual([
+      "80",
+      "420",
+      "500",
+    ]);
+    expect(b2?.rows.at(-1)?.cells.map((cell) => cell.display)).toEqual([
+      "Not reported",
+      "Not reported",
+      "2,500",
+    ]);
+    expect(b2?.usedFieldIds).toContain("B.230");
+  });
+
   it("builds a 2025-style C1 table and leaves missing schema cells explicit", () => {
     const tables = buildReconstructedTables({
       "C.101": field("1200", "Total first-time, first-year males who applied"),
@@ -179,6 +215,42 @@ describe("buildReconstructedTables", () => {
       "—",
     ]);
     expect(c7?.usedFieldIds).toEqual(["C.701", "C.703"]);
+  });
+
+  it("builds H2 as a need-based aid cohort grid", () => {
+    const tables = buildReconstructedTables({
+      "H.201": field("500", "A. Number of degree-seeking undergraduate students", "Number"),
+      "H.202": field("320", "B. Number of students in line a who applied for need-based financial aid", "Number"),
+      "H.209": field("95", "I. On average, the percentage of need that was met", "Nearest 1%"),
+      "H.210": field("72000", "J. The average financial aid package", "Nearest $1"),
+      "H.214": field("1800", "A. Number of degree-seeking undergraduate students", "Number"),
+      "H.222": field("90", "I. On average, the percentage of need that was met", "Nearest 1%"),
+      "H.223": field("65000", "J. The average financial aid package", "Nearest $1"),
+      "H.227": field("50", "A. Number of degree-seeking undergraduate students", "Number"),
+    });
+
+    const h2 = tables.find((table) => table.key === "h2-aid-awarded");
+
+    expect(h2?.columns).toEqual([
+      "First-year full-time",
+      "All undergraduates full-time",
+      "All undergraduates less-than-full-time",
+    ]);
+    expect(h2?.rows[0].cells.map((cell) => cell.display)).toEqual([
+      "500",
+      "1,800",
+      "50",
+    ]);
+    expect(h2?.rows[8].cells.map((cell) => cell.display)).toEqual([
+      "95%",
+      "90%",
+      "Not reported",
+    ]);
+    expect(h2?.rows[9].cells.map((cell) => cell.display)).toEqual([
+      "$72,000",
+      "$65,000",
+      "Not reported",
+    ]);
   });
 
   it("builds H2A as a cohort grid", () => {

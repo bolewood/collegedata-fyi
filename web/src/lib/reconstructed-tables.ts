@@ -28,9 +28,11 @@ export function buildReconstructedTables(
 ): ReconstructedTable[] {
   return [
     ...buildB1Tables(values),
+    ...buildB2Tables(values),
     ...buildC1Tables(values),
     ...buildC7Tables(values),
     ...buildC9Tables(values),
+    ...buildH2Tables(values),
     ...buildH2ATables(values),
   ].filter((table) => hasReportedCell(table));
 }
@@ -210,6 +212,60 @@ function row2024(
 }
 
 function b1Id(n: number): string {
+  return `B.${n}`;
+}
+
+function buildB2Tables(values: Record<string, FieldValue>): ReconstructedTable[] {
+  const ids = Object.keys(values);
+  if (!ids.some((id) => /^B\.2(0[1-9]|[12][0-9]|30)$/.test(id))) {
+    return [];
+  }
+
+  return [
+    makeTable({
+      key: "b2-race-ethnicity",
+      title: "B2 enrollment by race and ethnicity",
+      caption:
+        "Undergraduate enrollment by race or ethnicity for first-time first-year, degree-seeking, and total undergraduate cohorts.",
+      columns: [
+        "First-time first-year",
+        "Degree-seeking undergraduates",
+        "Total undergraduates",
+      ],
+      rows: [
+        b2Row("nonresidents", "Nonresidents", 201),
+        b2Row("hispanic-latino", "Hispanic/Latino", 202),
+        b2Row("black", "Black or African American, non-Hispanic", 203),
+        b2Row("white", "White, non-Hispanic", 204),
+        b2Row("american-indian", "American Indian or Alaska Native, non-Hispanic", 205),
+        b2Row("asian", "Asian, non-Hispanic", 206),
+        b2Row("pacific-islander", "Native Hawaiian or other Pacific Islander, non-Hispanic", 207),
+        b2Row("two-or-more", "Two or more races, non-Hispanic", 208),
+        b2Row("unknown", "Race and/or ethnicity unknown", 209),
+        b2Row("total", "Total", 210),
+      ],
+      values,
+    }),
+  ];
+}
+
+function b2Row(
+  key: string,
+  label: string,
+  firstYearIdNumber: number,
+): [string, string, (string | null)[]] {
+  return [
+    key,
+    label,
+    [
+      bId(firstYearIdNumber),
+      bId(firstYearIdNumber + 10),
+      bId(firstYearIdNumber + 20),
+    ],
+  ];
+}
+
+function bId(n: number): string {
   return `B.${n}`;
 }
 
@@ -398,6 +454,63 @@ function buildH2ATables(values: Record<string, FieldValue>): ReconstructedTable[
       values,
     }),
   ];
+}
+
+function buildH2Tables(values: Record<string, FieldValue>): ReconstructedTable[] {
+  const ids = Object.keys(values);
+  if (!ids.some((id) => /^H\.2(0[1-9]|[1-3][0-9])$/.test(id))) {
+    return [];
+  }
+
+  return [
+    makeTable({
+      key: "h2-aid-awarded",
+      title: "H2 students awarded aid",
+      caption:
+        "Need-based aid counts, need met, and average awards by undergraduate cohort.",
+      columns: [
+        "First-year full-time",
+        "All undergraduates full-time",
+        "All undergraduates less-than-full-time",
+      ],
+      rows: [
+        h2Row("degree-seeking", "Degree-seeking undergraduates", 201),
+        h2Row("applied-need", "Applied for need-based aid", 202),
+        h2Row("need-determined", "Determined to have financial need", 203),
+        h2Row("any-aid", "Awarded any aid", 204),
+        h2Row("need-grant", "Awarded need-based scholarship or grant aid", 205),
+        h2Row("need-self-help", "Awarded need-based self-help aid", 206),
+        h2Row("non-need-grant", "Awarded non-need-based scholarship or grant aid", 207),
+        h2Row("need-fully-met", "Need fully met", 208),
+        h2Row("average-need-met", "Average percentage of need met", 209),
+        h2Row("average-aid-package", "Average financial aid package", 210),
+        h2Row("average-need-grant", "Average need-based scholarship or grant", 211),
+        h2Row("average-need-self-help", "Average need-based self-help award", 212),
+        h2Row("average-need-loan", "Average need-based loan", 213),
+      ],
+      values,
+    }),
+  ];
+}
+
+function h2Row(
+  key: string,
+  label: string,
+  firstYearIdNumber: number,
+): [string, string, (string | null)[]] {
+  return [
+    key,
+    label,
+    [
+      h2Id(firstYearIdNumber),
+      h2Id(firstYearIdNumber + 13),
+      h2Id(firstYearIdNumber + 26),
+    ],
+  ];
+}
+
+function h2Id(n: number): string {
+  return `H.${n}`;
 }
 
 function makeTable({
