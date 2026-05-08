@@ -153,6 +153,8 @@ function SubsectionBlock({ sub }: { sub: SubsectionGroup }) {
 }
 
 function ReconstructedTableView({ table }: { table: ReconstructedTable }) {
+  const minWidth = table.columns.length >= 5 ? 760 : 620;
+
   return (
     <div
       className="cd-reconstructed"
@@ -164,16 +166,18 @@ function ReconstructedTableView({ table }: { table: ReconstructedTable }) {
         width: "100%",
         maxWidth: "100%",
         overflow: "hidden",
+        position: "relative",
       }}
     >
       <div
+        className="cd-reconstructed__head"
         style={{
           padding: "10px 12px",
           borderBottom: "1px solid var(--rule)",
         }}
       >
         <div
-          className="serif"
+          className="cd-reconstructed__title serif"
           style={{
             fontSize: 18,
             color: "var(--ink)",
@@ -196,6 +200,8 @@ function ReconstructedTableView({ table }: { table: ReconstructedTable }) {
       </div>
       <div
         className="cd-reconstructed__table-wrap"
+        tabIndex={0}
+        aria-label={`${table.title} table. Scroll horizontally to read all columns.`}
         style={{
           overflowX: "auto",
           width: "100%",
@@ -207,7 +213,7 @@ function ReconstructedTableView({ table }: { table: ReconstructedTable }) {
           className="cd-reconstructed__table nums"
           style={{
             width: "100%",
-            minWidth: table.columns.length >= 5 ? 760 : 620,
+            minWidth,
             borderCollapse: "collapse",
             fontSize: 13.5,
           }}
@@ -230,6 +236,7 @@ function ReconstructedTableView({ table }: { table: ReconstructedTable }) {
           <thead>
             <tr>
               <th
+                className="cd-reconstructed__stub"
                 scope="col"
                 style={{
                   textAlign: "left",
@@ -264,6 +271,7 @@ function ReconstructedTableView({ table }: { table: ReconstructedTable }) {
             {table.rows.map((row) => (
               <tr key={row.key}>
                 <th
+                  className="cd-reconstructed__rowhead"
                   scope="row"
                   style={{
                     textAlign: "left",
@@ -282,7 +290,7 @@ function ReconstructedTableView({ table }: { table: ReconstructedTable }) {
                     style={{
                       textAlign: "right",
                       padding: "9px 12px",
-                      color: cell.missing ? "var(--ink-4)" : "var(--ink)",
+                      color: cell.missing ? "var(--ink-3)" : "var(--ink)",
                       borderBottom: "1px dashed var(--rule)",
                       fontWeight: cell.missing ? 400 : 500,
                       overflowWrap: "anywhere",
