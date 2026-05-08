@@ -66,49 +66,7 @@ export function FieldsView({
 
         <div className="cd-fields__body">
           {sections.map((sec) => (
-            <section
-              key={sec.letter}
-              id={`sec-${sec.letter}`}
-              style={{ marginBottom: 36, scrollMarginTop: 24 }}
-            >
-              <header
-                style={{
-                  display: "flex",
-                  alignItems: "baseline",
-                  gap: 16,
-                  borderBottom: "1px solid var(--rule-strong)",
-                  paddingBottom: 8,
-                  marginBottom: 16,
-                }}
-              >
-                <h2
-                  className="serif"
-                  style={{
-                    fontWeight: 400,
-                    fontSize: 24,
-                    margin: 0,
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  {sec.name}
-                </h2>
-                <span
-                  className="mono"
-                  style={{
-                    fontSize: 11,
-                    color: "var(--ink-3)",
-                    marginLeft: "auto",
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  {sec.subsections.length} TABLE
-                  {sec.subsections.length === 1 ? "" : "S"}
-                </span>
-              </header>
-              {sec.subsections.map((sub) => (
-                <SubsectionBlock key={sub.slug} sub={sub} />
-              ))}
-            </section>
+            <SectionBlock key={sec.letter} sec={sec} />
           ))}
         </div>
       </div>
@@ -116,15 +74,94 @@ export function FieldsView({
   );
 }
 
-function SubsectionBlock({ sub }: { sub: SubsectionGroup }) {
-  const subsectionValues = Object.fromEntries(
-    sub.fields.map(({ id, field }) => [id, field]),
+function SectionBlock({ sec }: { sec: ReturnType<typeof groupBySection>[number] }) {
+  const sectionValues = Object.fromEntries(
+    sec.subsections.flatMap((sub) => sub.fields.map(({ id, field }) => [id, field])),
   );
-  const reconstructedTables = buildReconstructedTables(subsectionValues);
+  const reconstructedTables = buildReconstructedTables(sectionValues);
   const reconstructedIds = new Set(
     reconstructedTables.flatMap((table) => table.usedFieldIds),
   );
-  const fallbackFields = sub.fields.filter(({ id }) => !reconstructedIds.has(id));
+  const subsectionByField = new Map<string, string>();
+  for (const sub of sec.subsections) {
+    for (const { id } of sub.fields) {
+      subsectionByField.set(id, sub.slug);
+    }
+  }
+  const tablesBySubsection = new Map<string, ReconstructedTable[]>();
+  for (const table of reconstructedTables) {
+    const slug =
+      table.usedFieldIds
+        .map((id) => subsectionByField.get(id))
+        .find((subSlug): subSlug is string => Boolean(subSlug)) ??
+      sec.subsections[0]?.slug;
+    if (!slug) continue;
+    const tables = tablesBySubsection.get(slug) ?? [];
+    tables.push(table);
+    tablesBySubsection.set(slug, tables);
+  }
+
+  return (
+    <section
+      id={`sec-${sec.letter}`}
+      style={{ marginBottom: 36, scrollMarginTop: 24 }}
+    >
+      <header
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: 16,
+          borderBottom: "1px solid var(--rule-strong)",
+          paddingBottom: 8,
+          marginBottom: 16,
+        }}
+      >
+        <h2
+          className="serif"
+          style={{
+            fontWeight: 400,
+            fontSize: 24,
+            margin: 0,
+            letterSpacing: "-0.01em",
+          }}
+        >
+          {sec.name}
+        </h2>
+        <span
+          className="mono"
+          style={{
+            fontSize: 11,
+            color: "var(--ink-3)",
+            marginLeft: "auto",
+            letterSpacing: "0.05em",
+          }}
+        >
+          {sec.subsections.length} TABLE
+          {sec.subsections.length === 1 ? "" : "S"}
+        </span>
+      </header>
+      {sec.subsections.map((sub) => (
+        <SubsectionBlock
+          key={sub.slug}
+          hiddenFieldIds={reconstructedIds}
+          reconstructedTables={tablesBySubsection.get(sub.slug) ?? []}
+          sub={sub}
+        />
+      ))}
+    </section>
+  );
+}
+
+function SubsectionBlock({
+  hiddenFieldIds,
+  reconstructedTables,
+  sub,
+}: {
+  hiddenFieldIds: Set<string>;
+  reconstructedTables: ReconstructedTable[];
+  sub: SubsectionGroup;
+}) {
+  const fallbackFields = sub.fields.filter(({ id }) => !hiddenFieldIds.has(id));
 
   return (
     <div
@@ -293,7 +330,7 @@ function ReconstructedTableView({ table }: { table: ReconstructedTable }) {
                       color: cell.missing ? "var(--ink-3)" : "var(--ink)",
                       borderBottom: "1px dashed var(--rule)",
                       fontWeight: cell.missing ? 400 : 500,
-                      overflowWrap: "anywhere",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {cell.display}

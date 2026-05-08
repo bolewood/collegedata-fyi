@@ -121,6 +121,49 @@ describe("buildReconstructedTables", () => {
     expect(b2?.usedFieldIds).toContain("B.230");
   });
 
+  it("builds B3, B4, and B22 persistence and graduation tables", () => {
+    const tables = buildReconstructedTables({
+      "B.303": field("520", "Bachelor's degrees"),
+      "B.401": field("100", "Recipients of a Federal Pell Grant"),
+      "B.404": field("500", "Total"),
+      "B.429": field("88.5", "Six Year Grad Rate", "Whole Number or Round to Nearest Tenth"),
+      "B.501": field("90", "Recipients of a Federal Pell Grant"),
+      "B.532": field("91.2", "Total", "Whole Number or Round to Nearest Tenth"),
+      "B.1201": field("200", "2022 Cohort"),
+      "B.1202": field("180", "2021 Cohort"),
+      "B.2201": field("600", "Entering cohort"),
+      "B.2203": field("95", "Retention rate", "Whole Number or Round to Nearest Tenth"),
+    });
+
+    const degrees = tables.find((table) => table.key === "b3-degrees-awarded");
+    const currentGrad = tables.find((table) => table.key === "b4-current-graduation-rates");
+    const previousGrad = tables.find((table) => table.key === "b5-previous-graduation-rates");
+    const retention = tables.find((table) => table.key === "b22-first-year-retention");
+    const twoYear = tables.find((table) => table.key === "b12-b21-two-year-graduation-rates");
+
+    expect(degrees?.rows[2].cells[0].display).toBe("520");
+    expect(currentGrad?.columns).toEqual([
+      "Pell Grant",
+      "Subsidized Stafford, no Pell",
+      "Neither Pell nor subsidized Stafford",
+      "Total",
+    ]);
+    expect(currentGrad?.rows[0].cells.map((cell) => cell.display)).toEqual([
+      "100",
+      "Not reported",
+      "Not reported",
+      "500",
+    ]);
+    expect(currentGrad?.rows.at(-1)?.cells[0].display).toBe("88.5%");
+    expect(previousGrad?.rows.at(-1)?.cells.at(-1)?.display).toBe("91.2%");
+    expect(retention?.rows[0].cells[0].display).toBe("600");
+    expect(retention?.rows[2].cells[0].display).toBe("95%");
+    expect(twoYear?.rows[0].cells.map((cell) => cell.display)).toEqual([
+      "200",
+      "180",
+    ]);
+  });
+
   it("builds a 2025-style C1 table and leaves missing schema cells explicit", () => {
     const tables = buildReconstructedTables({
       "C.101": field("1200", "Total first-time, first-year males who applied"),
@@ -217,6 +260,54 @@ describe("buildReconstructedTables", () => {
     expect(c7?.usedFieldIds).toEqual(["C.701", "C.703"]);
   });
 
+  it("builds D2 transfer admissions and G cost tables", () => {
+    const tables = buildReconstructedTables({
+      "D.201": field("120", "Males"),
+      "D.202": field("150", "Females"),
+      "D.204": field("270", "Total"),
+      "D.212": field("40", "Total"),
+      "G.101": field("62000", "Tuition", "Nearest $1"),
+      "G.102": field("63000", "Tuition", "Nearest $1"),
+      "G.111": field("600", "Required Fees", "Nearest $1"),
+      "G.115": field("650", "Required Fees", "Nearest $1"),
+      "G.119": field("82000", "Comprehensive tuition and food and housing", "Nearest $1"),
+      "G.501": field("1200", "Books and supplies", "Nearest $1"),
+      "G.504": field("1100", "Books and supplies", "Nearest $1"),
+      "G.513": field("2000", "Other expenses", "Nearest $1"),
+    });
+
+    const d2 = tables.find((table) => table.key === "d2-transfer-admissions");
+    const g1 = tables.find((table) => table.key === "g1-undergraduate-costs");
+    const g5 = tables.find((table) => table.key === "g5-estimated-expenses");
+
+    expect(d2?.rows[0].cells.map((cell) => cell.display)).toEqual([
+      "120",
+      "150",
+      "Not reported",
+      "270",
+    ]);
+    expect(d2?.rows[2].cells.at(-1)?.display).toBe("40");
+    expect(g1?.rows[0].cells.map((cell) => cell.display)).toEqual([
+      "$62,000",
+      "$63,000",
+    ]);
+    expect(g1?.rows.at(-2)?.cells.map((cell) => cell.display)).toEqual([
+      "$82,000",
+      "Not reported",
+    ]);
+    expect(g5?.columns).toEqual([
+      "Residents",
+      "Commuters living at home",
+      "Commuters not living at home",
+    ]);
+    expect(g5?.rows[0].cells.map((cell) => cell.display)).toEqual([
+      "$1,200",
+      "$1,100",
+      "Not reported",
+    ]);
+    expect(g5?.rows.at(-1)?.cells.at(-1)?.display).toBe("$2,000");
+  });
+
   it("builds H2 as a need-based aid cohort grid", () => {
     const tables = buildReconstructedTables({
       "H.201": field("500", "A. Number of degree-seeking undergraduate students", "Number"),
@@ -277,5 +368,45 @@ describe("buildReconstructedTables", () => {
       "$12,500",
       "Not reported",
     ]);
+  });
+
+  it("builds H5, I1, I3, and J tables", () => {
+    const tables = buildReconstructedTables({
+      "H.501": field("200", "Any loan program", "Number"),
+      "H.506": field("40", "Any loan program", "Nearest 1%"),
+      "H.511": field("18000", "Any loan program", "Nearest $1"),
+      "I.101": field("90", "Total number of instructional faculty"),
+      "I.111": field("30", "Total number of instructional faculty"),
+      "I.121": field("120", "Total number of instructional faculty"),
+      "I.301": field("12", "2-9"),
+      "I.309": field("22", "2-9"),
+      "I.316": field("60", "Total"),
+      "J.187": field("12.5", "Computer and information sciences", "Whole Number or Round to Nearest Tenth"),
+      "J.220": field("100", "TOTAL", "Whole Number or Round to Nearest Tenth"),
+    });
+
+    const h5 = tables.find((table) => table.key === "h5-student-loans");
+    const i1 = tables.find((table) => table.key === "i1-instructional-faculty");
+    const i3 = tables.find((table) => table.key === "i3-undergraduate-class-size");
+    const j = tables.find((table) => table.key === "j-degrees-conferred");
+
+    expect(h5?.rows[0].cells.map((cell) => cell.display)).toEqual([
+      "200",
+      "40%",
+      "$18,000",
+    ]);
+    expect(i1?.rows[0].cells.map((cell) => cell.display)).toEqual([
+      "90",
+      "30",
+      "120",
+    ]);
+    expect(i3?.rows[0].cells.map((cell) => cell.display)).toEqual([
+      "12",
+      "22",
+    ]);
+    expect(i3?.rows.at(-1)?.cells.at(-1)?.display).toBe("60");
+    expect(j?.columns).toEqual(["Certificate/diploma", "Associate", "Bachelor's"]);
+    expect(j?.rows.find((row) => row.label === "Computer and information sciences")?.cells[2].display).toBe("12.5%");
+    expect(j?.rows.at(-1)?.cells[2].display).toBe("100%");
   });
 });

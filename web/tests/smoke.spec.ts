@@ -78,6 +78,19 @@ test("school-year page renders reconstructed CDS tables", async ({ page }) => {
   await expect(b2.getByRole("columnheader", { name: /Degree-seeking undergraduates/i })).toBeVisible();
   await expect(b2.getByRole("rowheader", { name: "Hispanic/Latino" })).toBeVisible();
 
+  const b3 = page.getByRole("table", { name: /B3 degrees awarded/i });
+  await expect(b3).toBeVisible();
+  await expect(b3.getByRole("rowheader", { name: "Bachelor's degrees" })).toBeVisible();
+
+  const b4 = page.getByRole("table", { name: /B4 current graduation-rate cohort/i });
+  await expect(b4).toBeVisible();
+  await expect(b4.getByRole("columnheader", { name: /Pell Grant/i })).toBeVisible();
+  await expect(b4.getByRole("rowheader", { name: "Six-year graduation rate" })).toBeVisible();
+
+  const b5 = page.getByRole("table", { name: /B5 previous graduation-rate cohort/i });
+  await expect(b5).toBeVisible();
+  await expect(b5.getByRole("rowheader", { name: "Initial cohort" })).toBeVisible();
+
   const c1 = page.getByRole("table", { name: /C1 first-year admissions/i });
   await expect(c1).toBeVisible();
   await expect(c1.getByRole("columnheader", { name: /^(Males|Men)$/i })).toBeVisible();
@@ -97,6 +110,18 @@ test("school-year page renders reconstructed CDS tables", async ({ page }) => {
   await expect(c7.getByRole("columnheader", { name: "Very important" })).toBeVisible();
   await expect(c7.getByRole("rowheader", { name: "Academic GPA" })).toBeVisible();
 
+  const d2 = page.getByRole("table", { name: /D2 transfer admissions/i });
+  await expect(d2).toBeVisible();
+  await expect(d2.getByRole("rowheader", { name: "Enrolled" })).toBeVisible();
+
+  const g1 = page.getByRole("table", { name: /G1 undergraduate costs/i });
+  await expect(g1).toBeVisible();
+  await expect(g1.getByRole("rowheader", { name: "Tuition", exact: true })).toBeVisible();
+
+  const g5 = page.getByRole("table", { name: /G5 estimated expenses/i });
+  await expect(g5).toBeVisible();
+  await expect(g5.getByRole("columnheader", { name: /Commuters not living at home/i })).toBeVisible();
+
   const h2 = page.getByRole("table", { name: /H2 students awarded aid/i });
   await expect(h2).toBeVisible();
   await expect(h2.getByRole("columnheader", { name: /All undergraduates full-time/i })).toBeVisible();
@@ -106,6 +131,23 @@ test("school-year page renders reconstructed CDS tables", async ({ page }) => {
   await expect(h2a).toBeVisible();
   await expect(h2a.getByRole("columnheader", { name: /First-year full-time/i })).toBeVisible();
   await expect(h2a.getByRole("rowheader", { name: /Average institutional non-need grant/i })).toBeVisible();
+
+  const h5 = page.getByRole("table", { name: /H5 student loans/i });
+  await expect(h5).toBeVisible();
+  await expect(h5.getByRole("columnheader", { name: /Average per borrower/i })).toBeVisible();
+
+  const i1 = page.getByRole("table", { name: /I1 instructional faculty/i });
+  await expect(i1).toBeVisible();
+  await expect(i1.getByRole("rowheader", { name: "Total instructional faculty" })).toBeVisible();
+
+  const i3 = page.getByRole("table", { name: /I3 undergraduate class size/i });
+  await expect(i3).toBeVisible();
+  await expect(i3.getByRole("rowheader", { name: "100+ students" })).toBeVisible();
+
+  const j = page.getByRole("table", { name: /J degrees conferred by discipline/i });
+  await expect(j).toBeVisible();
+  await expect(j.getByRole("columnheader", { name: "Bachelor's" })).toBeVisible();
+  await expect(j.getByRole("rowheader", { name: "Computer and information sciences" })).toBeVisible();
 });
 
 test("mobile launch surfaces do not overflow", async ({ page, isMobile }) => {
