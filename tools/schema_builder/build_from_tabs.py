@@ -3,22 +3,24 @@ Build a STRUCTURAL CDS schema from the per-section tabs of the commondataset.org
 Excel template (CDS-A through CDS-J).
 
 This is different from the Answer Sheet-based schema (see build_from_xlsx.py).
-The Answer Sheet is a machine-readable canonical spec that only exists in the
-2025-26 template. Older templates (2019-20 through 2023-24) only have the
-per-section tabs, which are visual layouts for humans filling in data.
+The Answer Sheet is a machine-readable canonical spec. Older templates
+(2019-20 through 2023-24) only have the per-section tabs, which are visual
+layouts for humans filling in data. The 2024-25 template is an intermediate
+format: it has canonical question numbers, but each per-section tab is a
+row-based metadata table rather than a visual form layout.
 
 This script walks the per-section tabs and extracts the schema structure:
   - Section (A, B, C, ...)
-  - Subsection markers (A0, A1, B1, B2, C1, ...) from column A
+  - Subsection markers (A0, A1, B1, B2, C1, ...) from column A, or from
+    canonical question numbers in row-based sheets
   - Question row labels from column B
   - Column headers (Males | Females | Unknown, Full-Time | Part-Time, etc.)
   - Answer cell references for provenance
 
 Output is a `cds_schema_YYYY_YY.structural.json` file. It does NOT contain
-canonical question numbers (A.001, B.101, etc.) because those only exist in
-the 2025-26 Answer Sheet. Canonical ID assignment for older years is a
-separate tool (future work) that cross-references structural schemas against
-the 2025-26 canonical schema via fuzzy label matching.
+canonical question numbers (A.001, B.101, etc.) when the source sheet provides
+them. Visual-layout historical years do not include canonical IDs; canonical
+ID assignment for those years is a separate cross-reference step.
 
 Structural schemas enable:
   - Per-year extraction that respects that year's specific field set
@@ -39,6 +41,7 @@ import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 import openpyxl
 
@@ -54,6 +57,26 @@ INSTRUCTION_PREFIXES = ("•", "*", "·", "Note:", "NOTE", "Provide", "Include",
                          "For ", "Please", "http", "This ", "These ",
                          "In cases", "As used", "Nonresident - ",
                          "Eligible non-citizens",)
+
+ROW_METADATA_REQUIRED_HEADERS = {
+    "Question Number",
+    "Question",
+    "Answer",
+    "Section",
+    "Sub-Section",
+}
+
+ROW_METADATA_DIMENSION_HEADERS = {
+    "Section": "section_title",
+    "Sub-Section": "subsection_title",
+    "Category": "category",
+    "Student Group": "student_group",
+    "Cohort": "cohort",
+    "Residency": "residency",
+    "Unit load": "unit_load",
+    "Gender": "gender",
+    "Value type": "value_type",
+}
 
 
 def _clean(v) -> str | None:
@@ -128,6 +151,117 @@ def _col_letter(idx: int) -> str:
         idx, rem = divmod(idx - 1, 26)
         out = chr(65 + rem) + out
     return out
+
+
+def _header_index(cells: list[str | None]) -> dict[str, int]:
+    return {name: i for i, name in enumerate(cells) if name}
+
+
+def _is_row_metadata_sheet(ws) -> bool:
+    header = [_clean(c.value) for c in ws[1]]
+    return ROW_METADATA_REQUIRED_HEADERS.issubset(set(header))
+
+
+def _normalize_question_number(raw: str) -> str:
+    value = _clean(raw)
+    if value is None:
+        raise ValueError("question number is empty")
+
+    value = re.sub(r"\s+", "", value.upper())
+    m = re.match(r"^([A-Z])\.?(.+)$", value)
+    if not m:
+        raise ValueError(f"unparseable question number: {raw!r}")
+
+    section, rest = m.groups()
+    if rest.isdigit() and len(rest) < 3:
+        rest = rest.zfill(3)
+    return f"{section}.{rest}"
+
+
+def _subsection_id_from_question_number(raw: str, section_letter: str) -> str:
+    value = re.sub(r"\s+", "", str(raw).upper())
+    if value.startswith(f"{section_letter}."):
+        value = section_letter + value.split(".", 1)[1]
+    body = value[1:]
+
+    m = re.match(r"^(\d+)([A-Z]+)?", body)
+    if not m:
+        return section_letter
+
+    digits, letters = m.groups()
+    if letters:
+        return f"{section_letter}{digits}{letters}"
+    if len(digits) > 2:
+        return f"{section_letter}{digits[:-2]}"
+    return f"{section_letter}{digits[0]}"
+
+
+def parse_row_metadata_sheet(ws, section_letter: str) -> dict[str, Any]:
+    """Extract structure from the 2024-25 row-metadata sheet format."""
+    header = [_clean(c.value) for c in ws[1]]
+    index = _header_index(header)
+    sheet_name = ws.title
+
+    answer_idx = index["Answer"]
+    qnum_idx = index["Question Number"]
+    question_idx = index["Question"]
+    section_idx = index["Section"]
+    subsection_idx = index["Sub-Section"]
+
+    section_title = section_letter
+    subsections_by_id: dict[str, dict[str, Any]] = {}
+    subsection_order: list[str] = []
+
+    for row_number, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+        raw_qnum = _clean(row[qnum_idx] if qnum_idx < len(row) else None)
+        question = _clean(row[question_idx] if question_idx < len(row) else None)
+        if not raw_qnum or not question:
+            continue
+
+        normalized = _normalize_question_number(raw_qnum)
+        if not normalized.startswith(f"{section_letter}."):
+            continue
+
+        row_section_title = _clean(row[section_idx] if section_idx < len(row) else None)
+        row_subsection_title = _clean(row[subsection_idx] if subsection_idx < len(row) else None)
+        if row_section_title and section_title == section_letter:
+            section_title = row_section_title
+
+        subsection_id = _subsection_id_from_question_number(raw_qnum, section_letter)
+        if subsection_id not in subsections_by_id:
+            subsections_by_id[subsection_id] = {
+                "id": subsection_id,
+                "title": row_subsection_title or subsection_id,
+                "questions": [],
+            }
+            subsection_order.append(subsection_id)
+
+        q: dict[str, Any] = {
+            "canonical_question_number": normalized,
+            "question_number_raw": raw_qnum,
+            "row_label": question,
+            "row": row_number,
+            "columns": [
+                {
+                    "header": None,
+                    "cell_ref": f"{sheet_name}!{_col_letter(answer_idx)}{row_number}",
+                }
+            ],
+        }
+        for source_name, output_name in ROW_METADATA_DIMENSION_HEADERS.items():
+            col_idx = index.get(source_name)
+            if col_idx is None or col_idx >= len(row):
+                continue
+            value = _clean(row[col_idx])
+            if value is not None:
+                q[output_name] = value
+
+        subsections_by_id[subsection_id]["questions"].append(q)
+
+    return {
+        "title": section_title,
+        "subsections": [subsections_by_id[sub_id] for sub_id in subsection_order],
+    }
 
 
 def parse_section_sheet(ws, section_letter: str) -> list[dict]:
@@ -262,7 +396,11 @@ def build_structural_schema(xlsx_path: Path) -> dict:
         if len(letter) != 1 or not letter.isalpha():
             continue
         ws = wb[name]
-        parsed = parse_section_sheet(ws, letter)
+        parsed = (
+            parse_row_metadata_sheet(ws, letter)
+            if _is_row_metadata_sheet(ws)
+            else parse_section_sheet(ws, letter)
+        )
         sections.append({
             "section": letter,
             "title": parsed["title"],
@@ -289,11 +427,11 @@ def build_structural_schema(xlsx_path: Path) -> dict:
         "structural": True,
         "source_note": (
             "Extracted from the per-section tabs (CDS-A through CDS-J) of the "
-            "commondataset.org Common Data Set Excel template. Unlike the "
-            "Answer Sheet-based canonical schema, this does not include "
-            "canonical question_numbers. Canonical ID assignment for this "
-            "year requires a separate cross-reference step against the "
-            "2025-26 Answer Sheet schema."
+            "commondataset.org Common Data Set Excel template. Row-metadata "
+            "templates retain canonical question_numbers when provided by the "
+            "source workbook. Visual-layout historical templates require a "
+            "separate canonical overlay to cross-reference fields against the "
+            "current Answer Sheet schema."
         ),
         "extracted_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "section_count": len(sections),
@@ -309,6 +447,9 @@ def _infer_year_from_filename(name: str) -> str:
     if m:
         y1, y2 = m.group(1), m.group(2)
         return f"{y1}-{y2[-2:]}"
+    m = re.search(r"(\d{4})[-_](\d{2})(?:\D|$)", name)
+    if m:
+        return f"{m.group(1)}-{m.group(2)}"
     return "unknown"
 
 
