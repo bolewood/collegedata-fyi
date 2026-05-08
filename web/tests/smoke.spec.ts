@@ -28,6 +28,17 @@ test("homepage search opens an institution page", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("homepage latest drain rows link to school pages", async ({ page }) => {
+  await page.goto("/");
+
+  const firstDrainRow = page.locator(".cd-drain-row").first();
+  await expect(firstDrainRow).toBeVisible();
+  await expect(firstDrainRow).toHaveAttribute("href", /\/schools\/[^/]+/);
+
+  await firstDrainRow.click();
+  await expect(page).toHaveURL(/\/schools\/[^/]+/);
+});
+
 test("coverage page renders filterable accountability data", async ({ page }) => {
   await page.goto("/coverage");
   await expect(
