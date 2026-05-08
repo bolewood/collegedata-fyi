@@ -1,4 +1,4 @@
-import { STORAGE_BASE_URL } from "./supabase";
+const STORAGE_BASE_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/sources`;
 
 export function formatBadgeLabel(format: string | null): string {
   switch (format) {

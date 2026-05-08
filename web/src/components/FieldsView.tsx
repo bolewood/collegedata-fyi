@@ -2,12 +2,16 @@ import type { FieldValue } from "@/lib/types";
 import { FIELD_LABELS } from "@/lib/labels";
 import { groupBySection, type SubsectionGroup } from "@/lib/sections";
 import { formatFieldValue } from "@/lib/format";
+import {
+  buildReconstructedTables,
+  type ReconstructedTable,
+} from "@/lib/reconstructed-tables";
 
 // FieldsView — textbook-gutter layout. Sticky section/subsection index on
 // the left, KV groups on the right. Each subsection renders the extracted
-// fields as a label/value list with dashed rules between rows; future work
-// can swap in reconstructed CDS tables for select subsections (B1, C9,
-// H2A, etc.) without changing the surrounding layout.
+// fields as a label/value list with dashed rules between rows. High-value
+// subsections can render reconstructed CDS-shaped tables first, while keeping
+// the KV rows as the fallback for unsupported or long-tail fields.
 export function FieldsView({
   values,
   totalFields,
@@ -113,6 +117,15 @@ export function FieldsView({
 }
 
 function SubsectionBlock({ sub }: { sub: SubsectionGroup }) {
+  const subsectionValues = Object.fromEntries(
+    sub.fields.map(({ id, field }) => [id, field]),
+  );
+  const reconstructedTables = buildReconstructedTables(subsectionValues);
+  const reconstructedIds = new Set(
+    reconstructedTables.flatMap((table) => table.usedFieldIds),
+  );
+  const fallbackFields = sub.fields.filter(({ id }) => !reconstructedIds.has(id));
+
   return (
     <div
       id={`sub-${sub.slug}`}
@@ -122,7 +135,167 @@ function SubsectionBlock({ sub }: { sub: SubsectionGroup }) {
         {sub.code ? `${sub.code} · ` : ""}
         {sub.name}
       </div>
-      <KVRows fields={sub.fields} />
+      {reconstructedTables.map((table) => (
+        <ReconstructedTableView key={table.key} table={table} />
+      ))}
+      {fallbackFields.length > 0 && (
+        <div style={{ marginTop: reconstructedTables.length > 0 ? 14 : 0 }}>
+          {reconstructedTables.length > 0 && (
+            <div className="meta" style={{ marginBottom: 6 }}>
+              Other extracted fields
+            </div>
+          )}
+          <KVRows fields={fallbackFields} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ReconstructedTableView({ table }: { table: ReconstructedTable }) {
+  return (
+    <div
+      className="cd-reconstructed"
+      style={{
+        marginBottom: 14,
+        border: "1px solid var(--rule)",
+        borderRadius: 8,
+        minWidth: 0,
+        width: "100%",
+        maxWidth: "100%",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          padding: "10px 12px",
+          borderBottom: "1px solid var(--rule)",
+        }}
+      >
+        <div
+          className="serif"
+          style={{
+            fontSize: 18,
+            color: "var(--ink)",
+            marginBottom: 2,
+          }}
+        >
+          {table.title}
+        </div>
+        <div
+          style={{
+            color: "var(--ink-2)",
+            fontSize: 13,
+            lineHeight: 1.45,
+            maxWidth: "100%",
+            overflowWrap: "anywhere",
+          }}
+        >
+          {table.caption}
+        </div>
+      </div>
+      <div
+        className="cd-reconstructed__table-wrap"
+        style={{
+          overflowX: "auto",
+          width: "100%",
+          maxWidth: "100%",
+          minWidth: 0,
+        }}
+      >
+        <table
+          className="cd-reconstructed__table nums"
+          style={{
+            width: "100%",
+            minWidth: table.columns.length >= 5 ? 760 : 620,
+            borderCollapse: "collapse",
+            fontSize: 13.5,
+          }}
+        >
+          <caption
+            style={{
+              position: "absolute",
+              width: 1,
+              height: 1,
+              padding: 0,
+              margin: -1,
+              overflow: "hidden",
+              clip: "rect(0, 0, 0, 0)",
+              whiteSpace: "nowrap",
+              border: 0,
+            }}
+          >
+            {table.title}. {table.caption}
+          </caption>
+          <thead>
+            <tr>
+              <th
+                scope="col"
+                style={{
+                  textAlign: "left",
+                  padding: "9px 12px",
+                  color: "var(--ink-2)",
+                  borderBottom: "1px solid var(--rule)",
+                  fontWeight: 600,
+                  whiteSpace: "normal",
+                }}
+              >
+                Measure
+              </th>
+              {table.columns.map((column) => (
+                <th
+                  key={column}
+                  scope="col"
+                  style={{
+                    textAlign: "right",
+                    padding: "9px 12px",
+                    color: "var(--ink-2)",
+                    borderBottom: "1px solid var(--rule)",
+                    fontWeight: 600,
+                    whiteSpace: "normal",
+                  }}
+                >
+                  {column}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {table.rows.map((row) => (
+              <tr key={row.key}>
+                <th
+                  scope="row"
+                  style={{
+                    textAlign: "left",
+                    padding: "9px 12px",
+                    color: "var(--ink-2)",
+                    borderBottom: "1px dashed var(--rule)",
+                    fontWeight: 500,
+                    width: "28%",
+                  }}
+                >
+                  {row.label}
+                </th>
+                {row.cells.map((cell, i) => (
+                  <td
+                    key={`${row.key}-${cell.fieldId ?? i}`}
+                    style={{
+                      textAlign: "right",
+                      padding: "9px 12px",
+                      color: cell.missing ? "var(--ink-4)" : "var(--ink)",
+                      borderBottom: "1px dashed var(--rule)",
+                      fontWeight: cell.missing ? 400 : 500,
+                      overflowWrap: "anywhere",
+                    }}
+                  >
+                    {cell.display}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
