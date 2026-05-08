@@ -74,4 +74,58 @@ describe("buildReconstructedTables", () => {
       "1,560",
     ]);
   });
+
+  it("builds C7 as a selected-choice matrix", () => {
+    const tables = buildReconstructedTables({
+      "C.701": field("Very Important", "Rigor of secondary school record", "Text"),
+      "C.703": field("Considered", "Academic GPA", "Text"),
+    });
+
+    const c7 = tables.find((table) => table.key === "c7-factors");
+    expect(c7?.columns).toEqual([
+      "Very important",
+      "Important",
+      "Considered",
+      "Not considered",
+    ]);
+    expect(c7?.rows[0].cells.map((cell) => cell.display)).toEqual([
+      "Yes",
+      "—",
+      "—",
+      "—",
+    ]);
+    expect(c7?.rows[2].cells.map((cell) => cell.display)).toEqual([
+      "—",
+      "—",
+      "Yes",
+      "—",
+    ]);
+    expect(c7?.usedFieldIds).toEqual(["C.701", "C.703"]);
+  });
+
+  it("builds H2A as a cohort grid", () => {
+    const tables = buildReconstructedTables({
+      "H.2A01": field("120", "N. Number of students...", "Number"),
+      "H.2A02": field("18000", "O. Average dollar amount...", "Nearest $1"),
+      "H.2A05": field("400", "N. Number of students...", "Number"),
+      "H.2A06": field("12500", "O. Average dollar amount...", "Nearest $1"),
+    });
+
+    const h2a = tables.find((table) => table.key === "h2a-non-need-aid");
+    expect(h2a?.columns).toEqual([
+      "First-year full-time",
+      "All undergraduates full-time",
+      "All undergraduates less-than-full-time",
+    ]);
+    expect(h2a?.rows[0].cells.map((cell) => cell.display)).toEqual([
+      "120",
+      "400",
+      "Not reported",
+    ]);
+    expect(h2a?.rows[1].cells.map((cell) => cell.display)).toEqual([
+      "$18,000",
+      "$12,500",
+      "Not reported",
+    ]);
+  });
 });

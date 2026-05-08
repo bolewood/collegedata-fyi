@@ -62,7 +62,7 @@ test("facts endpoint returns flat JSON", async ({ request }) => {
   expect(typeof body.raw).toBe("object");
 });
 
-test("school-year page renders reconstructed C1 and C9 tables", async ({ page }) => {
+test("school-year page renders reconstructed CDS tables", async ({ page }) => {
   await page.goto("/schools/bowdoin/2024-25");
   await expect(
     page.getByRole("heading", { name: /Bowdoin College/i }),
@@ -81,6 +81,16 @@ test("school-year page renders reconstructed C1 and C9 tables", async ({ page })
   await expect(c9Percentiles).toBeVisible();
   await expect(c9Percentiles.getByRole("columnheader", { name: /75th percentile/i })).toBeVisible();
   await expect(c9Percentiles.getByRole("rowheader", { name: "SAT composite" })).toBeVisible();
+
+  const c7 = page.getByRole("table", { name: /C7 basis for selection/i });
+  await expect(c7).toBeVisible();
+  await expect(c7.getByRole("columnheader", { name: "Very important" })).toBeVisible();
+  await expect(c7.getByRole("rowheader", { name: "Academic GPA" })).toBeVisible();
+
+  const h2a = page.getByRole("table", { name: /H2A non-need-based aid/i });
+  await expect(h2a).toBeVisible();
+  await expect(h2a.getByRole("columnheader", { name: /First-year full-time/i })).toBeVisible();
+  await expect(h2a.getByRole("rowheader", { name: /Average institutional non-need grant/i })).toBeVisible();
 });
 
 test("mobile launch surfaces do not overflow", async ({ page, isMobile }) => {

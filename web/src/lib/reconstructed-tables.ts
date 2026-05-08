@@ -28,7 +28,9 @@ export function buildReconstructedTables(
 ): ReconstructedTable[] {
   return [
     ...buildC1Tables(values),
+    ...buildC7Tables(values),
     ...buildC9Tables(values),
+    ...buildH2ATables(values),
   ].filter((table) => hasReportedCell(table));
 }
 
@@ -88,6 +90,70 @@ function c1Table2024(values: Record<string, FieldValue>): ReconstructedTable {
   });
 }
 
+function buildC7Tables(values: Record<string, FieldValue>): ReconstructedTable[] {
+  const ids = Object.keys(values);
+  if (!ids.some((id) => /^C\.7(0[1-9]|1[0-9])$/.test(id))) {
+    return [];
+  }
+
+  return [c7Table(values)];
+}
+
+const C7_COLUMNS = ["Very important", "Important", "Considered", "Not considered"];
+
+function c7Table(values: Record<string, FieldValue>): ReconstructedTable {
+  const factors: [string, string][] = [
+    ["C.701", "Rigor of secondary school record"],
+    ["C.702", "Class rank"],
+    ["C.703", "Academic GPA"],
+    ["C.704", "Standardized test scores"],
+    ["C.705", "Application essay"],
+    ["C.706", "Recommendations"],
+    ["C.707", "Interview"],
+    ["C.708", "Extracurricular activities"],
+    ["C.709", "Talent or ability"],
+    ["C.710", "Character and personal qualities"],
+    ["C.711", "First generation"],
+    ["C.712", "Alumni relation"],
+    ["C.713", "Geographical residence"],
+    ["C.714", "State residency"],
+    ["C.715", "Religious affiliation or commitment"],
+    ["C.716", "Volunteer work"],
+    ["C.717", "Work experience"],
+    ["C.718", "Level of applicant interest"],
+  ];
+
+  const usedFieldIds: string[] = [];
+  const rows = factors.map(([fieldId, label]) => {
+    const field = values[fieldId];
+    if (field) usedFieldIds.push(fieldId);
+    const selected = normalizeChoice(field ? displayField(field) : "");
+    return {
+      key: fieldId.toLowerCase().replace(".", "-"),
+      label,
+      cells: C7_COLUMNS.map((column) => {
+        const isSelected = selected === normalizeChoice(column);
+        return {
+          fieldId: isSelected ? fieldId : null,
+          label: column,
+          display: field ? (isSelected ? "Yes" : "—") : "Not reported",
+          missing: !field || !isSelected,
+        };
+      }),
+    };
+  });
+
+  return {
+    key: "c7-factors",
+    title: "C7 basis for selection",
+    caption:
+      "Relative importance of academic and nonacademic factors in first-year admissions decisions.",
+    columns: C7_COLUMNS,
+    rows,
+    usedFieldIds,
+  };
+}
+
 function buildC9Tables(values: Record<string, FieldValue>): ReconstructedTable[] {
   const ids = Object.keys(values);
   if (!ids.some((id) => /^C\.9(0[1-9]|[1-5][0-9])$/.test(id))) {
@@ -121,6 +187,34 @@ function buildC9Tables(values: Record<string, FieldValue>): ReconstructedTable[]
         ["act-writing", "ACT Writing", ["C.923", "C.924", "C.925"]],
         ["act-science", "ACT Science", ["C.926", "C.927", "C.928"]],
         ["act-reading", "ACT Reading", ["C.929", "C.930", "C.931"]],
+      ],
+      values,
+    }),
+  ];
+}
+
+function buildH2ATables(values: Record<string, FieldValue>): ReconstructedTable[] {
+  const ids = Object.keys(values);
+  if (!ids.some((id) => /^H\.2A(0[1-9]|1[0-2])$/.test(id))) {
+    return [];
+  }
+
+  return [
+    makeTable({
+      key: "h2a-non-need-aid",
+      title: "H2A non-need-based aid",
+      caption:
+        "Non-need-based scholarship and grant aid recipients and average awards by undergraduate cohort.",
+      columns: [
+        "First-year full-time",
+        "All undergraduates full-time",
+        "All undergraduates less-than-full-time",
+      ],
+      rows: [
+        ["institutional-grant-count", "Institutional non-need grant recipients", ["H.2A01", "H.2A05", "H.2A09"]],
+        ["institutional-grant-average", "Average institutional non-need grant", ["H.2A02", "H.2A06", "H.2A10"]],
+        ["athletic-grant-count", "Athletic grant recipients", ["H.2A03", "H.2A07", "H.2A11"]],
+        ["athletic-grant-average", "Average athletic grant", ["H.2A04", "H.2A08", "H.2A12"]],
       ],
       values,
     }),
@@ -187,4 +281,8 @@ function isMissingDisplay(display: string): boolean {
     normalized === "not reported" ||
     normalized.includes("not provided")
   );
+}
+
+function normalizeChoice(value: string): string {
+  return value.trim().toLowerCase().replace(/[-\s]+/g, " ");
 }
