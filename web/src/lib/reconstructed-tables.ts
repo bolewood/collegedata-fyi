@@ -27,11 +27,190 @@ export function buildReconstructedTables(
   values: Record<string, FieldValue>,
 ): ReconstructedTable[] {
   return [
+    ...buildB1Tables(values),
     ...buildC1Tables(values),
     ...buildC7Tables(values),
     ...buildC9Tables(values),
     ...buildH2ATables(values),
   ].filter((table) => hasReportedCell(table));
+}
+
+function buildB1Tables(values: Record<string, FieldValue>): ReconstructedTable[] {
+  const ids = Object.keys(values);
+  if (!ids.some((id) => /^B\.1\d{2}$/.test(id))) {
+    return [];
+  }
+
+  return isB12024Layout(values) ? b1Tables2024(values) : b1Tables2025(values);
+}
+
+function isB12024Layout(values: Record<string, FieldValue>): boolean {
+  const b103 = values["B.103"]?.question?.toLowerCase() ?? "";
+  return (
+    b103.includes("another gender") ||
+    ["B.189", "B.190", "B.191", "B.192", "B.193", "B.194", "B.195"].some(
+      (id) => id in values,
+    )
+  );
+}
+
+function b1Tables2025(values: Record<string, FieldValue>): ReconstructedTable[] {
+  return [
+    makeTable({
+      key: "b1-undergraduate",
+      title: "B1 undergraduate enrollment",
+      caption:
+        "Full-time, part-time, and total undergraduate enrollment by reported sex or status.",
+      columns: ["Males", "Females", "Unknown", "Total"],
+      rows: [
+        row2025("ug-ft-first-year", "Full-time first-time first-year degree-seeking", 101),
+        row2025("ug-ft-other-first-year", "Full-time other first-year degree-seeking", 102),
+        row2025("ug-ft-other-degree", "Full-time all other degree-seeking", 103),
+        row2025("ug-ft-total-degree", "Full-time total degree-seeking", 104),
+        row2025("ug-ft-other-credit", "Full-time other credit-course undergraduates", 105),
+        row2025("ug-ft-total", "Full-time total undergraduates", 106),
+        row2025("ug-pt-first-year", "Part-time first-time first-year degree-seeking", 107),
+        row2025("ug-pt-other-first-year", "Part-time other first-year degree-seeking", 108),
+        row2025("ug-pt-other-degree", "Part-time all other degree-seeking", 109),
+        row2025("ug-pt-total-degree", "Part-time total degree-seeking", 110),
+        row2025("ug-pt-other-credit", "Part-time other credit-course undergraduates", 111),
+        row2025("ug-pt-total", "Part-time total undergraduates", 112),
+        row2025("ug-total", "Total undergraduates", 113, "B.176"),
+      ],
+      values,
+    }),
+    makeTable({
+      key: "b1-graduate",
+      title: "B1 graduate enrollment",
+      caption:
+        "Full-time, part-time, and total graduate enrollment by reported sex or status.",
+      columns: ["Males", "Females", "Unknown", "Total"],
+      rows: [
+        row2025("grad-ft-first-time", "Full-time first-time degree-seeking", 114),
+        row2025("grad-ft-other-degree", "Full-time all other degree-seeking", 115),
+        row2025("grad-ft-other-credit", "Full-time other credit-course graduates", 116),
+        row2025("grad-ft-total", "Full-time total graduates", 117),
+        row2025("grad-pt-first-time", "Part-time first-time degree-seeking", 118),
+        row2025("grad-pt-other-degree", "Part-time all other degree-seeking", 119),
+        row2025("grad-pt-other-credit", "Part-time other credit-course graduates", 120),
+        row2025("grad-pt-total", "Part-time total graduates", 121),
+        row2025("grad-total", "Total graduate students", 122, "B.177"),
+      ],
+      values,
+    }),
+    makeTable({
+      key: "b1-overall",
+      title: "B1 overall enrollment",
+      caption:
+        "Institution-wide full-time, part-time, and total enrollment by reported sex or status.",
+      columns: ["Males", "Females", "Unknown", "Total"],
+      rows: [
+        row2025("all-ft", "Total full-time students", 123),
+        row2025("all-pt", "Total part-time students", 124),
+        row2025("all-total", "Grand total all students", 125, "B.178"),
+      ],
+      values,
+    }),
+  ];
+}
+
+function b1Tables2024(values: Record<string, FieldValue>): ReconstructedTable[] {
+  return [
+    makeTable({
+      key: "b1-undergraduate",
+      title: "B1 undergraduate enrollment",
+      caption:
+        "Full-time, part-time, and total undergraduate enrollment by reported gender or status.",
+      columns: ["Men", "Women", "Another gender", "Unknown", "Total"],
+      rows: [
+        row2024("ug-ft-first-year", "Full-time first-time first-year degree-seeking", 101),
+        row2024("ug-ft-other-first-year", "Full-time other first-year degree-seeking", 105),
+        row2024("ug-ft-other-degree", "Full-time all other degree-seeking", 109),
+        row2024("ug-ft-total-degree", "Full-time total degree-seeking", 113),
+        row2024("ug-ft-other-credit", "Full-time other credit-course undergraduates", 117),
+        row2024("ug-ft-total", "Full-time total undergraduates", 121),
+        row2024("ug-pt-first-year", "Part-time first-time first-year degree-seeking", 125),
+        row2024("ug-pt-other-first-year", "Part-time other first-year degree-seeking", 129),
+        row2024("ug-pt-other-degree", "Part-time all other degree-seeking", 133),
+        row2024("ug-pt-total-degree", "Part-time total degree-seeking", 137),
+        row2024("ug-pt-other-credit", "Part-time other credit-course undergraduates", 141),
+        row2024("ug-pt-total", "Part-time total undergraduates", 145),
+        row2024("ug-total", "Total undergraduates", 149, "B.193"),
+      ],
+      values,
+    }),
+    makeTable({
+      key: "b1-graduate",
+      title: "B1 graduate enrollment",
+      caption:
+        "Full-time, part-time, and total graduate enrollment by reported gender or status.",
+      columns: ["Men", "Women", "Another gender", "Unknown", "Total"],
+      rows: [
+        row2024("grad-ft-first-time", "Full-time first-time degree-seeking", 153),
+        row2024("grad-ft-other-degree", "Full-time all other degree-seeking", 157),
+        row2024("grad-ft-other-credit", "Full-time other credit-course graduates", 161),
+        row2024("grad-ft-total", "Full-time total graduates", 165),
+        row2024("grad-pt-first-time", "Part-time first-time degree-seeking", 169),
+        row2024("grad-pt-other-degree", "Part-time all other degree-seeking", 173),
+        row2024("grad-pt-other-credit", "Part-time other credit-course graduates", 177),
+        row2024("grad-pt-total", "Part-time total graduates", 181),
+        row2024("grad-total", "Total graduate students", 185, "B.194"),
+      ],
+      values,
+    }),
+    makeTable({
+      key: "b1-overall",
+      title: "B1 overall enrollment",
+      caption:
+        "Institution-wide total enrollment by reported gender or status.",
+      columns: ["Men", "Women", "Another gender", "Unknown", "Total"],
+      rows: [
+        row2024("all-total", "Grand total all students", 189, "B.195"),
+      ],
+      values,
+    }),
+  ];
+}
+
+function row2025(
+  key: string,
+  label: string,
+  maleIdNumber: number,
+  totalId: string | null = null,
+): [string, string, (string | null)[]] {
+  return [
+    key,
+    label,
+    [
+      b1Id(maleIdNumber),
+      b1Id(maleIdNumber + 25),
+      b1Id(maleIdNumber + 50),
+      totalId,
+    ],
+  ];
+}
+
+function row2024(
+  key: string,
+  label: string,
+  firstIdNumber: number,
+  totalId: string | null = null,
+): [string, string, (string | null)[]] {
+  return [
+    key,
+    label,
+    [
+      b1Id(firstIdNumber),
+      b1Id(firstIdNumber + 1),
+      b1Id(firstIdNumber + 2),
+      b1Id(firstIdNumber + 3),
+      totalId,
+    ],
+  ];
+}
+
+function b1Id(n: number): string {
+  return `B.${n}`;
 }
 
 function buildC1Tables(values: Record<string, FieldValue>): ReconstructedTable[] {
