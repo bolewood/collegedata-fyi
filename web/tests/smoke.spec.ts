@@ -62,10 +62,31 @@ test("facts endpoint returns flat JSON", async ({ request }) => {
   expect(typeof body.raw).toBe("object");
 });
 
+test("school-year page renders reconstructed C1 and C9 tables", async ({ page }) => {
+  await page.goto("/schools/bowdoin/2024-25");
+  await expect(
+    page.getByRole("heading", { name: /Bowdoin College/i }),
+  ).toBeVisible();
+
+  const c1 = page.getByRole("table", { name: /C1 first-year admissions/i });
+  await expect(c1).toBeVisible();
+  await expect(c1.getByRole("columnheader", { name: /^(Males|Men)$/i })).toBeVisible();
+  await expect(c1.getByRole("rowheader", { name: "Applied" })).toBeVisible();
+
+  const c9Submission = page.getByRole("table", { name: /C9 test-score submission/i });
+  await expect(c9Submission).toBeVisible();
+  await expect(c9Submission.getByRole("rowheader", { name: "SAT" })).toBeVisible();
+
+  const c9Percentiles = page.getByRole("table", { name: /C9 test-score percentiles/i });
+  await expect(c9Percentiles).toBeVisible();
+  await expect(c9Percentiles.getByRole("columnheader", { name: /75th percentile/i })).toBeVisible();
+  await expect(c9Percentiles.getByRole("rowheader", { name: "SAT composite" })).toBeVisible();
+});
+
 test("mobile launch surfaces do not overflow", async ({ page, isMobile }) => {
   test.skip(!isMobile, "mobile project only");
 
-  for (const path of ["/", "/coverage", "/browse"]) {
+  for (const path of ["/", "/coverage", "/browse", "/schools/bowdoin/2024-25"]) {
     await page.goto(path);
     await expectNoBodyOverflow(page);
   }
