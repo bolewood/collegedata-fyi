@@ -37,7 +37,13 @@ function formatDrainDate(iso: string): string {
 // The five most recently-discovered schools. Dedupes by school_id so a
 // single school with many historical years doesn't monopolize the feed.
 // Source of truth is the live manifest — every entry here is real.
-type DrainEntry = { when: string; school: string; action: string; tag: string };
+type DrainEntry = {
+  when: string;
+  school: string;
+  action: string;
+  tag: string;
+  href: string;
+};
 
 function latestDrain(rows: ManifestRow[]): DrainEntry[] {
   const sorted = rows
@@ -58,6 +64,7 @@ function latestDrain(rows: ManifestRow[]): DrainEntry[] {
       school: r.school_name ?? sid,
       action: `+ ${r.canonical_year ?? "new"} CDS`,
       tag: tagForFormat(r.source_format),
+      href: r.canonical_year ? `/schools/${sid}/${r.canonical_year}` : `/schools/${sid}`,
     });
   }
   return out;
@@ -194,8 +201,9 @@ export default async function HomePage() {
           </div>
           <div>
             {drain.map((r, i) => (
-              <div
+              <Link
                 key={`${r.school}-${i}`}
+                href={r.href}
                 className="rule cd-drain-row"
                 style={{
                   display: "grid",
@@ -204,19 +212,22 @@ export default async function HomePage() {
                   alignItems: "baseline",
                   padding: "10px 0",
                   fontSize: 14,
+                  color: "inherit",
+                  textDecoration: "none",
                 }}
               >
                 <span className="mono" style={{ color: "var(--ink-3)", fontSize: 12 }}>{r.when}</span>
                 <span style={{ fontFamily: "var(--serif)", fontSize: 18 }}>{r.school}</span>
                 <span className="mono" style={{ fontSize: 12, color: "var(--ink-2)" }}>{r.action}</span>
                 <span className="cd-chip">{r.tag}</span>
-              </div>
+              </Link>
             ))}
           </div>
         </section>
       )}
 
       <style>{`
+        .cd-drain-row:hover span:nth-child(2) { color: var(--forest-ink); text-decoration: underline; text-underline-offset: 3px; }
         @media (max-width: 860px) {
           .cd-hero { grid-template-columns: 1fr !important; padding-top: 48px !important; }
           .cd-marginalia-left, .cd-marginalia-right { display: none !important; }
