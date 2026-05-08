@@ -68,6 +68,11 @@ test("school-year page renders reconstructed CDS tables", async ({ page }) => {
     page.getByRole("heading", { name: /Bowdoin College/i }),
   ).toBeVisible();
 
+  const b1 = page.getByRole("table", { name: /B1 undergraduate enrollment/i });
+  await expect(b1).toBeVisible();
+  await expect(b1.getByRole("columnheader", { name: /^(Males|Men)$/i })).toBeVisible();
+  await expect(b1.getByRole("rowheader", { name: "Total undergraduates", exact: true })).toBeVisible();
+
   const c1 = page.getByRole("table", { name: /C1 first-year admissions/i });
   await expect(c1).toBeVisible();
   await expect(c1.getByRole("columnheader", { name: /^(Males|Men)$/i })).toBeVisible();

@@ -7,6 +7,84 @@ function field(value: string, question = "Question", value_type = "Number"): Fie
 }
 
 describe("buildReconstructedTables", () => {
+  it("builds 2025-style B1 undergraduate, graduate, and overall enrollment tables", () => {
+    const tables = buildReconstructedTables({
+      "B.101": field("100", "Degree-seeking, first-time first-year students: males"),
+      "B.126": field("140", "Degree-seeking, first-time first-year students: females"),
+      "B.151": field("5", "Degree-seeking, first-time first-year students: Unknown"),
+      "B.113": field("500", "Total undergraduate students: males"),
+      "B.138": field("600", "Total undergraduate students: females"),
+      "B.163": field("10", "Total undergraduate students: Unknown"),
+      "B.176": field("1110", "Total all undergraduates"),
+      "B.125": field("800", "Total All Students: males"),
+      "B.150": field("900", "Total All Students: females"),
+      "B.175": field("12", "Total All Students: Unknown"),
+      "B.178": field("1712", "Grand Total All Students"),
+    });
+
+    const undergrad = tables.find((table) => table.key === "b1-undergraduate");
+    const overall = tables.find((table) => table.key === "b1-overall");
+
+    expect(undergrad?.columns).toEqual(["Males", "Females", "Unknown", "Total"]);
+    expect(undergrad?.rows[0].cells.map((cell) => cell.display)).toEqual([
+      "100",
+      "140",
+      "5",
+      "Not reported",
+    ]);
+    expect(undergrad?.rows.at(-1)?.cells.map((cell) => cell.display)).toEqual([
+      "500",
+      "600",
+      "10",
+      "1,110",
+    ]);
+    expect(overall?.rows.at(-1)?.cells.map((cell) => cell.display)).toEqual([
+      "800",
+      "900",
+      "12",
+      "1,712",
+    ]);
+    expect(undergrad?.usedFieldIds).toContain("B.176");
+  });
+
+  it("builds 2024-style B1 tables with another gender columns", () => {
+    const tables = buildReconstructedTables({
+      "B.101": field("100", "Degree-seeking, first-time first-year students: men"),
+      "B.102": field("120", "Degree-seeking, first-time first-year students: women"),
+      "B.103": field("2", "Degree-seeking, first-time first-year students: another gender"),
+      "B.104": field("3", "Degree-seeking, first-time first-year students: unknown"),
+      "B.149": field("500", "Total undergraduate students: men"),
+      "B.150": field("600", "Total undergraduate students: women"),
+      "B.151": field("4", "Total undergraduate students: another gender"),
+      "B.152": field("5", "Total undergraduate students: unknown"),
+      "B.193": field("1109", "Total all undergraduates"),
+    });
+
+    const undergrad = tables.find((table) => table.key === "b1-undergraduate");
+
+    expect(undergrad?.columns).toEqual([
+      "Men",
+      "Women",
+      "Another gender",
+      "Unknown",
+      "Total",
+    ]);
+    expect(undergrad?.rows[0].cells.map((cell) => cell.display)).toEqual([
+      "100",
+      "120",
+      "2",
+      "3",
+      "Not reported",
+    ]);
+    expect(undergrad?.rows.at(-1)?.cells.map((cell) => cell.display)).toEqual([
+      "500",
+      "600",
+      "4",
+      "5",
+      "1,109",
+    ]);
+  });
+
   it("builds a 2025-style C1 table and leaves missing schema cells explicit", () => {
     const tables = buildReconstructedTables({
       "C.101": field("1200", "Total first-time, first-year males who applied"),
