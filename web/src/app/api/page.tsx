@@ -248,7 +248,56 @@ export default async function ApiDocsPage() {
             "app_fee_amount",
             "app_fee_waiver_offered",
             "admission_strategy_card_quality",
+            "federal_baseline_available",
+            "federal_source_mode",
             "updated_at",
+          ]}
+        />
+        <Resource
+          name="school_facts_unified"
+          description="Source-labeled NCES/IPEDS baseline facts for in-scope institutions. This is the public serving view for the IPEDS coverage layer; raw IPEDS JSON rows are intentionally not exposed."
+          fields={[
+            "school_id",
+            "school_name",
+            "ipeds_id",
+            "field_key",
+            "field_label",
+            "display_value",
+            "quality_flag",
+            "definition_alignment",
+            "source_table",
+            "source_variable",
+          ]}
+          allFields={[
+            "ipeds_id",
+            "school_id",
+            "school_name",
+            "city",
+            "state",
+            "in_scope",
+            "collection_year",
+            "data_year",
+            "field_key",
+            "field_label",
+            "display_value",
+            "value_numeric",
+            "value_text",
+            "value_label",
+            "unit",
+            "cohort",
+            "population",
+            "source_layer",
+            "source_table",
+            "source_variable",
+            "source_title",
+            "release_type",
+            "imputation_flag",
+            "imputation_label",
+            "quality_flag",
+            "definition_alignment",
+            "definition_note",
+            "display_group",
+            "created_at",
           ]}
         />
         <Resource

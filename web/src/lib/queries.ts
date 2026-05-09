@@ -17,6 +17,7 @@ import type {
   ChangeEventVerificationStatus,
   MeritProfileQuality,
   MeritProfileRow,
+  SchoolFactUnifiedRow,
 } from "./types";
 import type { SchoolAcademicProfile } from "./positioning";
 import type { AdmissionStrategyQuality, AdmissionStrategySchool } from "./admission-strategy";
@@ -413,6 +414,37 @@ export const fetchSchoolDocuments = cache(async function fetchSchoolDocuments(
     throw new Error(`Failed to fetch school documents: ${error.message}`);
   return data ?? [];
 });
+
+// PRD 021 — source-labeled NCES/IPEDS baseline facts.
+//
+// This intentionally tolerates missing-table/view errors so the web build can
+// ship before the production migration is applied from main. The UI simply
+// omits the federal baseline table until data exists.
+export const fetchSchoolFederalFacts = cache(
+  async function fetchSchoolFederalFacts(
+    schoolId: string,
+  ): Promise<SchoolFactUnifiedRow[]> {
+    try {
+      const { data, error } = await (supabase as unknown as UntypedSupabase)
+        .from("school_facts_unified")
+        .select(
+          "ipeds_id, school_id, school_name, city, state, in_scope, collection_year, data_year, field_key, field_label, display_value, value_numeric, value_text, value_label, unit, cohort, population, source_layer, source_table, source_variable, source_title, release_type, imputation_flag, imputation_label, quality_flag, definition_alignment, definition_note, display_group, created_at",
+        )
+        .eq("school_id", schoolId)
+        .order("display_group", { ascending: true })
+        .order("field_label", { ascending: true });
+
+      if (error) {
+        console.warn(`fetchSchoolFederalFacts: ${error.message}`);
+        return [];
+      }
+      return (data as SchoolFactUnifiedRow[]) ?? [];
+    } catch (error) {
+      console.warn(`fetchSchoolFederalFacts: ${String(error)}`);
+      return [];
+    }
+  },
+);
 
 export const fetchBrowserRowBySchoolId = cache(
   async function fetchBrowserRowBySchoolId(

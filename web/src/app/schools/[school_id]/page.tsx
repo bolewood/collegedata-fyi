@@ -10,6 +10,7 @@ import {
   fetchAdmissionStrategyBySchoolId,
   fetchMeritProfileBySchoolId,
   fetchChangeEventsBySchoolId,
+  fetchSchoolFederalFacts,
 } from "@/lib/queries";
 import { OutcomesSection } from "@/components/OutcomesSection";
 import { PositioningCard } from "@/components/PositioningCard";
@@ -21,6 +22,7 @@ import { ScorecardVintageNote } from "@/components/ScorecardVintageNote";
 import { Sparkline } from "@/components/Sparkline";
 import { CoverageBadge } from "@/components/CoverageBadge";
 import { SubmissionForm } from "@/components/SubmissionForm";
+import { FederalBaselineTable } from "@/components/FederalBaselineTable";
 import { storageUrl, yearRange } from "@/lib/format";
 import type { ManifestRow, InstitutionCoverage } from "@/lib/types";
 
@@ -44,6 +46,7 @@ export async function generateMetadata({
         title: `${coverage.school_name} - ${coverage.coverage_label}`,
         description: coverage.coverage_summary,
         alternates: { canonical: path },
+        robots: { index: false, follow: true },
         openGraph: {
           url: path,
           title: coverage.school_name,
@@ -158,6 +161,7 @@ export default async function SchoolDetailPage({
     meritProfile,
     changeEvents,
     coverage,
+    federalFacts,
   ] = await Promise.all([
     fetchScorecardByIpedsId(ipedsId),
     fetchBrowserRowBySchoolId(school_id),
@@ -166,6 +170,7 @@ export default async function SchoolDetailPage({
     fetchMeritProfileBySchoolId(school_id),
     fetchChangeEventsBySchoolId(school_id),
     fetchInstitutionCoverage(school_id),
+    fetchSchoolFederalFacts(school_id),
   ]);
   const positioningSchool = browserRow
     ? { ...browserRow, ...gpaProfile }
@@ -418,6 +423,8 @@ export default async function SchoolDetailPage({
 
       <WhatChangedCard events={changeEvents} />
 
+      <FederalBaselineTable facts={federalFacts} />
+
       {scorecard ? (
         <OutcomesSection scorecard={scorecard} />
       ) : ipedsId ? (
@@ -461,7 +468,10 @@ async function DirectoryOnlySchoolPage({
   coverage: InstitutionCoverage;
   school_id: string;
 }) {
-  const scorecard = await fetchScorecardByIpedsId(coverage.ipeds_id);
+  const [scorecard, federalFacts] = await Promise.all([
+    fetchScorecardByIpedsId(coverage.ipeds_id),
+    fetchSchoolFederalFacts(school_id),
+  ]);
 
   const { head, tail } = splitInstitutionalSuffix(coverage.school_name);
   const location = formatLocation(coverage);
@@ -590,6 +600,8 @@ async function DirectoryOnlySchoolPage({
         />
       )}
 
+      <FederalBaselineTable facts={federalFacts} compact />
+
       {scorecard ? (
         <div style={{ marginTop: 56 }}>
           <OutcomesSection scorecard={scorecard} />
@@ -623,8 +635,9 @@ async function DirectoryOnlySchoolPage({
         }}
       >
         We track every active, undergraduate-serving Title-IV institution
-        and refresh CDS coverage every 15 minutes. Federal data above
-        comes from College Scorecard. <Link href="/about">Read the method</Link>.
+        and refresh CDS coverage every 15 minutes. Federal data above comes
+        from NCES/IPEDS and College Scorecard when available.{" "}
+        <Link href="/about">Read the method</Link>.
       </p>
     </div>
   );

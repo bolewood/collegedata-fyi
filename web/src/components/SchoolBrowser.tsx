@@ -142,6 +142,8 @@ function downloadCsv(rows: BrowserRow[]) {
     { key: "act_composite_p75", label: "act_composite_p75" },
     { key: "source_format", label: "source_format" },
     { key: "data_quality_flag", label: "data_quality_flag" },
+    { key: "federal_baseline_available", label: "federal_baseline_available" },
+    { key: "federal_source_mode", label: "federal_source_mode" },
     { key: "archive_url", label: "archive_url" },
   ];
   const body = rows.map((row) => columns.map((col) => csvEscape(row[col.key])).join(","));

@@ -214,6 +214,52 @@ export interface InstitutionCoverage {
   can_submit_source: boolean;
 }
 
+export type FederalFactQuality =
+  | "reported"
+  | "imputed"
+  | "not_applicable"
+  | "suppressed"
+  | "missing"
+  | "unusable";
+
+export type FederalFactDefinitionAlignment =
+  | "direct"
+  | "near"
+  | "context_only"
+  | "not_cds_equivalent";
+
+export interface SchoolFactUnifiedRow {
+  ipeds_id: string;
+  school_id: string;
+  school_name: string;
+  city: string | null;
+  state: string | null;
+  in_scope: boolean;
+  collection_year: string;
+  data_year: number;
+  field_key: string;
+  field_label: string;
+  display_value: string | null;
+  value_numeric: number | null;
+  value_text: string | null;
+  value_label: string | null;
+  unit: string | null;
+  cohort: string | null;
+  population: string | null;
+  source_layer: "ipeds";
+  source_table: string;
+  source_variable: string;
+  source_title: string | null;
+  release_type: string;
+  imputation_flag: string | null;
+  imputation_label: string | null;
+  quality_flag: FederalFactQuality;
+  definition_alignment: FederalFactDefinitionAlignment;
+  definition_note: string | null;
+  display_group: string;
+  created_at: string;
+}
+
 export interface CorpusStats {
   total_schools: number;
   total_documents: number;

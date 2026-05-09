@@ -53,7 +53,9 @@ export type BrowserField =
   | "sat_math_p75"
   | "act_composite_p25"
   | "act_composite_p50"
-  | "act_composite_p75";
+  | "act_composite_p75"
+  | "federal_baseline_available"
+  | "federal_source_mode";
 
 export type BrowserSort = {
   field: BrowserField;
@@ -126,6 +128,8 @@ export type BrowserRow = {
   source_format: string | null;
   data_quality_flag: string | null;
   archive_url: string;
+  federal_baseline_available: boolean;
+  federal_source_mode: "cds_only" | "cds_plus_ipeds_baseline" | "ipeds_baseline_only";
 };
 
 export type BrowserSearchResponse = {
@@ -165,7 +169,18 @@ export const BROWSER_COLUMNS: BrowserField[] = [
   "source_format",
   "data_quality_flag",
   "archive_url",
+  "federal_baseline_available",
+  "federal_source_mode",
 ];
+
+const FEDERAL_BROWSER_COLUMNS = new Set<BrowserField>([
+  "federal_baseline_available",
+  "federal_source_mode",
+]);
+
+const LEGACY_BROWSER_COLUMNS = BROWSER_COLUMNS.filter(
+  (column) => !FEDERAL_BROWSER_COLUMNS.has(column),
+);
 
 export async function searchBrowserRows(
   request: BrowserSearchRequest,
@@ -177,6 +192,36 @@ export async function searchBrowserRows(
     throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
   }
 
+  const body = {
+    columns: BROWSER_COLUMNS,
+    ...request,
+  };
+  const response = await fetch(`${supabaseUrl}/functions/v1/browser-search`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      apikey: anonKey,
+      authorization: `Bearer ${anonKey}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  const payload = await response.json();
+  if (!response.ok && canRetryWithoutFederalColumns(payload, request)) {
+    return searchBrowserRowsWithoutFederalColumns(supabaseUrl, anonKey, request);
+  }
+  if (!response.ok) {
+    throw new Error(payload?.error ?? "Browser search failed");
+  }
+
+  return withFederalDefaults(payload as BrowserSearchResponse);
+}
+
+async function searchBrowserRowsWithoutFederalColumns(
+  supabaseUrl: string,
+  anonKey: string,
+  request: BrowserSearchRequest,
+): Promise<BrowserSearchResponse> {
   const response = await fetch(`${supabaseUrl}/functions/v1/browser-search`, {
     method: "POST",
     headers: {
@@ -185,7 +230,7 @@ export async function searchBrowserRows(
       authorization: `Bearer ${anonKey}`,
     },
     body: JSON.stringify({
-      columns: BROWSER_COLUMNS,
+      columns: LEGACY_BROWSER_COLUMNS,
       ...request,
     }),
   });
@@ -194,6 +239,29 @@ export async function searchBrowserRows(
   if (!response.ok) {
     throw new Error(payload?.error ?? "Browser search failed");
   }
+  return withFederalDefaults(payload as BrowserSearchResponse);
+}
 
-  return payload as BrowserSearchResponse;
+function canRetryWithoutFederalColumns(
+  payload: unknown,
+  request: BrowserSearchRequest,
+): boolean {
+  const error = (payload as { error?: string } | null)?.error ?? "";
+  if (!/unsupported column: federal_/.test(error)) return false;
+  const federalFilter = request.filters?.some((filter) =>
+    FEDERAL_BROWSER_COLUMNS.has(filter.field),
+  );
+  const federalSort = request.sort && FEDERAL_BROWSER_COLUMNS.has(request.sort.field);
+  return !federalFilter && !federalSort;
+}
+
+function withFederalDefaults(response: BrowserSearchResponse): BrowserSearchResponse {
+  return {
+    ...response,
+    rows: response.rows.map((row) => ({
+      ...row,
+      federal_baseline_available: row.federal_baseline_available ?? false,
+      federal_source_mode: row.federal_source_mode ?? "cds_only",
+    })),
+  };
 }
