@@ -590,15 +590,15 @@ async function DirectoryOnlySchoolPage({
             </a>
           </p>
         )}
+        {coverage.can_submit_source && (
+          <SubmissionForm
+            compact
+            school_id={school_id}
+            school_name={coverage.school_name}
+            coverage_status={coverage.coverage_status}
+          />
+        )}
       </section>
-
-      {coverage.can_submit_source && (
-        <SubmissionForm
-          school_id={school_id}
-          school_name={coverage.school_name}
-          coverage_status={coverage.coverage_status}
-        />
-      )}
 
       <FederalBaselineTable facts={federalFacts} compact />
 

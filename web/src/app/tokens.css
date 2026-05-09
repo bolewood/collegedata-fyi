@@ -278,6 +278,32 @@
   outline: 2px solid var(--forest);
   outline-offset: -2px;
 }
+.federal-source {
+  display: inline-grid;
+  gap: 4px;
+  min-width: 0;
+  cursor: help;
+}
+.federal-source:focus-visible {
+  outline: 2px solid var(--forest);
+  outline-offset: 3px;
+}
+.federal-source__meta {
+  display: none;
+  max-width: 38ch;
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+.federal-source:hover .federal-source__meta,
+.federal-source:focus .federal-source__meta,
+.federal-source:focus-visible .federal-source__meta {
+  display: grid;
+  gap: 2px;
+}
 @media (max-width: 640px) {
   .cd-reconstructed__head {
     padding: 9px 10px !important;
