@@ -6,7 +6,7 @@ from pathlib import Path
 
 from openpyxl import Workbook
 
-from tools.ipeds.metadata import parse_access_page, parse_tablesdoc
+from tools.ipeds.metadata import normalize_release_date_text, parse_access_page, parse_tablesdoc
 
 
 class IpedsMetadataTests(unittest.TestCase):
@@ -28,6 +28,11 @@ class IpedsMetadataTests(unittest.TestCase):
         self.assertTrue(releases[0].metadata_url.endswith("IPEDS202425Tablesdoc.xlsx"))
         self.assertTrue(releases[0].access_url.endswith("IPEDS_2024-25_Provisional.zip"))
         self.assertEqual(releases[1].release_type, "final")
+
+    def test_normalize_release_date_text_handles_month_and_day_precision(self) -> None:
+        self.assertEqual(normalize_release_date_text("March 2026"), ("2026-03-01", "month"))
+        self.assertEqual(normalize_release_date_text("January 6, 2026"), ("2026-01-06", "day"))
+        self.assertEqual(normalize_release_date_text("2026-03-01"), ("2026-03-01", "day"))
 
     def test_parse_tablesdoc_reads_core_sheets(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

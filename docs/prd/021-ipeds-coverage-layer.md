@@ -74,6 +74,10 @@ Important release semantics:
   initial collection and final data about two years after initial collection.
 - The current Access page shows `2024-25` as provisional, released March 2026,
   and `2023-24` as final, also released March 2026.
+- Operational probe cadence starts 10 months after the latest loaded
+  provisional Access release date, so the March 2026 reference begins checking
+  for `2025-26` provisional and `2024-25` final in January 2027. The earlier
+  check leaves room for NCES to publish faster in future cycles.
 
 Operational finding:
 
@@ -843,7 +847,9 @@ Decision gate:
 
 ### M6: Annual operations
 
-- Add monthly/weekly scheduled release checker.
+- Add monthly/weekly scheduled release checker. **Shipped follow-up:** monthly
+  GitHub Actions release probe with a 10-month no-op window from the latest
+  loaded provisional Access release date.
 - Add operator dashboard rows for last IPEDS load, tables loaded, row counts,
   schema drift, and unresolved mapping issues.
 

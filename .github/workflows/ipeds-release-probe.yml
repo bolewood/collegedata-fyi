@@ -1,0 +1,199 @@
+name: IPEDS release probe
+
+on:
+  workflow_dispatch:
+    inputs:
+      as_of:
+        description: "Optional probe date override, YYYY-MM-DD."
+        required: false
+        default: ""
+      force_probe:
+        description: "Probe even before the computed due date."
+        type: boolean
+        required: false
+        default: false
+      probe_delay_months:
+        description: "Months after the last Access release before probing."
+        required: false
+        default: "10"
+  schedule:
+    # GitHub cron has no year field. Run monthly; the probe script no-ops
+    # until the due date computed from ipeds_releases.release_date.
+    - cron: "24 15 5 * *"
+
+concurrency:
+  group: ipeds-release-probe
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  probe:
+    name: Probe NCES Access releases
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      INPUT_AS_OF: ${{ github.event_name == 'workflow_dispatch' && inputs.as_of || '' }}
+      INPUT_FORCE_PROBE: ${{ github.event_name == 'workflow_dispatch' && inputs.force_probe || false }}
+      INPUT_PROBE_DELAY_MONTHS: ${{ github.event_name == 'workflow_dispatch' && inputs.probe_delay_months || '10' }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/ci-requirements.txt
+
+      - name: Install probe dependencies
+        run: python -m pip install -r tools/ci-requirements.txt
+
+      - name: Run release probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${SUPABASE_URL}" || -z "${SUPABASE_SERVICE_ROLE_KEY}" ]]; then
+            echo "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY secrets are required." >&2
+            exit 2
+          fi
+          if ! [[ "${INPUT_PROBE_DELAY_MONTHS}" =~ ^[0-9]+$ ]]; then
+            echo "probe_delay_months must be an integer" >&2
+            exit 2
+          fi
+          mkdir -p ipeds-release-probe
+          args=(
+            --out-json ipeds-release-probe/summary.json
+            --probe-delay-months "${INPUT_PROBE_DELAY_MONTHS}"
+          )
+          if [[ -n "${INPUT_AS_OF}" ]]; then
+            args+=(--as-of "${INPUT_AS_OF}")
+          fi
+          if [[ "${INPUT_FORCE_PROBE}" == "true" ]]; then
+            args+=(--force)
+          fi
+          python tools/ipeds/probe_releases.py "${args[@]}" | tee ipeds-release-probe/probe.log
+
+      - name: Add run summary
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f ipeds-release-probe/summary.json ]]; then
+            {
+              echo "## IPEDS release probe"
+              echo
+              jq -r '"As of: \(.as_of)\nProbe delay months: \(.probe_delay_months)\nAvailable targets: \(.available_count)"' ipeds-release-probe/summary.json
+              echo
+              echo "### Targets"
+              jq -r '.targets[]? | "- \(.collection_year) \(.release_type): \(.status), due \(.due_on)"' ipeds-release-probe/summary.json
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No summary.json was produced." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Create release-available issues
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          import sys
+          import textwrap
+
+          path = "ipeds-release-probe/summary.json"
+          repo = os.environ["REPO"]
+          with open(path, "r", encoding="utf-8") as f:
+              summary = json.load(f)
+
+          available = [target for target in summary.get("targets", []) if target.get("status") == "available"]
+          if not available:
+              print("No available IPEDS releases to notify.")
+              sys.exit(0)
+
+          minted = 0
+          for target in available:
+              collection_year = target["collection_year"]
+              release_type = target["release_type"]
+              remote = target.get("remote_release") or {}
+              title = f"ipeds_release_available: {collection_year} {release_type}"
+              existing = subprocess.run(
+                  [
+                      "gh", "issue", "list",
+                      "--repo", repo,
+                      "--state", "open",
+                      "--search", f'in:title "{title}"',
+                      "--json", "title",
+                  ],
+                  check=True,
+                  text=True,
+                  stdout=subprocess.PIPE,
+              )
+              titles = [row.get("title") for row in json.loads(existing.stdout or "[]")]
+              if title in titles:
+                  print(f"Existing issue found for {title}; skipping.")
+                  continue
+
+              release_date = remote.get("release_date") or ""
+              release_date_text = remote.get("release_date_text") or release_date
+              metadata_url = remote.get("metadata_url") or ""
+              access_url = remote.get("access_url") or ""
+              data_year = remote.get("data_year") or int(collection_year[:4])
+              reference = summary.get("reference_release") or {}
+              body = textwrap.dedent(f"""\
+              NCES/IPEDS now lists the `{collection_year}` `{release_type}` Access Database release.
+
+              Probe due date: `{target.get('due_on')}`
+              NCES release date: `{release_date_text}`
+              Reference loaded release: `{reference.get('collection_year')} {reference.get('release_type')}` released `{reference.get('release_date')}`
+
+              Source page: {summary.get('source_page_url')}
+              Metadata: {metadata_url}
+              Access ZIP: {access_url}
+
+              Suggested operator flow:
+
+              ```bash
+              python tools/ipeds/download_release.py --collection-year {collection_year} --data-year {data_year}
+
+              python tools/ipeds/load_release.py \\
+                --metadata-xlsx scratch/ipeds/{collection_year}-{release_type}/IPEDS{collection_year.replace('-', '')}Tablesdoc.xlsx \\
+                --data-dir scratch/ipeds/{collection_year}-{release_type} \\
+                --collection-year {collection_year} \\
+                --data-year {data_year} \\
+                --release-type {release_type} \\
+                --release-date {release_date} \\
+                --release-date-text "{release_date_text}" \\
+                --metadata-url {metadata_url} \\
+                --access-url {access_url}
+              ```
+
+              Review the dry-run report, then apply from a fresh `main` checkout per `CLAUDE.md`.
+              """)
+              subprocess.run(
+                  [
+                      "gh", "issue", "create",
+                      "--repo", repo,
+                      "--title", title,
+                      "--body", body,
+                  ],
+                  check=True,
+              )
+              minted += 1
+          print(f"Created {minted} IPEDS release issue(s).")
+          PY
+
+      - name: Upload probe artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ipeds-release-probe
+          path: ipeds-release-probe/
+          if-no-files-found: warn

@@ -37,10 +37,20 @@ export function FederalBaselineTable({
           Source-labeled federal facts
         </h2>
         <p style={{ margin: "10px 0 0", maxWidth: 760, color: "var(--ink-2)", lineHeight: 1.55 }}>
-          These values come from official NCES/IPEDS tables. They are not Common Data Set fields unless the definition column says the alignment is direct or near.
+          These values come from official NCES/IPEDS tables. They are not Common Data Set fields unless the source note says the alignment is direct or near.
         </p>
         {releaseLabel && (
-          <p className="meta" style={{ margin: "8px 0 0", color: "var(--ink-3)" }}>
+          <p
+            className="mono"
+            style={{
+              margin: "14px 0 0",
+              color: "var(--ink)",
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+            }}
+          >
             {releaseLabel}
           </p>
         )}
@@ -58,22 +68,33 @@ export function FederalBaselineTable({
           >
             {group.name}
           </h3>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", minWidth: 720, borderCollapse: "collapse", fontSize: 14 }}>
+          <div
+            className="cd-reconstructed"
+            style={{
+              border: "1px solid var(--rule)",
+              borderRadius: 8,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              className="cd-reconstructed__table-wrap"
+              tabIndex={0}
+              aria-label={`${group.name} IPEDS baseline facts table. Scroll horizontally to read all columns.`}
+              style={{ overflowX: "auto" }}
+            >
+            <table className="cd-reconstructed__table" style={{ width: "100%", minWidth: 660, borderCollapse: "collapse", fontSize: 14 }}>
               <caption className="sr-only">{group.name} IPEDS baseline facts</caption>
               <thead>
                 <tr className="meta" style={{ textAlign: "left", borderBottom: "1px solid var(--rule-strong)" }}>
-                  <th style={{ padding: "8px 10px 8px 0", width: "28%" }}>Fact</th>
-                  <th style={{ padding: "8px 10px" }}>Value</th>
-                  <th style={{ padding: "8px 10px" }}>Status</th>
-                  <th style={{ padding: "8px 10px" }}>Definition</th>
-                  <th style={{ padding: "8px 0 8px 10px" }}>Source</th>
+                  <th style={{ padding: "9px 12px", width: "42%" }}>Fact</th>
+                  <th style={{ padding: "9px 12px", width: "18%" }}>Value</th>
+                  <th style={{ padding: "9px 12px", width: "40%" }}>Source</th>
                 </tr>
               </thead>
               <tbody>
                 {group.facts.map((fact) => (
                   <tr key={`${fact.field_key}-${fact.source_table}-${fact.source_variable}`} className="rule">
-                    <th scope="row" style={{ padding: "11px 10px 11px 0", textAlign: "left", fontWeight: 500 }}>
+                    <th scope="row" style={{ padding: "11px 12px", textAlign: "left", fontWeight: 500 }}>
                       {fact.field_label}
                       {fact.population && (
                         <div className="meta" style={{ marginTop: 3, lineHeight: 1.35 }}>
@@ -81,27 +102,17 @@ export function FederalBaselineTable({
                         </div>
                       )}
                     </th>
-                    <td className="nums" style={{ padding: "11px 10px", whiteSpace: "nowrap" }}>
+                    <td className="nums" style={{ padding: "11px 12px", whiteSpace: "nowrap" }}>
                       {formatFactValue(fact)}
                     </td>
-                    <td style={{ padding: "11px 10px" }}>
-                      <StatusBadge fact={fact} />
-                    </td>
-                    <td style={{ padding: "11px 10px", color: "var(--ink-2)" }}>
-                      {definitionLabel(fact.definition_alignment)}
-                      {fact.definition_note && (
-                        <div className="meta" style={{ marginTop: 4, lineHeight: 1.35 }}>
-                          {fact.definition_note}
-                        </div>
-                      )}
-                    </td>
-                    <td className="mono" style={{ padding: "11px 0 11px 10px", color: "var(--ink-3)", fontSize: 12 }}>
-                      {fact.source_table}.{fact.source_variable}
+                    <td style={{ padding: "11px 12px" }}>
+                      <SourceCell fact={fact} />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       ))}
@@ -125,14 +136,28 @@ function formatFactValue(fact: SchoolFactUnifiedRow): string {
   return fact.display_value ?? fact.value_text ?? (fact.value_numeric == null ? "-" : String(fact.value_numeric));
 }
 
-function StatusBadge({ fact }: { fact: SchoolFactUnifiedRow }) {
-  const label = fact.quality_flag === "reported" ? "reported" : fact.quality_flag.replaceAll("_", " ");
-  const title = fact.imputation_label ?? label;
+function SourceCell({ fact }: { fact: SchoolFactUnifiedRow }) {
+  const source = `${fact.source_table}.${fact.source_variable}`;
+  const status = statusLabel(fact);
+  const definition = definitionLabel(fact.definition_alignment);
+  const note = fact.definition_note ? ` ${fact.definition_note}` : "";
+  const title = `${source}. Status: ${status}. Definition: ${definition}.${note}`;
   return (
-    <span className={fact.quality_flag === "imputed" ? "cd-chip" : "meta"} title={title}>
-      {label}
+    <span className="federal-source" tabIndex={0} title={title} aria-label={title}>
+      <span className="mono" style={{ color: "var(--ink-3)", fontSize: 12 }}>
+        {source}
+      </span>
+      <span className="federal-source__meta" aria-hidden="true">
+        <span>Status: {status}</span>
+        <span>Definition: {definition}{fact.definition_note ? ` · ${fact.definition_note}` : ""}</span>
+      </span>
     </span>
   );
+}
+
+function statusLabel(fact: SchoolFactUnifiedRow): string {
+  const label = fact.quality_flag === "reported" ? "reported" : fact.quality_flag.replaceAll("_", " ");
+  return fact.imputation_label ? `${label} (${fact.imputation_label})` : label;
 }
 
 function definitionLabel(value: SchoolFactUnifiedRow["definition_alignment"]): string {
@@ -154,4 +179,3 @@ function releaseSummary(facts: SchoolFactUnifiedRow[]): string | null {
   const releaseType = first.release_type.charAt(0).toUpperCase() + first.release_type.slice(1);
   return `${releaseType} ${first.collection_year} release, data year ${first.data_year}`;
 }
-
