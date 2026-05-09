@@ -42,7 +42,8 @@ export default async function ApiDocsPage() {
     <div className="mx-auto max-w-3xl px-4 py-12 text-gray-800">
       <h1 className="text-3xl font-bold text-gray-900">API</h1>
       <p className="mt-3 text-base leading-relaxed text-gray-600">
-        The full collegedata.fyi corpus is exposed as a public, read-only{" "}
+        CollegeData.FYI now exposes two public surfaces: simple no-auth JSON
+        endpoints for agents and command-line tools, and the full read-only{" "}
         <a
           className={API_LINK_CLASS}
           href="https://postgrest.org/"
@@ -60,7 +61,117 @@ export default async function ApiDocsPage() {
       </p>
 
       <h2 className="mt-10 text-xl font-semibold text-gray-900">
-        Authentication
+        Simple endpoints
+      </h2>
+      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+        Start here for MCP tools, CLIs, notebooks, and quick integrations. These
+        endpoints do not require the Supabase anon key and return source labels
+        next to facts so agents can cite values without guessing where they came
+        from.
+      </p>
+      <CodeBlock>{`curl 'https://www.collegedata.fyi/api/schools/search?q=mit'
+
+curl 'https://www.collegedata.fyi/api/schools/mit/facts?categories=admissions,cost,outcomes'
+
+curl 'https://www.collegedata.fyi/api/schools/mit/sources'
+
+curl 'https://www.collegedata.fyi/api/compare?schools=mit,yale,university-of-chicago&categories=admissions,cost,outcomes'
+
+curl 'https://www.collegedata.fyi/api/fields'
+
+curl 'https://www.collegedata.fyi/openapi.json'`}</CodeBlock>
+      <p className="mt-3 text-sm leading-relaxed text-gray-700">
+        The minimal MCP server and CLI live in the repo under{" "}
+        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+          packages/mcp-server
+        </code>{" "}
+        and{" "}
+        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+          packages/cli
+        </code>
+        . Both wrap the simple endpoints rather than reimplementing query logic.
+      </p>
+
+      <h2 className="mt-10 text-xl font-semibold text-gray-900">
+        Runbook
+      </h2>
+      <div className="mt-4 space-y-6 text-sm leading-relaxed text-gray-700">
+        <section>
+          <h3 className="font-semibold text-gray-900">1. Smoke-test the API</h3>
+          <p className="mt-1">
+            Start with search, facts, and compare. If these three work, the
+            friendly API surface is healthy enough for most agent and CLI use.
+          </p>
+          <CodeBlock>{`curl 'https://www.collegedata.fyi/api/schools/search?q=mit'
+curl 'https://www.collegedata.fyi/api/schools/mit/facts?fields=avg_net_price,graduation_rate_6yr'
+curl 'https://www.collegedata.fyi/api/compare?schools=mit,yale,university-of-chicago&fields=acceptance_rate,avg_net_price'`}</CodeBlock>
+        </section>
+
+        <section>
+          <h3 className="font-semibold text-gray-900">2. Run the CLI</h3>
+          <p className="mt-1">
+            From a checkout of the repo, the CLI can point at production,
+            preview, or localhost with{" "}
+            <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+              COLLEGEDATA_API_BASE
+            </code>
+            .
+          </p>
+          <CodeBlock>{`COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegedata.js search mit
+COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegedata.js facts mit --categories admissions,cost
+COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegedata.js compare mit yale university-of-chicago --format csv`}</CodeBlock>
+        </section>
+
+        <section>
+          <h3 className="font-semibold text-gray-900">3. Connect an MCP client</h3>
+          <p className="mt-1">
+            The MCP server is read-only and uses the same friendly API. Configure
+            a client to run the server command from the repository root.
+          </p>
+          <CodeBlock>{`{
+  "mcpServers": {
+    "collegedata": {
+      "command": "node",
+      "args": ["packages/mcp-server/bin/collegedata-mcp.js"],
+      "env": {
+        "COLLEGEDATA_API_BASE": "https://www.collegedata.fyi"
+      }
+    }
+  }
+}`}</CodeBlock>
+        </section>
+
+        <section>
+          <h3 className="font-semibold text-gray-900">4. Use snapshots for local work</h3>
+          <p className="mt-1">
+            Use pinned snapshot paths for reproducible notebooks and the{" "}
+            <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+              latest
+            </code>{" "}
+            alias for quick experiments.
+          </p>
+          <CodeBlock>{`curl 'https://www.collegedata.fyi/snapshots/latest/manifest.json'
+curl 'https://www.collegedata.fyi/snapshots/latest/schools.jsonl'
+curl 'https://www.collegedata.fyi/snapshots/latest/school_facts.jsonl'`}</CodeBlock>
+        </section>
+
+        <section>
+          <h3 className="font-semibold text-gray-900">5. Troubleshoot source gaps</h3>
+          <p className="mt-1">
+            A missing value is usually one of three things: the school has no
+            public CDS, the field is not part of the V1 friendly dictionary, or
+            the source row is intentionally withheld because the projected value
+            failed a sanity check. The sources endpoint shows the document and
+            federal release context behind the page.
+          </p>
+          <CodeBlock>{`curl 'https://www.collegedata.fyi/api/schools/mit/sources'
+curl 'https://www.collegedata.fyi/api/fields?category=admissions'
+curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
+        </section>
+      </div>
+
+      <h2 className="mt-10 text-xl font-semibold text-gray-900">
+        Raw PostgREST authentication
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-gray-700">
         All requests require a Supabase{" "}

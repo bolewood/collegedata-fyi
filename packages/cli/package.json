@@ -1,0 +1,13 @@
+{
+  "name": "@collegedata-fyi/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "collegedata": "./bin/collegedata.js"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  }
+}
+
