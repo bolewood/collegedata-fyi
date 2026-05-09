@@ -11,6 +11,8 @@ Read [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) before changing UI.
 - `/schools` and `/schools/[school_id]` school directory/detail pages.
 - School-page cards for academic profile, admission strategy, merit/aid profile,
   and PRD 019 public-reviewed change intelligence.
+- Source-labeled NCES/IPEDS federal baseline facts on school pages through
+  `FederalBaselineTable`, especially for schools without an archived public CDS.
 - `/browse` queryable CDS browser.
 - `/match` local-only match-list builder.
 - `/coverage` public institution coverage dashboard.
@@ -39,6 +41,10 @@ Optional source-submission form:
 ```bash
 NEXT_PUBLIC_FORMSPREE_ENDPOINT=<formspree endpoint>
 ```
+
+When configured, no-CDS school pages show a compact "Email us!" CTA that opens
+the structured Formspree source-submission form inline. When unset, the CTA is
+disabled and the app does not fall back to `mailto:`.
 
 Operator-only PRD 019 digest:
 

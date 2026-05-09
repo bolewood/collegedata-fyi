@@ -1,6 +1,6 @@
 # PRD 021: IPEDS coverage layer for non-CDS schools
 
-**Status:** In implementation
+**Status:** First public slice shipped 2026-05-09; browse expansion and operator dashboard remain open
 **Created:** 2026-05-08
 **Author:** Anthony + Codex
 **Related:** [PRD 010](010-queryable-data-browser.md), [PRD 015](015-institution-directory-and-cds-coverage.md), [PRD 019](019-cds-change-intelligence.md), [PRD 020](020-accessible-cds-table-view.md), [Scorecard join recipe](../research/scorecard-join-recipe.md)
@@ -512,6 +512,39 @@ Use `institution_directory` as the public list backbone:
 This should turn the product from "hundreds of CDS schools" into "thousands of
 college pages with honest source depth."
 
+## Shipped implementation snapshot
+
+The 2026-05-09 implementation shipped the federal-baseline slice needed for
+non-CDS school pages:
+
+- Postgres schema for `ipeds_releases`, `ipeds_tables`, `ipeds_columns`,
+  `ipeds_value_labels`, `ipeds_raw_rows`, `ipeds_facts`,
+  `ipeds_current_facts`, and `school_facts_unified`.
+- `tools/ipeds/download_release.py` and `tools/ipeds/load_release.py` for
+  official NCES Tablesdoc metadata, selected Data Center CSV table ZIPs,
+  raw-row preservation, and curated fact projection.
+- Public school-page rendering through `FederalBaselineTable`, including
+  prominent release labels, source table/variable labels, and status/definition
+  notes available on hover/focus under the Source column.
+- Directory-only school pages that show "No public CDS found" alongside
+  available federal baseline facts and a compact Formspree source-submission
+  CTA when configured.
+- Release-date provenance for the first loaded release:
+  `2024-25 provisional`, official month text `March 2026`, normalized to
+  `2026-03-01` with `month` precision.
+- A monthly GitHub Actions release probe that no-ops until 10 months after the
+  latest loaded provisional Access release date, then checks for the current
+  final release and the next provisional release.
+
+Still open from the original PRD:
+
+- Browse source-mode controls and filters backed by `school_facts_unified`.
+- An operator dashboard for last load, table counts, schema drift, and
+  unresolved mappings.
+- Broader IPEDS field-family coverage beyond the MVP mappings.
+- Public methodology/attribution copy that explains NCES/IPEDS release status,
+  imputation, and source precedence in one place.
+
 ## Pipeline
 
 ### Annual release loader
@@ -519,11 +552,13 @@ college pages with honest source depth."
 When the release checker detects a new or changed IPEDS release:
 
 1. Fetch the official Access database page and detect the latest annual bundle.
-2. Detect changed release rows by table name, release type, and SHA.
-3. Download the annual Access bundle and companion Excel metadata workbook.
-   Fallback to selected Complete Data Files only when the Access bundle path is
-   unavailable or a narrow emergency refresh is required.
-4. Store raw release bytes in Supabase Storage under:
+2. Detect changed release rows by collection year, release type, metadata URL,
+   Access URL, and release date.
+3. Download the companion Tablesdoc Excel metadata workbook and the mapped
+   official Data Center CSV ZIPs. The Access ZIP URL is recorded as release
+   provenance but is not parsed in the first implementation.
+4. Cache raw release bytes locally under `scratch/ipeds/` for operator review.
+   Future storage mirroring may use:
 
 ```text
 federal/ipeds/{collection_year}/{release_type}/access.zip
@@ -567,10 +602,14 @@ Allow the load but flag QA if:
 
 ### Cadence
 
-- Check NCES monthly year-round.
-- Check weekly from September through March, when major collection releases and
-  final/provisional updates appear.
-- Manual operator run is allowed after NCES posts a new release memo.
+- Current implementation: check NCES monthly year-round through
+  `.github/workflows/ipeds-release-probe.yml`.
+- The probe intentionally no-ops until 10 months after the latest loaded
+  provisional Access release date. For the `March 2026` reference release, the
+  first automatic due date is `2027-01-01`.
+- Manual operator runs remain allowed after NCES posts a new release memo.
+- Weekly September-through-March probing remains a possible future tuning if
+  monthly checks miss useful early publication signals.
 
 This cadence is separate from CDS finder cadence. IPEDS is a bulk federal data
 release process, not a per-school discovery process.
@@ -814,30 +853,35 @@ Decision gate:
 
 ### M1: Loader and metadata
 
-- Add migrations for `ipeds_releases`, `ipeds_tables`, `ipeds_columns`,
-  `ipeds_value_labels`, and `ipeds_raw_rows`.
-- Build `tools/ipeds/download_release.py`.
-- Build `tools/ipeds/load_release.py`.
-- Add schema drift tests.
+- Shipped 2026-05-09: migrations for `ipeds_releases`, `ipeds_tables`,
+  `ipeds_columns`, `ipeds_value_labels`, and `ipeds_raw_rows`.
+- Shipped 2026-05-09: `tools/ipeds/download_release.py`.
+- Shipped 2026-05-09: `tools/ipeds/load_release.py`.
+- Shipped 2026-05-09: metadata/date parsing tests and loader projection tests.
 
 ### M2: Curated facts
 
-- Add `ipeds_facts`.
-- Project MVP fields.
-- Add unit tests around value labels, imputation flags, and release status.
-- Generate a QA report for fixture schools.
+- Shipped 2026-05-09: `ipeds_facts`.
+- Shipped 2026-05-09: MVP field projection.
+- Shipped 2026-05-09: unit tests around metadata parsing, date normalization,
+  value labels, and probe status.
+- Open: larger fixture-school QA report against NCES facsimiles/CSVs.
 
 ### M3: Unified serving layer
 
-- Add `school_facts_unified`.
-- Thread source labels into TypeScript types.
-- Add API documentation.
+- Shipped 2026-05-09: `ipeds_current_facts` and `school_facts_unified`.
+- Shipped 2026-05-09: source labels threaded into TypeScript row types and
+  school-page queries.
+- Partially shipped: API page documents `school_facts_unified`; raw release
+  metadata endpoint documentation remains a follow-up.
 
 ### M4: School page federal baseline
 
-- Add source-labeled IPEDS facts to school pages.
-- Add non-CDS federal baseline stub pages.
-- Add PRD 020-style accessible tables for high-value groups.
+- Shipped 2026-05-09: source-labeled IPEDS facts on CDS-backed and directory-only
+  school pages.
+- Shipped 2026-05-09: non-CDS federal baseline stub pages.
+- Shipped 2026-05-09: accessible native-table rendering for federal baseline
+  fact groups, reusing the PRD 020 table pattern.
 
 ### M5: Browse expansion
 
@@ -847,10 +891,9 @@ Decision gate:
 
 ### M6: Annual operations
 
-- Add monthly/weekly scheduled release checker. **Shipped follow-up:** monthly
-  GitHub Actions release probe with a 10-month no-op window from the latest
-  loaded provisional Access release date.
-- Add operator dashboard rows for last IPEDS load, tables loaded, row counts,
+- Shipped 2026-05-09: monthly GitHub Actions release probe with a 10-month
+  no-op window from the latest loaded provisional Access release date.
+- Open: operator dashboard rows for last IPEDS load, tables loaded, row counts,
   schema drift, and unresolved mapping issues.
 
 ## Open questions

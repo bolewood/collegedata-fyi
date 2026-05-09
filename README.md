@@ -1,16 +1,16 @@
 # collegedata.fyi
 
-**College facts pulled straight from each school's Common Data Set.**
+**College facts pulled from school-published Common Data Sets and source-labeled federal data.**
 
-Open-source Common Data Set API, searchable college admissions dataset, and preservation archive for U.S. higher education data.
+Open-source Common Data Set API, searchable college admissions dataset, federal baseline fact layer, and preservation archive for U.S. higher education data.
 
-An open, reproducible library of US college data. We find each school's Common Data Set document, extract it into a canonical schema, and publish both the raw source file and the structured extract alongside a queryable manifest. No hand-cleaned numbers, no opinionated schema of our own — we use the one the CDS Initiative already publishes. Just ground truth you can build on top of.
+An open, reproducible library of US college data. We find each school's Common Data Set document, extract it into a canonical schema, and publish both the raw source file and the structured extract alongside a queryable manifest. For schools without a public CDS, we now publish a curated NCES/IPEDS federal baseline keyed by UNITID and labeled as federal data. No hand-cleaned numbers, no unlabeled source blending — CDS remains the school-authored source, IPEDS and Scorecard remain federal context.
 
-> **Status: V1 live at [collegedata.fyi](https://collegedata.fyi).** 6,322 institutions indexed through the Scorecard-backed directory, 3,950 archived CDS documents, 3,792 documents extracted, 200,957 public `cds_fields` rows, 475 `school_browser_rows`, and 383 `school_merit_profile` rows. Five of six extraction tiers shipped: filled XLSX, fillable PDF, flattened PDF, image-only scan, and structured HTML. DOCX is the only remaining tier and is scoped in [PRD 007](docs/prd/007-tier3-docx-extraction.md). The live product now includes institution coverage transparency, academic positioning, admission strategy, match-list building, merit profile data, Scorecard outcomes, and a PRD 019 change-intelligence alpha for source-linked year-over-year CDS deltas. Public change events are explicitly review-gated. See [`docs/extraction-quality.md`](docs/extraction-quality.md) for current coverage and [`docs/known-issues/`](docs/known-issues/) for per-school notes.
+> **Status: V1 live at [collegedata.fyi](https://collegedata.fyi).** 6,322 institutions indexed through the federal directory, 3,950 archived CDS documents, 3,792 documents extracted, 200,957 public `cds_fields` rows, 475 `school_browser_rows`, and 383 `school_merit_profile` rows. Five of six extraction tiers shipped: filled XLSX, fillable PDF, flattened PDF, image-only scan, and structured HTML. DOCX is the only remaining tier and is scoped in [PRD 007](docs/prd/007-tier3-docx-extraction.md). The live product now includes institution coverage transparency, source-labeled NCES/IPEDS baseline facts, academic positioning, admission strategy, match-list building, merit profile data, Scorecard outcomes, and a PRD 019 change-intelligence alpha for source-linked year-over-year CDS deltas. Public change events are explicitly review-gated. See [`docs/extraction-quality.md`](docs/extraction-quality.md) for current CDS extraction coverage and [`tools/ipeds/README.md`](tools/ipeds/README.md) for the IPEDS release pipeline.
 
 ## Why this exists
 
-There is no free public API for Common Data Set information. Every school publishes to its own URL, most as PDFs, with no central index. If you want to compare admissions statistics across schools, the options today are "write a custom scraper for each institution," "pay a commercial data provider," or "give up and use IPEDS instead," which is federal compliance data that lacks the admissions granularity the CDS captures.
+There is no free public API for Common Data Set information. Every school publishes to its own URL, most as PDFs, with no central index. If you want to compare admissions statistics across schools, the options today are "write a custom scraper for each institution," "pay a commercial data provider," or fall back to IPEDS. IPEDS is the right federal baseline for broad coverage, but it lacks the current-year, school-authored admissions granularity the CDS captures.
 
 Two recent discoveries made this project much cheaper to build than it would have been a year ago:
 
@@ -27,9 +27,10 @@ We also archive source files on discovery, because some schools do occasionally 
 - **Source files** (PDF, XLSX, DOCX) for each school + year combination we've found, archived on discovery
 - **Canonical structured extracts** keyed to the CDS Initiative's own field IDs (A.001, B.101, C.101, ...), with provenance linking every value back to the source
 - **An institution directory and coverage transparency layer** ([PRD 015](docs/prd/015-institution-directory-and-cds-coverage.md)) — every active, undergraduate-serving Title-IV institution gets a searchable identity page and an honest CDS coverage status (`CDS available` / `Older CDS available` / `No public CDS found` / `Not checked yet`). The public coverage table at [`/coverage`](https://collegedata.fyi/coverage) makes the gap visible.
+- **A source-labeled NCES/IPEDS federal baseline** ([PRD 021](docs/prd/021-ipeds-coverage-layer.md)) — curated enrollment, admissions, cost, aid, and outcome-adjacent facts for in-scope institutions, especially schools where no public CDS is archived. Provisional/final release status, source table/variable, imputation status, and definition-alignment notes stay visible.
 - **Fit-data products on top of the raw CDS** — academic positioning ([PRD 016](docs/prd/016-academic-positioning-card.md)), admission strategy ([PRD 016B](docs/prd/016B-admission-strategy-card.md)), match-list building ([PRD 017](docs/prd/017-match-list-builder.md)), and merit profile data ([PRD 018](docs/prd/018-open-college-fit-data.md))
 - **Change intelligence alpha** ([PRD 019](docs/prd/019-cds-change-intelligence.md)) — deterministic year-over-year events for material deltas, newly missing/reported fields, producer or quality changes, and an operator review workflow before anything becomes public or reportable
-- **A public API** at `https://api.collegedata.fyi` that tracks discovery status, last-verified dates, participation status, per-document provenance, per-institution coverage state, browser-ready admissions/profile rows, Scorecard joins, and merit-aid profiles
+- **A public API** at `https://api.collegedata.fyi` that tracks discovery status, last-verified dates, participation status, per-document provenance, per-institution coverage state, browser-ready admissions/profile rows, source-labeled IPEDS baseline facts, Scorecard joins, and merit-aid profiles
 - **An extensible artifact model** so community cleanup tools can publish their own extracts alongside the primary ones without replacing them
 
 ## Quick look
@@ -61,9 +62,10 @@ curl 'https://api.collegedata.fyi/rest/v1/cds_artifacts?document_id=eq.<uuid>&ki
 1. Supabase Edge Functions run on cron, discover new or changed CDS documents at each school's Institutional Research URL, and record them in Postgres. Source bytes are archived in Storage on first discovery so we still have them if the school later removes the original.
 2. A Python worker prioritizes fresh CDS years, routes each document from byte-derived `source_format`, and extracts by tier. Tiers that ship today: filled XLSX -> template or embedded answer-column cell map + openpyxl; fillable PDF with AcroForm fields -> deterministic direct read ([`tools/tier2_extractor/`](tools/tier2_extractor/)); flattened PDF -> Docling layout extraction + schema-targeting cleaner ([`tools/extraction_worker/tier4_cleaner.py`](tools/extraction_worker/tier4_cleaner.py)); image-only scans -> force-OCR pass through the same Docling pipeline; structured HTML -> HTML normalizer reusing the Tier 4 cleaner. Remaining tier scoped but not yet built: filled DOCX via Structured Document Tags ([PRD 007](docs/prd/007-tier3-docx-extraction.md)).
 3. All extractors produce output keyed to the CDS Initiative's canonical field IDs using the schema at [`schemas/`](schemas/). Cross-school queries join on that field ID regardless of which extractor produced the values.
-4. PostgREST exposes the manifest, field substrate, browser rows, institution coverage, Scorecard joins, and merit profiles as a public read-only API at `api.collegedata.fyi`. The `browser-search` Edge Function powers the queryable browser and match list; `school_merit_profile` joins Section H CDS facts with federal affordability/outcome fields.
-5. PRD 019 projects selected year-over-year changes from comparable primary CDS rows into `cds_field_change_events`. Generated candidates are service-role/operator data by default; the school-page "What changed" card only reads events marked `public_visible=true` after verification.
-6. Community cleanup tools can register via `cleaners.yaml` and publish their own artifacts alongside the primary ones — see [ADR 0002](docs/decisions/0002-publish-raw-over-clean.md) for the rationale.
+4. The IPEDS pipeline loads official NCES metadata workbooks and selected CSV table ZIPs into release, metadata, raw-row, and curated-fact tables. `school_facts_unified` is the public serving view for source-labeled federal baseline facts; raw IPEDS rows are preserved for audit, not treated as the product API.
+5. PostgREST exposes the manifest, field substrate, browser rows, institution coverage, IPEDS facts, Scorecard joins, and merit profiles as a public read-only API at `api.collegedata.fyi`. The `browser-search` Edge Function powers the queryable browser and match list; `school_merit_profile` joins Section H CDS facts with federal affordability/outcome fields.
+6. PRD 019 projects selected year-over-year changes from comparable primary CDS rows into `cds_field_change_events`. Generated candidates are service-role/operator data by default; the school-page "What changed" card only reads events marked `public_visible=true` after verification.
+7. Community cleanup tools can register via `cleaners.yaml` and publish their own artifacts alongside the primary ones — see [ADR 0002](docs/decisions/0002-publish-raw-over-clean.md) for the rationale.
 
 Full architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
@@ -73,7 +75,7 @@ collegedata.fyi sits between official higher-education data systems and the docu
 
 - [Common Data Set Initiative](https://commondataset.org/) — the canonical CDS templates and field definitions this project follows.
 - [College Scorecard API](https://collegescorecard.ed.gov/data/api/) — federal outcomes, net-price, debt, completion, and earnings data; joined into `cds_scorecard`.
-- [IPEDS](https://nces.ed.gov/ipeds/) — federal postsecondary reporting system and the source of school identity metadata such as UNITID.
+- [IPEDS](https://nces.ed.gov/ipeds/) — federal postsecondary reporting system, source of UNITID identity metadata, and source for the PRD 021 federal baseline fact layer.
 - [Docling](https://github.com/docling-project/docling) — open-source document conversion toolkit used for flattened PDF, scanned PDF, and layout-aware extraction.
 - [UrbanInstitute/ipeds-scraper](https://github.com/UrbanInstitute/ipeds-scraper) — downloader for IPEDS complete data files.
 - [UrbanInstitute/education-data-package-r](https://github.com/UrbanInstitute/education-data-package-r) — R package for accessing education data including IPEDS and College Scorecard data.
@@ -82,7 +84,7 @@ collegedata.fyi sits between official higher-education data systems and the docu
 
 ## Docs and decisions
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — ten-pipeline map of the whole system (schema, corpus, discovery, mirror, extraction, scorecard, institution directory + coverage, change intelligence, consumer API, frontend)
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — eleven-pipeline map of the whole system (schema, corpus, discovery, mirror, extraction, scorecard, institution directory + coverage, IPEDS federal baseline, change intelligence, consumer API, frontend)
 - [`docs/data-extraction-pipeline.md`](docs/data-extraction-pipeline.md) — operational diagram of the discovery/archive/extraction/projection flow, including cadence, storage, and known issues
 - [`docs/extraction-quality.md`](docs/extraction-quality.md) — current accuracy by tier, per-section corpus-wide coverage, and reproducible scoring commands
 - [`docs/recipes/`](docs/recipes/) — worked examples with real data: interactive visualizations, XLSX starters, and API queries. Start with [acceptance rate vs yield](docs/recipes/acceptance-vs-yield.md)
@@ -92,6 +94,7 @@ collegedata.fyi sits between official higher-education data systems and the docu
 - [`docs/prd/003-ai-driven-data-quality.md`](docs/prd/003-ai-driven-data-quality.md) — AI-driven data-quality spike PRD (M1 only, approved via /autoplan)
 - [`docs/archive-pipeline.md`](docs/archive-pipeline.md) — deep dive on the discovery/archive queue
 - [`tools/scorecard/README.md`](tools/scorecard/README.md) — College Scorecard pipeline runbook (`/rest/v1/cds_scorecard` returns CDS docs joined with federal earnings, debt, net price by income, completion)
+- [`tools/ipeds/README.md`](tools/ipeds/README.md) — NCES/IPEDS release loader and scheduled release-probe runbook
 - [`docs/research/cds-vs-college-scorecard.md`](docs/research/cds-vs-college-scorecard.md) — CDS vs College Scorecard schema comparison
 - [`docs/decisions/`](docs/decisions/) — Architectural Decision Records
 - [`docs/known-issues/`](docs/known-issues/) — per-school extraction quality notes

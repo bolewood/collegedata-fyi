@@ -4,7 +4,7 @@ Open-source archive of U.S. college Common Data Set (CDS) documents.
 
 - **Live site:** https://collegedata.fyi (Next.js on Vercel)
 - **API:** https://api.collegedata.fyi (PostgREST on Supabase)
-- **Architecture:** `docs/ARCHITECTURE.md` (nine pipelines: schema, corpus, discovery, mirror, extraction, scorecard, institution directory + coverage, consumer API, frontend)
+- **Architecture:** `docs/ARCHITECTURE.md` (eleven pipelines: schema, corpus, discovery, mirror, extraction, scorecard, institution directory + coverage, IPEDS federal baseline, change intelligence, consumer API, frontend)
 - **Frontend PRD:** `docs/prd/002-frontend.md`
 - **Design system:** `web/DESIGN_SYSTEM.md` (canonical tokens in `web/src/app/tokens.css`; live reference at `/design-system/`). **Read before writing any UI.**
 
@@ -69,6 +69,23 @@ migrations contain verification DO blocks that assume production data,
 which would always fail in a clean CI database. The actual drift
 between prod and `main` isn't detectable from CI without prod
 credentials anyway; it's a policy safeguard.
+
+## IPEDS federal baseline operations
+
+PRD 021 adds official NCES/IPEDS baseline facts. CDS remains the
+school-authored source; IPEDS facts are federal baseline/context and must keep
+source table, source variable, release type, release date, imputation status,
+and definition-alignment notes visible.
+
+- Loader/runbook: `tools/ipeds/README.md`
+- Release probe workflow: `.github/workflows/ipeds-release-probe.yml`
+- Core public serving view: `school_facts_unified`
+- Public school-page component: `web/src/components/FederalBaselineTable.tsx`
+
+The release probe is monthly and intentionally no-ops until 10 months after the
+latest loaded provisional Access release date. When it opens an issue, run the
+suggested download/load dry run first, review the report, apply any needed
+migrations from fresh `main`, and only then run `load_release.py --apply`.
 
 ## Skill routing
 

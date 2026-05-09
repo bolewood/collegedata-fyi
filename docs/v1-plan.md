@@ -1,7 +1,7 @@
 # collegedata.fyi — V1 Project Plan
 
-**Status:** V1 live; PRD 019 change-intelligence alpha shipped 2026-05-05
-**Last updated:** 2026-05-05
+**Status:** V1 live; PRD 021 IPEDS federal-baseline slice shipped 2026-05-09
+**Last updated:** 2026-05-09
 **Canonical domain:** collegedata.fyi (API at `api.collegedata.fyi`)
 
 > This is a living document. Update it when decisions change rather than freezing it in time. Point-in-time decisions and their rationale are preserved as ADRs in [`docs/decisions/`](decisions/).
@@ -195,14 +195,21 @@ Supabase free-tier limits could bite if the corpus grows faster than expected. S
 
 ## What V1 does not try to be
 
-Not a data product for non-technical users. Not a replacement for IPEDS. Not a CDS authoring tool. Not a ranking or comparison site. Not a clean normalized dataset. All of those are possible V2+ directions, but they all depend on the V1 foundation existing first.
+Not a CDS authoring tool. Not a ranking or comparison site. Not a clean
+normalized dataset. Not a replacement for IPEDS, and not a product that lets
+IPEDS silently replace school-authored CDS data. The source-precedence model is:
+CDS is the school-authored primary source where available; IPEDS is a
+source-labeled federal baseline/context layer; Scorecard remains the federal
+outcomes/earnings/debt layer. All larger V2+ directions depend on preserving
+that provenance.
 
 ## Product layers built on the V1 foundation
 
 The original V1 foundation now supports several higher-level products:
 institution coverage transparency (PRD 015), academic positioning (PRD 016),
 admission strategy (PRD 016B), match-list building (PRD 017), merit profile data
-(PRD 018), and change intelligence (PRD 019).
+(PRD 018), change intelligence (PRD 019), and source-labeled IPEDS federal
+baseline facts for non-CDS and CDS-backed schools (PRD 021).
 
 PRD 019 is intentionally an alpha/operator capability. The deterministic event
 substrate can compare selected primary CDS rows year over year and generate
@@ -211,6 +218,15 @@ school-page card only shows events that are explicitly marked public after
 verification, and the `/changes` digest is disabled unless operator env vars are
 present. See [`docs/plans/prd-019-spike-and-qa.md`](plans/prd-019-spike-and-qa.md)
 for the spike results and launch gates.
+
+PRD 021 is the federal-baseline coverage layer. The first shipped slice loads
+official NCES/IPEDS release metadata and curated table CSVs, preserves raw rows
+for audit, projects source-labeled facts into `ipeds_facts`, and serves current
+public facts through `school_facts_unified`. School pages use those facts to
+make "No public CDS found" pages useful without pretending IPEDS is a CDS.
+The annual release probe runs monthly and opens operator issues after a
+10-month no-op window from the latest loaded provisional release date. See
+[`tools/ipeds/README.md`](../tools/ipeds/README.md) for the runbook.
 
 ## Open questions
 

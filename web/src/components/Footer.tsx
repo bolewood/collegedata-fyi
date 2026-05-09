@@ -34,6 +34,7 @@ export function Footer() {
           </a>
           <a href="/recipes">Recipes</a>
           <a href="/api">API</a>
+          <a href="/privacy">Privacy</a>
           <a href="/about">About</a>
         </div>
       </div>

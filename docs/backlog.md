@@ -117,15 +117,15 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 ### Larger features / future tiers
 
-- **PRD 021 IPEDS coverage layer.** Drafted as
-  [PRD 021](prd/021-ipeds-coverage-layer.md). IPEDS should become the federal
-  baseline fact layer for non-CDS schools, keyed by UNITID and source-labeled as
-  provisional/final federal data. It should not replace CDS as the
-  school-authored source-document layer or current-year change-intelligence
-  input. Start with a build-vs-use spike over the annual Access bundle,
-  Complete Data Files, and third-party normalized packages; then map
-  ADM/EF/COST/SFA/GR/OM/Completions into curated facts. **Effort:** multi-PR
-  product/data layer; first mapping + loader spike likely 1-2 days.
+- **PRD 021 IPEDS follow-ups after the first federal-baseline slice.** The
+  loader, curated facts, school-page baseline table, no-CDS page surface, and
+  monthly release probe shipped 2026-05-09. Remaining work: add browse
+  source-mode controls backed by `school_facts_unified`, build an operator
+  dashboard for last load/table counts/schema drift/unresolved mappings,
+  broaden field-family coverage beyond the MVP mappings, document public
+  NCES/IPEDS methodology/attribution, and decide whether the release probe
+  should become weekly during September-March publication season. **Effort:**
+  several focused follow-up PRs, not a single PRD-sized build.
 
 - **Tier 3 DOCX extractor (PRD 007).** Revised plan shipped 2026-04-29 in [PRD 007](prd/007-tier3-docx-extraction.md). Primary path is a deterministic OOXML SDT reader keyed by schema `word_tag` values, same lookup pattern as Tier 2. Fallback path is a measured Docling DOCX structural adapter that reuses Tier 4 cleaner/table logic for SDT-stripped Word files before considering any bespoke Word-table parser. Addressable corpus today is ~30-50 documents (Kent State's 14 SDT-preserving files are the largest family). The format sniffer now routes DOCX correctly; the remaining work is the extractor itself.
 
@@ -195,6 +195,19 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 ## Resolved
 
 Reverse chronological.
+
+### 2026-05-09
+
+- **[RESOLVED 2026-05-09] ~~PRD 021 first federal-baseline slice.~~**
+  Shipped the NCES/IPEDS coverage layer foundation: schema for release/table/
+  column/value-label metadata, raw row preservation, curated `ipeds_facts`,
+  `ipeds_current_facts`, `school_facts_unified`, official release-date
+  provenance for the `2024-25 provisional` load, `download_release.py`,
+  `load_release.py`, monthly `ipeds-release-probe` workflow with a 10-month
+  no-op window, school-page `FederalBaselineTable`, and compact no-CDS
+  Formspree CTA. Follow-ups stay open above for browse expansion, operator
+  dashboard, broader mappings, public methodology/attribution, and probe
+  cadence tuning.
 
 ### 2026-05-05
 

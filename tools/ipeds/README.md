@@ -6,14 +6,23 @@ is useful. The public UI reads curated facts, not raw IPEDS JSON.
 
 ## Workflow
 
-1. Download the official NCES metadata workbook and mapped CSV table ZIPs:
+Run IPEDS loads from a fresh `main` checkout after the corresponding migrations
+have landed and been applied. Feature-branch loads can put production ahead of
+the committed schema.
+
+1. Download the official NCES metadata workbook and mapped CSV table ZIPs. The
+   downloader writes into `scratch/ipeds/<collection-year>-<release-type>/` and
+   creates a `release.json` manifest with normalized release-date metadata and
+   source URLs.
 
 ```bash
 python tools/ipeds/download_release.py
 ```
 
 2. Dry-run the loader. This parses metadata, reads the ZIPs, projects public
-facts, and writes `scratch/ipeds/ipeds-<year>-<release>-report.json`.
+   facts, and writes `scratch/ipeds/ipeds-<year>-<release>-report.json`. Review
+   row counts, missing tables, projected fact counts, and any schema-drift notes
+   before applying.
 
 ```bash
 python tools/ipeds/load_release.py \
@@ -28,8 +37,8 @@ python tools/ipeds/load_release.py \
 ```
 
 3. After reviewing the report and after the migration has landed/applied from
-`main`, re-run with `--apply`. This requires `SUPABASE_URL` and
-`SUPABASE_SERVICE_ROLE_KEY` in `.env`.
+   `main`, re-run with `--apply`. This requires `SUPABASE_URL` and
+   `SUPABASE_SERVICE_ROLE_KEY` in `.env`.
 
 ```bash
 python tools/ipeds/load_release.py ... --apply
@@ -42,6 +51,11 @@ python tools/ipeds/load_release.py ... --apply
 - The Access database ZIP is recorded as release provenance but not parsed.
 - Raw rows are preserved in `ipeds_raw_rows`; public products query
   `ipeds_facts`, `ipeds_current_facts`, or `school_facts_unified`.
+- `release_date` is normalized to ISO form. Month-level NCES dates such as
+  `March 2026` are stored as the first day of the month with
+  `release_date_precision = "month"` in notes.
+- Provisional/final status, source table, source variable, imputation status,
+  and CDS-definition alignment must stay attached to every public fact.
 
 ## Release probe
 
@@ -63,6 +77,48 @@ Manual dry run:
 python tools/ipeds/probe_releases.py --as-of 2027-01-01
 ```
 
+Manual forced probe before the due date:
+
+```bash
+python tools/ipeds/probe_releases.py --force --out-json scratch/ipeds/probe-summary.json
+```
+
+Required GitHub Actions secrets:
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+The workflow uses `GITHUB_TOKEN` to create issues and does not mutate IPEDS
+tables. Issue creation is idempotent by title:
+`ipeds_release_available: <collection_year> <release_type>`.
+
+## Applying a release issue
+
+When the probe opens a release-available issue:
+
+1. Run the suggested `download_release.py` command.
+2. Run the suggested `load_release.py` command without `--apply`.
+3. Review the generated report under `scratch/ipeds/`.
+4. If migrations are needed for schema drift, ship/apply those first from
+   `main`.
+5. Re-run the same loader command with `--apply`.
+6. Confirm the probe now sees the release as loaded:
+
+```bash
+python tools/ipeds/probe_releases.py --as-of "$(date +%F)"
+```
+
+7. Spot-check the public serving view with the public anon key:
+
+```bash
+curl "$SUPABASE_URL/rest/v1/school_facts_unified?school_id=eq.goshen-college&select=school_name,field_label,display_value,release_type,collection_year,source_table,source_variable&limit=5" \
+  -H "apikey: $SUPABASE_ANON_KEY" \
+  -H "Authorization: Bearer $SUPABASE_ANON_KEY"
+```
+
+The probe should mark the target release as `loaded`, and school pages should
+read the new current facts through `school_facts_unified`.
+
 ## Public defaults
 
 - Public school pages show facts from `school_facts_unified`, which only joins
@@ -72,3 +128,15 @@ python tools/ipeds/probe_releases.py --as-of 2027-01-01
   intelligence unless a future PRD explicitly opts in.
 - Baseline-only pages are marked `noindex` until the methodology and QA surface
   mature.
+
+## Verification
+
+Before shipping loader or probe changes:
+
+```bash
+python3 -m unittest discover -s tools/ipeds -p 'test_*.py'
+git diff --check
+```
+
+For frontend changes that render IPEDS facts, also run the web typecheck/build
+from `web/` and smoke the affected school page.
