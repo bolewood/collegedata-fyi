@@ -15,7 +15,7 @@ import os
 import sys
 import zipfile
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -23,7 +23,7 @@ if __package__ is None or __package__ == "":
     sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from tools.ipeds.mappings import MVP_FACT_MAPPINGS
-from tools.ipeds.metadata import DATA_GENERATOR_URL, TablesDoc, parse_tablesdoc, sha256_file
+from tools.ipeds.metadata import DATA_GENERATOR_URL, TablesDoc, normalize_release_date_text, parse_tablesdoc, sha256_file
 from tools.ipeds.project import project_rows_to_facts
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -38,6 +38,8 @@ def main() -> int:
     parser.add_argument("--collection-year", required=True, help="Release collection year, e.g. 2024-25.")
     parser.add_argument("--data-year", required=True, type=int, help="IPEDS data year used in table names, e.g. 2024.")
     parser.add_argument("--release-type", default="provisional", choices=["preliminary", "provisional", "final"])
+    parser.add_argument("--release-date", help="Normalized official release date, YYYY-MM-DD. Month-level releases use the first day of the month.")
+    parser.add_argument("--release-date-text", help='Raw official release date text, e.g. "March 2026".')
     parser.add_argument("--metadata-url", required=True)
     parser.add_argument("--access-url")
     parser.add_argument("--apply", action="store_true", help="Upsert into Supabase using service role credentials.")
@@ -131,6 +133,7 @@ def build_report(
         "collection_year": args.collection_year,
         "data_year": args.data_year,
         "release_type": args.release_type,
+        **release_date_report(args),
         "metadata_xlsx": str(args.metadata_xlsx),
         "metadata_sha256": sha256_file(args.metadata_xlsx),
         "source_tables_requested": sorted({mapping.table_name.upper() for mapping in MVP_FACT_MAPPINGS}),
@@ -167,6 +170,18 @@ def apply_to_supabase(
         raise SystemExit("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required for --apply")
 
     client = create_client(supabase_url, service_key)
+    release_date, release_date_precision = release_date_metadata(args)
+    release_notes = {
+        "loader": "tools/ipeds/load_release.py",
+        "mapping_count": len(MVP_FACT_MAPPINGS),
+    }
+    if args.release_date_text:
+        release_notes["release_date_text"] = args.release_date_text
+    if release_date_precision:
+        release_notes["release_date_precision"] = release_date_precision
+    if release_date:
+        release_notes["release_probe_due_on"] = add_months(release_date, 10)
+
     release_payload = {
         "collection_year": args.collection_year,
         "data_year": args.data_year,
@@ -175,8 +190,10 @@ def apply_to_supabase(
         "metadata_url": args.metadata_url,
         "metadata_sha256": sha256_file(args.metadata_xlsx),
         "access_url": args.access_url,
-        "notes": {"loader": "tools/ipeds/load_release.py", "mapping_count": len(MVP_FACT_MAPPINGS)},
+        "notes": release_notes,
     }
+    if release_date:
+        release_payload["release_date"] = release_date
     release_result = client.table("ipeds_releases").upsert(
         release_payload,
         on_conflict="collection_year,release_type,metadata_sha256",
@@ -252,6 +269,43 @@ def dedupe_rows(rows: list[dict[str, Any]], on_conflict: str) -> list[dict[str, 
     for row in rows:
         seen[tuple(row.get(key) for key in keys)] = row
     return list(seen.values())
+
+
+def release_date_metadata(args: argparse.Namespace) -> tuple[str | None, str | None]:
+    if args.release_date:
+        date.fromisoformat(args.release_date)
+        precision = "month" if args.release_date.endswith("-01") and args.release_date_text else "day"
+        return args.release_date, precision
+    return normalize_release_date_text(args.release_date_text)
+
+
+def release_date_report(args: argparse.Namespace) -> dict[str, str | None]:
+    release_date, precision = release_date_metadata(args)
+    return {
+        "release_date": release_date,
+        "release_date_text": args.release_date_text,
+        "release_date_precision": precision,
+        "release_probe_due_on": add_months(release_date, 10) if release_date else None,
+    }
+
+
+def add_months(value: str, months: int) -> str:
+    parsed = date.fromisoformat(value)
+    month_index = parsed.month - 1 + months
+    year = parsed.year + month_index // 12
+    month = month_index % 12 + 1
+    day = min(parsed.day, days_in_month(year, month))
+    return f"{year:04d}-{month:02d}-{day:02d}"
+
+
+def days_in_month(year: int, month: int) -> int:
+    if month == 2:
+        if year % 400 == 0 or (year % 4 == 0 and year % 100 != 0):
+            return 29
+        return 28
+    if month in {4, 6, 9, 11}:
+        return 30
+    return 31
 
 
 def load_env(path: Path) -> None:

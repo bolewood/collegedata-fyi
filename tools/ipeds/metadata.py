@@ -14,6 +14,20 @@ from openpyxl import load_workbook
 
 NCES_IPEDS_ACCESS_PAGE = "https://nces.ed.gov/ipeds/use-the-data/download-access-database"
 DATA_GENERATOR_URL = "https://nces.ed.gov/ipeds/data-generator?year={year}&tableName={table_name}&HasRV=0&type=csv"
+MONTHS = {
+    "january": 1,
+    "february": 2,
+    "march": 3,
+    "april": 4,
+    "may": 5,
+    "june": 6,
+    "july": 7,
+    "august": 8,
+    "september": 9,
+    "october": 10,
+    "november": 11,
+    "december": 12,
+}
 
 
 @dataclass(frozen=True)
@@ -100,6 +114,47 @@ def release_type_from_text(value: str) -> str:
     return "provisional"
 
 
+def normalize_release_date_text(value: str | None) -> tuple[str | None, str | None]:
+    """Convert NCES release-date text into an ISO date and precision.
+
+    The IPEDS Access Database page currently publishes month-level dates like
+    "March 2026". Other NCES pages use day-level dates, so the normalizer
+    supports both while preserving precision for provenance notes.
+    """
+    if value is None:
+        return None, None
+    text = value.strip()
+    if not text:
+        return None, None
+
+    day_match = re.fullmatch(
+        r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s*(\d{4})",
+        text,
+        flags=re.I,
+    )
+    if day_match:
+        month = MONTHS[day_match.group(1).lower()]
+        day = int(day_match.group(2))
+        year = int(day_match.group(3))
+        return f"{year:04d}-{month:02d}-{day:02d}", "day"
+
+    month_match = re.fullmatch(
+        r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})",
+        text,
+        flags=re.I,
+    )
+    if month_match:
+        month = MONTHS[month_match.group(1).lower()]
+        year = int(month_match.group(2))
+        return f"{year:04d}-{month:02d}-01", "month"
+
+    iso_match = re.fullmatch(r"\d{4}-\d{2}-\d{2}", text)
+    if iso_match:
+        return text, "day"
+
+    return None, None
+
+
 def parse_access_page(html: str, base_url: str = NCES_IPEDS_ACCESS_PAGE) -> list[ReleaseLink]:
     """Extract official release links from the NCES Access database page.
 
@@ -127,6 +182,7 @@ def parse_access_page(html: str, base_url: str = NCES_IPEDS_ACCESS_PAGE) -> list
     releases: list[ReleaseLink] = []
     for collection_year, metadata_url in sorted(metadata_by_collection.items(), reverse=True):
         start_year = int(collection_year[:4])
+        access_url = access_by_collection.get(collection_year)
         row_match = re.search(
             rf"{re.escape(collection_year)}\s+Access.*?"
             rf"{re.escape(collection_year)}\s+Excel.*?"
@@ -140,13 +196,15 @@ def parse_access_page(html: str, base_url: str = NCES_IPEDS_ACCESS_PAGE) -> list
             r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}",
             window,
         )
+        access_lower = (access_url or "").lower()
+        release_type_text = access_url if any(token in access_lower for token in ("final", "provisional", "preliminary")) else window
         releases.append(
             ReleaseLink(
                 collection_year=collection_year,
                 data_year=start_year,
-                release_type=release_type_from_text(window),
+                release_type=release_type_from_text(release_type_text),
                 release_date=date_match.group(0) if date_match else None,
-                access_url=access_by_collection.get(collection_year),
+                access_url=access_url,
                 metadata_url=metadata_url,
             )
         )

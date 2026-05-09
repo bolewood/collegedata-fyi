@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import http.cookiejar
+import json
 import sys
 import urllib.request
 from pathlib import Path
@@ -12,7 +13,7 @@ from pathlib import Path
 if __package__ is None or __package__ == "":
     sys.path.append(str(Path(__file__).resolve().parents[2]))
 
-from tools.ipeds.metadata import DATA_GENERATOR_URL, NCES_IPEDS_ACCESS_PAGE, parse_access_page
+from tools.ipeds.metadata import DATA_GENERATOR_URL, NCES_IPEDS_ACCESS_PAGE, normalize_release_date_text, parse_access_page
 from tools.ipeds.mappings import MVP_FACT_MAPPINGS
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -36,6 +37,7 @@ def main() -> int:
     data_year = args.data_year or release.data_year
     out_dir = args.out_dir / f"{release.collection_year}-{release.release_type}"
     out_dir.mkdir(parents=True, exist_ok=True)
+    release_date, release_date_precision = normalize_release_date_text(release.release_date)
 
     metadata_path = out_dir / Path(release.metadata_url).name
     download(opener, release.metadata_url, metadata_path)
@@ -51,7 +53,23 @@ def main() -> int:
         download(opener, url, path)
         print(f"table: {path}")
 
+    manifest = {
+        "collection_year": release.collection_year,
+        "data_year": data_year,
+        "release_type": release.release_type,
+        "release_date": release_date,
+        "release_date_text": release.release_date,
+        "release_date_precision": release_date_precision,
+        "source_page_url": NCES_IPEDS_ACCESS_PAGE,
+        "metadata_url": release.metadata_url,
+        "access_url": release.access_url,
+    }
+    manifest_path = out_dir / "release.json"
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(f"manifest: {manifest_path}")
     print(f"release: {release.collection_year} {release.release_type}")
+    if release.release_date:
+        print(f"release date: {release.release_date}")
     return 0
 
 
@@ -68,4 +86,3 @@ def download(opener: urllib.request.OpenerDirector, url: str, path: Path) -> Non
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
