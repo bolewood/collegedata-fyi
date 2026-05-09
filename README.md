@@ -38,6 +38,18 @@ We also archive source files on discovery, because some schools do occasionally 
 **Browse the site:** [collegedata.fyi](https://collegedata.fyi) — search for a school, view archived CDS years, download source PDFs, or browse extracted field values.
 
 **Query the API:**
+
+Simple no-auth endpoints for agents, CLIs, and notebooks:
+
+```bash
+curl 'https://www.collegedata.fyi/api/schools/search?q=mit'
+curl 'https://www.collegedata.fyi/api/schools/mit/facts?categories=admissions,cost,outcomes'
+curl 'https://www.collegedata.fyi/api/compare?schools=mit,yale,university-of-chicago'
+curl 'https://www.collegedata.fyi/openapi.json'
+```
+
+Raw PostgREST remains available for power users:
+
 ```bash
 ANON_KEY="<copy the public anon key from https://www.collegedata.fyi/api>"
 

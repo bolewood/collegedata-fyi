@@ -1,0 +1,13 @@
+{
+  "name": "@collegedata-fyi/mcp-server",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "collegedata-mcp": "./bin/collegedata-mcp.js"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  }
+}
+
