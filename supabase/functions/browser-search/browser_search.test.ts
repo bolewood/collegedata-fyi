@@ -64,9 +64,42 @@ function row(overrides: Partial<BrowserRow>): BrowserRow {
     app_fee_amount: null,
     app_fee_waiver_offered: null,
     admission_strategy_card_quality: null,
+    federal_baseline_available: false,
+    federal_source_mode: "cds_only",
     ...overrides,
   };
 }
+
+Deno.test("federal source mode is filterable and exportable", () => {
+  const result = searchBrowserRows(
+    [
+      row({
+        school_id: "a",
+        school_name: "A College",
+        federal_baseline_available: true,
+        federal_source_mode: "cds_plus_ipeds_baseline",
+      }),
+      row({
+        document_id: "00000000-0000-0000-0000-000000000002",
+        school_id: "b",
+        school_name: "B College",
+        federal_source_mode: "cds_only",
+      }),
+    ],
+    {
+      filters: [{ field: "federal_source_mode", op: "=", value: "cds_plus_ipeds_baseline" }],
+      columns: ["school_id", "federal_baseline_available", "federal_source_mode"],
+    },
+  );
+
+  assertEquals(result.rows, [
+    {
+      school_id: "a",
+      federal_baseline_available: true,
+      federal_source_mode: "cds_plus_ipeds_baseline",
+    },
+  ]);
+});
 
 Deno.test("required fields derive from operators", () => {
   assertEquals(isRequiredOperator("="), true);

@@ -117,6 +117,16 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 ### Larger features / future tiers
 
+- **PRD 021 IPEDS coverage layer.** Drafted as
+  [PRD 021](prd/021-ipeds-coverage-layer.md). IPEDS should become the federal
+  baseline fact layer for non-CDS schools, keyed by UNITID and source-labeled as
+  provisional/final federal data. It should not replace CDS as the
+  school-authored source-document layer or current-year change-intelligence
+  input. Start with a build-vs-use spike over the annual Access bundle,
+  Complete Data Files, and third-party normalized packages; then map
+  ADM/EF/COST/SFA/GR/OM/Completions into curated facts. **Effort:** multi-PR
+  product/data layer; first mapping + loader spike likely 1-2 days.
+
 - **Tier 3 DOCX extractor (PRD 007).** Revised plan shipped 2026-04-29 in [PRD 007](prd/007-tier3-docx-extraction.md). Primary path is a deterministic OOXML SDT reader keyed by schema `word_tag` values, same lookup pattern as Tier 2. Fallback path is a measured Docling DOCX structural adapter that reuses Tier 4 cleaner/table logic for SDT-stripped Word files before considering any bespoke Word-table parser. Addressable corpus today is ~30-50 documents (Kent State's 14 SDT-preserving files are the largest family). The format sniffer now routes DOCX correctly; the remaining work is the extractor itself.
 
 - **Tier 4 cleaner — continue resolver coverage beyond the core product surfaces.** [PRD 005](prd/005-full-schema-extraction.md)'s Phase 6 architecture shipped 2026-04-20 (commit `aecca9b`): the section-family resolver framework backed by a shared `SchemaIndex` took the cleaner from 72 -> ~380 fields (Harvard 382, Yale 390, Dartmouth 343). PRD 016B and PRD 018 added targeted C21/C22 and H1/H2/H2A coverage. Remaining work is continuing to add resolvers for thinner sections as specific schools surface gaps; the ceiling is 1,105 fields, but full-schema parity is not urgent.

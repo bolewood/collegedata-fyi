@@ -66,6 +66,8 @@ export type BrowserRow = {
   app_fee_amount: number | null;
   app_fee_waiver_offered: boolean | null;
   admission_strategy_card_quality: string | null;
+  federal_baseline_available: boolean;
+  federal_source_mode: "cds_only" | "cds_plus_ipeds_baseline" | "ipeds_baseline_only";
 };
 
 export type BrowserFilter = {
@@ -180,6 +182,8 @@ export const ALLOWED_FIELDS = new Set([
   "app_fee_amount",
   "app_fee_waiver_offered",
   "admission_strategy_card_quality",
+  "federal_baseline_available",
+  "federal_source_mode",
 ]);
 
 const NUMERIC_FIELDS = new Set([
