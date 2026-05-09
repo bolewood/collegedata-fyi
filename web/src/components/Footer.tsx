@@ -23,9 +23,9 @@ export function Footer() {
         <div>
           <Wordmark size={18} variant="dotted" />
           <div style={{ marginTop: 10, maxWidth: 520, lineHeight: 1.55 }}>
-            An open-source archive of U.S. college Common Data Set documents.
-            MIT License. Data sourced from each school&rsquo;s IR office via the
-            CDS Initiative template.
+            Open-source college data with source-linked school publications,
+            NCES/IPEDS baselines, College Scorecard context, and public APIs.
+            MIT License.
           </div>
         </div>
         <div className="cd-footer-links" style={{ display: "flex", gap: 24, alignSelf: "end" }}>

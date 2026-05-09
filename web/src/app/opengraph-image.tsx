@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { fetchManifest, computeStats } from "@/lib/queries";
 
-export const alt = "collegedata.fyi - Open-source Common Data Set archive";
+export const alt = "collegedata.fyi - Open-source college data";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const revalidate = 3600;
