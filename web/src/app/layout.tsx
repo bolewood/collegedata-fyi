@@ -33,17 +33,17 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.collegedata.fyi"),
   title: {
-    default: "collegedata.fyi - Common Data Set Archive",
+    default: "collegedata.fyi - Open College Data",
     template: "%s | collegedata.fyi",
   },
   description:
-    "An open-source archive of U.S. college Common Data Set documents. Browse admissions, enrollment, financial aid, and more across hundreds of schools.",
+    "Open-source college data with source-linked Common Data Set files, NCES/IPEDS baselines, College Scorecard context, and a public API.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
     title: "collegedata.fyi",
-    description: "Open-source Common Data Set archive for U.S. colleges",
+    description: "Open-source college data with source links, federal baselines, and a public API.",
     url: "/",
     siteName: "collegedata.fyi",
     type: "website",

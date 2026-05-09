@@ -92,14 +92,14 @@ export default async function HomePage() {
         }}
       >
         <div className="meta cd-marginalia-left" style={{ textAlign: "right", paddingRight: 18 }}>
-          <div style={{ lineHeight: 1.8 }}>§ ARCHIVE</div>
-          <div style={{ lineHeight: 1.8 }}>EST. 2024</div>
-          <div style={{ lineHeight: 1.8 }}>VOL. III</div>
+          <div style={{ lineHeight: 1.8 }}>§ OPEN DATA</div>
+          <div style={{ lineHeight: 1.8 }}>SOURCE LINKS</div>
+          <div style={{ lineHeight: 1.8 }}>PUBLIC API</div>
         </div>
 
         <div style={{ textAlign: "center", maxWidth: 780, margin: "0 auto" }}>
           <div className="meta" style={{ marginBottom: 24 }}>
-            An open archive of U.S. Common Data Set documents
+            Open-source college data with source links, federal baselines, and an API
           </div>
           <h1
             style={{
@@ -126,9 +126,10 @@ export default async function HomePage() {
               textWrap: "balance",
             }}
           >
-            Every fact on this site starts with a school&rsquo;s own Common Data Set. We archive the source file and map it
-            into a queryable schema; some formats extract cleanly, while flattened PDFs still need template-specific
-            cleaners that improve over time.{" "}
+            CollegeData.FYI is building a public data layer for college decisions: school-published
+            Common Data Set files, NCES/IPEDS baseline facts, College Scorecard outcomes, and
+            source-linked APIs in one place. Compare schools, check affordability signals, build
+            match lists, audit missing data, or power your own tools.{" "}
             <Link href="/about">Read the method.</Link>
           </p>
 
@@ -161,9 +162,9 @@ export default async function HomePage() {
         </div>
 
         <div className="meta cd-marginalia-right" style={{ paddingLeft: 18 }}>
-          <div style={{ lineHeight: 1.8 }}>§C · ADMISSIONS</div>
-          <div style={{ lineHeight: 1.8 }}>§B · ENROLLMENT</div>
-          <div style={{ lineHeight: 1.8 }}>§H · FIN. AID</div>
+          <div style={{ lineHeight: 1.8 }}>ADMISSIONS</div>
+          <div style={{ lineHeight: 1.8 }}>AFFORDABILITY</div>
+          <div style={{ lineHeight: 1.8 }}>OUTCOMES</div>
         </div>
       </section>
 
@@ -178,8 +179,8 @@ export default async function HomePage() {
             gap: 40,
           }}
         >
-          <StatCell label="Schools archived" value={schoolsValue} note={`${stats.extracted_count.toLocaleString()} extracted`} />
-          <StatCell label="CDS documents" value={docsValue} note={`${yearRangeValue} source span`} />
+          <StatCell label="Schools in archive" value={schoolsValue} note={`${stats.extracted_count.toLocaleString()} extracted`} />
+          <StatCell label="Source documents" value={docsValue} note={`${yearRangeValue} CDS span`} />
           <StatCell label="Queryable fields" value={queryableFieldsValue} note={`${formatCount(stats.schema_field_count)} field schema`} />
           <StatCell label="Browser rows" value={browserRowsValue} note={`${formatCount(stats.browser_school_count)} schools; refreshed ${formatShortDate(stats.browser_updated_at)}`} />
         </div>
@@ -195,8 +196,8 @@ export default async function HomePage() {
           <div>
             <div className="meta" style={{ marginBottom: 6 }}>§ Latest drain</div>
             <div style={{ fontSize: 14, color: "var(--ink-3)", lineHeight: 1.5 }}>
-              The most recent additions to the archive. Every row is a real
-              CDS document we discovered, downloaded, and indexed.
+              The newest school-published source files added to the archive.
+              Each row links back to the original document and its extracted facts.
             </div>
           </div>
           <div>
