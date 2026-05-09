@@ -6,6 +6,7 @@ import zipfile
 from pathlib import Path
 
 from tools.ipeds.load_release import read_table_zip
+from tools.ipeds.load_release import dedupe_rows
 from tools.ipeds.mappings import FactMapping
 from tools.ipeds.metadata import IpedsColumn, IpedsValueLabel
 from tools.ipeds.project import project_rows_to_facts, quality_from_label
@@ -54,7 +55,16 @@ class IpedsProjectionTests(unittest.TestCase):
         self.assertEqual(quality_from_label("Not in universe"), "not_applicable")
         self.assertEqual(quality_from_label("Privacy suppressed"), "suppressed")
 
+    def test_dedupe_rows_uses_conflict_key(self) -> None:
+        rows = [
+            {"release_id": "r1", "table_name": "HD2024", "var_name": "CONTROL", "code_value": "1", "value_label": "Public"},
+            {"release_id": "r1", "table_name": "HD2024", "var_name": "CONTROL", "code_value": "1", "value_label": "Public duplicate"},
+            {"release_id": "r1", "table_name": "HD2024", "var_name": "CONTROL", "code_value": "2", "value_label": "Private"},
+        ]
+        out = dedupe_rows(rows, "release_id,table_name,var_name,code_value")
+        self.assertEqual(len(out), 2)
+        self.assertEqual(out[0]["value_label"], "Public duplicate")
+
 
 if __name__ == "__main__":
     unittest.main()
-
