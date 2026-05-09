@@ -91,10 +91,12 @@ def sha256_file(path: Path) -> str:
 
 def release_type_from_text(value: str) -> str:
     normalized = value.lower()
-    if "final" in normalized:
-        return "final"
     if "preliminary" in normalized:
         return "preliminary"
+    if "provisional" in normalized:
+        return "provisional"
+    if "final" in normalized:
+        return "final"
     return "provisional"
 
 
@@ -125,7 +127,15 @@ def parse_access_page(html: str, base_url: str = NCES_IPEDS_ACCESS_PAGE) -> list
     releases: list[ReleaseLink] = []
     for collection_year, metadata_url in sorted(metadata_by_collection.items(), reverse=True):
         start_year = int(collection_year[:4])
-        window = text[max(0, text.find(collection_year) - 400) : text.find(collection_year) + 800]
+        row_match = re.search(
+            rf"{re.escape(collection_year)}\s+Access.*?"
+            rf"{re.escape(collection_year)}\s+Excel.*?"
+            rf"(Preliminary|Provisional|Final)\s+"
+            rf"((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{{4}})",
+            text,
+            flags=re.I,
+        )
+        window = row_match.group(0) if row_match else text[max(0, text.find(collection_year) - 400) : text.find(collection_year) + 800]
         date_match = re.search(
             r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}",
             window,

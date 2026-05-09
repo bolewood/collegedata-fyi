@@ -241,8 +241,17 @@ def apply_to_supabase(
 
 
 def batch_upsert(client: Any, table: str, rows: list[dict[str, Any]], on_conflict: str, size: int = 500) -> None:
-    for start in range(0, len(rows), size):
-        client.table(table).upsert(rows[start : start + size], on_conflict=on_conflict).execute()
+    deduped = dedupe_rows(rows, on_conflict)
+    for start in range(0, len(deduped), size):
+        client.table(table).upsert(deduped[start : start + size], on_conflict=on_conflict).execute()
+
+
+def dedupe_rows(rows: list[dict[str, Any]], on_conflict: str) -> list[dict[str, Any]]:
+    keys = [key.strip() for key in on_conflict.split(",")]
+    seen: dict[tuple[Any, ...], dict[str, Any]] = {}
+    for row in rows:
+        seen[tuple(row.get(key) for key in keys)] = row
+    return list(seen.values())
 
 
 def load_env(path: Path) -> None:

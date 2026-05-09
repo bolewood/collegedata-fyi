@@ -12,16 +12,22 @@ from tools.ipeds.metadata import parse_access_page, parse_tablesdoc
 class IpedsMetadataTests(unittest.TestCase):
     def test_parse_access_page_finds_latest_excel_and_zip(self) -> None:
         html = """
+        Final release data include revisions to provisional release data.
         <a href="/ipeds/tablefiles/zipfiles/IPEDS_2024-25_Provisional.zip">2024-25 Access</a>
         <a href="/ipeds/tablefiles/tableDocs/IPEDS202425Tablesdoc.xlsx">2024-25 Excel</a>
-        Provisional Data: March 2026
+        (IPEDS202425Tablesdoc.xlsx, 1261kb) Provisional March 2026
+        <a href="/ipeds/tablefiles/zipfiles/IPEDS_2023-24.zip">2023-24 Access</a>
+        <a href="/ipeds/tablefiles/tableDocs/IPEDS202324Tablesdoc.xlsx">2023-24 Excel</a>
+        (IPEDS202324Tablesdoc.xlsx, 1348kb) Final March 2026
         """
         releases = parse_access_page(html)
         self.assertEqual(releases[0].collection_year, "2024-25")
         self.assertEqual(releases[0].data_year, 2024)
         self.assertEqual(releases[0].release_type, "provisional")
+        self.assertEqual(releases[0].release_date, "March 2026")
         self.assertTrue(releases[0].metadata_url.endswith("IPEDS202425Tablesdoc.xlsx"))
         self.assertTrue(releases[0].access_url.endswith("IPEDS_2024-25_Provisional.zip"))
+        self.assertEqual(releases[1].release_type, "final")
 
     def test_parse_tablesdoc_reads_core_sheets(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -47,4 +53,3 @@ class IpedsMetadataTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
