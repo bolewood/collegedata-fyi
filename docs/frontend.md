@@ -98,6 +98,19 @@ has cleared the public change-event gate. Generated change candidates stay
 operator-only in `cds_field_change_events` until `verification_status` is
 `not_required` or `confirmed` and `public_visible = true`.
 
+PRD 021 adds `FederalBaselineTable` for schools with
+`school_facts_unified` rows. On CDS-backed pages the table is federal context
+below the school-authored document narrative. On directory-only/no-CDS pages it
+is the main facts surface after the "No public CDS found" box. The table shows
+NCES/IPEDS release status prominently and keeps source table/variable visible;
+status and CDS-definition alignment details are exposed on hover/focus under
+the Source column.
+
+Directory-only pages with `can_submit_source` render a compact `SubmissionForm`
+CTA inside the no-CDS box. Clicking "Email us!" opens the same structured
+Formspree-backed form inline when `NEXT_PUBLIC_FORMSPREE_ENDPOINT` is set.
+There is no `mailto:` fallback.
+
 ### `/schools/[school_id]/[year]` Year detail (`web/src/app/schools/[school_id]/[year]/page.tsx`)
 
 The SEO answer page. Designed to rank for queries like "Yale acceptance
@@ -212,6 +225,7 @@ paths.
 | School positioning/admission cards | `school_browser_rows WHERE school_id = ?` | Latest primary row with SAT/ACT, admissions, ED/EA, wait-list, and C7/app-fee columns |
 | Match builder | `school_browser_rows` + `institution_directory` + `scorecard_summary` | Client-side ranked school list, with local-only profile persistence |
 | Merit profile | `school_merit_profile WHERE school_id = ?` | Latest primary Section H merit/need-aid facts plus Scorecard context |
+| Federal baseline facts | `school_facts_unified WHERE school_id = ?` | Source-labeled NCES/IPEDS baseline facts for in-scope schools, including release type/date, source table/variable, status, and CDS-definition alignment |
 | What changed card | `cds_field_change_events WHERE school_id = ? AND public_visible = true` | Public-reviewed PRD 019 events only; RLS also requires `verification_status in ('not_required','confirmed')` |
 | Operator changes digest | service-role `cds_field_change_events` query | Server-only route, disabled unless explicitly enabled by env var |
 
@@ -235,7 +249,9 @@ component share the same Supabase response within a single render.
 | `MatchListBuilder` | `components/MatchListBuilder.tsx` | PRD 017 ranked list-builder experience for `/match`. |
 | `MeritProfileCard` | `components/MeritProfileCard.tsx` | PRD 018 Section H + Scorecard merit/aid profile card. |
 | `WhatChangedCard` | `components/WhatChangedCard.tsx` | PRD 019 public-reviewed year-over-year CDS change events. Hides when the school has no published events. |
+| `FederalBaselineTable` | `components/FederalBaselineTable.tsx` | PRD 021 accessible table for source-labeled NCES/IPEDS facts from `school_facts_unified`. |
 | `SchoolDocumentsLedger` | `components/SchoolDocumentsLedger.tsx` | Collapses long CDS-document histories after the three most recent files. |
+| `SubmissionForm` | `components/SubmissionForm.tsx` | Formspree-backed public CDS source submission form; compact mode opens inline from no-CDS pages. |
 | `SchoolTable` | `components/SchoolTable.tsx` | Sortable/filterable school list with search input |
 | `DocumentCard` | `components/DocumentCard.tsx` | CDS year card with status badge, format badge, PDF link |
 | `KeyStats` | `components/KeyStats.tsx` | Grid of stat cards (acceptance rate, SAT, enrollment) |
@@ -324,8 +340,10 @@ a personalized award estimate.
 - **No dangerouslySetInnerHTML on user data.** All artifact field values
   are rendered as plain text nodes. The one use of `dangerouslySetInnerHTML`
   (JSON-LD script tag) escapes `<` as `\u003c` to prevent script injection.
-- **No write paths.** The frontend is read-only. The Supabase anon key
-  only allows SELECT via RLS policies.
+- **Public write path is isolated to Formspree.** The app has no public
+  Supabase write path. The optional source-submission form posts directly to
+  the configured Formspree endpoint. The Supabase anon key only allows SELECT
+  via RLS policies.
 - **No auth.** No user accounts, no sessions, no cookies (except Vercel
   Analytics which is zero-cookie).
 
@@ -350,6 +368,15 @@ SUPABASE_SERVICE_ROLE_KEY=<service role key>
 
 Do not expose the service-role key to client components. The public school-page
 card uses the anon client and RLS-filtered rows only.
+
+Optional public source-submission form:
+
+```
+NEXT_PUBLIC_FORMSPREE_ENDPOINT=<formspree endpoint>
+```
+
+When unset, the compact no-CDS CTA is disabled and full source-submission forms
+render an unavailable state.
 
 ---
 

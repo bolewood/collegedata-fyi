@@ -1,9 +1,10 @@
 # Data Extraction Pipeline Map
 
 This is the operational map for how collegedata.fyi turns decentralized Common
-Data Set files into public, queryable rows. It focuses on where each step lives,
-how often it runs, what it writes, and the constraints that matter during data
-quality work.
+Data Set files into public, queryable rows, plus the adjacent federal baseline
+path that now supplies NCES/IPEDS facts for schools without a public CDS. It
+focuses on where each step lives, how often it runs, what it writes, and the
+constraints that matter during data quality work.
 
 For deeper design context, see [ARCHITECTURE.md](ARCHITECTURE.md),
 [archive-pipeline.md](archive-pipeline.md), and
@@ -55,6 +56,12 @@ flowchart TD
     X --> AB[PostgREST API + frontend]
     Y --> AB
     AA --> AB
+
+    AC[Official NCES/IPEDS release<br/>Access page + Tablesdoc + CSV ZIPs] --> AD[IPEDS loader<br/>tools/ipeds]
+    AD --> AE[ipeds_releases / metadata<br/>ipeds_raw_rows]
+    AD --> AF[Curated federal facts<br/>ipeds_facts]
+    AF --> AG[Unified serving view<br/>school_facts_unified]
+    AG --> AB
 ```
 
 ## Operating Table
@@ -78,8 +85,9 @@ flowchart TD
 | Browser projection | `tools/browser_backend/project_browser_data.py` and replacement RPCs | `cds_fields`, `school_browser_rows`, metadata tables/views | Incremental after successful worker writes; full rebuild operator-run after migrations/projection changes | Serving rows are materialized. Rates are stored as fractions. Projection filters/normalizes invalid SAT/ACT/rate values rather than exposing obvious canaries. Full rebuild is required after schema/alias/projection logic changes. |
 | Data quality audits | `tools/data_quality/*`, `tools/browser_backend/prd*_audit.py`, `tools/change_intelligence/audit_watchlist_freshness.py` | Reports under `.context/reports/`; optional flags in `cds_documents.data_quality_flag` | Ad-hoc and before narrative/reporting work | Audits do not own data. They find canaries, low-field artifacts, visual OCR candidates, stale producer versions, and source-mapping gaps. For canaries, search for similar files and redrain the class, not only the one school. |
 | PRD 019 change intelligence | `tools/change_intelligence/project_change_events.py`, `review_change_event.py`, watchlists under `data/watchlists/` | `cds_field_change_events`, `cds_field_change_event_reviews`, `.context/reports/` | Operator-run; no cron | Compares selected `school_browser_rows`, not raw artifacts. Major changes and `newly_missing` events require human source review before publication. Events default to `public_visible=false`. |
+| IPEDS federal baseline | `tools/ipeds/download_release.py`, `tools/ipeds/load_release.py`, `.github/workflows/ipeds-release-probe.yml` | `ipeds_releases`, `ipeds_tables`, `ipeds_columns`, `ipeds_value_labels`, `ipeds_raw_rows`, `ipeds_facts`, `school_facts_unified` | Monthly release probe; operator-run load when NCES publishes | Uses official NCES/IPEDS sources only. Public products read curated facts/serving views, not raw JSONB rows. Probe no-ops until 10 months after latest loaded provisional release date, then opens operator issues for final/provisional updates. |
 | Coverage refresh | `supabase/functions/refresh-coverage`, `refresh_institution_cds_coverage()` SQL | `institution_cds_coverage`, coverage statuses | Every 15 minutes | Public coverage can lag archive/extraction by up to one refresh interval. Operator overrides and hosting observations affect status classification. |
-| Public API/frontend | PostgREST at `api.collegedata.fyi`, `browser-search`, Next.js web app | Public views/tables: `cds_documents`, `cds_artifacts`, `cds_fields`, `school_browser_rows`, `school_merit_profile`, reviewed `cds_field_change_events` | On demand | Frontend surfaces curated browser rows, archive downloads, and reviewed change events. Unreviewed PRD 019 events remain operator-only. |
+| Public API/frontend | PostgREST at `api.collegedata.fyi`, `browser-search`, Next.js web app | Public views/tables: `cds_documents`, `cds_artifacts`, `cds_fields`, `school_browser_rows`, `school_merit_profile`, `school_facts_unified`, reviewed `cds_field_change_events` | On demand | Frontend surfaces curated browser rows, archive downloads, IPEDS federal baseline facts, and reviewed change events. Unreviewed PRD 019 events remain operator-only. |
 
 ## Tier Routing Summary
 
@@ -161,6 +169,20 @@ flowchart TD
 
 # Full browser projection rebuild after a projection/schema change.
 python tools/browser_backend/project_browser_data.py --full-rebuild --apply
+
+# IPEDS release probe dry run for the January 2027 due date.
+python tools/ipeds/probe_releases.py --as-of 2027-01-01
+
+# IPEDS dry-run load. Review the generated report before adding --apply.
+python tools/ipeds/load_release.py \
+  --metadata-xlsx scratch/ipeds/2024-25-provisional/IPEDS202425Tablesdoc.xlsx \
+  --data-dir scratch/ipeds/2024-25-provisional \
+  --collection-year 2024-25 \
+  --data-year 2024 \
+  --release-type provisional \
+  --release-date 2026-03-01 \
+  --release-date-text "March 2026" \
+  --metadata-url https://nces.ed.gov/ipeds/tablefiles/tableDocs/IPEDS202425Tablesdoc.xlsx
 
 # One-command automation health check: GitHub Actions, pg_cron,
 # async Edge Function HTTP responses, archive queue, extraction movement,

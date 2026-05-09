@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "The story behind collegedata.fyi, an open-source archive of U.S. college Common Data Set documents.",
+    "The story behind collegedata.fyi, an open-source archive of U.S. college Common Data Set documents with source-labeled federal baseline facts.",
   alternates: { canonical: "/about" },
   openGraph: { url: "/about" },
 };
@@ -27,157 +27,191 @@ export default function AboutPage() {
 
       <div className="mt-8 space-y-5 text-base leading-relaxed">
         <p>
-          The Common Data Set is a beautiful idea. Almost thirty years ago,
-          three college-guide publishers — the College Board, Peterson&apos;s,
-          and U.S. News — sat down with a bunch of college institutional
-          research offices and agreed on a single template for reporting the
-          numbers that matter about a school: enrollment, admissions,
-          retention, tuition, financial aid, faculty.
+          Choosing a college should not require stitching together a dozen
+          tabs, a spreadsheet, a federal database, and a commercial search
+          product just to answer basic questions.
         </p>
 
         <p>
-          The CDS Initiative still publishes that template today. It is a 47-page
-          XLSX with 1,105 fields. It has a beautifully structured Answer Sheet
-          tab. It is, genuinely, one of the cleanest open data standards in
-          American higher education.
+          The good news is that a lot of the data already exists. Colleges
+          publish{" "}
+          <a
+            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
+            href="https://commondataset.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Common Data Set
+          </a>{" "}
+          files. The Department of Education publishes{" "}
+          <a
+            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
+            href="https://collegescorecard.ed.gov/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            College Scorecard
+          </a>{" "}
+          and{" "}
+          <a
+            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
+            href="https://nces.ed.gov/ipeds/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            IPEDS
+          </a>{" "}
+          data. The hard part is that none of those sources, by itself, gives
+          families a simple, current, trustworthy way to browse the college
+          landscape.
         </p>
 
-        <p>The name is &ldquo;Common Data Set.&rdquo;</p>
-
-        <p>The reality is extremely uncommon.</p>
+        <p>
+          <a
+            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
+            href="https://nces.ed.gov/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            NCES
+          </a>{" "}
+          is the Department of Education&apos;s statistical center, and IPEDS is
+          its core postsecondary data system for institution-reported federal
+          data.
+        </p>
 
         <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
-          What we found
+          The problem
         </h2>
 
         <p>
-          Schools publish their CDS in every format imaginable: fillable PDFs
-          where every answer lives in a named form field, flattened PDFs where
-          the form structure has been destroyed, scanned images, filled XLSX
-          workbooks, DOCX files, HTML pages behind JavaScript frameworks, Box
-          embeds, SharePoint pages, and Google Drive shares.
+          Common Data Set files are excellent, but scattered. They show up on
+          school websites in many formats, on different timetables, under
+          different URLs, and only a minority of the 3,000+ in-scope
+          undergraduate institutions publish a current public CDS that is easy
+          to find.
         </p>
 
         <p>
-          One school hosts their CDS on a Bepress Digital Commons page that
-          intercepts scrapers with a 202 Accepted response and an empty body.
-          Another has a &ldquo;test draft&rdquo; at a URL that is actually the
-          real production file. Two different schools shared the same physical
-          file via a common Google Drive link.
+          College Scorecard is useful, especially for outcomes like net price,
+          debt, completion, and earnings, but it is not a substitute for the
+          richer admissions and aid details schools publish in the CDS.
         </p>
 
         <p>
-          None of this is malicious. It&apos;s what happens when you release a
-          beautiful canonical template into a distributed system of 800+
-          institutional research offices, each with their own webmaster, CMS,
-          and IT policies. Over twenty years, the drift is cumulative.
+          IPEDS is powerful and broad, but federal releases lag the freshest
+          school-published files, and the official tools can be hard to navigate
+          unless you already know the survey components, table names, and Access
+          database workflow.
+        </p>
+
+        <p>
+          And if you want enriched data, the default option has often been a
+          proprietary vendor platform. Those tools can be useful, but they may
+          require accounts, hide their source lineage, limit API access, or
+          create another student-data profile along the way.
+        </p>
+
+        <p>
+          So the gap was not &ldquo;does college data exist?&rdquo; The gap was:
+          where can a student, parent, counselor, journalist, or builder browse
+          the freshest school-published facts, federal baseline data, source
+          links, and an open API in one place?
         </p>
 
         <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
-          Why we did this anyway
-        </h2>
-
-        <p>
-          It started as a side project. I was building a college spreadsheet
-          for my son and got tired of typing numbers from PDFs. The more I
-          looked at the existing options, the more obvious it was that nobody
-          had built the index this data deserves.
-        </p>
-
-        <p>
-          We kept building because we think it&apos;s a public good. Students,
-          parents, and counselors navigating college selection deserve direct,
-          free access to the data colleges already publish about themselves,
-          in a form that&apos;s actually queryable. For the past two decades
-          that access has been mediated by commercial aggregators who package
-          the same numbers and sell them back, sometimes for hundreds of
-          dollars per seat.
-        </p>
-
-        <p>
-          We also think colleges will appreciate having the infrastructure
-          they didn&apos;t have to build themselves. The institutional research
-          staff who painstakingly produce the CDS each year do so in PDF
-          format, on their own websites, where the work is effectively
-          invisible to anyone outside the institution until an aggregator
-          picks it up. We give that work direct attribution and a much larger
-          audience.
-        </p>
-
-        <p>
-          The open-access version of this data will probably annoy the
-          incumbent aggregators. We&apos;re fine with that.
-        </p>
-
-        <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
-          What we built
+          What you can do now
         </h2>
 
         <p>
           <strong style={{ fontWeight: 600, color: "var(--ink)" }}>collegedata.fyi</strong>{" "}
-          is the index. We discover each school&apos;s CDS document, archive the
-          source file, map what we can into the CDS Initiative&apos;s own
-          canonical 1,105-field schema, and expose the result as a queryable
-          API.
+          is a public college-data browser built around source transparency.
+          Search for a school, see whether we found a public CDS, inspect the
+          original source file, read extracted fields, and compare key facts
+          across schools without creating an account.
         </p>
 
-        <p>The pipeline has six stages:</p>
+        <ul className="ml-6 list-disc space-y-2 marker:text-gray-400">
+          <li>
+            Find a school&apos;s latest archived Common Data Set and download the
+            original PDF, XLSX, DOCX, or HTML source.
+          </li>
+          <li>
+            Browse extracted admissions, enrollment, test-score, aid, and
+            academic fields across schools.
+          </li>
+          <li>
+            See source-labeled federal baseline facts for schools where no
+            public CDS is archived.
+          </li>
+          <li>
+            Use academic positioning, admission strategy, merit-aid, and match
+            list tools without sending student profile data to a server.
+          </li>
+          <li>
+            Query the same data through a public REST API for spreadsheets,
+            research, dashboards, or your own tools.
+          </li>
+        </ul>
+
+        <p>
+          If you want starter ideas, the{" "}
+          <a
+            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
+            href="/recipes"
+          >
+            Recipes
+          </a>{" "}
+          page has worked examples you can adapt.
+        </p>
+
+        <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
+          What makes it different
+        </h2>
 
         <ol className="ml-6 list-decimal space-y-2 marker:text-gray-400">
           <li>
-            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Schema pipeline</strong>{" "}
-            extracts the canonical field definitions from the official XLSX
-            template.
+            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Fresh school-authored data first.</strong>{" "}
+            When a current CDS exists, we treat it as the primary source for
+            CDS-native fields.
           </li>
           <li>
-            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Corpus pipeline</strong>{" "}
-            builds the school list from IPEDS data and probes for CDS landing
-            pages.
+            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Federal coverage where CDS is missing.</strong>{" "}
+            NCES/IPEDS fills in source-labeled baseline facts for institutions
+            that do not publish a public CDS.
           </li>
           <li>
-            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Discovery pipeline</strong>{" "}
-            crawls IR pages and archives source files to storage.
+            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Clear provenance.</strong>{" "}
+            Values keep their source attached: CDS, IPEDS provisional/final, or
+            Scorecard context. We do not blend them into one unlabeled number.
           </li>
           <li>
-            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Extraction pipeline</strong>{" "}
-            routes each document to a format-specific extractor: filled XLSX
-            workbooks via the CDS template&apos;s own cell map, fillable PDFs
-            via AcroForm, flattened PDFs via Docling with a schema-targeting
-            cleaner, and scanned image PDFs via OCR.
+            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Accessible tables and durable links.</strong>{" "}
+            Public pages prioritize readable, keyboard-friendly tables and link
+            back to the original source documents.
           </li>
           <li>
-            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Projection pipeline</strong>{" "}
-            turns selected extraction results into normalized field rows and a
-            curated browser table for launch-certified comparison metrics.
+            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Open API.</strong>{" "}
+            The API is the same data surface the website uses, so researchers
+            and builders do not have to scrape the site.
           </li>
           <li>
-            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Consumer pipeline</strong>{" "}
-            exposes the archive, field substrate, browser rows, and federal
-            outcome joins through the website and public REST API.
+            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Privacy by default.</strong>{" "}
+            The core site works without accounts. Student profile tools are
+            local-first unless a future feature explicitly says otherwise.
+          </li>
+          <li>
+            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Built for everyday use.</strong>{" "}
+            Pages are designed to be fast, readable, accessible, and stable
+            enough for families, counselors, and builders to rely on.
           </li>
         </ol>
 
         <p>
-          The important caveat is that these formats do not all extract with
-          the same reliability. Filled XLSX files and true fillable PDFs are
-          comparatively structured, so they map cleanly. Flattened PDFs are
-          much harder: once the form fields are gone, we have to reconstruct
-          the template from layout and text alone.
-        </p>
-
-        <p>
-          In practice that means year-specific cleaners. We build parsers for
-          the recurring table shapes and labels used by each CDS template
-          vintage, then keep refining them as we audit more schools. The
-          output is useful today, but it is not perfect, especially on
-          flattened PDFs, and some fields will improve as the cleaners get
-          better.
-        </p>
-
-        <p>
-          That&apos;s also why every school-year page links back to the original
-          source document. The structured extract is there to make the corpus
-          searchable and comparable; the PDF remains the ground truth.
+          Structured extracts are useful, but source documents still matter.
+          Every school-year page links back to the original file, and federal
+          baseline rows keep enough source context to understand where a number
+          came from and how it should be read.
         </p>
 
         <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
@@ -252,7 +286,17 @@ export default function AboutPage() {
           >
             Reducto
           </a>{" "}
-          reference extracts used as a quality benchmark.
+          reference extracts used as a quality benchmark. Federal baseline
+          facts come from official{" "}
+          <a
+            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
+            href="https://nces.ed.gov/ipeds/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            NCES/IPEDS
+          </a>{" "}
+          releases.
         </p>
 
         <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
@@ -275,8 +319,7 @@ export default function AboutPage() {
         </ul>
 
         <div style={{ marginTop: 40, borderTop: "1px solid var(--rule)", paddingTop: 24, fontSize: 13, fontStyle: "italic", fontFamily: "var(--serif)", color: "var(--ink-3)" }}>
-          The &ldquo;Common&rdquo; in Common Data Set is doing a lot of work.
-          We&apos;re doing the rest.
+          Better college decisions start with better access to the facts.
         </div>
       </div>
     </div>

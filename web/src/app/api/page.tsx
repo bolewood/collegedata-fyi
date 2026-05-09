@@ -7,7 +7,7 @@ import { CopyButton } from "@/components/CopyButton";
 export const metadata: Metadata = {
   title: "API",
   description:
-    "Public REST API for the collegedata.fyi Common Data Set archive. PostgREST endpoints, anon key, and example queries.",
+    "Public REST API for the collegedata.fyi Common Data Set archive and source-labeled NCES/IPEDS federal baseline facts.",
   alternates: { canonical: "/api" },
   openGraph: { url: "/api" },
 };
@@ -54,7 +54,9 @@ export default async function ApiDocsPage() {
         API at{" "}
         <code className="break-all rounded bg-gray-100 px-1.5 py-0.5 text-sm">{BASE}</code>
         . Every page on this site is built from the same endpoints documented
-        below.
+        below: archived Common Data Set documents, structured CDS fields,
+        source-labeled NCES/IPEDS baseline facts, and curated federal Scorecard
+        context.
       </p>
 
       <h2 className="mt-10 text-xl font-semibold text-gray-900">
@@ -301,6 +303,208 @@ export default async function ApiDocsPage() {
           ]}
         />
         <Resource
+          name="ipeds_current_facts"
+          description="Latest public IPEDS fact per UNITID and field key. Prefers newer data years, then final over provisional over preliminary within the same data year. Use school_facts_unified for school-page display because it already joins institution names, slugs, and in-scope filtering."
+          fields={[
+            "ipeds_id",
+            "school_id",
+            "field_key",
+            "field_label",
+            "value_numeric",
+            "value_label",
+            "release_type",
+            "definition_alignment",
+            "quality_flag",
+          ]}
+          allFields={[
+            "release_id",
+            "unitid",
+            "ipeds_id",
+            "school_id",
+            "collection_year",
+            "data_year",
+            "field_key",
+            "field_label",
+            "value_numeric",
+            "value_text",
+            "value_label",
+            "unit",
+            "cohort",
+            "population",
+            "source_table",
+            "source_variable",
+            "source_title",
+            "release_type",
+            "imputation_flag",
+            "imputation_label",
+            "quality_flag",
+            "definition_alignment",
+            "definition_note",
+            "display_group",
+            "public_visible",
+            "created_at",
+            "rn",
+          ]}
+        />
+        <Resource
+          name="ipeds_facts"
+          description="Curated long-form NCES/IPEDS facts. This is the source-labeled fact table behind ipeds_current_facts and school_facts_unified; every row keeps release, source variable, imputation, and CDS-definition alignment metadata."
+          fields={[
+            "ipeds_id",
+            "school_id",
+            "collection_year",
+            "field_key",
+            "field_label",
+            "value_numeric",
+            "value_label",
+            "source_table",
+            "source_variable",
+            "release_type",
+          ]}
+          allFields={[
+            "release_id",
+            "unitid",
+            "ipeds_id",
+            "school_id",
+            "collection_year",
+            "data_year",
+            "field_key",
+            "field_label",
+            "value_numeric",
+            "value_text",
+            "value_label",
+            "unit",
+            "cohort",
+            "population",
+            "source_table",
+            "source_variable",
+            "source_title",
+            "release_type",
+            "imputation_flag",
+            "imputation_label",
+            "quality_flag",
+            "definition_alignment",
+            "definition_note",
+            "display_group",
+            "public_visible",
+            "created_at",
+          ]}
+        />
+        <Resource
+          name="ipeds_releases"
+          description="Official NCES/IPEDS release-load provenance. Tracks collection year, data year, release type, release date, source URLs, checksums, and loader notes."
+          fields={[
+            "collection_year",
+            "data_year",
+            "release_type",
+            "release_date",
+            "metadata_url",
+            "access_url",
+          ]}
+          allFields={[
+            "id",
+            "collection_year",
+            "data_year",
+            "release_type",
+            "release_date",
+            "source_page_url",
+            "source_page_sha256",
+            "metadata_url",
+            "metadata_sha256",
+            "access_url",
+            "access_sha256",
+            "downloaded_at",
+            "notes",
+            "created_at",
+          ]}
+        />
+        <Resource
+          name="ipeds_tables"
+          description="IPEDS table metadata from the official Tablesdoc workbook plus loader-observed row counts and source checksums."
+          fields={[
+            "table_name",
+            "survey_component",
+            "table_title",
+            "data_url",
+            "row_count",
+          ]}
+          allFields={[
+            "release_id",
+            "table_name",
+            "survey_component",
+            "year_coverage",
+            "table_number",
+            "table_title",
+            "description",
+            "table_release",
+            "table_release_date",
+            "data_url",
+            "dictionary_url",
+            "row_count",
+            "source_sha256",
+            "loaded_at",
+            "created_at",
+          ]}
+        />
+        <Resource
+          name="ipeds_columns"
+          description="Variable metadata from the official IPEDS Tablesdoc workbook, including long descriptions and imputation-variable pointers."
+          fields={[
+            "table_name",
+            "var_name",
+            "var_title",
+            "data_type",
+            "imputation_var",
+          ]}
+          allFields={[
+            "release_id",
+            "table_name",
+            "var_name",
+            "survey_component",
+            "table_number",
+            "table_title",
+            "var_number",
+            "var_order",
+            "imputation_var",
+            "var_title",
+            "data_type",
+            "field_width",
+            "format",
+            "multi_record",
+            "has_rv",
+            "file_number",
+            "section_number",
+            "long_description",
+            "var_source",
+            "file_title",
+            "section_title",
+            "created_at",
+          ]}
+        />
+        <Resource
+          name="ipeds_value_labels"
+          description="Categorical code labels from official IPEDS metadata, including reporting-status and imputation-code labels."
+          fields={[
+            "table_name",
+            "var_name",
+            "code_value",
+            "value_label",
+            "frequency",
+          ]}
+          allFields={[
+            "release_id",
+            "table_name",
+            "var_name",
+            "code_value",
+            "value_label",
+            "frequency",
+            "percent",
+            "value_order",
+            "var_title",
+            "created_at",
+          ]}
+        />
+        <Resource
           name="school_merit_profile"
           description="Latest primary 2024-25+ CDS Section H merit and need-aid facts per school, joined to selected College Scorecard affordability and outcome fields. Used by the school-page merit profile."
           fields={[
@@ -529,6 +733,19 @@ export default async function ApiDocsPage() {
       </div>
 
       <h2 className="mt-10 text-xl font-semibold text-gray-900">Examples</h2>
+
+      <h3 className="mt-6 text-base font-semibold text-gray-900">
+        Fetch federal baseline facts for a no-CDS school
+      </h3>
+      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+        Federal baseline facts come from <code>school_facts_unified</code>. Keep
+        the release type, source table/variable, quality flag, and definition
+        alignment visible if you reuse these values; they are NCES/IPEDS facts,
+        not school-published CDS fields unless the alignment says so.
+      </p>
+      <CodeBlock>{`curl '${BASE}/rest/v1/school_facts_unified?school_id=eq.goshen-college&select=school_id,school_name,field_label,display_value,release_type,collection_year,source_table,source_variable,quality_flag,definition_alignment&order=display_group,field_key' \\
+  -H 'apikey: <anon key>' \\
+  -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 
       <h3 className="mt-6 text-base font-semibold text-gray-900">
         Search the curated school browser
