@@ -1,7 +1,10 @@
 import type { FieldValue } from "@/lib/types";
-import { FIELD_LABELS } from "@/lib/labels";
 import { groupBySection, type SubsectionGroup } from "@/lib/sections";
 import { formatFieldValue } from "@/lib/format";
+import {
+  getFieldDisplayLabel,
+  getFieldValueType,
+} from "@/lib/schema-labels";
 import {
   buildReconstructedTables,
   type ReconstructedTable,
@@ -13,13 +16,15 @@ import {
 // subsections can render reconstructed CDS-shaped tables first, while keeping
 // the KV rows as the fallback for unsupported or long-tail fields.
 export function FieldsView({
+  schemaVersion,
   values,
   totalFields,
 }: {
+  schemaVersion?: string | null;
   values: Record<string, FieldValue>;
   totalFields?: number;
 }) {
-  const sections = groupBySection(values);
+  const sections = groupBySection(values, schemaVersion);
   const totalExtracted = Object.keys(values).length;
 
   return (
@@ -78,7 +83,8 @@ function SectionBlock({ sec }: { sec: ReturnType<typeof groupBySection>[number] 
   const sectionValues = Object.fromEntries(
     sec.subsections.flatMap((sub) => sub.fields.map(({ id, field }) => [id, field])),
   );
-  const reconstructedTables = buildReconstructedTables(sectionValues);
+  const schemaVersion = sec.schemaVersion;
+  const reconstructedTables = buildReconstructedTables(sectionValues, schemaVersion);
   const reconstructedIds = new Set(
     reconstructedTables.flatMap((table) => table.usedFieldIds),
   );
@@ -145,6 +151,7 @@ function SectionBlock({ sec }: { sec: ReturnType<typeof groupBySection>[number] 
           key={sub.slug}
           hiddenFieldIds={reconstructedIds}
           reconstructedTables={tablesBySubsection.get(sub.slug) ?? []}
+          schemaVersion={schemaVersion}
           sub={sub}
         />
       ))}
@@ -155,10 +162,12 @@ function SectionBlock({ sec }: { sec: ReturnType<typeof groupBySection>[number] 
 function SubsectionBlock({
   hiddenFieldIds,
   reconstructedTables,
+  schemaVersion,
   sub,
 }: {
   hiddenFieldIds: Set<string>;
   reconstructedTables: ReconstructedTable[];
+  schemaVersion?: string | null;
   sub: SubsectionGroup;
 }) {
   const fallbackFields = sub.fields.filter(({ id }) => !hiddenFieldIds.has(id));
@@ -182,7 +191,7 @@ function SubsectionBlock({
               Other extracted fields
             </div>
           )}
-          <KVRows fields={fallbackFields} />
+          <KVRows fields={fallbackFields} schemaVersion={schemaVersion} />
         </div>
       )}
     </div>
@@ -345,14 +354,18 @@ function ReconstructedTableView({ table }: { table: ReconstructedTable }) {
   );
 }
 
-function KVRows({ fields }: { fields: SubsectionGroup["fields"] }) {
+function KVRows({
+  fields,
+  schemaVersion,
+}: {
+  fields: SubsectionGroup["fields"];
+  schemaVersion?: string | null;
+}) {
   return (
     <div>
       {fields.map(({ id, field }, i) => {
-        const labelMeta = FIELD_LABELS[id];
-        const label =
-          field.question?.trim() || labelMeta?.label?.trim() || id;
-        const valueType = field.value_type ?? labelMeta?.valueType;
+        const label = getFieldDisplayLabel(id, field, schemaVersion);
+        const valueType = getFieldValueType(id, field, schemaVersion);
         const raw = field.value_decoded ?? field.value;
         const display = formatFieldValue(raw, valueType);
         const missing =

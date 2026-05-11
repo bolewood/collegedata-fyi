@@ -26,26 +26,68 @@ function maybeCount(value: number | null): string {
   return value == null ? "n/a" : formatCount(value);
 }
 
+function maybePct(value: number | null, digits = 0): string {
+  return formatRate(value, digits);
+}
+
+function maybeMultiple(value: number | null): string {
+  return value == null || !Number.isFinite(value) ? "n/a" : `${value.toFixed(1)}x`;
+}
+
 function important(value: string | null): boolean {
   return value === "Important" || value === "Very Important";
 }
 
-function StatBlock({
+function InsightBlock({
   label,
   value,
   note,
-  muted = false,
 }: {
   label: string;
   value: string;
   note: string;
-  muted?: boolean;
 }) {
   return (
-    <div className={muted ? "admission-strategy-stat admission-strategy-stat--muted" : "admission-strategy-stat"}>
+    <div className="admission-strategy-insight">
       <span>{label}</span>
       <strong className="serif stat-num">{value}</strong>
       <small>{note}</small>
+    </div>
+  );
+}
+
+function FlowRow({
+  admitRate,
+  admitted,
+  applicants,
+  enrolled,
+  label,
+  yieldLabel,
+}: {
+  admitRate: number | null;
+  admitted: number | null;
+  applicants: number | null;
+  enrolled: number | null;
+  label: string;
+  yieldLabel: string;
+}) {
+  return (
+    <div className="admission-strategy-flow-row">
+      <div className="admission-strategy-flow-row__label meta">{label}</div>
+      <div className="admission-strategy-flow-row__cells">
+        <div>
+          <strong>{maybeCount(applicants)}</strong>
+          <small>applicants</small>
+        </div>
+        <div>
+          <strong>{maybeCount(admitted)}</strong>
+          <small>admitted · {maybePct(admitRate)}</small>
+        </div>
+        <div>
+          <strong>{maybeCount(enrolled)}</strong>
+          <small>{yieldLabel}</small>
+        </div>
+      </div>
     </div>
   );
 }
@@ -124,7 +166,22 @@ export function AdmissionStrategyCard({
       school.waitListAdmitted != null ||
       derived.waitListConditionalAdmitRate != null);
   const showAppFee = school.appFeeAmount != null || school.appFeeWaiverOffered != null;
-  const selectiveEd = (school.acceptanceRate ?? 1) < 0.15;
+  const hasClassModel =
+    derived.edAdmitRate != null &&
+    derived.edShareOfClass != null &&
+    derived.estimatedNonEarlyEnrolled != null;
+  const edWidth = derived.edShareOfClass == null
+    ? 0
+    : Math.max(0, Math.min(100, derived.edShareOfClass * 100));
+  const nonEarlyWidth = 100 - edWidth;
+  const edClassShareNote =
+    school.enrolledFirstYear != null && school.edAdmitted != null
+      ? `${maybeCount(school.edAdmitted)} ED admits / ${maybeCount(school.enrolledFirstYear)} enrolled first-years`
+      : "Binding-ED estimate";
+  const remainingSeatNote =
+    school.enrolledFirstYear != null
+      ? `of ${maybeCount(school.enrolledFirstYear)} enrolled first-year seats`
+      : "after binding-ED assumption";
 
   return (
     <section className="admission-strategy-card rule-2" aria-labelledby="admission-strategy-title">
@@ -133,20 +190,10 @@ export function AdmissionStrategyCard({
         <div className="admission-strategy-card__head">
           <div>
             <h2 id="admission-strategy-title" className="serif admission-strategy-card__title">
-              How this school shapes its class.
+              How the class gets assembled.
             </h2>
             <RoundLine school={school} />
           </div>
-          {school.yieldRate != null && (
-            <div className="admission-strategy-yield">
-              <span className="meta">Yield</span>
-              <strong className="serif stat-num">{pct(school.yieldRate)}</strong>
-              <small>
-                Enrolled after admission. High yield can mean top-choice demand,
-                careful interest prediction, or both.
-              </small>
-            </div>
-          )}
         </div>
 
         {showEdSuppressed && (
@@ -156,33 +203,148 @@ export function AdmissionStrategyCard({
         )}
 
         {derived.edAdmitRate != null && (
-          <div className="admission-strategy-ed">
-            <div className="admission-strategy-stats">
-              <StatBlock
-                label="ED admit rate"
-                value={pct(derived.edAdmitRate)}
-                note={`${maybeCount(school.edAdmitted)} admitted from ${maybeCount(school.edApplicants)} ED applicants`}
-                muted={selectiveEd}
-              />
-              {derived.nonEarlyResidualAdmitRate != null && (
-                <StatBlock
-                  label="Non-early residual"
-                  value={pct(derived.nonEarlyResidualAdmitRate)}
-                  note="Applicant and admit totals after subtracting ED counts"
+          <div className="admission-strategy-model">
+            <div className="admission-strategy-insights">
+              {derived.edShareOfClass != null && (
+                <InsightBlock
+                  label="Estimated ED share of class"
+                  value={pct(derived.edShareOfClass)}
+                  note={edClassShareNote}
                 />
               )}
-              {derived.edShareOfAdmitted != null && (
-                <StatBlock
-                  label="ED share of admits"
-                  value={pct(derived.edShareOfAdmitted)}
-                  note={derived.hasHighEdShare ? "High relative to the 2024+ corpus" : "Share of admitted class from ED"}
+              {derived.edAdmitRateMultiple != null && (
+                <InsightBlock
+                  label="ED admit-rate multiple"
+                  value={maybeMultiple(derived.edAdmitRateMultiple)}
+                  note={`${pct(derived.edAdmitRate)} ED vs ${pct(derived.nonEarlyResidualAdmitRate)} estimated non-ED`}
+                />
+              )}
+              {derived.estimatedNonEarlyEnrolled != null && (
+                <InsightBlock
+                  label="Seats left outside ED"
+                  value={maybeCount(derived.estimatedNonEarlyEnrolled)}
+                  note={remainingSeatNote}
+                />
+              )}
+              {derived.nonEarlyResidualAdmitRate != null && (
+                <InsightBlock
+                  label="Estimated non-ED admit rate"
+                  value={pct(derived.nonEarlyResidualAdmitRate)}
+                  note={`${maybeCount(derived.nonEarlyAdmitted)} admitted from ${maybeCount(derived.nonEarlyApplicants)} applicants`}
                 />
               )}
             </div>
-            <div className="admission-strategy-caveat">
-              <strong>Read the ED rate carefully.</strong> Published ED rates include
-              recruited athletes, legacy applicants, and institutional-priority applicants.
-              The general-pool ED rate can be lower than the published number, sometimes substantially.
+
+            {hasClassModel && derived.estimatedEdEnrolled != null && (
+              <div className="admission-strategy-class-model">
+                <div>
+                  <div className="meta">§ Enrolled class model</div>
+                  <p>
+                    Start with the real enrolled class. If binding ED admits enroll,{" "}
+                    <strong>{maybeCount(derived.estimatedEdEnrolled)}</strong> of{" "}
+                    <strong> {maybeCount(school.enrolledFirstYear)}</strong> first-year
+                    seats are already spoken for before the remaining admission rounds
+                    fill the class.
+                  </p>
+                </div>
+                <div
+                  className="admission-strategy-seatbar"
+                  role="img"
+                  aria-label={`${maybeCount(derived.estimatedEdEnrolled)} enrolled seats are estimated Early Decision seats; ${maybeCount(derived.estimatedNonEarlyEnrolled)} are estimated seats outside Early Decision.`}
+                >
+                  <span
+                    className="admission-strategy-seatbar__ed"
+                    style={{ width: `${edWidth}%` }}
+                  >
+                    ED {maybeCount(derived.estimatedEdEnrolled)}
+                  </span>
+                  <span
+                    className="admission-strategy-seatbar__regular"
+                    style={{ width: `${nonEarlyWidth}%` }}
+                  >
+                    Non-ED {maybeCount(derived.estimatedNonEarlyEnrolled)}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="admission-strategy-flow" aria-labelledby="admission-strategy-flow-title">
+              <div>
+                <div id="admission-strategy-flow-title" className="meta">
+                  § Applicant paths
+                </div>
+                <p>
+                  Same class, different denominators: applicant pool, admitted pool,
+                  then enrolled seats.
+                </p>
+              </div>
+              <div className="admission-strategy-flow-grid">
+                <FlowRow
+                  label="Early Decision"
+                  applicants={school.edApplicants}
+                  admitted={school.edAdmitted}
+                  admitRate={derived.edAdmitRate}
+                  enrolled={derived.estimatedEdEnrolled}
+                  yieldLabel="assumed enrolled"
+                />
+                <FlowRow
+                  label="All other rounds"
+                  applicants={derived.nonEarlyApplicants}
+                  admitted={derived.nonEarlyAdmitted}
+                  admitRate={derived.nonEarlyResidualAdmitRate}
+                  enrolled={derived.estimatedNonEarlyEnrolled}
+                  yieldLabel={`${maybePct(derived.nonEarlyYield)} estimated yield`}
+                />
+              </div>
+              <table className="sr-only">
+                <caption>Admission rounds model</caption>
+                <thead>
+                  <tr>
+                    <th>Path</th>
+                    <th>Applicants</th>
+                    <th>Admitted</th>
+                    <th>Admit rate</th>
+                    <th>Estimated enrolled</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Early Decision</td>
+                    <td>{maybeCount(school.edApplicants)}</td>
+                    <td>{maybeCount(school.edAdmitted)}</td>
+                    <td>{pct(derived.edAdmitRate)}</td>
+                    <td>{maybeCount(derived.estimatedEdEnrolled)}</td>
+                  </tr>
+                  <tr>
+                    <td>All other rounds</td>
+                    <td>{maybeCount(derived.nonEarlyApplicants)}</td>
+                    <td>{maybeCount(derived.nonEarlyAdmitted)}</td>
+                    <td>{pct(derived.nonEarlyResidualAdmitRate)}</td>
+                    <td>{maybeCount(derived.estimatedNonEarlyEnrolled)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="admission-strategy-model-notes">
+              <div className="admission-strategy-caveat">
+                <strong>Binding ED assumption.</strong> The class-share model uses
+                ED admits as estimated enrolled ED seats. CDS does not report
+                confirmed ED enrollment, so this is a practical proxy rather than
+                a separate school-reported count.
+              </div>
+              {school.yieldRate != null && (
+                <div className="admission-strategy-caveat">
+                  <strong>Overall yield: {pct(school.yieldRate)}.</strong> Published
+                  yield blends high-commitment ED admits with the rest of the
+                  admitted pool.
+                </div>
+              )}
+              <div className="admission-strategy-caveat">
+                <strong>Read the ED rate carefully.</strong> Published ED rates can
+                include recruited athletes, legacy applicants, and institutional-priority
+                applicants. The general-pool ED rate can be lower.
+              </div>
             </div>
           </div>
         )}

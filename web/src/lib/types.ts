@@ -138,6 +138,7 @@ export interface ArtifactNotes {
   values?: Record<string, FieldValue>;
   producer?: string;
   producer_version?: string;
+  schema_version?: string;
   base_artifact_id?: string;
   base_producer?: string;
   base_producer_version?: string;

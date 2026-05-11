@@ -1,5 +1,5 @@
 import type { FieldValue } from "./types";
-import { FIELD_LABELS, SECTION_NAMES } from "./labels";
+import { getFieldSectionName, getFieldSubsectionName } from "./schema-labels";
 
 export type ExtractedField = {
   id: string;
@@ -20,6 +20,7 @@ export type SubsectionGroup = {
 export type SectionGroup = {
   letter: string;
   name: string;
+  schemaVersion?: string | null;
   subsections: SubsectionGroup[];
 };
 
@@ -29,6 +30,7 @@ export type SectionGroup = {
 // fields appear, not alphabetical.
 export function groupBySection(
   values: Record<string, FieldValue>,
+  schemaVersion?: string | null,
 ): SectionGroup[] {
   const sectionMap = new Map<
     string,
@@ -48,10 +50,8 @@ export function groupBySection(
 
   for (const [id, field] of entries) {
     const letter = id.split(".")[0];
-    const sectionName =
-      field.section ?? SECTION_NAMES[letter] ?? `Section ${letter}`;
-    const subsectionName =
-      field.subsection ?? FIELD_LABELS[id]?.subsection ?? "Other";
+    const sectionName = getFieldSectionName(id, field, schemaVersion);
+    const subsectionName = getFieldSubsectionName(id, field, schemaVersion);
 
     let sec = sectionMap.get(letter);
     if (!sec) {
@@ -90,7 +90,7 @@ export function groupBySection(
       const bFirst = sec.subOrder.get(b.name) ?? "";
       return aFirst.localeCompare(bFirst, undefined, { numeric: true });
     });
-    sections.push({ letter, name: sec.name, subsections: subs });
+    sections.push({ letter, name: sec.name, schemaVersion, subsections: subs });
   }
   return sections;
 }

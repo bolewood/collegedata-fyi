@@ -1,4 +1,5 @@
 import { formatFieldValue } from "./format";
+import { isSchema2024_25 } from "./schema-labels";
 import type { FieldValue } from "./types";
 
 export type ReconstructedCell = {
@@ -25,17 +26,18 @@ export type ReconstructedTable = {
 
 export function buildReconstructedTables(
   values: Record<string, FieldValue>,
+  schemaVersion?: string | null,
 ): ReconstructedTable[] {
   return [
-    ...buildB1Tables(values),
+    ...buildB1Tables(values, schemaVersion),
     ...buildB2Tables(values),
     ...buildB3Tables(values),
     ...buildB4B5Tables(values),
     ...buildB22Tables(values),
-    ...buildC1Tables(values),
+    ...buildC1Tables(values, schemaVersion),
     ...buildC7Tables(values),
     ...buildC9Tables(values),
-    ...buildD2Tables(values),
+    ...buildD2Tables(values, schemaVersion),
     ...buildG1Tables(values),
     ...buildG5Tables(values),
     ...buildH2Tables(values),
@@ -47,13 +49,18 @@ export function buildReconstructedTables(
   ].filter((table) => hasReportedCell(table));
 }
 
-function buildB1Tables(values: Record<string, FieldValue>): ReconstructedTable[] {
+function buildB1Tables(
+  values: Record<string, FieldValue>,
+  schemaVersion?: string | null,
+): ReconstructedTable[] {
   const ids = Object.keys(values);
   if (!ids.some((id) => /^B\.1\d{2}$/.test(id))) {
     return [];
   }
 
-  return isB12024Layout(values) ? b1Tables2024(values) : b1Tables2025(values);
+  return isB12024Layout(values)
+    ? b1Tables2024(values)
+    : b1Tables2025(values, schemaVersion);
 }
 
 function isB12024Layout(values: Record<string, FieldValue>): boolean {
@@ -66,14 +73,21 @@ function isB12024Layout(values: Record<string, FieldValue>): boolean {
   );
 }
 
-function b1Tables2025(values: Record<string, FieldValue>): ReconstructedTable[] {
+function b1Tables2025(
+  values: Record<string, FieldValue>,
+  schemaVersion?: string | null,
+): ReconstructedTable[] {
+  const columns = isSchema2024_25(schemaVersion)
+    ? ["Men", "Women", "Unknown", "Total"]
+    : ["Males", "Females", "Unknown", "Total"];
+  const status = isSchema2024_25(schemaVersion) ? "gender" : "sex";
   return [
     makeTable({
       key: "b1-undergraduate",
       title: "B1 undergraduate enrollment",
       caption:
-        "Full-time, part-time, and total undergraduate enrollment by reported sex or status.",
-      columns: ["Males", "Females", "Unknown", "Total"],
+        `Full-time, part-time, and total undergraduate enrollment by reported ${status} or status.`,
+      columns,
       rows: [
         row2025("ug-ft-first-year", "Full-time first-time first-year degree-seeking", 101),
         row2025("ug-ft-other-first-year", "Full-time other first-year degree-seeking", 102),
@@ -95,8 +109,8 @@ function b1Tables2025(values: Record<string, FieldValue>): ReconstructedTable[] 
       key: "b1-graduate",
       title: "B1 graduate enrollment",
       caption:
-        "Full-time, part-time, and total graduate enrollment by reported sex or status.",
-      columns: ["Males", "Females", "Unknown", "Total"],
+        `Full-time, part-time, and total graduate enrollment by reported ${status} or status.`,
+      columns,
       rows: [
         row2025("grad-ft-first-time", "Full-time first-time degree-seeking", 114),
         row2025("grad-ft-other-degree", "Full-time all other degree-seeking", 115),
@@ -114,8 +128,8 @@ function b1Tables2025(values: Record<string, FieldValue>): ReconstructedTable[] 
       key: "b1-overall",
       title: "B1 overall enrollment",
       caption:
-        "Institution-wide full-time, part-time, and total enrollment by reported sex or status.",
-      columns: ["Males", "Females", "Unknown", "Total"],
+        `Institution-wide full-time, part-time, and total enrollment by reported ${status} or status.`,
+      columns,
       rows: [
         row2025("all-ft", "Total full-time students", 123),
         row2025("all-pt", "Total part-time students", 124),
@@ -414,13 +428,20 @@ function twoYearGradRow(
   return [key, label, [bId(sectionNumber * 100 + 1), bId(sectionNumber * 100 + 2)]];
 }
 
-function buildC1Tables(values: Record<string, FieldValue>): ReconstructedTable[] {
+function buildC1Tables(
+  values: Record<string, FieldValue>,
+  schemaVersion?: string | null,
+): ReconstructedTable[] {
   const ids = Object.keys(values);
   if (!ids.some((id) => /^C\.1(0[1-9]|1[0-9]|2[0-9]|30)$/.test(id))) {
     return [];
   }
 
-  return [isC12024Layout(values) ? c1Table2024(values) : c1Table2025(values)];
+  return [
+    isSchema2024_25(schemaVersion) || isC12024Layout(values)
+      ? c1Table2024(values)
+      : c1Table2025(values),
+  ];
 }
 
 function isC12024Layout(values: Record<string, FieldValue>): boolean {
@@ -573,27 +594,50 @@ function buildC9Tables(values: Record<string, FieldValue>): ReconstructedTable[]
   ];
 }
 
-function buildD2Tables(values: Record<string, FieldValue>): ReconstructedTable[] {
+function buildD2Tables(
+  values: Record<string, FieldValue>,
+  schemaVersion?: string | null,
+): ReconstructedTable[] {
   const ids = Object.keys(values);
   if (!ids.some((id) => /^D\.2(0[1-9]|1[0-2])$/.test(id))) {
     return [];
   }
 
-  return [
-    makeTable({
-      key: "d2-transfer-admissions",
-      title: "D2 transfer admissions",
-      caption:
-        "Transfer applicants, admits, and enrolled students by reported sex or status.",
-      columns: ["Males", "Females", "Unknown", "Total"],
-      rows: [
-        ["applied", "Applied", ["D.201", "D.202", "D.203", "D.204"]],
-        ["admitted", "Admitted", ["D.205", "D.206", "D.207", "D.208"]],
-        ["enrolled", "Enrolled", ["D.209", "D.210", "D.211", "D.212"]],
-      ],
-      values,
-    }),
-  ];
+  return isSchema2024_25(schemaVersion)
+    ? [d2Table2024(values)]
+    : [d2Table2025(values)];
+}
+
+function d2Table2025(values: Record<string, FieldValue>): ReconstructedTable {
+  return makeTable({
+    key: "d2-transfer-admissions",
+    title: "D2 transfer admissions",
+    caption:
+      "Transfer applicants, admits, and enrolled students by reported sex or status.",
+    columns: ["Males", "Females", "Unknown", "Total"],
+    rows: [
+      ["applied", "Applied", ["D.201", "D.202", "D.203", "D.204"]],
+      ["admitted", "Admitted", ["D.205", "D.206", "D.207", "D.208"]],
+      ["enrolled", "Enrolled", ["D.209", "D.210", "D.211", "D.212"]],
+    ],
+    values,
+  });
+}
+
+function d2Table2024(values: Record<string, FieldValue>): ReconstructedTable {
+  return makeTable({
+    key: "d2-transfer-admissions",
+    title: "D2 transfer admissions",
+    caption:
+      "Transfer applicants, admits, and enrolled students by reported gender or status.",
+    columns: ["Men", "Women", "Unknown", "Total"],
+    rows: [
+      ["applied", "Applied", ["D.201", "D.202", "D.203", "D.204"]],
+      ["admitted", "Admitted", ["D.205", "D.206", "D.207", "D.208"]],
+      ["enrolled", "Enrolled", ["D.209", "D.210", "D.211", "D.212"]],
+    ],
+    values,
+  });
 }
 
 function buildG1Tables(values: Record<string, FieldValue>): ReconstructedTable[] {

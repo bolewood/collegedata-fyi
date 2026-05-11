@@ -144,6 +144,7 @@ async function DocumentVariant({
   let values: Record<string, FieldValue> = {};
   let totalFields: number | undefined;
   let markdown: string | undefined;
+  let schemaVersion: string | undefined;
 
   if (isExtracted && doc.document_id) {
     const { canonical, mergedValues } = await fetchExtract(doc.document_id);
@@ -151,6 +152,7 @@ async function DocumentVariant({
     values = mergedValues;
     totalFields = notes?.stats?.total_fields;
     markdown = notes?.markdown ?? undefined;
+    schemaVersion = notes?.schema_version ?? doc.cds_year ?? undefined;
   }
 
   const hasValues = Object.keys(values).length > 0;
@@ -212,7 +214,11 @@ async function DocumentVariant({
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             All Extracted Fields
           </h3>
-          <FieldsView values={values} totalFields={totalFields} />
+          <FieldsView
+            schemaVersion={schemaVersion ?? doc.cds_year}
+            values={values}
+            totalFields={totalFields}
+          />
         </div>
       ) : isExtracted ? (
         <div className="mt-4 rounded-lg border border-gray-200 p-6 text-center text-gray-500">

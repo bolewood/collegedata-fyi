@@ -241,7 +241,7 @@ export const FRIENDLY_FACT_FIELDS: FactDefinitionInput[] = [
     unit: "applicants",
     value_type: "number",
     definition: "Number of Early Decision applicants reported in the CDS.",
-    source_fields: ["C.2110"],
+    source_fields: ["C.2106", "C.2110"],
     path: "browser.ed_applicants",
   },
   {
@@ -252,7 +252,7 @@ export const FRIENDLY_FACT_FIELDS: FactDefinitionInput[] = [
     unit: "students",
     value_type: "number",
     definition: "Number of Early Decision admitted students reported in the CDS.",
-    source_fields: ["C.2111"],
+    source_fields: ["C.2107", "C.2111"],
     path: "browser.ed_admitted",
   },
   {
