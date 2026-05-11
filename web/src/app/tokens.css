@@ -930,6 +930,92 @@
   padding-top: 22px;
   border-top: 1px solid var(--rule);
 }
+.admission-strategy-flow__scale-note {
+  font-family: var(--mono);
+  font-size: 10.5px !important;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.admission-strategy-flow-matrix {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.admission-strategy-flow-matrix__head,
+.admission-strategy-flow-lane {
+  display: grid;
+  grid-template-columns: minmax(116px, 0.24fr) repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  align-items: stretch;
+}
+.admission-strategy-flow-matrix__head {
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+.admission-strategy-flow-lane__label {
+  display: flex;
+  align-items: center;
+  padding-top: 2px;
+}
+.admission-strategy-flow-lane__cells {
+  display: contents;
+}
+.admission-strategy-flow-cell {
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--paper) 82%, white);
+}
+.admission-strategy-flow-cell__stage {
+  display: none;
+}
+.admission-strategy-flow-cell strong,
+.admission-strategy-flow-cell span {
+  display: block;
+}
+.admission-strategy-flow-cell strong {
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: clamp(22px, 2.4vw, 30px);
+  font-weight: 400;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.admission-strategy-flow-cell > span:not(.admission-strategy-flow-cell__stage) {
+  margin-top: 5px;
+  color: var(--ink-3);
+  font-size: 11px;
+  line-height: 1.35;
+}
+.admission-strategy-flow-cell__track {
+  height: 7px;
+  margin-top: 10px;
+  background: var(--paper-3);
+}
+.admission-strategy-flow-cell__bar {
+  display: block;
+  min-width: 0;
+  height: 100%;
+}
+.admission-strategy-flow-cell__bar--ed {
+  background: var(--forest);
+}
+.admission-strategy-flow-cell__bar--other {
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--forest) 18%, var(--paper)),
+    color-mix(in srgb, var(--forest) 18%, var(--paper)) 6px,
+    var(--paper) 6px,
+    var(--paper) 12px
+  );
+}
+.admission-strategy-flow-cell__bar--single {
+  background: var(--ink);
+}
 .admission-strategy-flow-grid {
   display: grid;
   gap: 12px;
@@ -1010,6 +1096,16 @@
   border-top: 1px solid var(--rule);
   padding-top: 14px;
 }
+.admission-strategy-panel--wide {
+  grid-column: 1 / -1;
+}
+.admission-strategy-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
 .admission-strategy-panel--accent {
   border-top-color: var(--forest);
 }
@@ -1037,6 +1133,93 @@
   letter-spacing: 0;
   text-transform: none;
 }
+.admission-strategy-wait {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+.admission-strategy-wait-stage {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.34fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+.admission-strategy-wait-stage span {
+  display: block;
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+.admission-strategy-wait-stage strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 27px;
+  font-weight: 400;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.admission-strategy-wait-stage__track {
+  height: 18px;
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+}
+.admission-strategy-wait-stage__track i {
+  display: block;
+  min-width: 0;
+  height: 100%;
+  background: var(--forest);
+}
+.admission-strategy-zero-note {
+  color: var(--ink) !important;
+  font-weight: 600;
+}
+.admission-strategy-caution {
+  color: var(--ink-3) !important;
+  font-size: 12.5px !important;
+}
+.admission-strategy-data {
+  margin-top: 12px;
+  border-top: 1px dashed var(--rule);
+  padding-top: 10px;
+}
+.admission-strategy-data summary {
+  cursor: pointer;
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.admission-strategy-data__wrap {
+  overflow-x: auto;
+  margin-top: 10px;
+}
+.admission-strategy-data table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  color: var(--ink-2);
+  font-size: 12.5px;
+}
+.admission-strategy-data th,
+.admission-strategy-data td {
+  border-top: 1px solid var(--rule);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.admission-strategy-data th {
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 .admission-strategy-card__source {
   margin-top: 26px;
   padding-top: 14px;
@@ -1060,6 +1243,38 @@
   .admission-strategy-flow-row__cells {
     grid-template-columns: 1fr;
   }
+  .admission-strategy-flow-matrix__head {
+    display: none;
+  }
+  .admission-strategy-flow-lane {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .admission-strategy-flow-lane:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .admission-strategy-flow-lane__cells {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .admission-strategy-flow-cell__stage {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--ink-3);
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    line-height: 1.3;
+    text-transform: uppercase;
+  }
+  .admission-strategy-wait-stage {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
   .admission-strategy-flow-row__label {
     padding-top: 0;
   }
@@ -1067,6 +1282,9 @@
 }
 @media (max-width: 560px) {
   .admission-strategy-insights { grid-template-columns: 1fr; }
+  .admission-strategy-flow-lane__cells {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Merit profile card. H-section financial-aid facts sit beside Scorecard
