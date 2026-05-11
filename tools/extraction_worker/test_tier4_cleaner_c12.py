@@ -61,6 +61,21 @@ C12 Average high school GPA of all degree-seeking, first-time, first-year
         self.assertEqual(values["C.1201"]["value"], "3.27")
         self.assertEqual(values["C.1202"]["value"], "99")
 
+    def test_c12_handles_bu_split_layout_value_after_truncated_label(self):
+        supplemental = """
+C12. Average high school GPA of all degree-seeking, first-time, first-year students who submitted GPA
+
+Average high school GPA of all degree-seeking, first-time,             3.86
+Percent of total first-time, first-year students who submitted        100%
+
+C13. Application Fee
+"""
+
+        values = clean("", supplemental_text=supplemental)
+
+        self.assertEqual(values["C.1201"]["value"], "3.86")
+        self.assertEqual(values["C.1202"]["value"], "100")
+
 
 if __name__ == "__main__":
     unittest.main()

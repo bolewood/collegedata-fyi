@@ -89,6 +89,85 @@ C20              Common Application: Question removed from CDS.
         self.assertEqual(values["C.1802"]["value"], "1 year")
         self.assertEqual(values["C.1901"]["value"], "No")
 
+    def test_c13_c19_bu_dotted_headings_and_inline_values(self):
+        supplemental = """
+C13. Application Fee
+
+Does your institution have an application fee?                         Ye s
+Amount of application fee:                                             $80
+Can it be waived for applicants with financial need?                   Yes
+Same fee                      X
+Free
+Reduced
+Can on-line application fee be waived for applicants with              Ye s
+
+C14. Application closing date
+
+Does your institution have an application closing date?               Yes
+Application closing date (fall)                                  January 5, for all
+                                                                   admissions
+Priority Date                                                    December 1, for
+                                                                   Presidential
+
+C15. Are first-time, first-year students accepted for terms other than the fall?
+
+Are first-time, first-year students accepted for terms other       Yes, in most
+than the fall?                                                      programs
+
+C16. Notification to applicants of admission decision sent (fill in one only)
+
+On a rolling basis beginning (date):
+By (date):                                       April 1
+Other:
+
+C17. Reply policy for admitted applicants (fill in one only)
+
+Must reply by (date):                            May 1
+No set date
+Must reply by May 1st or within
+Other:
+Deadline for housing deposit (MMDD):             May 1
+Amount of housing deposit:                       $650
+Refundable if student does not enroll?            No
+
+C18. Deferred admission
+
+Does your institution allow students to postpone enrollment after admission?       Yes
+If yes, maximum period of postponement: Deferred admission is allowed with a maximum postponement of one year (freshmen only).
+
+C19. Early admission of high school students
+                                                                                       No
+Does your institution allow high school students to enroll as full-time, first-time,
+
+C20. Common Application: Question removed from CDS.
+"""
+
+        values = clean("", supplemental_text=supplemental)
+
+        self.assertEqual(values["C.1301"]["value"], "Yes")
+        self.assertEqual(values["C.1302"]["value"], "80")
+        self.assertEqual(values["C.1303"]["value"], "Yes")
+        self.assertEqual(values["C.1304"]["value"], "X")
+        self.assertEqual(values["C.1305"]["value"], "Yes")
+        self.assertEqual(values["C.1401"]["value"], "Yes")
+        self.assertEqual(values["C.1402"]["value"], "1")
+        self.assertEqual(values["C.1403"]["value"], "5")
+        self.assertEqual(values["C.1404"]["value"], "12")
+        self.assertEqual(values["C.1405"]["value"], "1")
+        self.assertEqual(values["C.1501"]["value"], "Yes")
+        self.assertEqual(values["C.1604"]["value"], "X")
+        self.assertEqual(values["C.1605"]["value"], "4")
+        self.assertEqual(values["C.1606"]["value"], "1")
+        self.assertEqual(values["C.1701"]["value"], "X")
+        self.assertEqual(values["C.1702"]["value"], "5")
+        self.assertEqual(values["C.1703"]["value"], "1")
+        self.assertEqual(values["C.1709"]["value"], "5")
+        self.assertEqual(values["C.1710"]["value"], "1")
+        self.assertEqual(values["C.1711"]["value"], "650")
+        self.assertEqual(values["C.1801"]["value"], "Yes")
+        self.assertEqual(values["C.1802"]["value"], "Deferred admission is allowed with a maximum postponement of one year (freshmen only).")
+        self.assertEqual(values["C.1901"]["value"], "No")
+
 
 if __name__ == "__main__":
     unittest.main()

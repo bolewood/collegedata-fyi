@@ -3075,6 +3075,10 @@ def _split_month_day(value: str) -> tuple[str, str] | None:
         month = _MONTHS.get(match.group(1).lower())
         if month:
             return month, match.group(2)
+    if match := re.fullmatch(r"([A-Za-z]{3,9})\s+(\d{1,2})(?:,.*)?", value):
+        month = _month_number(match.group(1))
+        if month:
+            return month, match.group(2)
     return None
 
 
@@ -3100,11 +3104,26 @@ def _extract_number_after_label(text: str, label_re: str) -> str | None:
 def _extract_date_after_label(text: str, label_re: str) -> str | None:
     compact = _compact_block_text(text)
     match = re.search(
-        rf"{label_re}\s*:?\s*((?:\d{{1,2}}/[0-9]{{1,2}})|(?:\d{{1,2}}-[A-Za-z]{{3,4}})|(?:[A-Za-z]{{3,4}}-\d{{1,2}}))",
+        rf"{label_re}\s*:?\s*((?:\d{{1,2}}/[0-9]{{1,2}})|(?:\d{{1,2}}-[A-Za-z]{{3,4}})|(?:[A-Za-z]{{3,9}}-\d{{1,2}})|(?:[A-Za-z]{{3,9}}\s+\d{{1,2}}(?:,\s*[^|]+)?))",
         compact,
         re.IGNORECASE,
     )
     return match.group(1) if match else None
+
+
+def _extract_inline_yes_no_after_label(text: str, label_re: str) -> str | None:
+    compact = _compact_block_text(text)
+    compact = re.sub(r"\bY\s*e\s*s\b", "Yes", compact, flags=re.IGNORECASE)
+    compact = re.sub(r"\bN\s*o\b", "No", compact, flags=re.IGNORECASE)
+    match = re.search(
+        rf"{label_re}\s*:?\s*(Yes|No|N/A|NA)\b",
+        compact,
+        re.IGNORECASE,
+    )
+    if not match:
+        return None
+    value = match.group(1).lower()
+    return "No" if value in ("n/a", "na") else value.capitalize()
 
 
 def _month_number(value: str) -> str | None:
@@ -3132,6 +3151,25 @@ def _extract_c21_layout_date_pairs(text: str) -> list[tuple[str, str]]:
         if len(dates) >= 2:
             pairs.append((dates[0], dates[1]))
     return pairs
+
+
+def _extract_c21_layout_month_day_values(text: str) -> list[tuple[str, str]]:
+    values: list[tuple[str, str]] = []
+    date_block = re.split(
+        r"For the Fall|Number of early decision|Please provide",
+        text,
+        maxsplit=1,
+        flags=re.IGNORECASE,
+    )[0]
+    for line in date_block.splitlines():
+        match = re.fullmatch(r"\s*([A-Za-z]{3,9})\s+(\d{1,2})\s*", line)
+        if not match:
+            continue
+        month = _month_number(match.group(1))
+        day = match.group(2)
+        if month:
+            values.append((month, day))
+    return values
 
 
 def _extract_c21_layout_count_pair(text: str) -> tuple[str, str] | None:
@@ -3706,6 +3744,18 @@ def resolve_c12_gpa_summary(
         out["C.1201"] = {"value": match.group(1), "source": "tier4_cleaner"}
     elif match := re.search(r"\b([0-4]\.\d{1,2})\s*Average high school GPA", c12, re.IGNORECASE):
         out["C.1201"] = {"value": match.group(1), "source": "tier4_cleaner"}
+    elif match := re.search(
+        r"^.*Average high school GPA.*?\b([0-4](?:\.\d{1,2})?)\s*$",
+        c12,
+        re.IGNORECASE | re.MULTILINE,
+    ):
+        out["C.1201"] = {"value": match.group(1), "source": "tier4_cleaner"}
+    elif match := re.search(
+        r"Average high school GPA of all degree-seeking,\s*first-time,\s*first-year students who submitted(?: high school)?(?: GPA)?\s*:?\s*([0-4](?:\.\d{1,2})?)\b",
+        _compact_block_text(c12),
+        re.IGNORECASE,
+    ):
+        out["C.1201"] = {"value": match.group(1), "source": "tier4_cleaner"}
 
     pct_anchor = re.search(
         r"Percent of total first-time,\s*first-year students who submitted high",
@@ -3715,6 +3765,13 @@ def resolve_c12_gpa_summary(
     if pct_anchor:
         window = c12[pct_anchor.end(): pct_anchor.end() + 250]
         if match := re.search(r"\b(\d+(?:\.\d+)?)\s*%", window):
+            out["C.1202"] = {"value": match.group(1), "source": "tier4_cleaner"}
+    if "C.1202" not in out:
+        if match := re.search(
+            r"Percent of total first-time,\s*first-year students who submitted(?: high school)?(?: GPA)?\s*:?\s*(\d+(?:\.\d+)?)\s*%",
+            _compact_block_text(c12),
+            re.IGNORECASE,
+        ):
             out["C.1202"] = {"value": match.group(1), "source": "tier4_cleaner"}
 
     return out
@@ -3726,7 +3783,7 @@ def resolve_c13_application_fee(
     tables: list[dict], markdown: str, schema: SchemaIndex
 ) -> dict[str, dict]:
     out: dict[str, dict] = {}
-    c13 = _section_between(markdown, r"C13\s+Application Fee", r"C14\b")
+    c13 = _section_between(markdown, r"C13\.?\s+Application Fee", r"C14\.?\b")
     if not c13:
         c13 = ""
     else:
@@ -3734,8 +3791,25 @@ def resolve_c13_application_fee(
             c13,
             r"Does your institution have an application fee\?",
         )
+        if not value:
+            value = _extract_inline_yes_no_after_label(
+                c13,
+                r"Does your institution have an application fee\?",
+            )
         if value:
             out["C.1301"] = {"value": value, "source": "tier4_cleaner"}
+        if match := re.search(
+            r"Amount of application fee:\s*\$?\s*(\d[\d,]*)",
+            _compact_block_text(c13),
+            re.IGNORECASE,
+        ):
+            out["C.1302"] = {"value": match.group(1).replace(",", ""), "source": "tier4_cleaner"}
+        value = _extract_inline_yes_no_after_label(
+            c13,
+            r"Can it be waived for applicants with financial need\?",
+        )
+        if value:
+            out["C.1303"] = {"value": value, "source": "tier4_cleaner"}
 
     # C13 continues across the page break in Farmingdale. The first
     # continuation row loses its Yes/No header in layout text; the visual x is
@@ -3746,42 +3820,64 @@ def resolve_c13_application_fee(
 
     if re.search(r"(?:^|\n)\s*(?:-\s*\[\s*\]\s*)?x\s+Same fee\b", markdown, re.IGNORECASE):
         out["C.1304"] = {"value": "X", "source": "tier4_cleaner"}
+    if re.search(r"\bSame fee\b\s*(?:\|\s*)?[xX]\b", c13, re.IGNORECASE):
+        out["C.1304"] = {"value": "X", "source": "tier4_cleaner"}
 
     c1305 = _extract_yes_no_by_layout(
         markdown,
         r"Can on-line application fee be waived for applicants",
     )
+    if not c1305:
+        c1305 = _extract_inline_yes_no_after_label(
+            c13,
+            r"Can on-line application fee be waived for applicants(?: with(?: financial need)?)?",
+        )
     if c1305:
         out["C.1305"] = {"value": c1305, "source": "tier4_cleaner"}
 
+    c14 = _section_between(markdown, r"C14\.?\s+Application closing date", r"C15\.?\b")
     c1401 = _extract_yes_no_by_layout(
-        markdown,
+        c14 or markdown,
         r"Does your institution have an application closing date\?",
     )
+    if not c1401:
+        c1401 = _extract_inline_yes_no_after_label(
+            c14 or markdown,
+            r"Does your institution have an application closing date\?",
+        )
     if c1401:
         out["C.1401"] = {"value": c1401, "source": "tier4_cleaner"}
-    if match := re.search(r"Application closing date \(fall\)\s+(\d{1,2}/\d{1,2})", markdown, re.IGNORECASE):
-        month_day = _split_month_day(match.group(1))
+    closing = _extract_date_after_label(c14 or markdown, r"Application closing date \(fall\)")
+    if closing:
+        month_day = _split_month_day(closing)
         if month_day:
             out["C.1402"] = {"value": month_day[0], "source": "tier4_cleaner"}
             out["C.1403"] = {"value": month_day[1], "source": "tier4_cleaner"}
-    if match := re.search(r"Priority Date\s+(\d{1,2}/\d{1,2})", markdown, re.IGNORECASE):
-        month_day = _split_month_day(match.group(1))
+    priority = _extract_date_after_label(c14 or markdown, r"Priority Date")
+    if priority:
+        month_day = _split_month_day(priority)
         if month_day:
             out["C.1404"] = {"value": month_day[0], "source": "tier4_cleaner"}
             out["C.1405"] = {"value": month_day[1], "source": "tier4_cleaner"}
 
-    c15 = _section_between(markdown, r"C15\b", r"C16\b")
+    c15 = _section_between(markdown, r"C15\.?\b", r"C16\.?\b")
     c1501 = _extract_yes_no_by_layout(
         c15,
         r"Are first-time,\s*first-year students accepted for terms other than",
     )
     if not c1501 and re.search(r"\bx\s*Are first-time,\s*first-year students accepted for terms other than", c15, re.IGNORECASE):
         c1501 = "Yes"
+    if not c1501:
+        c1501 = _extract_inline_yes_no_after_label(
+            c15,
+            r"Are first-time,\s*first-year students accepted for terms other than the fall\?",
+        )
+    if not c1501 and re.search(r"\bYes\b", c15, re.IGNORECASE):
+        c1501 = "Yes"
     if c1501:
         out["C.1501"] = {"value": c1501, "source": "tier4_cleaner"}
 
-    c16 = _section_between(markdown, r"C16\b", r"C17\b")
+    c16 = _section_between(markdown, r"C16\.?\b", r"C17\.?\b")
     if re.search(r"(?:^|\n)\s*(?:-\s*\[\s*\]\s*)?x\s+On a rolling basis beginning\b", c16, re.IGNORECASE):
         out["C.1601"] = {"value": "X", "source": "tier4_cleaner"}
         if match := re.search(r"On a rolling basis beginning\s+(\d{1,2}-[A-Za-z]{3,4}|[A-Za-z]{3,4}-\d{1,2})", c16, re.IGNORECASE):
@@ -3789,18 +3885,40 @@ def resolve_c13_application_fee(
             if month_day:
                 out["C.1602"] = {"value": month_day[0], "source": "tier4_cleaner"}
                 out["C.1603"] = {"value": month_day[1], "source": "tier4_cleaner"}
+    by_date = _extract_date_after_label(c16, r"By \(date\)")
+    if by_date:
+        month_day = _split_month_day(by_date)
+        if month_day:
+            out["C.1604"] = {"value": "X", "source": "tier4_cleaner"}
+            out["C.1605"] = {"value": month_day[0], "source": "tier4_cleaner"}
+            out["C.1606"] = {"value": month_day[1], "source": "tier4_cleaner"}
 
-    c17 = _section_between(markdown, r"C17\b", r"C18\b")
+    c17 = _section_between(markdown, r"C17\.?\b", r"C18\.?\b")
+    reply_by = _extract_date_after_label(c17, r"Must reply by \(date\)")
+    if reply_by:
+        month_day = _split_month_day(reply_by)
+        if month_day:
+            out["C.1701"] = {"value": "X", "source": "tier4_cleaner"}
+            out["C.1702"] = {"value": month_day[0], "source": "tier4_cleaner"}
+            out["C.1703"] = {"value": month_day[1], "source": "tier4_cleaner"}
     if re.search(r"(?:^|\n)\s*(?:-\s*\[\s*\]\s*)?x\s+Must reply by May 1st or within\b", c17, re.IGNORECASE):
         if match := re.search(r"Must reply by May 1st or within\s+(\d+)\s+weeks", c17, re.IGNORECASE | re.DOTALL):
             out["C.1705"] = {"value": match.group(1), "source": "tier4_cleaner"}
-    if match := re.search(r"Deadline for housing deposit \(MMD\w*\s+(\d{1,2}-[A-Za-z]{3,4}|[A-Za-z]{3,4}-\d{1,2})", c17, re.IGNORECASE):
-        month_day = _split_month_day(match.group(1))
+    housing_deadline = _extract_date_after_label(c17, r"Deadline for housing deposit \(MMD\w*\)")
+    if not housing_deadline:
+        match = re.search(
+            r"Deadline for housing deposit \(MMD\w*\s+(\d{1,2}-[A-Za-z]{3,9}|[A-Za-z]{3,9}-\d{1,2}|[A-Za-z]{3,9}\s+\d{1,2}|\d{1,2}/\d{1,2})",
+            c17,
+            re.IGNORECASE,
+        )
+        housing_deadline = match.group(1) if match else None
+    if housing_deadline:
+        month_day = _split_month_day(housing_deadline)
         if month_day:
             out["C.1709"] = {"value": month_day[0], "source": "tier4_cleaner"}
             out["C.1710"] = {"value": month_day[1], "source": "tier4_cleaner"}
     if match := re.search(
-        r"Amount of housing deposit:\s+(?:(?:\d{1,2}-[A-Za-z]{3,4}|[A-Za-z]{3,4}-\d{1,2})\s+)?(\d+)",
+        r"Amount of housing deposit:\s+(?:(?:\d{1,2}-[A-Za-z]{3,9}|[A-Za-z]{3,9}-\d{1,2}|[A-Za-z]{3,9}\s+\d{1,2})\s+)?\$?\s*(\d+)",
         c17,
         re.IGNORECASE,
     ):
@@ -3808,11 +3926,16 @@ def resolve_c13_application_fee(
     if re.search(r"(?:^|\n)\s*(?:-\s*\[\s*\]\s*)?x\s+Yes,\s*in full\b", c17, re.IGNORECASE):
         out["C.1712"] = {"value": "X", "source": "tier4_cleaner"}
 
-    c18 = _section_between(markdown, r"C18\b", r"C19\b")
+    c18 = _section_between(markdown, r"C18\.?\b", r"C19\.?\b")
     c1801 = _extract_yes_no_by_layout(
         c18,
         r"Does your institution allow students to postpone enrollment after",
     )
+    if not c1801:
+        c1801 = _extract_inline_yes_no_after_label(
+            c18,
+            r"Does your institution allow students to postpone enrollment after admission\?",
+        )
     if c1801:
         out["C.1801"] = {"value": c1801, "source": "tier4_cleaner"}
     if match := re.search(r"maximum period of postponement:\s+(.+?)\s*(?:\n|$)", c18, re.IGNORECASE):
@@ -3820,16 +3943,18 @@ def resolve_c13_application_fee(
         if text:
             out["C.1802"] = {"value": text, "source": "tier4_cleaner"}
 
-    c19 = _section_between(markdown, r"C19\b", r"C20\b")
+    c19 = _section_between(markdown, r"C19\.?\b", r"C20\.?\b")
     c1901 = _extract_yes_no_by_layout(
         c19,
         r"one year or more before high school",
     )
+    if not c1901:
+        c1901 = _extract_leading_yes_no(c19)
     if c1901:
         out["C.1901"] = {"value": c1901, "source": "tier4_cleaner"}
 
-    c21_start_re = r"(?:^|\n)\s*(?:[-*]\s*)?(?:##\s*)?C21\s+Early Decision"
-    c22_start_re = r"(?:^|\n)\s*(?:[-*]\s*)?(?:##\s*)?C22\s+Early action"
+    c21_start_re = r"(?:^|\n)\s*(?:[-*]\s*)?(?:##\s*)?C21\.?\s+Early Decision"
+    c22_start_re = r"(?:^|\n)\s*(?:[-*]\s*)?(?:##\s*)?C22\.?\s+Early action"
 
     c2101 = _extract_yes_no_block_by_layout(markdown, c21_start_re, c22_start_re)
     if c2101:
@@ -3894,6 +4019,15 @@ def resolve_c13_application_fee(
         else:
             layout_date_pairs = _extract_c21_layout_date_pairs(c21)
             layout_other_pair = layout_date_pairs[1] if len(layout_date_pairs) > 1 else None
+            layout_month_day_values = _extract_c21_layout_month_day_values(c21)
+            layout_month_day_by_qn = {
+                "C.2106": layout_month_day_values[2]
+                if len(layout_month_day_values) > 2
+                else None,
+                "C.2108": layout_month_day_values[3]
+                if len(layout_month_day_values) > 3
+                else None,
+            }
             for label, month_qn, day_qn in [
                 (
                     r"Other early decision plan closing date",
@@ -3922,6 +4056,8 @@ def resolve_c13_application_fee(
                     month_day = (month, day) if month and day else None
                 if not month_day and layout_other_pair and month_qn == "C.2106":
                     month_day = _split_month_day(layout_other_pair[0])
+                if not month_day and layout_month_day_by_qn[month_qn]:
+                    month_day = layout_month_day_by_qn[month_qn]
                 if month_day:
                     out[month_qn] = {"value": month_day[0], "source": "tier4_cleaner"}
                     out[day_qn] = {"value": month_day[1], "source": "tier4_cleaner"}
@@ -3939,6 +4075,17 @@ def resolve_c13_application_fee(
     c22_prompt_answers = _extract_yes_or_no_prompt_answers(c22) if c22 else []
     if not c2201 and c22_prompt_answers:
         c2201 = c22_prompt_answers[0]
+    if not c2201 and c22:
+        c22_lines = _nonempty_lines(c22)
+        if (
+            c22_lines
+            and c22_lines[0].strip().lower() in ("yes", "no", "n/a", "na")
+            and not (
+                len(c22_lines) > 1
+                and c22_lines[1].strip().lower() in ("yes", "no", "n/a", "na")
+            )
+        ):
+            c2201 = _extract_leading_yes_no(c22)
     if c2201:
         out["C.2201"] = {"value": c2201, "source": "tier4_cleaner"}
 
