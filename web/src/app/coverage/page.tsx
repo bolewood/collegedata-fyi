@@ -58,58 +58,52 @@ export default async function CoveragePage() {
         <CoverageDashboard rows={rows} />
       </Suspense>
 
-      <section style={{ marginTop: 64 }}>
+      <section style={{ marginTop: 64, maxWidth: 760 }}>
         <h2
           className="serif"
           style={{ fontSize: 22, lineHeight: 1.2, margin: "0 0 16px" }}
         >
           Methodology
         </h2>
-        <ul
+        <div
           style={{
-            margin: 0,
-            paddingLeft: 22,
             fontSize: 14,
-            lineHeight: 1.7,
+            lineHeight: 1.65,
             color: "var(--ink-2)",
-            maxWidth: 720,
+            display: "grid",
+            gap: 14,
           }}
         >
-          <li>
-            <strong>The CDS is voluntary.</strong> No school is required to
-            publish one, and there&rsquo;s no central registry. We have to
-            find each one ourselves.
-          </li>
-          <li>
-            <strong>Our discovery is automated.</strong> A resolver fetches
-            each school&rsquo;s website and looks for CDS-shaped links. It
-            misses sources buried behind logins, JavaScript-only pages, or
-            non-obvious filenames. <em>No public CDS found</em> means the
-            resolver tried and didn&rsquo;t see one — not that the school
-            doesn&rsquo;t publish one.
-          </li>
-          <li>
-            <strong>Not checked yet</strong> means we know the school exists
-            and is in scope, but our resolver hasn&rsquo;t scanned it. Coverage
-            refreshes every 15 minutes from{" "}
+          <p style={{ margin: 0 }}>
+            We start with active Title-IV institutions that serve
+            undergraduates, then look for public Common Data Set files on
+            school-controlled sites and known public archives. The table shows
+            our current best status for each school, plus the last time we
+            checked.
+          </p>
+          <p style={{ margin: 0 }}>
+            A school marked <em>No public CDS found</em> was checked without a
+            usable public source turning up. That is different from saying the
+            school never publishes one: CDS files are voluntary, and some are
+            posted in places automated discovery cannot reliably reach.
+            <em> Not checked yet</em> means the school is in scope, but the
+            resolver has not scanned it.
+          </p>
+          <p style={{ margin: 0 }}>
+            Coverage refreshes every 15 minutes from{" "}
             <a href="https://collegescorecard.ed.gov/" target="_blank" rel="noopener noreferrer">
               College Scorecard
-            </a>
-            ; the directory expands faster than discovery does.
-          </li>
-          <li>
-            <strong>Federal data is older than CDS.</strong> Scorecard uses
-            two-year-old cohorts; the most recent CDS is the current academic
-            year. They answer different questions and shouldn&rsquo;t be
-            compared directly.
-          </li>
-          <li>
-            <strong>Know where one of these is published?</strong> Click into
-            the school page and{" "}
+            </a>. CDS files are often newer than federal outcome datasets, while
+            NCES/IPEDS and Scorecard provide broader baseline context. We keep
+            those sources labeled separately so readers can tell what came from
+            a school publication and what came from federal data.
+          </p>
+          <p style={{ margin: 0 }}>
+            Know where one of these is published? Open the school page and{" "}
             <Link href="/about">send us the link</Link>. We&rsquo;ll archive
-            it. This page is how we make the gaps visible — not a final word.
-          </li>
-        </ul>
+            the source and update the coverage status.
+          </p>
+        </div>
       </section>
     </div>
   );
