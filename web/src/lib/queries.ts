@@ -53,6 +53,9 @@ export type BrowserAdmissionStrategyRow = AdmissionStrategySchool & {
   yearStart: number | null;
 };
 
+const ADMISSION_STRATEGY_SELECT =
+  "document_id, school_id, school_name, canonical_year, year_start, archive_url, data_quality_flag, applied, admitted, enrolled_first_year, acceptance_rate, yield_rate, ed_offered, ed_applicants, ed_admitted, ed_has_second_deadline, ea_offered, ea_restrictive, wait_list_policy, wait_list_offered, wait_list_accepted, wait_list_admitted, c711_first_gen_factor, c712_legacy_factor, c713_geography_factor, c714_state_residency_factor, c718_demonstrated_interest_factor, app_fee_amount, app_fee_waiver_offered, admission_strategy_card_quality";
+
 type DirectoryContextRow = {
   school_id: string | null;
   state: string | null;
@@ -74,6 +77,41 @@ type GpaContextRow = {
 
 function sha256Text(value: string): string {
   return createHash("sha256").update(value, "utf8").digest("hex");
+}
+
+function mapAdmissionStrategyRow(data: any): BrowserAdmissionStrategyRow {
+  return {
+    documentId: String(data.document_id),
+    schoolId: String(data.school_id),
+    schoolName: String(data.school_name),
+    cdsYear: String(data.canonical_year),
+    yearStart: numberOrNull(data.year_start),
+    archiveUrl: data.archive_url ?? null,
+    dataQualityFlag: data.data_quality_flag ?? null,
+    applied: numberOrNull(data.applied),
+    admitted: numberOrNull(data.admitted),
+    enrolledFirstYear: numberOrNull(data.enrolled_first_year),
+    acceptanceRate: normalizeRate(data.acceptance_rate),
+    yieldRate: normalizeRate(data.yield_rate),
+    edOffered: data.ed_offered ?? null,
+    edApplicants: numberOrNull(data.ed_applicants),
+    edAdmitted: numberOrNull(data.ed_admitted),
+    edHasSecondDeadline: data.ed_has_second_deadline ?? null,
+    eaOffered: data.ea_offered ?? null,
+    eaRestrictive: data.ea_restrictive ?? null,
+    waitListPolicy: data.wait_list_policy ?? null,
+    waitListOffered: numberOrNull(data.wait_list_offered),
+    waitListAccepted: numberOrNull(data.wait_list_accepted),
+    waitListAdmitted: numberOrNull(data.wait_list_admitted),
+    firstGenFactor: data.c711_first_gen_factor ?? null,
+    legacyFactor: data.c712_legacy_factor ?? null,
+    geographyFactor: data.c713_geography_factor ?? null,
+    stateResidencyFactor: data.c714_state_residency_factor ?? null,
+    demonstratedInterestFactor: data.c718_demonstrated_interest_factor ?? null,
+    appFeeAmount: numberOrNull(data.app_fee_amount),
+    appFeeWaiverOffered: data.app_fee_waiver_offered ?? null,
+    quality: (data.admission_strategy_card_quality ?? null) as AdmissionStrategyQuality | null,
+  };
 }
 
 function fallbackMatchesCanonical(
@@ -668,9 +706,7 @@ export const fetchAdmissionStrategyBySchoolId = cache(
     try {
       const { data, error } = await (supabase as unknown as UntypedSupabase)
         .from("school_browser_rows")
-        .select(
-          "document_id, school_id, school_name, canonical_year, year_start, archive_url, data_quality_flag, applied, admitted, enrolled_first_year, acceptance_rate, yield_rate, ed_offered, ed_applicants, ed_admitted, ed_has_second_deadline, ea_offered, ea_restrictive, wait_list_policy, wait_list_offered, wait_list_accepted, wait_list_admitted, c711_first_gen_factor, c712_legacy_factor, c713_geography_factor, c714_state_residency_factor, c718_demonstrated_interest_factor, app_fee_amount, app_fee_waiver_offered, admission_strategy_card_quality",
-        )
+        .select(ADMISSION_STRATEGY_SELECT)
         .eq("school_id", schoolId)
         .gte("year_start", 2024)
         .is("sub_institutional", null)
@@ -683,40 +719,33 @@ export const fetchAdmissionStrategyBySchoolId = cache(
         return null;
       }
 
-      return {
-        documentId: String(data.document_id),
-        schoolId: String(data.school_id),
-        schoolName: String(data.school_name),
-        cdsYear: String(data.canonical_year),
-        yearStart: numberOrNull(data.year_start),
-        archiveUrl: data.archive_url ?? null,
-        dataQualityFlag: data.data_quality_flag ?? null,
-        applied: numberOrNull(data.applied),
-        admitted: numberOrNull(data.admitted),
-        enrolledFirstYear: numberOrNull(data.enrolled_first_year),
-        acceptanceRate: normalizeRate(data.acceptance_rate),
-        yieldRate: normalizeRate(data.yield_rate),
-        edOffered: data.ed_offered ?? null,
-        edApplicants: numberOrNull(data.ed_applicants),
-        edAdmitted: numberOrNull(data.ed_admitted),
-        edHasSecondDeadline: data.ed_has_second_deadline ?? null,
-        eaOffered: data.ea_offered ?? null,
-        eaRestrictive: data.ea_restrictive ?? null,
-        waitListPolicy: data.wait_list_policy ?? null,
-        waitListOffered: numberOrNull(data.wait_list_offered),
-        waitListAccepted: numberOrNull(data.wait_list_accepted),
-        waitListAdmitted: numberOrNull(data.wait_list_admitted),
-        firstGenFactor: data.c711_first_gen_factor ?? null,
-        legacyFactor: data.c712_legacy_factor ?? null,
-        geographyFactor: data.c713_geography_factor ?? null,
-        stateResidencyFactor: data.c714_state_residency_factor ?? null,
-        demonstratedInterestFactor: data.c718_demonstrated_interest_factor ?? null,
-        appFeeAmount: numberOrNull(data.app_fee_amount),
-        appFeeWaiverOffered: data.app_fee_waiver_offered ?? null,
-        quality: (data.admission_strategy_card_quality ?? null) as AdmissionStrategyQuality | null,
-      };
+      return mapAdmissionStrategyRow(data);
     } catch (error) {
       console.warn(`fetchAdmissionStrategyBySchoolId: ${String(error)}`);
+      return null;
+    }
+  },
+);
+
+export const fetchAdmissionStrategyByDocumentId = cache(
+  async function fetchAdmissionStrategyByDocumentId(
+    documentId: string,
+  ): Promise<BrowserAdmissionStrategyRow | null> {
+    try {
+      const { data, error } = await (supabase as unknown as UntypedSupabase)
+        .from("school_browser_rows")
+        .select(ADMISSION_STRATEGY_SELECT)
+        .eq("document_id", documentId)
+        .maybeSingle();
+
+      if (error || !data) {
+        if (error) console.warn(`fetchAdmissionStrategyByDocumentId: ${error.message}`);
+        return null;
+      }
+
+      return mapAdmissionStrategyRow(data);
+    } catch (error) {
+      console.warn(`fetchAdmissionStrategyByDocumentId: ${String(error)}`);
       return null;
     }
   },

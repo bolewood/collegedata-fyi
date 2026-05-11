@@ -43,6 +43,8 @@ export type AdmissionStrategySchool = {
 };
 
 export type AdmissionStrategyDerived = {
+  hasEdFlow: boolean;
+  hasSingleApplicantFlow: boolean;
   edAdmitRate: number | null;
   nonEarlyResidualAdmitRate: number | null;
   edShareOfAdmitted: number | null;
@@ -54,7 +56,12 @@ export type AdmissionStrategyDerived = {
   nonEarlyAdmitted: number | null;
   nonEarlyYield: number | null;
   waitListOfferRate: number | null;
+  waitListOptInRate: number | null;
   waitListConditionalAdmitRate: number | null;
+  waitListHasCounts: boolean;
+  waitListHasAnyCount: boolean;
+  waitListCountsAnomalous: boolean;
+  waitListCountsMissing: boolean;
   hasHighEdShare: boolean;
   hasRenderableContent: boolean;
 };
@@ -67,6 +74,10 @@ function safeRate(numerator: number | null, denominator: number | null): number 
   if (numerator == null || denominator == null || denominator <= 0) return null;
   if (numerator < 0) return null;
   return numerator / denominator;
+}
+
+function safeNonNegative(value: number | null): number | null {
+  return value == null || value < 0 ? null : value;
 }
 
 function important(value: string | null): boolean {
@@ -89,7 +100,8 @@ export function computeAdmissionStrategy(
         school.edAdmitted <= school.edApplicants)) &&
     school.edApplicants != null &&
     school.edApplicants > 0 &&
-    school.edAdmitted != null;
+    school.edAdmitted != null &&
+    school.edAdmitted <= school.edApplicants;
 
   const edAdmitRate = edCountsValid
     ? safeRate(school.edAdmitted, school.edApplicants)
@@ -112,11 +124,11 @@ export function computeAdmissionStrategy(
       : null;
   const nonEarlyApplicants =
     edCountsValid && school.applied != null
-      ? school.applied - school.edApplicants!
+      ? safeNonNegative(school.applied - school.edApplicants!)
       : null;
   const nonEarlyAdmitted =
     edCountsValid && school.admitted != null
-      ? school.admitted - school.edAdmitted!
+      ? safeNonNegative(school.admitted - school.edAdmitted!)
       : null;
   const estimatedEdEnrolled =
     edCountsValid && school.enrolledFirstYear != null
@@ -141,18 +153,34 @@ export function computeAdmissionStrategy(
       ? edAdmitRate / nonEarlyResidualAdmitRate
       : null;
 
-  const waitListValid =
-    school.quality !== "wait_list_math_inconsistent" &&
-    (school.waitListPolicy === true ||
-      (school.waitListOffered != null &&
-        school.waitListAccepted != null &&
-        school.waitListAdmitted != null &&
-        school.waitListAccepted <= school.waitListOffered &&
-        school.waitListAdmitted <= school.waitListAccepted));
-  const waitListOfferRate = waitListValid
+  const waitListHasAnyCount =
+    school.waitListOffered != null ||
+    school.waitListAccepted != null ||
+    school.waitListAdmitted != null;
+  const waitListHasCounts =
+    school.waitListOffered != null &&
+    school.waitListAccepted != null &&
+    school.waitListAdmitted != null;
+  const waitListCountsAnomalous =
+    school.quality === "wait_list_math_inconsistent" ||
+    (school.waitListOffered != null &&
+      school.waitListAccepted != null &&
+      school.waitListAccepted > school.waitListOffered) ||
+    (school.waitListAccepted != null &&
+      school.waitListAdmitted != null &&
+      school.waitListAdmitted > school.waitListAccepted);
+  const waitListCountsMissing =
+    school.waitListPolicy === true && !waitListHasCounts;
+  const waitListCanCompute =
+    (school.waitListPolicy === true || waitListHasCounts) &&
+    !waitListCountsAnomalous;
+  const waitListOfferRate = waitListCanCompute
     ? safeRate(school.waitListOffered, school.applied)
     : null;
-  const waitListConditionalAdmitRate = waitListValid
+  const waitListOptInRate = waitListCanCompute
+    ? safeRate(school.waitListAccepted, school.waitListOffered)
+    : null;
+  const waitListConditionalAdmitRate = waitListCanCompute
     ? safeRate(school.waitListAdmitted, school.waitListAccepted)
     : null;
 
@@ -166,15 +194,29 @@ export function computeAdmissionStrategy(
 
   const hasRenderableContent =
     !HIDDEN_DOCUMENT_FLAGS.has(school.dataQualityFlag ?? "") &&
-    school.quality !== "insufficient_data" &&
+      school.quality !== "insufficient_data" &&
     (edAdmitRate != null ||
       school.yieldRate != null ||
       waitListOfferRate != null ||
       waitListConditionalAdmitRate != null ||
+      waitListHasAnyCount ||
+      waitListCountsMissing ||
       hasFactorSignal ||
       school.eaOffered === true);
 
   return {
+    hasEdFlow:
+      edCountsValid &&
+      school.applied != null &&
+      school.admitted != null &&
+      school.enrolledFirstYear != null &&
+      nonEarlyApplicants != null &&
+      nonEarlyAdmitted != null,
+    hasSingleApplicantFlow:
+      !edCountsValid &&
+      school.applied != null &&
+      school.admitted != null &&
+      school.enrolledFirstYear != null,
     edAdmitRate,
     nonEarlyResidualAdmitRate,
     edShareOfAdmitted,
@@ -186,7 +228,12 @@ export function computeAdmissionStrategy(
     nonEarlyAdmitted,
     nonEarlyYield,
     waitListOfferRate,
+    waitListOptInRate,
     waitListConditionalAdmitRate,
+    waitListHasCounts,
+    waitListHasAnyCount,
+    waitListCountsAnomalous,
+    waitListCountsMissing,
     hasHighEdShare:
       edShareOfAdmitted != null && edShareOfAdmitted >= HIGH_ED_SHARE_THRESHOLD,
     hasRenderableContent,

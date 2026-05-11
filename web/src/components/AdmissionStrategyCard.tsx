@@ -34,6 +34,11 @@ function maybeMultiple(value: number | null): string {
   return value == null || !Number.isFinite(value) ? "n/a" : `${value.toFixed(1)}x`;
 }
 
+function shareOf(value: number | null, total: number): number {
+  if (value == null || value <= 0 || total <= 0) return 0;
+  return Math.max(0, Math.min(100, (value / total) * 100));
+}
+
 function important(value: string | null): boolean {
   return value === "Important" || value === "Very Important";
 }
@@ -56,38 +61,287 @@ function InsightBlock({
   );
 }
 
-function FlowRow({
-  admitRate,
-  admitted,
-  applicants,
-  enrolled,
-  label,
-  yieldLabel,
-}: {
-  admitRate: number | null;
-  admitted: number | null;
-  applicants: number | null;
-  enrolled: number | null;
+type FlowLane = {
   label: string;
+  tone: "ed" | "other" | "single";
+  applicants: number | null;
+  admitted: number | null;
+  enrolled: number | null;
+  admitRate: number | null;
   yieldLabel: string;
+};
+
+function FlowCell({
+  label,
+  value,
+  width,
+  rate,
+  tone,
+}: {
+  label: string;
+  value: number | null;
+  width: number;
+  rate: string;
+  tone: FlowLane["tone"];
+}) {
+  const cssWidth = `${width}%`;
+  return (
+    <div className="admission-strategy-flow-cell">
+      <span className="admission-strategy-flow-cell__stage">{label}</span>
+      <strong>{maybeCount(value)}</strong>
+      <span>{rate}</span>
+      <div className="admission-strategy-flow-cell__track" aria-hidden="true">
+        <i
+          className={`admission-strategy-flow-cell__bar admission-strategy-flow-cell__bar--${tone}`}
+          style={{ width: cssWidth }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function AdjustedFlow({
+  description,
+  lanes,
+  titleId,
+}: {
+  description: string;
+  lanes: FlowLane[];
+  titleId: string;
+}) {
+  const applicantTotal = lanes.reduce((sum, lane) => sum + (lane.applicants ?? 0), 0);
+  const admittedTotal = lanes.reduce((sum, lane) => sum + (lane.admitted ?? 0), 0);
+  const enrolledTotal = lanes.reduce((sum, lane) => sum + (lane.enrolled ?? 0), 0);
+
+  return (
+    <div className="admission-strategy-flow" aria-labelledby={titleId}>
+      <div>
+        <div id={titleId} className="meta">
+          § Adjusted admission flow
+        </div>
+        <p>{description}</p>
+        <p className="admission-strategy-flow__scale-note">
+          Each column is scaled within that stage. Labels show exact counts.
+        </p>
+      </div>
+      <div className="admission-strategy-flow-matrix">
+        <div className="admission-strategy-flow-matrix__head" aria-hidden="true">
+          <span />
+          <span>Applicants</span>
+          <span>Admits</span>
+          <span>Class seats</span>
+        </div>
+        {lanes.map((lane) => (
+          <div className="admission-strategy-flow-lane" key={lane.label}>
+            <div className="admission-strategy-flow-lane__label meta">{lane.label}</div>
+            <div className="admission-strategy-flow-lane__cells">
+              <FlowCell
+                label="Applicants"
+                value={lane.applicants}
+                width={shareOf(lane.applicants, applicantTotal)}
+                rate="reported count"
+                tone={lane.tone}
+              />
+              <FlowCell
+                label="Admits"
+                value={lane.admitted}
+                width={shareOf(lane.admitted, admittedTotal)}
+                rate={maybePct(lane.admitRate)}
+                tone={lane.tone}
+              />
+              <FlowCell
+                label="Class seats"
+                value={lane.enrolled}
+                width={shareOf(lane.enrolled, enrolledTotal)}
+                rate={lane.yieldLabel}
+                tone={lane.tone}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DataTable({
+  rows,
+}: {
+  rows: Array<{
+    label: string;
+    applicants: string;
+    admitted: string;
+    admitRate: string;
+    enrolled: string;
+    note: string;
+  }>;
 }) {
   return (
-    <div className="admission-strategy-flow-row">
-      <div className="admission-strategy-flow-row__label meta">{label}</div>
-      <div className="admission-strategy-flow-row__cells">
-        <div>
-          <strong>{maybeCount(applicants)}</strong>
-          <small>applicants</small>
-        </div>
-        <div>
-          <strong>{maybeCount(admitted)}</strong>
-          <small>admitted · {maybePct(admitRate)}</small>
-        </div>
-        <div>
-          <strong>{maybeCount(enrolled)}</strong>
-          <small>{yieldLabel}</small>
-        </div>
+    <details className="admission-strategy-data">
+      <summary>Exact admission data</summary>
+      <div className="admission-strategy-data__wrap">
+        <table>
+          <caption className="sr-only">Admission flow data</caption>
+          <thead>
+            <tr>
+              <th>Path</th>
+              <th>Applicants</th>
+              <th>Admitted</th>
+              <th>Admit rate</th>
+              <th>Class seats</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.label}>
+                <td>{row.label}</td>
+                <td>{row.applicants}</td>
+                <td>{row.admitted}</td>
+                <td>{row.admitRate}</td>
+                <td>{row.enrolled}</td>
+                <td>{row.note}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
+    </details>
+  );
+}
+
+function WaitListStage({
+  label,
+  value,
+  width,
+}: {
+  label: string;
+  value: number | null;
+  width: number;
+}) {
+  return (
+    <div className="admission-strategy-wait-stage">
+      <div>
+        <span>{label}</span>
+        <strong>{maybeCount(value)}</strong>
+      </div>
+      <div className="admission-strategy-wait-stage__track" aria-hidden="true">
+        <i style={{ width: `${width}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function WaitListView({
+  accepted,
+  admitted,
+  anomalous,
+  offerRate,
+  offered,
+  optInRate,
+  admitRate,
+  policyMissingCounts,
+  sourceHref,
+}: {
+  accepted: number | null;
+  admitted: number | null;
+  anomalous: boolean;
+  offerRate: number | null;
+  offered: number | null;
+  optInRate: number | null;
+  admitRate: number | null;
+  policyMissingCounts: boolean;
+  sourceHref: string | null;
+}) {
+  const max = Math.max(offered ?? 0, accepted ?? 0, admitted ?? 0);
+
+  return (
+    <div className="admission-strategy-panel admission-strategy-panel--wide">
+      <div className="admission-strategy-panel__head">
+        <div className="meta">§ Wait list attrition</div>
+        {anomalous && <span className="cd-chip cd-chip--brick">Review flagged</span>}
+      </div>
+      {policyMissingCounts ? (
+        <p>Wait-list policy reported, counts unavailable.</p>
+      ) : (
+        <>
+          <div className="admission-strategy-wait" role="img" aria-label={`Wait-list flow: ${maybeCount(offered)} offered a place, ${maybeCount(accepted)} accepted a place, ${maybeCount(admitted)} admitted from the wait list.`}>
+            <WaitListStage
+              label="Offered a spot"
+              value={offered}
+              width={shareOf(offered, max)}
+            />
+            <WaitListStage
+              label="Accepted a spot"
+              value={accepted}
+              width={shareOf(accepted, max)}
+            />
+            <WaitListStage
+              label="Admitted from wait list"
+              value={admitted}
+              width={shareOf(admitted, max)}
+            />
+          </div>
+          <p>
+            {anomalous
+              ? "The reported wait-list counts do not follow the usual offered to accepted to admitted order, so rates are withheld pending review."
+              : `${maybePct(optInRate)} joined after being offered a spot. ${maybePct(admitRate)} of students who joined were admitted.`}
+            {offerRate != null ? ` ${maybePct(offerRate)} of applicants were offered the wait list.` : ""}
+          </p>
+          {admitted === 0 && (
+            <p className="admission-strategy-zero-note">
+              Zero students were reported as admitted from the wait list.
+            </p>
+          )}
+          <details className="admission-strategy-data">
+            <summary>Exact wait-list data</summary>
+            <div className="admission-strategy-data__wrap">
+              <table>
+                <caption className="sr-only">Wait-list data</caption>
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Offered a wait-list spot</td>
+                    <td>{maybeCount(offered)}</td>
+                  </tr>
+                  <tr>
+                    <td>Accepted a wait-list spot</td>
+                    <td>{maybeCount(accepted)}</td>
+                  </tr>
+                  <tr>
+                    <td>Admitted from wait list</td>
+                    <td>{maybeCount(admitted)}</td>
+                  </tr>
+                  <tr>
+                    <td>Joined after being offered</td>
+                    <td>{maybePct(optInRate)}</td>
+                  </tr>
+                  <tr>
+                    <td>Admitted after joining</td>
+                    <td>{maybePct(admitRate)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+        </>
+      )}
+      <p className="admission-strategy-caution">
+        Wait-list outcomes can change sharply year to year.
+        {anomalous && sourceHref ? (
+          <>
+            {" "}
+            <a href={sourceHref} target="_blank" rel="noopener noreferrer">
+              Check the source.
+            </a>
+          </>
+        ) : null}
+      </p>
     </div>
   );
 }
@@ -154,26 +408,12 @@ export function AdmissionStrategyCard({
   ];
 
   const showEdSuppressed = school.quality === "ed_math_inconsistent";
-  const showWaitListSuppressed = school.quality === "wait_list_math_inconsistent";
   const showWaitList =
-    !showWaitListSuppressed &&
     (school.waitListPolicy === true ||
-      (school.waitListOffered != null &&
-        school.waitListAccepted != null &&
-        school.waitListAdmitted != null)) &&
-    (school.waitListOffered != null ||
-      school.waitListAccepted != null ||
-      school.waitListAdmitted != null ||
-      derived.waitListConditionalAdmitRate != null);
+      derived.waitListHasAnyCount ||
+      derived.waitListCountsMissing);
   const showAppFee = school.appFeeAmount != null || school.appFeeWaiverOffered != null;
-  const hasClassModel =
-    derived.edAdmitRate != null &&
-    derived.edShareOfClass != null &&
-    derived.estimatedNonEarlyEnrolled != null;
-  const edWidth = derived.edShareOfClass == null
-    ? 0
-    : Math.max(0, Math.min(100, derived.edShareOfClass * 100));
-  const nonEarlyWidth = 100 - edWidth;
+  const showFlow = derived.hasEdFlow || derived.hasSingleApplicantFlow;
   const edClassShareNote =
     school.enrolledFirstYear != null && school.edAdmitted != null
       ? `${maybeCount(school.edAdmitted)} ED admits / ${maybeCount(school.enrolledFirstYear)} enrolled first-years`
@@ -182,14 +422,69 @@ export function AdmissionStrategyCard({
     school.enrolledFirstYear != null
       ? `of ${maybeCount(school.enrolledFirstYear)} enrolled first-year seats`
       : "after binding-ED assumption";
+  const flowLanes: FlowLane[] = derived.hasEdFlow
+    ? [
+        {
+          label: "Early Decision",
+          tone: "ed",
+          applicants: school.edApplicants,
+          admitted: school.edAdmitted,
+          admitRate: derived.edAdmitRate,
+          enrolled: derived.estimatedEdEnrolled,
+          yieldLabel: "assumes ED admits enroll",
+        },
+        {
+          label: "All other rounds",
+          tone: "other",
+          applicants: derived.nonEarlyApplicants,
+          admitted: derived.nonEarlyAdmitted,
+          admitRate: derived.nonEarlyResidualAdmitRate,
+          enrolled: derived.estimatedNonEarlyEnrolled,
+          yieldLabel: `${maybePct(derived.nonEarlyYield)} estimated yield`,
+        },
+      ]
+    : derived.hasSingleApplicantFlow
+      ? [
+          {
+            label: "All applicants",
+            tone: "single",
+            applicants: school.applied,
+            admitted: school.admitted,
+            admitRate: school.acceptanceRate,
+            enrolled: school.enrolledFirstYear,
+            yieldLabel: `${maybePct(school.yieldRate)} yield`,
+          },
+        ]
+      : [];
+  const flowDescription = derived.hasEdFlow
+    ? "Applicants, admits, and class seats use separate stage scales so Early Decision and all other rounds stay readable."
+    : "This school does not report an Early Decision lane, so the flow collapses to the school-reported applicant, admit, and enrolled totals.";
+  const flowDataRows = flowLanes.map((lane) => ({
+    label: lane.label,
+    applicants: maybeCount(lane.applicants),
+    admitted: maybeCount(lane.admitted),
+    admitRate: maybePct(lane.admitRate),
+    enrolled: maybeCount(lane.enrolled),
+    note:
+      lane.tone === "ed"
+        ? "Likely class seats assume ED admits enroll."
+        : lane.tone === "other"
+          ? "All other rounds are residual CDS totals, not exact Regular Decision."
+      : "School-reported totals.",
+  }));
+  const sectionId = `admission-strategy-${school.schoolId}-${school.cdsYear
+    .replace(/[^a-z0-9]+/gi, "-")
+    .toLowerCase()}`;
+  const titleId = `${sectionId}-title`;
+  const flowTitleId = `${sectionId}-flow-title`;
 
   return (
-    <section className="admission-strategy-card rule-2" aria-labelledby="admission-strategy-title">
+    <section className="admission-strategy-card rule-2" aria-labelledby={titleId}>
       <div className="meta">§ Admission rounds</div>
       <div className="admission-strategy-card__body cd-card cd-card--cut">
         <div className="admission-strategy-card__head">
           <div>
-            <h2 id="admission-strategy-title" className="serif admission-strategy-card__title">
+            <h2 id={titleId} className="serif admission-strategy-card__title">
               How the class gets assembled.
             </h2>
             <RoundLine school={school} />
@@ -202,137 +497,60 @@ export function AdmissionStrategyCard({
           </div>
         )}
 
-        {derived.edAdmitRate != null && (
+        {(showFlow || derived.edAdmitRate != null) && (
           <div className="admission-strategy-model">
-            <div className="admission-strategy-insights">
-              {derived.edShareOfClass != null && (
-                <InsightBlock
-                  label="Estimated ED share of class"
-                  value={pct(derived.edShareOfClass)}
-                  note={edClassShareNote}
-                />
-              )}
-              {derived.edAdmitRateMultiple != null && (
-                <InsightBlock
-                  label="ED admit-rate multiple"
-                  value={maybeMultiple(derived.edAdmitRateMultiple)}
-                  note={`${pct(derived.edAdmitRate)} ED vs ${pct(derived.nonEarlyResidualAdmitRate)} estimated non-ED`}
-                />
-              )}
-              {derived.estimatedNonEarlyEnrolled != null && (
-                <InsightBlock
-                  label="Seats left outside ED"
-                  value={maybeCount(derived.estimatedNonEarlyEnrolled)}
-                  note={remainingSeatNote}
-                />
-              )}
-              {derived.nonEarlyResidualAdmitRate != null && (
-                <InsightBlock
-                  label="Estimated non-ED admit rate"
-                  value={pct(derived.nonEarlyResidualAdmitRate)}
-                  note={`${maybeCount(derived.nonEarlyAdmitted)} admitted from ${maybeCount(derived.nonEarlyApplicants)} applicants`}
-                />
-              )}
-            </div>
-
-            {hasClassModel && derived.estimatedEdEnrolled != null && (
-              <div className="admission-strategy-class-model">
-                <div>
-                  <div className="meta">§ Enrolled class model</div>
-                  <p>
-                    Start with the real enrolled class. If binding ED admits enroll,{" "}
-                    <strong>{maybeCount(derived.estimatedEdEnrolled)}</strong> of{" "}
-                    <strong> {maybeCount(school.enrolledFirstYear)}</strong> first-year
-                    seats are already spoken for before the remaining admission rounds
-                    fill the class.
-                  </p>
-                </div>
-                <div
-                  className="admission-strategy-seatbar"
-                  role="img"
-                  aria-label={`${maybeCount(derived.estimatedEdEnrolled)} enrolled seats are estimated Early Decision seats; ${maybeCount(derived.estimatedNonEarlyEnrolled)} are estimated seats outside Early Decision.`}
-                >
-                  <span
-                    className="admission-strategy-seatbar__ed"
-                    style={{ width: `${edWidth}%` }}
-                  >
-                    ED {maybeCount(derived.estimatedEdEnrolled)}
-                  </span>
-                  <span
-                    className="admission-strategy-seatbar__regular"
-                    style={{ width: `${nonEarlyWidth}%` }}
-                  >
-                    Non-ED {maybeCount(derived.estimatedNonEarlyEnrolled)}
-                  </span>
-                </div>
+            {derived.edAdmitRate != null && (
+              <div className="admission-strategy-insights">
+                {derived.edShareOfClass != null && (
+                  <InsightBlock
+                    label="Likely ED share of class"
+                    value={pct(derived.edShareOfClass)}
+                    note={edClassShareNote}
+                  />
+                )}
+                {derived.edAdmitRateMultiple != null && (
+                  <InsightBlock
+                    label="ED admit-rate multiple"
+                    value={maybeMultiple(derived.edAdmitRateMultiple)}
+                    note={`${pct(derived.edAdmitRate)} ED vs ${pct(derived.nonEarlyResidualAdmitRate)} all other rounds`}
+                  />
+                )}
+                {derived.estimatedNonEarlyEnrolled != null && (
+                  <InsightBlock
+                    label="Seats left after ED"
+                    value={maybeCount(derived.estimatedNonEarlyEnrolled)}
+                    note={remainingSeatNote}
+                  />
+                )}
+                {derived.nonEarlyResidualAdmitRate != null && (
+                  <InsightBlock
+                    label="All-other admit rate"
+                    value={pct(derived.nonEarlyResidualAdmitRate)}
+                    note={`${maybeCount(derived.nonEarlyAdmitted)} admitted from ${maybeCount(derived.nonEarlyApplicants)} applicants`}
+                  />
+                )}
               </div>
             )}
 
-            <div className="admission-strategy-flow" aria-labelledby="admission-strategy-flow-title">
-              <div>
-                <div id="admission-strategy-flow-title" className="meta">
-                  § Applicant paths
-                </div>
-                <p>
-                  Same class, different denominators: applicant pool, admitted pool,
-                  then enrolled seats.
-                </p>
-              </div>
-              <div className="admission-strategy-flow-grid">
-                <FlowRow
-                  label="Early Decision"
-                  applicants={school.edApplicants}
-                  admitted={school.edAdmitted}
-                  admitRate={derived.edAdmitRate}
-                  enrolled={derived.estimatedEdEnrolled}
-                  yieldLabel="assumed enrolled"
+            {showFlow && (
+              <>
+                <AdjustedFlow
+                  description={flowDescription}
+                  lanes={flowLanes}
+                  titleId={flowTitleId}
                 />
-                <FlowRow
-                  label="All other rounds"
-                  applicants={derived.nonEarlyApplicants}
-                  admitted={derived.nonEarlyAdmitted}
-                  admitRate={derived.nonEarlyResidualAdmitRate}
-                  enrolled={derived.estimatedNonEarlyEnrolled}
-                  yieldLabel={`${maybePct(derived.nonEarlyYield)} estimated yield`}
-                />
-              </div>
-              <table className="sr-only">
-                <caption>Admission rounds model</caption>
-                <thead>
-                  <tr>
-                    <th>Path</th>
-                    <th>Applicants</th>
-                    <th>Admitted</th>
-                    <th>Admit rate</th>
-                    <th>Estimated enrolled</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Early Decision</td>
-                    <td>{maybeCount(school.edApplicants)}</td>
-                    <td>{maybeCount(school.edAdmitted)}</td>
-                    <td>{pct(derived.edAdmitRate)}</td>
-                    <td>{maybeCount(derived.estimatedEdEnrolled)}</td>
-                  </tr>
-                  <tr>
-                    <td>All other rounds</td>
-                    <td>{maybeCount(derived.nonEarlyApplicants)}</td>
-                    <td>{maybeCount(derived.nonEarlyAdmitted)}</td>
-                    <td>{pct(derived.nonEarlyResidualAdmitRate)}</td>
-                    <td>{maybeCount(derived.estimatedNonEarlyEnrolled)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                <DataTable rows={flowDataRows} />
+              </>
+            )}
 
             <div className="admission-strategy-model-notes">
-              <div className="admission-strategy-caveat">
-                <strong>Binding ED assumption.</strong> The class-share model uses
-                ED admits as estimated enrolled ED seats. CDS does not report
-                confirmed ED enrollment, so this is a practical proxy rather than
-                a separate school-reported count.
-              </div>
+              {derived.hasEdFlow && (
+                <div className="admission-strategy-caveat">
+                  <strong>Class-seat estimate assumes ED admits enroll.</strong> CDS
+                  does not report confirmed ED enrollment, so likely ED class seats
+                  are calculated as the smaller of ED admits and enrolled first-years.
+                </div>
+              )}
               {school.yieldRate != null && (
                 <div className="admission-strategy-caveat">
                   <strong>Overall yield: {pct(school.yieldRate)}.</strong> Published
@@ -340,39 +558,30 @@ export function AdmissionStrategyCard({
                   admitted pool.
                 </div>
               )}
-              <div className="admission-strategy-caveat">
-                <strong>Read the ED rate carefully.</strong> Published ED rates can
-                include recruited athletes, legacy applicants, and institutional-priority
-                applicants. The general-pool ED rate can be lower.
-              </div>
+              {derived.edAdmitRate != null && (
+                <div className="admission-strategy-caveat">
+                  <strong>Read the ED rate carefully.</strong> Published ED rates can
+                  include recruited athletes, legacy applicants, and institutional-priority
+                  applicants. The general-pool ED rate can be lower.
+                </div>
+              )}
             </div>
           </div>
         )}
 
         <div className="admission-strategy-grid">
           {showWaitList && (
-            <div className="admission-strategy-panel">
-              <div className="meta">§ Wait list</div>
-              <div className="admission-strategy-counts mono">
-                <span>Offered {maybeCount(school.waitListOffered)}</span>
-                <span>Accepted {maybeCount(school.waitListAccepted)}</span>
-                <span>Admitted {maybeCount(school.waitListAdmitted)}</span>
-              </div>
-              <p>
-                {derived.waitListOfferRate != null
-                  ? `${pct(derived.waitListOfferRate)} of applicants were offered the wait list. `
-                  : ""}
-                {derived.waitListConditionalAdmitRate != null
-                  ? `${pct(derived.waitListConditionalAdmitRate)} of students who accepted a wait-list spot were admitted.`
-                  : "Wait-list counts are reported, but the conditional admit rate is not computable."}
-              </p>
-            </div>
-          )}
-
-          {showWaitListSuppressed && (
-            <div className="admission-strategy-note admission-strategy-note--warn">
-              Wait-list counts for this school could not be reconciled and have been omitted.
-            </div>
+            <WaitListView
+              accepted={school.waitListAccepted}
+              admitted={school.waitListAdmitted}
+              anomalous={derived.waitListCountsAnomalous}
+              offerRate={derived.waitListOfferRate}
+              offered={school.waitListOffered}
+              optInRate={derived.waitListOptInRate}
+              admitRate={derived.waitListConditionalAdmitRate}
+              policyMissingCounts={derived.waitListCountsMissing}
+              sourceHref={sourceHref}
+            />
           )}
 
           <FactorsBlock factors={factors} />

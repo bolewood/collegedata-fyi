@@ -49,9 +49,14 @@ describe("computeAdmissionStrategy", () => {
     expect(result.nonEarlyAdmitted).toBe(60);
     expect(result.nonEarlyYield).toBeCloseTo(0.1667, 4);
     expect(result.edAdmitRateMultiple).toBeCloseTo(2.6667, 4);
+    expect(result.hasEdFlow).toBe(true);
+    expect(result.hasSingleApplicantFlow).toBe(false);
     expect(result.hasHighEdShare).toBe(true);
     expect(result.waitListOfferRate).toBe(0.3);
+    expect(result.waitListOptInRate).toBe(0.5);
     expect(result.waitListConditionalAdmitRate).toBe(0.2);
+    expect(result.waitListHasCounts).toBe(true);
+    expect(result.waitListCountsAnomalous).toBe(false);
     expect(result.hasRenderableContent).toBe(true);
   });
 
@@ -66,7 +71,22 @@ describe("computeAdmissionStrategy", () => {
     expect(result.edAdmitRate).toBeNull();
     expect(result.nonEarlyResidualAdmitRate).toBeNull();
     expect(result.edShareOfAdmitted).toBeNull();
+    expect(result.hasEdFlow).toBe(false);
     expect(result.hasRenderableContent).toBe(true);
+  });
+
+  it("suppresses impossible ED counts even when the quality flag is missing", () => {
+    const result = computeAdmissionStrategy({
+      ...base,
+      edOffered: true,
+      edApplicants: 40,
+      edAdmitted: 41,
+      quality: "ok",
+    });
+
+    expect(result.edAdmitRate).toBeNull();
+    expect(result.hasEdFlow).toBe(false);
+    expect(result.hasSingleApplicantFlow).toBe(true);
   });
 
   it("treats valid ED counts as an offered ED round", () => {
@@ -99,7 +119,46 @@ describe("computeAdmissionStrategy", () => {
     });
 
     expect(result.waitListOfferRate).toBe(0.2);
+    expect(result.waitListOptInRate).toBe(0.5);
     expect(result.waitListConditionalAdmitRate).toBe(0.1);
+    expect(result.hasRenderableContent).toBe(true);
+  });
+
+  it("renders no-ED schools as a single applicant flow when totals exist", () => {
+    const result = computeAdmissionStrategy({
+      ...base,
+      edOffered: false,
+      edApplicants: null,
+      edAdmitted: null,
+    });
+
+    expect(result.hasEdFlow).toBe(false);
+    expect(result.hasSingleApplicantFlow).toBe(true);
+    expect(result.edAdmitRate).toBeNull();
+  });
+
+  it("keeps anomalous wait-list counts visible but does not compute invalid rates", () => {
+    const result = computeAdmissionStrategy({
+      ...base,
+      quality: "wait_list_math_inconsistent",
+      waitListOffered: 100,
+      waitListAccepted: 120,
+      waitListAdmitted: 10,
+      edOffered: false,
+      edApplicants: null,
+      edAdmitted: null,
+      yieldRate: null,
+      firstGenFactor: null,
+      demonstratedInterestFactor: null,
+      appFeeAmount: null,
+      appFeeWaiverOffered: null,
+    });
+
+    expect(result.waitListHasCounts).toBe(true);
+    expect(result.waitListCountsAnomalous).toBe(true);
+    expect(result.waitListOfferRate).toBeNull();
+    expect(result.waitListOptInRate).toBeNull();
+    expect(result.waitListConditionalAdmitRate).toBeNull();
     expect(result.hasRenderableContent).toBe(true);
   });
 

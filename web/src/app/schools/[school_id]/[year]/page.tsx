@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   fetchDocumentsBySchoolAndYear,
+  fetchAdmissionStrategyByDocumentId,
   fetchExtract,
   fetchScorecardByIpedsId,
 } from "@/lib/queries";
@@ -14,6 +15,7 @@ import { FieldsView } from "@/components/FieldsView";
 import { MarkdownView } from "@/components/MarkdownView";
 import { OutcomesBand } from "@/components/OutcomesBand";
 import { ScorecardVintageNote } from "@/components/ScorecardVintageNote";
+import { AdmissionStrategyCard } from "@/components/AdmissionStrategyCard";
 
 export const revalidate = 3600;
 
@@ -156,6 +158,9 @@ async function DocumentVariant({
   }
 
   const hasValues = Object.keys(values).length > 0;
+  const admissionStrategy = doc.document_id
+    ? await fetchAdmissionStrategyByDocumentId(doc.document_id)
+    : null;
 
   return (
     <div className="mt-8">
@@ -189,8 +194,15 @@ async function DocumentVariant({
       {/* Key stats */}
       {hasValues && (
         <div className="mt-4">
-          <KeyStats values={values} />
+          <KeyStats schemaVersion={schemaVersion ?? doc.cds_year ?? undefined} values={values} />
         </div>
+      )}
+
+      {admissionStrategy && (
+        <AdmissionStrategyCard
+          school={admissionStrategy}
+          sourceHref={pdfUrl ?? admissionStrategy.archiveUrl}
+        />
       )}
 
       {/* Federal outcomes — Scorecard data. Only render under the first

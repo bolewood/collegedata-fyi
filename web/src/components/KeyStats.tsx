@@ -33,13 +33,47 @@ function sumFields(
   return found ? total : null;
 }
 
-export function KeyStats({ values }: { values: Record<string, FieldValue> }) {
+function c1TotalsForSchema(schemaVersion: string | undefined): {
+  applied: string[];
+  admitted: string[];
+  enrolled: string[];
+} {
+  if (schemaVersion === "2024-25") {
+    return {
+      applied: ["C.117"],
+      admitted: ["C.118"],
+      enrolled: ["C.119"],
+    };
+  }
+
+  if (schemaVersion === "2025-26") {
+    return {
+      applied: ["C.116"],
+      admitted: ["C.117"],
+      enrolled: ["C.118"],
+    };
+  }
+
+  return {
+    applied: ["C.101", "C.102", "C.103"],
+    admitted: ["C.104", "C.105", "C.106"],
+    enrolled: ["C.107", "C.108", "C.109"],
+  };
+}
+
+export function KeyStats({
+  schemaVersion,
+  values,
+}: {
+  schemaVersion?: string;
+  values: Record<string, FieldValue>;
+}) {
   const stats: { label: string; value: string }[] = [];
 
-  // Admissions funnel: sum across male + female + unknown
-  const totalApplied = sumFields(values, "C.101", "C.102", "C.103");
-  const totalAdmitted = sumFields(values, "C.104", "C.105", "C.106");
-  const totalEnrolled = sumFields(values, "C.107", "C.108", "C.109");
+  const c1Totals = c1TotalsForSchema(schemaVersion);
+  const totalApplied = sumFields(values, ...c1Totals.applied);
+  const totalAdmitted = sumFields(values, ...c1Totals.admitted);
+  const totalEnrolled = sumFields(values, ...c1Totals.enrolled);
 
   // Acceptance rate
   if (totalApplied && totalAdmitted && totalApplied > 0) {
