@@ -4,7 +4,8 @@ test("school page renders positioning card and persists profile locally", async 
   await page.goto("/schools/bowdoin");
   await expect(page.getByText("§ Academic profile")).toBeVisible();
   await expect(page.getByText("SAT composite").first()).toBeVisible();
-  await expect(page.getByText(/FROM THE .* OF ADMITS WHO SUBMITTED SCORES/).first()).toBeVisible();
+  await expect(page.getByText("Middle 50% of score submitters").first()).toBeVisible();
+  await expect(page.getByText(/OF ADMITS SUBMITTED SAT SCORES/).first()).toBeVisible();
 
   await page.getByRole("spinbutton", { name: "GPA" }).fill("3.85");
   await page.getByRole("spinbutton", { name: "SAT composite" }).fill("1500");
