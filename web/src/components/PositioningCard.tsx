@@ -18,10 +18,11 @@ function formatScore(value: number | null): string {
   return value == null ? "-" : value.toLocaleString();
 }
 
-function submitRateCaption(submitRate: number | null): string {
+function submitRateCaption(label: string, submitRate: number | null): string {
+  const testName = label.split(" ")[0] ?? "Test";
   return submitRate == null
     ? "SUBMIT RATE NOT REPORTED"
-    : `FROM THE ${formatPercent(submitRate)} OF ADMITS WHO SUBMITTED SCORES`;
+    : `${formatPercent(submitRate)} OF ADMITS SUBMITTED ${testName} SCORES`;
 }
 
 function RangeStrip({
@@ -40,23 +41,39 @@ function RangeStrip({
   year: string;
 }) {
   const hasRange = p25 != null && p50 != null && p75 != null;
+  const values = [
+    { label: "25th", value: p25 },
+    { label: "Median", value: p50 },
+    { label: "75th", value: p75 },
+  ];
+
   return (
     <div className="positioning-range">
       <div className="positioning-range__head">
         <span>{label}</span>
-        <span>
-          {formatScore(p25)} - {formatScore(p50)} - {formatScore(p75)}
-        </span>
+        <span>{hasRange ? "Middle 50% of score submitters" : "Not reported"}</span>
       </div>
-      <div className="positioning-range__track" aria-hidden="true">
-        <span style={{ left: "0%" }} />
-        <span style={{ left: "50%" }} />
-        <span style={{ left: "100%" }} />
-      </div>
+      {hasRange && (
+        <>
+          <div className="positioning-range__track" aria-hidden="true">
+            <span style={{ left: "0%" }} />
+            <span style={{ left: "50%" }} />
+            <span style={{ left: "100%" }} />
+          </div>
+          <div className="positioning-range__values" aria-label={`${label} percentile scores`}>
+            {values.map((item) => (
+              <div key={item.label}>
+                <span>{item.label}</span>
+                <strong>{formatScore(item.value)}</strong>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
       <div className="positioning-range__caption">
         {hasRange ? (
           <>
-            § {submitRateCaption(submitRate)} · {year} CDS ·{" "}
+            § {submitRateCaption(label, submitRate)} · {year} CDS ·{" "}
             <Link href="/methodology/positioning">METHOD →</Link>
           </>
         ) : (
