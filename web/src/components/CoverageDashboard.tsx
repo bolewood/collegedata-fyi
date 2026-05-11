@@ -67,7 +67,7 @@ type RecencyId = (typeof RECENCY_OPTIONS)[number]["id"];
 type SortKey = "name" | "state" | "enrollment" | "status" | "checked";
 type SortDir = "asc" | "desc";
 
-const ROW_HEIGHT = 56;
+const ROW_HEIGHT = 64;
 
 export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
   const router = useRouter();
@@ -348,121 +348,140 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
         SHOWING {filteredRows.length.toLocaleString()} OF {total.toLocaleString()} INSTITUTIONS
       </div>
 
-      {/* Sticky table header */}
       <div
-        role="row"
         style={{
-          display: "grid",
-          gridTemplateColumns: TABLE_COLUMNS,
-          alignItems: "baseline",
-          padding: "10px 0",
-          borderTop: "1px solid var(--rule-strong)",
-          borderBottom: "1px solid var(--rule-strong)",
-          fontFamily: "var(--mono)",
-          fontSize: 11,
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-          color: "var(--ink-3)",
-          background: "var(--paper)",
+          overflowX: "auto",
+          WebkitOverflowScrolling: "touch",
         }}
-      >
-        <SortHeader label="School" col="name" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
-        <SortHeader label="State" col="state" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
-        <SortHeader
-          label="UGDS"
-          col="enrollment"
-          sortKey={sortKey}
-          sortDir={sortDir}
-          onSort={handleSort}
-          align="right"
-        />
-        <SortHeader label="Status" col="status" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
-        <SortHeader label="Last checked" col="checked" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
-        <span>Action</span>
-      </div>
-
-      {/* Virtualized table body */}
-      <div
-        ref={parentRef}
-        style={{
-          height: 600,
-          overflowY: "auto",
-          borderBottom: "1px solid var(--rule-strong)",
-        }}
+        aria-label="Coverage table"
       >
         <div
           style={{
-            height: virtualizer.getTotalSize(),
-            position: "relative",
-            width: "100%",
+            minWidth: TABLE_MIN_WIDTH,
           }}
         >
-          {virtualizer.getVirtualItems().map((vi) => {
-            const r = filteredRows[vi.index];
-            return (
-              <div
-                key={r.school_id}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  transform: `translateY(${vi.start}px)`,
-                  height: ROW_HEIGHT,
-                  display: "grid",
-                  gridTemplateColumns: TABLE_COLUMNS,
-                  alignItems: "center",
-                  padding: "0 0",
-                  borderTop: vi.index === 0 ? "none" : "1px solid var(--rule)",
-                }}
-                role="row"
-              >
-                <Link
-                  href={`/schools/${r.school_id}`}
-                  style={{
-                    fontFamily: "var(--serif)",
-                    fontSize: 16,
-                    color: "var(--ink)",
-                    textDecoration: "none",
-                  }}
-                >
-                  {r.school_name}
-                </Link>
-                <span className="mono" style={{ fontSize: 12, color: "var(--ink-2)" }}>
-                  {r.state ?? "—"}
-                </span>
-                <span
-                  className="mono nums"
-                  style={{ fontSize: 13, color: "var(--ink-2)", textAlign: "right" }}
-                >
-                  {r.undergraduate_enrollment != null
-                    ? r.undergraduate_enrollment.toLocaleString()
-                    : "—"}
-                </span>
-                <CoverageBadge status={r.coverage_status} label={r.coverage_label} />
-                <span className="mono" style={{ fontSize: 12, color: "var(--ink-3)" }}>
-                  {formatChecked(r.last_checked_at)}
-                </span>
-                {r.can_submit_source ? (
-                  <Link
-                    href={`/schools/${r.school_id}#submit`}
-                    className="mono"
-                    style={{ fontSize: 12 }}
+          {/* Sticky table header */}
+          <div
+            role="row"
+            style={{
+              display: "grid",
+              gridTemplateColumns: TABLE_COLUMNS,
+              columnGap: TABLE_COLUMN_GAP,
+              alignItems: "baseline",
+              padding: "12px 0",
+              borderTop: "1px solid var(--rule-strong)",
+              borderBottom: "1px solid var(--rule-strong)",
+              fontFamily: "var(--mono)",
+              fontSize: 11,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              color: "var(--ink-3)",
+              background: "var(--paper)",
+            }}
+          >
+            <SortHeader label="School" col="name" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+            <SortHeader label="State" col="state" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+            <SortHeader
+              label="UGDS"
+              col="enrollment"
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={handleSort}
+              align="right"
+            />
+            <SortHeader label="Status" col="status" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+            <SortHeader label="Last checked" col="checked" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+            <span>Action</span>
+          </div>
+
+          {/* Virtualized table body */}
+          <div
+            ref={parentRef}
+            style={{
+              height: TABLE_VIEWPORT_HEIGHT,
+              overflowY: "auto",
+              borderBottom: "1px solid var(--rule-strong)",
+            }}
+          >
+            <div
+              style={{
+                height: virtualizer.getTotalSize(),
+                position: "relative",
+                width: "100%",
+              }}
+            >
+              {virtualizer.getVirtualItems().map((vi) => {
+                const r = filteredRows[vi.index];
+                return (
+                  <div
+                    key={r.school_id}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      transform: `translateY(${vi.start}px)`,
+                      height: ROW_HEIGHT,
+                      display: "grid",
+                      gridTemplateColumns: TABLE_COLUMNS,
+                      columnGap: TABLE_COLUMN_GAP,
+                      alignItems: "center",
+                      padding: "0 0",
+                      borderTop: vi.index === 0 ? "none" : "1px solid var(--rule)",
+                    }}
+                    role="row"
                   >
-                    Send the link
-                  </Link>
-                ) : (
-                  <Link
-                    href={`/schools/${r.school_id}`}
-                    className="mono"
-                    style={{ fontSize: 12, color: "var(--ink-3)" }}
-                  >
-                    Open
-                  </Link>
-                )}
-              </div>
-            );
-          })}
+                    <Link
+                      href={`/schools/${r.school_id}`}
+                      style={{
+                        fontFamily: "var(--serif)",
+                        fontSize: 16,
+                        lineHeight: 1.25,
+                        color: "var(--ink)",
+                        textDecoration: "none",
+                      }}
+                    >
+                      {r.school_name}
+                    </Link>
+                    <span className="mono" style={{ fontSize: 12, color: "var(--ink-2)" }}>
+                      {r.state ?? "—"}
+                    </span>
+                    <span
+                      className="mono nums"
+                      style={{ fontSize: 13, color: "var(--ink-2)", textAlign: "right" }}
+                    >
+                      {r.undergraduate_enrollment != null
+                        ? r.undergraduate_enrollment.toLocaleString()
+                        : "—"}
+                    </span>
+                    <span style={{ minWidth: 0 }}>
+                      <CoverageBadge status={r.coverage_status} label={r.coverage_label} />
+                    </span>
+                    <span className="mono" style={{ fontSize: 12, color: "var(--ink-3)" }}>
+                      {formatChecked(r.last_checked_at)}
+                    </span>
+                    {r.can_submit_source ? (
+                      <Link
+                        href={`/schools/${r.school_id}#submit`}
+                        className="mono"
+                        style={{ fontSize: 12 }}
+                      >
+                        Send the link
+                      </Link>
+                    ) : (
+                      <Link
+                        href={`/schools/${r.school_id}`}
+                        className="mono"
+                        style={{ fontSize: 12, color: "var(--ink-3)" }}
+                      >
+                        Open
+                      </Link>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -483,7 +502,10 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
   );
 }
 
-const TABLE_COLUMNS = "minmax(220px, 2fr) 56px 88px 220px 130px 110px";
+const TABLE_COLUMNS = "minmax(280px, 2fr) 64px 96px minmax(220px, 1fr) 140px 118px";
+const TABLE_COLUMN_GAP = 18;
+const TABLE_MIN_WIDTH = 1040;
+const TABLE_VIEWPORT_HEIGHT = ROW_HEIGHT * 10;
 
 const LABEL_BY_STATUS: Record<CoverageStatus, string> = {
   cds_available_current: "CDS available",
