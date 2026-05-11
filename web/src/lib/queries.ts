@@ -669,7 +669,7 @@ export const fetchAdmissionStrategyBySchoolId = cache(
       const { data, error } = await (supabase as unknown as UntypedSupabase)
         .from("school_browser_rows")
         .select(
-          "document_id, school_id, school_name, canonical_year, year_start, archive_url, data_quality_flag, applied, admitted, acceptance_rate, yield_rate, ed_offered, ed_applicants, ed_admitted, ed_has_second_deadline, ea_offered, ea_restrictive, wait_list_policy, wait_list_offered, wait_list_accepted, wait_list_admitted, c711_first_gen_factor, c712_legacy_factor, c713_geography_factor, c714_state_residency_factor, c718_demonstrated_interest_factor, app_fee_amount, app_fee_waiver_offered, admission_strategy_card_quality",
+          "document_id, school_id, school_name, canonical_year, year_start, archive_url, data_quality_flag, applied, admitted, enrolled_first_year, acceptance_rate, yield_rate, ed_offered, ed_applicants, ed_admitted, ed_has_second_deadline, ea_offered, ea_restrictive, wait_list_policy, wait_list_offered, wait_list_accepted, wait_list_admitted, c711_first_gen_factor, c712_legacy_factor, c713_geography_factor, c714_state_residency_factor, c718_demonstrated_interest_factor, app_fee_amount, app_fee_waiver_offered, admission_strategy_card_quality",
         )
         .eq("school_id", schoolId)
         .gte("year_start", 2024)
@@ -693,6 +693,7 @@ export const fetchAdmissionStrategyBySchoolId = cache(
         dataQualityFlag: data.data_quality_flag ?? null,
         applied: numberOrNull(data.applied),
         admitted: numberOrNull(data.admitted),
+        enrolledFirstYear: numberOrNull(data.enrolled_first_year),
         acceptanceRate: normalizeRate(data.acceptance_rate),
         yieldRate: normalizeRate(data.yield_rate),
         edOffered: data.ed_offered ?? null,

@@ -12,6 +12,7 @@ const base: AdmissionStrategySchool = {
   dataQualityFlag: null,
   applied: 1000,
   admitted: 100,
+  enrolledFirstYear: 50,
   acceptanceRate: 0.1,
   yieldRate: 0.5,
   edOffered: true,
@@ -41,6 +42,13 @@ describe("computeAdmissionStrategy", () => {
     expect(result.edAdmitRate).toBe(0.2);
     expect(result.nonEarlyResidualAdmitRate).toBe(0.075);
     expect(result.edShareOfAdmitted).toBe(0.4);
+    expect(result.edShareOfClass).toBe(0.8);
+    expect(result.estimatedEdEnrolled).toBe(40);
+    expect(result.estimatedNonEarlyEnrolled).toBe(10);
+    expect(result.nonEarlyApplicants).toBe(800);
+    expect(result.nonEarlyAdmitted).toBe(60);
+    expect(result.nonEarlyYield).toBeCloseTo(0.1667, 4);
+    expect(result.edAdmitRateMultiple).toBeCloseTo(2.6667, 4);
     expect(result.hasHighEdShare).toBe(true);
     expect(result.waitListOfferRate).toBe(0.3);
     expect(result.waitListConditionalAdmitRate).toBe(0.2);

@@ -19,6 +19,7 @@ export type AdmissionStrategySchool = {
   dataQualityFlag: string | null;
   applied: number | null;
   admitted: number | null;
+  enrolledFirstYear: number | null;
   acceptanceRate: number | null;
   yieldRate: number | null;
   edOffered: boolean | null;
@@ -45,6 +46,13 @@ export type AdmissionStrategyDerived = {
   edAdmitRate: number | null;
   nonEarlyResidualAdmitRate: number | null;
   edShareOfAdmitted: number | null;
+  edShareOfClass: number | null;
+  edAdmitRateMultiple: number | null;
+  estimatedEdEnrolled: number | null;
+  estimatedNonEarlyEnrolled: number | null;
+  nonEarlyApplicants: number | null;
+  nonEarlyAdmitted: number | null;
+  nonEarlyYield: number | null;
   waitListOfferRate: number | null;
   waitListConditionalAdmitRate: number | null;
   hasHighEdShare: boolean;
@@ -102,6 +110,36 @@ export function computeAdmissionStrategy(
     edCountsValid && school.admitted != null
       ? safeRate(school.edAdmitted, school.admitted)
       : null;
+  const nonEarlyApplicants =
+    edCountsValid && school.applied != null
+      ? school.applied - school.edApplicants!
+      : null;
+  const nonEarlyAdmitted =
+    edCountsValid && school.admitted != null
+      ? school.admitted - school.edAdmitted!
+      : null;
+  const estimatedEdEnrolled =
+    edCountsValid && school.enrolledFirstYear != null
+      ? Math.min(school.edAdmitted!, school.enrolledFirstYear)
+      : null;
+  const estimatedNonEarlyEnrolled =
+    estimatedEdEnrolled != null && school.enrolledFirstYear != null
+      ? Math.max(school.enrolledFirstYear - estimatedEdEnrolled, 0)
+      : null;
+  const edShareOfClass =
+    estimatedEdEnrolled != null && school.enrolledFirstYear != null
+      ? safeRate(estimatedEdEnrolled, school.enrolledFirstYear)
+      : null;
+  const nonEarlyYield =
+    estimatedNonEarlyEnrolled != null && nonEarlyAdmitted != null
+      ? safeRate(estimatedNonEarlyEnrolled, nonEarlyAdmitted)
+      : null;
+  const edAdmitRateMultiple =
+    edAdmitRate != null &&
+    nonEarlyResidualAdmitRate != null &&
+    nonEarlyResidualAdmitRate > 0
+      ? edAdmitRate / nonEarlyResidualAdmitRate
+      : null;
 
   const waitListValid =
     school.quality !== "wait_list_math_inconsistent" &&
@@ -140,6 +178,13 @@ export function computeAdmissionStrategy(
     edAdmitRate,
     nonEarlyResidualAdmitRate,
     edShareOfAdmitted,
+    edShareOfClass,
+    edAdmitRateMultiple,
+    estimatedEdEnrolled,
+    estimatedNonEarlyEnrolled,
+    nonEarlyApplicants,
+    nonEarlyAdmitted,
+    nonEarlyYield,
     waitListOfferRate,
     waitListConditionalAdmitRate,
     hasHighEdShare:
