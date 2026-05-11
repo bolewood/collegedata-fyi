@@ -85,6 +85,27 @@ describe("buildReconstructedTables", () => {
     ]);
   });
 
+  it("uses 2024 B1 wording when values are already in the compact layout", () => {
+    const tables = buildReconstructedTables(
+      {
+        "B.101": field("100", ""),
+        "B.126": field("140", ""),
+        "B.176": field("240", ""),
+      },
+      "2024-25",
+    );
+
+    const undergrad = tables.find((table) => table.key === "b1-undergraduate");
+    expect(undergrad?.columns).toEqual(["Men", "Women", "Unknown", "Total"]);
+    expect(undergrad?.caption).toContain("reported gender or status");
+    expect(undergrad?.rows[0].cells.map((cell) => cell.display)).toEqual([
+      "100",
+      "140",
+      "Not reported",
+      "Not reported",
+    ]);
+  });
+
   it("builds B2 as a race and ethnicity cohort table", () => {
     const tables = buildReconstructedTables({
       "B.201": field("25", "Nonresidents"),
@@ -209,6 +230,35 @@ describe("buildReconstructedTables", () => {
     ]);
   });
 
+  it("uses the 2024 C1 layout from schema version when extracted questions are missing", () => {
+    const tables = buildReconstructedTables(
+      {
+        "C.101": { value: "1200", value_type: "Number" },
+        "C.102": { value: "1300", value_type: "Number" },
+        "C.103": { value: "3", value_type: "Number" },
+        "C.104": { value: "2", value_type: "Number" },
+        "C.117": { value: "2505", value_type: "Number" },
+      },
+      "2024-25",
+    );
+
+    const c1 = tables.find((table) => table.key === "c1-admissions");
+    expect(c1?.columns).toEqual([
+      "Men",
+      "Women",
+      "Another gender",
+      "Unknown gender",
+      "Total",
+    ]);
+    expect(c1?.rows[0].cells.map((cell) => cell.display)).toEqual([
+      "1,200",
+      "1,300",
+      "3",
+      "2",
+      "2,505",
+    ]);
+  });
+
   it("builds C9 submission and percentile tables", () => {
     const tables = buildReconstructedTables({
       "C.901": field("60.5", "Percent Submitting SAT Scores", "Whole Number or Round to Nearest Tenth"),
@@ -306,6 +356,35 @@ describe("buildReconstructedTables", () => {
       "Not reported",
     ]);
     expect(g5?.rows.at(-1)?.cells.at(-1)?.display).toBe("$2,000");
+  });
+
+  it("uses the 2024 D2 transfer layout from schema version", () => {
+    const tables = buildReconstructedTables(
+      {
+        "D.201": { value: "120" },
+        "D.202": { value: "150" },
+        "D.204": { value: "270" },
+        "D.205": { value: "12" },
+        "D.206": { value: "18" },
+        "D.208": { value: "30" },
+      },
+      "2024-25",
+    );
+
+    const d2 = tables.find((table) => table.key === "d2-transfer-admissions");
+    expect(d2?.columns).toEqual(["Men", "Women", "Unknown", "Total"]);
+    expect(d2?.rows[0].cells.map((cell) => cell.display)).toEqual([
+      "120",
+      "150",
+      "Not reported",
+      "270",
+    ]);
+    expect(d2?.rows[1].cells.map((cell) => cell.display)).toEqual([
+      "12",
+      "18",
+      "Not reported",
+      "30",
+    ]);
   });
 
   it("builds H2 as a need-based aid cohort grid", () => {
