@@ -196,6 +196,49 @@ Yes
         self.assertEqual(values["C.2110"]["value"], "124")
         self.assertEqual(values["C.2111"]["value"], "77")
 
+    def test_c21_2025_26_dotted_heading_value_only_counts(self):
+        markdown = """
+## C21. Early Decision
+
+Yes
+
+November 1
+
+December 15
+
+January 5
+
+February 15
+
+## For the Fall 2025 entering class:
+
+6,907
+
+2,165
+
+Please provide significant details about your early decision plan:
+
+Only available for high school seniors applying for September admission.
+
+If admitted, students must send in the required enrollment deposit by January 9 for Early Decision and by February 15 for Early Decision 2.
+
+## C22. Early action
+
+No
+
+If 'yes,' please complete the following: Do you have a nonbinding early action plan whereby
+"""
+
+        values = clean(
+            markdown,
+            schema=SchemaIndex(Path("schemas/cds_schema_2025_26.json")),
+        )
+
+        self.assertEqual(values["C.2101"]["value"], "Yes")
+        self.assertEqual(values["C.2110"]["value"], "6907")
+        self.assertEqual(values["C.2111"]["value"], "2165")
+        self.assertEqual(values["C.2201"]["value"], "No")
+
     def test_c21_docling_vertical_yes_no_checkmark_means_no(self):
         markdown = """
 ## C21 Early Decision
