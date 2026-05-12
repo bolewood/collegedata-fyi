@@ -26,14 +26,16 @@ wait-list success rate = wait-listed students admitted / students accepting a wa
 
 That is the applicant-facing number. "Admitted divided by offered a spot" is also useful for understanding how much a school over-offers the list, but students usually make the decision after they have already accepted a spot.
 
+High-volume rows that report near-total wait-list admission are treated as data-quality caveats rather than odds estimates. Rows with at least 100 students accepting a wait-list spot and a reported success rate of at least 95% are preserved in the recipe but excluded from medians, bucket summaries, and the main chart. Some of these values appear verbatim in school PDFs; at least one inspected PDF leaves the accepted-count row blank and was over-filled by Tier 4 extraction. Exact duplicate school-year rows are collapsed before analysis, and the extremes table shows at most one row per school.
+
 ## What it shows
 
-The current generated dataset contains 191 complete school-year rows across 148 schools, plus 61 partial rows where the CDS projection reports only some wait-list values. Across complete rows:
+The current generated dataset contains 191 complete school-year rows across 148 schools, plus 61 partial rows where the CDS projection reports only some wait-list values. After collapsing duplicate school-year rows, six high-volume near-total rows are flagged as reported anomalies, leaving 180 school-year rows across 144 schools in the rate analysis. Across those analysis rows:
 
-- median success rate among accepted wait-list spots: 13.39%
-- weighted success rate: 23.32%
-- median "admitted / offered a spot" rate: 5.56%
-- rows under 2% success: 24
+- median success rate among accepted wait-list spots: 13.16%
+- weighted success rate: 21.51%
+- median "admitted / offered a spot" rate: 5.51%
+- rows under 2% success: 23
 
 The median is not the lesson by itself. The split matters:
 
@@ -67,8 +69,9 @@ wait_list_offered >= wait_list_accepted >= wait_list_admitted >= 0
 
 1. **This is CDS-reported, not counselor-rumor-reported.** When schools publish conflicting press figures or later updates, this recipe follows the Common Data Set projection.
 2. **Partial C2 rows are not rate rows.** Some PDFs expose offered and accepted counts but not admitted counts in the current projection. Those rows remain visible as caveats but do not enter medians.
-3. **One-year wait-list rates are volatile.** A school can admit hundreds one year and almost none the next. The chart is best read by bucket and by multi-year pattern, not as a guarantee for a single future class.
-4. **The accepted-wait-list denominator is applicant behavior.** Schools control how many spots they offer; students control whether they accept one. Both denominators are shown because they answer different questions.
+3. **Near-total high-volume admits are suspicious.** A school may publish them that way, but rows like IU Bloomington and UC Irvine can dominate the right edge of the chart while saying more about reporting quality than applicant odds.
+4. **One-year wait-list rates are volatile.** A school can admit hundreds one year and almost none the next. The chart is best read by bucket and by multi-year pattern, not as a guarantee for a single future class.
+5. **The accepted-wait-list denominator is applicant behavior.** Schools control how many spots they offer; students control whether they accept one. Both denominators are shown because they answer different questions.
 
 ## What else to try
 
