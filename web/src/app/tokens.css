@@ -539,6 +539,12 @@
   .cd-recipe-guide      { grid-template-columns: 1fr !important; gap: 14px !important; }
   .cd-recipe-quadrants  { grid-template-columns: 1fr !important; }
   .cd-recipe-bands      { grid-template-columns: 1fr !important; }
+  .waitlist-recipe-header,
+  .waitlist-recipe-stats,
+  .waitlist-case-grid,
+  .waitlist-intro-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 /* Earnings distribution — full dollar labels at desktop, abbreviated $Xk
