@@ -51,6 +51,18 @@ const RECIPES: Recipe[] = [
       "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/test-optional-tracker.md",
     sections: "C8, C9",
   },
+  {
+    slug: "waitlist-odds",
+    title: "Wait-list odds",
+    tagline:
+      "A corpus-wide look at CDS C2 wait-list outcomes: how many students accept a spot, how many get admitted, and how the odds differ by selectivity, control, size, and Carnegie class.",
+    audience:
+      "Students deciding whether to stay emotionally invested; counselors setting expectations after May 1; reporters checking one school's wait-list narrative against the corpus.",
+    demoPath: "/recipes/waitlist-odds",
+    writeupUrl:
+      "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/waitlist-odds.md",
+    sections: "C2, C1",
+  },
 ];
 
 export default function RecipesPage() {
