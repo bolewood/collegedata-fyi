@@ -8,6 +8,17 @@ import {
 
 export type WaitlistBucketKey = "selectivity" | "control" | "size" | "carnegie";
 
+export type BerkeleyWaitlistHistoryRow = {
+  year: string;
+  yearStart: number;
+  waitListOffered: number;
+  waitListAccepted: number;
+  waitListAdmitted: number;
+  waitListSuccessRate: number;
+  sourceKind: "pdf" | "xlsx";
+  archiveUrl: string;
+};
+
 export type WaitlistAnalysisSummary = {
   allVisibleRows: number;
   completeRows: number;
@@ -25,6 +36,99 @@ export type WaitlistAnalysisSummary = {
 
 const WAITLIST_REPORTED_ANOMALY_RATE = 0.95;
 const WAITLIST_REPORTED_ANOMALY_ACCEPTED = 100;
+
+export const BERKELEY_WAITLIST_HISTORY: readonly BerkeleyWaitlistHistoryRow[] = [
+  {
+    year: "2015-16",
+    yearStart: 2015,
+    waitListOffered: 3760,
+    waitListAccepted: 2445,
+    waitListAdmitted: 1340,
+    waitListSuccessRate: 1340 / 2445,
+    sourceKind: "pdf",
+    archiveUrl: "https://www.collegedata.fyi/schools/uc-berkeley/2015-16",
+  },
+  {
+    year: "2018-19",
+    yearStart: 2018,
+    waitListOffered: 7824,
+    waitListAccepted: 4127,
+    waitListAdmitted: 1536,
+    waitListSuccessRate: 1536 / 4127,
+    sourceKind: "xlsx",
+    archiveUrl: "https://www.collegedata.fyi/schools/uc-berkeley/2018-19",
+  },
+  {
+    year: "2019-20",
+    yearStart: 2019,
+    waitListOffered: 7531,
+    waitListAccepted: 3975,
+    waitListAdmitted: 1098,
+    waitListSuccessRate: 1098 / 3975,
+    sourceKind: "pdf",
+    archiveUrl: "https://www.collegedata.fyi/schools/uc-berkeley/2019-20",
+  },
+  {
+    year: "2020-21",
+    yearStart: 2020,
+    waitListOffered: 8753,
+    waitListAccepted: 5043,
+    waitListAdmitted: 1651,
+    waitListSuccessRate: 1651 / 5043,
+    sourceKind: "xlsx",
+    archiveUrl: "https://www.collegedata.fyi/schools/uc-berkeley/2020-21",
+  },
+  {
+    year: "2021-22",
+    yearStart: 2021,
+    waitListOffered: 11725,
+    waitListAccepted: 6871,
+    waitListAdmitted: 359,
+    waitListSuccessRate: 359 / 6871,
+    sourceKind: "xlsx",
+    archiveUrl: "https://www.collegedata.fyi/schools/uc-berkeley/2021-22",
+  },
+  {
+    year: "2022-23",
+    yearStart: 2022,
+    waitListOffered: 8456,
+    waitListAccepted: 4655,
+    waitListAdmitted: 44,
+    waitListSuccessRate: 44 / 4655,
+    sourceKind: "xlsx",
+    archiveUrl: "https://www.collegedata.fyi/schools/uc-berkeley/2022-23",
+  },
+  {
+    year: "2023-24",
+    yearStart: 2023,
+    waitListOffered: 7001,
+    waitListAccepted: 4820,
+    waitListAdmitted: 1191,
+    waitListSuccessRate: 1191 / 4820,
+    sourceKind: "pdf",
+    archiveUrl: "https://www.collegedata.fyi/schools/uc-berkeley/2023-24",
+  },
+  {
+    year: "2024-25",
+    yearStart: 2024,
+    waitListOffered: 10894,
+    waitListAccepted: 7853,
+    waitListAdmitted: 26,
+    waitListSuccessRate: 26 / 7853,
+    sourceKind: "xlsx",
+    archiveUrl: "https://www.collegedata.fyi/schools/uc-berkeley/2024-25",
+  },
+  {
+    year: "2025-26",
+    yearStart: 2025,
+    waitListOffered: 9102,
+    waitListAccepted: 6479,
+    waitListAdmitted: 1,
+    waitListSuccessRate: 1 / 6479,
+    sourceKind: "xlsx",
+    archiveUrl: "https://www.collegedata.fyi/schools/uc-berkeley/2025-26",
+  },
+];
 
 function median(values: readonly number[]): number | null {
   if (values.length === 0) return null;
