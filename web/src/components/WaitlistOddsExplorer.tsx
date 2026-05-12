@@ -3,17 +3,19 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
-  WAITLIST_BUCKETS,
   WAITLIST_CASES,
-  WAITLIST_RECIPE_SUMMARY,
-  WAITLIST_ROWS,
   type WaitlistBucketSummary,
   type WaitlistRecipeRow,
 } from "@/lib/waitlist-recipe-data";
+import {
+  WAITLIST_ANALYSIS_ROWS,
+  WAITLIST_ANALYSIS_SUMMARY,
+  WAITLIST_REPORTED_ANOMALY_ROWS,
+  type WaitlistBucketKey,
+  summarizeWaitlistBuckets,
+} from "@/lib/waitlist-recipe-analysis";
 
-type BucketKey = "selectivity" | "control" | "size" | "carnegie";
-
-const BUCKET_LABELS: Record<BucketKey, string> = {
+const BUCKET_LABELS: Record<WaitlistBucketKey, string> = {
   selectivity: "Admit-rate band",
   control: "Control",
   size: "Undergrad size",
@@ -72,12 +74,13 @@ function rowMedian(summary: WaitlistBucketSummary): number {
 function Chart({
   bucketKey,
   rows,
+  summaries,
 }: {
-  bucketKey: BucketKey;
+  bucketKey: WaitlistBucketKey;
   rows: readonly WaitlistRecipeRow[];
+  summaries: readonly WaitlistBucketSummary[];
 }) {
   const [hover, setHover] = useState<WaitlistRecipeRow | null>(null);
-  const summaries = WAITLIST_BUCKETS[bucketKey];
   const bucketIndex = new Map<string, number>(summaries.map((bucket, index) => [bucket.label, index]));
   const rowH = (H - M.t - M.b) / summaries.length;
   const yCenter = (index: number) => M.t + rowH * index + rowH / 2;
@@ -251,7 +254,9 @@ function Chart({
         <span><span style={{ color: "var(--brick)" }}>■</span> under 2%</span>
         <span><span style={{ color: "var(--ochre)" }}>■</span> 2-10%</span>
         <span><span style={{ color: "var(--forest)" }}>■</span> 10%+</span>
-        <span style={{ marginLeft: "auto" }}>Vertical forest ticks mark each bucket median.</span>
+        <span style={{ marginLeft: "auto" }}>
+          Vertical forest ticks mark each bucket median; reported anomalous rows are excluded.
+        </span>
       </div>
 
       {hover && (
@@ -292,7 +297,11 @@ function Chart({
   );
 }
 
-function BucketTable({ bucketKey }: { bucketKey: BucketKey }) {
+function BucketTable({
+  summaries,
+}: {
+  summaries: readonly WaitlistBucketSummary[];
+}) {
   return (
     <div className="cd-card" style={{ overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
@@ -319,7 +328,7 @@ function BucketTable({ bucketKey }: { bucketKey: BucketKey }) {
           </tr>
         </thead>
         <tbody>
-          {WAITLIST_BUCKETS[bucketKey].map((bucket) => (
+          {summaries.map((bucket) => (
             <tr key={bucket.label}>
               <td style={{ padding: "12px 14px", borderBottom: "1px dashed var(--rule)" }}>
                 {bucket.label}
@@ -397,22 +406,22 @@ function CaseStudy({ row }: { row: WaitlistRecipeRow }) {
 }
 
 export function WaitlistOddsExplorer() {
-  const [bucketKey, setBucketKey] = useState<BucketKey>("selectivity");
+  const [bucketKey, setBucketKey] = useState<WaitlistBucketKey>("selectivity");
   const [tableMode, setTableMode] = useState<"lowest" | "largest">("lowest");
 
-  const completeRows = useMemo(
-    () => WAITLIST_ROWS.filter((row) => row.complete && row.waitListAccepted && row.waitListAccepted > 0),
-    [],
+  const bucketSummaries = useMemo(
+    () => summarizeWaitlistBuckets(WAITLIST_ANALYSIS_ROWS, bucketKey),
+    [bucketKey],
   );
   const rankedRows = useMemo(() => {
-    const rows = [...completeRows];
+    const rows = [...WAITLIST_ANALYSIS_ROWS];
     if (tableMode === "largest") {
       rows.sort((a, b) => (b.waitListAccepted ?? 0) - (a.waitListAccepted ?? 0));
     } else {
       rows.sort((a, b) => (a.waitListSuccessRate ?? 0) - (b.waitListSuccessRate ?? 0));
     }
     return rows.slice(0, 15);
-  }, [completeRows, tableMode]);
+  }, [tableMode]);
 
   return (
     <>
@@ -426,10 +435,10 @@ export function WaitlistOddsExplorer() {
         className="waitlist-recipe-stats"
       >
         {[
-          ["Complete CDS rows", WAITLIST_RECIPE_SUMMARY.completeRows.toLocaleString("en-US")],
-          ["Median success", formatPct(WAITLIST_RECIPE_SUMMARY.medianSuccessRate)],
-          ["Weighted success", formatPct(WAITLIST_RECIPE_SUMMARY.weightedSuccessRate)],
-          ["Under 2%", `${WAITLIST_RECIPE_SUMMARY.zeroishRows} rows`],
+          ["Analysis rows", WAITLIST_ANALYSIS_SUMMARY.analysisRows.toLocaleString("en-US")],
+          ["Median success", formatPct(WAITLIST_ANALYSIS_SUMMARY.medianSuccessRate)],
+          ["Weighted success", formatPct(WAITLIST_ANALYSIS_SUMMARY.weightedSuccessRate)],
+          ["Flagged rows", WAITLIST_ANALYSIS_SUMMARY.reportedAnomalyRows.toLocaleString("en-US")],
         ].map(([label, value]) => (
           <div key={label} className="cd-card" style={{ padding: 16 }}>
             <div className="meta">{label}</div>
@@ -442,7 +451,7 @@ export function WaitlistOddsExplorer() {
 
       <section style={{ marginTop: 28 }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-          {(Object.keys(BUCKET_LABELS) as BucketKey[]).map((key) => (
+          {(Object.keys(BUCKET_LABELS) as WaitlistBucketKey[]).map((key) => (
             <button
               key={key}
               type="button"
@@ -454,7 +463,54 @@ export function WaitlistOddsExplorer() {
             </button>
           ))}
         </div>
-        <Chart bucketKey={bucketKey} rows={completeRows} />
+        <Chart bucketKey={bucketKey} rows={WAITLIST_ANALYSIS_ROWS} summaries={bucketSummaries} />
+      </section>
+
+      <section style={{ marginTop: 24 }}>
+        <div className="cd-card" style={{ padding: 18 }}>
+          <div className="meta">§ Reported-data caveat</div>
+          <p style={{ color: "var(--ink-2)", fontSize: 14, lineHeight: 1.6, margin: "8px 0 0" }}>
+            {WAITLIST_ANALYSIS_SUMMARY.reportedAnomalyRows} high-volume rows report that at least 95%
+            of students who accepted a wait-list spot were admitted. Some of those values appear
+            verbatim in the source PDFs, and at least one row has a blank accepted-count cell that the
+            extractor filled from the admitted-count row. They are preserved below as source-reported
+            anomalies, but excluded from medians, bucket summaries, and the main chart.
+          </p>
+          <div style={{ overflowX: "auto", marginTop: 12 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr className="mono" style={{ color: "var(--ink-3)", fontSize: 10.5, letterSpacing: "0.06em" }}>
+                  <th style={{ textAlign: "left", padding: "10px 0", borderBottom: "1px solid var(--rule)" }}>School</th>
+                  <th style={{ textAlign: "right", padding: "10px 0", borderBottom: "1px solid var(--rule)" }}>Year</th>
+                  <th style={{ textAlign: "right", padding: "10px 0", borderBottom: "1px solid var(--rule)" }}>Accepted</th>
+                  <th style={{ textAlign: "right", padding: "10px 0", borderBottom: "1px solid var(--rule)" }}>Admitted</th>
+                  <th style={{ textAlign: "right", padding: "10px 0", borderBottom: "1px solid var(--rule)" }}>Reported rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                {WAITLIST_REPORTED_ANOMALY_ROWS.map((row) => (
+                  <tr key={row.documentId}>
+                    <td style={{ padding: "10px 0", borderBottom: "1px dashed var(--rule)" }}>
+                      <Link href={row.schoolUrl}>{row.schoolName}</Link>
+                    </td>
+                    <td className="nums" style={{ textAlign: "right", padding: "10px 0", borderBottom: "1px dashed var(--rule)" }}>
+                      {row.year}
+                    </td>
+                    <td className="nums" style={{ textAlign: "right", padding: "10px 0", borderBottom: "1px dashed var(--rule)" }}>
+                      {formatNumber(row.waitListAccepted)}
+                    </td>
+                    <td className="nums" style={{ textAlign: "right", padding: "10px 0", borderBottom: "1px dashed var(--rule)" }}>
+                      {formatNumber(row.waitListAdmitted)}
+                    </td>
+                    <td className="nums" style={{ textAlign: "right", padding: "10px 0", borderBottom: "1px dashed var(--rule)" }}>
+                      {formatPct(row.waitListSuccessRate)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
       <section
@@ -476,17 +532,18 @@ export function WaitlistOddsExplorer() {
         </div>
         <p style={{ color: "var(--ink-2)", fontSize: 16, lineHeight: 1.65, margin: 0 }}>
           Across complete CDS wait-list rows in the current corpus, the median school admits{" "}
-          {formatPct(WAITLIST_RECIPE_SUMMARY.medianSuccessRate)} of students who accept a spot.
+          {formatPct(WAITLIST_ANALYSIS_SUMMARY.medianSuccessRate)} of students who accept a spot.
           That sounds meaningful until you split the schools: the most selective buckets cluster
-          around low single digits, and {WAITLIST_RECIPE_SUMMARY.zeroishRows} complete rows are
+          around low single digits, and {WAITLIST_ANALYSIS_SUMMARY.zeroishRows} complete rows are
           effectively closed doors under 2%. Higher rates exist, but they are concentrated at less
-          selective schools and in years where the enrollment model missed badly.
+          selective schools and in years where the enrollment model missed badly. Reported near-total
+          wait-list admit rows are treated as data-quality caveats rather than odds estimates.
         </p>
       </section>
 
       <section style={{ marginTop: 44 }}>
         <div className="meta" style={{ marginBottom: 10 }}>§ Bucket table</div>
-        <BucketTable bucketKey={bucketKey} />
+        <BucketTable summaries={bucketSummaries} />
       </section>
 
       <section style={{ marginTop: 44 }}>
