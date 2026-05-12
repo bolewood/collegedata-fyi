@@ -8,9 +8,11 @@ import {
   type WaitlistRecipeRow,
 } from "@/lib/waitlist-recipe-data";
 import {
+  BERKELEY_WAITLIST_HISTORY,
   WAITLIST_ANALYSIS_ROWS,
   WAITLIST_ANALYSIS_SUMMARY,
   WAITLIST_REPORTED_ANOMALY_ROWS,
+  type BerkeleyWaitlistHistoryRow,
   type WaitlistBucketKey,
   summarizeWaitlistBuckets,
 } from "@/lib/waitlist-recipe-analysis";
@@ -405,6 +407,185 @@ function CaseStudy({ row }: { row: WaitlistRecipeRow }) {
   );
 }
 
+const HISTORY_W = 980;
+const HISTORY_H = 360;
+const HISTORY_M = { l: 64, r: 28, t: 28, b: 54 };
+const HISTORY_IW = HISTORY_W - HISTORY_M.l - HISTORY_M.r;
+const HISTORY_IH = HISTORY_H - HISTORY_M.t - HISTORY_M.b;
+const HISTORY_RATE_MAX = 0.6;
+
+function BerkeleyHistoryChart() {
+  const years = BERKELEY_WAITLIST_HISTORY;
+  const minYear = Math.min(...years.map((row) => row.yearStart));
+  const maxYear = Math.max(...years.map((row) => row.yearStart));
+  const x = (row: BerkeleyWaitlistHistoryRow) =>
+    HISTORY_M.l + ((row.yearStart - minYear) / (maxYear - minYear)) * HISTORY_IW;
+  const y = (rate: number) =>
+    HISTORY_M.t + (1 - Math.min(rate, HISTORY_RATE_MAX) / HISTORY_RATE_MAX) * HISTORY_IH;
+  const points = years.map((row) => `${x(row)},${y(row.waitListSuccessRate)}`).join(" ");
+  const yTicks = [0, 0.1, 0.25, 0.5];
+
+  return (
+    <section style={{ marginTop: 44 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "220px 1fr",
+          gap: 36,
+        }}
+        className="cd-recipe-guide"
+      >
+        <div>
+          <div className="meta">§ Berkeley over time</div>
+          <div className="serif" style={{ color: "var(--ink-2)", fontSize: 21, fontStyle: "italic", lineHeight: 1.25, marginTop: 8 }}>
+            Nine CDS files,
+            <br />
+            one sharp cliff.
+          </div>
+        </div>
+        <p style={{ color: "var(--ink-2)", fontSize: 16, lineHeight: 1.65, margin: 0 }}>
+          Berkeley is the clearest example of why one wait-list year should not become a rule.
+          The archive has nine Berkeley CDS files with wait-list C2 counts. The success rate was
+          routinely above 25% in older files, then fell below 1% in 2022-23, 2024-25, and 2025-26.
+          Chart idea credited to <a href="https://x.com/neetu_arnold">@neetu_arnold</a>.
+        </p>
+      </div>
+
+      <div className="cd-card" style={{ marginTop: 16, padding: 24 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "space-between",
+            gap: 12,
+            flexWrap: "wrap",
+            marginBottom: 10,
+          }}
+        >
+          <div className="meta">Fig. 2 · Berkeley wait-list success rate</div>
+          <div className="mono" style={{ color: "var(--ink-3)", fontSize: 11 }}>
+            ADMITTED FROM WAIT LIST / ACCEPTED WAIT-LIST SPOTS
+          </div>
+        </div>
+        <div style={{ overflowX: "auto" }}>
+          <svg
+            width={HISTORY_W}
+            height={HISTORY_H}
+            viewBox={`0 0 ${HISTORY_W} ${HISTORY_H}`}
+            style={{ display: "block", height: "auto", maxWidth: "100%", minWidth: 720 }}
+            role="img"
+            aria-label="Line chart of Berkeley wait-list success rate across nine CDS files"
+          >
+            {yTicks.map((tick) => (
+              <g key={tick}>
+                <line
+                  x1={HISTORY_M.l}
+                  x2={HISTORY_W - HISTORY_M.r}
+                  y1={y(tick)}
+                  y2={y(tick)}
+                  stroke="var(--chart-grid)"
+                />
+                <text
+                  x={HISTORY_M.l - 12}
+                  y={y(tick) + 4}
+                  textAnchor="end"
+                  fontFamily="var(--mono)"
+                  fontSize="11"
+                  fill="var(--chart-axis)"
+                >
+                  {formatPct(tick, 0)}
+                </text>
+              </g>
+            ))}
+            <polyline
+              points={points}
+              fill="none"
+              stroke="var(--forest)"
+              strokeWidth="2.5"
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            />
+            {years.map((row) => (
+              <g key={row.year}>
+                <line
+                  x1={x(row)}
+                  x2={x(row)}
+                  y1={HISTORY_M.t}
+                  y2={HISTORY_H - HISTORY_M.b}
+                  stroke="var(--rule)"
+                  strokeDasharray="2 5"
+                />
+                <circle
+                  cx={x(row)}
+                  cy={y(row.waitListSuccessRate)}
+                  r={row.waitListSuccessRate < 0.01 ? 5 : 4}
+                  fill={row.waitListSuccessRate < 0.01 ? "var(--brick)" : "var(--forest)"}
+                  stroke="var(--paper)"
+                  strokeWidth="1.5"
+                />
+                <text
+                  x={x(row)}
+                  y={HISTORY_H - 22}
+                  textAnchor="middle"
+                  fontFamily="var(--mono)"
+                  fontSize="10.5"
+                  fill="var(--chart-axis)"
+                >
+                  {row.year.slice(2)}
+                </text>
+              </g>
+            ))}
+            <line
+              x1={HISTORY_M.l}
+              x2={HISTORY_W - HISTORY_M.r}
+              y1={HISTORY_H - HISTORY_M.b}
+              y2={HISTORY_H - HISTORY_M.b}
+              stroke="var(--ink)"
+            />
+          </svg>
+        </div>
+        <div style={{ borderTop: "1px solid var(--rule)", marginTop: 14, overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr className="mono" style={{ color: "var(--ink-3)", fontSize: 10.5, letterSpacing: "0.06em" }}>
+                <th style={{ textAlign: "left", padding: "12px 14px", borderBottom: "1px solid var(--rule)" }}>CDS year</th>
+                <th style={{ textAlign: "right", padding: "12px 14px", borderBottom: "1px solid var(--rule)" }}>Offered</th>
+                <th style={{ textAlign: "right", padding: "12px 14px", borderBottom: "1px solid var(--rule)" }}>Accepted</th>
+                <th style={{ textAlign: "right", padding: "12px 14px", borderBottom: "1px solid var(--rule)" }}>Admitted</th>
+                <th style={{ textAlign: "right", padding: "12px 14px", borderBottom: "1px solid var(--rule)" }}>Success</th>
+              </tr>
+            </thead>
+            <tbody>
+              {years.map((row) => (
+                <tr key={row.year}>
+                  <td style={{ padding: "12px 14px", borderBottom: "1px dashed var(--rule)" }}>
+                    <a href={row.archiveUrl}>{row.year}</a>
+                    <span className="mono" style={{ color: "var(--ink-3)", fontSize: 10.5, marginLeft: 8 }}>
+                      {row.sourceKind.toUpperCase()}
+                    </span>
+                  </td>
+                  <td className="nums" style={{ textAlign: "right", padding: "12px 14px", borderBottom: "1px dashed var(--rule)" }}>
+                    {formatNumber(row.waitListOffered)}
+                  </td>
+                  <td className="nums" style={{ textAlign: "right", padding: "12px 14px", borderBottom: "1px dashed var(--rule)" }}>
+                    {formatNumber(row.waitListAccepted)}
+                  </td>
+                  <td className="nums" style={{ textAlign: "right", padding: "12px 14px", borderBottom: "1px dashed var(--rule)" }}>
+                    {formatNumber(row.waitListAdmitted)}
+                  </td>
+                  <td className="nums" style={{ textAlign: "right", padding: "12px 14px", borderBottom: "1px dashed var(--rule)" }}>
+                    {formatSuccessPct(row.waitListSuccessRate)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function oneExtremeRowPerSchool(
   rows: readonly WaitlistRecipeRow[],
   tableMode: "lowest" | "largest",
@@ -545,6 +726,8 @@ export function WaitlistOddsExplorer() {
           </div>
         </div>
       </section>
+
+      <BerkeleyHistoryChart />
 
       <section
         style={{

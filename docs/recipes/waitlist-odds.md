@@ -46,6 +46,20 @@ The median is not the lesson by itself. The split matters:
 
 The practical answer is: hope is allowed, but planning on a wait-list admit is usually bad strategy. Treat it as an upside option while getting excited about the school that actually admitted you.
 
+The Berkeley history panel, inspired by a chart idea from [@neetu_arnold](https://x.com/neetu_arnold), is a hand-audited example from the nine Berkeley CDS files currently in the archive. The browser projection only exposes the two newest Berkeley wait-list rows, so the older values were read directly from archived source files:
+
+| CDS year | Offered | Accepted | Admitted | Success |
+| --- | ---: | ---: | ---: | ---: |
+| 2015-16 | 3,760 | 2,445 | 1,340 | 54.8% |
+| 2018-19 | 7,824 | 4,127 | 1,536 | 37.2% |
+| 2019-20 | 7,531 | 3,975 | 1,098 | 27.6% |
+| 2020-21 | 8,753 | 5,043 | 1,651 | 32.7% |
+| 2021-22 | 11,725 | 6,871 | 359 | 5.2% |
+| 2022-23 | 8,456 | 4,655 | 44 | 0.9% |
+| 2023-24 | 7,001 | 4,820 | 1,191 | 24.7% |
+| 2024-25 | 10,894 | 7,853 | 26 | 0.3% |
+| 2025-26 | 9,102 | 6,479 | 1 | 0.02% |
+
 ## How to reproduce
 
 The page is generated from public-facing browser rows:
