@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { WaitlistOddsExplorer } from "@/components/WaitlistOddsExplorer";
-import { WAITLIST_RECIPE_SUMMARY } from "@/lib/waitlist-recipe-data";
+import { WAITLIST_ANALYSIS_SUMMARY } from "@/lib/waitlist-recipe-analysis";
 
 const WSJ_URL =
   "https://www.wsj.com/us-news/education/college-waitlists-national-decision-day-4cb7b5d8";
@@ -71,7 +71,8 @@ export default function WaitlistOddsPage() {
             </a>{" "}
             on ballooning college wait lists, this recipe ignores anecdotes and
             looks across every complete C2 wait-list row currently visible in
-            the collegedata.fyi CDS corpus.
+            the collegedata.fyi CDS corpus, with high-volume near-total admit
+            rows treated as data-quality caveats.
           </p>
         </div>
         <div
@@ -117,13 +118,14 @@ export default function WaitlistOddsPage() {
             className="serif nums"
             style={{ fontSize: 40, lineHeight: 1, marginTop: 8 }}
           >
-            {WAITLIST_RECIPE_SUMMARY.latestCompleteSchools}
+            {WAITLIST_ANALYSIS_SUMMARY.latestCompleteSchools}
           </div>
           <p style={{ color: "var(--ink-2)", fontSize: 14, lineHeight: 1.55, margin: "8px 0 0" }}>
-            schools with complete wait-list counts, across{" "}
-            {WAITLIST_RECIPE_SUMMARY.completeRows} complete school-year rows.
-            Another {WAITLIST_RECIPE_SUMMARY.partialRows} rows report only part
-            of C2 and are shown as caveats.
+            schools in the rate analysis, across{" "}
+            {WAITLIST_ANALYSIS_SUMMARY.analysisRows} school-year rows. Another{" "}
+            {WAITLIST_ANALYSIS_SUMMARY.partialRows} rows report only part of C2,
+            and {WAITLIST_ANALYSIS_SUMMARY.reportedAnomalyRows} high-volume
+            near-total admit rows are shown as caveats.
           </p>
         </div>
       </section>
