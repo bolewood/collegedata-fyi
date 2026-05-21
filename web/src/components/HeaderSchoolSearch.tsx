@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { InstitutionSearchResult } from "@/lib/types";
+import { trackSchoolSearchSelected } from "@/lib/analytics";
 import { CoverageBadge } from "./CoverageBadge";
 
 const DEBOUNCE_MS = 180;
@@ -55,7 +56,17 @@ export function HeaderSchoolSearch() {
     return () => clearTimeout(timer);
   }, [query]);
 
-  function handleSelect(schoolId: string) {
+  function handleSelect(schoolId: string, inputMethod: "keyboard" | "mouse") {
+    const selected = results.find((result) => result.school_id === schoolId);
+    trackSchoolSearchSelected({
+      surface: "header",
+      schoolId,
+      coverageStatus: selected?.coverage_status,
+      latestCdsYear: selected?.latest_available_cds_year,
+      queryLength: query.trim().length,
+      resultCount: results.length,
+      inputMethod,
+    });
     setIsOpen(false);
     setQuery("");
     setResults([]);
@@ -72,7 +83,7 @@ export function HeaderSchoolSearch() {
       setSelectedIndex((i) => Math.max(i - 1, 0));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      handleSelect(results[selectedIndex].school_id);
+      handleSelect(results[selectedIndex].school_id, "keyboard");
     } else if (e.key === "Escape") {
       setIsOpen(false);
     }
@@ -109,7 +120,7 @@ export function HeaderSchoolSearch() {
               key={result.school_id}
               className="cd-header-search__result"
               data-active={index === selectedIndex ? "true" : "false"}
-              onMouseDown={() => handleSelect(result.school_id)}
+              onMouseDown={() => handleSelect(result.school_id, "mouse")}
             >
               <span className="cd-header-search__school">
                 <span className="cd-header-search__name">{result.school_name}</span>

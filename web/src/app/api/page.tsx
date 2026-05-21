@@ -3,6 +3,7 @@ import Link from "next/link";
 import { fetchSiteStats } from "@/lib/queries";
 import { formatCount, formatShortDate } from "@/lib/format";
 import { CopyButton } from "@/components/CopyButton";
+import { TrackedLink } from "@/components/TrackedLink";
 
 export const metadata: Metadata = {
   title: "API",
@@ -25,7 +26,14 @@ function CodeBlock({ children }: { children: string }) {
   return (
     <div className="relative mt-2">
       <div className="absolute right-2 top-2">
-        <CopyButton text={children} />
+        <CopyButton
+          text={children}
+          analyticsEvent="api_code_copied"
+          analyticsProperties={{
+            surface: "api_docs",
+            code_lines: children.split("\n").length,
+          }}
+        />
       </div>
       <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded border border-gray-200 bg-gray-50 px-4 py-3 pr-16 text-xs leading-relaxed text-gray-800">
         <code>{children}</code>
@@ -1061,14 +1069,20 @@ function Resource({
         <code className="min-w-0 break-all text-sm font-semibold text-gray-900">
           GET /rest/v1/{name}
         </code>
-        <a
+        <TrackedLink
+          external
           href={`${BASE}/rest/v1/${name}?limit=1&apikey=${ANON_KEY}`}
           target="_blank"
           rel="noopener noreferrer"
           className={API_LINK_SMALL_CLASS}
+          analyticsEvent="api_resource_opened"
+          analyticsProperties={{
+            surface: "api_docs",
+            resource: name,
+          }}
         >
           try it →
-        </a>
+        </TrackedLink>
       </div>
       <p className="mt-2 text-sm leading-relaxed text-gray-700">
         {description}

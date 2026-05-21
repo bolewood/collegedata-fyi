@@ -1,13 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import { type AnalyticsProperties, trackEvent } from "@/lib/analytics";
 
-export function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) {
+export function CopyButton({
+  text,
+  label = "Copy",
+  analyticsEvent = "copy_clicked",
+  analyticsProperties,
+}: {
+  text: string;
+  label?: string;
+  analyticsEvent?: string;
+  analyticsProperties?: AnalyticsProperties;
+}) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
     try {
       await navigator.clipboard.writeText(text);
+      trackEvent(analyticsEvent, analyticsProperties);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {

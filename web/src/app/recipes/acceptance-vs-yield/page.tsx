@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AcceptanceYieldChart } from "@/components/AcceptanceYieldChart";
+import { TrackedLink } from "@/components/TrackedLink";
 
 export const metadata: Metadata = {
   title: "Acceptance rate vs. yield",
@@ -263,16 +264,31 @@ export default function AcceptanceVsYieldPage() {
             fontSize: 13,
           }}
         >
-          <a
+          <TrackedLink
+            external
             href="https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/acceptance-vs-yield.md"
             target="_blank"
             rel="noopener noreferrer"
+            analyticsEvent="recipe_writeup_opened"
+            analyticsProperties={{
+              surface: "recipe_detail",
+              recipe: "acceptance-vs-yield",
+            }}
           >
             Read the full write-up →
-          </a>
-          <a href="/recipes/acceptance-vs-yield-starter.xlsx">
+          </TrackedLink>
+          <TrackedLink
+            external
+            href="/recipes/acceptance-vs-yield-starter.xlsx"
+            analyticsEvent="download_clicked"
+            analyticsProperties={{
+              surface: "recipe_detail",
+              file_type: "xlsx",
+              item: "acceptance_vs_yield_starter",
+            }}
+          >
             Download XLSX starter
-          </a>
+          </TrackedLink>
         </div>
       </section>
     </div>

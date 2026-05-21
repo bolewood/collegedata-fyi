@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { WaitlistOddsExplorer } from "@/components/WaitlistOddsExplorer";
+import { TrackedLink } from "@/components/TrackedLink";
 import { WAITLIST_ANALYSIS_SUMMARY } from "@/lib/waitlist-recipe-analysis";
 
 const WSJ_URL =
@@ -66,9 +67,20 @@ export default function WaitlistOddsPage() {
             }}
           >
             Inspired by Roshan Fernandez&apos;s{" "}
-            <a href={WSJ_URL} target="_blank" rel="noopener noreferrer">
+            <TrackedLink
+              external
+              href={WSJ_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              analyticsEvent="recipe_inspiration_opened"
+              analyticsProperties={{
+                surface: "recipe_hero",
+                recipe: "waitlist-odds",
+                source: "wsj",
+              }}
+            >
               May 10, 2026 Wall Street Journal story
-            </a>{" "}
+            </TrackedLink>{" "}
             on ballooning college wait lists, this recipe ignores anecdotes and
             looks across every complete C2 wait-list row currently visible in
             the collegedata.fyi CDS corpus, with high-volume near-total admit
@@ -152,16 +164,33 @@ export default function WaitlistOddsPage() {
 {`curl 'https://api.collegedata.fyi/rest/v1/school_browser_rows?select=school_id,school_name,canonical_year,acceptance_rate,wait_list_policy,wait_list_offered,wait_list_accepted,wait_list_admitted&wait_list_offered=not.is.null'`}
         </pre>
         <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 13, marginTop: 14 }}>
-          <a
+          <TrackedLink
+            external
             href="https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/waitlist-odds.md"
             target="_blank"
             rel="noopener noreferrer"
+            analyticsEvent="recipe_writeup_opened"
+            analyticsProperties={{
+              surface: "recipe_detail",
+              recipe: "waitlist-odds",
+            }}
           >
             Read the methodology →
-          </a>
-          <a href={WSJ_URL} target="_blank" rel="noopener noreferrer">
+          </TrackedLink>
+          <TrackedLink
+            external
+            href={WSJ_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            analyticsEvent="recipe_inspiration_opened"
+            analyticsProperties={{
+              surface: "recipe_detail",
+              recipe: "waitlist-odds",
+              source: "wsj",
+            }}
+          >
             WSJ inspiration →
-          </a>
+          </TrackedLink>
         </div>
       </section>
     </div>

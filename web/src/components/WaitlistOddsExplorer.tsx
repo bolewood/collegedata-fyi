@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { trackEvent, trackSourceOpened } from "@/lib/analytics";
 import {
   WAITLIST_CASES,
   type WaitlistBucketSummary,
@@ -559,7 +560,20 @@ function BerkeleyHistoryChart() {
               {years.map((row) => (
                 <tr key={row.year}>
                   <td style={{ padding: "12px 14px", borderBottom: "1px dashed var(--rule)" }}>
-                    <a href={row.archiveUrl}>{row.year}</a>
+                    <a
+                      href={row.archiveUrl}
+                      onClick={() =>
+                        trackSourceOpened({
+                          surface: "berkeley_waitlist_history",
+                          schoolId: "uc-berkeley",
+                          cdsYear: row.year,
+                          sourceFormat: row.sourceKind,
+                          action: "open_archive",
+                        })
+                      }
+                    >
+                      {row.year}
+                    </a>
                     <span className="mono" style={{ color: "var(--ink-3)", fontSize: 10.5, marginLeft: 8 }}>
                       {row.sourceKind.toUpperCase()}
                     </span>
@@ -671,7 +685,13 @@ export function WaitlistOddsExplorer() {
               type="button"
               className={`cd-btn ${bucketKey === key ? "" : "cd-btn--ghost"}`}
               style={{ padding: "8px 12px", fontSize: 13 }}
-              onClick={() => setBucketKey(key)}
+              onClick={() => {
+                trackEvent("recipe_bucket_changed", {
+                  recipe: "waitlist-odds",
+                  bucket: key,
+                });
+                setBucketKey(key);
+              }}
             >
               {BUCKET_LABELS[key]}
             </button>
@@ -791,7 +811,13 @@ export function WaitlistOddsExplorer() {
               type="button"
               className={`cd-btn ${tableMode === "lowest" ? "" : "cd-btn--ghost"}`}
               style={{ padding: "8px 12px", fontSize: 13 }}
-              onClick={() => setTableMode("lowest")}
+              onClick={() => {
+                trackEvent("recipe_extremes_table_changed", {
+                  recipe: "waitlist-odds",
+                  mode: "lowest",
+                });
+                setTableMode("lowest");
+              }}
             >
               Lowest odds
             </button>
@@ -799,7 +825,13 @@ export function WaitlistOddsExplorer() {
               type="button"
               className={`cd-btn ${tableMode === "largest" ? "" : "cd-btn--ghost"}`}
               style={{ padding: "8px 12px", fontSize: 13 }}
-              onClick={() => setTableMode("largest")}
+              onClick={() => {
+                trackEvent("recipe_extremes_table_changed", {
+                  recipe: "waitlist-odds",
+                  mode: "largest",
+                });
+                setTableMode("largest");
+              }}
             >
               Largest lists
             </button>
