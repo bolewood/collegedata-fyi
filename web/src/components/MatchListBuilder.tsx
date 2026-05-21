@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { track } from "@vercel/analytics";
+import { trackDownload, trackEvent } from "@/lib/analytics";
 import {
   DEFAULT_MATCH_FILTERS,
   groupRankedSchools,
@@ -137,11 +137,13 @@ export function MatchListBuilder({
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     setProfile(next);
     setCopied(false);
-    try {
-      track("match_profile_entered");
-    } catch {
-      // Analytics must not block local profile entry.
-    }
+    trackEvent("match_profile_entered", {
+      has_gpa: next.gpa != null,
+      has_sat: next.sat != null,
+      has_act: next.act != null,
+      has_state: next.state != null,
+      has_major: next.intendedMajor != null,
+    });
   }
 
   function onFilterChange(event: React.ChangeEvent<HTMLFormElement>) {
@@ -161,6 +163,7 @@ export function MatchListBuilder({
     if (!shareHref) return;
     try {
       await navigator.clipboard.writeText(shareHref);
+      trackEvent("match_share_copied", { ranked_count: ranked.length });
       setCopied(true);
       return;
     } catch {
@@ -173,6 +176,7 @@ export function MatchListBuilder({
       textarea.select();
       const ok = document.execCommand("copy");
       textarea.remove();
+      if (ok) trackEvent("match_share_copied", { ranked_count: ranked.length });
       setCopied(ok);
     }
   }
@@ -284,12 +288,27 @@ export function MatchListBuilder({
           <button
             className="cd-btn cd-btn--ghost"
             type="button"
-            onClick={() => downloadCsv("collegedata-match-list.csv", rankedSchoolsCsv(ranked))}
+            onClick={() => {
+              downloadCsv("collegedata-match-list.csv", rankedSchoolsCsv(ranked));
+              trackDownload({
+                surface: "match_builder",
+                fileType: "csv",
+                item: "ranked_match_list",
+                rowCount: ranked.length,
+              });
+            }}
             disabled={ranked.length === 0}
           >
             Export CSV
           </button>
-          <button className="cd-btn cd-btn--ghost" type="button" onClick={() => window.print()}>
+          <button
+            className="cd-btn cd-btn--ghost"
+            type="button"
+            onClick={() => {
+              trackEvent("match_print_clicked", { ranked_count: ranked.length });
+              window.print();
+            }}
+          >
             Print
           </button>
           <button className="cd-btn cd-btn--ghost" type="button" onClick={copyShareLink} disabled={!shareHref}>

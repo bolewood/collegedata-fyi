@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { InstitutionSearchResult } from "@/lib/types";
+import { trackSchoolSearchSelected } from "@/lib/analytics";
 import { CoverageBadge } from "./CoverageBadge";
 
 // PRD 015 M4 — server-backed autocomplete over institution_cds_coverage.
@@ -69,7 +70,17 @@ export function SchoolSearch() {
     return () => clearTimeout(timer);
   }, [query]);
 
-  function handleSelect(schoolId: string) {
+  function handleSelect(schoolId: string, inputMethod: "keyboard" | "mouse") {
+    const selected = results.find((result) => result.school_id === schoolId);
+    trackSchoolSearchSelected({
+      surface: "home",
+      schoolId,
+      coverageStatus: selected?.coverage_status,
+      latestCdsYear: selected?.latest_available_cds_year,
+      queryLength: query.trim().length,
+      resultCount: results.length,
+      inputMethod,
+    });
     setIsOpen(false);
     setQuery("");
     setResults([]);
@@ -86,7 +97,7 @@ export function SchoolSearch() {
       setSelectedIndex((i) => Math.max(i - 1, 0));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      handleSelect(results[selectedIndex].school_id);
+      handleSelect(results[selectedIndex].school_id, "keyboard");
     } else if (e.key === "Escape") {
       setIsOpen(false);
     }
@@ -147,7 +158,7 @@ export function SchoolSearch() {
           {results.map((r, i) => (
             <li
               key={r.school_id}
-              onMouseDown={() => handleSelect(r.school_id)}
+              onMouseDown={() => handleSelect(r.school_id, "mouse")}
               style={{
                 display: "grid",
                 gridTemplateColumns: "1fr auto",

@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { trackEvent, trackSourceOpened } from "@/lib/analytics";
 import { academicFitLabel, admissionsOutlookLabel, type Caveat } from "@/lib/positioning";
 import type { RankedMatchSchool } from "@/lib/list-builder";
 
@@ -46,7 +49,19 @@ export function SchoolListItem({ school }: { school: RankedMatchSchool }) {
     <article className="match-school-row rule">
       <div className="match-school-row__identity">
         <div className="match-school-row__name">
-          <Link href={school.schoolUrl}>{school.schoolName}</Link>
+          <Link
+            href={school.schoolUrl}
+            onClick={() =>
+              trackEvent("match_school_opened", {
+                school_id: school.schoolId,
+                cds_year: school.cdsYear,
+                academic_fit: school.result.academicFit,
+                admissions_outlook: school.result.admissionsOutlook,
+              })
+            }
+          >
+            {school.schoolName}
+          </Link>
         </div>
         <div className="match-school-row__meta mono">
           {school.state ?? "state n/a"} · {school.cdsYear} CDS · admit {formatPercent(school.acceptanceRate)}
@@ -87,7 +102,20 @@ export function SchoolListItem({ school }: { school: RankedMatchSchool }) {
           </span>
         ))}
         {school.archiveUrl ? (
-          <a href={school.archiveUrl} target="_blank" rel="noopener noreferrer" className="match-source-link mono">
+          <a
+            href={school.archiveUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="match-source-link mono"
+            onClick={() =>
+              trackSourceOpened({
+                surface: "match_builder",
+                schoolId: school.schoolId,
+                cdsYear: school.cdsYear,
+                action: "open_archive",
+              })
+            }
+          >
             source
           </a>
         ) : null}

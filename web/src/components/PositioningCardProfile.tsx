@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { track } from "@vercel/analytics";
+import { trackEvent } from "@/lib/analytics";
 import {
   scorePosition,
   tierLabel,
@@ -101,15 +101,21 @@ export function PositioningCardProfile({ school }: { school: SchoolAcademicProfi
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     setProfile(next);
     setEditing(false);
-    try {
-      track("positioning_profile_entered");
-    } catch {
-      // Analytics must never block the local-only profile interaction.
-    }
+    trackEvent("positioning_profile_entered", {
+      school_id: school.schoolId,
+      cds_year: school.cdsYear,
+      has_gpa: next.gpa != null,
+      has_sat: next.sat != null,
+      has_act: next.act != null,
+    });
   }
 
   function clearProfile() {
     window.localStorage.removeItem(STORAGE_KEY);
+    trackEvent("positioning_profile_cleared", {
+      school_id: school.schoolId,
+      cds_year: school.cdsYear,
+    });
     setProfile(null);
     setEditing(true);
   }

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   formatBadgeLabel,
@@ -5,6 +7,7 @@ import {
   storageUrl,
   dataQualityLabel,
 } from "@/lib/format";
+import { trackSourceOpened, trackEvent } from "@/lib/analytics";
 import type { ManifestRow } from "@/lib/types";
 
 // Map an extraction status to a chip variant. Only the success state gets
@@ -112,16 +115,51 @@ export function DocumentCard({
 
       <div className="document-card-row__actions">
         {canLink && (
-          <Link href={`/schools/${doc.school_id}/${doc.canonical_year}`}>
+          <Link
+            href={`/schools/${doc.school_id}/${doc.canonical_year}`}
+            onClick={() =>
+              trackEvent("school_document_fields_opened", {
+                school_id: doc.school_id,
+                cds_year: doc.canonical_year,
+                source_format: doc.source_format,
+              })
+            }
+          >
             View fields →
           </Link>
         )}
         {pdfUrl ? (
-          <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
+          <a
+            href={pdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() =>
+              trackSourceOpened({
+                surface: "school_documents",
+                schoolId: doc.school_id,
+                cdsYear: doc.canonical_year ?? doc.cds_year,
+                sourceFormat: doc.source_format,
+                action: "download",
+              })
+            }
+          >
             {downloadLabel(doc.source_format)}
           </a>
         ) : sourceUrl ? (
-          <a href={sourceUrl} target="_blank" rel="noopener noreferrer">
+          <a
+            href={sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() =>
+              trackSourceOpened({
+                surface: "school_documents",
+                schoolId: doc.school_id,
+                cdsYear: doc.canonical_year ?? doc.cds_year,
+                sourceFormat: doc.source_format,
+                action: "view_source",
+              })
+            }
+          >
             View source →
           </a>
         ) : null}

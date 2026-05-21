@@ -45,13 +45,17 @@ export default function PrivacyPage() {
         <p>
           We use Vercel Analytics to understand anonymous, aggregate site
           usage: things like page views, referrers, browser type, device type,
-          and general location. This helps us see which pages are useful and
-          whether the site is performing reliably.
+          general location, and which site features are used, such as school
+          search, source links, downloads, copy buttons, and recipe controls.
+          This helps us see which pages are useful and whether the site is
+          performing reliably.
         </p>
 
         <p>
           Vercel Analytics does not give us a list of named visitors, and we do
-          not use it to build student profiles or sell audience data.
+          not send locally entered GPA, test scores, intended majors, search
+          terms, or share codes as analytics properties. We do not use analytics
+          to build student profiles or sell audience data.
         </p>
 
         <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>

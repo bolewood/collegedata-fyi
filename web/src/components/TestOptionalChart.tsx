@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 
 type Point = { year: string; sat: number; act: number | null };
 type Series = {
@@ -390,7 +391,14 @@ export function TestOptionalChart() {
             <button
               key={s.id}
               type="button"
-              onClick={() => toggle(s.id)}
+              onClick={() => {
+                trackEvent("recipe_chart_series_toggled", {
+                  recipe: "test-optional-tracker",
+                  series: s.id,
+                  next_visible: hidden.has(s.id),
+                });
+                toggle(s.id);
+              }}
               aria-pressed={!off}
               style={{
                 display: "inline-flex",

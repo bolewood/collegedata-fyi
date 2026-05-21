@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TestOptionalChart } from "@/components/TestOptionalChart";
+import { TrackedLink } from "@/components/TrackedLink";
 
 export const metadata: Metadata = {
   title: "Test-optional tracker",
@@ -249,13 +250,19 @@ export default function TestOptionalTrackerPage() {
             fontSize: 13,
           }}
         >
-          <a
+          <TrackedLink
+            external
             href="https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/test-optional-tracker.md"
             target="_blank"
             rel="noopener noreferrer"
+            analyticsEvent="recipe_writeup_opened"
+            analyticsProperties={{
+              surface: "recipe_detail",
+              recipe: "test-optional-tracker",
+            }}
           >
             Read the full write-up →
-          </a>
+          </TrackedLink>
         </div>
       </section>
     </div>

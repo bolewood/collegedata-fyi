@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { TrackedLink } from "@/components/TrackedLink";
 
 export const metadata: Metadata = {
   title: "Recipes",
@@ -114,9 +115,17 @@ export default function RecipesPage() {
                   margin: 0,
                 }}
               >
-                <Link href={r.demoPath} style={{ textDecoration: "none", color: "inherit" }}>
+                <TrackedLink
+                  href={r.demoPath}
+                  style={{ textDecoration: "none", color: "inherit" }}
+                  analyticsEvent="recipe_opened"
+                  analyticsProperties={{
+                    surface: "recipes_index_title",
+                    recipe: r.slug,
+                  }}
+                >
                   {r.title}
-                </Link>
+                </TrackedLink>
               </h2>
               <span className="mono" style={{ fontSize: 11, color: "var(--ink-3)", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>
                 CDS {r.sections}
@@ -130,21 +139,47 @@ export default function RecipesPage() {
               {r.audience}
             </p>
             <div style={{ marginTop: 14, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
-              <Link href={r.demoPath} className="cd-btn" style={{ padding: "8px 14px", fontSize: 13 }}>
+              <TrackedLink
+                href={r.demoPath}
+                className="cd-btn"
+                style={{ padding: "8px 14px", fontSize: 13 }}
+                analyticsEvent="recipe_opened"
+                analyticsProperties={{
+                  surface: "recipes_index_button",
+                  recipe: r.slug,
+                }}
+              >
                 Open demo →
-              </Link>
-              <a
+              </TrackedLink>
+              <TrackedLink
+                external
                 href={r.writeupUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ fontSize: 12 }}
+                analyticsEvent="recipe_writeup_opened"
+                analyticsProperties={{
+                  surface: "recipes_index",
+                  recipe: r.slug,
+                }}
               >
                 Read write-up
-              </a>
+              </TrackedLink>
               {r.extras?.map((x) => (
-                <a key={x.path} href={x.path} style={{ fontSize: 12 }}>
+                <TrackedLink
+                  key={x.path}
+                  external
+                  href={x.path}
+                  style={{ fontSize: 12 }}
+                  analyticsEvent="download_clicked"
+                  analyticsProperties={{
+                    surface: "recipes_index",
+                    file_type: x.path.split(".").pop() ?? "file",
+                    item: x.label,
+                  }}
+                >
                   {x.label}
-                </a>
+                </TrackedLink>
               ))}
             </div>
           </article>

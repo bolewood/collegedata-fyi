@@ -11,6 +11,7 @@ import {
   type BrowserSearchMetadata,
   type BrowserSort,
 } from "@/lib/browser-search";
+import { trackDownload, trackEvent, trackSourceOpened } from "@/lib/analytics";
 import { formatBadgeLabel, formatCurrency, formatPercent } from "@/lib/format";
 
 type FilterState = {
@@ -227,6 +228,12 @@ export function SchoolBrowser() {
         page_size: 500,
       });
       downloadCsv(response.rows);
+      trackDownload({
+        surface: "school_browser",
+        fileType: "csv",
+        item: "browser_export",
+        rowCount: response.rows.length,
+      });
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -301,6 +308,10 @@ export function SchoolBrowser() {
               onChange={(e) => {
                 setPage(1);
                 setSortIndex(Number(e.target.value));
+                trackEvent("browser_sort_changed", {
+                  sort: SORT_OPTIONS[Number(e.target.value)]?.sort.field,
+                  direction: SORT_OPTIONS[Number(e.target.value)]?.sort.direction,
+                });
               }}
               style={inputStyle(220)}
             >
@@ -318,6 +329,7 @@ export function SchoolBrowser() {
               onClick={() => {
                 setPage(1);
                 setFilters({ undergradMin: "", acceptanceMax: "", yieldMin: "", netPriceMax: "", retentionMin: "" });
+                trackEvent("browser_filters_reset");
               }}
             >
               Reset
@@ -384,7 +396,17 @@ export function SchoolBrowser() {
             {rows.map((row) => (
               <tr key={row.document_id} className="rule">
                 <td style={{ padding: "12px 10px 12px 0" }}>
-                  <Link href={`/schools/${row.school_id}`} style={{ fontFamily: "var(--serif)", fontSize: 18 }}>
+                  <Link
+                    href={`/schools/${row.school_id}`}
+                    style={{ fontFamily: "var(--serif)", fontSize: 18 }}
+                    onClick={() =>
+                      trackEvent("browser_school_opened", {
+                        surface: "table",
+                        school_id: row.school_id,
+                        cds_year: row.canonical_year,
+                      })
+                    }
+                  >
                     {row.school_name}
                   </Link>
                   {row.sub_institutional && (
@@ -415,6 +437,15 @@ export function SchoolBrowser() {
                     rel="noopener noreferrer"
                     className="cd-chip"
                     data-testid="browser-source-link"
+                    onClick={() =>
+                      trackSourceOpened({
+                        surface: "school_browser_table",
+                        schoolId: row.school_id,
+                        cdsYear: row.canonical_year,
+                        sourceFormat: row.source_format,
+                        action: "open_archive",
+                      })
+                    }
                   >
                     {formatBadgeLabel(row.source_format)}
                   </a>
@@ -451,7 +482,14 @@ export function SchoolBrowser() {
             type="button"
             className="cd-btn cd-btn--ghost"
             disabled={page <= 1 || loading}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            onClick={() => {
+              trackEvent("browser_page_changed", {
+                direction: "previous",
+                current_page: page,
+                total_pages: totalPages,
+              });
+              setPage((p) => Math.max(1, p - 1));
+            }}
           >
             Previous
           </button>
@@ -459,7 +497,14 @@ export function SchoolBrowser() {
             type="button"
             className="cd-btn cd-btn--ghost"
             disabled={page >= totalPages || loading}
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            onClick={() => {
+              trackEvent("browser_page_changed", {
+                direction: "next",
+                current_page: page,
+                total_pages: totalPages,
+              });
+              setPage((p) => Math.min(totalPages, p + 1));
+            }}
           >
             Next
           </button>
@@ -503,7 +548,17 @@ function BrowserResultCard({ row }: { row: BrowserRow }) {
     <article className="cd-card" style={{ padding: 14 }}>
       <div style={{ display: "flex", gap: 10, alignItems: "flex-start", justifyContent: "space-between" }}>
         <div style={{ minWidth: 0 }}>
-          <Link href={`/schools/${row.school_id}`} style={{ fontFamily: "var(--serif)", fontSize: 19, lineHeight: 1.15 }}>
+          <Link
+            href={`/schools/${row.school_id}`}
+            style={{ fontFamily: "var(--serif)", fontSize: 19, lineHeight: 1.15 }}
+            onClick={() =>
+              trackEvent("browser_school_opened", {
+                surface: "card",
+                school_id: row.school_id,
+                cds_year: row.canonical_year,
+              })
+            }
+          >
             {row.school_name}
           </Link>
           {row.sub_institutional && (
@@ -539,6 +594,15 @@ function BrowserResultCard({ row }: { row: BrowserRow }) {
           rel="noopener noreferrer"
           className="cd-chip"
           data-testid="browser-source-link"
+          onClick={() =>
+            trackSourceOpened({
+              surface: "school_browser_card",
+              schoolId: row.school_id,
+              cdsYear: row.canonical_year,
+              sourceFormat: row.source_format,
+              action: "open_archive",
+            })
+          }
         >
           {formatBadgeLabel(row.source_format)} source
         </a>
