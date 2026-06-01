@@ -86,7 +86,7 @@ import tempfile
 import zipfile
 from collections import Counter
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Optional
@@ -131,8 +131,12 @@ class SchemaResolution:
     fallback_used: bool
     fallback_reason: Optional[str]
     schema_path: Path
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
 def utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return utc_now().isoformat()
 
 
 def parsed_field_count(action: str) -> int | None:
@@ -1021,6 +1025,106 @@ def clear_recoverable_quality_flag(client: Client, document_id: str) -> None:
     ).execute()
 
 
+def has_canonical_for_current_bytes(
+    client: Client,
+    document_id: str,
+    source_sha256: Optional[str],
+) -> bool:
+    """True if a canonical artifact produced from the document's CURRENT
+    source bytes already exists.
+
+    Notes-free heuristic, deliberately conservative: a canonical artifact
+    whose ``created_at`` is at or after the moment the current source bytes
+    were first archived was necessarily produced from those bytes, because
+    extraction always downloads the document's current source. When the
+    current source artifact can't be identified (no source row matching the
+    document's ``source_sha256``), this returns False so the document stays
+    pending rather than being marked extracted against stale bytes.
+
+    This is the gate for the reconcile pass — it answers "is this document
+    actually extracted?" without paying the cost of re-running Docling.
+    """
+    if not source_sha256:
+        return False
+    rows = (
+        client.table("cds_artifacts")
+        .select("kind,sha256,created_at")
+        .eq("document_id", document_id)
+        .execute()
+        .data
+        or []
+    )
+    canonical_times = [r["created_at"] for r in rows if r.get("kind") == "canonical"]
+    if not canonical_times:
+        return False
+    current_source_times = [
+        r["created_at"]
+        for r in rows
+        if r.get("kind") == "source" and r.get("sha256") == source_sha256
+    ]
+    if not current_source_times:
+        return False
+    current_bytes_archived_at = min(current_source_times)
+    # ISO-8601 timestamps from PostgREST compare correctly as strings here
+    # because they share the same +00:00 offset.
+    return any(t >= current_bytes_archived_at for t in canonical_times)
+
+
+def reconcile_pending_documents(
+    client: Client,
+    docs: list[dict[str, Any]],
+    projection_definitions: Optional[dict],
+    projection_enabled: bool,
+    dry_run: bool,
+) -> tuple[set[str], Counter]:
+    """Cheap, extraction-free status repair.
+
+    A document can sit in ``extraction_pending`` even though a valid canonical
+    artifact of its current bytes already exists — e.g. after a producer-version
+    requeue that the heavy drain never caught up on, or a worker run killed
+    mid-batch. Those documents serve real data but the public ``cds_manifest``
+    still reports "pending/processing" to users. This pass flips every such
+    document to ``extracted`` with a single DB query per row and no Docling, so
+    the symptom self-heals instead of persisting for weeks.
+
+    Producer-version upgrades are intentionally NOT handled here: this only
+    decides whether the current bytes have been extracted at all. Re-running a
+    newer extractor over already-extracted bytes is a separate quality concern,
+    driven explicitly via ``--force-reextract``, and must not hold a document in
+    a user-visible "pending" state.
+
+    Returns the set of reconciled document ids (to exclude from the heavy
+    drain) and a Counter of outcomes.
+    """
+    reconciled: set[str] = set()
+    counts: Counter = Counter()
+    for doc in docs:
+        document_id = str(doc["id"])
+        if not has_canonical_for_current_bytes(
+            client, document_id, doc.get("source_sha256")
+        ):
+            continue
+        reconciled.add(document_id)
+        counts["reconciled"] += 1
+        if dry_run:
+            continue
+        mark_extraction_status(client, document_id, "extracted")
+        clear_recoverable_quality_flag(client, document_id)
+        if projection_enabled and projection_definitions is not None:
+            try:
+                refresh_browser_projection(client, document_id, projection_definitions)
+            except Exception as e:
+                counts["projection_errors"] += 1
+                message = str(e).splitlines()[0][:200]
+                print(
+                    f"    reconcile_projection_error: document={document_id} "
+                    f"{type(e).__name__}: {message}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+    return reconciled, counts
+
+
 def write_source_metadata(
     client: Client,
     document_id: str,
@@ -1549,6 +1653,29 @@ def main() -> int:
         ),
     )
     parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument(
+        "--deadline-minutes",
+        type=float,
+        default=None,
+        help=(
+            "Wall-clock budget. The worker stops the heavy drain gracefully "
+            "before this many minutes elapse, writes its summary, and exits 0 "
+            "instead of being hard-killed by a CI job timeout (which loses "
+            "forward progress and reports the run as cancelled). Set it below "
+            "the workflow's timeout-minutes."
+        ),
+    )
+    parser.add_argument(
+        "--reconcile-pending",
+        action="store_true",
+        help=(
+            "Before the heavy drain, cheaply flip any extraction_pending "
+            "document that already has a canonical artifact of its current "
+            "source bytes to 'extracted' (no re-extraction). Repairs documents "
+            "left stuck as 'pending/processing' in cds_manifest. Reconciled "
+            "documents are excluded from the drain."
+        ),
+    )
     parser.add_argument("--school", default=None, help="Only process this school_id")
     parser.add_argument(
         "--document-ids",
@@ -1734,7 +1861,8 @@ def main() -> int:
         )
 
     query = client.table("cds_documents").select(
-        "id, school_id, cds_year, detected_year, source_format, extraction_status, discovered_at",
+        "id, school_id, cds_year, detected_year, source_format, "
+        "extraction_status, discovered_at, source_sha256",
     )
     if args.include_failed:
         query = query.in_("extraction_status", ["extraction_pending", "failed"])
@@ -1756,35 +1884,6 @@ def main() -> int:
             if (row_start_year(doc) or 0) >= args.min_year_start
         ]
     docs = sorted(docs, key=pending_doc_priority_key)
-    if args.limit:
-        docs = docs[:args.limit]
-    if not docs:
-        print(
-            "No rows to process. Try --include-failed to re-process earlier failures.",
-        )
-        if args.summary_json:
-            write_run_summary(args.summary_json, {
-                "started_at": started_at,
-                "finished_at": utc_now_iso(),
-                "dry_run": args.dry_run,
-                "limit": args.limit,
-                "school": args.school,
-                "include_failed": args.include_failed,
-                "low_field_threshold": args.low_field_threshold,
-                "processed_count": 0,
-                "failure_count": 0,
-                "mean_fields": None,
-                "low_field_docs": [],
-                "extraction_counts": {},
-                "projection_counts": {},
-                "documents": [],
-            })
-        return 0
-
-    print(
-        f"Processing {len(docs)} document(s){' (dry run)' if args.dry_run else ''}...",
-        flush=True,
-    )
 
     projection_definitions: dict | None = None
     projection_enabled = not args.dry_run and not args.skip_projection_refresh
@@ -1805,20 +1904,108 @@ def main() -> int:
                 flush=True,
             )
 
+    # Cheap status repair runs over the FULL pending set (before --limit), so a
+    # single scheduled run heals the whole "stuck pending" backlog instead of
+    # nibbling at it 25 rows a day. --force-reextract opts out: the operator
+    # explicitly wants the bytes re-extracted, not short-circuited.
+    reconcile_counts: Counter = Counter()
+    if args.reconcile_pending and not args.force_reextract:
+        reconciled_ids, reconcile_counts = reconcile_pending_documents(
+            client, docs, projection_definitions, projection_enabled, args.dry_run,
+        )
+        if reconciled_ids:
+            verb = "Would reconcile" if args.dry_run else "Reconciled"
+            print(
+                f"{verb} {len(reconciled_ids)} already-extracted document(s) "
+                "to 'extracted' (no re-extraction).",
+                flush=True,
+            )
+            docs = [d for d in docs if str(d["id"]) not in reconciled_ids]
+
+    if args.limit:
+        docs = docs[:args.limit]
+    if not docs:
+        print(
+            "No rows left to drain"
+            + (" after reconcile." if reconcile_counts.get("reconciled") else "."),
+        )
+        if args.summary_json:
+            write_run_summary(args.summary_json, {
+                "started_at": started_at,
+                "finished_at": utc_now_iso(),
+                "dry_run": args.dry_run,
+                "limit": args.limit,
+                "school": args.school,
+                "include_failed": args.include_failed,
+                "low_field_threshold": args.low_field_threshold,
+                "processed_count": 0,
+                "failure_count": 0,
+                "mean_fields": None,
+                "low_field_docs": [],
+                "extraction_counts": {},
+                "projection_counts": dict(projection_counts),
+                "reconcile_counts": dict(reconcile_counts),
+                "stopped_early": False,
+                "documents": [],
+            })
+        return 0
+
+    print(
+        f"Processing {len(docs)} document(s){' (dry run)' if args.dry_run else ''}...",
+        flush=True,
+    )
+
+    deadline: datetime | None = None
+    if args.deadline_minutes:
+        deadline = utc_now() + timedelta(minutes=args.deadline_minutes)
+
     counts: Counter = Counter()
     summary_docs: list[dict[str, Any]] = []
     field_counts: list[int] = []
     low_field_docs: list[dict[str, Any]] = []
     failure_count = 0
+    stopped_early = False
     for i, doc in enumerate(docs, 1):
-        outcome = extract_one(
-            client,
-            doc,
-            schema_registry,
-            args.dry_run,
-            cell_maps,
-            force_reextract=args.force_reextract,
-        )
+        if deadline is not None and utc_now() >= deadline:
+            remaining = len(docs) - (i - 1)
+            print(
+                f"Deadline reached ({args.deadline_minutes:g} min); stopping "
+                f"gracefully with {remaining} document(s) unprocessed. Their "
+                "extraction_status is unchanged and the next run will resume.",
+                flush=True,
+            )
+            stopped_early = True
+            break
+        # extract_one is contracted not to raise, but schema/format setup
+        # paths can still throw on a malformed or out-of-range document (e.g.
+        # an old CDS year that resolves to a schema without a 'fields' key).
+        # One bad row must not abort the whole drain and strand every
+        # remaining document — mark it failed and keep going.
+        try:
+            outcome = extract_one(
+                client,
+                doc,
+                schema_registry,
+                args.dry_run,
+                cell_maps,
+                force_reextract=args.force_reextract,
+            )
+        except Exception as e:
+            if not args.dry_run:
+                try:
+                    mark_extraction_status(
+                        client, str(doc["id"]), "failed", doc.get("source_format"),
+                    )
+                except Exception:
+                    pass
+            message = str(e).splitlines()[0][:200]
+            print(
+                f"    worker_error: school={doc.get('school_id')} "
+                f"document={doc['id']} {type(e).__name__}: {message}",
+                file=sys.stderr,
+                flush=True,
+            )
+            outcome = extraction_no_project(f"worker_error: {type(e).__name__}: {message}")
         bucket = outcome.action.split(":")[0].split(" ")[0]
         counts[bucket] += 1
         fields = parsed_field_count(outcome.action)
@@ -1876,11 +2063,17 @@ def main() -> int:
         })
         print(f"[{i:4d}/{len(docs)}] {doc['school_id']}: {outcome.action}{projection_note}", flush=True)
 
+    processed_count = sum(counts.values())
+
     print()
+    if reconcile_counts.get("reconciled"):
+        print(f"=== reconciled (no re-extraction): {reconcile_counts['reconciled']} ===")
     print("=== extraction results ===")
     for bucket, n in counts.most_common():
         print(f"  {bucket:30s} {n:5d}")
-    print(f"  {'total':30s} {sum(counts.values()):5d}")
+    print(f"  {'total':30s} {processed_count:5d}")
+    if stopped_early:
+        print(f"  {'(stopped at deadline)':30s}")
     if projection_enabled or projection_counts:
         print()
         print("=== browser projection refresh ===")
@@ -1897,12 +2090,14 @@ def main() -> int:
                     "school": args.school,
                     "include_failed": args.include_failed,
                     "low_field_threshold": args.low_field_threshold,
-                    "processed_count": len(docs),
+                    "processed_count": processed_count,
                     "failure_count": failure_count,
                     "mean_fields": mean_or_none(field_counts),
                     "low_field_docs": low_field_docs,
                     "extraction_counts": dict(counts),
                     "projection_counts": dict(projection_counts),
+                    "reconcile_counts": dict(reconcile_counts),
+                    "stopped_early": stopped_early,
                     "documents": summary_docs,
                 })
             return 2
@@ -1915,12 +2110,14 @@ def main() -> int:
             "school": args.school,
             "include_failed": args.include_failed,
             "low_field_threshold": args.low_field_threshold,
-            "processed_count": len(docs),
+            "processed_count": processed_count,
             "failure_count": failure_count,
             "mean_fields": mean_or_none(field_counts),
             "low_field_docs": low_field_docs,
             "extraction_counts": dict(counts),
             "projection_counts": dict(projection_counts),
+            "reconcile_counts": dict(reconcile_counts),
+            "stopped_early": stopped_early,
             "documents": summary_docs,
         })
     return 0

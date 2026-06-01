@@ -37,6 +37,10 @@ on:
         description: "Optional minimum CDS start year for targeted fresh-file drains, e.g. 2025."
         required: false
         default: ""
+      deadline_minutes:
+        description: "Wall-clock budget; the worker stops the drain gracefully before this many minutes so the job is never hard-killed (which reports as cancelled and loses progress). Must be below timeout-minutes."
+        required: false
+        default: "100"
   schedule:
     # Small daily pending-row drain. Full corpus drains belong on manual
     # operator machines or a self-hosted runner, not regular hosted CI.
@@ -59,7 +63,13 @@ jobs:
   drain-pending:
     name: Drain pending extraction rows
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # Headroom over the worker's --deadline-minutes budget (default 100). The
+    # worker stops itself gracefully before the budget; this hard cap only
+    # fires if something hangs. Previously 60, which routinely hard-killed the
+    # daily drain mid-batch and reported it as "cancelled" — 20 consecutive
+    # cancelled runs (2026-05-12..05-31) stranded ~150 already-extracted docs
+    # in extraction_pending. See --reconcile-pending below.
+    timeout-minutes: 120
     env:
       INPUT_LIMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.limit || '25' }}
       INPUT_SCHOOL: ${{ github.event_name == 'workflow_dispatch' && inputs.school || '' }}
@@ -69,6 +79,7 @@ jobs:
       INPUT_SEED_PROJECTION_METADATA: ${{ github.event_name != 'workflow_dispatch' || inputs.seed_projection_metadata }}
       INPUT_LOW_FIELD_THRESHOLD: ${{ github.event_name == 'workflow_dispatch' && inputs.low_field_threshold || '25' }}
       INPUT_MIN_YEAR_START: ${{ github.event_name == 'workflow_dispatch' && inputs.min_year_start || '' }}
+      INPUT_DEADLINE_MINUTES: ${{ github.event_name == 'workflow_dispatch' && inputs.deadline_minutes || '100' }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:
@@ -109,6 +120,10 @@ jobs:
             echo "min_year_start must be an integer when provided" >&2
             exit 2
           fi
+          if [[ -n "${INPUT_DEADLINE_MINUTES}" ]] && ! [[ "${INPUT_DEADLINE_MINUTES}" =~ ^[0-9]+$ ]]; then
+            echo "deadline_minutes must be an integer when provided" >&2
+            exit 2
+          fi
 
           mkdir -p ops-summary
           {
@@ -146,9 +161,13 @@ jobs:
           args=(
             --env .env.ops
             --limit "${INPUT_LIMIT}"
+            --reconcile-pending
             --summary-json ops-summary/summary.json
             --low-field-threshold "${INPUT_LOW_FIELD_THRESHOLD}"
           )
+          if [[ -n "${INPUT_DEADLINE_MINUTES}" ]]; then
+            args+=(--deadline-minutes "${INPUT_DEADLINE_MINUTES}")
+          fi
           if [[ "${INPUT_SEED_PROJECTION_METADATA}" == "true" ]]; then
             args+=(--seed-projection-metadata)
           fi
