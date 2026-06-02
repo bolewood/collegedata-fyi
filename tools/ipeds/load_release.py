@@ -22,7 +22,7 @@ from typing import Any
 if __package__ is None or __package__ == "":
     sys.path.append(str(Path(__file__).resolve().parents[2]))
 
-from tools.ipeds.mappings import MVP_FACT_MAPPINGS
+from tools.ipeds.mappings import fact_mappings_for_data_year, resolve_fact_mappings_for_columns
 from tools.ipeds.metadata import DATA_GENERATOR_URL, TablesDoc, normalize_release_date_text, parse_tablesdoc, sha256_file
 from tools.ipeds.project import project_rows_to_facts
 
@@ -42,12 +42,17 @@ def main() -> int:
     parser.add_argument("--release-date-text", help='Raw official release date text, e.g. "March 2026".')
     parser.add_argument("--metadata-url", required=True)
     parser.add_argument("--access-url")
+    parser.add_argument("--display-groups", nargs="*", help="Optional display groups to project/apply, e.g. Costs.")
     parser.add_argument("--apply", action="store_true", help="Upsert into Supabase using service role credentials.")
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
     args = parser.parse_args()
 
     tablesdoc = parse_tablesdoc(args.metadata_xlsx)
-    table_names = sorted({mapping.table_name.upper() for mapping in MVP_FACT_MAPPINGS})
+    fact_mappings = resolve_fact_mappings_for_columns(fact_mappings_for_data_year(args.data_year), tablesdoc.columns)
+    if args.display_groups:
+        display_groups = {group.lower() for group in args.display_groups}
+        fact_mappings = tuple(mapping for mapping in fact_mappings if mapping.display_group.lower() in display_groups)
+    table_names = sorted({mapping.table_name.upper() for mapping in fact_mappings})
     rows_by_table: dict[str, list[dict[str, Any]]] = {}
     table_sources: dict[str, dict[str, Any]] = {}
 
@@ -67,7 +72,7 @@ def main() -> int:
 
     facts = project_rows_to_facts(
         rows_by_table,
-        MVP_FACT_MAPPINGS,
+        fact_mappings,
         tablesdoc.columns,
         tablesdoc.value_labels,
         release_id=None,
@@ -76,7 +81,7 @@ def main() -> int:
         release_type=args.release_type,
     )
 
-    report = build_report(args, tablesdoc, rows_by_table, table_sources, facts)
+    report = build_report(args, tablesdoc, rows_by_table, table_sources, facts, fact_mappings)
     args.out_dir.mkdir(parents=True, exist_ok=True)
     report_path = args.out_dir / f"ipeds-{args.collection_year}-{args.release_type}-report.json"
     report_path.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
@@ -122,6 +127,7 @@ def build_report(
     rows_by_table: dict[str, list[dict[str, Any]]],
     table_sources: dict[str, dict[str, Any]],
     facts: list[dict[str, Any]],
+    fact_mappings: tuple[Any, ...],
 ) -> dict[str, Any]:
     facts_by_group: dict[str, int] = {}
     quality_counts: dict[str, int] = {}
@@ -136,7 +142,7 @@ def build_report(
         **release_date_report(args),
         "metadata_xlsx": str(args.metadata_xlsx),
         "metadata_sha256": sha256_file(args.metadata_xlsx),
-        "source_tables_requested": sorted({mapping.table_name.upper() for mapping in MVP_FACT_MAPPINGS}),
+        "source_tables_requested": sorted({mapping.table_name.upper() for mapping in fact_mappings}),
         "source_tables_loaded": table_sources,
         "metadata_counts": {
             "tables": len(tablesdoc.tables),
@@ -173,7 +179,7 @@ def apply_to_supabase(
     release_date, release_date_precision = release_date_metadata(args)
     release_notes = {
         "loader": "tools/ipeds/load_release.py",
-        "mapping_count": len(MVP_FACT_MAPPINGS),
+        "mapping_count": len(fact_mappings_for_data_year(args.data_year)),
     }
     if args.release_date_text:
         release_notes["release_date_text"] = args.release_date_text
@@ -260,7 +266,23 @@ def apply_to_supabase(
 def batch_upsert(client: Any, table: str, rows: list[dict[str, Any]], on_conflict: str, size: int = 500) -> None:
     deduped = dedupe_rows(rows, on_conflict)
     for start in range(0, len(deduped), size):
-        client.table(table).upsert(deduped[start : start + size], on_conflict=on_conflict).execute()
+        upsert_chunk(client, table, deduped[start : start + size], on_conflict)
+
+
+def upsert_chunk(client: Any, table: str, rows: list[dict[str, Any]], on_conflict: str) -> None:
+    try:
+        client.table(table).upsert(rows, on_conflict=on_conflict).execute()
+    except Exception as exc:
+        if len(rows) > 1 and is_statement_timeout(exc):
+            midpoint = len(rows) // 2
+            upsert_chunk(client, table, rows[:midpoint], on_conflict)
+            upsert_chunk(client, table, rows[midpoint:], on_conflict)
+            return
+        raise
+
+
+def is_statement_timeout(exc: Exception) -> bool:
+    return "57014" in str(exc) or "statement timeout" in str(exc).lower()
 
 
 def dedupe_rows(rows: list[dict[str, Any]], on_conflict: str) -> list[dict[str, Any]]:
