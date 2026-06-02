@@ -19,6 +19,19 @@ the committed schema.
 python tools/ipeds/download_release.py
 ```
 
+For historical releases where the NCES data-generator CSV ZIP endpoint no
+longer serves mapped tables, install `mdbtools` and export the missing tables
+from the official Access ZIP:
+
+```bash
+brew install mdbtools
+python tools/ipeds/download_release.py --collection-year 2019-20 --data-year 2019 --access-fallback
+```
+
+The downloader still prefers data-generator CSV ZIPs. `--access-fallback` only
+exports mapped tables that are present in the release metadata but return 404
+from the CSV endpoint.
+
 2. Dry-run the loader. This parses metadata, reads the ZIPs, projects public
    facts, and writes `scratch/ipeds/ipeds-<year>-<release>-report.json`. Review
    row counts, missing tables, projected fact counts, and any schema-drift notes
@@ -42,6 +55,13 @@ python tools/ipeds/load_release.py \
 
 ```bash
 python tools/ipeds/load_release.py ... --apply
+```
+
+For a targeted backfill after adding table aliases, restrict projection to one
+or more display groups:
+
+```bash
+python tools/ipeds/load_release.py ... --display-groups Costs --apply
 ```
 
 ## Source discipline
