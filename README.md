@@ -4,7 +4,7 @@
 
 Open-source Common Data Set API, searchable college admissions dataset, federal baseline fact layer, and preservation archive for U.S. higher education data.
 
-An open, reproducible library of US college data. We find each school's Common Data Set document, extract it into a canonical schema, and publish both the raw source file and the structured extract alongside a queryable manifest. For schools without a public CDS, we now publish a curated NCES/IPEDS federal baseline keyed by UNITID and labeled as federal data. No hand-cleaned numbers, no unlabeled source blending — CDS remains the school-authored source, IPEDS and Scorecard remain federal context.
+An open, reproducible library of US college data. We find each school's Common Data Set document, extract it into a canonical schema, and publish both the raw source file and the structured extract alongside a queryable manifest. For schools without a public CDS, we now publish a curated NCES/IPEDS federal baseline keyed by `ipeds_id` (zero-padded UNITID) and labeled as federal data. No hand-cleaned numbers, no unlabeled source blending — CDS remains the school-authored source, IPEDS and Scorecard remain federal context.
 
 > **Status: V1 live at [collegedata.fyi](https://collegedata.fyi).** 6,322 institutions indexed through the federal directory, 3,950 archived CDS documents, 3,792 documents extracted, 200,957 public `cds_fields` rows, 475 `school_browser_rows`, and 383 `school_merit_profile` rows. Five of six extraction tiers shipped: filled XLSX, fillable PDF, flattened PDF, image-only scan, and structured HTML. DOCX is the only remaining tier and is scoped in [PRD 007](docs/prd/007-tier3-docx-extraction.md). The live product now includes institution coverage transparency, source-labeled NCES/IPEDS baseline facts, academic positioning, admission strategy, match-list building, merit profile data, Scorecard outcomes, and a PRD 019 change-intelligence alpha for source-linked year-over-year CDS deltas. Public change events are explicitly review-gated. See [`docs/extraction-quality.md`](docs/extraction-quality.md) for current CDS extraction coverage and [`tools/ipeds/README.md`](tools/ipeds/README.md) for the IPEDS release pipeline.
 
@@ -67,6 +67,11 @@ curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?school_id=eq.yale&order=c
 curl 'https://api.collegedata.fyi/rest/v1/cds_artifacts?document_id=eq.<uuid>&kind=eq.canonical' \
   -H "apikey: $ANON_KEY" \
   -H "Authorization: Bearer $ANON_KEY"
+
+# Historical IPEDS facts: use ipeds_id, field_key, and a data_year range for fast reads
+curl 'https://api.collegedata.fyi/rest/v1/ipeds_facts?ipeds_id=eq.110635&field_key=in.(retention_rate_full_time,graduation_rate_6yr)&data_year=gte.2019&data_year=lte.2024&select=ipeds_id,data_year,field_key,value_numeric,source_table,source_variable&order=data_year.asc' \
+  -H "apikey: $ANON_KEY" \
+  -H "Authorization: Bearer $ANON_KEY"
 ```
 
 ## How it works
@@ -74,7 +79,7 @@ curl 'https://api.collegedata.fyi/rest/v1/cds_artifacts?document_id=eq.<uuid>&ki
 1. Supabase Edge Functions run on cron, discover new or changed CDS documents at each school's Institutional Research URL, and record them in Postgres. Source bytes are archived in Storage on first discovery so we still have them if the school later removes the original.
 2. A Python worker prioritizes fresh CDS years, routes each document from byte-derived `source_format`, and extracts by tier. Tiers that ship today: filled XLSX -> template or embedded answer-column cell map + openpyxl; fillable PDF with AcroForm fields -> deterministic direct read ([`tools/tier2_extractor/`](tools/tier2_extractor/)); flattened PDF -> Docling layout extraction + schema-targeting cleaner ([`tools/extraction_worker/tier4_cleaner.py`](tools/extraction_worker/tier4_cleaner.py)); image-only scans -> force-OCR pass through the same Docling pipeline; structured HTML -> HTML normalizer reusing the Tier 4 cleaner. Remaining tier scoped but not yet built: filled DOCX via Structured Document Tags ([PRD 007](docs/prd/007-tier3-docx-extraction.md)).
 3. All extractors produce output keyed to the CDS Initiative's canonical field IDs using the schema at [`schemas/`](schemas/). Cross-school queries join on that field ID regardless of which extractor produced the values.
-4. The IPEDS pipeline loads official NCES metadata workbooks and selected CSV table ZIPs into release, metadata, raw-row, and curated-fact tables. `school_facts_unified` is the public serving view for source-labeled federal baseline facts; raw IPEDS rows are preserved for audit, not treated as the product API.
+4. The IPEDS pipeline loads official NCES metadata workbooks and selected CSV table ZIPs into release, metadata, raw-row, and curated-fact tables. `school_facts_unified` is the public serving view for source-labeled federal baseline facts; `ipeds_current_facts` is backed by a materialized cache; raw IPEDS rows are preserved for audit, not treated as the product API.
 5. PostgREST exposes the manifest, field substrate, browser rows, institution coverage, IPEDS facts, Scorecard joins, and merit profiles as a public read-only API at `api.collegedata.fyi`. The `browser-search` Edge Function powers the queryable browser and match list; `school_merit_profile` joins Section H CDS facts with federal affordability/outcome fields.
 6. PRD 019 projects selected year-over-year changes from comparable primary CDS rows into `cds_field_change_events`. Generated candidates are service-role/operator data by default; the school-page "What changed" card only reads events marked `public_visible=true` after verification.
 7. Community cleanup tools can register via `cleaners.yaml` and publish their own artifacts alongside the primary ones — see [ADR 0002](docs/decisions/0002-publish-raw-over-clean.md) for the rationale.

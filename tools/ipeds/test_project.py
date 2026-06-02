@@ -6,7 +6,7 @@ import zipfile
 from pathlib import Path
 
 from tools.ipeds.load_release import read_table_zip
-from tools.ipeds.load_release import dedupe_rows
+from tools.ipeds.load_release import dedupe_rows, refresh_post_load_serving_views
 from tools.ipeds.mappings import FactMapping, fact_mappings_for_data_year, resolve_fact_mappings_for_columns, table_name_for_data_year
 from tools.ipeds.metadata import IpedsColumn, IpedsValueLabel
 from tools.ipeds.project import project_rows_to_facts, quality_from_label
@@ -107,6 +107,33 @@ class IpedsProjectionTests(unittest.TestCase):
         self.assertEqual(next(mapping for mapping in resolved if mapping.field_key == "tuition_in_state").table_name, "IC2019_AY")
         self.assertEqual(next(mapping for mapping in resolved if mapping.field_key == "room_and_board_on_campus").table_name, "IC2019")
         self.assertEqual(next(mapping for mapping in resolved if mapping.field_key == "total_price_in_state_on_campus").table_name, "DRVIC2019")
+
+    def test_post_load_refreshes_current_cache_before_browser_modes(self) -> None:
+        class FakeRpc:
+            def __init__(self, calls: list[str], name: str) -> None:
+                self.calls = calls
+                self.name = name
+                self.data = 1
+
+            def execute(self) -> "FakeRpc":
+                self.calls.append(self.name)
+                return self
+
+        class FakeClient:
+            def __init__(self) -> None:
+                self.calls: list[str] = []
+
+            def rpc(self, name: str) -> FakeRpc:
+                return FakeRpc(self.calls, name)
+
+        client = FakeClient()
+
+        refresh_post_load_serving_views(client)
+
+        self.assertEqual(
+            client.calls,
+            ["refresh_ipeds_current_facts_cache", "refresh_ipeds_browser_source_modes"],
+        )
 
 
 if __name__ == "__main__":

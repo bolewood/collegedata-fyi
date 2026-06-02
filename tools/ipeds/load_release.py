@@ -255,12 +255,21 @@ def apply_to_supabase(
         payload["release_id"] = release_id
         fact_payloads.append(payload)
     batch_upsert(client, "ipeds_facts", fact_payloads, "release_id,unitid,field_key,source_table,source_variable")
-    try:
-        refreshed = client.rpc("refresh_ipeds_browser_source_modes").execute()
-        print(f"refreshed browser source modes: {refreshed.data}")
-    except Exception as exc:  # pragma: no cover - defensive around optional post-load helper.
-        print(f"warning: could not refresh browser source modes: {exc}", file=sys.stderr)
+    refresh_post_load_serving_views(client)
     print(f"applied release {release_id}: {len(raw_payloads)} raw rows, {len(fact_payloads)} facts")
+
+
+def refresh_post_load_serving_views(client: Any) -> None:
+    post_load_helpers = [
+        ("refresh_ipeds_current_facts_cache", "current IPEDS facts cache"),
+        ("refresh_ipeds_browser_source_modes", "browser source modes"),
+    ]
+    for rpc_name, label in post_load_helpers:
+        try:
+            refreshed = client.rpc(rpc_name).execute()
+            print(f"refreshed {label}: {refreshed.data}")
+        except Exception as exc:  # pragma: no cover - defensive around optional post-load helpers.
+            print(f"warning: could not refresh {label}: {exc}", file=sys.stderr)
 
 
 def batch_upsert(client: Any, table: str, rows: list[dict[str, Any]], on_conflict: str, size: int = 500) -> None:

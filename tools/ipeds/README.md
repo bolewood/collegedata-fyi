@@ -57,6 +57,16 @@ python tools/ipeds/load_release.py \
 python tools/ipeds/load_release.py ... --apply
 ```
 
+The loader refreshes `ipeds_current_facts_cache` after fact upserts, then
+refreshes browser source-mode flags that depend on current facts. If an
+operator applies rows manually, run these RPCs with service-role credentials in
+the same order:
+
+```sql
+select public.refresh_ipeds_current_facts_cache();
+select public.refresh_ipeds_browser_source_modes();
+```
+
 For a targeted backfill after adding table aliases, restrict projection to one
 or more display groups:
 
@@ -71,6 +81,8 @@ python tools/ipeds/load_release.py ... --display-groups Costs --apply
 - The Access database ZIP is recorded as release provenance but not parsed.
 - Raw rows are preserved in `ipeds_raw_rows`; public products query
   `ipeds_facts`, `ipeds_current_facts`, or `school_facts_unified`.
+  `ipeds_current_facts` is a stable view backed by the materialized
+  `ipeds_current_facts_cache` serving surface.
 - `release_date` is normalized to ISO form. Month-level NCES dates such as
   `March 2026` are stored as the first day of the month with
   `release_date_precision = "month"` in notes.
@@ -138,6 +150,28 @@ curl "$SUPABASE_URL/rest/v1/school_facts_unified?school_id=eq.goshen-college&sel
 
 The probe should mark the target release as `loaded`, and school pages should
 read the new current facts through `school_facts_unified`.
+
+## Public query performance
+
+`ipeds_facts` is a long-form historical table. Public queries should use the
+same keys as the serving indexes:
+
+- Prefer `ipeds_id` over raw `unitid`. `ipeds_id` is the public, zero-padded
+  UNITID text key used by `institution_directory`, `school_facts_unified`, and
+  the index-backed historical query path.
+- Include `field_key` for analytical reads.
+- Include `data_year` or a narrow `data_year` range when reading history.
+- Use `school_facts_unified` for current school-page display and
+  `ipeds_current_facts` for latest-per-school fact reads. Both avoid
+  recomputing the latest-release window over the full historical table.
+
+Fast historical example:
+
+```bash
+curl "$SUPABASE_URL/rest/v1/ipeds_facts?ipeds_id=eq.110635&field_key=in.(retention_rate_full_time,graduation_rate_6yr)&data_year=gte.2019&data_year=lte.2024&select=ipeds_id,data_year,field_key,value_numeric,source_table,source_variable&order=data_year.asc" \
+  -H "apikey: $SUPABASE_ANON_KEY" \
+  -H "Authorization: Bearer $SUPABASE_ANON_KEY"
+```
 
 ## Public defaults
 

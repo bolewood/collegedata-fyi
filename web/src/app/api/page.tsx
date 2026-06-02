@@ -423,7 +423,7 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         />
         <Resource
           name="ipeds_current_facts"
-          description="Latest public IPEDS fact per UNITID and field key. Prefers newer data years, then final over provisional over preliminary within the same data year. Use school_facts_unified for school-page display because it already joins institution names, slugs, and in-scope filtering."
+          description="Latest public IPEDS fact per public ipeds_id and field key. Prefers newer data years, then final over provisional over preliminary within the same data year. This view is backed by a materialized serving cache; use school_facts_unified for school-page display because it already joins institution names, slugs, and in-scope filtering."
           fields={[
             "ipeds_id",
             "school_id",
@@ -467,7 +467,7 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         />
         <Resource
           name="ipeds_facts"
-          description="Curated long-form NCES/IPEDS facts. This is the source-labeled fact table behind ipeds_current_facts and school_facts_unified; every row keeps release, source variable, imputation, and CDS-definition alignment metadata."
+          description="Curated long-form NCES/IPEDS facts. This is the source-labeled fact table behind ipeds_current_facts and school_facts_unified; every row keeps release, source variable, imputation, and CDS-definition alignment metadata. For historical reads, filter by ipeds_id, field_key, and data_year rather than raw unitid."
           fields={[
             "ipeds_id",
             "school_id",
@@ -863,6 +863,19 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         not school-published CDS fields unless the alignment says so.
       </p>
       <CodeBlock>{`curl '${BASE}/rest/v1/school_facts_unified?school_id=eq.goshen-college&select=school_id,school_name,field_label,display_value,release_type,collection_year,source_table,source_variable,quality_flag,definition_alignment&order=display_group,field_key' \\
+  -H 'apikey: <anon key>' \\
+  -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
+
+      <h3 className="mt-6 text-base font-semibold text-gray-900">
+        Fetch a historical IPEDS time series
+      </h3>
+      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+        Historical IPEDS queries are fastest when they use the public{" "}
+        <code>ipeds_id</code> key, one or more <code>field_key</code> values, and
+        a bounded <code>data_year</code> range. Avoid filtering raw{" "}
+        <code>unitid</code> unless you also know the matching index exists.
+      </p>
+      <CodeBlock>{`curl '${BASE}/rest/v1/ipeds_facts?ipeds_id=eq.110635&field_key=in.(retention_rate_full_time,graduation_rate_6yr)&data_year=gte.2019&data_year=lte.2024&select=ipeds_id,data_year,field_key,value_numeric,source_table,source_variable&order=data_year.asc' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 
