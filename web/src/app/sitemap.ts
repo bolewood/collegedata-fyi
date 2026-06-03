@@ -81,6 +81,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.5,
     },
+    {
+      url: `${SITE_URL}/recipes/test-optional-outcome-tracker`,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    },
   ];
 
   const schoolPages: MetadataRoute.Sitemap = schools.map((s) => ({

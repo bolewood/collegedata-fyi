@@ -60,6 +60,25 @@ export async function GET() {
             responses: { "200": { description: "Sparse comparison matrix" } },
           },
         },
+        "/api/recipes/test-optional-outcome-tracker": {
+          get: {
+            summary: "Get the test-optional observability and UC outcome tracker",
+            parameters: [
+              {
+                name: "format",
+                in: "query",
+                required: false,
+                schema: { type: "string", enum: ["csv"] },
+              },
+            ],
+            responses: {
+              "200": {
+                description:
+                  "Tracker JSON by default, or CSV when ?format=csv is passed.",
+              },
+            },
+          },
+        },
         "/api/fields": {
           get: {
             summary: "List V1 friendly field definitions",
@@ -107,4 +126,3 @@ export async function GET() {
     },
   );
 }
-
