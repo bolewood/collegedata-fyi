@@ -30,7 +30,7 @@ from pathlib import Path
 
 
 PRODUCER_NAME = "tier4_docling"
-PRODUCER_VERSION = "0.3.11"
+PRODUCER_VERSION = "0.3.12"
 DOCLING_CONFIG_NAME = "production-fast-no-orphan-clusters"
 DOCLING_NATIVE_TABLES_VERSION = "docling_table_cells_compact_v1"
 SCANNED_ADMISSIONS_OCR_MAX_PAGE = 35
@@ -40,7 +40,11 @@ def _matches_visual_ocr_trigger(text: str) -> bool:
     normalized = re.sub(r"\s+", " ", text.lower())
     triggers = (
         "c1. first-time",
+        "c. first-time, first-year admission",
+        "first-time, first-year admission",
         "first-time, first-year student applicants",
+        "first-time, first-year student admits",
+        "first-time, first-year student enrollees",
         "residency breakdowns for total applicants",
         "total first-time, first-year (degree-seeking) who applied",
         "c2. first time",
@@ -84,13 +88,16 @@ def _visual_ocr_candidate_pages(pdf_path: Path) -> list[int]:
 
         reader = pypdf.PdfReader(str(pdf_path))
         pages: set[int] = set()
+        page_count = len(reader.pages)
         for idx, page in enumerate(reader.pages, start=1):
             try:
                 text = page.extract_text() or ""
             except Exception:
                 text = ""
             if _matches_visual_ocr_trigger(text):
-                pages.add(idx)
+                for page_no in (idx - 1, idx, idx + 1):
+                    if 1 <= page_no <= page_count and page_no <= SCANNED_ADMISSIONS_OCR_MAX_PAGE:
+                        pages.add(page_no)
         return sorted(pages)
     except Exception:
         return []

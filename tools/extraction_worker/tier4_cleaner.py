@@ -3702,10 +3702,23 @@ def resolve_c9_score_distributions(
 
         previous_single_role = roles[0][1] if len(roles) == 1 else None
         matched_any = False
+        previous_range_key: str | None = None
         for row in table["rows"]:
             range_key = _c9_range_key(_normalize_label(row["label"]))
             if not range_key:
                 continue
+            values_with_numbers = [
+                _extract_number(value)
+                for value in row.get("values", [])
+                if _extract_number(value) is not None
+            ]
+            if (
+                range_key == previous_range_key
+                and values_with_numbers
+                and all(value in {"100", "100.00"} for value in values_with_numbers)
+            ):
+                range_key = "total"
+            previous_range_key = range_key
             for col_idx, role in roles:
                 qn = _C9_DISTRIBUTION_QNS.get(role, {}).get(range_key)
                 if not qn or col_idx >= len(row["values"]):
@@ -5038,14 +5051,19 @@ def resolve_h_financial_aid(
                 out[non_need_qn] = {"value": "X", "source": "tier4_cleaner"}
 
         if match := re.search(
-            r"H15\b.*?please\s+provide\s+details\s+below:\s*(.+?)\s*(?:CDS-H|I\.\s*INSTRUCTIONAL FACULTY|$)",
+            r"H15\b.*?please\s+provide\s+details\s+below:\s*(.+?)\s*(?:CDS-H|I\.?\s*INSTRUCTIONAL\s*FACULTY|J\.?\s*Disciplinary|$)",
             h_block,
             re.IGNORECASE | re.DOTALL,
         ):
             text = re.sub(r"\s+", " ", match.group(1)).strip()
             text = text.replace("on- campus", "on-campus")
             text = re.sub(r"\bW e\b", "We", text)
-            text = re.split(r"\s+(?:-\s+\[|Students must reply by|H1[234]\b|##\s+)", text, maxsplit=1)[0].strip()
+            text = re.split(
+                r"\s+(?:-\s+\[|Students must reply by|H1[234]\b|##\s+)|I\.?\s*INSTRUCTIONAL\s*FACULTY|J\.?\s*Disciplinary",
+                text,
+                maxsplit=1,
+                flags=re.IGNORECASE,
+            )[0].strip()
             if (
                 re.fullmatch(r"Common Data Set\s+20\d{2}-\s*20\d{2}", text, re.IGNORECASE)
                 or "Non-Need Based" in text

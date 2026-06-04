@@ -118,6 +118,40 @@ ACT Reading 21 25 30
         self.assertEqual(values["C.915"]["value"], "24")
         self.assertEqual(values["C.916"]["value"], "28")
 
+    def test_valdosta_visual_ocr_c9_lines(self):
+        markdown = """
+C9. Percent and number of first-time, first-year students enrolled in Fall 2025 who submitted national standardized (SAT/ACT) test scores.
+
+Percent Number
+Submitting SAT Scores 23.93 303
+Submitting ACT Scores 6.56 83
+
+Assessment 25th Percentile 50th Percentile 75th Percentile
+Score Score Score
+
+SAT Composite 920 1000 1080
+SAT Evidence-Based Reading and Writing 480 530 570
+SAT Math 440 480 540
+ACT Composite 15 17 20
+ACT Math 15 16 18
+ACT English 13 15 19
+ACT Science 15 17 21
+ACT Reading 15 19 23
+"""
+
+        values = clean(markdown)
+
+        self.assertEqual(values["C.901"]["value"], "23.93")
+        self.assertEqual(values["C.902"]["value"], "6.56")
+        self.assertEqual(values["C.903"]["value"], "303")
+        self.assertEqual(values["C.904"]["value"], "83")
+        self.assertEqual(values["C.905"]["value"], "920")
+        self.assertEqual(values["C.906"]["value"], "1000")
+        self.assertEqual(values["C.907"]["value"], "1080")
+        self.assertEqual(values["C.914"]["value"], "15")
+        self.assertEqual(values["C.915"]["value"], "17")
+        self.assertEqual(values["C.916"]["value"], "20")
+
     def test_c9_form_style_submission_values_on_following_lines(self):
         markdown = """
 Score that represents the 25th and 75th percentile score for students who enrolled in Fall 2024 (CDS C9)
@@ -233,6 +267,24 @@ Submitting ACT Scores
         self.assertEqual(values["C.957"]["value"], "3")
         self.assertNotIn("C.958", values)
         self.assertEqual(values["C.959"]["value"], "100.00")
+
+    def test_c9_blank_below_6_row_followed_by_unlabeled_total(self):
+        markdown = """
+| Score Range   | ACT Composite   | ACT English   | ACT Math   | ACT Reading   | ACT Science   |
+|---------------|-----------------|---------------|------------|---------------|---------------|
+| 30-36         |                 |               |            |               |               |
+| 24-29         |                 |               |            |               |               |
+| 18-23         |                 |               |            |               |               |
+| 12-17         |                 |               |            |               |               |
+| 6-11          |                 |               |            |               |               |
+| Below 6       |                 |               |            |               |               |
+|               | 100%            | 100%          | 100%       | 100%          | 100%          |
+"""
+
+        values = clean(markdown)
+
+        self.assertNotIn("C.958", values)
+        self.assertEqual(values["C.959"]["value"], "100")
 
     def test_c9_percentile_table_uses_header_order(self):
         markdown = """

@@ -93,6 +93,9 @@ clock.
 │           (CMU pattern), fan out via pickCandidates (ADR     │
 │           0007 Stage B — multi-candidate, prefer full-CDS    │
 │           over section, deprioritize test artifacts).        │
+│           When one CDS year is published as multiple section │
+│           PDFs, group recognized A-J files into a section    │
+│           package instead of picking only Section C.         │
 │           Year is a URL-side guess only; content year is     │
 │           written later by the extraction worker.            │
 │                                                              │
@@ -127,6 +130,35 @@ clock.
 │                  flip extraction_status='extraction_pending' │
 └──────────────────────────────────────────────────────────────┘
 ```
+
+### Sectionized CDS packages
+
+Some schools publish one CDS year as separate section PDFs rather than a
+single filled template. CMU's 2025-26 page is the motivating case: links such
+as `cds-2025-a-general-information.pdf`,
+`cds-2025-b-enrollment-and-persistence.pdf`, and
+`cds-2025-c-first-time-first-year-admission.pdf` are all parts of one logical
+CDS response.
+
+The archive layer handles this before extraction:
+
+1. The resolver detects same-year section files from filenames and returns a
+   `section_package` candidate when two or more section letters are available
+   and no full-CDS file exists for that year.
+2. The archiver downloads and uploads every original section PDF as
+   `cds_artifacts.kind='source_part'`. Each row records section letter, source
+   URL, final URL, SHA, storage path, and sort order in `notes`.
+3. The archiver merges the section PDFs in A-J order into a derived PDF bundle.
+   That bundle is stored as the document's latest `kind='source'` artifact so
+   the extraction worker still consumes one complete logical source file.
+4. The `kind='source'` artifact's `notes.source_package` manifest records all
+   parts used to build the bundle. The original section PDFs remain the
+   provenance; the merged PDF is an extraction convenience.
+
+Full CDS files still win over packages. Single section-only years keep the
+legacy fallback behavior and can archive Section C by itself, but multiple
+recognized sections now become one logical source instead of colliding across
+successive refreshes.
 
 Downstream of the archive queue, the operator-run Python workers complete the
 data path:

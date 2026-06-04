@@ -112,6 +112,19 @@ CDS-H
         self.assertNotIn("H.1411", values)
         self.assertEqual(values["H.1501"]["value"], "Automatic Scholarship for Ohio Residents")
 
+    def test_h15_empty_value_stops_before_compact_section_i(self):
+        markdown = """
+H15. If your institution has recently implemented any major financial aid policy, program, or initiative to make your
+institution more affordable to incoming students such as replacing loans with grants, or waiving costs for families
+below a certain income level please provide details below:
+I.INSTRUCTIONALFACULTYANDCLASSSIZE I-1. Please report the number of instructional faculty members
+J.DisciplinaryareasofDEGREESCONFERRED
+"""
+
+        values = clean(markdown)
+
+        self.assertNotIn("H.1501", values)
+
 
 if __name__ == "__main__":
     unittest.main()

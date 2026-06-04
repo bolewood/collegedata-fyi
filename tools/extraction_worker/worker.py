@@ -162,6 +162,50 @@ def low_field_quality_flag(fields: int, threshold: int = MIN_TIER4_FIELDS) -> st
     return "blank_template" if fields == 0 else "low_coverage"
 
 
+def extraction_quality_flag(canonical: dict, threshold: int = MIN_TIER4_FIELDS) -> str | None:
+    """Return a recoverable extraction quality flag for weak canonical artifacts."""
+    stats = canonical.get("stats") or {}
+    fields = int(stats.get("schema_fields_populated") or 0)
+    flag = low_field_quality_flag(fields, threshold)
+    if flag:
+        return flag
+    page_count = int(stats.get("page_count") or 0)
+    if page_count >= 20 and fields < 100:
+        return "low_coverage"
+
+    values = canonical.get("values") or {}
+    markdown = str(canonical.get("markdown") or "")
+    markdown_lower = markdown.lower()
+    if fields < 150:
+        has_c1_anchor = (
+            "c1. first-time" in markdown_lower
+            or "first-time, first-year student applicants" in markdown_lower
+            or "first-time, first-year admission" in markdown_lower
+        )
+        has_c9_anchor = (
+            "submitting sat scores" in markdown_lower
+            or "c9. percent and number" in markdown_lower
+        )
+        c1_keys = {"C.101", "C.102", "C.104", "C.105", "C.116", "C.117", "C.118", "C.119"}
+        c9_keys = {"C.901", "C.902", "C.903", "C.904", "C.905", "C.906", "C.907", "C.914", "C.915", "C.916"}
+        if (has_c1_anchor and not c1_keys.intersection(values)) or (
+            has_c9_anchor and not c9_keys.intersection(values)
+        ):
+            return "low_coverage"
+
+    for qn in ("H.1501",):
+        rec = values.get(qn) or {}
+        text = str(rec.get("value") or "")
+        compact = re.sub(r"\s+", "", text).lower()
+        if len(text) > 5000 and (
+            "instructionalfacultyandclasssize" in compact
+            or "disciplinaryareasofdegreesconferred" in compact
+        ):
+            return "low_coverage"
+
+    return None
+
+
 def mean_or_none(values: list[int]) -> float | None:
     if not values:
         return None
@@ -893,7 +937,7 @@ def _run_tier6(
     producer_version = canonical["producer_version"]
     stats = canonical.get("stats", {})
     fields = int(stats.get("schema_fields_populated") or 0)
-    quality_flag = low_field_quality_flag(fields)
+    quality_flag = extraction_quality_flag(canonical)
 
     if not dry_run:
         if not force_reextract and artifact_already_extracted(
@@ -964,7 +1008,7 @@ def _run_tier4(
     producer_version = canonical["producer_version"]
     stats = canonical.get("stats", {})
     fields = int(stats.get("schema_fields_populated") or 0)
-    quality_flag = low_field_quality_flag(fields)
+    quality_flag = extraction_quality_flag(canonical)
 
     if not dry_run:
         if not force_reextract and artifact_already_extracted(

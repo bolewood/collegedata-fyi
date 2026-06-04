@@ -111,6 +111,7 @@ export interface InsertFreshArgs {
   // cds_documents.source_http_last_modified by migration
   // 20260505160000_archive_observability.sql for freshness audits.
   source_http_last_modified?: string | null;
+  source_artifact_notes?: Record<string, unknown>;
 }
 
 // Used for the "no existing row" branch. Inserts cds_documents + the first
@@ -150,6 +151,7 @@ export async function insertFreshDocument(
     producer_version: ARCHIVER_VERSION,
     storage_path: args.storage_path,
     sha256: args.source_sha256,
+    notes: args.source_artifact_notes ?? {},
   });
   if (artErr) throw new Error(`insertFreshDocument (artifact): ${artErr.message}`);
 
@@ -173,6 +175,7 @@ export interface RefreshArgs {
   // re-archive; clears Stale value if the school stopped emitting
   // the header. Null is the correct "not reported by host" value.
   source_http_last_modified?: string | null;
+  source_artifact_notes?: Record<string, unknown>;
 }
 
 // Used when a new SHA is seen for an existing (school, year) row.
@@ -216,6 +219,7 @@ export async function refreshDocumentWithNewSha(
     producer_version: ARCHIVER_VERSION,
     storage_path: args.storage_path,
     sha256: args.source_sha256,
+    notes: args.source_artifact_notes ?? {},
   });
   if (artErr) {
     throw new Error(`refreshDocumentWithNewSha (artifact): ${artErr.message}`);
