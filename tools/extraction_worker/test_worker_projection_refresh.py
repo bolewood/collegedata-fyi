@@ -7,6 +7,7 @@ from worker import (
     annotate_tier2_unmapped_fields,
     artifact_already_extracted,
     attach_source_metadata,
+    extraction_quality_flag,
     extraction_no_project,
     extraction_success,
     is_failure_action,
@@ -71,6 +72,37 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
         self.assertEqual(low_field_quality_flag(0), "blank_template")
         self.assertEqual(low_field_quality_flag(24), "low_coverage")
         self.assertIsNone(low_field_quality_flag(25))
+
+    def test_extraction_quality_flags_missing_admissions_anchors(self):
+        canonical = {
+            "stats": {"schema_fields_populated": 43},
+            "markdown": "C9. Percent and number\nSubmitting SAT Scores\nSubmitting ACT Scores",
+            "values": {"A.501": {"value": "X"}},
+        }
+
+        self.assertEqual(extraction_quality_flag(canonical), "low_coverage")
+
+    def test_extraction_quality_flags_sparse_long_documents(self):
+        canonical = {
+            "stats": {"schema_fields_populated": 87, "page_count": 40},
+            "markdown": "",
+            "values": {},
+        }
+
+        self.assertEqual(extraction_quality_flag(canonical), "low_coverage")
+
+    def test_extraction_quality_flags_section_swallow(self):
+        canonical = {
+            "stats": {"schema_fields_populated": 43},
+            "markdown": "",
+            "values": {
+                "H.1501": {
+                    "value": "x" * 5001 + " I.INSTRUCTIONALFACULTYANDCLASSSIZE",
+                },
+            },
+        }
+
+        self.assertEqual(extraction_quality_flag(canonical), "low_coverage")
 
     def test_attach_source_metadata_records_latest_source(self):
         canonical = {}

@@ -29,7 +29,7 @@ from supabase import create_client
 
 C1_KEYS = {"C.101", "C.102", "C.105", "C.106", "C.117", "C.118", "C.119"}
 C9_KEYS = {"C.901", "C.902", "C.903", "C.904", "C.905", "C.906", "C.907", "C.914", "C.915", "C.916"}
-OCR_PRODUCER_VERSION = "0.3.8"
+OCR_PRODUCER_VERSION = "0.3.12"
 
 
 def parse_year_start(year: str | None) -> int | None:

@@ -371,6 +371,37 @@ C3   High school completion requirement
         self.assertEqual(values["C.203"]["value"], "344")
         self.assertEqual(values["C.204"]["value"], "157")
 
+    def test_valdosta_visual_ocr_c1_lines(self):
+        supplemental = """
+C. FIRST-TIME, FIRST-YEAR ADMISSION
+FIRST-TIME, FIRST-YEAR STUDENT APPLICANTS TOTAL
+Total first-time, first-year men who applied 1655
+Total first-time, first-year women who applied 3836
+Total first-time, first-year unknown sex who applied 0
+FIRST-TIME, FIRST-YEAR STUDENT ADMITS TOTAL
+Total first-time, first-year men who were admitted 1232
+Total first-time, first-year women who were admitted 3034
+Total first-time, first-year unknown sex who were admitted 0
+FIRST-TIME, FIRST-YEAR STUDENT ENROLLEES TOTAL
+Total first-time, first-year men who enrolled 411
+Total first-time, first-year women who enrolled 814
+Total first-time, first-year unknown sex who enrolled 0
+"""
+
+        values = clean(
+            "",
+            supplemental_text=supplemental,
+            schema=SchemaIndex(REPO_ROOT / "schemas" / "cds_schema_2025_26.json"),
+        )
+
+        self.assertEqual(values["C.101"]["value"], "1655")
+        self.assertEqual(values["C.102"]["value"], "3836")
+        self.assertEqual(values["C.104"]["value"], "1232")
+        self.assertEqual(values["C.105"]["value"], "3034")
+        self.assertEqual(values["C.116"]["value"], "5491")
+        self.assertEqual(values["C.117"]["value"], "4266")
+        self.assertEqual(values["C.118"]["value"], "1225")
+
 
 if __name__ == "__main__":
     unittest.main()
