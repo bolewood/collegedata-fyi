@@ -85,10 +85,6 @@ curl 'https://www.collegedata.fyi/api/schools/mit/sources'
 
 curl 'https://www.collegedata.fyi/api/compare?schools=mit,yale,university-of-chicago&categories=admissions,cost,outcomes'
 
-curl 'https://www.collegedata.fyi/api/recipes/test-optional-outcome-tracker'
-
-curl 'https://www.collegedata.fyi/api/recipes/test-optional-outcome-tracker?format=csv'
-
 curl 'https://www.collegedata.fyi/api/fields'
 
 curl 'https://www.collegedata.fyi/openapi.json'`}</CodeBlock>
@@ -879,7 +875,7 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         a bounded <code>data_year</code> range. Avoid filtering raw{" "}
         <code>unitid</code> unless you also know the matching index exists.
       </p>
-      <CodeBlock>{`curl '${BASE}/rest/v1/ipeds_facts?ipeds_id=eq.110635&field_key=in.(retention_rate_full_time,bachelor_6yr_grad_rate,transfer_out_rate_total)&data_year=gte.2019&data_year=lte.2024&select=ipeds_id,data_year,field_key,value_numeric,source_table,source_variable&order=data_year.asc' \\
+      <CodeBlock>{`curl '${BASE}/rest/v1/ipeds_facts?ipeds_id=eq.110635&field_key=in.(retention_rate_full_time,graduation_rate_6yr)&data_year=gte.2019&data_year=lte.2024&select=ipeds_id,data_year,field_key,value_numeric,source_table,source_variable&order=data_year.asc' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 
