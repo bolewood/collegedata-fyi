@@ -5,15 +5,20 @@
 // context and finally-block accounting.
 
 import { SupabaseClient } from "jsr:@supabase/supabase-js@2";
+import { PDFDocument } from "npm:pdf-lib@1.17.1";
 import {
   isSafeUrl,
   resolveCdsForSchool,
+  ResolvedCandidate,
   ResolveProbeData,
   ResolveResult,
+  ResolvedSectionPackage,
   USER_AGENT,
 } from "./resolve.ts";
 import { inferHosting, inferWaf, type HostingInference } from "./hosting.ts";
 import {
+  ARCHIVER_PRODUCER,
+  ARCHIVER_VERSION,
   bumpVerified,
   fetchDocumentForSchoolYear,
   fetchLatestSourceArtifact,
@@ -453,8 +458,13 @@ export async function archiveManualUrls(
       normalizeYear(filename);
     try {
       candidates.push(await archiveOneCandidate(supabase, school, {
+        candidate_kind: "single_document",
         url,
         cds_year: year ?? UNKNOWN_YEAR_SENTINEL,
+        filename,
+        is_section_file: false,
+        is_test_artifact: false,
+        discovered_via: "direct",
       }, { source_provenance: options.source_provenance }));
     } catch (e) {
       if (e instanceof PermanentError) {
@@ -504,6 +514,248 @@ export async function archiveManualUrls(
   };
 }
 
+interface DownloadedSectionPart {
+  section: string;
+  filename: string;
+  source_url: string;
+  final_url: string;
+  sha256: string;
+  storage_path: string;
+  size_bytes: number;
+  http_last_modified: string | null;
+  bytes: Uint8Array;
+}
+
+async function sha256Hex(bytes: Uint8Array): Promise<string> {
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  const hashBuf = await crypto.subtle.digest("SHA-256", copy.buffer as ArrayBuffer);
+  return Array.from(new Uint8Array(hashBuf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function buildPdfBundle(parts: DownloadedSectionPart[]): Promise<Uint8Array> {
+  const merged = await PDFDocument.create();
+  for (const part of parts) {
+    let pdf: PDFDocument;
+    try {
+      pdf = await PDFDocument.load(part.bytes);
+    } catch (e) {
+      throw new PermanentError(
+        `section ${part.section} is not a mergeable PDF (${part.final_url}): ${(e as Error).message}`,
+        "wrong_content_type",
+      );
+    }
+    const copied = await merged.copyPages(pdf, pdf.getPageIndices());
+    for (const page of copied) merged.addPage(page);
+  }
+  return await merged.save();
+}
+
+function packageSourceNotes(
+  pkg: ResolvedSectionPackage,
+  parts: DownloadedSectionPart[],
+  bundleSha256: string,
+): Record<string, unknown> {
+  return {
+    source_package: {
+      kind: "section_package",
+      assembled_at: new Date().toISOString(),
+      bundle_sha256: bundleSha256,
+      section_count: parts.length,
+      sections: parts.map((p) => p.section),
+      package_filename: pkg.filename,
+      parts: parts.map((p, index) => ({
+        sort_order: index + 1,
+        section: p.section,
+        filename: p.filename,
+        source_url: p.source_url,
+        final_url: p.final_url,
+        sha256: p.sha256,
+        storage_path: p.storage_path,
+        size_bytes: p.size_bytes,
+        source_http_last_modified: p.http_last_modified,
+      })),
+    },
+  };
+}
+
+async function insertSourcePartArtifacts(
+  supabase: SupabaseClient,
+  documentId: string,
+  parts: DownloadedSectionPart[],
+): Promise<void> {
+  if (parts.length === 0) return;
+  const { error } = await supabase.from("cds_artifacts").insert(
+    parts.map((p, index) => ({
+      document_id: documentId,
+      kind: "source_part",
+      producer: ARCHIVER_PRODUCER,
+      producer_version: ARCHIVER_VERSION,
+      storage_path: p.storage_path,
+      sha256: p.sha256,
+      notes: {
+        sort_order: index + 1,
+        section: p.section,
+        filename: p.filename,
+        source_url: p.source_url,
+        final_url: p.final_url,
+        size_bytes: p.size_bytes,
+        source_http_last_modified: p.http_last_modified,
+      },
+    })),
+  );
+  if (error) throw new Error(`insertSourcePartArtifacts: ${error.message}`);
+}
+
+async function effectiveIpedsIdForSchool(
+  supabase: SupabaseClient,
+  school: SchoolInput,
+): Promise<string | null> {
+  let effectiveIpedsId: string | null = school.ipeds_id ?? null;
+  if (effectiveIpedsId) return effectiveIpedsId;
+  const { data: sibling } = await supabase
+    .from("cds_documents")
+    .select("ipeds_id")
+    .eq("school_id", school.school_id)
+    .not("ipeds_id", "is", null)
+    .limit(1)
+    .maybeSingle();
+  if (sibling?.ipeds_id) effectiveIpedsId = sibling.ipeds_id as string;
+  return effectiveIpedsId;
+}
+
+async function archiveSectionPackage(
+  supabase: SupabaseClient,
+  school: SchoolInput,
+  pkg: ResolvedSectionPackage,
+  options: { source_provenance?: string } = {},
+): Promise<CandidateOutcome> {
+  const parts: DownloadedSectionPart[] = [];
+  for (const part of pkg.parts) {
+    const downloaded = await downloadWithCaps(part.url);
+    const ext = extForResponse(downloaded.contentType, downloaded.finalUrl, downloaded.bytes);
+    if (ext !== "pdf") {
+      throw new PermanentError(
+        `section ${part.section} is ${ext ?? "unknown"}, expected pdf at ${downloaded.finalUrl}`,
+        "wrong_content_type",
+      );
+    }
+    const storagePath = buildSourcePath(
+      school.school_id,
+      pkg.cds_year,
+      downloaded.sha256,
+      "pdf",
+    );
+    await ensureObjectUploaded(supabase, storagePath, downloaded.bytes, "pdf");
+    parts.push({
+      section: part.section,
+      filename: part.filename,
+      source_url: part.url,
+      final_url: downloaded.finalUrl,
+      sha256: downloaded.sha256,
+      storage_path: storagePath,
+      size_bytes: downloaded.bytes.byteLength,
+      http_last_modified: downloaded.httpLastModified,
+      bytes: downloaded.bytes,
+    });
+  }
+
+  const bundleBytes = await buildPdfBundle(parts);
+  const bundleSha256 = await sha256Hex(bundleBytes);
+  const bundleStoragePath = buildSourcePath(
+    school.school_id,
+    pkg.cds_year,
+    bundleSha256,
+    "pdf",
+  );
+  await ensureObjectUploaded(supabase, bundleStoragePath, bundleBytes, "pdf");
+
+  const sourceUrl = parts[0]?.final_url ?? pkg.url;
+  const sourceNotes = packageSourceNotes(pkg, parts, bundleSha256);
+  const existing = await fetchDocumentForSchoolYear(
+    supabase,
+    school.school_id,
+    pkg.cds_year,
+  );
+
+  if (!existing) {
+    const docId = await insertFreshDocument(supabase, {
+      school_id: school.school_id,
+      school_name: school.school_name,
+      ipeds_id: await effectiveIpedsIdForSchool(supabase, school),
+      cds_year: pkg.cds_year,
+      source_url: sourceUrl,
+      source_sha256: bundleSha256,
+      storage_path: bundleStoragePath,
+      source_provenance: options.source_provenance,
+      source_http_last_modified: null,
+      source_artifact_notes: sourceNotes,
+    });
+    await insertSourcePartArtifacts(supabase, docId, parts);
+    return {
+      action: "inserted",
+      document_id: docId,
+      cds_year: pkg.cds_year,
+      source_sha256: bundleSha256,
+      resolved_url: sourceUrl,
+      storage_path: bundleStoragePath,
+    };
+  }
+
+  const latestArtifact = await fetchLatestSourceArtifact(supabase, existing.id);
+  if (latestArtifact && latestArtifact.sha256 === bundleSha256) {
+    const present = await objectExists(supabase, latestArtifact.storage_path);
+    if (present) {
+      await bumpVerified(supabase, existing.id, sourceUrl);
+      return {
+        action: "unchanged_verified",
+        document_id: existing.id,
+        cds_year: pkg.cds_year,
+        source_sha256: bundleSha256,
+        resolved_url: sourceUrl,
+        storage_path: latestArtifact.storage_path,
+      };
+    }
+    await ensureObjectUploaded(supabase, latestArtifact.storage_path, bundleBytes, "pdf");
+    await recordRepair(
+      supabase,
+      existing.id,
+      bundleSha256,
+      latestArtifact.storage_path,
+      sourceUrl,
+    );
+    return {
+      action: "unchanged_repaired",
+      document_id: existing.id,
+      cds_year: pkg.cds_year,
+      source_sha256: bundleSha256,
+      resolved_url: sourceUrl,
+      storage_path: latestArtifact.storage_path,
+    };
+  }
+
+  await refreshDocumentWithNewSha(supabase, {
+    document_id: existing.id,
+    source_url: sourceUrl,
+    source_sha256: bundleSha256,
+    storage_path: bundleStoragePath,
+    source_provenance: options.source_provenance,
+    source_http_last_modified: null,
+    source_artifact_notes: sourceNotes,
+  });
+  await insertSourcePartArtifacts(supabase, existing.id, parts);
+  return {
+    action: "refreshed",
+    document_id: existing.id,
+    cds_year: pkg.cds_year,
+    source_sha256: bundleSha256,
+    resolved_url: sourceUrl,
+    storage_path: bundleStoragePath,
+  };
+}
+
 // Archive a single resolved candidate. Shared by archiveOneSchool for
 // both the single-candidate direct-doc path and the multi-candidate
 // landing-page fan-out. This is the body of the pre-Stage-B
@@ -511,7 +763,7 @@ export async function archiveManualUrls(
 async function archiveOneCandidate(
   supabase: SupabaseClient,
   school: SchoolInput,
-  resolved: { url: string; cds_year: string },
+  resolved: ResolvedCandidate,
   // options.source_provenance propagates into insertFreshDocument and
   // refreshDocumentWithNewSha. Defaults to undefined (→ 'school_direct'
   // via db.ts default), which is correct for the resolver-driven path
@@ -520,6 +772,10 @@ async function archiveOneCandidate(
   // archiveManualUrls.
   options: { source_provenance?: string } = {},
 ): Promise<CandidateOutcome> {
+  if (resolved.candidate_kind === "section_package") {
+    return archiveSectionPackage(supabase, school, resolved, options);
+  }
+
   // Download with a hard memory + wall clock cap.
   const { bytes, sha256, contentType, finalUrl, httpLastModified } =
     await downloadWithCaps(resolved.url);

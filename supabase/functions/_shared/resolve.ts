@@ -44,6 +44,7 @@ const DOCUMENT_EXT_RE = /\.(pdf|xlsx|docx)(\?|#|$)/i;
 // layouts such as KU's `/CDS/2025-2026/C.pdf` and Oxy's
 // `CDS_C_2526_0.pdf`.
 const EXPLICIT_SECTION_MARKER_RE = /(?:^|[-_ .])section[-_ ]?([a-j])(?:[-_ .]|$)/i;
+const CDS_YEAR_SECTION_FILENAME_RE = /\bcds[-_ ]?\d{4}(?:[-_ ]?\d{2})?[-_ ]?([a-j])(?:[-_ .]|$)/i;
 const CDS_SECTION_FILENAME_RE = /\bcds[-_ ]?([a-j])(?:[-_ .]|\d|$)/i;
 const SINGLE_SECTION_FILENAME_RE = /^([a-j])\d*\.pdf$/i;
 
@@ -55,6 +56,9 @@ const REFERENCE_ARTIFACT_RE =
 function sectionLetterFromFilename(filename: string): string | null {
   const explicit = filename.match(EXPLICIT_SECTION_MARKER_RE);
   if (explicit) return explicit[1].toUpperCase();
+
+  const yearSection = filename.match(CDS_YEAR_SECTION_FILENAME_RE);
+  if (yearSection) return yearSection[1].toUpperCase();
 
   const cdsSection = filename.match(CDS_SECTION_FILENAME_RE);
   if (cdsSection) return cdsSection[1].toUpperCase();
@@ -274,6 +278,7 @@ export interface CdsAnchor {
 }
 
 export interface ResolvedDocument {
+  candidate_kind?: "single_document";
   url: string;
   cds_year: string;
   filename: string;
@@ -282,6 +287,29 @@ export interface ResolvedDocument {
   discovered_via: "direct" | "landing" | "subpage";
   parent_subpage_url?: string;
 }
+
+export interface ResolvedSectionPart {
+  url: string;
+  cds_year: string;
+  filename: string;
+  section: string;
+  is_test_artifact: boolean;
+  discovered_via: "direct" | "landing" | "subpage";
+  parent_subpage_url?: string;
+}
+
+export interface ResolvedSectionPackage {
+  candidate_kind: "section_package";
+  url: string;
+  cds_year: string;
+  filename: string;
+  is_section_file: true;
+  is_test_artifact: boolean;
+  discovered_via: "landing" | "subpage";
+  parts: ResolvedSectionPart[];
+}
+
+export type ResolvedCandidate = ResolvedDocument | ResolvedSectionPackage;
 
 // Sentinel cds_year for direct-doc hints whose filename carries no
 // parseable year (e.g. `cds_all.pdf`, `common-data-set.pdf`, UCLA's
@@ -299,11 +327,13 @@ export const UNKNOWN_YEAR_SENTINEL = "unknown";
 // cds_documents.removed_at to fire on DNS blips. Codex flagged it as the
 // #1 critical finding in review.
 //
-// The `resolved` variant carries `docs: ResolvedDocument[]` — a
+// The `resolved` variant carries `docs: ResolvedCandidate[]` — a
 // non-empty list of candidates — rather than a single doc, so the
 // archiver can fan out into multiple cds_documents rows per school
 // (ADR 0007 Stage B: one row per historical year for schools like
-// Lafayette that expose 20 years on a single landing page).
+// Lafayette that expose 20 years on a single landing page). A candidate
+// can also be a section package when a school publishes one CDS year as
+// separate A/J section PDFs (CMU pattern).
 //
 // The optional `probe` field carries hosting-inference signal from
 // the resolver's first fetchText call when one happened (Cases B/C/D
@@ -320,7 +350,7 @@ export interface ResolveProbeData {
 }
 
 export type ResolveResult =
-  | { kind: "resolved"; docs: ResolvedDocument[]; probe?: ResolveProbeData }
+  | { kind: "resolved"; docs: ResolvedCandidate[]; probe?: ResolveProbeData }
   | { kind: "upstream_gone"; status: number; reason: string; probe?: ResolveProbeData }
   | { kind: "transient"; reason: string; probe?: ResolveProbeData }
   | { kind: "no_cds_found"; reason: string; probe?: ResolveProbeData }
@@ -677,7 +707,7 @@ export function findBestSourceAnchor(
 export function pickCandidates(
   docs: CdsAnchor[],
   discoveredVia: "landing" | "subpage",
-): ResolvedDocument[] | null {
+): ResolvedCandidate[] | null {
   if (docs.length === 0) return [];
 
   // Dedupe by URL (minus fragment). extractCdsAnchors does this on
@@ -694,7 +724,7 @@ export function pickCandidates(
   const withYear = unique.filter((a) => a.year !== null);
   const withoutYear = unique.filter((a) => a.year === null);
 
-  let chosen: CdsAnchor[] = [];
+  const chosen: ResolvedCandidate[] = [];
   if (withYear.length > 0) {
     const byYear = new Map<string, CdsAnchor[]>();
     for (const d of withYear) {
@@ -705,17 +735,25 @@ export function pickCandidates(
     for (const [, group] of byYear) {
       const fullClean = group.filter((d) => !d.is_section_file && !d.is_test_artifact);
       const fullTest = group.filter((d) => !d.is_section_file && d.is_test_artifact);
-      const sectionC = group.filter((d) => sectionLetterFromFilename(d.filename) === "C");
-      const pool = fullClean.length > 0
-        ? fullClean
-        : fullTest.length > 0
-        ? fullTest
-        : sectionC;
-      if (pool.length > 0) chosen.push(pool[0]);
+      const sectionParts = group
+        .map((d) => ({ anchor: d, section: sectionLetterFromFilename(d.filename) }))
+        .filter((d): d is { anchor: CdsAnchor; section: string } => d.section !== null)
+        .sort((a, b) => a.section.localeCompare(b.section));
+
+      if (fullClean.length > 0) {
+        chosen.push(anchorToResolvedDocument(fullClean[0], discoveredVia));
+      } else if (fullTest.length > 0) {
+        chosen.push(anchorToResolvedDocument(fullTest[0], discoveredVia));
+      } else if (sectionParts.length >= 2) {
+        chosen.push(sectionPackageFromAnchors(sectionParts, discoveredVia));
+      } else {
+        const sectionC = group.find((d) => sectionLetterFromFilename(d.filename) === "C");
+        if (sectionC) chosen.push(anchorToResolvedDocument(sectionC, discoveredVia));
+      }
     }
   } else if (unique.length === 1) {
     // Single year-less candidate — sentinel is safe, no collision.
-    chosen = unique;
+    chosen.push(anchorToResolvedDocument(unique[0], discoveredVia));
   } else if (withoutYear.length > 1) {
     // Multiple year-less candidates. Out of Stage B scope.
     return null;
@@ -723,14 +761,48 @@ export function pickCandidates(
 
   if (chosen.length === 0) return [];
 
-  return chosen.map((d) => ({
+  return chosen;
+}
+
+function anchorToResolvedDocument(
+  d: CdsAnchor,
+  discoveredVia: "landing" | "subpage",
+): ResolvedDocument {
+  return {
+    candidate_kind: "single_document",
     url: d.url,
     cds_year: d.year ?? UNKNOWN_YEAR_SENTINEL,
     filename: d.filename,
     is_section_file: d.is_section_file,
     is_test_artifact: d.is_test_artifact,
     discovered_via: discoveredVia,
+  };
+}
+
+function sectionPackageFromAnchors(
+  sectionParts: { anchor: CdsAnchor; section: string }[],
+  discoveredVia: "landing" | "subpage",
+): ResolvedSectionPackage {
+  const parts = sectionParts.map(({ anchor, section }) => ({
+    url: anchor.url,
+    cds_year: anchor.year ?? UNKNOWN_YEAR_SENTINEL,
+    filename: anchor.filename,
+    section,
+    is_test_artifact: anchor.is_test_artifact,
+    discovered_via: discoveredVia,
   }));
+  const year = parts[0]?.cds_year ?? UNKNOWN_YEAR_SENTINEL;
+  const sections = parts.map((p) => p.section).join("");
+  return {
+    candidate_kind: "section_package",
+    url: parts[0]?.url ?? "",
+    cds_year: year,
+    filename: `cds-${year}-sections-${sections}.pdf`,
+    is_section_file: true,
+    is_test_artifact: parts.every((p) => p.is_test_artifact),
+    discovered_via: discoveredVia,
+    parts,
+  };
 }
 
 // Translates a content-type header into an extension symbol. Shared with
@@ -810,7 +882,7 @@ export function parentLandingCandidates(hint: string): string[] {
 // page hints already get the full Case C treatment and don't need this.
 async function findSiblingDocsFromParents(
   hint: string,
-): Promise<ResolvedDocument[]> {
+): Promise<ResolvedCandidate[]> {
   const candidates = parentLandingCandidates(hint);
   for (const ancestorUrl of candidates) {
     const resp = await fetchText(ancestorUrl, SUBPAGE_TIMEOUT_MS);
@@ -884,7 +956,7 @@ export function wellKnownPathUrls(hint: string): string[] {
 
 async function findDocsViaWellKnownPaths(
   hint: string,
-): Promise<ResolvedDocument[]> {
+): Promise<ResolvedCandidate[]> {
   for (const url of wellKnownPathUrls(hint)) {
     const resp = await fetchText(url, SUBPAGE_TIMEOUT_MS);
     if (!resp.ok) continue;
@@ -939,6 +1011,7 @@ export async function resolveCdsForSchool(
     );
     const year = normalizeYear(hint) ?? normalizeYear(filename);
     const directDoc: ResolvedDocument = {
+      candidate_kind: "single_document",
       url: hint,
       cds_year: year ?? UNKNOWN_YEAR_SENTINEL,
       filename,
@@ -962,7 +1035,7 @@ export async function resolveCdsForSchool(
       : [];
 
     // Merge direct + siblings + fallback, dedupe by URL.
-    const byUrl = new Map<string, ResolvedDocument>();
+    const byUrl = new Map<string, ResolvedCandidate>();
     byUrl.set(directDoc.url.split("#")[0], directDoc);
     for (const d of [...siblings, ...fallback]) {
       const key = d.url.split("#")[0];
@@ -1019,6 +1092,7 @@ export async function resolveCdsForSchool(
     return {
       kind: "resolved",
       docs: [{
+        candidate_kind: "single_document",
         url: landing.finalUrl,
         cds_year: year ?? UNKNOWN_YEAR_SENTINEL,
         filename,

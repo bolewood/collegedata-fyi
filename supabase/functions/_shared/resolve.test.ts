@@ -72,10 +72,11 @@ Deno.test("extractCdsAnchors: section marker detected", () => {
   const html = `
     <a href="/files/cds-section-d-2024-25.pdf">Common Data Set Section D 2024-25</a>
     <a href="/files/CDS_C_2526_0.pdf">Admissions</a>
+    <a href="/ira/CDS/pdf/cds_2025_26/cds-2025-a-general-information.pdf">General Information</a>
     <a href="/CDS/2025-2026/J.pdf">Degrees Conferred</a>
   `;
   const anchors = extractCdsAnchors(html, BASE);
-  assertEquals(anchors.length, 3);
+  assertEquals(anchors.length, 4);
   assertEquals(anchors.every((a) => a.is_section_file), true);
 });
 
@@ -512,7 +513,7 @@ Deno.test("pickCandidates: clean beats demoted when a clean sibling exists", () 
   assertEquals(result[0].is_test_artifact, false);
 });
 
-Deno.test("pickCandidates: section-only years select Section C instead of Section J", () => {
+Deno.test("pickCandidates: section-only years become a section package", () => {
   const anchors = [
     {
       url: "https://aire.ku.edu/sites/aire/files/files/CDS/2025-2026/C.pdf",
@@ -538,7 +539,11 @@ Deno.test("pickCandidates: section-only years select Section C instead of Sectio
   const result = pickCandidates(anchors, "landing");
   assertExists(result);
   assertEquals(result.length, 1);
-  assertEquals(result[0].filename, "C.pdf");
+  assertEquals(result[0].candidate_kind, "section_package");
+  assertEquals(result[0].filename, "cds-2025-26-sections-CJ.pdf");
+  if (result[0].candidate_kind === "section_package") {
+    assertEquals(result[0].parts.map((p) => p.section), ["C", "J"]);
+  }
 });
 
 Deno.test("pickCandidates: older full CDS and current sectionized CDS can coexist", () => {
@@ -578,8 +583,28 @@ Deno.test("pickCandidates: older full CDS and current sectionized CDS can coexis
   assertExists(result);
   assertEquals(result.map((r) => r.filename).sort(), [
     "CDS 2023-24.pdf",
-    "CDS_C_2526_0.pdf",
+    "cds-2025-26-sections-CJ.pdf",
   ]);
+});
+
+Deno.test("pickCandidates: single section-only year preserves Section C fallback", () => {
+  const anchors = [
+    {
+      url: "https://www.cmu.edu/ira/CDS/pdf/cds_2025_26/cds-2025-c-first-time-first-year-admission.pdf",
+      filename: "cds-2025-c-first-time-first-year-admission.pdf",
+      link_text: "First-Time, First-Year Admission",
+      year: "2025-26",
+      year_source: "url_path" as const,
+      kind: "document" as const,
+      is_section_file: true,
+      is_test_artifact: false,
+    },
+  ];
+  const result = pickCandidates(anchors, "landing");
+  assertExists(result);
+  assertEquals(result.length, 1);
+  assertEquals(result[0].candidate_kind, "single_document");
+  assertEquals(result[0].filename, "cds-2025-c-first-time-first-year-admission.pdf");
 });
 
 Deno.test("pickCandidates: reference-only documents are skipped", () => {
