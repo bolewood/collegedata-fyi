@@ -53,18 +53,6 @@ const RECIPES: Recipe[] = [
     sections: "C8, C9",
   },
   {
-    slug: "test-optional-outcome-tracker",
-    title: "Test-optional outcome tracker",
-    tagline:
-      "A source-linked response to the SAT-reinstatement news cycle: what CDS testing rows still reveal, and what UC retention, graduation, and transfer-out data show so far.",
-    audience:
-      "Reporters, counselors, and parents trying to pressure-test preparedness claims without turning institution-level public data into a culture-war proxy.",
-    demoPath: "/recipes/test-optional-outcome-tracker",
-    writeupUrl:
-      "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/test-optional-outcome-tracker.md",
-    sections: "CDS + IPEDS",
-  },
-  {
     slug: "waitlist-odds",
     title: "Wait-list odds",
     tagline:
