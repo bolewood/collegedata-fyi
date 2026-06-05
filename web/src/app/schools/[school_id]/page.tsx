@@ -245,8 +245,13 @@ export default async function SchoolDetailPage({
       dataset: uniqueYears.map((year) => ({
         "@type": "Dataset",
         name: `${name} Common Data Set ${year}`,
+        description: `Common Data Set ${year} for ${name}, containing admissions, enrollment, financial aid, and other institutional data extracted by collegedata.fyi.`,
         url: `https://www.collegedata.fyi/schools/${school_id}/${year}`,
+        creator: { "@type": "Organization", name },
+        provider: { "@type": "Organization", name: "collegedata.fyi", url: "https://www.collegedata.fyi" },
         temporalCoverage: year,
+        license: "https://opensource.org/licenses/MIT",
+        isAccessibleForFree: true,
       })),
     },
   ];
