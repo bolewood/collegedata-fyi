@@ -16,6 +16,7 @@ import {
   USER_AGENT,
 } from "./resolve.ts";
 import { inferHosting, inferWaf, type HostingInference } from "./hosting.ts";
+import { rejectableHtmlSourceOutcome } from "./html_source_guard.ts";
 import {
   ARCHIVER_PRODUCER,
   ARCHIVER_VERSION,
@@ -805,6 +806,16 @@ async function archiveOneCandidate(
       `unknown content type for ${finalUrl}: ${contentType || "(none)"}, bytes do not match PDF/XLSX/DOCX magic`,
       "wrong_content_type",
     );
+  }
+
+  if (ext === "html") {
+    const rejectOutcome = rejectableHtmlSourceOutcome(bytes, finalUrl);
+    if (rejectOutcome) {
+      throw new PermanentError(
+        `rejecting non-CDS HTML source at ${finalUrl}: ${rejectOutcome}`,
+        rejectOutcome,
+      );
+    }
   }
 
   // Use the post-redirect URL when persisting provenance. A school may

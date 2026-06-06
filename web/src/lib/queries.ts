@@ -210,6 +210,7 @@ export const fetchManifest = cache(async function fetchManifest(): Promise<Manif
       .from("cds_manifest")
       .select("*")
       .not("participation_status", "in", `(${PUBLIC_EXCLUDED_STATUSES.join(",")})`)
+      .is("removed_at", null)
       .order("school_name")
       .range(from, from + PAGE_SIZE - 1);
 
@@ -446,6 +447,7 @@ export const fetchSchoolDocuments = cache(async function fetchSchoolDocuments(
     .select("*")
     .eq("school_id", schoolId)
     .not("participation_status", "in", `(${PUBLIC_EXCLUDED_STATUSES.join(",")})`)
+    .is("removed_at", null)
     .order("canonical_year", { ascending: false });
 
   if (error)
@@ -936,6 +938,7 @@ export const fetchDocumentsBySchoolAndYear = cache(async function fetchDocuments
     .eq("school_id", schoolId)
     .eq("canonical_year", year)
     .not("participation_status", "in", `(${PUBLIC_EXCLUDED_STATUSES.join(",")})`)
+    .is("removed_at", null)
     .order("sub_institutional", { ascending: true, nullsFirst: true });
 
   if (error) {

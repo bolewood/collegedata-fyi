@@ -946,14 +946,14 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
       <h3 className="mt-6 text-base font-semibold text-gray-900">
         List the most recent year for every school
       </h3>
-      <CodeBlock>{`curl '${BASE}/rest/v1/cds_manifest?select=school_id,school_name,canonical_year&order=canonical_year.desc&limit=10' \\
+      <CodeBlock>{`curl '${BASE}/rest/v1/cds_manifest?removed_at=is.null&select=school_id,school_name,canonical_year&order=canonical_year.desc&limit=10' \\
   -H 'apikey: ${ANON_KEY.slice(0, 24)}…' \\
   -H 'Authorization: Bearer ${ANON_KEY.slice(0, 24)}…'`}</CodeBlock>
 
       <h3 className="mt-6 text-base font-semibold text-gray-900">
         Fetch all archived years for one school
       </h3>
-      <CodeBlock>{`curl '${BASE}/rest/v1/cds_manifest?school_id=eq.harvard-university&select=canonical_year,source_format,extraction_status' \\
+      <CodeBlock>{`curl '${BASE}/rest/v1/cds_manifest?school_id=eq.harvard-university&removed_at=is.null&select=canonical_year,source_format,extraction_status' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 
@@ -1001,6 +1001,7 @@ const { data } = await supabase
   .from("cds_manifest")
   .select("school_name, canonical_year")
   .eq("extraction_status", "extracted")
+  .is("removed_at", null)
   .limit(20);`}</CodeBlock>
 
       <h2 className="mt-10 text-xl font-semibold text-gray-900">
