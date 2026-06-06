@@ -37,10 +37,11 @@ with coverage badges as well as schools with archived CDS data. Below it, a
 stats bar shows live corpus numbers pulled from the API (institutions, documents,
 field rows, extraction %).
 
-**Data flow:** `fetchManifest()` returns all rows from `cds_manifest` via
-paginated range queries (PostgREST caps at 1,000 rows per request).
-Client-side aggregation computes school summaries and corpus stats. ISR
-revalidates every hour.
+**Data flow:** `fetchManifest()` returns live rows from `cds_manifest` via
+paginated range queries (PostgREST caps at 1,000 rows per request), filtering
+out `removed_at` rows and excluded public participation statuses. Client-side
+aggregation computes school summaries and corpus stats. ISR revalidates every
+hour.
 
 ### `/schools` School directory (`web/src/app/schools/page.tsx`)
 
@@ -217,9 +218,9 @@ paths.
 
 | Page | Query | Notes |
 |------|-------|-------|
-| Landing + Directory | `cds_manifest` (all rows, paginated) | Range-based pagination to work around PostgREST 1,000-row cap |
-| School detail | `cds_manifest WHERE school_id = ?` | Ordered by canonical_year DESC |
-| Year detail | `cds_manifest WHERE school_id = ? AND canonical_year = ?` | Returns all sub-institutional variants |
+| Landing + Directory | `cds_manifest WHERE removed_at IS NULL` (paginated) | Range-based pagination to work around PostgREST 1,000-row cap |
+| School detail | `cds_manifest WHERE school_id = ? AND removed_at IS NULL` | Ordered by canonical_year DESC |
+| Year detail | `cds_manifest WHERE school_id = ? AND canonical_year = ? AND removed_at IS NULL` | Returns all sub-institutional variants |
 | Year detail (fields) | `cds_artifacts WHERE document_id = ?` | Loads canonical + `tier4_llm_fallback`, then merges cleaner-wins |
 | Queryable browser | `browser-search` Edge Function | Ranked latest-per-school search over `school_browser_rows` with answerability metadata, including SAT/ACT submit-rate companion metadata for active score filters |
 | School positioning/admission cards | `school_browser_rows WHERE school_id = ?` | Latest primary row with SAT/ACT, admissions, ED/EA, wait-list, and C7/app-fee columns |
