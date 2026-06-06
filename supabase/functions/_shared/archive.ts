@@ -635,6 +635,13 @@ async function archiveSectionPackage(
   const parts: DownloadedSectionPart[] = [];
   for (const part of pkg.parts) {
     const downloaded = await downloadWithCaps(part.url);
+    const authCategory = authWallOutcome(downloaded.finalUrl);
+    if (authCategory) {
+      throw new PermanentError(
+        `auth-walled: section ${part.section} for ${part.url} redirected to ${downloaded.finalUrl}`,
+        authCategory,
+      );
+    }
     const ext = extForResponse(downloaded.contentType, downloaded.finalUrl, downloaded.bytes);
     if (ext !== "pdf") {
       throw new PermanentError(
@@ -779,26 +786,21 @@ async function archiveOneCandidate(
   // Download with a hard memory + wall clock cap.
   const { bytes, sha256, contentType, finalUrl, httpLastModified } =
     await downloadWithCaps(resolved.url);
+
+  const authCategory = authWallOutcome(finalUrl);
+  if (authCategory) {
+    throw new PermanentError(
+      `auth-walled: download for ${resolved.url} redirected to ${finalUrl}`,
+      authCategory,
+    );
+  }
+
   // extForResponse tries content-type → URL suffix → magic-byte sniff.
   // The magic-byte path is what rescues Google Drive (serves everything
   // as application/octet-stream) and any other host whose download
   // endpoint doesn't set a canonical Content-Type.
   const ext = extForResponse(contentType, finalUrl, bytes);
   if (!ext) {
-    // Auth-wall detection: when a school's CDS lives behind SSO, the
-    // download follow-redirects path lands on an SSO HTML page (e.g.,
-    // login.microsoftonline.com/<tenant>/saml2). The bytes are HTML, not
-    // PDF, so extForResponse rejects them — but the *reason* matters.
-    // An auth-walled school is structurally different from a school
-    // whose link 404s, and downstream cooldown / hosting policy needs
-    // to distinguish them.
-    const authCategory = authWallOutcome(finalUrl);
-    if (authCategory) {
-      throw new PermanentError(
-        `auth-walled: download for ${resolved.url} redirected to ${finalUrl}`,
-        authCategory,
-      );
-    }
     throw new PermanentError(
       `unknown content type for ${finalUrl}: ${contentType || "(none)"}, bytes do not match PDF/XLSX/DOCX magic`,
       "wrong_content_type",

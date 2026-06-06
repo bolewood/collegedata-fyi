@@ -633,6 +633,16 @@ def sniff_zip_inner_format(data: bytes) -> str:
     return "other"
 
 
+def strip_leading_html_noise(head: str) -> str:
+    head = head.lstrip("\ufeff").lstrip()
+    while head.startswith("<!--"):
+        end = head.find("-->")
+        if end < 0:
+            return head
+        head = head[end + 3 :].lstrip()
+    return head
+
+
 def sniff_format_from_bytes(data: bytes) -> str:
     """Best-effort format detection when cds_documents.source_format is null.
     Returns one of the extraction_status enum values the migration allows
@@ -663,7 +673,9 @@ def sniff_format_from_bytes(data: bytes) -> str:
     # stray "<html" byte sequence doesn't mis-route. Matches the
     # storage.ts sniffBytesForExt logic on the discovery side.
     try:
-        head = data[:512].decode("utf-8", errors="ignore").lower().lstrip()
+        head = strip_leading_html_noise(
+            data[:512].decode("utf-8", errors="ignore").lower()
+        )
     except Exception:
         head = ""
     if (

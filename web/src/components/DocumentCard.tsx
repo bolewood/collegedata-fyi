@@ -6,6 +6,7 @@ import {
   formatExtractionStatus,
   storageUrl,
   dataQualityLabel,
+  sourceDownloadLabel,
 } from "@/lib/format";
 import { trackSourceOpened, trackEvent } from "@/lib/analytics";
 import type { ManifestRow } from "@/lib/types";
@@ -26,23 +27,6 @@ function statusChipClass(status: string): string {
   }
 }
 
-function downloadLabel(format: string | null): string {
-  switch (format) {
-    case "xlsx":
-      return "Download XLSX";
-    case "docx":
-      return "Download DOCX";
-    case "html":
-      return "Download HTML";
-    case "pdf_fillable":
-    case "pdf_flat":
-    case "pdf_scanned":
-      return "Download PDF";
-    default:
-      return "Download source";
-  }
-}
-
 // One row of the documents ledger. Year sits in display serif; the format
 // and status are mono chips; download/view actions are right-aligned. Last
 // row drops the dashed separator so the ledger ends on a hairline rule.
@@ -53,7 +37,7 @@ export function DocumentCard({
   doc: ManifestRow;
   isLast?: boolean;
 }) {
-  const pdfUrl = storageUrl(doc.source_storage_path);
+  const sourceDownloadUrl = storageUrl(doc.source_storage_path);
   const sourceUrl = doc.source_url;
   const status = doc.extraction_status ?? "discovered";
   const isExtracted = status === "extracted";
@@ -128,9 +112,9 @@ export function DocumentCard({
             View fields →
           </Link>
         )}
-        {pdfUrl ? (
+        {sourceDownloadUrl ? (
           <a
-            href={pdfUrl}
+            href={sourceDownloadUrl}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() =>
@@ -143,7 +127,7 @@ export function DocumentCard({
               })
             }
           >
-            {downloadLabel(doc.source_format)}
+            {sourceDownloadLabel(doc.source_format, doc.source_storage_path)}
           </a>
         ) : sourceUrl ? (
           <a
