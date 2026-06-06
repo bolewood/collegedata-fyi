@@ -19,6 +19,39 @@ export function formatBadgeLabel(format: string | null): string {
   }
 }
 
+function sourcePathExtension(path: string | null | undefined): string | null {
+  if (!path) return null;
+  const cleanPath = path.split(/[?#]/)[0]?.toLowerCase() ?? "";
+  const lastDot = cleanPath.lastIndexOf(".");
+  if (lastDot < 0) return null;
+  return cleanPath.slice(lastDot + 1);
+}
+
+export function sourceDownloadLabel(
+  format: string | null,
+  storagePath?: string | null,
+): string {
+  const pathExt = sourcePathExtension(storagePath);
+  const effectiveFormat = pathExt ?? format;
+
+  switch (effectiveFormat) {
+    case "xlsx":
+      return "Download XLSX";
+    case "docx":
+      return "Download DOCX";
+    case "html":
+    case "htm":
+      return "Download HTML";
+    case "pdf":
+    case "pdf_fillable":
+    case "pdf_flat":
+    case "pdf_scanned":
+      return "Download PDF";
+    default:
+      return "Download source";
+  }
+}
+
 export function formatExtractionStatus(status: string): string {
   switch (status) {
     case "extracted":

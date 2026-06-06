@@ -1,9 +1,28 @@
 import { assertEquals } from "jsr:@std/assert";
-import { extForResponse } from "./storage.ts";
+import { extForResponse, sniffBytesForExt } from "./storage.ts";
 
 Deno.test("extForResponse: rejects HTML challenge bytes at PDF URL", () => {
   const bytes = new TextEncoder().encode(
     "<!DOCTYPE html><html><title>Just a moment...</title></html>",
+  );
+
+  assertEquals(
+    extForResponse("text/html; charset=UTF-8", "https://example.edu/cds.pdf", bytes),
+    null,
+  );
+});
+
+Deno.test("sniffBytesForExt: detects HTML after leading comments", () => {
+  const bytes = new TextEncoder().encode(
+    "<!-- Copyright (C) Example. --><!DOCTYPE html><html><title>Sign in</title></html>",
+  );
+
+  assertEquals(sniffBytesForExt(bytes), "html");
+});
+
+Deno.test("extForResponse: rejects comment-prefixed HTML challenge bytes at PDF URL", () => {
+  const bytes = new TextEncoder().encode(
+    "<!-- Copyright (C) Example. --><!DOCTYPE html><html><title>Sign in</title></html>",
   );
 
   assertEquals(

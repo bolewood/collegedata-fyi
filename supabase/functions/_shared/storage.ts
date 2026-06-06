@@ -40,6 +40,16 @@ export function extForContentType(contentType: string | null, fallbackUrl: strin
   return extForContentTypeOnly(contentType) ?? extForUrl(fallbackUrl);
 }
 
+function stripLeadingHtmlNoise(fragment: string): string {
+  let head = fragment.replace(/^\uFEFF/, "").trimStart();
+  while (head.startsWith("<!--")) {
+    const end = head.indexOf("-->");
+    if (end < 0) return head;
+    head = head.slice(end + 3).trimStart();
+  }
+  return head;
+}
+
 // Magic-byte sniffer. Used as a last-resort fallback when content-type
 // and URL extension both fail to identify the file — most commonly
 // for Google Drive direct-download URLs which serve every file as
@@ -83,13 +93,13 @@ export function sniffBytesForExt(bytes: Uint8Array): "pdf" | "xlsx" | "docx" | "
   // document. Case-insensitive. Tolerates leading whitespace / BOM.
   const head = new TextDecoder("utf-8", { fatal: false })
     .decode(bytes.slice(0, 512))
-    .toLowerCase()
-    .trimStart();
+    .toLowerCase();
+  const normalizedHead = stripLeadingHtmlNoise(head);
   if (
-    head.startsWith("<!doctype html") ||
-    head.startsWith("<html") ||
-    head.startsWith("<head") ||
-    head.startsWith("<?xml") && head.includes("<html")
+    normalizedHead.startsWith("<!doctype html") ||
+    normalizedHead.startsWith("<html") ||
+    normalizedHead.startsWith("<head") ||
+    normalizedHead.startsWith("<?xml") && normalizedHead.includes("<html")
   ) {
     return "html";
   }

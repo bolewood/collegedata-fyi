@@ -102,6 +102,14 @@ class SniffFormatFromBytesTest(unittest.TestCase):
             "html",
         )
 
+    def test_html_with_leading_comment_routes_html(self):
+        self.assertEqual(
+            sniff_format_from_bytes(
+                b"<!-- Copyright (C) Example. --><!DOCTYPE html><html><body>sign in</body></html>"
+            ),
+            "html",
+        )
+
     def test_unknown_bytes_route_other(self):
         self.assertEqual(sniff_format_from_bytes(b"\x00\x01garbage"), "other")
 

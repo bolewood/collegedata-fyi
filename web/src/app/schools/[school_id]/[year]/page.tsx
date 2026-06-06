@@ -8,7 +8,7 @@ import {
   fetchScorecardByIpedsId,
 } from "@/lib/queries";
 import type { FieldValue, ArtifactNotes } from "@/lib/types";
-import { storageUrl, formatBadgeLabel } from "@/lib/format";
+import { storageUrl, formatBadgeLabel, sourceDownloadLabel } from "@/lib/format";
 import { Badge } from "@/components/Badge";
 import { KeyStats } from "@/components/KeyStats";
 import { FieldsView } from "@/components/FieldsView";
@@ -140,7 +140,7 @@ async function DocumentVariant({
   doc: Awaited<ReturnType<typeof fetchDocumentsBySchoolAndYear>>[number];
   scorecard: Awaited<ReturnType<typeof fetchScorecardByIpedsId>>;
 }) {
-  const pdfUrl = storageUrl(doc.source_storage_path);
+  const sourceDownloadUrl = storageUrl(doc.source_storage_path);
   const isExtracted = doc.extraction_status === "extracted";
 
   let values: Record<string, FieldValue> = {};
@@ -179,14 +179,14 @@ async function DocumentVariant({
             className="bg-gray-100 text-gray-700"
           />
         )}
-        {pdfUrl && (
+        {sourceDownloadUrl && (
           <a
-            href={pdfUrl}
+            href={sourceDownloadUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-blue-600 hover:text-blue-800"
           >
-            Download source PDF
+            {sourceDownloadLabel(doc.source_format, doc.source_storage_path)}
           </a>
         )}
       </div>
@@ -201,7 +201,7 @@ async function DocumentVariant({
       {admissionStrategy && (
         <AdmissionStrategyCard
           school={admissionStrategy}
-          sourceHref={pdfUrl ?? admissionStrategy.archiveUrl}
+          sourceHref={sourceDownloadUrl ?? admissionStrategy.archiveUrl}
         />
       )}
 
@@ -239,7 +239,7 @@ async function DocumentVariant({
       ) : (
         <div className="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-center text-yellow-800">
           <p>
-            Structured data coming soon. The source PDF is available for
+            Structured data coming soon. The source document is available for
             download above.
           </p>
         </div>
