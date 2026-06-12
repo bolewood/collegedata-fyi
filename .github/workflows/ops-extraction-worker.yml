@@ -42,7 +42,7 @@ on:
         required: false
         default: "100"
   schedule:
-    # Small daily pending-row drain. Full corpus drains belong on manual
+    # Tiny daily pending-row drain. Full corpus drains belong on manual
     # operator machines or a self-hosted runner, not regular hosted CI.
     - cron: "17 9 * * *"
 
@@ -71,7 +71,7 @@ jobs:
     # in extraction_pending. See --reconcile-pending below.
     timeout-minutes: 120
     env:
-      INPUT_LIMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.limit || '25' }}
+      INPUT_LIMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.limit || '5' }}
       INPUT_SCHOOL: ${{ github.event_name == 'workflow_dispatch' && inputs.school || '' }}
       INPUT_DOCUMENT_IDS: ${{ github.event_name == 'workflow_dispatch' && inputs.document_ids || '' }}
       INPUT_REQUEUE_DOCUMENT_IDS: ${{ github.event_name == 'workflow_dispatch' && inputs.requeue_document_ids || '' }}
@@ -79,7 +79,7 @@ jobs:
       INPUT_SEED_PROJECTION_METADATA: ${{ github.event_name != 'workflow_dispatch' || inputs.seed_projection_metadata }}
       INPUT_LOW_FIELD_THRESHOLD: ${{ github.event_name == 'workflow_dispatch' && inputs.low_field_threshold || '25' }}
       INPUT_MIN_YEAR_START: ${{ github.event_name == 'workflow_dispatch' && inputs.min_year_start || '' }}
-      INPUT_DEADLINE_MINUTES: ${{ github.event_name == 'workflow_dispatch' && inputs.deadline_minutes || '100' }}
+      INPUT_DEADLINE_MINUTES: ${{ github.event_name == 'workflow_dispatch' && inputs.deadline_minutes || '25' }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:
