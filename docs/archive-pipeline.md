@@ -358,7 +358,7 @@ touching the database or Storage.
    ```
 
    `directory-enqueue` is operator-triggered only — no pg_cron entry.
-   `refresh-coverage` runs on a 15-minute pg_cron tick (operators can also
+   `refresh-coverage` runs on an hourly pg_cron tick (operators can also
    curl it for ad-hoc refresh after a manual archive drain).
 
 3. Create the two Vault secrets in the dashboard SQL editor. These are
@@ -607,8 +607,8 @@ The worker runs every 30 seconds, so a 50-school batch drains in ~25
 minutes with the existing single-row claim cadence.
 
 **Refresh the public coverage table on demand** (PRD 015 M3 — pg_cron
-hits this every 15 minutes; manual invocation is for after-batch
-debugging or when 15 minutes feels too long):
+hits this hourly; manual invocation is for after-batch debugging or when
+waiting for the next cron is too long):
 
 ```bash
 cd /Users/santhonys/Projects/Owen/colleges/collegedata-fyi

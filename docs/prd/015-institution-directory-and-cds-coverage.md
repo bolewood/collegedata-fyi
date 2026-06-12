@@ -619,7 +619,7 @@ different question: "What do we know about this institution's CDS availability?"
 - Keep Scorecard refresh annual and separate from CDS extraction drains.
 - Do not add full discovery, extraction, or Docling corpus drains to PR CI.
 
-**Status:** The 15-minute `refresh-coverage` cron means coverage state is always current; the per-refresh histogram in the edge function response gives operators a regression signal at a glance. Dedicated operator reports (status deltas, "not checked recently") are not yet built and live on the backlog.
+**Status:** Launched with a 15-minute `refresh-coverage` cron and per-refresh histogram. As of the June 2026 Supabase Disk IO Budget incident, production is relaxed to hourly refreshes and the histogram is opt-in (`{"include_histogram": true}`) so cron does not do a second full-table read after every rebuild. Dedicated operator reports (status deltas, "not checked recently") are not yet built and live on the backlog.
 
 ## Design Notes
 

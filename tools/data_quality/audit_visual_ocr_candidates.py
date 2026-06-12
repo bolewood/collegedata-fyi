@@ -213,6 +213,20 @@ def main() -> int:
     parser.add_argument("--school", help="Restrict to one school_id")
     parser.add_argument("--min-year-start", type=int, default=2024)
     parser.add_argument("--include-all-years", action="store_true")
+    parser.add_argument(
+        "--max-docs",
+        type=int,
+        default=250,
+        help=(
+            "Refuse to fetch artifact notes for more than this many candidate "
+            "documents unless --allow-large-scan is passed. Use 0 for no cap."
+        ),
+    )
+    parser.add_argument(
+        "--allow-large-scan",
+        action="store_true",
+        help="Allow a broad scan that may read many large cds_artifacts.notes payloads.",
+    )
     parser.add_argument("--csv-output", type=Path)
     parser.add_argument("--json-output", type=Path)
     args = parser.parse_args()
@@ -242,6 +256,22 @@ def main() -> int:
             )
         )
     ]
+    if (
+        not args.allow_large_scan
+        and not args.school
+        and args.max_docs > 0
+        and len(docs) > args.max_docs
+    ):
+        print(
+            (
+                f"Refusing to fetch artifact notes for {len(docs)} candidate documents. "
+                f"Pass --school, lower the year window, set --max-docs, or pass "
+                f"--allow-large-scan during a low-traffic maintenance window."
+            ),
+            flush=True,
+        )
+        return 2
+
     artifacts = latest_canonical_artifacts(
         fetch_artifacts_for_documents(client, [str(doc["id"]) for doc in docs])
     )

@@ -3,12 +3,13 @@
 //
 // PRD 015 M3. Calls refresh_institution_cds_coverage() (which does the
 // atomic TRUNCATE+INSERT inside its own transaction) and returns the
-// row count, duration, and a coverage_status histogram so operators
-// can spot misconfigured precedence at a glance after a refresh.
+// row count and duration. Operators can request a coverage_status histogram
+// with {"include_histogram": true}; cron omits it to avoid a second full-table
+// read after every refresh.
 //
-// pg_cron hits this every 15 minutes (refresh_coverage_cron migration);
+// pg_cron hits this hourly (refresh_coverage_cron migrations);
 // operators can also curl it for debugging or after a manual archive
-// drain when 15 minutes feels too long to wait. No query params.
+// drain when waiting for the next cron feels too long.
 //
 // Auth: same isServiceRoleAuth pattern as archive-enqueue.
 
@@ -29,8 +30,10 @@ Deno.serve(async (req: Request) => {
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
   const started = Date.now();
+  const body = await parseBody(req);
+  const includeHistogram = body.include_histogram === true;
 
-  logEvent({ event: "refresh_start" });
+  logEvent({ event: "refresh_start", include_histogram: includeHistogram });
 
   const { data: refreshData, error: refreshErr } = await supabase
     .rpc("refresh_institution_cds_coverage");
@@ -46,11 +49,7 @@ Deno.serve(async (req: Request) => {
   const rowsWritten = (rpcResult as { rows_written?: number })?.rows_written ?? 0;
   const durationMs = (rpcResult as { duration_ms?: number })?.duration_ms ?? 0;
 
-  // Coverage status histogram. Useful for catching precedence regressions
-  // ("we lost the cds_available_current bucket") without opening psql.
-  // Pulls just the column we care about; counts in JS so we can run on
-  // any PostgREST setup (no GROUP BY support without an RPC).
-  const histogram = await loadStatusHistogram(supabase);
+  const histogram = includeHistogram ? await loadStatusHistogram(supabase) : null;
 
   const totalMs = Date.now() - started;
   logEvent({
@@ -58,16 +57,28 @@ Deno.serve(async (req: Request) => {
     rows_written: rowsWritten,
     refresh_duration_ms: durationMs,
     total_duration_ms: totalMs,
-    histogram,
+    histogram_included: includeHistogram,
+    ...(histogram ? { histogram } : {}),
   });
 
   return json({
     rows_written: rowsWritten,
     refresh_duration_ms: durationMs,
     total_duration_ms: totalMs,
-    coverage_status_histogram: histogram,
+    ...(histogram ? { coverage_status_histogram: histogram } : {}),
   });
 });
+
+async function parseBody(req: Request): Promise<{ include_histogram?: boolean }> {
+  try {
+    const text = await req.text();
+    if (!text.trim()) return {};
+    const parsed = JSON.parse(text);
+    return typeof parsed === "object" && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+}
 
 // Pull every coverage_status value and bucket in JS. Paginated for the
 // same reason directory-enqueue paginates: PostgREST silently caps
