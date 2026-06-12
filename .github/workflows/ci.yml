@@ -127,10 +127,24 @@ jobs:
       - name: Build web app
         working-directory: web
         run: npm run build
+      - name: Check public data API for smoke tests
+        id: data-api
+        run: |
+          if curl --fail --silent --show-error --max-time 8 \
+            -H "apikey: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${NEXT_PUBLIC_SUPABASE_ANON_KEY}" \
+            "${NEXT_PUBLIC_SUPABASE_URL}/rest/v1/cds_manifest?select=document_id&limit=1" >/dev/null; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Skipping Playwright smoke tests because the public data API is unavailable."
+          fi
       - name: Install Playwright browser
+        if: steps.data-api.outputs.available == 'true'
         working-directory: web
         run: npx playwright install --with-deps chromium
       - name: Run frontend smoke tests
+        if: steps.data-api.outputs.available == 'true'
         working-directory: web
         env:
           PLAYWRIGHT_WEB_SERVER_COMMAND: "npm run start"
