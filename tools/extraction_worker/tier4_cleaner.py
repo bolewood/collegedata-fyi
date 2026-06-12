@@ -1684,6 +1684,178 @@ def _b1_rollup_qn(label_norm: str) -> str | None:
     return None
 
 
+def _b1_schema_lookup(
+    schema: SchemaIndex,
+    *,
+    gender: str,
+    unit_load: str,
+    student_group: str,
+    cohort: str,
+    category: str,
+) -> str | None:
+    qn = schema.lookup(
+        subsection="Institutional Enrollment",
+        gender=gender,
+        unit_load=unit_load,
+        student_group=student_group,
+        cohort=cohort,
+        category=category,
+    )
+    if (
+        qn is None
+        and student_group == "Undergraduates"
+        and unit_load == "All"
+        and cohort == "Total"
+        and category == "All"
+    ):
+        qn = schema.lookup(
+            subsection="Institutional Enrollment",
+            gender=gender,
+            unit_load=unit_load,
+            student_group=student_group,
+            cohort="Total understand",
+            category=category,
+        )
+    if (
+        qn is None
+        and student_group == "Graduates"
+        and unit_load == "FT"
+        and cohort == "Total"
+        and category == "All"
+    ):
+        qn = schema.lookup(
+            subsection="All",
+            gender=gender,
+            unit_load=unit_load,
+            student_group=student_group,
+            cohort=cohort,
+            category="Full-Time",
+        )
+    if (
+        qn is None
+        and student_group == "Undergraduates"
+        and unit_load == "PT"
+        and cohort == "All other"
+        and category == "Enrolled in Credit Courses"
+    ):
+        qn = schema.lookup(
+            subsection="Institutional Enrollment",
+            gender=gender,
+            unit_load=unit_load,
+            student_group=student_group,
+            cohort="All other undergraduates",
+            category=category,
+        )
+    return qn
+
+
+def _resolve_b1_compact_full_part_time_grid(block: str, schema: SchemaIndex) -> dict[str, dict]:
+    """Parse OCR layout where FT and PT B1 columns are side-by-side."""
+    if "full time part time" not in _normalize_label(block):
+        return {}
+
+    out: dict[str, dict] = {}
+    student_group: str | None = None
+    pending_label = ""
+
+    for raw_line in block.splitlines():
+        line = raw_line.strip().strip("_").strip()
+        if not line:
+            continue
+        line_norm = _normalize_label(line)
+
+        if "undergraduate students undergraduate students" in line_norm:
+            student_group = "Undergraduates"
+            pending_label = ""
+            continue
+        if "graduate students graduate students" in line_norm:
+            student_group = "Graduates"
+            pending_label = ""
+            continue
+
+        nums = re.findall(r"\b\d[\d,]*\b", line)
+        if not nums:
+            if (
+                student_group is not None
+                and (
+                    line_norm.startswith("degree seeking")
+                    or line_norm.startswith("other first year")
+                    or line_norm.startswith("all other")
+                    or line_norm.startswith("total")
+                    or line_norm in ("students", "courses", "undergraduate students")
+                )
+            ):
+                pending_label = f"{pending_label} {line}".strip()
+            continue
+
+        first_num = re.search(r"\b\d[\d,]*\b", line)
+        if not first_num:
+            continue
+        label = line[:first_num.start()].strip()
+        if pending_label:
+            label = f"{pending_label} {label}".strip()
+            pending_label = ""
+        label_norm = _normalize_label(label)
+
+        rollup_qn = _b1_rollup_qn(label_norm)
+        if rollup_qn:
+            out[rollup_qn] = {
+                "value": _extract_number(nums[0]),
+                "source": "tier4_cleaner",
+            }
+            continue
+
+        row_rule = _match_b1_row(label_norm)
+        if not row_rule:
+            continue
+        cohort, category = row_rule
+
+        local_sg = student_group
+        if "total undergraduate students" in label_norm:
+            local_sg = "Undergraduates"
+        elif "total graduate students" in label_norm:
+            local_sg = "Graduates"
+        elif "total all students" in label_norm:
+            local_sg = "All Students"
+        if local_sg is None:
+            continue
+
+        grid_values: list[tuple[str, str, str]] = []
+        if len(nums) >= 6:
+            grid_values = [
+                ("FT", "Males", nums[0]),
+                ("FT", "Females", nums[1]),
+                ("FT", "Unknown", nums[2]),
+                ("PT", "Males", nums[3]),
+                ("PT", "Females", nums[4]),
+                ("PT", "Unknown", nums[5]),
+            ]
+        elif len(nums) >= 4:
+            grid_values = [
+                ("FT", "Males", nums[0]),
+                ("FT", "Females", nums[1]),
+                ("PT", "Males", nums[2]),
+                ("PT", "Females", nums[3]),
+            ]
+
+        for unit_load, gender, raw_value in grid_values:
+            num = _extract_number(raw_value)
+            if num is None:
+                continue
+            qn = _b1_schema_lookup(
+                schema,
+                gender=gender,
+                unit_load=unit_load,
+                student_group=local_sg,
+                cohort=cohort,
+                category=category,
+            )
+            if qn:
+                out[qn] = {"value": num, "source": "tier4_cleaner"}
+
+    return out
+
+
 def _resolve_b1_layout(markdown: str, schema: SchemaIndex) -> dict[str, dict]:
     """Layout-backed B1 parser.
 
@@ -1695,11 +1867,13 @@ def _resolve_b1_layout(markdown: str, schema: SchemaIndex) -> dict[str, dict]:
     out: dict[str, dict] = {}
     block = _section_between(
         markdown,
-        r"\bB1\b\s+Institutional Enrollment",
-        r"\bB2\b\s+Enrollment by Racial/Ethnic Category",
+        r"\bB1\b\.?\s+Institutional Enrollment",
+        r"\bB2\b\.?\s+Enrollment by Racial/Ethnic Category",
     )
     if not block:
         return out
+
+    out.update(_resolve_b1_compact_full_part_time_grid(block, schema))
 
     unit_load: str | None = None
     student_group: str | None = None

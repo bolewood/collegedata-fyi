@@ -30,7 +30,7 @@ from pathlib import Path
 
 
 PRODUCER_NAME = "tier4_docling"
-PRODUCER_VERSION = "0.3.12"
+PRODUCER_VERSION = "0.3.13"
 DOCLING_CONFIG_NAME = "production-fast-no-orphan-clusters"
 DOCLING_NATIVE_TABLES_VERSION = "docling_table_cells_compact_v1"
 SCANNED_ADMISSIONS_OCR_MAX_PAGE = 35
@@ -54,6 +54,10 @@ def _matches_visual_ocr_trigger(text: str) -> bool:
         "percent and number of first-time",
         "submitting sat scores",
         "percent of first-time, first-year students with scores in each range",
+        "b1. institutional enrollment",
+        "institutional enrollment - men and women",
+        "full-timepart-timemen women undergraduate students",
+        "all other degree-seeking undergraduate students",
     )
     return any(trigger in normalized for trigger in triggers)
 
@@ -133,7 +137,7 @@ def _extract_visual_ocr_text(
                         str(page_no),
                         "-png",
                         "-r",
-                        "160",
+                        "240",
                         str(pdf_path),
                         str(prefix),
                     ],
@@ -171,7 +175,16 @@ def _needs_visual_ocr_supplement(markdown: str, values: dict[str, dict]) -> bool
         "submitting sat scores" in markdown.lower()
         and not any(qn in values for qn in ("C.901", "C.903", "C.905", "C.914"))
     )
-    return c1_missing or c9_missing
+    b1_missing = (
+        (
+            "b1. institutional enrollment" in markdown.lower()
+            or "institutional enrollment - men and women" in markdown.lower()
+            or "full-timepart-timemen women undergraduate students" in markdown.lower()
+            or "all other degree-seeking undergraduate students" in markdown.lower()
+        )
+        and not any(qn in values for qn in ("B.101", "B.106", "B.176", "B.178"))
+    )
+    return c1_missing or c9_missing or b1_missing
 
 
 def extract(
