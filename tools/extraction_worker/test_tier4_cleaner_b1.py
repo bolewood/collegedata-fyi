@@ -96,6 +96,65 @@ B2   Enrollment by Racial/Ethnic Category.
         self.assertEqual(values["B.177"]["value"], "32")
         self.assertEqual(values["B.178"]["value"], "10039")
 
+    def test_b1_ocr_side_by_side_full_time_part_time_grid(self):
+        supplemental = """
+B1. Institutional Enrollment - Men and Women
+FULL-TIME PART-TIME
+Men Women Unknown Men Women Unknown
+Undergraduate Students Undergraduate Students
+Degree-seeking, first-
+time, first-year students 2911 4137 183 246
+Other first-year, degree-
+seeking students 1437 1463 452 473
+All other degree-seeking
+undergraduate students 10399 13880 3097 2569
+Total degree-seeking
+undergraduate students 14747 19480 0 3732 3288 0
+All other undergraduates
+enrolled in credit courses 39 36 1114 858
+Total Undergraduate Students 14786 19516 0 4846 4146 0
+Graduate Students Graduate Students
+Degree-seeking, first-time 920 1403 354 377
+All other degree-seeking 2310 3066 1165 1252
+All other graduates enrolled in
+credit courses 17 9 91 126
+Total Graduate Students 3247 4478 0 1610 1755 0
+Total All Students 18033 23994 0 6456 5901 0
+Total All Undergraduates 43294
+Total All Graduate Students 11090
+Grand Total All Students 54384
+B2 Enrollment by Racial/Ethnic Category
+"""
+
+        values = clean("", supplemental_text=supplemental)
+
+        self.assertEqual(values["B.101"]["value"], "2911")
+        self.assertEqual(values["B.126"]["value"], "4137")
+        self.assertEqual(values["B.102"]["value"], "1437")
+        self.assertEqual(values["B.127"]["value"], "1463")
+        self.assertEqual(values["B.103"]["value"], "10399")
+        self.assertEqual(values["B.128"]["value"], "13880")
+        self.assertEqual(values["B.104"]["value"], "14747")
+        self.assertEqual(values["B.129"]["value"], "19480")
+        self.assertEqual(values["B.154"]["value"], "0")
+        self.assertEqual(values["B.106"]["value"], "14786")
+        self.assertEqual(values["B.131"]["value"], "19516")
+        self.assertEqual(values["B.156"]["value"], "0")
+        self.assertEqual(values["B.107"]["value"], "183")
+        self.assertEqual(values["B.132"]["value"], "246")
+        self.assertEqual(values["B.111"]["value"], "1114")
+        self.assertEqual(values["B.136"]["value"], "858")
+        self.assertEqual(values["B.116"]["value"], "17")
+        self.assertEqual(values["B.141"]["value"], "9")
+        self.assertEqual(values["B.121"]["value"], "1610")
+        self.assertEqual(values["B.146"]["value"], "1755")
+        self.assertEqual(values["B.123"]["value"], "18033")
+        self.assertEqual(values["B.148"]["value"], "23994")
+        self.assertEqual(values["B.173"]["value"], "0")
+        self.assertEqual(values["B.176"]["value"], "43294")
+        self.assertEqual(values["B.177"]["value"], "11090")
+        self.assertEqual(values["B.178"]["value"], "54384")
+
 
 if __name__ == "__main__":
     unittest.main()

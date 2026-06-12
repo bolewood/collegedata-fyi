@@ -29,7 +29,8 @@ from supabase import create_client
 
 C1_KEYS = {"C.101", "C.102", "C.105", "C.106", "C.117", "C.118", "C.119"}
 C9_KEYS = {"C.901", "C.902", "C.903", "C.904", "C.905", "C.906", "C.907", "C.914", "C.915", "C.916"}
-OCR_PRODUCER_VERSION = "0.3.12"
+B1_KEYS = {"B.101", "B.106", "B.176", "B.178"}
+OCR_PRODUCER_VERSION = "0.3.13"
 
 
 def parse_year_start(year: str | None) -> int | None:
@@ -129,6 +130,17 @@ def has_c9_anchor(markdown: str) -> bool:
     return "submitting sat scores" in lowered or "c9. percent and number" in lowered
 
 
+def has_b1_anchor(markdown: str) -> bool:
+    lowered = markdown.lower()
+    compact = re.sub(r"\s+", "", lowered)
+    return (
+        "b1. institutional enrollment" in lowered
+        or "institutional enrollment - men and women" in lowered
+        or "full-timepart-timemenwomenundergraduatestudents" in compact
+        or "all other degree-seeking undergraduate students" in lowered
+    )
+
+
 def classify(doc: dict[str, Any], artifact: dict[str, Any]) -> dict[str, Any] | None:
     notes = artifact.get("notes") or {}
     if not isinstance(notes, dict):
@@ -149,17 +161,20 @@ def classify(doc: dict[str, Any], artifact: dict[str, Any]) -> dict[str, Any] | 
 
     c1_anchor = has_c1_anchor(markdown)
     c9_anchor = has_c9_anchor(markdown)
+    b1_anchor = has_b1_anchor(markdown)
     missing_c1 = c1_anchor and not C1_KEYS.intersection(values)
     missing_c9 = c9_anchor and not C9_KEYS.intersection(values)
+    missing_b1 = b1_anchor and not B1_KEYS.intersection(values)
     recovered_c1 = c1_anchor and bool(C1_KEYS.intersection(values))
     recovered_c9 = c9_anchor and bool(C9_KEYS.intersection(values))
+    recovered_b1 = b1_anchor and bool(B1_KEYS.intersection(values))
 
     if visual_pages:
-        if missing_c1 or missing_c9:
+        if missing_b1 or missing_c1 or missing_c9:
             status = "ocr_attempt_still_missing"
         else:
             status = "visual_ocr_recovered"
-    elif (missing_c1 or missing_c9) and field_count < 150:
+    elif (missing_b1 or missing_c1 or missing_c9) and field_count < 150:
         status = (
             "needs_redrain_visual_ocr"
             if version_tuple(producer_version) < version_tuple(OCR_PRODUCER_VERSION)
@@ -181,8 +196,10 @@ def classify(doc: dict[str, Any], artifact: dict[str, Any]) -> dict[str, Any] | 
         "schema_fallback_used": bool(notes.get("schema_fallback_used")),
         "field_count": field_count,
         "visual_ocr_pages": ",".join(str(p) for p in visual_pages),
+        "missing_b1": int(missing_b1),
         "missing_c1": int(missing_c1),
         "missing_c9": int(missing_c9),
+        "recovered_b1": int(recovered_b1),
         "recovered_c1": int(recovered_c1),
         "recovered_c9": int(recovered_c9),
         "source_url": doc.get("source_url") or "",
@@ -259,8 +276,10 @@ def main() -> int:
         "schema_fallback_used",
         "field_count",
         "visual_ocr_pages",
+        "missing_b1",
         "missing_c1",
         "missing_c9",
+        "recovered_b1",
         "recovered_c1",
         "recovered_c9",
         "source_url",

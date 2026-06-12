@@ -35,6 +35,7 @@ import {
 // Consumers who need the full manifest (audit, transparency log reconciliation)
 // can query cds_documents directly via PostgREST.
 const PUBLIC_EXCLUDED_STATUSES = ["withdrawn", "verified_absent"];
+const STATIC_BUILD_QUERY_TIMEOUT_MS = 8_000;
 
 type UntypedSupabase = {
   // Generated DB types can lag migrations. Keep dynamic stats queries isolated
@@ -74,6 +75,107 @@ type GpaContextRow = {
   value_text: unknown;
   year_start: unknown;
 };
+
+function isStaticBuild(): boolean {
+  return (
+    process.env.NEXT_PHASE === "phase-production-build" ||
+    process.env.npm_lifecycle_event === "build"
+  );
+}
+
+function errorText(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+async function fetchManifestForStaticBuild(): Promise<ManifestRow[]> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) return [];
+
+  const PAGE_SIZE = 1000;
+  const allRows: ManifestRow[] = [];
+  const excludedStatuses = PUBLIC_EXCLUDED_STATUSES.join(",");
+
+  for (let offset = 0; ; offset += PAGE_SIZE) {
+    const url = new URL(`${supabaseUrl}/rest/v1/cds_manifest`);
+    url.searchParams.set("select", "*");
+    url.searchParams.set("participation_status", `not.in.(${excludedStatuses})`);
+    url.searchParams.set("removed_at", "is.null");
+    url.searchParams.set("order", "school_name.asc");
+    url.searchParams.set("limit", String(PAGE_SIZE));
+    url.searchParams.set("offset", String(offset));
+
+    try {
+      const response = await fetch(url, {
+        headers: {
+          apikey: supabaseAnonKey,
+          Authorization: `Bearer ${supabaseAnonKey}`,
+        },
+        signal: AbortSignal.timeout(STATIC_BUILD_QUERY_TIMEOUT_MS),
+      });
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(`HTTP ${response.status}: ${body.slice(0, 200)}`);
+      }
+      const page = (await response.json()) as ManifestRow[];
+      allRows.push(...page);
+      if (page.length < PAGE_SIZE) break;
+    } catch (error) {
+      console.warn(
+        `Failed to fetch manifest during static build: ${errorText(error)}; continuing with ${allRows.length} manifest rows.`,
+      );
+      break;
+    }
+  }
+
+  return allRows;
+}
+
+async function fetchCoverageRowsForStaticBuild(): Promise<InstitutionCoverage[]> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) return [];
+
+  const PAGE_SIZE = 1000;
+  const HARD_CAP = 50_000;
+  const out: InstitutionCoverage[] = [];
+
+  for (let offset = 0; offset < HARD_CAP; offset += PAGE_SIZE) {
+    const url = new URL(`${supabaseUrl}/rest/v1/institution_cds_coverage`);
+    url.searchParams.set(
+      "select",
+      "ipeds_id,school_id,school_name,city,state,website_url,undergraduate_enrollment,coverage_status,coverage_label,coverage_summary,latest_available_cds_year,last_checked_at,can_submit_source",
+    );
+    url.searchParams.set("coverage_status", "neq.out_of_scope");
+    url.searchParams.set("order", "school_name.asc");
+    url.searchParams.set("limit", String(PAGE_SIZE));
+    url.searchParams.set("offset", String(offset));
+
+    try {
+      const response = await fetch(url, {
+        headers: {
+          apikey: supabaseAnonKey,
+          Authorization: `Bearer ${supabaseAnonKey}`,
+        },
+        signal: AbortSignal.timeout(STATIC_BUILD_QUERY_TIMEOUT_MS),
+      });
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(`HTTP ${response.status}: ${body.slice(0, 200)}`);
+      }
+      const page = (await response.json()) as InstitutionCoverage[];
+      out.push(...page);
+      if (page.length < PAGE_SIZE) break;
+    } catch (error) {
+      console.warn(
+        `Failed to fetch coverage during static build: ${errorText(error)}; continuing with ${out.length} coverage rows.`,
+      );
+      break;
+    }
+  }
+
+  return out;
+}
 
 function sha256Text(value: string): string {
   return createHash("sha256").update(value, "utf8").digest("hex");
@@ -201,6 +303,8 @@ async function optionalExactCount(
 }
 
 export const fetchManifest = cache(async function fetchManifest(): Promise<ManifestRow[]> {
+  if (isStaticBuild()) return fetchManifestForStaticBuild();
+
   const PAGE_SIZE = 1000;
   const allRows: ManifestRow[] = [];
   let from = 0;
@@ -214,7 +318,10 @@ export const fetchManifest = cache(async function fetchManifest(): Promise<Manif
       .order("school_name")
       .range(from, from + PAGE_SIZE - 1);
 
-    if (error) throw new Error(`Failed to fetch manifest: ${error.message}`);
+    if (error) {
+      const message = `Failed to fetch manifest: ${error.message}`;
+      throw new Error(message);
+    }
     if (!data || data.length === 0) break;
 
     allRows.push(...data);
@@ -285,6 +392,23 @@ export function computeStats(rows: ManifestRow[]): CorpusStats {
 }
 
 export const fetchSiteStats = cache(async function fetchSiteStats(): Promise<SiteStats> {
+  if (isStaticBuild()) {
+    const manifest = await fetchManifest();
+    return {
+      ...computeStats(manifest),
+      schema_field_count: null,
+      queryable_field_count: null,
+      queryable_field_updated_at: null,
+      browser_row_count: null,
+      browser_primary_row_count: null,
+      browser_school_count: null,
+      browser_updated_at: null,
+      scorecard_institution_count: null,
+      scorecard_data_year: null,
+      scorecard_refreshed_at: null,
+    };
+  }
+
   const raw = supabase as unknown as UntypedSupabase;
 
   const [
@@ -417,6 +541,8 @@ export const fetchInstitutionCoverage = cache(
 export const fetchCoverageRows = cache(async function fetchCoverageRows(): Promise<
   InstitutionCoverage[]
 > {
+  if (isStaticBuild()) return fetchCoverageRowsForStaticBuild();
+
   const PAGE = 1000;
   const HARD_CAP = 50_000;
   const out: InstitutionCoverage[] = [];

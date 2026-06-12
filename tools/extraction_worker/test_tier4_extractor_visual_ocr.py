@@ -15,6 +15,26 @@ class Tier4ExtractorVisualOcrTest(unittest.TestCase):
 
         self.assertTrue(tier4_extractor._matches_visual_ocr_trigger(text))
 
+    def test_visual_ocr_trigger_matches_b1_form_text_signature(self):
+        text = (
+            "FULL-TIMEPART-TIMEMen Women Undergraduate Students"
+            "Degree-seeking, first-time students All other degree-seeking "
+            "undergraduate students"
+        )
+
+        self.assertTrue(tier4_extractor._matches_visual_ocr_trigger(text))
+
+    def test_needs_visual_ocr_when_b1_values_missing(self):
+        markdown = "B1. Institutional Enrollment - Men and Women"
+
+        self.assertTrue(tier4_extractor._needs_visual_ocr_supplement(markdown, {}))
+        self.assertFalse(
+            tier4_extractor._needs_visual_ocr_supplement(
+                markdown,
+                {"B.101": {"value": "1"}},
+            )
+        )
+
     def test_visual_ocr_candidates_include_neighbor_pages(self):
         class FakeReader:
             pages = [
