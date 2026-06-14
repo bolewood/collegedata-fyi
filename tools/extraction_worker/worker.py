@@ -267,10 +267,11 @@ def load_env(env_path: Path) -> dict[str, str]:
 
 
 def canonical_schema_paths(schema_dir: Path = SCHEMA_DIR) -> list[Path]:
+    canonical_name_re = re.compile(r"^cds_schema_\d{4}_\d{2}\.json$")
     return [
         path
         for path in sorted(schema_dir.glob("cds_schema_*.json"))
-        if "-to-" not in path.name and not path.name.endswith(".structural.json")
+        if canonical_name_re.match(path.name)
     ]
 
 
@@ -279,7 +280,7 @@ def load_schema_registry(schema_dir: Path = SCHEMA_DIR) -> dict[str, tuple[Path,
     for path in canonical_schema_paths(schema_dir):
         schema = load_schema(path)
         version = schema.get("schema_version")
-        if version:
+        if version and isinstance(schema.get("fields"), list):
             registry[str(version)] = (path, schema)
     if not registry:
         raise RuntimeError(f"no canonical schemas found in {schema_dir}")
