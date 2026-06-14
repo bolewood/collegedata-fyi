@@ -252,20 +252,26 @@ There are two Actions surfaces, and they are intentionally separate:
   service-role database writes.
 - `.github/workflows/ops-extraction-worker.yml` is the bounded ops path for
   production-ish extraction work. It runs on a small daily schedule and can be
-  started manually with `limit`, `school`, `include_failed`,
-  `seed_projection_metadata`, and `low_field_threshold` inputs. It requires
-  `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` GitHub Secrets, installs the
-  extraction worker dependencies, then calls `tools/extraction_worker/worker.py`
-  with `--limit`, `--summary-json`, and the requested filters. Projection
+  started manually with `limit`, `school`, `document_ids`,
+  `requeue_document_ids`, `source_format`, `min_year_start`, `include_failed`,
+  `seed_projection_metadata`, `low_field_threshold`, and `deadline_minutes`
+  inputs. It requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` GitHub
+  Secrets, installs the extraction worker dependencies, then calls
+  `tools/extraction_worker/worker.py` with `--reconcile-pending`,
+  `--deadline-minutes`, `--summary-json`, and the requested filters. Projection
   refresh is enabled by default; metadata seeding is controlled by the workflow
   input.
 
-The ops workflow caps GitHub-hosted runs at 100 rows. Full corpus drains,
-large Docling/OCR backfills, and expensive repair experiments still belong on a
+The ops workflow caps GitHub-hosted runs at 100 rows. The scheduled path uses a
+small limit and a 25-minute worker deadline under a 120-minute hard job timeout;
+manual dispatch can raise the graceful deadline when the requested scope is
+still appropriate for GitHub-hosted compute. Full corpus drains, large
+Docling/OCR backfills, and expensive repair experiments still belong on a
 laptop or self-hosted runner. Every ops run uploads an
 `extraction-worker-summary` artifact containing `summary.json` and
 `worker.log`; the summary includes processed count, failures, mean fields,
-low-field docs, extraction counts, and projection counts.
+low-field docs, extraction counts, projection counts, reconcile counts, and the
+per-document run summary.
 
 ### Files
 
@@ -283,7 +289,7 @@ low-field docs, extraction counts, and projection counts.
 | Queue consumer (30 s cron target + `force_school` backfill) | `supabase/functions/archive-process/index.ts` |
 | Cadence-aware seeder (daily cron target; weekly March-June, monthly otherwise) | `supabase/functions/archive-enqueue/index.ts` |
 | Operator-triggered seeder for Scorecard-only directory rows (PRD 015 M2) | `supabase/functions/directory-enqueue/index.ts` |
-| Public-safe coverage table refresh, on 15-min pg_cron (PRD 015 M3) | `supabase/functions/refresh-coverage/index.ts` |
+| Public-safe coverage table refresh, hourly pg_cron by default (PRD 015 M3, relaxed June 2026 for IO budget) | `supabase/functions/refresh-coverage/index.ts` |
 | Coverage table + status precedence + atomic refresh RPC (PRD 015 M3) | `supabase/migrations/<ts>_institution_cds_coverage.sql` |
 | Format badge / source-format presentation | `supabase/functions/_shared/format.ts`, `web/src/lib/format.ts` |
 | Extraction worker | `tools/extraction_worker/worker.py` |
@@ -308,6 +314,13 @@ HTML is uploaded with `content-type: text/plain` even though the object suffix
 is `.html`; this prevents public Storage URLs from executing school-hosted
 scripts in the `sources` bucket. The extraction worker reads the bytes directly,
 so this XSS mitigation does not affect Tier 6 extraction.
+
+The archive layer rejects HTML login walls, WAF/bot challenges, generic error
+pages, and CDS-looking landing pages that do not contain real table markup.
+`tools/data_quality/cleanup_bad_html_sources.py` is the operator cleanup tool for
+pre-guard rows: by default it reports candidates, and with `--write` /
+`--delete-storage` it marks bad rows removed and deletes public archived
+challenge/login HTML.
 
 SHA-addressed paths replace the earlier `source.pdf` stable path because
 the stable-path + history-copy approach had crash windows without real
@@ -335,6 +348,12 @@ two credential formats to survive Supabase's key rotation transition:
 This double-gate prevents codex finding #2 from the PR 1-2 review: without
 the in-handler check, `verify_jwt=true` alone would let any authenticated
 project user trigger service-role writes.
+
+Public PostgREST views that sit on top of RLS-protected tables are explicitly
+`security_invoker` after the June 2026 Supabase Advisor hardening. `cds_manifest`
+and `cds_field_observations` remain public through their underlying policies;
+operator-only views such as `bot_challenged_documents` and
+`latest_school_hosting` do not grant anon/authenticated reads.
 
 `discover` has no write path and is gated by `verify_jwt=true` only. It
 returns a dry-run `ResolveResult` for each requested school without

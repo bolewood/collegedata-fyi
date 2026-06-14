@@ -76,12 +76,14 @@ score submitters, not the entire admitted or enrolled class.
 
 All archived CDS documents for one school, sorted newest first. Each
 document is a card showing year, format badge, extraction status badge,
-and a PDF download link.
+and a source download link. The label is format-aware (`Download PDF`,
+`Download XLSX`, `Download DOCX`, `Download HTML`, or `Download source`) and is
+derived from the archived storage path when available.
 
 **Status badge behavior:**
 - Green "Extracted": year is clickable, links to `/schools/{id}/{year}`
-- Yellow "Pending": not clickable, PDF download only
-- Red "Failed": not clickable, PDF download only
+- Yellow "Pending": not clickable, source download only
+- Red "Failed": not clickable, source download only
 
 This prevents dead-end navigation to year pages with no structured data.
 
@@ -120,7 +122,7 @@ rate 2025" or "Stanford SAT scores 2024-25."
 **Layout (when extracted):**
 1. Breadcrumb: Schools / {name} / {year}
 2. School name + year heading
-3. Format badge + PDF download link
+3. Format badge + source download link
 4. **KeyStats block:** 4-8 stat cards showing acceptance rate, applications,
    admitted, enrolled, SAT composite/math/reading ranges, and ACT Composite
    when available. Only renders cards for fields that have values. Acceptance rate is computed from
@@ -134,11 +136,14 @@ rate 2025" or "Stanford SAT scores 2024-25."
 (e.g., Columbia College + SEAS and General Studies), all variants are shown
 on the same page with their own KeyStats and FieldsView sections.
 
-**When not extracted:** Shows document metadata + PDF download + a
+**When not extracted:** Shows document metadata + source download + a
 "Structured data coming soon" message.
 
-**SEO:** Schema.org `Dataset` JSON-LD markup. Unique `<title>` and
-`<meta description>` per page via `generateMetadata()`.
+**SEO:** Schema.org `Dataset` JSON-LD markup plus breadcrumb markup. Dataset
+JSON-LD includes `name`, `description`, `url`, `creator`, `temporalCoverage`,
+`license`, `provider`, and `isAccessibleForFree` so Google Search Console's
+Dataset structured-data checks have the required fields. Unique `<title>` and
+`<meta description>` per page come from `generateMetadata()`.
 
 ### `/coverage` Coverage dashboard (`web/src/app/coverage/page.tsx`)
 
@@ -254,7 +259,7 @@ component share the same Supabase response within a single render.
 | `SchoolDocumentsLedger` | `components/SchoolDocumentsLedger.tsx` | Collapses long CDS-document histories after the three most recent files. |
 | `SubmissionForm` | `components/SubmissionForm.tsx` | Formspree-backed public CDS source submission form; compact mode opens inline from no-CDS pages. |
 | `SchoolTable` | `components/SchoolTable.tsx` | Sortable/filterable school list with search input |
-| `DocumentCard` | `components/DocumentCard.tsx` | CDS year card with status badge, format badge, PDF link |
+| `DocumentCard` | `components/DocumentCard.tsx` | CDS year card with status badge, format badge, and format-aware source link |
 | `KeyStats` | `components/KeyStats.tsx` | Grid of stat cards (acceptance rate, SAT, enrollment) |
 | `FieldsView` | `components/FieldsView.tsx` | Full field listing grouped by CDS section |
 | `Badge` | `components/Badge.tsx` | Colored pill badge (green/yellow/red/gray) |
@@ -331,7 +336,9 @@ a personalized award estimate.
 - **Sitemap:** `sitemap.ts` generates URLs for all static pages, all school
   pages, and all extracted year detail pages.
 - **Robots:** `robots.ts` allows all crawlers and points to the sitemap.
-- **Schema.org:** Year detail pages include `Dataset` JSON-LD markup.
+- **Schema.org:** School pages include `CollegeOrUniversity` + archive
+  `Dataset` JSON-LD. Year detail pages include `Dataset` + `BreadcrumbList`
+  JSON-LD with required `description`, `creator`, and `license` fields.
 - **Open Graph:** Root metadata includes OG title, description, and URL.
 
 ---

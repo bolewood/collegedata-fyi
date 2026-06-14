@@ -11,7 +11,7 @@ This is the M2 half of the pipeline. M1 (discovery) archives the source bytes; M
 
 | File | Purpose |
 |---|---|
-| `worker.py` | The main poller. Reads pending rows with recency priority, downloads sources from Storage, routes by `source_format`, writes canonical artifacts, and refreshes browser projections after successful writes unless disabled. Tier 1 (xlsx), Tier 2 (pdf_fillable), Tier 4 (pdf_flat), and Tier 5 (pdf_scanned via Tier 4 + force-OCR) are wired end-to-end; Tier 3 (docx) is still a stub pending [PRD 007](../../docs/prd/007-tier3-docx-extraction.md). Also runs content-based year detection (ADR 0007) and writes `cds_documents.detected_year`. |
+| `worker.py` | The main poller. Reads pending rows with recency priority, downloads sources from Storage, routes by `source_format`, writes canonical artifacts, and refreshes browser projections after successful writes unless disabled. Tier 1 (xlsx), Tier 2 (pdf_fillable), Tier 4 (pdf_flat), Tier 5 (pdf_scanned via Tier 4 + force-OCR), and Tier 6 (structured HTML) are wired end-to-end; Tier 3 (docx) is still a stub pending [PRD 007](../../docs/prd/007-tier3-docx-extraction.md). Also runs content-based year detection (ADR 0007), writes `cds_documents.detected_year`, reconciles already-extracted pending rows, and supports graceful deadline exits for bounded ops runs. |
 | `tier4_extractor.py` | Tier 4 extraction pipeline. Runs Docling with the tuned `production-fast-no-orphan-clusters` config to produce markdown, persists compact native table cells, then hands off to the cleaner. Accepts a `force_ocr` parameter which the worker sets to True for `pdf_scanned` sources — this enables Tier 5 via the same pipeline with EasyOCR forced on every page. |
 | `tier4_cleaner.py` | Schema-targeting post-processor for Docling output. Parses markdown tables, maps row labels to canonical question numbers, handles the common table shapes across the corpus (B1 gender columns, B2 race/ethnicity, C10 class rank, etc.). Bulk of the Tier 4 logic lives here. |
 | `tier4_native_tables.py` | Compact serializer for Docling native table cells. Preserves row/column offsets, cell flags, bboxes, and table provenance in `notes.native_tables` so deterministic native-table parsers can run before any LLM repair. |
@@ -49,16 +49,29 @@ python worker.py --skip-projection-refresh --limit 10
 # Scoped operator re-drain: only 2024+ Tier 4/Tier 5 PDFs
 python worker.py --source-format pdf_flat,pdf_scanned --min-year-start 2024
 
+# Graceful CI/operator budget: stop before the hard timeout and still write
+# summary/projection progress.
+python worker.py --limit 25 --deadline-minutes 25 --summary-json ../../scratch/extraction-summary.json
+
+# Repair rows stuck in extraction_pending when a prior run was cancelled after
+# writing the current canonical artifact.
+python worker.py --reconcile-pending --limit 100 --summary-json ../../scratch/reconcile-summary.json
+
 # Targeted managed Docling re-drain on an operator laptop.
 # This requeues the documents, processes only those IDs, and refreshes
 # cds_fields/school_browser_rows as each document finishes.
 python worker.py \
     --env /Users/santhonys/Projects/Owen/colleges/collegedata-fyi/.env \
     --requeue-document-ids <uuid>,<uuid> \
+    --document-ids <uuid>,<uuid> \
     --limit 2 \
     --min-year-start 2024 \
     --seed-projection-metadata \
     --summary-json ../../.context/local-redrain/summary.json
+
+# Force a new artifact even if producer/schema/source SHA already match.
+# Use only for managed cleaner/extractor redrains after code changes.
+python worker.py --requeue-document-ids <uuid> --force-reextract --limit 1
 
 # Fresh-year drain: process the newest archived CDS rows before old backlog
 python worker.py --min-year-start 2025 --include-failed --limit 25
@@ -79,8 +92,10 @@ small scheduled backlog drain, CI, and other unattended jobs.
 
 For extractor or cleaner changes, bump the relevant `producer_version` before
 re-draining. The worker is idempotent by `(document_id, producer,
-producer_version, schema_version)` and will otherwise skip matching artifacts as
-`already_extracted`.
+producer_version, schema_version, source_sha256)` and will otherwise skip
+matching artifacts as `already_extracted`. The source-SHA check means a newly
+archived byte revision can still extract even when producer and schema versions
+are unchanged. `--force-reextract` opts out for deliberate managed redrains.
 
 ## GitHub Actions ops workflow
 
@@ -89,10 +104,11 @@ wrapper around `worker.py`. It is separate from PR CI and is meant for the
 scheduled automation path, not managed Docling re-drains.
 
 The workflow supports both a daily scheduled drain and manual dispatch. Manual
-inputs are `limit`, `school`, `source_format`, `min_year_start`,
-`include_failed`, `seed_projection_metadata`, and `low_field_threshold`.
-GitHub-hosted runs reject `limit` values over 100; full
-corpus drains should run on an operator laptop or a self-hosted runner.
+inputs are `limit`, `school`, `document_ids`, `requeue_document_ids`,
+`source_format`, `min_year_start`, `include_failed`,
+`seed_projection_metadata`, `low_field_threshold`, and `deadline_minutes`.
+GitHub-hosted runs reject `limit` values over 100; full corpus drains should run
+on an operator laptop or a self-hosted runner.
 
 The default claim order is deliberately recency-first: the worker sorts by
 content-derived `detected_year` when available, then archive-time `cds_year`,
@@ -118,6 +134,12 @@ Each workflow run uploads an `extraction-worker-summary` artifact containing
 | `low_field_docs` | Documents below `--low-field-threshold`, with school/source details. |
 | `extraction_counts` | Result buckets from the extraction pass. |
 | `projection_counts` | Browser projection writes, skipped rows, and projection errors. |
+| `reconcile_counts` | Rows repaired by `--reconcile-pending` without heavy extraction. |
+| `documents` | Per-document action, producer, schema, field count, and error details. |
+
+The workflow always passes `--reconcile-pending` unless `--force-reextract` is
+used locally. This keeps cancelled or timeout-interrupted rows from accumulating
+in the pending queue when their current-source artifact already exists.
 
 ## CI workflow
 
