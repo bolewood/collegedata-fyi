@@ -31,6 +31,8 @@ covers the derived schemas — the same reasoning extends to the template files.
 
 | File | SHA-256 | Source | Snapshot |
 |---|---|---|---|
+| `cds_2023-24_template.xlsx` | `4c82edcccdf30032105d6684bbe648dfb457a8498e6b1396d5f5fd68b8f279e4` | `CDS_2023-2024-1.xlsx` user-provided official/Wayback template attachment | pending |
+| `cds_2023-24_template.pdf`  | `2adbe3d16d6ff3144fb9675da67d6d6c9ff9c942a3b597121d50a0084f61c65f` | `CDS_2023-2024-with-auto-sum.pdf` user-provided official/Wayback template attachment | pending |
 | `cds_2024-25_template.xlsx` | `24d16e066e331426802aad6e4886edffaa2887b0267310f0539d890b68485cf5` | `https://commondataset.org/wp-content/uploads/2024/11/2024-2025-CDS-Template_Updated_11_08_24.xlsx` | `https://web.archive.org/web/20250321004409/https://commondataset.org/wp-content/uploads/2024/11/2024-2025-CDS-Template_Updated_11_08_24.xlsx` |
 | `cds_2024-25_template.pdf`  | `8c02492902d1d7a6128581ab615df024db1ffa1ce8d38ae923a31aad1225d9f0` | `https://commondataset.org/wp-content/uploads/2024/11/CDS-2024-2025-TEMPLATE.pdf` | `https://web.archive.org/web/20250321004409/https://commondataset.org/wp-content/uploads/2024/11/CDS-2024-2025-TEMPLATE.pdf` |
 | `cds_2025-26_template.xlsx` | `2f4f8dabeb286578d68ded3dea39c65ce8d10f696ab160a109dd10126cb0f3fe` | `https://commondataset.org/wp-content/uploads/2025/11/CDS-PDF-2025-2026-Excel_Template.xlsx` | `https://web.archive.org/web/20260428185533/https://commondataset.org/wp-content/uploads/2025/11/CDS-PDF-2025-2026-Excel_Template.xlsx` |
@@ -62,9 +64,17 @@ When the CDS Initiative publishes a new template (e.g., 2026-27):
 4. Follow the contributor process in PRD 014 to build the canonical schema and
    wire it into the year-aware extractors.
 
-## Older years (2019-20 through 2023-24)
+## Older years (2019-20 through 2022-23)
 
 Not currently archived here. Those years use structural schemas only (no
 canonical Answer Sheet exists in those templates), and the originals are still
 on commondataset.org as of this writing. If a future contributor wants to
 archive them as a defensive measure, follow the same process.
+
+## 2023-24 exception
+
+The 2023-24 template has no Answer Sheet tab, but it is close enough to the
+2024-25 canonical schema to support a year-specific synthesized canonical
+schema. The XLSX above is archived for structural rebuilds; the fillable PDF is
+archived because its AcroForm keys provide the exact 2023-24 PDF tags used by
+Tier 2 extraction.

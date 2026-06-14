@@ -36,7 +36,7 @@ class BuildCoreTableOverlayTest(unittest.TestCase):
             "C.907",
         )
 
-    def test_2023_keeps_another_gender_and_gender_residency_unmapped(self):
+    def test_2023_keeps_another_gender_unmapped_in_2025_overlay(self):
         source = json.loads((ROOT / "schemas/cds_schema_2023_24.structural.json").read_text())
         target = json.loads((ROOT / "schemas/cds_schema_2025_26.json").read_text())
 
@@ -51,8 +51,8 @@ class BuildCoreTableOverlayTest(unittest.TestCase):
             "no_2025_target_for_another_gender",
         )
         self.assertEqual(
-            unmapped_reasons[("Total first-time, first-year men who applied", "In-State")],
-            "gender_specific_residency_not_in_2025_schema",
+            unmapped_reasons[("Total part-time, first-time, first-year another gender who enrolled", None)],
+            "no_2025_target_for_another_gender",
         )
 
     def test_2023_maps_c7_factor_choices_and_keeps_removed_factor_unmapped(self):

@@ -118,6 +118,14 @@ class SchemaDispatchTest(unittest.TestCase):
         self.assertFalse(resolution.fallback_used)
         self.assertEqual(resolution.schema["schema_version"], "2024-25")
 
+    def test_resolve_schema_uses_2023_canonical_schema(self):
+        registry = load_schema_registry()
+        resolution = resolve_schema_for_year("2023-24", registry)
+
+        self.assertEqual(resolution.schema_version, "2023-24")
+        self.assertFalse(resolution.fallback_used)
+        self.assertEqual(resolution.schema["schema_version"], "2023-24")
+
     def test_resolve_schema_falls_back_to_latest(self):
         registry = load_schema_registry()
         resolution = resolve_schema_for_year("2026-27", registry)

@@ -106,7 +106,7 @@ the `2024+` projection, the median populated field count is 521 and the max is
 
 ## Known gaps
 
-1. **Only shipped canonical years get deterministic maps.** The worker currently ships 2024-25 and 2025-26 templates. Filled XLSXs from 2019-20 or other unshipped years can use different cell positions; those docs fall back to the latest known schema unless a template/schema pair is added for that year.
+1. **Only templates with machine-readable question/cell maps get deterministic maps.** The worker currently has deterministic Tier 1 cell maps for 2024-25 and 2025-26. The 2023-24 canonical schema improves PDF/Tier 4 targeting, but its XLSX template is a visual form layout and currently yields no Tier 1 cell map. Filled XLSXs from 2019-20 through 2023-24 can use different cell positions; those docs use workbook-native fallback detection unless a visual-layout cell mapper is added for that year.
 2. **Custom template variants.** Some schools post an Excel file that looks like a CDS but uses a custom layout (no standard section tabs, no stable question/answer columns, or renamed tabs). These can still populate zero fields. Route them to Tier 4 via PDF conversion as a fallback.
 3. **DOCX is routed, not extracted.** ZIP internals are now inspected before routing, so DOCX no longer lands in Tier 1 as fake XLSX. Those rows correctly route to Tier 3, whose extractor is still pending PRD 007.
 4. **No type coercion.** Every value is emitted as a string, matching the Tier 2 pattern. Downstream consumers coerce per field using the schema's `value_type` metadata.
@@ -115,5 +115,5 @@ the `2024+` projection, the median populated field count is 521 and the max is
 
 - [`tools/tier2_extractor/`](../tier2_extractor/) — the AcroForm Tier 2 extractor; Tier 1 mirrors its output shape
 - [`tools/schema_builder/`](../schema_builder/) — builds the canonical schema JSON from the same Excel template
-- [`schemas/templates/cds_2024-25_template.xlsx`](../../schemas/templates/) and [`schemas/templates/cds_2025-26_template.xlsx`](../../schemas/templates/) — templates Tier 1 parses for year-specific cell maps
+- [`schemas/templates/`](../../schemas/templates/) — archived templates; Tier 1 currently parses year-specific cell maps from 2024-25 and 2025-26
 - [`docs/decisions/0006-tiered-extraction-strategy.md`](../../docs/decisions/0006-tiered-extraction-strategy.md) — tier ladder rationale

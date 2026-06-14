@@ -4175,7 +4175,7 @@ def resolve_c13_application_fee(
                 admitted = admitted or layout_counts[1]
         if applications and admitted:
             out["C.2101"] = {"value": "Yes", "source": "tier4_cleaner"}
-        if idx_is_2024 := (schema.schema_version == "2024-25"):
+        if idx_is_pre_2025 := (schema.schema_version in {"2023-24", "2024-25"}):
             if applications:
                 out["C.2106"] = {"value": applications, "source": "tier4_cleaner"}
             if admitted:
@@ -4186,7 +4186,7 @@ def resolve_c13_application_fee(
             if admitted:
                 out["C.2111"] = {"value": admitted, "source": "tier4_cleaner"}
 
-        if idx_is_2024:
+        if idx_is_pre_2025:
             other_closing = _extract_date_after_label(
                 c21,
                 r"Other early decision plan closing date",

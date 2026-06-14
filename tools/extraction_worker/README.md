@@ -184,15 +184,19 @@ then chooses the schema for each document from `detected_year || cds_year`.
 If no matching canonical schema exists, the worker uses the most recent
 available schema and records `notes.schema_fallback_used: true`,
 `notes.schema_fallback_reason`, and `notes.schema_version` on the artifact.
+As of 2026-06-14 the canonical years are 2023-24, 2024-25, and 2025-26; 2019-20
+through 2022-23 still use structural schemas/overlays only and therefore fall
+back for deterministic extraction.
 
 Tier 1 uses a schema-matched template cell map when one exists. The 2025-26
-template uses hidden AA/AC lookup columns; the 2024-25 template uses the
-reduced section-tab layout with question numbers in column A and answer cells
-in column C. If that map produces fewer than 25 populated values, Tier 1 scans
-the workbook itself for embedded Question Number / Answer columns and uses that
-map only when it recovers more fields. Tier 2 joins AcroForm values against the
-selected schema. Tier 4, Tier 5, and Tier 6 pass a year-matched `SchemaIndex`
-into the cleaner for schema filters and value metadata.
+template uses hidden AA/AC lookup columns; the 2024-25 template uses the reduced
+section-tab layout. The archived 2023-24 XLSX is a visual form layout and
+currently does not produce a Tier 1 cell map. If a map produces fewer than 25
+populated values, Tier 1 scans the workbook itself for embedded Question Number /
+Answer columns and uses that map only when it recovers more fields. Tier 2 joins
+AcroForm values against the selected schema. Tier 4, Tier 5, and Tier 6 pass a
+year-matched `SchemaIndex` into the cleaner for schema filters and value
+metadata.
 
 Known limitation: Tier 4's hand-coded phrase/field maps are still maintained
 against the 2025-26 reference frame. M3 makes `SchemaIndex.filter()` and schema
