@@ -16,7 +16,7 @@ Every year, the Common Data Set Initiative publishes three fillable templates fo
 
 This is `cds_schema_vN`. We do not hand-author it. We extract it.
 
-The 2025-26 Answer Sheet has **1,105 fields across 10 sections**, with 1,089 having a PDF tag (the remaining 16 are computed totals that don't exist as AcroForm widgets because Excel/PDF derives them via formulas). The 2024-25 Answer Sheet is reduced: it has the canonical field list and structural metadata, but it omits `Sort Order`, `US News PDF Tag`, and `Word Tag`.
+The 2025-26 Answer Sheet has **1,105 fields across 10 sections**, with 1,089 having a PDF tag (the remaining 16 are computed totals that don't exist as AcroForm widgets because Excel/PDF derives them via formulas). The 2024-25 Answer Sheet is reduced: it has the canonical field list and structural metadata, but it omits `Sort Order`, `US News PDF Tag`, and `Word Tag`. The 2023-24 template has no Answer Sheet at all, so its canonical schema is synthesized from the 2024-25 canonical field map plus the 2023-24 fillable PDF's AcroForm tags.
 
 ## What this script does
 
@@ -140,13 +140,34 @@ The core table overlays map only rows whose semantics are clear against the
 gender-specific residency breakdowns, or removed C7 factors without a 2025-26
 equivalent, remains in `unmapped` with a reason for QA.
 
+For 2023-24, build the structural schema from the archived XLSX and then build
+the synthesized canonical schema from the 2024-25 canonical schema plus the
+archived 2023-24 fillable PDF:
+
+```bash
+python tools/schema_builder/build_from_tabs.py \
+    schemas/templates/cds_2023-24_template.xlsx \
+    schemas/cds_schema_2023_24.structural.json
+
+python tools/schema_builder/build_2023_24_canonical.py
+
+python tools/schema_builder/decode_checkboxes.py \
+    schemas/templates/cds_2023-24_template.pdf \
+    schemas/cds_schema_2023_24.json
+```
+
+This is intentionally limited to 2023-24 for now. It drops the 2024-25
+`Unknown` gender rows that do not exist in the 2023-24 template, assigns the
+2023 PDF's `NON_BINARY` tags to the corresponding `Another Gender` canonical
+rows, and validates every retained `pdf_tag` against the 2023 PDF form keys.
+
 ## Known limitations
 
 1. **Known-header validation.** The script detects columns by header name, so reordered headers and the reduced 2024-25 layout are supported. Unknown headers still fail loudly because silently accepting a redesigned template would produce a silently drifted schema.
 
 2. **The XLSX template is the authority, not the PDF template.** The PDF has 1,089 AcroForm fields but the XLSX lists 1,105 canonical fields. The 16-row delta is canonical questions that don't have AcroForm widgets (computed totals). Both are "real" CDS fields from the consumer's point of view, but only one tier has automatic population.
 
-3. **Licensing and archival policy.** The Common Data Set is a collaborative open survey instrument with no published terms of service at commondataset.org. The CDS Initiative is a working group, not a rights-holder, and individual schools own the data inside their own filled CDS. Derived schemas produced by this script can ship in the public repo without further review. Official templates needed for reproducible canonical schema builds are archived in `schemas/templates/`; provenance and SHA-256 hashes are recorded in `schemas/templates/SOURCES.md`.
+3. **Licensing and archival policy.** The Common Data Set is a collaborative open survey instrument with no published terms of service at commondataset.org. The CDS Initiative is a working group, not a rights-holder, and individual schools own the data inside their own filled CDS. Derived schemas produced by these scripts can ship in the public repo without further review. Official templates needed for reproducible canonical schema builds are archived in `schemas/templates/`; provenance and SHA-256 hashes are recorded in `schemas/templates/SOURCES.md`.
 
 ## See also
 

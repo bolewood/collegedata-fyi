@@ -1,9 +1,9 @@
 {
   "schema_version": "2023-24",
-  "source_filename": "CDS_2023-2024.xlsx",
+  "source_filename": "cds_2023-24_template.xlsx",
   "structural": true,
-  "source_note": "Extracted from the per-section tabs (CDS-A through CDS-J) of the commondataset.org Common Data Set Excel template. Unlike the Answer Sheet-based canonical schema, this does not include canonical question_numbers. Canonical ID assignment for this year requires a separate cross-reference step against the 2025-26 Answer Sheet schema.",
-  "extracted_at": "2026-04-17T18:16:11Z",
+  "source_note": "Extracted from the per-section tabs (CDS-A through CDS-J) of the commondataset.org Common Data Set Excel template. Row-metadata templates retain canonical question_numbers when provided by the source workbook. Visual-layout historical templates require a separate canonical overlay to cross-reference fields against the current Answer Sheet schema.",
+  "extracted_at": "2026-06-14T18:42:51Z",
   "section_count": 10,
   "subsection_count": 95,
   "question_row_count": 509,
@@ -1641,7 +1641,7 @@
               ]
             },
             {
-              "row_label": "Total first-time, first-year men who applied",
+              "row_label": "Total first-time, first-year who applied",
               "row": 31,
               "columns": [
                 {
@@ -1667,7 +1667,7 @@
               ]
             },
             {
-              "row_label": "Total first-time, first-year women who applied",
+              "row_label": "Total first-time, first-year who were admitted",
               "row": 32,
               "columns": [
                 {
@@ -1693,7 +1693,7 @@
               ]
             },
             {
-              "row_label": "Total first-time, first-year another gender who applied",
+              "row_label": "Total first-time, first-year who enrolled",
               "row": 33,
               "columns": [
                 {

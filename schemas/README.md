@@ -6,6 +6,7 @@ Canonical and structural CDS schemas extracted from the commondataset.org Excel 
 
 | File | Source tab | Scope | What it has |
 |---|---|---|---|
+| `cds_schema_2023_24.json` | synthesized | 2023-24 | Canonical question_numbers inherited from 2024-25, validated 2023-24 PDF tags, 2023-24 `Another Gender` field mapping. |
 | `cds_schema_2024_25.json` | `Answer Sheet` | 2024-25 | Canonical question_numbers (A.001, B.101, ...), section hierarchy. The source Answer Sheet omits pdf_tag and word_tag metadata. |
 | `cds_schema_2025_26.json` | `Answer Sheet` | 2025-26 | Canonical question_numbers (A.001, B.101, ...), pdf_tag, word_tag, section hierarchy, value_options decoder |
 | `cds_schema_YYYY_YY.structural.json` | `CDS-A` through `CDS-J` | 2019-20 through 2025-26 | Per-year structural layout: subsections, row labels, column headers, answer-cell refs. Includes canonical question_numbers only when the source sheet provides them. |
@@ -13,11 +14,12 @@ Canonical and structural CDS schemas extracted from the commondataset.org Excel 
 
 The Answer Sheet tab exists in the 2024-25 and 2025-26 templates. It is the CDS Initiative's machine-readable canonical spec and is the authoritative source for question_numbers. The 2024-25 Answer Sheet is reduced: it omits `Sort Order`, `US News PDF Tag`, and `Word Tag`, so the generated schema records `pdf_tag: null` and `word_tag: null` until follow-on synthesis fills those gaps.
 
-Older templates do not have an Answer Sheet, so `cds_schema_YYYY_YY.structural.json` remains the best programmatic source for 2019-20 through 2023-24. The overlay files add field identity for the first accessible-table slice without mutating those source structural schemas.
+Older templates do not have an Answer Sheet, so `cds_schema_YYYY_YY.structural.json` remains the best programmatic source for 2019-20 through 2022-23. The overlay files add field identity for the first accessible-table slice without mutating those source structural schemas. The 2023-24 year now has an additional synthesized canonical schema because its PDF AcroForm tags and 2024-25 structural continuity are strong enough to support year-specific extraction.
 
 ## Generators
 
 - `tools/schema_builder/build_from_xlsx.py` — Answer Sheet → canonical schema for 2024-25 and later canonical template years.
+- `tools/schema_builder/build_2023_24_canonical.py` — 2024-25 canonical schema + 2023-24 PDF AcroForm tags → synthesized 2023-24 canonical schema.
 - `tools/schema_builder/build_from_tabs.py` — per-section tabs → structural schema. Works across all years.
 - `tools/schema_builder/build_core_table_overlay.py` — historical structural schema → C1/C7/C9 canonical overlay against the 2025-26 schema.
 - `tools/schema_builder/canonical_diff.py` — canonical schema → classified cross-year diff and validated `pdf_tag` synthesis for reduced Answer Sheet years.
@@ -37,7 +39,7 @@ Older templates do not have an Answer Sheet, so `cds_schema_YYYY_YY.structural.j
 | 2020-21 | — | ✅ | ✅ | commondataset.org/wp-content/uploads/2020/11/CDS_2020-2021.xlsx |
 | 2021-22 | — | ✅ | ✅ | commondataset.org/wp-content/uploads/2021/10/CDS_2021-2022.xlsx |
 | 2022-23 | — | ✅ | ✅ | commondataset.org/wp-content/uploads/2022/11/CDS_2022-2023.xlsx |
-| 2023-24 | — | ✅ | ✅ | commondataset.org/wp-content/uploads/2023/11/CDS_2023-2024.xlsx |
+| 2023-24 | synthesized | ✅ | ✅ | `schemas/templates/cds_2023-24_template.xlsx` + `schemas/templates/cds_2023-24_template.pdf` |
 | 2024-25 | ✅ | ✅ | n/a | `schemas/templates/cds_2024-25_template.xlsx` |
 | 2025-26 | ✅ | ✅ | n/a | `schemas/templates/cds_2025-26_template.xlsx` |
 
@@ -60,3 +62,4 @@ Official templates needed to reproduce canonical schemas live in `schemas/templa
 
 - Wire the 2024-25 to 2025-26 semantic diff into the database equivalence layer described in PRD 014.
 - Expand historical overlays beyond C1/C7/C9 only when a product slice needs those sections; each expansion should keep unmapped rows explicit for QA.
+- Consider whether 2022-23 has enough PDF/form continuity to justify the same synthesized-canonical treatment as 2023-24.
