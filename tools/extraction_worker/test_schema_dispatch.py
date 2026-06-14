@@ -1,5 +1,7 @@
 import unittest
+import json
 import sys
+import tempfile
 from pathlib import Path
 
 TOOLS_ROOT = Path(__file__).resolve().parents[1]
@@ -76,6 +78,38 @@ class MultiTableFakeClient:
 
 
 class SchemaDispatchTest(unittest.TestCase):
+    def test_schema_registry_ignores_overlay_files_without_fields(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            schema_dir = Path(tmp)
+            (schema_dir / "cds_schema_2023_24.core_table_overlay.json").write_text(
+                json.dumps({
+                    "schema_version": "2023-24",
+                    "overlay_version": "core_table_v1",
+                    "mappings": [],
+                })
+            )
+            (schema_dir / "cds_schema_2025_26.json").write_text(
+                json.dumps({
+                    "schema_version": "2025-26",
+                    "fields": [
+                        {
+                            "question_number": "A.001",
+                            "question": "First Name:",
+                            "section": "General Information",
+                            "subsection": "Respondent Information",
+                        }
+                    ],
+                })
+            )
+
+            registry = load_schema_registry(schema_dir)
+            resolution = resolve_schema_for_year("2023-24", registry)
+
+        self.assertNotIn("2023-24", registry)
+        self.assertEqual(resolution.schema_version, "2025-26")
+        self.assertTrue(resolution.fallback_used)
+        self.assertEqual(resolution.fallback_reason, "no_schema_for_2023-24")
+
     def test_resolve_schema_uses_matching_year(self):
         registry = load_schema_registry()
         resolution = resolve_schema_for_year("2024-25", registry)
