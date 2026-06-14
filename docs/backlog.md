@@ -117,9 +117,10 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 ### Larger features / future tiers
 
-- **PRD 021 IPEDS follow-ups after the first federal-baseline slice.** The
-  loader, curated facts, school-page baseline table, no-CDS page surface, and
-  monthly release probe shipped 2026-05-09. Remaining work: add browse
+- **PRD 021 IPEDS follow-ups after the historical backfill.** The loader,
+  curated facts, school-page baseline table, no-CDS page surface, monthly
+  release probe, historical Access fallback, and materialized
+  `ipeds_current_facts` serving cache have shipped. Remaining work: add browse
   source-mode controls backed by `school_facts_unified`, build an operator
   dashboard for last load/table counts/schema drift/unresolved mappings,
   broaden field-family coverage beyond the MVP mappings, document public
@@ -130,27 +131,6 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 - **Tier 3 DOCX extractor (PRD 007).** Revised plan shipped 2026-04-29 in [PRD 007](prd/007-tier3-docx-extraction.md). Primary path is a deterministic OOXML SDT reader keyed by schema `word_tag` values, same lookup pattern as Tier 2. Fallback path is a measured Docling DOCX structural adapter that reuses Tier 4 cleaner/table logic for SDT-stripped Word files before considering any bespoke Word-table parser. Addressable corpus today is ~30-50 documents (Kent State's 14 SDT-preserving files are the largest family). The format sniffer now routes DOCX correctly; the remaining work is the extractor itself.
 
 - **Tier 4 cleaner — continue resolver coverage beyond the core product surfaces.** [PRD 005](prd/005-full-schema-extraction.md)'s Phase 6 architecture shipped 2026-04-20 (commit `aecca9b`): the section-family resolver framework backed by a shared `SchemaIndex` took the cleaner from 72 -> ~380 fields (Harvard 382, Yale 390, Dartmouth 343). PRD 016B and PRD 018 added targeted C21/C22 and H1/H2/H2A coverage. Remaining work is continuing to add resolvers for thinner sections as specific schools surface gaps; the ceiling is 1,105 fields, but full-schema parity is not urgent.
-
-- **Logical CDS assembly for schools that publish by section.** Some schools
-  publish one CDS year as multiple section PDFs instead of a single A-J file
-  (recent examples: KU, CMU, Oxy, UTK current-year section pages). The current
-  resolver can choose Section C for admissions change intelligence, but that is
-  only a tactical repair: it still loses the rest of the CDS for browser fields,
-  merit profile data, and future sections. Future shape: archive each original
-  section file as its own source/component with URL + hash provenance, then
-  create a derived logical "assembled CDS" artifact ordered A through J. Run
-  extraction/projection against the assembled artifact while preserving links
-  back to the original component sources. Track `partial_sections` metadata so
-  a year with only A-C published is visibly partial rather than silently
-  complete. Prefer a real full CDS when present; assemble only when the school
-  clearly publishes section fragments for one year. **Why it matters:** avoids
-  one-off Section C repairs, gives sectionized publishers normal year-over-year
-  comparability, and keeps provenance clean. **Risks / design questions:**
-  section/year mismatch on sloppy pages, handling later section additions,
-  uniqueness/modeling for one logical school-year built from multiple URLs, and
-  whether the derived artifact should be a physical merged PDF or a logical
-  extraction bundle. **Effort:** probably a small PRD / 1-2 day implementation
-  after the current PRD 019 freshness drain, with KU/CMU/Oxy as fixtures.
 
 - **Tier 4 cleaner — Docling flat-text table recovery.** Dartmouth's C10 and Harvard's Submitting SAT/ACT block are cases where Docling emitted a two-column table as two sequential paragraphs (all labels first, then all values in the same order) instead of interleaved table rows. Current cleaner has no recovery path for this shape — the `_INLINE_PATTERNS` fallback handles single-field cases but not these multi-row column-flattened ones. **Fix shape:** detect consecutive N-line blocks of label-like paragraphs (each starting with "Percent..." or matching the row-label pattern of a known table) followed by N value-like paragraphs (e.g. `\d+%`), and pair them positionally. Only worth building if corpus survey shows many schools hitting this pattern — currently it's a known miss for ~2 fields per affected school.
 
@@ -195,6 +175,75 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 ## Resolved
 
 Reverse chronological.
+
+### 2026-06-14
+
+- **[RESOLVED 2026-06-14] ~~Historical schema dispatch for 2023-24.~~**
+  Added a synthesized `cds_schema_2023_24.json` built from the 2024-25
+  canonical field map plus the official 2023-24 PDF AcroForm tags. The schema
+  drops 2024-only `Unknown` gender rows, maps 2023 `NON_BINARY` tags onto
+  `Another Gender`, validates every retained PDF tag against the archived 2023
+  template, and lets the worker resolve 2023-24 directly instead of falling
+  back to 2025-26. The 2023-24 XLSX template remains visual-only for Tier 1.
+
+- **[RESOLVED 2026-06-14] ~~Supabase Advisor security-invoker hardening.~~**
+  Set advisor-flagged public-schema views to `security_invoker`, kept serving
+  views public through underlying RLS policies, and revoked anon/authenticated
+  reads from operator-only views (`bot_challenged_documents`,
+  `latest_school_hosting`).
+
+### 2026-06-12
+
+- **[RESOLVED 2026-06-12] ~~Supabase IO-budget mitigation.~~** Relaxed the
+  coverage refresh cron from every 15 minutes to hourly, skipped the default
+  histogram read in cron-triggered `refresh-coverage` calls, and documented
+  that large Docling/OCR drains remain laptop/self-hosted work rather than
+  hosted CI work.
+
+- **[RESOLVED 2026-06-12] ~~Visual-only B1 extraction gap.~~** Fixed Tier 4
+  recovery for PDFs where B1 enrollment values were present in visual text but
+  missing from Docling's table serialization, then added audit/test coverage so
+  similar visual-OCR candidates are easier to detect before publication.
+
+### 2026-06-06
+
+- **[RESOLVED 2026-06-06] ~~Auth-wall and bad HTML source cleanup.~~** Added a
+  guard that rejects archived HTML login walls, bot challenges, generic error
+  pages, and CDS-looking landing pages without real tables before they become
+  source documents. Added `cleanup_bad_html_sources.py` for pre-guard rows and
+  fixed frontend source labels so XLSX/DOCX/HTML links no longer say "Download
+  PDF."
+
+### 2026-06-05
+
+- **[RESOLVED 2026-06-05] ~~Dataset structured-data Search Console errors.~~**
+  Year detail and school archive pages now emit Dataset JSON-LD with required
+  `description` plus recommended `creator` and `license` fields.
+
+### 2026-06-04
+
+- **[RESOLVED 2026-06-04] ~~Logical CDS assembly for sectionized publishers.~~**
+  The resolver now detects same-year A-J section PDFs, stores each original as
+  a `source_part` artifact with URL/hash provenance, and builds one derived
+  ordered source PDF for extraction when no full-CDS file exists. Full CDS files
+  still win; single-section pages remain scoped source-review cases.
+
+### 2026-06-02
+
+- **[RESOLVED 2026-06-02] ~~Historical IPEDS backfill and current-fact cache.~~**
+  Backfilled official NCES/IPEDS historical releases, added Access fallback for
+  older mapped tables whose CSV endpoint has aged off, indexed long-form
+  historical `ipeds_facts` reads by `(field_key, data_year, ipeds_id)`, and
+  backed `ipeds_current_facts` with `ipeds_current_facts_cache` for public
+  serving performance.
+
+### 2026-06-01
+
+- **[RESOLVED 2026-06-01] ~~Extraction worker timeout recovery.~~** Hardened
+  the ops worker after repeated GitHub-hosted cancellations stranded already
+  extracted rows in `extraction_pending`: the worker now supports
+  `--deadline-minutes`, `--reconcile-pending`, document-id filters, requeue
+  filters, source-SHA-aware idempotency, and richer summary JSON.
 
 ### 2026-05-09
 
@@ -312,7 +361,7 @@ Reverse chronological.
 
 - **[RESOLVED 2026-04-20] ~~ADR 0008: Takedown process for archived documents.~~** Shipped as [`docs/decisions/0008-takedown-process.md`](decisions/0008-takedown-process.md) + transparency-log scaffold at [`docs/takedowns.md`](takedowns.md). Three-step protocol: verify via `.edu` email matching school domain, apply by flipping `participation_status='withdrawn'` + `removed_at=now()`, log each takedown in the public transparency file. The frontend's `cds_manifest` selects in `web/src/lib/queries.ts` filter out `participation_status IN ('withdrawn','verified_absent')` so withdrawn docs disappear from the school directory, school page, and sitemap; PostgREST API keeps the rows visible (transparency). Bytes-removal-to-separate-bucket is deferred per PRD 009 and triggered by the first request that demands it. Linked from `CONTRIBUTING.md` under a new "If you represent a school and need a document removed" section.
 
-- **[RESOLVED 2026-04-20] ~~Tier 6 HTML extractor (PRD 008).~~** Shipped as `tools/extraction_worker/html_to_markdown.py` — an 80-line BS4+lxml normalizer that converts CDS-shaped HTML into the pipe-delimited markdown shape the Tier 4 cleaner already consumes. No bespoke parser — reuses `tier4_cleaner._parse_markdown_tables`, `_normalize_label`, `SchemaIndex.filter`. Worker adds `_run_tier6` + HTML sniff case + routing. MIT 2024-25 first drain: 152 schema fields populated across sections B, C, F, G, H, I. **XSS mitigation** (critical finding during /autoplan review): the `sources` bucket is public-read; adding `text/html` to the allowlist would mean archived HTML with `<script>` executes at the Supabase CDN URL. Fix: `normalizedContentType('html')` returns `'text/plain'`, and the bucket allowlist includes `text/plain` so the upload's declared content-type matches. Verified: public HEAD returns `content-type: text/plain` + `content-security-policy: default-src 'none'; sandbox`. Shipped files: `html_to_markdown.py`, `worker.py` (additive), migrations `20260420150000_html_source_format.sql` + `20260420160000_html_xss_mitigation_allow_plain.sql`, `storage.ts` (html recognition + text/plain override), `format.ts` (HTML badge). PRD reframed during /autoplan from bespoke Tier 6 extractor + alias table to cleaner reuse — both CEO voices and eng subagent converged on the reuse path. **Follow-ups:** (a) auto-discover HTML-native publishers at resolver time (currently operator-curated via `manual_urls.yaml` + `force_urls`); (b) archive MIT historical years (2021-22, 2022-23, 2023-24 HTML pages); (c) `web/src/components/DocumentCard.tsx:69` hardcodes "Download PDF" link text — cosmetic bug surfaces on any non-PDF format (also affects existing xlsx/docx archives).
+- **[RESOLVED 2026-04-20] ~~Tier 6 HTML extractor (PRD 008).~~** Shipped as `tools/extraction_worker/html_to_markdown.py` — an 80-line BS4+lxml normalizer that converts CDS-shaped HTML into the pipe-delimited markdown shape the Tier 4 cleaner already consumes. No bespoke parser — reuses `tier4_cleaner._parse_markdown_tables`, `_normalize_label`, `SchemaIndex.filter`. Worker adds `_run_tier6` + HTML sniff case + routing. MIT 2024-25 first drain: 152 schema fields populated across sections B, C, F, G, H, I. **XSS mitigation** (critical finding during /autoplan review): the `sources` bucket is public-read; adding `text/html` to the allowlist would mean archived HTML with `<script>` executes at the Supabase CDN URL. Fix: `normalizedContentType('html')` returns `'text/plain'`, and the bucket allowlist includes `text/plain` so the upload's declared content-type matches. Verified: public HEAD returns `content-type: text/plain` + `content-security-policy: default-src 'none'; sandbox`. Shipped files: `html_to_markdown.py`, `worker.py` (additive), migrations `20260420150000_html_source_format.sql` + `20260420160000_html_xss_mitigation_allow_plain.sql`, `storage.ts` (html recognition + text/plain override), `format.ts` (HTML badge). PRD reframed during /autoplan from bespoke Tier 6 extractor + alias table to cleaner reuse — both CEO voices and eng subagent converged on the reuse path. **Remaining follow-ups:** auto-discover HTML-native publishers at resolver time and archive MIT historical HTML years. The old `DocumentCard` "Download PDF" label bug was resolved 2026-06-06 with format-aware source labels.
 
 - **[RESOLVED 2026-04-20] ~~Tier 4 LLM fallback (PRD 006).~~** Schema-aware LLM repair layer on top of the Tier 4 cleaner. Phase 0 (benchmark harness) + Phase 1 (production worker, cache table, merged view in the frontend) shipped in a single day. 244 2024-25 docs backfilled with mean 28.2 fields added per doc beyond the cleaner baseline, $14.08 total Anthropic spend (Claude Haiku 4.5 with prompt caching), zero regression on audited ground truth. Target subsections: H5-H8 (loans/aid), C13-C17 (deadlines/policies), D13-D16 (transfer credit), G5 (estimated expenses). Artifacts land in `cds_artifacts` with `producer='tier4_llm_fallback'`; `cds_llm_cache` keys on `(source_sha256, markdown_sha256, section_name, schema_version, model_name, prompt_version, strategy_version, cleaner_version, missing_fields_sha256)` so re-runs on unchanged inputs cost $0. Consumer merge via `web/src/lib/queries.ts:fetchExtract` (Mode B: cleaner wins, fallback fills gaps). See [`docs/tier4-llm-fallback.md`](tier4-llm-fallback.md) for operator runbook + [`docs/research/tier4-cleaner-learnings-for-llm-fallback.md`](research/tier4-cleaner-learnings-for-llm-fallback.md) for the measured gaps that informed subsection selection. **Next expansions:** backfill earlier years (2023-24, 2022-23, ...); expand target subsections as `corpus_survey_tier4.py --include-fallback` surfaces sections where the fallback pays for itself; batch thin subsections (C15, D15, D16) into shared calls to cut per-call overhead.
 

@@ -4,6 +4,12 @@ PRD 021 adds a federal NCES/IPEDS baseline for schools that do not publish a
 Common Data Set and for CDS schools where a source-labeled federal context row
 is useful. The public UI reads curated facts, not raw IPEDS JSON.
 
+As of the June 2026 backfill, the pipeline supports historical releases from
+2004-05 through 2024-25. Current public facts are served through
+`ipeds_current_facts`, a stable view backed by the materialized
+`ipeds_current_facts_cache`; historical analysis should query `ipeds_facts`
+with `ipeds_id`, `field_key`, and a bounded `data_year` range.
+
 ## Workflow
 
 Run IPEDS loads from a fresh `main` checkout after the corresponding migrations
