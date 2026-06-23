@@ -92,7 +92,15 @@ jobs:
           cache-dependency-path: tools/extraction_worker/requirements.txt
 
       - name: Install extraction worker dependencies
-        run: python -m pip install -r tools/extraction_worker/requirements.txt
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends poppler-utils tesseract-ocr
+          python -m pip install -r tools/extraction_worker/requirements.txt
+
+      - name: Verify visual OCR tooling
+        run: |
+          pdftoppm -h >/dev/null 2>&1
+          tesseract --version
 
       - name: Run bounded pending-row drain
         shell: bash
