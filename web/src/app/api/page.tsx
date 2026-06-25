@@ -99,6 +99,18 @@ curl 'https://www.collegedata.fyi/openapi.json'`}</CodeBlock>
         </code>
         . Both wrap the simple endpoints rather than reimplementing query logic.
       </p>
+      <p className="mt-3 text-sm leading-relaxed text-gray-700">
+        If you build on these endpoints, send a short{" "}
+        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+          X-CollegeData-Client
+        </code>{" "}
+        header such as{" "}
+        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+          my-app-name
+        </code>
+        . It helps us understand API usage and keep the free public surface
+        healthy without requiring API keys.
+      </p>
 
       <h2 className="mt-10 text-xl font-semibold text-gray-900">
         Runbook

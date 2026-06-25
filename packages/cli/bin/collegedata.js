@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 const API_BASE = (process.env.COLLEGEDATA_API_BASE ?? "https://www.collegedata.fyi").replace(/\/$/, "");
+const CLIENT_NAME = "cli";
+const CLIENT_VERSION = "0.1.0";
 
 function usage() {
   console.error(`Usage:
@@ -32,8 +34,22 @@ function parseOptions(args) {
   return out;
 }
 
-async function getJson(path) {
-  const res = await fetch(`${API_BASE}${path}`);
+function withClientParams(path, command) {
+  const url = new URL(path, "https://collegedata.fyi");
+  url.searchParams.set("cd_client", CLIENT_NAME);
+  url.searchParams.set("cd_client_version", CLIENT_VERSION);
+  if (command) url.searchParams.set("cd_command", command);
+  return `${url.pathname}?${url.searchParams.toString()}`;
+}
+
+async function getJson(path, command) {
+  const res = await fetch(`${API_BASE}${withClientParams(path, command)}`, {
+    headers: {
+      "X-CollegeData-Client": CLIENT_NAME,
+      "X-CollegeData-Client-Version": CLIENT_VERSION,
+      ...(command ? { "X-CollegeData-CLI-Command": command } : {}),
+    },
+  });
   const text = await res.text();
   let payload;
   try {
@@ -98,7 +114,7 @@ async function main() {
   if (command === "search") {
     const q = opts._.join(" ");
     if (!q) throw new Error("search requires a query");
-    const payload = await getJson(`/api/schools/search?q=${encodeURIComponent(q)}`);
+    const payload = await getJson(`/api/schools/search?q=${encodeURIComponent(q)}`, command);
     if (format === "json") return printJson(payload);
     return printTable(payload.results, ["school_id", "school_name", "city", "state", "coverage_status"]);
   }
@@ -108,7 +124,7 @@ async function main() {
     if (!school) throw new Error("facts requires a school_id");
     const params = new URLSearchParams();
     if (opts.categories) params.set("categories", opts.categories);
-    const payload = await getJson(`/api/schools/${encodeURIComponent(school)}/facts${params.size ? `?${params}` : ""}`);
+    const payload = await getJson(`/api/schools/${encodeURIComponent(school)}/facts${params.size ? `?${params}` : ""}`, command);
     if (format === "json") return printJson(payload);
     return printTable(
       payload.facts.map((fact) => ({
@@ -127,7 +143,7 @@ async function main() {
     const params = new URLSearchParams({ schools: schools.join(",") });
     if (opts.categories) params.set("categories", opts.categories);
     if (opts.fields) params.set("fields", opts.fields);
-    const payload = await getJson(`/api/compare?${params}`);
+    const payload = await getJson(`/api/compare?${params}`, command);
     if (format === "json") return printJson(payload);
     const columns = ["school", ...payload.columns.map((column) => column.key)];
     const rows = payload.rows.map((row) => ({
@@ -143,14 +159,14 @@ async function main() {
   if (command === "sources") {
     const school = opts._[0];
     if (!school) throw new Error("sources requires a school_id");
-    const payload = await getJson(`/api/schools/${encodeURIComponent(school)}/sources`);
+    const payload = await getJson(`/api/schools/${encodeURIComponent(school)}/sources`, command);
     return printJson(payload);
   }
 
   if (command === "fields") {
     const params = new URLSearchParams();
     if (opts.category) params.set("category", opts.category);
-    const payload = await getJson(`/api/fields${params.size ? `?${params}` : ""}`);
+    const payload = await getJson(`/api/fields${params.size ? `?${params}` : ""}`, command);
     if (format === "json") return printJson(payload);
     return printTable(payload.fields, ["key", "label", "category", "source_layer"]);
   }
@@ -173,4 +189,3 @@ main().catch((error) => {
   console.error(error.message);
   process.exit(1);
 });
-
