@@ -177,6 +177,178 @@ async function fetchCoverageRowsForStaticBuild(): Promise<InstitutionCoverage[]>
   return out;
 }
 
+type StaticRestConfig = {
+  supabaseUrl: string;
+  supabaseAnonKey: string;
+};
+
+function staticRestConfig(): StaticRestConfig | null {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) return null;
+  return { supabaseUrl, supabaseAnonKey };
+}
+
+function staticRestUrl(
+  config: StaticRestConfig,
+  table: string,
+  params: Record<string, string>,
+): URL {
+  const url = new URL(`${config.supabaseUrl}/rest/v1/${table}`);
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
+  }
+  return url;
+}
+
+function parseContentRangeTotal(value: string | null): number | null {
+  const match = value?.match(/\/(\d+)$/);
+  if (!match) return null;
+  const parsed = Number(match[1]);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+async function staticExactCount(
+  table: string,
+  params: Record<string, string> = {},
+): Promise<number | null> {
+  const config = staticRestConfig();
+  if (!config) return null;
+
+  const url = staticRestUrl(config, table, {
+    select: "*",
+    limit: "1",
+    ...params,
+  });
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        apikey: config.supabaseAnonKey,
+        Authorization: `Bearer ${config.supabaseAnonKey}`,
+        Prefer: "count=exact",
+      },
+      signal: AbortSignal.timeout(STATIC_BUILD_QUERY_TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`HTTP ${response.status}: ${body.slice(0, 200)}`);
+    }
+    return parseContentRangeTotal(response.headers.get("content-range"));
+  } catch (error) {
+    console.warn(
+      `Failed to count ${table} during static build: ${errorText(error)}.`,
+    );
+    return null;
+  }
+}
+
+async function staticFirstRow<T>(
+  table: string,
+  params: Record<string, string>,
+): Promise<T | null> {
+  const rows = await staticRows<T>(table, { limit: "1", ...params });
+  return rows[0] ?? null;
+}
+
+async function staticRows<T>(
+  table: string,
+  params: Record<string, string>,
+): Promise<T[]> {
+  const config = staticRestConfig();
+  if (!config) return [];
+
+  const url = staticRestUrl(config, table, params);
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        apikey: config.supabaseAnonKey,
+        Authorization: `Bearer ${config.supabaseAnonKey}`,
+      },
+      signal: AbortSignal.timeout(STATIC_BUILD_QUERY_TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`HTTP ${response.status}: ${body.slice(0, 200)}`);
+    }
+    return (await response.json()) as T[];
+  } catch (error) {
+    console.warn(
+      `Failed to fetch ${table} rows during static build: ${errorText(error)}.`,
+    );
+    return [];
+  }
+}
+
+async function fetchSiteStatsForStaticBuild(): Promise<SiteStats> {
+  const [
+    manifest,
+    schemaFieldCount,
+    queryableFieldCount,
+    queryableFieldLatest,
+    browserRowCount,
+    browserPrimaryRows,
+    browserRowsForSchools,
+    browserLatest,
+    scorecardInstitutionCount,
+    scorecardLatest,
+  ] = await Promise.all([
+    fetchManifest(),
+    staticExactCount("cds_field_definitions"),
+    staticExactCount("cds_fields", { year_start: "gte.2024" }),
+    staticFirstRow<{ updated_at: string | null }>("cds_fields", {
+      select: "updated_at",
+      year_start: "gte.2024",
+      order: "updated_at.desc",
+    }),
+    staticExactCount("school_browser_rows", { year_start: "gte.2024" }),
+    staticExactCount("school_browser_rows", {
+      year_start: "gte.2024",
+      sub_institutional: "is.null",
+    }),
+    staticRows<{ school_id: string | null }>("school_browser_rows", {
+      select: "school_id",
+      year_start: "gte.2024",
+      sub_institutional: "is.null",
+      limit: "5000",
+    }),
+    staticFirstRow<{ updated_at: string | null }>("school_browser_rows", {
+      select: "updated_at",
+      year_start: "gte.2024",
+      order: "updated_at.desc",
+    }),
+    staticExactCount("scorecard_summary"),
+    staticFirstRow<{
+      scorecard_data_year: string | null;
+      refreshed_at: string | null;
+    }>("scorecard_summary", {
+      select: "scorecard_data_year,refreshed_at",
+      order: "scorecard_data_year.desc",
+    }),
+  ]);
+
+  const browserSchoolCount = new Set(
+    browserRowsForSchools
+      .map((row) => row.school_id)
+      .filter(Boolean),
+  ).size;
+
+  return {
+    ...computeStats(manifest),
+    schema_field_count: schemaFieldCount,
+    queryable_field_count: queryableFieldCount,
+    queryable_field_updated_at: queryableFieldLatest?.updated_at ?? null,
+    browser_row_count: browserRowCount,
+    browser_primary_row_count: browserPrimaryRows,
+    browser_school_count: browserSchoolCount,
+    browser_updated_at: browserLatest?.updated_at ?? null,
+    scorecard_institution_count: scorecardInstitutionCount,
+    scorecard_data_year: scorecardLatest?.scorecard_data_year ?? null,
+    scorecard_refreshed_at: scorecardLatest?.refreshed_at ?? null,
+  };
+}
+
 function sha256Text(value: string): string {
   return createHash("sha256").update(value, "utf8").digest("hex");
 }
@@ -393,20 +565,7 @@ export function computeStats(rows: ManifestRow[]): CorpusStats {
 
 export const fetchSiteStats = cache(async function fetchSiteStats(): Promise<SiteStats> {
   if (isStaticBuild()) {
-    const manifest = await fetchManifest();
-    return {
-      ...computeStats(manifest),
-      schema_field_count: null,
-      queryable_field_count: null,
-      queryable_field_updated_at: null,
-      browser_row_count: null,
-      browser_primary_row_count: null,
-      browser_school_count: null,
-      browser_updated_at: null,
-      scorecard_institution_count: null,
-      scorecard_data_year: null,
-      scorecard_refreshed_at: null,
-    };
+    return fetchSiteStatsForStaticBuild();
   }
 
   const raw = supabase as unknown as UntypedSupabase;
