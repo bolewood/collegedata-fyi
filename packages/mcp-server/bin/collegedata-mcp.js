@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 const API_BASE = (process.env.COLLEGEDATA_API_BASE ?? "https://www.collegedata.fyi").replace(/\/$/, "");
+const CLIENT_NAME = "mcp";
+const CLIENT_VERSION = "0.1.0";
 
 const tools = [
   {
@@ -59,8 +61,22 @@ const tools = [
   },
 ];
 
-async function getJson(path) {
-  const res = await fetch(`${API_BASE}${path}`);
+function withClientParams(path, toolName) {
+  const url = new URL(path, "https://collegedata.fyi");
+  url.searchParams.set("cd_client", CLIENT_NAME);
+  url.searchParams.set("cd_client_version", CLIENT_VERSION);
+  if (toolName) url.searchParams.set("cd_tool", toolName);
+  return `${url.pathname}?${url.searchParams.toString()}`;
+}
+
+async function getJson(path, toolName) {
+  const res = await fetch(`${API_BASE}${withClientParams(path, toolName)}`, {
+    headers: {
+      "X-CollegeData-Client": CLIENT_NAME,
+      "X-CollegeData-Client-Version": CLIENT_VERSION,
+      ...(toolName ? { "X-CollegeData-MCP-Tool": toolName } : {}),
+    },
+  });
   const payload = await res.json();
   if (!res.ok) throw new Error(payload?.message ?? payload?.error ?? `HTTP ${res.status}`);
   return payload;
@@ -70,26 +86,26 @@ async function callTool(name, args) {
   if (name === "search_schools") {
     const params = new URLSearchParams({ q: args.query });
     if (args.limit) params.set("limit", String(args.limit));
-    return getJson(`/api/schools/search?${params}`);
+    return getJson(`/api/schools/search?${params}`, name);
   }
   if (name === "get_school_facts") {
     const params = new URLSearchParams();
     if (args.categories) params.set("categories", args.categories);
-    return getJson(`/api/schools/${encodeURIComponent(args.school_id)}/facts${params.size ? `?${params}` : ""}`);
+    return getJson(`/api/schools/${encodeURIComponent(args.school_id)}/facts${params.size ? `?${params}` : ""}`, name);
   }
   if (name === "compare_schools") {
     const params = new URLSearchParams({ schools: args.school_ids.join(",") });
     if (args.categories) params.set("categories", args.categories);
     if (args.fields) params.set("fields", args.fields);
-    return getJson(`/api/compare?${params}`);
+    return getJson(`/api/compare?${params}`, name);
   }
   if (name === "get_source_documents") {
-    return getJson(`/api/schools/${encodeURIComponent(args.school_id)}/sources`);
+    return getJson(`/api/schools/${encodeURIComponent(args.school_id)}/sources`, name);
   }
   if (name === "get_field_dictionary") {
     const params = new URLSearchParams();
     if (args.category) params.set("category", args.category);
-    return getJson(`/api/fields${params.size ? `?${params}` : ""}`);
+    return getJson(`/api/fields${params.size ? `?${params}` : ""}`, name);
   }
   throw new Error(`Unknown tool: ${name}`);
 }
