@@ -104,6 +104,7 @@ collegedata.fyi sits between official higher-education data systems and the docu
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — eleven-pipeline map of the whole system (schema, corpus, discovery, mirror, extraction, scorecard, institution directory + coverage, IPEDS federal baseline, change intelligence, consumer API, frontend)
 - [`docs/data-extraction-pipeline.md`](docs/data-extraction-pipeline.md) — operational diagram of the discovery/archive/extraction/projection flow, including cadence, storage, and known issues
 - [`docs/extraction-quality.md`](docs/extraction-quality.md) — current accuracy by tier, per-section corpus-wide coverage, and reproducible scoring commands
+- [`docs/api-usage-attribution.md`](docs/api-usage-attribution.md) — low-PII friendly API usage attribution for MCP, CLI, and cooperative external integrations
 - [`docs/recipes/`](docs/recipes/) — worked examples with real data: interactive visualizations, XLSX starters, and API queries. Start with [acceptance rate vs yield](docs/recipes/acceptance-vs-yield.md)
 - [`docs/plans/prd-019-spike-and-qa.md`](docs/plans/prd-019-spike-and-qa.md) — PRD 019 spike and QA summary, including the first calibration-run numbers and review gates
 - [`docs/v1-plan.md`](docs/v1-plan.md) — living project plan for V1
