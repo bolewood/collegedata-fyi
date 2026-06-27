@@ -1279,6 +1279,11 @@ def replace_projection_rows(
     ).execute()
 
 
+def refresh_public_serving_caches(client: Any) -> None:
+    """Refresh materialized public-serving caches after a bulk projection run."""
+    client.rpc("refresh_public_serving_caches", {}).execute()
+
+
 def project_document_id(
     client: Any,
     document_id: str,
@@ -1442,6 +1447,10 @@ def main() -> int:
         count, has_browser_row = project_document(client, document, definitions, args.apply)
         total_fields += count
         total_browser_rows += int(has_browser_row)
+
+    if args.full_rebuild and args.apply:
+        print("refreshing public serving caches")
+        refresh_public_serving_caches(client)
 
     mode = "applied" if args.apply else "dry-run"
     print(f"{mode}: projected {total_fields} fields and {total_browser_rows} browser rows from {len(docs)} documents")
