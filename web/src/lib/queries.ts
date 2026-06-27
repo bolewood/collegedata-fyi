@@ -76,6 +76,28 @@ type GpaContextRow = {
   year_start: unknown;
 };
 
+type SiteStatsCacheRow = {
+  total_schools: unknown;
+  total_documents: unknown;
+  earliest_year: string | null;
+  latest_year: string | null;
+  extracted_count: unknown;
+  extraction_pct: unknown;
+  schema_field_count: unknown;
+  queryable_field_count: unknown;
+  queryable_field_updated_at: string | null;
+  browser_row_count: unknown;
+  browser_primary_row_count: unknown;
+  browser_school_count: unknown;
+  browser_updated_at: string | null;
+  scorecard_institution_count: unknown;
+  scorecard_data_year: string | null;
+  scorecard_refreshed_at: string | null;
+};
+
+const SITE_STATS_CACHE_SELECT =
+  "total_schools,total_documents,earliest_year,latest_year,extracted_count,extraction_pct,schema_field_count,queryable_field_count,queryable_field_updated_at,browser_row_count,browser_primary_row_count,browser_school_count,browser_updated_at,scorecard_institution_count,scorecard_data_year,scorecard_refreshed_at";
+
 function isStaticBuild(): boolean {
   return (
     process.env.NEXT_PHASE === "phase-production-build" ||
@@ -281,7 +303,59 @@ async function staticRows<T>(
   }
 }
 
-async function fetchSiteStatsForStaticBuild(): Promise<SiteStats> {
+function mapSiteStatsCacheRow(row: SiteStatsCacheRow | null | undefined): SiteStats | null {
+  if (!row) return null;
+
+  return {
+    total_schools: numberOrNull(row.total_schools) ?? 0,
+    total_documents: numberOrNull(row.total_documents) ?? 0,
+    earliest_year: row.earliest_year ?? null,
+    latest_year: row.latest_year ?? null,
+    extracted_count: numberOrNull(row.extracted_count) ?? 0,
+    extraction_pct: numberOrNull(row.extraction_pct) ?? 0,
+    schema_field_count: numberOrNull(row.schema_field_count),
+    queryable_field_count: numberOrNull(row.queryable_field_count),
+    queryable_field_updated_at: row.queryable_field_updated_at ?? null,
+    browser_row_count: numberOrNull(row.browser_row_count),
+    browser_primary_row_count: numberOrNull(row.browser_primary_row_count),
+    browser_school_count: numberOrNull(row.browser_school_count),
+    browser_updated_at: row.browser_updated_at ?? null,
+    scorecard_institution_count: numberOrNull(row.scorecard_institution_count),
+    scorecard_data_year: row.scorecard_data_year ?? null,
+    scorecard_refreshed_at: row.scorecard_refreshed_at ?? null,
+  };
+}
+
+async function fetchCachedSiteStatsForStaticBuild(): Promise<SiteStats | null> {
+  const row = await staticFirstRow<SiteStatsCacheRow>("site_stats_cache", {
+    select: SITE_STATS_CACHE_SELECT,
+    id: "eq.1",
+  });
+  return mapSiteStatsCacheRow(row);
+}
+
+async function fetchCachedSiteStats(): Promise<SiteStats | null> {
+  try {
+    const { data, error } = await (supabase as unknown as UntypedSupabase)
+      .from("site_stats_cache")
+      .select(SITE_STATS_CACHE_SELECT)
+      .eq("id", 1)
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.warn(`Failed to fetch site_stats_cache: ${error.message}`);
+      return null;
+    }
+
+    return mapSiteStatsCacheRow(data as SiteStatsCacheRow | null);
+  } catch (error) {
+    console.warn(`Failed to fetch site_stats_cache: ${errorText(error)}`);
+    return null;
+  }
+}
+
+async function fetchLiveSiteStatsForStaticBuild(): Promise<SiteStats> {
   const [
     manifest,
     schemaFieldCount,
@@ -347,6 +421,12 @@ async function fetchSiteStatsForStaticBuild(): Promise<SiteStats> {
     scorecard_data_year: scorecardLatest?.scorecard_data_year ?? null,
     scorecard_refreshed_at: scorecardLatest?.refreshed_at ?? null,
   };
+}
+
+async function fetchSiteStatsForStaticBuild(): Promise<SiteStats> {
+  const cachedStats = await fetchCachedSiteStatsForStaticBuild();
+  if (cachedStats) return cachedStats;
+  return fetchLiveSiteStatsForStaticBuild();
 }
 
 function sha256Text(value: string): string {
@@ -567,6 +647,9 @@ export const fetchSiteStats = cache(async function fetchSiteStats(): Promise<Sit
   if (isStaticBuild()) {
     return fetchSiteStatsForStaticBuild();
   }
+
+  const cachedStats = await fetchCachedSiteStats();
+  if (cachedStats) return cachedStats;
 
   const raw = supabase as unknown as UntypedSupabase;
 
