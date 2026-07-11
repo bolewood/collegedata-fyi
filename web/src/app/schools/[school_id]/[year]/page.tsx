@@ -16,6 +16,7 @@ import { MarkdownView } from "@/components/MarkdownView";
 import { OutcomesBand } from "@/components/OutcomesBand";
 import { ScorecardVintageNote } from "@/components/ScorecardVintageNote";
 import { AdmissionStrategyCard } from "@/components/AdmissionStrategyCard";
+import { SpreadsheetDownloadLinks } from "@/components/SpreadsheetDownloadLinks";
 
 export const revalidate = 3600;
 
@@ -188,6 +189,12 @@ async function DocumentVariant({
           >
             {sourceDownloadLabel(doc.source_format, doc.source_storage_path)}
           </a>
+        )}
+        {hasValues && doc.school_id && doc.canonical_year && (
+          <SpreadsheetDownloadLinks
+            schoolId={doc.school_id}
+            year={doc.canonical_year}
+          />
         )}
       </div>
 
