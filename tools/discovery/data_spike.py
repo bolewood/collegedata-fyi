@@ -10,7 +10,7 @@ Inputs (fetch first — see docs/plans/prd-026-data-spike-findings.md):
   scratch/discovery-spike/C2024_a.csv        IPEDS completions, 2023-24 awards
   scratch/discovery-spike/directory.json      institution_directory dump
   scratch/discovery-spike/scorecard.json      scorecard_summary dump
-  data/discovery/ontology/v1-draft.json       interest-family edges
+  data/discovery/ontology/v1.json       interest-family edges
   data/discovery/scenarios/v1.json            20 scenario fixtures
 
 Outputs:
@@ -57,7 +57,7 @@ def haversine_miles(lat1, lon1, lat2, lon2):
 def load_inputs():
     directory = json.load(open(SPIKE / "directory.json"))
     scorecard = {r["ipeds_id"]: r for r in json.load(open(SPIKE / "scorecard.json"))}
-    ontology = json.load(open(ROOT / "data/discovery/ontology/v1-draft.json"))
+    ontology = json.load(open(ROOT / "data/discovery/ontology/v1.json"))
     scenarios = json.load(open(ROOT / "data/discovery/scenarios/v1.json"))
     return directory, scorecard, ontology, scenarios
 

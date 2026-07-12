@@ -17,7 +17,7 @@ dumps from the public API). Full machine-readable output:
 | Completions | IPEDS `C2024_A` provisional (2023-24 awards), `MAJORNUM=1`, `AWLEVEL=05` |
 | Institution universe | `institution_directory` (6,322 rows, refreshed 2026-04-29) |
 | Scorecard context | `scorecard_summary` (2022-23 data year) |
-| Ontology | `data/discovery/ontology/v1-draft.json` (6 concepts, 43 edges, **review_status=draft**) |
+| Ontology | `data/discovery/ontology/v1.json` (6 concepts, 45 edges, **approved 2026-07-12**) |
 | Scenarios | `data/discovery/scenarios/v1.json` (5 origins × 4 profiles = 20) |
 
 ## Gate results
@@ -85,8 +85,6 @@ institutions with **no** recent-award evidence in the family → 895 eligible.
 
 ## Caveats (spike-only simplifications)
 
-- Ontology edges are **draft** — owner review (reviewer, reviewed_at,
-  review_status=approved) is required before production reasons cite them.
 - Evidence matchers are prototypes with placeholder thresholds; only
   directory/scorecard-backed keys were wired. CDS-backed keys deliberately
   contributed zero, exercising the supported-preference rule.
@@ -99,7 +97,6 @@ institutions with **no** recent-award evidence in the family → 895 eligible.
 
 ## Recommended next steps
 
-1. Owner review pass over the 43 ontology edges → `v1` approved.
 2. Opening-deck selection (20–24 of the 54 cards) as a versioned artifact.
 3. Formalize `discovery_policy_v1` (real matchers + thresholds, relaxation
    stage, diagnostics manifest) — the spike's prototype is the skeleton.
