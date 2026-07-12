@@ -45,7 +45,10 @@ const NUMERIC_VALUE_TYPES = new Set([
   "Nearest 1%",
   "Round to Nearest Hundredths",
   "Whole Number or Round to Nearest Hundredths",
+  // Both spellings ship in the wild: the 2024-25 schema uses "Tenths"
+  // (262 fields), the 2025-26 schema "Tenth" (255 fields).
   "Whole Number or Round to Nearest Tenth",
+  "Whole Number or Round to Nearest Tenths",
   "Number",
   "Numbers",
 ]);
@@ -60,9 +63,12 @@ export function toSpreadsheetNumber(
 ): number | null {
   if (!valueType || !NUMERIC_VALUE_TYPES.has(valueType)) return null;
   const value = raw.trim();
-  if (!/^\$?\s?[\d,]+(\.\d+)?%?$/.test(value)) return null;
-  if (/^0\d/.test(value)) return null; // leading zero: identifier, not a number
-  const numeric = parseFloat(value.replace(/[$,%\s]/g, ""));
+  // Strict comma grouping: OCR-mangled strings like "1,00" or "1,50,000"
+  // must stay strings rather than silently become wrong numbers.
+  if (!/^\$?\s?(\d{1,3}(,\d{3})*|\d+)(\.\d+)?%?$/.test(value)) return null;
+  const digits = value.replace(/[$,%\s]/g, "");
+  if (/^0\d/.test(digits)) return null; // leading zero: identifier, not a number
+  const numeric = parseFloat(digits);
   return Number.isFinite(numeric) ? numeric : null;
 }
 
@@ -239,9 +245,14 @@ function csvEscape(value: string | null): string {
   // Neutralize spreadsheet formula injection (CWE-1236): cells starting
   // with =, @, tab, or a +/- expression execute as formulas when the CSV
   // is opened in Excel, and values here come from third-party school
-  // documents. Plain signed numbers ("-5", "+3.2") stay as published;
-  // the sibling XLSX path is immune (typed inline strings).
-  if (/^[=@\t]/.test(s) || (/^[+-]/.test(s) && !/^[+-]\d*\.?\d+$/.test(s))) {
+  // documents. Detection probes past leading whitespace (Excel ignores
+  // it); plain signed numbers ("-5", "+3.2", "-1,234") stay as
+  // published. The sibling XLSX path is immune (typed inline strings).
+  const probe = s.replace(/^\s+/, "");
+  if (
+    /^[=@\t]/.test(probe) ||
+    (/^[+-]/.test(probe) && !/^[+-](\d{1,3}(,\d{3})*|\d+)(\.\d+)?%?$/.test(probe))
+  ) {
     s = `'${s}`;
   }
   return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;

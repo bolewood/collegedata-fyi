@@ -159,6 +159,11 @@ describe("sanitizeSheetName", () => {
     expect(sanitizeSheetName("x".repeat(40))).toHaveLength(31);
     expect(sanitizeSheetName("///")).toBe("Sheet");
   });
+
+  it("strips wrapping apostrophes and dodges the reserved History name", () => {
+    expect(sanitizeSheetName("'Notes'")).toBe("Notes");
+    expect(sanitizeSheetName("History")).toBe("Sheet");
+  });
 });
 
 describe("columnRef", () => {

@@ -182,7 +182,10 @@ export function formatFieldValue(
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
+    // Both spellings ship in the wild: 2024-25 schema says "Tenths",
+    // 2025-26 says "Tenth".
     case "Whole Number or Round to Nearest Tenth":
+    case "Whole Number or Round to Nearest Tenths":
       if (!Number.isInteger(numeric)) {
         return numeric.toLocaleString("en-US", {
           minimumFractionDigits: 1,

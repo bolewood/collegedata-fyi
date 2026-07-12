@@ -42,15 +42,18 @@ export function buildXlsx(sheets: Sheet[]): Buffer {
 }
 
 // Excel rejects workbooks whose tab names exceed 31 characters, contain
-// \ / ? * [ ] :, or collide case-insensitively.
+// \ / ? * [ ] :, begin or end with an apostrophe, collide
+// case-insensitively, or use the reserved name "History".
 export function sanitizeSheetName(name: string): string {
   const cleaned = name
     .replace(/[\\/?*[\]:]/g, " ")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 31)
+    .replace(/^'+|'+$/g, "")
     .trim();
-  return cleaned || "Sheet";
+  if (!cleaned || cleaned.toLowerCase() === "history") return "Sheet";
+  return cleaned;
 }
 
 function uniqueSheetNames(names: string[]): string[] {

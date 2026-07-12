@@ -57,8 +57,22 @@ describe("toSpreadsheetNumber", () => {
     expect(toSpreadsheetNumber("617-495-1551", "Numbers")).toBeNull();
     expect(toSpreadsheetNumber("Required for some", "Number")).toBeNull();
     expect(toSpreadsheetNumber("02138", "Numbers")).toBeNull(); // zip code
+    expect(toSpreadsheetNumber("$0123", "Nearest $1")).toBeNull(); // still an identifier
     expect(toSpreadsheetNumber("1,200 - 1,400", "Number")).toBeNull();
     expect(toSpreadsheetNumber("", "Number")).toBeNull();
+  });
+
+  it("refuses malformed comma grouping (OCR-mangled values stay strings)", () => {
+    expect(toSpreadsheetNumber("1,00", "Number")).toBeNull();
+    expect(toSpreadsheetNumber("1,2", "Number")).toBeNull();
+    expect(toSpreadsheetNumber("1,50,000", "Number")).toBeNull();
+    expect(toSpreadsheetNumber("12,345", "Number")).toBe(12345);
+  });
+
+  it("accepts the 2024-25 plural Tenths value type", () => {
+    expect(
+      toSpreadsheetNumber("98.5", "Whole Number or Round to Nearest Tenths"),
+    ).toBe(98.5);
   });
 
   it("refuses negative-looking strings (CDS values are never negative)", () => {
@@ -172,6 +186,7 @@ describe("buildCdsCsv", () => {
             values: {
               "A.999": field("-5", { question: "Q" }),
               "A.998": field("+3.2", { question: "Q2" }),
+              "A.997": field("-1,234", { question: "Q3" }),
             },
           },
         ],
@@ -179,8 +194,17 @@ describe("buildCdsCsv", () => {
     );
     expect(csv).toContain(",-5,");
     expect(csv).toContain(",+3.2,");
+    expect(csv).toContain('"-1,234"');
     expect(csv).not.toContain("'-5");
     expect(csv).not.toContain("'+3.2");
+    expect(csv).not.toContain("'-1,234");
+  });
+
+  it("neutralizes formulas hiding behind leading whitespace", () => {
+    // Field values are trimmed in buildFieldRows, but manifest-derived
+    // columns (school name, variant) are not — the probe must catch both.
+    const csv = buildCdsCsv(input({ schoolName: "  =EVIL()" }));
+    expect(csv).toContain("'  =EVIL()");
   });
 
   it("emits the variant column for multi-variant schools", () => {
