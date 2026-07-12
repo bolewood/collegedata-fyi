@@ -1,0 +1,880 @@
+{
+  "card_library_version": "v1",
+  "status": "published",
+  "created": "2026-07-12",
+  "license": "CC-BY-SA-4.0",
+  "prd": "docs/prd/026-guided-college-discovery.md",
+  "notes": [
+    "54-card library brainstormed 2026-07-12 from PRD 026 domains plus counselor themes (NACAC fit framework, Gallup 'Big Six' experiences, Your College-Bound Kid list-building criteria).",
+    "Preference keys are unipolar qualities (e.g. scale.large and scale.small are distinct keys, both phrased as positive experiences). Opposing qualities are reconciled by evidence matchers in discovery_policy_v1, not by same-key conflict detection; same-key seek/avoid conflicts arise from reactions and edits per PRD 026 §3.",
+    "Evidence keys are declarative source.field pointers, provisional until discovery_policy_v1 binds matchers. cds.* keys depend on corpus extraction coverage — the Milestone 0 data spike must report per-card coverage before any 'data' card is trusted in a recommendation reason.",
+    "Protected-status preference cards (LGBTQ+ climate, disability support, campus safety) were considered and deferred past v1 by owner decision 2026-07-12.",
+    "The opening deck is decks/opening-v1.json (approved, revision 2), drawn from this library.",
+    "2026-07-12 spike amendment: early-research upgraded reflection_only -> data (v2). Undergraduate Research entered CDS Section E1 in the 2022-23 schema (schemas/cds_schema_2021_22-to-2022_23.diff.md) and 245 schools have E.117 extracted for 2024-25. Counts: 25 data / 12 proxy / 17 reflection-only.",
+    "2026-07-12 review amendment: evidence keys corrected to name real columns (scorecard.locale, scorecard.median_debt_completers, scorecard.earnings_10yr_median, scorecard.net_price_0_30k, scorecard.graduation_rate_4yr/6yr); four-year-finish (v2) no longer cites six-year completion. ipeds.ic.* keys (religious_affiliation, athletic_division on faith-life and big-game-days) reference IPEDS IC attributes NOT YET LOADED into the serving layer — those cards cannot generate recommendation reasons until that load ships."
+  ],
+  "limitations": {
+    "lim.reflection_only": "No verified data source supports this yet, so it shapes your reflection and preference ledger but never explains why a school appears.",
+    "lim.e1_offering": "The school reports offering this option in its Common Data Set; that says nothing about how many students use it or how strong it is.",
+    "lim.cip_breadth": "Program breadth comes from degrees recently awarded (IPEDS); it shows academic range, not advising quality or how easy switching actually is.",
+    "lim.class_size": "Class-size counts come from the school's CDS Section I and describe section sizes for one year, not teaching quality.",
+    "lim.size_proxy": "School size and student-faculty ratio are rough proxies for personal attention; small numbers don't guarantee close relationships.",
+    "lim.locale_proxy": "Federal locale codes describe the setting's category (city, town, rural), not how walkable or lively it actually feels.",
+    "lim.metro_distance": "Distance is approximate straight-line miles, not travel time.",
+    "lim.housing_share": "The share of students in college housing comes from the school's CDS for one year; it approximates campus life but can't measure atmosphere.",
+    "lim.participation_share": "Participation shares come from the school's CDS for one year; they describe scale, not whether you'd feel at home.",
+    "lim.activities_checklist": "The CDS activities checklist shows something exists; it can't measure how active or welcoming it is.",
+    "lim.composition": "Enrollment composition uses federal reporting categories from a specific year; the categories are imperfect and don't capture lived campus experience.",
+    "lim.pell_proxy": "Pell-share is a federal proxy from a specific year; how supported students actually feel is not measurable from this data.",
+    "lim.aid_no_prediction": "Aid and price figures describe reported patterns for past students in a named year; they are never a prediction of your award or your family's price.",
+    "lim.outcomes_cohort": "Retention, graduation, and earnings figures describe past cohorts, often several years old, and vary by program and student path.",
+    "lim.division_proxy": "Athletic division indicates the scale of the athletics program, not the actual game-day culture.",
+    "lim.affiliation": "Religious affiliation is a reported institutional attribute; campuses vary widely in how present faith life feels."
+  },
+  "cards": [
+    {
+      "card_id": "explore-before-major",
+      "version": 1,
+      "group": "academic-flexibility",
+      "domain": "academic",
+      "evidence_status": "data",
+      "statement": "I can try classes in a few different subjects before committing to a major.",
+      "explanation": "Schools with many related programs give you real room to explore before you declare.",
+      "preference_keys": [
+        "academic.breadth"
+      ],
+      "evidence_keys": [
+        "ipeds.cip_breadth",
+        "program.related_cip_count"
+      ],
+      "limitation_id": "lim.cip_breadth"
+    },
+    {
+      "card_id": "pivot-without-transfer",
+      "version": 1,
+      "group": "academic-flexibility",
+      "domain": "academic",
+      "evidence_status": "data",
+      "statement": "If I change my mind about my major, I won't have to transfer.",
+      "explanation": "When a school awards degrees across several related fields, changing direction usually means changing departments, not schools.",
+      "preference_keys": [
+        "academic.pivot_flexibility"
+      ],
+      "evidence_keys": [
+        "program.related_cip_count"
+      ],
+      "limitation_id": "lim.cip_breadth"
+    },
+    {
+      "card_id": "combine-interests",
+      "version": 1,
+      "group": "academic-flexibility",
+      "domain": "academic",
+      "evidence_status": "data",
+      "statement": "I can combine two interests into one degree — double major, or design my own.",
+      "explanation": "Some schools formally support double majors and student-designed majors.",
+      "preference_keys": [
+        "academic.combine_interests"
+      ],
+      "evidence_keys": [
+        "cds.e1.double_major",
+        "cds.e1.student_designed_major"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    {
+      "card_id": "honors-path",
+      "version": 1,
+      "group": "academic-flexibility",
+      "domain": "academic",
+      "evidence_status": "data",
+      "statement": "There's an honors path with smaller, deeper classes if I want the challenge.",
+      "explanation": "Honors programs offer a more intense academic track inside a larger school.",
+      "preference_keys": [
+        "academic.honors_program"
+      ],
+      "evidence_keys": [
+        "cds.e1.honors_program"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    {
+      "card_id": "cross-registration",
+      "version": 1,
+      "group": "academic-flexibility",
+      "domain": "academic",
+      "evidence_status": "data",
+      "statement": "I can take classes at nearby colleges too, not just my own.",
+      "explanation": "Cross-registration agreements let you enroll in courses at partner schools.",
+      "preference_keys": [
+        "academic.cross_registration"
+      ],
+      "evidence_keys": [
+        "cds.e1.cross_registration"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    {
+      "card_id": "accelerated-degree",
+      "version": 1,
+      "group": "academic-flexibility",
+      "domain": "academic",
+      "evidence_status": "data",
+      "statement": "I can speed up — graduate early or start advanced work as an undergrad.",
+      "explanation": "Accelerated programs compress the path to a degree or blend into graduate work.",
+      "preference_keys": [
+        "academic.accelerated"
+      ],
+      "evidence_keys": [
+        "cds.e1.accelerated_program"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    {
+      "card_id": "discussion-classes",
+      "version": 1,
+      "group": "faculty-class",
+      "domain": "academic",
+      "evidence_status": "proxy",
+      "statement": "Most of my classes feel like conversations, not lectures in a giant hall.",
+      "explanation": "Schools report how many class sections are small, medium, and large.",
+      "preference_keys": [
+        "class.small_discussion"
+      ],
+      "evidence_keys": [
+        "cds.i3.class_size_distribution"
+      ],
+      "limitation_id": "lim.class_size"
+    },
+    {
+      "card_id": "professors-know-me",
+      "version": 1,
+      "group": "faculty-class",
+      "domain": "academic",
+      "evidence_status": "proxy",
+      "statement": "My professors will actually know my name.",
+      "explanation": "Smaller schools and lower student-faculty ratios make personal attention more likely — but they're only proxies.",
+      "preference_keys": [
+        "class.faculty_known_by_name"
+      ],
+      "evidence_keys": [
+        "cds.i2.student_faculty_ratio",
+        "directory.enrollment"
+      ],
+      "limitation_id": "lim.size_proxy"
+    },
+    {
+      "card_id": "office-hours-culture",
+      "version": 1,
+      "group": "faculty-class",
+      "domain": "academic",
+      "evidence_status": "reflection_only",
+      "statement": "Going to office hours and getting real help is normal here.",
+      "explanation": "Whether students actually use office hours is a culture question no dataset answers yet.",
+      "preference_keys": [
+        "class.office_hours_culture"
+      ],
+      "evidence_keys": [],
+      "limitation_id": "lim.reflection_only"
+    },
+    {
+      "card_id": "faculty-taught",
+      "version": 1,
+      "group": "faculty-class",
+      "domain": "academic",
+      "evidence_status": "reflection_only",
+      "statement": "Professors — not teaching assistants — teach most of my courses.",
+      "explanation": "Public data counts faculty but doesn't say who leads your actual class sessions.",
+      "preference_keys": [
+        "class.faculty_taught"
+      ],
+      "evidence_keys": [],
+      "limitation_id": "lim.reflection_only"
+    },
+    {
+      "card_id": "faculty-in-my-field",
+      "version": 1,
+      "group": "faculty-class",
+      "domain": "academic",
+      "evidence_status": "reflection_only",
+      "statement": "There are professors here working on problems I care about.",
+      "explanation": "Matching faculty research to your interests takes department-level digging the data can't do yet.",
+      "preference_keys": [
+        "class.faculty_in_field"
+      ],
+      "evidence_keys": [],
+      "limitation_id": "lim.reflection_only"
+    },
+    {
+      "card_id": "internship-credit",
+      "version": 1,
+      "group": "experiential",
+      "domain": "opportunity",
+      "evidence_status": "data",
+      "statement": "I can get course credit for internships.",
+      "explanation": "Schools report whether internships can count toward your degree.",
+      "preference_keys": [
+        "opp.internship_credit"
+      ],
+      "evidence_keys": [
+        "cds.e1.internships"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    {
+      "card_id": "coop-program",
+      "version": 1,
+      "group": "experiential",
+      "domain": "opportunity",
+      "evidence_status": "data",
+      "statement": "I could alternate semesters of work and school and graduate with a résumé.",
+      "explanation": "Cooperative education formally weaves paid work terms into the degree.",
+      "preference_keys": [
+        "opp.coop"
+      ],
+      "evidence_keys": [
+        "cds.e1.cooperative_education"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    {
+      "card_id": "study-abroad-normal",
+      "version": 1,
+      "group": "experiential",
+      "domain": "opportunity",
+      "evidence_status": "proxy",
+      "statement": "Studying abroad is normal here, not a rare exception.",
+      "explanation": "Schools report offering study abroad; how many students actually go isn't in the data.",
+      "preference_keys": [
+        "opp.study_abroad"
+      ],
+      "evidence_keys": [
+        "cds.e1.study_abroad"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    {
+      "card_id": "early-research",
+      "version": 2,
+      "group": "experiential",
+      "domain": "opportunity",
+      "evidence_status": "data",
+      "statement": "Undergraduates join real research early — not just seniors.",
+      "explanation": "Schools report offering undergraduate research among their CDS special study options (a checklist item since the 2022-23 CDS).",
+      "preference_keys": [
+        "opp.undergrad_research"
+      ],
+      "evidence_keys": [
+        "cds.e1.undergraduate_research"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    {
+      "card_id": "hands-on-classes",
+      "version": 1,
+      "group": "experiential",
+      "domain": "opportunity",
+      "evidence_status": "reflection_only",
+      "statement": "Classes get out of the classroom — fieldwork, labs, studios, building things.",
+      "explanation": "How much learning happens outside lecture halls is a curriculum-design question the data can't see.",
+      "preference_keys": [
+        "opp.experiential_courses"
+      ],
+      "evidence_keys": [],
+      "limitation_id": "lim.reflection_only"
+    },
+    {
+      "card_id": "independent-study",
+      "version": 1,
+      "group": "experiential",
+      "domain": "opportunity",
+      "evidence_status": "data",
+      "statement": "Independent study is real — I can pursue a question no course covers.",
+      "explanation": "Schools report whether students can earn credit for self-directed projects.",
+      "preference_keys": [
+        "opp.independent_study"
+      ],
+      "evidence_keys": [
+        "cds.e1.independent_study"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    {
+      "card_id": "teacher-certification",
+      "version": 1,
+      "group": "experiential",
+      "domain": "opportunity",
+      "evidence_status": "data",
+      "statement": "I can pick up a teaching certificate along the way.",
+      "explanation": "Some schools let you earn state teaching certification alongside your major.",
+      "preference_keys": [
+        "opp.teacher_certification"
+      ],
+      "evidence_keys": [
+        "cds.e1.teacher_certification"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    {
+      "card_id": "walkable-town",
+      "version": 1,
+      "group": "place",
+      "domain": "place",
+      "evidence_status": "proxy",
+      "statement": "I can walk from campus into a real town — coffee, food, places to be.",
+      "explanation": "Federal locale codes hint at town-and-campus settings, but walkability itself isn't measured.",
+      "preference_keys": [
+        "place.walkable_town"
+      ],
+      "evidence_keys": [
+        "scorecard.locale",
+        "directory.coordinates"
+      ],
+      "limitation_id": "lim.locale_proxy"
+    },
+    {
+      "card_id": "city-as-campus",
+      "version": 1,
+      "group": "place",
+      "domain": "place",
+      "evidence_status": "data",
+      "statement": "The city IS my campus — internships, music, food all around me.",
+      "explanation": "Schools in large cities put urban life at your doorstep.",
+      "preference_keys": [
+        "place.big_city"
+      ],
+      "evidence_keys": [
+        "scorecard.locale"
+      ],
+      "limitation_id": "lim.locale_proxy"
+    },
+    {
+      "card_id": "classic-campus",
+      "version": 1,
+      "group": "place",
+      "domain": "place",
+      "evidence_status": "reflection_only",
+      "statement": "A classic campus — green quads, old buildings, a place that feels like somewhere.",
+      "explanation": "Campus beauty and feel are real preferences, but no dataset scores them.",
+      "preference_keys": [
+        "place.classic_campus"
+      ],
+      "evidence_keys": [],
+      "limitation_id": "lim.reflection_only"
+    },
+    {
+      "card_id": "outdoors-access",
+      "version": 1,
+      "group": "place",
+      "domain": "place",
+      "evidence_status": "reflection_only",
+      "statement": "Mountains, trails, or water close enough for a normal weekend.",
+      "explanation": "Outdoor access could be derived from geography data later; it isn't loaded yet.",
+      "preference_keys": [
+        "place.outdoors_access"
+      ],
+      "evidence_keys": [],
+      "limitation_id": "lim.reflection_only"
+    },
+    {
+      "card_id": "warm-climate",
+      "version": 1,
+      "group": "place",
+      "domain": "place",
+      "evidence_status": "reflection_only",
+      "statement": "Warm most of the school year sounds right to me.",
+      "explanation": "Climate data isn't loaded yet, so this shapes reflection only.",
+      "preference_keys": [
+        "place.warm_climate"
+      ],
+      "evidence_keys": [],
+      "limitation_id": "lim.reflection_only"
+    },
+    {
+      "card_id": "four-seasons",
+      "version": 1,
+      "group": "place",
+      "domain": "place",
+      "evidence_status": "reflection_only",
+      "statement": "I want real seasons — snow included.",
+      "explanation": "Climate data isn't loaded yet, so this shapes reflection only.",
+      "preference_keys": [
+        "place.four_seasons"
+      ],
+      "evidence_keys": [],
+      "limitation_id": "lim.reflection_only"
+    },
+    {
+      "card_id": "quiet-setting",
+      "version": 1,
+      "group": "place",
+      "domain": "place",
+      "evidence_status": "data",
+      "statement": "A quieter setting where campus is the center of life.",
+      "explanation": "Rural and town settings where most students live on campus tend to center life on the school itself.",
+      "preference_keys": [
+        "place.quiet_setting"
+      ],
+      "evidence_keys": [
+        "scorecard.locale",
+        "cds.f1.pct_college_housing"
+      ],
+      "limitation_id": "lim.locale_proxy"
+    },
+    {
+      "card_id": "weekend-city-access",
+      "version": 1,
+      "group": "city-access",
+      "domain": "place",
+      "evidence_status": "data",
+      "statement": "I can get to a big city for a weekend without living in one.",
+      "explanation": "Distance from campus to the nearest large metro can be computed from coordinates.",
+      "preference_keys": [
+        "place.metro_access"
+      ],
+      "evidence_keys": [
+        "distance.metro_proximity"
+      ],
+      "limitation_id": "lim.metro_distance"
+    },
+    {
+      "card_id": "airport-access",
+      "version": 1,
+      "group": "city-access",
+      "domain": "place",
+      "evidence_status": "reflection_only",
+      "statement": "An airport with real flight options is within reach.",
+      "explanation": "Airport proximity data isn't loaded yet, so this shapes reflection only.",
+      "preference_keys": [
+        "place.airport_access"
+      ],
+      "evidence_keys": [],
+      "limitation_id": "lim.reflection_only"
+    },
+    {
+      "card_id": "residential-campus",
+      "version": 1,
+      "group": "residential-social",
+      "domain": "community",
+      "evidence_status": "data",
+      "statement": "Most students live on campus, so evenings and weekends have life.",
+      "explanation": "Schools report what share of students live in college housing.",
+      "preference_keys": [
+        "life.residential_campus"
+      ],
+      "evidence_keys": [
+        "cds.f1.pct_college_housing"
+      ],
+      "limitation_id": "lim.housing_share"
+    },
+    {
+      "card_id": "weekend-vitality",
+      "version": 1,
+      "group": "residential-social",
+      "domain": "community",
+      "evidence_status": "proxy",
+      "statement": "Campus doesn't empty out on Friday afternoon.",
+      "explanation": "High on-campus housing and many students from far away make a weekend campus more likely — but it's a proxy.",
+      "preference_keys": [
+        "life.weekend_vitality"
+      ],
+      "evidence_keys": [
+        "cds.f1.pct_college_housing",
+        "cds.f1.pct_out_of_state"
+      ],
+      "limitation_id": "lim.housing_share"
+    },
+    {
+      "card_id": "greek-scene",
+      "version": 1,
+      "group": "residential-social",
+      "domain": "community",
+      "evidence_status": "data",
+      "statement": "Greek life is a big part of the social scene.",
+      "explanation": "Schools report what share of students join fraternities and sororities.",
+      "preference_keys": [
+        "life.greek_scene"
+      ],
+      "evidence_keys": [
+        "cds.f1.pct_fraternity",
+        "cds.f1.pct_sorority"
+      ],
+      "limitation_id": "lim.participation_share"
+    },
+    {
+      "card_id": "arts-scene",
+      "version": 1,
+      "group": "residential-social",
+      "domain": "community",
+      "evidence_status": "proxy",
+      "statement": "There's a real arts scene — ensembles, theater, galleries open to every major.",
+      "explanation": "Schools list arts activities in the CDS; the checklist shows existence, not vibrancy.",
+      "preference_keys": [
+        "life.arts_scene"
+      ],
+      "evidence_keys": [
+        "cds.f1.activities"
+      ],
+      "limitation_id": "lim.activities_checklist"
+    },
+    {
+      "card_id": "club-sports",
+      "version": 1,
+      "group": "residential-social",
+      "domain": "community",
+      "evidence_status": "proxy",
+      "statement": "Club and intramural sports are easy to join at any level.",
+      "explanation": "Schools list intramural and club sports in the CDS activities checklist.",
+      "preference_keys": [
+        "life.club_sports"
+      ],
+      "evidence_keys": [
+        "cds.f1.activities"
+      ],
+      "limitation_id": "lim.activities_checklist"
+    },
+    {
+      "card_id": "housing-guaranteed",
+      "version": 1,
+      "group": "residential-social",
+      "domain": "community",
+      "evidence_status": "reflection_only",
+      "statement": "Housing is guaranteed beyond freshman year.",
+      "explanation": "Housing guarantees aren't reported in structured data yet.",
+      "preference_keys": [
+        "life.housing_guaranteed"
+      ],
+      "evidence_keys": [],
+      "limitation_id": "lim.reflection_only"
+    },
+    {
+      "card_id": "big-school-energy",
+      "version": 1,
+      "group": "scale",
+      "domain": "community",
+      "evidence_status": "data",
+      "statement": "I want the energy of a big school — hundreds of clubs, a huge catalog.",
+      "explanation": "Enrollment and program breadth show a school's scale directly.",
+      "preference_keys": [
+        "scale.large"
+      ],
+      "evidence_keys": [
+        "directory.enrollment",
+        "ipeds.cip_breadth"
+      ],
+      "limitation_id": "lim.size_proxy"
+    },
+    {
+      "card_id": "small-school-known",
+      "version": 1,
+      "group": "scale",
+      "domain": "community",
+      "evidence_status": "data",
+      "statement": "I want a school small enough that I'm a person, not a number.",
+      "explanation": "Enrollment shows scale directly; whether small feels personal is up to the school.",
+      "preference_keys": [
+        "scale.small"
+      ],
+      "evidence_keys": [
+        "directory.enrollment"
+      ],
+      "limitation_id": "lim.size_proxy"
+    },
+    {
+      "card_id": "tight-knit-overlap",
+      "version": 1,
+      "group": "scale",
+      "domain": "community",
+      "evidence_status": "proxy",
+      "statement": "I keep seeing the same people across classes and clubs — and I like that.",
+      "explanation": "Smaller communities overlap more by nature, but the feeling itself isn't measured.",
+      "preference_keys": [
+        "scale.tight_knit"
+      ],
+      "evidence_keys": [
+        "directory.enrollment"
+      ],
+      "limitation_id": "lim.size_proxy"
+    },
+    {
+      "card_id": "big-game-days",
+      "version": 1,
+      "group": "community-spirit",
+      "domain": "community",
+      "evidence_status": "proxy",
+      "statement": "Game days matter — big crowds, school colors, the whole thing.",
+      "explanation": "Athletic division hints at the scale of sports culture; the culture itself isn't measured.",
+      "preference_keys": [
+        "spirit.big_sports"
+      ],
+      "evidence_keys": [
+        "ipeds.ic.athletic_division"
+      ],
+      "limitation_id": "lim.division_proxy"
+    },
+    {
+      "card_id": "shared-traditions",
+      "version": 1,
+      "group": "community-spirit",
+      "domain": "community",
+      "evidence_status": "reflection_only",
+      "statement": "Traditions matter here — rituals every student shares.",
+      "explanation": "Traditions are real and unmeasured; this shapes reflection only.",
+      "preference_keys": [
+        "spirit.traditions"
+      ],
+      "evidence_keys": [],
+      "limitation_id": "lim.reflection_only"
+    },
+    {
+      "card_id": "faith-life",
+      "version": 1,
+      "group": "community-spirit",
+      "domain": "community",
+      "evidence_status": "proxy",
+      "statement": "Faith or spiritual life has a real home on campus.",
+      "explanation": "Religious affiliation is reported federally; how present faith life feels varies widely.",
+      "preference_keys": [
+        "spirit.faith_life"
+      ],
+      "evidence_keys": [
+        "ipeds.ic.religious_affiliation"
+      ],
+      "limitation_id": "lim.affiliation"
+    },
+    {
+      "card_id": "collaborative-culture",
+      "version": 1,
+      "group": "community-spirit",
+      "domain": "community",
+      "evidence_status": "reflection_only",
+      "statement": "People collaborate here — it's supportive, not cutthroat.",
+      "explanation": "Academic culture is one of the most-asked-about qualities and one no dataset measures.",
+      "preference_keys": [
+        "spirit.collaborative"
+      ],
+      "evidence_keys": [],
+      "limitation_id": "lim.reflection_only"
+    },
+    {
+      "card_id": "service-culture",
+      "version": 1,
+      "group": "community-spirit",
+      "domain": "community",
+      "evidence_status": "reflection_only",
+      "statement": "Service and volunteering are woven into ordinary student life.",
+      "explanation": "Service culture varies by campus and isn't captured in structured data.",
+      "preference_keys": [
+        "spirit.service"
+      ],
+      "evidence_keys": [],
+      "limitation_id": "lim.reflection_only"
+    },
+    {
+      "card_id": "politically-engaged",
+      "version": 1,
+      "group": "community-spirit",
+      "domain": "community",
+      "evidence_status": "reflection_only",
+      "statement": "Campus is politically engaged — debate and activism are part of the conversation.",
+      "explanation": "Civic energy is a genuine preference that sorts strongly both ways; no dataset measures it.",
+      "preference_keys": [
+        "spirit.politically_engaged"
+      ],
+      "evidence_keys": [],
+      "limitation_id": "lim.reflection_only"
+    },
+    {
+      "card_id": "geographic-mix",
+      "version": 1,
+      "group": "people",
+      "domain": "community",
+      "evidence_status": "data",
+      "statement": "My classmates come from all over the country and the world.",
+      "explanation": "Schools report what share of students come from out of state and abroad.",
+      "preference_keys": [
+        "people.geographic_mix"
+      ],
+      "evidence_keys": [
+        "cds.f1.pct_out_of_state",
+        "cds.f1.pct_international"
+      ],
+      "limitation_id": "lim.participation_share"
+    },
+    {
+      "card_id": "background-diversity",
+      "version": 1,
+      "group": "people",
+      "domain": "community",
+      "evidence_status": "data",
+      "statement": "I'll meet people whose backgrounds are genuinely different from mine.",
+      "explanation": "Enrollment composition is reported in federal categories with a stated year.",
+      "preference_keys": [
+        "people.background_diversity"
+      ],
+      "evidence_keys": [
+        "cds.b2.enrollment_composition"
+      ],
+      "limitation_id": "lim.composition"
+    },
+    {
+      "card_id": "first-gen-common",
+      "version": 1,
+      "group": "people",
+      "domain": "community",
+      "evidence_status": "proxy",
+      "statement": "Being first in your family at college is common and supported here.",
+      "explanation": "Pell-share suggests how common first-generation and lower-income students are; support quality isn't measured.",
+      "preference_keys": [
+        "people.first_gen_common"
+      ],
+      "evidence_keys": [
+        "scorecard.pell_grant_rate"
+      ],
+      "limitation_id": "lim.pell_proxy"
+    },
+    {
+      "card_id": "need-aid-strength",
+      "version": 1,
+      "group": "affordability",
+      "domain": "affordability",
+      "evidence_status": "data",
+      "statement": "The sticker price isn't the real price — I want schools where aid is worth investigating.",
+      "explanation": "Reported net prices by family income show where aid meaningfully lowers the real cost.",
+      "preference_keys": [
+        "cost.need_aid_strength"
+      ],
+      "evidence_keys": [
+        "scorecard.net_price_0_30k",
+        "scorecard.avg_net_price"
+      ],
+      "limitation_id": "lim.aid_no_prediction"
+    },
+    {
+      "card_id": "merit-scholarships",
+      "version": 1,
+      "group": "affordability",
+      "domain": "affordability",
+      "evidence_status": "data",
+      "statement": "Merit scholarships can cut the cost even without financial need.",
+      "explanation": "Schools report non-need merit aid patterns — how many students get it and how much.",
+      "preference_keys": [
+        "cost.merit_aid"
+      ],
+      "evidence_keys": [
+        "merit_profile.summary"
+      ],
+      "limitation_id": "lim.aid_no_prediction"
+    },
+    {
+      "card_id": "graduate-low-debt",
+      "version": 1,
+      "group": "affordability",
+      "domain": "affordability",
+      "evidence_status": "data",
+      "statement": "I want to graduate without heavy loans.",
+      "explanation": "Median debt and borrowing rates show the debt picture for past students.",
+      "preference_keys": [
+        "cost.low_debt"
+      ],
+      "evidence_keys": [
+        "scorecard.median_debt_completers",
+        "scorecard.federal_loan_rate"
+      ],
+      "limitation_id": "lim.aid_no_prediction"
+    },
+    {
+      "card_id": "campus-jobs",
+      "version": 1,
+      "group": "affordability",
+      "domain": "affordability",
+      "evidence_status": "reflection_only",
+      "statement": "Working a campus job to help pay my way is realistic here.",
+      "explanation": "Campus job availability isn't in structured data yet.",
+      "preference_keys": [
+        "cost.campus_jobs"
+      ],
+      "evidence_keys": [],
+      "limitation_id": "lim.reflection_only"
+    },
+    {
+      "card_id": "students-return",
+      "version": 1,
+      "group": "outcomes",
+      "domain": "outcomes",
+      "evidence_status": "data",
+      "statement": "Almost everyone comes back for sophomore year — people stay because it works.",
+      "explanation": "First-year retention is reported by the school and federally.",
+      "preference_keys": [
+        "out.retention"
+      ],
+      "evidence_keys": [
+        "cds.b22.retention",
+        "scorecard.retention_rate_ft"
+      ],
+      "limitation_id": "lim.outcomes_cohort"
+    },
+    {
+      "card_id": "four-year-finish",
+      "version": 2,
+      "group": "outcomes",
+      "domain": "outcomes",
+      "evidence_status": "data",
+      "statement": "Most students finish in four years, not five or six.",
+      "explanation": "Graduation rates show how reliably students actually finish on time.",
+      "preference_keys": [
+        "out.four_year_grad"
+      ],
+      "evidence_keys": [
+        "cds.b.four_year_grad_rate",
+        "scorecard.graduation_rate_4yr"
+      ],
+      "limitation_id": "lim.outcomes_cohort"
+    },
+    {
+      "card_id": "career-track-record",
+      "version": 2,
+      "group": "outcomes",
+      "domain": "outcomes",
+      "evidence_status": "proxy",
+      "statement": "There's a visible track record of graduates moving into careers.",
+      "explanation": "Federal earnings data exists for past cohorts; it's evidence to inspect, never a promise of a good job.",
+      "preference_keys": [
+        "out.career_track_record"
+      ],
+      "evidence_keys": [
+        "scorecard.earnings_10yr_median",
+        "scorecard.graduation_rate_6yr"
+      ],
+      "limitation_id": "lim.outcomes_cohort"
+    },
+    {
+      "card_id": "early-career-help",
+      "version": 1,
+      "group": "outcomes",
+      "domain": "outcomes",
+      "evidence_status": "reflection_only",
+      "statement": "Career help starts early, not senior year.",
+      "explanation": "Career services quality and timing aren't in structured data.",
+      "preference_keys": [
+        "out.career_services_early"
+      ],
+      "evidence_keys": [],
+      "limitation_id": "lim.reflection_only"
+    },
+    {
+      "card_id": "alumni-network",
+      "version": 1,
+      "group": "outcomes",
+      "domain": "outcomes",
+      "evidence_status": "reflection_only",
+      "statement": "Alumni actually answer when students reach out.",
+      "explanation": "Alumni-network warmth is real and unmeasured; this shapes reflection only.",
+      "preference_keys": [
+        "out.alumni_network"
+      ],
+      "evidence_keys": [],
+      "limitation_id": "lim.reflection_only"
+    }
+  ]
+}

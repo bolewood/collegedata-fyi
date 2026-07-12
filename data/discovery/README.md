@@ -38,6 +38,13 @@ later. Code contributions elsewhere in the repo are unaffected.
   `tools/discovery/data_spike.py`; invariants pinned by
   `tools/discovery/test_policy.py`.
 
+## Web runtime mirrors
+
+The web app consumes committed mirrors of these artifacts under
+`web/src/lib/discovery/content/` (the Vercel project root is `web/`, so it
+cannot import across the repo root). `web/src/lib/discovery/content-sync.test.ts`
+fails the suite whenever a mirror drifts from its canonical source here.
+
 ## Versioning rules
 
 - Files are immutable once referenced by a shipped policy version: fix
