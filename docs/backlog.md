@@ -74,6 +74,8 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 - **Queryable browser CSV export pagination.** The `/browse` MVP exports the current browser result set through one Edge Function call capped at `page_size=500`. That is fine for current launch filters, but a broad export should page through all results or move export server-side before result sets grow. The dependency-free XLSX/CSV writer shipped for PRD 025 (`web/src/lib/xlsx.ts`) is reusable for a server-side `/browse` export. **Effort:** ~1 hour.
 
+- **Dataset JSON-LD license metadata consistency.** School-year pages stamp `license: MIT` on their schema.org Dataset objects. With the PRD 026 content-license split (code MIT, `data/discovery/` CC BY-SA 4.0), audit the structured-data license claims so each surface states the license that actually applies to what it serves. **Effort:** ~30 min.
+
 - **Spreadsheet download follow-ups (PRD 025).** All-years-per-school workbook (`/schools/{id}/cds.xlsx`, one column per year for trend analysis); match-list builder XLSX export; list the per-school download URLs in `llms.txt` and the friendly-API docs. See `docs/prd/025-school-spreadsheet-download.md` for the decision log.
 
 - **OG images.** Per-school social cards with school name + key stats. Would improve link previews on Twitter/Slack/Discord. **Effort:** ~1 hour using Next.js OG image generation.

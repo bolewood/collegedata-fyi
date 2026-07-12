@@ -134,3 +134,9 @@ Created and maintained by Anthony S. at [Bolewood Group, LLC](https://bolewood.c
 ## License
 
 MIT — see [`LICENSE`](LICENSE). Copyright © 2026 Anthony S. and Bolewood Group, LLC.
+
+One exception: the curated discovery content under [`data/discovery/`](data/discovery/)
+(experience-card library, interest ontology, explanation templates, discovery policy
+definitions) is licensed [CC BY-SA 4.0](data/discovery/LICENSE) — publicly inspectable,
+attribution and share-alike required. Contributions to that directory require a
+contribution agreement; see [`data/discovery/README.md`](data/discovery/README.md).

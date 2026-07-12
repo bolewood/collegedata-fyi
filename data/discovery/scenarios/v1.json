@@ -1,0 +1,68 @@
+{
+  "scenario_corpus_version": "v1",
+  "status": "versioned",
+  "created": "2026-07-12",
+  "license": "CC-BY-SA-4.0",
+  "prd": "docs/prd/026-guided-college-discovery.md",
+  "reviewer": "santhonys (owner)",
+  "rationale": "Five origin contexts spanning U.S. regions and urban/rural settings crossed with four preference profiles covering bounded, preferred-only, strict-maximum, and no-distance cases (PRD 026 Milestone 0). Versioned before the first feasibility-gate run; changing any fixture after seeing results requires a new corpus version and a documented reason.",
+  "notes": [
+    "Origins carry coordinates directly because the ZIP-centroid source selection (PRD 026 Open Question 5) is still open; production scenarios will re-derive coordinates from ZIPs once a centroid dataset is chosen.",
+    "Preference aggregates use the deterministic card mapping: essential=+3, interesting=+1, not_for_me=-3.",
+    "Profiles deliberately include preference keys unsupported by spike-stage evidence matchers (residential_campus, small_discussion, greek_scene, outdoors_access) to exercise the supported-preference rule: unsupported keys contribute zero to relevance."
+  ],
+  "origins": [
+    { "origin_id": "atl-suburb", "label": "Suburban Atlanta, GA", "context": "large-metro suburb, South", "lat": 33.953, "lon": -84.55 },
+    { "origin_id": "chi-city", "label": "Chicago, IL", "context": "large city, Midwest", "lat": 41.878, "lon": -87.63 },
+    { "origin_id": "mt-rural", "label": "Lewistown, MT", "context": "remote rural, Mountain West", "lat": 47.063, "lon": -109.428 },
+    { "origin_id": "nj-suburb", "label": "Edison, NJ", "context": "dense suburb, Northeast corridor", "lat": 40.519, "lon": -74.412 },
+    { "origin_id": "fresno", "label": "Fresno, CA", "context": "mid-size city, Central Valley West", "lat": 36.746, "lon": -119.772 }
+  ],
+  "profiles": [
+    {
+      "profile_id": "bounded-regional",
+      "label": "Bounded regional searcher",
+      "geography": { "preferred_miles": 150, "maximum_miles": 400, "allow_wildcards": true },
+      "concepts": ["environment-climate"],
+      "preferences": [
+        { "key": "life.residential_campus", "aggregate": 3 },
+        { "key": "class.small_discussion", "aggregate": 1 },
+        { "key": "cost.need_aid_strength", "aggregate": 3 }
+      ]
+    },
+    {
+      "profile_id": "preferred-only",
+      "label": "Soft-radius small-school outdoors kid",
+      "geography": { "preferred_miles": 300, "maximum_miles": null, "allow_wildcards": true },
+      "concepts": ["conservation-wildlife"],
+      "preferences": [
+        { "key": "scale.small", "aggregate": 3 },
+        { "key": "place.quiet_setting", "aggregate": 1 },
+        { "key": "place.outdoors_access", "aggregate": 1 }
+      ]
+    },
+    {
+      "profile_id": "no-distance",
+      "label": "Anywhere urban policy head",
+      "geography": { "preferred_miles": null, "maximum_miles": null, "allow_wildcards": false },
+      "concepts": ["environmental-policy", "environment-climate"],
+      "preferences": [
+        { "key": "place.big_city", "aggregate": 3 },
+        { "key": "scale.large", "aggregate": 1 },
+        { "key": "cost.low_debt", "aggregate": 1 }
+      ]
+    },
+    {
+      "profile_id": "strict-max",
+      "label": "Hard-boundary engineer, no Greek life",
+      "geography": { "preferred_miles": 100, "maximum_miles": 250, "allow_wildcards": false },
+      "concepts": ["environmental-engineering", "climate-earth-science"],
+      "preferences": [
+        { "key": "out.four_year_grad", "aggregate": 3 },
+        { "key": "out.retention", "aggregate": 1 },
+        { "key": "life.greek_scene", "aggregate": -3 }
+      ]
+    }
+  ],
+  "scenarios": "cross-product: every origin x every profile = 20 scenarios; scenario_id = {origin_id}--{profile_id}"
+}
