@@ -16,6 +16,7 @@ import { MarkdownView } from "@/components/MarkdownView";
 import { OutcomesBand } from "@/components/OutcomesBand";
 import { ScorecardVintageNote } from "@/components/ScorecardVintageNote";
 import { AdmissionStrategyCard } from "@/components/AdmissionStrategyCard";
+import { SpreadsheetDownloadLinks } from "@/components/SpreadsheetDownloadLinks";
 
 export const revalidate = 3600;
 
@@ -121,12 +122,14 @@ export default async function SchoolYearPage({
       <h1 className="text-3xl font-bold text-gray-900">{schoolName}</h1>
       <p className="text-xl text-gray-600 mt-1">Common Data Set {year}</p>
 
-      {/* Render each document variant */}
-      {docs.map((doc) => (
+      {/* Render each document variant. The spreadsheet download covers all
+          variants in one workbook, so only the first variant shows links. */}
+      {docs.map((doc, i) => (
         <DocumentVariant
           key={doc.document_id}
           doc={doc}
           scorecard={scorecard}
+          showSpreadsheetLinks={i === 0}
         />
       ))}
     </div>
@@ -136,9 +139,11 @@ export default async function SchoolYearPage({
 async function DocumentVariant({
   doc,
   scorecard,
+  showSpreadsheetLinks,
 }: {
   doc: Awaited<ReturnType<typeof fetchDocumentsBySchoolAndYear>>[number];
   scorecard: Awaited<ReturnType<typeof fetchScorecardByIpedsId>>;
+  showSpreadsheetLinks: boolean;
 }) {
   const sourceDownloadUrl = storageUrl(doc.source_storage_path);
   const isExtracted = doc.extraction_status === "extracted";
@@ -188,6 +193,12 @@ async function DocumentVariant({
           >
             {sourceDownloadLabel(doc.source_format, doc.source_storage_path)}
           </a>
+        )}
+        {showSpreadsheetLinks && hasValues && doc.school_id && doc.canonical_year && (
+          <SpreadsheetDownloadLinks
+            schoolId={doc.school_id}
+            year={doc.canonical_year}
+          />
         )}
       </div>
 
