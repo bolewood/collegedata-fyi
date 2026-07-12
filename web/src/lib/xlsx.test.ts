@@ -107,6 +107,34 @@ describe("buildXlsx", () => {
     expect(parts2.get("xl/worksheets/sheet1.xml")).toContain("badchar");
   });
 
+  it("strips the U+FFFE/U+FFFF non-characters from cell text", () => {
+    const parts2 = readZip(
+      buildXlsx([{ name: "S", rows: [["bad\ufffe\uffffchar"]] }]),
+    );
+    expect(parts2.get("xl/worksheets/sheet1.xml")).toContain("badchar");
+  });
+
+  it("writes a valid end-of-central-directory record", () => {
+    const eocd = workbook.subarray(workbook.length - 22);
+    expect(eocd.readUInt32LE(0)).toBe(0x06054b50);
+    expect(eocd.readUInt16LE(8)).toBe(parts.size); // entries on this disk
+    expect(eocd.readUInt16LE(10)).toBe(parts.size); // entries total
+  });
+
+  it("throws on an empty sheet list", () => {
+    expect(() => buildXlsx([])).toThrow(/at least one sheet/);
+  });
+
+  it("writes non-finite numbers as inline strings, never as number cells", () => {
+    const parts4 = readZip(
+      buildXlsx([{ name: "S", rows: [[NaN, Infinity, -Infinity]] }]),
+    );
+    const sheet = parts4.get("xl/worksheets/sheet1.xml")!;
+    expect(sheet).not.toContain("<v>NaN</v>");
+    expect(sheet).not.toContain("<v>Infinity</v>");
+    expect(sheet).toContain('t="inlineStr"><is><t xml:space="preserve">NaN</t>');
+  });
+
   it("deduplicates and truncates sheet names", () => {
     const parts3 = readZip(
       buildXlsx([

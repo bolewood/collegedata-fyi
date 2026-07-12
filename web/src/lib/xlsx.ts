@@ -73,9 +73,10 @@ function escapeXml(value: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
-    // Control characters are not representable in XML 1.0; Excel treats
-    // them as corruption. Tab/newline/CR are fine.
-    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "");
+    // Control characters and the U+FFFE/U+FFFF non-characters are not
+    // representable in XML 1.0; Excel treats them as corruption.
+    // Tab/newline/CR are fine.
+    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/g, "");
 }
 
 // 0-based column index → A1-style letters (0 → A, 26 → AA).

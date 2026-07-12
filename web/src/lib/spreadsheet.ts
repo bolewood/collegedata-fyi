@@ -14,7 +14,6 @@ export interface SpreadsheetDocument {
   schemaVersion: string | null;
   sourceUrl: string | null;
   values: Record<string, FieldValue>;
-  totalKnownFields?: number;
 }
 
 export interface SpreadsheetInput {
@@ -101,7 +100,11 @@ export function spreadsheetFilename(
   year: string,
   ext: "xlsx" | "csv",
 ): string {
-  return `${schoolId}-cds-${year}.${ext}`;
+  // The parts land inside a quoted Content-Disposition filename. Slugs and
+  // canonical years are [a-z0-9-] in practice; sanitizing here keeps the
+  // header valid even if slug provenance ever changes.
+  const safe = (s: string) => s.replace(/[^A-Za-z0-9._-]/g, "-");
+  return `${safe(schoolId)}-cds-${safe(year)}.${ext}`;
 }
 
 // --- XLSX workbook -------------------------------------------------------
@@ -232,7 +235,15 @@ const CSV_COLUMNS = [
 ] as const;
 
 function csvEscape(value: string | null): string {
-  const s = value ?? "";
+  let s = value ?? "";
+  // Neutralize spreadsheet formula injection (CWE-1236): cells starting
+  // with =, @, tab, or a +/- expression execute as formulas when the CSV
+  // is opened in Excel, and values here come from third-party school
+  // documents. Plain signed numbers ("-5", "+3.2") stay as published;
+  // the sibling XLSX path is immune (typed inline strings).
+  if (/^[=@\t]/.test(s) || (/^[+-]/.test(s) && !/^[+-]\d*\.?\d+$/.test(s))) {
+    s = `'${s}`;
+  }
   return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 

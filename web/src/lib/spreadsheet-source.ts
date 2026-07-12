@@ -26,7 +26,6 @@ export async function fetchSpreadsheetInput(
           schemaVersion: notes?.schema_version ?? doc.cds_year ?? null,
           sourceUrl: storageUrl(doc.source_storage_path),
           values: mergedValues,
-          totalKnownFields: notes?.stats?.total_fields,
         };
       }),
   );

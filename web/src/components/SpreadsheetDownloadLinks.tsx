@@ -4,7 +4,9 @@ import { trackEvent } from "@/lib/analytics";
 
 // Download links for the per-school CDS spreadsheet routes (PRD 025).
 // Rendered next to the source-document link on the school-year page when
-// structured field values exist.
+// structured field values exist. Plain anchors on purpose: the global
+// `.cd-theme a` rule supplies the canonical link treatment (ink text,
+// rule-strong underline, forest-ink hover).
 export function SpreadsheetDownloadLinks({
   schoolId,
   year,
@@ -22,28 +24,12 @@ export function SpreadsheetDownloadLinks({
     });
   }
 
-  const linkStyle = {
-    color: "var(--forest)",
-    textDecorationColor: "var(--rule-strong)",
-    textUnderlineOffset: 3,
-  } as const;
-
   return (
     <span className="inline-flex items-baseline gap-3 text-sm">
-      <a
-        href={`${base}/cds.xlsx`}
-        className="underline hover:text-[var(--forest-ink)]"
-        style={linkStyle}
-        onClick={() => track("xlsx")}
-      >
+      <a href={`${base}/cds.xlsx`} onClick={() => track("xlsx")}>
         Download spreadsheet
       </a>
-      <a
-        href={`${base}/cds.csv`}
-        className="underline hover:text-[var(--forest-ink)]"
-        style={linkStyle}
-        onClick={() => track("csv")}
-      >
+      <a href={`${base}/cds.csv`} onClick={() => track("csv")}>
         CSV
       </a>
     </span>
