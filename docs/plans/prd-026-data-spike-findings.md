@@ -33,13 +33,18 @@ audit logic and artifact invariants: `python3 -m pytest tools/discovery/`.
 | States represented | ≥ 15 | **53** (incl. DC/territories) | PASS |
 | Both control types | both | 480 private-nonprofit / 415 public | PASS |
 | Rounds with ≥ 4 schools | 100% | 20/20 | PASS |
-| Rounds with 6 schools | ≥ 80% | 17/20 (85%) | PASS |
+| Rounds with 6 schools | ≥ 80% | 16/20 (80%)² | PASS |
 | Anchor fill | 100% | 100% | PASS |
 | Flexible-path fill | ≥ 80% | 100% | PASS |
 | Contrast fill | ≥ 50% | 60% | PASS |
 | Affordability-context fill | ≥ 70% | 95% | PASS |
 | Geographic-wildcard fill (where possible) | ≥ 70% | 90% | PASS |
 | Reason references resolve to loaded evidence¹ | 100% | 100% | PASS |
+
+² Originally measured 17/20; the pre-landing hardening in PR #107 (concept-
+scoped flexible slot) correctly tightened one Montana scenario from 6 to 5
+schools. 16/20 is the value the shipped code reproduces; the gate verdict is
+unchanged.
 
 ¹ Spike-level check: every emitted reason reference must resolve to loaded
 evidence for that school (qualifying award counts for academic reasons, a live

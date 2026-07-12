@@ -10,8 +10,9 @@ Inputs (fetch first — see docs/plans/prd-026-data-spike-findings.md):
   scratch/discovery-spike/C2024_a.csv        IPEDS completions, 2023-24 awards
   scratch/discovery-spike/directory.json      institution_directory dump
   scratch/discovery-spike/scorecard.json      scorecard_summary dump
-  data/discovery/ontology/v1.json       interest-family edges
+  data/discovery/ontology/v1.json             interest-family edges
   data/discovery/scenarios/v1.json            20 scenario fixtures
+  data/discovery/policy/v1.json               discovery_policy_v1 (executed)
 
 Outputs:
   scratch/discovery-spike/audit.json          full machine-readable audit
@@ -42,12 +43,17 @@ SPIKE = ROOT / "scratch" / "discovery-spike"
 
 BACHELOR_AWLEVEL = "5"
 FIRST_MAJOR = "1"
-MAX_PER_STATE = 2
-MAX_PER_CONTROL = 3
 
-# Scorecard locale codes: 11-13 city, 21-23 suburb, 31-33 town, 41-43 rural.
-TOWNISH = {31, 32, 33, 41, 42, 43}
-BIG_CITY = {11, 12}
+# The versioned policy is the single source of truth for matchers, weights,
+# slots, diversity caps, and relaxation (PRD 026 §7-8). This script is its
+# reference implementation.
+POLICY = json.load(open(ROOT / "data" / "discovery" / "policy" / "v1.json"))
+SCORING = POLICY["scoring"]
+DIVERSITY = POLICY["round_composition"]["diversity"]
+MAX_PER_STATE = DIVERSITY["max_per_state"]
+MAX_PER_CONTROL = DIVERSITY["max_per_control"]
+ESSENTIAL = SCORING["essential_threshold"]
+SUPPORTED_KEYS = frozenset(POLICY["matchers"])
 
 
 def haversine_miles(lat1, lon1, lat2, lon2):
@@ -104,56 +110,76 @@ def edge_sets(ontology, concepts=None):
     return direct, adjacent - direct
 
 
-def matcher(key, school):
-    """Prototype evidence matchers -> -1 | 0 | +1 (0 = unknown/unsupported)."""
-    sc = school["scorecard"] or {}
-    enr = school["enrollment"]
-    loc = sc.get("locale")
-    if loc is not None:
-        loc = int(loc)
-    if key == "scale.small":
-        if enr is None:
-            return 0
-        return 1 if enr <= 5000 else (-1 if enr >= 15000 else 0)
-    if key == "scale.large":
-        if enr is None:
-            return 0
-        return 1 if enr >= 15000 else (-1 if enr <= 5000 else 0)
-    if key == "place.big_city":
-        if loc is None:
-            return 0
-        return 1 if loc in BIG_CITY else (-1 if loc in TOWNISH else 0)
-    if key == "place.quiet_setting":
-        if loc is None:
-            return 0
-        return 1 if loc in TOWNISH else (-1 if loc in BIG_CITY else 0)
-    if key == "cost.need_aid_strength":
-        np = sc.get("net_price_0_30k")
-        if np is None:
-            return 0
-        return 1 if np < 15000 else (-1 if np > 25000 else 0)
-    if key == "cost.low_debt":
-        d = sc.get("median_debt_completers")
-        if d is None:
-            return 0
-        return 1 if d < 20000 else (-1 if d > 27000 else 0)
-    if key == "out.retention":
-        r = sc.get("retention_rate_ft")
-        if r is None:
-            return 0
-        return 1 if r >= 0.85 else (-1 if r < 0.70 else 0)
-    if key == "out.four_year_grad":
-        g = sc.get("graduation_rate_4yr")
-        if g is None:
-            return 0
-        return 1 if g >= 0.60 else (-1 if g < 0.35 else 0)
-    return 0  # unsupported in the spike
+def _sc(school):
+    return school["scorecard"] or {}
 
 
-SUPPORTED_KEYS = {
-    "scale.small", "scale.large", "place.big_city", "place.quiet_setting",
-    "cost.need_aid_strength", "cost.low_debt", "out.retention", "out.four_year_grad",
+def _locale(school):
+    v = _sc(school).get("locale")
+    return int(v) if v is not None else None
+
+
+# Evidence-key resolvers for the sources this spike loads. Keys without a
+# resolver (cds.*, ipeds.ic.*, distance.*, merit_profile.*) resolve to None,
+# so their matchers return 0 (unknown) — absence never means mismatch.
+FIELD_RESOLVERS = {
+    "directory.enrollment": lambda s: s["enrollment"],
+    "program.related_cip_count": lambda s: (len(s["direct"]) + len(s["adjacent"])) or None,
+    "scorecard.locale": _locale,
+    "scorecard.net_price_0_30k": lambda s: _sc(s).get("net_price_0_30k"),
+    "scorecard.median_debt_completers": lambda s: _sc(s).get("median_debt_completers"),
+    "scorecard.retention_rate_ft": lambda s: _sc(s).get("retention_rate_ft"),
+    "scorecard.graduation_rate_4yr": lambda s: _sc(s).get("graduation_rate_4yr"),
+    "scorecard.earnings_10yr_median": lambda s: _sc(s).get("earnings_10yr_median"),
+    "scorecard.pell_grant_rate": lambda s: _sc(s).get("pell_grant_rate"),
 }
+
+
+def _band_test(value, band):
+    ops = {"gte": lambda v, t: v >= t, "gt": lambda v, t: v > t,
+           "lte": lambda v, t: v <= t, "lt": lambda v, t: v < t}
+    return all(ops[op](value, t) for op, t in band.items())
+
+
+def matcher(key, school):
+    """Execute the policy matcher for key -> -1 | 0 | +1."""
+    spec = POLICY["matchers"].get(key)
+    if spec is None:
+        return 0  # unsupported key: ledger-only
+    vals = []
+    for ek in spec["evidence_keys"]:
+        resolve = FIELD_RESOLVERS.get(ek)
+        v = resolve(school) if resolve else None
+        if v is not None:
+            vals.append(v)
+    kind = spec["kind"]
+    if kind == "offering_any":
+        return 1 if any(vals) else 0
+    if kind == "checklist_membership":
+        for v in vals:
+            if isinstance(v, (list, set)):
+                hits = sum(1 for m in spec["members"] if m in v)
+                if hits >= spec.get("min_members", 1):
+                    return 1
+        return 0
+    if kind == "category_set":
+        if not vals:
+            return 0
+        v = vals[0]
+        if v in spec.get("seek_set", []):
+            return 1
+        if v in spec.get("opposite_set", []):
+            return -1
+        return 0
+    # numeric kinds: numeric_band, numeric_band_inverted, count_band
+    if not vals:
+        return 0
+    v = max(vals) if spec.get("aggregation") == "max" else vals[0]
+    if _band_test(v, spec["seek"]):
+        return 1
+    if _band_test(v, spec["opposite"]):
+        return -1
+    return 0
 
 
 def build_pool(directory, scorecard, awards, family_direct, family_adjacent):
@@ -206,12 +232,12 @@ def relevance(school, prefs, direct_cips, adjacent_cips, in_preferred):
     score = 0
     reasons = []
     if any(c in direct_cips for c in school["direct"]):
-        score += 6
+        score += SCORING["academic_match"]["direct"]
         reasons.append(("academic_direct", "program.recent_awards_direct"))
     elif any(c in adjacent_cips for c in school["adjacent"]) or any(
         c in adjacent_cips for c in school["direct"]
     ):
-        score += 3
+        score += SCORING["academic_match"]["adjacent"]
         reasons.append(("academic_adjacent", "program.recent_awards_adjacent"))
     for p in prefs:
         key, agg = p["key"], p["aggregate"]
@@ -223,7 +249,8 @@ def relevance(school, prefs, direct_cips, adjacent_cips, in_preferred):
             if agg * m > 0:
                 reasons.append((key, f"match:{key}"))
     if in_preferred:
-        score += 2  # radius contribution; not a displayable reason (PRD shows distance itself)
+        # radius contribution; not a displayable reason (PRD shows distance itself)
+        score += SCORING["inside_preferred_radius"]
     return score, reasons
 
 
@@ -407,7 +434,7 @@ def mismatches_exactly_one_interesting(school, prefs):
             continue
         m = matcher(p["key"], school)
         agg = p["aggregate"]
-        if abs(agg) >= 3:  # essential seek/avoid must not mismatch
+        if abs(agg) >= ESSENTIAL:  # essential seek/avoid must not mismatch
             if (agg > 0 and m == -1) or (agg < 0 and m == 1):
                 return False
         elif agg != 0:  # any sub-essential aggregate counts as interesting
@@ -516,7 +543,9 @@ def main():
             file_manifest(SPIKE / "scorecard.json"),
             file_manifest(ROOT / "data/discovery/ontology/v1.json"),
             file_manifest(ROOT / "data/discovery/scenarios/v1.json"),
+            file_manifest(ROOT / "data/discovery/policy/v1.json"),
         ],
+        "policy_version": POLICY["policy_version"],
         "completions_release": "C2024_A provisional (2023-24 awards, MAJORNUM=1, AWLEVEL=05)",
         "ontology_version": ontology["ontology_version"],
         "scenario_corpus_version": scenarios["scenario_corpus_version"],

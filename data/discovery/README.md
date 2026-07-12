@@ -30,6 +30,13 @@ later. Code contributions elsewhere in the repo are unaffected.
   approved 2026-07-12).
 - `scenarios/v1.json` — versioned synthetic geography/preference
   fixtures for the feasibility gate (5 origins x 4 profiles).
+- `policy/v1.json` — `discovery_policy_v1`: eligibility predicate,
+  scoring constants, evidence matchers for every data/proxy preference
+  key (thresholds are initial calibration pending pilot evidence), slot
+  composition, diversity + relaxation, tie-breaks, cooldowns,
+  diagnostics schema, and reason templates. Executed by
+  `tools/discovery/data_spike.py`; invariants pinned by
+  `tools/discovery/test_policy.py`.
 
 ## Versioning rules
 
