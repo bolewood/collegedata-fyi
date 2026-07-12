@@ -8,6 +8,7 @@ import type {
   DiscoveryCard,
   KeyAggregate,
   PreferenceSignal,
+  SchoolReaction,
 } from "./types";
 
 // Bucket → signal mapping per the PRD table. "not_important" retains the
@@ -72,6 +73,50 @@ export function aggregateKeys(signals: PreferenceSignal[]): KeyAggregate[] {
     });
   }
   return out.sort((a, b) => a.key.localeCompare(b.key));
+}
+
+// School reactions become preference signals of magnitude 1 (PRD 026 §3,
+// §10). Only one active reaction signal may exist per (school, key): a later
+// reaction on the same pair supersedes the earlier one.
+export function buildReactionSignals(
+  reactions: SchoolReaction[],
+): PreferenceSignal[] {
+  const latest = new Map<string, SchoolReaction>();
+  for (const r of reactions) {
+    if (!r.key) continue;
+    if (r.reaction !== "more_like_this" && r.reaction !== "not_for_me") continue;
+    latest.set(`${r.school_id}:${r.key}`, r);
+  }
+  return [...latest.entries()].map(([pair, r]) => ({
+    signal_id: `reaction:${pair}`,
+    key: r.key as string,
+    domain: "community",
+    direction: r.reaction === "more_like_this" ? ("seek" as const) : ("avoid" as const),
+    strength: "interesting" as const,
+    magnitude: 1,
+    source: "school_reaction" as const,
+    source_id: r.school_id,
+    confidence: "explicit" as const,
+    active: true,
+  }));
+}
+
+// Combined card + reaction aggregates for round composition: conflicted keys
+// contribute zero (but stay visible in the ledger).
+export function buildRoundAggregates(
+  responses: Record<string, Bucket>,
+  cards: DiscoveryCard[],
+  reactions: SchoolReaction[],
+): Record<string, number> {
+  const signals = [
+    ...buildSignals(responses, cards),
+    ...buildReactionSignals(reactions),
+  ];
+  const out: Record<string, number> = {};
+  for (const agg of aggregateKeys(signals)) {
+    out[agg.key] = agg.conflicted ? 0 : agg.total;
+  }
+  return out;
 }
 
 export interface LedgerRow {

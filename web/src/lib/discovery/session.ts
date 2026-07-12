@@ -16,7 +16,7 @@ const SESSION_TTL_MS = SESSION_TTL_DAYS * 24 * 60 * 60 * 1000;
 
 export function newSession(now: Date): DiscoverySessionV1 {
   return {
-    schema_version: 1,
+    schema_version: 2,
     created_at: now.toISOString(),
     expires_at: new Date(now.getTime() + SESSION_TTL_MS).toISOString(),
     card_deck_version: DECK_VERSION,
@@ -26,6 +26,10 @@ export function newSession(now: Date): DiscoverySessionV1 {
     sort_index: 0,
     geography: null,
     card_responses: {},
+    concepts: [],
+    reactions: [],
+    current_round: 0,
+    round_history: [],
   };
 }
 
@@ -34,7 +38,7 @@ export function isCompatible(
   now: Date,
 ): boolean {
   return (
-    session.schema_version === 1 &&
+    session.schema_version === 2 &&
     session.card_deck_version === DECK_VERSION &&
     session.card_library_version === CARD_LIBRARY_VERSION &&
     session.policy_version === POLICY_VERSION &&
@@ -42,7 +46,7 @@ export function isCompatible(
   );
 }
 
-const STEPS = new Set(["intro", "geography", "sort", "ledger"]);
+const STEPS = new Set(["intro", "geography", "sort", "ledger", "interests", "rounds", "shelf"]);
 const BUCKET_SET = new Set<string>(BUCKETS);
 
 // A version-stamped session can still be shape-corrupted (tampered or
@@ -73,6 +77,15 @@ export function hasValidShape(session: DiscoverySessionV1): boolean {
     if (geo.preferred_miles !== null && typeof geo.preferred_miles !== "number") return false;
     if (geo.maximum_miles !== null && typeof geo.maximum_miles !== "number") return false;
     if (typeof geo.allow_wildcards !== "boolean") return false;
+  }
+  if (!Array.isArray(session.concepts) || !session.concepts.every((c) => typeof c === "string")) {
+    return false;
+  }
+  if (!Array.isArray(session.reactions) || !Array.isArray(session.round_history)) {
+    return false;
+  }
+  if (!Number.isInteger(session.current_round) || session.current_round < 0) {
+    return false;
   }
   return true;
 }
