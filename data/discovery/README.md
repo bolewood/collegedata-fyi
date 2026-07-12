@@ -32,7 +32,8 @@ later. Code contributions elsewhere in the repo are unaffected.
   fixtures for the feasibility gate (5 origins x 4 profiles).
 - `geo/zip3-centroids-v1.json` — 3-digit ZIP prefix centroids (Census
   gazetteer, public domain) for browser-local, coarse distance resolution
-  (PRD Q5 v1 answer: the full ZIP never leaves the device).
+  (PRD Q5 v1 answer: the full ZIP never leaves the device). Regenerated
+  bit-identically by `tools/discovery/build_zip3_centroids.py`.
 - `policy/v1.json` — `discovery_policy_v1`: eligibility predicate,
   scoring constants, evidence matchers for every data/proxy preference
   key (thresholds are initial calibration pending pilot evidence), slot

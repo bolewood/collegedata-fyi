@@ -63,6 +63,21 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
 
 ### Frontend polish
 
+- **PRD 026 discovery rounds follow-ups.** The rounds engine shipped 2026-07-12
+  (interests → six-school rounds → reactions → research shelf, composed in the
+  browser from the versioned evidence bundle; see the PRD 026 Implementation
+  Addendum). Remaining slices: (a) the schema-constrained AI reflection step —
+  the deterministic path is live and reflection is strictly additive per the
+  PRD's AI-unavailability requirement; (b) flip `/discover` into the browse nav
+  slot per the addendum's owner decision and remove the
+  `robots: { index: false, follow: false }` metadata in
+  `web/src/app/discover/page.tsx` once the surface is meant to be found;
+  (c) grow CDS-backed evidence matchers as extraction coverage expands — the
+  v1 bundle leans on IPEDS completions, directory, and Scorecard fields, and
+  the policy's matcher layer is where CDS fields plug in without a bundle
+  format change. **Effort:** (b) is ~30 min; (a) and (c) are focused
+  follow-up slices.
+
 - **Academic positioning v1.1 follow-ups from pre-merge review.** Confirm
   whether the range strip should plot the student's score as a tick or whether
   the v1 right-column score display is the intended design decision; add focused
