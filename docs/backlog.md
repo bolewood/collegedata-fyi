@@ -72,7 +72,9 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
   card; consider route-mocked Playwright fixtures so live Bowdoin/MIT extraction
   changes cannot make the e2e flaky. **Effort:** ~0.5-1 day.
 
-- **Queryable browser CSV export pagination.** The `/browse` MVP exports the current browser result set through one Edge Function call capped at `page_size=500`. That is fine for current launch filters, but a broad export should page through all results or move export server-side before result sets grow. **Effort:** ~1 hour.
+- **Queryable browser CSV export pagination.** The `/browse` MVP exports the current browser result set through one Edge Function call capped at `page_size=500`. That is fine for current launch filters, but a broad export should page through all results or move export server-side before result sets grow. The dependency-free XLSX/CSV writer shipped for PRD 025 (`web/src/lib/xlsx.ts`) is reusable for a server-side `/browse` export. **Effort:** ~1 hour.
+
+- **Spreadsheet download follow-ups (PRD 025).** All-years-per-school workbook (`/schools/{id}/cds.xlsx`, one column per year for trend analysis); match-list builder XLSX export; list the per-school download URLs in `llms.txt` and the friendly-API docs. See `docs/prd/025-school-spreadsheet-download.md` for the decision log.
 
 - **OG images.** Per-school social cards with school name + key stats. Would improve link previews on Twitter/Slack/Discord. **Effort:** ~1 hour using Next.js OG image generation.
 
