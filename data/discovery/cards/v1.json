@@ -9,7 +9,8 @@
     "Preference keys are unipolar qualities (e.g. scale.large and scale.small are distinct keys, both phrased as positive experiences). Opposing qualities are reconciled by evidence matchers in discovery_policy_v1, not by same-key conflict detection; same-key seek/avoid conflicts arise from reactions and edits per PRD 026 §3.",
     "Evidence keys are declarative source.field pointers, provisional until discovery_policy_v1 binds matchers. cds.* keys depend on corpus extraction coverage — the Milestone 0 data spike must report per-card coverage before any 'data' card is trusted in a recommendation reason.",
     "Protected-status preference cards (LGBTQ+ climate, disability support, campus safety) were considered and deferred past v1 by owner decision 2026-07-12.",
-    "The 20-24 card opening deck is a separate selection artifact drawn from this library (pending)."
+    "The 20-24 card opening deck is a separate selection artifact drawn from this library (pending).",
+    "2026-07-12 spike amendment: early-research upgraded reflection_only -> data (v2). The 2024-25 CDS schema includes E.117 'Undergraduate Research' in Section E1; 245 schools have it extracted. Counts: 25 data / 12 proxy / 17 reflection-only."
   ],
   "limitations": {
     "lim.reflection_only": "No verified data source supports this yet, so it shapes your reflection and preference ledger but never explains why a school appears.",
@@ -38,8 +39,13 @@
       "evidence_status": "data",
       "statement": "I can try classes in a few different subjects before committing to a major.",
       "explanation": "Schools with many related programs give you real room to explore before you declare.",
-      "preference_keys": ["academic.breadth"],
-      "evidence_keys": ["ipeds.cip_breadth", "program.related_cip_count"],
+      "preference_keys": [
+        "academic.breadth"
+      ],
+      "evidence_keys": [
+        "ipeds.cip_breadth",
+        "program.related_cip_count"
+      ],
       "limitation_id": "lim.cip_breadth"
     },
     {
@@ -50,8 +56,12 @@
       "evidence_status": "data",
       "statement": "If I change my mind about my major, I won't have to transfer.",
       "explanation": "When a school awards degrees across several related fields, changing direction usually means changing departments, not schools.",
-      "preference_keys": ["academic.pivot_flexibility"],
-      "evidence_keys": ["program.related_cip_count"],
+      "preference_keys": [
+        "academic.pivot_flexibility"
+      ],
+      "evidence_keys": [
+        "program.related_cip_count"
+      ],
       "limitation_id": "lim.cip_breadth"
     },
     {
@@ -62,8 +72,13 @@
       "evidence_status": "data",
       "statement": "I can combine two interests into one degree — double major, or design my own.",
       "explanation": "Some schools formally support double majors and student-designed majors.",
-      "preference_keys": ["academic.combine_interests"],
-      "evidence_keys": ["cds.e1.double_major", "cds.e1.student_designed_major"],
+      "preference_keys": [
+        "academic.combine_interests"
+      ],
+      "evidence_keys": [
+        "cds.e1.double_major",
+        "cds.e1.student_designed_major"
+      ],
       "limitation_id": "lim.e1_offering"
     },
     {
@@ -74,8 +89,12 @@
       "evidence_status": "data",
       "statement": "There's an honors path with smaller, deeper classes if I want the challenge.",
       "explanation": "Honors programs offer a more intense academic track inside a larger school.",
-      "preference_keys": ["academic.honors_program"],
-      "evidence_keys": ["cds.e1.honors_program"],
+      "preference_keys": [
+        "academic.honors_program"
+      ],
+      "evidence_keys": [
+        "cds.e1.honors_program"
+      ],
       "limitation_id": "lim.e1_offering"
     },
     {
@@ -86,8 +105,12 @@
       "evidence_status": "data",
       "statement": "I can take classes at nearby colleges too, not just my own.",
       "explanation": "Cross-registration agreements let you enroll in courses at partner schools.",
-      "preference_keys": ["academic.cross_registration"],
-      "evidence_keys": ["cds.e1.cross_registration"],
+      "preference_keys": [
+        "academic.cross_registration"
+      ],
+      "evidence_keys": [
+        "cds.e1.cross_registration"
+      ],
       "limitation_id": "lim.e1_offering"
     },
     {
@@ -98,8 +121,12 @@
       "evidence_status": "data",
       "statement": "I can speed up — graduate early or start advanced work as an undergrad.",
       "explanation": "Accelerated programs compress the path to a degree or blend into graduate work.",
-      "preference_keys": ["academic.accelerated"],
-      "evidence_keys": ["cds.e1.accelerated_program"],
+      "preference_keys": [
+        "academic.accelerated"
+      ],
+      "evidence_keys": [
+        "cds.e1.accelerated_program"
+      ],
       "limitation_id": "lim.e1_offering"
     },
     {
@@ -110,8 +137,12 @@
       "evidence_status": "proxy",
       "statement": "Most of my classes feel like conversations, not lectures in a giant hall.",
       "explanation": "Schools report how many class sections are small, medium, and large.",
-      "preference_keys": ["class.small_discussion"],
-      "evidence_keys": ["cds.i3.class_size_distribution"],
+      "preference_keys": [
+        "class.small_discussion"
+      ],
+      "evidence_keys": [
+        "cds.i3.class_size_distribution"
+      ],
       "limitation_id": "lim.class_size"
     },
     {
@@ -122,8 +153,13 @@
       "evidence_status": "proxy",
       "statement": "My professors will actually know my name.",
       "explanation": "Smaller schools and lower student-faculty ratios make personal attention more likely — but they're only proxies.",
-      "preference_keys": ["class.faculty_known_by_name"],
-      "evidence_keys": ["cds.i2.student_faculty_ratio", "directory.enrollment"],
+      "preference_keys": [
+        "class.faculty_known_by_name"
+      ],
+      "evidence_keys": [
+        "cds.i2.student_faculty_ratio",
+        "directory.enrollment"
+      ],
       "limitation_id": "lim.size_proxy"
     },
     {
@@ -134,7 +170,9 @@
       "evidence_status": "reflection_only",
       "statement": "Going to office hours and getting real help is normal here.",
       "explanation": "Whether students actually use office hours is a culture question no dataset answers yet.",
-      "preference_keys": ["class.office_hours_culture"],
+      "preference_keys": [
+        "class.office_hours_culture"
+      ],
       "evidence_keys": [],
       "limitation_id": "lim.reflection_only"
     },
@@ -146,7 +184,9 @@
       "evidence_status": "reflection_only",
       "statement": "Professors — not teaching assistants — teach most of my courses.",
       "explanation": "Public data counts faculty but doesn't say who leads your actual class sessions.",
-      "preference_keys": ["class.faculty_taught"],
+      "preference_keys": [
+        "class.faculty_taught"
+      ],
       "evidence_keys": [],
       "limitation_id": "lim.reflection_only"
     },
@@ -158,7 +198,9 @@
       "evidence_status": "reflection_only",
       "statement": "There are professors here working on problems I care about.",
       "explanation": "Matching faculty research to your interests takes department-level digging the data can't do yet.",
-      "preference_keys": ["class.faculty_in_field"],
+      "preference_keys": [
+        "class.faculty_in_field"
+      ],
       "evidence_keys": [],
       "limitation_id": "lim.reflection_only"
     },
@@ -170,8 +212,12 @@
       "evidence_status": "data",
       "statement": "I can get course credit for internships.",
       "explanation": "Schools report whether internships can count toward your degree.",
-      "preference_keys": ["opp.internship_credit"],
-      "evidence_keys": ["cds.e1.internships"],
+      "preference_keys": [
+        "opp.internship_credit"
+      ],
+      "evidence_keys": [
+        "cds.e1.internships"
+      ],
       "limitation_id": "lim.e1_offering"
     },
     {
@@ -182,8 +228,12 @@
       "evidence_status": "data",
       "statement": "I could alternate semesters of work and school and graduate with a résumé.",
       "explanation": "Cooperative education formally weaves paid work terms into the degree.",
-      "preference_keys": ["opp.coop"],
-      "evidence_keys": ["cds.e1.cooperative_education"],
+      "preference_keys": [
+        "opp.coop"
+      ],
+      "evidence_keys": [
+        "cds.e1.cooperative_education"
+      ],
       "limitation_id": "lim.e1_offering"
     },
     {
@@ -194,21 +244,29 @@
       "evidence_status": "proxy",
       "statement": "Studying abroad is normal here, not a rare exception.",
       "explanation": "Schools report offering study abroad; how many students actually go isn't in the data.",
-      "preference_keys": ["opp.study_abroad"],
-      "evidence_keys": ["cds.e1.study_abroad"],
+      "preference_keys": [
+        "opp.study_abroad"
+      ],
+      "evidence_keys": [
+        "cds.e1.study_abroad"
+      ],
       "limitation_id": "lim.e1_offering"
     },
     {
       "card_id": "early-research",
-      "version": 1,
+      "version": 2,
       "group": "experiential",
       "domain": "opportunity",
-      "evidence_status": "reflection_only",
+      "evidence_status": "data",
       "statement": "Undergraduates join real research early — not just seniors.",
-      "explanation": "Real research access varies by department and professor; no public dataset measures it.",
-      "preference_keys": ["opp.undergrad_research"],
-      "evidence_keys": [],
-      "limitation_id": "lim.reflection_only"
+      "explanation": "The 2024-25 CDS added Undergraduate Research to its special study options, so schools now report offering it.",
+      "preference_keys": [
+        "opp.undergrad_research"
+      ],
+      "evidence_keys": [
+        "cds.e1.undergraduate_research"
+      ],
+      "limitation_id": "lim.e1_offering"
     },
     {
       "card_id": "hands-on-classes",
@@ -218,7 +276,9 @@
       "evidence_status": "reflection_only",
       "statement": "Classes get out of the classroom — fieldwork, labs, studios, building things.",
       "explanation": "How much learning happens outside lecture halls is a curriculum-design question the data can't see.",
-      "preference_keys": ["opp.experiential_courses"],
+      "preference_keys": [
+        "opp.experiential_courses"
+      ],
       "evidence_keys": [],
       "limitation_id": "lim.reflection_only"
     },
@@ -230,8 +290,12 @@
       "evidence_status": "data",
       "statement": "Independent study is real — I can pursue a question no course covers.",
       "explanation": "Schools report whether students can earn credit for self-directed projects.",
-      "preference_keys": ["opp.independent_study"],
-      "evidence_keys": ["cds.e1.independent_study"],
+      "preference_keys": [
+        "opp.independent_study"
+      ],
+      "evidence_keys": [
+        "cds.e1.independent_study"
+      ],
       "limitation_id": "lim.e1_offering"
     },
     {
@@ -242,8 +306,12 @@
       "evidence_status": "data",
       "statement": "I can pick up a teaching certificate along the way.",
       "explanation": "Some schools let you earn state teaching certification alongside your major.",
-      "preference_keys": ["opp.teacher_certification"],
-      "evidence_keys": ["cds.e1.teacher_certification"],
+      "preference_keys": [
+        "opp.teacher_certification"
+      ],
+      "evidence_keys": [
+        "cds.e1.teacher_certification"
+      ],
       "limitation_id": "lim.e1_offering"
     },
     {
@@ -254,8 +322,13 @@
       "evidence_status": "proxy",
       "statement": "I can walk from campus into a real town — coffee, food, places to be.",
       "explanation": "Federal locale codes hint at town-and-campus settings, but walkability itself isn't measured.",
-      "preference_keys": ["place.walkable_town"],
-      "evidence_keys": ["directory.locale", "directory.coordinates"],
+      "preference_keys": [
+        "place.walkable_town"
+      ],
+      "evidence_keys": [
+        "directory.locale",
+        "directory.coordinates"
+      ],
       "limitation_id": "lim.locale_proxy"
     },
     {
@@ -266,8 +339,12 @@
       "evidence_status": "data",
       "statement": "The city IS my campus — internships, music, food all around me.",
       "explanation": "Schools in large cities put urban life at your doorstep.",
-      "preference_keys": ["place.big_city"],
-      "evidence_keys": ["directory.locale"],
+      "preference_keys": [
+        "place.big_city"
+      ],
+      "evidence_keys": [
+        "directory.locale"
+      ],
       "limitation_id": "lim.locale_proxy"
     },
     {
@@ -278,7 +355,9 @@
       "evidence_status": "reflection_only",
       "statement": "A classic campus — green quads, old buildings, a place that feels like somewhere.",
       "explanation": "Campus beauty and feel are real preferences, but no dataset scores them.",
-      "preference_keys": ["place.classic_campus"],
+      "preference_keys": [
+        "place.classic_campus"
+      ],
       "evidence_keys": [],
       "limitation_id": "lim.reflection_only"
     },
@@ -290,7 +369,9 @@
       "evidence_status": "reflection_only",
       "statement": "Mountains, trails, or water close enough for a normal weekend.",
       "explanation": "Outdoor access could be derived from geography data later; it isn't loaded yet.",
-      "preference_keys": ["place.outdoors_access"],
+      "preference_keys": [
+        "place.outdoors_access"
+      ],
       "evidence_keys": [],
       "limitation_id": "lim.reflection_only"
     },
@@ -302,7 +383,9 @@
       "evidence_status": "reflection_only",
       "statement": "Warm most of the school year sounds right to me.",
       "explanation": "Climate data isn't loaded yet, so this shapes reflection only.",
-      "preference_keys": ["place.warm_climate"],
+      "preference_keys": [
+        "place.warm_climate"
+      ],
       "evidence_keys": [],
       "limitation_id": "lim.reflection_only"
     },
@@ -314,7 +397,9 @@
       "evidence_status": "reflection_only",
       "statement": "I want real seasons — snow included.",
       "explanation": "Climate data isn't loaded yet, so this shapes reflection only.",
-      "preference_keys": ["place.four_seasons"],
+      "preference_keys": [
+        "place.four_seasons"
+      ],
       "evidence_keys": [],
       "limitation_id": "lim.reflection_only"
     },
@@ -326,8 +411,13 @@
       "evidence_status": "data",
       "statement": "A quieter setting where campus is the center of life.",
       "explanation": "Rural and town settings where most students live on campus tend to center life on the school itself.",
-      "preference_keys": ["place.quiet_setting"],
-      "evidence_keys": ["directory.locale", "cds.f1.pct_college_housing"],
+      "preference_keys": [
+        "place.quiet_setting"
+      ],
+      "evidence_keys": [
+        "directory.locale",
+        "cds.f1.pct_college_housing"
+      ],
       "limitation_id": "lim.locale_proxy"
     },
     {
@@ -338,8 +428,12 @@
       "evidence_status": "data",
       "statement": "I can get to a big city for a weekend without living in one.",
       "explanation": "Distance from campus to the nearest large metro can be computed from coordinates.",
-      "preference_keys": ["place.metro_access"],
-      "evidence_keys": ["distance.metro_proximity"],
+      "preference_keys": [
+        "place.metro_access"
+      ],
+      "evidence_keys": [
+        "distance.metro_proximity"
+      ],
       "limitation_id": "lim.metro_distance"
     },
     {
@@ -350,7 +444,9 @@
       "evidence_status": "reflection_only",
       "statement": "An airport with real flight options is within reach.",
       "explanation": "Airport proximity data isn't loaded yet, so this shapes reflection only.",
-      "preference_keys": ["place.airport_access"],
+      "preference_keys": [
+        "place.airport_access"
+      ],
       "evidence_keys": [],
       "limitation_id": "lim.reflection_only"
     },
@@ -362,8 +458,12 @@
       "evidence_status": "data",
       "statement": "Most students live on campus, so evenings and weekends have life.",
       "explanation": "Schools report what share of students live in college housing.",
-      "preference_keys": ["life.residential_campus"],
-      "evidence_keys": ["cds.f1.pct_college_housing"],
+      "preference_keys": [
+        "life.residential_campus"
+      ],
+      "evidence_keys": [
+        "cds.f1.pct_college_housing"
+      ],
       "limitation_id": "lim.housing_share"
     },
     {
@@ -374,8 +474,13 @@
       "evidence_status": "proxy",
       "statement": "Campus doesn't empty out on Friday afternoon.",
       "explanation": "High on-campus housing and many students from far away make a weekend campus more likely — but it's a proxy.",
-      "preference_keys": ["life.weekend_vitality"],
-      "evidence_keys": ["cds.f1.pct_college_housing", "cds.f1.pct_out_of_state"],
+      "preference_keys": [
+        "life.weekend_vitality"
+      ],
+      "evidence_keys": [
+        "cds.f1.pct_college_housing",
+        "cds.f1.pct_out_of_state"
+      ],
       "limitation_id": "lim.housing_share"
     },
     {
@@ -386,8 +491,13 @@
       "evidence_status": "data",
       "statement": "Greek life is a big part of the social scene.",
       "explanation": "Schools report what share of students join fraternities and sororities.",
-      "preference_keys": ["life.greek_scene"],
-      "evidence_keys": ["cds.f1.pct_fraternity", "cds.f1.pct_sorority"],
+      "preference_keys": [
+        "life.greek_scene"
+      ],
+      "evidence_keys": [
+        "cds.f1.pct_fraternity",
+        "cds.f1.pct_sorority"
+      ],
       "limitation_id": "lim.participation_share"
     },
     {
@@ -398,8 +508,12 @@
       "evidence_status": "proxy",
       "statement": "There's a real arts scene — ensembles, theater, galleries open to every major.",
       "explanation": "Schools list arts activities in the CDS; the checklist shows existence, not vibrancy.",
-      "preference_keys": ["life.arts_scene"],
-      "evidence_keys": ["cds.f1.activities"],
+      "preference_keys": [
+        "life.arts_scene"
+      ],
+      "evidence_keys": [
+        "cds.f1.activities"
+      ],
       "limitation_id": "lim.activities_checklist"
     },
     {
@@ -410,8 +524,12 @@
       "evidence_status": "proxy",
       "statement": "Club and intramural sports are easy to join at any level.",
       "explanation": "Schools list intramural and club sports in the CDS activities checklist.",
-      "preference_keys": ["life.club_sports"],
-      "evidence_keys": ["cds.f1.activities"],
+      "preference_keys": [
+        "life.club_sports"
+      ],
+      "evidence_keys": [
+        "cds.f1.activities"
+      ],
       "limitation_id": "lim.activities_checklist"
     },
     {
@@ -422,7 +540,9 @@
       "evidence_status": "reflection_only",
       "statement": "Housing is guaranteed beyond freshman year.",
       "explanation": "Housing guarantees aren't reported in structured data yet.",
-      "preference_keys": ["life.housing_guaranteed"],
+      "preference_keys": [
+        "life.housing_guaranteed"
+      ],
       "evidence_keys": [],
       "limitation_id": "lim.reflection_only"
     },
@@ -434,8 +554,13 @@
       "evidence_status": "data",
       "statement": "I want the energy of a big school — hundreds of clubs, a huge catalog.",
       "explanation": "Enrollment and program breadth show a school's scale directly.",
-      "preference_keys": ["scale.large"],
-      "evidence_keys": ["directory.enrollment", "ipeds.cip_breadth"],
+      "preference_keys": [
+        "scale.large"
+      ],
+      "evidence_keys": [
+        "directory.enrollment",
+        "ipeds.cip_breadth"
+      ],
       "limitation_id": "lim.size_proxy"
     },
     {
@@ -446,8 +571,12 @@
       "evidence_status": "data",
       "statement": "I want a school small enough that I'm a person, not a number.",
       "explanation": "Enrollment shows scale directly; whether small feels personal is up to the school.",
-      "preference_keys": ["scale.small"],
-      "evidence_keys": ["directory.enrollment"],
+      "preference_keys": [
+        "scale.small"
+      ],
+      "evidence_keys": [
+        "directory.enrollment"
+      ],
       "limitation_id": "lim.size_proxy"
     },
     {
@@ -458,8 +587,12 @@
       "evidence_status": "proxy",
       "statement": "I keep seeing the same people across classes and clubs — and I like that.",
       "explanation": "Smaller communities overlap more by nature, but the feeling itself isn't measured.",
-      "preference_keys": ["scale.tight_knit"],
-      "evidence_keys": ["directory.enrollment"],
+      "preference_keys": [
+        "scale.tight_knit"
+      ],
+      "evidence_keys": [
+        "directory.enrollment"
+      ],
       "limitation_id": "lim.size_proxy"
     },
     {
@@ -470,8 +603,12 @@
       "evidence_status": "proxy",
       "statement": "Game days matter — big crowds, school colors, the whole thing.",
       "explanation": "Athletic division hints at the scale of sports culture; the culture itself isn't measured.",
-      "preference_keys": ["spirit.big_sports"],
-      "evidence_keys": ["directory.athletic_division"],
+      "preference_keys": [
+        "spirit.big_sports"
+      ],
+      "evidence_keys": [
+        "directory.athletic_division"
+      ],
       "limitation_id": "lim.division_proxy"
     },
     {
@@ -482,7 +619,9 @@
       "evidence_status": "reflection_only",
       "statement": "Traditions matter here — rituals every student shares.",
       "explanation": "Traditions are real and unmeasured; this shapes reflection only.",
-      "preference_keys": ["spirit.traditions"],
+      "preference_keys": [
+        "spirit.traditions"
+      ],
       "evidence_keys": [],
       "limitation_id": "lim.reflection_only"
     },
@@ -494,8 +633,12 @@
       "evidence_status": "proxy",
       "statement": "Faith or spiritual life has a real home on campus.",
       "explanation": "Religious affiliation is reported federally; how present faith life feels varies widely.",
-      "preference_keys": ["spirit.faith_life"],
-      "evidence_keys": ["directory.religious_affiliation"],
+      "preference_keys": [
+        "spirit.faith_life"
+      ],
+      "evidence_keys": [
+        "directory.religious_affiliation"
+      ],
       "limitation_id": "lim.affiliation"
     },
     {
@@ -506,7 +649,9 @@
       "evidence_status": "reflection_only",
       "statement": "People collaborate here — it's supportive, not cutthroat.",
       "explanation": "Academic culture is one of the most-asked-about qualities and one no dataset measures.",
-      "preference_keys": ["spirit.collaborative"],
+      "preference_keys": [
+        "spirit.collaborative"
+      ],
       "evidence_keys": [],
       "limitation_id": "lim.reflection_only"
     },
@@ -518,7 +663,9 @@
       "evidence_status": "reflection_only",
       "statement": "Service and volunteering are woven into ordinary student life.",
       "explanation": "Service culture varies by campus and isn't captured in structured data.",
-      "preference_keys": ["spirit.service"],
+      "preference_keys": [
+        "spirit.service"
+      ],
       "evidence_keys": [],
       "limitation_id": "lim.reflection_only"
     },
@@ -530,7 +677,9 @@
       "evidence_status": "reflection_only",
       "statement": "Campus is politically engaged — debate and activism are part of the conversation.",
       "explanation": "Civic energy is a genuine preference that sorts strongly both ways; no dataset measures it.",
-      "preference_keys": ["spirit.politically_engaged"],
+      "preference_keys": [
+        "spirit.politically_engaged"
+      ],
       "evidence_keys": [],
       "limitation_id": "lim.reflection_only"
     },
@@ -542,8 +691,13 @@
       "evidence_status": "data",
       "statement": "My classmates come from all over the country and the world.",
       "explanation": "Schools report what share of students come from out of state and abroad.",
-      "preference_keys": ["people.geographic_mix"],
-      "evidence_keys": ["cds.f1.pct_out_of_state", "cds.f1.pct_international"],
+      "preference_keys": [
+        "people.geographic_mix"
+      ],
+      "evidence_keys": [
+        "cds.f1.pct_out_of_state",
+        "cds.f1.pct_international"
+      ],
       "limitation_id": "lim.participation_share"
     },
     {
@@ -554,8 +708,12 @@
       "evidence_status": "data",
       "statement": "I'll meet people whose backgrounds are genuinely different from mine.",
       "explanation": "Enrollment composition is reported in federal categories with a stated year.",
-      "preference_keys": ["people.background_diversity"],
-      "evidence_keys": ["cds.b2.enrollment_composition"],
+      "preference_keys": [
+        "people.background_diversity"
+      ],
+      "evidence_keys": [
+        "cds.b2.enrollment_composition"
+      ],
       "limitation_id": "lim.composition"
     },
     {
@@ -566,8 +724,12 @@
       "evidence_status": "proxy",
       "statement": "Being first in your family at college is common and supported here.",
       "explanation": "Pell-share suggests how common first-generation and lower-income students are; support quality isn't measured.",
-      "preference_keys": ["people.first_gen_common"],
-      "evidence_keys": ["scorecard.pell_grant_rate"],
+      "preference_keys": [
+        "people.first_gen_common"
+      ],
+      "evidence_keys": [
+        "scorecard.pell_grant_rate"
+      ],
       "limitation_id": "lim.pell_proxy"
     },
     {
@@ -578,8 +740,13 @@
       "evidence_status": "data",
       "statement": "The sticker price isn't the real price — I want schools where aid is worth investigating.",
       "explanation": "Reported net prices by family income show where aid meaningfully lowers the real cost.",
-      "preference_keys": ["cost.need_aid_strength"],
-      "evidence_keys": ["scorecard.net_price_by_income", "scorecard.avg_net_price"],
+      "preference_keys": [
+        "cost.need_aid_strength"
+      ],
+      "evidence_keys": [
+        "scorecard.net_price_by_income",
+        "scorecard.avg_net_price"
+      ],
       "limitation_id": "lim.aid_no_prediction"
     },
     {
@@ -590,8 +757,12 @@
       "evidence_status": "data",
       "statement": "Merit scholarships can cut the cost even without financial need.",
       "explanation": "Schools report non-need merit aid patterns — how many students get it and how much.",
-      "preference_keys": ["cost.merit_aid"],
-      "evidence_keys": ["merit_profile.summary"],
+      "preference_keys": [
+        "cost.merit_aid"
+      ],
+      "evidence_keys": [
+        "merit_profile.summary"
+      ],
       "limitation_id": "lim.aid_no_prediction"
     },
     {
@@ -602,8 +773,13 @@
       "evidence_status": "data",
       "statement": "I want to graduate without heavy loans.",
       "explanation": "Median debt and borrowing rates show the debt picture for past students.",
-      "preference_keys": ["cost.low_debt"],
-      "evidence_keys": ["scorecard.median_debt", "scorecard.federal_loan_rate"],
+      "preference_keys": [
+        "cost.low_debt"
+      ],
+      "evidence_keys": [
+        "scorecard.median_debt",
+        "scorecard.federal_loan_rate"
+      ],
       "limitation_id": "lim.aid_no_prediction"
     },
     {
@@ -614,7 +790,9 @@
       "evidence_status": "reflection_only",
       "statement": "Working a campus job to help pay my way is realistic here.",
       "explanation": "Campus job availability isn't in structured data yet.",
-      "preference_keys": ["cost.campus_jobs"],
+      "preference_keys": [
+        "cost.campus_jobs"
+      ],
       "evidence_keys": [],
       "limitation_id": "lim.reflection_only"
     },
@@ -626,8 +804,13 @@
       "evidence_status": "data",
       "statement": "Almost everyone comes back for sophomore year — people stay because it works.",
       "explanation": "First-year retention is reported by the school and federally.",
-      "preference_keys": ["out.retention"],
-      "evidence_keys": ["cds.b22.retention", "scorecard.retention_rate_ft"],
+      "preference_keys": [
+        "out.retention"
+      ],
+      "evidence_keys": [
+        "cds.b22.retention",
+        "scorecard.retention_rate_ft"
+      ],
       "limitation_id": "lim.outcomes_cohort"
     },
     {
@@ -638,8 +821,13 @@
       "evidence_status": "data",
       "statement": "Most students finish in four years, not five or six.",
       "explanation": "Graduation rates show how reliably students actually finish on time.",
-      "preference_keys": ["out.four_year_grad"],
-      "evidence_keys": ["cds.b.four_year_grad_rate", "scorecard.completion_rate_6yr"],
+      "preference_keys": [
+        "out.four_year_grad"
+      ],
+      "evidence_keys": [
+        "cds.b.four_year_grad_rate",
+        "scorecard.completion_rate_6yr"
+      ],
       "limitation_id": "lim.outcomes_cohort"
     },
     {
@@ -650,8 +838,13 @@
       "evidence_status": "proxy",
       "statement": "There's a visible track record of graduates moving into careers.",
       "explanation": "Federal earnings data exists for past cohorts; it's evidence to inspect, never a promise of a good job.",
-      "preference_keys": ["out.career_track_record"],
-      "evidence_keys": ["scorecard.earnings_10yr", "scorecard.completion_rate_6yr"],
+      "preference_keys": [
+        "out.career_track_record"
+      ],
+      "evidence_keys": [
+        "scorecard.earnings_10yr",
+        "scorecard.completion_rate_6yr"
+      ],
       "limitation_id": "lim.outcomes_cohort"
     },
     {
@@ -662,7 +855,9 @@
       "evidence_status": "reflection_only",
       "statement": "Career help starts early, not senior year.",
       "explanation": "Career services quality and timing aren't in structured data.",
-      "preference_keys": ["out.career_services_early"],
+      "preference_keys": [
+        "out.career_services_early"
+      ],
       "evidence_keys": [],
       "limitation_id": "lim.reflection_only"
     },
@@ -674,7 +869,9 @@
       "evidence_status": "reflection_only",
       "statement": "Alumni actually answer when students reach out.",
       "explanation": "Alumni-network warmth is real and unmeasured; this shapes reflection only.",
-      "preference_keys": ["out.alumni_network"],
+      "preference_keys": [
+        "out.alumni_network"
+      ],
       "evidence_keys": [],
       "limitation_id": "lim.reflection_only"
     }
