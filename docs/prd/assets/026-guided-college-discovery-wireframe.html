@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>College discovery flow — rough wireframe</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f2f0eb; color: #242424; font: 15px/1.45 system-ui, sans-serif; }
+    button, textarea { font: inherit; color: inherit; }
+    .page { max-width: 1320px; margin: 0 auto; padding: 30px; }
+    .top { display: flex; justify-content: space-between; gap: 24px; border-bottom: 2px solid #333; padding-bottom: 14px; }
+    .brand { font-family: Georgia, serif; font-size: 24px; }
+    .meta { font: 11px/1.3 ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; color: #666; }
+    h1, h2, h3 { font-family: Georgia, serif; font-weight: 400; margin: 0; }
+    h1 { margin-top: 28px; max-width: 790px; font-size: 46px; line-height: 1.05; }
+    .lede { max-width: 720px; color: #555; font-size: 17px; }
+    .boundary { display: grid; grid-template-columns: 1fr 2.3fr; gap: 22px; margin-top: 24px; }
+    .boundary-copy { border-right: 1px solid #aaa; padding-right: 20px; }
+    .boundary-copy h2 { font-size: 25px; margin: 4px 0 8px; }
+    .boundary-form { display: grid; grid-template-columns: .8fr 1fr 1fr; gap: 12px; align-items: end; }
+    .boundary-form label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; }
+    .boundary-form input { width: 100%; border: 1px solid #777; background: white; padding: 9px; font: 14px ui-monospace, monospace; }
+    .boundary-option { grid-column: 1 / -1; display: flex !important; grid-template-columns: none !important; gap: 8px !important; align-items: center; font-weight: 400 !important; }
+    .boundary-option input { width: auto; }
+    .privacy { grid-column: 1 / -1; margin: 0; color: #666; font-size: 12px; }
+    .flow { display: grid; grid-template-columns: 1.4fr .9fr; gap: 24px; margin-top: 28px; }
+    .panel { border: 1px solid #777; background: #faf9f5; padding: 18px; }
+    .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; border-bottom: 1px solid #aaa; padding-bottom: 10px; margin-bottom: 14px; }
+    .deck { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .card { min-height: 142px; border: 1px solid #777; background: white; padding: 13px; display: flex; flex-direction: column; justify-content: space-between; }
+    .card p { margin: 9px 0 14px; font-family: Georgia, serif; font-size: 18px; line-height: 1.25; }
+    .card-actions { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #bbb; }
+    .card-actions button { border: 0; border-right: 1px solid #bbb; background: transparent; padding: 6px 2px; font: 10px ui-monospace, monospace; cursor: pointer; }
+    .card-actions button:last-child { border-right: 0; }
+    .card-actions button[aria-pressed="true"] { background: #333; color: white; }
+    .summary { display: grid; gap: 10px; }
+    .bucket { border-top: 1px solid #999; padding-top: 9px; }
+    .bucket-line { display: flex; justify-content: space-between; gap: 8px; }
+    .tag { display: inline-block; border: 1px solid #888; border-radius: 999px; padding: 4px 8px; margin: 6px 3px 0 0; font-size: 12px; }
+    .continue { width: 100%; margin-top: 18px; border: 1px solid #333; background: #333; color: white; padding: 11px; }
+    .next { margin-top: 26px; border-top: 2px dashed #777; padding-top: 26px; }
+    .steps { display: grid; grid-template-columns: .9fr 1.5fr; gap: 24px; }
+    .reflection blockquote { margin: 16px 0; border-left: 3px solid #555; padding: 6px 0 6px 16px; font-family: Georgia, serif; font-size: 21px; }
+    textarea { width: 100%; min-height: 88px; resize: vertical; background: white; border: 1px solid #777; padding: 10px; }
+    .school-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+    .school { border: 1px solid #777; background: white; padding: 13px; }
+    .school h3 { font-size: 20px; }
+    .school p { margin: 8px 0; color: #555; }
+    .reason { border-top: 1px solid #bbb; padding-top: 8px; font-size: 13px; }
+    .evidence { font: 10px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .04em; }
+    .note { margin-top: 22px; padding-top: 12px; border-top: 1px solid #999; color: #555; font-size: 13px; }
+    @media (max-width: 900px) { .flow, .steps, .boundary { grid-template-columns: 1fr; } .boundary-copy { border-right: 0; border-bottom: 1px solid #aaa; padding: 0 0 12px; } .deck, .school-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 560px) { .page { padding: 18px; } h1 { font-size: 34px; } .deck, .school-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="top">
+      <div class="brand">college<span style="font-style:italic">data</span>.fyi</div>
+      <div class="meta">Guided discovery · 4 steps</div>
+    </header>
+
+    <!-- Step 1: hard geography is a guardrail, not a preference inferred by AI. -->
+    <section class="panel boundary" aria-label="Geographic boundaries">
+      <div class="boundary-copy">
+        <div class="meta">1 · Optional boundary</div>
+        <h2>How far can discovery take you?</h2>
+        <div>Set a preference and a limit. You can change either later.</div>
+      </div>
+      <div class="boundary-form">
+        <label>Starting ZIP code<input value="48104" inputmode="numeric" aria-label="Starting ZIP code"></label>
+        <label>Prefer within<input value="250 miles" aria-label="Preferred distance"></label>
+        <label>Never beyond<input value="700 miles" aria-label="Maximum distance"></label>
+        <label class="boundary-option"><input type="checkbox" checked> Show an occasional geographic wildcard beyond 250 miles, but never beyond 700</label>
+        <p class="privacy">Approximate straight-line distance · ZIP used for this discovery session and not saved by default</p>
+      </div>
+    </section>
+
+    <div class="meta" style="margin-top:28px">2 · Sort experiences</div>
+    <h1>What do you want college to make possible?</h1>
+    <p class="lede">There are no right answers. Sort the experiences that sound like you. You can change everything later.</p>
+
+    <!-- Screen 1: Cards deliberately mix academics, place, and community so priorities compete. -->
+    <section class="flow" aria-label="Card sort">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Experience cards</h2>
+          <span class="meta">6 of 22 shown</span>
+        </div>
+        <div class="deck">
+          <article class="card">
+            <div><span class="meta">Learning</span><p>I can explore several related subjects before choosing a major.</p></div>
+            <div class="card-actions" aria-label="Sort this card"><button aria-pressed="true">Essential</button><button>Interesting</button><button>Neutral</button><button>No</button></div>
+          </article>
+          <article class="card">
+            <div><span class="meta">Place</span><p>I can walk from campus into a lively town.</p></div>
+            <div class="card-actions" aria-label="Sort this card"><button>Essential</button><button aria-pressed="true">Interesting</button><button>Neutral</button><button>No</button></div>
+          </article>
+          <article class="card">
+            <div><span class="meta">Opportunity</span><p>Undergraduates can join meaningful research early.</p></div>
+            <div class="card-actions" aria-label="Sort this card"><button aria-pressed="true">Essential</button><button>Interesting</button><button>Neutral</button><button>No</button></div>
+          </article>
+          <article class="card">
+            <div><span class="meta">Community</span><p>School spirit and big athletic events shape campus life.</p></div>
+            <div class="card-actions" aria-label="Sort this card"><button>Essential</button><button>Interesting</button><button>Neutral</button><button aria-pressed="true">No</button></div>
+          </article>
+          <article class="card">
+            <div><span class="meta">Learning</span><p>Professors are likely to know me personally.</p></div>
+            <div class="card-actions" aria-label="Sort this card"><button>Essential</button><button aria-pressed="true">Interesting</button><button>Neutral</button><button>No</button></div>
+          </article>
+          <article class="card">
+            <div><span class="meta">Place</span><p>Outdoor fieldwork can be part of ordinary class life.</p></div>
+            <div class="card-actions" aria-label="Sort this card"><button aria-pressed="true">Essential</button><button>Interesting</button><button>Neutral</button><button>No</button></div>
+          </article>
+        </div>
+      </div>
+
+      <!-- The side ledger makes the inferred profile inspectable before AI speaks. -->
+      <aside class="panel summary">
+        <div class="panel-head"><h2>Your sort</h2><span class="meta">Editable</span></div>
+        <div class="bucket"><div class="bucket-line"><strong>Essential</strong><span class="meta">3</span></div><span class="tag">Academic flexibility</span><span class="tag">Early research</span><span class="tag">Field learning</span></div>
+        <div class="bucket"><div class="bucket-line"><strong>Interesting</strong><span class="meta">2</span></div><span class="tag">Walkable town</span><span class="tag">Faculty access</span></div>
+        <div class="bucket"><div class="bucket-line"><strong>Not for me</strong><span class="meta">1</span></div><span class="tag">Big sports culture</span></div>
+        <button class="continue">Reflect on my choices →</button>
+      </aside>
+    </section>
+
+    <!-- Screens 2 and 3 are compressed below to show where the card sort leads. -->
+    <section class="next">
+      <div class="meta">What happens next</div>
+      <div class="steps">
+        <article class="panel reflection">
+          <div class="panel-head"><h2>3. Reflect</h2><span class="meta">AI-assisted</span></div>
+          <blockquote>You seem drawn to learning that crosses subjects and gets outside the classroom. A lively town interests you, but it was not essential.</blockquote>
+          <label><strong>One question:</strong><br>When you imagine environmental work, are you more excited by laboratory science, fieldwork, public policy, or keeping several paths open?</label>
+          <textarea placeholder="I like chemistry, but I don't want to give up policy or fieldwork…"></textarea>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head"><h2>4. Discover</h2><span class="meta">Round 1 · 6 schools</span></div>
+          <p>Not ranked. Each school is here for a different, inspectable reason.</p>
+          <div class="school-grid">
+            <article class="school"><span class="meta">Academic wildcard</span><h3>College of the Atlantic</h3><p class="reason">One interdisciplinary human ecology program connects science, policy, and field study.</p><span class="evidence">Program data · Locale · Source dates</span></article>
+            <article class="school"><span class="meta">Flexible anchor</span><h3>University of Vermont</h3><p class="reason">Several environmental pathways plus a lively small-city setting.</p><span class="evidence">Program breadth · Completions · Place</span></article>
+            <article class="school"><span class="meta">Smaller contrast</span><h3>St. Olaf College</h3><p class="reason">Undergraduate focus and related science paths test how much scale matters to you.</p><span class="evidence">Program mix · Size · Setting</span></article>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <p class="note"><strong>Sketch decisions:</strong> hard distance stays separate from place preferences; no scores, rankings, or admissions data in onboarding; no drag-only interaction; inferred preferences remain visible; AI asks one high-value follow-up; school cards explain why they appeared and name the evidence class.</p>
+  </main>
+</body>
+</html>
