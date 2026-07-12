@@ -1083,6 +1083,34 @@ Owner decisions after acceptance, superseding the corresponding sections above:
   and `scale.small` are distinct keys, both positively phrased); opposing
   qualities reconcile through evidence matchers in `discovery_policy_v1`
   rather than same-key conflict detection.
+- **Rounds engine shipped (2026-07-12).** The discovery loop now runs
+  end-to-end at `/discover`: interests → six-school rounds → reactions →
+  research shelf. Round composition happens entirely in the browser against a
+  versioned evidence bundle (`web/public/discovery/evidence-v1.json`, 895
+  schools, policy eligibility stages 1+3 pre-applied at build time, fetched
+  once with immutable caching); the student's ZIP never leaves the device.
+  Sessions move to schema v2, stamp `bundle_version`, and validate stored
+  round/reaction entries on load; reactions write preference signals per §10;
+  every displayed reason renders fail-closed from policy templates per §9 (a
+  school with no valid rendered reason cannot enter a round). Shown rounds are
+  stored and re-render from history — never recomposed — so earlier rounds
+  stay stable as signals accumulate. The TypeScript engine is
+  conformance-proven against the Python reference via a committed 21-case
+  fixture (including a synthetic whole-family case) with a staleness canary.
+  Pre-landing review hardening: cooldown covers all shown schools (now
+  machine-readable in the policy `cooldowns` block), change notes derive only
+  from signal-writing reactions, reaction-vs-card conflicts surface as
+  tension notes, changing interests resets round history while keeping
+  reactions and the shelf, an exhausted-pool state replaces the no-op "Next
+  round", incremental readmission of oldest-unreacted schools, truthful
+  affordability-slot evidence (`tpl.affordability_slot.v1`) plus a dedicated
+  `tpl.count_high.v1` template, and prefers-reduced-motion support.
+- **Open Question 5 resolved (2026-07-12, ZIP handling).** Approximate
+  distance resolves browser-side from the committed ZIP3 centroid table
+  (`data/discovery/geo/zip3-centroids-v1.json`, Census gazetteer, public
+  domain), regenerated bit-identically by
+  `tools/discovery/build_zip3_centroids.py`. No server endpoint; the full ZIP
+  never leaves the device.
 
 ## The Assignment
 

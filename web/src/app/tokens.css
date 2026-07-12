@@ -91,8 +91,24 @@
   text-decoration: none;
 }
 .cd-btn:hover { background: var(--forest-ink); border-color: var(--forest-ink); color: var(--paper); }
+/* Disabled buttons must still read as buttons: same box, muted, no hover
+   flip. Without this, `disabled` renders the default UA gray-on-ink —
+   effectively invisible on paper. */
+.cd-btn:disabled,
+.cd-btn:disabled:hover {
+  background: var(--rule-strong); border-color: var(--rule-strong);
+  color: var(--paper); cursor: not-allowed;
+}
 .cd-btn--ghost { background: transparent; color: var(--ink); border-color: var(--rule-strong); }
 .cd-btn--ghost:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.cd-btn--ghost:disabled,
+.cd-btn--ghost:disabled:hover {
+  background: transparent; border-color: var(--rule); color: var(--ink-3);
+  cursor: not-allowed;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cd-btn { transition: none; }
+}
 
 /* Button text color and underline reset for anchor variants. The
    `.cd-theme a { color: var(--ink); text-decoration: underline; }` rule

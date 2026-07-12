@@ -99,13 +99,12 @@ def load_completions(cip_universe):
 
 
 def edge_sets(ontology, concepts=None):
-    """Direct/adjacent CIP sets. concepts=None means the whole family;
-    an explicit empty set matches nothing (never the whole family)."""
+    """Direct/adjacent CIP sets. Both None and an empty set mean the whole
+    family — matching the product semantics (the interests step's "use the
+    whole family" path) and the TypeScript engine."""
     direct, adjacent = set(), set()
-    if concepts is not None and not concepts:
-        return direct, adjacent
     for e in ontology["edges"]:
-        if concepts is not None and e["from_concept_id"] not in concepts:
+        if concepts and e["from_concept_id"] not in concepts:
             continue
         if e["relationship"] == "direct":
             direct.add(e["to_cip"])

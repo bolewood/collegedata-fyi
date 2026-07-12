@@ -618,8 +618,9 @@
     "cooldowns": {
       "research_next_shelf": "never repeats",
       "not_for_me": "never repeats in the current session",
-      "shown_unreacted": "two-round cooldown",
-      "readmission": "oldest unreacted only, labeled Revisit, never saved or rejected schools"
+      "shown_unreacted_rounds": 2,
+      "shown_note": "ALL shown schools cool down for shown_unreacted_rounds rounds (reacted or not); research_next/not_for_me never return",
+      "readmission": "oldest unreacted only, only enough to reach minimum_size, labeled Revisit, never saved or rejected schools"
     }
   },
   "diagnostics_manifest_schema": [
@@ -670,6 +671,10 @@
       "text": "Average net price {value} for {population} in {data_year} — shown for cost context, never a prediction of your family's price.",
       "limitation_id": "lim.aid_no_prediction"
     },
-    "note": "Template placeholders resolve from evidence facts at render time; a reason missing a valid template, evidence, or limitation version is omitted (fail closed, PRD 026 §9). Each matcher's limitation_id overrides the template default when they differ."
+    "note": "Template placeholders resolve from evidence facts at render time; a reason missing a valid template, evidence, or limitation version is omitted (fail closed, PRD 026 §9). Each matcher's limitation_id overrides the template default when they differ.",
+    "tpl.count_high.v1": {
+      "text": "{value} related programs across this interest family ({data_year}) — room to explore and change direction.",
+      "limitation_id": "lim.cip_breadth"
+    }
   }
 }

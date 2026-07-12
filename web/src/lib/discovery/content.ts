@@ -7,8 +7,10 @@
 // see ./content/README.md; content-sync.test.ts enforces they never drift.
 import libraryJson from "./content/cards.v1.json";
 import deckJson from "./content/deck.opening-v1.json";
+import ontologyJson from "./content/ontology.v1.json";
 import policyJson from "./content/policy.v1.json";
-import type { DiscoveryCard } from "./types";
+import zip3Json from "./content/zip3-centroids.v1.json";
+import type { DiscoveryCard, DiscoveryPolicy, InterestOntology } from "./types";
 
 const library = libraryJson as unknown as {
   card_library_version: string;
@@ -22,14 +24,7 @@ const deck = deckJson as unknown as {
   display_order: string[];
 };
 
-const policy = policyJson as unknown as {
-  policy_version: string;
-  scoring: {
-    preference_aggregate_clamp: [number, number];
-    bucket_weights: Record<string, number>;
-    essential_threshold: number;
-  };
-};
+const policy = policyJson as unknown as DiscoveryPolicy;
 
 const cardsById = new Map(library.cards.map((c) => [c.card_id, c]));
 
@@ -57,4 +52,22 @@ export const ESSENTIAL_THRESHOLD = policy.scoring.essential_threshold;
 
 export function getCard(cardId: string): DiscoveryCard | undefined {
   return cardsById.get(cardId);
+}
+
+export const POLICY = policy;
+export const ONTOLOGY = ontologyJson as unknown as InterestOntology;
+
+const zip3 = zip3Json as unknown as {
+  zip3_centroid_version: string;
+  centroids: Record<string, [number, number]>;
+};
+
+// PRD Q5 v1 resolution: a coarse 3-digit-prefix centroid lookup that runs
+// entirely in the browser — the full ZIP never leaves the device. Returns
+// null when the prefix is unknown (the UI's ZIP-no-match state applies).
+export function resolveZip(zip: string): { lat: number; lon: number } | null {
+  const m = /^(\d{3})\d{2}$/.exec(zip.trim());
+  if (!m) return null;
+  const hit = zip3.centroids[m[1]];
+  return hit ? { lat: hit[0], lon: hit[1] } : null;
 }

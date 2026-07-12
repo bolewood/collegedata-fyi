@@ -14,6 +14,11 @@ export default defineConfig({
   use: {
     baseURL,
     trace: "retain-on-failure",
+    // Deterministic rendering for axe contrast scans: button color
+    // transitions (120ms) can otherwise be caught mid-blend right after a
+    // click, flagging intermediate colors that never rest on screen.
+    // (reducedMotion is a context option, not a first-class test option.)
+    contextOptions: { reducedMotion: "reduce" },
   },
   webServer: suppliedBaseUrl
     ? undefined

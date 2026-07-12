@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { DECK_CARDS } from "./content";
-import { aggregateKeys, buildLedger, buildSignals } from "./signals";
-import type { Bucket, DiscoveryCard } from "./types";
+import {
+  aggregateKeys,
+  buildLedger,
+  buildReactionSignals,
+  buildRoundAggregates,
+  buildSignals,
+} from "./signals";
+import type { Bucket, DiscoveryCard, SchoolReaction } from "./types";
 
 const card = (id: string, keys: string[], domain = "community"): DiscoveryCard => ({
   card_id: id,
@@ -119,6 +125,90 @@ describe("opening deck integration", () => {
     ) as Record<string, Bucket>;
     const aggregates = aggregateKeys(buildSignals(responses, DECK_CARDS));
     expect(aggregates.every((a) => !a.conflicted)).toBe(true);
+  });
+});
+
+const reaction = (over: Partial<SchoolReaction> = {}): SchoolReaction => ({
+  school_id: "s1",
+  reaction: "more_like_this",
+  key: "k.one",
+  saved_reason_text: null,
+  familiarity: null,
+  round_index: 0,
+  ...over,
+});
+
+describe("buildReactionSignals (PRD 026 §10)", () => {
+  it("maps more_like_this/not_for_me to magnitude-1 seek/avoid signals", () => {
+    const signals = buildReactionSignals([
+      reaction(),
+      reaction({ school_id: "s2", reaction: "not_for_me", key: "k.two" }),
+    ]);
+    expect(signals).toHaveLength(2);
+    const byKey = Object.fromEntries(signals.map((s) => [s.key, s]));
+    expect(byKey["k.one"]).toMatchObject({
+      direction: "seek",
+      magnitude: 1,
+      strength: "interesting",
+      source: "school_reaction",
+      source_id: "s1",
+    });
+    expect(byKey["k.two"]).toMatchObject({ direction: "avoid", magnitude: 1 });
+  });
+
+  it("ignores research_next and keyless reactions — saving never tunes preferences", () => {
+    expect(
+      buildReactionSignals([
+        reaction({ reaction: "research_next", key: "k.one" }),
+        reaction({ key: null }),
+        reaction({ reaction: "not_for_me", key: null }),
+      ]),
+    ).toEqual([]);
+  });
+
+  it("keeps only the latest reaction per (school, key) pair", () => {
+    const signals = buildReactionSignals([
+      reaction({ reaction: "more_like_this" }),
+      reaction({ reaction: "not_for_me", round_index: 2 }),
+    ]);
+    expect(signals).toHaveLength(1);
+    expect(signals[0].direction).toBe("avoid");
+  });
+
+  it("keeps distinct schools' reactions on the same key separate", () => {
+    const signals = buildReactionSignals([
+      reaction({ school_id: "s1" }),
+      reaction({ school_id: "s2" }),
+    ]);
+    expect(signals).toHaveLength(2);
+  });
+});
+
+describe("buildRoundAggregates", () => {
+  it("adds reaction magnitude on top of card signals for the same key", () => {
+    const aggs = buildRoundAggregates(
+      { a: "interesting" },
+      [card("a", ["k.one"])],
+      [reaction({ key: "k.one" })],
+    );
+    expect(aggs["k.one"]).toBe(2); // +1 card, +1 reaction
+  });
+
+  it("zeroes a key conflicted between a card and a reaction (both stay visible upstream)", () => {
+    const aggs = buildRoundAggregates(
+      { a: "essential" },
+      [card("a", ["k.one"])],
+      [reaction({ reaction: "not_for_me", key: "k.one" })],
+    );
+    expect(aggs["k.one"]).toBe(0);
+  });
+
+  it("reaction-only keys enter the aggregates without any card response", () => {
+    const aggs = buildRoundAggregates({}, [card("a", ["k.one"])], [
+      reaction({ key: "k.solo", reaction: "not_for_me" }),
+    ]);
+    expect(aggs["k.solo"]).toBe(-1);
+    expect(aggs["k.one"]).toBeUndefined();
   });
 });
 

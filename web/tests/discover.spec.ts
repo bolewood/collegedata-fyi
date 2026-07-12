@@ -154,6 +154,76 @@ test("discover flow: wildcard note, revision mid-sort, essential nudge, restart"
   ).toBeVisible();
 });
 
+test("discovery rounds: interests → round with reasons → reactions → shelf", async ({ page }) => {
+  await page.goto("/discover");
+  await page.getByRole("button", { name: /start sorting/i }).click();
+  await page.getByLabel(/home zip/i).fill("30060");
+  await page.getByLabel(/prefer within/i).fill("300");
+  await page.getByRole("textbox", { name: /never beyond/i }).fill("800");
+  await page.getByRole("button", { name: /continue to the cards/i }).click();
+  const buckets = [/^Essential/, /^Interesting/, /^Not important/, /^Not for me/];
+  for (let i = 0; i < 24; i++) {
+    await page.getByRole("button", { name: buckets[i % 4] }).press("Enter");
+  }
+  await page.getByRole("button", { name: /see my preference profile/i }).click();
+
+  // Ledger → interests (pilot lake chips) → first round.
+  await page.getByRole("button", { name: /continue to discovery rounds/i }).click();
+  await expect(page.getByRole("heading", { name: /pulling you back/i })).toBeVisible();
+  await expectAxeClean(page);
+  await page.getByRole("button", { name: /environment & climate/i }).click();
+  await page.getByRole("button", { name: /see my first round/i }).click();
+
+  // The round: schools with role chips, reasons, source & limits disclosure,
+  // approximate distance under the hard cap.
+  await expect(page.getByRole("heading", { name: /with receipts/i })).toBeVisible();
+  const cards = page.locator("ol > li.cd-card");
+  await expect(cards).toHaveCount(6);
+  await expect(cards.first().getByText(/mi straight-line/)).toBeVisible();
+  await cards.first().getByText("source & limits").first().click();
+  await expect(cards.first().getByText(/data, \d{4}/).first()).toBeVisible();
+  await expectAxeClean(page);
+  const firstSchool = await cards.first().getByRole("heading").textContent();
+
+  // Research next: must pick a reason and answer familiarity (PRD §10).
+  await cards.first().getByRole("button", { name: /research next/i }).click();
+  await expect(page.getByText(/which reason are you saving/i)).toBeVisible();
+  await cards.first().getByRole("radio").first().check();
+  await page.getByRole("radio", { name: "No", exact: true }).check();
+  await cards.first().getByRole("button", { name: /save to shelf/i }).click();
+  await expect(page.getByRole("button", { name: /research shelf \(1\)/i })).toBeVisible();
+
+  // Not for me on the second card (skip reason via "Something else").
+  const second = cards.nth(1);
+  await second.getByRole("button", { name: /not for me/i }).click();
+  await second.getByRole("radio", { name: /something else/i }).check();
+  await second.getByRole("button", { name: /set it aside/i }).click();
+
+  // Next round: saved + rejected schools never reappear.
+  await page.getByRole("button", { name: /next round/i }).click();
+  await expect(
+    page.locator("ol > li.cd-card h2", { hasText: firstSchool ?? "" }),
+  ).toHaveCount(0);
+  const roundTwoNames = await page
+    .locator("ol > li.cd-card h2")
+    .allTextContents();
+  expect(roundTwoNames).not.toContain(firstSchool);
+  await expectAxeClean(page);
+
+  // Shelf holds the saved school with the student's own reason.
+  await page.getByRole("button", { name: /research shelf/i }).click();
+  await expect(page.getByRole("heading", { name: /shortlist/i })).toBeVisible();
+  await expect(page.getByText(/saved because:/i)).toBeVisible();
+  if (firstSchool) {
+    await expect(page.getByRole("heading", { name: firstSchool })).toBeVisible();
+  }
+  await expectAxeClean(page);
+
+  // Session (with rounds state) survives a reload.
+  await page.reload();
+  await expect(page.getByRole("heading", { name: /shortlist/i })).toBeVisible();
+});
+
 test("discover card sort reflows at 320px without horizontal scroll", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto("/discover");

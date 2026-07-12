@@ -66,6 +66,13 @@ describe("discovery session", () => {
     ["invalid bucket value", { card_responses: { "explore-before-major": "maybe" } }],
     ["null card_responses", { card_responses: null }],
     ["malformed geography", { geography: { zip: 30060 } }],
+    // schema v2 rounds-slice fields
+    ["non-array concepts", { concepts: "environment-climate" }],
+    ["non-string concept entries", { concepts: [42] }],
+    ["non-array reactions", { reactions: {} }],
+    ["non-array round_history", { round_history: "corrupt" }],
+    ["negative current_round", { current_round: -1 }],
+    ["non-integer current_round", { current_round: 0.5 }],
   ])(
     "discards version-valid sessions with a corrupt shape: %s",
     (_label, patch) => {
@@ -116,5 +123,67 @@ describe("discovery session", () => {
     expect(loadSession(NOW)).toBeNull();
     expect(() => saveSession(newSession(NOW))).not.toThrow();
     expect(() => clearSession()).not.toThrow();
+  });
+});
+
+describe("rounds-era session guards", () => {
+  const store = () => {
+    const m = new Map<string, string>();
+    return {
+      getItem: (k: string) => m.get(k) ?? null,
+      setItem: (k: string, v: string) => void m.set(k, v),
+      removeItem: (k: string) => void m.delete(k),
+    };
+  };
+  const NOW = new Date("2026-07-12T12:00:00Z");
+
+  it("discards schema v1 sessions (pre-rounds) rather than migrating", () => {
+    const s = store();
+    const v1 = { ...newSession(NOW), schema_version: 1 };
+    s.setItem(SESSION_STORAGE_KEY, JSON.stringify(v1));
+    expect(loadSession(NOW, s)).toBeNull();
+    expect(s.getItem(SESSION_STORAGE_KEY)).toBeNull();
+  });
+
+  it("a bundle bump resets round history but keeps the student's own work", () => {
+    const s = store();
+    const sess = newSession(NOW);
+    sess.bundle_version = "evidence-v0";
+    sess.reactions = [{
+      school_id: "a", reaction: "research_next", key: null,
+      saved_reason_text: "kept", familiarity: "no", round_index: 0,
+    }];
+    sess.round_history = [
+      { round_index: 0, school_ids: ["a", "b"], roles: ["anchor", "exploration"], revisit_ids: [] },
+    ];
+    sess.current_round = 0;
+    s.setItem(SESSION_STORAGE_KEY, JSON.stringify(sess));
+    const loaded = loadSession(NOW, s);
+    expect(loaded).not.toBeNull();
+    expect(loaded!.round_history).toEqual([]);
+    expect(loaded!.current_round).toBe(0);
+    expect(loaded!.reactions).toHaveLength(1);
+    expect(loaded!.bundle_version).not.toBe("evidence-v0");
+  });
+
+  it("discards sessions with tampered round-history entries", () => {
+    const s = store();
+    const sess = newSession(NOW);
+    sess.round_history = [
+      { round_index: 0, school_ids: [42], roles: [], revisit_ids: [] },
+    ] as never;
+    s.setItem(SESSION_STORAGE_KEY, JSON.stringify(sess));
+    expect(loadSession(NOW, s)).toBeNull();
+  });
+
+  it("discards sessions with tampered reaction entries", () => {
+    const s = store();
+    const sess = newSession(NOW);
+    sess.reactions = [
+      { school_id: "a", reaction: "rank_this_number_one", key: null,
+        saved_reason_text: null, familiarity: null, round_index: 0 },
+    ] as never;
+    s.setItem(SESSION_STORAGE_KEY, JSON.stringify(sess));
+    expect(loadSession(NOW, s)).toBeNull();
   });
 });

@@ -30,6 +30,10 @@ later. Code contributions elsewhere in the repo are unaffected.
   approved 2026-07-12).
 - `scenarios/v1.json` — versioned synthetic geography/preference
   fixtures for the feasibility gate (5 origins x 4 profiles).
+- `geo/zip3-centroids-v1.json` — 3-digit ZIP prefix centroids (Census
+  gazetteer, public domain) for browser-local, coarse distance resolution
+  (PRD Q5 v1 answer: the full ZIP never leaves the device). Regenerated
+  bit-identically by `tools/discovery/build_zip3_centroids.py`.
 - `policy/v1.json` — `discovery_policy_v1`: eligibility predicate,
   scoring constants, evidence matchers for every data/proxy preference
   key (thresholds are initial calibration pending pilot evidence), slot
@@ -41,10 +45,11 @@ later. Code contributions elsewhere in the repo are unaffected.
 ## Web runtime mirrors
 
 The web app consumes committed mirrors of the runtime artifacts — the card
-library, opening deck, and policy (not the ontology or scenario fixtures) —
-under `web/src/lib/discovery/content/` (the Vercel project root is `web/`, so
-it cannot import across the repo root). `web/src/lib/discovery/content-sync.test.ts`
-fails the suite whenever a mirror drifts from its canonical source here.
+library, opening deck, policy, ontology, and ZIP3 centroids (not the scenario
+fixtures) — under `web/src/lib/discovery/content/` (the Vercel project root is
+`web/`, so it cannot import across the repo root).
+`web/src/lib/discovery/content-sync.test.ts` fails the suite whenever a
+mirror drifts from its canonical source here.
 
 ## Versioning rules
 

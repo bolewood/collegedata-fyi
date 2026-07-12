@@ -1,0 +1,1223 @@
+{
+ "fixture_version": "rounds-conformance.v1",
+ "bundle_version": "evidence-v1",
+ "policy_version": "discovery_policy_v1",
+ "ontology_version": "v1",
+ "scenario_corpus_version": "v1",
+ "cases": [
+  {
+   "scenario_id": "synthetic--whole-family",
+   "concepts": [],
+   "geography": {
+    "zip": null,
+    "preferred_miles": null,
+    "maximum_miles": null,
+    "allow_wildcards": false
+   },
+   "origin": null,
+   "aggregates": {
+    "scale.small": 3
+   },
+   "expected": {
+    "schools": [
+     [
+      "suny-college-of-environmental-science-and-forestry",
+      "anchor"
+     ],
+     [
+      "texas-am",
+      "flexible"
+     ],
+     [
+      "cuny-hunter-college",
+      "affordability"
+     ],
+     [
+      "juniata-college",
+      "exploration"
+     ],
+     [
+      "the-university-of-the-south",
+      "additional_exploration"
+     ],
+     [
+      "bucknell",
+      "additional_exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": false,
+     "affordability": true,
+     "wildcard": false,
+     "exploration": true
+    },
+    "eligible_candidates": 895,
+    "relaxation_level": null
+   }
+  },
+  {
+   "scenario_id": "atl-suburb--bounded-regional",
+   "concepts": [
+    "environment-climate"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": 150,
+    "maximum_miles": 400,
+    "allow_wildcards": true
+   },
+   "origin": {
+    "lat": 33.953,
+    "lon": -84.55
+   },
+   "aggregates": {
+    "life.residential_campus": 3,
+    "class.small_discussion": 1,
+    "cost.need_aid_strength": 3
+   },
+   "expected": {
+    "schools": [
+     [
+      "uga",
+      "anchor"
+     ],
+     [
+      "north-carolina-state-university-at-raleigh",
+      "flexible"
+     ],
+     [
+      "university-of-florida-online",
+      "affordability"
+     ],
+     [
+      "warren-wilson-college",
+      "wildcard"
+     ],
+     [
+      "the-university-of-the-south",
+      "exploration"
+     ],
+     [
+      "emory",
+      "additional_exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": false,
+     "affordability": true,
+     "wildcard": true,
+     "exploration": true
+    },
+    "eligible_candidates": 115,
+    "relaxation_level": null
+   }
+  },
+  {
+   "scenario_id": "atl-suburb--preferred-only",
+   "concepts": [
+    "conservation-wildlife"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": 300,
+    "maximum_miles": null,
+    "allow_wildcards": true
+   },
+   "origin": {
+    "lat": 33.953,
+    "lon": -84.55
+   },
+   "aggregates": {
+    "scale.small": 3,
+    "place.quiet_setting": 1,
+    "place.outdoors_access": 1
+   },
+   "expected": {
+    "schools": [
+     [
+      "warren-wilson-college",
+      "anchor"
+     ],
+     [
+      "university-of-idaho",
+      "flexible"
+     ],
+     [
+      "charleston-southern-university",
+      "contrast"
+     ],
+     [
+      "eastern-new-mexico-university-main-campus",
+      "affordability"
+     ],
+     [
+      "juniata-college",
+      "wildcard"
+     ],
+     [
+      "frostburg-state-university",
+      "exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": true,
+     "affordability": true,
+     "wildcard": true,
+     "exploration": true
+    },
+    "eligible_candidates": 175,
+    "relaxation_level": null
+   }
+  },
+  {
+   "scenario_id": "atl-suburb--no-distance",
+   "concepts": [
+    "environmental-policy",
+    "environment-climate"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": null,
+    "maximum_miles": null,
+    "allow_wildcards": false
+   },
+   "origin": {
+    "lat": 33.953,
+    "lon": -84.55
+   },
+   "aggregates": {
+    "place.big_city": 3,
+    "scale.large": 1,
+    "cost.low_debt": 1
+   },
+   "expected": {
+    "schools": [
+     [
+      "osu",
+      "anchor"
+     ],
+     [
+      "texas-am",
+      "flexible"
+     ],
+     [
+      "suny-college-of-environmental-science-and-forestry",
+      "contrast"
+     ],
+     [
+      "princeton",
+      "affordability"
+     ],
+     [
+      "usc",
+      "exploration"
+     ],
+     [
+      "brigham-young-university",
+      "additional_exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": true,
+     "affordability": true,
+     "wildcard": false,
+     "exploration": true
+    },
+    "eligible_candidates": 794,
+    "relaxation_level": null
+   }
+  },
+  {
+   "scenario_id": "atl-suburb--strict-max",
+   "concepts": [
+    "environmental-engineering",
+    "climate-earth-science"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": 100,
+    "maximum_miles": 250,
+    "allow_wildcards": false
+   },
+   "origin": {
+    "lat": 33.953,
+    "lon": -84.55
+   },
+   "aggregates": {
+    "out.four_year_grad": 3,
+    "out.retention": 1,
+    "life.greek_scene": -3
+   },
+   "expected": {
+    "schools": [
+     [
+      "uga",
+      "anchor"
+     ],
+     [
+      "the-university-of-alabama",
+      "flexible"
+     ],
+     [
+      "savannah-state-university",
+      "affordability"
+     ],
+     [
+      "the-university-of-the-south",
+      "exploration"
+     ],
+     [
+      "vanderbilt",
+      "additional_exploration"
+     ],
+     [
+      "furman-university",
+      "additional_exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": false,
+     "affordability": true,
+     "wildcard": false,
+     "exploration": true
+    },
+    "eligible_candidates": 35,
+    "relaxation_level": null
+   }
+  },
+  {
+   "scenario_id": "chi-city--bounded-regional",
+   "concepts": [
+    "environment-climate"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": 150,
+    "maximum_miles": 400,
+    "allow_wildcards": true
+   },
+   "origin": {
+    "lat": 41.878,
+    "lon": -87.63
+   },
+   "aggregates": {
+    "life.residential_campus": 3,
+    "class.small_discussion": 1,
+    "cost.need_aid_strength": 3
+   },
+   "expected": {
+    "schools": [
+     [
+      "uw-madison",
+      "anchor"
+     ],
+     [
+      "osu",
+      "flexible"
+     ],
+     [
+      "indiana-university-kokomo",
+      "affordability"
+     ],
+     [
+      "washington-university-in-st-louis",
+      "wildcard"
+     ],
+     [
+      "northwestern",
+      "exploration"
+     ],
+     [
+      "valparaiso-university",
+      "additional_exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": false,
+     "affordability": true,
+     "wildcard": true,
+     "exploration": true
+    },
+    "eligible_candidates": 196,
+    "relaxation_level": null
+   }
+  },
+  {
+   "scenario_id": "chi-city--preferred-only",
+   "concepts": [
+    "conservation-wildlife"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": 300,
+    "maximum_miles": null,
+    "allow_wildcards": true
+   },
+   "origin": {
+    "lat": 41.878,
+    "lon": -87.63
+   },
+   "aggregates": {
+    "scale.small": 3,
+    "place.quiet_setting": 1,
+    "place.outdoors_access": 1
+   },
+   "expected": {
+    "schools": [
+     [
+      "otterbein-university",
+      "anchor"
+     ],
+     [
+      "university-of-idaho",
+      "flexible"
+     ],
+     [
+      "calvin-university",
+      "contrast"
+     ],
+     [
+      "eastern-new-mexico-university-main-campus",
+      "affordability"
+     ],
+     [
+      "juniata-college",
+      "wildcard"
+     ],
+     [
+      "university-of-michigan-flint",
+      "exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": true,
+     "affordability": true,
+     "wildcard": true,
+     "exploration": true
+    },
+    "eligible_candidates": 175,
+    "relaxation_level": null
+   }
+  },
+  {
+   "scenario_id": "chi-city--no-distance",
+   "concepts": [
+    "environmental-policy",
+    "environment-climate"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": null,
+    "maximum_miles": null,
+    "allow_wildcards": false
+   },
+   "origin": {
+    "lat": 41.878,
+    "lon": -87.63
+   },
+   "aggregates": {
+    "place.big_city": 3,
+    "scale.large": 1,
+    "cost.low_debt": 1
+   },
+   "expected": {
+    "schools": [
+     [
+      "osu",
+      "anchor"
+     ],
+     [
+      "texas-am",
+      "flexible"
+     ],
+     [
+      "suny-college-of-environmental-science-and-forestry",
+      "contrast"
+     ],
+     [
+      "princeton",
+      "affordability"
+     ],
+     [
+      "usc",
+      "exploration"
+     ],
+     [
+      "brigham-young-university",
+      "additional_exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": true,
+     "affordability": true,
+     "wildcard": false,
+     "exploration": true
+    },
+    "eligible_candidates": 794,
+    "relaxation_level": null
+   }
+  },
+  {
+   "scenario_id": "chi-city--strict-max",
+   "concepts": [
+    "environmental-engineering",
+    "climate-earth-science"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": 100,
+    "maximum_miles": 250,
+    "allow_wildcards": false
+   },
+   "origin": {
+    "lat": 41.878,
+    "lon": -87.63
+   },
+   "aggregates": {
+    "out.four_year_grad": 3,
+    "out.retention": 1,
+    "life.greek_scene": -3
+   },
+   "expected": {
+    "schools": [
+     [
+      "northwestern",
+      "anchor"
+     ],
+     [
+      "uw-madison",
+      "flexible"
+     ],
+     [
+      "university-of-wisconsin-green-bay",
+      "contrast"
+     ],
+     [
+      "indiana-university-northwest",
+      "affordability"
+     ],
+     [
+      "university-of-notre-dame",
+      "exploration"
+     ],
+     [
+      "loyola-university-chicago",
+      "additional_exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": true,
+     "affordability": true,
+     "wildcard": false,
+     "exploration": true
+    },
+    "eligible_candidates": 54,
+    "relaxation_level": null
+   }
+  },
+  {
+   "scenario_id": "mt-rural--bounded-regional",
+   "concepts": [
+    "environment-climate"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": 150,
+    "maximum_miles": 400,
+    "allow_wildcards": true
+   },
+   "origin": {
+    "lat": 47.063,
+    "lon": -109.428
+   },
+   "aggregates": {
+    "life.residential_campus": 3,
+    "class.small_discussion": 1,
+    "cost.need_aid_strength": 3
+   },
+   "expected": {
+    "schools": [
+     [
+      "montana-state-university-billings",
+      "anchor"
+     ],
+     [
+      "the-university-of-montana",
+      "flexible"
+     ],
+     [
+      "idaho-state-university",
+      "affordability"
+     ],
+     [
+      "gonzaga-university",
+      "wildcard"
+     ],
+     [
+      "whitworth-university",
+      "exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": false,
+     "affordability": true,
+     "wildcard": true,
+     "exploration": true
+    },
+    "eligible_candidates": 14,
+    "relaxation_level": null
+   }
+  },
+  {
+   "scenario_id": "mt-rural--preferred-only",
+   "concepts": [
+    "conservation-wildlife"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": 300,
+    "maximum_miles": null,
+    "allow_wildcards": true
+   },
+   "origin": {
+    "lat": 47.063,
+    "lon": -109.428
+   },
+   "aggregates": {
+    "scale.small": 3,
+    "place.quiet_setting": 1,
+    "place.outdoors_access": 1
+   },
+   "expected": {
+    "schools": [
+     [
+      "salish-kootenai-college",
+      "anchor"
+     ],
+     [
+      "university-of-idaho",
+      "flexible"
+     ],
+     [
+      "suny-college-of-environmental-science-and-forestry",
+      "contrast"
+     ],
+     [
+      "college-of-the-ozarks",
+      "affordability"
+     ],
+     [
+      "juniata-college",
+      "wildcard"
+     ],
+     [
+      "paul-smiths-college-of-arts-and-science",
+      "exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": true,
+     "affordability": true,
+     "wildcard": true,
+     "exploration": true
+    },
+    "eligible_candidates": 175,
+    "relaxation_level": null
+   }
+  },
+  {
+   "scenario_id": "mt-rural--no-distance",
+   "concepts": [
+    "environmental-policy",
+    "environment-climate"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": null,
+    "maximum_miles": null,
+    "allow_wildcards": false
+   },
+   "origin": {
+    "lat": 47.063,
+    "lon": -109.428
+   },
+   "aggregates": {
+    "place.big_city": 3,
+    "scale.large": 1,
+    "cost.low_debt": 1
+   },
+   "expected": {
+    "schools": [
+     [
+      "osu",
+      "anchor"
+     ],
+     [
+      "texas-am",
+      "flexible"
+     ],
+     [
+      "suny-college-of-environmental-science-and-forestry",
+      "contrast"
+     ],
+     [
+      "princeton",
+      "affordability"
+     ],
+     [
+      "usc",
+      "exploration"
+     ],
+     [
+      "brigham-young-university",
+      "additional_exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": true,
+     "affordability": true,
+     "wildcard": false,
+     "exploration": true
+    },
+    "eligible_candidates": 794,
+    "relaxation_level": null
+   }
+  },
+  {
+   "scenario_id": "mt-rural--strict-max",
+   "concepts": [
+    "environmental-engineering",
+    "climate-earth-science"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": 100,
+    "maximum_miles": 250,
+    "allow_wildcards": false
+   },
+   "origin": {
+    "lat": 47.063,
+    "lon": -109.428
+   },
+   "aggregates": {
+    "out.four_year_grad": 3,
+    "out.retention": 1,
+    "life.greek_scene": -3
+   },
+   "expected": {
+    "schools": [
+     [
+      "montana-state-university",
+      "anchor"
+     ],
+     [
+      "rocky-mountain-college",
+      "flexible"
+     ],
+     [
+      "the-university-of-montana",
+      "additional_exploration_relaxed"
+     ],
+     [
+      "montana-technological-university",
+      "additional_exploration_relaxed"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": false,
+     "affordability": false,
+     "wildcard": false,
+     "exploration": false
+    },
+    "eligible_candidates": 4,
+    "relaxation_level": 2
+   }
+  },
+  {
+   "scenario_id": "nj-suburb--bounded-regional",
+   "concepts": [
+    "environment-climate"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": 150,
+    "maximum_miles": 400,
+    "allow_wildcards": true
+   },
+   "origin": {
+    "lat": 40.519,
+    "lon": -74.412
+   },
+   "aggregates": {
+    "life.residential_campus": 3,
+    "class.small_discussion": 1,
+    "cost.need_aid_strength": 3
+   },
+   "expected": {
+    "schools": [
+     [
+      "udel",
+      "anchor"
+     ],
+     [
+      "suny-college-of-environmental-science-and-forestry",
+      "flexible"
+     ],
+     [
+      "cuny-hunter-college",
+      "affordability"
+     ],
+     [
+      "colby",
+      "wildcard"
+     ],
+     [
+      "johns-hopkins",
+      "exploration"
+     ],
+     [
+      "franklin-and-marshall-college",
+      "additional_exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": false,
+     "affordability": true,
+     "wildcard": true,
+     "exploration": true
+    },
+    "eligible_candidates": 281,
+    "relaxation_level": null
+   }
+  },
+  {
+   "scenario_id": "nj-suburb--preferred-only",
+   "concepts": [
+    "conservation-wildlife"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": 300,
+    "maximum_miles": null,
+    "allow_wildcards": true
+   },
+   "origin": {
+    "lat": 40.519,
+    "lon": -74.412
+   },
+   "aggregates": {
+    "scale.small": 3,
+    "place.quiet_setting": 1,
+    "place.outdoors_access": 1
+   },
+   "expected": {
+    "schools": [
+     [
+      "juniata-college",
+      "anchor"
+     ],
+     [
+      "university-of-idaho",
+      "flexible"
+     ],
+     [
+      "suny-college-of-environmental-science-and-forestry",
+      "contrast"
+     ],
+     [
+      "eastern-new-mexico-university-main-campus",
+      "affordability"
+     ],
+     [
+      "warren-wilson-college",
+      "wildcard"
+     ],
+     [
+      "paul-smiths-college-of-arts-and-science",
+      "exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": true,
+     "affordability": true,
+     "wildcard": true,
+     "exploration": true
+    },
+    "eligible_candidates": 175,
+    "relaxation_level": null
+   }
+  },
+  {
+   "scenario_id": "nj-suburb--no-distance",
+   "concepts": [
+    "environmental-policy",
+    "environment-climate"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": null,
+    "maximum_miles": null,
+    "allow_wildcards": false
+   },
+   "origin": {
+    "lat": 40.519,
+    "lon": -74.412
+   },
+   "aggregates": {
+    "place.big_city": 3,
+    "scale.large": 1,
+    "cost.low_debt": 1
+   },
+   "expected": {
+    "schools": [
+     [
+      "osu",
+      "anchor"
+     ],
+     [
+      "texas-am",
+      "flexible"
+     ],
+     [
+      "suny-college-of-environmental-science-and-forestry",
+      "contrast"
+     ],
+     [
+      "princeton",
+      "affordability"
+     ],
+     [
+      "usc",
+      "exploration"
+     ],
+     [
+      "brigham-young-university",
+      "additional_exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": true,
+     "affordability": true,
+     "wildcard": false,
+     "exploration": true
+    },
+    "eligible_candidates": 794,
+    "relaxation_level": null
+   }
+  },
+  {
+   "scenario_id": "nj-suburb--strict-max",
+   "concepts": [
+    "environmental-engineering",
+    "climate-earth-science"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": 100,
+    "maximum_miles": 250,
+    "allow_wildcards": false
+   },
+   "origin": {
+    "lat": 40.519,
+    "lon": -74.412
+   },
+   "aggregates": {
+    "out.four_year_grad": 3,
+    "out.retention": 1,
+    "life.greek_scene": -3
+   },
+   "expected": {
+    "schools": [
+     [
+      "udel",
+      "anchor"
+     ],
+     [
+      "penn-state",
+      "flexible"
+     ],
+     [
+      "fitchburg-state-university",
+      "contrast"
+     ],
+     [
+      "princeton",
+      "affordability"
+     ],
+     [
+      "columbia",
+      "exploration"
+     ],
+     [
+      "lafayette-college",
+      "additional_exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": true,
+     "affordability": true,
+     "wildcard": false,
+     "exploration": true
+    },
+    "eligible_candidates": 110,
+    "relaxation_level": null
+   }
+  },
+  {
+   "scenario_id": "fresno--bounded-regional",
+   "concepts": [
+    "environment-climate"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": 150,
+    "maximum_miles": 400,
+    "allow_wildcards": true
+   },
+   "origin": {
+    "lat": 36.746,
+    "lon": -119.772
+   },
+   "aggregates": {
+    "life.residential_campus": 3,
+    "class.small_discussion": 1,
+    "cost.need_aid_strength": 3
+   },
+   "expected": {
+    "schools": [
+     [
+      "san-jose-state-university",
+      "anchor"
+     ],
+     [
+      "uc-davis",
+      "flexible"
+     ],
+     [
+      "nevada-state-university",
+      "affordability"
+     ],
+     [
+      "university-of-nevada-reno",
+      "additional_exploration_relaxed"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": false,
+     "affordability": true,
+     "wildcard": false,
+     "exploration": false
+    },
+    "eligible_candidates": 52,
+    "relaxation_level": 1
+   }
+  },
+  {
+   "scenario_id": "fresno--preferred-only",
+   "concepts": [
+    "conservation-wildlife"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": 300,
+    "maximum_miles": null,
+    "allow_wildcards": true
+   },
+   "origin": {
+    "lat": 36.746,
+    "lon": -119.772
+   },
+   "aggregates": {
+    "scale.small": 3,
+    "place.quiet_setting": 1,
+    "place.outdoors_access": 1
+   },
+   "expected": {
+    "schools": [
+     [
+      "juniata-college",
+      "anchor"
+     ],
+     [
+      "university-of-idaho",
+      "flexible"
+     ],
+     [
+      "suny-college-of-environmental-science-and-forestry",
+      "contrast"
+     ],
+     [
+      "eastern-new-mexico-university-main-campus",
+      "affordability"
+     ],
+     [
+      "paul-smiths-college-of-arts-and-science",
+      "wildcard"
+     ],
+     [
+      "warren-wilson-college",
+      "exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": true,
+     "affordability": true,
+     "wildcard": true,
+     "exploration": true
+    },
+    "eligible_candidates": 175,
+    "relaxation_level": null
+   }
+  },
+  {
+   "scenario_id": "fresno--no-distance",
+   "concepts": [
+    "environmental-policy",
+    "environment-climate"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": null,
+    "maximum_miles": null,
+    "allow_wildcards": false
+   },
+   "origin": {
+    "lat": 36.746,
+    "lon": -119.772
+   },
+   "aggregates": {
+    "place.big_city": 3,
+    "scale.large": 1,
+    "cost.low_debt": 1
+   },
+   "expected": {
+    "schools": [
+     [
+      "osu",
+      "anchor"
+     ],
+     [
+      "texas-am",
+      "flexible"
+     ],
+     [
+      "suny-college-of-environmental-science-and-forestry",
+      "contrast"
+     ],
+     [
+      "princeton",
+      "affordability"
+     ],
+     [
+      "usc",
+      "exploration"
+     ],
+     [
+      "brigham-young-university",
+      "additional_exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": true,
+     "affordability": true,
+     "wildcard": false,
+     "exploration": true
+    },
+    "eligible_candidates": 794,
+    "relaxation_level": null
+   }
+  },
+  {
+   "scenario_id": "fresno--strict-max",
+   "concepts": [
+    "environmental-engineering",
+    "climate-earth-science"
+   ],
+   "geography": {
+    "zip": null,
+    "preferred_miles": 100,
+    "maximum_miles": 250,
+    "allow_wildcards": false
+   },
+   "origin": {
+    "lat": 36.746,
+    "lon": -119.772
+   },
+   "aggregates": {
+    "out.four_year_grad": 3,
+    "out.retention": 1,
+    "life.greek_scene": -3
+   },
+   "expected": {
+    "schools": [
+     [
+      "uc-davis",
+      "anchor"
+     ],
+     [
+      "california-state-university-long-beach",
+      "flexible"
+     ],
+     [
+      "university-of-nevada-reno",
+      "affordability"
+     ],
+     [
+      "uc-berkeley",
+      "additional_exploration_relaxed"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": false,
+     "affordability": true,
+     "wildcard": false,
+     "exploration": false
+    },
+    "eligible_candidates": 38,
+    "relaxation_level": 2
+   }
+  }
+ ]
+}

@@ -1,9 +1,10 @@
 "use client";
 
-// Guided discovery, slice 1 (PRD 026): geographic boundaries → accessible
-// card sort → plain-language preference ledger. Everything runs in the
-// browser; the session lives in localStorage only (PRD §12). Discovery
-// rounds arrive with the evidence engine in a later slice.
+// Guided discovery (PRD 026): geographic boundaries → accessible card sort →
+// plain-language preference ledger → interests → discovery rounds → research
+// shelf. Everything runs in the browser; the session lives in localStorage
+// only (PRD §12) and rounds are composed client-side from the public
+// evidence bundle.
 //
 // Accessibility contract (PRD §13): no dragging anywhere — the sort is one
 // card at a time with four buttons; every bucket change is announced via a
@@ -25,13 +26,23 @@ import {
   saveSession,
   SESSION_TTL_DAYS,
 } from "@/lib/discovery/session";
-import { aggregateKeys, buildLedger, buildSignals } from "@/lib/discovery/signals";
+import { cardStatementForKey } from "@/lib/discovery/round-session";
+import {
+  aggregateKeys,
+  buildLedger,
+  buildReactionSignals,
+  buildSignals,
+} from "@/lib/discovery/signals";
 import type {
   Bucket,
   DiscoveryCard,
   DiscoverySessionV1,
+  SchoolReaction,
 } from "@/lib/discovery/types";
 import { BUCKET_LABELS, BUCKETS } from "@/lib/discovery/types";
+import { InterestsStep } from "./InterestsStep";
+import { RoundsStep } from "./RoundsStep";
+import { ShelfStep } from "./ShelfStep";
 
 const BUCKET_HINTS: Record<Bucket, string> = {
   essential: "I'd give up other things for this",
@@ -151,7 +162,71 @@ export function DiscoverFlow() {
             update((s) => ({ ...s, step: "sort", sort_index: index }))
           }
           onEditGeography={() => update((s) => ({ ...s, step: "geography" }))}
+          onContinue={() => update((s) => ({ ...s, step: "interests" }))}
           onRestart={restart}
+        />
+      );
+    case "interests":
+      return (
+        <InterestsStep
+          initial={session.concepts}
+          onDone={(concepts) => {
+            // Step completion only — which/how many interests were chosen is
+            // preference-derived and never leaves the device (PRD 026 §12).
+            trackEvent("discovery_interests_chosen", { deck_version: DECK_VERSION });
+            update((s) => {
+              // Changed interests change the candidate pool: stored rounds no
+              // longer reflect the profile, so they reset. Reactions and the
+              // shelf are the student's own work and survive.
+              const changed =
+                s.concepts.length !== concepts.length ||
+                s.concepts.some((c) => !concepts.includes(c));
+              return {
+                ...s,
+                concepts,
+                step: "rounds",
+                ...(changed ? { round_history: [], current_round: 0 } : {}),
+              };
+            });
+          }}
+          onBack={() => update((s) => ({ ...s, step: "ledger" }))}
+        />
+      );
+    case "rounds":
+      return (
+        <RoundsStep
+          session={session}
+          onReact={(reaction: SchoolReaction) =>
+            update((s) => ({ ...s, reactions: [...s.reactions, reaction] }))
+          }
+          onAdvanceRound={() =>
+            update((s) => ({ ...s, current_round: s.round_history.length }))
+          }
+          onRecordRound={(round) =>
+            update((s) => ({
+              ...s,
+              current_round: round.round_index,
+              round_history: [...s.round_history, round.history_entry],
+            }))
+          }
+          onOpenShelf={() => update((s) => ({ ...s, step: "shelf" }))}
+          onBackToLedger={() => update((s) => ({ ...s, step: "ledger" }))}
+          onFixBoundaries={() => update((s) => ({ ...s, step: "geography" }))}
+        />
+      );
+    case "shelf":
+      return (
+        <ShelfStep
+          session={session}
+          onRemove={(schoolId) =>
+            update((s) => ({
+              ...s,
+              reactions: s.reactions.filter(
+                (r) => !(r.school_id === schoolId && r.reaction === "research_next"),
+              ),
+            }))
+          }
+          onBackToRounds={() => update((s) => ({ ...s, step: "rounds" }))}
         />
       );
   }
@@ -165,11 +240,11 @@ function Intro({ onStart }: { onStart: () => void }) {
         Find what you value, <em>before</em> you search.
       </h1>
       <p style={{ fontSize: 16, lineHeight: 1.6, color: "var(--ink-2)", maxWidth: "60ch" }}>
-        Most college search tools ask you to declare preferences before you have
-        seen any real possibilities. This works the other way: you react to
-        concrete campus experiences, and your choices become a preference
-        profile you can inspect, edit, and — soon — use to discover schools you
-        have never heard of, each with its reasons shown.
+        Most college search tools ask you to declare preferences before you
+        have seen any real possibilities. This works the other way: you react
+        to concrete campus experiences, and your choices become a preference
+        profile that steers small rounds of real schools — including ones you
+        have never heard of — each shown with its reasons and sources.
       </p>
       <div className="cd-card" style={{ padding: "16px 20px", margin: "20px 0", maxWidth: "60ch" }}>
         <div className="meta" style={{ marginBottom: 8 }}>§ How it works</div>
@@ -177,6 +252,7 @@ function Intro({ onStart }: { onStart: () => void }) {
           <li>Set distance boundaries — only if your family has them.</li>
           <li>Sort {DECK_CARDS.length} cards describing real campus experiences.</li>
           <li>Review your preference profile in plain language.</li>
+          <li>React to rounds of schools, each with its reasons shown.</li>
         </ol>
         <p style={{ margin: "10px 0 0", fontSize: 13, color: "var(--ink-3)" }}>
           Your answers stay on this device — no account, and nothing you type
@@ -243,7 +319,7 @@ function GeographyStep({
 
   return (
     <div>
-      <div className="meta">§ Step 1 of 3 · Boundaries</div>
+      <div className="meta">§ Boundaries</div>
       <h1 className="serif" style={{ fontSize: 32, margin: "8px 0 12px" }}>
         How far from home?
       </h1>
@@ -370,8 +446,8 @@ function GeographyStep({
         </button>
       </div>
       <p style={{ fontSize: 13, color: "var(--ink-3)", marginTop: 12, maxWidth: "60ch" }}>
-        Distance-based suggestions activate when discovery rounds ship; your
-        boundary is saved locally so it will be respected from day one.
+        Every discovery round respects your boundary. Your ZIP and distances
+        are saved only in this browser — they never leave the device.
       </p>
     </div>
   );
@@ -419,7 +495,7 @@ function SortStep({
 
   return (
     <div>
-      <div className="meta">§ Step 2 of 3 · Card sort</div>
+      <div className="meta">§ Card sort</div>
       <div
         style={{ display: "flex", alignItems: "baseline", gap: 12, margin: "8px 0 4px" }}
       >
@@ -522,11 +598,13 @@ function LedgerStep({
   session,
   onEditCard,
   onEditGeography,
+  onContinue,
   onRestart,
 }: {
   session: DiscoverySessionV1;
   onEditCard: (deckIndex: number) => void;
   onEditGeography: () => void;
+  onContinue: () => void;
   onRestart: () => void;
 }) {
   const ledger = useMemo(
@@ -534,16 +612,35 @@ function LedgerStep({
     [session.card_responses],
   );
   const aggregates = useMemo(
-    () => aggregateKeys(buildSignals(session.card_responses, DECK_CARDS)),
-    [session.card_responses],
+    () =>
+      aggregateKeys([
+        ...buildSignals(session.card_responses, DECK_CARDS),
+        ...buildReactionSignals(session.reactions),
+      ]),
+    [session.card_responses, session.reactions],
   );
   const conflicts = aggregates.filter((a) => a.conflicted);
-  const conflictCards = conflicts.flatMap((a) =>
-    a.signal_ids
-      .map((id) => id.split(":")[1])
-      .map((cardId) => DECK_CARDS[DECK_INDEX.get(cardId) ?? -1])
-      .filter(Boolean),
-  );
+  // Each tension line names its source: a sorted card by its statement, a
+  // round reaction by the statement behind the reason the student tuned.
+  const conflictLines = conflicts.flatMap((a) => {
+    const lines: { id: string; text: string }[] = [];
+    for (const card of a.signal_ids
+      .filter((id) => id.startsWith("card:"))
+      .map((id) => DECK_CARDS[DECK_INDEX.get(id.split(":")[1]) ?? -1])
+      .filter(Boolean)) {
+      lines.push({ id: `card:${card.card_id}:${a.key}`, text: `“${card.statement}”` });
+    }
+    if (a.signal_ids.some((id) => id.startsWith("reaction:"))) {
+      const statement = cardStatementForKey(a.key);
+      lines.push({
+        id: `reaction:${a.key}`,
+        text: statement
+          ? `Your reactions to schools in the rounds, about “${statement}”`
+          : "Your reactions to schools in the rounds",
+      });
+    }
+    return lines;
+  });
   const everythingEssential =
     ledger.essential.length >= DECK_CARDS.length - ESSENTIAL_NUDGE_TOLERANCE;
 
@@ -556,14 +653,14 @@ function LedgerStep({
 
   return (
     <div>
-      <div className="meta">§ Step 3 of 3 · Your preference profile</div>
+      <div className="meta">§ Your preference profile</div>
       <h1 className="serif" style={{ fontSize: 32, margin: "8px 0 12px" }}>
         Here's what you told us.
       </h1>
       <p style={{ color: "var(--ink-2)", lineHeight: 1.6, maxWidth: "60ch" }}>
         This ledger is yours to edit — nothing here is hidden or inferred
-        without your say. When discovery rounds ship, every school suggestion
-        will trace back to lines on this page.
+        without your say. Every school suggestion in your rounds traces back
+        to lines on this page.
       </p>
 
       <p style={{ fontSize: 13, color: "var(--ink-3)", maxWidth: "60ch" }}>
@@ -601,11 +698,12 @@ function LedgerStep({
           <div className="meta" style={{ marginBottom: 6 }}>§ Tensions</div>
           <p style={{ margin: 0, fontSize: 14, color: "var(--ink-2)" }}>
             These choices pull in opposite directions. They stay visible and
-            count for nothing until you revise one of the cards involved:
+            count for nothing until you revise one of the cards or reactions
+            involved:
           </p>
           <ul style={{ margin: "8px 0 0", paddingLeft: 20, fontSize: 14, color: "var(--ink-2)" }}>
-            {conflictCards.map((card) => (
-              <li key={card.card_id}>“{card.statement}”</li>
+            {conflictLines.map((line) => (
+              <li key={line.id}>{line.text}</li>
             ))}
           </ul>
         </div>
@@ -687,21 +785,32 @@ function LedgerStep({
       <div className="cd-card cd-card--cut" style={{ padding: "16px 20px", margin: "28px 0", maxWidth: "60ch" }}>
         <div className="meta" style={{ marginBottom: 8 }}>§ What happens next</div>
         <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--ink-2)" }}>
-          Discovery rounds are coming: small, varied sets of schools chosen by
-          transparent rules, each with its reasons and sources shown — never a
-          ranking. Your profile is saved in this browser for {SESSION_TTL_DAYS}{" "}
-          days, so you can return and revise anytime.
+          Next: pick the interest areas to explore, then discovery rounds —
+          small, varied sets of schools chosen by transparent rules, each with
+          its reasons and sources shown, never a ranking. Your profile is
+          saved in this browser for {SESSION_TTL_DAYS} days, so you can return
+          and revise anytime.
         </p>
       </div>
 
-      <button
-        type="button"
-        className="cd-btn cd-btn--ghost"
-        style={{ minHeight: 44 }}
-        onClick={onRestart}
-      >
-        Start over
-      </button>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <button
+          type="button"
+          className="cd-btn"
+          style={{ minHeight: 44 }}
+          onClick={onContinue}
+        >
+          Continue to discovery rounds →
+        </button>
+        <button
+          type="button"
+          className="cd-btn cd-btn--ghost"
+          style={{ minHeight: 44 }}
+          onClick={onRestart}
+        >
+          Start over
+        </button>
+      </div>
     </div>
   );
 }

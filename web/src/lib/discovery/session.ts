@@ -3,6 +3,7 @@
 // Sessions expire after 30 days; a session written by an incompatible deck,
 // library, or policy version is discarded rather than silently migrated.
 
+import { EVIDENCE_BUNDLE_VERSION } from "./bundle";
 import {
   CARD_LIBRARY_VERSION,
   DECK_VERSION,
@@ -16,7 +17,7 @@ const SESSION_TTL_MS = SESSION_TTL_DAYS * 24 * 60 * 60 * 1000;
 
 export function newSession(now: Date): DiscoverySessionV1 {
   return {
-    schema_version: 1,
+    schema_version: 2,
     created_at: now.toISOString(),
     expires_at: new Date(now.getTime() + SESSION_TTL_MS).toISOString(),
     card_deck_version: DECK_VERSION,
@@ -26,6 +27,11 @@ export function newSession(now: Date): DiscoverySessionV1 {
     sort_index: 0,
     geography: null,
     card_responses: {},
+    concepts: [],
+    reactions: [],
+    current_round: 0,
+    round_history: [],
+    bundle_version: EVIDENCE_BUNDLE_VERSION,
   };
 }
 
@@ -34,7 +40,7 @@ export function isCompatible(
   now: Date,
 ): boolean {
   return (
-    session.schema_version === 1 &&
+    session.schema_version === 2 &&
     session.card_deck_version === DECK_VERSION &&
     session.card_library_version === CARD_LIBRARY_VERSION &&
     session.policy_version === POLICY_VERSION &&
@@ -42,8 +48,39 @@ export function isCompatible(
   );
 }
 
-const STEPS = new Set(["intro", "geography", "sort", "ledger"]);
+const STEPS = new Set(["intro", "geography", "sort", "ledger", "interests", "rounds", "shelf"]);
 const BUCKET_SET = new Set<string>(BUCKETS);
+const REACTION_KINDS = new Set(["research_next", "more_like_this", "not_for_me"]);
+const FAMILIARITIES = new Set(["yes", "name_only", "no"]);
+
+function isStringArray(v: unknown): v is string[] {
+  return Array.isArray(v) && v.every((x) => typeof x === "string");
+}
+
+// Round history and reactions feed the engine directly; a tampered entry
+// (non-string school id, bogus reaction kind, negative round index) would
+// crash round rendering on every reload otherwise.
+function validRoundEntry(e: DiscoverySessionV1["round_history"][number]): boolean {
+  return (
+    typeof e === "object" && e !== null &&
+    Number.isInteger(e.round_index) && e.round_index >= 0 &&
+    isStringArray(e.school_ids) &&
+    isStringArray(e.roles) &&
+    isStringArray(e.revisit_ids)
+  );
+}
+
+function validReaction(r: DiscoverySessionV1["reactions"][number]): boolean {
+  return (
+    typeof r === "object" && r !== null &&
+    typeof r.school_id === "string" &&
+    REACTION_KINDS.has(r.reaction) &&
+    (r.key === null || typeof r.key === "string") &&
+    (r.saved_reason_text === null || typeof r.saved_reason_text === "string") &&
+    (r.familiarity === null || FAMILIARITIES.has(r.familiarity)) &&
+    Number.isInteger(r.round_index) && r.round_index >= 0
+  );
+}
 
 // A version-stamped session can still be shape-corrupted (tampered or
 // half-written storage). Without this guard a bad step/sort_index/bucket
@@ -73,6 +110,18 @@ export function hasValidShape(session: DiscoverySessionV1): boolean {
     if (geo.preferred_miles !== null && typeof geo.preferred_miles !== "number") return false;
     if (geo.maximum_miles !== null && typeof geo.maximum_miles !== "number") return false;
     if (typeof geo.allow_wildcards !== "boolean") return false;
+  }
+  if (!Array.isArray(session.concepts) || !session.concepts.every((c) => typeof c === "string")) {
+    return false;
+  }
+  if (!Array.isArray(session.reactions) || !session.reactions.every(validReaction)) {
+    return false;
+  }
+  if (!Array.isArray(session.round_history) || !session.round_history.every(validRoundEntry)) {
+    return false;
+  }
+  if (!Number.isInteger(session.current_round) || session.current_round < 0) {
+    return false;
   }
   return true;
 }
@@ -105,6 +154,17 @@ export function loadSession(now: Date, store?: StorageLike): DiscoverySessionV1 
     if (!isCompatible(parsed, now) || !hasValidShape(parsed)) {
       s.removeItem(SESSION_STORAGE_KEY);
       return null;
+    }
+    // A new evidence bundle invalidates stored rounds (their school ids and
+    // reasons came from the old data) but not the student's own work — cards,
+    // boundaries, interests, reactions, and shelf survive.
+    if (parsed.bundle_version !== EVIDENCE_BUNDLE_VERSION) {
+      return {
+        ...parsed,
+        bundle_version: EVIDENCE_BUNDLE_VERSION,
+        round_history: [],
+        current_round: 0,
+      };
     }
     return parsed;
   } catch {
