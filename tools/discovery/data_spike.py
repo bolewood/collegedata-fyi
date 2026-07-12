@@ -17,6 +17,9 @@ Outputs:
   scratch/discovery-spike/audit.json          full machine-readable audit
   stdout                                       gate summary
 
+Sibling: cds_card_coverage.py regenerates the per-card CDS coverage numbers
+cited in the findings doc.
+
 Prototype-policy notes (documented deviations, all spike-only):
   - Evidence matchers cover directory/scorecard-backed keys only; CDS-backed
     keys (residential_campus, small_discussion, greek_scene) and geodata keys
@@ -27,6 +30,7 @@ Prototype-policy notes (documented deviations, all spike-only):
 """
 
 import csv
+import hashlib
 import json
 import math
 import sys
@@ -38,9 +42,10 @@ SPIKE = ROOT / "scratch" / "discovery-spike"
 
 BACHELOR_AWLEVEL = "5"
 FIRST_MAJOR = "1"
+MAX_PER_STATE = 2
+MAX_PER_CONTROL = 3
 
 # Scorecard locale codes: 11-13 city, 21-23 suburb, 31-33 town, 41-43 rural.
-CITY = {11, 12, 13}
 TOWNISH = {31, 32, 33, 41, 42, 43}
 BIG_CITY = {11, 12}
 
@@ -63,10 +68,8 @@ def load_inputs():
 
 
 def load_completions(cip_universe):
-    """UNITID -> {cip: total bachelor's first-major awards}, plus all-CIP
-    bachelor counts per school for breadth measures."""
+    """UNITID -> {cip: total bachelor's first-major awards}."""
     by_school = defaultdict(dict)
-    breadth = Counter()
     with open(SPIKE / "C2024_a.csv", newline="", encoding="utf-8-sig", errors="replace") as fh:
         for row in csv.DictReader(fh):
             if row["MAJORNUM"].strip() != FIRST_MAJOR:
@@ -80,16 +83,19 @@ def load_completions(cip_universe):
             unitid = row["UNITID"].strip()
             if cip == "99":  # grand-total rollup rows
                 continue
-            breadth[unitid] += 1
             if cip in cip_universe:
                 by_school[unitid][cip] = by_school[unitid].get(cip, 0) + total
-    return by_school, breadth
+    return by_school
 
 
 def edge_sets(ontology, concepts=None):
+    """Direct/adjacent CIP sets. concepts=None means the whole family;
+    an explicit empty set matches nothing (never the whole family)."""
     direct, adjacent = set(), set()
+    if concepts is not None and not concepts:
+        return direct, adjacent
     for e in ontology["edges"]:
-        if concepts and e["from_concept_id"] not in concepts:
+        if concepts is not None and e["from_concept_id"] not in concepts:
             continue
         if e["relationship"] == "direct":
             direct.add(e["to_cip"])
@@ -103,6 +109,8 @@ def matcher(key, school):
     sc = school["scorecard"] or {}
     enr = school["enrollment"]
     loc = sc.get("locale")
+    if loc is not None:
+        loc = int(loc)
     if key == "scale.small":
         if enr is None:
             return 0
@@ -215,8 +223,26 @@ def relevance(school, prefs, direct_cips, adjacent_cips, in_preferred):
             if agg * m > 0:
                 reasons.append((key, f"match:{key}"))
     if in_preferred:
-        score += 2
+        score += 2  # radius contribution; not a displayable reason (PRD shows distance itself)
     return score, reasons
+
+
+def reason_resolves(reason, school, direct_cips, adjacent_cips):
+    """Spike-level stand-in for PRD fail-closed rendering: a reason reference
+    must resolve to loaded evidence for this school. Full RecommendationReason
+    validation (templates, coverage records, limitation versions) is a
+    discovery_policy_v1 deliverable."""
+    kind, ref = reason
+    if kind == "academic_direct":
+        return ref == "program.recent_awards_direct" and any(
+            c in direct_cips and n > 0 for c, n in school["direct"].items())
+    if kind == "academic_adjacent":
+        return ref == "program.recent_awards_adjacent" and any(
+            c in adjacent_cips and n > 0
+            for c, n in list(school["direct"].items()) + list(school["adjacent"].items()))
+    if ref == f"match:{kind}":
+        return kind in SUPPORTED_KEYS and matcher(kind, school) != 0
+    return False
 
 
 def tie_key(school):
@@ -233,6 +259,7 @@ def compose_round(pool, profile, origin, family_edges_by_concept):
     geo = profile["geography"]
     prefs = profile["preferences"]
     max_mi, pref_mi = geo["maximum_miles"], geo["preferred_miles"]
+    wildcard_possible = bool(geo["allow_wildcards"] and pref_mi)
     use_geo = origin is not None and (max_mi or pref_mi)
 
     candidates, diagnostics = [], Counter()
@@ -263,7 +290,8 @@ def compose_round(pool, profile, origin, family_edges_by_concept):
     chosen, state_count, control_count = [], Counter(), Counter()
 
     def diversity_ok(s):
-        return state_count[s["state"]] < 2 and control_count[s["control"]] < 3
+        return (state_count[s["state"]] < MAX_PER_STATE
+                and control_count[s["control"]] < MAX_PER_CONTROL)
 
     def take(pred, role):
         for s in candidates:
@@ -284,15 +312,14 @@ def compose_round(pool, profile, origin, family_edges_by_concept):
 
     slots_filled = {}
     slots_filled["anchor"] = take(is_direct, "anchor")
-    slots_filled["flexible"] = take_flexible(candidates, chosen, direct_cips,
+    slots_filled["flexible"] = take_flexible(candidates, chosen, direct_cips, adjacent_cips,
                                              state_count, control_count, diagnostics)
     slots_filled["contrast"] = take(
         lambda s: mismatches_exactly_one_interesting(s, prefs), "contrast")
     slots_filled["affordability"] = take_affordability(
         candidates, chosen, state_count, control_count, diagnostics)
     slots_filled["wildcard"] = (
-        take(lambda s: geo["allow_wildcards"] and pref_mi and s["distance"] is not None
-             and s["distance"] > pref_mi, "wildcard")
+        take(lambda s: s["distance"] is not None and s["distance"] > pref_mi, "wildcard")
         if geo["allow_wildcards"] and pref_mi else False)
     slots_filled["exploration"] = take(lambda s: True, "exploration")
     while len(chosen) < 6 and take(lambda s: True, "additional_exploration"):
@@ -301,10 +328,9 @@ def compose_round(pool, profile, origin, family_edges_by_concept):
     # PRD 026 §8: if diversity caps prevent a four-school minimum, relax
     # control type first, then state, recording the relaxation.
     if len(chosen) < 4:
-        for level, (state_cap, control_cap) in enumerate(
-            [(2, None), (None, None)], start=1
-        ):
-            diagnostics["relaxation_level"] = level
+        # level 1 drops the control cap (state cap kept); level 2 drops both.
+        for level, state_cap in enumerate([MAX_PER_STATE, None], start=1):
+            added = 0
             for s in candidates:
                 if len(chosen) >= 4:
                     break
@@ -315,23 +341,32 @@ def compose_round(pool, profile, origin, family_edges_by_concept):
                 chosen.append({**s, "role": "additional_exploration_relaxed"})
                 state_count[s["state"]] += 1
                 control_count[s["control"]] += 1
+                added += 1
+            if added:
+                diagnostics["relaxation_level"] = level
+                diagnostics[f"relaxation_added_l{level}"] = added
             if len(chosen) >= 4:
                 break
 
-    return chosen, slots_filled, diagnostics, len(candidates)
+    return chosen, slots_filled, diagnostics, len(candidates), wildcard_possible
 
 
-def take_flexible(candidates, chosen, direct_cips, state_count, control_count, diagnostics):
+def take_flexible(candidates, chosen, direct_cips, adjacent_cips,
+                  state_count, control_count, diagnostics):
+    """Highest related-CIP count among remaining direct matches, counted
+    within the SELECTED concepts' edge sets (PRD 026 §8 slot 2), not the
+    whole family."""
     best = None
+    scoped = direct_cips | adjacent_cips
     for s in candidates:
         if any(c["ipeds_id"] == s["ipeds_id"] for c in chosen):
             continue
         if not any(c in direct_cips for c in s["direct"]):
             continue
-        if state_count[s["state"]] >= 2 or control_count[s["control"]] >= 3:
+        if state_count[s["state"]] >= MAX_PER_STATE or control_count[s["control"]] >= MAX_PER_CONTROL:
             diagnostics["diversity_rejected:flexible"] += 1
             continue
-        related = len(s["direct"]) + len(s["adjacent"])
+        related = sum(1 for c in list(s["direct"]) + list(s["adjacent"]) if c in scoped)
         if best is None or related > best[0]:
             best = (related, s)
     if best:
@@ -351,7 +386,7 @@ def take_affordability(candidates, chosen, state_count, control_count, diagnosti
         np = (s["scorecard"] or {}).get("avg_net_price")
         if np is None:
             continue
-        if state_count[s["state"]] >= 2 or control_count[s["control"]] >= 3:
+        if state_count[s["state"]] >= MAX_PER_STATE or control_count[s["control"]] >= MAX_PER_CONTROL:
             diagnostics["diversity_rejected:affordability"] += 1
             continue
         if best is None or np < best[0]:
@@ -372,10 +407,10 @@ def mismatches_exactly_one_interesting(school, prefs):
             continue
         m = matcher(p["key"], school)
         agg = p["aggregate"]
-        if agg >= 3 or agg <= -3:  # essential seek/avoid must not mismatch
+        if abs(agg) >= 3:  # essential seek/avoid must not mismatch
             if (agg > 0 and m == -1) or (agg < 0 and m == 1):
                 return False
-        elif abs(agg) == 1:
+        elif agg != 0:  # any sub-essential aggregate counts as interesting
             if (agg > 0 and m == -1) or (agg < 0 and m == 1):
                 mismatched_interesting += 1
     return mismatched_interesting == 1
@@ -385,7 +420,7 @@ def main():
     directory, scorecard, ontology, scenarios = load_inputs()
     family_direct, family_adjacent = edge_sets(ontology)
     cip_universe = family_direct | family_adjacent
-    awards, breadth = load_completions(cip_universe)
+    awards = load_completions(cip_universe)
 
     pool, exclusions = build_pool(directory, scorecard, awards,
                                   family_direct, family_adjacent)
@@ -399,7 +434,10 @@ def main():
         1 for s in pool
         if s["scorecard"] and s["scorecard"].get("graduation_rate_6yr") is not None)
 
-    # identity-join audit against the full completions file
+    # Identity-join audit: membership of family UNITIDs in the directory.
+    # NOTE: ipeds_id is the directory's primary key, so the ambiguity check
+    # in build_pool can never fire on this input; the PRD §6 audit of branch
+    # campuses, systems, closures, and consolidations is future work.
     directory_ids = {d["ipeds_id"] for d in directory if d["ipeds_id"]}
     family_unitids = set(awards)
     unmatched = family_unitids - directory_ids
@@ -410,14 +448,18 @@ def main():
         for profile in scenarios["profiles"]:
             concepts = set(profile["concepts"])
             d_cips, a_cips = edge_sets(ontology, concepts)
-            chosen, slots, diags, n_cand = compose_round(
+            chosen, slots, diags, n_cand, wc_possible = compose_round(
                 pool, profile, origin, (d_cips, a_cips))
-            reasons_valid = all(s["reasons"] for s in chosen)
+            reasons_valid = all(
+                s["reasons"] and all(
+                    reason_resolves(r, s, d_cips, a_cips) for r in s["reasons"])
+                for s in chosen)
             scenario_results.append({
                 "scenario_id": f"{origin['origin_id']}--{profile['profile_id']}",
                 "eligible_candidates": n_cand,
                 "round_size": len(chosen),
                 "slots": slots,
+                "wildcard_possible": wc_possible,
                 "roles": [s["role"] for s in chosen],
                 "schools": [
                     {"school_id": s["school_id"], "role": s["role"],
@@ -433,12 +475,10 @@ def main():
     rounds4 = sum(1 for r in scenario_results if r["round_size"] >= 4)
     rounds6 = sum(1 for r in scenario_results if r["round_size"] >= 6)
     n_scen = len(scenario_results)
-    wildcard_possible = [r for r in scenario_results if "--no-distance" not in r["scenario_id"]
-                         and not r["scenario_id"].endswith("strict-max")]
+    wildcard_universe = [r for r in scenario_results if r["wildcard_possible"]]
 
     def fill_rate(role, universe):
-        pool_ = [r for r in universe]
-        return (sum(1 for r in pool_ if r["slots"].get(role)) / len(pool_)) if pool_ else None
+        return (sum(1 for r in universe if r["slots"].get(role)) / len(universe)) if universe else None
 
     gate = {
         "eligible_institutions": {"value": n_pool, "threshold": 75, "pass": n_pool >= 75},
@@ -452,7 +492,7 @@ def main():
         "slot_flexible": {"value": fill_rate("flexible", scenario_results), "threshold": 0.8},
         "slot_contrast": {"value": fill_rate("contrast", scenario_results), "threshold": 0.5},
         "slot_affordability": {"value": fill_rate("affordability", scenario_results), "threshold": 0.7},
-        "slot_wildcard": {"value": fill_rate("wildcard", wildcard_possible), "threshold": 0.7},
+        "slot_wildcard": {"value": fill_rate("wildcard", wildcard_universe), "threshold": 0.7},
         "reasons_resolve": {"value": all(r["all_reasons_resolve"] for r in scenario_results), "threshold": True},
     }
     for k in ("slot_anchor", "slot_flexible", "slot_contrast", "slot_affordability", "slot_wildcard"):
@@ -460,8 +500,23 @@ def main():
         gate[k]["pass"] = v is not None and v >= gate[k]["threshold"]
     gate["reasons_resolve"]["pass"] = gate["reasons_resolve"]["value"] is True
 
+    def file_manifest(path):
+        h = hashlib.sha256()
+        with open(path, "rb") as fh:
+            for chunk in iter(lambda: fh.read(1 << 20), b""):
+                h.update(chunk)
+        stat = path.stat()
+        return {"file": path.name, "sha256": h.hexdigest(), "bytes": stat.st_size}
+
     audit = {
         "spike_version": "v1",
+        "input_manifests": [
+            file_manifest(SPIKE / "C2024_a.csv"),
+            file_manifest(SPIKE / "directory.json"),
+            file_manifest(SPIKE / "scorecard.json"),
+            file_manifest(ROOT / "data/discovery/ontology/v1.json"),
+            file_manifest(ROOT / "data/discovery/scenarios/v1.json"),
+        ],
         "completions_release": "C2024_A provisional (2023-24 awards, MAJORNUM=1, AWLEVEL=05)",
         "ontology_version": ontology["ontology_version"],
         "scenario_corpus_version": scenarios["scenario_corpus_version"],

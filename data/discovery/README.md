@@ -21,12 +21,15 @@ later. Code contributions elsewhere in the repo are unaffected.
 
 ## Files
 
-- `cards/v1.json` — versioned experience-card library (54 cards). The
-  opening sort deck is drawn from this library; deck selection is a
-  separate versioned artifact (pending).
-- `ontology/` — reviewed interest-concept graph (pending, Milestone 0).
-- `scenarios/` — synthetic geography/preference fixtures for the
-  feasibility gate (pending, Milestone 0).
+- `cards/v1.json` — versioned experience-card library (54 cards;
+  25 data / 12 proxy / 17 reflection-only).
+- `decks/opening-v1.json` — the 24-card opening sort deck drawn from the
+  library (approved, revision 2).
+- `ontology/v1.json` — reviewed interest-concept graph for the
+  environment/climate/sustainability lake (6 concepts, 45 edges,
+  approved 2026-07-12).
+- `scenarios/v1.json` — versioned synthetic geography/preference
+  fixtures for the feasibility gate (5 origins x 4 profiles).
 
 ## Versioning rules
 

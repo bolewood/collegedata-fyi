@@ -7,8 +7,11 @@ environment/climate/sustainability interest family.
 Reproduce: `python3 tools/discovery/data_spike.py` after fetching the inputs
 listed in the script header (IPEDS `C2024_A` + dictionary into
 `scratch/discovery-spike/`, plus `institution_directory` / `scorecard_summary`
-dumps from the public API). Full machine-readable output:
-`scratch/discovery-spike/audit.json`.
+dumps from the public API); `python3 tools/discovery/cds_card_coverage.py`
+regenerates the per-card CDS coverage numbers. Full machine-readable output:
+`scratch/discovery-spike/audit.json`, which embeds SHA-256 manifests of every
+input file so a re-run against drifted dumps is detectable. Unit tests for the
+audit logic and artifact invariants: `python3 -m pytest tools/discovery/`.
 
 ## Inputs and versions
 
@@ -36,7 +39,13 @@ dumps from the public API). Full machine-readable output:
 | Contrast fill | ≥ 50% | 60% | PASS |
 | Affordability-context fill | ≥ 70% | 95% | PASS |
 | Geographic-wildcard fill (where possible) | ≥ 70% | 90% | PASS |
-| Recommendation reasons resolve to evidence | 100% | 100% | PASS |
+| Reason references resolve to loaded evidence¹ | 100% | 100% | PASS |
+
+¹ Spike-level check: every emitted reason reference must resolve to loaded
+evidence for that school (qualifying award counts for academic reasons, a live
+matcher signal for preference reasons). Full `RecommendationReason` validation
+(templates, coverage records, limitation versions, fail-closed rendering) is a
+`discovery_policy_v1` deliverable, not something this spike measures.
 
 Eligibility funnel from the 6,322-row directory: 3,398 out of scope, 811 not
 predominantly bachelor's, 312 excluded control types, 906 in-scope bachelor's
@@ -54,17 +63,23 @@ institutions with **no** recent-award evidence in the family → 895 eligible.
    `discovery_policy_v1` must treat relaxation as a first-class stage with its
    level recorded in round diagnostics, exactly as the PRD specifies.
 
-2. **E.117 "Undergraduate Research" exists in the 2024-25 CDS schema.** The
-   PRD assumed research access was unmeasurable (reflection-only). The 2024-25
-   CDS added it to Section E1 and **245 schools already have it extracted**.
-   The `early-research` card is upgraded to `data` (card v2, library note
-   records the amendment). The offered-≠-popular limitation still applies.
+2. **E.117 "Undergraduate Research" is a CDS Section E1 checklist item**
+   (added in the 2022-23 schema —
+   `schemas/cds_schema_2021_22-to-2022_23.diff.md`). The PRD assumed research
+   access was unmeasurable (reflection-only), but **245 schools have E.117
+   extracted for 2024-25**. The `early-research` card is upgraded to `data`
+   (card v2, library note records the amendment). The offered-≠-popular
+   limitation still applies.
 
-3. **Identity joins and geography are clean.** All 938 family UNITIDs in the
-   completions file match `institution_directory.ipeds_id` one-to-one (0
-   unmatched, 0 ambiguous); 0 of the 895 pool schools lack coordinates. The
-   PRD's feared join-audit problems did not materialize for this universe —
-   the directory's Scorecard provenance already normalized them.
+3. **Identity-join membership and geography are clean — with stated limits.**
+   All 938 family UNITIDs in the completions file appear in
+   `institution_directory.ipeds_id` (0 unmatched), and 0 of the 895 pool
+   schools lack coordinates. This is a membership check only: `ipeds_id` is
+   the directory's primary key, so within-dump ambiguity cannot occur by
+   construction, and the PRD §6 audit of branch campuses, multi-campus
+   systems, closures, consolidations, and one-to-many joins remains **open
+   work** before production evidence tables ship (the directory's
+   `main_campus`/`branch_count` fields exist but were not examined here).
 
 4. **The family is direct-heavy.** 838 of 895 eligible schools have a direct
    edge. The adjacent tier (57 schools) passes its ≥40 threshold, but adjacency
@@ -97,10 +112,14 @@ institutions with **no** recent-award evidence in the family → 895 eligible.
 
 ## Recommended next steps
 
-2. Opening-deck selection (20–24 of the 54 cards) as a versioned artifact.
-3. Formalize `discovery_policy_v1` (real matchers + thresholds, relaxation
-   stage, diagnostics manifest) — the spike's prototype is the skeleton.
-4. Production evidence tables (`ProgramEvidenceFact`/summary projections) via
-   the existing IPEDS pipeline, from fresh `main` per migration policy.
-5. Prioritize E1/F1 extraction coverage in future drains — every point of
+1. Formalize `discovery_policy_v1` (real matchers + thresholds, relaxation
+   stage, diagnostics manifest, full `RecommendationReason` validation) — the
+   spike's prototype is the skeleton. (Opening-deck selection is done:
+   `data/discovery/decks/opening-v1.json`.)
+2. Production evidence tables (`ProgramEvidenceFact`/summary projections) via
+   the existing IPEDS pipeline, from fresh `main` per migration policy —
+   including the PRD §6 identity audit (branches, systems, closures) deferred
+   by this spike, and the IPEDS IC load that backs the faith-life and
+   big-game-days cards.
+3. Prioritize E1/F1 extraction coverage in future drains — every point of
    coverage directly widens the evidence-backed card set.

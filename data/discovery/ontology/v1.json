@@ -7,7 +7,7 @@
   "interest_family": "environment-climate-sustainability",
   "notes": [
     "First interest lake per PRD 026 §5 and the Implementation Addendum. Codes verified against the C2024_A completions dictionary (labels as published by NCES).",
-    "All 45 edges reviewed and approved as a batch by the owner on 2026-07-12 (edge curation by agent; per-edge counts of schools with recent bachelor's awards were reviewed alongside each edge). Flagged-but-kept edges: ec-a7, su-d2, su-a2, cw-a4, ep-d2, ce-a5, ee-a1 — near-empty CIP edges are harmless (they simply never fire) and remain as future-proofing.",
+    "All 45 edges reviewed and approved as a batch by the owner on 2026-07-12; per-edge counts of schools with recent bachelor's awards (C2024_A) were presented alongside each edge. Seven edges were flagged for extra scrutiny at review for semantic fit or thin coverage and kept: ec-a7 (33 schools), su-d2 (1), su-a2 (2), cw-a4 (23), ep-d2 (2), ce-a5 (71), ee-a1 (0) — note ce-a5, ec-a7, and cw-a4 were flagged for semantic fit, not scarcity. The genuinely near-empty edges (<=4 schools) are ee-a1 (0), su-d2/x3/x4 (1), su-a2/ep-d2/ce-d3/ce-a2/x2 (2), ce-d1/ec-a4 (3), and ec-a5/ee-a2 (4); they are harmless — they simply never fire — and remain as future-proofing.",
     "Exploratory edges never satisfy academic-plausibility eligibility (PRD 026 §7 stage 3); they exist for reflection breadth and path display.",
     "credential_levels: bachelor only in v1.",
     "Edge explanations are load-bearing user-facing copy: the UI's 'why is this school here?' chain cites the edge explanation for the concept-to-program hop (PRD 026 §5, §9)."

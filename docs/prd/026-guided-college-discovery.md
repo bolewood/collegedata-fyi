@@ -1072,12 +1072,13 @@ Owner decisions after acceptance, superseding the corresponding sections above:
   contributions to that directory require a contribution agreement so the
   content layer stays relicensable.
 - **Card library v1 authored.** 54 cards at `data/discovery/cards/v1.json`
-  (24 evidence-backed, 12 proxy, 18 reflection-only), brainstormed from the
-  §2 domains plus counselor themes (NACAC fit framework, Gallup "Big Six,"
-  college-list podcast criteria). Protected-status preference cards (LGBTQ+
-  climate, disability support, campus safety) considered and deferred past v1.
-  The §2 "20–24 card mixed deck" constraint stands: the opening deck is a
-  selection from this library, pending as a separate versioned artifact.
+  (25 evidence-backed, 12 proxy, 17 reflection-only after the E.117
+  undergraduate-research amendment), brainstormed from the §2 domains plus
+  counselor themes (NACAC fit framework, Gallup "Big Six," college-list
+  podcast criteria). Protected-status preference cards (LGBTQ+ climate,
+  disability support, campus safety) considered and deferred past v1. The §2
+  "20–24 card mixed deck" constraint stands: the opening deck ships at
+  `data/discovery/decks/opening-v1.json` (24 cards, approved, revision 2).
 - Preference keys in the library are unipolar qualities (e.g. `scale.large`
   and `scale.small` are distinct keys, both positively phrased); opposing
   qualities reconcile through evidence matchers in `discovery_policy_v1`

@@ -1,6 +1,6 @@
 {
   "card_library_version": "v1",
-  "status": "draft",
+  "status": "published",
   "created": "2026-07-12",
   "license": "CC-BY-SA-4.0",
   "prd": "docs/prd/026-guided-college-discovery.md",
@@ -9,8 +9,9 @@
     "Preference keys are unipolar qualities (e.g. scale.large and scale.small are distinct keys, both phrased as positive experiences). Opposing qualities are reconciled by evidence matchers in discovery_policy_v1, not by same-key conflict detection; same-key seek/avoid conflicts arise from reactions and edits per PRD 026 §3.",
     "Evidence keys are declarative source.field pointers, provisional until discovery_policy_v1 binds matchers. cds.* keys depend on corpus extraction coverage — the Milestone 0 data spike must report per-card coverage before any 'data' card is trusted in a recommendation reason.",
     "Protected-status preference cards (LGBTQ+ climate, disability support, campus safety) were considered and deferred past v1 by owner decision 2026-07-12.",
-    "The 20-24 card opening deck is a separate selection artifact drawn from this library (pending).",
-    "2026-07-12 spike amendment: early-research upgraded reflection_only -> data (v2). The 2024-25 CDS schema includes E.117 'Undergraduate Research' in Section E1; 245 schools have it extracted. Counts: 25 data / 12 proxy / 17 reflection-only."
+    "The opening deck is decks/opening-v1.json (approved, revision 2), drawn from this library.",
+    "2026-07-12 spike amendment: early-research upgraded reflection_only -> data (v2). Undergraduate Research entered CDS Section E1 in the 2022-23 schema (schemas/cds_schema_2021_22-to-2022_23.diff.md) and 245 schools have E.117 extracted for 2024-25. Counts: 25 data / 12 proxy / 17 reflection-only.",
+    "2026-07-12 review amendment: evidence keys corrected to name real columns (scorecard.locale, scorecard.median_debt_completers, scorecard.earnings_10yr_median, scorecard.net_price_0_30k, scorecard.graduation_rate_4yr/6yr); four-year-finish (v2) no longer cites six-year completion. ipeds.ic.* keys (religious_affiliation, athletic_division on faith-life and big-game-days) reference IPEDS IC attributes NOT YET LOADED into the serving layer — those cards cannot generate recommendation reasons until that load ships."
   ],
   "limitations": {
     "lim.reflection_only": "No verified data source supports this yet, so it shapes your reflection and preference ledger but never explains why a school appears.",
@@ -259,7 +260,7 @@
       "domain": "opportunity",
       "evidence_status": "data",
       "statement": "Undergraduates join real research early — not just seniors.",
-      "explanation": "The 2024-25 CDS added Undergraduate Research to its special study options, so schools now report offering it.",
+      "explanation": "Schools report offering undergraduate research among their CDS special study options (a checklist item since the 2022-23 CDS).",
       "preference_keys": [
         "opp.undergrad_research"
       ],
@@ -326,7 +327,7 @@
         "place.walkable_town"
       ],
       "evidence_keys": [
-        "directory.locale",
+        "scorecard.locale",
         "directory.coordinates"
       ],
       "limitation_id": "lim.locale_proxy"
@@ -343,7 +344,7 @@
         "place.big_city"
       ],
       "evidence_keys": [
-        "directory.locale"
+        "scorecard.locale"
       ],
       "limitation_id": "lim.locale_proxy"
     },
@@ -415,7 +416,7 @@
         "place.quiet_setting"
       ],
       "evidence_keys": [
-        "directory.locale",
+        "scorecard.locale",
         "cds.f1.pct_college_housing"
       ],
       "limitation_id": "lim.locale_proxy"
@@ -607,7 +608,7 @@
         "spirit.big_sports"
       ],
       "evidence_keys": [
-        "directory.athletic_division"
+        "ipeds.ic.athletic_division"
       ],
       "limitation_id": "lim.division_proxy"
     },
@@ -637,7 +638,7 @@
         "spirit.faith_life"
       ],
       "evidence_keys": [
-        "directory.religious_affiliation"
+        "ipeds.ic.religious_affiliation"
       ],
       "limitation_id": "lim.affiliation"
     },
@@ -744,7 +745,7 @@
         "cost.need_aid_strength"
       ],
       "evidence_keys": [
-        "scorecard.net_price_by_income",
+        "scorecard.net_price_0_30k",
         "scorecard.avg_net_price"
       ],
       "limitation_id": "lim.aid_no_prediction"
@@ -777,7 +778,7 @@
         "cost.low_debt"
       ],
       "evidence_keys": [
-        "scorecard.median_debt",
+        "scorecard.median_debt_completers",
         "scorecard.federal_loan_rate"
       ],
       "limitation_id": "lim.aid_no_prediction"
@@ -815,7 +816,7 @@
     },
     {
       "card_id": "four-year-finish",
-      "version": 1,
+      "version": 2,
       "group": "outcomes",
       "domain": "outcomes",
       "evidence_status": "data",
@@ -826,13 +827,13 @@
       ],
       "evidence_keys": [
         "cds.b.four_year_grad_rate",
-        "scorecard.completion_rate_6yr"
+        "scorecard.graduation_rate_4yr"
       ],
       "limitation_id": "lim.outcomes_cohort"
     },
     {
       "card_id": "career-track-record",
-      "version": 1,
+      "version": 2,
       "group": "outcomes",
       "domain": "outcomes",
       "evidence_status": "proxy",
@@ -842,8 +843,8 @@
         "out.career_track_record"
       ],
       "evidence_keys": [
-        "scorecard.earnings_10yr",
-        "scorecard.completion_rate_6yr"
+        "scorecard.earnings_10yr_median",
+        "scorecard.graduation_rate_6yr"
       ],
       "limitation_id": "lim.outcomes_cohort"
     },
