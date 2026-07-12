@@ -44,7 +44,11 @@ def file_manifest(path: Path) -> dict:
     with open(path, "rb") as fh:
         for chunk in iter(lambda: fh.read(1 << 20), b""):
             h.update(chunk)
-    return {"file": path.name, "sha256": h.hexdigest(), "bytes": path.stat().st_size}
+    try:
+        name = str(path.relative_to(ROOT))
+    except ValueError:
+        name = f"scratch/{path.name}"
+    return {"file": name, "sha256": h.hexdigest(), "bytes": path.stat().st_size}
 
 
 def main() -> int:

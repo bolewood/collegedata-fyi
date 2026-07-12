@@ -32,8 +32,9 @@ export interface DiscoveryCard {
   limitation_id: string;
 }
 
-// PRD 026 §3 PreferenceSignal — the slice-1 subset (card-sourced signals only;
-// reflection, reactions, and explicit edits arrive with later slices).
+// PRD 026 §3 PreferenceSignal — card-sourced and school-reaction signals
+// (reflection-derived signals and explicit ledger edits arrive with later
+// slices).
 export interface PreferenceSignal {
   signal_id: string;
   key: string;
@@ -216,6 +217,10 @@ export interface DiscoverySessionV1 {
   // past the recorded history.
   current_round: number;
   round_history: RoundHistoryEntry[];
+  // Evidence bundle version the stored rounds were composed against. A bundle
+  // bump resets round history (stale school ids/reasons) but keeps the
+  // student's own work.
+  bundle_version: string;
 }
 
 export interface RoundHistoryEntry {

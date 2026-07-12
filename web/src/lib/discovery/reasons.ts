@@ -8,7 +8,10 @@ import { evidenceValue, matcher } from "./matchers";
 import type { Candidate } from "./rounds";
 import type { RoundReason } from "./types";
 
-const COMPLETIONS_DISPLAY_YEAR = "2023-24"; // bundle completions_release
+// Display twin of the bundle's completions_release cycle — a sync test
+// (reasons.test.ts) fails if the bundle is regenerated onto a new cycle
+// without updating this.
+export const COMPLETIONS_DISPLAY_YEAR = "2023-24";
 
 const METRIC_LABELS: Record<string, string> = {
   "scale.small": "undergraduate enrollment",
@@ -20,8 +23,6 @@ const METRIC_LABELS: Record<string, string> = {
   "cost.low_debt": "median borrower debt",
   "cost.need_aid_strength": "average net price for families earning under $30k",
   "people.first_gen_common": "share of students with Pell grants",
-  "academic.breadth": "related programs in this interest area",
-  "academic.pivot_flexibility": "related programs in this interest area",
 };
 
 const LOCALE_LABELS: Record<number, string> = {
@@ -104,7 +105,7 @@ function academicReason(
 
 const KIND_TEMPLATE: Record<string, string> = {
   numeric_band: "tpl.numeric_high.v1",
-  count_band: "tpl.numeric_high.v1",
+  count_band: "tpl.count_high.v1",
   numeric_band_inverted: "tpl.numeric_low_good.v1",
   category_set: "tpl.category.v1",
   offering_any: "tpl.offering.v1",
@@ -132,6 +133,13 @@ function preferenceReason(key: string, candidate: Candidate): RoundReason | null
       typeof value === "number" ? LOCALE_LABELS[value] : String(value);
     if (!label) return null;
     text = fill(tpl.text, { category_label: label, data_year: scorecardYear });
+  } else if (spec.kind === "count_band") {
+    // Program counts aren't a "reported metric" — their template says what
+    // the number actually is (programs across the interest family).
+    text = fill(tpl.text, {
+      value: formatValue(key, value),
+      data_year: scorecardYear,
+    });
   } else {
     const label = METRIC_LABELS[key];
     if (!label) return null;

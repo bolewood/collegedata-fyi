@@ -24,8 +24,14 @@ import type {
   SchoolReaction,
 } from "@/lib/discovery/types";
 
+const CONTROL_LABELS: Record<number, string> = {
+  1: "public",
+  2: "private nonprofit",
+  3: "private for-profit",
+};
+
 const ROLE_LABELS: Record<string, string> = {
-  anchor: "Strong match",
+  anchor: "Anchor pick",
   flexible: "Flexible path",
   contrast: "A different angle",
   affordability: "Affordability context",
@@ -136,23 +142,18 @@ export function RoundsStep({
         </div>
       )}
 
-      {round.changed_keys.length > 0 && (
-        <p style={{ fontSize: 14, color: "var(--ink-2)", maxWidth: "64ch" }}>
-          This round leans{" "}
-          {round.changed_keys
-            .map((c) => {
-              const stmt = cardStatementForKey(c.key);
-              return stmt
-                ? `${c.direction === "seek" ? "toward" : "away from"} “${stmt}”`
-                : null;
-            })
-            .filter(Boolean)
-            .join(" and ")}{" "}
-          because of your last choices.
-        </p>
-      )}
+      <ChangeNote changedKeys={round.changed_keys} onBackToLedger={onBackToLedger} />
 
-      {round.schools.length < 4 && (
+      {round.schools.length === 0 ? (
+        <div className="cd-card" style={{ padding: "16px 20px", margin: "0 0 16px", maxWidth: "64ch" }}>
+          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--ink-2)" }}>
+            You&apos;ve seen every school your current boundaries and interests
+            allow. Two reversible ways to keep going: widen your distance
+            limit, or add another interest angle. Your shelf and profile are
+            untouched.
+          </p>
+        </div>
+      ) : round.schools.length < 4 ? (
         <div className="cd-card" style={{ padding: "12px 16px", margin: "0 0 16px", maxWidth: "64ch" }}>
           <p style={{ margin: 0, fontSize: 14, color: "var(--ink-2)" }}>
             Your current boundaries and interests leave a small pool
@@ -161,7 +162,7 @@ export function RoundsStep({
             another interest angle.
           </p>
         </div>
-      )}
+      ) : null}
 
       <ol style={{ listStyle: "none", margin: 0, padding: 0 }}>
         {round.schools.map((s) => (
@@ -176,9 +177,16 @@ export function RoundsStep({
       </ol>
 
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 20 }}>
-        <button type="button" className="cd-btn" style={{ minHeight: 44 }} onClick={onAdvanceRound}>
-          Next round →
-        </button>
+        {round.schools.length > 0 && (
+          <button type="button" className="cd-btn" style={{ minHeight: 44 }} onClick={onAdvanceRound}>
+            Next round →
+          </button>
+        )}
+        {round.schools.length === 0 && (
+          <button type="button" className="cd-btn" style={{ minHeight: 44 }} onClick={onFixBoundaries}>
+            Widen my boundaries
+          </button>
+        )}
         <button type="button" className="cd-btn cd-btn--ghost" style={{ minHeight: 44 }} onClick={onOpenShelf}>
           Research shelf ({savedCount})
         </button>
@@ -191,6 +199,66 @@ export function RoundsStep({
         ranking, an application list, or an admissions prediction.
       </p>
     </StepShell>
+  );
+}
+
+// Round change note (PRD §10): plain-language, and honest about tensions — a
+// reaction whose key now opposes a card counts for nothing, and we say so
+// instead of claiming a lean the engine isn't applying.
+function ChangeNote({
+  changedKeys,
+  onBackToLedger,
+}: {
+  changedKeys: NextRound["changed_keys"];
+  onBackToLedger: () => void;
+}) {
+  if (changedKeys.length === 0) return null;
+  const leans = changedKeys.filter((c) => !c.conflicted);
+  const conflicted = changedKeys.filter((c) => c.conflicted);
+  const phrase = (c: (typeof changedKeys)[number]) => {
+    const stmt = cardStatementForKey(c.key);
+    return stmt
+      ? `${c.direction === "seek" ? "toward" : "away from"} “${stmt}”`
+      : null;
+  };
+  const leanPhrases = leans.map(phrase).filter(Boolean);
+  return (
+    <div style={{ maxWidth: "64ch" }}>
+      {leanPhrases.length > 0 && (
+        <p style={{ fontSize: 14, color: "var(--ink-2)" }}>
+          This round leans {leanPhrases.join(" and ")} because of your last
+          choices.
+        </p>
+      )}
+      {conflicted.length > 0 && (
+        <p style={{ fontSize: 14, color: "var(--ink-2)" }}>
+          Your reaction about{" "}
+          {conflicted
+            .map((c) => cardStatementForKey(c.key))
+            .filter(Boolean)
+            .map((stmt) => `“${stmt}”`)
+            .join(" and ")}{" "}
+          now pulls against your earlier cards, so that preference counts for
+          nothing until you resolve the tension in{" "}
+          <button
+            type="button"
+            onClick={onBackToLedger}
+            style={{
+              background: "none",
+              border: "none",
+              padding: 0,
+              font: "inherit",
+              color: "var(--forest)",
+              textDecoration: "underline",
+              cursor: "pointer",
+            }}
+          >
+            your profile
+          </button>
+          .
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -254,21 +322,24 @@ function RoundCard({
         {s.name}
       </h2>
       <p style={{ margin: "0 0 10px", fontSize: 14, color: "var(--ink-3)" }}>
-        {[s.city, s.state].filter(Boolean).join(", ")} ·{" "}
-        {s.control === 1 ? "public" : "private nonprofit"}
-        {s.enrollment
-          ? ` · ${s.enrollment.toLocaleString("en-US")} undergrads`
-          : ""}
+        {[s.city, s.state, CONTROL_LABELS[s.control]].filter(Boolean).join(", ")}
+        {s.enrollment ? (
+          <>
+            {" · "}
+            <span className="nums">{s.enrollment.toLocaleString("en-US")}</span>
+            {" undergrads"}
+          </>
+        ) : null}
       </p>
 
       <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
         {entry.reasons.map((r, i) => (
           <li key={r.ref} style={{ padding: "6px 0", borderTop: i > 0 ? "1px dashed var(--rule)" : "none" }}>
-            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>{r.text}</p>
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5 }}>{r.text}</p>
             <details>
               <summary
                 className="meta"
-                style={{ cursor: "pointer", fontSize: 11, marginTop: 2 }}
+                style={{ cursor: "pointer", fontSize: 11, padding: "8px 0", display: "inline-block" }}
               >
                 source &amp; limits
               </summary>
@@ -286,7 +357,7 @@ function RoundCard({
         </p>
       ) : panel === "none" ? (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
-          <button type="button" className="cd-btn" style={{ minHeight: 44 }}
+          <button type="button" className="cd-btn cd-btn--ghost" style={{ minHeight: 44 }}
             onClick={() => { setPanel("save"); setChosenReason(entry.reasons.length === 1 ? 0 : null); }}>
             Research next
           </button>
@@ -430,7 +501,7 @@ function ReasonPicker({
     <fieldset style={{ border: "none", margin: 0, padding: 0 }}>
       <legend style={{ fontSize: 14, fontWeight: 600 }}>{legend}</legend>
       {reasons.map((text, i) => (
-        <label key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "5px 0", minHeight: 34 }}>
+        <label key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "10px 0", minHeight: 44 }}>
           <input type="radio" name={name} checked={chosen === i} onChange={() => onChoose(i)}
             style={{ width: 20, height: 20, marginTop: 1, accentColor: "var(--forest)", flexShrink: 0 }} />
           <span style={{ fontSize: 14, lineHeight: 1.45 }}>{text}</span>

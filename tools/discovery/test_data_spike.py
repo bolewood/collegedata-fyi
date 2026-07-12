@@ -52,11 +52,13 @@ def test_edge_sets_direct_wins_overlap_and_concept_scoping():
     assert "03.0103" in a_b and "03.0103" not in d_b
 
 
-def test_edge_sets_empty_concepts_matches_nothing():
+def test_edge_sets_empty_concepts_means_whole_family():
+    # Product semantics (and the TS engine): no selection = the whole lake.
     ont = {"edges": [
         {"from_concept_id": "a", "to_cip": "01.0000", "relationship": "direct"},
     ]}
-    assert ds.edge_sets(ont, set()) == (set(), set())
+    assert ds.edge_sets(ont, set()) == ({"01.0000"}, set())
+    assert ds.edge_sets(ont, None) == ({"01.0000"}, set())
 
 
 def test_matcher_bands_and_none_passthrough():

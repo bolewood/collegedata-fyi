@@ -3,6 +3,7 @@
 // Sessions expire after 30 days; a session written by an incompatible deck,
 // library, or policy version is discarded rather than silently migrated.
 
+import { EVIDENCE_BUNDLE_VERSION } from "./bundle";
 import {
   CARD_LIBRARY_VERSION,
   DECK_VERSION,
@@ -30,6 +31,7 @@ export function newSession(now: Date): DiscoverySessionV1 {
     reactions: [],
     current_round: 0,
     round_history: [],
+    bundle_version: EVIDENCE_BUNDLE_VERSION,
   };
 }
 
@@ -48,6 +50,37 @@ export function isCompatible(
 
 const STEPS = new Set(["intro", "geography", "sort", "ledger", "interests", "rounds", "shelf"]);
 const BUCKET_SET = new Set<string>(BUCKETS);
+const REACTION_KINDS = new Set(["research_next", "more_like_this", "not_for_me"]);
+const FAMILIARITIES = new Set(["yes", "name_only", "no"]);
+
+function isStringArray(v: unknown): v is string[] {
+  return Array.isArray(v) && v.every((x) => typeof x === "string");
+}
+
+// Round history and reactions feed the engine directly; a tampered entry
+// (non-string school id, bogus reaction kind, negative round index) would
+// crash round rendering on every reload otherwise.
+function validRoundEntry(e: DiscoverySessionV1["round_history"][number]): boolean {
+  return (
+    typeof e === "object" && e !== null &&
+    Number.isInteger(e.round_index) && e.round_index >= 0 &&
+    isStringArray(e.school_ids) &&
+    isStringArray(e.roles) &&
+    isStringArray(e.revisit_ids)
+  );
+}
+
+function validReaction(r: DiscoverySessionV1["reactions"][number]): boolean {
+  return (
+    typeof r === "object" && r !== null &&
+    typeof r.school_id === "string" &&
+    REACTION_KINDS.has(r.reaction) &&
+    (r.key === null || typeof r.key === "string") &&
+    (r.saved_reason_text === null || typeof r.saved_reason_text === "string") &&
+    (r.familiarity === null || FAMILIARITIES.has(r.familiarity)) &&
+    Number.isInteger(r.round_index) && r.round_index >= 0
+  );
+}
 
 // A version-stamped session can still be shape-corrupted (tampered or
 // half-written storage). Without this guard a bad step/sort_index/bucket
@@ -81,7 +114,10 @@ export function hasValidShape(session: DiscoverySessionV1): boolean {
   if (!Array.isArray(session.concepts) || !session.concepts.every((c) => typeof c === "string")) {
     return false;
   }
-  if (!Array.isArray(session.reactions) || !Array.isArray(session.round_history)) {
+  if (!Array.isArray(session.reactions) || !session.reactions.every(validReaction)) {
+    return false;
+  }
+  if (!Array.isArray(session.round_history) || !session.round_history.every(validRoundEntry)) {
     return false;
   }
   if (!Number.isInteger(session.current_round) || session.current_round < 0) {
@@ -118,6 +154,17 @@ export function loadSession(now: Date, store?: StorageLike): DiscoverySessionV1 
     if (!isCompatible(parsed, now) || !hasValidShape(parsed)) {
       s.removeItem(SESSION_STORAGE_KEY);
       return null;
+    }
+    // A new evidence bundle invalidates stored rounds (their school ids and
+    // reasons came from the old data) but not the student's own work — cards,
+    // boundaries, interests, reactions, and shelf survive.
+    if (parsed.bundle_version !== EVIDENCE_BUNDLE_VERSION) {
+      return {
+        ...parsed,
+        bundle_version: EVIDENCE_BUNDLE_VERSION,
+        round_history: [],
+        current_round: 0,
+      };
     }
     return parsed;
   } catch {

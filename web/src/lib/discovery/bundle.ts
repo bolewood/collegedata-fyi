@@ -4,6 +4,10 @@
 
 import type { EvidenceBundle } from "./types";
 
+// Compile-time twin of the artifact's bundle_version — the fetch path below
+// pins the same version, so a bundle bump changes both together.
+export const EVIDENCE_BUNDLE_VERSION = "evidence-v1";
+
 let cache: EvidenceBundle | null = null;
 let inflight: Promise<EvidenceBundle> | null = null;
 

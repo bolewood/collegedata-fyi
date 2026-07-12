@@ -6,6 +6,58 @@
  "scenario_corpus_version": "v1",
  "cases": [
   {
+   "scenario_id": "synthetic--whole-family",
+   "concepts": [],
+   "geography": {
+    "zip": null,
+    "preferred_miles": null,
+    "maximum_miles": null,
+    "allow_wildcards": false
+   },
+   "origin": null,
+   "aggregates": {
+    "scale.small": 3
+   },
+   "expected": {
+    "schools": [
+     [
+      "suny-college-of-environmental-science-and-forestry",
+      "anchor"
+     ],
+     [
+      "texas-am",
+      "flexible"
+     ],
+     [
+      "cuny-hunter-college",
+      "affordability"
+     ],
+     [
+      "juniata-college",
+      "exploration"
+     ],
+     [
+      "the-university-of-the-south",
+      "additional_exploration"
+     ],
+     [
+      "bucknell",
+      "additional_exploration"
+     ]
+    ],
+    "slots": {
+     "anchor": true,
+     "flexible": true,
+     "contrast": false,
+     "affordability": true,
+     "wildcard": false,
+     "exploration": true
+    },
+    "eligible_candidates": 895,
+    "relaxation_level": null
+   }
+  },
+  {
    "scenario_id": "atl-suburb--bounded-regional",
    "concepts": [
     "environment-climate"

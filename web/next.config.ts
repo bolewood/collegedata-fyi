@@ -11,6 +11,22 @@ const nextConfig: NextConfig = {
       { source: "/design-system/", destination: "/design-system/index.html" },
     ];
   },
+  async headers() {
+    return [
+      {
+        // Versioned discovery artifacts (evidence-v1.json, …): the filename
+        // IS the version, so the content behind a given path never changes —
+        // cache immutably instead of revalidating a ~460KB payload per visit.
+        source: "/discovery/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

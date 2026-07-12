@@ -14,6 +14,8 @@ cd /path/to/collegedata-fyi
 cp data/discovery/cards/v1.json web/src/lib/discovery/content/cards.v1.json
 cp data/discovery/decks/opening-v1.json web/src/lib/discovery/content/deck.opening-v1.json
 cp data/discovery/policy/v1.json web/src/lib/discovery/content/policy.v1.json
+cp data/discovery/ontology/v1.json web/src/lib/discovery/content/ontology.v1.json
+cp data/discovery/geo/zip3-centroids-v1.json web/src/lib/discovery/content/zip3-centroids.v1.json
 ```
 
 `content-sync.test.ts` fails the suite whenever a mirror drifts from its

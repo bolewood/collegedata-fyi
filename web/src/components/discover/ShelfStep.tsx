@@ -4,19 +4,33 @@
 // saved reason and declared familiarity. Local to this browser; comparison
 // and downstream cost/positioning handoffs are later slices.
 
+import { useEffect, useState } from "react";
+import { getCachedBundle, loadBundle } from "@/lib/discovery/bundle";
 import type { DiscoverySessionV1, EvidenceBundle } from "@/lib/discovery/types";
 
 export function ShelfStep({
   session,
-  bundle,
   onRemove,
   onBackToRounds,
 }: {
   session: DiscoverySessionV1;
-  bundle: EvidenceBundle | null;
   onRemove: (schoolId: string) => void;
   onBackToRounds: () => void;
 }) {
+  // Names/locations need the bundle; after a reload straight into the shelf
+  // it isn't cached yet. Saved reasons and familiarity render either way.
+  const [bundle, setBundle] = useState<EvidenceBundle | null>(getCachedBundle());
+  useEffect(() => {
+    if (!bundle) {
+      let cancelled = false;
+      loadBundle().then(
+        (b) => { if (!cancelled) setBundle(b); },
+        () => {},
+      );
+      return () => { cancelled = true; };
+    }
+  }, [bundle]);
+
   const saved = session.reactions.filter((r) => r.reaction === "research_next");
   const byId = new Map(bundle?.schools.map((s) => [s.school_id, s]) ?? []);
   const FAMILIARITY = {

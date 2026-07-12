@@ -31,6 +31,32 @@ def main() -> int:
     ontology = json.load(open(ROOT / "data/discovery/ontology/v1.json"))
 
     cases = []
+    # Synthetic case: empty concepts = whole interest family (the interests
+    # step's "use the whole family" path) — pins the TS/Python agreement on
+    # empty-selection semantics that no scenario profile exercises.
+    d_all, a_all = ds.edge_sets(ontology, set())
+    chosen, slots, diags, n_cand, _ = ds.compose_round(
+        pool,
+        {"geography": {"preferred_miles": None, "maximum_miles": None,
+                       "allow_wildcards": False},
+         "preferences": [{"key": "scale.small", "aggregate": 3}]},
+        None,
+        (d_all, a_all),
+    )
+    cases.append({
+        "scenario_id": "synthetic--whole-family",
+        "concepts": [],
+        "geography": {"zip": None, "preferred_miles": None,
+                      "maximum_miles": None, "allow_wildcards": False},
+        "origin": None,
+        "aggregates": {"scale.small": 3},
+        "expected": {
+            "schools": [[c["school_id"], c["role"]] for c in chosen],
+            "slots": slots,
+            "eligible_candidates": n_cand,
+            "relaxation_level": diags.get("relaxation_level"),
+        },
+    })
     for origin in scenarios["origins"]:
         for profile in scenarios["profiles"]:
             d_cips, a_cips = ds.edge_sets(ontology, set(profile["concepts"]))

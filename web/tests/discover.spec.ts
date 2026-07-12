@@ -189,7 +189,7 @@ test("discovery rounds: interests → round with reasons → reactions → shelf
   await cards.first().getByRole("button", { name: /research next/i }).click();
   await expect(page.getByText(/which reason are you saving/i)).toBeVisible();
   await cards.first().getByRole("radio").first().check();
-  await page.getByRole("radio", { name: "No" }).check();
+  await page.getByRole("radio", { name: "No", exact: true }).check();
   await cards.first().getByRole("button", { name: /save to shelf/i }).click();
   await expect(page.getByRole("button", { name: /research shelf \(1\)/i })).toBeVisible();
 
@@ -201,7 +201,9 @@ test("discovery rounds: interests → round with reasons → reactions → shelf
 
   // Next round: saved + rejected schools never reappear.
   await page.getByRole("button", { name: /next round/i }).click();
-  await expect(cards.first()).toBeVisible();
+  await expect(
+    page.locator("ol > li.cd-card h2", { hasText: firstSchool ?? "" }),
+  ).toHaveCount(0);
   const roundTwoNames = await page
     .locator("ol > li.cd-card h2")
     .allTextContents();

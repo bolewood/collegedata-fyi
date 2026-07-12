@@ -61,7 +61,6 @@ const zip3 = zip3Json as unknown as {
   zip3_centroid_version: string;
   centroids: Record<string, [number, number]>;
 };
-export const ZIP3_CENTROID_VERSION = zip3.zip3_centroid_version;
 
 // PRD Q5 v1 resolution: a coarse 3-digit-prefix centroid lookup that runs
 // entirely in the browser — the full ZIP never leaves the device. Returns

@@ -3,37 +3,118 @@
 // composer. Pure functions — the UI supplies the session, this returns the
 // round.
 
-import { DECK_CARDS, resolveZip } from "./content";
+import { DECK_CARDS, LIMITATIONS, POLICY, resolveZip } from "./content";
+import { haversineMiles } from "./matchers";
 import { renderReasons } from "./reasons";
+import { composeRound, edgeSets, scoreSchool, type ComposedRound } from "./rounds";
 import {
-  composeRound,
-  edgeSets,
-  haversineDistance,
-  scoreSchool,
-  type ComposedRound,
-} from "./rounds";
-import { buildRoundAggregates } from "./signals";
+  aggregateKeys,
+  buildReactionSignals,
+  buildSignals,
+} from "./signals";
 import type {
   DiscoverySessionV1,
   EvidenceBundle,
   RoundHistoryEntry,
+  RoundReason,
   RoundSchool,
+  SchoolReaction,
 } from "./types";
 
-const COOLDOWN_ROUNDS = 2;
+// Machine-readable in discovery_policy_v1 round_composition.cooldowns.
+const COOLDOWN_ROUNDS = (POLICY.round_composition as unknown as {
+  cooldowns: { shown_unreacted_rounds: number };
+}).cooldowns.shown_unreacted_rounds;
+const MINIMUM_SIZE = POLICY.round_composition.minimum_size;
+
+// Shared session context so composeNextRound and renderStoredRound cannot
+// drift (stored-round stability depends on them agreeing).
+function sessionContext(session: DiscoverySessionV1) {
+  const signals = [
+    ...buildSignals(session.card_responses, DECK_CARDS),
+    ...buildReactionSignals(session.reactions),
+  ];
+  const aggregates: Record<string, number> = {};
+  const conflictedKeys = new Set<string>();
+  for (const agg of aggregateKeys(signals)) {
+    aggregates[agg.key] = agg.conflicted ? 0 : agg.total;
+    if (agg.conflicted) conflictedKeys.add(agg.key);
+  }
+  const zip = session.geography?.zip ?? null;
+  const origin = zip ? resolveZip(zip) : null;
+  const zipUnresolved = Boolean(zip && !origin);
+  return {
+    aggregates,
+    conflictedKeys,
+    origin: zipUnresolved ? null : origin,
+    zipUnresolved,
+    geography: zipUnresolved ? null : session.geography,
+  };
+}
+
+// The round change note derives only from reactions that actually write
+// signals (more_like_this / not_for_me with a key). Saving to the shelf
+// never changes preferences and must never read as a lean. A reaction whose
+// key ended up conflicted is reported as a tension, not a lean the engine
+// silently neutralized.
+function changedKeysForRound(
+  reactions: SchoolReaction[],
+  priorRoundIndex: number,
+  conflictedKeys: Set<string>,
+): { key: string; direction: "seek" | "avoid"; conflicted: boolean }[] {
+  return reactions
+    .filter(
+      (r) =>
+        r.round_index === priorRoundIndex &&
+        r.key &&
+        (r.reaction === "more_like_this" || r.reaction === "not_for_me"),
+    )
+    .map((r) => ({
+      key: r.key as string,
+      direction: (r.reaction === "more_like_this" ? "seek" : "avoid") as
+        | "seek"
+        | "avoid",
+      conflicted: conflictedKeys.has(r.key as string),
+    }));
+}
+
+// The affordability slot's selection evidence (lowest reported average net
+// price) must itself be shown (policy slot rule + PRD §9).
+function affordabilityReason(school: RoundSchool["school"]): RoundReason | null {
+  const tpl = POLICY.reason_templates["tpl.affordability_slot.v1"];
+  if (!tpl || typeof tpl === "string") return null;
+  const np = school.scorecard.avg_net_price;
+  if (np === null) return null;
+  const year = school.scorecard.scorecard_data_year ?? "recent";
+  const text = tpl.text
+    .replaceAll("{value}", `$${Math.round(np).toLocaleString("en-US")}`)
+    .replaceAll("{population}", "students receiving federal aid")
+    .replaceAll("{data_year}", year);
+  const limitation = LIMITATIONS[tpl.limitation_id];
+  if (!limitation || /\{[a-z_]+\}/.test(text)) return null;
+  return {
+    kind: "affordability_slot",
+    ref: "scorecard.avg_net_price",
+    text,
+    evidence_class: "scorecard",
+    data_year: year,
+    limitation,
+    tunable_key: null,
+  };
+}
 
 export interface NextRound {
   round_index: number;
   schools: RoundSchool[];
-  diagnostics: Record<string, number | string>;
   eligible_candidates: number;
   // ZIP present but not resolvable: distance settings are disabled for this
   // round and the UI must say so (PRD failure state — never silently drop
   // only the maximum).
   zip_unresolved: boolean;
-  // preference keys nudged by reactions since the previous round, for the
-  // round change note
-  changed_keys: { key: string; direction: "seek" | "avoid" }[];
+  // preference keys nudged by reactions since the previous round; conflicted
+  // means the reaction now opposes a card signal and the key counts for
+  // nothing until resolved (surfaced, never silent — PRD §3).
+  changed_keys: { key: string; direction: "seek" | "avoid"; conflicted: boolean }[];
   // what the session must persist so this round renders stably from history
   history_entry: RoundHistoryEntry;
 }
@@ -43,19 +124,20 @@ export function roundExclusions(session: DiscoverySessionV1): {
   cooldown: Set<string>;
 } {
   const never = new Set<string>();
-  const reacted = new Set<string>();
   for (const r of session.reactions) {
-    reacted.add(r.school_id);
     if (r.reaction === "research_next" || r.reaction === "not_for_me") {
       never.add(r.school_id);
     }
   }
+  // ALL shown schools cool down — including more_like_this reactions, whose
+  // boosted key would otherwise bounce the very same school straight back
+  // (policy cooldowns.shown_note).
   const cooldown = new Set<string>();
   const nextIndex = session.round_history.length;
   for (const h of session.round_history) {
     if (nextIndex - h.round_index <= COOLDOWN_ROUNDS) {
       for (const id of h.school_ids) {
-        if (!never.has(id) && !reacted.has(id)) cooldown.add(id);
+        if (!never.has(id)) cooldown.add(id);
       }
     }
   }
@@ -83,85 +165,72 @@ export function composeNextRound(
   session: DiscoverySessionV1,
   bundle: EvidenceBundle,
 ): NextRound {
-  const aggregates = buildRoundAggregates(
-    session.card_responses,
-    DECK_CARDS,
-    session.reactions,
-  );
-
-  const zip = session.geography?.zip ?? null;
-  const origin = zip ? resolveZip(zip) : null;
-  const zipUnresolved = Boolean(zip && !origin);
-  // PRD failure state: an unresolved ZIP disables ALL distance settings for
-  // the round (visibly), rather than silently dropping just the hard cap.
-  const geography = zipUnresolved ? null : session.geography;
-
+  const ctx = sessionContext(session);
   const { never, cooldown } = roundExclusions(session);
   const excluded = new Set([...never, ...cooldown]);
 
-  let result: ComposedRound = composeRound({
-    pool: bundle.schools,
-    concepts: session.concepts,
-    geography,
-    origin: zipUnresolved ? null : origin,
-    aggregates,
-    excluded_school_ids: excluded,
-  });
-
-  // Re-admission: if cooldowns starved the round below the minimum, re-admit
-  // the oldest unreacted schools only — never saved or rejected ones.
-  const revisitIds = new Set<string>();
-  if (
-    result.chosen.length < 4 &&
-    cooldown.size > 0
-  ) {
-    for (const id of readmissionOrder(session, never)) {
-      excluded.delete(id);
-      revisitIds.add(id);
-    }
-    result = composeRound({
+  const compose = (): ComposedRound =>
+    composeRound({
       pool: bundle.schools,
       concepts: session.concepts,
-      geography,
-      origin: zipUnresolved ? null : origin,
-      aggregates,
+      geography: ctx.geography,
+      origin: ctx.origin,
+      aggregates: ctx.aggregates,
       excluded_school_ids: excluded,
     });
+
+  let result = compose();
+
+  // Re-admission: if cooldowns starved the round below the policy minimum,
+  // re-admit oldest unreacted schools one at a time — only as many as the
+  // minimum requires, never saved or rejected ones.
+  const revisitIds = new Set<string>();
+  if (result.chosen.length < MINIMUM_SIZE && cooldown.size > 0) {
+    for (const id of readmissionOrder(session, never)) {
+      if (result.chosen.length >= MINIMUM_SIZE) break;
+      if (!excluded.has(id)) continue;
+      excluded.delete(id);
+      revisitIds.add(id);
+      result = compose();
+    }
   }
 
   const { direct, adjacent } = edgeSets(session.concepts);
   const schools: RoundSchool[] = result.chosen
-    .map(({ candidate, role }) => ({
-      school: candidate.school,
-      role,
-      score: candidate.score,
-      distance_miles:
-        candidate.distance === null ? null : Math.round(candidate.distance),
-      reasons: renderReasons(candidate, session.concepts, direct, adjacent, aggregates),
-      revisit: revisitIds.has(candidate.school.school_id),
-    }))
+    .map(({ candidate, role }) => {
+      const reasons = renderReasons(
+        candidate, session.concepts, direct, adjacent, ctx.aggregates,
+      );
+      if (role === "affordability") {
+        const r = affordabilityReason(candidate.school);
+        if (r && !reasons.some((x) => x.kind === "affordability_slot")) {
+          reasons.push(r);
+        }
+      }
+      return {
+        school: candidate.school,
+        role,
+        score: candidate.score,
+        distance_miles:
+          candidate.distance === null ? null : Math.round(candidate.distance),
+        reasons: reasons.slice(0, 3),
+        revisit: revisitIds.has(candidate.school.school_id),
+      };
+    })
     // Fail closed (§9): a school with no valid rendered reasons cannot enter
     // a round.
     .filter((s) => s.reasons.length > 0);
 
-  // Reaction-driven changes since the previous round, for the change note.
-  const lastRoundIndex = session.round_history.length - 1;
-  const changedKeys = session.reactions
-    .filter((r) => r.round_index === lastRoundIndex && r.key)
-    .map((r) => ({
-      key: r.key as string,
-      direction: (r.reaction === "more_like_this" ? "seek" : "avoid") as
-        | "seek"
-        | "avoid",
-    }));
-
   return {
     round_index: session.round_history.length,
     schools,
-    diagnostics: result.diagnostics,
     eligible_candidates: result.eligible_candidates,
-    zip_unresolved: zipUnresolved,
-    changed_keys: changedKeys,
+    zip_unresolved: ctx.zipUnresolved,
+    changed_keys: changedKeysForRound(
+      session.reactions,
+      session.round_history.length - 1,
+      ctx.conflictedKeys,
+    ),
     history_entry: {
       round_index: session.round_history.length,
       school_ids: schools.map((x) => x.school.school_id),
@@ -180,16 +249,8 @@ export function renderStoredRound(
   bundle: EvidenceBundle,
   entry: RoundHistoryEntry,
 ): NextRound {
-  const aggregates = buildRoundAggregates(
-    session.card_responses,
-    DECK_CARDS,
-    session.reactions,
-  );
-  const zip = session.geography?.zip ?? null;
-  const origin = zip ? resolveZip(zip) : null;
-  const zipUnresolved = Boolean(zip && !origin);
-  const useOrigin = zipUnresolved ? null : origin;
-  const prefMi = zipUnresolved ? null : session.geography?.preferred_miles ?? null;
+  const ctx = sessionContext(session);
+  const prefMi = ctx.geography?.preferred_miles ?? null;
 
   const byId = new Map(bundle.schools.map((s) => [s.school_id, s]));
   const { direct, adjacent } = edgeSets(session.concepts);
@@ -200,45 +261,46 @@ export function renderStoredRound(
     const school = byId.get(id);
     if (!school) return; // bundle version changed underneath — skip cleanly
     let distance: number | null = null;
-    if (useOrigin && school.lat !== null && school.lon !== null) {
-      distance = haversineDistance(useOrigin.lat, useOrigin.lon, school.lat, school.lon);
+    if (ctx.origin && school.lat !== null && school.lon !== null) {
+      distance = haversineMiles(ctx.origin.lat, ctx.origin.lon, school.lat, school.lon);
     }
     const inPreferred = Boolean(prefMi && distance !== null && distance <= prefMi);
-    const { score, reasons } = scoreSchool(school, aggregates, direct, adjacent, inPreferred);
+    const { score, reasons } = scoreSchool(school, ctx.aggregates, direct, adjacent, inPreferred);
+    const role = entry.roles[i] ?? "exploration";
     const rendered = renderReasons(
       { school, score, distance, inPreferred, reasons },
       session.concepts,
       direct,
       adjacent,
-      aggregates,
+      ctx.aggregates,
     );
+    if (role === "affordability") {
+      const r = affordabilityReason(school);
+      if (r && !rendered.some((x) => x.kind === "affordability_slot")) {
+        rendered.push(r);
+      }
+    }
     if (rendered.length === 0) return;
     schools.push({
       school,
-      role: entry.roles[i] ?? "exploration",
+      role,
       score,
       distance_miles: distance === null ? null : Math.round(distance),
-      reasons: rendered,
+      reasons: rendered.slice(0, 3),
       revisit: revisit.has(id),
     });
   });
 
-  const changedKeys = session.reactions
-    .filter((r) => r.round_index === entry.round_index - 1 && r.key)
-    .map((r) => ({
-      key: r.key as string,
-      direction: (r.reaction === "more_like_this" ? "seek" : "avoid") as
-        | "seek"
-        | "avoid",
-    }));
-
   return {
     round_index: entry.round_index,
     schools,
-    diagnostics: {},
     eligible_candidates: schools.length,
-    zip_unresolved: zipUnresolved,
-    changed_keys: changedKeys,
+    zip_unresolved: ctx.zipUnresolved,
+    changed_keys: changedKeysForRound(
+      session.reactions,
+      entry.round_index - 1,
+      ctx.conflictedKeys,
+    ),
     history_entry: entry,
   };
 }
