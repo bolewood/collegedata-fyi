@@ -371,8 +371,9 @@ a personalized award estimate.
 
 - **Metadata:** Every page has a unique `<title>` and `<meta description>`
   via `generateMetadata()` or static `metadata` exports.
-- **Sitemap:** `sitemap.ts` generates URLs for all static pages, all school
-  pages, and all extracted year detail pages.
+- **Sitemap:** `sitemap.ts` generates URLs for all indexable static pages, all
+  school pages, and all extracted year detail pages. Noindex routes
+  (`/discover`, `/changes`) are omitted.
 - **Robots:** `robots.ts` allows all crawlers and points to the sitemap.
 - **Schema.org:** School pages include `CollegeOrUniversity` + archive
   `Dataset` JSON-LD. Year detail pages include `Dataset` + `BreadcrumbList`
@@ -390,8 +391,9 @@ a personalized award estimate.
   Supabase write path. The optional source-submission form posts directly to
   the configured Formspree endpoint. The Supabase anon key only allows SELECT
   via RLS policies.
-- **No auth.** No user accounts, no sessions, no cookies (except Vercel
-  Analytics which is zero-cookie).
+- **No auth.** No user accounts, no server-side sessions, no cookies (except
+  Vercel Analytics which is zero-cookie). The `/discover` session is
+  browser-local localStorage only and never leaves the device.
 
 ---
 
@@ -432,6 +434,8 @@ render an unavailable state.
 cd web
 npm install
 npm run dev        # http://localhost:3000
+npm test           # vitest unit tests (also run in CI)
+npm run test:smoke # Playwright smoke tests; starts the dev server itself
 npm run build      # production build, type-checks
 ```
 
@@ -444,7 +448,8 @@ Key items:
 
 - `supabase gen types` for typed Supabase client (currently using manual types)
 - Schema-version-aware labels (dependency resolved: structural schemas for 6 years now exist)
-- Automated Playwright smoke tests in the repo
+- Playwright smoke coverage beyond `/discover` (`web/tests/discover.spec.ts`
+  and `npm run test:smoke` exist; other routes have no specs yet)
 - OG images (per-school social cards)
 - Paginated full CSV export for `/browse` when result sets exceed the Edge Function page-size cap
 - Public `/changes` launch, methodology page, and report charts after PRD 019

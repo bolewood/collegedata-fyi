@@ -40,9 +40,10 @@ later. Code contributions elsewhere in the repo are unaffected.
 
 ## Web runtime mirrors
 
-The web app consumes committed mirrors of these artifacts under
-`web/src/lib/discovery/content/` (the Vercel project root is `web/`, so it
-cannot import across the repo root). `web/src/lib/discovery/content-sync.test.ts`
+The web app consumes committed mirrors of the runtime artifacts — the card
+library, opening deck, and policy (not the ontology or scenario fixtures) —
+under `web/src/lib/discovery/content/` (the Vercel project root is `web/`, so
+it cannot import across the repo root). `web/src/lib/discovery/content-sync.test.ts`
 fails the suite whenever a mirror drifts from its canonical source here.
 
 ## Versioning rules

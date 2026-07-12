@@ -107,7 +107,10 @@ institutions with **no** recent-award evidence in the family → 895 eligible.
 
 - Evidence matchers are prototypes with placeholder thresholds; only
   directory/scorecard-backed keys were wired. CDS-backed keys deliberately
-  contributed zero, exercising the supported-preference rule.
+  contributed zero, exercising the supported-preference rule. (Superseded:
+  `discovery_policy_v1` now defines matchers for every data/proxy key and
+  `data_spike.py` executes the policy file; thresholds remain initial
+  calibration pending pilot evidence.)
 - Origins carry coordinates directly; the ZIP-centroid source (PRD Q5)
   remains unselected.
 - `MAJORNUM=1` only (first majors); second-major counts excluded to avoid
@@ -120,7 +123,10 @@ institutions with **no** recent-award evidence in the family → 895 eligible.
 1. Formalize `discovery_policy_v1` (real matchers + thresholds, relaxation
    stage, diagnostics manifest, full `RecommendationReason` validation) — the
    spike's prototype is the skeleton. (Opening-deck selection is done:
-   `data/discovery/decks/opening-v1.json`.)
+   `data/discovery/decks/opening-v1.json`. Policy artifact is done:
+   `data/discovery/policy/v1.json`, executed by `data_spike.py` and pinned by
+   `tools/discovery/test_policy.py`; threshold calibration awaits pilot
+   evidence.)
 2. Production evidence tables (`ProgramEvidenceFact`/summary projections) via
    the existing IPEDS pipeline, from fresh `main` per migration policy —
    including the PRD §6 identity audit (branches, systems, closures) deferred
