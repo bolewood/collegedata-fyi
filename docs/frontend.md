@@ -171,6 +171,22 @@ and Scorecard enrichment, ranks schools with the same profile model used by the
 academic positioning card, and supports local save/share codes without writing
 student profile data to the backend.
 
+### `/discover` Guided discovery (`web/src/app/discover/page.tsx`)
+
+PRD 026 slice 1, soft-launched: the route exports `noindex` metadata and is
+not linked from navigation until the discovery rounds engine ships in a later
+slice. The client-side `DiscoverFlow` component walks a geographic boundary
+step, an accessible 24-card experience sort, and a plain-language preference
+ledger. Everything runs in the browser: the session lives in localStorage only
+(30-day TTL, discarded on deck/library/policy version mismatch) and the ZIP
+never leaves the device. The sort follows the PRD accessibility contract — no
+dragging, one card at a time with four buttons, polite live-region
+announcements, nothing communicated by color alone. Content (card library,
+opening deck, `discovery_policy_v1`) is bound at build time from committed
+mirrors in `lib/discovery/content/` of the canonical CC BY-SA artifacts in
+`data/discovery/`; `content-sync.test.ts` fails the suite when a mirror
+drifts.
+
 ### `/changes` Operator digest (`web/src/app/changes/page.tsx`)
 
 PRD 019 internal review surface. This route is disabled unless
@@ -268,6 +284,7 @@ component share the same Supabase response within a single render.
 | `MeritProfileCard` | `components/MeritProfileCard.tsx` | PRD 018 Section H + Scorecard merit/aid profile card. |
 | `WhatChangedCard` | `components/WhatChangedCard.tsx` | PRD 019 public-reviewed year-over-year CDS change events. Hides when the school has no published events. |
 | `FederalBaselineTable` | `components/FederalBaselineTable.tsx` | PRD 021 accessible table for source-labeled NCES/IPEDS facts from `school_facts_unified`. |
+| `DiscoverFlow` | `components/discover/DiscoverFlow.tsx` | PRD 026 guided discovery slice 1 for `/discover`: boundary step, accessible 24-card sort, preference ledger. Session is browser-local only. |
 | `SchoolDocumentsLedger` | `components/SchoolDocumentsLedger.tsx` | Collapses long CDS-document histories after the three most recent files. |
 | `SpreadsheetDownloadLinks` | `components/SpreadsheetDownloadLinks.tsx` | PRD 025 XLSX + CSV download links on the year page; fires a `spreadsheet_downloaded` analytics event. |
 | `SubmissionForm` | `components/SubmissionForm.tsx` | Formspree-backed public CDS source submission form; compact mode opens inline from no-CDS pages. |
@@ -303,6 +320,11 @@ component share the same Supabase response within a single render.
 | `spreadsheet.ts` | `lib/spreadsheet.ts` | PRD 025 workbook/CSV builder; same section grouping and labels as `FieldsView`, CSV output neutralized against formula injection |
 | `spreadsheet-source.ts` | `lib/spreadsheet-source.ts` | Assembles `SpreadsheetInput` for the `cds.xlsx`/`cds.csv` routes from the same queries the year page uses |
 | `xlsx.ts` | `lib/xlsx.ts` | Dependency-free minimal XLSX writer (zip of XML parts, inline strings, deterministic output); reusable for other export surfaces |
+| `discovery/content.ts` | `lib/discovery/content.ts` | Build-time binding to the versioned PRD 026 content mirrors in `lib/discovery/content/` (card library, opening deck, `discovery_policy_v1`); `content-sync.test.ts` keeps mirrors in lockstep with `data/discovery/` |
+| `discovery/geography.ts` | `lib/discovery/geography.ts` | Boundary-step validation with plain-language, field-associated errors; validates shape only — ZIP centroid resolution is deferred |
+| `discovery/session.ts` | `lib/discovery/session.ts` | Browser-local (localStorage-only) discovery session: 30-day TTL, discarded on deck/library/policy version mismatch |
+| `discovery/signals.ts` | `lib/discovery/signals.ts` | Pure card-response → preference signal/ledger mapping per `discovery_policy_v1` bucket weights |
+| `discovery/types.ts` | `lib/discovery/types.ts` | Discovery runtime types mirroring the versioned `data/discovery/` artifact shapes |
 | `labels.ts` | `lib/labels.ts` | Auto-generated CDS field ID to plain-English label map (1,105 fields from `cds_schema_2025_26.json`) |
 
 ---
