@@ -22,6 +22,8 @@ The project has eleven logical pipelines, each running at a different cadence an
 
 Each pipeline is independently runnable. None of them requires any of the others to be live for the others to work. This is deliberate: the project ships incrementally, one pipeline at a time, rather than requiring the full stack to be up before anything is useful.
 
+One design-stage effort sits alongside these pipelines without being one yet: **guided college discovery** ([PRD 026](prd/026-guided-college-discovery.md)) ships a versioned content layer at [`data/discovery/`](../data/discovery/README.md) — experience-card library, interest ontology, opening deck, and scenario fixtures, licensed CC BY-SA 4.0 unlike the MIT code — plus offline feasibility tooling at `tools/discovery/`. Its Milestone 0 data-spike gate passed 13/13 ([`docs/plans/prd-026-data-spike-findings.md`](plans/prd-026-data-spike-findings.md)); it has no runtime surface yet.
+
 ---
 
 ## Data flow diagram

@@ -14,6 +14,9 @@ Open-source archive of U.S. college Common Data Set (CDS) documents.
 - `supabase/` — Postgres migrations, Edge Functions (Deno/TS), shared modules
 - `tools/` — Python extraction pipeline, schema builder, corpus tools
 - `schemas/` — Canonical CDS schema JSON (1,105 fields)
+- `data/` — Versioned content datasets: `data/discovery/` (PRD 026 guided-discovery
+  card library, ontology, deck, scenarios — CC BY-SA 4.0 with a contribution gate,
+  see its README) and `data/watchlists/` (change-intelligence school watchlists)
 - `docs/` — Architecture, PRDs, ADRs, research, backlog
 - `scratch/` — Throwaway operational outputs (gitignored). Default
   destination for any one-off run artifact: audit/drain JSON dumps,

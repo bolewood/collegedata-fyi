@@ -97,3 +97,5 @@ Open a GitHub issue with the question label, or reach out via the contact on [co
 ## License
 
 By contributing, you agree that your contributions will be licensed under the MIT License. See [`LICENSE`](LICENSE).
+
+One exception: the curated discovery content under [`data/discovery/`](data/discovery/) is licensed [CC BY-SA 4.0](data/discovery/LICENSE), and outside contributions to that directory are not accepted without a signed contribution agreement. Read [`data/discovery/README.md`](data/discovery/README.md) before opening a PR that touches it. Code contributions everywhere else in the repo are unaffected.
