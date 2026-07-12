@@ -64,19 +64,14 @@ def test_matcher_specs_well_formed():
 
 
 def test_numeric_bands_are_disjoint():
-    ops = {"gte": lambda v, t: v >= t, "gt": lambda v, t: v > t,
-           "lte": lambda v, t: v <= t, "lt": lambda v, t: v < t}
-
     def satisfiable_together(a, b):
-        # sample a coarse grid around the thresholds
+        # sample a coarse grid around the thresholds, using the engine's own
+        # band predicate so the test can't drift from the implementation
         points = set()
         for band in (a, b):
             for t in band.values():
                 points.update({t - 0.01, t, t + 0.01})
-        return any(
-            all(ops[op](p, t) for op, t in a.items())
-            and all(ops[op](p, t) for op, t in b.items())
-            for p in points)
+        return any(ds._band_test(p, a) and ds._band_test(p, b) for p in points)
 
     for key, spec in POLICY["matchers"].items():
         if spec["kind"] in ("numeric_band", "numeric_band_inverted", "count_band"):
@@ -118,6 +113,10 @@ def test_engine_reads_policy_not_hardcoded_constants():
     # The reference implementation must source its constants from the file.
     assert ds.POLICY["policy_version"] == "discovery_policy_v1"
     assert ds.MAX_PER_STATE == POLICY["round_composition"]["diversity"]["max_per_state"]
+    assert ds.MAX_PER_CONTROL == POLICY["round_composition"]["diversity"]["max_per_control"]
+    assert ds.ROUND_SIZE == POLICY["round_composition"]["round_size"]
+    assert ds.MINIMUM_SIZE == POLICY["round_composition"]["minimum_size"]
+    assert ds.ESSENTIAL == POLICY["scoring"]["essential_threshold"]
     assert ds.SUPPORTED_KEYS == frozenset(POLICY["matchers"])
 
 
@@ -152,6 +151,17 @@ def test_determinism_same_inputs_identical_rounds():
     run = lambda: ds.compose_round(pool, profile, origin, ({"03.0103"}, set()))
     c1, s1, d1, n1, w1 = run()
     c2, s2, d2, n2, w2 = run()
+    # The round must be substantive, not vacuously-equal empties.
+    assert len(c1) >= ds.MINIMUM_SIZE
+    # Golden sequence: pins cross-process determinism (set iteration, hashing).
+    assert [(x["school_id"], x["role"]) for x in c1] == [
+        ("s00", "anchor"),
+        ("s02", "flexible"),
+        ("s01", "affordability"),
+        ("s04", "wildcard"),
+        ("s03", "exploration"),
+        ("s05", "additional_exploration"),
+    ]
     assert [x["school_id"] for x in c1] == [x["school_id"] for x in c2]
     assert [x["role"] for x in c1] == [x["role"] for x in c2]
     assert (s1, dict(d1), n1, w1) == (s2, dict(d2), n2, w2)

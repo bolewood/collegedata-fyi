@@ -40,7 +40,8 @@ export interface PreferenceSignal {
   domain: string;
   direction: "seek" | "avoid";
   strength: "essential" | "interesting";
-  magnitude: 1 | 3;
+  // Absolute policy bucket weight (discovery_policy_v1 scoring).
+  magnitude: number;
   source: "card";
   source_id: string;
   confidence: "explicit";

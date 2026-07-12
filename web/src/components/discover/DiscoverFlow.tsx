@@ -23,6 +23,7 @@ import {
   loadSession,
   newSession,
   saveSession,
+  SESSION_TTL_DAYS,
 } from "@/lib/discovery/session";
 import { aggregateKeys, buildLedger, buildSignals } from "@/lib/discovery/signals";
 import type {
@@ -39,11 +40,30 @@ const BUCKET_HINTS: Record<Bucket, string> = {
   not_for_me: "I'd rather avoid this",
 };
 
+// Evidence-backed is the common case, so it stays the quiet outline default
+// ("one accent, used rarely"); the caveat states carry the emphasis via an
+// ochre BORDER — ochre text at chip size fails WCAG AA contrast on paper.
 const EVIDENCE_BADGES = {
-  data: { label: "evidence-backed", className: "cd-chip cd-chip--forest" },
-  proxy: { label: "proxy evidence", className: "cd-chip" },
-  reflection_only: { label: "reflection only", className: "cd-chip" },
+  data: { label: "evidence-backed", className: "cd-chip", style: undefined },
+  proxy: {
+    label: "proxy evidence",
+    className: "cd-chip",
+    style: { borderColor: "var(--ochre)" } as const,
+  },
+  reflection_only: {
+    label: "reflection only",
+    className: "cd-chip",
+    style: { borderColor: "var(--ochre)", borderStyle: "dashed" } as const,
+  },
 } as const;
+
+const ESSENTIAL_NUDGE_TOLERANCE = 2; // "nearly everything": all but a couple
+
+const DECK_INDEX = new Map(DECK_CARDS.map((c, i) => [c.card_id, i]));
+
+function sortComplete(responses: Record<string, Bucket | undefined>): boolean {
+  return DECK_CARDS.every((c) => responses[c.card_id]);
+}
 
 export function DiscoverFlow() {
   const [session, setSession] = useState<DiscoverySessionV1 | null>(null);
@@ -95,7 +115,11 @@ export function DiscoverFlow() {
         <GeographyStep
           session={session}
           onDone={(geography) =>
-            update((s) => ({ ...s, geography, step: "sort" }))
+            update((s) => ({
+              ...s,
+              geography,
+              step: sortComplete(s.card_responses) ? "ledger" : "sort",
+            }))
           }
         />
       );
@@ -112,14 +136,9 @@ export function DiscoverFlow() {
           }
           onBack={(index) => update((s) => ({ ...s, sort_index: index }))}
           onComplete={() => {
-            const responses = session.card_responses;
-            trackEvent("discovery_sort_completed", {
-              deck_version: DECK_VERSION,
-              essential: Object.values(responses).filter((b) => b === "essential").length,
-              interesting: Object.values(responses).filter((b) => b === "interesting").length,
-              not_important: Object.values(responses).filter((b) => b === "not_important").length,
-              not_for_me: Object.values(responses).filter((b) => b === "not_for_me").length,
-            });
+            // Step completion only — bucket distributions are preference-
+            // derived and never leave the device (PRD 026 §12).
+            trackEvent("discovery_sort_completed", { deck_version: DECK_VERSION });
             update((s) => ({ ...s, step: "ledger" }));
           }}
         />
@@ -160,8 +179,9 @@ function Intro({ onStart }: { onStart: () => void }) {
           <li>Review your preference profile in plain language.</li>
         </ol>
         <p style={{ margin: "10px 0 0", fontSize: 13, color: "var(--ink-3)" }}>
-          Everything stays in your browser. No account, no tracking of what you
-          type, nothing sent to a server.
+          Your answers stay on this device — no account, and nothing you type
+          or choose is sent to a server. We count only anonymous step
+          completions to know the tool is being used.
         </p>
       </div>
       <button type="button" className="cd-btn" style={{ minHeight: 44 }} onClick={onStart}>
@@ -187,6 +207,21 @@ function GeographyStep({
   const [attempted, setAttempted] = useState(false);
   const validation = validateGeography(form);
   const showErrors = attempted && !validation.ok;
+  const relationError = showErrors && validation.errors.relation;
+  const hasSavedGeography = Boolean(
+    session.geography &&
+      (session.geography.zip ||
+        session.geography.preferred_miles ||
+        session.geography.maximum_miles),
+  );
+
+  function describedBy(fieldId: string, fieldError: unknown): string | undefined {
+    const ids = [
+      fieldError ? `${fieldId}-error` : null,
+      relationError ? "geo-relation-error" : null,
+    ].filter(Boolean);
+    return ids.length ? ids.join(" ") : undefined;
+  }
 
   function submit() {
     setAttempted(true);
@@ -250,8 +285,8 @@ function GeographyStep({
             inputMode="numeric"
             value={form.preferredMiles}
             onChange={(e) => setForm({ ...form, preferredMiles: e.target.value })}
-            aria-describedby={showErrors && validation.errors.preferred ? "geo-preferred-error" : undefined}
-            aria-invalid={showErrors && !!validation.errors.preferred}
+            aria-describedby={describedBy("geo-preferred", showErrors && validation.errors.preferred)}
+            aria-invalid={(showErrors && !!validation.errors.preferred) || !!relationError}
             style={inputStyle}
           />
           {showErrors && validation.errors.preferred && (
@@ -270,8 +305,8 @@ function GeographyStep({
             inputMode="numeric"
             value={form.maximumMiles}
             onChange={(e) => setForm({ ...form, maximumMiles: e.target.value })}
-            aria-describedby={showErrors && validation.errors.maximum ? "geo-maximum-error" : undefined}
-            aria-invalid={showErrors && !!validation.errors.maximum}
+            aria-describedby={describedBy("geo-maximum", showErrors && validation.errors.maximum)}
+            aria-invalid={(showErrors && !!validation.errors.maximum) || !!relationError}
             style={inputStyle}
           />
           {showErrors && validation.errors.maximum && (
@@ -304,8 +339,12 @@ function GeographyStep({
           )}
         </div>
 
-        {showErrors && validation.errors.relation && (
-          <p role="alert" style={{ color: "var(--brick)", fontSize: 14, margin: 0 }}>
+        {relationError && (
+          <p
+            id="geo-relation-error"
+            role="alert"
+            style={{ color: "var(--brick)", fontSize: 14, margin: 0 }}
+          >
             {validation.errors.relation}
           </p>
         )}
@@ -313,7 +352,9 @@ function GeographyStep({
 
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <button type="button" className="cd-btn" style={{ minHeight: 44 }} onClick={submit}>
-          Continue to the cards
+          {sortComplete(session.card_responses)
+            ? "Save boundaries"
+            : "Continue to the cards"}
         </button>
         <button
           type="button"
@@ -323,7 +364,9 @@ function GeographyStep({
             onDone({ zip: null, preferred_miles: null, maximum_miles: null, allow_wildcards: false })
           }
         >
-          Skip — no distance limits
+          {hasSavedGeography
+            ? "Clear distance settings"
+            : "Skip — no distance limits"}
         </button>
       </div>
       <p style={{ fontSize: 13, color: "var(--ink-3)", marginTop: 12, maxWidth: "60ch" }}>
@@ -361,8 +404,9 @@ function SortStep({
     setAnnouncement(
       `Sorted “${card.statement}” into ${BUCKET_LABELS[bucket]}.${moved} Card ${Math.min(index + 2, total)} of ${total}.`,
     );
+    const merged = { ...session.card_responses, [card.card_id]: bucket };
     const nextUnanswered = DECK_CARDS.findIndex(
-      (c, i) => i > index && !{ ...session.card_responses, [card.card_id]: bucket }[c.card_id],
+      (c, i) => i > index && !merged[c.card_id],
     );
     if (index + 1 < total) {
       onRespond(card.card_id, bucket, nextUnanswered === -1 ? index + 1 : nextUnanswered);
@@ -396,7 +440,7 @@ function SortStep({
 
       <div className="cd-card cd-card--cut" style={{ padding: "24px", maxWidth: "60ch" }}>
         <div className="meta" style={{ marginBottom: 10 }}>
-          {card.group.replace(/-/g, " ")}
+          § {card.group.replace(/-/g, " ")}
         </div>
         <h2
           className="serif"
@@ -494,8 +538,14 @@ function LedgerStep({
     [session.card_responses],
   );
   const conflicts = aggregates.filter((a) => a.conflicted);
+  const conflictCards = conflicts.flatMap((a) =>
+    a.signal_ids
+      .map((id) => id.split(":")[1])
+      .map((cardId) => DECK_CARDS[DECK_INDEX.get(cardId) ?? -1])
+      .filter(Boolean),
+  );
   const everythingEssential =
-    ledger.essential.length >= DECK_CARDS.length - 2;
+    ledger.essential.length >= DECK_CARDS.length - ESSENTIAL_NUDGE_TOLERANCE;
 
   const sections: { bucket: Bucket; blurb: string }[] = [
     { bucket: "essential", blurb: "You'd trade other things for these." },
@@ -514,6 +564,13 @@ function LedgerStep({
         This ledger is yours to edit — nothing here is hidden or inferred
         without your say. When discovery rounds ship, every school suggestion
         will trace back to lines on this page.
+      </p>
+
+      <p style={{ fontSize: 13, color: "var(--ink-3)", maxWidth: "60ch" }}>
+        Badges: <strong>evidence-backed</strong> — public data can verify this
+        · <strong>proxy evidence</strong> — an imperfect stand-in exists ·{" "}
+        <strong>reflection only</strong> — no data yet, so it shapes how we
+        read you but can't pick schools.
       </p>
 
       <div className="cd-card" style={{ padding: "14px 18px", margin: "18px 0", maxWidth: "60ch" }}>
@@ -543,10 +600,14 @@ function LedgerStep({
         <div className="cd-card" style={{ padding: "14px 18px", margin: "18px 0", maxWidth: "60ch" }}>
           <div className="meta" style={{ marginBottom: 6 }}>§ Tensions</div>
           <p style={{ margin: 0, fontSize: 14, color: "var(--ink-2)" }}>
-            Some choices pull in opposite directions. They stay visible here
-            and count for nothing until you resolve them by revising the cards
-            involved.
+            These choices pull in opposite directions. They stay visible and
+            count for nothing until you revise one of the cards involved:
           </p>
+          <ul style={{ margin: "8px 0 0", paddingLeft: 20, fontSize: 14, color: "var(--ink-2)" }}>
+            {conflictCards.map((card) => (
+              <li key={card.card_id}>“{card.statement}”</li>
+            ))}
+          </ul>
         </div>
       )}
 
@@ -576,7 +637,7 @@ function LedgerStep({
             <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
               {rows.map(({ card }) => {
                 const badge = EVIDENCE_BADGES[card.evidence_status];
-                const deckIndex = DECK_CARDS.findIndex((c) => c.card_id === card.card_id);
+                const deckIndex = DECK_INDEX.get(card.card_id) ?? 0;
                 return (
                   <li
                     key={card.card_id}
@@ -594,6 +655,7 @@ function LedgerStep({
                     </span>
                     <span
                       className={badge.className}
+                      style={badge.style}
                       title={LIMITATIONS[card.limitation_id]}
                     >
                       {badge.label}
@@ -627,8 +689,8 @@ function LedgerStep({
         <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--ink-2)" }}>
           Discovery rounds are coming: small, varied sets of schools chosen by
           transparent rules, each with its reasons and sources shown — never a
-          ranking. Your profile is saved in this browser for 30 days, so
-          you can return and revise anytime.
+          ranking. Your profile is saved in this browser for {SESSION_TTL_DAYS}{" "}
+          days, so you can return and revise anytime.
         </p>
       </div>
 

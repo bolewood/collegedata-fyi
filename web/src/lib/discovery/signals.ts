@@ -2,7 +2,7 @@
 // discovery_policy_v1 bucket weights). Pure functions: same responses in,
 // same ledger out — no clock, no randomness.
 
-import { AGGREGATE_CLAMP, BUCKET_WEIGHTS } from "./content";
+import { AGGREGATE_CLAMP, BUCKET_WEIGHTS, ESSENTIAL_THRESHOLD } from "./content";
 import type {
   Bucket,
   DiscoveryCard,
@@ -23,13 +23,14 @@ export function buildSignals(
     const weight = BUCKET_WEIGHTS[bucket] ?? 0;
     if (weight === 0) continue;
     for (const key of card.preference_keys) {
+      const magnitude = Math.abs(weight);
       signals.push({
         signal_id: `card:${card.card_id}:${key}`,
         key,
         domain: card.domain,
         direction: weight > 0 ? "seek" : "avoid",
-        strength: Math.abs(weight) >= 3 ? "essential" : "interesting",
-        magnitude: Math.abs(weight) >= 3 ? 3 : 1,
+        strength: magnitude >= ESSENTIAL_THRESHOLD ? "essential" : "interesting",
+        magnitude,
         source: "card",
         source_id: card.card_id,
         confidence: "explicit",
@@ -91,7 +92,9 @@ export function buildLedger(
   };
   for (const card of deckCards) {
     const bucket = responses[card.card_id];
-    if (bucket) grouped[bucket].push({ card, bucket });
+    // Unknown bucket strings (tampered/corrupt storage) are dropped rather
+    // than crashing the ledger.
+    if (bucket && grouped[bucket]) grouped[bucket].push({ card, bucket });
   }
   return grouped;
 }

@@ -73,6 +73,79 @@ def test_locale_matcher_tolerates_string_typed_locale():
         assert ds.matcher("place.big_city", school) == expected, loc
 
 
+def test_offering_any_never_returns_minus_one(monkeypatch):
+    # cds.e1.* sources are pending, so pin the semantics via an injected
+    # resolver: truthy offering -> +1; reported-absent or missing -> 0
+    # ("absence never means mismatch", policy notes).
+    school = mk_school()
+    assert ds.matcher("opp.study_abroad", school) == 0  # no resolver yet
+    monkeypatch.setitem(ds.FIELD_RESOLVERS, "cds.e1.study_abroad", lambda s: True)
+    assert ds.matcher("opp.study_abroad", school) == 1
+    monkeypatch.setitem(ds.FIELD_RESOLVERS, "cds.e1.study_abroad", lambda s: False)
+    assert ds.matcher("opp.study_abroad", school) == 0
+
+
+def test_checklist_membership_min_members(monkeypatch):
+    # life.arts_scene requires >= 2 of its checklist members.
+    school = mk_school()
+    cases = [
+        (["theater", "dance"], 1),
+        (["theater"], 0),
+        ([], 0),
+        ("theater", 0),  # non-list evidence never counts
+    ]
+    for activities, expected in cases:
+        monkeypatch.setitem(
+            ds.FIELD_RESOLVERS, "cds.f1.activities", lambda s, a=activities: a)
+        assert ds.matcher("life.arts_scene", school) == expected, activities
+    # life.club_sports needs only one member.
+    monkeypatch.setitem(
+        ds.FIELD_RESOLVERS, "cds.f1.activities", lambda s: ["club_sports"])
+    assert ds.matcher("life.club_sports", school) == 1
+
+
+def test_numeric_max_aggregation_across_evidence_keys(monkeypatch):
+    # life.greek_scene takes max(fraternity, sorority) share.
+    school = mk_school()
+    monkeypatch.setitem(ds.FIELD_RESOLVERS, "cds.f1.pct_fraternity", lambda s: 3)
+    monkeypatch.setitem(ds.FIELD_RESOLVERS, "cds.f1.pct_sorority", lambda s: 25)
+    assert ds.matcher("life.greek_scene", school) == 1  # max 25 >= 20
+    monkeypatch.setitem(ds.FIELD_RESOLVERS, "cds.f1.pct_sorority", lambda s: 4)
+    assert ds.matcher("life.greek_scene", school) == -1  # max 4 <= 5
+    monkeypatch.setitem(ds.FIELD_RESOLVERS, "cds.f1.pct_sorority", lambda s: None)
+    monkeypatch.setitem(ds.FIELD_RESOLVERS, "cds.f1.pct_fraternity", lambda s: 10)
+    assert ds.matcher("life.greek_scene", school) == 0  # neutral band
+
+
+def test_evidence_priority_first_non_null_wins(monkeypatch):
+    # out.retention lists cds.b22.retention before the scorecard fallback:
+    # school-authored CDS must win when both exist.
+    scorecard_only = mk_school(scorecard={"retention_rate_ft": 0.9})
+    assert ds.matcher("out.retention", scorecard_only) == 1
+    monkeypatch.setitem(ds.FIELD_RESOLVERS, "cds.b22.retention", lambda s: 0.5)
+    assert ds.matcher("out.retention", scorecard_only) == -1  # CDS 0.5 < 0.7
+
+
+def test_strict_lt_opposite_boundary():
+    # out.retention's opposite band uses lt 0.7 — exactly 0.7 is neutral.
+    for rate, expected in ((0.85, 1), (0.7, 0), (0.699, -1)):
+        school = mk_school(scorecard={"retention_rate_ft": rate})
+        assert ds.matcher("out.retention", school) == expected, rate
+
+
+def test_count_band_zero_related_cips_is_unknown():
+    # academic.breadth: 0 related CIPs resolves to None (unknown, never -1);
+    # 1 is the defined opposite; a mid count sits in the neutral band.
+    cases = [
+        ({"direct": {f"{i:02}.0101": 1 for i in range(1, 6)}}, 1),
+        ({"direct": {"03.0103": 1}}, -1),
+        ({"direct": {"03.0103": 1}, "adjacent": {"44.0501": 1, "01.0000": 1}}, 0),
+        ({}, 0),
+    ]
+    for over, expected in cases:
+        assert ds.matcher("academic.breadth", mk_school(**over)) == expected, over
+
+
 def test_contrast_truth_table():
     school = mk_school(enrollment=4000)  # scale.small -> +1, scale.large -> -1
     # exactly one interesting mismatch (seek large, school is small)

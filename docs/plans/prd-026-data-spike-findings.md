@@ -41,16 +41,16 @@ audit logic and artifact invariants: `python3 -m pytest tools/discovery/`.
 | Geographic-wildcard fill (where possible) | ≥ 70% | 90% | PASS |
 | Reason references resolve to loaded evidence¹ | 100% | 100% | PASS |
 
-² Originally measured 17/20; the pre-landing hardening in PR #107 (concept-
-scoped flexible slot) correctly tightened one Montana scenario from 6 to 5
-schools. 16/20 is the value the shipped code reproduces; the gate verdict is
-unchanged.
-
 ¹ Spike-level check: every emitted reason reference must resolve to loaded
 evidence for that school (qualifying award counts for academic reasons, a live
 matcher signal for preference reasons). Full `RecommendationReason` validation
 (templates, coverage records, limitation versions, fail-closed rendering) is a
 `discovery_policy_v1` deliverable, not something this spike measures.
+
+² Originally measured 17/20; the pre-landing hardening in PR #107 (concept-
+scoped flexible slot) correctly tightened one Montana scenario from 6 to 5
+schools. 16/20 is the value the shipped code reproduces; the gate verdict is
+unchanged.
 
 Eligibility funnel from the 6,322-row directory: 3,398 out of scope, 811 not
 predominantly bachelor's, 312 excluded control types, 906 in-scope bachelor's

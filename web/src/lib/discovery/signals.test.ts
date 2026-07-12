@@ -65,6 +65,45 @@ describe("aggregateKeys", () => {
     expect(agg.total).toBe(0);
     expect(agg.signal_ids).toHaveLength(2); // opposing signals never disappear
   });
+
+  it("clamps the avoid side to the negative policy bound", () => {
+    const cards3 = Array.from({ length: 3 }, (_, i) => card(`n${i}`, ["k.same"]));
+    const responses = Object.fromEntries(cards3.map((c) => [c.card_id, "not_for_me"]));
+    const [agg] = aggregateKeys(buildSignals(responses as Record<string, Bucket>, cards3));
+    expect(agg.total).toBe(-5); // 3 x -3 clamped to -5
+    expect(agg.conflicted).toBe(false);
+  });
+
+  it("mixes essential and interesting magnitudes on one key", () => {
+    const two = [card("p", ["k.same"]), card("q", ["k.same"])];
+    const [agg] = aggregateKeys(
+      buildSignals({ p: "essential", q: "interesting" }, two),
+    );
+    expect(agg.total).toBe(4); // +3 +1, same direction — not conflicted
+    expect(agg.conflicted).toBe(false);
+  });
+
+  it("excludes inactive signals from aggregation", () => {
+    const signals = buildSignals({ a: "essential", b: "essential" }, [
+      card("a", ["k.one"]),
+      card("b", ["k.two"]),
+    ]);
+    const deactivated = signals.map((s) =>
+      s.key === "k.two" ? { ...s, active: false } : s,
+    );
+    const aggs = aggregateKeys(deactivated);
+    expect(aggs.map((a) => a.key)).toEqual(["k.one"]);
+  });
+
+  it("returns aggregates sorted by key for stable rendering", () => {
+    const cards = [card("z", ["k.zeta"]), card("a", ["k.alpha"]), card("m", ["k.mid"])];
+    const responses = { z: "essential", a: "interesting", m: "interesting" } as Record<
+      string,
+      Bucket
+    >;
+    const aggs = aggregateKeys(buildSignals(responses, cards));
+    expect(aggs.map((a) => a.key)).toEqual(["k.alpha", "k.mid", "k.zeta"]);
+  });
 });
 
 describe("opening deck integration", () => {

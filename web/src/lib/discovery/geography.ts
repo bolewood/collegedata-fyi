@@ -56,6 +56,18 @@ export function validateGeography(input: GeographyFormInput): GeographyValidatio
       "Your preferred distance is larger than your never-beyond maximum. Raise the maximum or lower the preference.";
   }
 
+  // A radius without an origin is unenforceable: the engine could silently
+  // ignore a "never beyond" boundary (PRD 026 §Geography enforcement says
+  // distance settings stay disabled until a ZIP resolves).
+  if (
+    !zip &&
+    !errors.zip &&
+    (typeof preferred === "number" || typeof maximum === "number")
+  ) {
+    errors.zip =
+      "Distances need a starting point — add your ZIP (it stays on this device) or clear the distance fields.";
+  }
+
   const wildcardNote =
     input.allowWildcards && preferred === null && !errors.preferred
       ? "Wildcards only make sense with a preferred distance — without one, every school is already in range, so this setting is ignored."

@@ -54,9 +54,9 @@ test("discover flow: boundaries → card sort → ledger", async ({ page }) => {
   const buckets = [/^Essential/, /^Interesting/, /^Not important/, /^Not for me/];
   for (let i = 0; i < 24; i++) {
     // Keyboard operation: focus the bucket button and press Enter.
-    const button = page.getByRole("button", { name: buckets[i % 4] });
-    await button.focus();
-    await page.keyboard.press("Enter");
+    // press() is keyboard-operated AND actionability-checked, so a swallowed
+    // keystroke fails at the card that stalled instead of 5 lines later.
+    await page.getByRole("button", { name: buckets[i % 4] }).press("Enter");
   }
 
   // The live region announced the final sort.
@@ -82,7 +82,76 @@ test("discover flow: boundaries → card sort → ledger", async ({ page }) => {
 
   // "Change" reopens the sort at that card, and the ledger is reachable again.
   await page.getByRole("button", { name: "Change", exact: true }).first().click();
-  await expect(page.getByText(/Card \d+ of 24/)).toBeVisible();
+  await expect(page.getByText("Card 1 of 24", { exact: false })).toBeVisible();
+});
+
+// Revision affordances and honest-guidance states. The conflicted-key
+// "Tensions" panel is intentionally not exercised: deck opening-v1 gives every
+// card a unique preference key (pinned in signals.test.ts), so a seek+avoid
+// conflict cannot be produced from the sort alone — the panel becomes
+// reachable when reflection/edit signals ship.
+test("discover flow: wildcard note, revision mid-sort, essential nudge, restart", async ({
+  page,
+}) => {
+  await page.goto("/discover");
+  await page.getByRole("button", { name: /start sorting/i }).click();
+
+  // Wildcards without a preferred radius explain themselves instead of
+  // erroring — and the note clears once a radius exists.
+  await page.getByRole("checkbox", { name: /occasional wildcard/i }).check();
+  await expect(page.getByText(/this setting is ignored/i)).toBeVisible();
+  await page.getByLabel(/prefer within/i).fill("150");
+  await expect(page.getByText(/this setting is ignored/i)).toBeHidden();
+  // A radius without an origin is unenforceable: continuing demands a ZIP.
+  await page.getByRole("button", { name: /continue to the cards/i }).click();
+  await expect(page.getByRole("alert").filter({ hasText: /starting point/i })).toBeVisible();
+  await page.getByLabel(/home zip/i).fill("60601");
+  await page.getByRole("button", { name: /continue to the cards/i }).click();
+
+  // Back-navigation mid-sort: revising an earlier card resumes at the next
+  // unanswered card rather than replaying already-sorted ones.
+  // (the "· N sorted" suffix pins the progress line, not the live region)
+  await expect(page.getByText("Card 1 of 24")).toBeVisible();
+  await page.getByRole("button", { name: /^Essential/ }).click();
+  await expect(page.getByText(/Card 2 of 24 · \d+ sorted/)).toBeVisible();
+  await page.getByRole("button", { name: /^Interesting/ }).click();
+  await expect(page.getByText(/Card 3 of 24 · \d+ sorted/)).toBeVisible();
+  await page.getByRole("button", { name: /previous card/i }).click();
+  await expect(page.getByText(/Card 2 of 24 · \d+ sorted/)).toBeVisible();
+  await page.getByRole("button", { name: /^Not important/ }).click();
+  await expect(page.getByText(/Card 3 of 24 · \d+ sorted/)).toBeVisible();
+
+  // Everything-else-essential: 23 of 24 essential must trigger the nudge.
+  for (let i = 2; i < 24; i++) {
+    await page.getByRole("button", { name: /^Essential/ }).click();
+  }
+  await page.getByRole("button", { name: /see my preference profile/i }).click();
+  await expect(page.getByText(/nothing can stand out/i)).toBeVisible();
+
+  // Boundary edit from the ledger round-trips with the form prefilled and
+  // every card response intact.
+  await page.getByRole("button", { name: /change boundaries/i }).click();
+  await expect(page.getByLabel(/prefer within/i)).toHaveValue("150");
+  await page.getByLabel(/prefer within/i).fill("200");
+  // With the sort complete, saving boundaries returns straight to the ledger.
+  await page.getByRole("button", { name: /save boundaries/i }).click();
+  await expect(
+    page.getByRole("heading", { name: /what you told us/i }),
+  ).toBeVisible();
+  await expect(page.getByText(/prefer within ~200 miles/)).toBeVisible();
+
+  // Start over wipes the stored session and lands on a blank boundaries form;
+  // a reload proves nothing lingered in localStorage.
+  await page.getByRole("button", { name: /start over/i }).click();
+  await expect(page.getByRole("heading", { name: /how far from home/i })).toBeVisible();
+  await expect(page.getByLabel(/prefer within/i)).toHaveValue("");
+  expect(
+    await page.evaluate(() => window.localStorage.getItem("cdfyi.discovery.session.v1")),
+  ).toBeNull();
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: /find what you value/i }),
+  ).toBeVisible();
 });
 
 test("discover card sort reflows at 320px without horizontal scroll", async ({ page }) => {

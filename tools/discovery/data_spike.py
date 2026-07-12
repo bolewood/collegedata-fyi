@@ -21,13 +21,15 @@ Outputs:
 Sibling: cds_card_coverage.py regenerates the per-card CDS coverage numbers
 cited in the findings doc.
 
-Prototype-policy notes (documented deviations, all spike-only):
-  - Evidence matchers cover directory/scorecard-backed keys only; CDS-backed
-    keys (residential_campus, small_discussion, greek_scene) and geodata keys
-    (outdoors_access) are unsupported and contribute zero, exercising the
-    supported-preference rule.
+Spike-scope notes:
+  - Matchers execute data/discovery/policy/v1.json. Keys whose evidence
+    sources are not loaded here (cds.*, ipeds.ic.*, distance.*,
+    merit_profile.*) resolve to None and return 0 — unknown, never mismatch.
+    The policy's unsupported set is the reflection-only keys.
   - Origins are coordinates, not ZIPs (centroid source still unselected).
   - Completions use MAJORNUM=1 (first majors) and AWLEVEL=05 (bachelor's).
+  - The "fewer_quality_flags" tie-break is not implementable here (quality
+    flags are not loaded); ordering falls through to school_id.
 """
 
 import csv
@@ -52,6 +54,8 @@ SCORING = POLICY["scoring"]
 DIVERSITY = POLICY["round_composition"]["diversity"]
 MAX_PER_STATE = DIVERSITY["max_per_state"]
 MAX_PER_CONTROL = DIVERSITY["max_per_control"]
+ROUND_SIZE = POLICY["round_composition"]["round_size"]
+MINIMUM_SIZE = POLICY["round_composition"]["minimum_size"]
 ESSENTIAL = SCORING["essential_threshold"]
 SUPPORTED_KEYS = frozenset(POLICY["matchers"])
 
@@ -349,17 +353,17 @@ def compose_round(pool, profile, origin, family_edges_by_concept):
         take(lambda s: s["distance"] is not None and s["distance"] > pref_mi, "wildcard")
         if geo["allow_wildcards"] and pref_mi else False)
     slots_filled["exploration"] = take(lambda s: True, "exploration")
-    while len(chosen) < 6 and take(lambda s: True, "additional_exploration"):
+    while len(chosen) < ROUND_SIZE and take(lambda s: True, "additional_exploration"):
         pass
 
     # PRD 026 §8: if diversity caps prevent a four-school minimum, relax
     # control type first, then state, recording the relaxation.
-    if len(chosen) < 4:
+    if len(chosen) < MINIMUM_SIZE:
         # level 1 drops the control cap (state cap kept); level 2 drops both.
         for level, state_cap in enumerate([MAX_PER_STATE, None], start=1):
             added = 0
             for s in candidates:
-                if len(chosen) >= 4:
+                if len(chosen) >= MINIMUM_SIZE:
                     break
                 if any(c["ipeds_id"] == s["ipeds_id"] for c in chosen):
                     continue
@@ -372,7 +376,7 @@ def compose_round(pool, profile, origin, family_edges_by_concept):
             if added:
                 diagnostics["relaxation_level"] = level
                 diagnostics[f"relaxation_added_l{level}"] = added
-            if len(chosen) >= 4:
+            if len(chosen) >= MINIMUM_SIZE:
                 break
 
     return chosen, slots_filled, diagnostics, len(candidates), wildcard_possible

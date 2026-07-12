@@ -33,12 +33,18 @@ const policy = policyJson as unknown as {
 
 const cardsById = new Map(library.cards.map((c) => [c.card_id, c]));
 
-// The opening deck in versioned display order. A deck id that fails to
-// resolve is a content bug the artifact tests catch pre-merge; the runtime
-// filter is defense in depth.
-export const DECK_CARDS: DiscoveryCard[] = deck.display_order
-  .map((id) => cardsById.get(id))
-  .filter((c): c is DiscoveryCard => Boolean(c));
+// The opening deck in versioned display order. An unresolved deck id is a
+// content bug: fail closed at module init (surfaces in build/tests) rather
+// than silently serving a shorter deck.
+const unresolved = deck.display_order.filter((id) => !cardsById.has(id));
+if (unresolved.length > 0) {
+  throw new Error(
+    `Deck ${deck.deck_version} references unknown cards: ${unresolved.join(", ")}`,
+  );
+}
+export const DECK_CARDS: DiscoveryCard[] = deck.display_order.map(
+  (id) => cardsById.get(id) as DiscoveryCard,
+);
 
 export const CARD_LIBRARY_VERSION = library.card_library_version;
 export const DECK_VERSION = deck.deck_version;
@@ -47,6 +53,7 @@ export const LIMITATIONS = library.limitations;
 
 export const AGGREGATE_CLAMP = policy.scoring.preference_aggregate_clamp;
 export const BUCKET_WEIGHTS = policy.scoring.bucket_weights;
+export const ESSENTIAL_THRESHOLD = policy.scoring.essential_threshold;
 
 export function getCard(cardId: string): DiscoveryCard | undefined {
   return cardsById.get(cardId);
