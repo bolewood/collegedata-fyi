@@ -185,6 +185,40 @@ test("discovery rounds: interests → round with reasons → reactions → shelf
   await expectAxeClean(page);
   const firstSchool = await cards.first().getByRole("heading").textContent();
 
+  // Profile strip: collapsed bar is present with steering counts, and every
+  // reason that traces to a preference carries its attribution gloss.
+  const strip = page.getByTestId("profile-strip");
+  await expect(strip.getByText(/Steering: \d+ strong/)).toBeVisible();
+  await expect(page.getByText(/Because you (said|asked)/).first()).toBeVisible();
+
+  // Expand the drawer, spotlight a preference, and verify the round is a
+  // pure render under it: same schools, same order.
+  const orderBefore = await page.locator("ol > li.cd-card h2").allTextContents();
+  await strip.getByRole("button", { name: /your answers/i }).click();
+  const drawer = page.getByRole("region", { name: /your answers/i });
+  await expect(drawer.getByText(/steering strongly/i)).toBeVisible();
+  await expectAxeClean(page);
+  const toggle = drawer.locator("button[aria-pressed]").first();
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  const spotlitCount = await page.locator("[data-spotlit]").count();
+  const announcement = await strip.locator("[aria-live]").textContent();
+  if (spotlitCount > 0) {
+    expect(announcement).toMatch(
+      new RegExp(`Highlighting ${spotlitCount} reason`),
+    );
+  } else {
+    expect(announcement).toMatch(/No shown reasons come from this/);
+  }
+  const orderAfter = await page.locator("ol > li.cd-card h2").allTextContents();
+  expect(orderAfter).toEqual(orderBefore);
+  await expectAxeClean(page);
+  // Escape closes the drawer and clears the spotlight (one rule).
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeHidden();
+  await expect(page.locator("[data-spotlit]")).toHaveCount(0);
+  await expect(strip.getByRole("button", { name: /your answers/i })).toBeFocused();
+
   // Research next: must pick a reason and answer familiarity (PRD §10).
   await cards.first().getByRole("button", { name: /research next/i }).click();
   await expect(page.getByText(/which reason are you saving/i)).toBeVisible();
@@ -222,6 +256,37 @@ test("discovery rounds: interests → round with reasons → reactions → shelf
   // Session (with rounds state) survives a reload.
   await page.reload();
   await expect(page.getByRole("heading", { name: /shortlist/i })).toBeVisible();
+});
+
+test("discovery rounds with profile strip reflow at 320px", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto("/discover");
+  await page.getByRole("button", { name: /start sorting/i }).click();
+  await page.getByRole("button", { name: /skip — no distance limits/i }).click();
+  const buckets = [/^Essential/, /^Interesting/, /^Not important/, /^Not for me/];
+  for (let i = 0; i < 24; i++) {
+    await page.getByRole("button", { name: buckets[i % 4] }).press("Enter");
+  }
+  await page.getByRole("button", { name: /see my preference profile/i }).click();
+  await page.getByRole("button", { name: /continue to discovery rounds/i }).click();
+  await page.getByRole("button", { name: /environment & climate/i }).click();
+  await page.getByRole("button", { name: /see my first round/i }).click();
+  await expect(page.locator("ol > li.cd-card").first()).toBeVisible();
+
+  const strip = page.getByTestId("profile-strip");
+  await expect(strip.getByText(/Steering: \d+ strong/)).toBeVisible();
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow).toBeLessThanOrEqual(1);
+
+  // The fixed strip must not obscure the reaction buttons: the last card's
+  // panel still opens from a real click.
+  const lastCard = page.locator("ol > li.cd-card").last();
+  await lastCard.getByRole("button", { name: /not for me/i }).scrollIntoViewIfNeeded();
+  await lastCard.getByRole("button", { name: /not for me/i }).click();
+  await expect(lastCard.getByText(/not for you because of/i)).toBeVisible();
+  await expectAxeClean(page);
 });
 
 test("discover card sort reflows at 320px without horizontal scroll", async ({ page }) => {

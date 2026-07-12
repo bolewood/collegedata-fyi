@@ -110,6 +110,14 @@
   .cd-btn { transition: none; }
 }
 
+/* Discovery rounds: a reason spotlit by an active profile-strip chip. The
+   wash reuses the established forest tint (see --match-fit-bg). */
+.discover-spotlit {
+  border-left: 3px solid var(--forest);
+  background: rgba(63, 91, 58, 0.07);
+  padding-left: 10px;
+}
+
 /* Button text color and underline reset for anchor variants. The
    `.cd-theme a { color: var(--ink); text-decoration: underline; }` rule
    above has specificity (0,1,1), which beats a bare `.cd-btn` at (0,1,0)
