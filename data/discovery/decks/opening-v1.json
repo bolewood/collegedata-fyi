@@ -11,7 +11,8 @@
     "Every one of the 11 library groups is represented, so the sort forces prioritization across domains (PRD 026 §2).",
     "Two deliberate tension pairs — big-school-energy/small-school-known and city-as-campus/quiet-setting — separated in display order; unipolar keys mean sorting both Essential is allowed and reconciles through matchers.",
     "Two reflection-only cards earn slots on reflection value: collaborative-culture (the most-asked unmeasurable culture question) and outdoors-access (high salience, and scenario-corpus-exercised).",
-    "display_order interleaves groups so no two consecutive cards share one; the order is versioned, not shuffled at runtime, keeping sessions reproducible."
+    "display_order interleaves groups so no two consecutive cards share one; the order is versioned, not shuffled at runtime, keeping sessions reproducible.",
+    "Revision 2 (2026-07-12, owner-directed): faith-life replaces big-game-days in slot 12 — game-day culture gets partial coverage from big-school-energy's scale evidence, while faith life is load-bearing for a distinct family segment nothing else in the deck touches."
   ],
   "display_order": [
     "explore-before-major",
@@ -25,7 +26,7 @@
     "city-as-campus",
     "greek-scene",
     "combine-interests",
-    "big-game-days",
+    "faith-life",
     "internship-credit",
     "quiet-setting",
     "background-diversity",
@@ -57,13 +58,13 @@
     "arts-scene": "Big Six extracurricular engagement, non-athletic flavor; F1 activities checklist.",
     "big-school-energy": "Tension pole (scale); full-coverage enrollment evidence.",
     "small-school-known": "Tension pole (scale); full-coverage enrollment evidence.",
-    "big-game-days": "High-salience, polarizing; athletic-division proxy.",
     "collaborative-culture": "The most-asked unmeasurable culture question; reflection gold.",
     "background-diversity": "People dimension; CDS B2 composition evidence.",
     "need-aid-strength": "Family-critical; scorecard net-price evidence covers ~the whole pool.",
     "graduate-low-debt": "Distinct debt lens on affordability; scorecard evidence.",
     "students-return": "Momentum signal students understand; retention evidence.",
-    "four-year-finish": "The outcome families actually budget around; grad-rate evidence."
+    "four-year-finish": "The outcome families actually budget around; grad-rate evidence.",
+    "faith-life": "Owner call (rev 2): load-bearing for a distinct family segment no other card covers; IPEDS affiliation proxy."
   },
   "excluded_to_library": {
     "pivot-without-transfer": "Same evidence family and student instinct as explore-before-major.",
@@ -86,15 +87,16 @@
     "club-sports": "Lost the activities-checklist slot to arts-scene (distinct audience).",
     "tight-knit-overlap": "Duplicate feel of small-school-known.",
     "shared-traditions": "Reflection overlap with big-game-days/collaborative-culture.",
-    "faith-life": "Load-bearing for a subset; better surfaced via reflection chips than a universal deck slot — revisit for deck v2.",
     "service-culture": "Reflection overlap with collaborative-culture.",
-    "politically-engaged": "Polarizing slot already spent on greek-scene and big-game-days.",
+    "politically-engaged": "Polarizing slot already spent on greek-scene.",
     "geographic-mix": "People slot went to background-diversity (broader axis).",
     "first-gen-common": "Pell proxy is thin; revisit with better evidence.",
     "merit-scholarships": "Affordability slots went to need-aid + debt; merit is a strong v2 candidate for no-need families.",
     "campus-jobs": "Reflection-only; low sort signal.",
     "career-track-record": "Outcomes slots went to retention + four-year finish.",
     "early-career-help": "Reflection overlap with career-track-record.",
-    "alumni-network": "Reflection overlap with early-career-help."
-  }
+    "alumni-network": "Reflection overlap with early-career-help.",
+    "big-game-days": "Owner call (rev 2): partially covered by big-school-energy (large scale correlates with big athletics); returned to library, strong v2 candidate."
+  },
+  "revision": 2
 }
