@@ -30,8 +30,13 @@ import type {
   Bucket,
   DiscoveryCard,
   DiscoverySessionV1,
+  SchoolReaction,
 } from "@/lib/discovery/types";
 import { BUCKET_LABELS, BUCKETS } from "@/lib/discovery/types";
+import { getCachedBundle } from "@/lib/discovery/bundle";
+import { InterestsStep } from "./InterestsStep";
+import { RoundsStep } from "./RoundsStep";
+import { ShelfStep } from "./ShelfStep";
 
 const BUCKET_HINTS: Record<Bucket, string> = {
   essential: "I'd give up other things for this",
@@ -151,7 +156,60 @@ export function DiscoverFlow() {
             update((s) => ({ ...s, step: "sort", sort_index: index }))
           }
           onEditGeography={() => update((s) => ({ ...s, step: "geography" }))}
+          onContinue={() => update((s) => ({ ...s, step: "interests" }))}
           onRestart={restart}
+        />
+      );
+    case "interests":
+      return (
+        <InterestsStep
+          initial={session.concepts}
+          onDone={(concepts) => {
+            trackEvent("discovery_interests_chosen", {
+              deck_version: DECK_VERSION,
+              count: concepts.length,
+            });
+            update((s) => ({ ...s, concepts, step: "rounds" }));
+          }}
+          onBack={() => update((s) => ({ ...s, step: "ledger" }))}
+        />
+      );
+    case "rounds":
+      return (
+        <RoundsStep
+          session={session}
+          onReact={(reaction: SchoolReaction) =>
+            update((s) => ({ ...s, reactions: [...s.reactions, reaction] }))
+          }
+          onAdvanceRound={() =>
+            update((s) => ({ ...s, current_round: s.round_history.length }))
+          }
+          onRecordRound={(round) =>
+            update((s) => ({
+              ...s,
+              current_round: round.round_index,
+              round_history: [...s.round_history, round.history_entry],
+            }))
+          }
+          onOpenShelf={() => update((s) => ({ ...s, step: "shelf" }))}
+          onBackToLedger={() => update((s) => ({ ...s, step: "ledger" }))}
+          onFixBoundaries={() => update((s) => ({ ...s, step: "geography" }))}
+        />
+      );
+    case "shelf":
+      return (
+        <ShelfStep
+          session={session}
+          bundle={getCachedBundle()}
+          onRemove={(schoolId) =>
+            update((s) => ({
+              ...s,
+              reactions: s.reactions.filter(
+                (r) => !(r.school_id === schoolId && r.reaction === "research_next"),
+              ),
+            }))
+          }
+          onBackToRounds={() => update((s) => ({ ...s, step: "rounds" }))}
         />
       );
   }
@@ -522,11 +580,13 @@ function LedgerStep({
   session,
   onEditCard,
   onEditGeography,
+  onContinue,
   onRestart,
 }: {
   session: DiscoverySessionV1;
   onEditCard: (deckIndex: number) => void;
   onEditGeography: () => void;
+  onContinue: () => void;
   onRestart: () => void;
 }) {
   const ledger = useMemo(
@@ -687,21 +747,31 @@ function LedgerStep({
       <div className="cd-card cd-card--cut" style={{ padding: "16px 20px", margin: "28px 0", maxWidth: "60ch" }}>
         <div className="meta" style={{ marginBottom: 8 }}>§ What happens next</div>
         <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--ink-2)" }}>
-          Discovery rounds are coming: small, varied sets of schools chosen by
-          transparent rules, each with its reasons and sources shown — never a
+          Next: discovery rounds — small, varied sets of schools chosen by
+          transparent rules, each with its reasons and sources shown, never a
           ranking. Your profile is saved in this browser for {SESSION_TTL_DAYS}{" "}
           days, so you can return and revise anytime.
         </p>
       </div>
 
-      <button
-        type="button"
-        className="cd-btn cd-btn--ghost"
-        style={{ minHeight: 44 }}
-        onClick={onRestart}
-      >
-        Start over
-      </button>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <button
+          type="button"
+          className="cd-btn"
+          style={{ minHeight: 44 }}
+          onClick={onContinue}
+        >
+          Continue to discovery rounds →
+        </button>
+        <button
+          type="button"
+          className="cd-btn cd-btn--ghost"
+          style={{ minHeight: 44 }}
+          onClick={onRestart}
+        >
+          Start over
+        </button>
+      </div>
     </div>
   );
 }
