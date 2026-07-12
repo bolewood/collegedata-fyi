@@ -122,7 +122,9 @@ rate 2025" or "Stanford SAT scores 2024-25."
 **Layout (when extracted):**
 1. Breadcrumb: Schools / {name} / {year}
 2. School name + year heading
-3. Format badge + source download link
+3. Format badge + source download link, plus "Download spreadsheet"
+   (XLSX) and CSV links (PRD 025) on the first variant when structured
+   values exist
 4. **KeyStats block:** 4-8 stat cards showing acceptance rate, applications,
    admitted, enrolled, SAT composite/math/reading ranges, and ACT Composite
    when available. Only renders cards for fields that have values. Acceptance rate is computed from
@@ -138,6 +140,16 @@ on the same page with their own KeyStats and FieldsView sections.
 
 **When not extracted:** Shows document metadata + source download + a
 "Structured data coming soon" message.
+
+**Spreadsheet download routes (PRD 025):**
+`/schools/[school_id]/[year]/cds.xlsx` and `cds.csv` route handlers serve
+the same merged extract the page renders as a downloadable workbook (README
+sheet + one sheet per CDS section that has extracted values) or flat CSV. Multi-variant school-years
+land in one workbook; a Variant column appears when there is more than one
+document. Both routes 404 when the
+school/year has no structured values; CSV cells are neutralized against
+spreadsheet formula injection. See `lib/spreadsheet-source.ts`,
+`lib/spreadsheet.ts`, and `lib/xlsx.ts`.
 
 **SEO:** Schema.org `Dataset` JSON-LD markup plus breadcrumb markup. Dataset
 JSON-LD includes `name`, `description`, `url`, `creator`, `temporalCoverage`,
@@ -257,6 +269,7 @@ component share the same Supabase response within a single render.
 | `WhatChangedCard` | `components/WhatChangedCard.tsx` | PRD 019 public-reviewed year-over-year CDS change events. Hides when the school has no published events. |
 | `FederalBaselineTable` | `components/FederalBaselineTable.tsx` | PRD 021 accessible table for source-labeled NCES/IPEDS facts from `school_facts_unified`. |
 | `SchoolDocumentsLedger` | `components/SchoolDocumentsLedger.tsx` | Collapses long CDS-document histories after the three most recent files. |
+| `SpreadsheetDownloadLinks` | `components/SpreadsheetDownloadLinks.tsx` | PRD 025 XLSX + CSV download links on the year page; fires a `spreadsheet_downloaded` analytics event. |
 | `SubmissionForm` | `components/SubmissionForm.tsx` | Formspree-backed public CDS source submission form; compact mode opens inline from no-CDS pages. |
 | `SchoolTable` | `components/SchoolTable.tsx` | Sortable/filterable school list with search input |
 | `DocumentCard` | `components/DocumentCard.tsx` | CDS year card with status badge, format badge, and format-aware source link |
@@ -287,6 +300,9 @@ component share the same Supabase response within a single render.
 | `savecode.ts` | `lib/savecode.ts` | Stateless local profile/list share code encoding |
 | `types.ts` | `lib/types.ts` | TypeScript interfaces for API responses |
 | `format.ts` | `lib/format.ts` | Display formatters (badge labels, status colors, storage URLs) |
+| `spreadsheet.ts` | `lib/spreadsheet.ts` | PRD 025 workbook/CSV builder; same section grouping and labels as `FieldsView`, CSV output neutralized against formula injection |
+| `spreadsheet-source.ts` | `lib/spreadsheet-source.ts` | Assembles `SpreadsheetInput` for the `cds.xlsx`/`cds.csv` routes from the same queries the year page uses |
+| `xlsx.ts` | `lib/xlsx.ts` | Dependency-free minimal XLSX writer (zip of XML parts, inline strings, deterministic output); reusable for other export surfaces |
 | `labels.ts` | `lib/labels.ts` | Auto-generated CDS field ID to plain-English label map (1,105 fields from `cds_schema_2025_26.json`) |
 
 ---

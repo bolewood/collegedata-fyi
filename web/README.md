@@ -13,6 +13,8 @@ Read [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) before changing UI.
   and PRD 019 public-reviewed change intelligence.
 - Source-labeled NCES/IPEDS federal baseline facts on school pages through
   `FederalBaselineTable`, especially for schools without an archived public CDS.
+- Per-school-year spreadsheet downloads at `/schools/[school_id]/[year]/cds.xlsx`
+  and `cds.csv` (PRD 025), built from the same merged extract the page renders.
 - `/browse` queryable CDS browser.
 - `/match` local-only match-list builder.
 - `/coverage` public institution coverage dashboard.

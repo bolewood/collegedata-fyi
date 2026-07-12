@@ -35,7 +35,7 @@ We also archive source files on discovery, because some schools do occasionally 
 
 ## Quick look
 
-**Browse the site:** [collegedata.fyi](https://collegedata.fyi) — search for a school, view archived CDS years, download archived source files, or browse extracted field values.
+**Browse the site:** [collegedata.fyi](https://collegedata.fyi) — search for a school, view archived CDS years, download archived source files or a per-school-year XLSX/CSV spreadsheet of the extracted values, or browse extracted field values.
 
 **Query the API:**
 
