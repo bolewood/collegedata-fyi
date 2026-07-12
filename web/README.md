@@ -17,6 +17,9 @@ Read [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) before changing UI.
   and `cds.csv` (PRD 025), built from the same merged extract the page renders.
 - `/browse` queryable CDS browser.
 - `/match` local-only match-list builder.
+- `/discover` guided discovery slice 1 (PRD 026): boundary step, accessible
+  card sort, preference ledger. Soft-launched — noindex, unlinked, session
+  kept in localStorage only.
 - `/coverage` public institution coverage dashboard.
 - `/changes` operator-only PRD 019 digest, disabled by default.
 - Static methodology, API, about, and recipe pages.

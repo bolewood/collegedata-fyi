@@ -43,6 +43,8 @@ jobs:
         run: python -m unittest discover -s tools/ipeds -p "test_*.py"
       - name: Run change intelligence tests
         run: python -m unittest discover -s tools/change_intelligence -p "test_*.py"
+      - name: Run discovery policy and engine tests
+        run: python -m pytest tools/discovery -q
 
   migrations:
     # Structural sanity checks on supabase/migrations/. Verifies every
@@ -124,6 +126,9 @@ jobs:
       - name: Typecheck web app
         working-directory: web
         run: npm run typecheck
+      - name: Run web unit tests
+        working-directory: web
+        run: npm test
       - name: Build web app
         working-directory: web
         run: npm run build

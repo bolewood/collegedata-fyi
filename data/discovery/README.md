@@ -30,6 +30,21 @@ later. Code contributions elsewhere in the repo are unaffected.
   approved 2026-07-12).
 - `scenarios/v1.json` — versioned synthetic geography/preference
   fixtures for the feasibility gate (5 origins x 4 profiles).
+- `policy/v1.json` — `discovery_policy_v1`: eligibility predicate,
+  scoring constants, evidence matchers for every data/proxy preference
+  key (thresholds are initial calibration pending pilot evidence), slot
+  composition, diversity + relaxation, tie-breaks, cooldowns,
+  diagnostics schema, and reason templates. Executed by
+  `tools/discovery/data_spike.py`; invariants pinned by
+  `tools/discovery/test_policy.py`.
+
+## Web runtime mirrors
+
+The web app consumes committed mirrors of the runtime artifacts — the card
+library, opening deck, and policy (not the ontology or scenario fixtures) —
+under `web/src/lib/discovery/content/` (the Vercel project root is `web/`, so
+it cannot import across the repo root). `web/src/lib/discovery/content-sync.test.ts`
+fails the suite whenever a mirror drifts from its canonical source here.
 
 ## Versioning rules
 

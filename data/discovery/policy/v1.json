@@ -1,0 +1,675 @@
+{
+  "policy_version": "discovery_policy_v1",
+  "status": "draft",
+  "created": "2026-07-12",
+  "license": "CC-BY-SA-4.0",
+  "prd": "docs/prd/026-guided-college-discovery.md",
+  "card_library_version": "v1",
+  "ontology_version": "v1",
+  "notes": [
+    "The versioned policy governing deterministic candidate generation (PRD 026 §7-8). Given identical evidence versions, ontology version, policy version, constraints, and preferences, rounds must be identical.",
+    "All matcher thresholds are INITIAL CALIBRATION — spike-derived placeholders pending pilot evidence. They are versioned policy, not validated constants; changing any threshold requires a new policy version.",
+    "Matcher semantics (PRD 026 §7): +1 = verified evidence aligns with the positive statement; -1 = verified evidence supports its defined opposite; 0 = unknown, unsupported, missing, suppressed, or inside the neutral band. Absence NEVER means mismatch.",
+    "A preference key with no matcher entry is unsupported: it contributes zero to relevance and stays visible in the ledger (reflection-only keys are listed in unsupported_keys).",
+    "Matchers whose evidence_keys reference sources not yet loaded (ipeds.ic.*, distance.metro_proximity, merit_profile.*, derived cds metrics) are defined but return 0 until the load ships — 'supported preference' additionally requires at least one usable evidence fact at runtime.",
+    "Reference implementation: tools/discovery/data_spike.py executes this file; tools/discovery/test_policy.py pins its invariants."
+  ],
+  "eligibility": {
+    "description": "Stage 1 predicate — the exact meaning of 'in scope' (PRD 026 §7).",
+    "predicates": [
+      {
+        "field": "directory.in_scope",
+        "op": "eq",
+        "value": true
+      },
+      {
+        "field": "directory.currently_operating",
+        "op": "eq",
+        "value": true
+      },
+      {
+        "field": "directory.control",
+        "op": "in",
+        "value": [
+          1,
+          2
+        ],
+        "note": "public or private nonprofit (Scorecard coding)"
+      },
+      {
+        "field": "directory.predominant_degree",
+        "op": "gte",
+        "value": 3,
+        "note": "primarily bachelor's-or-above"
+      },
+      {
+        "field": "directory.ipeds_id",
+        "op": "unambiguous",
+        "note": "exactly one directory row per ipeds_unitid"
+      }
+    ]
+  },
+  "academic_plausibility": {
+    "description": "Stage 3: at least one positive bachelor's award in the selected IPEDS collection cycle for a direct or adjacent reviewed edge. Exploratory edges never gate. Zero or missing counts are unknown, never negative evidence.",
+    "completions_cycle": "C2024_A provisional (2023-24 awards)",
+    "award_level": "bachelor",
+    "majornum": 1
+  },
+  "scoring": {
+    "academic_match": {
+      "direct": 6,
+      "adjacent": 3,
+      "stacking": false
+    },
+    "preference_aggregate_clamp": [
+      -5,
+      5
+    ],
+    "bucket_weights": {
+      "essential": 3,
+      "interesting": 1,
+      "not_important": 0,
+      "not_for_me": -3
+    },
+    "inside_preferred_radius": 2,
+    "conflicted_key_contribution": 0,
+    "essential_threshold": 3,
+    "essential_threshold_note": "abs(aggregate) >= 3 is treated as essential-strength for contrast-slot protection; any other nonzero aggregate is interesting-strength."
+  },
+  "matchers": {
+    "academic.breadth": {
+      "kind": "count_band",
+      "evidence_keys": [
+        "program.related_cip_count"
+      ],
+      "seek": {
+        "gte": 5
+      },
+      "opposite": {
+        "lte": 1
+      },
+      "limitation_id": "lim.cip_breadth"
+    },
+    "academic.pivot_flexibility": {
+      "kind": "count_band",
+      "evidence_keys": [
+        "program.related_cip_count"
+      ],
+      "seek": {
+        "gte": 4
+      },
+      "opposite": {
+        "lte": 1
+      },
+      "limitation_id": "lim.cip_breadth"
+    },
+    "academic.combine_interests": {
+      "kind": "offering_any",
+      "evidence_keys": [
+        "cds.e1.double_major",
+        "cds.e1.student_designed_major"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    "academic.honors_program": {
+      "kind": "offering_any",
+      "evidence_keys": [
+        "cds.e1.honors_program"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    "academic.cross_registration": {
+      "kind": "offering_any",
+      "evidence_keys": [
+        "cds.e1.cross_registration"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    "academic.accelerated": {
+      "kind": "offering_any",
+      "evidence_keys": [
+        "cds.e1.accelerated_program"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    "class.small_discussion": {
+      "kind": "numeric_band",
+      "evidence_keys": [
+        "cds.i3.pct_sections_under_20"
+      ],
+      "derived_method": "cds_i3_section_share_v1 (pending)",
+      "seek": {
+        "gte": 60
+      },
+      "opposite": {
+        "lte": 25
+      },
+      "unit": "percent",
+      "limitation_id": "lim.class_size"
+    },
+    "class.faculty_known_by_name": {
+      "kind": "numeric_band_inverted",
+      "evidence_keys": [
+        "cds.i2.student_faculty_ratio"
+      ],
+      "seek": {
+        "lte": 12
+      },
+      "opposite": {
+        "gte": 20
+      },
+      "unit": "ratio",
+      "limitation_id": "lim.size_proxy"
+    },
+    "opp.internship_credit": {
+      "kind": "offering_any",
+      "evidence_keys": [
+        "cds.e1.internships"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    "opp.coop": {
+      "kind": "offering_any",
+      "evidence_keys": [
+        "cds.e1.cooperative_education"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    "opp.study_abroad": {
+      "kind": "offering_any",
+      "evidence_keys": [
+        "cds.e1.study_abroad"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    "opp.independent_study": {
+      "kind": "offering_any",
+      "evidence_keys": [
+        "cds.e1.independent_study"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    "opp.teacher_certification": {
+      "kind": "offering_any",
+      "evidence_keys": [
+        "cds.e1.teacher_certification"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    "opp.undergrad_research": {
+      "kind": "offering_any",
+      "evidence_keys": [
+        "cds.e1.undergraduate_research"
+      ],
+      "limitation_id": "lim.e1_offering"
+    },
+    "place.walkable_town": {
+      "kind": "category_set",
+      "evidence_keys": [
+        "scorecard.locale"
+      ],
+      "seek_set": [
+        13,
+        31,
+        32,
+        33
+      ],
+      "opposite_set": [
+        41,
+        42,
+        43
+      ],
+      "limitation_id": "lim.locale_proxy"
+    },
+    "place.big_city": {
+      "kind": "category_set",
+      "evidence_keys": [
+        "scorecard.locale"
+      ],
+      "seek_set": [
+        11,
+        12
+      ],
+      "opposite_set": [
+        31,
+        32,
+        33,
+        41,
+        42,
+        43
+      ],
+      "limitation_id": "lim.locale_proxy"
+    },
+    "place.quiet_setting": {
+      "kind": "category_set",
+      "evidence_keys": [
+        "scorecard.locale"
+      ],
+      "seek_set": [
+        31,
+        32,
+        33,
+        41,
+        42,
+        43
+      ],
+      "opposite_set": [
+        11,
+        12
+      ],
+      "limitation_id": "lim.locale_proxy"
+    },
+    "place.metro_access": {
+      "kind": "numeric_band_inverted",
+      "evidence_keys": [
+        "distance.metro_proximity"
+      ],
+      "derived_method": "metro_proximity_v1 (pending metro dataset)",
+      "seek": {
+        "lte": 60
+      },
+      "opposite": {
+        "gte": 150
+      },
+      "unit": "miles",
+      "limitation_id": "lim.metro_distance"
+    },
+    "life.residential_campus": {
+      "kind": "numeric_band",
+      "evidence_keys": [
+        "cds.f1.pct_college_housing"
+      ],
+      "seek": {
+        "gte": 70
+      },
+      "opposite": {
+        "lte": 30
+      },
+      "unit": "percent",
+      "limitation_id": "lim.housing_share"
+    },
+    "life.weekend_vitality": {
+      "kind": "numeric_band",
+      "evidence_keys": [
+        "cds.f1.pct_college_housing"
+      ],
+      "seek": {
+        "gte": 70
+      },
+      "opposite": {
+        "lte": 30
+      },
+      "unit": "percent",
+      "limitation_id": "lim.housing_share",
+      "note": "proxy shared with residential_campus until a better signal exists"
+    },
+    "life.greek_scene": {
+      "kind": "numeric_band",
+      "evidence_keys": [
+        "cds.f1.pct_fraternity",
+        "cds.f1.pct_sorority"
+      ],
+      "aggregation": "max",
+      "seek": {
+        "gte": 20
+      },
+      "opposite": {
+        "lte": 5
+      },
+      "unit": "percent",
+      "limitation_id": "lim.participation_share"
+    },
+    "life.arts_scene": {
+      "kind": "checklist_membership",
+      "evidence_keys": [
+        "cds.f1.activities"
+      ],
+      "members": [
+        "music_ensembles",
+        "theater",
+        "art_gallery",
+        "choral_groups",
+        "dance"
+      ],
+      "min_members": 2,
+      "limitation_id": "lim.activities_checklist"
+    },
+    "life.club_sports": {
+      "kind": "checklist_membership",
+      "evidence_keys": [
+        "cds.f1.activities"
+      ],
+      "members": [
+        "intramural_sports",
+        "club_sports"
+      ],
+      "min_members": 1,
+      "limitation_id": "lim.activities_checklist"
+    },
+    "scale.large": {
+      "kind": "numeric_band",
+      "evidence_keys": [
+        "directory.enrollment"
+      ],
+      "seek": {
+        "gte": 15000
+      },
+      "opposite": {
+        "lte": 5000
+      },
+      "unit": "undergraduates",
+      "limitation_id": "lim.size_proxy"
+    },
+    "scale.small": {
+      "kind": "numeric_band_inverted",
+      "evidence_keys": [
+        "directory.enrollment"
+      ],
+      "seek": {
+        "lte": 5000
+      },
+      "opposite": {
+        "gte": 15000
+      },
+      "unit": "undergraduates",
+      "limitation_id": "lim.size_proxy"
+    },
+    "scale.tight_knit": {
+      "kind": "numeric_band_inverted",
+      "evidence_keys": [
+        "directory.enrollment"
+      ],
+      "seek": {
+        "lte": 3000
+      },
+      "opposite": {
+        "gte": 10000
+      },
+      "unit": "undergraduates",
+      "limitation_id": "lim.size_proxy"
+    },
+    "spirit.big_sports": {
+      "kind": "category_set",
+      "evidence_keys": [
+        "ipeds.ic.athletic_division"
+      ],
+      "seek_set": [
+        "ncaa_d1"
+      ],
+      "opposite_set": [
+        "no_intercollegiate"
+      ],
+      "limitation_id": "lim.division_proxy",
+      "note": "pending IPEDS IC load"
+    },
+    "spirit.faith_life": {
+      "kind": "category_set",
+      "evidence_keys": [
+        "ipeds.ic.religious_affiliation"
+      ],
+      "seek_set": [
+        "affiliated"
+      ],
+      "opposite_set": [],
+      "limitation_id": "lim.affiliation",
+      "note": "pending IPEDS IC load; no opposite — secular schools host faith communities, so unaffiliated is 0, never -1"
+    },
+    "people.geographic_mix": {
+      "kind": "numeric_band",
+      "evidence_keys": [
+        "cds.f1.pct_out_of_state"
+      ],
+      "seek": {
+        "gte": 40
+      },
+      "opposite": {
+        "lte": 15
+      },
+      "unit": "percent",
+      "limitation_id": "lim.participation_share"
+    },
+    "people.background_diversity": {
+      "kind": "numeric_band",
+      "evidence_keys": [
+        "cds.b2.diversity_index"
+      ],
+      "derived_method": "b2_diversity_index_v1 (pending — definition requires its own review)",
+      "seek": {
+        "gte": 0.6
+      },
+      "opposite": {
+        "lte": 0.25
+      },
+      "unit": "index_0_1",
+      "limitation_id": "lim.composition"
+    },
+    "people.first_gen_common": {
+      "kind": "numeric_band",
+      "evidence_keys": [
+        "scorecard.pell_grant_rate"
+      ],
+      "seek": {
+        "gte": 0.45
+      },
+      "opposite": {
+        "lte": 0.2
+      },
+      "unit": "fraction",
+      "limitation_id": "lim.pell_proxy"
+    },
+    "cost.need_aid_strength": {
+      "kind": "numeric_band_inverted",
+      "evidence_keys": [
+        "scorecard.net_price_0_30k"
+      ],
+      "seek": {
+        "lte": 15000
+      },
+      "opposite": {
+        "gte": 25000
+      },
+      "unit": "usd",
+      "limitation_id": "lim.aid_no_prediction"
+    },
+    "cost.merit_aid": {
+      "kind": "category_set",
+      "evidence_keys": [
+        "merit_profile.quality"
+      ],
+      "seek_set": [
+        "strong"
+      ],
+      "opposite_set": [],
+      "limitation_id": "lim.aid_no_prediction",
+      "note": "partial/limited/missing are 0 — thin merit data is unknown, not verified absence"
+    },
+    "cost.low_debt": {
+      "kind": "numeric_band_inverted",
+      "evidence_keys": [
+        "scorecard.median_debt_completers"
+      ],
+      "seek": {
+        "lte": 20000
+      },
+      "opposite": {
+        "gte": 27000
+      },
+      "unit": "usd",
+      "limitation_id": "lim.aid_no_prediction"
+    },
+    "out.retention": {
+      "kind": "numeric_band",
+      "evidence_keys": [
+        "cds.b22.retention",
+        "scorecard.retention_rate_ft"
+      ],
+      "evidence_priority": "first non-null wins (school-authored CDS preferred)",
+      "seek": {
+        "gte": 0.85
+      },
+      "opposite": {
+        "lt": 0.7
+      },
+      "unit": "fraction",
+      "limitation_id": "lim.outcomes_cohort"
+    },
+    "out.four_year_grad": {
+      "kind": "numeric_band",
+      "evidence_keys": [
+        "cds.b.four_year_grad_rate",
+        "scorecard.graduation_rate_4yr"
+      ],
+      "evidence_priority": "first non-null wins",
+      "seek": {
+        "gte": 0.6
+      },
+      "opposite": {
+        "lt": 0.35
+      },
+      "unit": "fraction",
+      "limitation_id": "lim.outcomes_cohort"
+    },
+    "out.career_track_record": {
+      "kind": "numeric_band",
+      "evidence_keys": [
+        "scorecard.earnings_10yr_median"
+      ],
+      "seek": {
+        "gte": 55000
+      },
+      "opposite": {
+        "lte": 35000
+      },
+      "unit": "usd",
+      "limitation_id": "lim.outcomes_cohort"
+    }
+  },
+  "unsupported_keys": {
+    "description": "Reflection-only preference keys: no matcher, zero relevance contribution, always visible in the ledger.",
+    "keys": [
+      "class.office_hours_culture",
+      "class.faculty_taught",
+      "class.faculty_in_field",
+      "opp.experiential_courses",
+      "place.classic_campus",
+      "place.outdoors_access",
+      "place.warm_climate",
+      "place.four_seasons",
+      "place.airport_access",
+      "life.housing_guaranteed",
+      "spirit.traditions",
+      "spirit.collaborative",
+      "spirit.service",
+      "spirit.politically_engaged",
+      "cost.campus_jobs",
+      "out.career_services_early",
+      "out.alumni_network"
+    ]
+  },
+  "round_composition": {
+    "round_size": 6,
+    "minimum_size": 4,
+    "slots": [
+      {
+        "slot": "anchor",
+        "rule": "strongest direct evidence match (highest relevance among direct-path candidates)"
+      },
+      {
+        "slot": "flexible",
+        "rule": "highest related-CIP count among remaining direct matches, counted within the selected concepts' direct+adjacent edge sets"
+      },
+      {
+        "slot": "contrast",
+        "rule": "highest relevance among candidates mismatching exactly one supported interesting-strength preference and mismatching no essential-strength (abs(aggregate)>=3) preference"
+      },
+      {
+        "slot": "affordability",
+        "rule": "lowest non-missing scorecard_summary.avg_net_price among remaining academically plausible candidates; NPT4_PUB for public, NPT4_PRIV for private; missing values cannot fill the slot; display the federal metric's population and year; never call it the student's price"
+      },
+      {
+        "slot": "wildcard",
+        "rule": "highest relevance outside preferred radius (and inside maximum when one exists); only when the student allowed wildcards and a preferred radius exists"
+      },
+      {
+        "slot": "exploration",
+        "rule": "highest remaining relevance after diversity constraints"
+      }
+    ],
+    "backfill_role": "additional_exploration",
+    "diversity": {
+      "max_per_state": 2,
+      "max_per_control": 3,
+      "note": "applied during each slot selection when the eligible pool contains alternatives"
+    },
+    "relaxation": {
+      "order": [
+        "control",
+        "state"
+      ],
+      "trigger": "diversity caps prevent the four-school minimum",
+      "record": "relaxation level and schools added per level in round diagnostics"
+    },
+    "tie_break": [
+      "more_direct_evidence_facts",
+      "more_supported_preference_dimensions",
+      "fewer_quality_flags",
+      "school_id_ascending"
+    ],
+    "cooldowns": {
+      "research_next_shelf": "never repeats",
+      "not_for_me": "never repeats in the current session",
+      "shown_unreacted": "two-round cooldown",
+      "readmission": "oldest unreacted only, labeled Revisit, never saved or rejected schools"
+    }
+  },
+  "diagnostics_manifest_schema": [
+    "policy_version",
+    "ontology_version",
+    "card_deck_version",
+    "evidence_release_ids",
+    "eligible_count",
+    "excluded_counts_by_reason",
+    "slot_winners_and_runners_up",
+    "diversity_rejections",
+    "relaxations",
+    "evidence_ids_used",
+    "active_constraint_ids",
+    "preference_state_hash",
+    "geography_preference_without_zip"
+  ],
+  "reason_templates": {
+    "tpl.academic_direct.v1": {
+      "text": "Reported bachelor's degrees in {program_label} in {data_year} — a direct path for your interest in {concept_label}.",
+      "limitation_id": "lim.cip_breadth"
+    },
+    "tpl.academic_adjacent.v1": {
+      "text": "Reported bachelor's degrees in {program_label} in {data_year} — a related path for your interest in {concept_label}.",
+      "limitation_id": "lim.cip_breadth"
+    },
+    "tpl.offering.v1": {
+      "text": "Reports offering {offering_label} in its Common Data Set ({data_year}).",
+      "limitation_id": "lim.e1_offering"
+    },
+    "tpl.numeric_high.v1": {
+      "text": "Reported {metric_label} of {value} in {data_year} — in line with what you said matters.",
+      "limitation_id": "lim.outcomes_cohort"
+    },
+    "tpl.numeric_low_good.v1": {
+      "text": "Reported {metric_label} of {value} in {data_year} — on the lower side, which matches what you asked for.",
+      "limitation_id": "lim.aid_no_prediction"
+    },
+    "tpl.category.v1": {
+      "text": "Federal data classifies this campus setting as {category_label} ({data_year}).",
+      "limitation_id": "lim.locale_proxy"
+    },
+    "tpl.distance.v1": {
+      "text": "About {miles} miles from your starting point (straight-line, not driving time).",
+      "limitation_id": "lim.metro_distance"
+    },
+    "tpl.affordability_slot.v1": {
+      "text": "Average net price {value} for {population} in {data_year} — shown for cost context, never a prediction of your family's price.",
+      "limitation_id": "lim.aid_no_prediction"
+    },
+    "note": "Template placeholders resolve from evidence facts at render time; a reason missing a valid template, evidence, or limitation version is omitted (fail closed, PRD 026 §9). Each matcher's limitation_id overrides the template default when they differ."
+  }
+}

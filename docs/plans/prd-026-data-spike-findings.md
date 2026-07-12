@@ -33,7 +33,7 @@ audit logic and artifact invariants: `python3 -m pytest tools/discovery/`.
 | States represented | ≥ 15 | **53** (incl. DC/territories) | PASS |
 | Both control types | both | 480 private-nonprofit / 415 public | PASS |
 | Rounds with ≥ 4 schools | 100% | 20/20 | PASS |
-| Rounds with 6 schools | ≥ 80% | 17/20 (85%) | PASS |
+| Rounds with 6 schools | ≥ 80% | 16/20 (80%)² | PASS |
 | Anchor fill | 100% | 100% | PASS |
 | Flexible-path fill | ≥ 80% | 100% | PASS |
 | Contrast fill | ≥ 50% | 60% | PASS |
@@ -46,6 +46,11 @@ evidence for that school (qualifying award counts for academic reasons, a live
 matcher signal for preference reasons). Full `RecommendationReason` validation
 (templates, coverage records, limitation versions, fail-closed rendering) is a
 `discovery_policy_v1` deliverable, not something this spike measures.
+
+² Originally measured 17/20; the pre-landing hardening in PR #107 (concept-
+scoped flexible slot) correctly tightened one Montana scenario from 6 to 5
+schools. 16/20 is the value the shipped code reproduces; the gate verdict is
+unchanged.
 
 Eligibility funnel from the 6,322-row directory: 3,398 out of scope, 811 not
 predominantly bachelor's, 312 excluded control types, 906 in-scope bachelor's
@@ -102,7 +107,10 @@ institutions with **no** recent-award evidence in the family → 895 eligible.
 
 - Evidence matchers are prototypes with placeholder thresholds; only
   directory/scorecard-backed keys were wired. CDS-backed keys deliberately
-  contributed zero, exercising the supported-preference rule.
+  contributed zero, exercising the supported-preference rule. (Superseded:
+  `discovery_policy_v1` now defines matchers for every data/proxy key and
+  `data_spike.py` executes the policy file; thresholds remain initial
+  calibration pending pilot evidence.)
 - Origins carry coordinates directly; the ZIP-centroid source (PRD Q5)
   remains unselected.
 - `MAJORNUM=1` only (first majors); second-major counts excluded to avoid
@@ -115,7 +123,10 @@ institutions with **no** recent-award evidence in the family → 895 eligible.
 1. Formalize `discovery_policy_v1` (real matchers + thresholds, relaxation
    stage, diagnostics manifest, full `RecommendationReason` validation) — the
    spike's prototype is the skeleton. (Opening-deck selection is done:
-   `data/discovery/decks/opening-v1.json`.)
+   `data/discovery/decks/opening-v1.json`. Policy artifact is done:
+   `data/discovery/policy/v1.json`, executed by `data_spike.py` and pinned by
+   `tools/discovery/test_policy.py`; threshold calibration awaits pilot
+   evidence.)
 2. Production evidence tables (`ProgramEvidenceFact`/summary projections) via
    the existing IPEDS pipeline, from fresh `main` per migration policy —
    including the PRD §6 identity audit (branches, systems, closures) deferred
