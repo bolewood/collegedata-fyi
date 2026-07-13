@@ -110,6 +110,23 @@
   .cd-btn { transition: none; }
 }
 
+/* Discovery rounds: a reason spotlit by an active profile-strip chip. The
+   wash reuses the established forest tint (see --match-fit-bg). The negative
+   margin cancels the border+padding so text never reflows on toggle — the
+   rule sits in the card's gutter. */
+.discover-spotlit {
+  border-left: 3px solid var(--forest);
+  background: rgba(63, 91, 58, 0.07);
+  padding-left: 10px;
+  margin-left: -13px;
+}
+
+/* Profile-strip interactive affordances: chips and drawer rows are buttons
+   and need hover feedback like every other interactive element. Inline
+   active-state styles (solid forest) win over these. */
+.discover-chip:hover { border-color: var(--forest); color: var(--forest-ink); }
+.discover-drawer-toggle:hover { background: rgba(63, 91, 58, 0.05); }
+
 /* Button text color and underline reset for anchor variants. The
    `.cd-theme a { color: var(--ink); text-decoration: underline; }` rule
    above has specificity (0,1,1), which beats a bare `.cd-btn` at (0,1,0)

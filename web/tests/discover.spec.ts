@@ -19,6 +19,36 @@ async function expectAxeClean(page: Page) {
   expect(results.violations).toEqual([]);
 }
 
+const BUCKETS = [/^Essential/, /^Interesting/, /^Not important/, /^Not for me/];
+
+// Shared funnel: fresh session → sorted deck → interests → first round.
+// The mixed sort (buckets cycling across all 24 cards) guarantees strong,
+// gentle, away, tension-free, and recorded entries all exist.
+async function reachFirstRound(
+  page: Page,
+  opts: { zip?: { zip: string; preferred: string; maximum: string } } = {},
+) {
+  await page.goto("/discover");
+  await page.getByRole("button", { name: /start sorting/i }).click();
+  if (opts.zip) {
+    await page.getByLabel(/home zip/i).fill(opts.zip.zip);
+    await page.getByLabel(/prefer within/i).fill(opts.zip.preferred);
+    await page.getByRole("textbox", { name: /never beyond/i }).fill(opts.zip.maximum);
+    await page.getByRole("checkbox", { name: /occasional wildcard/i }).check();
+    await page.getByRole("button", { name: /continue to the cards/i }).click();
+  } else {
+    await page.getByRole("button", { name: /skip — no distance limits/i }).click();
+  }
+  for (let i = 0; i < 24; i++) {
+    await page.getByRole("button", { name: BUCKETS[i % 4] }).press("Enter");
+  }
+  await page.getByRole("button", { name: /see my preference profile/i }).click();
+  await page.getByRole("button", { name: /continue to discovery rounds/i }).click();
+  await page.getByRole("button", { name: /environment & climate/i }).click();
+  await page.getByRole("button", { name: /see my first round/i }).click();
+  await expect(page.locator("ol > li.cd-card").first()).toBeVisible();
+}
+
 test("discover flow: boundaries → card sort → ledger", async ({ page }) => {
   await page.goto("/discover");
 
@@ -51,12 +81,11 @@ test("discover flow: boundaries → card sort → ledger", async ({ page }) => {
   await expect(page.getByText("Card 1 of 24")).toBeVisible();
   await expectAxeClean(page);
 
-  const buckets = [/^Essential/, /^Interesting/, /^Not important/, /^Not for me/];
   for (let i = 0; i < 24; i++) {
     // Keyboard operation: focus the bucket button and press Enter.
     // press() is keyboard-operated AND actionability-checked, so a swallowed
     // keystroke fails at the card that stalled instead of 5 lines later.
-    await page.getByRole("button", { name: buckets[i % 4] }).press("Enter");
+    await page.getByRole("button", { name: BUCKETS[i % 4] }).press("Enter");
   }
 
   // The live region announced the final sort.
@@ -161,9 +190,8 @@ test("discovery rounds: interests → round with reasons → reactions → shelf
   await page.getByLabel(/prefer within/i).fill("300");
   await page.getByRole("textbox", { name: /never beyond/i }).fill("800");
   await page.getByRole("button", { name: /continue to the cards/i }).click();
-  const buckets = [/^Essential/, /^Interesting/, /^Not important/, /^Not for me/];
   for (let i = 0; i < 24; i++) {
-    await page.getByRole("button", { name: buckets[i % 4] }).press("Enter");
+    await page.getByRole("button", { name: BUCKETS[i % 4] }).press("Enter");
   }
   await page.getByRole("button", { name: /see my preference profile/i }).click();
 
@@ -185,6 +213,61 @@ test("discovery rounds: interests → round with reasons → reactions → shelf
   await expectAxeClean(page);
   const firstSchool = await cards.first().getByRole("heading").textContent();
 
+  // Profile strip: collapsed bar is present with steering counts, and every
+  // reason that traces to a preference carries its attribution gloss.
+  const strip = page.getByTestId("profile-strip");
+  await expect(strip.getByText(/Steering: \d+ strong/)).toBeVisible();
+  await expect(page.getByText(/Because you (said|asked)/).first()).toBeVisible();
+
+  // Expand the drawer, spotlight a preference, and verify the round is a
+  // pure render under it: same schools, same order.
+  const orderBefore = await page.locator("ol > li.cd-card h2").allTextContents();
+  await strip.getByRole("button", { name: /your answers/i }).click();
+  const drawer = page.getByRole("region", { name: /your answers/i });
+  await expect(drawer.getByText(/steering strongly/i)).toBeVisible();
+  await expectAxeClean(page);
+  // Deterministic spotlight: derive the toggle from a rendered gloss, so the
+  // highlight branch always exercises real matches (a regression that makes
+  // every toggle match zero can't slip through the zero-match copy).
+  const glossText = await page
+    .getByText(/^Because you said: “/)
+    .first()
+    .textContent();
+  const statement = glossText!.slice("Because you said: “".length).replace(/”$/, "");
+  const toggle = drawer
+    .locator("button[aria-pressed]", { hasText: statement.slice(0, 30) })
+    .first();
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  const spotlitCount = await page.locator("[data-spotlit]").count();
+  expect(spotlitCount).toBeGreaterThan(0);
+  const announcement = await strip.locator("[aria-live]").textContent();
+  expect(announcement).toMatch(new RegExp(`Highlighting ${spotlitCount} reason`));
+  const orderAfter = await page.locator("ol > li.cd-card h2").allTextContents();
+  expect(orderAfter).toEqual(orderBefore);
+  await expectAxeClean(page);
+  // Non-toggle entries explain themselves instead of pretending to be
+  // spotlights: away entries carry their copy, and non-actionable keys sit
+  // in the disclosed "Recorded, not yet matching" group (never inflating
+  // the steering counts).
+  await expect(
+    drawer.getByText(/shapes scoring, not the reasons shown/).first(),
+  ).toBeVisible();
+  await expect(drawer.getByText(/recorded, not yet matching/i)).toBeVisible();
+  // Toggling the same chip off clears the spotlight and announces it.
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  await expect(page.locator("[data-spotlit]")).toHaveCount(0);
+  expect(await strip.locator("[aria-live]").textContent()).toBe("Highlight cleared.");
+  // Re-arm so Escape below demonstrably clears an active spotlight.
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  // Escape closes the drawer and clears the spotlight (one rule).
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeHidden();
+  await expect(page.locator("[data-spotlit]")).toHaveCount(0);
+  await expect(strip.getByRole("button", { name: /your answers/i })).toBeFocused();
+
   // Research next: must pick a reason and answer familiarity (PRD §10).
   await cards.first().getByRole("button", { name: /research next/i }).click();
   await expect(page.getByText(/which reason are you saving/i)).toBeVisible();
@@ -199,8 +282,22 @@ test("discovery rounds: interests → round with reasons → reactions → shelf
   await second.getByRole("radio", { name: /something else/i }).check();
   await second.getByRole("button", { name: /set it aside/i }).click();
 
+  // Advancing rounds clears any active spotlight — a highlight surviving the
+  // transition would describe the previous round. Inline collapsed-bar chips
+  // exist only at sm+ widths, so this leg runs on the desktop project.
+  const inlineChip = strip.locator(".cd-chip[aria-pressed]").first();
+  const inlineChipVisible = await inlineChip.isVisible();
+  if (inlineChipVisible) {
+    await inlineChip.click();
+    await expect(inlineChip).toHaveAttribute("aria-pressed", "true");
+  }
+
   // Next round: saved + rejected schools never reappear.
   await page.getByRole("button", { name: /next round/i }).click();
+  if (inlineChipVisible) {
+    await expect(page.locator("[data-spotlit]")).toHaveCount(0);
+    await expect(inlineChip).toHaveAttribute("aria-pressed", "false");
+  }
   await expect(
     page.locator("ol > li.cd-card h2", { hasText: firstSchool ?? "" }),
   ).toHaveCount(0);
@@ -222,6 +319,37 @@ test("discovery rounds: interests → round with reasons → reactions → shelf
   // Session (with rounds state) survives a reload.
   await page.reload();
   await expect(page.getByRole("heading", { name: /shortlist/i })).toBeVisible();
+});
+
+test("discovery rounds with profile strip reflow at 320px", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await reachFirstRound(page);
+
+  const strip = page.getByTestId("profile-strip");
+  await expect(strip.getByText(/Steering: \d+ strong/)).toBeVisible();
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow).toBeLessThanOrEqual(1);
+
+  // The fixed strip must not obscure the reaction buttons: the last card's
+  // panel still opens from a real click.
+  const lastCard = page.locator("ol > li.cd-card").last();
+  await lastCard.getByRole("button", { name: /not for me/i }).scrollIntoViewIfNeeded();
+  await lastCard.getByRole("button", { name: /not for me/i }).click();
+  await expect(lastCard.getByText(/not for you because of/i)).toBeVisible();
+  await expectAxeClean(page);
+
+  // "Edit profile" in the drawer routes back to the ledger — the strip is
+  // read-only by design and the ledger stays the only editing surface.
+  await strip.getByRole("button", { name: /your answers/i }).click();
+  await page
+    .getByRole("region", { name: /your answers/i })
+    .getByRole("button", { name: /edit profile/i })
+    .click();
+  await expect(
+    page.getByRole("button", { name: /continue to discovery rounds/i }),
+  ).toBeVisible();
 });
 
 test("discover card sort reflows at 320px without horizontal scroll", async ({ page }) => {

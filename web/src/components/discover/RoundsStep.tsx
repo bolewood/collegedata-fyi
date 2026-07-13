@@ -12,6 +12,11 @@ import { trackEvent } from "@/lib/analytics";
 import { getCachedBundle, loadBundle } from "@/lib/discovery/bundle";
 import { DECK_VERSION } from "@/lib/discovery/content";
 import {
+  buildProfileStripModel,
+  spotlightCountsForRound,
+  STRIP_CLEARANCE,
+} from "@/lib/discovery/profile-strip";
+import {
   cardStatementForKey,
   composeNextRound,
   renderStoredRound,
@@ -23,6 +28,7 @@ import type {
   RoundSchool,
   SchoolReaction,
 } from "@/lib/discovery/types";
+import { ProfileStrip } from "./ProfileStrip";
 
 const CONTROL_LABELS: Record<number, string> = {
   1: "public",
@@ -60,6 +66,9 @@ export function RoundsStep({
 }) {
   const [bundle, setBundle] = useState<EvidenceBundle | null>(getCachedBundle());
   const [loadError, setLoadError] = useState(false);
+  // Spotlight is view-state only — it highlights, never recomposes. Cleared
+  // on drawer close (inside ProfileStrip) and on round advance (below).
+  const [spotlightKey, setSpotlightKey] = useState<string | null>(null);
 
   useEffect(() => {
     if (bundle || loadError) return;
@@ -86,6 +95,39 @@ export function RoundsStep({
       ? renderStoredRound(session, bundle, storedEntry)
       : composeNextRound(session, bundle);
   }, [bundle, session, storedEntry]);
+
+  const stripModel = useMemo(() => buildProfileStripModel(session), [session]);
+  const stripVisible = Boolean(
+    round && round.schools.length > 0 && !stripModel.empty,
+  );
+
+  // A reaction can invalidate the active spotlight mid-round (e.g. Not-for-me
+  // on the spotlit key makes it conflicted; its chip becomes non-toggle and
+  // its reasons vanish). Reconcile at render: an invalid key highlights
+  // nothing and no chip reads pressed — same live snapshot everywhere.
+  const spotlightableKeys = useMemo(
+    () => new Set([...stripModel.strong, ...stripModel.gentle].map((e) => e.key)),
+    [stripModel],
+  );
+  const activeSpotlight =
+    spotlightKey && spotlightableKeys.has(spotlightKey) ? spotlightKey : null;
+
+  // Keyboard focus must never land hidden behind the fixed strip (WCAG
+  // focus-not-obscured), and the document itself needs bottom clearance —
+  // padding only the step content would leave the global footer's last row
+  // permanently under the bar at full scroll.
+  useEffect(() => {
+    if (!stripVisible) return;
+    const root = document.documentElement;
+    const prevScroll = root.style.scrollPaddingBottom;
+    const prevPad = document.body.style.paddingBottom;
+    root.style.scrollPaddingBottom = `${STRIP_CLEARANCE}px`;
+    document.body.style.paddingBottom = `${STRIP_CLEARANCE}px`;
+    return () => {
+      root.style.scrollPaddingBottom = prevScroll;
+      document.body.style.paddingBottom = prevPad;
+    };
+  }, [stripVisible]);
 
   // Persist a freshly composed round exactly once (drives cooldowns).
   useEffect(() => {
@@ -128,7 +170,7 @@ export function RoundsStep({
   ).length;
 
   return (
-    <StepShell>
+    <StepShell style={stripVisible ? { paddingBottom: STRIP_CLEARANCE } : undefined}>
       {round.zip_unresolved && (
         <div className="cd-card" style={{ padding: "12px 16px", margin: "0 0 16px", maxWidth: "64ch" }}>
           <p style={{ margin: 0, fontSize: 14, color: "var(--ink-2)" }}>
@@ -172,13 +214,26 @@ export function RoundsStep({
             roundIndex={round.round_index}
             alreadyReacted={reactedIds.has(s.school.school_id)}
             onReact={onReact}
+            spotlightKey={activeSpotlight}
+            glosses={stripModel.glosses}
           />
         ))}
       </ol>
 
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 20 }}>
         {round.schools.length > 0 && (
-          <button type="button" className="cd-btn" style={{ minHeight: 44 }} onClick={onAdvanceRound}>
+          <button
+            type="button"
+            className="cd-btn"
+            style={{ minHeight: 44 }}
+            onClick={() => {
+              // A spotlight surviving the transition would describe the
+              // previous round — clear it with the same one-rule semantics
+              // as drawer close.
+              setSpotlightKey(null);
+              onAdvanceRound();
+            }}
+          >
             Next round →
           </button>
         )}
@@ -198,6 +253,16 @@ export function RoundsStep({
         These are research suggestions with their evidence shown — not a
         ranking, an application list, or an admissions prediction.
       </p>
+
+      {stripVisible && (
+        <ProfileStrip
+          model={stripModel}
+          spotlightKey={activeSpotlight}
+          onSpotlight={setSpotlightKey}
+          spotlightCounts={(key) => spotlightCountsForRound(round.schools, key)}
+          onEditProfile={onBackToLedger}
+        />
+      )}
     </StepShell>
   );
 }
@@ -262,9 +327,15 @@ function ChangeNote({
   );
 }
 
-function StepShell({ children }: { children: React.ReactNode }) {
+function StepShell({
+  children,
+  style,
+}: {
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+}) {
   return (
-    <div>
+    <div style={style}>
       <div className="meta">§ Discovery round</div>
       <h1 className="serif" style={{ fontSize: 32, margin: "8px 0 12px" }}>
         Schools worth a look — with receipts.
@@ -279,11 +350,15 @@ function RoundCard({
   roundIndex,
   alreadyReacted,
   onReact,
+  spotlightKey,
+  glosses,
 }: {
   entry: RoundSchool;
   roundIndex: number;
   alreadyReacted: boolean;
   onReact: (r: SchoolReaction) => void;
+  spotlightKey: string | null;
+  glosses: Record<string, string>;
 }) {
   const [panel, setPanel] = useState<"none" | "save" | "more" | "not">("none");
   const [chosenReason, setChosenReason] = useState<number | null>(null);
@@ -333,9 +408,22 @@ function RoundCard({
       </p>
 
       <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-        {entry.reasons.map((r, i) => (
-          <li key={r.ref} style={{ padding: "6px 0", borderTop: i > 0 ? "1px dashed var(--rule)" : "none" }}>
+        {entry.reasons.map((r, i) => {
+          const spotlit = Boolean(r.tunable_key && r.tunable_key === spotlightKey);
+          const gloss = r.tunable_key ? glosses[r.tunable_key] : undefined;
+          return (
+          <li
+            key={r.ref}
+            data-spotlit={spotlit || undefined}
+            className={spotlit ? "discover-spotlit" : undefined}
+            style={{ padding: "6px 0", borderTop: i > 0 ? "1px dashed var(--rule)" : "none" }}
+          >
             <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5 }}>{r.text}</p>
+            {gloss && (
+              <p style={{ margin: "2px 0 0", fontSize: 13, color: "var(--ink-3)" }}>
+                {gloss}
+              </p>
+            )}
             <details>
               <summary
                 className="meta"
@@ -348,7 +436,8 @@ function RoundCard({
               </p>
             </details>
           </li>
-        ))}
+          );
+        })}
       </ul>
 
       {alreadyReacted ? (
