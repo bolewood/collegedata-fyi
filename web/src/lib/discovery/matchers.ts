@@ -37,6 +37,18 @@ export function bandTest(value: number, band: Record<string, number>): boolean {
 
 export const SUPPORTED_KEYS = new Set(Object.keys(POLICY.matchers));
 
+// Keys whose matcher can actually resolve evidence from the current bundle.
+// A spec whose evidence keys all lack resolvers (cds.*, ipeds.ic.*,
+// distance.*) is policy-supported but not yet actionable — matcher() always
+// returns 0 for it, so it neither scores nor produces reasons. UI that
+// claims such a key "shapes scoring" would be lying; use this set to tell
+// the truth.
+export const ACTIONABLE_KEYS = new Set(
+  Object.keys(POLICY.matchers).filter((k) =>
+    POLICY.matchers[k].evidence_keys.some((ek) => ek in FIELD_RESOLVERS),
+  ),
+);
+
 /** Execute the policy matcher for a preference key → -1 | 0 | +1. */
 export function matcher(key: string, school: EvidenceSchool): -1 | 0 | 1 {
   const spec: MatcherSpec | undefined = POLICY.matchers[key];

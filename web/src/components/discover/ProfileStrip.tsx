@@ -7,15 +7,16 @@
 // reasons they caused across the round. The ledger stays the only editing
 // surface — "Edit profile" navigates there.
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   NON_TOGGLE_COPY,
+  STRIP_BAR_MIN_HEIGHT,
   type ProfileStripModel,
   type StripEntry,
 } from "@/lib/discovery/profile-strip";
 
 const GROUPS: {
-  field: "strong" | "gentle" | "away" | "tensions";
+  field: "strong" | "gentle" | "away" | "tensions" | "recorded";
   label: string;
   blurb: string;
 }[] = [
@@ -23,6 +24,7 @@ const GROUPS: {
   { field: "gentle", label: "Steering gently", blurb: "These nudge, they don't drive." },
   { field: "away", label: "Steering away", blurb: "Schools like this lose ground." },
   { field: "tensions", label: "Tensions", blurb: "Pulling both ways — counting for nothing until resolved." },
+  { field: "recorded", label: "Recorded, not yet matching", blurb: "No public data can check these yet — they don't pick schools." },
 ];
 
 export function ProfileStrip({
@@ -44,6 +46,14 @@ export function ProfileStrip({
   const [open, setOpen] = useState(false);
   const [announcement, setAnnouncement] = useState("");
   const disclosureRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
+
+  // A keyboard user who opens the drawer must land inside it: the drawer
+  // renders before the trigger in DOM order, so without this, Tab exits the
+  // strip without ever reaching the content just opened.
+  useEffect(() => {
+    if (open) drawerRef.current?.focus();
+  }, [open]);
 
   function toggleSpotlight(key: string) {
     if (spotlightKey === key) {
@@ -76,7 +86,7 @@ export function ProfileStrip({
   // text-overflow on the box itself).
   const chipStyle = (active: boolean) =>
     ({
-      minHeight: 32,
+      minHeight: 44,
       cursor: "pointer",
       background: active ? "var(--forest)" : undefined,
       color: active ? "var(--paper)" : undefined,
@@ -89,28 +99,43 @@ export function ProfileStrip({
     }) as const;
 
   return (
-    <div data-testid="profile-strip">
+    // One fixed container, drawer above bar in normal flow: the bar can wrap
+    // taller without ever painting over the drawer, and Escape works from
+    // anywhere in the strip (trigger included). z-index sits BELOW the
+    // header search dropdown (40) and nav popover — bottom chrome yields to
+    // top-of-page overlays.
+    <div
+      data-testid="profile-strip"
+      onKeyDown={(e) => {
+        if (e.key === "Escape" && open) closeDrawer(true);
+      }}
+      style={{
+        position: "fixed",
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 38,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <p className="sr-only" aria-live="polite">
         {announcement}
       </p>
 
       {open && (
         <div
+          id="profile-strip-drawer"
+          ref={drawerRef}
+          tabIndex={-1}
           role="region"
           aria-label="Your answers"
-          onKeyDown={(e) => {
-            if (e.key === "Escape") closeDrawer(true);
-          }}
           style={{
-            position: "fixed",
-            left: 0,
-            right: 0,
-            bottom: 56,
-            zIndex: 40,
             background: "var(--paper)",
             borderTop: "1px solid var(--rule-strong)",
             maxHeight: "70dvh",
             overflowY: "auto",
+            overscrollBehavior: "contain",
           }}
         >
           <div className="mx-auto max-w-3xl px-4 sm:px-6" style={{ padding: "14px 16px 18px" }}>
@@ -159,16 +184,13 @@ export function ProfileStrip({
 
       <div
         style={{
-          position: "fixed",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 41,
           background: "var(--paper)",
           borderTop: "1px solid var(--rule-strong)",
-          minHeight: 56,
+          minHeight: STRIP_BAR_MIN_HEIGHT,
           display: "flex",
           alignItems: "center",
+          // Notched phones: keep the touch targets above the home indicator.
+          paddingBottom: "env(safe-area-inset-bottom)",
         }}
       >
         <div
@@ -184,7 +206,7 @@ export function ProfileStrip({
               <button
                 key={e.key}
                 type="button"
-                className="cd-chip"
+                className="cd-chip discover-chip"
                 aria-pressed={spotlightKey === e.key}
                 onClick={() => toggleSpotlight(e.key)}
                 style={chipStyle(spotlightKey === e.key)}
@@ -207,6 +229,7 @@ export function ProfileStrip({
             type="button"
             className="cd-btn cd-btn--ghost"
             aria-expanded={open}
+            aria-controls="profile-strip-drawer"
             style={{ minHeight: 44, marginLeft: "auto", whiteSpace: "nowrap" }}
             onClick={() => (open ? closeDrawer(false) : setOpen(true))}
           >
@@ -216,6 +239,14 @@ export function ProfileStrip({
       </div>
     </div>
   );
+}
+
+// A withdrawn card (reaction-only aggregate) must not be quoted as the
+// student's answer — same truthfulness rule the glosses follow.
+function entryLabel(entry: StripEntry): string {
+  return entry.quoted
+    ? `“${entry.statement}”`
+    : `${entry.statement} — via your round reactions`;
 }
 
 function DrawerEntry({
@@ -230,10 +261,13 @@ function DrawerEntry({
   if (entry.kind !== "spotlight") {
     return (
       <li style={{ padding: "8px 2px", borderBottom: "1px dashed var(--rule)", fontSize: 14 }}>
-        “{entry.statement}”{" "}
-        <span style={{ color: "var(--ink-3)", fontSize: 13 }}>
-          — {NON_TOGGLE_COPY[entry.kind]}
-        </span>
+        {entryLabel(entry)}
+        {/* the recorded group's blurb already explains unsupported entries */}
+        {entry.kind !== "unsupported" && (
+          <span style={{ color: "var(--ink-3)", fontSize: 13 }}>
+            {" "}— {NON_TOGGLE_COPY[entry.kind]}
+          </span>
+        )}
       </li>
     );
   }
@@ -241,6 +275,7 @@ function DrawerEntry({
     <li style={{ borderBottom: "1px dashed var(--rule)" }}>
       <button
         type="button"
+        className="discover-drawer-toggle"
         aria-pressed={active}
         onClick={() => onToggle(entry.key)}
         style={{
@@ -270,7 +305,7 @@ function DrawerEntry({
             background: active ? "var(--forest)" : "transparent",
           }}
         />
-        “{entry.statement}”
+        {entryLabel(entry)}
         {active && (
           <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--forest)", whiteSpace: "nowrap" }}>
             spotlighting

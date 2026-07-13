@@ -11,7 +11,11 @@ import { useEffect, useMemo, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import { getCachedBundle, loadBundle } from "@/lib/discovery/bundle";
 import { DECK_VERSION } from "@/lib/discovery/content";
-import { buildProfileStripModel } from "@/lib/discovery/profile-strip";
+import {
+  buildProfileStripModel,
+  spotlightCountsForRound,
+  STRIP_CLEARANCE,
+} from "@/lib/discovery/profile-strip";
 import {
   cardStatementForKey,
   composeNextRound,
@@ -97,15 +101,31 @@ export function RoundsStep({
     round && round.schools.length > 0 && !stripModel.empty,
   );
 
-  // Keyboard focus must never land hidden behind the fixed strip
-  // (WCAG focus-not-obscured).
+  // A reaction can invalidate the active spotlight mid-round (e.g. Not-for-me
+  // on the spotlit key makes it conflicted; its chip becomes non-toggle and
+  // its reasons vanish). Reconcile at render: an invalid key highlights
+  // nothing and no chip reads pressed — same live snapshot everywhere.
+  const spotlightableKeys = useMemo(
+    () => new Set([...stripModel.strong, ...stripModel.gentle].map((e) => e.key)),
+    [stripModel],
+  );
+  const activeSpotlight =
+    spotlightKey && spotlightableKeys.has(spotlightKey) ? spotlightKey : null;
+
+  // Keyboard focus must never land hidden behind the fixed strip (WCAG
+  // focus-not-obscured), and the document itself needs bottom clearance —
+  // padding only the step content would leave the global footer's last row
+  // permanently under the bar at full scroll.
   useEffect(() => {
     if (!stripVisible) return;
     const root = document.documentElement;
-    const prev = root.style.scrollPaddingBottom;
-    root.style.scrollPaddingBottom = "88px";
+    const prevScroll = root.style.scrollPaddingBottom;
+    const prevPad = document.body.style.paddingBottom;
+    root.style.scrollPaddingBottom = `${STRIP_CLEARANCE}px`;
+    document.body.style.paddingBottom = `${STRIP_CLEARANCE}px`;
     return () => {
-      root.style.scrollPaddingBottom = prev;
+      root.style.scrollPaddingBottom = prevScroll;
+      document.body.style.paddingBottom = prevPad;
     };
   }, [stripVisible]);
 
@@ -150,7 +170,7 @@ export function RoundsStep({
   ).length;
 
   return (
-    <StepShell style={stripVisible ? { paddingBottom: 88 } : undefined}>
+    <StepShell style={stripVisible ? { paddingBottom: STRIP_CLEARANCE } : undefined}>
       {round.zip_unresolved && (
         <div className="cd-card" style={{ padding: "12px 16px", margin: "0 0 16px", maxWidth: "64ch" }}>
           <p style={{ margin: 0, fontSize: 14, color: "var(--ink-2)" }}>
@@ -194,7 +214,7 @@ export function RoundsStep({
             roundIndex={round.round_index}
             alreadyReacted={reactedIds.has(s.school.school_id)}
             onReact={onReact}
-            spotlightKey={spotlightKey}
+            spotlightKey={activeSpotlight}
             glosses={stripModel.glosses}
           />
         ))}
@@ -234,23 +254,12 @@ export function RoundsStep({
         ranking, an application list, or an admissions prediction.
       </p>
 
-      {stripVisible && round && (
+      {stripVisible && (
         <ProfileStrip
           model={stripModel}
-          spotlightKey={spotlightKey}
+          spotlightKey={activeSpotlight}
           onSpotlight={setSpotlightKey}
-          spotlightCounts={(key) => {
-            let reasons = 0;
-            let schools = 0;
-            for (const sch of round.schools) {
-              const hits = sch.reasons.filter((r) => r.tunable_key === key).length;
-              if (hits > 0) {
-                reasons += hits;
-                schools += 1;
-              }
-            }
-            return { reasons, schools };
-          }}
+          spotlightCounts={(key) => spotlightCountsForRound(round.schools, key)}
           onEditProfile={onBackToLedger}
         />
       )}

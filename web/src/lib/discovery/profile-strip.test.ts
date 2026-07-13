@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DECK_CARDS, ESSENTIAL_THRESHOLD } from "./content";
-import { SUPPORTED_KEYS } from "./matchers";
-import { buildProfileStripModel } from "./profile-strip";
+import { ACTIONABLE_KEYS } from "./matchers";
+import { buildProfileStripModel, spotlightCountsForRound } from "./profile-strip";
 import { newSession } from "./session";
 import type { DiscoverySessionV1, SchoolReaction } from "./types";
 
@@ -65,15 +65,40 @@ describe("buildProfileStripModel grouping", () => {
     expect(m.gentle).toEqual([]);
   });
 
-  it("marks unsupported keys non-toggle even when steering positively", () => {
+  it("keeps non-actionable keys out of the steering groups and counts", () => {
+    // spirit.collaborative has no matcher; life.greek_scene has a matcher
+    // whose cds.* evidence has no resolver yet. Neither can score or produce
+    // reasons — counting them as "strong" would claim influence scoreSchool
+    // never applies. They live in the disclosed "recorded" group instead.
     const m = buildProfileStripModel(
-      session({ card_responses: { "collaborative-culture": "essential" } }),
+      session({
+        card_responses: {
+          "collaborative-culture": "essential",
+          "greek-scene": "essential",
+        },
+      }),
     );
-    const entry = m.strong.find((e) => e.key === "spirit.collaborative");
-    expect(entry).toBeTruthy();
-    expect(entry!.kind).toBe("unsupported");
+    expect(m.strong).toEqual([]);
+    expect(m.counts.strong).toBe(0);
+    expect(m.recorded.map((e) => e.key).sort()).toEqual([
+      "life.greek_scene",
+      "spirit.collaborative",
+    ]);
+    expect(m.recorded.every((e) => e.kind === "unsupported")).toBe(true);
     // Non-toggle entries never reach the collapsed inline chips.
     expect(m.inline).toEqual([]);
+    // The strip still shows (the profile isn't empty, it's just not
+    // matchable yet).
+    expect(m.empty).toBe(false);
+  });
+
+  it("routes negative non-actionable keys to recorded, not away", () => {
+    const m = buildProfileStripModel(
+      session({ card_responses: { "collaborative-culture": "not_for_me" } }),
+    );
+    expect(m.away).toEqual([]);
+    expect(m.counts.away).toBe(0);
+    expect(m.recorded.map((e) => e.key)).toEqual(["spirit.collaborative"]);
   });
 
   it("away and tension entries are never spotlight toggles", () => {
@@ -108,7 +133,7 @@ describe("buildProfileStripModel grouping", () => {
       "out.retention",
       "scale.small",
     ]);
-    expect(m.inline.every((e) => e.kind === "spotlight" && SUPPORTED_KEYS.has(e.key))).toBe(true);
+    expect(m.inline.every((e) => e.kind === "spotlight" && ACTIONABLE_KEYS.has(e.key))).toBe(true);
   });
 
   it("is empty when nothing steers (all cards Not important, no reactions)", () => {
@@ -161,6 +186,51 @@ describe("attribution glosses", () => {
     );
     expect(m.glosses["scale.large"]).toBeUndefined();
     expect(m.glosses["out.retention"]).toBeUndefined();
+  });
+});
+
+describe("quoted flag and spotlight counts", () => {
+  it("marks reaction-only entries unquoted so the UI never quotes a withdrawn card", () => {
+    const m = buildProfileStripModel(
+      session({
+        card_responses: {
+          "graduate-low-debt": "not_important", // withdrawn in the ledger
+          "small-school-known": "essential",
+        },
+        reactions: [reaction({})], // keeps cost.low_debt alive at +1
+      }),
+    );
+    const reactionOnly = m.gentle.find((e) => e.key === "cost.low_debt");
+    expect(reactionOnly!.quoted).toBe(false);
+    const cardBacked = m.strong.find((e) => e.key === "scale.small");
+    expect(cardBacked!.quoted).toBe(true);
+  });
+
+  it("writes no gloss for non-actionable keys (no reason can ever carry them)", () => {
+    const m = buildProfileStripModel(
+      session({ card_responses: { "greek-scene": "essential" } }),
+    );
+    expect(m.glosses["life.greek_scene"]).toBeUndefined();
+  });
+
+  it("counts spotlight hits per reason and per school", () => {
+    const schools = [
+      { reasons: [{ tunable_key: "scale.small" }, { tunable_key: "scale.small" }] },
+      { reasons: [{ tunable_key: "scale.small" }, { tunable_key: null }] },
+      { reasons: [{ tunable_key: "cost.low_debt" }] },
+    ];
+    expect(spotlightCountsForRound(schools, "scale.small")).toEqual({
+      reasons: 3,
+      schools: 2,
+    });
+    expect(spotlightCountsForRound(schools, "cost.low_debt")).toEqual({
+      reasons: 1,
+      schools: 1,
+    });
+    expect(spotlightCountsForRound(schools, "no.match")).toEqual({
+      reasons: 0,
+      schools: 0,
+    });
   });
 });
 
