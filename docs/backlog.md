@@ -75,7 +75,12 @@ Sections are ordered **Open → Resolved → Strategic context**. Every open ite
   (c) grow CDS-backed evidence matchers as extraction coverage expands — the
   v1 bundle leans on IPEDS completions, directory, and Scorecard fields, and
   the policy's matcher layer is where CDS fields plug in without a bundle
-  format change. **Effort:** (b) is ~30 min; (a) and (c) are focused
+  format change; each new resolver also moves its matcher-backed deck keys
+  out of the profile strip's disclosed "Recorded, not yet matching" group
+  (keys outside `ACTIONABLE_KEYS` in `web/src/lib/discovery/matchers.ts`)
+  into real steering; (d) the profile-strip v2 tap-to-retune interaction (chips that
+  re-tune future rounds), designed but held until dogfooding validates the
+  read-only strip. **Effort:** (b) is ~30 min; (a), (c), and (d) are focused
   follow-up slices.
 
 - **Academic positioning v1.1 follow-ups from pre-merge review.** Confirm

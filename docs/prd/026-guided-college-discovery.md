@@ -1111,6 +1111,27 @@ Owner decisions after acceptance, superseding the corresponding sections above:
   domain), regenerated bit-identically by
   `tools/discovery/build_zip3_centroids.py`. No server endpoint; the full ZIP
   never leaves the device.
+- **Profile strip + spotlight attribution shipped (2026-07-12).** The rounds
+  view gains a fixed bottom profile strip (hidden when no round is on screen
+  or nothing steers): steering counts (strong / away / tensions) with the
+  strongest chips inline, expanding to a drawer grouped in
+  steering language — never bucket names, since reactions can push a card past
+  its sorted bucket and quoting the bucket would misquote the sort. Positive,
+  matcher-supported chips are spotlight toggles that highlight every rendered
+  reason they caused across the round (pure view-state; school order untouched
+  by construction); away/tension/unsupported chips are non-toggles with honest
+  per-class copy. Reasons carry "Because you said: '<card statement>'"
+  attribution — the card is quoted only while an active card signal exists;
+  reaction-only aggregates say "Because you asked for more like this" instead
+  of misquoting a withdrawn card. Steering counts are truthful: deck keys
+  outside `ACTIONABLE_KEYS` (`web/src/lib/discovery/matchers.ts`) — the 12
+  of 24 whose matcher evidence has no bundle resolver yet, plus the two with
+  no policy matcher at all — surface in a disclosed "Recorded, not yet
+  matching" drawer group rather than posing as active steering;
+  matcher-backed keys move into real steering automatically as resolvers
+  land. The v2 tap-to-retune interaction (chips that re-tune future rounds)
+  is designed but deliberately not built, gated on dogfooding the read-only
+  strip first.
 
 ## The Assignment
 
