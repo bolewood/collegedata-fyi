@@ -110,9 +110,9 @@ export function authWallOutcome(finalUrl: string): ProbeOutcome | null {
 //     other than unchanged_verified mean we did meaningful work; no
 //     cooldown.
 //
-// archive-enqueue's existing 30d default still applies to
-// unchanged_verified for back-compat with PR 1; this map will be
-// consulted by a future cooldown policy upgrade.
+// The shared unchanged_verified default remains 30d for consumers that use
+// this map directly. archive-enqueue intentionally overrides it to 7d so the
+// curated school corpus is checked weekly year-round.
 export const DEFAULT_COOLDOWN_DAYS: Record<ProbeOutcome, number> = {
   inserted: 0,
   refreshed: 0,

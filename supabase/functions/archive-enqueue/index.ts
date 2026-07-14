@@ -129,35 +129,27 @@ Deno.serve(async (req: Request) => {
   const uniformOverride = url.searchParams.get("cooldown_days");
   const uniformDays = uniformOverride ? parseInt(uniformOverride, 10) : null;
 
-  let inCooldown = new Set<string>();
+  const inCooldown = new Set<string>();
   if (!forceRecheck) {
     // Pull the most-recent terminal row per school across both done
-    // (success outcomes) and failed_permanent (failure outcomes).
-    // We over-fetch (no DISTINCT ON via REST) and reduce client-side
-    // to the latest row per school.
+    // (success outcomes) and failed_permanent (failure outcomes). The RPC
+    // performs DISTINCT ON in PostgreSQL so the response stays bounded by the
+    // school count instead of growing with weekly queue history.
     //
     // Bounds:
     //   (a) processed_at > now() - 95 days. The longest cooldown we
     //       ever apply is 90d (auth_walled_*); anything older is out
     //       of cooldown regardless, so ignoring those rows is safe.
     //       Without this bound the query would scan the full archive_queue
-    //       history — at ~851 schools × monthly cron the table will
-    //       cross PostgREST's 1000-row default response cap after a few
-    //       months and silently truncate, dropping schools' cooldowns.
-    //   (b) Explicit .limit(10000). Defense in depth — if an operator
-    //       runs with an unusually large cooldown_days override and a
-    //       lot of schools flipped to failed_permanent recently, we
-    //       still want a hard cap before the reply gets truncated.
+    //       history forever.
     const coolWindowMs = 95 * 24 * 60 * 60 * 1000;
-    const coolWindowCutoff = new Date(Date.now() - coolWindowMs).toISOString();
-    const { data: terminalRows, error: terminalErr } = await supabase
-      .from("archive_queue")
-      .select("school_id, processed_at, last_outcome")
-      .in("status", ["done", "failed_permanent"])
-      .not("last_outcome", "is", null)
-      .not("processed_at", "is", null)
-      .gte("processed_at", coolWindowCutoff)
-      .limit(10000);
+    const coolWindowCutoff = new Date(
+      now.getTime() - coolWindowMs,
+    ).toISOString();
+    const { data: terminalRows, error: terminalErr } = await supabase.rpc(
+      "latest_archive_terminal_rows",
+      { p_since: coolWindowCutoff },
+    );
 
     if (terminalErr) {
       // Don't fail enqueue on cooldown query failure — log and proceed
@@ -174,13 +166,10 @@ Deno.serve(async (req: Request) => {
         { processed_at: string; last_outcome: ProbeOutcome }
       >();
       for (const row of terminalRows ?? []) {
-        const prior = latestBySchool.get(row.school_id);
-        if (!prior || row.processed_at > prior.processed_at) {
-          latestBySchool.set(row.school_id, {
-            processed_at: row.processed_at,
-            last_outcome: row.last_outcome as ProbeOutcome,
-          });
-        }
+        latestBySchool.set(row.school_id, {
+          processed_at: row.processed_at,
+          last_outcome: row.last_outcome as ProbeOutcome,
+        });
       }
       const nowMs = now.getTime();
       for (const [schoolId, latest] of latestBySchool) {

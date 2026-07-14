@@ -289,6 +289,7 @@ per-document run summary.
 | Resolver dev entry (dry-run, no writes) | `supabase/functions/discover/index.ts` |
 | Queue consumer (30 s cron target + `force_school` backfill) | `supabase/functions/archive-process/index.ts` |
 | Cooldown-aware daily seeder (weekly successful-school checks; next-day transient retries) | `supabase/functions/archive-enqueue/index.ts` |
+| Latest terminal outcome RPC + covering index | `supabase/migrations/20260713215000_latest_archive_terminal_rows.sql` |
 | Operator-triggered seeder for Scorecard-only directory rows (PRD 015 M2) | `supabase/functions/directory-enqueue/index.ts` |
 | Public-safe coverage table refresh, hourly pg_cron by default (PRD 015 M3, relaxed June 2026 for IO budget) | `supabase/functions/refresh-coverage/index.ts` |
 | Coverage table + status precedence + atomic refresh RPC (PRD 015 M3) | `supabase/migrations/<ts>_institution_cds_coverage.sql` |
