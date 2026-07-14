@@ -2,6 +2,13 @@
 -- the full queue history through PostgREST. archive-enqueue calls this once per
 -- day before applying outcome-specific cooldowns.
 
+-- Supabase migrations are not implicitly transactional. Keep the duplicate
+-- cleanup and unique-index creation atomic, and briefly stop queue writers so
+-- no active row can arrive between those two statements.
+begin;
+
+lock table public.archive_queue in share row exclusive mode;
+
 create index if not exists archive_queue_terminal_latest_idx
   on public.archive_queue (school_id, processed_at desc, id desc)
   where status in ('done', 'failed_permanent')
@@ -64,6 +71,24 @@ where q.id = ranked.id
   and ranked.active_rank > 1
   and q.status = 'ready';
 
+-- Never delete work that a processor may already own. Multiple processing
+-- rows are unexpected and require operator inspection; fail clearly instead
+-- of letting CREATE UNIQUE INDEX emit an opaque duplicate-key error.
+do $$
+begin
+  if exists (
+    select 1
+    from public.archive_queue
+    where status = 'processing'
+    group by school_id
+    having count(*) > 1
+  ) then
+    raise exception
+      'archive queue has multiple processing rows for a school; resolve them before adding the one-active-school index';
+  end if;
+end
+$$;
+
 create unique index if not exists archive_queue_one_active_school_idx
   on public.archive_queue (school_id)
   where status in ('ready', 'processing');
@@ -115,3 +140,5 @@ revoke all on function public.enqueue_archive_queue_rows(jsonb)
   from public, anon, authenticated;
 grant execute on function public.enqueue_archive_queue_rows(jsonb)
   to service_role;
+
+commit;

@@ -3,9 +3,8 @@
 // Invoked daily by pg_cron (PR 5). Each UTC day gets a deterministic run_id,
 // so a transient schools.yaml fetch failure or school-level probe failure can
 // self-heal the next day. Repeated calls within the same day are no-ops for
-// rows that already landed because the archive_queue UNIQUE
-// (enqueued_run_id, school_id) constraint fires under ignoreDuplicates and
-// skips them.
+// rows that already landed because the database enqueue RPC ignores conflicts
+// on the archive_queue UNIQUE (enqueued_run_id, school_id) constraint.
 //
 // Per-outcome cooldowns control actual probe frequency: successful schools are
 // checked every 7 days year-round, while stable failures back off longer and
@@ -60,8 +59,8 @@ Deno.serve(async (req: Request) => {
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   // run_id is deterministic for the UTC calendar day. Duplicate cron calls on
-  // the same day collide on the unique (run_id, school_id) index and no-op via
-  // ignoreDuplicates. The next day gets a fresh run_id, allowing cooldown-free
+  // the same day collide on the unique (run_id, school_id) index and no-op. The
+  // next day gets a fresh run_id, allowing cooldown-free
   // transient failures to retry. Operators can override via ?run_id=... when
   // manually reprocessing or testing.
   const url = new URL(req.url);
@@ -234,9 +233,9 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Bulk insert with onConflict + ignoreDuplicates so re-running within the
-  // same UTC day is a no-op on rows that already landed. A new daily run_id
-  // makes the per-outcome cooldown the sole cross-day scheduling policy.
+  // Re-running within the same UTC day is a no-op on rows that already landed.
+  // A new daily run_id makes the per-outcome cooldown the sole cross-day
+  // scheduling policy.
   // After cooldown filtering, rows may be empty. Short-circuit so we
   // don't issue an empty upsert (which Supabase rejects).
   if (rows.length === 0) {
