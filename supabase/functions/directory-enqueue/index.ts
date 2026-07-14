@@ -202,16 +202,12 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Bulk insert with onConflict + ignoreDuplicates so re-running with
-  // the same run_id is a no-op on rows that already landed. Same
-  // retry-safety property as archive-enqueue.
-  const { data, error } = await supabase
-    .from("archive_queue")
-    .upsert(rowsToInsert, {
-      onConflict: "enqueued_run_id,school_id",
-      ignoreDuplicates: true,
-    })
-    .select("id");
+  // Insert through the shared queue RPC so same-run duplicates and an active
+  // row from either enqueue path are ignored atomically.
+  const { data: enqueuedCount, error } = await supabase.rpc(
+    "enqueue_archive_queue_rows",
+    { p_rows: rowsToInsert },
+  );
 
   if (error) {
     logEvent({
@@ -227,7 +223,7 @@ Deno.serve(async (req: Request) => {
     }, 500);
   }
 
-  const enqueued = data?.length ?? 0;
+  const enqueued = Number(enqueuedCount ?? 0);
   const skippedExisting = rowsToInsert.length - enqueued;
   logEvent({
     event: "enqueue_completed",

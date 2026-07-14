@@ -106,13 +106,12 @@ export function authWallOutcome(finalUrl: string): ProbeOutcome | null {
 //   - transient: 0 (no cooldown) — these retry next cron by design.
 //   - permanent_other / blocked_url / file_too_large: 30d — stable
 //     enough to throttle but worth re-evaluating monthly.
-//   - inserted/refreshed/unchanged_repaired: 0 — success outcomes
-//     other than unchanged_verified mean we did meaningful work; no
-//     cooldown.
+//   - inserted/refreshed/unchanged_repaired: 0 — consumers of this shared
+//     default may retry immediately after meaningful work.
 //
-// The shared unchanged_verified default remains 30d for consumers that use
-// this map directly. archive-enqueue intentionally overrides it to 7d so the
-// curated school corpus is checked weekly year-round.
+// archive-enqueue intentionally overrides every successful outcome to 7d so
+// the curated school corpus is checked weekly year-round. These shared
+// defaults remain unchanged for other consumers.
 export const DEFAULT_COOLDOWN_DAYS: Record<ProbeOutcome, number> = {
   inserted: 0,
   refreshed: 0,

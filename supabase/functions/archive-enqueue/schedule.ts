@@ -3,7 +3,25 @@ import {
   ProbeOutcome,
 } from "../_shared/probe_outcome.ts";
 
-const UNCHANGED_COOLDOWN_DAYS = 7;
+const WEEKLY_SUCCESS_COOLDOWN_DAYS = 7;
+const WEEKLY_SUCCESS_OUTCOMES = new Set<ProbeOutcome>([
+  "inserted",
+  "refreshed",
+  "unchanged_verified",
+  "unchanged_repaired",
+]);
+
+export function parseCooldownDaysOverride(raw: string | null): number | null {
+  if (raw === null) return null;
+  if (!/^\d+$/.test(raw)) {
+    throw new Error("cooldown_days must be a non-negative integer");
+  }
+  const days = Number(raw);
+  if (!Number.isSafeInteger(days) || days > 3650) {
+    throw new Error("cooldown_days must be between 0 and 3650");
+  }
+  return days;
+}
 
 export function archiveEnqueueRunKey(now: Date): string {
   const yyyy = now.getUTCFullYear().toString().padStart(4, "0");
@@ -31,8 +49,8 @@ export function archiveCooldownDaysForOutcome(
   outcome: ProbeOutcome,
   _now: Date,
 ): number {
-  if (outcome === "unchanged_verified") {
-    return UNCHANGED_COOLDOWN_DAYS;
+  if (WEEKLY_SUCCESS_OUTCOMES.has(outcome)) {
+    return WEEKLY_SUCCESS_COOLDOWN_DAYS;
   }
   return DEFAULT_COOLDOWN_DAYS[outcome] ?? 0;
 }

@@ -7,10 +7,11 @@
 // (enqueued_run_id, school_id) constraint fires under ignoreDuplicates and
 // skips them.
 //
-// Per-outcome cooldowns control actual probe frequency: unchanged schools are
+// Per-outcome cooldowns control actual probe frequency: successful schools are
 // checked every 7 days year-round, while stable failures back off longer and
-// transient failures have no cooldown. archive-process claims in enqueued_at
-// order so older batches drain first.
+// transient failures have no cooldown. A database-enforced active-row
+// invariant prevents a lagging processor from accumulating duplicate work.
+// archive-process claims in enqueued_at order so older batches drain first.
 //
 // Operator retry semantics: re-running archive-enqueue within the same UTC day
 // is a no-op for existing rows. The next daily run can enqueue rows whose
@@ -41,6 +42,7 @@ import { ProbeOutcome } from "../_shared/probe_outcome.ts";
 import {
   archiveCooldownDaysForOutcome,
   archiveEnqueueRunId,
+  parseCooldownDaysOverride,
 } from "./schedule.ts";
 
 Deno.serve(async (req: Request) => {
@@ -112,7 +114,7 @@ Deno.serve(async (req: Request) => {
   // outcome whose archive cadence window hasn't elapsed yet.
   // PR 2 expanded this from a single hardcoded check on
   // unchanged_verified to a per-outcome policy:
-  //   unchanged_verified → 7d year-round
+  //   successful outcome → 7d year-round
   //   auth_walled_*      → 90d (rarely change)
   //   dead_url           → 14d (schools fix broken URLs in days/weeks)
   //   no_pdfs_found      → 14d
@@ -126,46 +128,72 @@ Deno.serve(async (req: Request) => {
   // force_school via archive-process always bypasses the queue and
   // is unaffected.
   const forceRecheck = url.searchParams.get("force_recheck") === "true";
-  const uniformOverride = url.searchParams.get("cooldown_days");
-  const uniformDays = uniformOverride ? parseInt(uniformOverride, 10) : null;
+  let uniformDays: number | null;
+  try {
+    uniformDays = parseCooldownDaysOverride(
+      url.searchParams.get("cooldown_days"),
+    );
+  } catch (error) {
+    return json({ error: (error as Error).message }, 400);
+  }
 
   const inCooldown = new Set<string>();
   if (!forceRecheck) {
     // Pull the most-recent terminal row per school across both done
     // (success outcomes) and failed_permanent (failure outcomes). The RPC
-    // performs DISTINCT ON in PostgreSQL so the response stays bounded by the
-    // school count instead of growing with weekly queue history.
+    // performs DISTINCT ON in PostgreSQL. Calls are chunked by the current
+    // schools.yaml corpus so each response stays below PostgREST's row cap and
+    // directory-only queue history is never transferred.
     //
     // Bounds:
-    //   (a) processed_at > now() - 95 days. The longest cooldown we
-    //       ever apply is 90d (auth_walled_*); anything older is out
-    //       of cooldown regardless, so ignoring those rows is safe.
+    //   (a) processed_at is bounded by the larger of 95 days or the operator's
+    //       uniform override. The normal longest cooldown is 90d
+    //       (auth_walled_*); anything older is out of cooldown.
     //       Without this bound the query would scan the full archive_queue
     //       history forever.
-    const coolWindowMs = 95 * 24 * 60 * 60 * 1000;
+    const lookbackDays = Math.max(95, uniformDays ?? 0);
+    const coolWindowMs = lookbackDays * 24 * 60 * 60 * 1000;
     const coolWindowCutoff = new Date(
       now.getTime() - coolWindowMs,
     ).toISOString();
-    const { data: terminalRows, error: terminalErr } = await supabase.rpc(
-      "latest_archive_terminal_rows",
-      { p_since: coolWindowCutoff },
-    );
+    const terminalRows: Array<{
+      school_id: string;
+      processed_at: string;
+      last_outcome: string;
+    }> = [];
+    let terminalError: string | null = null;
+    const schoolIds = allSchools.map((school) => school.id);
+    const rpcChunkSize = 500;
+    for (let offset = 0; offset < schoolIds.length; offset += rpcChunkSize) {
+      const { data, error } = await supabase.rpc(
+        "latest_archive_terminal_rows",
+        {
+          p_since: coolWindowCutoff,
+          p_school_ids: schoolIds.slice(offset, offset + rpcChunkSize),
+        },
+      );
+      if (error) {
+        terminalError = error.message;
+        break;
+      }
+      terminalRows.push(...(data ?? []));
+    }
 
-    if (terminalErr) {
+    if (terminalError) {
       // Don't fail enqueue on cooldown query failure — log and proceed
       // with no cooldown applied. Better to over-enqueue than to skip
       // a fresh batch entirely.
       logEvent({
         event: "cooldown_query_failed",
         run_id: runId,
-        error: terminalErr.message,
+        error: terminalError,
       });
     } else {
       const latestBySchool = new Map<
         string,
         { processed_at: string; last_outcome: ProbeOutcome }
       >();
-      for (const row of terminalRows ?? []) {
+      for (const row of terminalRows) {
         latestBySchool.set(row.school_id, {
           processed_at: row.processed_at,
           last_outcome: row.last_outcome as ProbeOutcome,
@@ -232,13 +260,14 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  const { data, error } = await supabase
-    .from("archive_queue")
-    .upsert(rows, {
-      onConflict: "enqueued_run_id,school_id",
-      ignoreDuplicates: true,
-    })
-    .select("id");
+  // The RPC inserts under the database's one-active-row-per-school invariant
+  // and uses ON CONFLICT DO NOTHING. That makes the active-row check atomic:
+  // same-day retries and cross-day invocations during a worker outage cannot
+  // build duplicate ready/processing rows.
+  const { data: enqueuedCount, error } = await supabase.rpc(
+    "enqueue_archive_queue_rows",
+    { p_rows: rows },
+  );
 
   if (error) {
     logEvent({
@@ -254,7 +283,7 @@ Deno.serve(async (req: Request) => {
     }, 500);
   }
 
-  const enqueued = data?.length ?? 0;
+  const enqueued = Number(enqueuedCount ?? 0);
   const skippedExisting = rows.length - enqueued;
   logEvent({
     event: "enqueue_completed",

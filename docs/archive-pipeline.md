@@ -34,11 +34,13 @@ CMS, file_storage, auth_required, rendering, and WAF. The
 school for consumers that don't want history.
 
 The cooldown-aware enqueuer runs daily with a fresh attempt key. Per-outcome
-cooldowns control actual work: schools whose most recent probe was
-`unchanged_verified` are checked every 7 days year-round, `auth_walled_*`
-schools every 90 days, `dead_url` schools every 14 days, and transient failures
-the next day. This keeps current-CDS discovery weekly without re-probing the
-whole corpus every day.
+cooldowns control actual work: successful probes (`inserted`, `refreshed`,
+`unchanged_verified`, or `unchanged_repaired`) are checked every 7 days
+year-round, `auth_walled_*` schools every 90 days, `dead_url` schools every 14
+days, and transient failures the next day. A database constraint permits at
+most one ready/processing row per school, so processor lag cannot accumulate
+duplicate daily work. This keeps current-CDS discovery weekly without
+re-probing the whole corpus every day.
 
 Archive discovery runs on Supabase Edge Functions + pg_cron + pg_net. One
 school per edge function invocation so the 400 s wall clock, 256 MB memory, and
@@ -289,7 +291,7 @@ per-document run summary.
 | Resolver dev entry (dry-run, no writes) | `supabase/functions/discover/index.ts` |
 | Queue consumer (30 s cron target + `force_school` backfill) | `supabase/functions/archive-process/index.ts` |
 | Cooldown-aware daily seeder (weekly successful-school checks; next-day transient retries) | `supabase/functions/archive-enqueue/index.ts` |
-| Latest terminal outcome RPC + covering index | `supabase/migrations/20260713215000_latest_archive_terminal_rows.sql` |
+| Corpus-bounded terminal outcome RPC, atomic enqueue RPC, and active-row/terminal indexes | `supabase/migrations/20260713215000_latest_archive_terminal_rows.sql` |
 | Operator-triggered seeder for Scorecard-only directory rows (PRD 015 M2) | `supabase/functions/directory-enqueue/index.ts` |
 | Public-safe coverage table refresh, hourly pg_cron by default (PRD 015 M3, relaxed June 2026 for IO budget) | `supabase/functions/refresh-coverage/index.ts` |
 | Coverage table + status precedence + atomic refresh RPC (PRD 015 M3) | `supabase/migrations/<ts>_institution_cds_coverage.sql` |
