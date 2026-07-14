@@ -1,22 +1,21 @@
-// archive-enqueue — cadence-aware seeder for the archive pipeline.
+// archive-enqueue — cooldown-aware daily seeder for the archive pipeline.
 //
-// Invoked daily by pg_cron (PR 5). The daily cadence (rather than monthly)
-// exists so a transient schools.yaml fetch failure on any given day
-// self-heals on the next tick. Idempotency is guaranteed by a deterministic
-// run_id: weekly during March-June freshness season, monthly the rest of
-// the year. Repeated calls within the same cadence bucket are no-ops for
-// rows that already landed, because the archive_queue UNIQUE
+// Invoked daily by pg_cron (PR 5). Each UTC day gets a deterministic run_id,
+// so a transient schools.yaml fetch failure or school-level probe failure can
+// self-heal the next day. Repeated calls within the same day are no-ops for
+// rows that already landed because the archive_queue UNIQUE
 // (enqueued_run_id, school_id) constraint fires under ignoreDuplicates and
 // skips them.
 //
-// At the start of each new cadence bucket, run_id changes, which seeds a
-// fresh batch alongside any unprocessed rows from the prior bucket.
-// archive-process claims in enqueued_at order so older batches drain first.
+// Per-outcome cooldowns control actual probe frequency: unchanged schools are
+// checked every 7 days year-round, while stable failures back off longer and
+// transient failures have no cooldown. archive-process claims in enqueued_at
+// order so older batches drain first.
 //
-// Operator retry semantics: re-running archive-enqueue within the same
-// cadence bucket is a no-op for existing rows, including rows that are
-// currently in status='failed_permanent'. This is deliberate. To retry
-// a specific failed row, use the archive-process operator backfill:
+// Operator retry semantics: re-running archive-enqueue within the same UTC day
+// is a no-op for existing rows. The next daily run can enqueue rows whose
+// cooldown has elapsed. To retry a specific row immediately, use the
+// archive-process operator backfill:
 //
 //   curl -X POST https://<ref>.supabase.co/functions/v1/archive-process \
 //        ?force_school=<school-id> \
@@ -58,11 +57,11 @@ Deno.serve(async (req: Request) => {
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-  // run_id is deterministic on the cadence bucket (UTC): weekly during
-  // March-June freshness season, monthly otherwise. Daily cron calls within
-  // the same bucket collide on the unique (run_id, school_id) index and no-op
-  // via ignoreDuplicates. Operators can override via ?run_id=... when manually
-  // reprocessing or testing.
+  // run_id is deterministic for the UTC calendar day. Duplicate cron calls on
+  // the same day collide on the unique (run_id, school_id) index and no-op via
+  // ignoreDuplicates. The next day gets a fresh run_id, allowing cooldown-free
+  // transient failures to retry. Operators can override via ?run_id=... when
+  // manually reprocessing or testing.
   const url = new URL(req.url);
   const overrideRunId = url.searchParams.get("run_id");
   const now = new Date();
@@ -113,7 +112,7 @@ Deno.serve(async (req: Request) => {
   // outcome whose archive cadence window hasn't elapsed yet.
   // PR 2 expanded this from a single hardcoded check on
   // unchanged_verified to a per-outcome policy:
-  //   unchanged_verified → 7d during March-June, 30d otherwise
+  //   unchanged_verified → 7d year-round
   //   auth_walled_*      → 90d (rarely change)
   //   dead_url           → 14d (schools fix broken URLs in days/weeks)
   //   no_pdfs_found      → 14d
@@ -218,9 +217,9 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Bulk insert with onConflict + ignoreDuplicates so re-running with the
-  // same run_id is a no-op on rows that already landed. This is the
-  // retry-safety property the plan's Rollout step 2 assumes.
+  // Bulk insert with onConflict + ignoreDuplicates so re-running within the
+  // same UTC day is a no-op on rows that already landed. A new daily run_id
+  // makes the per-outcome cooldown the sole cross-day scheduling policy.
   // After cooldown filtering, rows may be empty. Short-circuit so we
   // don't issue an empty upsert (which Supabase rejects).
   if (rows.length === 0) {
