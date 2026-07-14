@@ -33,16 +33,19 @@ CMS, file_storage, auth_required, rendering, and WAF. The
 `latest_school_hosting` view exposes the most-recent observation per
 school for consumers that don't want history.
 
-The cadence-aware enqueuer applies a per-outcome cooldown so schools whose
-most recent probe was `unchanged_verified` (7d during March-June freshness
-season, 30d otherwise), `auth_walled_*` (90d), `dead_url` (14d), etc. are
-skipped for the relevant window — typically ~67% of active schools per cron.
+The cooldown-aware enqueuer runs daily with a fresh attempt key. Per-outcome
+cooldowns control actual work: successful probes (`inserted`, `refreshed`,
+`unchanged_verified`, or `unchanged_repaired`) are checked every 7 days
+year-round, `auth_walled_*` schools every 90 days, `dead_url` schools every 14
+days, and transient failures the next day. A database constraint permits at
+most one ready/processing row per school, so processor lag cannot accumulate
+duplicate daily work. This keeps current-CDS discovery weekly without
+re-probing the whole corpus every day.
 
 Archive discovery runs on Supabase Edge Functions + pg_cron + pg_net. One
 school per edge function invocation so the 400 s wall clock, 256 MB memory, and
 2 s CPU caps never bind. The active-school count changes with the finder corpus;
-the original ~840-school monthly batch drained in roughly seven hours of wall
-clock.
+the original ~840-school full batch drained in roughly seven hours of wall clock.
 
 ## Architecture
 
@@ -57,9 +60,9 @@ clock.
 │                != null AND sub_institutions is null          │
 │    2b. Cooldown filter: drop schools whose most-recent       │
 │                         last_outcome's window hasn't expired │
-│    3. Derive run_id = sha256(weekly Mar-Jun, monthly else)   │
+│    3. Derive run_id = sha256(current UTC date)               │
 │    4. Bulk upsert one archive_queue row per school,          │
-│       ignoreDuplicates=true → same bucket is a no-op         │
+│       ignoreDuplicates=true → same-day repeats are no-ops    │
 └──────────────────────────────────────────────────────────────┘
                             │
                             ▼
@@ -287,7 +290,8 @@ per-document run summary.
 | One-school pipeline orchestrator | `supabase/functions/_shared/archive.ts` |
 | Resolver dev entry (dry-run, no writes) | `supabase/functions/discover/index.ts` |
 | Queue consumer (30 s cron target + `force_school` backfill) | `supabase/functions/archive-process/index.ts` |
-| Cadence-aware seeder (daily cron target; weekly March-June, monthly otherwise) | `supabase/functions/archive-enqueue/index.ts` |
+| Cooldown-aware daily seeder (weekly successful-school checks; next-day transient retries) | `supabase/functions/archive-enqueue/index.ts` |
+| Corpus-bounded terminal outcome RPC, atomic enqueue RPC, and active-row/terminal indexes | `supabase/migrations/20260713215000_latest_archive_terminal_rows.sql` |
 | Operator-triggered seeder for Scorecard-only directory rows (PRD 015 M2) | `supabase/functions/directory-enqueue/index.ts` |
 | Public-safe coverage table refresh, hourly pg_cron by default (PRD 015 M3, relaxed June 2026 for IO budget) | `supabase/functions/refresh-coverage/index.ts` |
 | Coverage table + status precedence + atomic refresh RPC (PRD 015 M3) | `supabase/migrations/<ts>_institution_cds_coverage.sql` |
@@ -425,7 +429,7 @@ touching the database or Storage.
    ```json
    {
      "mode": "enqueue",
-     "run_id": "<deterministic cadence-bucket uuid>",
+     "run_id": "<deterministic daily uuid>",
      "enqueued": 837,
      "skipped": 2,
      "skipped_invalid_yaml": 0,
