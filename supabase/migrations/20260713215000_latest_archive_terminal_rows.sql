@@ -86,7 +86,7 @@ begin
     raise exception
       'archive queue has multiple processing rows for a school; resolve them before adding the one-active-school index';
   end if;
-end
+end;
 $$;
 
 create unique index if not exists archive_queue_one_active_school_idx
