@@ -150,6 +150,8 @@ def is_failure_action(action: str) -> bool:
     action_name = action.split(" (", 1)[0]
     if action == "no_source_artifact" or action.startswith("stub_"):
         return True
+    if action_name.startswith("tier1_no_cell_map"):
+        return True
     if "_low_fields" in action:
         return True
     if "_error" in action or action_name.endswith("_no_tables"):

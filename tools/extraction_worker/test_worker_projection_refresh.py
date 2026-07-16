@@ -65,6 +65,7 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
         self.assertTrue(is_failure_action("tier1_low_fields (0 fields)"))
         self.assertTrue(is_failure_action("no_source_artifact"))
         self.assertTrue(is_failure_action("html_no_tables (0 fields)"))
+        self.assertTrue(is_failure_action("tier1_no_cell_map schema_version=2025-26"))
 
     def test_extraction_run_fails_when_any_document_failed(self):
         self.assertEqual(extraction_run_exit_code(0), 0)
