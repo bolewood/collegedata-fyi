@@ -1,4 +1,5 @@
 import {
+  attemptCompletionFailure,
   buildAttemptCompletionParams,
   buildAttemptBudgetExhaustedUpdate,
   hasExceededAttemptBudget,
@@ -108,4 +109,32 @@ Deno.test("buildAttemptCompletionParams rejects a missing claim lease", () => {
       error.message === "cannot complete archive attempt without a claim lease";
   }
   if (!threw) throw new Error("expected a missing claim lease to be rejected");
+});
+
+Deno.test("attemptCompletionFailure exposes RPC errors", () => {
+  const failure = attemptCompletionFailure({
+    completed: false,
+    error: "database unavailable",
+  });
+  if (failure?.status !== 500) {
+    throw new Error(`unexpected status ${failure?.status}`);
+  }
+  if (failure.error !== "terminal update failed: database unavailable") {
+    throw new Error(`unexpected error ${failure.error}`);
+  }
+});
+
+Deno.test("attemptCompletionFailure exposes stale leases", () => {
+  const failure = attemptCompletionFailure({ completed: false, error: null });
+  if (failure?.status !== 409) {
+    throw new Error(`unexpected status ${failure?.status}`);
+  }
+  if (failure.error !== "claim lease is no longer current") {
+    throw new Error(`unexpected error ${failure.error}`);
+  }
+});
+
+Deno.test("attemptCompletionFailure accepts an atomic completion", () => {
+  const failure = attemptCompletionFailure({ completed: true, error: null });
+  if (failure !== null) throw new Error("successful completion was rejected");
 });

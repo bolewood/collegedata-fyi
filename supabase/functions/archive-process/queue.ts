@@ -2,6 +2,11 @@ export const MAX_ATTEMPTS = 3;
 
 export type ArchiveQueueTerminalStatus = "ready" | "done" | "failed_permanent";
 
+export interface ArchiveAttemptCompletionResult {
+  completed: boolean;
+  error: string | null;
+}
+
 export interface ArchiveQueueRow {
   id: string;
   enqueued_run_id: string;
@@ -71,4 +76,16 @@ export function buildAttemptCompletionParams(
     p_last_error: lastError,
     p_finished_at: finishedAt,
   };
+}
+
+export function attemptCompletionFailure(
+  result: ArchiveAttemptCompletionResult,
+): { status: 500 | 409; error: string } | null {
+  if (result.error) {
+    return { status: 500, error: `terminal update failed: ${result.error}` };
+  }
+  if (!result.completed) {
+    return { status: 409, error: "claim lease is no longer current" };
+  }
+  return null;
 }

@@ -38,6 +38,7 @@ import {
   UnknownSchoolError,
 } from "../_shared/schools.ts";
 import {
+  attemptCompletionFailure,
   buildAttemptCompletionParams,
   buildAttemptBudgetExhaustedUpdate,
   hasExceededAttemptBudget,
@@ -295,6 +296,7 @@ async function runQueueClaim(
   let finalStatus: "ready" | "done" | "failed_permanent" = "ready";
   let finalError: string | null = null;
   let outcome: ArchiveOutcome | null = null;
+  let terminalFailure: { status: 500 | 409; error: string } | null = null;
 
   logEvent({
     event: "claim",
@@ -378,6 +380,7 @@ async function runQueueClaim(
       finalError,
       finishedAt,
     );
+    terminalFailure = attemptCompletionFailure(completion);
     if (completion.error) {
       logEvent({
         event: "terminal_update_failed",
@@ -395,6 +398,15 @@ async function runQueueClaim(
         attempts,
       });
     }
+  }
+
+  if (terminalFailure) {
+    return json({
+      error: terminalFailure.error,
+      school_id: row.school_id,
+      attempts,
+      intended_status: finalStatus,
+    }, terminalFailure.status);
   }
 
   const duration_ms = Date.now() - started;
