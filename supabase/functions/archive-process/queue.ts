@@ -1,5 +1,12 @@
 export const MAX_ATTEMPTS = 3;
 
+export type ArchiveQueueTerminalStatus = "ready" | "done" | "failed_permanent";
+
+export interface ArchiveAttemptCompletionResult {
+  completed: boolean;
+  error: string | null;
+}
+
 export interface ArchiveQueueRow {
   id: string;
   enqueued_run_id: string;
@@ -48,4 +55,37 @@ export function buildAttemptBudgetExhaustedUpdate(
       `exhausted ${maxAttempts} attempts before processing ` +
       `(row was reclaimed ${attempts} times without a terminal update, likely prior edge-function timeout)`,
   };
+}
+
+export function buildAttemptCompletionParams(
+  row: Pick<ArchiveQueueRow, "id" | "attempts" | "claimed_at">,
+  status: ArchiveQueueTerminalStatus,
+  lastOutcome: string | null,
+  lastError: string | null,
+  finishedAt: string,
+): Record<string, string | number | null> {
+  if (!row.claimed_at) {
+    throw new Error("cannot complete archive attempt without a claim lease");
+  }
+  return {
+    p_queue_id: row.id,
+    p_attempt_number: row.attempts,
+    p_claimed_at: row.claimed_at,
+    p_status: status,
+    p_last_outcome: lastOutcome,
+    p_last_error: lastError,
+    p_finished_at: finishedAt,
+  };
+}
+
+export function attemptCompletionFailure(
+  result: ArchiveAttemptCompletionResult,
+): { status: 500 | 409; error: string } | null {
+  if (result.error) {
+    return { status: 500, error: `terminal update failed: ${result.error}` };
+  }
+  if (!result.completed) {
+    return { status: 409, error: "claim lease is no longer current" };
+  }
+  return null;
 }

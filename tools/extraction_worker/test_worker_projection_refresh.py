@@ -9,6 +9,7 @@ from worker import (
     attach_source_metadata,
     extraction_quality_flag,
     extraction_no_project,
+    extraction_run_exit_code,
     extraction_success,
     is_failure_action,
     low_field_quality_flag,
@@ -63,6 +64,12 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
         self.assertTrue(is_failure_action("stub_docx"))
         self.assertTrue(is_failure_action("tier1_low_fields (0 fields)"))
         self.assertTrue(is_failure_action("no_source_artifact"))
+        self.assertTrue(is_failure_action("html_no_tables (0 fields)"))
+        self.assertTrue(is_failure_action("tier1_no_cell_map schema_version=2025-26"))
+
+    def test_extraction_run_fails_when_any_document_failed(self):
+        self.assertEqual(extraction_run_exit_code(0), 0)
+        self.assertEqual(extraction_run_exit_code(1), 1)
 
     def test_summary_mean_rounding(self):
         self.assertEqual(mean_or_none([1, 2, 4]), 2.33)

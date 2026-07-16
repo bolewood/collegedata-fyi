@@ -137,6 +137,13 @@ Each workflow run uploads an `extraction-worker-summary` artifact containing
 | `reconcile_counts` | Rows repaired by `--reconcile-pending` without heavy extraction. |
 | `documents` | Per-document action, producer, schema, field count, and error details. |
 
+After writing the summary, the worker exits non-zero if `failure_count` is
+greater than zero. Failure classification uses the action name before any
+parenthesized detail, so actions such as `html_no_tables (0 fields)` cannot be
+misreported as success. The workflow keeps its summary, notification, and
+artifact steps on `if: always()`, which makes the run visibly red without losing
+the evidence needed to diagnose it.
+
 The workflow always passes `--reconcile-pending` unless `--force-reextract` is
 used locally. This keeps cancelled or timeout-interrupted rows from accumulating
 in the pending queue when their current-source artifact already exists.

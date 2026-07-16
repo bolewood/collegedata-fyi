@@ -147,11 +147,14 @@ def parsed_field_count(action: str) -> int | None:
 def is_failure_action(action: str) -> bool:
     if action == "already_extracted":
         return False
+    action_name = action.split(" (", 1)[0]
     if action == "no_source_artifact" or action.startswith("stub_"):
+        return True
+    if action_name.startswith("tier1_no_cell_map"):
         return True
     if "_low_fields" in action:
         return True
-    if "_error" in action or action.endswith("_no_tables"):
+    if "_error" in action or action_name.endswith("_no_tables"):
         return True
     return False
 
@@ -210,6 +213,10 @@ def mean_or_none(values: list[int]) -> float | None:
     if not values:
         return None
     return round(sum(values) / len(values), 2)
+
+
+def extraction_run_exit_code(failure_count: int) -> int:
+    return 1 if failure_count > 0 else 0
 
 
 def row_start_year(row: dict[str, Any]) -> int | None:
@@ -2177,7 +2184,7 @@ def main() -> int:
             "stopped_early": stopped_early,
             "documents": summary_docs,
         })
-    return 0
+    return extraction_run_exit_code(failure_count)
 
 
 if __name__ == "__main__":

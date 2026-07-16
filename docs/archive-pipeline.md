@@ -74,15 +74,18 @@ the original ~840-school full batch drained in roughly seven hours of wall clock
 │    1. claim_archive_queue_row() RPC                          │
 │       → UPDATE status='processing', claimed_at=now(),        │
 │              attempts = attempts + 1                         │
-│       → FOR UPDATE SKIP LOCKED + visibility timeout (10 min) │
+│       → INSERT archive_queue_attempts row for this lease     │
+│       → on 10-min lease reclaim, close the prior attempt as  │
+│         timed_out; FOR UPDATE SKIP LOCKED prevents races     │
 │    2. try: archiveOneSchool()                                │
 │       catch PermanentError  → status=failed_permanent        │
 │       catch TransientError  → status=ready, enqueued_at=now()│
 │                                 (bump to tail of queue)      │
 │                              → failed_permanent after        │
 │                                MAX_ATTEMPTS=3                │
-│    3. finally: UPDATE archive_queue with terminal state,     │
-│                guarded by .eq('claimed_at', claimLease)      │
+│    3. finally: complete_archive_queue_attempt() atomically    │
+│                writes queue state + attempt duration/outcome, │
+│                guarded by queue id, attempt, and claim lease │
 │                so a stale worker cannot overwrite a newer    │
 │                owner's state                                 │
 └──────────────────────────────────────────────────────────────┘
@@ -274,7 +277,10 @@ laptop or self-hosted runner. Every ops run uploads an
 `extraction-worker-summary` artifact containing `summary.json` and
 `worker.log`; the summary includes processed count, failures, mean fields,
 low-field docs, extraction counts, projection counts, reconcile counts, and the
-per-document run summary.
+per-document run summary. Any real per-document extraction failure, including a
+structured HTML source that yields no tables, exits the worker non-zero so the
+Actions job is red. The workflow's `if: always()` summary and artifact steps
+still run, so the failure evidence remains available for diagnosis.
 
 ### Files
 
@@ -292,6 +298,7 @@ per-document run summary.
 | Queue consumer (30 s cron target + `force_school` backfill) | `supabase/functions/archive-process/index.ts` |
 | Cooldown-aware daily seeder (weekly successful-school checks; next-day transient retries) | `supabase/functions/archive-enqueue/index.ts` |
 | Corpus-bounded terminal outcome RPC, atomic enqueue RPC, and active-row/terminal indexes | `supabase/migrations/20260713215000_latest_archive_terminal_rows.sql` |
+| Per-claim attempt ledger, duration telemetry, timeout recovery, and completion invariants | `supabase/migrations/20260716010500_archive_queue_attempt_telemetry.sql` through `20260716014000_archive_queue_timeout_recovery.sql` |
 | Operator-triggered seeder for Scorecard-only directory rows (PRD 015 M2) | `supabase/functions/directory-enqueue/index.ts` |
 | Public-safe coverage table refresh, hourly pg_cron by default (PRD 015 M3, relaxed June 2026 for IO budget) | `supabase/functions/refresh-coverage/index.ts` |
 | Coverage table + status precedence + atomic refresh RPC (PRD 015 M3) | `supabase/migrations/<ts>_institution_cds_coverage.sql` |
@@ -750,7 +757,22 @@ runs. This is tracked in [`docs/backlog.md`](backlog.md).
 
 ```sql
 select status, count(*) from public.archive_queue group by status;
+
+select terminal_state,
+       count(*) as attempts,
+       round(avg(duration_ms)) as mean_duration_ms,
+       max(duration_ms) as max_duration_ms
+  from public.archive_queue_attempts
+ where claimed_at > now() - interval '7 days'
+ group by terminal_state
+ order by terminal_state;
 ```
+
+`archive_queue_attempts` keeps one immutable row per claim. Normal completions
+record `duration_ms` in the same transaction as the queue terminal update. If an
+Edge invocation dies before completion, the next claimant closes the expired
+lease as `timed_out`, preserving the otherwise-lost attempt instead of inferring
+it only from the queue's cumulative `attempts` count.
 
 Historical note: the first full monthly drain (2026-04-14/15) produced `done: 535`,
 `failed_permanent: 302`, `ready/processing: 0`. The 302 failure

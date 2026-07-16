@@ -38,6 +38,8 @@ import {
   UnknownSchoolError,
 } from "../_shared/schools.ts";
 import {
+  attemptCompletionFailure,
+  buildAttemptCompletionParams,
   buildAttemptBudgetExhaustedUpdate,
   hasExceededAttemptBudget,
   isEmptyClaimResult,
@@ -245,27 +247,37 @@ async function runQueueClaim(
     });
     return json({ error: "RPC returned row with null claimed_at" }, 500);
   }
-  const claimLease: string = row.claimed_at;
-
   if (hasExceededAttemptBudget(row)) {
     const update = buildAttemptBudgetExhaustedUpdate(
       row,
       new Date().toISOString(),
     );
-    const { error: updErr } = await supabase
-      .from("archive_queue")
-      .update(update)
-      .eq("id", row.id)
-      .eq("claimed_at", claimLease);
-    if (updErr) {
+    const completion = await completeQueueAttempt(
+      supabase,
+      row,
+      "failed_permanent",
+      "transient",
+      String(update.last_error),
+      String(update.processed_at),
+    );
+    if (completion.error) {
       logEvent({
         event: "attempt_budget_terminal_update_failed",
         id: row.id,
         school_id: row.school_id,
         attempts,
-        error: updErr.message,
+        error: completion.error,
       });
-      return json({ error: `terminal update failed: ${updErr.message}` }, 500);
+      return json({ error: `terminal update failed: ${completion.error}` }, 500);
+    }
+    if (!completion.completed) {
+      logEvent({
+        event: "attempt_budget_stale_lease",
+        id: row.id,
+        school_id: row.school_id,
+        attempts,
+      });
+      return json({ error: "claim lease is no longer current" }, 409);
     }
     logEvent({
       event: "attempt_budget_exhausted",
@@ -284,6 +296,7 @@ async function runQueueClaim(
   let finalStatus: "ready" | "done" | "failed_permanent" = "ready";
   let finalError: string | null = null;
   let outcome: ArchiveOutcome | null = null;
+  let terminalFailure: { status: 500 | 409; error: string } | null = null;
 
   logEvent({
     event: "claim",
@@ -349,64 +362,51 @@ async function runQueueClaim(
       }
     }
   } finally {
-    // ALWAYS write the terminal state. If this update itself fails (DB
-    // transient), the row stays status=processing with claimed_at set and
-    // the 10-minute visibility timeout in claim_archive_queue_row() will
-    // re-pick it on a later tick.
-    //
-    // attempts is NOT written here — claim_archive_queue_row() already
-    // incremented it when the row was leased.
-    //
-    // The .eq('claimed_at', claimLease) guard prevents a stale owner from
-    // overwriting a newer owner's state. Scenario: this worker hangs past
-    // the 10-minute visibility timeout, another worker reclaims the row
-    // (updating claimed_at to a newer value), we finally reach this finally
-    // block and try to write our terminal state. The guard makes our
-    // UPDATE affect 0 rows because claimLease no longer matches the row's
-    // current claimed_at. In the current deploy, edge function wall clock
-    // (400s) is already shorter than the visibility timeout (600s) so the
-    // window is closed by construction — this guard is defense in depth
-    // against any future wall-clock bump or operator misconfiguration.
-    const update: Record<string, unknown> = {
-      status: finalStatus,
-      last_error: finalError,
-    };
-    if (finalStatus === "ready") {
-      // Release the claim AND push the row to the tail of the queue by
-      // bumping enqueued_at. Without the bump, ORDER BY enqueued_at ASC
-      // would re-pick the same flaky row every 30s, head-of-line blocking
-      // younger rows behind a persistent failure.
-      update.claimed_at = null;
-      update.enqueued_at = new Date().toISOString();
-    }
-    if (finalStatus === "done" || finalStatus === "failed_permanent") {
-      update.processed_at = new Date().toISOString();
-    }
-    // Persist the structured ProbeOutcome on terminal status so the
-    // queue carries categorized outcome history (not just a free-text
-    // last_error). archive-enqueue's cooldown reads this column;
-    // future audit dashboards and the school_hosting table will too.
-    // ready (re-claimable) intentionally does NOT touch last_outcome
-    // so an in-flight retry doesn't disturb the cooldown signal.
-    if (finalStatus === "done" && outcome) {
-      update.last_outcome = outcome.outcome;
-    } else if (finalStatus === "failed_permanent" && failureCategory) {
-      update.last_outcome = failureCategory;
-    }
-    const { error: updErr } = await supabase
-      .from("archive_queue")
-      .update(update)
-      .eq("id", row.id)
-      .eq("claimed_at", claimLease);
-    if (updErr) {
+    // The completion RPC updates archive_queue and its per-attempt telemetry
+    // row in one transaction. If this invocation dies before reaching here,
+    // claim_archive_queue_row() closes the attempt as timed_out when the
+    // 10-minute lease is reclaimed.
+    const finishedAt = new Date().toISOString();
+    const lastOutcome = finalStatus === "done" && outcome
+      ? outcome.outcome
+      : finalStatus === "failed_permanent"
+      ? failureCategory
+      : null;
+    const completion = await completeQueueAttempt(
+      supabase,
+      row,
+      finalStatus,
+      lastOutcome,
+      finalError,
+      finishedAt,
+    );
+    terminalFailure = attemptCompletionFailure(completion);
+    if (completion.error) {
       logEvent({
         event: "terminal_update_failed",
         id: row.id,
         school_id: row.school_id,
         intended_status: finalStatus,
-        error: updErr.message,
+        error: completion.error,
+      });
+    } else if (!completion.completed) {
+      logEvent({
+        event: "terminal_update_stale_lease",
+        id: row.id,
+        school_id: row.school_id,
+        intended_status: finalStatus,
+        attempts,
       });
     }
+  }
+
+  if (terminalFailure) {
+    return json({
+      error: terminalFailure.error,
+      school_id: row.school_id,
+      attempts,
+      intended_status: finalStatus,
+    }, terminalFailure.status);
   }
 
   const duration_ms = Date.now() - started;
@@ -428,6 +428,29 @@ async function runQueueClaim(
     action: outcome?.action ?? null,
     error: finalError,
   });
+}
+
+async function completeQueueAttempt(
+  supabase: Client,
+  row: ArchiveQueueRow,
+  status: "ready" | "done" | "failed_permanent",
+  lastOutcome: ProbeOutcome | null,
+  lastError: string | null,
+  finishedAt: string,
+): Promise<{ completed: boolean; error: string | null }> {
+  const params = buildAttemptCompletionParams(
+    row,
+    status,
+    lastOutcome,
+    lastError,
+    finishedAt,
+  );
+  const { data, error } = await supabase.rpc(
+    "complete_archive_queue_attempt",
+    params,
+  );
+  if (error) return { completed: false, error: error.message };
+  return { completed: data === true, error: null };
 }
 
 // ── Operator backfill mode ─────────────────────────────────────────────
