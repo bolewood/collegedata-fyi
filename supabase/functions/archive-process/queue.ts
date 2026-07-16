@@ -1,5 +1,7 @@
 export const MAX_ATTEMPTS = 3;
 
+export type ArchiveQueueTerminalStatus = "ready" | "done" | "failed_permanent";
+
 export interface ArchiveQueueRow {
   id: string;
   enqueued_run_id: string;
@@ -47,5 +49,26 @@ export function buildAttemptBudgetExhaustedUpdate(
     last_error:
       `exhausted ${maxAttempts} attempts before processing ` +
       `(row was reclaimed ${attempts} times without a terminal update, likely prior edge-function timeout)`,
+  };
+}
+
+export function buildAttemptCompletionParams(
+  row: Pick<ArchiveQueueRow, "id" | "attempts" | "claimed_at">,
+  status: ArchiveQueueTerminalStatus,
+  lastOutcome: string | null,
+  lastError: string | null,
+  finishedAt: string,
+): Record<string, string | number | null> {
+  if (!row.claimed_at) {
+    throw new Error("cannot complete archive attempt without a claim lease");
+  }
+  return {
+    p_queue_id: row.id,
+    p_attempt_number: row.attempts,
+    p_claimed_at: row.claimed_at,
+    p_status: status,
+    p_last_outcome: lastOutcome,
+    p_last_error: lastError,
+    p_finished_at: finishedAt,
   };
 }
