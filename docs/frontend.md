@@ -218,6 +218,15 @@ Static content adapted from the "Uncommon Data Set" blog post draft.
 Explains what the CDS is, what we found building the archive, how the
 pipeline works, and credits.
 
+### `/recipes` Worked examples (`web/src/app/recipes/page.tsx`)
+
+Static index for reproducible analyses built from CDS and federal data.
+`/recipes/endowment-draw-rate` renders an FY2020–FY2024 private nonprofit
+IPEDS Finance Part H distribution and selection-neutral school history from a
+versioned, checked-in generated dataset. The public-data generator and full
+methodology live in `tools/ipeds/build_endowment_draw_rate_recipe.py` and
+[`recipes/endowment-draw-rate.md`](recipes/endowment-draw-rate.md).
+
 ### Error and 404 pages
 
 - `error.tsx`: Root error boundary with "Try again" button. Catches
@@ -284,6 +293,7 @@ component share the same Supabase response within a single render.
 | `MeritProfileCard` | `components/MeritProfileCard.tsx` | PRD 018 Section H + Scorecard merit/aid profile card. |
 | `WhatChangedCard` | `components/WhatChangedCard.tsx` | PRD 019 public-reviewed year-over-year CDS change events. Hides when the school has no published events. |
 | `FederalBaselineTable` | `components/FederalBaselineTable.tsx` | PRD 021 accessible table for source-labeled NCES/IPEDS facts from `school_facts_unified`. |
+| `EndowmentDrawRateExplorer` | `components/EndowmentDrawRateExplorer.tsx` | Interactive sector distribution, threshold table, and school-history explorer for the endowment draw-rate recipe. |
 | `DiscoverFlow` | `components/discover/DiscoverFlow.tsx` | PRD 026 guided discovery slice 1 for `/discover`: boundary step, accessible 24-card sort, preference ledger. Session is browser-local only. |
 | `SchoolDocumentsLedger` | `components/SchoolDocumentsLedger.tsx` | Collapses long CDS-document histories after the three most recent files. |
 | `SpreadsheetDownloadLinks` | `components/SpreadsheetDownloadLinks.tsx` | PRD 025 XLSX + CSV download links on the year page; fires a `spreadsheet_downloaded` analytics event. |
@@ -314,6 +324,8 @@ component share the same Supabase response within a single render.
 | `admission-strategy.ts` | `lib/admission-strategy.ts` | ED/EA/wait-list/admission-factor calculations and quality gating |
 | `list-builder.ts` | `lib/list-builder.ts` | PRD 017 match ranking, tiering, and list presentation helpers |
 | `change-intelligence-admin.ts` | `lib/change-intelligence-admin.ts` | Server-only service-role query helper for the gated `/changes` digest |
+| `endowment-draw-rate-recipe-analysis.ts` | `lib/endowment-draw-rate-recipe-analysis.ts` | Pure filtering and presentation helpers for the endowment draw-rate recipe. |
+| `endowment-draw-rate-recipe-data.ts` | `lib/endowment-draw-rate-recipe-data.ts` | Generated, versioned FY2020–FY2024 IPEDS recipe dataset and source-release provenance. |
 | `savecode.ts` | `lib/savecode.ts` | Stateless local profile/list share code encoding |
 | `types.ts` | `lib/types.ts` | TypeScript interfaces for API responses |
 | `format.ts` | `lib/format.ts` | Display formatters (badge labels, status colors, storage URLs) |
@@ -448,8 +460,9 @@ Key items:
 
 - `supabase gen types` for typed Supabase client (currently using manual types)
 - Schema-version-aware labels (dependency resolved: structural schemas for 6 years now exist)
-- Playwright smoke coverage beyond `/discover` (`web/tests/discover.spec.ts`
-  and `npm run test:smoke` exist; other routes have no specs yet)
+- Playwright smoke coverage beyond `/discover` and the endowment draw-rate
+  recipe (`web/tests/discover.spec.ts` and
+  `web/tests/endowment-draw-rate-recipe.spec.ts`)
 - OG images (per-school social cards)
 - Paginated full CSV export for `/browse` when result sets exceed the Edge Function page-size cap
 - Public `/changes` launch, methodology page, and report charts after PRD 019
