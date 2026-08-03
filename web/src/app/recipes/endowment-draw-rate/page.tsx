@@ -39,10 +39,10 @@ export default function EndowmentDrawRatePage() {
               How much of the endowment is being <span>spent?</span>
             </h1>
             <p>
-              {fiscalYearCount} fiscal years of private nonprofit IPEDS Finance filings, turned into a
-              sign-normalized spending estimate. This is federal reporting, not a reproduction
-              of audited-statement analysis—and a high rate is a question to investigate, not a
-              finding of misconduct or distress.
+              {fiscalYearCount} years of federal finance filings, turned into an estimated
+              endowment spending rate for private nonprofit colleges. This is an estimate
+              from federal filings. A high draw rate is a reason to look closer, not proof a
+              school is in trouble.
             </p>
           </div>
           <div className="endowment-recipe-chips">
@@ -62,20 +62,20 @@ export default function EndowmentDrawRatePage() {
         <div>
           <span className="meta">Above 7%</span>
           <strong>{formatPct(latest.above7Share)}</strong>
-          <small>{latest.above7Count.toLocaleString()} of {latest.eligible.toLocaleString()} eligible reporters</small>
+          <small>{latest.above7Count.toLocaleString()} of {latest.eligible.toLocaleString()} eligible schools</small>
         </div>
         <div>
           <span className="meta">School-year rows</span>
           <strong>{ENDOWMENT_DRAW_RATE_META.rowCount.toLocaleString()}</strong>
-          <small>{ENDOWMENT_DRAW_RATE_META.schoolCount.toLocaleString()} historical institutions</small>
+          <small>{ENDOWMENT_DRAW_RATE_META.schoolCount.toLocaleString()} schools across five years</small>
         </div>
         <div>
           <span className="meta">Latest status</span>
           <strong className="endowment-release-word">{titleCase(latest.releaseType)}</strong>
           <small>
             FY{latest.year}{latest.releaseType === "provisional"
-              ? " will be versioned again when final"
-              : " latest finalized release"}
+              ? " will be updated when the final release is published"
+              : " is the latest final release"}
           </small>
         </div>
       </section>
@@ -86,12 +86,12 @@ export default function EndowmentDrawRatePage() {
         <div className="endowment-method-grid">
           <div>
             <div className="meta">§ What the threshold means</div>
-            <h2>A reference point, not an accusation.</h2>
+            <h2>How to read the 7% line</h2>
             <p>
               Typical endowment payout policies often target roughly 4–5%. Some states&apos;
-              versions of UPMIFA include a presumption above 7%, but that test uses a multi-year
-              average value and exists only in a minority of states. This recipe divides one
-              year&apos;s reported spending distribution by that year&apos;s beginning value, so crossing
+              versions of UPMIFA include a presumption above 7%. That test uses a multi-year
+              average value and applies only in a minority of states. This recipe divides one
+              year&apos;s reported spending distribution by that year&apos;s beginning value. Crossing
               7% here does not establish a UPMIFA violation.
             </p>
           </div>
@@ -99,10 +99,9 @@ export default function EndowmentDrawRatePage() {
             <div className="meta">Coverage note</div>
             <p>
               {ENDOWMENT_DRAW_RATE_META.schoolsWithoutCurrentPage.toLocaleString()}{" "}
-              historical
-              institutions in this artifact have no current public school page. Raw IPEDS facts
-              retain reporters that later closed or left the current directory, making this the
-              archive&apos;s first surface for some of those histories.
+              schools in this dataset have no current public school page. This can include
+              colleges that later closed or left the current directory. Their histories still
+              appear here.
             </p>
           </div>
         </div>
