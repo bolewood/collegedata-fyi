@@ -10,6 +10,12 @@ As of the June 2026 backfill, the pipeline supports historical releases from
 `ipeds_current_facts_cache`; historical analysis should query `ipeds_facts`
 with `ipeds_id`, `field_key`, and a bounded `data_year` range.
 
+Install the IPEDS tool dependencies before downloading or applying a release:
+
+```bash
+python3 -m pip install -r tools/ipeds/requirements.txt
+```
+
 ## Workflow
 
 Run IPEDS loads from a fresh `main` checkout after the corresponding migrations
@@ -78,22 +84,58 @@ python tools/ipeds/load_release.py \
 ```
 
 3. After reviewing the report and after the migration has landed/applied from
-   `main`, re-run with `--apply`. This requires `SUPABASE_URL` and
-   `SUPABASE_SERVICE_ROLE_KEY` in `.env`.
+   `main`, re-run with `--apply`. This requires `SUPABASE_URL`,
+   `SUPABASE_SERVICE_ROLE_KEY`, and `IPEDS_ADMIN_DATABASE_URL` in `.env`.
+   `IPEDS_ADMIN_DATABASE_URL` must be a direct PostgreSQL or Supavisor
+   **session-mode** URI copied from the target project's database connection
+   settings. Do not substitute a transaction-mode pooler URI.
 
 ```bash
 python tools/ipeds/load_release.py ... --apply
 ```
 
-The loader refreshes `ipeds_current_facts_cache` after fact upserts, then
-refreshes browser source-mode flags that depend on current facts. If an
-operator applies rows manually, run these RPCs with service-role credentials in
-the same order:
+The loader preflights the administrative session before writing. Normal release
+metadata, raw-row, fact, pruning, and supersession writes continue through
+PostgREST with the service role. Publication then uses the dedicated database
+session, sets a 10-minute statement timeout, refreshes
+`ipeds_current_facts_cache`, and finally refreshes browser source-mode flags.
+The current-facts cache is required; browser source modes remain best-effort.
+The loader prints `applied release ...` only after the required cache refresh
+succeeds.
+
+The split is intentional. The cache refresh scans millions of historical facts
+and takes about 65–71 seconds in production. PostgREST's service-role requests
+inherit the `authenticator` role's 8-second statement timeout, so the ordinary
+API path cannot complete this administrative operation. There is no PostgREST
+fallback for either post-load refresh: retrying the same known-short path would
+only repeat the timeout. If an operator applies rows manually, run these
+functions through a direct or session-mode database connection in this order:
 
 ```sql
 select public.refresh_ipeds_current_facts_cache();
 select public.refresh_ipeds_browser_source_modes();
 ```
+
+### Apply failure and recovery semantics
+
+- Missing, malformed, or unreachable `IPEDS_ADMIN_DATABASE_URL` fails the
+  preflight before release writes begin. Connection errors identify the config
+  name and safe error class/SQLSTATE only; the URI and password are never
+  printed.
+- A PostgREST write failure is a data-load failure. The loader does not print
+  `release data writes completed` or `applied release`; correct the write error
+  and rerun the exact command.
+- If the required cache refresh fails after writes, the loader exits 4 and says
+  `release data writes completed, but required publication failed`. It does not
+  claim success. Correct the administrative session or timeout issue and rerun
+  the exact `--apply` command. Upserts, stale-row pruning, release-priority
+  checks, and supersession are idempotent at the same release/mapping scope.
+- If only `refresh_ipeds_browser_source_modes()` fails, the loader warns after
+  confirming that the current-facts cache was published, then completes. Rerun
+  the function later through the same administrative session if browser badges
+  need recovery.
+- Dry runs do not connect to either Supabase path and do not require
+  `IPEDS_ADMIN_DATABASE_URL`.
 
 For a targeted backfill after adding table aliases, restrict projection to one
 or more display groups:
@@ -228,6 +270,38 @@ curl "$SUPABASE_URL/rest/v1/ipeds_facts?field_key=in.(endowment_value_begin,endo
   -H "apikey: $SUPABASE_ANON_KEY" \
   -H "Authorization: Bearer $SUPABASE_ANON_KEY"
 ```
+
+Run the checked-in reconciliation command against the untouched Scorecard CSV
+or ZIP. It loads `.env`, uses the anon key in both required headers, paginates
+both PostgREST tables, and writes no database data:
+
+```bash
+python -m tools.ipeds.reconcile_endowment_scorecard \
+  /path/to/Most-Recent-Cohorts-Institution_06102026.zip \
+  --min-year 2020 \
+  --max-year 2024 \
+  --threshold 0.99 \
+  --min-reporting-coverage 0.95 \
+  --out scratch/ipeds/endowment-scorecard-reconciliation-06102026.json
+```
+
+The June 10, 2026 Scorecard file empirically aligns to FY2024. Of 1,110
+in-scope private-nonprofit Scorecard rows with both values, 1,079 have a
+complete F2 fact pair. Direct UNITID comparison matches 1,060. The remaining 19
+are reporting-entity consolidations: 16 exact OPEID6 allocation rollups and two
+unique exact beginning-and-ending residual matches reconcile; the Chicago
+School remains visible and unreconciled because its Dallas branch has `NA`
+Scorecard values. The reporting-entity gate is therefore 1,078/1,079 = 99.907%
+(pass). The 31 in-scope rows without a complete F2 pair are reported separately,
+not counted as independent F2 reporters, and leave 97.207% population coverage,
+above the command's default 95% anti-sparsity floor. All five corrected fixtures
+(201195, 148131, 231420, 203580, and 152080) match both values exactly.
+
+The consolidation detail in the JSON report is deliberately auditable. Every
+member UNITID, OPEID6, value pair, inclusion flag, and matching method is
+listed. The tool never uses fuzzy names, never discards ambiguous residual
+matches, and never promotes a Scorecard branch without direct F2 facts into the
+reporting-entity denominator.
 
 ## Source discipline
 

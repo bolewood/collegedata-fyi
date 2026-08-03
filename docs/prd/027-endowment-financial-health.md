@@ -473,6 +473,18 @@ Validation checks:
   fixtures match exactly under FY-correct alignment (Scorecard's current file is FY2024).
   Gate: ≥99% exact match over the full correctly-aligned FASB population, with the discovered
   alignment documented.
+  **Observed after the Phase 1 production backfill (June 10, 2026 Scorecard file):** the best
+  alignment is FY2024. There are 1,110 in-scope private-nonprofit Scorecard rows with both
+  values; 1,079 have complete F2 beginning/end fact pairs. Direct UNITID matches account for
+  1,060. Of 19 reporting entities needing consolidation, 16 reconcile through exact OPEID6
+  allocation rollups and two through unique exact beginning-and-ending residual matches.
+  The Chicago School remains the one unreconciled entity because its Dallas branch has `NA`
+  Scorecard values. Correct reporting-entity result: 1,078/1,079 = 99.907% (pass); the 31
+  in-scope rows without F2 pairs are reported separately, not counted as independent F2
+  reporters. That is 97.207% coverage of the in-scope Scorecard population, above the tool's
+  95% anti-sparsity floor. All five corrected fixtures match both values exactly. The
+  reproducible command is `tools/ipeds/reconcile_endowment_scorecard.py`; its JSON output lists
+  every member UNITID and method and does not use fuzzy names.
 - **Accounting identity:** `(F2H02 − F2H01) = F2H03A+F2H03B+F2H03C+F2H03D` per year via the
   analysis script (`F2H03` itself is not loaded — it is the calculated difference). Verified
   FY2023 baseline: identity holds 1318/1318. FY2020–21 checks run per-release during the M1
