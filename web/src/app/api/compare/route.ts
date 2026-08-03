@@ -1,28 +1,8 @@
 import { NextResponse } from "next/server";
-import {
-  compareSchools,
-  type PublicFactCategory,
-} from "@/lib/public-data";
+import { compareSchools } from "@/lib/public-data";
+import { parseCompareFactCategories } from "@/lib/public-fact-category";
 
 export const revalidate = 3600;
-
-const CATEGORIES = new Set<PublicFactCategory>([
-  "identity",
-  "admissions",
-  "enrollment",
-  "cost",
-  "aid",
-  "outcomes",
-  "sources",
-]);
-
-function parseCategories(value: string | null): PublicFactCategory[] | undefined {
-  if (!value) return undefined;
-  return value
-    .split(",")
-    .map((part) => part.trim())
-    .filter((part): part is PublicFactCategory => CATEGORIES.has(part as PublicFactCategory));
-}
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -32,7 +12,8 @@ export async function GET(request: Request) {
       ?.split(",")
       .map((school) => school.trim())
       .filter(Boolean) ?? [];
-  const categories = parseCategories(url.searchParams.get("categories"));
+  const rawCategories = url.searchParams.get("categories");
+  const { categories, unsupported } = parseCompareFactCategories(rawCategories);
   const fields =
     url.searchParams
       .get("fields")
@@ -47,6 +28,27 @@ export async function GET(request: Request) {
     );
   }
 
+  if (rawCategories !== null && categories?.length === 0) {
+    return NextResponse.json(
+      {
+        error: "invalid_categories",
+        message: "Pass at least one recognized public fact category.",
+      },
+      { status: 400 },
+    );
+  }
+
+  if (unsupported.length > 0) {
+    return NextResponse.json(
+      {
+        error: "unsupported_categories",
+        categories: unsupported,
+        message: "Finance facts are available from the per-school facts endpoint, not the fixed-schema compare endpoint.",
+      },
+      { status: 400 },
+    );
+  }
+
   const payload = await compareSchools(schools, { categories, fields });
   return NextResponse.json(payload, {
     headers: {
@@ -54,4 +56,3 @@ export async function GET(request: Request) {
     },
   });
 }
-

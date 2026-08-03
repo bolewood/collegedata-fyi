@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from dataclasses import replace
 from typing import Any
@@ -79,6 +80,74 @@ MVP_FACT_MAPPINGS: tuple[FactMapping, ...] = (
     FactMapping("pell_grant_average", "Average Pell grant", "SFA2324", "PGRNT_A", "number", "Financial aid", "context_only", unit="usd"),
     FactMapping("federal_loan_rate", "Federal loan rate", "SFA2324", "LOAN_P", "number", "Financial aid", "context_only", unit="percent"),
     FactMapping("federal_loan_average", "Average federal loan", "SFA2324", "LOAN_A", "number", "Financial aid", "context_only", unit="usd"),
+    FactMapping(
+        "endowment_value_begin",
+        "Endowment net assets, beginning of fiscal year",
+        "F2223_F2",
+        "F2H01",
+        "number",
+        "Endowment",
+        "not_cds_equivalent",
+        unit="usd",
+    ),
+    FactMapping(
+        "endowment_value_end",
+        "Endowment net assets, end of fiscal year",
+        "F2223_F2",
+        "F2H02",
+        "number",
+        "Endowment",
+        "not_cds_equivalent",
+        unit="usd",
+    ),
+    FactMapping(
+        "endowment_investment_return",
+        "Endowment net investment return",
+        "F2223_F2",
+        "F2H03B",
+        "number",
+        "Endowment",
+        "not_cds_equivalent",
+        unit="usd",
+    ),
+    FactMapping(
+        "endowment_new_gifts",
+        "Endowment new gifts and additions",
+        "F2223_F2",
+        "F2H03A",
+        "number",
+        "Endowment",
+        "not_cds_equivalent",
+        unit="usd",
+    ),
+    FactMapping(
+        "endowment_other_change",
+        "Other changes in endowment net assets",
+        "F2223_F2",
+        "F2H03D",
+        "number",
+        "Endowment",
+        "not_cds_equivalent",
+        unit="usd",
+        definition_note=(
+            "Residual line that absorbs transfers, reclassifications, and reporting noise; "
+            "it is not a measure of borrowing."
+        ),
+    ),
+    FactMapping(
+        "endowment_spending_distribution",
+        "Endowment spending distribution for current use",
+        "F2223_F2",
+        "F2H03C",
+        "number",
+        "Endowment",
+        "not_cds_equivalent",
+        unit="usd",
+        definition_note=(
+            "Reported as a negative value when funds leave the endowment under the modern "
+            "convention; fiscal years 2020 and 2021 mix sign conventions."
+        ),
+    ),
     FactMapping("bachelor_degrees_awarded", "Bachelor's degrees awarded", "DRVC2024", "BASDEG", "number", "Completions", "context_only"),
     FactMapping("master_degrees_awarded", "Master's degrees awarded", "DRVC2024", "MASDEG", "number", "Completions", "context_only"),
     FactMapping("doctor_degrees_awarded", "Doctor's degrees awarded", "DRVC2024", "DOCDEGRS", "number", "Completions", "context_only"),
@@ -128,6 +197,8 @@ def table_name_for_data_year(table_name: str, data_year: int) -> str:
     tables use the aid-year pair instead, so 2024 maps to SFA2324.
     """
     upper = table_name.upper()
+    if re.fullmatch(r"F\d{4}_F2", upper):
+        return f"F{(data_year - 1) % 100:02d}{data_year % 100:02d}_F2"
     if upper.startswith("SFA"):
         return f"SFA{(data_year - 1) % 100:02d}{data_year % 100:02d}"
     if upper.startswith("COST1_"):
@@ -150,6 +221,10 @@ def _best_table_candidate(table_name: str, var_name: str, candidates: list[str])
         sfa_candidates = [candidate for candidate in candidates if candidate.startswith(table_name)]
         if sfa_candidates:
             return sorted(sfa_candidates)[0]
+    if re.fullmatch(r"F\d{4}_F2", table_name):
+        finance_candidates = [candidate for candidate in candidates if re.fullmatch(r"F\d{4}_F2", candidate)]
+        if len(finance_candidates) == 1:
+            return finance_candidates[0]
     if table_name.startswith("COST1_"):
         year = table_name.rsplit("_", 1)[-1]
         preferred = f"IC{year}_AY" if var_name in {"TUITION2", "TUITION3", "FEE2", "FEE3"} else f"IC{year}"

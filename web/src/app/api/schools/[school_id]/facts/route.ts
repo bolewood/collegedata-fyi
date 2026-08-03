@@ -1,28 +1,10 @@
 import { NextResponse } from "next/server";
 import {
   getSchoolFacts,
-  type PublicFactCategory,
 } from "@/lib/public-data";
+import { parsePublicFactCategories } from "@/lib/public-fact-category";
 
 export const revalidate = 3600;
-
-const CATEGORIES = new Set<PublicFactCategory>([
-  "identity",
-  "admissions",
-  "enrollment",
-  "cost",
-  "aid",
-  "outcomes",
-  "sources",
-]);
-
-function parseCategories(value: string | null): PublicFactCategory[] | undefined {
-  if (!value) return undefined;
-  return value
-    .split(",")
-    .map((part) => part.trim())
-    .filter((part): part is PublicFactCategory => CATEGORIES.has(part as PublicFactCategory));
-}
 
 export async function GET(
   request: Request,
@@ -30,7 +12,17 @@ export async function GET(
 ) {
   const { school_id } = await params;
   const url = new URL(request.url);
-  const categories = parseCategories(url.searchParams.get("categories"));
+  const rawCategories = url.searchParams.get("categories");
+  const categories = parsePublicFactCategories(rawCategories);
+  if (rawCategories !== null && categories?.length === 0) {
+    return NextResponse.json(
+      {
+        error: "invalid_categories",
+        message: "Pass at least one recognized public fact category.",
+      },
+      { status: 400 },
+    );
+  }
   const fields =
     url.searchParams
       .get("fields")
@@ -56,4 +48,3 @@ export async function GET(
     },
   });
 }
-

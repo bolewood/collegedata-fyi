@@ -6,6 +6,12 @@ import {
   fetchScorecardByIpedsId,
 } from "./queries";
 import type { InstitutionCoverage, ManifestRow, SchoolFactUnifiedRow } from "./types";
+import {
+  federalCategory,
+  type PublicFactCategory,
+} from "./public-fact-category";
+
+export type { PublicFactCategory } from "./public-fact-category";
 
 const SITE_URL = "https://www.collegedata.fyi";
 
@@ -13,15 +19,6 @@ type UntypedSupabase = {
   from: (table: string) => any;
   rpc: (fn: string, args?: Record<string, unknown>) => any;
 };
-
-export type PublicFactCategory =
-  | "identity"
-  | "admissions"
-  | "enrollment"
-  | "cost"
-  | "aid"
-  | "outcomes"
-  | "sources";
 
 export type PublicSourceLayer = "cds" | "ipeds" | "scorecard" | "derived" | "directory";
 
@@ -655,16 +652,6 @@ function makeStaticFact(definition: FactDefinitionInput, context: PublicSchoolCo
     source: value == null ? null : sourceForDefinition(definition, context),
     quality: qualityForDefinition(definition, value, context),
   };
-}
-
-function federalCategory(row: SchoolFactUnifiedRow): PublicFactCategory {
-  const group = `${row.display_group} ${row.field_key} ${row.field_label}`.toLowerCase();
-  if (group.includes("admission")) return "admissions";
-  if (group.includes("cost") || group.includes("price") || group.includes("tuition")) return "cost";
-  if (group.includes("aid") || group.includes("loan") || group.includes("pell")) return "aid";
-  if (group.includes("completion") || group.includes("graduation") || group.includes("outcome")) return "outcomes";
-  if (group.includes("enrollment")) return "enrollment";
-  return "identity";
 }
 
 function makeFederalFact(row: SchoolFactUnifiedRow): PublicFact {

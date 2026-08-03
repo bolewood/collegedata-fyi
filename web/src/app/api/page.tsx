@@ -81,6 +81,8 @@ export default async function ApiDocsPage() {
 
 curl 'https://www.collegedata.fyi/api/schools/mit/facts?categories=admissions,cost,outcomes'
 
+curl 'https://www.collegedata.fyi/api/schools/university-of-notre-dame/facts?categories=finance'
+
 curl 'https://www.collegedata.fyi/api/schools/mit/sources'
 
 curl 'https://www.collegedata.fyi/api/compare?schools=mit,yale,university-of-chicago&categories=admissions,cost,outcomes'
@@ -479,7 +481,7 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         />
         <Resource
           name="ipeds_facts"
-          description="Curated long-form NCES/IPEDS facts. This is the source-labeled fact table behind ipeds_current_facts and school_facts_unified; every row keeps release, source variable, imputation, and CDS-definition alignment metadata. For historical reads, filter by ipeds_id, field_key, and data_year rather than raw unitid."
+          description="Curated long-form NCES/IPEDS facts. This is the source-labeled fact table behind ipeds_current_facts and school_facts_unified; every row keeps release, source variable, imputation, and CDS-definition alignment metadata. Endowment history uses the endowment_value_* and endowment component field keys. For historical reads, filter by ipeds_id, field_key, and data_year rather than raw unitid."
           fields={[
             "ipeds_id",
             "school_id",
@@ -797,7 +799,7 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         />
         <Resource
           name="scorecard_summary"
-          description={`Curated federal College Scorecard subset, one row per IPEDS UNITID (${formatCount(stats.scorecard_institution_count)} institutions, not just CDS-archived ones). Refreshed ${formatShortDate(stats.scorecard_refreshed_at)} after the ${scorecardVintage} Scorecard load. For per-program earnings, race-stratified completion, or other fields beyond the curated subset, query Scorecard directly.`}
+          description={`Curated federal College Scorecard subset, one row per IPEDS UNITID (${formatCount(stats.scorecard_institution_count)} institutions, not just CDS-archived ones). Refreshed ${formatShortDate(stats.scorecard_refreshed_at)} after the ${scorecardVintage} Scorecard load. Its endowment_end column is a latest-vintage snapshot; use ipeds_facts endowment_value_begin/end for source-variable-labeled fiscal-year history. For per-program earnings, race-stratified completion, or other fields beyond the curated subset, query Scorecard directly.`}
           fields={[
             "ipeds_id",
             "school_name",
@@ -888,6 +890,23 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         <code>unitid</code> unless you also know the matching index exists.
       </p>
       <CodeBlock>{`curl '${BASE}/rest/v1/ipeds_facts?ipeds_id=eq.110635&field_key=in.(retention_rate_full_time,graduation_rate_6yr)&data_year=gte.2019&data_year=lte.2024&select=ipeds_id,data_year,field_key,value_numeric,source_table,source_variable&order=data_year.asc' \\
+  -H 'apikey: <anon key>' \\
+  -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
+
+      <h3 className="mt-6 text-base font-semibold text-gray-900">
+        Compute an endowment draw-rate series
+      </h3>
+      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+        Finance Part H reports beginning and ending endowment values plus the
+        components of change from fiscal year 2020 onward. A sign-normalized
+        spending rate is <code>abs(F2H03C) / F2H01</code>. Keep the quality and
+        source columns in analytical exports: fiscal years 2020 and 2021 mix
+        spending sign conventions, and this federal series cannot identify
+        restricted-fund borrowing. The similarly named{" "}
+        <code>scorecard_summary.endowment_end</code> is a single latest-vintage
+        snapshot, not this historical series.
+      </p>
+      <CodeBlock>{`curl '${BASE}/rest/v1/ipeds_facts?ipeds_id=eq.152080&field_key=in.(endowment_value_begin,endowment_value_end,endowment_spending_distribution)&data_year=gte.2020&data_year=lte.2024&select=ipeds_id,data_year,field_key,value_numeric,quality_flag,source_table,source_variable,release_type&order=data_year.asc,field_key.asc' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 
