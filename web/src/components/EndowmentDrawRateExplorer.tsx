@@ -167,9 +167,9 @@ function SectorDistributionChart() {
         </svg>
       </div>
       <p className="endowment-chart-note">
-        Forest guide rules mark 5% and 7%. The scale stops at 15% so the central distribution
-        remains readable; the threshold table below counts every eligible reporter, including
-        rates beyond the plotted range.
+        Reference lines mark 5% and 7%. The scale stops at 15% to keep the main distribution
+        readable. The table below includes every eligible school, including rates beyond the
+        chart.
       </p>
     </div>
   );
@@ -425,8 +425,8 @@ function SchoolDetail({ school }: { school: EndowmentDrawRateSchool }) {
       {hasSmallDenominator && (
         <p className="endowment-volatility-note">
           At least one beginning value is below $5 million. A single gift, transfer, or
-          spend-down can move this ratio by several percentage points, so read the series as
-          volatile context rather than a verdict.
+          spend-down can move this ratio by several percentage points. Treat this series as
+          volatile context.
         </p>
       )}
       <div className="endowment-table-wrap endowment-school-table-wrap" tabIndex={0}>
@@ -478,7 +478,7 @@ export function EndowmentDrawRateExplorer() {
         <div className="endowment-section-heading">
           <div>
             <div className="meta">§ Sector view</div>
-            <h2>An independent estimate from public federal data.</h2>
+            <h2>An independent estimate from public federal data</h2>
           </div>
           <div className="endowment-data-stamp mono">
             {ENDOWMENT_DRAW_RATE_META.datasetVersion}<br />
@@ -486,10 +486,11 @@ export function EndowmentDrawRateExplorer() {
           </div>
         </div>
         <p className="endowment-section-copy">
-          Each year covers historically private not-for-profit institutions reporting Finance
-          Part H. The denominator keeps rows with a positive beginning value, reported inputs,
-          and a balancing component identity. Rates use the absolute reported spending amount,
-          which normalizes the mixed positive/negative convention in FY2020–21.
+          Each year covers schools that were private nonprofits and reported Finance Part H.
+          The denominator includes rows with a positive beginning value and reported inputs.
+          Rows must also pass the component identity check (the beginning value plus the reported
+          parts equals the year-end value). Rates use the absolute reported spending amount. This
+          sign-normalizes the mixed positive and negative reporting convention in FY2020–21.
         </p>
         <SectorDistributionChart />
         <ThresholdTable />
@@ -499,17 +500,17 @@ export function EndowmentDrawRateExplorer() {
         <div className="endowment-section-heading">
           <div>
             <div className="meta">§ Pick a school</div>
-            <h2>Put one history beside the sector.</h2>
+            <h2>Compare a school to the sector</h2>
           </div>
-          <span className="cd-chip">{ENDOWMENT_DRAW_RATE_SCHOOLS.length.toLocaleString()} institutions</span>
+          <span className="cd-chip">{ENDOWMENT_DRAW_RATE_SCHOOLS.length.toLocaleString()} schools</span>
         </div>
         <label className="endowment-school-picker">
-          <span className="meta">Institution</span>
+          <span className="meta">School</span>
           <select
             value={selectedIpedsId ?? ""}
             onChange={(event) => setSelectedIpedsId(event.target.value || null)}
           >
-            <option value="">Choose a school — none selected by default</option>
+            <option value="">Choose a school (none selected by default)</option>
             {ENDOWMENT_DRAW_RATE_SCHOOLS.map((school) => (
               <option key={school.ipedsId} value={school.ipedsId}>
                 {endowmentSchoolLabel(school)}
@@ -521,10 +522,9 @@ export function EndowmentDrawRateExplorer() {
           <SchoolDetail school={selectedSchool} />
         ) : (
           <div className="endowment-neutral-default cd-card cd-card--cut">
-            <div className="meta">Selection-neutral default</div>
             <p>
-              The corpus distribution stays in view until you choose an institution. No school
-              is preselected, ranked, or presented as representative.
+              No school is preselected or highlighted, so the sector-wide view stays up until
+              you choose one.
             </p>
           </div>
         )}

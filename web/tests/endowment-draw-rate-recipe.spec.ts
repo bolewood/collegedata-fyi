@@ -15,7 +15,9 @@ test("endowment draw-rate recipe stays neutral until a school is selected", asyn
   await expect(
     page.getByRole("heading", { name: /how much of the endowment is being spent/i }),
   ).toBeVisible();
-  await expect(page.getByText("Selection-neutral default")).toBeVisible();
+  await expect(
+    page.getByText(/no school is preselected or highlighted/i),
+  ).toBeVisible();
   await expect(page.getByText("§ School history")).toHaveCount(0);
   await expect(page.getByRole("link", { name: /read the methodology/i })).toHaveAttribute(
     "href",
@@ -26,7 +28,7 @@ test("endowment draw-rate recipe stays neutral until a school is selected", asyn
     "/api",
   );
 
-  const picker = page.getByLabel("Institution");
+  const picker = page.getByRole("combobox", { name: "School", exact: true });
   await picker.selectOption("152080");
 
   await expect(page.getByRole("heading", { name: "University of Notre Dame" })).toBeVisible();
@@ -42,14 +44,16 @@ test("endowment draw-rate recipe stays neutral until a school is selected", asyn
   await expect(page.locator(".endowment-school-table-wrap tbody tr")).toHaveCount(5);
 
   await picker.selectOption("");
-  await expect(page.getByText("Selection-neutral default")).toBeVisible();
+  await expect(
+    page.getByText(/no school is preselected or highlighted/i),
+  ).toBeVisible();
   await expect(page.getByText("§ School history")).toHaveCount(0);
   await expectNoPageOverflow(page);
 });
 
 test("historical and small-endowment school states remain explicit", async ({ page }) => {
   await page.goto("/recipes/endowment-draw-rate");
-  const picker = page.getByLabel("Institution");
+  const picker = page.getByRole("combobox", { name: "School", exact: true });
   await picker.selectOption("457271");
 
   await expect(
