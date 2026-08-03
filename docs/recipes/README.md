@@ -1,6 +1,6 @@
 # Recipes
 
-Worked examples that show what you can do with the CDS data in this repo. Each recipe pairs a short write-up (Markdown, in this directory) with a reproducible artifact — an interactive HTML visualization, an XLSX template, or a Jupyter notebook, living in [`web/public/recipes/`](../../web/public/recipes/) and served at [collegedata.fyi/recipes](https://collegedata.fyi/recipes). Each recipe is seeded with hand-verified data and designed to be extended with live API results.
+Worked examples that show what you can do with the CDS and federal data in this repo. Each recipe pairs a short write-up (Markdown, in this directory) with a reproducible artifact — an interactive route, an XLSX template, or a checked-in generated dataset — served from [collegedata.fyi/recipes](https://collegedata.fyi/recipes). Recipe inputs are reviewable and designed to be reproduced or extended through the public API.
 
 ## Conventions
 
@@ -14,6 +14,7 @@ Worked examples that show what you can do with the CDS data in this repo. Each r
 - [**Acceptance rate vs yield**](./acceptance-vs-yield.md) — scatter plot showing the gap between how selective a school looks on paper (acceptance rate) and how selective it actually is in practice (yield). Seeded with 18 hand-audited schools across a range of selectivity tiers. Extends through the live `school_browser_rows` / `cds_fields` API substrate. Artifacts: [`acceptance-vs-yield-demo.html`](../../web/public/recipes/acceptance-vs-yield-demo.html), [`acceptance-vs-yield-starter.xlsx`](../../web/public/recipes/acceptance-vs-yield-starter.xlsx).
 - [**Test-optional tracker**](./test-optional-tracker.md) — line chart of SAT submission percentage over time for seven well-documented schools (Yale 2009–2024, Caltech 2002–2020, MIT, Princeton, Stanford, Harvard, Wake Forest). Uses the submission rate as an honest proxy for effective test-optional policy: written disclosures lie, enrollment numbers don't. Artifact: [`test-optional-tracker-demo.html`](../../web/public/recipes/test-optional-tracker-demo.html).
 - [**Wait-list odds**](./waitlist-odds.md) — corpus-wide CDS C2 analysis of wait-list offers, accepted spots, and admitted students, bucketed by selectivity, control, size, and Carnegie class. Inspired by the May 2026 WSJ wait-list story; computed from collegedata.fyi projections instead of article figures.
+- [**Endowment draw-rate tracker**](./endowment-draw-rate.md) — FY2020–FY2024 distribution and per-school history for private nonprofit IPEDS Finance Part H reporters. Uses a paginated public-API generator and a versioned checked-in dataset; FY2024 is provisional.
 - **Agent/CLI starter.** Use the no-auth friendly API to search schools, fetch facts with citations, compare a short list, and list source documents:
   `curl 'https://www.collegedata.fyi/api/schools/mit/facts?categories=admissions,cost,outcomes'`.
 
