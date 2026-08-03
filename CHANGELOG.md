@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 This project uses four-part semantic versioning.
 
+## [0.2.0.0] - 2026-08-03
+
+### Added
+
+- Explore five years of private nonprofit college endowment draw rates at `/recipes/endowment-draw-rate`, including sector distributions, threshold shares, and selection-neutral school histories.
+- Rebuild the versioned recipe dataset from public IPEDS Finance Part H facts with a read-only, paginated generator and documented source-release provenance.
+
+### Changed
+
+- Expand the recipes index and methodology documentation to cover reproducible federal-data analyses alongside CDS recipes.
+
+### Fixed
+
+- Calculate percentile and strict threshold statistics from exact values before display rounding, keep documentation tied to the generated dataset version, and display each institution under its latest reported identity.
+
 ## [0.1.0.0] - 2026-08-03
 
 ### Added
