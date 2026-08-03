@@ -13,11 +13,12 @@ import csv
 import json
 import os
 import sys
+import urllib.parse
 import zipfile
 from dataclasses import asdict
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 if __package__ is None or __package__ == "":
     sys.path.append(str(Path(__file__).resolve().parents[2]))
@@ -29,6 +30,24 @@ from tools.ipeds.project import project_rows_to_facts
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT_DIR = REPO_ROOT / "scratch" / "ipeds"
 ACCESS_PAGE_URL = "https://nces.ed.gov/ipeds/use-the-data/download-access-database"
+ADMIN_DATABASE_URL_ENV = "IPEDS_ADMIN_DATABASE_URL"
+ADMIN_REFRESH_TIMEOUT_MS = 600_000
+
+
+class AdminRefreshConfigurationError(RuntimeError):
+    """Raised before writes when the administrative session DSN is unusable."""
+
+
+class AdminRefreshConnectionError(RuntimeError):
+    """Raised when the administrative database session cannot be opened."""
+
+
+class RequiredCacheRefreshError(RuntimeError):
+    """Raised when the required current-facts publication step fails."""
+
+
+class PublicationRefreshError(RuntimeError):
+    """Raised after loader writes commit but required publication does not."""
 
 
 def main() -> int:
@@ -107,14 +126,33 @@ def main() -> int:
         return 2
 
     if args.apply:
-        apply_to_supabase(
-            args,
-            tablesdoc,
-            rows_by_table,
-            table_sources,
-            facts,
-            fact_mappings,
-        )
+        try:
+            apply_to_supabase(
+                args,
+                tablesdoc,
+                rows_by_table,
+                table_sources,
+                facts,
+                fact_mappings,
+            )
+        except (AdminRefreshConfigurationError, AdminRefreshConnectionError) as exc:
+            print(
+                f"error: apply stopped before release writes: {exc}",
+                file=sys.stderr,
+            )
+            return 3
+        except PublicationRefreshError as exc:
+            print(
+                "error: release data writes completed, but required publication failed: "
+                f"{exc}",
+                file=sys.stderr,
+            )
+            print(
+                "Re-run the exact same --apply command after fixing the administrative "
+                "database connection; upserts and pruning are idempotent.",
+                file=sys.stderr,
+            )
+            return 4
     else:
         print("dry run only; re-run with --apply to write Supabase")
     return 0
@@ -316,6 +354,8 @@ def apply_to_supabase(
     fact_mappings: tuple[Any, ...],
 ) -> None:
     load_env(REPO_ROOT / ".env")
+    admin_database_url = require_admin_database_url()
+    preflight_admin_database(admin_database_url)
     try:
         from supabase import create_client
     except ImportError as exc:
@@ -444,7 +484,10 @@ def apply_to_supabase(
         release_type=args.release_type,
         field_keys={mapping.field_key for mapping in loaded_fact_mappings},
     )
-    refresh_post_load_serving_views(client)
+    try:
+        refresh_post_load_serving_views(admin_database_url)
+    except (AdminRefreshConnectionError, RequiredCacheRefreshError) as exc:
+        raise PublicationRefreshError(str(exc)) from None
     print(f"applied release {release_id}: {len(raw_payloads)} raw rows, {len(fact_payloads)} facts")
 
 
@@ -508,14 +551,163 @@ def build_loaded_table_payloads(
     return payloads
 
 
-def refresh_post_load_serving_views(client: Any) -> None:
-    refreshed = client.rpc("refresh_ipeds_current_facts_cache").execute()
-    print(f"refreshed current IPEDS facts cache: {refreshed.data}")
+def require_admin_database_url(
+    env: Mapping[str, str] | None = None,
+) -> str:
+    source = os.environ if env is None else env
+    value = source.get(ADMIN_DATABASE_URL_ENV, "").strip()
+    if not value:
+        raise AdminRefreshConfigurationError(
+            f"{ADMIN_DATABASE_URL_ENV} is required for --apply; configure a direct "
+            "or Supavisor session-mode PostgreSQL URI, not the ordinary API URL"
+        )
     try:
-        browser_modes = client.rpc("refresh_ipeds_browser_source_modes").execute()
-        print(f"refreshed browser source modes: {browser_modes.data}")
-    except Exception as exc:  # pragma: no cover - optional browser metadata helper.
-        print(f"warning: could not refresh browser source modes: {exc}", file=sys.stderr)
+        parsed = urllib.parse.urlsplit(value)
+        _ = parsed.port
+    except ValueError:
+        raise AdminRefreshConfigurationError(
+            f"{ADMIN_DATABASE_URL_ENV} must be a valid PostgreSQL URI"
+        ) from None
+    if (
+        parsed.scheme not in {"postgres", "postgresql"}
+        or not parsed.hostname
+        or not parsed.path.lstrip("/")
+    ):
+        raise AdminRefreshConfigurationError(
+            f"{ADMIN_DATABASE_URL_ENV} must be a PostgreSQL URI with a host and database name"
+        )
+    return value
+
+
+def database_error_label(exc: Exception) -> str:
+    """Return diagnostics that cannot contain a password, URI, or auth header."""
+    label = type(exc).__name__
+    sqlstate = getattr(exc, "sqlstate", None)
+    return f"{label} (SQLSTATE {sqlstate})" if sqlstate else label
+
+
+def connect_admin_database(admin_database_url: str) -> Any:
+    try:
+        import psycopg  # type: ignore
+    except ImportError:
+        raise AdminRefreshConnectionError(
+            "psycopg is required for administrative refreshes; install "
+            "tools/ipeds/requirements.txt"
+        ) from None
+    try:
+        return psycopg.connect(
+            admin_database_url,
+            autocommit=True,
+            connect_timeout=20,
+            application_name="collegedata_ipeds_loader",
+        )
+    except Exception as exc:
+        raise AdminRefreshConnectionError(
+            f"could not connect using {ADMIN_DATABASE_URL_ENV}; verify that it is a "
+            "reachable direct or session-mode DSN ({database_error_label(exc)})"
+        ) from None
+
+
+def execute_admin_scalar(connection: Any, sql: str, params: tuple[Any, ...] = ()) -> Any:
+    with connection.cursor() as cursor:
+        cursor.execute(sql, params)
+        row = cursor.fetchone()
+    return row[0] if row else None
+
+
+def preflight_admin_database(
+    admin_database_url: str,
+    *,
+    connect: Any = connect_admin_database,
+) -> None:
+    """Fail before PostgREST writes when the admin session is not reachable."""
+    try:
+        with connect(admin_database_url) as connection:
+            function_name = "public.refresh_ipeds_current_facts_cache()"
+            can_refresh = execute_admin_scalar(
+                connection,
+                """
+                select to_regprocedure(%s) is not null
+                   and has_function_privilege(
+                     current_user,
+                     to_regprocedure(%s),
+                     'EXECUTE'
+                   )
+                """,
+                (function_name, function_name),
+            )
+            if can_refresh is not True:
+                raise AdminRefreshConfigurationError(
+                    f"{ADMIN_DATABASE_URL_ENV} connects, but its database role cannot "
+                    "execute refresh_ipeds_current_facts_cache()"
+                )
+    except AdminRefreshConfigurationError:
+        raise
+    except AdminRefreshConnectionError:
+        raise
+    except Exception as exc:
+        raise AdminRefreshConnectionError(
+            f"could not verify {ADMIN_DATABASE_URL_ENV}; verify that it is a reachable "
+            f"direct or session-mode DSN ({database_error_label(exc)})"
+        ) from None
+
+
+def refresh_post_load_serving_views(
+    admin_database_url: str,
+    *,
+    connect: Any = connect_admin_database,
+) -> None:
+    """Publish loader writes through a long-lived administrative DB session."""
+    try:
+        connection_context = connect(admin_database_url)
+    except AdminRefreshConnectionError:
+        raise
+    except Exception as exc:
+        raise AdminRefreshConnectionError(
+            f"could not connect using {ADMIN_DATABASE_URL_ENV} for publication "
+            f"({database_error_label(exc)})"
+        ) from None
+
+    try:
+        with connection_context as connection:
+            try:
+                execute_admin_scalar(
+                    connection,
+                    "select set_config('statement_timeout', %s, false)",
+                    (str(ADMIN_REFRESH_TIMEOUT_MS),),
+                )
+                refreshed_count = execute_admin_scalar(
+                    connection,
+                    "select public.refresh_ipeds_current_facts_cache()",
+                )
+            except Exception as exc:
+                raise RequiredCacheRefreshError(
+                    "refresh_ipeds_current_facts_cache() failed through the "
+                    "administrative database session "
+                    f"({database_error_label(exc)})"
+                ) from None
+
+            print(f"refreshed current IPEDS facts cache: {refreshed_count}")
+            try:
+                browser_count = execute_admin_scalar(
+                    connection,
+                    "select public.refresh_ipeds_browser_source_modes()",
+                )
+                print(f"refreshed browser source modes: {browser_count}")
+            except Exception as exc:  # Best-effort metadata; cache publication is durable.
+                print(
+                    "warning: current facts cache published, but "
+                    "refresh_ipeds_browser_source_modes() failed "
+                    f"({database_error_label(exc)})",
+                    file=sys.stderr,
+                )
+    except RequiredCacheRefreshError:
+        raise
+    except Exception as exc:
+        raise AdminRefreshConnectionError(
+            "administrative database session failed during publication "
+            f"({database_error_label(exc)})"
+        ) from None
 
 
 def prune_release_scope(

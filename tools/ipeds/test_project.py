@@ -1,23 +1,34 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
+import io
 import json
 import sys
 import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from tools.ipeds.load_release import (
+    ADMIN_DATABASE_URL_ENV,
+    AdminRefreshConnectionError,
+    AdminRefreshConfigurationError,
+    PublicationRefreshError,
+    RequiredCacheRefreshError,
+    apply_to_supabase,
     build_loaded_table_payloads,
     build_release_notes,
     data_url_for_table,
     dedupe_rows,
     find_table_zip,
+    preflight_admin_database,
     read_release_manifest,
     read_table_zip,
     refresh_post_load_serving_views,
+    require_admin_database_url,
     prune_release_scope,
     supersede_lower_priority_facts,
     validate_release_priority,
@@ -28,6 +39,71 @@ from tools.ipeds.load_release import (
 from tools.ipeds.mappings import FactMapping, fact_mappings_for_data_year, resolve_fact_mappings_for_columns, table_name_for_data_year
 from tools.ipeds.metadata import IpedsColumn, IpedsTable, IpedsValueLabel, TablesDoc
 from tools.ipeds.project import project_rows_to_facts, quality_from_label
+
+
+class FakeDatabaseError(RuntimeError):
+    sqlstate = "57014"
+
+
+class FakeAdminCursor:
+    def __init__(self, connection: "FakeAdminConnection") -> None:
+        self.connection = connection
+        self.sql = ""
+
+    def __enter__(self) -> "FakeAdminCursor":
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        return None
+
+    def execute(self, sql: str, params: tuple[object, ...] = ()) -> None:
+        self.sql = sql
+        self.connection.calls.append((sql, params))
+        if self.connection.fail_on and self.connection.fail_on in sql:
+            raise self.connection.error
+
+    def fetchone(self) -> tuple[object]:
+        if "has_function_privilege" in self.sql:
+            return (self.connection.preflight_allowed,)
+        if "refresh_ipeds_current_facts_cache" in self.sql:
+            return (8244,)
+        if "refresh_ipeds_browser_source_modes" in self.sql:
+            return (100,)
+        return (1,)
+
+
+class FakeAdminConnection:
+    def __init__(
+        self,
+        *,
+        fail_on: str | None = None,
+        error: Exception | None = None,
+        preflight_allowed: bool = True,
+    ) -> None:
+        self.calls: list[tuple[str, tuple[object, ...]]] = []
+        self.fail_on = fail_on
+        self.error = error or RuntimeError("database failure")
+        self.preflight_allowed = preflight_allowed
+
+    def __enter__(self) -> "FakeAdminConnection":
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        return None
+
+    def cursor(self) -> FakeAdminCursor:
+        return FakeAdminCursor(self)
+
+
+class FailingAdminConnectionContext:
+    def __init__(self, error: Exception) -> None:
+        self.error = error
+
+    def __enter__(self) -> None:
+        raise self.error
+
+    def __exit__(self, *_args: object) -> None:
+        return None
 
 
 class IpedsProjectionTests(unittest.TestCase):
@@ -257,44 +333,139 @@ class IpedsProjectionTests(unittest.TestCase):
         self.assertEqual(next(mapping for mapping in resolved if mapping.field_key == "room_and_board_on_campus").table_name, "IC2019")
         self.assertEqual(next(mapping for mapping in resolved if mapping.field_key == "total_price_in_state_on_campus").table_name, "DRVIC2019")
 
-    def test_post_load_refreshes_current_cache_before_browser_modes(self) -> None:
-        class FakeRpc:
-            def __init__(self, calls: list[str], name: str) -> None:
-                self.calls = calls
-                self.name = name
-                self.data = 1
+    def test_direct_post_load_refreshes_required_cache_before_browser_modes(self) -> None:
+        connection = FakeAdminConnection()
+        stdout = io.StringIO()
 
-            def execute(self) -> "FakeRpc":
-                self.calls.append(self.name)
-                return self
-
-        class FakeClient:
-            def __init__(self) -> None:
-                self.calls: list[str] = []
-
-            def rpc(self, name: str) -> FakeRpc:
-                return FakeRpc(self.calls, name)
-
-        client = FakeClient()
-
-        refresh_post_load_serving_views(client)
+        with contextlib.redirect_stdout(stdout):
+            refresh_post_load_serving_views(
+                "postgresql://admin:secret@example.test/postgres",
+                connect=lambda _dsn: connection,
+            )
 
         self.assertEqual(
-            client.calls,
-            ["refresh_ipeds_current_facts_cache", "refresh_ipeds_browser_source_modes"],
+            [call[0] for call in connection.calls],
+            [
+                "select set_config('statement_timeout', %s, false)",
+                "select public.refresh_ipeds_current_facts_cache()",
+                "select public.refresh_ipeds_browser_source_modes()",
+            ],
+        )
+        self.assertEqual(connection.calls[0][1], ("600000",))
+        self.assertIn("refreshed current IPEDS facts cache: 8244", stdout.getvalue())
+        self.assertIn("refreshed browser source modes: 100", stdout.getvalue())
+
+    def test_required_current_cache_refresh_failure_propagates_without_secret(self) -> None:
+        secret = "do-not-leak"
+        connection = FakeAdminConnection(
+            fail_on="refresh_ipeds_current_facts_cache",
+            error=FakeDatabaseError(f"{secret} postgresql://admin:{secret}@host/db"),
         )
 
-    def test_required_current_cache_refresh_failure_propagates(self) -> None:
-        class FailingRpc:
-            def execute(self) -> None:
-                raise RuntimeError("refresh failed")
+        with self.assertRaises(RequiredCacheRefreshError) as caught:
+            refresh_post_load_serving_views(
+                f"postgresql://admin:{secret}@example.test/postgres",
+                connect=lambda _dsn: connection,
+            )
 
-        class FakeClient:
-            def rpc(self, _name: str) -> FailingRpc:
-                return FailingRpc()
+        self.assertIn("SQLSTATE 57014", str(caught.exception))
+        self.assertNotIn(secret, str(caught.exception))
+        self.assertEqual(
+            [call[0] for call in connection.calls],
+            [
+                "select set_config('statement_timeout', %s, false)",
+                "select public.refresh_ipeds_current_facts_cache()",
+            ],
+        )
 
-        with self.assertRaisesRegex(RuntimeError, "refresh failed"):
-            refresh_post_load_serving_views(FakeClient())
+    def test_browser_source_mode_refresh_is_best_effort_and_redacted(self) -> None:
+        secret = "browser-secret"
+        connection = FakeAdminConnection(
+            fail_on="refresh_ipeds_browser_source_modes",
+            error=RuntimeError(f"bad DSN postgresql://admin:{secret}@host/db"),
+        )
+        stderr = io.StringIO()
+
+        with contextlib.redirect_stderr(stderr):
+            refresh_post_load_serving_views(
+                f"postgresql://admin:{secret}@example.test/postgres",
+                connect=lambda _dsn: connection,
+            )
+
+        self.assertIn("current facts cache published", stderr.getvalue())
+        self.assertNotIn(secret, stderr.getvalue())
+
+    def test_publication_connection_lifecycle_failure_is_redacted(self) -> None:
+        secret = "lifecycle-secret"
+
+        with self.assertRaises(AdminRefreshConnectionError) as caught:
+            refresh_post_load_serving_views(
+                f"postgresql://admin:{secret}@example.test/postgres",
+                connect=lambda _dsn: FailingAdminConnectionContext(
+                    RuntimeError(f"could not enter with {secret}")
+                ),
+            )
+
+        self.assertIn("session failed during publication", str(caught.exception))
+        self.assertNotIn(secret, str(caught.exception))
+
+    def test_admin_database_url_is_required_and_validated_without_echoing_it(self) -> None:
+        with self.assertRaisesRegex(
+            AdminRefreshConfigurationError,
+            ADMIN_DATABASE_URL_ENV,
+        ):
+            require_admin_database_url({})
+
+        secret = "invalid-secret"
+        with self.assertRaises(AdminRefreshConfigurationError) as caught:
+            require_admin_database_url(
+                {ADMIN_DATABASE_URL_ENV: f"https://admin:{secret}@example.test/project"}
+            )
+        self.assertNotIn(secret, str(caught.exception))
+
+        valid = "postgresql://admin:secret@example.test/postgres?sslmode=require"
+        self.assertEqual(
+            require_admin_database_url({ADMIN_DATABASE_URL_ENV: valid}),
+            valid,
+        )
+
+    def test_admin_preflight_requires_cache_refresh_execute_privilege(self) -> None:
+        connection = FakeAdminConnection(preflight_allowed=False)
+
+        with self.assertRaisesRegex(
+            AdminRefreshConfigurationError,
+            "cannot execute refresh_ipeds_current_facts_cache",
+        ):
+            preflight_admin_database(
+                "postgresql://admin:secret@example.test/postgres",
+                connect=lambda _dsn: connection,
+            )
+
+        self.assertEqual(len(connection.calls), 1)
+        self.assertIn("has_function_privilege", connection.calls[0][0])
+
+    def test_apply_preflight_failure_happens_before_supabase_client_creation(self) -> None:
+        create_client_calls: list[tuple[object, ...]] = []
+        fake_supabase = SimpleNamespace(
+            create_client=lambda *args: create_client_calls.append(args)
+        )
+
+        with (
+            patch("tools.ipeds.load_release.load_env"),
+            patch(
+                "tools.ipeds.load_release.require_admin_database_url",
+                return_value="postgresql://admin:secret@example.test/postgres",
+            ),
+            patch(
+                "tools.ipeds.load_release.preflight_admin_database",
+                side_effect=AdminRefreshConnectionError("unreachable"),
+            ),
+            patch.dict(sys.modules, {"supabase": fake_supabase}),
+        ):
+            with self.assertRaises(AdminRefreshConnectionError):
+                apply_to_supabase(None, None, {}, {}, [], ())
+
+        self.assertEqual(create_client_calls, [])
 
     def test_release_scope_prunes_stale_rows_after_upsert_at_mapping_scope(self) -> None:
         deletes: list[tuple[str, list[tuple[str, object]]]] = []
@@ -730,6 +901,50 @@ class IpedsProjectionTests(unittest.TestCase):
             ):
                 self.assertEqual(load_release_main(), 0)
                 apply_mock.assert_called_once()
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with (
+                patch.object(sys, "argv", argv),
+                patch("tools.ipeds.load_release.parse_tablesdoc", return_value=tablesdoc),
+                patch(
+                    "tools.ipeds.load_release.resolve_fact_mappings_for_columns",
+                    return_value=(mapping,),
+                ),
+                patch("tools.ipeds.load_release.project_rows_to_facts", return_value=facts),
+                patch(
+                    "tools.ipeds.load_release.apply_to_supabase",
+                    side_effect=PublicationRefreshError("required cache refresh failed"),
+                ),
+                contextlib.redirect_stdout(stdout),
+                contextlib.redirect_stderr(stderr),
+            ):
+                self.assertEqual(load_release_main(), 4)
+
+            self.assertNotIn("applied release", stdout.getvalue())
+            self.assertIn("release data writes completed", stderr.getvalue())
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with (
+                patch.object(sys, "argv", argv),
+                patch("tools.ipeds.load_release.parse_tablesdoc", return_value=tablesdoc),
+                patch(
+                    "tools.ipeds.load_release.resolve_fact_mappings_for_columns",
+                    return_value=(mapping,),
+                ),
+                patch("tools.ipeds.load_release.project_rows_to_facts", return_value=facts),
+                patch(
+                    "tools.ipeds.load_release.apply_to_supabase",
+                    side_effect=AdminRefreshConnectionError("unreachable"),
+                ),
+                contextlib.redirect_stdout(stdout),
+                contextlib.redirect_stderr(stderr),
+            ):
+                self.assertEqual(load_release_main(), 3)
+
+            self.assertNotIn("applied release", stdout.getvalue())
+            self.assertIn("stopped before release writes", stderr.getvalue())
 
     def test_release_manifest_reader_handles_absent_invalid_and_valid_files(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
