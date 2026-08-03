@@ -5,7 +5,7 @@ import { TrackedLink } from "@/components/TrackedLink";
 export const metadata: Metadata = {
   title: "Recipes",
   description:
-    "Worked examples of what you can do with the collegedata.fyi Common Data Set archive: interactive charts seeded with hand-verified data, extendable to the full corpus via the public API.",
+    "Worked examples of what you can do with the collegedata.fyi CDS and federal-data archive, with reproducible interactive charts and public API queries.",
   alternates: { canonical: "/recipes" },
   openGraph: { url: "/recipes" },
 };
@@ -17,7 +17,7 @@ type Recipe = {
   audience: string;
   demoPath: string;
   writeupUrl: string;
-  sections: string;
+  sourceLabel: string;
   extras?: { label: string; path: string }[];
 };
 
@@ -32,7 +32,7 @@ const RECIPES: Recipe[] = [
     demoPath: "/recipes/acceptance-vs-yield",
     writeupUrl:
       "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/acceptance-vs-yield.md",
-    sections: "C1, B1, B22",
+    sourceLabel: "CDS C1 · B1 · B22",
     extras: [
       {
         label: "XLSX starter",
@@ -50,7 +50,7 @@ const RECIPES: Recipe[] = [
     demoPath: "/recipes/test-optional-tracker",
     writeupUrl:
       "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/test-optional-tracker.md",
-    sections: "C8, C9",
+    sourceLabel: "CDS C8 · C9",
   },
   {
     slug: "waitlist-odds",
@@ -62,7 +62,19 @@ const RECIPES: Recipe[] = [
     demoPath: "/recipes/waitlist-odds",
     writeupUrl:
       "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/waitlist-odds.md",
-    sections: "C2, C1",
+    sourceLabel: "CDS C2 · C1",
+  },
+  {
+    slug: "endowment-draw-rate",
+    title: "Endowment draw-rate tracker",
+    tagline:
+      "Five fiscal years of private nonprofit IPEDS Finance filings: sector distributions, shares above 5%, 7%, and 15%, plus a school-by-school value and draw-rate history. An independent federal-data estimate, not a reproduction of audited-statement analysis.",
+    audience:
+      "College finance reporters, institutional researchers, trustees, and readers looking for a careful public baseline.",
+    demoPath: "/recipes/endowment-draw-rate",
+    writeupUrl:
+      "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/endowment-draw-rate.md",
+    sourceLabel: "IPEDS F2 · PART H",
   },
 ];
 
@@ -85,8 +97,8 @@ export default function RecipesPage() {
       </h1>
       <p style={{ marginTop: 20, fontSize: 16, lineHeight: 1.6, color: "var(--ink-2)" }}>
         What you can do with the archive. Each recipe pairs a short write-up with an interactive
-        artifact seeded from hand-verified data, plus a copy-pasteable API query you can use to
-        scale it to the full corpus. If you want to contribute one,{" "}
+        artifact built from checked-in, reviewable data, plus copy-pasteable API queries that
+        reproduce or extend the analysis. If you want to contribute one,{" "}
         <a
           href="https://github.com/bolewood/collegedata-fyi/blob/main/CONTRIBUTING.md"
           target="_blank"
@@ -128,7 +140,7 @@ export default function RecipesPage() {
                 </TrackedLink>
               </h2>
               <span className="mono" style={{ fontSize: 11, color: "var(--ink-3)", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>
-                CDS {r.sections}
+                {r.sourceLabel}
               </span>
             </div>
             <p style={{ marginTop: 10, fontSize: 14, lineHeight: 1.55, color: "var(--ink-2)" }}>
