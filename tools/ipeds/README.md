@@ -25,18 +25,40 @@ the committed schema.
 python tools/ipeds/download_release.py
 ```
 
-For historical releases where the NCES data-generator CSV ZIP endpoint no
-longer serves mapped tables, install `mdbtools` and export the missing tables
-from the official Access ZIP:
+Install `mdbtools` for final releases and provisional releases whose mapped
+table is available only in the official Access ZIP:
 
 ```bash
 brew install mdbtools
-python tools/ipeds/download_release.py --collection-year 2019-20 --data-year 2019 --access-fallback
+python tools/ipeds/download_release.py \
+  --collection-year 2024-25 \
+  --release-type provisional \
+  --tables F2324_F2 \
+  --access-fallback
 ```
 
-The downloader still prefers data-generator CSV ZIPs. `--access-fallback` only
-exports mapped tables that are present in the release metadata but return 404
-from the CSV endpoint.
+For preliminary and provisional releases, the downloader prefers data-generator
+CSV ZIPs. `--access-fallback` exports mapped tables that return 404 from the CSV
+endpoint. Final releases route directly to the official Access database because
+the data-generator URL pins `HasRV=0` and can return stale provisional values.
+Release-year and optional release-type selection are strict: a request that is
+not on the official page exits instead of silently substituting another release.
+The generated `release.json` records the actual release, source mode, downloaded
+or Access-exported tables, and unresolved tables; unresolved Finance F2 tables
+exit nonzero.
+
+Finance Part H final releases may be Access-only. For example:
+
+```bash
+python tools/ipeds/download_release.py \
+  --collection-year 2023-24 \
+  --release-type final \
+  --tables F2223_F2
+```
+
+The loader reads `release.json` so an Access-exported table keeps the official
+Access bundle URL as table provenance rather than the data-generator URL that
+returned 404.
 
 2. Dry-run the loader. This parses metadata, reads the ZIPs, projects public
    facts, and writes `scratch/ipeds/ipeds-<year>-<release>-report.json`. Review
@@ -80,11 +102,138 @@ or more display groups:
 python tools/ipeds/load_release.py ... --display-groups Costs --apply
 ```
 
+Targeted reruns upsert table, column, and valueset metadata only for tables
+loaded in that run, and existing release notes are merged. Re-pass
+`--release-date-text` from that release's `release.json` on every dry run and
+apply; the loader validates manifest provenance rather than accepting a release
+type, metadata URL, or date text that contradicts the downloaded data.
+
+## Endowment spike audit
+
+The `Endowment` mapping group covers Finance Part H for all F2 filers: beginning
+and ending endowment value, new gifts, investment return, spending distribution,
+and other/residual change. `F2H03` is deliberately not mapped because it is the
+calculated change `(F2H02 - F2H01)`. Component detail begins in fiscal year 2020.
+
+Create the mappings and `analyze_endowment` script before running this spike;
+otherwise `--display-groups Endowment` can vacuously produce zero facts. Download
+the current FY2023 final release, then derive every loader provenance value from
+the emitted manifest:
+
+```bash
+python -m tools.ipeds.download_release \
+  --collection-year 2023-24 \
+  --release-type final \
+  --tables F2223_F2
+
+RELEASE_MANIFEST="$(python3 - <<'PY'
+import json
+from pathlib import Path
+matches = []
+for path in Path("scratch/ipeds").glob("2023-24-*/release.json"):
+    manifest = json.loads(path.read_text())
+    if manifest.get("collection_year") == "2023-24" and manifest.get("release_type") == "final":
+        matches.append(path)
+if len(matches) != 1:
+    raise SystemExit(f"expected one FY2023 final manifest, found {matches}")
+print(matches[0])
+PY
+)"
+RELEASE_DIR="$(dirname "$RELEASE_MANIFEST")"
+METADATA_URL="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["metadata_url"])' "$RELEASE_MANIFEST")"
+METADATA_XLSX="$RELEASE_DIR/$(basename "$METADATA_URL")"
+RELEASE_TYPE="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["release_type"])' "$RELEASE_MANIFEST")"
+RELEASE_DATE_TEXT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["release_date_text"])' "$RELEASE_MANIFEST")"
+
+python -m tools.ipeds.load_release \
+  --metadata-xlsx "$METADATA_XLSX" \
+  --metadata-url "$METADATA_URL" \
+  --data-dir "$RELEASE_DIR" \
+  --collection-year 2023-24 \
+  --data-year 2023 \
+  --release-type "$RELEASE_TYPE" \
+  --release-date-text "$RELEASE_DATE_TEXT" \
+  --display-groups Endowment
+
+python -m tools.ipeds.analyze_endowment \
+  --data-dir "$RELEASE_DIR" \
+  --unitids 201195,148131,231420,203580,152080 \
+  --out scratch/ipeds/endowment-spike-analysis.json
+```
+
+The dry-run gate is `F2223_F2` under `source_tables_loaded` and a positive
+`facts_by_group.Endowment` count. The analysis report records the corrected five
+fixtures, source manifest metadata and SHA-256, FY2023 spending-sign tolerance,
+the single accounting identity
+`(F2H02 - F2H01) = F2H03A + F2H03B + F2H03C + F2H03D`, draw-rate distribution,
+and blank Part H rows. The analyzer fails if `release.json` does not identify
+exactly one Finance source, its recorded artifact is missing, or a requested
+fixture UNITID is absent. Blank screener-A rows project to no facts; no synthetic
+`not_applicable` facts are expected. Draw rate is `abs(F2H03C) / F2H01` with no
+small-endowment floor; the volatility note belongs with any consumer of the
+metric. The $5 million denominator floor applies only to the future
+`other_change_share` metric.
+
+### Phase 1 endowment release cycles
+
+After the loader changes have merged and any required production setup is
+applied from `main`, run one complete download, dry-run, review, analysis, and
+apply cycle for each release. Phase 1 has no schema migration. The future Phase
+2 `school_endowment_health` view is a migration and must be applied from `main`
+after merge. Never apply from a feature branch.
+
+| Fiscal year | Collection | F2 table | Selected release | Download option |
+|---|---|---|---|---|
+| 2020 | 2020-21 | `F1920_F2` | final | — |
+| 2021 | 2021-22 | `F2021_F2` | final | — |
+| 2022 | 2022-23 | `F2122_F2` | final | — |
+| 2023 | 2023-24 | `F2223_F2` | final | direct Access route |
+| 2024 | 2024-25 | `F2324_F2` | provisional | `--access-fallback` |
+
+For each row, pass `--collection-year`, `--release-type`, `--tables`, and the
+listed download option. Locate that row's `release.json` as above; take its
+directory, `release_type`, `release_date_text`, and `metadata_url`; run
+`load_release` without `--apply`; review both reports; then rerun the exact same
+loader command with `--apply`. Include `--release-date-text` on the apply and on
+every later rerun because the date text is required provenance and the loader
+validates it against the manifest. Run the sign and identity analysis separately
+for every release. FY2020 and FY2021 may have roughly 194 and 184 positive
+`F2H03C` rows respectively; those are tolerance bands, so material divergence
+triggers investigation rather than an automatic count-based failure.
+
+An apply first upserts the replacement data, then prunes stale raw rows for each
+loaded table and stale facts only for the selected mappings. This keeps a
+targeted display-group rerun from deleting other mappings that share a source
+table, while preventing corrected sources from leaving stale same-release
+values behind. A higher-priority or revised same-priority release then marks
+matching same-year fields from older releases non-public; selected field keys
+come from the mappings, so an all-blank final field cannot fall back to an older
+public value. The loader refuses to apply a lower-priority release after a
+higher-priority one is present. It also rejects a competing same-priority
+revision unless the incoming official release date is strictly newer than every
+loaded peer. These read-only guards run before any write. The current-facts
+cache publishes last and its refresh is required; the browser source-mode
+refresh remains best-effort.
+
+Post-load endowment reconciliation uses the raw College Scorecard institution
+file (`Most-Recent-Cohorts-Institution_*.zip`), which carries both `ENDOWBEGIN`
+and `ENDOWEND`; `scorecard_summary` persists only `endowment_end` and cannot run
+this gate. Join the raw Scorecard rows to a bounded `ipeds_facts` export by
+UNITID, scan candidate fiscal years over the full in-scope private-nonprofit
+population, document the best alignment, and require at least 99% exact matches.
+PostgREST requests must use the Supabase REST endpoint and both auth headers:
+
+```bash
+curl "$SUPABASE_URL/rest/v1/ipeds_facts?field_key=in.(endowment_value_begin,endowment_value_end)&data_year=gte.2020&data_year=lte.2024&select=unitid,data_year,field_key,value_numeric" \
+  -H "apikey: $SUPABASE_ANON_KEY" \
+  -H "Authorization: Bearer $SUPABASE_ANON_KEY"
+```
+
 ## Source discipline
 
 - Metadata comes from the official IPEDS Tablesdoc workbook.
-- Table data comes from the official IPEDS data-generator CSV ZIP endpoints.
-- The Access database ZIP is recorded as release provenance but not parsed.
+- Table data comes from official IPEDS data-generator CSV ZIPs or, for final and
+  Access-only releases, tables exported from the official Access database ZIP.
 - Raw rows are preserved in `ipeds_raw_rows`; public products query
   `ipeds_facts`, `ipeds_current_facts`, or `school_facts_unified`.
   `ipeds_current_facts` is a stable view backed by the materialized
