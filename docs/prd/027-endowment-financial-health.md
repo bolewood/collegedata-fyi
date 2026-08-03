@@ -3,7 +3,7 @@
 **Status:** Draft (revised after adversarial review, 2026-08-03)
 **Created:** 2026-08-03
 **Author:** Anthony Showalter (with Claude)
-**Related:** PRD 021 (IPEDS coverage layer — this extends its open item "Broader IPEDS field-family coverage beyond the MVP mappings"), `docs/prd/021-ipeds-coverage-layer.md:534`
+**Related:** PRD 021 (IPEDS coverage layer — this extends its open item "Broader IPEDS field-family coverage beyond the MVP mappings", in 021's "Still open from the original PRD" section)
 
 ---
 
@@ -21,8 +21,9 @@ Finance survey's Part H reports not just endowment beginning/end values but the 
 change**: new gifts, investment return, spending distribution for current use, and a residual
 "other changes" line. From those we can compute a per-school, per-year endowment draw rate — the
 same *kind* of metric behind the WSJ statistic — using the loader pipeline PRD 021 already
-shipped, with **no schema migration** and roughly 6 new `FactMapping` rows plus targeted loader
-fixes (enumerated below; the "mappings-only" version of this plan did not survive review).
+shipped, with **no schema migration in Phase 1** (Phase 2's derived view is a migration) and
+roughly 6 new `FactMapping` rows plus targeted loader fixes (enumerated below; the
+"mappings-only" version of this plan did not survive review).
 
 Phases:
 
@@ -101,8 +102,11 @@ Ground truths that shape the design:
   thresholds below).
 - **Imputation is essentially absent from Part H.** Actual X-flag counts: FY2020 {R:1350, A:469},
   FY2023 {R:1317, A:448, P:1}. Zero-to-one imputed institutions per year. The 'A' codes are
-  schools answering "no endowment" on the screener (~25% of F2 filers) — expect them as
-  not-applicable status facts, not imputations.
+  schools answering "no endowment" on the screener (~25% of F2 filers). Their Part H value
+  cells are typically blank, and the current projection emits **no fact at all** for blank
+  values — so the expected representation is *absent rows*, not not-applicable status facts
+  (a school with no endowment simply has no Endowment section, which is the accepted design).
+  M0 records the actual representation observed in the data.
 - **Coverage:** the F2 file has ~1,770–1,820 rows per year (including FASB-reporting publics);
   ~75% report Part H. Our in-scope private-nonprofit directory population is 1,364, of which
   1,112 have a non-null Scorecard endowment today.
@@ -172,8 +176,9 @@ and clearly marked derived metrics; we do not compute a distress verdict.
 
 ### New fact mappings (Phase 1)
 
-Appended to `MVP_FACT_MAPPINGS` in `tools/ipeds/mappings.py`, with `display_group="Endowment"`,
-`unit="usd"`, `definition_alignment="not_cds_equivalent"`. Field keys deliberately avoid shadowing
+Appended to `MVP_FACT_MAPPINGS` in `tools/ipeds/mappings.py`, with `value_kind="number"`,
+`display_group="Endowment"`, `unit="usd"`, `definition_alignment="not_cds_equivalent"`. Field
+keys deliberately avoid shadowing
 the Scorecard column `endowment_end` — resolved now, not deferred: the IPEDS family uses a
 `_value_` naming pair, `scorecard_summary.endowment_end` stays unchanged, and the API docs
 cross-reference the two.
@@ -189,6 +194,12 @@ cross-reference the two.
 
 - Baseline `table_name` is the newest complete-data-file name at implementation time (`F2223_F2`
   today); `table_name_for_data_year` translates per year.
+- `F2H03` (change in value) is deliberately **not mapped** — it is a calculated field equal to
+  `F2H02 − F2H01`. Every identity check in this PRD is stated in the `(F2H02 − F2H01)` form so
+  it is computable from the loaded fact set.
+- The F2 file includes a small number of FASB-reporting **public** institutions. Phase 1 loads
+  all F2 filers (the form, not control, determines the data) — provenance columns make the
+  source visible either way. Control-based gating applies only to Phase 2 panel copy.
 - `definition_note` on `endowment_spending_distribution`: reported as a negative value
   (funds leaving the endowment); FY2020–21 filings mix sign conventions. On
   `endowment_other_change`: residual line; absorbs transfers, reclassifications, and reporting
@@ -203,8 +214,10 @@ cross-reference the two.
 
 1. **`table_name_for_data_year`**: bespoke Finance branch mirroring the SFA fiscal-year-pair
    formula: data year Y → `F{Y-1 mod 100}{Y mod 100}_F2` (2024→`F2324_F2`, 2021→`F2021_F2`,
-   2015→`F1415_F2`; verified against live NCES file names). Must be a dedicated branch — the
-   generic digit-stripping prefix loop would emit garbage.
+   2015→`F1415_F2`; verified against live NCES file names). Must be a dedicated branch —
+   F-table names match none of the existing prefixes, so the function currently falls through
+   and returns the baseline table name **unchanged**, which on backfill silently loads the
+   wrong year's table.
 2. **`_best_table_candidate` cannot handle F tables** — its digit-stripping fallback turns
    `F1516_F2` into prefix `F_F`, which can never match. Contrary to the earlier draft, existing
    rename resolution does *not* cover finance; add an F-table candidate rule + tests.
@@ -219,7 +232,12 @@ cross-reference the two.
 4. **Access-fallback gating**: `download_release.py` only routes a table to `--access-fallback`
    when it appears in Tablesdoc but 404s from the data generator; a table name absent from an
    old Tablesdoc is silently skipped. Backfill needs a loud failure (or explicit skip report)
-   for expected-but-missing finance tables.
+   for expected-but-missing finance tables. Additionally, the data-generator URL pins `HasRV=0`
+   (original, non-revised values) and the fallback fires only on 404 — so a **revised final**
+   release whose provisional CSV still returns 200 (FY2023 today) is unreachable by the
+   documented mechanism. Add an explicit revised-final path (release-type selector routing to
+   the Access DB) or the backfill will silently load provisional values under whatever
+   release-type label the operator passes.
 5. **Release selection**: `download_release.py` silently falls back to the newest release when
    `--collection-year` doesn't match; for a 5-release backfill this turns a typo into loading
    the wrong year. Add strict matching (or at minimum a confirmation line in the manifest).
@@ -235,11 +253,13 @@ Raw `ipeds_facts` rows stay verbatim federal values (signs included). The
 `(ipeds_id, data_year)`, FASB filers, FY2020+:
 
 - `draw_rate` = `abs(F2H03C) / nullif(F2H01, 0)` with per-row sign normalization; for FY2020–21
-  rows where the identity `F2H03 = 03A+03B+03C+03D` fails under the modern convention,
-  re-derive or null out rather than guess.
+  rows where the identity `(F2H02 − F2H01) = 03A+03B+03C+03D` fails under the modern
+  convention, re-derive or null out rather than guess. `draw_rate` is **not** floored by
+  endowment size — small distressed endowments are precisely the population of interest; the
+  panel carries a volatility note for endowments under ~$5M instead.
 - `other_change_share` = normalized `F2H03D / nullif(F2H01, 0)` — **nulled for FY2020–21**
-  (residual contamination) and floored: no ratio metrics when `F2H01` < $5M (small-denominator
-  volatility; one gift swings the ratio by points).
+  (residual contamination) and **nulled when `F2H01` < $5M** (small-denominator volatility; one
+  gift swings the ratio by points). The floor applies to this metric only.
 - `endowment_per_student`, `value_change_1yr`, `value_change_5yr` (value series only).
 - Rows with imputed or non-reported inputs produce NULL metrics — provenance must not leak away
   one layer up (PRD 021's imputation principle applies to derived layers too, even though Part H
@@ -258,8 +278,10 @@ the site's contact path must be referenced near the panel so a school can disput
 
 - **Automatic:** the new `display_group` renders as its own section in `FederalBaselineTable.tsx`
   (data-driven grouping; `display_group asc` ordering in `web/src/lib/queries.ts:842`).
-  `unit="usd"` formats via `formatCurrency`. Within-group ordering is `field_label asc` — choose
-  labels that sort sensibly (the table above does not; fix labels or accept interleaving).
+  `unit="usd"` formats via `formatCurrency`. Within-group ordering is `field_label asc`; the
+  labels in the mapping table already yield an acceptable order (net-asset values first —
+  beginning, then end — then investment return, gifts, spending distribution, with the "Other
+  changes" residual sorting last). No code change and no label rework needed.
 - **Required changes (fuller list than the first draft):**
   - `web/src/lib/public-data.ts`: `federalCategory` branch + new `PublicFactCategory` member
     (`"finance"`) — otherwise endowment facts land under `"identity"` in the public JSON API.
@@ -333,21 +355,32 @@ small follow-up PRD — school pages for closed institutions have UX and identit
 
 ## Pipeline commands
 
-Spike (Phase 0) — FY2023 complete data file (exists today), dictionary check, fixture analysis:
+Spike (Phase 0) — FY2023 complete data file (exists today), dictionary check, fixture analysis.
+**Phase 0 runs from the feature-branch worktree**: the draft Endowment mappings and the new
+`analyze_endowment` script must exist on the branch before these commands run (they are not on
+`main` during the spike; with zero Endowment mappings the dry run "passes" vacuously with 0
+facts — that is a failed spike, not a passing one).
 
 ```bash
-cd /Users/santhonys/Projects/Owen/colleges/collegedata-fyi
+cd /Users/santhonys/Projects/Owen/colleges/collegedata-fyi   # or your checkout of the feature branch
 source .env
 
-# 1. Download the 2023-24 collection's F2 table + Tablesdoc (the --tables flag already exists)
+# 1. Download the 2023-24 collection's F2 table + Tablesdoc (the --tables flag already exists).
+#    The output directory is scratch/ipeds/<collection-year>-<release-type>/ where release-type
+#    comes from the live NCES page — 2023-24 is now listed as Final (March 2026), so expect
+#    scratch/ipeds/2023-24-final/. Take the directory, release type, release date text, and
+#    metadata URL from the emitted release.json manifest; do NOT assume the values below.
 python -m tools.ipeds.download_release --collection-year 2023-24 --tables F2223_F2
+cat scratch/ipeds/2023-24-*/release.json
+RELEASE_DIR=scratch/ipeds/2023-24-final    # substitute from the manifest
 
 # 2. Confirm Part H variable codes AND valuesets (projection hazard: any value label on F2H03*
 #    negative values would be silently converted to status facts)
-python - <<'EOF'
+python - "$RELEASE_DIR" <<'EOF'
+import sys
 from pathlib import Path
 from tools.ipeds.metadata import parse_tablesdoc
-meta = parse_tablesdoc(next(Path("scratch/ipeds/2023-24-provisional").glob("*ablesdoc*.xlsx")))
+meta = parse_tablesdoc(next(Path(sys.argv[1]).glob("*ablesdoc*.xlsx")))
 for c in meta.columns:
     if c.table_name.upper().endswith("_F2") and c.var_name.upper().startswith("F2H"):
         print("VAR", c.table_name, c.var_name, "|", c.var_title)
@@ -356,30 +389,58 @@ for v in meta.value_labels:
         print("VALUESET", v.var_name, v.code_value, "->", v.value_label)
 EOF
 
-# 3. Dry run (default) — writes scratch/ipeds/ipeds-2023-24-provisional-report.json
+# 3. Dry run (default) — writes scratch/ipeds/ipeds-<collection>-<type>-report.json.
+#    --metadata-url is REQUIRED by load_release.py; take it (and release type/date text)
+#    from release.json. GATE: the report must show F2223_F2 read with >0 projected
+#    Endowment facts.
 python -m tools.ipeds.load_release \
-  --metadata-xlsx scratch/ipeds/2023-24-provisional/<tablesdoc>.xlsx \
-  --data-dir scratch/ipeds/2023-24-provisional \
+  --metadata-xlsx "$RELEASE_DIR"/<tablesdoc>.xlsx \
+  --metadata-url "<metadata_url from release.json>" \
+  --data-dir "$RELEASE_DIR" \
   --collection-year 2023-24 --data-year 2023 \
-  --release-type provisional --release-date-text "September 2024" \
+  --release-type "<release_type from release.json>" \
+  --release-date-text "<release_date_text from release.json>" \
   --display-groups Endowment
 
 # 4. NEW TOOLING (in scope for M0, does not exist yet): a fixture/identity analysis script —
 #    per-school Part H values for named unitids, corpus-wide sign audit (count of positive
 #    F2H03C per year), accounting-identity residuals, and draw-rate distribution. The current
 #    dry-run report only emits counts + the first 20 facts and cannot do any of this.
+#    Unitids: 201195 Baldwin Wallace, 148131 Quincy, 231420 Averett, 203580 Lake Erie,
+#    152080 Notre Dame.
 python -m tools.ipeds.analyze_endowment \
-  --data-dir scratch/ipeds/2023-24-provisional \
-  --unitids 201195,206349,231688,203580,152080 \
+  --data-dir "$RELEASE_DIR" \
+  --unitids 201195,148131,231420,203580,152080 \
   --out scratch/ipeds/endowment-spike-analysis.json
 ```
 
-Load + backfill (Phase 1, after PR merge and after the loader fixes land, per release year):
+Load + backfill (Phase 1, after PR merge and after the loader fixes land). One
+download+dry-run+apply cycle per release row; all flag values come from that release's
+`release.json` manifest:
+
+| FY (`--data-year`) | `--collection-year` | F2 table | Source path |
+|---|---|---|---|
+| 2020 | 2020-21 | `F1920_F2` | datacenter CSV |
+| 2021 | 2021-22 | `F2021_F2` | datacenter CSV |
+| 2022 | 2022-23 | `F2122_F2` | datacenter CSV |
+| 2023 | 2023-24 | `F2223_F2` | CSV serves provisional values; revised final needs the Access path (loader fix 4) |
+| 2024 | 2024-25 | `F2324_F2` | Access DB only — `--access-fallback` |
 
 ```bash
-# Re-pass release-date flags on every rerun (notes are overwritten wholesale)
-python -m tools.ipeds.load_release ... --display-groups Endowment \
-  --release-date-text "<original text>" --apply
+cd /Users/santhonys/Projects/Owen/colleges/collegedata-fyi
+source .env
+# Per release row above (example shown for FY2020; repeat for each row, substituting from
+# that release's release.json). Add --access-fallback for 2024-25. Dry-run first (omit
+# --apply), review the report + analyze_endowment output, then re-run with --apply.
+python -m tools.ipeds.download_release --collection-year 2020-21 --tables F1920_F2
+python -m tools.ipeds.load_release \
+  --metadata-xlsx scratch/ipeds/2020-21-<type>/<tablesdoc>.xlsx \
+  --metadata-url "<metadata_url from release.json>" \
+  --data-dir scratch/ipeds/2020-21-<type> \
+  --collection-year 2020-21 --data-year 2020 \
+  --release-type "<release_type from release.json>" \
+  --release-date-text "<release_date_text from release.json>" \
+  --display-groups Endowment --apply
 ```
 
 ## QA plan
@@ -391,34 +452,47 @@ interfund loans need not move Part H at all):
 | School (unitid) | What to record |
 |---|---|
 | Baldwin Wallace (201195) | FY2020–24 Part H series. Note: the $20M restricted→unrestricted reclassification may legitimately not appear in Part H (Part A event). FY2023 F2H02 = $167.8M (verified). |
-| Quincy University | FY2024 values via Access path. Note: a $6M interfund loan is an asset-composition swap; determine whether FY2024 03c/03d moved at all. FY2023 F2H02 = $22.7M (verified). |
-| Averett University | Draw-rate series FY2020–24 and which line the depletion shows in (03c vs 03d). Correction from first draft: FY2022 endowment was $26.7M; the $5.7M figure is FY2024. |
-| Lake Erie College (OH — not LECOM) | Full series; record draw rate, no threshold asserted. |
+| Quincy University (148131) | FY2024 values via Access path. Note: a $6M interfund loan is an asset-composition swap; determine whether FY2024 03c/03d moved at all. FY2023 F2H02 = $22.7M (review-verified by school name; re-verify against unitid in M0). |
+| Averett University (231420) | Draw-rate series FY2020–24 and which line the depletion shows in (03c vs 03d). Correction from first draft: FY2022 endowment was $26.7M; the $5.7M figure is FY2024. Re-verify against unitid in M0. |
+| Lake Erie College (203580 — OH, not LECOM) | Full series; record draw rate, no threshold asserted. |
 | University of Notre Dame (152080) | Control: FY2023 F2H02 = $16.96B (verified); expect ~4-5% draw, all components populated, identity holds. |
 | Notre Dame College (204468) | Loads into `ipeds_facts` for FY≤2022 (absent from F2223 provisional onward); confirm it is queryable via raw API and correctly absent from school pages. |
 
 Validation checks:
 
-- **Reconciliation (re-specified):** the only currently-testable exact-passthrough pairing is
-  Scorecard **ENDOWBEGIN vs prior-FY F2H02** / same-FY alignment discovered *empirically*: scan
-  match rate across candidate data years over the **full population** of in-scope private
-  nonprofits with non-null Scorecard endowment (1,112 schools — one API query; no 20-school
-  samples, which cannot measure a 99% threshold). Verified during review: 5/5 fixtures match
-  exactly under FY-correct alignment (Scorecard's current file is FY2024). Gate: ≥99% exact
-  match over the full correctly-aligned FASB population, with the discovered alignment
-  documented.
-- **Accounting identity:** `F2H03 = F2H03A+F2H03B+F2H03C+F2H03D` and `F2H03 = F2H02−F2H01` per
-  year via the M0 analysis script. Verified FY2023 baseline: 1318/1318 and 1317/1318. Expect
-  FY2020–21 failures ≈ the positive-03C population (194 and 184 rows) — those drive the
-  sign-normalization rules.
+- **Reconciliation (re-specified; runs in M1 once facts are loaded):** note that our
+  `scorecard_summary` table persists only `endowment_end` — Scorecard's `ENDOWBEGIN` is **not
+  in our database**, so the gate compares against the **raw Scorecard institution file**
+  (`Most-Recent-Cohorts-Institution_*.zip`, which carries both `ENDOWBEGIN` and `ENDOWEND`)
+  joined to loaded `ipeds_facts` by UNITID. One Scorecard CSV download + one PostgREST query
+  (`$SUPABASE_URL/rest/v1/ipeds_facts?...` with `apikey` + `Authorization` headers — the bare
+  `https://api.collegedata.fyi/<table>` form returns "requested path is invalid"). Alignment
+  discovered *empirically*: scan match rate across candidate data years over the **full
+  population** of in-scope private nonprofits with non-null Scorecard endowment (1,112 schools;
+  no 20-school samples, which cannot measure a 99% threshold). Verified during review: 5/5
+  fixtures match exactly under FY-correct alignment (Scorecard's current file is FY2024).
+  Gate: ≥99% exact match over the full correctly-aligned FASB population, with the discovered
+  alignment documented.
+- **Accounting identity:** `(F2H02 − F2H01) = F2H03A+F2H03B+F2H03C+F2H03D` per year via the
+  analysis script (`F2H03` itself is not loaded — it is the calculated difference). Verified
+  FY2023 baseline: identity holds 1318/1318. FY2020–21 checks run per-release during the M1
+  backfill; expect failures ≈ the positive-03C population (~194 and ~184 rows at review time —
+  treat these as tolerance bands, not exact gates; revisions move counts). Those failures
+  drive the sign-normalization rules.
 - **Coverage:** ~75% of F2 filers report Part H (rest are screener-'A' no-endowment schools).
   Record counts per year; expect ~1,300–1,350 reporters.
-- **Status handling:** expect 'A' (not applicable) status facts for ~25% of filers and near-zero
+- **Status handling:** expect ~25% of filers to produce **no Part H facts at all**
+  (screener-'A' no-endowment schools; blank values project to nothing) and near-zero
   imputations (first draft's "frequently imputed" was wrong — do not assert imputed counts).
+  M0 confirms the representation; absence is the accepted design.
 
-Success gates: variable codes + empty-F2H valuesets confirmed; sign audit matches the review
-baselines; reconciliation ≥99% under documented alignment; fixture observations recorded; no
-regression in existing `school_facts_unified` consumers.
+Success gates — M0 (FY2023 scope): variable codes confirmed; F2H valuesets empty (or a
+projection escape hatch designed); dry run projects >0 Endowment facts; FY2023 sign audit and
+identity within tolerance of the review baselines (≈0 positive `F2H03C`, identity holding for
+essentially all reporters — treat material divergence as investigate, not auto-fail); fixture
+dollar values re-verified against the corrected unitids. M1: per-release FY2020–21 sign audits;
+reconciliation ≥99% under documented alignment; no regression in existing
+`school_facts_unified` consumers.
 
 ## Risks and mitigations
 
@@ -443,10 +517,12 @@ regression in existing `school_facts_unified` consumers.
 
 ## Rollout
 
-- **M0 (spike, ~1 day):** FY2023 download + dictionary/valueset probe + **new
-  `analyze_endowment` script** (fixtures, sign audit, identity check, draw distribution) +
-  dry-run. Go/no-go on: variable codes, no F2H valuesets, sign baselines matching review
-  findings.
+- **M0 (spike, ~1 day, on the feature branch):** write the draft mappings and the **new
+  `analyze_endowment` script** first (both must exist before the commands run), then FY2023
+  download + dictionary/valueset probe + dry-run (gate: >0 projected Endowment facts) +
+  fixture/sign/identity analysis. Go/no-go on: variable codes; F2H valuesets empty (or escape
+  hatch designed); FY2023 results within tolerance of review baselines; fixture values
+  re-verified against corrected unitids.
 - **M1:** loader fixes (F-table year branch + candidate rule, backfill provenance fix,
   access-fallback loudness, strict release selection) + mappings + tests +
   `public-data.ts`/facts-route category plumbing; load FY2020–FY2024 (Access path for FY2024);
@@ -490,3 +566,15 @@ to the real static-dataset pattern; annotation policy rewritten (no event-assert
 persistence requirement, denominator floor); UPMIFA copy qualified (optional §4(d), minority
 states, 3-yr-average denominator); `endowment_value_*` naming resolved now instead of deferred;
 closed-school question resolved into a design decision (directory absence, not `in_scope`).
+
+A ship-stage review pass (two specialist reviewers plus three cross-model adversarial
+reviewers over the final diff) then corrected: two wrong fixture unitids in the spike command
+(206349/231688 were Ursuline College and a VA nursing school — Quincy is 148131, Averett is
+231420); the missing required `--metadata-url` flag; hardcoded release directory/type/date
+assumptions (now taken from `release.json`); M0 sequencing (draft mappings must exist before
+the spike commands, with a >0-facts gate against vacuous passes); the unreachable
+revised-final path (`HasRV=0` + 404-only fallback); the `F2H03` identity restated as
+`(F2H02 − F2H01)`; the reconciliation gate repointed at the raw Scorecard file (our DB lacks
+`ENDOWBEGIN`); the 'A'-screener representation (absent rows, not status facts); exact-count
+gates loosened to tolerance bands; the $5M floor scoped to `other_change_share` only; and the
+Phase 1 apply command expanded to the full per-release table.
