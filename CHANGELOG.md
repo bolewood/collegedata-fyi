@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 This project uses four-part semantic versioning.
 
+## [0.2.1.0] - 2026-08-03
+
+### Changed
+
+- Read the endowment draw-rate recipe in plainer language, with clearer descriptions of coverage, thresholds, school comparisons, and the federal accounting check.
+
 ## [0.2.0.0] - 2026-08-03
 
 ### Added
