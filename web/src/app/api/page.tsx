@@ -91,6 +91,13 @@ curl 'https://www.collegedata.fyi/api/fields'
 
 curl 'https://www.collegedata.fyi/openapi.json'`}</CodeBlock>
       <p className="mt-3 text-sm leading-relaxed text-gray-700">
+        The per-school facts endpoint accepts the <code>finance</code> category
+        for endowment facts. The fixed-schema compare endpoint does not: a
+        compare request containing <code>finance</code> returns <code>400</code>
+        instead of substituting unrelated fields. A categories filter with no
+        recognized values also returns <code>400</code> on either endpoint.
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-gray-700">
         The minimal MCP server and CLI live in the repo under{" "}
         <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
           packages/mcp-server
