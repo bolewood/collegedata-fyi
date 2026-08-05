@@ -292,6 +292,13 @@ the site's contact path must be referenced near the panel so a school can disput
   - Known, accepted gaps (pre-existing, documented not fixed here): snapshots exclude IPEDS
     facts entirely; `/api/fields` and `field_dictionary.json` list only the static friendly
     fields; `/api/compare` cannot select IPEDS fields.
+  - **Amendment (2026-08-05), agent-surface discoverability:** the `/api/fields` gap is closed
+    for this family — documentation-only `ipeds.endowment_*` entries (with the sign and
+    residual caveats) join the field dictionary and snapshot `field_dictionary.json`, while
+    the `fields=` selector list stays friendly-fields-only. The MCP server tool descriptions,
+    `llms.txt`, and the OpenAPI spec enumerate valid categories including `finance` (and note
+    that compare excludes it). No new MCP tools: the server stays a thin generic wrapper per
+    PRD 022, and agent-facing caveats continue to travel inside each fact payload.
 - **Phase 2 panel:** compact endowment card on the school page — end value, 5-year sparkline or
   delta, draw rate with the qualified threshold copy — per `web/DESIGN_SYSTEM.md` and dataviz
   guidance. Private nonprofits only until F1A lands; publics get a "reports under different
