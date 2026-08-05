@@ -21,8 +21,13 @@ from tools.scorecard.load_directory import (  # noqa: E402
     assign_slugs,
     base_slug,
     build_crosswalk_rows,
+    build_directory_row,
+    directory_refresh_delta,
+    fetch_existing_directory_rows,
     load_schools_yaml,
     normalize_ipeds,
+    previous_predominant_degrees,
+    printable_refresh_delta,
 )
 
 
@@ -84,7 +89,7 @@ class ScopeDecisionTests(unittest.TestCase):
         self.assertEqual(reason, "not_two_or_four_year")
 
     def test_certificate_only_excluded(self):
-        # PREDDEG=1 = certificate-only — excluded.
+        # PREDDEG=1 = predominantly certificate-granting — excluded by PRD 015.
         in_scope, reason = _scope_decision(self._row(predominant_degree=1))
         self.assertFalse(in_scope)
         self.assertEqual(reason, "non_degree_predominant")
@@ -95,6 +100,93 @@ class ScopeDecisionTests(unittest.TestCase):
             self._row(predominant_degree=4, undergraduate_enrollment=100)
         )
         self.assertTrue(in_scope)
+
+
+class PredominantDegreeStabilizationTests(unittest.TestCase):
+    @staticmethod
+    def _raw(**overrides):
+        row = {
+            "UNITID": "123456",
+            "INSTNM": "Example College",
+            "CITY": "Example",
+            "STABBR": "MI",
+            "ZIP": "48000",
+            "INSTURL": "example.edu",
+            "UGDS": 100,
+            "CONTROL": 2,
+            "ICLEVEL": 1,
+            "PREDDEG": 3,
+            "HIGHDEG": 3,
+            "CURROPER": 1,
+            "MAIN": 1,
+            "NUMBRANCH": 1,
+            "LATITUDE": 42.0,
+            "LONGITUDE": -83.0,
+        }
+        row.update(overrides)
+        return row
+
+    def test_stabilizes_spelman_one_release_regression(self):
+        raw = self._raw(
+            UNITID="141060",
+            INSTNM="Spelman College",
+            PREDDEG=1,
+            HIGHDEG=3,
+            UGDS=3414,
+        )
+
+        row = build_directory_row(raw, "2022-23", previous_predominant_degree=3)
+
+        self.assertIsNotNone(row)
+        self.assertEqual(row["predominant_degree"], 3)
+        self.assertTrue(row["in_scope"])
+        self.assertIsNone(row["exclusion_reason"])
+        self.assertEqual(row["_current_predominant_degree"], 1)
+        self.assertEqual(row["_previous_predominant_degree"], 3)
+
+    def test_does_not_override_current_certificate_only_school(self):
+        raw = self._raw(PREDDEG=1, HIGHDEG=1)
+
+        row = build_directory_row(raw, "2022-23", previous_predominant_degree=3)
+
+        self.assertIsNotNone(row)
+        self.assertEqual(row["predominant_degree"], 1)
+        self.assertFalse(row["in_scope"])
+        self.assertNotIn("_previous_predominant_degree", row)
+
+    def test_does_not_override_without_prior_degree_classification(self):
+        raw = self._raw(PREDDEG=1, HIGHDEG=3)
+
+        row = build_directory_row(raw, "2022-23", previous_predominant_degree=1)
+
+        self.assertIsNotNone(row)
+        self.assertEqual(row["predominant_degree"], 1)
+        self.assertFalse(row["in_scope"])
+
+
+class PreviousPredominantDegreeTests(unittest.TestCase):
+    def test_normalizes_ids_and_skips_missing_values(self):
+        class Frame:
+            columns = ["UNITID", "PREDDEG"]
+
+            @staticmethod
+            def to_dict(orient):
+                if orient != "records":
+                    raise AssertionError(f"unexpected orientation: {orient}")
+                return [
+                    {"UNITID": "141060.0", "PREDDEG": "3"},
+                    {"UNITID": "123", "PREDDEG": "NULL"},
+                    {"UNITID": "", "PREDDEG": "2"},
+                ]
+
+        self.assertEqual(previous_predominant_degrees(Frame()), {"141060": 3})
+
+    def test_requires_unitid_and_preddeg(self):
+        class Frame:
+            columns = ["UNITID"]
+
+        with self.assertRaisesRegex(ValueError, "PREDDEG"):
+            previous_predominant_degrees(Frame())
 
 
 class BaseSlugTests(unittest.TestCase):
@@ -289,6 +381,122 @@ class SchoolsYamlRegressionTests(unittest.TestCase):
         self.assertEqual(claims["212054"], "drexel")
         self.assertNotIn("211158", claims)
         self.assertNotIn("212160", claims)
+
+
+class DirectoryRefreshDeltaTests(unittest.TestCase):
+    def _row(self, ipeds_id, name, *, in_scope, reason=None, preddeg=3, ugds=1000):
+        return {
+            "ipeds_id": ipeds_id,
+            "school_name": name,
+            "in_scope": in_scope,
+            "exclusion_reason": reason,
+            "predominant_degree": preddeg,
+            "undergraduate_enrollment": ugds,
+        }
+
+    def test_reports_scope_transitions_new_and_missing_rows(self):
+        existing = [
+            self._row(
+                "141060",
+                "Spelman College",
+                in_scope=False,
+                reason="non_degree_predominant",
+                preddeg=1,
+                ugds=3414,
+            ),
+            self._row("000002", "Closing College", in_scope=True),
+            self._row("000003", "Dropped College", in_scope=True),
+        ]
+        incoming = [
+            self._row("141060", "Spelman College", in_scope=True, preddeg=3, ugds=3633),
+            self._row(
+                "000002",
+                "Closing College",
+                in_scope=False,
+                reason="closed",
+            ),
+            self._row("000004", "New College", in_scope=True),
+        ]
+
+        delta = directory_refresh_delta(existing, incoming)
+
+        self.assertEqual(delta["existing_rows"], 3)
+        self.assertEqual(delta["incoming_rows"], 3)
+        self.assertEqual(delta["entering_scope"], 1)
+        self.assertEqual(delta["leaving_scope"], 1)
+        self.assertEqual(delta["entering_scope_old_reasons"], {"non_degree_predominant": 1})
+        self.assertEqual(delta["leaving_scope_new_reasons"], {"closed": 1})
+        self.assertEqual(delta["new_ipeds_ids"], ["000004"])
+        self.assertEqual(delta["missing_ipeds_ids"], ["000003"])
+        self.assertEqual(delta["entering_scope_rows"][0]["ipeds_id"], "141060")
+        self.assertEqual(
+            delta["entering_scope_rows"][0]["new_predominant_degree"],
+            3,
+        )
+
+    def test_printable_delta_keeps_counts_and_limits_samples(self):
+        existing = [
+            self._row(f"{i:06d}", f"Old College {i}", in_scope=True)
+            for i in range(4)
+        ]
+        incoming = [
+            self._row(f"{i + 10:06d}", f"New College {i}", in_scope=True)
+            for i in range(4)
+        ]
+
+        report = printable_refresh_delta(
+            directory_refresh_delta(existing, incoming),
+            sample_size=2,
+        )
+
+        self.assertEqual(report["new_rows"], 4)
+        self.assertEqual(report["missing_rows"], 4)
+        self.assertEqual(len(report["new_ipeds_ids_sample"]), 2)
+        self.assertEqual(len(report["missing_ipeds_ids_sample"]), 2)
+        self.assertNotIn("new_ipeds_ids", report)
+        self.assertNotIn("missing_ipeds_ids", report)
+
+    def test_fetch_existing_directory_rows_pages_past_postgrest_limit(self):
+        source_rows = [{"ipeds_id": f"{i:06d}"} for i in range(2501)]
+        requested_ranges = []
+
+        class Response:
+            def __init__(self, data):
+                self.data = data
+
+        class Query:
+            def __init__(self):
+                self.start = 0
+                self.end = 0
+
+            def select(self, _columns):
+                return self
+
+            def order(self, _column):
+                return self
+
+            def range(self, start, end):
+                self.start = start
+                self.end = end
+                requested_ranges.append((start, end))
+                return self
+
+            def execute(self):
+                return Response(source_rows[self.start : self.end + 1])
+
+        class Client:
+            def table(self, name):
+                if name != "institution_directory":
+                    raise AssertionError(f"unexpected table: {name}")
+                return Query()
+
+        rows = fetch_existing_directory_rows(Client())
+
+        self.assertEqual(len(rows), 2501)
+        self.assertEqual(
+            requested_ranges,
+            [(0, 999), (1000, 1999), (2000, 2999)],
+        )
 
 
 if __name__ == "__main__":

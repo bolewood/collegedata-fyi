@@ -25,7 +25,7 @@ is below.
 
 - [`backfill_ipeds_ids.py`](./backfill_ipeds_ids.py) — one-shot fill of `cds_documents.ipeds_id` for rows inserted before the migration shipped. New rows pick up `ipeds_id` automatically via the archive edge functions (`_shared/archive.ts` reads it off `SchoolInput`).
 - [`refresh_summary.py`](./refresh_summary.py) — annual upsert of `scorecard_summary` from the Scorecard Most-Recent Institution CSV. Schema-drift guard catches renamed columns; per-row dedup prevents `ON CONFLICT` failures; `--only-cds` scopes to schools we actually have CDS docs for.
-- [`load_directory.py`](./load_directory.py) — PRD 015 M1. Refreshes `institution_directory` and `institution_slug_crosswalk` from the same Scorecard CSV. Applies the MVP in-scope filter (active, undergraduate-serving, two-or-four-year, degree-granting) and records `exclusion_reason` on out-of-scope rows. Preserves `schools.yaml` slugs where IPEDS IDs match; generates deterministic slugs for Scorecard-only rows with collision resolution `state → city → ipeds_id`. Writes a refresh summary to `scratch/scorecard/directory-refresh-<year>.json`.
+- [`load_directory.py`](./load_directory.py) — PRD 015 M1. Refreshes `institution_directory` and `institution_slug_crosswalk` from the same Scorecard CSV. Applies the MVP in-scope filter (active, undergraduate-serving, two-or-four-year, degree-granting) and records `exclusion_reason` on out-of-scope rows. Preserves `schools.yaml` slugs where IPEDS IDs match; generates deterministic slugs for Scorecard-only rows with collision resolution `state → city → ipeds_id`. When given the immediately previous release via `--previous-csv`, it stabilizes one-release `PREDDEG 2/3/4 → 1` regressions only when current `HIGHDEG` still confirms an associate-or-higher award. Apply runs print the live scope delta, mark rows absent from the new Scorecard vintage out of scope, refresh `refreshed_at`, and rebuild `institution_cds_coverage`. Writes a refresh summary to `scratch/scorecard/directory-refresh-<year>.json`.
 - [`test_load_directory.py`](./test_load_directory.py) — unit tests for the loader's pure functions (slug determinism, collision tiers, schools.yaml preservation, in-scope filter, UNITID normalization, crosswalk construction).
 
 ## Migrations
@@ -66,11 +66,30 @@ python tools/scorecard/refresh_summary.py \
 python tools/scorecard/refresh_summary.py \
   --csv /tmp/scorecard/Most-Recent-Cohorts-Institution.csv \
   --data-year 2022-23 --apply
+
+# 4. Refresh the institution directory from the exact same CSV and vintage.
+# Parse locally first, then audit the production delta without writing.
+python tools/scorecard/load_directory.py \
+  --csv /tmp/scorecard/Most-Recent-Cohorts-Institution.csv \
+  --previous-csv /tmp/scorecard-previous/Most-Recent-Cohorts-Institution.csv \
+  --data-year 2022-23
+python tools/scorecard/load_directory.py \
+  --csv /tmp/scorecard/Most-Recent-Cohorts-Institution.csv \
+  --previous-csv /tmp/scorecard-previous/Most-Recent-Cohorts-Institution.csv \
+  --data-year 2022-23 --audit-live
+python tools/scorecard/load_directory.py \
+  --csv /tmp/scorecard/Most-Recent-Cohorts-Institution.csv \
+  --previous-csv /tmp/scorecard-previous/Most-Recent-Cohorts-Institution.csv \
+  --data-year 2022-23 --apply
 ```
 
 ## Annual refresh
 
-Scorecard releases a new Most-Recent-Cohorts bundle each fall (typically October). Run step 3 above with the new CSV and an updated `--data-year`.
+Scorecard releases a new Most-Recent-Cohorts bundle each fall (typically October). Run both steps 3 and 4 above with the same new CSV and updated `--data-year`. Refreshing only `scorecard_summary` leaves search and coverage backed by the prior directory vintage.
+
+`load_directory.py --apply` treats the incoming institution file as the complete vintage. Before writing, it prints the number and largest examples of schools entering and leaving public scope and records the full delta in the refresh summary JSON. Existing UNITIDs absent from the incoming file are retained for stable aliases but marked `missing_from_current_scorecard`, which hides them from public coverage/search. As a truncated-file guard, apply aborts if more than 250 existing UNITIDs are missing; raise `--max-missing` only after verifying the release is complete. The loader refreshes `institution_cds_coverage` after all directory writes, so corrected scope is visible immediately rather than waiting for the hourly projection refresh.
+
+Always retain the prior complete institution CSV for the next directory run and pass it as `--previous-csv`. This is a narrow release-stability guard: if current `PREDDEG` falls from 2/3/4 to 1 while current `HIGHDEG` still says the institution awards an associate-or-higher degree, directory scope keeps the prior classification. The full affected list is written to the refresh JSON for review. Current closure, enrollment, institution-level, and highest-degree signals still win, and no regression is stabilized when the prior file is omitted.
 
 The schema-drift guard fires loudly on any renamed/removed column, so the first symptom of a Scorecard schema change is a clean error from `refresh_summary.py` listing exactly which CSV columns are missing. When that happens:
 
