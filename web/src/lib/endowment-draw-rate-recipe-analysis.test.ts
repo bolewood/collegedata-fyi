@@ -7,7 +7,9 @@ import {
   type EndowmentDrawRatePoint,
 } from "./endowment-draw-rate-recipe-data";
 import {
+  ENDOWMENT_DRAW_RATE_BUCKET_THRESHOLDS,
   DEFAULT_ENDOWMENT_RECIPE_SCHOOL_ID,
+  bucketMembers,
   endowmentSchoolHistory,
   endowmentSchoolLabel,
   unpackEndowmentDrawRatePoint,
@@ -62,19 +64,12 @@ describe("endowment draw-rate recipe analysis", () => {
 
     for (const summary of ENDOWMENT_DRAW_RATE_YEAR_SUMMARIES) {
       const yearPoints = allPoints.filter(({ point }) => point.year === summary.year);
-      const eligible = yearPoints.filter(({ point }) => point.drawRate != null);
+      const eligible = yearPoints.filter(
+        ({ point }) => point.drawRate !== null && point.exclusionReason === null,
+      );
       expect(yearPoints).toHaveLength(summary.reporters);
       expect(eligible).toHaveLength(summary.eligible);
       expect(summary.excluded).toBe(summary.reporters - summary.eligible);
-      expect(eligible.filter(({ point }) => point.drawRate! > 0.05)).toHaveLength(
-        summary.above5Count,
-      );
-      expect(eligible.filter(({ point }) => point.drawRate! > 0.07)).toHaveLength(
-        summary.above7Count,
-      );
-      expect(eligible.filter(({ point }) => point.drawRate! > 0.15)).toHaveLength(
-        summary.above15Count,
-      );
     }
 
     for (const { point } of allPoints) {
@@ -89,6 +84,44 @@ describe("endowment draw-rate recipe analysis", () => {
         Math.abs(point.spendingDistribution) / point.beginningValue,
         7,
       );
+    }
+  });
+
+  it("derives every cumulative threshold bucket from eligible school-year points", () => {
+    for (const summary of ENDOWMENT_DRAW_RATE_YEAR_SUMMARIES) {
+      const expectedCounts = {
+        0.05: summary.above5Count,
+        0.07: summary.above7Count,
+        0.15: summary.above15Count,
+      } as const;
+      const membersByThreshold = ENDOWMENT_DRAW_RATE_BUCKET_THRESHOLDS.map((threshold) => {
+        const members = bucketMembers(summary.year, threshold);
+        expect(members, `FY${summary.year} above ${threshold * 100}%`).toHaveLength(
+          expectedCounts[threshold],
+        );
+        expect(
+          members.every(
+            (member) =>
+              member.year === summary.year &&
+              member.drawRate !== null &&
+              member.exclusionReason === null &&
+              member.drawRate > threshold,
+          ),
+        ).toBe(true);
+        expect(members.map((member) => member.drawRate)).toEqual(
+          [...members].sort((a, b) => b.drawRate - a.drawRate).map((member) => member.drawRate),
+        );
+        return [threshold, new Set(members.map((member) => member.ipedsId))] as const;
+      });
+
+      const memberIds = new Map(membersByThreshold);
+      for (const ipedsId of memberIds.get(0.15)!) {
+        expect(memberIds.get(0.07)!.has(ipedsId)).toBe(true);
+        expect(memberIds.get(0.05)!.has(ipedsId)).toBe(true);
+      }
+      for (const ipedsId of memberIds.get(0.07)!) {
+        expect(memberIds.get(0.05)!.has(ipedsId)).toBe(true);
+      }
     }
   });
 

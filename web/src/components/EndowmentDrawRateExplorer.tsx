@@ -7,11 +7,15 @@ import {
   ENDOWMENT_DRAW_RATE_SCHOOLS,
   ENDOWMENT_DRAW_RATE_YEAR_SUMMARIES,
   type EndowmentDrawRateSchool,
+  type EndowmentDrawRateYearSummary,
 } from "@/lib/endowment-draw-rate-recipe-data";
 import {
   DEFAULT_ENDOWMENT_RECIPE_SCHOOL_ID,
+  ENDOWMENT_DRAW_RATE_BUCKET_THRESHOLDS,
+  bucketMembers,
   endowmentSchoolHistory,
   endowmentSchoolLabel,
+  type EndowmentDrawRateBucketThreshold,
   type EndowmentDrawRatePointView,
 } from "@/lib/endowment-draw-rate-recipe-analysis";
 
@@ -28,6 +32,43 @@ const SCHOOL_VALUE_TOP = 42;
 const SCHOOL_VALUE_BOTTOM = 208;
 const SCHOOL_RATE_TOP = 280;
 const SCHOOL_RATE_BOTTOM = 420;
+const SMALL_ENDOWMENT_FLOOR = 5_000_000;
+
+const BUCKET_DISCLAIMER =
+  "Many things put a school on these lists besides financial stress: board-approved spending of unrestricted quasi-endowment funds, drawing down a completed capital campaign, deploying a large one-time gift, or ordinary volatility in a small endowment, where a single transfer can swing the rate by whole percentage points. Appearing here is not evidence of fiscal irresponsibility. Rates come from each school's own federal IPEDS filing. Some states' UPMIFA statutes presume imprudence only above a 7% rate measured against a multi-year average value — a different measure than the single-year rate shown here.";
+
+type ThresholdSummary = Pick<
+  EndowmentDrawRateYearSummary,
+  | "above5Count"
+  | "above5Share"
+  | "above7Count"
+  | "above7Share"
+  | "above15Count"
+  | "above15Share"
+>;
+
+const THRESHOLD_BUCKET_ACCESSORS = {
+  0.05: {
+    count: (summary: ThresholdSummary) => summary.above5Count,
+    share: (summary: ThresholdSummary) => summary.above5Share,
+  },
+  0.07: {
+    count: (summary: ThresholdSummary) => summary.above7Count,
+    share: (summary: ThresholdSummary) => summary.above7Share,
+  },
+  0.15: {
+    count: (summary: ThresholdSummary) => summary.above15Count,
+    share: (summary: ThresholdSummary) => summary.above15Share,
+  },
+} satisfies Record<EndowmentDrawRateBucketThreshold, {
+  count: (summary: ThresholdSummary) => number;
+  share: (summary: ThresholdSummary) => number | null;
+}>;
+
+const THRESHOLD_BUCKETS = ENDOWMENT_DRAW_RATE_BUCKET_THRESHOLDS.map((threshold) => ({
+  threshold,
+  ...THRESHOLD_BUCKET_ACCESSORS[threshold],
+}));
 
 function formatPct(value: number | null, digits = 1): string {
   return value == null || !Number.isFinite(value)
@@ -176,35 +217,142 @@ function SectorDistributionChart() {
 }
 
 function ThresholdTable() {
+  const [activeBucket, setActiveBucket] = useState<{
+    year: number;
+    threshold: EndowmentDrawRateBucketThreshold;
+  } | null>(null);
+  const activeMembers = useMemo(
+    () => activeBucket ? bucketMembers(activeBucket.year, activeBucket.threshold) : [],
+    [activeBucket],
+  );
+  const activeThresholdLabel = activeBucket ? Math.round(activeBucket.threshold * 100) : null;
+
   return (
-    <div className="endowment-table-wrap" tabIndex={0}>
-      <table className="endowment-table">
-        <thead>
-          <tr>
-            <th>Fiscal year</th>
-            <th>Eligible / reporters</th>
-            <th>Median</th>
-            <th>Above 5%</th>
-            <th>Above 7%</th>
-            <th>Above 15%</th>
-            <th>Release</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ENDOWMENT_DRAW_RATE_YEAR_SUMMARIES.map((summary) => (
-            <tr key={summary.year}>
-              <th>FY{summary.year}</th>
-              <td>{summary.eligible.toLocaleString()} / {summary.reporters.toLocaleString()}</td>
-              <td>{formatPct(summary.median)}</td>
-              <td>{formatPct(summary.above5Share)} <span>({summary.above5Count})</span></td>
-              <td>{formatPct(summary.above7Share)} <span>({summary.above7Count})</span></td>
-              <td>{formatPct(summary.above15Share)} <span>({summary.above15Count})</span></td>
-              <td><span className="cd-chip">{summary.releaseType}</span></td>
+    <>
+      <p className="endowment-bucket-disclaimer cd-card">
+        <span className="endowment-bucket-disclaimer__copy">{BUCKET_DISCLAIMER}</span>
+      </p>
+      <div className="endowment-table-wrap" tabIndex={0}>
+        <table className="endowment-table">
+          <thead>
+            <tr>
+              <th>Fiscal year</th>
+              <th>Eligible / reporters</th>
+              <th>Median</th>
+              <th>Above 5%</th>
+              <th>Above 7%</th>
+              <th>Above 15%</th>
+              <th>Release</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {ENDOWMENT_DRAW_RATE_YEAR_SUMMARIES.map((summary) => (
+              <tr key={summary.year}>
+                <th>FY{summary.year}</th>
+                <td>{summary.eligible.toLocaleString()} / {summary.reporters.toLocaleString()}</td>
+                <td>{formatPct(summary.median)}</td>
+                {THRESHOLD_BUCKETS.map((bucket) => {
+                  const thresholdLabel = Math.round(bucket.threshold * 100);
+                  const count = bucket.count(summary);
+                  const isOpen =
+                    activeBucket?.year === summary.year &&
+                    activeBucket.threshold === bucket.threshold;
+                  const controlId = `endowment-bucket-toggle-${summary.year}-${thresholdLabel}`;
+                  const panelId = `endowment-bucket-panel-${summary.year}-${thresholdLabel}`;
+                  return (
+                    <td key={bucket.threshold} className="endowment-bucket-cell">
+                      <button
+                        id={controlId}
+                        type="button"
+                        className="endowment-bucket-toggle"
+                        aria-expanded={isOpen}
+                        aria-controls={panelId}
+                        aria-label={`${isOpen ? "Hide" : "Show"} schools above ${thresholdLabel}% in FY${summary.year}: ${count.toLocaleString()} schools, ${formatPct(bucket.share(summary))} of eligible schools`}
+                        onClick={() => setActiveBucket(
+                          isOpen
+                            ? null
+                            : { year: summary.year, threshold: bucket.threshold },
+                        )}
+                      >
+                        {formatPct(bucket.share(summary))}{" "}
+                        <span>({count.toLocaleString()})</span>
+                        <span className="endowment-bucket-toggle__action" aria-hidden="true">
+                          {isOpen ? "hide" : "view"}
+                        </span>
+                      </button>
+                    </td>
+                  );
+                })}
+                <td><span className="cd-chip">{summary.releaseType}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {activeBucket && activeThresholdLabel !== null && (
+        <section
+          id={`endowment-bucket-panel-${activeBucket.year}-${activeThresholdLabel}`}
+          className="endowment-bucket-panel cd-card"
+          role="region"
+          aria-labelledby={`endowment-bucket-heading-${activeBucket.year}-${activeThresholdLabel}`}
+        >
+          <div className="endowment-bucket-panel__head">
+            <div>
+              <div className="meta">§ Threshold membership</div>
+              <h3 id={`endowment-bucket-heading-${activeBucket.year}-${activeThresholdLabel}`}>
+                Schools above {activeThresholdLabel}% in FY{activeBucket.year}
+              </h3>
+            </div>
+            <span className="cd-chip">{activeMembers.length.toLocaleString()} schools</span>
+          </div>
+          <p className="endowment-bucket-disclaimer">
+            <span className="endowment-bucket-disclaimer__copy">{BUCKET_DISCLAIMER}</span>
+          </p>
+          <ol
+            className="endowment-bucket-list"
+            aria-label={`Schools above ${activeThresholdLabel}% in FY${activeBucket.year}`}
+          >
+            {activeMembers.map((member, index) => {
+              const hasSchoolLink = member.hasCurrentSchoolPage && member.schoolId !== null;
+              const hasSmallEndowment =
+                member.beginningValue !== null && member.beginningValue < SMALL_ENDOWMENT_FLOOR;
+              return (
+                <li key={member.ipedsId} className="endowment-bucket-row">
+                  <span className="endowment-bucket-row__rank" aria-label={`Rank ${index + 1}`}>
+                    {index + 1}
+                  </span>
+                  <div className="endowment-bucket-row__school">
+                    <div className="endowment-bucket-row__identity">
+                      {hasSchoolLink ? (
+                        <Link href={`/schools/${member.schoolId}`}>{member.schoolName}</Link>
+                      ) : (
+                        <span>{member.schoolName}</span>
+                      )}
+                      <span className="endowment-bucket-row__state">
+                        {member.state ?? "State unavailable"}
+                      </span>
+                    </div>
+                    {(!hasSchoolLink || hasSmallEndowment) && (
+                      <div className="endowment-bucket-row__markers">
+                        {!hasSchoolLink && (
+                          <span>not in directory (typically closed)</span>
+                        )}
+                        {hasSmallEndowment && (
+                          <span>small endowment — rate is volatile</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <span className="endowment-bucket-row__rate">
+                    {formatPct(member.drawRate)}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+      )}
+    </>
   );
 }
 
@@ -296,7 +444,7 @@ function SchoolHistoryChart({ school }: { school: EndowmentDrawRateSchool }) {
             </g>
           );
         })}
-        {[0.05, 0.07, 0.15].map((threshold) => {
+        {ENDOWMENT_DRAW_RATE_BUCKET_THRESHOLDS.map((threshold) => {
           const y = scaleY(threshold, rateMaximum, SCHOOL_RATE_TOP, SCHOOL_RATE_BOTTOM);
           return (
             <g key={threshold}>
@@ -401,7 +549,7 @@ function exclusionLabel(point: EndowmentDrawRatePointView): string {
 function SchoolDetail({ school }: { school: EndowmentDrawRateSchool }) {
   const history = endowmentSchoolHistory(school);
   const hasSmallDenominator = history.some(
-    (point) => point.beginningValue != null && point.beginningValue < 5_000_000,
+    (point) => point.beginningValue != null && point.beginningValue < SMALL_ENDOWMENT_FLOOR,
   );
   return (
     <section className="endowment-school-detail cd-card">

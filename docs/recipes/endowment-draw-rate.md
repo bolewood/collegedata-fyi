@@ -52,6 +52,22 @@ Dataset version: `ipeds-endowment-96739084aaee38c8`, generated August 3, 2026.
 “Above” means strictly greater than the threshold. Small endowments are not removed: they are a
 substantively important population, but the school view adds a volatility note below $5 million.
 
+## Bucket membership lists
+
+Each threshold cell in the interactive table opens the complete list of schools in that
+fiscal-year bucket, sorted from the highest reported draw rate to the lowest. A school enters a
+list only when its school-year point has a non-null draw rate and no exclusion reason, and its
+rate is strictly greater than the threshold. The buckets are cumulative: a school above 15% also
+appears in the above-7% and above-5% lists for the same year.
+
+The lists retain schools without a current directory page as unlinked archive entries. They also
+mark school-years with a beginning value below $5 million because a single transfer can move a
+small denominator by whole percentage points. The neutral disclaimer appears above the table and
+inside every open list because the ratio cannot identify why reported spending occurred or, by
+itself, establish fiscal irresponsibility. It also keeps the legal comparison qualified: some
+states' UPMIFA statutes presume imprudence only above a 7% rate measured against a multi-year
+average value, which differs from the single-year rate shown here.
+
 ## How to reproduce it
 
 The checked-in generator makes bounded, paginated public PostgREST requests one field at a time,
