@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
-import { publicFieldDefinitions } from "@/lib/public-data";
+import { selectableFactKeys } from "@/lib/public-data";
 
 export const revalidate = 3600;
 
+const FACT_CATEGORIES = "identity, admissions, enrollment, cost, aid, finance, outcomes, sources";
+const COMPARE_CATEGORIES = "identity, admissions, enrollment, cost, aid, outcomes, sources";
+
 export async function GET() {
-  const factKeys = publicFieldDefinitions().map((field) => field.key);
+  const factKeys = selectableFactKeys();
   return NextResponse.json(
     {
       openapi: "3.1.0",
@@ -31,7 +34,15 @@ export async function GET() {
             summary: "Get source-labeled school facts",
             parameters: [
               { name: "school_id", in: "path", required: true, schema: { type: "string" } },
-              { name: "categories", in: "query", required: false, schema: { type: "string" } },
+              {
+                name: "categories",
+                in: "query",
+                required: false,
+                schema: {
+                  type: "string",
+                  description: `Comma-separated categories. Valid: ${FACT_CATEGORIES}. Use finance for endowment values and spending (IPEDS Part H, fiscal years 2020+); unknown categories are ignored.`,
+                },
+              },
               {
                 name: "fields",
                 in: "query",
@@ -54,7 +65,15 @@ export async function GET() {
             summary: "Compare schools across friendly fact fields",
             parameters: [
               { name: "schools", in: "query", required: true, schema: { type: "string" } },
-              { name: "categories", in: "query", required: false, schema: { type: "string" } },
+              {
+                name: "categories",
+                in: "query",
+                required: false,
+                schema: {
+                  type: "string",
+                  description: `Comma-separated categories. Valid for compare: ${COMPARE_CATEGORIES}. The finance category is facts-only (per-school endpoint), not comparable.`,
+                },
+              },
               { name: "fields", in: "query", required: false, schema: { type: "string" } },
             ],
             responses: { "200": { description: "Sparse comparison matrix" } },
@@ -63,7 +82,14 @@ export async function GET() {
         "/api/fields": {
           get: {
             summary: "List V1 friendly field definitions",
-            parameters: [{ name: "category", in: "query", required: false, schema: { type: "string" } }],
+            parameters: [
+              {
+                name: "category",
+                in: "query",
+                required: false,
+                schema: { type: "string", description: `Single category filter. Valid: ${FACT_CATEGORIES}.` },
+              },
+            ],
             responses: { "200": { description: "Field dictionary" } },
           },
         },

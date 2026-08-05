@@ -389,8 +389,90 @@ export const FRIENDLY_FACT_FIELDS: FactDefinitionInput[] = [
 
 const FIELD_BY_KEY = new Map(FRIENDLY_FACT_FIELDS.map((field) => [field.key, field]));
 
+// Documentation-only definitions for the federal endowment facts (PRD 027).
+// These facts are assembled from school_facts_unified, not from a `path`
+// lookup, so they are listed in the field dictionary for discoverability but
+// are not addressable via the `fields=` selector — request them with
+// `categories=finance`. Available for fiscal years 2020 onward (FASB F2
+// filers; the change components do not exist in federal data before FY2020).
+export const FEDERAL_ENDOWMENT_FIELD_DOCS: PublicFieldDefinition[] = [
+  {
+    key: "ipeds.endowment_value_begin",
+    label: "Endowment net assets, beginning of fiscal year",
+    category: "finance",
+    source_layer: "ipeds",
+    unit: "USD",
+    value_type: "money",
+    definition: "Value of endowment net assets at the beginning of the fiscal year (IPEDS Finance Part H, F2H01).",
+    derivation_note: "Served per fiscal year via categories=finance; not selectable via fields=.",
+  },
+  {
+    key: "ipeds.endowment_value_end",
+    label: "Endowment net assets, end of fiscal year",
+    category: "finance",
+    source_layer: "ipeds",
+    unit: "USD",
+    value_type: "money",
+    definition: "Value of endowment net assets at the end of the fiscal year (IPEDS Finance Part H, F2H02).",
+    derivation_note: "Served per fiscal year via categories=finance; not selectable via fields=.",
+  },
+  {
+    key: "ipeds.endowment_new_gifts",
+    label: "Endowment new gifts and additions",
+    category: "finance",
+    source_layer: "ipeds",
+    unit: "USD",
+    value_type: "money",
+    definition: "New gifts and additions to endowment net assets during the fiscal year (IPEDS Finance Part H, F2H03A).",
+    derivation_note: "Served per fiscal year via categories=finance; not selectable via fields=.",
+  },
+  {
+    key: "ipeds.endowment_investment_return",
+    label: "Endowment net investment return",
+    category: "finance",
+    source_layer: "ipeds",
+    unit: "USD",
+    value_type: "money",
+    definition: "Net investment return on endowment net assets during the fiscal year (IPEDS Finance Part H, F2H03B).",
+    derivation_note: "Served per fiscal year via categories=finance; not selectable via fields=.",
+  },
+  {
+    key: "ipeds.endowment_spending_distribution",
+    label: "Endowment spending distribution for current use",
+    category: "finance",
+    source_layer: "ipeds",
+    unit: "USD",
+    value_type: "money",
+    definition: "Spending distributed from the endowment for current use during the fiscal year (IPEDS Finance Part H, F2H03C).",
+    derivation_note: "Served per fiscal year via categories=finance; not selectable via fields=.",
+    caveat:
+      "Reported as a negative value when funds leave the endowment under the modern convention; fiscal years 2020 and 2021 mix sign conventions.",
+  },
+  {
+    key: "ipeds.endowment_other_change",
+    label: "Other changes in endowment net assets",
+    category: "finance",
+    source_layer: "ipeds",
+    unit: "USD",
+    value_type: "money",
+    definition: "Residual change in endowment net assets not attributed to gifts, investment return, or spending (IPEDS Finance Part H, F2H03D).",
+    derivation_note: "Served per fiscal year via categories=finance; not selectable via fields=.",
+    caveat:
+      "Residual line that absorbs transfers, reclassifications, and reporting noise; it is not a measure of borrowing.",
+  },
+];
+
 export function publicFieldDefinitions(): PublicFieldDefinition[] {
-  return FRIENDLY_FACT_FIELDS.map(({ path: _path, ...field }) => field);
+  return [
+    ...FRIENDLY_FACT_FIELDS.map(({ path: _path, ...field }) => field),
+    ...FEDERAL_ENDOWMENT_FIELD_DOCS,
+  ];
+}
+
+// Keys addressable via the `fields=` selector on /api/schools/{id}/facts and
+// /api/compare. Documentation-only federal entries are excluded on purpose.
+export function selectableFactKeys(): string[] {
+  return FRIENDLY_FACT_FIELDS.map((field) => field.key);
 }
 
 export function fieldsForCategories(categories: PublicFactCategory[]): string[] {

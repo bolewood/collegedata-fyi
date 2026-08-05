@@ -2,7 +2,10 @@
 
 const API_BASE = (process.env.COLLEGEDATA_API_BASE ?? "https://www.collegedata.fyi").replace(/\/$/, "");
 const CLIENT_NAME = "mcp";
-const CLIENT_VERSION = "0.1.0";
+const CLIENT_VERSION = "0.1.1";
+
+const FACT_CATEGORIES = "identity, admissions, enrollment, cost, aid, finance, outcomes, sources";
+const COMPARE_CATEGORIES = "identity, admissions, enrollment, cost, aid, outcomes, sources";
 
 const tools = [
   {
@@ -24,7 +27,10 @@ const tools = [
       type: "object",
       properties: {
         school_id: { type: "string" },
-        categories: { type: "string", description: "Optional comma-separated categories." },
+        categories: {
+          type: "string",
+          description: `Optional comma-separated categories. Valid: ${FACT_CATEGORIES}. Use "finance" for endowment values and spending (IPEDS Part H, fiscal years 2020+). Unknown categories are silently ignored.`,
+        },
       },
       required: ["school_id"],
     },
@@ -36,7 +42,10 @@ const tools = [
       type: "object",
       properties: {
         school_ids: { type: "array", items: { type: "string" } },
-        categories: { type: "string" },
+        categories: {
+          type: "string",
+          description: `Optional comma-separated categories. Valid for compare: ${COMPARE_CATEGORIES}. The finance category is facts-only; use get_school_facts for endowment data.`,
+        },
         fields: { type: "string" },
       },
       required: ["school_ids"],
@@ -53,10 +62,16 @@ const tools = [
   },
   {
     name: "get_field_dictionary",
-    description: "List V1 friendly fact field definitions.",
+    description:
+      "List friendly fact field definitions, including federal endowment fields (category: finance).",
     inputSchema: {
       type: "object",
-      properties: { category: { type: "string" } },
+      properties: {
+        category: {
+          type: "string",
+          description: `Optional single-category filter. Valid: ${FACT_CATEGORIES}.`,
+        },
+      },
     },
   },
 ];
