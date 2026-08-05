@@ -322,6 +322,51 @@ corpus via the public API") — none fetch at runtime. This recipe does the same
   closed-school surface, which is worth a line in the writeup.
 - Sequencing: requires Phase 1 only. Can land before the Phase 2 panel and de-risk its design.
 
+#### Amendment (2026-08-05): threshold bucket membership lists
+
+User feedback after launch: the sector table shows counts ("Above 7%: N schools") without
+saying which schools — while the underlying facts are publicly queryable in our own API. An
+aggregate that won't name its members reads as deliberate obfuscation, which is the opposite
+of the archive's mission. The threshold cells become clickable and reveal their member lists.
+
+**Spec:**
+
+- Each `Above 5% / Above 7% / Above 15%` cell in the threshold table becomes a disclosure
+  control that expands the full member list for that (fiscal year, threshold): school name,
+  state, and that school's draw rate for that year, sorted by rate descending. Buckets stay
+  cumulative, matching the existing counts (a school above 15% appears in all three lists).
+- Membership is derived in the frontend from the existing checked-in dataset
+  (`endowment-draw-rate-recipe-data.ts` already carries every school's per-year rate) using
+  the same eligibility rule the build script uses for the summary counts. **Consistency
+  gate:** a unit test asserts the derived list length equals the rendered
+  `above{5,7,15}Count` for every year — if they ever diverge, the derivation is wrong, never
+  the counts.
+- Schools with `hasCurrentSchoolPage` link to their school page; schools without one (closed
+  or out-of-directory institutions) render unlinked with a "no longer operating /
+  not in directory" marker — their inclusion is deliberate archive value, not an error.
+- Schools with beginning value under ~$5M carry a small-endowment volatility marker in the
+  list (consistent with the derived-metrics floor rationale; the rate still shows).
+- **Disclaimer, rendered above the table and repeated inside each expanded list** (must
+  survive on its own when screenshotted):
+
+  > Many things put a school on these lists besides financial stress: board-approved
+  > spending of unrestricted quasi-endowment funds, drawing down a completed capital
+  > campaign, deploying a large one-time gift, or ordinary volatility in a small endowment,
+  > where a single transfer can swing the rate by whole percentage points. Appearing here is
+  > not evidence of fiscal irresponsibility. Rates come from each school's own federal IPEDS
+  > filing. Some states' UPMIFA statutes presume imprudence only above a 7% rate measured
+  > against a multi-year average value — a different measure than the single-year rate shown
+  > here.
+
+- **Annotation-policy boundary (unchanged):** these lists are factual query renderings — the
+  school's own reported number shown next to its name — not editorial annotations. The
+  school-page annotation policy (descriptive-neutral strings, multi-year persistence, owner
+  sign-off) still governs school pages and is not relaxed by this amendment.
+- Accessibility: disclosure pattern must be keyboard/screen-reader native (`<details>` or
+  equivalent), not hover-only; lists render as real DOM content.
+- The methodology writeup (`docs/recipes/endowment-draw-rate.md`) gains a short section on
+  bucket membership and the disclaimer rationale.
+
 ### Closed schools (promoted from open question to design decision)
 
 Verified: closed schools that have left Scorecard have **no `institution_directory` row**, so
