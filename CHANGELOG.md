@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project uses four-part semantic versioning.
 
+## [0.3.0.0] - 2026-08-05
+
+### Added
+
+- Open any endowment draw-rate threshold count to inspect its complete ranked school list, including current-directory links, archived-school context, and small-endowment volatility markers.
+- Read the same qualified interpretation disclaimer above the threshold table and inside every expanded list, with documented eligibility and cumulative-bucket semantics.
+
 ## [0.2.1.0] - 2026-08-03
 
 ### Changed
