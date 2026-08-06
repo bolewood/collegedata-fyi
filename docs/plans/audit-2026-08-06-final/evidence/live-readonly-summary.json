@@ -1,0 +1,925 @@
+{
+  "label": "Partial execution — network reprobe, source-byte corpus probe, and manual checks run separately",
+  "run_started_at": "2026-08-06T18:50:04.259740Z",
+  "run_finished_at": "2026-08-06T18:53:53.481080Z",
+  "snapshot_semantics": "Sequential live read-only requests; not an atomic database snapshot. Per-query captured_at timestamps, Content-Range headers, and result checksums are in pagination.json.",
+  "source": {
+    "git_commit": "c51375f3d01536de85a48b7b0ab737269fba0db3",
+    "origin_main": "6938972ca8bab739f3db8c148dda39a07d0a345c"
+  },
+  "core_exact_counts": {
+    "archive_queue": {
+      "captured_at": "2026-08-06T18:50:15.921881Z",
+      "content_range": "0-0/17044",
+      "count": 17044,
+      "http_status": 206,
+      "probe_rows": 1
+    },
+    "cds_artifacts": {
+      "captured_at": "2026-08-06T18:50:04.789509Z",
+      "content_range": "0-0/24802",
+      "count": 24802,
+      "http_status": 206,
+      "probe_rows": 1
+    },
+    "cds_documents": {
+      "captured_at": "2026-08-06T18:50:04.588103Z",
+      "content_range": "0-0/4071",
+      "count": 4071,
+      "http_status": 206,
+      "probe_rows": 1
+    },
+    "cds_fields": {
+      "captured_at": "2026-08-06T18:50:07.520755Z",
+      "content_range": "0-0/262537",
+      "count": 262537,
+      "http_status": 206,
+      "probe_rows": 1
+    },
+    "institution_cds_coverage": {
+      "captured_at": "2026-08-06T18:50:16.145301Z",
+      "content_range": "0-0/6322",
+      "count": 6322,
+      "http_status": 206,
+      "probe_rows": 1
+    },
+    "ipeds_facts": {
+      "captured_at": "2026-08-06T18:50:15.383835Z",
+      "content_range": "0-0/4424512",
+      "count": 4424512,
+      "http_status": 206,
+      "probe_rows": 1
+    },
+    "school_browser_rows": {
+      "captured_at": "2026-08-06T18:50:04.996086Z",
+      "content_range": "0-0/558",
+      "count": 558,
+      "http_status": 206,
+      "probe_rows": 1
+    }
+  },
+  "documents": {
+    "rows": 4071,
+    "non_null_cds_year_detected_year_mismatches": 91,
+    "interpretation": "detected_year is intentionally authoritative; a mismatch is an identity-audit candidate, not automatically a defect"
+  },
+  "archive_queue": {
+    "completed_rows_with_null_outcome": {
+      "denominator": 10945,
+      "numerator": 2470,
+      "rate": 0.22567382366377342
+    },
+    "last_outcome": {
+      "None": 2470,
+      "auth_walled_google": 14,
+      "auth_walled_microsoft": 5,
+      "dead_url": 1095,
+      "inserted": 71,
+      "marked_removed": 317,
+      "no_pdfs_found": 2848,
+      "permanent_other": 1,
+      "refreshed": 194,
+      "transient": 1899,
+      "unchanged_repaired": 29,
+      "unchanged_verified": 7864,
+      "wrong_content_type": 237
+    },
+    "no_pdfs_found": {
+      "distinct_schools": 1356,
+      "rows": 2848
+    },
+    "rows": 17044,
+    "status": {
+      "done": 10945,
+      "failed_permanent": 6099
+    },
+    "unpaged_first_1000_diagnostic": {
+      "no_pdfs_found": 240,
+      "rows": 1000,
+      "warning": "Diagnostic only: unordered first-page results are not a corpus estimate."
+    }
+  },
+  "archive_attempts": {
+    "attempts": 4795,
+    "cohort_definition": "All archive_queue_attempts rows; the table was introduced by migration 20260716010500, so the table itself defines the post-ledger cohort.",
+    "duration_ms": {
+      "denominator": 4795,
+      "max": 1321495,
+      "p50": 866.0,
+      "p95": 32060.200000000004
+    },
+    "finished_attempts": 4795,
+    "open_attempts": 0,
+    "terminal_state": {
+      "completed": 1212,
+      "failed_permanent": 1424,
+      "retryable_failure": 2048,
+      "timed_out": 111
+    },
+    "timeout_rate": {
+      "denominator": 4795,
+      "numerator": 111,
+      "rate": 0.023149113660062566
+    }
+  },
+  "artifacts": {
+    "kind": {
+      "canonical": 8944,
+      "cleaned": 232,
+      "source": 15248,
+      "source_part": 378
+    },
+    "producer": {
+      "archiver": 15561,
+      "headless_download": 65,
+      "tier1_xlsx": 514,
+      "tier2_acroform": 218,
+      "tier4_docling": 8207,
+      "tier4_llm_fallback": 232,
+      "tier6_html": 5
+    },
+    "producer_version": {
+      "('archiver', '0.1')": 15561,
+      "('headless_download', '0.1.0')": 65,
+      "('tier1_xlsx', '0.1.0')": 391,
+      "('tier1_xlsx', '0.2.0')": 18,
+      "('tier1_xlsx', '0.2.1')": 59,
+      "('tier1_xlsx', '0.2.2')": 46,
+      "('tier2_acroform', '0.2.0')": 218,
+      "('tier4_docling', '0.1.0')": 3364,
+      "('tier4_docling', '0.3.0')": 3400,
+      "('tier4_docling', '0.3.1')": 356,
+      "('tier4_docling', '0.3.10')": 23,
+      "('tier4_docling', '0.3.11')": 498,
+      "('tier4_docling', '0.3.12')": 21,
+      "('tier4_docling', '0.3.13')": 19,
+      "('tier4_docling', '0.3.14')": 83,
+      "('tier4_docling', '0.3.2')": 100,
+      "('tier4_docling', '0.3.3')": 146,
+      "('tier4_docling', '0.3.4')": 77,
+      "('tier4_docling', '0.3.5')": 2,
+      "('tier4_docling', '0.3.6')": 32,
+      "('tier4_docling', '0.3.7')": 3,
+      "('tier4_docling', '0.3.8')": 40,
+      "('tier4_docling', '0.3.9')": 43,
+      "('tier4_llm_fallback', '0.1.0')": 232,
+      "('tier6_html', '0.1.0')": 5
+    },
+    "rows": 24802,
+    "section_packages": {
+      "documents_with_fewer_than_two_parts": {},
+      "documents_with_preserved_source_parts": 5,
+      "limitation": "Preserved source_part rows can check that persisted packages have at least two inputs. They cannot reveal resolver candidates that were never selected or persisted, and package notes were intentionally not projected because that JSON-path query repeatedly exceeded the API statement timeout.",
+      "source_part_artifacts": 378
+    }
+  },
+  "cds_fields": {
+    "rows": 262537,
+    "authorization": "service_role read succeeded; exact count and every 1,000-row range completed. The prior RLS diagnosis was not reproduced.",
+    "schema_version": {
+      "2024-25": 172599,
+      "2025-26": 89938
+    },
+    "producer": {
+      "tier1_xlsx": 30617,
+      "tier2_acroform": 56043,
+      "tier4_docling": 175704,
+      "tier6_html": 173
+    },
+    "source_format": {
+      "docx": 462,
+      "html": 173,
+      "pdf_fillable": 56158,
+      "pdf_flat": 176130,
+      "pdf_scanned": 302,
+      "xlsx": 29312
+    },
+    "sections": {
+      "A": {
+        "documents": 520,
+        "value_status": {
+          "not_applicable": 1,
+          "parse_error": 670,
+          "reported": 10122
+        },
+        "values": 10793
+      },
+      "B": {
+        "documents": 516,
+        "value_status": {
+          "not_applicable": 20,
+          "parse_error": 873,
+          "reported": 60500
+        },
+        "values": 61393
+      },
+      "C": {
+        "documents": 548,
+        "value_status": {
+          "not_applicable": 113,
+          "parse_error": 692,
+          "reported": 62872
+        },
+        "values": 63677
+      },
+      "D": {
+        "documents": 530,
+        "value_status": {
+          "not_applicable": 1210,
+          "parse_error": 352,
+          "reported": 12502
+        },
+        "values": 14064
+      },
+      "E": {
+        "documents": 472,
+        "value_status": {
+          "reported": 8748
+        },
+        "values": 8748
+      },
+      "F": {
+        "documents": 529,
+        "value_status": {
+          "not_applicable": 11,
+          "parse_error": 81,
+          "reported": 17025
+        },
+        "values": 17117
+      },
+      "G": {
+        "documents": 493,
+        "value_status": {
+          "not_applicable": 66,
+          "parse_error": 40,
+          "reported": 9493
+        },
+        "values": 9599
+      },
+      "H": {
+        "documents": 532,
+        "value_status": {
+          "not_applicable": 39,
+          "parse_error": 292,
+          "reported": 43467
+        },
+        "values": 43798
+      },
+      "I": {
+        "documents": 486,
+        "value_status": {
+          "not_applicable": 1,
+          "parse_error": 183,
+          "reported": 18014
+        },
+        "values": 18198
+      },
+      "J": {
+        "documents": 534,
+        "value_status": {
+          "parse_error": 478,
+          "reported": 14672
+        },
+        "values": 15150
+      }
+    },
+    "question_count": 1157
+  },
+  "tier4": {
+    "selected_tier4_documents": 3485,
+    "selected_rows_missing_from_tier4_payload_query": 0,
+    "cleaner_field_count": {
+      "max": 748,
+      "min": 0,
+      "p50": 215.0,
+      "p95": 571.0
+    },
+    "merged_field_count": {
+      "max": 748,
+      "min": 0,
+      "p50": 215.0,
+      "p95": 571.0
+    },
+    "fallback": {
+      "delta_p50": 0.0,
+      "delta_p95": 0.0,
+      "documents_with_positive_delta": 0,
+      "documents_with_selected_fallback": 0,
+      "fields_added": 0
+    },
+    "section_distribution": {
+      "A": {
+        "documents": 3264,
+        "values": 45252
+      },
+      "B": {
+        "documents": 3308,
+        "values": 205781
+      },
+      "C": {
+        "documents": 3375,
+        "values": 225620
+      },
+      "D": {
+        "documents": 3321,
+        "values": 81407
+      },
+      "E": {
+        "documents": 1838,
+        "values": 33363
+      },
+      "F": {
+        "documents": 3170,
+        "values": 75119
+      },
+      "G": {
+        "documents": 3174,
+        "values": 35669
+      },
+      "H": {
+        "documents": 3291,
+        "values": 158016
+      },
+      "I": {
+        "documents": 3150,
+        "values": 59635
+      },
+      "J": {
+        "documents": 3093,
+        "values": 77502
+      }
+    },
+    "visual_ocr": {
+      "denominator": 3485,
+      "documents_with_visual_ocr_pages": 33,
+      "limitation": "Visual-OCR use and section value distribution are measured, but no section-specific human ground truth exists; this does not estimate recall."
+    }
+  },
+  "admissions_withholding": {
+    "behavior": "public-data.ts withholds applied/admitted/enrolled_first_year for these rows and emits low_confidence_extract with a reason; the browser row remains queryable.",
+    "denominator": 558,
+    "document_ids": [
+      "29f10765-d770-44cb-bbfd-0977b78c7580",
+      "4c139ec7-9b89-4c8e-90cf-208a7fc870b0",
+      "89f95c9e-244f-43a2-a068-ecdeabcd2343",
+      "a2f43d80-bad8-4978-85e7-a1ed8d05e97c",
+      "ccc6ee13-a4ee-4da1-955c-b26ac09346c7"
+    ],
+    "incoherent_rows": 5,
+    "non_null_values_withheld_by_friendly_api": 15
+  },
+  "projection": {
+    "cds_fields": {
+      "missing_document_ids": [
+        "00fcb523-cc52-4005-b59c-ca98605b170e",
+        "0eaae0e3-23fb-4924-bf9f-93c5f65f4bed",
+        "15dddd1f-5348-49e9-a159-245cd134b1ba",
+        "17a3485b-3ddf-4b42-9544-8a3362722c0f",
+        "72d16cde-10ab-4aa4-b8e1-8d3a4629a4b8",
+        "77d5e458-6236-46e7-8137-bd66155bf4e3",
+        "7c5306ff-723f-4716-b47f-5673be59065e",
+        "b5016c30-bad9-4501-947c-4b21f42c4f11",
+        "c4afff8f-8fef-470d-9cdd-136d01bb0a10",
+        "d22cd76d-d145-4d5f-90c1-c5834c9c5336",
+        "d5819ea3-8449-40fa-bb08-4facd4a98fee",
+        "e04158b0-c9cb-4279-a91b-ddd5421eb3cd"
+      ],
+      "missing_expected": 12,
+      "projected_documents": 553,
+      "stale_document_ids": [],
+      "updated_before_selected_artifact": 0
+    },
+    "eligible_denominator": {
+      "browser_expected": 563,
+      "browser_intended_exclusions_wrong_file": 0,
+      "definition": "cds_documents with extraction_status=extracted, canonical year start >=2024, and a row in cds_selected_extraction_result",
+      "documents": 563,
+      "field_projection_expected": 563
+    },
+    "lags_seconds": {
+      "document_discovered_to_selected_artifact_p50": 1779892.556006,
+      "document_discovered_to_selected_artifact_p95": 5465715.902117999,
+      "selected_artifact_to_browser_updated_p50": 1.148408,
+      "selected_artifact_to_browser_updated_p95": 434411.7329664
+    },
+    "provenance_limitation": "updated_at is a practical delete/reinsert refresh timestamp, but neither projection table stores selected artifact_id or copied source_sha256. Producer, version, schema, and time checks are therefore proxies rather than byte identity.",
+    "school_browser_rows": {
+      "actual": 558,
+      "identity_mismatch_document_ids": [
+        "de9530b9-0742-4094-8ef3-10f7f5819d47",
+        "f63dce67-350b-453e-be68-99713f8a5882"
+      ],
+      "missing_document_ids": [
+        "0eaae0e3-23fb-4924-bf9f-93c5f65f4bed",
+        "17a3485b-3ddf-4b42-9544-8a3362722c0f",
+        "72d16cde-10ab-4aa4-b8e1-8d3a4629a4b8",
+        "77d5e458-6236-46e7-8137-bd66155bf4e3",
+        "b5016c30-bad9-4501-947c-4b21f42c4f11",
+        "c4afff8f-8fef-470d-9cdd-136d01bb0a10",
+        "d5819ea3-8449-40fa-bb08-4facd4a98fee",
+        "e04158b0-c9cb-4279-a91b-ddd5421eb3cd"
+      ],
+      "missing_expected": 8,
+      "producer_version_schema_proxy_mismatch": 2,
+      "stale_document_ids": [],
+      "unexpected": 3,
+      "unexpected_document_ids": [
+        "28319681-5664-405e-98ab-23cfbdd5f722",
+        "7f1a4765-a2a2-465a-b38b-3615a416c3eb",
+        "fd256616-d419-4695-9990-6ea0442611e6"
+      ],
+      "updated_before_selected_artifact": 0
+    }
+  },
+  "ipeds_finance": {
+    "by_year_field": [
+      {
+        "data_year": 2020,
+        "field_key": "endowment_investment_return",
+        "rows": 1351
+      },
+      {
+        "data_year": 2020,
+        "field_key": "endowment_new_gifts",
+        "rows": 1351
+      },
+      {
+        "data_year": 2020,
+        "field_key": "endowment_other_change",
+        "rows": 1351
+      },
+      {
+        "data_year": 2020,
+        "field_key": "endowment_spending_distribution",
+        "rows": 1351
+      },
+      {
+        "data_year": 2020,
+        "field_key": "endowment_value_begin",
+        "rows": 1351
+      },
+      {
+        "data_year": 2020,
+        "field_key": "endowment_value_end",
+        "rows": 1351
+      },
+      {
+        "data_year": 2021,
+        "field_key": "endowment_investment_return",
+        "rows": 1348
+      },
+      {
+        "data_year": 2021,
+        "field_key": "endowment_new_gifts",
+        "rows": 1348
+      },
+      {
+        "data_year": 2021,
+        "field_key": "endowment_other_change",
+        "rows": 1348
+      },
+      {
+        "data_year": 2021,
+        "field_key": "endowment_spending_distribution",
+        "rows": 1348
+      },
+      {
+        "data_year": 2021,
+        "field_key": "endowment_value_begin",
+        "rows": 1348
+      },
+      {
+        "data_year": 2021,
+        "field_key": "endowment_value_end",
+        "rows": 1348
+      },
+      {
+        "data_year": 2022,
+        "field_key": "endowment_investment_return",
+        "rows": 1331
+      },
+      {
+        "data_year": 2022,
+        "field_key": "endowment_new_gifts",
+        "rows": 1331
+      },
+      {
+        "data_year": 2022,
+        "field_key": "endowment_other_change",
+        "rows": 1331
+      },
+      {
+        "data_year": 2022,
+        "field_key": "endowment_spending_distribution",
+        "rows": 1331
+      },
+      {
+        "data_year": 2022,
+        "field_key": "endowment_value_begin",
+        "rows": 1331
+      },
+      {
+        "data_year": 2022,
+        "field_key": "endowment_value_end",
+        "rows": 1331
+      },
+      {
+        "data_year": 2023,
+        "field_key": "endowment_investment_return",
+        "rows": 1319
+      },
+      {
+        "data_year": 2023,
+        "field_key": "endowment_new_gifts",
+        "rows": 1319
+      },
+      {
+        "data_year": 2023,
+        "field_key": "endowment_other_change",
+        "rows": 1319
+      },
+      {
+        "data_year": 2023,
+        "field_key": "endowment_spending_distribution",
+        "rows": 1319
+      },
+      {
+        "data_year": 2023,
+        "field_key": "endowment_value_begin",
+        "rows": 1319
+      },
+      {
+        "data_year": 2023,
+        "field_key": "endowment_value_end",
+        "rows": 1319
+      },
+      {
+        "data_year": 2024,
+        "field_key": "endowment_investment_return",
+        "rows": 1304
+      },
+      {
+        "data_year": 2024,
+        "field_key": "endowment_new_gifts",
+        "rows": 1304
+      },
+      {
+        "data_year": 2024,
+        "field_key": "endowment_other_change",
+        "rows": 1304
+      },
+      {
+        "data_year": 2024,
+        "field_key": "endowment_spending_distribution",
+        "rows": 1304
+      },
+      {
+        "data_year": 2024,
+        "field_key": "endowment_value_begin",
+        "rows": 1304
+      },
+      {
+        "data_year": 2024,
+        "field_key": "endowment_value_end",
+        "rows": 1304
+      }
+    ],
+    "draw_rate": {
+      "candidate_reporter_years": 6653,
+      "eligible": 6645,
+      "exclusions": {
+        "accounting_identity_mismatch": 3,
+        "nonpositive_beginning_value": 5
+      },
+      "formula": "abs(F2H03C) / F2H01",
+      "rate_p50": 0.04004828264110627,
+      "rate_p95": 0.10502766485580972,
+      "raw_F2H03D_preserved": true
+    },
+    "provenance_rows_missing_source_table_variable_or_release_type": 0,
+    "rows": 39918,
+    "sign_contract": {
+      "interpretation": "A labeled negative is stored as a status fact; an unlabeled negative remains numeric. A blanket allowNegative registry would be incorrect.",
+      "negative_numeric_with_value_label": 0,
+      "negative_numeric_without_value_label": 8425,
+      "negative_raw_text_status_with_value_label": 0
+    },
+    "sign_contract_by_release_field": [
+      {
+        "data_year": 2020,
+        "field_key": "endowment_investment_return",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 238,
+        "release_id": "1d7dc2c9-7376-40a5-befb-9b3f6df438f1",
+        "release_type": "final",
+        "rows": 1351
+      },
+      {
+        "data_year": 2020,
+        "field_key": "endowment_new_gifts",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 0,
+        "release_id": "1d7dc2c9-7376-40a5-befb-9b3f6df438f1",
+        "release_type": "final",
+        "rows": 1351
+      },
+      {
+        "data_year": 2020,
+        "field_key": "endowment_other_change",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 410,
+        "release_id": "1d7dc2c9-7376-40a5-befb-9b3f6df438f1",
+        "release_type": "final",
+        "rows": 1351
+      },
+      {
+        "data_year": 2020,
+        "field_key": "endowment_spending_distribution",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 956,
+        "release_id": "1d7dc2c9-7376-40a5-befb-9b3f6df438f1",
+        "release_type": "final",
+        "rows": 1351
+      },
+      {
+        "data_year": 2020,
+        "field_key": "endowment_value_begin",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 0,
+        "release_id": "1d7dc2c9-7376-40a5-befb-9b3f6df438f1",
+        "release_type": "final",
+        "rows": 1351
+      },
+      {
+        "data_year": 2020,
+        "field_key": "endowment_value_end",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 0,
+        "release_id": "1d7dc2c9-7376-40a5-befb-9b3f6df438f1",
+        "release_type": "final",
+        "rows": 1351
+      },
+      {
+        "data_year": 2021,
+        "field_key": "endowment_investment_return",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 9,
+        "release_id": "378811bc-a50d-4d9a-9d0f-c5c61933fe68",
+        "release_type": "final",
+        "rows": 1348
+      },
+      {
+        "data_year": 2021,
+        "field_key": "endowment_new_gifts",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 0,
+        "release_id": "378811bc-a50d-4d9a-9d0f-c5c61933fe68",
+        "release_type": "final",
+        "rows": 1348
+      },
+      {
+        "data_year": 2021,
+        "field_key": "endowment_other_change",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 324,
+        "release_id": "378811bc-a50d-4d9a-9d0f-c5c61933fe68",
+        "release_type": "final",
+        "rows": 1348
+      },
+      {
+        "data_year": 2021,
+        "field_key": "endowment_spending_distribution",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 949,
+        "release_id": "378811bc-a50d-4d9a-9d0f-c5c61933fe68",
+        "release_type": "final",
+        "rows": 1348
+      },
+      {
+        "data_year": 2021,
+        "field_key": "endowment_value_begin",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 0,
+        "release_id": "378811bc-a50d-4d9a-9d0f-c5c61933fe68",
+        "release_type": "final",
+        "rows": 1348
+      },
+      {
+        "data_year": 2021,
+        "field_key": "endowment_value_end",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 0,
+        "release_id": "378811bc-a50d-4d9a-9d0f-c5c61933fe68",
+        "release_type": "final",
+        "rows": 1348
+      },
+      {
+        "data_year": 2022,
+        "field_key": "endowment_investment_return",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 1063,
+        "release_id": "643ad217-3634-4ae8-8571-50f064230c51",
+        "release_type": "final",
+        "rows": 1331
+      },
+      {
+        "data_year": 2022,
+        "field_key": "endowment_new_gifts",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 0,
+        "release_id": "643ad217-3634-4ae8-8571-50f064230c51",
+        "release_type": "final",
+        "rows": 1331
+      },
+      {
+        "data_year": 2022,
+        "field_key": "endowment_other_change",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 342,
+        "release_id": "643ad217-3634-4ae8-8571-50f064230c51",
+        "release_type": "final",
+        "rows": 1331
+      },
+      {
+        "data_year": 2022,
+        "field_key": "endowment_spending_distribution",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 1112,
+        "release_id": "643ad217-3634-4ae8-8571-50f064230c51",
+        "release_type": "final",
+        "rows": 1331
+      },
+      {
+        "data_year": 2022,
+        "field_key": "endowment_value_begin",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 0,
+        "release_id": "643ad217-3634-4ae8-8571-50f064230c51",
+        "release_type": "final",
+        "rows": 1331
+      },
+      {
+        "data_year": 2022,
+        "field_key": "endowment_value_end",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 0,
+        "release_id": "643ad217-3634-4ae8-8571-50f064230c51",
+        "release_type": "final",
+        "rows": 1331
+      },
+      {
+        "data_year": 2024,
+        "field_key": "endowment_investment_return",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 13,
+        "release_id": "b379296f-48ab-474a-8d09-e7624f416a5b",
+        "release_type": "provisional",
+        "rows": 1304
+      },
+      {
+        "data_year": 2024,
+        "field_key": "endowment_new_gifts",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 0,
+        "release_id": "b379296f-48ab-474a-8d09-e7624f416a5b",
+        "release_type": "provisional",
+        "rows": 1304
+      },
+      {
+        "data_year": 2024,
+        "field_key": "endowment_other_change",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 308,
+        "release_id": "b379296f-48ab-474a-8d09-e7624f416a5b",
+        "release_type": "provisional",
+        "rows": 1304
+      },
+      {
+        "data_year": 2024,
+        "field_key": "endowment_spending_distribution",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 1113,
+        "release_id": "b379296f-48ab-474a-8d09-e7624f416a5b",
+        "release_type": "provisional",
+        "rows": 1304
+      },
+      {
+        "data_year": 2024,
+        "field_key": "endowment_value_begin",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 0,
+        "release_id": "b379296f-48ab-474a-8d09-e7624f416a5b",
+        "release_type": "provisional",
+        "rows": 1304
+      },
+      {
+        "data_year": 2024,
+        "field_key": "endowment_value_end",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 0,
+        "release_id": "b379296f-48ab-474a-8d09-e7624f416a5b",
+        "release_type": "provisional",
+        "rows": 1304
+      },
+      {
+        "data_year": 2023,
+        "field_key": "endowment_investment_return",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 182,
+        "release_id": "d3f6fefe-e7d6-4817-a86e-91eae12d06dc",
+        "release_type": "final",
+        "rows": 1319
+      },
+      {
+        "data_year": 2023,
+        "field_key": "endowment_new_gifts",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 0,
+        "release_id": "d3f6fefe-e7d6-4817-a86e-91eae12d06dc",
+        "release_type": "final",
+        "rows": 1319
+      },
+      {
+        "data_year": 2023,
+        "field_key": "endowment_other_change",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 297,
+        "release_id": "d3f6fefe-e7d6-4817-a86e-91eae12d06dc",
+        "release_type": "final",
+        "rows": 1319
+      },
+      {
+        "data_year": 2023,
+        "field_key": "endowment_spending_distribution",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 1109,
+        "release_id": "d3f6fefe-e7d6-4817-a86e-91eae12d06dc",
+        "release_type": "final",
+        "rows": 1319
+      },
+      {
+        "data_year": 2023,
+        "field_key": "endowment_value_begin",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 0,
+        "release_id": "d3f6fefe-e7d6-4817-a86e-91eae12d06dc",
+        "release_type": "final",
+        "rows": 1319
+      },
+      {
+        "data_year": 2023,
+        "field_key": "endowment_value_end",
+        "labeled_negative_status": 0,
+        "negative_numeric_labeled": 0,
+        "negative_numeric_unlabeled": 0,
+        "release_id": "d3f6fefe-e7d6-4817-a86e-91eae12d06dc",
+        "release_type": "final",
+        "rows": 1319
+      }
+    ]
+  },
+  "loaded_but_unserved_finance": {
+    "absent_from_directory": 61,
+    "bounded_population": "IPEDS endowment reporter UNITIDs present in the FY2020-FY2024 six-field slice; this is not an all-ipeds_facts inventory",
+    "directory_out_of_scope": 204,
+    "loaded_but_unserved": 265,
+    "loaded_reporters": 1374,
+    "served_in_scope": 1109
+  },
+  "limitations": [
+    "No production mutation or mutating RPC was executed.",
+    "The run is sequential and cannot freeze concurrent production writes.",
+    "The selected-extraction view is used as a provenance proxy because projection rows lack artifact_id/source_sha256.",
+    "The bounded IPEDS finance slice does not stand in for a 4.4-million-row full-table export.",
+    "Concurrency invariants require an isolated local/test database and are not exercised here."
+  ]
+}

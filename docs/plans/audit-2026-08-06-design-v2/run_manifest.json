@@ -1,0 +1,14 @@
+{
+  "label": "Static audit design v2 — execution NOT STARTED",
+  "as_of": null,
+  "as_of_note": "No snapshot taken. Prior as_of was aspirational, not a frozen export.",
+  "git_commit": "6938972ca8bab739f3db8c148dda39a07d0a345c",
+  "base_branch": "origin/main",
+  "live_db_access": false,
+  "schools_yaml_hash": null,
+  "schema_hash": null,
+  "query_hashes": null,
+  "result_checksums": null,
+  "input_row_counts": null,
+  "prior_manifest_issues": "Prior manifest used schools_yaml_present:true and fake as_of; corrected to nulls with explicit note. Full reproducibility requires snapshot + hashes per check."
+}

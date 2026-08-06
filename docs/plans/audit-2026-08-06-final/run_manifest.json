@@ -1,0 +1,117 @@
+{
+  "label": "Partial execution — manual OCR ground truth, isolated concurrency, and full-universe serving inventory remain",
+  "manifest_generated_at": "2026-08-06T19:59:41Z",
+  "live_db_access": true,
+  "production_mutation": false,
+  "atomic_snapshot": false,
+  "snapshot_semantics": "Sequential read-only requests; per-query capture times and result hashes are recorded in evidence/pagination.json.",
+  "run_started_at": "2026-08-06T18:16:31Z",
+  "run_finished_at": "2026-08-06T19:13:13.165641Z",
+  "primary_live_rerun": {
+    "started_at": "2026-08-06T18:50:04.259740Z",
+    "finished_at": "2026-08-06T18:53:53.481080Z"
+  },
+  "repository": {
+    "workspace_head": "c51375f3d01536de85a48b7b0ab737269fba0db3",
+    "origin_main": "6938972ca8bab739f3db8c148dda39a07d0a345c",
+    "base_branch": "origin/main",
+    "note": "The workspace branch already contained unrelated committed user work relative to origin/main; the audit did not rewrite it."
+  },
+  "read_only_controls": {
+    "postgrest_methods": ["GET"],
+    "mutating_rpcs_called": 0,
+    "production_writes": 0,
+    "source_bytes_persisted": false,
+    "credentials_persisted": false,
+    "authorization_headers_persisted": false,
+    "network_reprobes_authorized": true,
+    "concurrency_test_environment": "deferred; no isolated database supplied"
+  },
+  "input_hashes": {
+    "tools/finder/schools.yaml": "7dbbd5b16c3c7a78cb80ffcf45d2d6c0c385ac9f60e9c6e342b7f9ea29a03350",
+    "schemas/cds_schema_2023_24.json": "9ffe5c196bf3b8f2702036ee0ca3c11c96cbef95f32fdad46bb4cbf6daf84ef4",
+    "schemas/cds_schema_2024_25.json": "bad22b5245ea3d30662e49361ab5e2e433f1cbf3454e10e7994f96d3e04f1fee",
+    "schemas/cds_schema_2025_26.json": "80c38b6de395ca2d73fb0bddd8862faa0463e5526fce991162283ca83f8ee4c8",
+    ".context/scorecard-directory-refresh-03232026/Most-Recent-Cohorts-Institution.csv": "7deaa94791dbf4c29bb9f70ede0ee01f78023eafc4a11fb6b346e1a246b18932"
+  },
+  "input_metadata": {
+    "scorecard_csv_rows": 6322,
+    "scorecard_csv_bytes": 100817953,
+    "scorecard_csv_committed": false
+  },
+  "query_script_hash_semantics": "execution_script_hashes are the exact files used for the recorded live run. post_run_script_hashes include the later pre-landing fix for valid empty PostgREST relations; that branch was not exercised by the non-empty production queries and does not change the committed results.",
+  "execution_script_hashes": {
+    "tools/data_quality/run_data_integrity_audit.py": "9315c11fe546d0a967b91d4a70f22118b80d9407075dd382f3c202a89c718165",
+    "tools/data_quality/reprobe_resolver_cohort.ts": "a43a46b57366f116dc7d8a7cc20c25f7eac1203854044b24c2a753540363dcea",
+    "tools/data_quality/probe_source_corpus.py": "8a86c5140756ea62d9781e980f0b22cc2780e4c067fe7e6a7106160e5df02607",
+    "tools/data_quality/audit_schema_alignment.py": "15b304fab116182c354ddca4c8a6e3963a16b3f56202260176171ef144a16967",
+    "tools/data_quality/audit_tier6_version_contract.py": "3681cbb27f61375ee5564abc280275ffa96e182885df3c84fba04a7276e1a92d",
+    "tools/data_quality/test_audit_support.py": "a1ac1b8e0832ef09d02fff466df716ed982b43cf50fc61b1baffacb8ba137c4d"
+  },
+  "post_run_script_hashes": {
+    "tools/data_quality/run_data_integrity_audit.py": "7748a6bac0ad48f86d0c75877e685e24b39175913fdd50a62f4b9c9712292c03",
+    "tools/data_quality/reprobe_resolver_cohort.ts": "46f62fe7b090731c3bd00a63a61f7c08a5ee718964b0defc5a23bd67ef93fb7f",
+    "tools/data_quality/probe_source_corpus.py": "8a86c5140756ea62d9781e980f0b22cc2780e4c067fe7e6a7106160e5df02607",
+    "tools/data_quality/audit_schema_alignment.py": "15b304fab116182c354ddca4c8a6e3963a16b3f56202260176171ef144a16967",
+    "tools/data_quality/audit_tier6_version_contract.py": "3681cbb27f61375ee5564abc280275ffa96e182885df3c84fba04a7276e1a92d",
+    "tools/data_quality/test_audit_support.py": "e56dcb95ede86a96d02c69a9b763b06c11787cd4eb79f5faa170f4af00400c66",
+    "tools/data_quality/reprobe_resolver_cohort.test.ts": "0085e7fc898342819a83b085fa38e3f283d85b5e17aed4be4bda42c3d47d0690"
+  },
+  "result_checksums": {
+    "24-check-matrix.json": "188bc06291c8e78425783ee34be94ade220e02ba4c77f512fcf9c1f3cbbe2ed8",
+    "RECOMMENDED-CADENCE.md": "78ac5aa241abd7f908ad80bc774fb04a5a972c417631c368888082f928c0fc74",
+    "evidence/cds-field-question-distribution.tsv": "d9b320cb1e90622103fd549fcb154dda4aeb189ca53f06e7d7efec1b003951f7",
+    "evidence/live-readonly-summary.json": "2d214d6a02efe97727fb46aa6fb4947b4b8a5b62e7f3998eb4095dc8a3b46b00",
+    "evidence/n-reprobe-summary.json": "443440a87adb865b05dc4f62c6c4de8998490ecf2373ddde73b8d5d4ed38a7a7",
+    "evidence/pagination.json": "bf069f142cd10afe1c8235cf4b5794c3842af67b91271b605c52f1df19aa919b",
+    "evidence/schema-2023-24-alignment.json": "098b4d48bb36de35e269e4211292cc174f061dc8622a7c16b5f9568a852fc662",
+    "evidence/scorecard-reconciliation-summary.json": "0e0d0590d8a630d9d8b03129bd7d00c575a3ce0201db9654986da9ea3afff16d",
+    "evidence/source-corpus-summary.json": "ea9504ca8f7c1d7d4d06810703660d6a22a52c930d6605d5f41c26595aef88a6",
+    "evidence/static-contracts.json": "34eb7bfede1db737b2c9d10d3eb1ec08cfe8c098b4cea3561288af3674f5b17d",
+    "evidence/tier6-version-contract.json": "4c76e94ab7a14162e3b20cad5ba20daca21a2443ba1c0955d595881b46491ee3"
+  },
+  "exact_counts": {
+    "cds_documents": 4071,
+    "cds_artifacts": 24802,
+    "school_browser_rows": 558,
+    "cds_fields": 262537,
+    "ipeds_facts": 4424512,
+    "archive_queue": 17044,
+    "institution_cds_coverage": 6322
+  },
+  "pagination_contract": {
+    "primary_queries": 15,
+    "first_page_exact_count_required": true,
+    "stable_order_required": true,
+    "content_ranges_captured": true,
+    "duplicate_keys_rejected": true,
+    "gaps_caps_short_pages_rejected": true,
+    "fetched_equals_expected_asserted": true
+  },
+  "tests": {
+    "audit_support": "11/11 passed",
+    "tier4_cleaner": "87/87 passed",
+    "python_compile": "passed",
+    "deno_check_reprobe": "passed",
+    "json_validation": "passed before handoff"
+  },
+  "post_run_ship_validation": {
+    "audit_support": "12/12 passed",
+    "resolver_support": "3/3 passed",
+    "full_python": "382/382 passed before the empty-relation regression was added; the affected audit suite was rerun afterward",
+    "full_deno": "203/203 passed before the empty-relation regression was added; the affected audit suite was rerun afterward",
+    "web_vitest": "278/278 passed",
+    "typescript": "passed",
+    "next_build": "passed"
+  },
+  "limitations": [
+    "Sequential production reads are not an atomic snapshot.",
+    "Projection rows lack selected artifact_id and source_sha256; identity comparisons are proxies.",
+    "The SQL selected-result view lacks the Python projector's unusable Tier 2 AcroForm penalty.",
+    "Manual OCR ground truth was not available.",
+    "Concurrent enqueue was not exercised because no isolated database was supplied.",
+    "Loaded-but-unserved inventory is bounded to FY2020-FY2024 endowment reporters.",
+    "Fifteen current source objects returned explicit network/storage errors and were excluded from byte-family classification.",
+    "The 2023-24 schema comparison has only three selected artifacts; zero-hit fields are not retirement evidence."
+  ]
+}

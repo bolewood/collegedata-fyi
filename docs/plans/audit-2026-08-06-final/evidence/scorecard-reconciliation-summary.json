@@ -1,0 +1,45 @@
+{
+  "methodology": {
+    "fuzzy_name_matching": false,
+    "matching_order": [
+      "direct_unitid",
+      "opeid6_rollup",
+      "unique_residual_match"
+    ],
+    "population": "Current in-scope private-nonprofit Scorecard rows with both ENDOWBEGIN and ENDOWEND, restricted to UNITIDs with a complete F2 fact pair"
+  },
+  "best_alignment": {
+    "data_year": 2024,
+    "direct_exact_unitid_rows": 1066,
+    "direct_exact_rate": 0.9824884792626728,
+    "consolidation_required": 19,
+    "consolidation_matched": 19,
+    "reporting_entities": 1085,
+    "matched_reporting_entities": 1085,
+    "reporting_entity_rate": 1,
+    "scorecard_population_coverage": 0.9722222222222222,
+    "no_f2_rows": 31,
+    "unreconciled_count": 0
+  },
+  "gate": {
+    "min_reporting_coverage": 0.95,
+    "passed": true,
+    "rate": 1,
+    "rate_passed": true,
+    "reporting_coverage": 0.9722222222222222,
+    "reporting_coverage_passed": true,
+    "threshold": 0.99
+  },
+  "fixtures_all_match": true,
+  "fixture_count": 5,
+  "in_scope_private_nonprofit_rows_with_values": 1116,
+  "scorecard_private_nonprofit_rows_with_values": 1327,
+  "excluded_scorecard_rows": 211,
+  "source_input": {
+    "path": ".context/scorecard-directory-refresh-03232026/Most-Recent-Cohorts-Institution.csv",
+    "rows": 6322,
+    "bytes": 100817953,
+    "sha256": "7deaa94791dbf4c29bb9f70ede0ee01f78023eafc4a11fb6b346e1a246b18932"
+  },
+  "invocation": "python3 tools/ipeds/reconcile_endowment_scorecard.py .context/scorecard-directory-refresh-03232026/Most-Recent-Cohorts-Institution.csv --min-year 2020 --max-year 2024 --threshold 0.99 --out scratch/data-integrity-audit/scorecard-reconciliation.json"
+}

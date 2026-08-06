@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 This project uses four-part semantic versioning.
 
+## [0.4.0.0] - 2026-08-06
+
+### Added
+
+- Review the [reproducible 24-check data-integrity audit](docs/plans/audit-2026-08-06-final/README.md) with full-universe pagination evidence, query and result checksums, source-byte probes, a deterministic resolver cohort, and an explicit record of executed, partial, deferred, and rejected checks.
+- Follow the [recommended audit cadence](docs/plans/audit-2026-08-06-final/RECOMMENDED-CADENCE.md), backed by daily, weekly, monthly, quarterly, release-triggered, and change-triggered controls, with the remaining manual ground-truth and concurrency work called out separately.
+
+### Changed
+
+- Keep the [annual College Scorecard directory refresh](tools/scorecard/README.md) aligned with the current complete vintage by comparing the prior release, stabilizing one-release degree-classification regressions, hiding institutions missing from the new vintage, and refreshing public coverage immediately.
+
+### Fixed
+
+- Accept valid empty PostgREST result sets in the audit paginators and keep the regression checks running in CI.
+
 ## [0.3.0.0] - 2026-08-05
 
 ### Added

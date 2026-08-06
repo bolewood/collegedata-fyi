@@ -78,6 +78,13 @@ Public default filters:
 - `ICLEVEL in (1, 2)` four-year or two-year institution
 - `PREDDEG in (2, 3, 4)` predominant degree is associate, bachelor's, or graduate
   degree; graduate-predominant rows stay only if `UGDS > 0`
+- Release-stability guard: when the immediately prior complete Scorecard release
+  reported `PREDDEG in (2, 3, 4)`, a current one-release change to `PREDDEG = 1`
+  does not remove the institution while current `HIGHDEG in (2, 3, 4)` still
+  confirms an associate-or-higher award. The loader persists the prior
+  predominant-degree value and records every stabilization in its refresh JSON.
+  Current closure, enrollment, institution-level, and highest-degree signals
+  still control scope.
 - Scorecard row exists, giving us Title-IV / federal data backbone
 
 Explicit default exclusions:

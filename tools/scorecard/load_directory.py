@@ -20,11 +20,13 @@ Usage:
     # Dry run — parse, compute slugs, print summary, write nothing.
     python tools/scorecard/load_directory.py \\
       --csv ~/Downloads/Most-Recent-Cohorts-Institution.csv \\
+      --previous-csv ~/Downloads/Previous-Most-Recent-Cohorts-Institution.csv \\
       --data-year 2022-23
 
-    # Apply — upsert directory + crosswalk, write a summary report.
+    # Apply — reconcile directory + crosswalk, then refresh public coverage.
     python tools/scorecard/load_directory.py \\
       --csv ~/Downloads/Most-Recent-Cohorts-Institution.csv \\
+      --previous-csv ~/Downloads/Previous-Most-Recent-Cohorts-Institution.csv \\
       --data-year 2022-23 \\
       --apply
 
@@ -41,11 +43,13 @@ import os
 import re
 import sys
 from collections import Counter, defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SCHOOLS_YAML = REPO_ROOT / "tools" / "finder" / "schools.yaml"
+MISSING_FROM_CURRENT_SCORECARD = "missing_from_current_scorecard"
 
 
 # Scorecard CSV column → directory field. Source-of-truth list comes
@@ -105,9 +109,7 @@ def _coerce(value: Any, col: str) -> Any:
     """Mirror refresh_summary.py's _coerce semantics. Treat NULL,
     'NULL', and 'PrivacySuppressed' as missing; cast int / float per
     column's declared type."""
-    import pandas as pd
-
-    if pd.isna(value):
+    if value is None or (isinstance(value, float) and value != value):
         return None
     if isinstance(value, str):
         s = value.strip()
@@ -347,6 +349,7 @@ def load_schools_yaml(path: Path) -> dict[str, str]:
 def build_directory_row(
     raw: dict[str, Any],
     data_year: str,
+    previous_predominant_degree: Optional[int] = None,
 ) -> Optional[dict[str, Any]]:
     """Transform one Scorecard CSV row into a directory row, or None
     when UNITID is missing/invalid."""
@@ -362,6 +365,24 @@ def build_directory_row(
         out[target] = _coerce(raw.get(source), target)
     if not out.get("school_name"):
         return None
+
+    # PREDDEG is a derived annual classification, not a statement that the
+    # institution stopped awarding degrees. The March 2026 Scorecard release
+    # moved Spelman and dozens of other established degree-granting schools
+    # from PREDDEG 2/3 to 1 for a single release while HIGHDEG still reported
+    # an associate-or-higher award. When the operator supplies the immediately
+    # previous release, keep its degree-predominant classification for this
+    # narrow regression. Genuine closures, enrollment changes, level changes,
+    # and schools whose HIGHDEG also falls below 2 still follow current data.
+    if (
+        out.get("predominant_degree") == 1
+        and previous_predominant_degree in (2, 3, 4)
+        and out.get("highest_degree") in (2, 3, 4)
+    ):
+        out["_current_predominant_degree"] = 1
+        out["_previous_predominant_degree"] = previous_predominant_degree
+        out["predominant_degree"] = previous_predominant_degree
+
     in_scope, reason = _scope_decision(out)
     out["in_scope"] = in_scope
     out["exclusion_reason"] = reason
@@ -435,18 +456,179 @@ def required_scorecard_columns() -> set[str]:
     return {"UNITID"} | set(DIRECTORY_COLUMN_MAP.values())
 
 
+def previous_predominant_degrees(df: Any) -> dict[str, int]:
+    """Return normalized UNITID -> PREDDEG for a prior Scorecard release."""
+    required = {"UNITID", "PREDDEG"}
+    missing = required - set(df.columns)
+    if missing:
+        raise ValueError(
+            f"Previous Scorecard CSV is missing required columns: {sorted(missing)}"
+        )
+
+    result: dict[str, int] = {}
+    for raw in df.to_dict(orient="records"):
+        ipeds_id = normalize_ipeds(raw.get("UNITID"))
+        preddeg = _coerce(raw.get("PREDDEG"), "predominant_degree")
+        if ipeds_id is not None and preddeg is not None:
+            result[ipeds_id] = preddeg
+    return result
+
+
+def directory_refresh_delta(
+    existing_rows: Iterable[dict[str, Any]],
+    incoming_rows: Iterable[dict[str, Any]],
+) -> dict[str, Any]:
+    """Describe public-scope changes before a directory refresh is applied.
+
+    Public scope mirrors one Scorecard vintage rather than appending forever.
+    This comparison makes scope changes reviewable and identifies rows that
+    disappeared from the incoming vintage so they can be retained for aliases
+    while hidden from current public search and coverage.
+    """
+    existing = {row["ipeds_id"]: row for row in existing_rows}
+    incoming = {row["ipeds_id"]: row for row in incoming_rows}
+
+    def transition(
+        ipeds_id: str,
+        old: dict[str, Any],
+        new: dict[str, Any],
+    ) -> dict[str, Any]:
+        return {
+            "ipeds_id": ipeds_id,
+            "school_name": new.get("school_name") or old.get("school_name"),
+            "old_reason": old.get("exclusion_reason"),
+            "new_reason": new.get("exclusion_reason"),
+            "old_predominant_degree": old.get("predominant_degree"),
+            "new_predominant_degree": new.get("predominant_degree"),
+            "old_undergraduate_enrollment": old.get("undergraduate_enrollment"),
+            "new_undergraduate_enrollment": new.get("undergraduate_enrollment"),
+        }
+
+    entering_scope: list[dict[str, Any]] = []
+    leaving_scope: list[dict[str, Any]] = []
+    for ipeds_id in existing.keys() & incoming.keys():
+        old = existing[ipeds_id]
+        new = incoming[ipeds_id]
+        if not old.get("in_scope") and new.get("in_scope"):
+            entering_scope.append(transition(ipeds_id, old, new))
+        elif old.get("in_scope") and not new.get("in_scope"):
+            leaving_scope.append(transition(ipeds_id, old, new))
+
+    entering_scope.sort(
+        key=lambda row: (
+            -(row.get("new_undergraduate_enrollment") or 0),
+            row.get("school_name") or "",
+        )
+    )
+    leaving_scope.sort(
+        key=lambda row: (
+            -(row.get("old_undergraduate_enrollment") or 0),
+            row.get("school_name") or "",
+        )
+    )
+
+    missing_ipeds_ids = sorted(existing.keys() - incoming.keys())
+    new_ipeds_ids = sorted(incoming.keys() - existing.keys())
+    return {
+        "existing_rows": len(existing),
+        "incoming_rows": len(incoming),
+        "new_rows": len(new_ipeds_ids),
+        "missing_rows": len(missing_ipeds_ids),
+        "entering_scope": len(entering_scope),
+        "leaving_scope": len(leaving_scope),
+        "entering_scope_old_reasons": dict(
+            Counter(row["old_reason"] for row in entering_scope)
+        ),
+        "leaving_scope_new_reasons": dict(
+            Counter(row["new_reason"] for row in leaving_scope)
+        ),
+        "new_ipeds_ids": new_ipeds_ids,
+        "missing_ipeds_ids": missing_ipeds_ids,
+        "entering_scope_rows": entering_scope,
+        "leaving_scope_rows": leaving_scope,
+    }
+
+
+def fetch_existing_directory_rows(client: Any, page_size: int = 1000) -> list[dict[str, Any]]:
+    """Fetch the complete live directory with stable PostgREST pagination."""
+    rows: list[dict[str, Any]] = []
+    offset = 0
+    while True:
+        response = (
+            client.table("institution_directory")
+            .select(
+                "ipeds_id,school_name,in_scope,exclusion_reason,"
+                "predominant_degree,undergraduate_enrollment"
+            )
+            .order("ipeds_id")
+            .range(offset, offset + page_size - 1)
+            .execute()
+        )
+        batch = response.data or []
+        rows.extend(batch)
+        if len(batch) < page_size:
+            break
+        offset += page_size
+    return rows
+
+
+def printable_refresh_delta(delta: dict[str, Any], sample_size: int = 20) -> dict[str, Any]:
+    """Keep the operator report compact while retaining high-impact samples."""
+    compact = {
+        key: value
+        for key, value in delta.items()
+        if key not in {
+            "new_ipeds_ids",
+            "missing_ipeds_ids",
+            "entering_scope_rows",
+            "leaving_scope_rows",
+        }
+    }
+    compact.update(
+        {
+            "new_ipeds_ids_sample": delta["new_ipeds_ids"][:sample_size],
+            "missing_ipeds_ids_sample": delta["missing_ipeds_ids"][:sample_size],
+            "entering_scope_sample": delta["entering_scope_rows"][:sample_size],
+            "leaving_scope_sample": delta["leaving_scope_rows"][:sample_size],
+        }
+    )
+    return compact
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--csv", required=True, help="Path to Most-Recent-Cohorts-Institution.csv")
+    parser.add_argument(
+        "--previous-csv",
+        help=(
+            "Immediately previous complete Most-Recent Institution CSV. When "
+            "provided, stabilizes one-release PREDDEG 2/3/4 -> 1 regressions "
+            "only while the current HIGHDEG remains 2/3/4."
+        ),
+    )
     parser.add_argument("--data-year", required=True, help="Scorecard vintage, e.g. 2022-23")
     parser.add_argument("--schools-yaml", default=str(DEFAULT_SCHOOLS_YAML),
                         help="Path to schools.yaml for slug preservation (default: tools/finder/schools.yaml)")
     parser.add_argument("--apply", action="store_true",
                         help="Write to Supabase. Without this flag the loader is a dry run that prints the summary only.")
+    parser.add_argument(
+        "--audit-live",
+        action="store_true",
+        help="Compare the incoming vintage with the live directory without writing",
+    )
     parser.add_argument("--summary-out", default=None,
                         help="Optional path to write the refresh summary as JSON. Defaults to scratch/scorecard/directory-refresh-<data_year>.json")
     parser.add_argument("--env", default=str(REPO_ROOT / ".env"), help=".env path")
     parser.add_argument("--batch-size", type=int, default=500, help="Upsert batch size")
+    parser.add_argument(
+        "--max-missing",
+        type=int,
+        default=250,
+        help=(
+            "Abort --apply when more than this many live UNITIDs are absent "
+            "from the incoming full vintage (default: 250)"
+        ),
+    )
     args = parser.parse_args()
 
     try:
@@ -479,6 +661,30 @@ def main() -> int:
         )
         return 2
 
+    prior_predominant_by_ipeds: dict[str, int] = {}
+    previous_csv_path: Optional[Path] = None
+    if args.previous_csv:
+        previous_csv_path = Path(args.previous_csv).expanduser()
+        if not previous_csv_path.exists():
+            print(f"Previous CSV not found: {previous_csv_path}", file=sys.stderr)
+            return 1
+        print(f"Reading previous release {previous_csv_path} ...", file=sys.stderr)
+        previous_df = pd.read_csv(
+            previous_csv_path,
+            dtype=str,
+            usecols=lambda column: column in {"UNITID", "PREDDEG"},
+            low_memory=False,
+        )
+        try:
+            prior_predominant_by_ipeds = previous_predominant_degrees(previous_df)
+        except ValueError as exc:
+            print(str(exc), file=sys.stderr)
+            return 2
+        print(
+            f"  {len(prior_predominant_by_ipeds):,} prior PREDDEG values",
+            file=sys.stderr,
+        )
+
     # Build directory rows. Skip rows missing UNITID or INSTNM.
     rows: list[dict[str, Any]] = []
     skipped_no_ipeds = 0
@@ -488,7 +694,11 @@ def main() -> int:
         if ipeds is None:
             skipped_no_ipeds += 1
             continue
-        row = build_directory_row(raw, args.data_year)
+        row = build_directory_row(
+            raw,
+            args.data_year,
+            prior_predominant_by_ipeds.get(ipeds),
+        )
         if row is None:
             skipped_no_name += 1
             continue
@@ -507,11 +717,32 @@ def main() -> int:
     no_slug = [r for r in rows if not r.get("school_id")]
     rows = [r for r in rows if r.get("school_id")]
 
-    # Strip transient slug-assignment fields before persistence.
+    predominant_degree_stabilizations = [
+        {
+            "ipeds_id": row["ipeds_id"],
+            "school_name": row["school_name"],
+            "current_predominant_degree": row["_current_predominant_degree"],
+            "previous_predominant_degree": row["_previous_predominant_degree"],
+            "current_highest_degree": row.get("highest_degree"),
+            "undergraduate_enrollment": row.get("undergraduate_enrollment"),
+        }
+        for row in rows
+        if "_previous_predominant_degree" in row
+    ]
+    predominant_degree_stabilizations.sort(
+        key=lambda row: (
+            -(row.get("undergraduate_enrollment") or 0),
+            row["school_name"],
+        )
+    )
+
+    # Strip transient reconciliation/slug-assignment fields before persistence.
     for row in rows:
         row.pop("_slug_source", None)
         row.pop("_base_slug", None)
         row.pop("_slug_error", None)
+        row.pop("_current_predominant_degree", None)
+        row.pop("_previous_predominant_degree", None)
 
     crosswalk_rows = build_crosswalk_rows(rows, schools_yaml_map)
 
@@ -523,6 +754,7 @@ def main() -> int:
     summary: dict[str, Any] = {
         "data_year": args.data_year,
         "csv_path": str(csv_path),
+        "previous_csv_path": str(previous_csv_path) if previous_csv_path else None,
         "total_csv_rows": int(len(df)),
         "skipped_no_ipeds": skipped_no_ipeds,
         "skipped_no_name": skipped_no_name,
@@ -536,6 +768,15 @@ def main() -> int:
         "slug_collisions_by_tier": dict(Counter(c["tier"] for c in collisions)),
         "schools_yaml_preserved": sum(1 for r in rows if r["ipeds_id"] in schools_yaml_map),
         "crosswalk_rows": len(crosswalk_rows),
+        "predominant_degree_stabilizations": len(
+            predominant_degree_stabilizations
+        ),
+        "predominant_degree_stabilizations_by_previous_value": dict(
+            Counter(
+                row["previous_predominant_degree"]
+                for row in predominant_degree_stabilizations
+            )
+        ),
     }
 
     print("\n=== Refresh summary ===", file=sys.stderr)
@@ -550,20 +791,46 @@ def main() -> int:
                 file=sys.stderr,
             )
 
+    if predominant_degree_stabilizations:
+        print(
+            "\n=== Stabilized PREDDEG regressions (first 20) ===",
+            file=sys.stderr,
+        )
+        for row in predominant_degree_stabilizations[:20]:
+            print(
+                f"  {row['ipeds_id']} {row['school_name']!r}: "
+                f"current={row['current_predominant_degree']} -> "
+                f"previous={row['previous_predominant_degree']} "
+                f"(HIGHDEG={row['current_highest_degree']})",
+                file=sys.stderr,
+            )
+
     summary_path = Path(args.summary_out) if args.summary_out else (
         REPO_ROOT / "scratch" / "scorecard" / f"directory-refresh-{args.data_year}.json"
     )
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     summary_path.write_text(
-        json.dumps({"summary": summary, "collisions": collisions}, indent=2) + "\n"
+        json.dumps(
+            {
+                "summary": summary,
+                "collisions": collisions,
+                "predominant_degree_stabilizations": predominant_degree_stabilizations,
+            },
+            indent=2,
+        )
+        + "\n"
     )
     print(f"\nWrote summary to {summary_path}", file=sys.stderr)
 
-    if not args.apply:
-        print("\nDry run — no writes. Pass --apply to upsert.", file=sys.stderr)
+    if not args.apply and not args.audit_live:
+        print(
+            "\nDry run — no writes. Pass --audit-live to preview the production "
+            "scope delta or --apply to reconcile it.",
+            file=sys.stderr,
+        )
         return 0
 
-    # Apply path. Service-role client; same pattern as refresh_summary.py.
+    # Live audit/apply path. Service-role client; same pattern as refresh_summary.py.
     from supabase import create_client  # type: ignore
 
     env_path = Path(args.env).expanduser()
@@ -581,6 +848,40 @@ def main() -> int:
 
     client = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 
+    existing_rows = fetch_existing_directory_rows(client)
+    delta = directory_refresh_delta(existing_rows, rows)
+    summary["live_delta"] = delta
+    summary_path.write_text(
+        json.dumps(
+            {
+                "summary": summary,
+                "collisions": collisions,
+                "predominant_degree_stabilizations": predominant_degree_stabilizations,
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+    print("\n=== Live directory delta ===", file=sys.stderr)
+    print(json.dumps(printable_refresh_delta(delta), indent=2), file=sys.stderr)
+    if delta["missing_rows"] > args.max_missing:
+        print(
+            f"Refusing to continue: {delta['missing_rows']:,} live UNITIDs are absent "
+            f"from the incoming vintage, above --max-missing={args.max_missing:,}. "
+            "Confirm that this is the complete institution-level file, then "
+            "raise --max-missing deliberately if the release is valid.",
+            file=sys.stderr,
+        )
+        return 3
+
+    if not args.apply:
+        print("\nLive audit complete — no writes.", file=sys.stderr)
+        return 0
+
+    refreshed_at = datetime.now(timezone.utc).isoformat()
+    for row in rows:
+        row["refreshed_at"] = refreshed_at
+
     print(f"\nUpserting {len(rows)} institution_directory rows in batches of {args.batch_size}...", file=sys.stderr)
     for i in range(0, len(rows), args.batch_size):
         batch = rows[i : i + args.batch_size]
@@ -594,6 +895,34 @@ def main() -> int:
             batch, on_conflict="ipeds_id,alias"
         ).execute()
         print(f"  {i + len(batch):,}/{len(crosswalk_rows):,}", file=sys.stderr)
+
+    missing_ipeds_ids = delta["missing_ipeds_ids"]
+    if missing_ipeds_ids:
+        print(
+            f"\nMarking {len(missing_ipeds_ids):,} rows absent from this Scorecard "
+            "vintage as out of scope...",
+            file=sys.stderr,
+        )
+        for i in range(0, len(missing_ipeds_ids), args.batch_size):
+            batch = missing_ipeds_ids[i : i + args.batch_size]
+            (
+                client.table("institution_directory")
+                .update(
+                    {
+                        "in_scope": False,
+                        "exclusion_reason": MISSING_FROM_CURRENT_SCORECARD,
+                        "refreshed_at": refreshed_at,
+                    }
+                )
+                .in_("ipeds_id", batch)
+                .execute()
+            )
+            print(f"  {i + len(batch):,}/{len(missing_ipeds_ids):,}", file=sys.stderr)
+
+    print("\nRefreshing institution_cds_coverage...", file=sys.stderr)
+    coverage_response = client.rpc("refresh_institution_cds_coverage").execute()
+    if coverage_response.data:
+        print(json.dumps(coverage_response.data, indent=2), file=sys.stderr)
 
     print("\nDone.", file=sys.stderr)
     return 0

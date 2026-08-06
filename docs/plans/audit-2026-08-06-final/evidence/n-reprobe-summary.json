@@ -1,0 +1,81 @@
+{
+  "label": "Deterministic 20-school N reprobe",
+  "run_started_at": "2026-08-06T19:05:17.245Z",
+  "run_finished_at": "2026-08-06T19:08:09.678Z",
+  "method": {
+    "population": "Schools whose latest archive_queue row is failed_permanent/no_pdfs_found",
+    "sampling": "Take the 20 lexicographically smallest SHA-256(audit-2026-08-06-n1\\0school_id) values",
+    "sample_salt": "audit-2026-08-06-n1",
+    "eligible_schools": 1342,
+    "cohort_size": 20,
+    "resolver": "supabase/functions/_shared/resolve.ts resolveCdsForSchool: redirects, direct documents, two-hop discovery, and production candidate selection",
+    "extension_evaluated": "For unsuccessful non-document hints, call the same resolver on the existing well-known paths. Production does not currently do this for homepage hints."
+  },
+  "archive_queue_pagination": {
+    "expected_rows": 17044,
+    "fetched_rows": 17044,
+    "page_size": 1000,
+    "page_count": 18,
+    "content_ranges": [
+      "0-999/17044",
+      "1000-1999/*",
+      "2000-2999/*",
+      "3000-3999/*",
+      "4000-4999/*",
+      "5000-5999/*",
+      "6000-6999/*",
+      "7000-7999/*",
+      "8000-8999/*",
+      "9000-9999/*",
+      "10000-10999/*",
+      "11000-11999/*",
+      "12000-12999/*",
+      "13000-13999/*",
+      "14000-14999/*",
+      "15000-15999/*",
+      "16000-16999/*",
+      "17000-17043/*"
+    ],
+    "result_sha256": "2e0a4744c3da0d764a908f0503b5a5d2a6dd15df2412c7d6fd4993658b0176c1",
+    "assertions": {
+      "stable_order_declared": true,
+      "no_gaps_or_caps": true,
+      "unique_ids": true,
+      "fetched_equals_expected": true
+    }
+  },
+  "sample_school_ids": [
+    "eastern-wyoming-college",
+    "mississippi-gulf-coast-community-college",
+    "fresno-pacific-university",
+    "cuny-york-college",
+    "york-college-of-pennsylvania",
+    "elyon-college",
+    "missouri-baptist-university",
+    "edp-university-of-puerto-rico-manati",
+    "lane-community-college",
+    "galen-health-institutes-salt-lake-city",
+    "metropolitan-state-university",
+    "southwest-tennessee-community-college",
+    "sandhills-community-college",
+    "john-a-logan-college",
+    "eastwick-college-hackensack",
+    "san-joaquin-valley-college-rancho-cordova",
+    "east-ohio-college",
+    "chadron-state-college",
+    "brunswick-community-college",
+    "universal-technical-institute-of-northern-california-inc"
+  ],
+  "base_resolver_outcomes": {
+    "no_cds_found": 20
+  },
+  "extension_attempts": 300,
+  "extension_outcomes": {
+    "no_cds_found": 47,
+    "upstream_gone": 253
+  },
+  "verdicts": {
+    "not_found_from_supplied_hint": 20
+  },
+  "interpretation": "No unresolved school is called truly absent. The strongest supported label is not_found_from_supplied_hint."
+}
