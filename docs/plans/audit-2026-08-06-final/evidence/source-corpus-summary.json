@@ -1,0 +1,271 @@
+{
+  "label": "Source corpus format sniff and deterministic 100-PDF byte/year probe",
+  "run_started_at": "2026-08-06T19:10:05.377045Z",
+  "run_finished_at": "2026-08-06T19:13:13.165641Z",
+  "method": {
+    "b1_sample": "100 current sources whose 4 KiB head probe contains %PDF, with smallest SHA-256(audit-2026-08-06-b1\\0document_id)",
+    "bytes_persisted": false,
+    "current_source_selection": "Newest kind=source artifact per document by created_at then id",
+    "head_probe": "HTTP Range bytes=0-4095; fail if the storage server does not return 206",
+    "zip_probe": "Full current ZIP sources, capped at 50 MiB, using worker.sniff_zip_inner_format"
+  },
+  "pagination": {
+    "cds_documents": {
+      "assertions": {
+        "fetched_equals_expected": true,
+        "no_gaps_or_caps": true,
+        "stable_order_declared": true,
+        "unique_keys": true
+      },
+      "captured_at": "2026-08-06T19:10:05.377238Z",
+      "content_ranges": [
+        "0-999/4071",
+        "1000-1999/*",
+        "2000-2999/*",
+        "3000-3999/*",
+        "4000-4070/*"
+      ],
+      "expected_rows": 4071,
+      "fetched_rows": 4071,
+      "identifier": "cds_documents.source_probe",
+      "page_count": 5,
+      "page_size": 1000,
+      "query_sha256": "72e35fc14c102ad92e39d694bc5bb4f19b4a40023d6b85d663ef7d35b0008986",
+      "result_sha256": "1e7ab5b7895da58817f2090ed6aabea38bc5875aefc6cf71605f98fe0368c07c"
+    },
+    "source_artifacts": {
+      "assertions": {
+        "fetched_equals_expected": true,
+        "no_gaps_or_caps": true,
+        "stable_order_declared": true,
+        "unique_keys": true
+      },
+      "captured_at": "2026-08-06T19:10:07.924131Z",
+      "content_ranges": [
+        "0-999/15248",
+        "1000-1999/*",
+        "2000-2999/*",
+        "3000-3999/*",
+        "4000-4999/*",
+        "5000-5999/*",
+        "6000-6999/*",
+        "7000-7999/*",
+        "8000-8999/*",
+        "9000-9999/*",
+        "10000-10999/*",
+        "11000-11999/*",
+        "12000-12999/*",
+        "13000-13999/*",
+        "14000-14999/*",
+        "15000-15247/*"
+      ],
+      "expected_rows": 15248,
+      "fetched_rows": 15248,
+      "identifier": "cds_artifacts.current_source_candidates",
+      "page_count": 16,
+      "page_size": 1000,
+      "query_sha256": "490571cc30fd781950de344d39de85c734196e3156a0fffa2b10d670b4e9c48c",
+      "result_sha256": "b4d20206fdaa5ca80688fc7e162edba4764f81b47d02432f7eed0a841ddf9c5c"
+    }
+  },
+  "format_sniff": {
+    "current_source_documents": 4071,
+    "head_probe_successes": 4056,
+    "head_probe_failures": 15,
+    "head_probe_failure_types": {
+      "HTTPError": 15
+    },
+    "head_probe_failure_rows": [
+      {
+        "document_id": "1305dad5-f582-4713-b5fd-cb5778d36c03",
+        "error_type": "HTTPError",
+        "http_status": 400,
+        "school_id": "mississippi-state-university"
+      },
+      {
+        "document_id": "1a321b50-5735-463f-906e-bf9fcb20ab0c",
+        "error_type": "HTTPError",
+        "http_status": 400,
+        "school_id": "saint-josephs-university"
+      },
+      {
+        "document_id": "282324e3-7c27-44ed-8630-676274c01e20",
+        "error_type": "HTTPError",
+        "http_status": 400,
+        "school_id": "geisinger-commonwealth-school-of-medicine"
+      },
+      {
+        "document_id": "5c4cada1-cccb-4407-b894-a70998dbe84d",
+        "error_type": "HTTPError",
+        "http_status": 400,
+        "school_id": "university-of-north-carolina-wilmington"
+      },
+      {
+        "document_id": "6f2c11c3-1387-49b0-9772-33a777c40c06",
+        "error_type": "HTTPError",
+        "http_status": 400,
+        "school_id": "ut-austin"
+      },
+      {
+        "document_id": "7880e495-dcf8-4bda-af32-a609d17902db",
+        "error_type": "HTTPError",
+        "http_status": 400,
+        "school_id": "eastern-new-mexico-university-main-campus"
+      },
+      {
+        "document_id": "84e3758a-0bed-402b-8e89-83ced4ec8763",
+        "error_type": "HTTPError",
+        "http_status": 400,
+        "school_id": "university-of-mississippi"
+      },
+      {
+        "document_id": "904d95f7-a401-4996-b9cb-62313adeb629",
+        "error_type": "HTTPError",
+        "http_status": 400,
+        "school_id": "the-university-of-texas-rio-grande-valley"
+      },
+      {
+        "document_id": "9567190c-d1d1-48e2-a4a2-4b56f09e91c5",
+        "error_type": "HTTPError",
+        "http_status": 400,
+        "school_id": "university-of-wisconsin-oshkosh"
+      },
+      {
+        "document_id": "95938c38-c7e9-427f-b607-a12dbe1bc042",
+        "error_type": "HTTPError",
+        "http_status": 400,
+        "school_id": "indiana-university-of-pennsylvania-main-campus"
+      },
+      {
+        "document_id": "cb422aa5-9b59-4d3f-bba0-03bb20c4aa97",
+        "error_type": "HTTPError",
+        "http_status": 400,
+        "school_id": "marquette-university"
+      },
+      {
+        "document_id": "d8e7d149-1b88-4672-855e-63dda032dd0a",
+        "error_type": "HTTPError",
+        "http_status": 400,
+        "school_id": "western-connecticut-state-university"
+      },
+      {
+        "document_id": "ed308842-7962-410a-b336-b4b3bcba3fe8",
+        "error_type": "HTTPError",
+        "http_status": 400,
+        "school_id": "suny-college-at-geneseo"
+      },
+      {
+        "document_id": "f034b1c6-4822-4a16-ace7-174ef83b0c06",
+        "error_type": "HTTPError",
+        "http_status": 400,
+        "school_id": "augsburg-university"
+      },
+      {
+        "document_id": "fafa02cb-6330-41d8-9c20-94ee7b3223c1",
+        "error_type": "HTTPError",
+        "http_status": 400,
+        "school_id": "midwestern-state-university"
+      }
+    ],
+    "observed_head": {
+      "html_within_512": 56,
+      "other": 1,
+      "pdf": 3610,
+      "zip": 389
+    },
+    "leading_junk_pdf": {
+      "denominator": 4056,
+      "numerator": 0,
+      "rows": []
+    },
+    "html_marker_after_512_within_4096": {
+      "denominator": 4056,
+      "numerator": 0,
+      "rows": []
+    },
+    "zip": {
+      "denominator": 389,
+      "detected": {
+        "docx": 19,
+        "xlsx": 370
+      },
+      "declared_mismatch_count": 28,
+      "declared_mismatch_pairs": [
+        {
+          "declared": "pdf_flat",
+          "detected": "xlsx",
+          "count": 20
+        },
+        {
+          "declared": "xlsx",
+          "detected": "docx",
+          "count": 8
+        }
+      ],
+      "declared_mismatch_document_ids": [
+        "5b760b6f-945a-4715-b52c-5f147f65224f",
+        "8d7bc227-cb45-4df7-98c3-c50c2821f4a5",
+        "9ea2dc05-37c4-4f7f-be9d-5fb803ed2c5a",
+        "2efb875c-b6f8-400b-831c-1b1b282c113c",
+        "4b661dd1-1417-403c-9455-b6637c8d7384",
+        "df72d54c-0a51-4d50-b073-f6845364f79b",
+        "46581380-9000-4f42-8ebb-b919da1d80ea",
+        "5de3ad5b-fcf2-4464-aad4-eeaed0f1f11e",
+        "8f43d9ee-f410-4cde-bb87-235bfe168f7e",
+        "9633426a-aa01-499c-a9ba-f0012f009d67",
+        "3de249cd-ce66-4ab8-9ae1-cda64a6dffb2",
+        "192060de-b121-4cdd-950c-135de482cd77",
+        "32e34b0b-1569-4a30-ad9a-d741395d0958",
+        "04f90025-4dc2-4201-a10a-765921c37d88",
+        "353f8e4a-ac65-4e6d-8dd9-051a8abadc19",
+        "827855a9-6fa8-4bf4-94e8-821e243074d6",
+        "1f6d42a8-9fdb-4892-b88b-0d2c5c6738c3",
+        "7ce4801e-3c36-47fa-bd55-71cf1ccd5432",
+        "568544c2-6d0d-4648-b54d-92aae5f49173",
+        "9b9c57f9-e265-48c0-974d-be0adc481572",
+        "8febb292-9285-459a-9014-b082d09fe6c9",
+        "fe9d6ced-5496-4f93-bc1f-50937a15fb30",
+        "a59a0fd0-b7c1-4a90-a679-f1acada9094f",
+        "55439010-5a64-4be5-9280-63ece5c375e0",
+        "02118510-a598-4274-80cf-50117f6c8f63",
+        "bc388a17-24b9-466b-aed1-a9936882f862",
+        "f230d3ea-39b0-4c0f-9555-736842652f88",
+        "16ecb192-27ba-4da8-975b-696a8c15b885"
+      ],
+      "sha_mismatches": 0,
+      "probe_errors": 0
+    },
+    "interpretation": "These measurements quantify current-corpus exposure to the 100-character PDF and 512-byte HTML routing heuristics. They do not claim that extra OCR cost is silent data loss."
+  },
+  "b1_source_byte_sample": {
+    "sample_salt": "audit-2026-08-06-b1",
+    "requested": 100,
+    "completed": 100,
+    "errors": 0,
+    "artifact_sha_mismatches": 0,
+    "document_sha_mismatches": 2,
+    "document_sha_mismatch_rows": [
+      {
+        "artifact_sha_matches_bytes": true,
+        "byte_detected_year": "2018-19",
+        "cds_year": "2018-19",
+        "detected_year": "2018-19",
+        "document_id": "95f41ff1-ed15-481e-920d-cbc2ff179bc8",
+        "document_sha_matches_bytes": false,
+        "school_id": "university-of-notre-dame"
+      },
+      {
+        "artifact_sha_matches_bytes": true,
+        "byte_detected_year": null,
+        "cds_year": "2022-23",
+        "detected_year": null,
+        "document_id": "dd28321c-5929-4f8b-a347-57d0c315e38e",
+        "document_sha_matches_bytes": false,
+        "school_id": "nyu"
+      }
+    ],
+    "byte_year_vs_detected_year_mismatches": 0,
+    "byte_year_undetected": 16,
+    "cohort_sha256": "5724cdc788d3d4bec0a7c35c45981df85bde5dc0e5100ed55ebee060eb3004d1"
+  }
+}

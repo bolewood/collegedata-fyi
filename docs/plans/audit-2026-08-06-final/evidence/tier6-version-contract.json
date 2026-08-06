@@ -1,0 +1,34 @@
+{
+  "label": "Tier 6 producer-version/idempotency contract",
+  "pagination": {
+    "assertions": {
+      "fetched_equals_expected": true,
+      "no_gaps_or_caps": true,
+      "stable_order_declared": true,
+      "unique_keys": true
+    },
+    "captured_at": "2026-08-06T18:55:00.689655Z",
+    "content_ranges": [
+      "0-4/5"
+    ],
+    "expected_rows": 5,
+    "fetched_rows": 5,
+    "identifier": "cds_artifacts.tier6_html",
+    "page_count": 1,
+    "page_size": 1000,
+    "query_sha256": "3323f3cdce756d4178fd40d1db437dd68b3044fb6f4a64b88a09e891806b1e6a",
+    "result_sha256": "d6f53d1c770368558cbc23c2d779c8889569a3f125fa7f867a8d338edf6b2ba5"
+  },
+  "result": {
+    "artifacts_with_source_sha_provenance": 0,
+    "artifacts_without_source_sha_provenance": 5,
+    "canonical_artifacts": 5,
+    "documents": 4,
+    "interpretation": "Current artifacts without source SHA do not suppress a re-extraction when the current source SHA is known. After a SHA-tagged artifact is written, however, cleaner-only changes require a Tier 6 producer-version bump to avoid the idempotency skip.",
+    "producer_versions": {
+      "0.1.0": 5
+    }
+  },
+  "run_finished_at": "2026-08-06T18:55:01.155686Z",
+  "run_started_at": "2026-08-06T18:55:00.689494Z"
+}

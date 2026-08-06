@@ -1,0 +1,126 @@
+{
+  "captured_at": "2026-08-06T18:49:10Z",
+  "source_commit": "c51375f3d01536de85a48b7b0ab737269fba0db3",
+  "origin_main": "6938972ca8bab739f3db8c148dda39a07d0a345c",
+  "projection": {
+    "source": "tools/browser_backend/project_browser_data.py",
+    "minimum_year_start": 2024,
+    "browser_only_exclusion": "data_quality_flag=wrong_file",
+    "selector_controls": [
+      "expected schema version",
+      "schema-fallback penalty",
+      "unusable Tier 2 label-AcroForm penalty",
+      "producer precedence",
+      "newest created_at/id"
+    ],
+    "selected_view_limitation": "The SQL selected-result view does not encode the Python projector's unusable Tier 2 label-AcroForm penalty. It is therefore a provenance proxy, not a byte-identity oracle.",
+    "projection_provenance_columns_missing": [
+      "selected artifact_id",
+      "copied source_sha256"
+    ],
+    "scheduled_worker": ".github/workflows/ops-extraction-worker.yml cron 17 9 * * *",
+    "independent_full_rebuild_or_freshness_reconciliation_cron_found": false
+  },
+  "resolver": {
+    "source": "supabase/functions/_shared/resolve.ts",
+    "find_download_links_year": null,
+    "multiple_yearless_candidate_behavior": "pickCandidates returns null before UNKNOWN_YEAR_SENTINEL assignment",
+    "adams_state_root_cause": "Download-link year evidence is discarded; multiple yearless candidates are rejected. The cause is not an UNKNOWN_YEAR_SENTINEL guard.",
+    "safe_fix_direction": "Inherit year from link text/path/parent context before candidate selection; do not emit multiple sentinel rows that collide on school/year uniqueness.",
+    "well_known_path_scope": "Production applies well-known paths to direct-document hints; the audit separately evaluated the same paths for failed homepage hints."
+  },
+  "ipeds_facts_direct_reader_inventory": {
+    "runtime_serving_reader_count": 0,
+    "runtime_serving_reader": "web/src/lib/queries.ts reads school_facts_unified",
+    "bounded_or_operational_readers": [
+      "tools/ipeds/reconcile_endowment_scorecard.py",
+      "tools/ipeds/build_endowment_draw_rate_recipe.py",
+      "tools/ipeds/load_release.py post-load validation",
+      "tools/data_quality/run_data_integrity_audit.py"
+    ],
+    "writer": "tools/ipeds/load_release.py batch upsert",
+    "documentation_examples": [
+      "README.md",
+      "tools/ipeds/README.md",
+      "web/src/app/api/page.tsx",
+      "web/src/app/recipes/endowment-draw-rate/page.tsx"
+    ],
+    "interpretation": "The public school-page path does not bypass the materialized current-facts serving layer. Historical/API examples and bounded tooling intentionally query ipeds_facts directly and must remain tightly filtered."
+  },
+  "finance": {
+    "projector_source": "tools/ipeds/project.py",
+    "negative_contract": "A negative raw value with a matching value label becomes a status fact; an unlabeled negative remains numeric.",
+    "blanket_allow_negative_registry_rejected": true,
+    "draw_rate_formula": "abs(F2H03C) / F2H01",
+    "raw_f2h03d_preserved": true,
+    "accounting_failure_effect": "Derived draw rate is excluded; raw components remain available."
+  },
+  "producer_version_history": {
+    "tier4_current": "0.3.14",
+    "tier4_sequential_bumps": 14,
+    "tier4_versions": [
+      "0.3.0",
+      "0.3.1",
+      "0.3.2",
+      "0.3.3",
+      "0.3.4",
+      "0.3.5",
+      "0.3.6",
+      "0.3.7",
+      "0.3.8",
+      "0.3.9",
+      "0.3.10",
+      "0.3.11",
+      "0.3.12",
+      "0.3.13",
+      "0.3.14"
+    ],
+    "tier4_commit_sequence": [
+      "16eb226",
+      "9e185ae",
+      "b824588",
+      "0c34f7e",
+      "dc092f1",
+      "085bde7",
+      "3bbd055",
+      "ca1dfb7",
+      "feae4b4",
+      "a523c18",
+      "e4695a4",
+      "0161e3a",
+      "5a15a35",
+      "dff9e53"
+    ],
+    "discipline_conclusion": "Sequential history does not prove that every cleaner change and version bump occurred in the same commit.",
+    "tier6_current": "0.1.0",
+    "tier6_calls_tier4_cleaner": true,
+    "tier6_idempotency_key": [
+      "document_id",
+      "producer",
+      "producer_version",
+      "schema_version",
+      "source_sha256"
+    ]
+  },
+  "consumer_contracts": {
+    "admissions": "web/src/lib/public-data.ts withholds incoherent friendly admissions values and emits low_confidence_extract; the underlying browser row remains queryable.",
+    "current_ipeds": "web/src/lib/queries.ts reads school_facts_unified.",
+    "artifact_projection_parity": "Exact equality is not a valid invariant: the spreadsheet/download corpus can include historical artifacts while browser projection is intentionally current-year scoped and applies its own selector. Per-document selected artifact identity is the appropriate contract, but projection rows do not currently persist it."
+  },
+  "test_runs": [
+    {
+      "command": "python3 -m unittest discover -s tools/extraction_worker -p 'test_tier4_cleaner*.py'",
+      "tests": 87,
+      "result": "passed"
+    },
+    {
+      "command": "python3 -m unittest tools.data_quality.test_audit_support",
+      "tests": 11,
+      "result": "passed"
+    },
+    {
+      "command": "deno check tools/data_quality/reprobe_resolver_cohort.ts",
+      "result": "passed"
+    }
+  ]
+}
