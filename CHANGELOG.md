@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 This project uses four-part semantic versioning.
 
+## [0.5.0.0] - 2026-08-10
+
+### Added
+
+- Validate every curated school-to-IPEDS mapping against a checked-in official NCES identity snapshot in CI and before directory or recipe generation can write data.
+- Follow retired school links safely across pages, metadata, Open Graph images, APIs, CSV exports, and Excel downloads with permanent redirects to the canonical school.
+
+### Changed
+
+- Preserve reviewed school slugs and retired aliases across annual finder and College Scorecard refreshes, while refusing missing, empty, malformed, ambiguous, or identity-mismatched inputs before any database client is created.
+- Keep the waitlist and endowment recipes tied to canonical document and IPEDS provenance, including corrected Tufts data and refreshed endowment coverage.
+
+### Fixed
+
+- Restore Tufts University to IPEDS `168148` and UMass Dartmouth to IPEDS `167987`, with an atomic migration that repairs the directory, documents, projections, discovery history, coverage, search, federal facts, and serving caches without transferring one institution's data to the other.
+- Prevent a later Scorecard refresh or stale retired-slug payload from reintroducing the Tufts identity split.
+
 ## [0.4.0.0] - 2026-08-06
 
 ### Added
