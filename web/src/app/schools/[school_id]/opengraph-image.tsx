@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { fetchSchoolDocuments } from "@/lib/queries";
+import { fetchCanonicalSchoolId, fetchSchoolDocuments } from "@/lib/queries";
 import { yearRange } from "@/lib/format";
 
 export const alt = "School Common Data Set archive";
@@ -13,7 +13,8 @@ export default async function Image({
   params: Promise<{ school_id: string }>;
 }) {
   const { school_id } = await params;
-  const docs = await fetchSchoolDocuments(school_id);
+  const resolvedSchoolId = (await fetchCanonicalSchoolId(school_id)) ?? school_id;
+  const docs = await fetchSchoolDocuments(resolvedSchoolId);
 
   if (docs.length === 0) {
     return new ImageResponse(
@@ -37,7 +38,7 @@ export default async function Image({
     );
   }
 
-  const name = docs[0].school_name ?? school_id;
+  const name = docs[0].school_name ?? resolvedSchoolId;
   const years = docs
     .map((d) => d.canonical_year)
     .filter((y): y is string => y != null)

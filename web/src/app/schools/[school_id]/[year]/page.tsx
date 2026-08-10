@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import {
   fetchDocumentsBySchoolAndYear,
   fetchAdmissionStrategyByDocumentId,
   fetchExtract,
   fetchScorecardByIpedsId,
+  fetchCanonicalSchoolId,
 } from "@/lib/queries";
 import type { FieldValue, ArtifactNotes } from "@/lib/types";
 import { storageUrl, formatBadgeLabel, sourceDownloadLabel } from "@/lib/format";
@@ -28,12 +29,13 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { school_id, year } = await params;
-  const docs = await fetchDocumentsBySchoolAndYear(school_id, year);
+  const resolvedSchoolId = (await fetchCanonicalSchoolId(school_id)) ?? school_id;
+  const docs = await fetchDocumentsBySchoolAndYear(resolvedSchoolId, year);
 
   if (docs.length === 0) return { title: "Document Not Found" };
 
   const doc = docs[0];
-  const path = `/schools/${school_id}/${year}`;
+  const path = `/schools/${resolvedSchoolId}/${year}`;
   const title = `${doc.school_name} Common Data Set ${year}`;
   const description =
     `View ${doc.school_name} Common Data Set ${year}: official source download plus extracted admissions, enrollment, SAT/ACT, financial aid, and field-level CDS data.`;
@@ -52,6 +54,10 @@ export default async function SchoolYearPage({
   params: Promise<Params>;
 }) {
   const { school_id, year } = await params;
+  const canonicalSchoolId = await fetchCanonicalSchoolId(school_id);
+  if (canonicalSchoolId && canonicalSchoolId !== school_id) {
+    permanentRedirect(`/schools/${canonicalSchoolId}/${year}`);
+  }
   const docs = await fetchDocumentsBySchoolAndYear(school_id, year);
 
   if (docs.length === 0) {

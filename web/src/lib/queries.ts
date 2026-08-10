@@ -28,6 +28,10 @@ import {
   testPolicySignal,
   type MatchBuilderSchool,
 } from "./list-builder";
+import {
+  resolveCanonicalSchoolId,
+  type SchoolAliasRow,
+} from "./school-alias";
 
 // Documents with these participation_status values are excluded from every
 // public-facing manifest query. 'withdrawn' = takedown per ADR 0008.
@@ -763,6 +767,31 @@ export const fetchInstitutionCoverage = cache(
 
       if (error) return null;
       return (data as InstitutionCoverage | null) ?? null;
+    } catch {
+      return null;
+    }
+  },
+);
+
+// Resolve both canonical and retired school slugs through the public
+// crosswalk. A primary alias wins over demoted aliases; ambiguous rows return
+// null so callers render normally instead of redirecting to the wrong school.
+export const fetchCanonicalSchoolId = cache(
+  async function fetchCanonicalSchoolId(
+    requestedSchoolId: string,
+  ): Promise<string | null> {
+    try {
+      const { data, error } = await (supabase as unknown as UntypedSupabase)
+        .from("institution_slug_crosswalk")
+        .select("school_id, alias, is_primary")
+        .eq("alias", requestedSchoolId)
+        .order("is_primary", { ascending: false });
+
+      if (error) return null;
+      return resolveCanonicalSchoolId(
+        requestedSchoolId,
+        (data as SchoolAliasRow[] | null) ?? [],
+      );
     } catch {
       return null;
     }
