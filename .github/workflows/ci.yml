@@ -37,6 +37,10 @@ jobs:
         run: |
           python -m unittest tools.tier_probe.test_probe
           python -m unittest tools.tier1_extractor.test_extract
+      - name: Audit schools.yaml IPEDS identities
+        run: python tools/finder/identity_guard.py
+      - name: Run finder identity tests
+        run: python -m unittest tools.finder.test_identity_guard
       - name: Run scorecard loader tests
         run: python -m unittest tools.scorecard.test_load_directory
       - name: Run IPEDS loader tests

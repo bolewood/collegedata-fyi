@@ -51,6 +51,19 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SCHOOLS_YAML = REPO_ROOT / "tools" / "finder" / "schools.yaml"
 MISSING_FROM_CURRENT_SCORECARD = "missing_from_current_scorecard"
 
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from tools.finder.identity_guard import (  # noqa: E402
+    DEFAULT_EXCEPTIONS as DEFAULT_IDENTITY_EXCEPTIONS,
+    audit_school_identities,
+    load_identity_exceptions,
+    load_school_claims,
+    official_records_from_directory_rows,
+    school_claim_retired_alias_map,
+    school_claim_slug_map,
+)
+
 
 # Scorecard CSV column → directory field. Source-of-truth list comes
 # straight from PRD 015's directory data model. Keep this set distinct
@@ -327,23 +340,20 @@ def load_schools_yaml(path: Path) -> dict[str, str]:
     """Return ipeds_id → school_id from schools.yaml. Skips entries
     without an ipeds_id (none currently, but the loader shouldn't
     crash if one shows up)."""
-    try:
-        import yaml
-    except ImportError:
-        print("pyyaml not installed. pip install pyyaml", file=sys.stderr)
-        sys.exit(1)
-    data = yaml.safe_load(path.read_text())
-    out: dict[str, str] = {}
-    for entry in data.get("schools", []):
-        ipeds = entry.get("ipeds_id")
-        slug = entry.get("id")
-        if ipeds and slug:
-            # schools.yaml carries ipeds as a string already (quoted in
-            # the YAML to preserve leading zeros). Re-normalize defensively.
-            normalized = normalize_ipeds(ipeds)
-            if normalized:
-                out[normalized] = slug
-    return out
+    return school_claim_slug_map(load_school_claims(path))
+
+
+def audit_directory_identities(
+    claims: Iterable[dict[str, str]],
+    directory_rows: Iterable[dict[str, Any]],
+    exceptions: Iterable[dict[str, str]] = (),
+) -> dict[str, Any]:
+    """Validate every curated UNITID claim against the incoming federal row."""
+    return audit_school_identities(
+        claims,
+        official_records_from_directory_rows(directory_rows),
+        exceptions,
+    )
 
 
 def build_directory_row(
@@ -392,6 +402,7 @@ def build_directory_row(
 def build_crosswalk_rows(
     directory_rows: list[dict[str, Any]],
     schools_yaml_map: dict[str, str],
+    retired_aliases_by_ipeds: Optional[dict[str, list[str]]] = None,
 ) -> list[dict[str, Any]]:
     """One row per known alias. Each ipeds_id always has at least one
     primary row (its school_id). When a schools.yaml ID and the
@@ -401,10 +412,12 @@ def build_crosswalk_rows(
     multiple IPEDS), the loser IPEDS still get the schools.yaml slug
     as a non-primary alias so legacy URLs keep resolving."""
     out: list[dict[str, Any]] = []
+    retired_aliases_by_ipeds = retired_aliases_by_ipeds or {}
     for row in directory_rows:
         ipeds = row["ipeds_id"]
         primary = row["school_id"]
         yaml_slug = schools_yaml_map.get(ipeds)
+        retired_aliases = set(retired_aliases_by_ipeds.get(ipeds, []))
         # Source tag: schools_yaml when this ipeds's primary equals its
         # yaml claim. If yaml-demoted (yaml_slug exists but primary is
         # auto-generated), the primary is scorecard-source.
@@ -426,7 +439,7 @@ def build_crosswalk_rows(
                 auto = base_slug(row["school_name"])
             except ValueError:
                 auto = None
-            if auto and auto != primary:
+            if auto and auto != primary and auto not in retired_aliases:
                 out.append(
                     {
                         "ipeds_id": ipeds,
@@ -449,7 +462,84 @@ def build_crosswalk_rows(
                     "is_primary": False,
                 }
             )
+        # Retired public routes are durable corpus configuration. In
+        # particular, an annual Scorecard refresh must not recreate an
+        # official-name slug as a searchable alias after a repair retired it.
+        for alias in sorted(retired_aliases):
+            out.append(
+                {
+                    "ipeds_id": ipeds,
+                    "school_id": primary,
+                    "alias": alias,
+                    "source": "redirect",
+                    "is_primary": False,
+                }
+            )
     return out
+
+
+def fetch_existing_redirect_alias_keys(
+    client: Any, page_size: int = 1000
+) -> set[tuple[str, str]]:
+    """Fetch live redirect keys so a refresh cannot overwrite provenance."""
+    keys: set[tuple[str, str]] = set()
+    offset = 0
+    while True:
+        response = (
+            client.table("institution_slug_crosswalk")
+            .select("ipeds_id,alias")
+            .eq("source", "redirect")
+            .order("ipeds_id")
+            .order("alias")
+            .range(offset, offset + page_size - 1)
+            .execute()
+        )
+        batch = response.data or []
+        keys.update(
+            (str(row["ipeds_id"]), str(row["alias"]))
+            for row in batch
+            if row.get("ipeds_id") and row.get("alias")
+        )
+        if len(batch) < page_size:
+            break
+        offset += page_size
+    return keys
+
+
+def preserve_existing_redirect_aliases(
+    crosswalk_rows: list[dict[str, Any]],
+    existing_redirect_keys: set[tuple[str, str]],
+) -> tuple[list[dict[str, Any]], int]:
+    """Keep live redirects intact and reject a redirect becoming primary."""
+    conflicts = [
+        row
+        for row in crosswalk_rows
+        if (row["ipeds_id"], row["alias"]) in existing_redirect_keys
+        and row["source"] != "redirect"
+    ]
+    primary_conflicts = [row for row in conflicts if row["is_primary"]]
+    if primary_conflicts:
+        rendered = ", ".join(
+            f"{row['ipeds_id']}:{row['alias']}" for row in primary_conflicts
+        )
+        raise ValueError(
+            "Scorecard refresh would promote retired alias(es) to primary: "
+            f"{rendered}. Add durable retired_aliases/canonical slug claims "
+            "to schools.yaml before applying."
+        )
+
+    protected_keys = {
+        (row["ipeds_id"], row["alias"]) for row in conflicts
+    }
+    return (
+        [
+            row
+            for row in crosswalk_rows
+            if (row["ipeds_id"], row["alias"]) not in protected_keys
+            or row["source"] == "redirect"
+        ],
+        len(protected_keys),
+    )
 
 
 def required_scorecard_columns() -> set[str]:
@@ -609,6 +699,14 @@ def main() -> int:
     parser.add_argument("--data-year", required=True, help="Scorecard vintage, e.g. 2022-23")
     parser.add_argument("--schools-yaml", default=str(DEFAULT_SCHOOLS_YAML),
                         help="Path to schools.yaml for slug preservation (default: tools/finder/schools.yaml)")
+    parser.add_argument(
+        "--identity-exceptions",
+        default=str(DEFAULT_IDENTITY_EXCEPTIONS),
+        help=(
+            "Exact reviewed identity exceptions. Mismatches still fail closed; "
+            "there is no ignore flag."
+        ),
+    )
     parser.add_argument("--apply", action="store_true",
                         help="Write to Supabase. Without this flag the loader is a dry run that prints the summary only.")
     parser.add_argument(
@@ -643,7 +741,28 @@ def main() -> int:
         return 1
 
     yaml_path = Path(args.schools_yaml).expanduser()
-    schools_yaml_map = load_schools_yaml(yaml_path) if yaml_path.exists() else {}
+    if not yaml_path.is_file():
+        print(
+            f"Refusing to continue: schools.yaml not found: {yaml_path}",
+            file=sys.stderr,
+        )
+        return 4
+    try:
+        school_claims = load_school_claims(yaml_path)
+    except Exception as exc:
+        print(
+            f"Refusing to continue: invalid schools.yaml identity corpus: {exc}",
+            file=sys.stderr,
+        )
+        return 4
+    if not school_claims:
+        print(
+            "Refusing to continue: schools.yaml identity corpus is empty",
+            file=sys.stderr,
+        )
+        return 4
+    schools_yaml_map = school_claim_slug_map(school_claims)
+    retired_aliases_by_ipeds = school_claim_retired_alias_map(school_claims)
     print(f"Loaded {len(schools_yaml_map)} schools.yaml slug claims", file=sys.stderr)
 
     print(f"Reading {csv_path} ...", file=sys.stderr)
@@ -704,6 +823,35 @@ def main() -> int:
             continue
         rows.append(row)
 
+    # Identity guard. Slugs are allowed to differ from official institution
+    # names, but the UNITID claim must share either the official normalized
+    # name or website domain. Run before slug assignment and before any live
+    # client is constructed so a bad corpus mapping cannot reach Supabase.
+    identity_exceptions_path = Path(args.identity_exceptions).expanduser()
+    identity_exceptions = load_identity_exceptions(identity_exceptions_path)
+    identity_audit = audit_directory_identities(
+        school_claims, rows, identity_exceptions
+    )
+    print(
+        "Identity guard: "
+        f"{identity_audit['matched']:,} matched, "
+        f"{identity_audit['excepted']:,} excepted, "
+        f"{len(identity_audit['warnings']):,} warnings, "
+        f"{len(identity_audit['errors']):,} errors",
+        file=sys.stderr,
+    )
+    for issue in identity_audit["warnings"]:
+        print(f"  WARNING {json.dumps(issue, sort_keys=True)}", file=sys.stderr)
+    if identity_audit["errors"]:
+        for issue in identity_audit["errors"]:
+            print(f"  ERROR {json.dumps(issue, sort_keys=True)}", file=sys.stderr)
+        print(
+            "Refusing to continue: schools.yaml identity claims do not match "
+            "the incoming Scorecard institution file.",
+            file=sys.stderr,
+        )
+        return 4
+
     # Slug assignment. We slug every row, in-scope or not, so the
     # crosswalk includes inactive/closed institutions too (they may
     # still need search redirects).
@@ -744,7 +892,9 @@ def main() -> int:
         row.pop("_current_predominant_degree", None)
         row.pop("_previous_predominant_degree", None)
 
-    crosswalk_rows = build_crosswalk_rows(rows, schools_yaml_map)
+    crosswalk_rows = build_crosswalk_rows(
+        rows, schools_yaml_map, retired_aliases_by_ipeds
+    )
 
     in_scope_rows = [r for r in rows if r["in_scope"]]
     excluded_rows = [r for r in rows if not r["in_scope"]]
@@ -767,6 +917,9 @@ def main() -> int:
         "slug_collisions_resolved": len(collisions),
         "slug_collisions_by_tier": dict(Counter(c["tier"] for c in collisions)),
         "schools_yaml_preserved": sum(1 for r in rows if r["ipeds_id"] in schools_yaml_map),
+        "identity_claims_matched": identity_audit["matched"],
+        "identity_claims_excepted": identity_audit["excepted"],
+        "identity_claim_warnings": len(identity_audit["warnings"]),
         "crosswalk_rows": len(crosswalk_rows),
         "predominant_degree_stabilizations": len(
             predominant_degree_stabilizations
@@ -877,6 +1030,24 @@ def main() -> int:
     if not args.apply:
         print("\nLive audit complete — no writes.", file=sys.stderr)
         return 0
+
+    # Existing redirects remain redirects even if they have not yet been
+    # promoted into schools.yaml. This protects operator-created legacy URLs
+    # while the corpus is brought up to date.
+    existing_redirect_keys = fetch_existing_redirect_alias_keys(client)
+    try:
+        crosswalk_rows, protected_redirect_count = preserve_existing_redirect_aliases(
+            crosswalk_rows, existing_redirect_keys
+        )
+    except ValueError as exc:
+        print(f"Refusing to continue: {exc}", file=sys.stderr)
+        return 4
+    if protected_redirect_count:
+        print(
+            f"Preserving {protected_redirect_count:,} live redirect alias(es) from "
+            "Scorecard overwrite.",
+            file=sys.stderr,
+        )
 
     refreshed_at = datetime.now(timezone.utc).isoformat()
     for row in rows:

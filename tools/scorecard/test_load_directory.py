@@ -10,21 +10,28 @@ Run from repo root:
 from __future__ import annotations
 
 import sys
+import tempfile
+import types
 import unittest
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from tools.scorecard.load_directory import (  # noqa: E402
     DEFAULT_SCHOOLS_YAML,
     _scope_decision,
+    audit_directory_identities,
     assign_slugs,
     base_slug,
     build_crosswalk_rows,
     build_directory_row,
     directory_refresh_delta,
+    fetch_existing_redirect_alias_keys,
+    preserve_existing_redirect_aliases,
     fetch_existing_directory_rows,
     load_schools_yaml,
+    main as load_directory_main,
     normalize_ipeds,
     previous_predominant_degrees,
     printable_refresh_delta,
@@ -371,16 +378,270 @@ class BuildCrosswalkRowsTests(unittest.TestCase):
         self.assertTrue(cw[0]["is_primary"])
         self.assertEqual(cw[0]["source"], "scorecard")
 
+    def test_retired_alias_stays_a_redirect_across_scorecard_refreshes(self):
+        rows = [
+            {
+                "ipeds_id": "168148",
+                "school_id": "tufts",
+                "school_name": "Tufts University",
+            },
+        ]
+
+        crosswalk = build_crosswalk_rows(
+            rows,
+            {"168148": "tufts"},
+            {"168148": ["tufts-university"]},
+        )
+
+        self.assertEqual(
+            [row for row in crosswalk if row["alias"] == "tufts-university"],
+            [
+                {
+                    "ipeds_id": "168148",
+                    "school_id": "tufts",
+                    "alias": "tufts-university",
+                    "source": "redirect",
+                    "is_primary": False,
+                }
+            ],
+        )
+
+    def test_fetch_existing_redirect_alias_keys_paginates(self):
+        source_rows = [
+            {"ipeds_id": "168148", "alias": "tufts-university"},
+            {"ipeds_id": "166027", "alias": "harvard-college"},
+        ]
+
+        class Response:
+            def __init__(self, data):
+                self.data = data
+
+        class Query:
+            def __init__(self):
+                self.start = 0
+                self.end = 0
+
+            def select(self, _columns):
+                return self
+
+            def eq(self, column, value):
+                self.filter = (column, value)
+                return self
+
+            def order(self, _column):
+                return self
+
+            def range(self, start, end):
+                self.start = start
+                self.end = end
+                return self
+
+            def execute(self):
+                return Response(source_rows[self.start : self.end + 1])
+
+        query = Query()
+
+        class Client:
+            @staticmethod
+            def table(name):
+                if name != "institution_slug_crosswalk":
+                    raise AssertionError(f"unexpected table: {name}")
+                return query
+
+        keys = fetch_existing_redirect_alias_keys(Client(), page_size=1)
+
+        self.assertEqual(
+            keys,
+            {
+                ("168148", "tufts-university"),
+                ("166027", "harvard-college"),
+            },
+        )
+        self.assertEqual(query.filter, ("source", "redirect"))
+
+    def test_existing_redirects_are_preserved_and_cannot_become_primary(self):
+        redirect_key = {("168148", "tufts-university")}
+        generated_alias = {
+            "ipeds_id": "168148",
+            "school_id": "tufts",
+            "alias": "tufts-university",
+            "source": "scorecard",
+            "is_primary": False,
+        }
+        canonical = {
+            "ipeds_id": "168148",
+            "school_id": "tufts",
+            "alias": "tufts",
+            "source": "schools_yaml",
+            "is_primary": True,
+        }
+        filtered, protected = preserve_existing_redirect_aliases(
+            [canonical, generated_alias], redirect_key
+        )
+        self.assertEqual(filtered, [canonical])
+        self.assertEqual(protected, 1)
+
+        with self.assertRaisesRegex(ValueError, "promote retired alias"):
+            preserve_existing_redirect_aliases(
+                [{**generated_alias, "is_primary": True}], redirect_key
+            )
+
 
 class SchoolsYamlRegressionTests(unittest.TestCase):
     def test_launch_critical_ipeds_ids_match_nces(self):
-        # These two IDs were stale in schools.yaml and caused CDS-backed
+        # These IDs were stale in schools.yaml and caused CDS-backed
         # rows to miss the Scorecard directory join before launch.
         claims = load_schools_yaml(DEFAULT_SCHOOLS_YAML)
         self.assertEqual(claims["211291"], "bucknell")
         self.assertEqual(claims["212054"], "drexel")
+        self.assertEqual(claims["168148"], "tufts")
         self.assertNotIn("211158", claims)
         self.assertNotIn("212160", claims)
+        self.assertNotIn("167987", claims)
+
+    def test_loader_identity_guard_rejects_original_tufts_mapping(self):
+        claims = [
+            {
+                "school_id": "tufts",
+                "ipeds_id": "167987",
+                "claimed_name": "Tufts University",
+                "claimed_domain": "tufts.edu",
+                "scrape_policy": "active",
+            }
+        ]
+        directory_rows = [
+            {
+                "ipeds_id": "167987",
+                "school_name": "University of Massachusetts-Dartmouth",
+                "website_url": "https://www.umassd.edu/",
+                "state": "MA",
+                "currently_operating": True,
+            }
+        ]
+
+        audit = audit_directory_identities(claims, directory_rows)
+
+        self.assertEqual(
+            [issue["kind"] for issue in audit["errors"]],
+            ["identity_mismatch"],
+        )
+
+
+class LoaderMainIdentityGuardTests(unittest.TestCase):
+    @staticmethod
+    def _scorecard_row() -> dict[str, str]:
+        return {
+            "UNITID": "167987",
+            "INSTNM": "University of Massachusetts-Dartmouth",
+            "CITY": "North Dartmouth",
+            "STABBR": "MA",
+            "ZIP": "02747",
+            "INSTURL": "https://www.umassd.edu/",
+            "UGDS": "5221",
+            "CONTROL": "1",
+            "ICLEVEL": "1",
+            "PREDDEG": "3",
+            "HIGHDEG": "4",
+            "CURROPER": "1",
+            "MAIN": "1",
+            "NUMBRANCH": "1",
+            "LATITUDE": "41.628",
+            "LONGITUDE": "-71.006",
+        }
+
+    def _run_main(
+        self,
+        root: Path,
+        *,
+        schools_path: Path,
+        apply: bool,
+    ) -> tuple[int, Mock, Path]:
+        row = self._scorecard_row()
+
+        class Frame:
+            columns = list(row)
+
+            def __len__(self):
+                return 1
+
+            @staticmethod
+            def to_dict(orient):
+                if orient != "records":
+                    raise AssertionError(f"unexpected orientation: {orient}")
+                return [row]
+
+        fake_pandas = types.ModuleType("pandas")
+        fake_pandas.read_csv = Mock(return_value=Frame())
+        create_client = Mock(side_effect=AssertionError("database client must not open"))
+        fake_supabase = types.ModuleType("supabase")
+        fake_supabase.create_client = create_client
+
+        csv_path = root / "scorecard.csv"
+        csv_path.write_text("fixture", encoding="utf-8")
+        exceptions_path = root / "exceptions.json"
+        exceptions_path.write_text('{"exceptions": []}\n', encoding="utf-8")
+        summary_path = root / "summary.json"
+        argv = [
+            "load_directory.py",
+            "--csv",
+            str(csv_path),
+            "--data-year",
+            "2024-25",
+            "--schools-yaml",
+            str(schools_path),
+            "--identity-exceptions",
+            str(exceptions_path),
+            "--summary-out",
+            str(summary_path),
+        ]
+        if apply:
+            argv.append("--apply")
+
+        with (
+            patch.dict(sys.modules, {"pandas": fake_pandas, "supabase": fake_supabase}),
+            patch.object(sys, "argv", argv),
+        ):
+            result = load_directory_main()
+        return result, create_client, summary_path
+
+    def test_missing_schools_yaml_blocks_dry_run_and_apply_before_database(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            missing = root / "missing-schools.yaml"
+            for apply in (False, True):
+                with self.subTest(apply=apply):
+                    result, create_client, summary_path = self._run_main(
+                        root,
+                        schools_path=missing,
+                        apply=apply,
+                    )
+                    self.assertNotEqual(result, 0)
+                    create_client.assert_not_called()
+                    self.assertFalse(summary_path.exists())
+
+    def test_identity_mismatch_blocks_apply_before_database(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            schools = root / "schools.yaml"
+            schools.write_text(
+                "schools:\n"
+                "  - id: tufts\n"
+                "    name: Tufts University\n"
+                "    domain: tufts.edu\n"
+                "    ipeds_id: '167987'\n"
+                "    scrape_policy: active\n",
+                encoding="utf-8",
+            )
+
+            result, create_client, summary_path = self._run_main(
+                root,
+                schools_path=schools,
+                apply=True,
+            )
+
+            self.assertEqual(result, 4)
+            create_client.assert_not_called()
+            self.assertFalse(summary_path.exists())
 
 
 class DirectoryRefreshDeltaTests(unittest.TestCase):
