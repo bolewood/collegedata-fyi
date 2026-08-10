@@ -775,9 +775,10 @@ export const fetchInstitutionCoverage = cache(
   },
 );
 
-// Resolve both canonical and retired school slugs through the public
-// crosswalk. A primary alias wins over demoted aliases; ambiguous rows return
-// null so callers render normally instead of redirecting to the wrong school.
+// Resolve reviewed retired slugs from the checked-in manifest first, then use
+// the public crosswalk for other aliases. A primary alias wins over demoted
+// aliases; ambiguous rows return null so callers render normally instead of
+// redirecting to the wrong school.
 export const fetchCanonicalSchoolId = cache(
   async function fetchCanonicalSchoolId(
     requestedSchoolId: string,

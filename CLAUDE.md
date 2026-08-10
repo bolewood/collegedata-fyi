@@ -36,8 +36,10 @@ whole corpus, not a one-off.
   available, then add a durable finder or archiver hint so the next year's document
   can be found automatically.
 - For school identity changes, run `python tools/finder/identity_guard.py` before
-  writing generated data. Treat `retired_aliases` as durable redirects: preserve
-  them across refreshes and never promote a retired slug to another institution.
+  writing generated data, then run `python tools/finder/school_redirect_guard.py`
+  to verify the checked-in web redirect manifest. Treat `retired_aliases` as
+  durable redirects: preserve them across refreshes and never promote a retired
+  slug to another institution.
 - Close the loop across current state, prior-year baseline, future discovery, and
   similar files before calling the issue handled.
 

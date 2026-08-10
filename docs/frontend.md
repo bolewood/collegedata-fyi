@@ -74,12 +74,14 @@ score submitters, not the entire admitted or enrolled class.
 
 ### `/schools/[school_id]` School detail (`web/src/app/schools/[school_id]/page.tsx`)
 
-School-scoped pages resolve `school_id` through `institution_slug_crosswalk`
-before reading school data. Retired aliases receive a permanent redirect to the
-canonical school, including year pages and Open Graph image routes. The public
-facts/source APIs and XLSX/CSV download routes use the same lookup and return a
-`308` while preserving query parameters, so old links cannot serve another
-institution's data.
+School-scoped pages check the reviewed aliases in
+`web/src/data/school-redirects.json` before consulting the live
+`institution_slug_crosswalk`. Next.js issues permanent redirects for page and
+year routes from that checked-in manifest, preserving scalar, repeated, and
+empty query parameters. Metadata, Open Graph images, public facts/source APIs,
+and XLSX/CSV download routes use the same reviewed alias authority before the
+live crosswalk, so an annual directory refresh cannot make an old link serve
+another institution's data.
 
 All archived CDS documents for one school, sorted newest first. Each
 document is a card showing year, format badge, extraction status badge,
@@ -326,6 +328,7 @@ component share the same Supabase response within a single render.
 |--------|------|---------|
 | `supabase.ts` | `lib/supabase.ts` | Supabase client singleton + Storage base URL |
 | `queries.ts` | `lib/queries.ts` | Typed query functions + client-side aggregation |
+| `school-alias.ts` | `lib/school-alias.ts` | Validates the checked-in retired-alias manifest, builds permanent school and school-year redirects, and resolves reviewed aliases before live crosswalk queries. |
 | `browser-search.ts` | `lib/browser-search.ts` | Typed request/response wrapper for the `browser-search` Edge Function |
 | `positioning.ts` | `lib/positioning.ts` | Student-profile fit tiering and academic-positioning copy logic |
 | `admission-strategy.ts` | `lib/admission-strategy.ts` | ED/EA/wait-list/admission-factor calculations and quality gating |

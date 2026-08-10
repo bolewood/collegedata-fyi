@@ -1,6 +1,6 @@
 # finder
 
-Discovers CDS document URLs across the ~2,400-school US four-year higher-ed corpus and writes them back into a single YAML manifest.
+Discovers CDS document URLs across the 2,424-school US four-year higher-ed corpus and writes them back into a single YAML manifest.
 
 ## Why this exists
 
@@ -16,6 +16,7 @@ This directory turns that problem into a reproducible pipeline. You run one comm
 | `school_overrides.yaml` | Operator-supplied per-school overrides keyed by `school_id`. Hand-curated `browse_url`, `direct_archive_urls` (year-tagged for Box/Drive/SharePoint-hosted schools), `hosting_override` (CMS/file_storage/auth_required/rendering/waf/notes). Read at edge-function runtime by `_shared/schools.ts`; NOT touched by `build_school_list.py`. |
 | `build_school_list.py` | Rebuilds `schools.yaml` from IPEDS HD data, preserving hand-curated overrides. Run rarely (once per IPEDS release). Includes `assert_no_duplicates()` build-time guard. |
 | `identity_guard.py` | CI and loader guard that checks every `schools.yaml` UNITID against a checked-in official NCES HD identity snapshot. It blocks when neither official name nor website domain agrees; exact reviewed exceptions cannot use wildcards and must remain in use. |
+| `school_redirect_guard.py` | CI guard that derives reviewed retired aliases from `schools.yaml` and verifies `web/src/data/school-redirects.json` has exactly one valid permanent redirect for each alias, with no canonical-slug collisions or conflicting destinations. |
 | `ipeds_identity_snapshot.csv` | Offline NCES HD identity snapshot used by CI, including all official UNITIDs, names, domains, active flags, and successor IDs. Refresh deliberately with `identity_guard.py --build-snapshot ...` after reviewing a new HD release. |
 | `probe_urls.py` | Discovers CDS URLs for schools where we don't have one. Run monthly. This is the workhorse. |
 | `dedup_audit.py` | Compares duplicate-name `schools.yaml` entries against authoritative IPEDS HD data, recommends a canonical. Run when the build guard surfaces a duplicate. |
@@ -156,14 +157,14 @@ After one day of work:
 
 | | Count |
 |---|---:|
-| Total corpus | 2,434 |
-| Active (known publishers) | 852 |
-| Active **with clean `discovery_seed_url`** | **840** |
+| Total corpus | 2,424 |
+| Active (known publishers) | 841 |
+| Active **with clean `discovery_seed_url`** | **829** |
 | Active, hint cleared pending re-probe | 12 |
 | `verified_absent` (known non-publishers) | 2 |
 | Still `unknown` | 1,581 |
 
-**~34.5% of the corpus now has a fetchable CDS URL.** For context, the biggest prior public attempt we're aware of indexed on the order of 80 schools. This is roughly 10× that.
+**~34.2% of the corpus now has a fetchable CDS URL.** For context, the biggest prior public attempt we're aware of indexed on the order of 80 schools. This is roughly 10× that.
 
 The 1,581 `unknown` tail are Brave-confirmed misses — pattern ladder fails AND Brave returns no CDS-titled result. Candidates: schools that genuinely don't publish CDS, schools that publish under unusual keywords ("Institutional Fact Book"), schools hosting on Box/Drive, and schools whose IR subdomains are thinly indexed. Needs a different discovery strategy and is scoped for a later pass.
 
@@ -231,13 +232,19 @@ Run the offline identity audit before finder changes:
 
 ```bash
 python tools/finder/identity_guard.py
-python -m unittest tools.finder.test_identity_guard
+python tools/finder/school_redirect_guard.py
+python -m unittest tools.finder.test_identity_guard tools.finder.test_school_redirect_guard
 ```
 
 The guard accepts an exact normalized name match or a same/subdomain website
 match. Fuzzy similarity is diagnostic only and never permits a write. Active
 schools missing from the official vintage fail; non-active schools missing
 from the vintage warn. There is intentionally no ignore flag.
+
+When `retired_aliases` changes, update
+`web/src/data/school-redirects.json` in the same commit. The redirect guard
+rejects missing, extra, malformed, duplicated, ambiguous, or canonical-colliding
+aliases before they can ship.
 
 ### Why this matters
 
