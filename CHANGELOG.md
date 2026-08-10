@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 This project uses four-part semantic versioning.
 
+## [0.5.1.0] - 2026-08-10
+
+### Added
+
+- Verify in CI that every reviewed retired school slug has one unambiguous, non-conflicting permanent redirect to its canonical school.
+
+### Changed
+
+- Treat the checked-in retired-alias corpus as the shared redirect authority for school pages, metadata, APIs, and downloads, while still resolving ordinary search aliases from the live crosswalk.
+
+### Fixed
+
+- Preserve scalar, repeated, and empty query parameters when retired school and school-year links redirect to their canonical pages.
+- Prevent annual Scorecard refreshes from assigning a retired slug as another school's primary or non-primary alias.
+
 ## [0.5.0.0] - 2026-08-10
 
 ### Added

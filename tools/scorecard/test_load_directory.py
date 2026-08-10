@@ -326,6 +326,23 @@ class AssignSlugsTests(unittest.TestCase):
         self.assertNotEqual(assigned["000002"], "harvard-university")
         self.assertEqual(assigned["000002"], "harvard-university-wa")
 
+    def test_retired_alias_is_reserved_during_scorecard_slug_assignment(self):
+        rows = [self._row("000001", "Tufts University", state="MA")]
+        assigned, collisions = assign_slugs(
+            rows, {}, {"tufts-university"}
+        )
+        self.assertEqual(assigned["000001"], "tufts-university-ma")
+        self.assertEqual(collisions[0]["tier"], "state")
+
+    def test_retired_alias_cannot_also_be_a_yaml_canonical_slug(self):
+        rows = [self._row("000001", "Tufts University", state="MA")]
+        with self.assertRaisesRegex(ValueError, "collides with a schools.yaml"):
+            assign_slugs(
+                rows,
+                {"000001": "tufts-university"},
+                {"tufts-university"},
+            )
+
 
 class BuildCrosswalkRowsTests(unittest.TestCase):
     def test_one_primary_per_directory_row(self):
@@ -405,6 +422,33 @@ class BuildCrosswalkRowsTests(unittest.TestCase):
                 }
             ],
         )
+
+    def test_retired_alias_cannot_be_regenerated_for_another_school(self):
+        rows = [
+            {
+                "ipeds_id": "168148",
+                "school_id": "tufts",
+                "school_name": "Tufts University",
+            },
+            {
+                "ipeds_id": "999999",
+                "school_id": "custom-school",
+                "school_name": "Tufts University",
+            },
+        ]
+
+        crosswalk = build_crosswalk_rows(
+            rows,
+            {"168148": "tufts", "999999": "custom-school"},
+            {"168148": ["tufts-university"]},
+        )
+
+        matching = [
+            row for row in crosswalk if row["alias"] == "tufts-university"
+        ]
+        self.assertEqual(len(matching), 1)
+        self.assertEqual(matching[0]["ipeds_id"], "168148")
+        self.assertEqual(matching[0]["source"], "redirect")
 
     def test_fetch_existing_redirect_alias_keys_paginates(self):
         source_rows = [

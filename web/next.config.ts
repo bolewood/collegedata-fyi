@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
+import retiredSchoolAliases from "./src/data/school-redirects.json";
+import { buildRetiredSchoolRedirects } from "./src/lib/school-alias";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return buildRetiredSchoolRedirects(retiredSchoolAliases);
+  },
   // Rewrite the pretty URL `/design-system` and `/design-system/` to the
   // static file under `public/design-system/index.html`. Next's default
   // static handler only serves the full path; rewrites give us the

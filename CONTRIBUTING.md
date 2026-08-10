@@ -25,9 +25,13 @@ Before opening the PR, run the offline identity guard:
 
 ```bash
 python tools/finder/identity_guard.py
+python tools/finder/school_redirect_guard.py
 ```
 
 The guard checks every curated `name`, `domain`, and `ipeds_id` claim against the checked-in official NCES identity snapshot. If an institution has moved to a new public slug, preserve the old slug in `retired_aliases` so existing links continue to redirect; do not reuse it for another school.
+Keep [`web/src/data/school-redirects.json`](web/src/data/school-redirects.json)
+in sync with those reviewed aliases. The redirect guard fails when the manifest
+is missing an alias, contains an extra alias, or points at a conflicting school.
 
 Open a PR with the new entry and a short note saying how you found the URL. The discovery pipeline will pick it up on the next scheduled run.
 

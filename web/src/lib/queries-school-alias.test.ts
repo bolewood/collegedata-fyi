@@ -24,22 +24,27 @@ describe("fetchCanonicalSchoolId", () => {
     vi.clearAllMocks();
   });
 
-  it("queries the public crosswalk and resolves a unique retired alias", async () => {
+  it("resolves a reviewed retired alias without trusting live crosswalk state", async () => {
+    await expect(fetchCanonicalSchoolId("tufts-university")).resolves.toBe("tufts");
+    expect(supabaseMocks.from).not.toHaveBeenCalled();
+  });
+
+  it("queries the public crosswalk and resolves another unique alias", async () => {
     const query = aliasQueryResult({
       data: [
         {
-          school_id: "tufts",
-          alias: "tufts-university",
+          school_id: "bucknell",
+          alias: "bucknell-university",
           is_primary: false,
         },
       ],
       error: null,
     });
 
-    await expect(fetchCanonicalSchoolId("tufts-university")).resolves.toBe("tufts");
+    await expect(fetchCanonicalSchoolId("bucknell-university")).resolves.toBe("bucknell");
     expect(supabaseMocks.from).toHaveBeenCalledWith("institution_slug_crosswalk");
     expect(query.select).toHaveBeenCalledWith("school_id, alias, is_primary");
-    expect(query.eq).toHaveBeenCalledWith("alias", "tufts-university");
+    expect(query.eq).toHaveBeenCalledWith("alias", "bucknell-university");
     expect(query.order).toHaveBeenCalledWith("is_primary", { ascending: false });
   });
 
