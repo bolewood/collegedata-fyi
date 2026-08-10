@@ -21,6 +21,14 @@ Minimum entry:
 
 Use the existing entries (Carnegie Mellon, Columbia, Harvard, and so on) as reference for edge cases, such as schools that publish separate CDS files per sub-institution.
 
+Before opening the PR, run the offline identity guard:
+
+```bash
+python tools/finder/identity_guard.py
+```
+
+The guard checks every curated `name`, `domain`, and `ipeds_id` claim against the checked-in official NCES identity snapshot. If an institution has moved to a new public slug, preserve the old slug in `retired_aliases` so existing links continue to redirect; do not reuse it for another school.
+
 Open a PR with the new entry and a short note saying how you found the URL. The discovery pipeline will pick it up on the next scheduled run.
 
 ### 2. Fix your own school's data

@@ -35,6 +35,9 @@ whole corpus, not a one-off.
 - For finding/discovery issues, find and archive the most recent two CDS years when
   available, then add a durable finder or archiver hint so the next year's document
   can be found automatically.
+- For school identity changes, run `python tools/finder/identity_guard.py` before
+  writing generated data. Treat `retired_aliases` as durable redirects: preserve
+  them across refreshes and never promote a retired slug to another institution.
 - Close the loop across current state, prior-year baseline, future discovery, and
   similar files before calling the issue handled.
 
