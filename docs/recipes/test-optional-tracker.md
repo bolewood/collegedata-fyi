@@ -10,7 +10,7 @@
 
 ## The demo
 
-See [`test-optional-tracker-demo.html`](../../web/public/recipes/test-optional-tracker-demo.html) for the interactive line chart. It shows SAT-submission percentage over time for seven schools pulled directly from the collegedata.fyi corpus: Yale (2009-10 → 2024-25), Caltech (2002-03 → 2020-21), MIT, Princeton, Stanford, Harvard, and Wake Forest. Hover over a point to see the underlying year, SAT submission rate, and (where reported) ACT submission rate. Dashed horizontal reference lines mark the thresholds we use to classify a school's effective policy.
+Open [`/recipes/test-optional-tracker`](https://www.collegedata.fyi/recipes/test-optional-tracker) for the interactive line chart. It shows SAT-submission percentage over time for seven schools pulled directly from the collegedata.fyi corpus: Yale (2009-10 → 2024-25), Caltech (2002-03 → 2020-21), MIT, Princeton, Stanford, Harvard, and Wake Forest. Hover over a point to see the underlying year, SAT submission rate, and (where reported) ACT submission rate. Dashed horizontal reference lines mark the thresholds we use to classify a school's effective policy.
 
 The chart tells three stories that no single school's admissions page would:
 
@@ -34,7 +34,7 @@ The seed data in the demo is hand-verified for each of the seven charted schools
 
 ```bash
 # 1) List every extracted manifest entry for the years you care about
-curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?canonical_year=in.(2018-19,2019-20,2020-21,2021-22,2022-23,2023-24,2024-25)&extraction_status=eq.extracted&select=school_id,school_name,canonical_year,document_id' \
+curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?canonical_year=in.(2018-19,2019-20,2020-21,2021-22,2022-23,2023-24,2024-25)&extraction_status=eq.extracted&select=document_id,ipeds_id,school_id,school_name,canonical_year' \
   -H 'apikey: <anon key>' -H 'Authorization: Bearer <anon key>' \
   > manifest.json
 
@@ -44,6 +44,9 @@ curl 'https://api.collegedata.fyi/rest/v1/cds_artifacts?document_id=eq.<uuid>&ki
 ```
 
 The artifact's `notes.values["C.901"].value` is the SAT submission percentage, as a string (e.g. `"54"` means 54%). Divide by 100 if you need a ratio. `notes.values["C.902"].value` is the ACT equivalent.
+
+Treat `document_id` as the CDS join key and retain its `ipeds_id` and `school_id` for provenance.
+Any federal enrichment must join on a guarded `ipeds_id`, never on the display slug.
 
 If you want a single blob rather than per-document queries, the /api page at [collegedata.fyi/api](/api) has the full PostgREST auth and query reference, including how to use `in.(…)` to fetch many documents at once.
 

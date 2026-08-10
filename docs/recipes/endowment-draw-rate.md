@@ -39,7 +39,7 @@ exclusion reason and `drawRate: null`, but do not enter percentiles or threshold
 
 ## Current generated result
 
-Dataset version: `ipeds-endowment-96739084aaee38c8`, generated August 3, 2026.
+Dataset version: `ipeds-endowment-283292ca75a4abda`, generated August 10, 2026.
 
 | Fiscal year | Eligible / reporters | Median | Above 5% | Above 7% | Above 15% | Release |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
@@ -127,7 +127,7 @@ uses a multi-year average value. This recipe uses one year&apos;s beginning valu
 does not establish a UPMIFA violation, donor-intent problem, financial distress, or misconduct.
 
 The generated artifact contains 6,580 school-year rows across 1,357 historical institutions.
-There are 267 institutions without a current public school page. Raw IPEDS history can retain
+There are 263 institutions without a current public school page. Raw IPEDS history can retain
 reporters that later closed or left the current directory, so the recipe intentionally includes
 them and labels their histories “historical/raw API only” instead of inventing a current page.
 

@@ -20,6 +20,16 @@ describe("endowment draw-rate recipe analysis", () => {
     expect(DEFAULT_ENDOWMENT_RECIPE_SCHOOL_ID).toBeNull();
   });
 
+  it("links the official Tufts UNITID to its canonical school slug", () => {
+    expect(
+      ENDOWMENT_DRAW_RATE_SCHOOLS.find((school) => school.ipedsId === "168148"),
+    ).toMatchObject({
+      schoolId: "tufts",
+      schoolName: "Tufts University",
+      hasCurrentSchoolPage: true,
+    });
+  });
+
   it("keeps the documented dataset version in sync with the generated artifact", () => {
     const methodology = readFileSync(
       new URL("../../../docs/recipes/endowment-draw-rate.md", import.meta.url),
