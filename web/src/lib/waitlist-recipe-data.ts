@@ -1,5 +1,6 @@
 export type WaitlistRecipeRow = {
   documentId: string;
+  ipedsId?: string;
   schoolId: string;
   schoolName: string;
   year: string;
@@ -4234,13 +4235,14 @@ export const WAITLIST_ROWS = [
   },
   {
     "documentId": "7a5bb196-7973-4f7f-87c1-adc699248073",
+    "ipedsId": "168148",
     "schoolId": "tufts",
     "schoolName": "Tufts University",
     "year": "2024-25",
     "yearStart": 2024,
-    "state": null,
-    "control": "Unknown control",
-    "carnegie": "Unknown Carnegie",
+    "state": "MA",
+    "control": "Private nonprofit",
+    "carnegie": "Doctoral universities",
     "size": "Midsize (2.5k-10k)",
     "selectivity": "10-20% admit rate",
     "applied": 34432,
@@ -4248,7 +4250,7 @@ export const WAITLIST_ROWS = [
     "enrolledFirstYear": 1801,
     "acceptanceRate": 0.1149,
     "yieldRate": 0.4551,
-    "undergradEnrollment": 5221,
+    "undergradEnrollment": 7061,
     "waitListPolicy": true,
     "waitListOffered": 2800,
     "waitListAccepted": 991,
@@ -8013,4 +8015,3 @@ export const WAITLIST_ROWS = [
     "relativeToRegularAdmitRate": null
   }
 ] as const satisfies readonly WaitlistRecipeRow[];
-

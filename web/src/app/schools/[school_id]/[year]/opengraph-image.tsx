@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import {
+  fetchCanonicalSchoolId,
   fetchDocumentsBySchoolAndYear,
   fetchExtract,
 } from "@/lib/queries";
@@ -45,7 +46,8 @@ export default async function Image({
   params: Promise<Params>;
 }) {
   const { school_id, year } = await params;
-  const docs = await fetchDocumentsBySchoolAndYear(school_id, year);
+  const resolvedSchoolId = (await fetchCanonicalSchoolId(school_id)) ?? school_id;
+  const docs = await fetchDocumentsBySchoolAndYear(resolvedSchoolId, year);
 
   if (docs.length === 0) {
     return new ImageResponse(
@@ -69,7 +71,7 @@ export default async function Image({
     );
   }
 
-  const schoolName = docs[0].school_name ?? school_id;
+  const schoolName = docs[0].school_name ?? resolvedSchoolId;
 
   // Load extracted data for key stats
   const stats: { label: string; value: string }[] = [];

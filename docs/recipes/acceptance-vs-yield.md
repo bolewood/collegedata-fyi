@@ -10,7 +10,7 @@
 
 ## The demo
 
-See [`acceptance-vs-yield-demo.html`](../../web/public/recipes/acceptance-vs-yield-demo.html) for the interactive scatter plot. It now shows eighteen schools across the top 100: three ground-truth anchors (Harvard, Dartmouth, Harvey Mudd) plus fifteen rows pulled directly from the collegedata.fyi public API for Stanford, Princeton, Brown, Duke, Cornell, Northeastern, Notre Dame, Rice, Johns Hopkins, NYU, USC, Washington University in St. Louis, Boston College, UVA, and William & Mary. Acceptance rate is on the x-axis (0–40%) and yield on the y-axis (0–100%); each dot is sized by the enrolled first-year class. Hover over a dot for applied / admitted / enrolled counts and the data source (ground-truth vs. API).
+Open [`/recipes/acceptance-vs-yield`](https://www.collegedata.fyi/recipes/acceptance-vs-yield) for the interactive scatter plot. It now shows eighteen schools across the top 100: three ground-truth anchors (Harvard, Dartmouth, Harvey Mudd) plus fifteen rows pulled directly from the collegedata.fyi public API for Stanford, Princeton, Brown, Duke, Cornell, Northeastern, Notre Dame, Rice, Johns Hopkins, NYU, USC, Washington University in St. Louis, Boston College, UVA, and William & Mary. Acceptance rate is on the x-axis (0–40%) and yield on the y-axis (0–100%); each dot is sized by the enrolled first-year class. Hover over a dot for applied / admitted / enrolled counts and the data source (ground-truth vs. API).
 
 Eighteen points is enough to see the four quadrants resolve — but still only 2–3% of the addressable corpus. The XLSX starter ([`acceptance-vs-yield-starter.xlsx`](../../web/public/recipes/acceptance-vs-yield-starter.xlsx)) is designed to be populated from the public API; instructions are below.
 
@@ -29,15 +29,19 @@ The XLSX ships with three ground-truth rows pre-filled and formulas wired for ac
 
 ```bash
 # 1) Get the list of schools with a 2024-25 CDS document
-curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?canonical_year=eq.2024-25&select=school_id,school_name,ipeds_id' \
+curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?canonical_year=eq.2024-25&select=document_id,school_id,school_name,ipeds_id' \
   > schools-2024-25.json
 
 # 2) Pull the C1 and B1 fields we need, for all those schools
-curl 'https://api.collegedata.fyi/rest/v1/cds_fields?canonical_year=eq.2024-25&field_id=in.(c1_total_applied,c1_total_admitted,c1_total_enrolled,b1_ft_total_ug_men,b1_ft_total_ug_women,b22_retention_pct)' \
+curl 'https://api.collegedata.fyi/rest/v1/cds_fields?canonical_year=eq.2024-25&field_id=in.(c1_total_applied,c1_total_admitted,c1_total_enrolled,b1_ft_total_ug_men,b1_ft_total_ug_women,b22_retention_pct)&select=document_id,ipeds_id,school_id,canonical_year,field_id,value_numeric' \
   > fields-2024-25.json
 ```
 
-The Field Reference tab in the XLSX documents exactly which field IDs to pull. Join on `school_id` and paste the values into the spreadsheet; the formulas compute acceptance rate, yield, and total UG automatically.
+The Field Reference tab in the XLSX documents exactly which field IDs to pull. Join CDS fields to
+the manifest on `document_id`, retain `(document_id, ipeds_id, school_id)` as provenance, and paste
+the values into the spreadsheet; the formulas compute acceptance rate, yield, and total UG
+automatically. If you add IPEDS or Scorecard context, join it only by the guarded `ipeds_id`; do not
+use `school_id` as a federal-data identity key.
 
 ## Known caveats
 

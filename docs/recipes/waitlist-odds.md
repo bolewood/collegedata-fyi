@@ -65,13 +65,19 @@ The Berkeley history panel, inspired by a chart idea from [@neetu_arnold](https:
 The page is generated from public-facing browser rows:
 
 ```bash
-curl 'https://api.collegedata.fyi/rest/v1/school_browser_rows?select=school_id,school_name,canonical_year,acceptance_rate,wait_list_policy,wait_list_offered,wait_list_accepted,wait_list_admitted&wait_list_offered=not.is.null'
+curl 'https://api.collegedata.fyi/rest/v1/school_browser_rows?select=document_id,ipeds_id,school_id,school_name,canonical_year,acceptance_rate,wait_list_policy,wait_list_offered,wait_list_accepted,wait_list_admitted&wait_list_offered=not.is.null'
 ```
 
 For the page's bucket analysis, join by `ipeds_id` to:
 
 - `institution_directory` for control and undergraduate enrollment
 - `scorecard_summary` for Carnegie basic classification and Scorecard enrollment fallback
+
+Retain `(document_id, ipeds_id, school_id)` as the row's provenance tuple. Before enriching
+CDS rows with federal data, validate active `school_id` → `ipeds_id` claims with
+`python3 tools/finder/identity_guard.py`. Never fall back to a slug join when the IPEDS identity
+is missing or fails that guard: a plausible slug can otherwise attach one institution's federal
+facts to another institution's CDS document.
 
 Then filter to complete rows where:
 

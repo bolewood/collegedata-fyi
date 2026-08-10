@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import {
   fetchSchoolDocuments,
@@ -11,6 +11,7 @@ import {
   fetchMeritProfileBySchoolId,
   fetchChangeEventsBySchoolId,
   fetchSchoolFederalFacts,
+  fetchCanonicalSchoolId,
 } from "@/lib/queries";
 import { OutcomesSection } from "@/components/OutcomesSection";
 import { PositioningCard } from "@/components/PositioningCard";
@@ -34,14 +35,15 @@ export async function generateMetadata({
   params: Promise<{ school_id: string }>;
 }): Promise<Metadata> {
   const { school_id } = await params;
-  const docs = await fetchSchoolDocuments(school_id);
+  const resolvedSchoolId = (await fetchCanonicalSchoolId(school_id)) ?? school_id;
+  const docs = await fetchSchoolDocuments(resolvedSchoolId);
   if (docs.length === 0) {
     // PRD 015 M4 — directory-only schools render a coverage stub.
     // Title reflects the school name (not "Not Found") so the browser
     // tab and OG share match what the user sees.
-    const coverage = await fetchInstitutionCoverage(school_id);
+    const coverage = await fetchInstitutionCoverage(resolvedSchoolId);
     if (coverage) {
-      const path = `/schools/${school_id}`;
+      const path = `/schools/${resolvedSchoolId}`;
       return {
         title: `${coverage.school_name} - ${coverage.coverage_label}`,
         description: coverage.coverage_summary,
@@ -58,13 +60,13 @@ export async function generateMetadata({
   }
 
   const name = docs[0].school_name;
-  const coverage = await fetchInstitutionCoverage(school_id);
+  const coverage = await fetchInstitutionCoverage(resolvedSchoolId);
   const location = formatLocation(coverage);
   const years = docs
     .map((d) => d.canonical_year)
     .filter((y): y is string => y != null)
     .sort();
-  const path = `/schools/${school_id}`;
+  const path = `/schools/${resolvedSchoolId}`;
   const archiveCount = `${docs.length} CDS document${docs.length !== 1 ? "s" : ""}`;
   const locationLead = location ? ` for ${location}` : "";
   const description =
@@ -134,6 +136,10 @@ export default async function SchoolDetailPage({
   params: Promise<{ school_id: string }>;
 }) {
   const { school_id } = await params;
+  const canonicalSchoolId = await fetchCanonicalSchoolId(school_id);
+  if (canonicalSchoolId && canonicalSchoolId !== school_id) {
+    permanentRedirect(`/schools/${canonicalSchoolId}`);
+  }
   const docs = await fetchSchoolDocuments(school_id);
 
   if (docs.length === 0) {

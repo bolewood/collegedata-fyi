@@ -536,7 +536,9 @@ schools:
 - id: tufts
   name: Tufts University
   domain: tufts.edu
-  ipeds_id: '167987'
+  ipeds_id: '168148'
+  retired_aliases:
+  - tufts-university
   scrape_policy: active
   discovery_seed_url: https://provost.tufts.edu/institutionalresearch/common-data-set/
   probe_state:
@@ -4449,8 +4451,8 @@ schools:
     search_fallback_tried: true
   discovery_seed_url: https://www.catawba.edu/ir/
 - id: catholic-distance-university
-  name: Catholic Distance University
-  domain: cdu.edu
+  name: Catholic International University
+  domain: catholiciu.edu
   ipeds_id: '475398'
   scrape_policy: unknown
   probe_state:
@@ -8468,8 +8470,8 @@ schools:
     search_fallback_tried: true
   discovery_seed_url: https://www.gettysburg.edu/offices/institutional-research/pdfs/2025/cds_2024-2025_final.pdf
 - id: glasgow-caledonian-new-york-college
-  name: Glasgow Caledonian New York College
-  domain: gcnyc.edu
+  name: IE New York College
+  domain: ienyc.edu
   ipeds_id: '494551'
   scrape_policy: unknown
   probe_state:
@@ -10563,8 +10565,8 @@ schools:
     patterns_tried: 0
     search_fallback_tried: true
 - id: kansas-health-science-center
-  name: Kansas Health Science Center
-  domain: kansascom.kansashsc.org
+  name: Kansas Health Science University
+  domain: kansascom.kansashsu.org
   ipeds_id: '497693'
   scrape_policy: unknown
   probe_state:
@@ -16061,8 +16063,8 @@ schools:
     patterns_tried: 0
     search_fallback_tried: true
 - id: pennsylvania-college-of-health-sciences
-  name: Pennsylvania College of Health Sciences
-  domain: pacollege.edu
+  name: Saint Joseph's University - Lancaster
+  domain: sju.edu
   ipeds_id: '442356'
   scrape_policy: unknown
   probe_state:
@@ -19468,8 +19470,8 @@ schools:
     patterns_tried: 0
     search_fallback_tried: true
 - id: southwestern-assemblies-of-god-university
-  name: Southwestern Assemblies of God University
-  domain: sagu.edu
+  name: Nelson University
+  domain: nelson.edu
   ipeds_id: '228325'
   scrape_policy: unknown
   probe_state:
@@ -20440,8 +20442,8 @@ schools:
     patterns_tried: 0
     search_fallback_tried: true
 - id: tallahassee-community-college
-  name: Tallahassee Community College
-  domain: tcc.fl.edu
+  name: Tallahassee State College
+  domain: tsc.fl.edu
   ipeds_id: '137759'
   scrape_policy: unknown
   probe_state:
@@ -21859,8 +21861,8 @@ schools:
     patterns_tried: 0
     search_fallback_tried: true
 - id: trinity-episcopal-school-for-ministry
-  name: Trinity Episcopal School for Ministry
-  domain: tsm.edu
+  name: Trinity Anglican Seminary
+  domain: tas.edu
   ipeds_id: '216463'
   scrape_policy: unknown
   probe_state:
@@ -24969,8 +24971,8 @@ schools:
     patterns_tried: 0
     search_fallback_tried: true
 - id: urshan-college
-  name: Urshan College
-  domain: urshancollege.org
+  name: Urshan University
+  domain: urshan.edu
   ipeds_id: '494685'
   scrape_policy: unknown
   probe_state:
@@ -25584,8 +25586,8 @@ schools:
     search_fallback_tried: true
   discovery_seed_url: https://www.washcoll.edu/people_departments/offices/institutional-research/common_data_sets_cds/common-data-set-2024-2025.pdf
 - id: washington-state-community-college
-  name: Washington State Community College
-  domain: wscc.edu
+  name: Washington State College of Ohio
+  domain: wsco.edu
   ipeds_id: '206446'
   scrape_policy: unknown
   probe_state:

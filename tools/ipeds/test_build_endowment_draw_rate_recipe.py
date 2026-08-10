@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import os
+import sys
+import tempfile
 import unittest
 from decimal import Decimal
+from pathlib import Path
 from unittest.mock import patch
 
 from tools.ipeds.build_endowment_draw_rate_recipe import (
@@ -11,6 +15,7 @@ from tools.ipeds.build_endowment_draw_rate_recipe import (
     fetch_recipe_inputs,
     index_finance_rows,
     index_identity_rows,
+    main as recipe_builder_main,
     normalize_draw_rate,
     quantile,
     render_typescript,
@@ -107,6 +112,86 @@ def identity_rows(
 
 
 class EndowmentDrawRateRecipeBuilderTests(unittest.TestCase):
+    def test_canonical_school_identity_overrides_a_stale_directory_slug(self) -> None:
+        artifact = build_recipe_artifact(
+            finance_rows=raw_finance_rows("168148", cells_for()),
+            identity_rows=identity_rows("168148", "Tufts University"),
+            directory_rows=[
+                {
+                    "ipeds_id": "168148",
+                    "school_id": "tufts-university",
+                    "in_scope": True,
+                }
+            ],
+            release_rows=[{
+                "id": "release-2024",
+                "collection_year": "2024-25",
+                "data_year": 2024,
+                "release_type": "provisional",
+                "release_date": "2026-03-01",
+                "metadata_sha256": "a" * 64,
+                "access_sha256": "b" * 64,
+                "source_page_url": "https://example.edu",
+            }],
+            min_year=2024,
+            max_year=2024,
+            generated_at="2026-08-10",
+            canonical_school_ids={"168148": "tufts"},
+        )
+
+        self.assertEqual(artifact["rows"][0]["schoolId"], "tufts")
+        self.assertTrue(artifact["rows"][0]["hasCurrentSchoolPage"])
+
+    def test_cli_identity_guard_failure_does_not_write_an_artifact(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output = Path(temp_dir) / "recipe-data.ts"
+            argv = [
+                "build_endowment_draw_rate_recipe.py",
+                "--min-year",
+                "2024",
+                "--max-year",
+                "2024",
+                "--generated-at",
+                "2026-08-10",
+                "--out",
+                str(output),
+            ]
+            inputs = {
+                "finance_rows": [],
+                "identity_rows": [],
+                "directory_rows": [],
+                "release_rows": [],
+            }
+            with (
+                patch.object(sys, "argv", argv),
+                patch.dict(
+                    os.environ,
+                    {
+                        "SUPABASE_URL": "https://project.example",
+                        "SUPABASE_ANON_KEY": "test-key",
+                    },
+                    clear=False,
+                ),
+                patch(
+                    "tools.ipeds.build_endowment_draw_rate_recipe.load_env"
+                ),
+                patch(
+                    "tools.ipeds.build_endowment_draw_rate_recipe.fetch_recipe_inputs",
+                    return_value=inputs,
+                ),
+                patch(
+                    "tools.ipeds.build_endowment_draw_rate_recipe.validated_unique_school_claim_slug_map",
+                    side_effect=ValueError("identity audit failed"),
+                ),
+                patch(
+                    "tools.ipeds.build_endowment_draw_rate_recipe.build_recipe_artifact"
+                ) as build_artifact,
+            ):
+                self.assertEqual(recipe_builder_main(), 2)
+
+            build_artifact.assert_not_called()
+            self.assertFalse(output.exists())
+
     def test_normalizes_both_reported_spending_signs(self) -> None:
         negative_rate, negative_error = normalize_draw_rate(cells_for())
         positive_rate, positive_error = normalize_draw_rate(

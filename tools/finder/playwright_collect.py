@@ -127,7 +127,7 @@ STARTING_URLS: dict[str, str] = {
     "university-of-california-davis": "https://aggiedata.ucdavis.edu/common-data-set",
     "university-of-california-irvine": "https://irap.uci.edu/institutional-research/data-hub/common-data-set/",
     "university-of-california-santa-barbara": "https://bap.ucsb.edu/institutional-research",
-    "tufts-university": "https://provost.tufts.edu/institutionalresearch/common-data-set/",
+    "tufts": "https://provost.tufts.edu/institutionalresearch/common-data-set/",
     "wake-forest-university": "https://ir.wfu.edu/common-data-set/",
     "tulane-university": "https://oair.tulane.edu/common-data-set",
     "university-of-washington-seattle-campus": "https://www.washington.edu/opb/common-data-set/",

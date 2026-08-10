@@ -19,9 +19,11 @@
 
 import { NextResponse } from "next/server";
 import {
+  fetchCanonicalSchoolId,
   fetchSchoolDocuments,
   fetchExtract,
 } from "@/lib/queries";
+import { schoolRedirectUrl } from "@/lib/school-alias";
 
 export const revalidate = 3600; // hourly — matches the rest of the app
 
@@ -50,10 +52,17 @@ function asPct(a: number | null, b: number | null): number | null {
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ school_id: string }> },
 ) {
   const { school_id } = await params;
+  const canonicalSchoolId = await fetchCanonicalSchoolId(school_id);
+  if (canonicalSchoolId && canonicalSchoolId !== school_id) {
+    return NextResponse.redirect(
+      schoolRedirectUrl(request.url, `/api/facts/${canonicalSchoolId}`),
+      308,
+    );
+  }
   const docs = await fetchSchoolDocuments(school_id);
   const extracted = docs.find((d) => d.extraction_status === "extracted" && d.document_id);
 

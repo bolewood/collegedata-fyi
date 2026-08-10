@@ -3130,57 +3130,6 @@ schools:
       text: Common Data Set - 2025-26
       year: 2025-26
       is_document: false
-  tufts-university:
-    starting_url: https://provost.tufts.edu/institutionalresearch/common-data-set/
-    final_url: https://provost.tufts.edu/institutionalresearch/about-tufts/common-data-set/
-    status: ok
-    error: null
-    duration_ms: 1550
-    anchors:
-    - url: https://provost.tufts.edu/institutionalresearch/about-tufts/common-data-set/
-      text: Common Data Set
-      year: null
-      is_document: false
-    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2024-2025-1.pdf
-      text: 2024-2025 Common Data Set
-      year: 2024-25
-      is_document: true
-    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2023_2024.pdf
-      text: 2023-2024 Common Data Set
-      year: 2023-24
-      is_document: true
-    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2022-2023.pdf
-      text: 2022-2023 Common Data Set
-      year: 2022-23
-      is_document: true
-    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS-2021-2022.pdf
-      text: 2021-2022 Common Data Set
-      year: 2021-22
-      is_document: true
-    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2020-2021_Final-Revised-9.1.21.pdf
-      text: 2020-2021 Common Data Set
-      year: 2020-21
-      is_document: true
-    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2019-2020_Final-Revised-7.28.20.pdf
-      text: 2019-2020 Common Data Set
-      year: 2019-20
-      is_document: true
-    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2018-2019-Final-Revised-7.22.19.pdf
-      text: 2018-2019 Common Data Set
-      year: 2018-19
-      is_document: true
-    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2017-2018.pdf
-      text: 2017-2018 Common Data Set
-      year: 2017-18
-      is_document: true
-    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2016-2017.pdf
-      text: 2016-2017 Common Data Set
-      year: 2016-17
-      is_document: true
-    - url: https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/Tufts_CDS_2015-2016.pdf
-      text: 2015-2016 Common Data Set
-      year: 2015-16
-      is_document: true
   wake-forest-university:
     starting_url: https://ir.wfu.edu/common-data-set/
     final_url: https://ir.wfu.edu/common-data-set/

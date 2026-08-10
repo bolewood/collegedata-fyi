@@ -34,7 +34,18 @@ import yaml
 
 
 ROOT = Path(__file__).parent
+REPO_ROOT = ROOT.parents[1]
 SCHOOLS_YAML = ROOT / "schools.yaml"
+
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from tools.finder.identity_guard import (  # noqa: E402
+    audit_school_identities,
+    load_identity_exceptions,
+    official_records_from_ipeds_rows,
+    school_claims_from_entries,
+)
 
 # IPEDS download URL pattern — the HD (Header/Directory) file
 # contains institution-level characteristics.
@@ -200,6 +211,7 @@ def merge(ipeds_rows: list[dict], existing: dict[str, dict]) -> list[dict]:
                 "discovery_seed_url", "browse_url",
                 "cds_url_hint",  # legacy; kept for back-compat
                 "scrape_policy", "notes", "sub_institutions",
+                "retired_aliases",
                 "probe_state",
             ]:
                 if key in hand and hand[key] is not None:
@@ -347,6 +359,7 @@ def write_yaml(schools: list[dict], dry_run: bool = False) -> None:
 #                        Distinct from discovery_seed_url when the seed is a direct
 #                        PDF that no one wants to send a contributor to.
 #   scrape_policy:       active | verified_absent | verified_partial | unknown
+#   retired_aliases:     optional old public slugs that permanently redirect
 #   sub_institutions:    optional list if the school publishes >1 CDS per year
 #   notes:               optional free-text
 #
@@ -387,6 +400,10 @@ def write_yaml(schools: list[dict], dry_run: bool = False) -> None:
                     f.write(f"    browse_url: {s['browse_url']}\n")
                 policy = s.get("scrape_policy", "unknown")
                 f.write(f"    scrape_policy: {policy}\n")
+                if s.get("retired_aliases"):
+                    f.write("    retired_aliases:\n")
+                    for alias in s["retired_aliases"]:
+                        f.write(f"      - {alias}\n")
                 if s.get("sub_institutions"):
                     f.write("    sub_institutions:\n")
                     for sub in s["sub_institutions"]:
@@ -428,6 +445,20 @@ def main():
 
     schools = merge(rows, existing)
     print(f"Merged total: {len(schools)}")
+
+    identity_audit = audit_school_identities(
+        school_claims_from_entries(schools),
+        official_records_from_ipeds_rows(rows),
+        load_identity_exceptions(),
+    )
+    for issue in identity_audit["warnings"]:
+        print(f"  identity warning: {issue}", file=sys.stderr)
+    if identity_audit["errors"]:
+        for issue in identity_audit["errors"]:
+            print(f"  identity error: {issue}", file=sys.stderr)
+        raise SystemExit(
+            "Refusing to write schools.yaml: an IPEDS identity claim failed validation"
+        )
 
     write_yaml(schools, dry_run=args.dry_run)
 

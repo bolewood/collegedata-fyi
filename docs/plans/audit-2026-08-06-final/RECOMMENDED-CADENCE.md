@@ -18,9 +18,9 @@ It also established bounded evidence for missing projections, inaccessible sourc
 |---|---|---|
 | Daily | Current-year projection completeness and freshness; selected artifact → projection lag; IPEDS cache refresh timestamp once instrumented | Alert when less than 95% of selected current-year documents project within 24 hours, or any selected document remains unprojected for seven days |
 | Weekly | Exact core counts, explicit PostgREST pagination assertions, archive attempt terminal/open counts, source-object accessibility | Alert on a gap/cap/duplicate, an unfinished attempt older than its timeout contract, or a new inaccessible current source |
-| Monthly | Full archive outcome taxonomy, attempt p50/p95/timeout rate, loaded-but-unserved bounded inventory, projection identity discrepancies | Retain a dated machine-readable result and compare against the prior month; investigate step changes rather than absolute counts alone |
+| Monthly | Full archive outcome taxonomy, attempt p50/p95/timeout rate, loaded-but-unserved bounded inventory, projection identity discrepancies, CDS/document/directory IPEDS identity parity | Retain a dated machine-readable result and compare against the prior month; block publication when one institution's documents or projections resolve to another institution's federal identity |
 | Quarterly | Deterministic unresolved-school resolver cohort, full 4 KiB format-head corpus probe, ZIP byte sniff, per-question `cds_fields` distribution | Use a versioned sampling salt; alert on resolver regressions, new byte-routing exposure, or section/question distribution breaks |
-| Per IPEDS release | Sign contract by release/field, accounting identity, draw-rate exclusions, provenance completeness, Scorecard/OPEID6 reconciliation | Block release when labeled negatives remain numeric, provenance is missing, raw components are erased, or the declared reconciliation gate fails |
+| Per IPEDS or Scorecard release | Refresh the pinned official identity snapshot; validate every active finder claim before loading; sign contract by release/field, accounting identity, draw-rate exclusions, provenance completeness, Scorecard/OPEID6 reconciliation | Block loading before a database connection when a claimed UNITID does not match the official institution name/domain, or when labeled negatives remain numeric, provenance is missing, raw components are erased, or the declared reconciliation gate fails |
 | Annually | All 24 matrix checks, historical/schema drift, full loaded-but-unserved universe, manual OCR ground truth, producer-version history, consumer honesty review | Publish one canonical matrix and manifest. Preserve partial/deferred labels wherever evidence is unavailable |
 
 ## Change-triggered reruns
@@ -28,9 +28,9 @@ It also established bounded evidence for missing projections, inaccessible sourc
 Do not wait for the calendar when any of these changes lands:
 
 - extractor, cleaner, OCR, or producer-version logic: rerun A1–A4 and F1–F4;
-- resolver, archive queue, finder hints, or storage routing: rerun C1–C3, F3, and the N cohort;
+- resolver, archive queue, finder hints, school identity claims, or storage routing: run `tools/finder/identity_guard.py`, then rerun C1–C3, F3, and the N cohort;
 - schema registry or projection selector: rerun B2–B3, A4, D1, and G3;
-- IPEDS loader, field registry, release fallback, or finance UI: rerun D2–D3, E1–E4, and G1–G2;
+- IPEDS/Scorecard loader, field registry, release fallback, or finance UI: refresh the official identity snapshot, run the loader's pre-write identity guard, and rerun D2–D3, E1–E4, and G1–G2;
 - public API/friendly-field behavior: rerun A3 and G1–G3.
 
 ## Work to finish before the annual rerun

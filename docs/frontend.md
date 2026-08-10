@@ -74,6 +74,13 @@ score submitters, not the entire admitted or enrolled class.
 
 ### `/schools/[school_id]` School detail (`web/src/app/schools/[school_id]/page.tsx`)
 
+School-scoped pages resolve `school_id` through `institution_slug_crosswalk`
+before reading school data. Retired aliases receive a permanent redirect to the
+canonical school, including year pages and Open Graph image routes. The public
+facts/source APIs and XLSX/CSV download routes use the same lookup and return a
+`308` while preserving query parameters, so old links cannot serve another
+institution's data.
+
 All archived CDS documents for one school, sorted newest first. Each
 document is a card showing year, format badge, extraction status badge,
 and a source download link. The label is format-aware (`Download PDF`,

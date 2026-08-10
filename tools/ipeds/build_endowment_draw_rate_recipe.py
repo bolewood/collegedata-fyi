@@ -26,6 +26,7 @@ if __package__ is None or __package__ == "":
 
 from tools.ipeds.load_release import load_env
 from tools.ipeds.reconcile_endowment_scorecard import postgrest_get_all
+from tools.finder.identity_guard import validated_unique_school_claim_slug_map
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUTPUT = REPO_ROOT / "web/src/lib/endowment-draw-rate-recipe-data.ts"
@@ -59,6 +60,12 @@ def main() -> int:
     parser.add_argument("--min-year", type=int, default=DEFAULT_MIN_YEAR)
     parser.add_argument("--max-year", type=int, default=DEFAULT_MAX_YEAR)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument(
+        "--schools-yaml",
+        type=Path,
+        default=REPO_ROOT / "tools/finder/schools.yaml",
+        help="Identity-guarded canonical school slugs keyed by IPEDS UNITID",
+    )
     parser.add_argument(
         "--generated-at",
         default=date.today().isoformat(),
@@ -102,6 +109,9 @@ def main() -> int:
             min_year=args.min_year,
             max_year=args.max_year,
             generated_at=args.generated_at,
+            canonical_school_ids=validated_unique_school_claim_slug_map(
+                schools_path=args.schools_yaml
+            ),
         )
     except (OSError, ValueError) as exc:
         print(f"error: recipe dataset build failed: {exc}", file=sys.stderr)
@@ -338,12 +348,18 @@ def build_recipe_artifact(
     min_year: int,
     max_year: int,
     generated_at: str,
+    canonical_school_ids: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
     finance = index_finance_rows(finance_rows)
     identity = index_identity_rows(identity_rows)
+    canonical_school_ids = canonical_school_ids or {}
     directory = {
         str(row.get("ipeds_id") or ""): {
-            "schoolId": str(row.get("school_id") or "") or None,
+            "schoolId": (
+                canonical_school_ids.get(str(row.get("ipeds_id") or ""))
+                or str(row.get("school_id") or "")
+                or None
+            ),
             "inScope": row.get("in_scope") is True,
         }
         for row in directory_rows

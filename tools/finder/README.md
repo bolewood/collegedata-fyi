@@ -15,6 +15,8 @@ This directory turns that problem into a reproducible pipeline. You run one comm
 | `schools.yaml` | The corpus. 2,434 schools keyed by IPEDS ID, with `discovery_seed_url` (the resolver's seed URL; renamed from `cds_url_hint` in PR 5 of the URL hint refactor), optional `browse_url` (human-friendly URL for contributor tools), `scrape_policy`, `probe_state`. |
 | `school_overrides.yaml` | Operator-supplied per-school overrides keyed by `school_id`. Hand-curated `browse_url`, `direct_archive_urls` (year-tagged for Box/Drive/SharePoint-hosted schools), `hosting_override` (CMS/file_storage/auth_required/rendering/waf/notes). Read at edge-function runtime by `_shared/schools.ts`; NOT touched by `build_school_list.py`. |
 | `build_school_list.py` | Rebuilds `schools.yaml` from IPEDS HD data, preserving hand-curated overrides. Run rarely (once per IPEDS release). Includes `assert_no_duplicates()` build-time guard. |
+| `identity_guard.py` | CI and loader guard that checks every `schools.yaml` UNITID against a checked-in official NCES HD identity snapshot. It blocks when neither official name nor website domain agrees; exact reviewed exceptions cannot use wildcards and must remain in use. |
+| `ipeds_identity_snapshot.csv` | Offline NCES HD identity snapshot used by CI, including all official UNITIDs, names, domains, active flags, and successor IDs. Refresh deliberately with `identity_guard.py --build-snapshot ...` after reviewing a new HD release. |
 | `probe_urls.py` | Discovers CDS URLs for schools where we don't have one. Run monthly. This is the workhorse. |
 | `dedup_audit.py` | Compares duplicate-name `schools.yaml` entries against authoritative IPEDS HD data, recommends a canonical. Run when the build guard surfaces a duplicate. |
 | `dedup_migrate.py` | Moves Supabase rows (cds_documents, archive_queue, etc.) from a wrong slug to its canonical, then deletes the wrong yaml entry. Run after `dedup_audit.py` chooses the canonical. |
@@ -110,7 +112,7 @@ IPEDS 209542, it turns out, **is Oregon State University, not Reed.** Someone ha
 
 One wrong digit in a hand-curated entry was deleting a major R1 from the discovery pipeline forever. This is the kind of bug that only surfaces when you go looking for it.
 
-Fix: deleted the bad `id: reed` entry, re-added a correct `id: oregon-state-university` entry with IPEDS 209542 + domain `oregonstate.edu`, kept the real `reed-college` entry. The merge() bug that lets this happen silently is still open as a follow-up — `build_school_list.py` should warn or abort when a hand-curated name doesn't match the IPEDS row it's overlaying. For now, keep an eye on hand-curated IPEDS IDs.
+Fix: deleted the bad `id: reed` entry, re-added a correct `id: oregon-state-university` entry with IPEDS 209542 + domain `oregonstate.edu`, kept the real `reed-college` entry. The shared identity guard now blocks this failure class in CI and in `load_directory.py` before any database connection or write.
 
 **University of Illinois Urbana-Champaign: real Brave miss, XLSX format.** Illinois's DMI publishes CDS as `.xlsx`, not PDF, at `https://www.dmi.illinois.edu/stuenr/misc/cds_2024_2025.xlsx`. Brave's index turned out to have effectively zero coverage of `www.dmi.illinois.edu` — `site:illinois.edu "Common Data Set"` returns zero results across every query variant we tried. Brave just doesn't crawl that subdomain. Subdomain coverage gaps in the search engine's index are rare but real. Manually set `cds_url_hint` to the XLSX URL and flipped `scrape_policy` to active. Tier 1 extraction path (openpyxl → Answer Sheet) will handle it directly.
 
@@ -173,7 +175,7 @@ Things we know we don't catch, documented so they don't surprise anyone later.
 - **Subdomain coverage gaps in Brave's index.** `dmi.illinois.edu` is effectively invisible to Brave; `site:illinois.edu "Common Data Set"` returns zero results. Rare but real. Only fix is per-school manual resolution.
 - **Opaque file URLs without extension.** UCLA publishes CDS at `apb.ucla.edu/file/<uuid>` — no file extension in the URL, parser currently rejects because `endswith(".pdf")` fails. Needs a `Content-Type` header check during URL validation.
 - **Landing pages that aren't direct files.** 289 of the 840 active hints are IR landing pages (like `irp.osu.edu/institutional-data-and-reports`), not direct file URLs. Downstream extraction will need a second-step HTML parse to find the actual PDF/XLSX link. Separate M2 concern.
-- **`build_school_list.py` merge silent-overwrite.** If a hand-curated entry has a mismatched IPEDS ID (Reed/OSU bug), the IPEDS row for the wrong school gets silently renamed in place during every build. The `assert_no_duplicates()` guard now catches the downstream symptom (two active rows with the same slug or the same display name with different IPEDS IDs) and aborts the build, so the bug surfaces at build time instead of leaking into production. The full first-line defense — warning when hand-curated `name` disagrees with the IPEDS row it's overlaying — is still an open follow-up. See "Deduplication" below.
+- **`build_school_list.py` merge identity safety.** A hand-curated entry with a mismatched IPEDS ID can rename the wrong federal row in place. `assert_no_duplicates()` still catches duplicate symptoms; `identity_guard.py` is the first-line semantic defense. CI validates the whole corpus against the checked-in NCES snapshot, and `load_directory.py` repeats the same audit against the incoming Scorecard file before preserving any slug.
 
 ## Deduplication
 
@@ -224,6 +226,18 @@ python build_school_list.py
 ### Why IPEDS HD is the source of truth
 
 NCES IPEDS HD (Header) is the official US Department of Education registry of every Title-IV-eligible institution. UNITID is the federal primary key. INSTNM is the official institution name. STABBR is the state. Every other school dataset (College Scorecard, College Navigator, ACT, SAT) joins back to UNITID. If `schools.yaml` and IPEDS disagree about what institution lives at a given UNITID, IPEDS wins. The audit script downloads `HD{year}.zip` from `nces.ed.gov/ipeds/datacenter` and caches it in `.ipeds-cache/` (gitignored, re-fetched on demand).
+
+Run the offline identity audit before finder changes:
+
+```bash
+python tools/finder/identity_guard.py
+python -m unittest tools.finder.test_identity_guard
+```
+
+The guard accepts an exact normalized name match or a same/subdomain website
+match. Fuzzy similarity is diagnostic only and never permits a write. Active
+schools missing from the official vintage fail; non-active schools missing
+from the vintage warn. There is intentionally no ignore flag.
 
 ### Why this matters
 
