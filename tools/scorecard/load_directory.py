@@ -191,6 +191,7 @@ def city_suffix(city: Optional[str]) -> str:
 def assign_slugs(
     rows: list[dict[str, Any]],
     schools_yaml_map: dict[str, str],
+    reserved_slugs: Optional[set[str]] = None,
 ) -> tuple[dict[str, str], list[dict[str, Any]]]:
     """Two-pass slug assignment.
 
@@ -205,8 +206,18 @@ def assign_slugs(
         (ipeds_id → school_id mapping for rows we slugged,
          list of collision-report entries for the summary)
     """
+    reserved_slugs = set(reserved_slugs or set())
+    canonical_claims = set(schools_yaml_map.values())
+    reserved_canonical_collisions = sorted(reserved_slugs & canonical_claims)
+    if reserved_canonical_collisions:
+        raise ValueError(
+            "reserved slug collides with a schools.yaml canonical claim: "
+            + ", ".join(reserved_canonical_collisions)
+        )
+
     assigned: dict[str, str] = {}
-    claimed: set[str] = set()
+    # Durable retired aliases must never be reassigned to a new institution.
+    claimed: set[str] = set(reserved_slugs)
     collisions: list[dict[str, Any]] = []
 
     # Pre-pass: detect schools.yaml self-collisions where multiple IPEDS
@@ -413,6 +424,25 @@ def build_crosswalk_rows(
     as a non-primary alias so legacy URLs keep resolving."""
     out: list[dict[str, Any]] = []
     retired_aliases_by_ipeds = retired_aliases_by_ipeds or {}
+    retired_alias_owners: dict[str, str] = {}
+    for owner_ipeds, aliases in retired_aliases_by_ipeds.items():
+        for alias in aliases:
+            existing_owner = retired_alias_owners.get(alias)
+            if existing_owner and existing_owner != owner_ipeds:
+                raise ValueError(
+                    f"retired alias {alias!r} belongs to multiple IPEDS IDs"
+                )
+            retired_alias_owners[alias] = owner_ipeds
+
+    yaml_alias_conflicts = sorted(
+        set(retired_alias_owners) & set(schools_yaml_map.values())
+    )
+    if yaml_alias_conflicts:
+        raise ValueError(
+            "retired alias collides with a schools.yaml canonical claim: "
+            + ", ".join(yaml_alias_conflicts)
+        )
+
     for row in directory_rows:
         ipeds = row["ipeds_id"]
         primary = row["school_id"]
@@ -439,7 +469,7 @@ def build_crosswalk_rows(
                 auto = base_slug(row["school_name"])
             except ValueError:
                 auto = None
-            if auto and auto != primary and auto not in retired_aliases:
+            if auto and auto != primary and auto not in retired_alias_owners:
                 out.append(
                     {
                         "ipeds_id": ipeds,
@@ -855,7 +885,14 @@ def main() -> int:
     # Slug assignment. We slug every row, in-scope or not, so the
     # crosswalk includes inactive/closed institutions too (they may
     # still need search redirects).
-    assigned, collisions = assign_slugs(rows, schools_yaml_map)
+    reserved_retired_aliases = {
+        alias
+        for aliases in retired_aliases_by_ipeds.values()
+        for alias in aliases
+    }
+    assigned, collisions = assign_slugs(
+        rows, schools_yaml_map, reserved_retired_aliases
+    )
     for row in rows:
         row["school_id"] = assigned.get(row["ipeds_id"])
 

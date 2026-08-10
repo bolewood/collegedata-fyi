@@ -48,9 +48,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function SchoolYearPage({
-  params,
-}: {
+export default async function SchoolYearPage({ params }: {
   params: Promise<Params>;
 }) {
   const { school_id, year } = await params;

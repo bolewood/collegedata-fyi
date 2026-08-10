@@ -30,8 +30,10 @@ import {
 } from "./list-builder";
 import {
   resolveCanonicalSchoolId,
+  resolveRetiredSchoolAlias,
   type SchoolAliasRow,
 } from "./school-alias";
+import retiredSchoolAliases from "../data/school-redirects.json";
 
 // Documents with these participation_status values are excluded from every
 // public-facing manifest query. 'withdrawn' = takedown per ADR 0008.
@@ -780,6 +782,12 @@ export const fetchCanonicalSchoolId = cache(
   async function fetchCanonicalSchoolId(
     requestedSchoolId: string,
   ): Promise<string | null> {
+    const reviewedSchoolId = resolveRetiredSchoolAlias(
+      requestedSchoolId,
+      retiredSchoolAliases,
+    );
+    if (reviewedSchoolId) return reviewedSchoolId;
+
     try {
       const { data, error } = await (supabase as unknown as UntypedSupabase)
         .from("institution_slug_crosswalk")

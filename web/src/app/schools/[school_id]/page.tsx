@@ -130,9 +130,7 @@ function archiveHistory(docs: ManifestRow[]): number[] {
   return series.length === 1 ? [0, 1] : series;
 }
 
-export default async function SchoolDetailPage({
-  params,
-}: {
+export default async function SchoolDetailPage({ params }: {
   params: Promise<{ school_id: string }>;
 }) {
   const { school_id } = await params;
