@@ -4058,7 +4058,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.csun.edu/node/65206
+  discovery_seed_url: https://www.csun.edu/institutional-research/explore-csun-data/common-data-set
 - id: california-state-university-sacramento
   name: California State University-Sacramento
   domain: csus.edu
@@ -9718,7 +9718,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.hccs.edu/media/houston-community-college/district/pdf/HCC-Common-Data-Set-2023-2024.pdf
+  discovery_seed_url: https://www.hccs.edu/about-us/institutional-data/common-data-set/
 - id: houston-graduate-school-of-theology
   name: Houston Graduate School of Theology
   domain: hgst.edu
@@ -21455,7 +21455,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.utrgv.edu/sair/data-reports/cds_2020-2021.pdf
+  discovery_seed_url: https://www.utrgv.edu/sair/_files/documents/data-and-reports/cds_2023-2024_utrgv-2.xlsx
 - id: the-university-of-texas-system-office
   name: The University of Texas System Office
   domain: utsystem.edu
