@@ -1,15 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 400" role="img">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="920" height="400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 400" role="img">
   <rect width="920" height="400" fill="#faf6ec"/>
   <rect x="24" y="24" width="872" height="352" fill="#f1ece1" stroke="rgba(28,30,27,.28)"/>
-  <text x="44" y="56" font-family="ui-monospace, Menlo, monospace" font-size="12" letter-spacing="1.2" fill="#6b6a63">SAME FILE � DOCLING ON A FILLABLE PDF � NOT THE LIVE EXTRACT</text>
+  <text x="44" y="56" font-family="ui-monospace, Menlo, monospace" font-size="12" letter-spacing="1.2" fill="#6b6a63">SAME FILE · DOCLING ON A FILLABLE PDF · NOT THE LIVE EXTRACT</text>
   <text x="44" y="92" font-family="Georgia, serif" font-size="26" fill="#1c1e1b">C1 row-shift after flattening</text>
-  <text x="44" y="118" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#3a3b37">Ground truth from AcroForm: men 3,452 � women 1,761 � another/unknown 4.</text>
+  <text x="44" y="118" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#3a3b37">Ground truth from AcroForm: men 3,452 · women 1,761 · another/unknown 4.</text>
   <rect x="44" y="140" width="832" height="120" fill="#fff" stroke="rgba(140,42,31,.45)"/>
   <text x="56" y="168" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#8c2a1f">Docling cell collapse</text>
   <text x="56" y="196" font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#1c1e1b">Total first-time, first-year men who applied     | 3452 1761</text>
   <text x="56" y="220" font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#1c1e1b">Total first-time, first-year women who applied   | 4</text>
   <text x="56" y="244" font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#1c1e1b">Total first-time, first-year unknown who applied |</text>
-  <text x="44" y="292" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#3a3b37">Kerned year numerals in the same extract: Common Data Set 202 5 -202 6, Fall 201 8 Cohort.</text>
-  <text x="44" y="320" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#3a3b37">Running header emitted as an H2 five times: Common Data Set 2025-2026.</text>
+  <text x="44" y="292" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#3a3b37">Kerned year numerals in the same extract: “Common Data Set 202 5 -202 6”, “Fall 201 8 Cohort”.</text>
+  <text x="44" y="320" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#3a3b37">Running header emitted as an H2 five times: “Common Data Set 2025-2026”.</text>
   <text x="44" y="352" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#27321f">The live Harvey Mudd 2025-26 extract is the AcroForm path, not this Docling output.</text>
 </svg>
