@@ -1,7 +1,6 @@
 import type { MetadataRoute } from "next";
 import { fetchManifest, aggregateSchools } from "@/lib/queries";
-
-const SITE_URL = "https://www.collegedata.fyi";
+import { SITE_URL, staticSitemapEntries } from "@/lib/sitemap-static";
 
 function isAcademicYear(value: string | null | undefined): value is string {
   if (!value) return false;
@@ -14,74 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const manifest = await fetchManifest();
   const schools = aggregateSchools(manifest);
 
-  const staticPages: MetadataRoute.Sitemap = [
-    { url: SITE_URL, changeFrequency: "daily", priority: 1 },
-    {
-      url: `${SITE_URL}/schools`,
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
-    {
-      url: `${SITE_URL}/match`,
-      changeFrequency: "daily",
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/coverage`,
-      changeFrequency: "daily",
-      priority: 0.7,
-    },
-    {
-      url: `${SITE_URL}/about`,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${SITE_URL}/api`,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${SITE_URL}/privacy`,
-      changeFrequency: "yearly",
-      priority: 0.4,
-    },
-    {
-      url: `${SITE_URL}/methodology`,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${SITE_URL}/methodology/positioning`,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${SITE_URL}/methodology/admission-strategy`,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${SITE_URL}/methodology/merit-profile`,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${SITE_URL}/recipes`,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${SITE_URL}/recipes/acceptance-vs-yield`,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${SITE_URL}/recipes/test-optional-tracker`,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-  ];
+  const staticPages = staticSitemapEntries();
 
   const schoolPages: MetadataRoute.Sitemap = schools.map((s) => ({
     url: `${SITE_URL}/schools/${s.school_id}`,

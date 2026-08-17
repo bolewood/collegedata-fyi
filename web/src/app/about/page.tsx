@@ -81,29 +81,50 @@ export default function AboutPage() {
         </p>
 
         <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
-          The problem
+          Three sources
         </h2>
 
         <p>
-          Common Data Set files are excellent, but scattered. They show up on
-          school websites in many formats, on different timetables, under
-          different URLs, and only a minority of the 3,000+ in-scope
-          undergraduate institutions publish a current public CDS that is easy
-          to find.
+          The data already exists. It lives in three systems that do not
+          replace each other. These notes are the long versions; this page
+          stays the product story.
         </p>
 
-        <p>
-          College Scorecard is useful, especially for outcomes like net price,
-          debt, completion, and earnings, but it is not a substitute for the
-          richer admissions and aid details schools publish in the CDS.
-        </p>
-
-        <p>
-          IPEDS is powerful and broad, but federal releases lag the freshest
-          school-published files, and the official tools can be hard to navigate
-          unless you already know the survey components, table names, and Access
-          database workflow.
-        </p>
+        <ul className="ml-6 list-disc space-y-2 marker:text-gray-400">
+          <li>
+            <a
+              style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
+              href="/about/common-data-set"
+            >
+              What is the Common Data Set
+            </a>
+            {" "}
+            — the voluntary school-authored form, why a 47-page PDF is not a
+            database, and what “extracted” means here.
+          </li>
+          <li>
+            <a
+              style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
+              href="/about/college-scorecard"
+            >
+              College Scorecard, and why it is not a CDS
+            </a>
+            {" "}
+            — federal outcomes and net price, lagged on purpose, never mixed
+            into §C or §H.
+          </li>
+          <li>
+            <a
+              style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
+              href="/about/ipeds"
+            >
+              What IPEDS is, and what it cannot replace
+            </a>
+            {" "}
+            — NCES survey tables keyed by UNITID, and the wait-list / H2A
+            facts they do not carry.
+          </li>
+        </ul>
 
         <p>
           And if you want enriched data, the default option has often been a

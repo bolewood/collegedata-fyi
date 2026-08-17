@@ -22,6 +22,12 @@ change line. Caveats travel inside each fact's quality.note — keep them when c
 methodology and a worked example: https://www.collegedata.fyi/recipes/endowment-draw-rate
 
 When summarizing values, preserve the source metadata in each fact. Do not blend CDS, IPEDS, and Scorecard values without naming the source layer. Use source.url or source.archive_url for citations when available.
+
+Source literacy:
+
+- What is the Common Data Set: https://www.collegedata.fyi/about/common-data-set
+- College Scorecard vs CDS: https://www.collegedata.fyi/about/college-scorecard
+- What IPEDS is, and what it cannot replace: https://www.collegedata.fyi/about/ipeds
 `;
 
   return new Response(body, {

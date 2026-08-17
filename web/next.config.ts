@@ -1,10 +1,14 @@
 import type { NextConfig } from "next";
 import retiredSchoolAliases from "./src/data/school-redirects.json";
+import { APEX_TO_WWW_REDIRECTS } from "./src/lib/apex-redirect";
 import { buildRetiredSchoolRedirects } from "./src/lib/school-alias";
 
 const nextConfig: NextConfig = {
   async redirects() {
-    return buildRetiredSchoolRedirects(retiredSchoolAliases);
+    return [
+      ...APEX_TO_WWW_REDIRECTS,
+      ...buildRetiredSchoolRedirects(retiredSchoolAliases),
+    ];
   },
   // Rewrite the pretty URL `/design-system` and `/design-system/` to the
   // static file under `public/design-system/index.html`. Next's default

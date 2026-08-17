@@ -25,6 +25,8 @@ import { CoverageBadge } from "@/components/CoverageBadge";
 import { SubmissionForm } from "@/components/SubmissionForm";
 import { FederalBaselineTable } from "@/components/FederalBaselineTable";
 import { storageUrl, yearRange } from "@/lib/format";
+import { archiveLead } from "@/lib/archive-lead";
+import { ArchiveLead } from "@/components/ArchiveLead";
 import type { ManifestRow, InstitutionCoverage } from "@/lib/types";
 
 export const revalidate = 3600;
@@ -261,6 +263,12 @@ export default async function SchoolDetailPage({ params }: {
   ];
 
   const history = archiveHistory(docs);
+  const schoolLead = archiveLead({
+    schoolId: school_id,
+    schoolName: name,
+    ipedsId,
+    documents: docs,
+  });
   const carnegieCode = scorecard?.carnegie_basic;
   const positioningSourceDoc = positioningSchool
     ? docs.find((doc) => doc.canonical_year === positioningSchool.cdsYear) ?? docs[0]
@@ -338,6 +346,7 @@ export default async function SchoolDetailPage({ params }: {
               name
             )}
           </h1>
+          {schoolLead ? <ArchiveLead lead={schoolLead} /> : null}
           <div
             style={{
               display: "flex",

@@ -138,6 +138,62 @@ describe("retired alias pages and Open Graph images", () => {
     });
   });
 
+  it("emits path-specific canonicals for Virginia Tech and Harvey Mudd year pages", async () => {
+    mocks.fetchCanonicalSchoolId.mockImplementation(async (schoolId: string) => schoolId);
+    mocks.fetchSchoolDocuments.mockImplementation(async (schoolId: string) => [
+      {
+        school_id: schoolId,
+        school_name:
+          schoolId === "virginia-tech" ? "Virginia Tech" : "Harvey Mudd College",
+        canonical_year: "2025-26",
+      },
+    ]);
+    mocks.fetchDocumentsBySchoolAndYear.mockImplementation(
+      async (schoolId: string) => [
+        {
+          school_id: schoolId,
+          school_name:
+            schoolId === "virginia-tech"
+              ? "Virginia Tech"
+              : "Harvey Mudd College",
+        },
+      ],
+    );
+    mocks.fetchInstitutionCoverage.mockResolvedValue(null);
+
+    const [vtHub, vtYear, hmcHub, hmcYear] = await Promise.all([
+      generateSchoolMetadata({
+        params: Promise.resolve({ school_id: "virginia-tech" }),
+      }),
+      generateSchoolYearMetadata({
+        params: Promise.resolve({
+          school_id: "virginia-tech",
+          year: "2025-26",
+        }),
+      }),
+      generateSchoolMetadata({
+        params: Promise.resolve({ school_id: "harvey-mudd" }),
+      }),
+      generateSchoolYearMetadata({
+        params: Promise.resolve({
+          school_id: "harvey-mudd",
+          year: "2025-26",
+        }),
+      }),
+    ]);
+
+    expect(vtHub.alternates).toEqual({ canonical: "/schools/virginia-tech" });
+    expect(vtYear.alternates).toEqual({
+      canonical: "/schools/virginia-tech/2025-26",
+    });
+    expect(hmcHub.alternates).toEqual({ canonical: "/schools/harvey-mudd" });
+    expect(hmcYear.alternates).toEqual({
+      canonical: "/schools/harvey-mudd/2025-26",
+    });
+    expect(vtHub.alternates).not.toEqual({ canonical: "/" });
+    expect(vtYear.alternates).not.toEqual({ canonical: "/" });
+  });
+
   it("loads the canonical school for the school-level Open Graph image", async () => {
     mocks.fetchSchoolDocuments.mockResolvedValue([
       {
