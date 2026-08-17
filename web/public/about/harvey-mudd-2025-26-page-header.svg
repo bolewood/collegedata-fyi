@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="920" height="300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 300" role="img">
-  <rect width="920" height="300" fill="#faf6ec"/>
-  <rect x="24" y="24" width="872" height="252" fill="#f1ece1" stroke="rgba(28,30,27,.28)"/>
+<svg width="920" height="380" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 380" role="img">
+  <rect width="920" height="380" fill="#faf6ec"/>
+  <rect x="24" y="24" width="872" height="332" fill="#f1ece1" stroke="rgba(28,30,27,.28)"/>
   <text x="44" y="52" font-family="ui-monospace, Menlo, monospace" font-size="12" letter-spacing="1.2" fill="#6b6a63">PAGE HEADER REPEATED · NOT A DATABASE</text>
-  <text x="44" y="88" font-family="Georgia, serif" font-size="22" fill="#1c1e1b">Common Data Set 2025-2026</text>
-  <text x="44" y="118" font-family="Georgia, serif" font-size="22" fill="#1c1e1b">Common Data Set 2025-2026</text>
-  <text x="44" y="148" font-family="Georgia, serif" font-size="22" fill="#1c1e1b">Common Data Set 2025-2026</text>
-  <text x="44" y="178" font-family="Georgia, serif" font-size="22" fill="#1c1e1b">Common Data Set 2025-2026</text>
-  <text x="44" y="208" font-family="Georgia, serif" font-size="22" fill="#1c1e1b">Common Data Set 2025-2026</text>
-  <text x="44" y="248" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#3a3b37">Harvey Mudd 2025-26 fillable PDF. The running header is print chrome. Google can index the phrase; it is still a form, not a table.</text>
+  <text font-family="Georgia, serif" font-size="22" fill="#1c1e1b">
+    <tspan x="44" y="92">Common Data Set 2025-2026</tspan>
+    <tspan x="44" y="128">Common Data Set 2025-2026</tspan>
+    <tspan x="44" y="164">Common Data Set 2025-2026</tspan>
+    <tspan x="44" y="200">Common Data Set 2025-2026</tspan>
+    <tspan x="44" y="236">Common Data Set 2025-2026</tspan>
+  </text>
+  <text font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#3a3b37">
+    <tspan x="44" y="284">Harvey Mudd 2025-26 fillable PDF. The running header is print chrome.</tspan>
+    <tspan x="44" y="306">Google can index the phrase; it is still a form, not a table.</tspan>
+  </text>
 </svg>
