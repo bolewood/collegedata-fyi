@@ -24,7 +24,7 @@ test("homepage search opens an institution page", async ({ page }) => {
 
   await expect(page).toHaveURL(/\/schools\/rice/);
   await expect(
-    page.getByRole("heading", { name: /Rice University/i }),
+    page.getByRole("heading", { name: "Rice University", exact: true, level: 1 }),
   ).toBeVisible();
 });
 
@@ -76,7 +76,7 @@ test("facts endpoint returns flat JSON", async ({ request }) => {
 test("school-year page renders reconstructed CDS tables", async ({ page }) => {
   await page.goto("/schools/bowdoin/2024-25");
   await expect(
-    page.getByRole("heading", { name: /Bowdoin College/i }),
+    page.getByRole("heading", { name: "Bowdoin College", exact: true, level: 1 }),
   ).toBeVisible();
 
   const b1 = page.getByRole("table", { name: /B1 undergraduate enrollment/i });

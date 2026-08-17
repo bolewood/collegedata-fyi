@@ -14,7 +14,7 @@ test.describe("retired school aliases", () => {
     expect(url.searchParams.get("tab")).toBe("sources");
     expect(url.searchParams.getAll("compare")).toEqual(["cost", "aid"]);
     await expect(
-      page.getByRole("heading", { name: /Tufts University/i }),
+      page.getByRole("heading", { name: "Tufts University", exact: true, level: 1 }),
     ).toBeVisible();
   });
 
@@ -28,7 +28,7 @@ test.describe("retired school aliases", () => {
     expect(url.pathname).toBe("/schools/tufts/2024-25");
     expect(url.searchParams.get("download")).toBe("1");
     await expect(
-      page.getByRole("heading", { name: /Tufts University/i }),
+      page.getByRole("heading", { name: "Tufts University", exact: true, level: 1 }),
     ).toBeVisible();
   });
 
