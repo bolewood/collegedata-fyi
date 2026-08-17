@@ -29,7 +29,7 @@ const jetbrains = JetBrains_Mono({
 
 // metadataBase lets every route segment below use relative paths for
 // canonical / openGraph URLs. The apex (https://collegedata.fyi)
-// 307-redirects to www, so www is the canonical host.
+// 301-redirects to www, so www is the canonical host.
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.collegedata.fyi"),
   title: {

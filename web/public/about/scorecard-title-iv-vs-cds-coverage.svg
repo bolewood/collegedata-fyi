@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 280" role="img">
+  <rect width="920" height="280" fill="#faf6ec"/>
+  <rect x="24" y="24" width="872" height="232" fill="#f1ece1" stroke="rgba(28,30,27,.28)"/>
+  <text x="44" y="56" font-family="ui-monospace, Menlo, monospace" font-size="12" letter-spacing="1.2" fill="#6b6a63">COVERAGE · TITLE IV MANDATE VS VOLUNTARY PDF</text>
+  <text x="44" y="96" font-family="Georgia, serif" font-size="24" fill="#1c1e1b">A school with no public CDS still has a Scorecard row</text>
+  <text x="44" y="140" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#3a3b37">College Scorecard covers Title IV institutions because IPEDS reporting is mandatory. The Common Data Set is a voluntary guidebook template. That is why the directory stub exists: federal baseline facts without pretending a CDS was published.</text>
+  <text x="44" y="210" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#27321f">Harvey Mudd and Virginia Tech both publish a CDS. The coverage gap is everyone else.</text>
+</svg>

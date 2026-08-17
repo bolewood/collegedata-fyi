@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 This project uses four-part semantic versioning.
 
+## [Unreleased]
+
+### Added
+
+- Show a data-generated Common Data Set archive lead on school hubs and year pages, including an official IR link when we have a usable HTML URL, and gated-request copy only for schools we have actually read (Virginia Tech).
+- Publish three source-literacy pages under `/about` (Common Data Set, College Scorecard, IPEDS) and link them from About, the footer, and `/llms.txt`.
+- Record the August 2026 Search Console CDS-query export next to PRD 028, including URL inspection of the Virginia Tech and Harvey Mudd canaries.
+
+### Changed
+
+- Replace the About page’s three-paragraph source gloss with a short hub that points at the longer CDS, Scorecard, and IPEDS notes.
+
 ## [0.5.1.0] - 2026-08-10
 
 ### Added

@@ -79,6 +79,16 @@ export function FieldsView({
   );
 }
 
+const SECTION_FRAGMENTS: Record<string, string> = {
+  C: "admissions",
+  H: "aid",
+};
+
+const SUBSECTION_FRAGMENTS: Record<string, string> = {
+  "Wait List": "waitlist",
+  "Entrance Exams": "testing",
+};
+
 function SectionBlock({ sec }: { sec: ReturnType<typeof groupBySection>[number] }) {
   const sectionValues = Object.fromEntries(
     sec.subsections.flatMap((sub) => sub.fields.map(({ id, field }) => [id, field])),
@@ -124,6 +134,7 @@ function SectionBlock({ sec }: { sec: ReturnType<typeof groupBySection>[number] 
       >
         <h2
           className="serif"
+          id={SECTION_FRAGMENTS[sec.letter]}
           style={{
             fontWeight: 400,
             fontSize: 24,
@@ -171,16 +182,32 @@ function SubsectionBlock({
   sub: SubsectionGroup;
 }) {
   const fallbackFields = sub.fields.filter(({ id }) => !hiddenFieldIds.has(id));
+  const fragment = SUBSECTION_FRAGMENTS[sub.name];
+  const heading = (
+    <>
+      {sub.code ? `${sub.code} · ` : ""}
+      {sub.name}
+    </>
+  );
 
   return (
     <div
       id={`sub-${sub.slug}`}
       style={{ marginBottom: 24, scrollMarginTop: 24 }}
     >
-      <div className="meta" style={{ marginBottom: 6 }}>
-        {sub.code ? `${sub.code} · ` : ""}
-        {sub.name}
-      </div>
+      {fragment ? (
+        <h3
+          id={fragment}
+          className="meta"
+          style={{ marginBottom: 6, fontSize: 11, fontWeight: 400 }}
+        >
+          {heading}
+        </h3>
+      ) : (
+        <div className="meta" style={{ marginBottom: 6 }}>
+          {heading}
+        </div>
+      )}
       {reconstructedTables.map((table) => (
         <ReconstructedTableView key={table.key} table={table} />
       ))}

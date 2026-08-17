@@ -28,7 +28,7 @@ export function Footer() {
             MIT License.
           </div>
         </div>
-        <div className="cd-footer-links" style={{ display: "flex", gap: 24, alignSelf: "end" }}>
+        <div className="cd-footer-links" style={{ display: "flex", gap: 24, alignSelf: "end", flexWrap: "wrap" }}>
           <a href="https://github.com/bolewood/collegedata-fyi" target="_blank" rel="noopener noreferrer">
             GitHub
           </a>
@@ -36,6 +36,9 @@ export function Footer() {
           <a href="/api">API</a>
           <a href="/privacy">Privacy</a>
           <a href="/about">About</a>
+          <a href="/about/common-data-set">CDS</a>
+          <a href="/about/college-scorecard">Scorecard</a>
+          <a href="/about/ipeds">IPEDS</a>
         </div>
       </div>
     </footer>

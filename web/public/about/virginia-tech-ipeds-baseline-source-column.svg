@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 360" role="img">
+  <rect width="920" height="360" fill="#faf6ec"/>
+  <rect x="24" y="24" width="872" height="312" fill="#f1ece1" stroke="rgba(28,30,27,.28)"/>
+  <text x="44" y="56" font-family="ui-monospace, Menlo, monospace" font-size="12" letter-spacing="1.2" fill="#6b6a63">NCES/IPEDS BASELINE · SOURCE COLUMN VISIBLE</text>
+  <text x="44" y="88" font-family="Georgia, serif" font-size="24" fill="#1c1e1b">Federal facts stay labeled</text>
+  <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="14">
+    <rect x="44" y="112" width="832" height="32" fill="#e9e3d4"/>
+    <text x="56" y="133" font-family="ui-monospace, Menlo, monospace" font-size="11" letter-spacing="1" fill="#6b6a63">FACT</text>
+    <text x="360" y="133" font-family="ui-monospace, Menlo, monospace" font-size="11" letter-spacing="1" fill="#6b6a63">ALIGNMENT</text>
+    <text x="560" y="133" font-family="ui-monospace, Menlo, monospace" font-size="11" letter-spacing="1" fill="#6b6a63">SOURCE</text>
+    <text x="56" y="172" fill="#1c1e1b">Admission rate</text>
+    <text x="360" y="172" fill="#3a3b37">Near CDS</text>
+    <text x="560" y="172" font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#1c1e1b">ADM.DRVADM_RATE</text>
+    <text x="56" y="208" fill="#1c1e1b">Endowment</text>
+    <text x="360" y="208" fill="#3a3b37">Not CDS-equivalent</text>
+    <text x="560" y="208" font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#1c1e1b">F.F1H_END</text>
+    <text x="56" y="244" fill="#1c1e1b">Locale</text>
+    <text x="360" y="244" fill="#3a3b37">Direct</text>
+    <text x="560" y="244" font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#1c1e1b">HD.LOCALE</text>
+  </g>
+  <text x="44" y="292" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#3a3b37">Worked example shape from the live federal baseline table. Captions on the school page show source_table, source_variable, and release type.</text>
+  <text x="44" y="318" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#27321f">Do not read these as a substitute for the current-year CDS wait-list or H2A rows.</text>
+</svg>

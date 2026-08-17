@@ -431,6 +431,123 @@
   margin-right: 8px;
   color: var(--ink-4);
 }
+
+/* PRD 028 — crawlable archive lead. Typesetting, not a marketing card. */
+.cd-archive-lead {
+  max-width: 42rem;
+  margin-top: 18px;
+}
+.cd-archive-lead__heading {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  margin: 0 0 10px;
+}
+.cd-archive-lead p {
+  margin: 0 0 10px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.cd-archive-lead p:last-child {
+  margin-bottom: 0;
+}
+
+/* PRD 028 — long-form source literacy pages off /about */
+.cd-source-story {
+  margin-top: 40px;
+  font-size: 16px;
+  line-height: 1.65;
+}
+.cd-source-story h2 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  margin: 40px 0 14px;
+}
+.cd-source-story h3 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1.2;
+  color: var(--ink);
+  margin: 28px 0 10px;
+}
+.cd-source-story p,
+.cd-source-story ul,
+.cd-source-story ol {
+  margin: 0 0 16px;
+}
+.cd-source-story ul,
+.cd-source-story ol {
+  padding-left: 1.3rem;
+}
+.cd-source-story li {
+  margin-bottom: 8px;
+}
+.cd-source-story a {
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 3px;
+}
+.cd-story-figure {
+  margin: 28px -8px 32px;
+}
+.cd-story-figure img {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule-strong);
+  background: #faf6ec;
+  display: block;
+}
+.cd-story-figure figcaption {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+  margin-top: 10px;
+  max-width: 42rem;
+}
+.cd-story-table-wrap {
+  overflow-x: auto;
+  margin: 20px 0 28px;
+  border: 1px solid var(--rule);
+}
+.cd-story-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 14.5px;
+}
+.cd-story-table th,
+.cd-story-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+.cd-story-table th {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+.cd-story-table tbody th {
+  font-family: var(--sans);
+  font-size: 14.5px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+  font-weight: 600;
+}
 @media (max-width: 640px) {
   .cd-school-header { grid-template-columns: 1fr; gap: 18px; }
   .cd-school-header__aside {

@@ -18,6 +18,8 @@ import { OutcomesBand } from "@/components/OutcomesBand";
 import { ScorecardVintageNote } from "@/components/ScorecardVintageNote";
 import { AdmissionStrategyCard } from "@/components/AdmissionStrategyCard";
 import { SpreadsheetDownloadLinks } from "@/components/SpreadsheetDownloadLinks";
+import { ArchiveLead } from "@/components/ArchiveLead";
+import { yearArchiveLead } from "@/lib/archive-lead";
 
 export const revalidate = 3600;
 
@@ -67,7 +69,15 @@ export default async function SchoolYearPage({ params }: {
   const ipedsId = docs.find((d) => d.ipeds_id)?.ipeds_id ?? null;
   const scorecard = await fetchScorecardByIpedsId(ipedsId);
 
-  const schoolName = docs[0].school_name;
+  const schoolName = docs[0].school_name ?? "Unknown school";
+  const yearLead = yearArchiveLead({
+    schoolId: school_id,
+    schoolName,
+    year,
+    ipedsId,
+    hasExtract: docs.some((doc) => doc.extraction_status === "extracted"),
+    sourceDownloadHref: storageUrl(docs[0]?.source_storage_path ?? null),
+  });
 
   const canonicalUrl = `https://www.collegedata.fyi/schools/${school_id}/${year}`;
   const jsonLd = [
@@ -124,7 +134,8 @@ export default async function SchoolYearPage({ params }: {
 
       {/* Header */}
       <h1 className="text-3xl font-bold text-gray-900">{schoolName}</h1>
-      <p className="text-xl text-gray-600 mt-1">Common Data Set {year}</p>
+      <h2 className="text-xl text-gray-600 mt-1">{yearLead.heading}</h2>
+      <ArchiveLead lead={yearLead} showHeading={false} />
 
       {/* Render each document variant. The spreadsheet download covers all
           variants in one workbook, so only the first variant shows links. */}
