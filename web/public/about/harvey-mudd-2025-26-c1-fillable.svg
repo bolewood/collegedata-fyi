@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="920" height="420" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 420" role="img">
-  <rect width="920" height="420" fill="#faf6ec"/>
-  <rect x="24" y="24" width="872" height="372" fill="#f1ece1" stroke="rgba(28,30,27,.28)"/>
+<svg width="920" height="440" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 440" role="img">
+  <rect width="920" height="440" fill="#faf6ec"/>
+  <rect x="24" y="24" width="872" height="392" fill="#f1ece1" stroke="rgba(28,30,27,.28)"/>
   <text x="44" y="56" font-family="ui-monospace, Menlo, monospace" font-size="12" letter-spacing="1.2" fill="#6b6a63">HARVEY MUDD COLLEGE · CDS 2025-26 · FILLABLE ACROFORM · §C1</text>
   <text x="44" y="92" font-family="Georgia, serif" font-size="28" fill="#1c1e1b">C1. Applicants, admits, enrolled</text>
   <text x="44" y="118" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#3a3b37">Named fields from the unflattened template. Values are the field contents, not OCR.</text>
@@ -23,6 +23,9 @@
     <text x="430" y="300" fill="#3a3b37">Offered a place on the wait list</text>
     <text x="780" y="300" fill="#1c1e1b">685</text>
   </g>
-  <rect x="44" y="328" width="832" height="44" fill="#27321f"/>
-  <text x="56" y="355" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#f1ece1">pypdf.get_fields() reads these tags directly. Docling is the wrong tool for this file.</text>
+  <rect x="44" y="328" width="832" height="64" fill="#27321f"/>
+  <text font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#f1ece1">
+    <tspan x="56" y="354">pypdf.get_fields() reads these tags directly.</tspan>
+    <tspan x="56" y="376">Docling is the wrong tool for this file.</tspan>
+  </text>
 </svg>

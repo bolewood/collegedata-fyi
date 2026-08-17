@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="920" height="300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 300" role="img">
-  <rect width="920" height="300" fill="#faf6ec"/>
-  <rect x="24" y="24" width="872" height="252" fill="#f1ece1" stroke="rgba(28,30,27,.28)"/>
+<svg width="920" height="340" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 340" role="img">
+  <rect width="920" height="340" fill="#faf6ec"/>
+  <rect x="24" y="24" width="872" height="292" fill="#f1ece1" stroke="rgba(28,30,27,.28)"/>
   <text x="44" y="56" font-family="ui-monospace, Menlo, monospace" font-size="12" letter-spacing="1.2" fill="#6b6a63">SCORECARD JOIN · NOT A GUIDEBOOK SURVEY</text>
   <text x="44" y="92" font-family="Georgia, serif" font-size="24" fill="#1c1e1b">Five administrative systems</text>
-  <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#1c1e1b">
-    <rect x="44" y="120" width="150" height="56" fill="#fff" stroke="rgba(28,30,27,.28)"/>
-    <text x="56" y="154">IPEDS</text>
-    <rect x="210" y="120" width="150" height="56" fill="#fff" stroke="rgba(28,30,27,.28)"/>
-    <text x="222" y="154">NSLDS</text>
-    <rect x="376" y="120" width="150" height="56" fill="#fff" stroke="rgba(28,30,27,.28)"/>
-    <text x="388" y="154">Treasury/IRS</text>
-    <rect x="542" y="120" width="150" height="56" fill="#fff" stroke="rgba(28,30,27,.28)"/>
-    <text x="554" y="154">FSA</text>
-    <rect x="708" y="120" width="150" height="56" fill="#fff" stroke="rgba(28,30,27,.28)"/>
-    <text x="720" y="154">OPE / ACS</text>
+  <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#1c1e1b" text-anchor="middle">
+    <rect x="44" y="120" width="156" height="64" fill="#fff" stroke="rgba(28,30,27,.28)"/>
+    <text x="122" y="158">IPEDS</text>
+    <rect x="216" y="120" width="156" height="64" fill="#fff" stroke="rgba(28,30,27,.28)"/>
+    <text x="294" y="158">NSLDS</text>
+    <rect x="388" y="120" width="156" height="64" fill="#fff" stroke="rgba(28,30,27,.28)"/>
+    <text x="466" y="158">Treasury / IRS</text>
+    <rect x="560" y="120" width="156" height="64" fill="#fff" stroke="rgba(28,30,27,.28)"/>
+    <text x="638" y="158">FSA</text>
+    <rect x="732" y="120" width="144" height="64" fill="#fff" stroke="rgba(28,30,27,.28)"/>
+    <text x="804" y="158">OPE / ACS</text>
   </g>
-  <text x="44" y="214" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#3a3b37">Earnings, debt, and net price come from this join. They are not Section C or Section H of a school PDF.</text>
-  <text x="44" y="246" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#27321f">Official tool: collegescorecard.ed.gov. We cite it; we do not impersonate it.</text>
+  <text font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#3a3b37">
+    <tspan x="44" y="220">Earnings, debt, and net price come from this join. They are not</tspan>
+    <tspan x="44" y="242">Section C or Section H of a school PDF.</tspan>
+  </text>
+  <text x="44" y="278" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#27321f">Official tool: collegescorecard.ed.gov. We cite it; we do not impersonate it.</text>
 </svg>

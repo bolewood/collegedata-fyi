@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="920" height="280" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 280" role="img">
-  <rect width="920" height="280" fill="#faf6ec"/>
-  <rect x="24" y="24" width="872" height="232" fill="#f1ece1" stroke="rgba(28,30,27,.28)"/>
+<svg width="920" height="340" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 340" role="img">
+  <rect width="920" height="340" fill="#faf6ec"/>
+  <rect x="24" y="24" width="872" height="292" fill="#f1ece1" stroke="rgba(28,30,27,.28)"/>
   <text x="44" y="56" font-family="ui-monospace, Menlo, monospace" font-size="12" letter-spacing="1.2" fill="#6b6a63">IPEDS SURVEY COMPONENTS · NOT ONE FILE</text>
   <text x="44" y="92" font-family="Georgia, serif" font-size="24" fill="#1c1e1b">HD · IC · ADM · EF · GR · SFA · F</text>
-  <text x="44" y="136" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#3a3b37">Recent releases arrive as a stack of tables inside a Microsoft Access database, with dictionaries. Provisional first, then final with institutional revisions.</text>
-  <text x="44" y="196" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#1c1e1b">UNITID is the join key this site actually uses.</text>
-  <text x="44" y="228" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#27321f">Official system of record: nces.ed.gov/ipeds</text>
+  <text font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#3a3b37">
+    <tspan x="44" y="136">Recent releases arrive as a stack of tables inside a Microsoft</tspan>
+    <tspan x="44" y="158">Access database, with dictionaries. Provisional first, then final</tspan>
+    <tspan x="44" y="180">with institutional revisions.</tspan>
+  </text>
+  <text x="44" y="224" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#1c1e1b">UNITID is the join key this site actually uses.</text>
+  <text x="44" y="256" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#27321f">Official system of record: nces.ed.gov/ipeds</text>
 </svg>

@@ -1,17 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="920" height="360" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 360" role="img">
-  <rect width="920" height="360" fill="#faf6ec"/>
-  <rect x="24" y="24" width="420" height="312" fill="#f1ece1" stroke="rgba(28,30,27,.28)"/>
-  <text x="40" y="52" font-family="ui-monospace, Menlo, monospace" font-size="11" letter-spacing="1.2" fill="#6b6a63">VIRGINIA TECH · 2025-26 · XLSX</text>
-  <text x="40" y="84" font-family="Georgia, serif" font-size="22" fill="#1c1e1b">Answer Sheet tab</text>
-  <text x="40" y="120" font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#1c1e1b">C.116  Applied (total)</text>
-  <text x="300" y="120" font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#1c1e1b">57,755</text>
-  <text x="40" y="148" font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#1c1e1b">C.117  Admitted</text>
-  <text x="40" y="176" font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#1c1e1b">C.118  Enrolled</text>
-  <text x="40" y="220" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#3a3b37">Machine-readable by construction. The school still does not index this file on a public HTML landing page.</text>
-  <rect x="476" y="24" width="420" height="312" fill="#f1ece1" stroke="rgba(28,30,27,.28)"/>
-  <text x="492" y="52" font-family="ui-monospace, Menlo, monospace" font-size="11" letter-spacing="1.2" fill="#6b6a63">AIE.VT.EDU · SAME SCHOOL</text>
-  <text x="492" y="84" font-family="Georgia, serif" font-size="22" fill="#1c1e1b">Email to request</text>
-  <text x="492" y="130" font-family="Georgia, serif" font-size="15" font-style="italic" fill="#1c1e1b">“Current and historical CDS files for Virginia Tech are available via request to aiesupport@vt.edu.”</text>
-  <text x="492" y="220" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#3a3b37">The official result explains the form, then withholds the file. The archive page is the public HTML that hands over the extract.</text>
+<svg width="920" height="500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 500" role="img">
+  <rect width="920" height="500" fill="#faf6ec"/>
+  <rect x="24" y="24" width="420" height="452" fill="#f1ece1" stroke="rgba(28,30,27,.28)"/>
+  <text x="44" y="52" font-family="ui-monospace, Menlo, monospace" font-size="11" letter-spacing="1.2" fill="#6b6a63">VIRGINIA TECH · 2025-26 · XLSX</text>
+  <text x="44" y="88" font-family="Georgia, serif" font-size="22" fill="#1c1e1b">Answer Sheet tab</text>
+  <text font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#1c1e1b">
+    <tspan x="44" y="128">C.116  Applied (total)</tspan>
+    <tspan x="300" y="128">57,755</tspan>
+    <tspan x="44" y="156">C.117  Admitted</tspan>
+    <tspan x="44" y="184">C.118  Enrolled</tspan>
+  </text>
+  <text font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#3a3b37">
+    <tspan x="44" y="240">Machine-readable by construction.</tspan>
+    <tspan x="44" y="262">The school still does not index this</tspan>
+    <tspan x="44" y="284">file on a public HTML landing page.</tspan>
+  </text>
+  <rect x="476" y="24" width="420" height="452" fill="#f1ece1" stroke="rgba(28,30,27,.28)"/>
+  <text x="496" y="52" font-family="ui-monospace, Menlo, monospace" font-size="11" letter-spacing="1.2" fill="#6b6a63">AIE.VT.EDU · SAME SCHOOL</text>
+  <text x="496" y="88" font-family="Georgia, serif" font-size="22" fill="#1c1e1b">Email to request</text>
+  <text font-family="Georgia, serif" font-size="15" font-style="italic" fill="#1c1e1b">
+    <tspan x="496" y="132">Current and historical CDS files</tspan>
+    <tspan x="496" y="154">for Virginia Tech are available</tspan>
+    <tspan x="496" y="176">via request to aiesupport@vt.edu.</tspan>
+  </text>
+  <text font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#3a3b37">
+    <tspan x="496" y="240">The official result explains the form,</tspan>
+    <tspan x="496" y="262">then withholds the file. The archive</tspan>
+    <tspan x="496" y="284">page is the public HTML that hands</tspan>
+    <tspan x="496" y="306">over the extract.</tspan>
+  </text>
 </svg>
