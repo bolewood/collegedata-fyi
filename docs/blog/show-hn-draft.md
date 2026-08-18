@@ -1,8 +1,11 @@
 # Show HN draft
 
-> **Status:** Draft, not posted. Edit and post when ready. See ADR 0008 for
-> takedown protocol — having this live before the launch means the
-> response process exists if the post goes viral.
+> **Status:** Posted a few months back; minimal traction. Kept here as
+> reference for a possible repost with a genuinely updated pitch (real
+> traffic/ranking data, an outside contributor, a live MCP server — none
+> of which existed at the first posting). See ADR 0008 for takedown
+> protocol — having this live means the response process exists if a
+> future post goes viral.
 
 ---
 
