@@ -4,12 +4,19 @@ import {
 } from "../_shared/probe_outcome.ts";
 
 const WEEKLY_SUCCESS_COOLDOWN_DAYS = 7;
+const DAILY_ESCALATION_COOLDOWN_DAYS = 1;
+const DAILY_ESCALATION_MONTHS = 9;
 const WEEKLY_SUCCESS_OUTCOMES = new Set<ProbeOutcome>([
   "inserted",
   "refreshed",
   "unchanged_verified",
   "unchanged_repaired",
 ]);
+
+export type PublishAlertCooldownContext = {
+  isDemandTier?: boolean;
+  freshnessAt?: Date | null;
+};
 
 export function parseCooldownDaysOverride(raw: string | null): number | null {
   if (raw === null) return null;
@@ -45,12 +52,28 @@ export async function archiveEnqueueRunId(now: Date): Promise<string> {
   );
 }
 
+export function monthsElapsedUtc(from: Date, to: Date): number {
+  return (
+    (to.getUTCFullYear() - from.getUTCFullYear()) * 12 +
+    (to.getUTCMonth() - from.getUTCMonth()) -
+    (to.getUTCDate() < from.getUTCDate() ? 1 : 0)
+  );
+}
+
 export function archiveCooldownDaysForOutcome(
   outcome: ProbeOutcome,
-  _now: Date,
+  now: Date,
+  context?: PublishAlertCooldownContext,
 ): number {
-  if (WEEKLY_SUCCESS_OUTCOMES.has(outcome)) {
-    return WEEKLY_SUCCESS_COOLDOWN_DAYS;
+  if (!WEEKLY_SUCCESS_OUTCOMES.has(outcome)) {
+    return DEFAULT_COOLDOWN_DAYS[outcome] ?? 0;
   }
-  return DEFAULT_COOLDOWN_DAYS[outcome] ?? 0;
+  if (
+    context?.isDemandTier &&
+    context.freshnessAt &&
+    monthsElapsedUtc(context.freshnessAt, now) >= DAILY_ESCALATION_MONTHS
+  ) {
+    return DAILY_ESCALATION_COOLDOWN_DAYS;
+  }
+  return WEEKLY_SUCCESS_COOLDOWN_DAYS;
 }

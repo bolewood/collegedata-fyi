@@ -45,7 +45,12 @@ export async function generateMetadata({
   return {
     title,
     description,
-    alternates: { canonical: path },
+    alternates: {
+      canonical: path,
+      types: {
+        "application/rss+xml": `/schools/${resolvedSchoolId}/feed.xml`,
+      },
+    },
     openGraph: { url: path, title, description },
   };
 }
@@ -77,6 +82,10 @@ export default async function SchoolYearPage({ params }: {
     ipedsId,
     hasExtract: docs.some((doc) => doc.extraction_status === "extracted"),
     sourceDownloadHref: storageUrl(docs[0]?.source_storage_path ?? null),
+    source_modification_date: docs[0]?.source_modification_date,
+    source_creation_date: docs[0]?.source_creation_date,
+    source_http_last_modified: docs[0]?.source_http_last_modified,
+    discovered_at: docs[0]?.discovered_at,
   });
 
   const canonicalUrl = `https://www.collegedata.fyi/schools/${school_id}/${year}`;

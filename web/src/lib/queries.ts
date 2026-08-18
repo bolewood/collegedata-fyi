@@ -19,6 +19,7 @@ import type {
   MeritProfileRow,
   SchoolFactUnifiedRow,
 } from "./types";
+import type { SchoolFeedEvent } from "./school-rss";
 import type { SchoolAcademicProfile } from "./positioning";
 import type { AdmissionStrategyQuality, AdmissionStrategySchool } from "./admission-strategy";
 import {
@@ -860,6 +861,35 @@ export const fetchSchoolDocuments = cache(async function fetchSchoolDocuments(
     throw new Error(`Failed to fetch school documents: ${error.message}`);
   return data ?? [];
 });
+
+export const fetchSchoolDirectPublishEvents = cache(
+  async function fetchSchoolDirectPublishEvents(
+    schoolId: string,
+    limit = 20,
+  ): Promise<SchoolFeedEvent[]> {
+    const { data, error } = await supabase
+      .from("cds_publish_events")
+      .select("id, school_id, cds_year, event_type, occurred_at")
+      .eq("school_id", schoolId)
+      .eq("source_provenance", "school_direct")
+      .in("event_type", ["inserted", "refreshed"])
+      .order("occurred_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      throw new Error(`Failed to fetch publish events: ${error.message}`);
+    }
+
+    return (data ?? []).map((row) => ({
+      id: row.id,
+      school_id: row.school_id,
+      school_name: "",
+      cds_year: row.cds_year,
+      event_type: row.event_type as "inserted" | "refreshed",
+      occurred_at: row.occurred_at,
+    }));
+  },
+);
 
 // PRD 021 — source-labeled NCES/IPEDS baseline facts.
 //

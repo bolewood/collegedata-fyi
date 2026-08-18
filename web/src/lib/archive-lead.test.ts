@@ -30,7 +30,7 @@ describe("archiveLead", () => {
       documents: vtDocs,
     });
     expect(leadPlainText(lead)).toMatchInlineSnapshot(
-      `"Virginia Tech Common Data Set archive, 2011–2025 (3 documents). This page archives 3 documents from 2011–2025. Latest extracted year is 2025-26. Downloads include PDF, XLSX, and CSV. The school's own CDS page currently asks the public to request the file. This page is the archived source plus extract. What is a Common Data Set?"`,
+      `"Virginia Tech Common Data Set archive, 2011–2025 (3 documents). This page archives 3 documents from 2011–2025. Latest extracted year is 2025-26. Downloads include PDF, XLSX, and CSV. The school's own CDS page currently asks the public to request the file. This page is the archived source plus extract. What is a Common Data Set? Subscribe to school-published files via RSS."`,
     );
     expect(leadContainsBannedCopy(leadPlainText(lead))).toBe(false);
   });
@@ -43,7 +43,7 @@ describe("archiveLead", () => {
       documents: hmcDocs,
     });
     expect(leadPlainText(lead)).toMatchInlineSnapshot(
-      `"Harvey Mudd College Common Data Set archive, 2010–2025 (16 documents). This page archives 16 documents from 2010–2025. Latest extracted year is 2025-26. Downloads include PDF, XLSX, and CSV. The school's own CDS page is the publisher; this page is the archive and extract. What is a Common Data Set?"`,
+      `"Harvey Mudd College Common Data Set archive, 2010–2025 (16 documents). This page archives 16 documents from 2010–2025. Latest extracted year is 2025-26. Downloads include PDF, XLSX, and CSV. The school's own CDS page is the publisher; this page is the archive and extract. What is a Common Data Set? Subscribe to school-published files via RSS."`,
     );
     expect(leadContainsBannedCopy(leadPlainText(lead))).toBe(false);
   });
@@ -61,7 +61,7 @@ describe("archiveLead", () => {
       ],
     });
     expect(leadPlainText(lead)).toMatchInlineSnapshot(
-      `"Thin College Common Data Set archive, 2023-24 (1 document). This page archives 1 document from 2023-24. Latest extracted year is 2023-24. Downloads include PDF, XLSX, and CSV. What is a Common Data Set?"`,
+      `"Thin College Common Data Set archive, 2023-24 (1 document). This page archives 1 document from 2023-24. Latest extracted year is 2023-24. Downloads include PDF, XLSX, and CSV. What is a Common Data Set? Subscribe to school-published files via RSS."`,
     );
   });
 
@@ -89,6 +89,18 @@ describe("archiveLead", () => {
     expect(leadPlainText(lead)).toContain("archived source file");
     expect(leadPlainText(lead)).toContain("extracted field tables");
     expect(leadPlainText(lead)).toContain("school's own CDS page");
+    expect(leadPlainText(lead)).toContain("RSS");
     expect(leadContainsBannedCopy(leadPlainText(lead))).toBe(false);
+  });
+
+  it("states when a year-page date is only this archive's discovery", () => {
+    const lead = yearArchiveLead({
+      schoolId: "thin-college",
+      schoolName: "Thin College",
+      year: "2023-24",
+      discovered_at: "2026-08-10T00:00:00Z",
+    });
+    expect(leadPlainText(lead)).toContain("discovered the file");
+    expect(leadPlainText(lead)).toContain("did not send Last-Modified");
   });
 });

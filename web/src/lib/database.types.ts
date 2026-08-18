@@ -165,6 +165,10 @@ export type Database = {
           source_provenance: string
           source_sha256: string | null
           source_url: string | null
+          source_http_last_modified: string | null
+          source_creation_date: string | null
+          source_modification_date: string | null
+          extracted_at: string | null
           sub_institutional: string | null
           updated_at: string
         }
@@ -187,6 +191,10 @@ export type Database = {
           source_provenance?: string
           source_sha256?: string | null
           source_url?: string | null
+          source_http_last_modified?: string | null
+          source_creation_date?: string | null
+          source_modification_date?: string | null
+          extracted_at?: string | null
           sub_institutional?: string | null
           updated_at?: string
         }
@@ -209,8 +217,45 @@ export type Database = {
           source_provenance?: string
           source_sha256?: string | null
           source_url?: string | null
+          source_http_last_modified?: string | null
+          source_creation_date?: string | null
+          source_modification_date?: string | null
+          extracted_at?: string | null
           sub_institutional?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      cds_publish_events: {
+        Row: {
+          id: number
+          school_id: string
+          document_id: string
+          cds_year: string
+          event_type: string
+          source_provenance: string
+          source_sha256: string
+          occurred_at: string
+        }
+        Insert: {
+          id?: number
+          school_id: string
+          document_id: string
+          cds_year: string
+          event_type: string
+          source_provenance: string
+          source_sha256: string
+          occurred_at?: string
+        }
+        Update: {
+          id?: number
+          school_id?: string
+          document_id?: string
+          cds_year?: string
+          event_type?: string
+          source_provenance?: string
+          source_sha256?: string
+          occurred_at?: string
         }
         Relationships: []
       }
@@ -532,6 +577,7 @@ export type Database = {
           discovered_at: string | null
           document_id: string | null
           extraction_status: string | null
+          extracted_at: string | null
           ipeds_id: string | null
           last_verified_at: string | null
           latest_canonical_artifact_id: string | null
@@ -542,6 +588,9 @@ export type Database = {
           source_format: string | null
           source_storage_path: string | null
           source_url: string | null
+          source_http_last_modified: string | null
+          source_creation_date: string | null
+          source_modification_date: string | null
           sub_institutional: string | null
         }
         Insert: {
@@ -552,6 +601,7 @@ export type Database = {
           discovered_at?: string | null
           document_id?: string | null
           extraction_status?: string | null
+          extracted_at?: string | null
           ipeds_id?: string | null
           last_verified_at?: string | null
           latest_canonical_artifact_id?: never
@@ -562,6 +612,9 @@ export type Database = {
           source_format?: string | null
           source_storage_path?: never
           source_url?: string | null
+          source_http_last_modified?: string | null
+          source_creation_date?: string | null
+          source_modification_date?: string | null
           sub_institutional?: string | null
         }
         Update: {
@@ -572,6 +625,7 @@ export type Database = {
           discovered_at?: string | null
           document_id?: string | null
           extraction_status?: string | null
+          extracted_at?: string | null
           ipeds_id?: string | null
           last_verified_at?: string | null
           latest_canonical_artifact_id?: never
@@ -582,6 +636,9 @@ export type Database = {
           source_format?: string | null
           source_storage_path?: never
           source_url?: string | null
+          source_http_last_modified?: string | null
+          source_creation_date?: string | null
+          source_modification_date?: string | null
           sub_institutional?: string | null
         }
         Relationships: []
@@ -668,6 +725,21 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      publish_alert_tier_schools: {
+        Args: { p_n?: number }
+        Returns: {
+          school_id: string
+          applied: number
+          canonical_year: string
+        }[]
+      }
+      publish_alert_freshness_anchors: {
+        Args: { p_school_ids: string[] }
+        Returns: {
+          school_id: string
+          freshness_at: string | null
+        }[]
       }
     }
     Enums: {

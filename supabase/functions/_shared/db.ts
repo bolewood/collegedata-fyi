@@ -155,6 +155,15 @@ export async function insertFreshDocument(
   });
   if (artErr) throw new Error(`insertFreshDocument (artifact): ${artErr.message}`);
 
+  await recordPublishEvent(client, {
+    school_id: args.school_id,
+    document_id: doc.id as string,
+    cds_year: args.cds_year,
+    event_type: "inserted",
+    source_provenance: args.source_provenance ?? "school_direct",
+    source_sha256: args.source_sha256,
+  });
+
   return doc.id as string;
 }
 
@@ -224,6 +233,48 @@ export async function refreshDocumentWithNewSha(
   if (artErr) {
     throw new Error(`refreshDocumentWithNewSha (artifact): ${artErr.message}`);
   }
+
+  const { data: existing, error: readErr } = await client
+    .from("cds_documents")
+    .select("school_id, cds_year")
+    .eq("id", args.document_id)
+    .single();
+  if (readErr) {
+    throw new Error(`refreshDocumentWithNewSha (event lookup): ${readErr.message}`);
+  }
+
+  await recordPublishEvent(client, {
+    school_id: existing.school_id as string,
+    document_id: args.document_id,
+    cds_year: existing.cds_year as string,
+    event_type: "refreshed",
+    source_provenance: args.source_provenance ?? "school_direct",
+    source_sha256: args.source_sha256,
+  });
+}
+
+export interface PublishEventArgs {
+  school_id: string;
+  document_id: string;
+  cds_year: string;
+  event_type: "inserted" | "refreshed";
+  source_provenance: string;
+  source_sha256: string;
+}
+
+export async function recordPublishEvent(
+  client: SupabaseClient,
+  args: PublishEventArgs,
+): Promise<void> {
+  const { error } = await client.from("cds_publish_events").insert({
+    school_id: args.school_id,
+    document_id: args.document_id,
+    cds_year: args.cds_year,
+    event_type: args.event_type,
+    source_provenance: args.source_provenance,
+    source_sha256: args.source_sha256,
+  });
+  if (error) throw new Error(`recordPublishEvent: ${error.message}`);
 }
 
 // Bumps last_verified_at and optionally updates source_url if the school

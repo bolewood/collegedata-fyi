@@ -132,9 +132,13 @@ describe("retired alias pages and Open Graph images", () => {
       "tufts",
       "2024-25",
     );
-    expect(schoolMetadata.alternates).toEqual({ canonical: "/schools/tufts" });
+    expect(schoolMetadata.alternates).toEqual({
+      canonical: "/schools/tufts",
+      types: { "application/rss+xml": "/schools/tufts/feed.xml" },
+    });
     expect(yearMetadata.alternates).toEqual({
       canonical: "/schools/tufts/2024-25",
+      types: { "application/rss+xml": "/schools/tufts/feed.xml" },
     });
   });
 
@@ -182,13 +186,21 @@ describe("retired alias pages and Open Graph images", () => {
       }),
     ]);
 
-    expect(vtHub.alternates).toEqual({ canonical: "/schools/virginia-tech" });
+    expect(vtHub.alternates).toEqual({
+      canonical: "/schools/virginia-tech",
+      types: { "application/rss+xml": "/schools/virginia-tech/feed.xml" },
+    });
     expect(vtYear.alternates).toEqual({
       canonical: "/schools/virginia-tech/2025-26",
+      types: { "application/rss+xml": "/schools/virginia-tech/feed.xml" },
     });
-    expect(hmcHub.alternates).toEqual({ canonical: "/schools/harvey-mudd" });
+    expect(hmcHub.alternates).toEqual({
+      canonical: "/schools/harvey-mudd",
+      types: { "application/rss+xml": "/schools/harvey-mudd/feed.xml" },
+    });
     expect(hmcYear.alternates).toEqual({
       canonical: "/schools/harvey-mudd/2025-26",
+      types: { "application/rss+xml": "/schools/harvey-mudd/feed.xml" },
     });
     expect(vtHub.alternates).not.toEqual({ canonical: "/" });
     expect(vtYear.alternates).not.toEqual({ canonical: "/" });
