@@ -56,6 +56,9 @@ class _DocUpdateQuery:
         self._sink.append((value, self._payload))
         return self
 
+    def is_(self, _col, _value):
+        return self
+
     def in_(self, _col, _values):
         return self
 

@@ -60,13 +60,10 @@ comment on column public.cds_documents.extracted_at is
   'tools/extraction_worker/worker.py mark_extraction_status. Later edits '
   'to the row must not rewrite this timestamp.';
 
--- Recreate cds_manifest to expose extracted_at and the freshness columns
--- already on cds_documents (HTTP Last-Modified, embedded PDF/XLSX dates).
--- cds_scorecard depends on cds_manifest, so drop it first.
-drop view if exists public.cds_scorecard;
-drop view if exists public.cds_manifest;
-
-create view public.cds_manifest
+-- Append freshness columns at the end of cds_manifest. CREATE OR REPLACE
+-- can add trailing columns; it cannot insert them in the middle, and a
+-- DROP would fail while site_stats_cache still depends on the view.
+create or replace view public.cds_manifest
 with (security_invoker = true) as
   select
     d.id                   as document_id,
@@ -82,10 +79,6 @@ with (security_invoker = true) as
     d.last_verified_at,
     d.removed_at,
     d.extraction_status,
-    d.extracted_at,
-    d.source_http_last_modified,
-    d.source_creation_date,
-    d.source_modification_date,
     (
       select a.id
       from public.cds_artifacts a
@@ -102,7 +95,11 @@ with (security_invoker = true) as
     ) as source_storage_path,
     d.detected_year,
     coalesce(d.detected_year, d.cds_year) as canonical_year,
-    d.data_quality_flag
+    d.data_quality_flag,
+    d.extracted_at,
+    d.source_http_last_modified,
+    d.source_creation_date,
+    d.source_modification_date
   from public.cds_documents d;
 
 grant select on public.cds_manifest to anon, authenticated;
@@ -112,52 +109,6 @@ comment on view public.cds_manifest is
   'artifact and archived source file. SECURITY INVOKER so public reads '
   'honor underlying RLS. extracted_at and source_* date columns are the '
   'PRD 029 freshness signals.';
-
-create view public.cds_scorecard
-with (security_invoker = true) as
-  select
-    m.document_id,
-    m.school_id,
-    m.school_name,
-    m.ipeds_id,
-    m.canonical_year                    as cds_year,
-    m.source_format,
-    m.extraction_status,
-    m.data_quality_flag,
-    m.latest_canonical_artifact_id,
-    m.source_storage_path,
-    sc.scorecard_data_year,
-    sc.earnings_10yr_median,
-    sc.earnings_10yr_p25,
-    sc.earnings_10yr_p75,
-    sc.median_debt_completers,
-    sc.median_debt_monthly_payment,
-    sc.avg_net_price,
-    sc.net_price_0_30k,
-    sc.net_price_30k_48k,
-    sc.net_price_48k_75k,
-    sc.net_price_75k_110k,
-    sc.net_price_110k_plus,
-    sc.graduation_rate_6yr,
-    sc.grad_rate_pell,
-    sc.repayment_rate_3yr,
-    sc.default_rate_3yr,
-    sc.pell_grant_rate,
-    sc.federal_loan_rate,
-    sc.first_generation_share,
-    sc.median_family_income,
-    sc.retention_rate_ft,
-    sc.endowment_end,
-    sc.instructional_expenditure_fte
-  from public.cds_manifest m
-  left join public.scorecard_summary sc
-    on sc.ipeds_id = m.ipeds_id;
-
-grant select on public.cds_scorecard to anon, authenticated;
-
-comment on view public.cds_scorecard is
-  'CDS manifest left-joined with the curated College Scorecard subset. '
-  'One row per CDS document. Recreated alongside cds_manifest in PRD 029.';
 
 -- Demand-shaped top-N for daily archive escalation. Ranked from public
 -- CDS C1 applicant volume already stored on school_browser_rows.applied
