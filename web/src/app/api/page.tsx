@@ -248,11 +248,35 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
             "source_storage_path",
             "participation_status",
             "extraction_status",
+            "extracted_at",
             "data_quality_flag",
             "latest_canonical_artifact_id",
             "discovered_at",
+            "source_http_last_modified",
+            "source_creation_date",
+            "source_modification_date",
             "last_verified_at",
             "removed_at",
+          ]}
+        />
+        <Resource
+          name="cds_publish_events"
+          description="Append-only log of school-direct Common Data Set inserts and refreshes. Public rows are source_provenance=school_direct only. Prefer the per-school RSS feed at /schools/{school_id}/feed.xml."
+          fields={[
+            "school_id",
+            "cds_year",
+            "event_type",
+            "occurred_at",
+          ]}
+          allFields={[
+            "id",
+            "school_id",
+            "document_id",
+            "cds_year",
+            "event_type",
+            "source_provenance",
+            "source_sha256",
+            "occurred_at",
           ]}
         />
         <Resource
@@ -746,6 +770,10 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
             "extraction_status",
             "data_quality_flag",
             "discovered_at",
+            "extracted_at",
+            "source_http_last_modified",
+            "source_creation_date",
+            "source_modification_date",
             "last_verified_at",
             "removed_at",
             "created_at",

@@ -3,11 +3,17 @@ import {
   getOfficialCdsPage,
   type OfficialCdsPage,
 } from "./official-cds-page";
+import { freshnessSentence, latestDocumentFreshness, pickFreshnessSignal } from "./freshness";
+import { schoolFeedPath } from "./school-rss";
 
 export type ArchiveDocumentFacts = {
   canonical_year: string | null;
   source_format: string | null;
   extraction_status: string | null;
+  source_modification_date?: string | null;
+  source_creation_date?: string | null;
+  source_http_last_modified?: string | null;
+  discovered_at?: string | null;
 };
 
 export type ArchiveLeadFacts = {
@@ -25,6 +31,10 @@ export type YearArchiveLeadFacts = {
   ipedsId?: string | null;
   hasExtract?: boolean;
   sourceDownloadHref?: string | null;
+  source_modification_date?: string | null;
+  source_creation_date?: string | null;
+  source_http_last_modified?: string | null;
+  discovered_at?: string | null;
 };
 
 export type LeadPart =
@@ -186,6 +196,20 @@ export function archiveLead(facts: ArchiveLeadFacts): ArchiveLead | null {
     { type: "text", text: "?" },
   ]);
 
+  const freshness = freshnessSentence(latestDocumentFreshness(facts.documents));
+  if (freshness) {
+    paragraphs.push([{ type: "text", text: freshness }]);
+  }
+  paragraphs.push([
+    { type: "text", text: "Subscribe to school-published files via " },
+    {
+      type: "link",
+      href: schoolFeedPath(facts.schoolId),
+      text: "RSS",
+    },
+    { type: "text", text: "." },
+  ]);
+
   return { heading, paragraphs };
 }
 
@@ -223,6 +247,20 @@ export function yearArchiveLead(facts: YearArchiveLeadFacts): ArchiveLead {
     });
     parts.push({ type: "text", text: "." });
   }
+
+  const freshness = freshnessSentence(pickFreshnessSignal(facts));
+  if (freshness) {
+    parts.push({ type: "text", text: " " });
+    parts.push({ type: "text", text: freshness });
+  }
+
+  parts.push({ type: "text", text: " Subscribe via " });
+  parts.push({
+    type: "link",
+    href: schoolFeedPath(facts.schoolId),
+    text: "RSS",
+  });
+  parts.push({ type: "text", text: "." });
 
   return {
     heading: `${facts.schoolName} Common Data Set ${facts.year}`,

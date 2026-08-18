@@ -198,10 +198,51 @@ Deno.serve(async (req: Request) => {
           last_outcome: row.last_outcome as ProbeOutcome,
         });
       }
+
+      const demandTier = new Set<string>();
+      const freshnessBySchool = new Map<string, Date>();
+      const { data: tierRows, error: tierError } = await supabase.rpc(
+        "publish_alert_tier_schools",
+        { p_n: 50 },
+      );
+      if (tierError) {
+        logEvent({
+          event: "publish_alert_tier_query_failed",
+          run_id: runId,
+          error: tierError.message,
+        });
+      } else {
+        for (const row of tierRows ?? []) {
+          demandTier.add(row.school_id);
+        }
+        if (demandTier.size > 0) {
+          const { data: freshnessRows, error: freshnessError } = await supabase
+            .rpc("publish_alert_freshness_anchors", {
+              p_school_ids: [...demandTier],
+            });
+          if (freshnessError) {
+            logEvent({
+              event: "publish_alert_freshness_query_failed",
+              run_id: runId,
+              error: freshnessError.message,
+            });
+          } else {
+            for (const row of freshnessRows ?? []) {
+              if (row.freshness_at) {
+                freshnessBySchool.set(row.school_id, new Date(row.freshness_at));
+              }
+            }
+          }
+        }
+      }
+
       const nowMs = now.getTime();
       for (const [schoolId, latest] of latestBySchool) {
         const cooldownDays = uniformDays ??
-          archiveCooldownDaysForOutcome(latest.last_outcome, now);
+          archiveCooldownDaysForOutcome(latest.last_outcome, now, {
+            isDemandTier: demandTier.has(schoolId),
+            freshnessAt: freshnessBySchool.get(schoolId) ?? null,
+          });
         if (cooldownDays <= 0) continue;
         const elapsedMs = nowMs - new Date(latest.processed_at).getTime();
         if (elapsedMs < cooldownDays * 24 * 60 * 60 * 1000) {

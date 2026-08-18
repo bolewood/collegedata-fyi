@@ -11,6 +11,7 @@ This project uses four-part semantic versioning.
 - Show a data-generated Common Data Set archive lead on school hubs and year pages, including an official IR link when we have a usable HTML URL, and gated-request copy only for schools we have actually read (Virginia Tech).
 - Publish three source-literacy pages under `/about` (Common Data Set, College Scorecard, IPEDS) and link them from About, the footer, and `/llms.txt`.
 - Record the August 2026 Search Console CDS-query export next to PRD 028, including URL inspection of the Virginia Tech and Harvey Mudd canaries.
+- Record school-direct Common Data Set insert and refresh events in an append-only log, expose a per-school RSS feed of those events, show which freshness signal a school or year page is using, and daily-probe the top 50 schools by public C1 applicant volume once they are nine months past that file date.
 
 ### Changed
 

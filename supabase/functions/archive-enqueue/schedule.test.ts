@@ -48,6 +48,47 @@ Deno.test("archiveCooldownDaysForOutcome checks every successful outcome weekly"
   }
 });
 
+Deno.test("archiveCooldownDaysForOutcome daily-escalates only demand-tier success past 9 months", () => {
+  const now = new Date("2026-08-18T12:00:00Z");
+  const tenMonthsAgo = new Date("2025-10-18T12:00:00Z");
+  const eightMonthsAgo = new Date("2025-12-18T12:00:00Z");
+  assertEquals(
+    archiveCooldownDaysForOutcome("unchanged_verified", now, {
+      isDemandTier: true,
+      freshnessAt: tenMonthsAgo,
+    }),
+    1,
+  );
+  assertEquals(
+    archiveCooldownDaysForOutcome("unchanged_verified", now, {
+      isDemandTier: true,
+      freshnessAt: eightMonthsAgo,
+    }),
+    7,
+  );
+  assertEquals(
+    archiveCooldownDaysForOutcome("unchanged_verified", now, {
+      isDemandTier: false,
+      freshnessAt: tenMonthsAgo,
+    }),
+    7,
+  );
+  assertEquals(
+    archiveCooldownDaysForOutcome("auth_walled_microsoft", now, {
+      isDemandTier: true,
+      freshnessAt: tenMonthsAgo,
+    }),
+    90,
+  );
+  assertEquals(
+    archiveCooldownDaysForOutcome("dead_url", now, {
+      isDemandTier: true,
+      freshnessAt: tenMonthsAgo,
+    }),
+    14,
+  );
+});
+
 Deno.test("archiveCooldownDaysForOutcome preserves outcome-specific backoff", () => {
   assertEquals(
     archiveCooldownDaysForOutcome(

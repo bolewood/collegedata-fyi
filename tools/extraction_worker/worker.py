@@ -1069,6 +1069,12 @@ def mark_extraction_status(
     if source_format is not None:
         update["source_format"] = source_format
     client.table("cds_documents").update(update).eq("id", document_id).execute()
+    if status == "extracted":
+        # First transition only. A later reconcile or re-mark must not
+        # rewrite extracted_at (PRD 029).
+        client.table("cds_documents").update(
+            {"extracted_at": datetime.now(timezone.utc).isoformat()},
+        ).eq("id", document_id).is_("extracted_at", "null").execute()
 
 
 def mark_document_quality_flag(
