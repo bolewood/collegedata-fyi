@@ -1,0 +1,20 @@
+# Public Jump-to-school nicknames. Not a ranking and not the PRD 019
+# operator watchlist. These tokens are loaded into
+# institution_slug_crosswalk as source=manual so typed initials like
+# "penn" resolve to the school people mean.
+version: 1
+nicknames:
+  - school_id: upenn
+    aliases: [penn]
+  - school_id: uc-berkeley
+    aliases: [cal]
+  - school_id: washington-university-in-st-louis
+    aliases: [washu]
+  - school_id: johns-hopkins
+    aliases: [jhu]
+  - school_id: georgia-tech
+    aliases: [gt]
+  - school_id: william-and-mary
+    aliases: [wm, w&m]
+  - school_id: california-institute-of-technology
+    aliases: [caltech]

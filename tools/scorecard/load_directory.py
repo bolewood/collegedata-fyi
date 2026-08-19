@@ -47,8 +47,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
+import yaml
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SCHOOLS_YAML = REPO_ROOT / "tools" / "finder" / "schools.yaml"
+DEFAULT_SEARCH_NICKNAMES = REPO_ROOT / "data" / "search_nicknames.yaml"
 MISSING_FROM_CURRENT_SCORECARD = "missing_from_current_scorecard"
 
 if str(REPO_ROOT) not in sys.path:
@@ -354,6 +357,25 @@ def load_schools_yaml(path: Path) -> dict[str, str]:
     return school_claim_slug_map(load_school_claims(path))
 
 
+def load_search_nicknames(path: Path) -> dict[str, list[str]]:
+    """Canonical school_id → extra typed aliases for Jump-to-school."""
+    if not path.exists():
+        return {}
+    payload = yaml.safe_load(path.read_text()) or {}
+    out: dict[str, list[str]] = {}
+    for row in payload.get("nicknames") or []:
+        school_id = str(row["school_id"]).strip()
+        aliases = [
+            str(alias).strip().lower()
+            for alias in (row.get("aliases") or [])
+            if str(alias).strip()
+        ]
+        if not school_id or not aliases:
+            continue
+        out[school_id] = aliases
+    return out
+
+
 def audit_directory_identities(
     claims: Iterable[dict[str, str]],
     directory_rows: Iterable[dict[str, Any]],
@@ -414,6 +436,7 @@ def build_crosswalk_rows(
     directory_rows: list[dict[str, Any]],
     schools_yaml_map: dict[str, str],
     retired_aliases_by_ipeds: Optional[dict[str, list[str]]] = None,
+    search_nicknames: Optional[dict[str, list[str]]] = None,
 ) -> list[dict[str, Any]]:
     """One row per known alias. Each ipeds_id always has at least one
     primary row (its school_id). When a schools.yaml ID and the
@@ -424,6 +447,7 @@ def build_crosswalk_rows(
     as a non-primary alias so legacy URLs keep resolving."""
     out: list[dict[str, Any]] = []
     retired_aliases_by_ipeds = retired_aliases_by_ipeds or {}
+    search_nicknames = search_nicknames or {}
     retired_alias_owners: dict[str, str] = {}
     for owner_ipeds, aliases in retired_aliases_by_ipeds.items():
         for alias in aliases:
@@ -441,6 +465,19 @@ def build_crosswalk_rows(
         raise ValueError(
             "retired alias collides with a schools.yaml canonical claim: "
             + ", ".join(yaml_alias_conflicts)
+        )
+
+    canonical_ids = {row["school_id"] for row in directory_rows}
+    nickname_collisions = sorted(
+        alias
+        for aliases in search_nicknames.values()
+        for alias in aliases
+        if alias in canonical_ids
+    )
+    if nickname_collisions:
+        raise ValueError(
+            "search nickname collides with a canonical school_id: "
+            + ", ".join(nickname_collisions)
         )
 
     for row in directory_rows:
@@ -505,6 +542,22 @@ def build_crosswalk_rows(
                     "is_primary": False,
                 }
             )
+        emitted = {primary, *retired_aliases}
+        if yaml_slug:
+            emitted.add(yaml_slug)
+        for alias in search_nicknames.get(primary, []):
+            if alias in emitted or alias in retired_alias_owners:
+                continue
+            out.append(
+                {
+                    "ipeds_id": ipeds,
+                    "school_id": primary,
+                    "alias": alias,
+                    "source": "manual",
+                    "is_primary": False,
+                }
+            )
+            emitted.add(alias)
     return out
 
 
@@ -730,6 +783,11 @@ def main() -> int:
     parser.add_argument("--schools-yaml", default=str(DEFAULT_SCHOOLS_YAML),
                         help="Path to schools.yaml for slug preservation (default: tools/finder/schools.yaml)")
     parser.add_argument(
+        "--search-nicknames",
+        default=str(DEFAULT_SEARCH_NICKNAMES),
+        help="Path to Jump-to-school nicknames YAML (default: data/search_nicknames.yaml)",
+    )
+    parser.add_argument(
         "--identity-exceptions",
         default=str(DEFAULT_IDENTITY_EXCEPTIONS),
         help=(
@@ -793,7 +851,9 @@ def main() -> int:
         return 4
     schools_yaml_map = school_claim_slug_map(school_claims)
     retired_aliases_by_ipeds = school_claim_retired_alias_map(school_claims)
+    search_nicknames = load_search_nicknames(Path(args.search_nicknames).expanduser())
     print(f"Loaded {len(schools_yaml_map)} schools.yaml slug claims", file=sys.stderr)
+    print(f"Loaded {sum(len(v) for v in search_nicknames.values())} search nicknames", file=sys.stderr)
 
     print(f"Reading {csv_path} ...", file=sys.stderr)
     df = pd.read_csv(csv_path, dtype=str, low_memory=False)
@@ -930,7 +990,7 @@ def main() -> int:
         row.pop("_previous_predominant_degree", None)
 
     crosswalk_rows = build_crosswalk_rows(
-        rows, schools_yaml_map, retired_aliases_by_ipeds
+        rows, schools_yaml_map, retired_aliases_by_ipeds, search_nicknames
     )
 
     in_scope_rows = [r for r in rows if r["in_scope"]]

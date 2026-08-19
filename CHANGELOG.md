@@ -18,6 +18,10 @@ This project uses four-part semantic versioning.
 - Replace the About page’s three-paragraph source gloss with a short hub that points at the longer CDS, Scorecard, and IPEDS notes.
 - Add R (`httr2`) copy-paste examples on `/api` and the acceptance-vs-yield recipe, and round recipe-page percents to whole numbers except below 10% and for endowment draw rates.
 
+### Fixed
+
+- Rank Jump-to-school exact slugs and nicknames (MIT, Penn) ahead of accidental name substrings, and prefer schools that already have a CDS year.
+
 ## [0.5.1.0] - 2026-08-10
 
 ### Added
