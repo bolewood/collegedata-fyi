@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
+import { formatRecipeShare } from "@/lib/format";
 
 type Point = { year: string; sat: number; act: number | null };
 type Series = {
@@ -468,10 +469,10 @@ export function TestOptionalChart() {
             CDS {hoverPoint.year}
           </div>
           <div style={{ marginTop: 6 }}>
-            SAT submitted: {hoverPoint.sat.toFixed(1)}%
+            SAT submitted: {formatRecipeShare(hoverPoint.sat / 100)}
           </div>
           {hoverPoint.act != null && (
-            <div>ACT submitted: {hoverPoint.act.toFixed(1)}%</div>
+            <div>ACT submitted: {formatRecipeShare(hoverPoint.act / 100)}</div>
           )}
         </div>
       )}

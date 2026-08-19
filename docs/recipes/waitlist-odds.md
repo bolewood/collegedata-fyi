@@ -32,9 +32,9 @@ High-volume rows that report near-total wait-list admission are treated as data-
 
 The current generated dataset contains 191 complete school-year rows across 148 schools, plus 61 partial rows where the CDS projection reports only some wait-list values. After collapsing duplicate school-year rows, six high-volume near-total rows are flagged as reported anomalies, leaving 180 school-year rows across 144 schools in the rate analysis. Across those analysis rows:
 
-- median success rate among accepted wait-list spots: 13.16%
-- weighted success rate: 21.51%
-- median "admitted / offered a spot" rate: 5.51%
+- median success rate among accepted wait-list spots: 13%
+- weighted success rate: 22%
+- median "admitted / offered a spot" rate: 5.5%
 - rows under 2% success: 23
 
 The median is not the lesson by itself. The split matters:

@@ -122,6 +122,19 @@ export function formatPercent(
   return `${(n * 100).toFixed(decimals)}%`;
 }
 
+// Recipe charts and tables. Whole percents by default; one tenth below 10%
+// so elite admit rates and rare wait-list outcomes do not collapse to 0% or
+// 3%. Pass digits: 1 for endowment draw rates — 4.8% vs 5% vs 7% is the claim.
+export function formatRecipeShare(
+  rate01: number | null | undefined,
+  digits?: number,
+): string {
+  if (rate01 == null || !Number.isFinite(rate01)) return "n/a";
+  const pct = rate01 * 100;
+  const places = digits ?? (pct > 0 && pct < 10 ? 1 : 0);
+  return `${pct.toFixed(places)}%`;
+}
+
 export function yearRange(
   earliest: string | null,
   latest: string | null

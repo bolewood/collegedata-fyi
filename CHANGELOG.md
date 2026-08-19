@@ -16,6 +16,7 @@ This project uses four-part semantic versioning.
 ### Changed
 
 - Replace the About page’s three-paragraph source gloss with a short hub that points at the longer CDS, Scorecard, and IPEDS notes.
+- Add R (`httr2`) copy-paste examples on `/api` and the acceptance-vs-yield recipe, and round recipe-page percents to whole numbers except below 10% and for endowment draw rates.
 
 ## [0.5.1.0] - 2026-08-10
 

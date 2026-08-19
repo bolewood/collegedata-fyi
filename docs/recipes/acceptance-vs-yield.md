@@ -18,10 +18,10 @@ Eighteen points is enough to see the four quadrants resolve — but still only 2
 
 The plot divides roughly into four quadrants:
 
-- **Top-left — selective and desired.** Low acceptance, high yield. Harvard sits here: 3.65% accept rate and 83.60% yield. Schools in this quadrant are both hard to get into and hard to turn down, usually because their market position is strong enough that most admits don't have meaningfully better options.
+- **Top-left — selective and desired.** Low acceptance, high yield. Harvard sits here: 3.6% accept rate and 84% yield. Schools in this quadrant are both hard to get into and hard to turn down, usually because their market position is strong enough that most admits don't have meaningfully better options.
 - **Top-right — loved despite openness.** Higher acceptance but strong yield. Often state flagships, religious-fit schools, or institutions with strong regional pull. Admits know what they're getting and most of them come.
-- **Bottom-left — selective but second-choice.** Hard to get into, but most admits choose somewhere else. Often cross-admit peers of top-left schools — they admit strong students who would also get into the Harvards of the world, and lose the cross-admit battle. Dartmouth at 5.40% / 69.12% is edge-of-this-quadrant; it wins a solid majority of its admits but loses some to HYPS peers.
-- **Bottom-right — accessible and optional.** Admits freely, captures a smaller share. Common safety-school territory. Harvey Mudd at 12.30% / 36.51% is here — a top-tier STEM liberal arts college with a specific fit, so its admits often accept offers from MIT, Caltech, Stanford instead.
+- **Bottom-left — selective but second-choice.** Hard to get into, but most admits choose somewhere else. Often cross-admit peers of top-left schools — they admit strong students who would also get into the Harvards of the world, and lose the cross-admit battle. Dartmouth at 5.4% / 69% is edge-of-this-quadrant; it wins a solid majority of its admits but loses some to HYPS peers.
+- **Bottom-right — accessible and optional.** Admits freely, captures a smaller share. Common safety-school territory. Harvey Mudd at 12% / 37% is here — a top-tier STEM liberal arts college with a specific fit, so its admits often accept offers from MIT, Caltech, Stanford instead.
 
 ## How to populate this with all 700+ schools
 
@@ -35,6 +35,33 @@ curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?canonical_year=eq.2024-25
 # 2) Pull the C1 and B1 fields we need, for all those schools
 curl 'https://api.collegedata.fyi/rest/v1/cds_fields?canonical_year=eq.2024-25&field_id=in.(c1_total_applied,c1_total_admitted,c1_total_enrolled,b1_ft_total_ug_men,b1_ft_total_ug_women,b22_retention_pct)&select=document_id,ipeds_id,school_id,canonical_year,field_id,value_numeric' \
   > fields-2024-25.json
+```
+
+From R, the projected `school_browser_rows` table is usually enough: it already has acceptance rate and yield. Ask PostgREST for CSV so the result is a data frame. The public anon key is on [`/api`](https://www.collegedata.fyi/api).
+
+```r
+library(httr2)
+library(readr)
+
+anon <- "<anon key>"
+
+rows <- request("https://api.collegedata.fyi/rest/v1/school_browser_rows") |>
+  req_url_query(
+    select = "school_id,school_name,canonical_year,applied,admitted,enrolled_first_year,acceptance_rate,yield_rate",
+    canonical_year = "eq.2024-25",
+    sub_institutional = "is.null",
+    acceptance_rate = "not.is.null",
+    yield_rate = "not.is.null"
+  ) |>
+  req_headers(
+    apikey = anon,
+    Authorization = paste("Bearer", anon),
+    Accept = "text/csv",
+    `X-CollegeData-Client` = "r-httr2"
+  ) |>
+  req_perform() |>
+  resp_body_string() |>
+  read_csv()
 ```
 
 The Field Reference tab in the XLSX documents exactly which field IDs to pull. Join CDS fields to
