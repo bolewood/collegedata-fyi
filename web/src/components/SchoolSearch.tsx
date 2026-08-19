@@ -10,8 +10,8 @@ import { CoverageBadge } from "./CoverageBadge";
 // PRD 015 M4 — server-backed autocomplete over institution_cds_coverage.
 // Calls the search_institutions RPC with a debounced query so missing-
 // CDS and not-yet-checked schools surface as first-class results. The
-// RPC ranks name-exact > prefix > substring; we just render the order
-// it returns.
+// RPC ranks exact school_id/alias, then prefix, then name token, with
+// CDS year and enrollment as tie-breaks.
 //
 // Replaces the prior in-memory ILIKE that only knew about CDS-backed
 // schools (see git blame for the swap).

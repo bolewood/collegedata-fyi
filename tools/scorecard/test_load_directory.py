@@ -31,6 +31,7 @@ from tools.scorecard.load_directory import (  # noqa: E402
     preserve_existing_redirect_aliases,
     fetch_existing_directory_rows,
     load_schools_yaml,
+    load_search_nicknames,
     main as load_directory_main,
     normalize_ipeds,
     previous_predominant_degrees,
@@ -395,7 +396,70 @@ class BuildCrosswalkRowsTests(unittest.TestCase):
         self.assertTrue(cw[0]["is_primary"])
         self.assertEqual(cw[0]["source"], "scorecard")
 
-    def test_retired_alias_stays_a_redirect_across_scorecard_refreshes(self):
+    def test_search_nicknames_emit_manual_aliases(self):
+        rows = [
+            {
+                "ipeds_id": "215062",
+                "school_id": "upenn",
+                "school_name": "University of Pennsylvania",
+            },
+            {
+                "ipeds_id": "243780",
+                "school_id": "penn-state",
+                "school_name": "Pennsylvania State University",
+            },
+        ]
+        cw = build_crosswalk_rows(
+            rows,
+            {"215062": "upenn", "243780": "penn-state"},
+            search_nicknames={"upenn": ["penn"]},
+        )
+        penn = [row for row in cw if row["alias"] == "penn"]
+        self.assertEqual(
+            penn,
+            [
+                {
+                    "ipeds_id": "215062",
+                    "school_id": "upenn",
+                    "alias": "penn",
+                    "source": "manual",
+                    "is_primary": False,
+                }
+            ],
+        )
+
+    def test_search_nickname_cannot_collide_with_canonical_id(self):
+        rows = [
+            {"ipeds_id": "000001", "school_id": "harvard", "school_name": "Harvard University"},
+            {"ipeds_id": "000002", "school_id": "yale", "school_name": "Yale University"},
+        ]
+        with self.assertRaisesRegex(ValueError, "search nickname collides"):
+            build_crosswalk_rows(
+                rows,
+                {"000001": "harvard"},
+                search_nicknames={"harvard": ["yale"]},
+            )
+
+    def test_load_search_nicknames_reads_penn(self):
+        nicknames = load_search_nicknames(
+            Path(__file__).resolve().parents[2] / "data" / "search_nicknames.yaml"
+        )
+        self.assertIn("penn", nicknames["upenn"])
+        self.assertNotIn("mit", {alias for aliases in nicknames.values() for alias in aliases})
+
+    def test_search_nicknames_are_not_the_operator_watchlist(self):
+        root = Path(__file__).resolve().parents[2]
+        nickname_text = (root / "data" / "search_nicknames.yaml").read_text()
+        sql_text = (
+            root
+            / "supabase"
+            / "migrations"
+            / "20260819160000_search_institutions_identity_rank.sql"
+        ).read_text()
+        body = sql_text.split("as $$", 1)[1].split("$$;", 1)[0]
+        self.assertNotIn("top_200", nickname_text)
+        self.assertNotIn("watchlist", body.lower())
+        self.assertNotIn("top_200", body)
         rows = [
             {
                 "ipeds_id": "168148",
