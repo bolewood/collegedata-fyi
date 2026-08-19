@@ -90,6 +90,34 @@ curl 'https://www.collegedata.fyi/api/compare?schools=mit,yale,university-of-chi
 curl 'https://www.collegedata.fyi/api/fields'
 
 curl 'https://www.collegedata.fyi/openapi.json'`}</CodeBlock>
+      <p className="mt-4 text-sm leading-relaxed text-gray-700">
+        The same simple endpoints from R, with no API key.{" "}
+        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">httr2</code>{" "}
+        and{" "}
+        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">jsonlite</code>{" "}
+        are enough. Send{" "}
+        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+          X-CollegeData-Client
+        </code>{" "}
+        so we can tell research scripts apart from other traffic.
+      </p>
+      <CodeBlock>{`library(httr2)
+library(jsonlite)
+
+facts <- request("https://www.collegedata.fyi/api/schools/mit/facts") |>
+  req_url_query(categories = "admissions,cost,outcomes") |>
+  req_headers(\`X-CollegeData-Client\` = "r-httr2") |>
+  req_perform() |>
+  resp_body_json()
+
+compare <- request("https://www.collegedata.fyi/api/compare") |>
+  req_url_query(
+    schools = "mit,yale,university-of-chicago",
+    fields = "acceptance_rate,avg_net_price"
+  ) |>
+  req_headers(\`X-CollegeData-Client\` = "r-httr2") |>
+  req_perform() |>
+  resp_body_json()`}</CodeBlock>
       <p className="mt-3 text-sm leading-relaxed text-gray-700">
         The per-school facts endpoint accepts the <code>finance</code> category
         for endowment facts. The fixed-schema compare endpoint does not: a

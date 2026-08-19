@@ -17,6 +17,7 @@ import {
   type WaitlistBucketKey,
   summarizeWaitlistBuckets,
 } from "@/lib/waitlist-recipe-analysis";
+import { formatRecipeShare } from "@/lib/format";
 
 const BUCKET_LABELS: Record<WaitlistBucketKey, string> = {
   selectivity: "Admit-rate band",
@@ -30,19 +31,9 @@ const H = 540;
 const M = { l: 210, r: 36, t: 34, b: 58 };
 const IW = W - M.l - M.r;
 
-function formatPct(value: number | null, digits = 1): string {
-  if (value == null || !Number.isFinite(value)) return "n/a";
-  return `${(value * 100).toFixed(digits)}%`;
-}
-
 function formatNumber(value: number | null): string {
   if (value == null || !Number.isFinite(value)) return "n/a";
   return value.toLocaleString("en-US");
-}
-
-function formatSuccessPct(value: number | null): string {
-  if (value == null) return "n/a";
-  return formatPct(value, value > 0 && value < 0.01 ? 2 : 1);
 }
 
 function compactNumber(value: number | null): string {
@@ -158,7 +149,7 @@ function Chart({
               fontSize="11"
               fill="var(--chart-axis)"
             >
-              {tick === 0 ? "0" : formatPct(tick, tick < 0.1 ? 0 : 0)}
+              {tick === 0 ? "0" : formatRecipeShare(tick, 0)}
             </text>
           </g>
         ))}
@@ -186,7 +177,7 @@ function Chart({
                 fontSize="10"
                 fill="var(--ink-3)"
               >
-                {summary.schools} schools · median {formatPct(summary.medianSuccessRate)}
+                {summary.schools} schools · median {formatRecipeShare(summary.medianSuccessRate)}
               </text>
               <line
                 x1={xScale(rowMedian(summary))}
@@ -289,10 +280,10 @@ function Chart({
             {formatNumber(hover.waitListAdmitted)} admitted from{" "}
             {formatNumber(hover.waitListAccepted)} accepted spots
           </div>
-          <div>Wait-list success: {formatPct(hover.waitListSuccessRate)}</div>
+          <div>Wait-list success: {formatRecipeShare(hover.waitListSuccessRate)}</div>
           <div style={{ color: "var(--ink-4)", marginTop: 6 }}>
             Offered {formatNumber(hover.waitListOffered)} · Admit rate{" "}
-            {formatPct(hover.acceptanceRate)}
+            {formatRecipeShare(hover.acceptanceRate)}
           </div>
         </div>
       )}
@@ -340,13 +331,13 @@ function BucketTable({
                 {bucket.schools}
               </td>
               <td className="nums" style={{ textAlign: "right", padding: "12px 14px", borderBottom: "1px dashed var(--rule)" }}>
-                {formatPct(bucket.medianSuccessRate)}
+                {formatRecipeShare(bucket.medianSuccessRate)}
               </td>
               <td className="nums" style={{ textAlign: "right", padding: "12px 14px", borderBottom: "1px dashed var(--rule)" }}>
-                {formatPct(bucket.weightedSuccessRate)}
+                {formatRecipeShare(bucket.weightedSuccessRate)}
               </td>
               <td className="nums" style={{ textAlign: "right", padding: "12px 14px", borderBottom: "1px dashed var(--rule)" }}>
-                {formatPct(bucket.zeroishShare, 0)}
+                {formatRecipeShare(bucket.zeroishShare, 0)}
               </td>
               <td className="nums" style={{ textAlign: "right", padding: "12px 14px", borderBottom: "1px dashed var(--rule)" }}>
                 {formatNumber(bucket.medianAccepted)}
@@ -394,8 +385,8 @@ function CaseStudy({ row }: { row: WaitlistRecipeRow }) {
       <p style={{ color: "var(--ink-2)", fontSize: 14, lineHeight: 1.55, marginTop: 12 }}>
         {complete ? (
           <>
-            {formatSuccessPct(row.waitListSuccessRate)} of students who accepted a spot were admitted from
-            the wait list. The same CDS row reports a normal admit rate of {formatPct(row.acceptanceRate)}.
+            {formatRecipeShare(row.waitListSuccessRate)} of students who accepted a spot were admitted from
+            the wait list. The same CDS row reports a normal admit rate of {formatRecipeShare(row.acceptanceRate)}.
           </>
         ) : (
           <>
@@ -494,7 +485,7 @@ function BerkeleyHistoryChart() {
                   fontSize="11"
                   fill="var(--chart-axis)"
                 >
-                  {formatPct(tick, 0)}
+                  {formatRecipeShare(tick, 0)}
                 </text>
               </g>
             ))}
@@ -588,7 +579,7 @@ function BerkeleyHistoryChart() {
                     {formatNumber(row.waitListAdmitted)}
                   </td>
                   <td className="nums" style={{ textAlign: "right", padding: "12px 14px", borderBottom: "1px dashed var(--rule)" }}>
-                    {formatSuccessPct(row.waitListSuccessRate)}
+                    {formatRecipeShare(row.waitListSuccessRate)}
                   </td>
                 </tr>
               ))}
@@ -664,8 +655,8 @@ export function WaitlistOddsExplorer() {
       >
         {[
           ["Analysis rows", WAITLIST_ANALYSIS_SUMMARY.analysisRows.toLocaleString("en-US")],
-          ["Median success", formatPct(WAITLIST_ANALYSIS_SUMMARY.medianSuccessRate)],
-          ["Weighted success", formatPct(WAITLIST_ANALYSIS_SUMMARY.weightedSuccessRate)],
+          ["Median success", formatRecipeShare(WAITLIST_ANALYSIS_SUMMARY.medianSuccessRate)],
+          ["Weighted success", formatRecipeShare(WAITLIST_ANALYSIS_SUMMARY.weightedSuccessRate)],
           ["Flagged rows", WAITLIST_ANALYSIS_SUMMARY.reportedAnomalyRows.toLocaleString("en-US")],
         ].map(([label, value]) => (
           <div key={label} className="cd-card" style={{ padding: 16 }}>
@@ -737,7 +728,7 @@ export function WaitlistOddsExplorer() {
                       {formatNumber(row.waitListAdmitted)}
                     </td>
                     <td className="nums" style={{ textAlign: "right", padding: "10px 0", borderBottom: "1px dashed var(--rule)" }}>
-                      {formatPct(row.waitListSuccessRate)}
+                      {formatRecipeShare(row.waitListSuccessRate)}
                     </td>
                   </tr>
                 ))}
@@ -768,7 +759,7 @@ export function WaitlistOddsExplorer() {
         </div>
         <p style={{ color: "var(--ink-2)", fontSize: 16, lineHeight: 1.65, margin: 0 }}>
           Across complete CDS wait-list rows in the current corpus, the median school admits{" "}
-          {formatPct(WAITLIST_ANALYSIS_SUMMARY.medianSuccessRate)} of students who accept a spot.
+          {formatRecipeShare(WAITLIST_ANALYSIS_SUMMARY.medianSuccessRate)} of students who accept a spot.
           That sounds meaningful until you split the schools: the most selective buckets cluster
           around low single digits, and {WAITLIST_ANALYSIS_SUMMARY.zeroishRows} complete rows are
           effectively closed doors under 2%. Higher rates exist, but they are concentrated at less
@@ -868,10 +859,10 @@ export function WaitlistOddsExplorer() {
                     {compactNumber(row.waitListAdmitted)}
                   </td>
                   <td className="nums" style={{ textAlign: "right", padding: "12px 14px", borderBottom: "1px dashed var(--rule)" }}>
-                    {formatPct(row.waitListSuccessRate, row.waitListSuccessRate && row.waitListSuccessRate < 0.01 ? 2 : 1)}
+                    {formatRecipeShare(row.waitListSuccessRate)}
                   </td>
                   <td className="nums" style={{ textAlign: "right", padding: "12px 14px", borderBottom: "1px dashed var(--rule)" }}>
-                    {formatPct(row.acceptanceRate)}
+                    {formatRecipeShare(row.acceptanceRate)}
                   </td>
                 </tr>
               ))}

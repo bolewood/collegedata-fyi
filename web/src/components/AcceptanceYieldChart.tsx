@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { formatRecipeShare } from "@/lib/format";
 
 type SchoolPoint = {
   school: string;
@@ -310,9 +311,9 @@ export function AcceptanceYieldChart() {
           </div>
           <div style={{ color: "var(--ink-4)", marginTop: 2 }}>CDS {tooltip.cdsYear}</div>
           <div style={{ marginTop: 6 }}>
-            Acceptance rate: {tooltip.accept.toFixed(2)}%
+            Acceptance rate: {formatRecipeShare(tooltip.accept / 100)}
           </div>
-          <div>Yield: {tooltip.yieldPct.toFixed(1)}%</div>
+          <div>Yield: {formatRecipeShare(tooltip.yieldPct / 100)}</div>
           <div style={{ marginTop: 6, color: "var(--ink-4)" }}>
             Applied {tooltip.applied.toLocaleString("en-US")} · Admitted{" "}
             {tooltip.admitted.toLocaleString("en-US")} · Enrolled{" "}

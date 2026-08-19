@@ -499,7 +499,7 @@ function SchoolHistoryChart({ school }: { school: EndowmentDrawRateSchool }) {
                   stroke="var(--paper)"
                   strokeWidth="2"
                 >
-                  <title>{`FY${point.year} draw rate: ${formatPct(point.drawRate, 2)}`}</title>
+                  <title>{`FY${point.year} draw rate: ${formatPct(point.drawRate, 1)}`}</title>
                 </circle>
               ) : (
                 <text
@@ -599,7 +599,7 @@ function SchoolDetail({ school }: { school: EndowmentDrawRateSchool }) {
                 <td>
                   {point.drawRate == null
                     ? <span title={exclusionLabel(point)}>n/a*</span>
-                    : formatPct(point.drawRate, 2)}
+                    : formatPct(point.drawRate, 1)}
                 </td>
                 <td><span className="mono">{point.sourceTable}</span> · {point.releaseType}</td>
               </tr>

@@ -245,15 +245,57 @@ export default function AcceptanceVsYieldPage() {
             overflowX: "auto",
           }}
         >
-{`curl https://collegedata.fyi/api/facts \\
-  ?fields=C.116,C.117,C.118        `}
-          <span style={{ color: "#c9c2ae" }}>{`# accept · admit · enroll`}</span>
-{`
-  &year=latest                     `}
-          <span style={{ color: "#c9c2ae" }}>{`# most-recent CDS per school`}</span>
-{`
-  &verified=true                   `}
-          <span style={{ color: "#c9c2ae" }}>{`# skip PDFs awaiting review`}</span>
+{`curl 'https://api.collegedata.fyi/rest/v1/school_browser_rows?select=school_id,school_name,canonical_year,applied,admitted,enrolled_first_year,acceptance_rate,yield_rate&canonical_year=eq.2024-25&sub_institutional=is.null&acceptance_rate=not.is.null&yield_rate=not.is.null' \\
+  -H 'apikey: <anon key>' \\
+  -H 'Authorization: Bearer <anon key>' \\
+  -H 'Accept: text/csv'`}
+        </pre>
+        <p
+          style={{
+            color: "var(--ink-2)",
+            fontSize: 14,
+            lineHeight: 1.55,
+            margin: "16px 0 10px",
+          }}
+        >
+          From R, the same query lands in a data frame. The anon key is on the{" "}
+          <Link href="/api">API page</Link>.
+        </p>
+        <pre
+          style={{
+            background: "var(--ink)",
+            color: "var(--paper)",
+            padding: "20px 24px",
+            fontFamily: "var(--mono)",
+            fontSize: 13,
+            lineHeight: 1.55,
+            margin: 0,
+            borderRadius: 2,
+            overflowX: "auto",
+          }}
+        >
+{`library(httr2)
+library(readr)
+
+anon <- "<anon key>"
+
+rows <- request("https://api.collegedata.fyi/rest/v1/school_browser_rows") |>
+  req_url_query(
+    select = "school_id,school_name,canonical_year,applied,admitted,enrolled_first_year,acceptance_rate,yield_rate",
+    canonical_year = "eq.2024-25",
+    sub_institutional = "is.null",
+    acceptance_rate = "not.is.null",
+    yield_rate = "not.is.null"
+  ) |>
+  req_headers(
+    apikey = anon,
+    Authorization = paste("Bearer", anon),
+    Accept = "text/csv",
+    \`X-CollegeData-Client\` = "r-httr2"
+  ) |>
+  req_perform() |>
+  resp_body_string() |>
+  read_csv()`}
         </pre>
         <div
           style={{
