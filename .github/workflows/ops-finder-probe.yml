@@ -1,0 +1,232 @@
+name: Ops finder probe
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "unknown = cooldown-aged unknowns; stuck-pdf = stale PDF seeds; both = stuck first, remaining Brave budget on unknowns."
+        type: choice
+        options:
+          - both
+          - stuck-pdf
+          - unknown
+        default: both
+      cooldown_days:
+        description: "Skip unknowns probed within N days (0 = ignore)."
+        required: false
+        default: "30"
+      brave_budget:
+        description: "Max Brave Search API calls this run (0 = unlimited)."
+        required: false
+        default: "1800"
+      apply_landing_hints:
+        description: "Apply high-confidence landing-page seed rewrites."
+        type: boolean
+        required: false
+        default: true
+      create_pr:
+        description: "Open a PR if schools.yaml changed."
+        type: boolean
+        required: false
+        default: true
+  schedule:
+    # Monthly. The README called this a cron for months; nothing actually
+    # called the Brave API after 2026-04-14. Day 2 avoids colliding with
+    # the IPEDS release probe on the 5th.
+    - cron: "18 14 2 * *"
+
+concurrency:
+  group: ops-finder-probe
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  probe:
+    name: Probe CDS listing URLs
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: https://api.collegedata.fyi
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzZHV3bXlndm1kb3pocHZ6YWl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDk3NTksImV4cCI6MjA5MTY4NTc1OX0.fYZOIHyrOWzidgc-CVxWCY5Fe9pQk12-6YjDIS6y9qs
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+      INPUT_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'both' }}
+      INPUT_COOLDOWN_DAYS: ${{ github.event_name == 'workflow_dispatch' && inputs.cooldown_days || '30' }}
+      INPUT_BRAVE_BUDGET: ${{ github.event_name == 'workflow_dispatch' && inputs.brave_budget || '1800' }}
+      INPUT_APPLY_LANDING_HINTS: ${{ github.event_name != 'workflow_dispatch' || inputs.apply_landing_hints }}
+      INPUT_CREATE_PR: ${{ github.event_name != 'workflow_dispatch' || inputs.create_pr }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/ci-requirements.txt
+
+      - name: Install Python dependencies
+        run: python -m pip install -r tools/ci-requirements.txt
+
+      - name: Require Brave API key
+        run: |
+          if [[ -z "${BRAVE_API_KEY}" ]]; then
+            echo "::error::Add the BRAVE_API_KEY repository secret. The finder talks to api.search.brave.com, not public brave.com, and has not been called since 2026-04-14."
+            exit 2
+          fi
+
+      - name: Classify stuck PDF seeds
+        run: |
+          mkdir -p finder-probe
+          python tools/finder/stuck_pdf_seeds.py \
+            --out-json finder-probe/stuck.json \
+            --out-md finder-probe/stuck.md \
+            --out-ids finder-probe/stuck-ids.txt
+
+      - name: Re-probe stuck PDF seeds
+        if: env.INPUT_MODE == 'both' || env.INPUT_MODE == 'stuck-pdf'
+        run: |
+          if [[ ! -s finder-probe/stuck-ids.txt ]]; then
+            echo "No stuck PDF seeds to re-probe."
+            exit 0
+          fi
+          PYTHONUNBUFFERED=1 python tools/finder/probe_urls.py \
+            --brave-fallback \
+            --ids-file finder-probe/stuck-ids.txt \
+            --brave-budget "${INPUT_BRAVE_BUDGET}" \
+            --school-budget-sec 20 \
+            --save-every 25 \
+            2>&1 | tee finder-probe/stuck-probe.log
+
+      - name: Probe unknown schools
+        if: env.INPUT_MODE == 'both' || env.INPUT_MODE == 'unknown'
+        run: |
+          PYTHONUNBUFFERED=1 python tools/finder/probe_urls.py \
+            --brave-fallback \
+            --include-active-no-hint \
+            --cooldown-days "${INPUT_COOLDOWN_DAYS}" \
+            --brave-budget "${INPUT_BRAVE_BUDGET}" \
+            --school-budget-sec 20 \
+            --save-every 50 \
+            2>&1 | tee finder-probe/unknown-probe.log
+
+      - name: Promote high-confidence landing hints
+        if: env.INPUT_APPLY_LANDING_HINTS == 'true'
+        run: |
+          python tools/finder/promote_landing_hints.py \
+            --min-confidence high \
+            --apply \
+            --report finder-probe/landing-hints.md \
+            2>&1 | tee finder-probe/landing-hints.log
+
+      - name: Refresh stuck report after seed rewrites
+        run: |
+          python tools/finder/stuck_pdf_seeds.py \
+            --out-json finder-probe/stuck-after.json \
+            --out-md finder-probe/stuck-after.md \
+            --out-ids finder-probe/stuck-ids-after.txt
+
+      - name: Add run summary
+        if: always()
+        run: |
+          {
+            echo "## Finder probe"
+            echo
+            echo "Mode: \`${INPUT_MODE}\`"
+            echo
+            if [[ -f finder-probe/stuck.md ]]; then
+              echo "### Stuck PDF seeds (before)"
+              echo
+              wc -l finder-probe/stuck-ids.txt | awk '{print $1 " school ids"}'
+              echo
+            fi
+            if [[ -f finder-probe/stuck-after.md ]]; then
+              echo "### Stuck PDF seeds (after)"
+              echo
+              wc -l finder-probe/stuck-ids-after.txt | awk '{print $1 " school ids"}'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upsert coverage issue
+        if: success()
+        run: |
+          python - <<'PY'
+          import json, os, subprocess, sys
+          from pathlib import Path
+          repo = os.environ["REPO"]
+          path = Path("finder-probe/stuck-after.md")
+          if not path.exists():
+              path = Path("finder-probe/stuck.md")
+          if not path.exists():
+              print("No stuck report; skipping issue.")
+              sys.exit(0)
+          title = "Finder: stuck PDF discovery seeds"
+          body = path.read_text()[:60000]
+          existing = subprocess.run(
+              ["gh", "issue", "list", "--repo", repo, "--state", "open",
+               "--search", f'in:title "{title}"', "--json", "number,title"],
+              check=True, text=True, stdout=subprocess.PIPE,
+          )
+          rows = json.loads(existing.stdout or "[]")
+          match = next((r for r in rows if r.get("title") == title), None)
+          if match:
+              subprocess.run(
+                  ["gh", "issue", "comment", str(match["number"]),
+                   "--repo", repo, "--body", body],
+                  check=True,
+              )
+              print(f"Commented on existing issue #{match['number']}")
+          else:
+              subprocess.run(
+                  ["gh", "issue", "create", "--repo", repo, "--title", title, "--body", body],
+                  check=True,
+              )
+              print("Created coverage issue")
+          PY
+
+      - name: Open PR for seed updates
+        if: success() && (env.INPUT_CREATE_PR == 'true')
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/finder/schools.yaml
+          if git diff --cached --quiet; then
+            echo "No schools.yaml changes."
+            exit 0
+          fi
+          branch="chore/finder-probe-${GITHUB_RUN_ID}"
+          git checkout -b "$branch"
+          git commit -m "$(cat <<'EOF'
+          chore: refresh CDS discovery seeds from monthly finder probe
+
+          Re-probe stale PDF seeds and unknowns via the Brave Search API, and
+          promote high-confidence HTML listings so weekly archive is not stuck
+          on a single year file.
+
+          EOF
+          )"
+          git push -u origin HEAD
+          gh pr create --title "chore: refresh CDS discovery seeds from monthly finder probe" --body "$(cat <<EOF
+          ## Summary
+          - Monthly finder probe (\`${INPUT_MODE}\`) updated \`tools/finder/schools.yaml\`.
+          - Stuck PDF-seed report is in the workflow artifacts / coverage issue.
+
+          ## Test plan
+          - [ ] Skim the PR diff for accidental satellite-campus seed copies
+          - [ ] After merge, weekly \`archive-enqueue\` picks up new listing seeds
+          EOF
+          )"
+
+      - name: Upload probe artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: finder-probe
+          path: finder-probe/
+          if-no-files-found: warn

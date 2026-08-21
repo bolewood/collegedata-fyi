@@ -76,7 +76,7 @@ SKIP_HOST_RE = re.compile(
 CDS_LIKE_SEGMENT_RE = re.compile(
     r"^(cds|common-data-set|common_data_set|common-data-sets|commondataset|"
     r"institutional-research|institutional_research|institutionalresearch|"
-    r"institutional-data|ir|oir|oira|iro|irp)$",
+    r"institutional-data|ir|irr|oir|oira|iro|irp|other-reports)$",
     re.I,
 )
 
@@ -427,6 +427,18 @@ def main() -> int:
                          "positives where the 'parent' is a 404 or 403. "
                          "option-(a) proposals are already probe-verified "
                          "via the manual_urls.yaml pipeline.")
+    ap.add_argument(
+        "--min-confidence",
+        choices=("high", "medium", "low"),
+        default="low",
+        help="Only keep proposals at this confidence or better "
+             "(high > medium > low). Default low keeps every proposal.",
+    )
+    ap.add_argument(
+        "--ids-file",
+        type=Path,
+        help="Limit proposals to school ids listed in this file.",
+    )
     args = ap.parse_args()
 
     schools_data = yaml.safe_load(args.schools_yaml.read_text())
@@ -502,6 +514,21 @@ def main() -> int:
                   f"{', '.join(dropped) if dropped else '(none)'}",
                   file=sys.stderr)
             print(f"Proposals (post-verify): {len(proposals)}", file=sys.stderr)
+
+    rank = {"high": 3, "medium": 2, "low": 1}
+    min_rank = rank[args.min_confidence]
+    proposals = [
+        p for p in proposals
+        if rank.get(p.get("confidence") or "low", 0) >= min_rank
+    ]
+    if args.ids_file:
+        allow = {
+            line.strip()
+            for line in args.ids_file.read_text().splitlines()
+            if line.strip() and not line.strip().startswith("#")
+        }
+        proposals = [p for p in proposals if p["school_id"] in allow]
+    print(f"Proposals (after confidence/id filters): {len(proposals)}", file=sys.stderr)
 
     if args.apply:
         if not proposals:

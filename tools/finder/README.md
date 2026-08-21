@@ -266,17 +266,29 @@ The guard catches all three at build time before they ship.
 
 **SIGINT saves partial progress.** `Ctrl-C` triggers a finally-block save in `probe_urls.py`, so the fraction of schools probed before interrupt get committed to `schools.yaml`. Tested via an 11-minute wedge + SIGINT during the elite-seed pattern run.
 
-## Recommended monthly cron command
+## Recommended monthly cron
+
+GitHub Actions runs this on the 2nd of each month (`ops-finder-probe.yml`). It needs the `BRAVE_API_KEY` repository secret — the finder talks to `api.search.brave.com`, not public brave.com. Manual dispatch:
 
 ```bash
-cd /path/to/collegedata-fyi/tools/finder && \
-  PYTHONUNBUFFERED=1 python probe_urls.py \
-    --brave-fallback \
-    --include-active-no-hint \
-    2>&1 | tee logs/probe-$(date +%Y%m%d).log
+gh workflow run ops-finder-probe.yml
 ```
 
-`PYTHONUNBUFFERED=1` so `tee` sees output as it happens; `--brave-fallback` for URL discovery; `--include-active-no-hint` to keep rescuing any future seed-list entries that are marked active but lack a hint. Expected runtime: 5-15 minutes depending on how many schools have aged out of cooldown. Expected Brave spend: under $1 for a typical cron.
+Operator equivalent, from a laptop that has `BRAVE_API_KEY` in the environment:
+
+```bash
+cd /path/to/collegedata-fyi && \
+  PYTHONUNBUFFERED=1 python tools/finder/stuck_pdf_seeds.py --out-ids /tmp/stuck-ids.txt && \
+  PYTHONUNBUFFERED=1 python tools/finder/probe_urls.py \
+    --brave-fallback \
+    --ids-file /tmp/stuck-ids.txt \
+    --brave-budget 1800 \
+    2>&1 | tee logs/probe-stuck-$(date +%Y%m%d).log && \
+  PYTHONUNBUFFERED=1 python tools/finder/probe_urls.py \
+    --brave-fallback \
+    --include-active-no-hint \
+    2>&1 | tee logs/probe-unknown-$(date +%Y%m%d).log
+```
 
 ## See also
 

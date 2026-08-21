@@ -45,8 +45,17 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
+from collections import defaultdict
 
 import yaml
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+from tools.finder.stuck_pdf_seeds import (  # noqa: E402
+    choose_canonical_school,
+    is_direct_doc_seed,
+)
 
 ROOT = Path(__file__).parent
 SCHOOLS_YAML = ROOT / "schools.yaml"
@@ -247,15 +256,73 @@ def _days_since(iso_str: str) -> float:
         return 999  # treat unparseable as "very old"
 
 
-def should_skip(school: dict, cooldown_days: float) -> bool:
-    """Return True if this school was probed recently and came back not_found."""
+def should_skip(school: dict, cooldown_days: float, *, reprobe_found: bool = False) -> bool:
+    """Return True if this school should not be probed this run.
+
+    `last_result: found` used to skip forever — that froze PDF seeds in
+    place (OU). Re-probe runs pass reprobe_found=True. Satellite campuses
+    that inherited a sibling's URL stay skipped until an operator
+    explicitly includes them.
+    """
     ps = school.get("probe_state")
     if not ps:
         return False
-    if ps.get("last_result") == "found":
-        return True  # already found, nothing to do
-    last = ps.get("last_probed_at", "")
-    return _days_since(last) < cooldown_days
+    last = ps.get("last_result")
+    if last == "shared_parent_seed" and not reprobe_found:
+        return True
+    if last == "found" and not reprobe_found:
+        return True
+    probed_at = ps.get("last_probed_at", "")
+    return _days_since(probed_at) < cooldown_days
+
+
+def should_replace_seed(existing: str | None, new: str | None) -> bool:
+    """Listing pages replace year-specific PDFs; PDFs do not replace listings."""
+    if not new:
+        return False
+    if not existing:
+        return True
+    existing_doc = is_direct_doc_seed(existing)
+    new_doc = is_direct_doc_seed(new)
+    if existing_doc and not new_doc:
+        return True
+    if not existing_doc:
+        return False
+    return False
+
+
+def clear_shared_parent_seed(school: dict, keeper_id: str) -> None:
+    school.pop("discovery_seed_url", None)
+    school.pop("cds_url_hint", None)
+    school["scrape_policy"] = "unknown"
+    record_probe(school, "shared_parent_seed", "shared_parent", 0, False)
+    note = (
+        f"Cleared identical seed also assigned to {keeper_id}; "
+        "Brave site:domain search is not campus-specific."
+    )
+    existing = school.get("notes") or ""
+    if note not in existing:
+        school["notes"] = f"{existing} {note}".strip() if existing else note
+
+
+def dedupe_identical_seeds(schools: list[dict]) -> list[tuple[str, str]]:
+    """Keep one owner per identical discovery_seed_url; clear the rest."""
+    by_url: dict[str, list[dict]] = defaultdict(list)
+    for school in schools:
+        seed = school.get("discovery_seed_url") or ""
+        if seed:
+            by_url[seed].append(school)
+    cleared: list[tuple[str, str]] = []
+    for _url, group in by_url.items():
+        if len(group) < 2:
+            continue
+        keeper = choose_canonical_school(group)
+        for school in group:
+            if school.get("id") == keeper.get("id"):
+                continue
+            clear_shared_parent_seed(school, keeper.get("id") or "")
+            cleared.append((school.get("id") or "", keeper.get("id") or ""))
+    return cleared
 
 
 def record_probe(school: dict, result: str, method: str,
@@ -419,12 +486,19 @@ def bing_html_search(domain: str) -> str | None:
     return None
 
 
-def brave_search(domain: str, api_key: str) -> str | None:
+def brave_search(domain: str, api_key: str, tracker: dict | None = None) -> str | None:
     """Use Brave Search API to find CDS PDFs for a school.
 
     Free tier: 2,000 queries/month. Paid: $0.003/query.
     Independent index, no domain pre-registration.
     """
+    if tracker is not None:
+        with tracker["lock"]:
+            budget = tracker.get("budget")
+            if budget is not None and tracker["calls"] >= budget:
+                print("  [brave] budget exhausted — skipping remaining queries", flush=True)
+                return None
+            tracker["calls"] += 1
     # NOTE: do not add `filetype:pdf` here. Many schools publish CDS as an
     # HTML landing page (oair.tulane.edu/common-data-set) or a .cfm page
     # (american.edu/provost/oira/common-data-set.cfm), not a raw PDF.
@@ -558,7 +632,7 @@ def process_school(school: dict, args: argparse.Namespace,
     if not url and args.brave_fallback and env.get("brave_api_key"):
         search_tried = True
         last_attempted_method = "brave"
-        url = brave_search(domain, env["brave_api_key"])
+        url = brave_search(domain, env["brave_api_key"], env.get("brave_tracker"))
         if url:
             method = "brave"
         time.sleep(0.5)
@@ -582,8 +656,10 @@ def process_school(school: dict, args: argparse.Namespace,
 
     if url:
         if not args.dry_run:
-            school["discovery_seed_url"] = url
-            school["scrape_policy"] = "active"
+            existing = school.get("discovery_seed_url") or school.get("cds_url_hint")
+            if should_replace_seed(existing, url):
+                school["discovery_seed_url"] = url
+                school["scrape_policy"] = "active"
             record_probe(school, "found", method, patterns_tried, search_tried)
     else:
         if not args.dry_run:
@@ -621,7 +697,9 @@ def main():
 
     ap = argparse.ArgumentParser(
         description="Discover CDS URLs for schools in schools.yaml")
-    ap.add_argument("--only", help="Only probe this school id")
+    ap.add_argument("--only", help="Only probe this school id, or comma-separated ids")
+    ap.add_argument("--ids-file", type=Path,
+                    help="Probe only the school ids listed in this file (one per line)")
     ap.add_argument("--dry-run", action="store_true",
                     help="Print results but don't update schools.yaml")
     ap.add_argument("--rps", type=float, default=1.0,
@@ -656,6 +734,13 @@ def main():
                          "have no discovery_seed_url. Used to resolve seed-list "
                          "entries that were marked active on faith but never "
                          "got a URL — populates their seeds without demoting.")
+    ap.add_argument("--reprobe-pdf-seeds", action="store_true",
+                    help="Also re-probe active schools whose seed is a PDF/XLSX/"
+                         "DOCX. Needed because last_result=found otherwise skips "
+                         "them forever and weekly archive never finds listings.")
+    ap.add_argument("--brave-budget", type=int, default=1800,
+                    help="Max Brave Search API calls this run (default 1800, "
+                         "under the 2000/month free tier). 0 means unlimited.")
     ap.add_argument("--school-budget-sec", type=float, default=DEFAULT_SCHOOL_BUDGET_SEC,
                     help=f"Per-school wall-clock budget for the pattern "
                          f"ladder in seconds (default: {DEFAULT_SCHOOL_BUDGET_SEC}). "
@@ -672,7 +757,28 @@ def main():
         "google_api_key": os.environ.get("GOOGLE_API_KEY"),
         "google_cx": os.environ.get("GOOGLE_CX"),
         "brave_api_key": os.environ.get("BRAVE_API_KEY"),
+        "brave_tracker": {
+            "calls": 0,
+            "budget": None if args.brave_budget == 0 else args.brave_budget,
+            "lock": Lock(),
+        },
     }
+    if args.brave_fallback and not env["brave_api_key"]:
+        print("BRAVE_API_KEY is not set; --brave-fallback will find nothing.",
+              file=sys.stderr)
+
+    only_ids: set[str] | None = None
+    if args.only:
+        only_ids = {s.strip() for s in args.only.split(",") if s.strip()}
+    if args.ids_file:
+        file_ids = {
+            line.strip()
+            for line in args.ids_file.read_text().splitlines()
+            if line.strip() and not line.strip().startswith("#")
+        }
+        only_ids = file_ids if only_ids is None else only_ids | file_ids
+    targeted = only_ids is not None
+    reprobe_found = targeted or args.reprobe_pdf_seeds
 
     # ── Build candidate list (apply all filters up front) ──
     name_filter = args.name_contains.lower() if args.name_contains else None
@@ -683,23 +789,34 @@ def main():
         sid = school.get("id", "")
         policy = school.get("scrape_policy", "unknown")
         name = school.get("name", sid)
+        seed = school.get("discovery_seed_url") or school.get("cds_url_hint") or ""
 
-        if args.only and sid != args.only:
+        if only_ids is not None and sid not in only_ids:
             continue
-        if not args.only and policy != "unknown":
+        if not targeted and policy != "unknown":
             # Allow through active-but-no-hint entries when the caller asks
             # for them. These are hand-curated seed-list rows that were
             # marked active on faith but never got a URL resolved, so
             # downstream has nothing to fetch. Running them through the
             # probe populates discovery_seed_url without touching scrape_policy.
             # Both names checked so legacy YAML rows (pre-PR-5) still match.
-            if not (args.include_active_no_hint
-                    and policy == "active"
-                    and not (school.get("discovery_seed_url") or school.get("cds_url_hint"))):
+            allow_active_no_hint = (
+                args.include_active_no_hint
+                and policy == "active"
+                and not seed
+            )
+            allow_pdf_reprobe = (
+                args.reprobe_pdf_seeds
+                and policy == "active"
+                and is_direct_doc_seed(seed)
+            )
+            if not allow_active_no_hint and not allow_pdf_reprobe:
                 continue
         if name_filter and name_filter not in name.lower():
             continue
-        if not args.only and args.cooldown_days > 0 and should_skip(school, args.cooldown_days):
+        if not targeted and args.cooldown_days > 0 and should_skip(
+            school, args.cooldown_days, reprobe_found=reprobe_found
+        ):
             skipped += 1
             continue
 
@@ -746,12 +863,14 @@ def main():
 
                 # Periodic save so Ctrl-C doesn't lose hours of probes
                 if not args.dry_run and args.save_every > 0 and completed % args.save_every == 0:
+                    dedupe_identical_seeds(schools)
                     _save_yaml(data)
                     print(f"  [checkpoint saved at {completed}/{total}]")
         except KeyboardInterrupt:
             print(f"\n[interrupted at {completed}/{total}] — cancelling pending workers")
             executor.shutdown(wait=False, cancel_futures=True)
             if not args.dry_run:
+                dedupe_identical_seeds(schools)
                 _save_yaml(data)
                 print(f"  [partial progress saved to {SCHOOLS_YAML}]")
             print(f"\nProbed: {completed}, Found: {found}, Not found: {failed}")
@@ -761,8 +880,14 @@ def main():
     if skipped:
         print(f", Skipped (cooldown): {skipped}", end="")
     print()
+    tracker = env.get("brave_tracker") or {}
+    if tracker.get("calls"):
+        print(f"Brave API calls this run: {tracker['calls']}")
 
     if not args.dry_run and completed > 0:
+        cleared = dedupe_identical_seeds(schools)
+        if cleared:
+            print(f"Cleared {len(cleared)} duplicate seed(s) shared across UNITIDs")
         _save_yaml(data)
         print(f"Updated {SCHOOLS_YAML}")
 

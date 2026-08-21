@@ -1816,14 +1816,15 @@ schools:
   name: Arizona State University Digital Immersion
   domain: asu.edu
   ipeds_id: '483124'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:16:46Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://provost.asu.edu/sites/g/files/litvpz671/files/page/2556/uoia-commondataset-2017.pdf
+  notes: Cleared identical seed also assigned to arizona-state-university-campus-immersion; search is not campus-specific.
+
 - id: arkansas-baptist-college
   name: Arkansas Baptist College
   domain: arkansasbaptist.edu
@@ -6862,14 +6863,15 @@ schools:
   name: Drury University-College of Continuing Professional Studies
   domain: drury.edu
   ipeds_id: '492801'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:18:19Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.drury.edu/wp-content/uploads/files/academic-affairs/pdf/institutional_research/CDS_2023-2024_DruryU.pdf
+  notes: Cleared identical seed also assigned to drury-university; search is not campus-specific.
+
 - id: dunwoody-college-of-technology
   name: Dunwoody College of Technology
   domain: dunwoody.edu
@@ -7548,14 +7550,15 @@ schools:
   name: Fairleigh Dickinson University-Florham Campus
   domain: fdu.edu
   ipeds_id: '184694'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:18:31Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.fdu.edu/wp-content/uploads/2025/04/2024-25-Common-Data-Set-University.pdf
+  notes: Cleared identical seed also assigned to fairleigh-dickinson-university-metropolitan-campus; search is not campus-specific.
+
 - id: fairleigh-dickinson-university-metropolitan-campus
   name: Fairleigh Dickinson University-Metropolitan Campus
   domain: fdu.edu
@@ -7857,14 +7860,15 @@ schools:
   name: Florida Institute of Technology-Online
   domain: fit.edu
   ipeds_id: '480569'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:18:37Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.fit.edu/media/site-specific/wwwfitedu/oir/documents/CDS_2022-2023.pdf
+  notes: Cleared identical seed also assigned to florida-institute-of-technology; search is not campus-specific.
+
 - id: florida-international-university
   name: Florida International University
   domain: fiu.edu
@@ -10682,38 +10686,41 @@ schools:
   name: Kent State University at Ashtabula
   domain: kent.edu
   ipeds_id: '203447'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:19:28Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.kent.edu/ir/common-dataset-cds
+  notes: Cleared identical seed also assigned to kent-state-university-at-kent; search is not campus-specific.
+
 - id: kent-state-university-at-east-liverpool
   name: Kent State University at East Liverpool
   domain: kent.edu
   ipeds_id: '203456'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:19:28Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.kent.edu/ir/common-dataset-cds
+  notes: Cleared identical seed also assigned to kent-state-university-at-kent; search is not campus-specific.
+
 - id: kent-state-university-at-geauga
   name: Kent State University at Geauga
   domain: kent.edu
   ipeds_id: '203526'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:19:28Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.kent.edu/ir/common-dataset-cds
+  notes: Cleared identical seed also assigned to kent-state-university-at-kent; search is not campus-specific.
+
 - id: kent-state-university-at-kent
   name: Kent State University at Kent
   domain: kent.edu
@@ -10730,50 +10737,54 @@ schools:
   name: Kent State University at Salem
   domain: kent.edu
   ipeds_id: '203492'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:19:29Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.kent.edu/ir/common-dataset-cds
+  notes: Cleared identical seed also assigned to kent-state-university-at-kent; search is not campus-specific.
+
 - id: kent-state-university-at-stark
   name: Kent State University at Stark
   domain: kent.edu
   ipeds_id: '203465'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:19:29Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.kent.edu/ir/common-dataset-cds
+  notes: Cleared identical seed also assigned to kent-state-university-at-kent; search is not campus-specific.
+
 - id: kent-state-university-at-trumbull
   name: Kent State University at Trumbull
   domain: kent.edu
   ipeds_id: '203474'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:19:29Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.kent.edu/ir/common-dataset-cds
+  notes: Cleared identical seed also assigned to kent-state-university-at-kent; search is not campus-specific.
+
 - id: kent-state-university-at-tuscarawas
   name: Kent State University at Tuscarawas
   domain: kent.edu
   ipeds_id: '203483'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:19:29Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.kent.edu/ir/common-dataset-cds
+  notes: Cleared identical seed also assigned to kent-state-university-at-kent; search is not campus-specific.
+
 - id: kentucky-christian-university
   name: Kentucky Christian University
   domain: kcu.edu
@@ -12872,26 +12883,28 @@ schools:
   name: Miami University-Hamilton
   domain: miamioh.edu
   ipeds_id: '204006'
-  scrape_policy: active
-  discovery_seed_url: https://miamioh.edu/institutional-research/common-data-set.html
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T06:36:07Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: pattern
     patterns_tried: 3
     search_fallback_tried: false
+  notes: Cleared identical seed also assigned to miami-university-oxford; search is not campus-specific.
+
 - id: miami-university-middletown
   name: Miami University-Middletown
   domain: miamioh.edu
   ipeds_id: '204015'
-  scrape_policy: active
-  discovery_seed_url: https://miamioh.edu/institutional-research/common-data-set.html
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T06:36:11Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: pattern
     patterns_tried: 3
     search_fallback_tried: false
+  notes: Cleared identical seed also assigned to miami-university-oxford; search is not campus-specific.
+
 - id: miami-university-oxford
   name: Miami University-Oxford
   domain: miamioh.edu
@@ -13044,14 +13057,15 @@ schools:
   name: Middlebury Institute of International Studies at Monterey
   domain: middlebury.edu
   ipeds_id: '119058'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:20:11Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.middlebury.edu/sites/default/files/2023-03/CDS_2022-2023_3.pdf
+  notes: Cleared identical seed also assigned to middlebury-college; search is not campus-specific.
+
 - id: midland-college
   name: Midland College
   domain: midland.edu
@@ -14743,14 +14757,15 @@ schools:
   name: Northeastern University Professional Programs
   domain: northeastern.edu
   ipeds_id: '482705'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:20:42Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://uds.northeastern.edu/facts/common-data-set/
+  notes: Cleared identical seed also assigned to northeastern; search is not campus-specific.
+
 - id: northern-arizona-university
   name: Northern Arizona University
   domain: nau.edu
@@ -14937,14 +14952,15 @@ schools:
   name: Northwest University-Center for Online and Extended Education
   domain: northwestu.edu
   ipeds_id: '487603'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:20:45Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.northwestu.edu/assets/documents/about/Common_Data_Set_Northwest_University_2022-2023.pdf
+  notes: Cleared identical seed also assigned to northwest-university; search is not campus-specific.
+
 - id: northwestern-college
   name: Northwestern College
   domain: nwciowa.edu
@@ -15285,38 +15301,41 @@ schools:
   name: Ohio University-Chillicothe Campus
   domain: ohio.edu
   ipeds_id: '204820'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:20:51Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.ohio.edu/instres/commondataset.pdf
+  notes: Brave site:ohio.edu assigned the main-campus CDS PDF to every Ohio University UNITID. Regional campuses do not get that file.
+
 - id: ohio-university-eastern-campus
   name: Ohio University-Eastern Campus
   domain: ohio.edu
   ipeds_id: '204802'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:20:51Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.ohio.edu/instres/commondataset.pdf
+  notes: Brave site:ohio.edu assigned the main-campus CDS PDF to every Ohio University UNITID. Regional campuses do not get that file.
+
 - id: ohio-university-lancaster-campus
   name: Ohio University-Lancaster Campus
   domain: ohio.edu
   ipeds_id: '204848'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:20:51Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.ohio.edu/instres/commondataset.pdf
+  notes: Brave site:ohio.edu assigned the main-campus CDS PDF to every Ohio University UNITID. Regional campuses do not get that file.
+
 - id: ohio-university-main-campus
   name: Ohio University-Main Campus
   domain: ohio.edu
@@ -15333,26 +15352,28 @@ schools:
   name: Ohio University-Southern Campus
   domain: ohio.edu
   ipeds_id: '204839'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:20:52Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.ohio.edu/instres/commondataset.pdf
+  notes: Brave site:ohio.edu assigned the main-campus CDS PDF to every Ohio University UNITID. Regional campuses do not get that file.
+
 - id: ohio-university-zanesville-campus
   name: Ohio University-Zanesville Campus
   domain: ohio.edu
   ipeds_id: '204866'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:20:52Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.ohio.edu/instres/commondataset.pdf
+  notes: Brave site:ohio.edu assigned the main-campus CDS PDF to every Ohio University UNITID. Regional campuses do not get that file.
+
 - id: ohio-wesleyan-university
   name: Ohio Wesleyan University
   domain: owu.edu
@@ -15755,14 +15776,15 @@ schools:
   name: Pacific Northwest College of Art
   domain: willamette.edu
   ipeds_id: '209603'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:20:58Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://legacy.willamette.edu/ir/cds/index.html
+  notes: Cleared identical seed also assigned to willamette-university; search is not campus-specific.
+
 - id: pacific-northwest-university-of-health-sciences
   name: Pacific Northwest University of Health Sciences
   domain: pnwu.edu
@@ -19665,14 +19687,15 @@ schools:
   name: Springfield College-Regional, Online, and Continuing Education
   domain: springfield.edu
   ipeds_id: '475273'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:22:10Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://springfield.edu/sites/default/files/springfield-college-2024-25-common-data-set-usnews-v4.pdf
+  notes: Cleared identical seed also assigned to springfield-college; search is not campus-specific.
+
 - id: st-bernards-school-of-theology-and-ministry
   name: St Bernard's School of Theology and Ministry
   domain: stbernards.edu
@@ -22898,14 +22921,15 @@ schools:
   name: University of Hawaii System Office
   domain: hawaii.edu
   ipeds_id: '141963'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:23:10Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://manoa.hawaii.edu/miro/wp-content/uploads/2023/11/AnalysisBrief_CommonDataSet_2023-2024_updated.pdf
+  notes: Cleared identical seed also assigned to university-of-hawaii-at-manoa; search is not campus-specific.
+
 - id: university-of-hawaii-west-oahu
   name: University of Hawaii-West Oahu
   domain: westoahu.hawaii.edu
@@ -22980,14 +23004,15 @@ schools:
   name: University of Houston-System Administration
   domain: uh.edu
   ipeds_id: '229407'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:23:12Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://uh.edu/ir/reports/common-data-sets/
+  notes: Cleared identical seed also assigned to university-of-houston; search is not campus-specific.
+
 - id: university-of-houston-victoria
   name: University of Houston-Victoria
   domain: uhv.edu
