@@ -120,7 +120,8 @@ jobs:
         if: env.INPUT_APPLY_LANDING_HINTS == 'true'
         run: |
           python tools/finder/promote_landing_hints.py \
-            --min-confidence high \
+            --min-confidence medium \
+            --ids-file finder-probe/stuck-ids.txt \
             --apply \
             --report finder-probe/landing-hints.md \
             2>&1 | tee finder-probe/landing-hints.log

@@ -76,7 +76,7 @@ SKIP_HOST_RE = re.compile(
 CDS_LIKE_SEGMENT_RE = re.compile(
     r"^(cds|common-data-set|common_data_set|common-data-sets|commondataset|"
     r"institutional-research|institutional_research|institutionalresearch|"
-    r"institutional-data|ir|irr|oir|oira|iro|irp|other-reports)$",
+    r"institutional-data|ir|irr|iea|oir|oira|iro|irp|other-reports|university-data)$",
     re.I,
 )
 

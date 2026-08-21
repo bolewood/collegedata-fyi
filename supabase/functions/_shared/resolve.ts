@@ -35,6 +35,10 @@ const MAX_SUBPAGES_PER_SCHOOL = 25;
 // false positives where cds is a prefix of a different word.
 const CDS_KEYWORDS_RE = /common\s*data\s*set|\bcds(?![a-z])/i;
 const DOCUMENT_EXT_RE = /\.(pdf|xlsx|docx)(\?|#|$)/i;
+// SharePoint sharing links encode the Office type in the path (/:b:/ PDF,
+// /:x:/ Excel, /:w:/ Word) instead of a filename extension. Ohio's 2025
+// CDS is a :x: link titled "2025 Common Data Set" with no .xlsx suffix.
+const SHAREPOINT_FILE_PATH_RE = /^\/:[xbw]:\//i;
 
 // Section-file detection deliberately scoped to filenames only.
 // The earlier broader regex produced false positives when legit full-CDS
@@ -517,9 +521,12 @@ export function extractCdsAnchors(html: string, baseUrl: string): CdsAnchor[] {
       if (year) yearSource = "link_text";
     }
 
-    const kind: AnchorKind = DOCUMENT_EXT_RE.test(filename)
-      ? "document"
-      : "subpage";
+    const kind: AnchorKind =
+      DOCUMENT_EXT_RE.test(filename) ||
+        (parsed.hostname.endsWith("sharepoint.com") &&
+          SHAREPOINT_FILE_PATH_RE.test(parsed.pathname))
+        ? "document"
+        : "subpage";
 
     all.push({
       url: absoluteUrl,
@@ -834,7 +841,7 @@ function extensionFromContentType(contentType: string): "pdf" | "xlsx" | "docx" 
 // just the direct doc (pre-upgrade behavior).
 const MAX_PARENT_LEVELS = 3;
 const CDS_LIKE_PATH_SEGMENT_RE =
-  /^(cds|common-data-set|common-data-sets|common_data_set|institutional-research|institutional_research|ir|irr|oir|oira|iro|irp|other-reports)$/i;
+  /^(cds|common-data-set|common-data-sets|common_data_set|institutional-research|institutional_research|ir|irr|iea|oir|oira|iro|irp|other-reports|university-data)$/i;
 
 function pathHasCdsLikeSegment(segments: string[]): boolean {
   return segments.some((s) => CDS_LIKE_PATH_SEGMENT_RE.test(s));
@@ -946,6 +953,9 @@ const WELL_KNOWN_CDS_LANDING_PATHS: readonly string[] = [
   "/irr/common-data-set/",
   "/institutional-research/reports/",
   "/ir/reports/",
+  // Ohio University IEA mixed hub (2025 CDS is a SharePoint card on this page)
+  "/iea/university-data",
+  "/iea/university-data/",
 ];
 
 export function wellKnownPathUrls(hint: string): string[] {

@@ -68,6 +68,19 @@ Deno.test("extractCdsAnchors: commondataset.org documents are excluded even when
   assertEquals(anchors[0].url, "https://example.edu/files/cds2024-25.pdf");
 });
 
+Deno.test("extractCdsAnchors: SharePoint :x: link with CDS title is a document", () => {
+  const html = `
+    <a href="https://catmailohio.sharepoint.com/:x:/s/PRO-IeaWebdocs2/IQC__vQsqLFdQ732wvQ8Z4M2Af3jwIEccxlwEDYLMr8U6r8">2025 Common Data Set</a>
+  `;
+  const anchors = extractCdsAnchors(html, "https://www.ohio.edu/iea/university-data");
+  assertEquals(anchors.length, 1);
+  assertEquals(anchors[0].kind, "document");
+  assertEquals(
+    anchors[0].url,
+    "https://catmailohio.sharepoint.com/:x:/s/PRO-IeaWebdocs2/IQC__vQsqLFdQ732wvQ8Z4M2Af3jwIEccxlwEDYLMr8U6r8",
+  );
+});
+
 Deno.test("extractCdsAnchors: section marker detected", () => {
   const html = `
     <a href="/files/cds-section-d-2024-25.pdf">Common Data Set Section D 2024-25</a>
@@ -753,6 +766,7 @@ Deno.test("wellKnownPathUrls: expands to host-rooted CDS landing paths", () => {
   assertEquals(set.has("https://irp.dpb.cornell.edu/institutional-research/common-data-set/"), true);
   assertEquals(set.has("https://irp.dpb.cornell.edu/ir/common-data-set/"), true);
   assertEquals(set.has("https://irp.dpb.cornell.edu/irr/other-reports"), true);
+  assertEquals(set.has("https://irp.dpb.cornell.edu/iea/university-data"), true);
   // Origin is preserved without the hint's path.
   for (const u of urls) {
     assertEquals(u.startsWith("https://irp.dpb.cornell.edu"), true);
