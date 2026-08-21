@@ -12,6 +12,7 @@ This project uses four-part semantic versioning.
 - Publish three source-literacy pages under `/about` (Common Data Set, College Scorecard, IPEDS) and link them from About, the footer, and `/llms.txt`.
 - Record the August 2026 Search Console CDS-query export next to PRD 028, including URL inspection of the Virginia Tech and Harvey Mudd canaries.
 - Record school-direct Common Data Set insert and refresh events in an append-only log, expose a per-school RSS feed of those events, show which freshness signal a school or year page is using, and daily-probe the top 50 schools by public C1 applicant volume once they are nine months past that file date.
+- Run the CDS URL finder monthly via GitHub Actions against the Brave Search API, re-probe stale one-file PDF seeds, flag that coverage class on a GitHub issue, and open a seed-update PR.
 
 ### Changed
 
@@ -22,6 +23,7 @@ This project uses four-part semantic versioning.
 
 - Rank Jump-to-school exact slugs and nicknames (MIT, Penn) ahead of accidental name substrings, and prefer schools that already have a CDS year.
 - Point Oklahoma's archive seed at the IRR listing (`/irr/other-reports`) instead of a single 2023-24 DAM PDF, and prefer Brave HTML listings over year-specific PDFs so sibling years are not frozen out.
+- Stop copying Ohio University's main-campus CDS URL onto the five regional UNITIDs that share ohio.edu.
 
 ## [0.5.1.0] - 2026-08-10
 
