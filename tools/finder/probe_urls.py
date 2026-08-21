@@ -119,6 +119,8 @@ PATTERNS = [
     "/irr/common-data-set/",
     "/institutional-research/reports/",
     "/ir/reports/",
+    "/iea/university-data",
+    "/iea/university-data/",
 ]
 
 # Subdomains to try. `sites` catches Wordpress-multisite institutions

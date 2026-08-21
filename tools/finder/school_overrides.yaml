@@ -691,6 +691,20 @@ overrides:
         the WAF/headless downloader to capture the SharePoint download.aspx
         bytes before extraction.
 
+  - school_id: ohio-university-main-campus
+    browse_url: https://www.ohio.edu/iea/university-data
+    direct_archive_urls:
+      - { url: "https://catmailohio.sharepoint.com/:x:/s/PRO-IeaWebdocs2/IQC__vQsqLFdQ732wvQ8Z4M2Af3jwIEccxlwEDYLMr8U6r8", year: "2025-26" }
+    hosting_override:
+      file_storage: sharepoint
+      cms: drupal
+      auth_required: none
+      notes: >-
+        IEA moved CDS off /instres/commondataset.pdf (404). The 2025 file is
+        a public SharePoint xlsx card on /iea/university-data. Historical CDS
+        files were pulled in 2026 pending an H1 review. Regional UNITIDs on
+        ohio.edu must not inherit this seed.
+
   - school_id: colorado
     browse_url: https://data.colorado.edu/reports/common-data-set
     hosting_override:

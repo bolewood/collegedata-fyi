@@ -15347,7 +15347,8 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.ohio.edu/instres/commondataset.pdf
+  discovery_seed_url: https://www.ohio.edu/iea/university-data
+  browse_url: https://www.ohio.edu/iea/university-data
 - id: ohio-university-southern-campus
   name: Ohio University-Southern Campus
   domain: ohio.edu
