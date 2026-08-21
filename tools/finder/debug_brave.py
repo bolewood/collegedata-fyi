@@ -133,17 +133,9 @@ def brave_query(q, api_key):
 
 
 def extract_with_current_parser(data, domain):
-    """Replicate probe_urls.py's brave_search extraction logic."""
-    results = data.get("web", {}).get("results", [])
-    for r in results:
-        link = r.get("url", "")
-        if link.lower().endswith(".pdf"):
-            return link
-        desc = r.get("description", "").lower()
-        title = r.get("title", "").lower()
-        if "common data set" in desc or "common data set" in title:
-            return link
-    return None
+    """Use probe_urls.py's Brave picker so this diagnostic cannot drift."""
+    from probe_urls import select_brave_cds_url
+    return select_brave_cds_url(data.get("web", {}).get("results", []))
 
 
 def summarize_results(data, domain):

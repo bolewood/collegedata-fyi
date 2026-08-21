@@ -44,9 +44,9 @@ interface SubInstitution {
 // `discovery_seed_url` is what the resolver fetches as the seed for its
 // upgrade path (parent walk, well-known paths, multi-candidate fan-out).
 // `browse_url` is the human-friendly URL surfaced by the kids worklist
-// and any contributor-facing tool. They differ when a school's seed is
-// a direct PDF (good for the resolver, useless for a kid trying to
-// browse for new years).
+// and any contributor-facing tool. Prefer an HTML listing as the seed.
+// A direct PDF archives that one file but often misses sibling years
+// (OU's 2023-24 DAM PDF vs /irr/other-reports).
 //
 // `cds_url_hint` is preserved for back-compat with un-renamed YAML rows
 // during the PR 5 migration window.

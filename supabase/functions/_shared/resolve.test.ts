@@ -685,6 +685,25 @@ Deno.test("parentLandingCandidates: Boston-College-style direct PDF returns CDS 
   assertEquals(candidates[1], "https://www.bc.edu/content/dam/bc1/offices/irp/ir/");
 });
 
+Deno.test("parentLandingCandidates: OU DAM path keeps irr / common-data-sets ancestors", () => {
+  const hint =
+    "https://www.ou.edu/content/dam/irr/docs/common-data-sets/norman-campus-only/2023-24-nc/CDS%202023-2024%20Combined.pdf";
+  const candidates = parentLandingCandidates(hint);
+  const urls = new Set(candidates);
+  assertEquals(
+    urls.has(
+      "https://www.ou.edu/content/dam/irr/docs/common-data-sets/norman-campus-only/2023-24-nc/",
+    ),
+    true,
+  );
+  assertEquals(
+    urls.has(
+      "https://www.ou.edu/content/dam/irr/docs/common-data-sets/norman-campus-only/",
+    ),
+    true,
+  );
+});
+
 Deno.test("parentLandingCandidates: Drupal upload-dir path has no CDS-like segments, returns []", () => {
   const hint = "https://oir.brown.edu/sites/default/files/2020-04/CDS2009_2010.pdf";
   const candidates = parentLandingCandidates(hint);
@@ -733,6 +752,7 @@ Deno.test("wellKnownPathUrls: expands to host-rooted CDS landing paths", () => {
   assertEquals(set.has("https://irp.dpb.cornell.edu/institutional-data/common-data-set"), true);
   assertEquals(set.has("https://irp.dpb.cornell.edu/institutional-research/common-data-set/"), true);
   assertEquals(set.has("https://irp.dpb.cornell.edu/ir/common-data-set/"), true);
+  assertEquals(set.has("https://irp.dpb.cornell.edu/irr/other-reports"), true);
   // Origin is preserved without the hint's path.
   for (const u of urls) {
     assertEquals(u.startsWith("https://irp.dpb.cornell.edu"), true);

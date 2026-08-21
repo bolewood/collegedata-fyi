@@ -42,7 +42,7 @@ jobs:
       - name: Audit retired school redirects
         run: python tools/finder/school_redirect_guard.py
       - name: Run finder identity tests
-        run: python -m unittest tools.finder.test_identity_guard tools.finder.test_school_redirect_guard
+        run: python -m unittest tools.finder.test_identity_guard tools.finder.test_school_redirect_guard tools.finder.test_probe_urls
       - name: Run scorecard loader tests
         run: python -m unittest tools.scorecard.test_load_directory
       - name: Run IPEDS loader tests

@@ -101,6 +101,15 @@ PATTERNS = [
     # ── Generic "data" page (for schools like Adelphi whose CDS is
     #    linked from a data hub with no CDS keyword in the path) ──
     "/institutional-research/research/data/",
+
+    # ── IR "other reports" hubs ──
+    # Oklahoma (ou.edu/irr/other-reports) posts CDS on a mixed-reports
+    # page, not under /ir/cds/. The CDS heading is below the fold.
+    "/irr/other-reports",
+    "/irr/other-reports/",
+    "/irr/common-data-set/",
+    "/institutional-research/reports/",
+    "/ir/reports/",
 ]
 
 # Subdomains to try. `sites` catches Wordpress-multisite institutions
@@ -188,7 +197,10 @@ def is_cds_page(content: bytes, content_type: str) -> bool:
     if "pdf" in ct:
         return True
     if "html" in ct:
-        text = content[:5000].decode("utf-8", errors="ignore").lower()
+        # OU's /irr/other-reports puts the CDS heading ~8KB into the page,
+        # below Facts-at-a-Glance. 5KB was enough for dedicated CDS pages
+        # and missed mixed IR hubs.
+        text = content[:32_000].decode("utf-8", errors="ignore").lower()
         return "common data set" in text
     return False
 
@@ -307,7 +319,7 @@ def probe_school(domain: str, rps: float, max_seconds: float = DEFAULT_SCHOOL_BU
                 return None, tried
             url = base.rstrip("/") + pattern
             tried += 1
-            status, headers, body = _get(url, timeout=10, read_bytes=5000)
+            status, headers, body = _get(url, timeout=10, read_bytes=32_000)
             if status == 200:
                 ct = headers.get("content-type", "")
                 if is_cds_page(body, ct):
@@ -445,15 +457,23 @@ def brave_search(domain: str, api_key: str) -> str | None:
         return None
 
     results = data.get("web", {}).get("results", [])
-    # Prefer PDFs when present, but accept CDS landing pages as fallback.
-    #
-    # Reject URL paths that look like they point at the CDS Initiative's
-    # template/definitions/instructions documents rather than a school's
-    # filled-out data. Without this filter, Brave's landing-page fallback
-    # returns e.g. `.../Common+Data+Set+Definitions.pdf` or `.../cds-template.pdf`
-    # because those titles legitimately contain "Common Data Set". They are
-    # not extractable school data. Filter was added 2026-04-14 after
-    # Amherst's Brave-discovered hint turned out to be the definitions PDF.
+    return select_brave_cds_url(results)
+
+
+def select_brave_cds_url(results: list[dict]) -> str | None:
+    """Pick a discovery seed from Brave web results.
+
+    Prefer an HTML listing over a year-specific PDF. A PDF seed locks the
+    archive resolver onto one file — OU's 2023-24 Combined.pdf instead of
+    ou.edu/irr/other-reports, which lists every year plus section PDFs.
+    Landing pages still have to mention "Common Data Set" in title or
+    description so random IR homepages do not win.
+
+    Reject URL paths that look like the CDS Initiative's template /
+    definitions / instructions documents rather than a school's filled-out
+    data. Filter added 2026-04-14 after Amherst's hint turned out to be
+    the definitions PDF.
+    """
     bad_keywords = ("definition", "definitions", "template", "instructions",
                     "blank", "glossary")
 
@@ -461,20 +481,22 @@ def brave_search(domain: str, api_key: str) -> str | None:
         p = url_str.lower()
         return any(kw in p for kw in bad_keywords)
 
-    landing_fallback = None
+    landing = None
+    pdf = None
     for r in results:
         link = r.get("url", "")
         if not link or looks_like_template(link):
             continue
         if link.lower().endswith(".pdf"):
-            return link
+            if pdf is None:
+                pdf = link
+            continue
         desc = r.get("description", "").lower()
         title = r.get("title", "").lower()
         if "common data set" in desc or "common data set" in title:
-            if landing_fallback is None:
-                landing_fallback = link
-
-    return landing_fallback
+            if landing is None:
+                landing = link
+    return landing or pdf
 
 
 def google_dork(domain: str, api_key: str, cx: str) -> str | None:

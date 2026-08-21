@@ -834,7 +834,7 @@ function extensionFromContentType(contentType: string): "pdf" | "xlsx" | "docx" 
 // just the direct doc (pre-upgrade behavior).
 const MAX_PARENT_LEVELS = 3;
 const CDS_LIKE_PATH_SEGMENT_RE =
-  /^(cds|common-data-set|common_data_set|institutional-research|institutional_research|ir|oir|oira|iro|irp)$/i;
+  /^(cds|common-data-set|common-data-sets|common_data_set|institutional-research|institutional_research|ir|irr|oir|oira|iro|irp|other-reports)$/i;
 
 function pathHasCdsLikeSegment(segments: string[]): boolean {
   return segments.some((s) => CDS_LIKE_PATH_SEGMENT_RE.test(s));
@@ -940,6 +940,12 @@ const WELL_KNOWN_CDS_LANDING_PATHS: readonly string[] = [
   "/institutional-data/common-data-set",
   "/reports/common-data-set",
   "/reports/cds-reports/",
+  // Mixed IR report hubs (OU posts CDS on /irr/other-reports, not /ir/cds/)
+  "/irr/other-reports",
+  "/irr/other-reports/",
+  "/irr/common-data-set/",
+  "/institutional-research/reports/",
+  "/ir/reports/",
 ];
 
 export function wellKnownPathUrls(hint: string): string[] {

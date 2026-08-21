@@ -24047,7 +24047,10 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.ou.edu/content/dam/irr/docs/Common%20Data%20Sets/Norman%20Campus%20Only/2023-24-nc/CDS%202023-2024%20Combined.pdf
+  discovery_seed_url: https://www.ou.edu/irr/other-reports
+  browse_url: https://www.ou.edu/irr/other-reports
+  notes: Brave locked onto a 2023-24 DAM PDF; the IR listing at /irr/other-reports
+    has combined prior years plus 2025-26 section PDFs. Seed is the listing, not a file.
 - id: university-of-oregon
   name: University of Oregon
   domain: uoregon.edu

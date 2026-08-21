@@ -21,6 +21,7 @@ This project uses four-part semantic versioning.
 ### Fixed
 
 - Rank Jump-to-school exact slugs and nicknames (MIT, Penn) ahead of accidental name substrings, and prefer schools that already have a CDS year.
+- Point Oklahoma's archive seed at the IRR listing (`/irr/other-reports`) instead of a single 2023-24 DAM PDF, and prefer Brave HTML listings over year-specific PDFs so sibling years are not frozen out.
 
 ## [0.5.1.0] - 2026-08-10
 
