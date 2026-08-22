@@ -14,6 +14,7 @@ const STATIC_PAGES: StaticEntry[] = [
   { path: "/browse", changeFrequency: "daily", priority: 0.7 },
   { path: "/match", changeFrequency: "daily", priority: 0.8 },
   { path: "/coverage", changeFrequency: "daily", priority: 0.7 },
+  { path: "/pipeline-observation", changeFrequency: "daily", priority: 0.7 },
   { path: "/about", changeFrequency: "monthly", priority: 0.5 },
   { path: "/about/common-data-set", changeFrequency: "monthly", priority: 0.6 },
   { path: "/about/college-scorecard", changeFrequency: "monthly", priority: 0.6 },

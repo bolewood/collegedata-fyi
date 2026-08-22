@@ -29,7 +29,7 @@ class AutomationHealthTests(unittest.TestCase):
             "database": {
                 "cron_jobs": [
                     {"jobname": "archive-process-every-30s", "active": True},
-                    {"jobname": "refresh-coverage-every-15min", "active": True},
+                    {"jobname": "refresh-coverage-hourly", "active": True},
                 ],
                 "cron_recent_failures": [],
                 "http_response_categories": {
@@ -64,7 +64,7 @@ class AutomationHealthTests(unittest.TestCase):
             "database": {
                 "cron_jobs": [
                     {"jobname": "archive-process-every-30s", "active": True},
-                    {"jobname": "refresh-coverage-every-15min", "active": True},
+                    {"jobname": "refresh-coverage-hourly", "active": True},
                 ],
                 "cron_recent_failures": [],
                 "http_response_categories": {

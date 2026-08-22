@@ -15,6 +15,7 @@
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, SupabaseClient } from "jsr:@supabase/supabase-js@2";
+import { recordPipelineHeartbeat } from "../_shared/pipeline_heartbeat.ts";
 
 Deno.serve(async (req: Request) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -35,12 +36,37 @@ Deno.serve(async (req: Request) => {
 
   logEvent({ event: "refresh_start", include_histogram: includeHistogram });
 
+  const heartbeat = {
+    current: 0,
+    stale: 0,
+    inaccessible: 0,
+    never_found: 0,
+  };
+  const send = async (
+    body: unknown,
+    status = 200,
+    histogram: Record<string, number> = {},
+  ): Promise<Response> => {
+    heartbeat.current = histogram.cds_available_current ?? 0;
+    heartbeat.stale = histogram.cds_available_stale ?? 0;
+    heartbeat.inaccessible = histogram.source_not_automatically_accessible ?? 0;
+    heartbeat.never_found = histogram.no_public_cds_found ?? 0;
+    await recordPipelineHeartbeat(supabase, {
+      stationId: "coverage_refresh",
+      status: status < 400 ? "ok" : "error",
+      trigger: "cron",
+      summary: heartbeat,
+      errorCode: status < 400 ? "none" : "job_failed",
+    });
+    return json(body, status);
+  };
+
   const { data: refreshData, error: refreshErr } = await supabase
     .rpc("refresh_institution_cds_coverage");
 
   if (refreshErr) {
     logEvent({ event: "refresh_failed", error: refreshErr.message });
-    return json({ error: `refresh failed: ${refreshErr.message}` }, 500);
+    return await send({ error: `refresh failed: ${refreshErr.message}` }, 500);
   }
 
   // The RPC returns SETOF (rows_written int, duration_ms int) — supabase-js
@@ -49,7 +75,7 @@ Deno.serve(async (req: Request) => {
   const rowsWritten = (rpcResult as { rows_written?: number })?.rows_written ?? 0;
   const durationMs = (rpcResult as { duration_ms?: number })?.duration_ms ?? 0;
 
-  const histogram = includeHistogram ? await loadStatusHistogram(supabase) : null;
+  const histogram = await loadStatusHistogram(supabase);
 
   const totalMs = Date.now() - started;
   logEvent({
@@ -58,15 +84,19 @@ Deno.serve(async (req: Request) => {
     refresh_duration_ms: durationMs,
     total_duration_ms: totalMs,
     histogram_included: includeHistogram,
-    ...(histogram ? { histogram } : {}),
+    ...(includeHistogram ? { histogram } : {}),
   });
 
-  return json({
-    rows_written: rowsWritten,
-    refresh_duration_ms: durationMs,
-    total_duration_ms: totalMs,
-    ...(histogram ? { coverage_status_histogram: histogram } : {}),
-  });
+  return await send(
+    {
+      rows_written: rowsWritten,
+      refresh_duration_ms: durationMs,
+      total_duration_ms: totalMs,
+      ...(includeHistogram ? { coverage_status_histogram: histogram } : {}),
+    },
+    200,
+    histogram,
+  );
 });
 
 async function parseBody(req: Request): Promise<{ include_histogram?: boolean }> {

@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pipeline observation — collegedata.fyi (preview)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --paper: #f1ece1;
+      --paper-2: #e9e3d4;
+      --ink: #1c1e1b;
+      --ink-2: #3a3b37;
+      --ink-3: #6b6a63;
+      --rule: rgba(28,30,27,0.12);
+      --serif: "Newsreader", "Times New Roman", serif;
+      --sans: "IBM Plex Sans", system-ui, sans-serif;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+      --lamp-ok: #1f7a4d;
+      --lamp-late: #e0a106;
+      --lamp-down: #d7263d;
+      --lamp-lock: #6b3fa0;
+      --lamp-sso: #7a2f6a;
+      --lamp-waf: #c45c14;
+      --lamp-slate: #5c5a54;
+      --late-ink: #1c1400;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.5;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px 80px; }
+    .meta {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+    h1 {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: clamp(40px, 6vw, 64px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin: 16px 0 0;
+    }
+    h1 em { font-style: italic; }
+    .lede { max-width: 720px; margin: 18px 0 0; color: var(--ink-2); font-size: 16px; }
+    .banner {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      margin: 16px 0 0;
+      padding: 14px 18px;
+      background: var(--lamp-down);
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    h2 {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 22px;
+      margin: 48px 0 16px;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+      gap: 8px;
+    }
+    .tile {
+      min-height: 168px;
+      padding: 14px 14px 12px;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .tile.ok { background: var(--lamp-ok); }
+    .tile.down { background: var(--lamp-down); }
+    .tile.late { background: var(--lamp-late); color: var(--late-ink); }
+    .tile.slate { background: var(--lamp-slate); }
+    .tile .id {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+    .tile h3 {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 20px;
+      line-height: 1.1;
+      margin: 8px 0 0;
+    }
+    .tile .ago {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-variant-numeric: tabular-nums;
+      margin-top: 8px;
+    }
+    .tile .result { font-size: 12px; opacity: 0.92; margin-top: 4px; }
+    .tile .lamp {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 10px;
+    }
+    .manual {
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--ink-3);
+      font-family: var(--mono);
+    }
+    .groups {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 10px;
+    }
+    .door {
+      border: 1px solid var(--rule);
+      background: var(--paper);
+      padding: 14px 16px 8px;
+    }
+    .door header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+    .chip {
+      display: inline-block;
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+    }
+    .chip.lock { background: var(--lamp-lock); }
+    .chip.sso { background: var(--lamp-sso); }
+    .count { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+    .school {
+      padding: 8px 0;
+      border-top: 1px solid var(--rule);
+      font-size: 14px;
+    }
+    .school small { display: block; color: var(--ink-3); font-size: 12px; }
+    .method { max-width: 720px; color: var(--ink-2); font-size: 14px; }
+    .preview-flag {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="preview-flag">
+      Static preview · not live data · PRD 030 · production fonts are Newsreader / Geist / JetBrains Mono; Plex is preview-only
+    </div>
+    <div class="meta">§ Pipeline observation</div>
+    <div class="banner">3 stations overdue · finder scheduled 41 days ago · extract late (84 pending, cap)</div>
+    <h1>The clocks, <em>and the locked doors.</em></h1>
+    <p class="lede">
+      Every dispatch station on collegedata.fyi, when it last ran on schedule,
+      and what it found. If a step goes quiet, the lamp turns red — including
+      the monthly search that sat idle from April to August 2026. Schools that
+      put the Common Data Set behind Tableau, SharePoint, or SSO are listed by name.
+    </p>
+
+    <h2>Dispatch board</h2>
+    <div class="board">
+      <article class="tile down" aria-label="Finder: DOWN, 41 days overdue"><div class="id">monthly · scheduled SLA 40d</div><div><h3>Finder</h3><div class="lamp">Down</div><div class="ago">41 days</div><div class="result">Last scheduled Brave: Apr 14. Dispatch does not reset this clock.</div></div></article>
+      <article class="tile down" aria-label="Stuck PDFs: DOWN, 41 days overdue"><div class="id">monthly · scheduled SLA 40d</div><div><h3>Stuck PDFs</h3><div class="lamp">Down</div><div class="ago">41 days</div><div class="result">227 seeds frozen on last_result=found</div></div></article>
+      <article class="tile down" aria-label="Landing hints: DOWN, 41 days overdue"><div class="id">monthly · scheduled SLA 40d</div><div><h3>Landing hints</h3><div class="lamp">Down</div><div class="ago">41 days</div><div class="result">No scheduled promotion since Apr</div></div></article>
+      <article class="tile ok" aria-label="Enqueue: OK, 11 hours ago"><div class="id">daily · SLA 36h</div><div><h3>Enqueue</h3><div class="lamp">Ok</div><div class="ago">11 hours</div><div class="result">412 queued · 1,988 skipped</div></div></article>
+      <article class="tile ok" aria-label="Process: OK, 22 seconds ago"><div class="id">every 30s</div><div><h3>Process</h3><div class="lamp">Ok</div><div class="ago">22 sec</div><div class="result">queue depth 3 · 2 verified</div></div></article>
+      <article class="tile late" aria-label="Extract: LATE, 84 pending, hosted cap"><div class="id">daily · pending &gt; 0</div><div><h3>Extract</h3><div class="lamp">Late</div><div class="ago">20 hours</div><div class="result">84 pending · stopped at hosted cap</div></div></article>
+      <article class="tile ok" aria-label="Coverage: OK, 48 minutes ago"><div class="id">hourly · SLA 3h</div><div><h3>Coverage</h3><div class="lamp">Ok</div><div class="ago">48 min</div><div class="result">348 current · 322 stale</div></div></article>
+      <article class="tile ok" aria-label="Serving caches: OK, 37 minutes ago"><div class="id">hourly · SLA 3h</div><div><h3>Serving caches</h3><div class="lamp">Ok</div><div class="ago">37 min</div><div class="result">refresh_public_serving_caches</div></div></article>
+      <article class="tile ok" aria-label="IPEDS probe: OK, 12 days ago"><div class="id">monthly · scheduled SLA 40d</div><div><h3>IPEDS probe</h3><div class="lamp">Ok</div><div class="ago">12 days</div><div class="result">no new release</div></div></article>
+      <article class="tile slate" aria-label="Schema: SLATE, no heartbeat yet"><div class="id">yearly · slate until a heartbeat</div><div><h3>Schema</h3><div class="lamp">Slate</div><div class="ago">no heartbeat</div><div class="result">Do not infer vintage from git.</div></div></article>
+      <article class="tile slate" aria-label="Scorecard: SLATE, no heartbeat yet"><div class="id">yearly · slate until a heartbeat</div><div><h3>Scorecard</h3><div class="lamp">Slate</div><div class="ago">no heartbeat</div><div class="result">Do not infer vintage from git.</div></div></article>
+    </div>
+    <p class="manual">Manual sources (not on the strip): Directory enqueue — never · Mirror ingest — never</p>
+
+    <h2>Locked doors</h2>
+    <p class="lede" style="margin-top:0;margin-bottom:16px">
+      These IR offices publish a Common Data Set we can see but cannot archive
+      as a file. That is a school choice, not a collegedata.fyi outage.
+      Tableau and SharePoint IRM are listed from a public override file.
+    </p>
+    <div class="groups">
+      <section class="door">
+        <header><span class="chip lock">Tableau</span><span class="count">override</span></header>
+        <div class="school">Pomona College <small>CDS 2025-26 is a Tableau view, not a downloadable file.</small></div>
+      </section>
+      <section class="door">
+        <header><span class="chip lock">SharePoint IRM</span><span class="count">override</span></header>
+        <div class="school">Ohio University <small>2025-26 CDS is listed in Excel Online with download blocked.</small></div>
+      </section>
+      <section class="door">
+        <header><span class="chip sso">Microsoft SSO</span><span class="count">from last_outcome</span></header>
+        <div class="school">Adelphi University <small>Redirects to login.microsoftonline.com.</small></div>
+      </section>
+    </div>
+
+    <h2 id="methodology">Methodology</h2>
+    <div class="method">
+      <p>Each station writes a public heartbeat when it starts and when it finishes. Lamps are computed at read time. If the scheduled heartbeat is older than the SLA, the lamp is red — including when a manual run succeeded yesterday. Missing data is red, not gray.</p>
+      <p>Locked doors use probe outcomes plus a short public override list for Tableau and SharePoint IRM. We do not publish stack traces, seed URLs with tokens, or operator notes.</p>
+    </div>
+  </div>
+</body>
+</html>

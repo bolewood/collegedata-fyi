@@ -43,6 +43,7 @@ import {
   archiveEnqueueRunId,
   parseCooldownDaysOverride,
 } from "./schedule.ts";
+import { recordPipelineHeartbeat } from "../_shared/pipeline_heartbeat.ts";
 
 Deno.serve(async (req: Request) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -57,6 +58,32 @@ Deno.serve(async (req: Request) => {
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const heartbeat = {
+    queued: 0,
+    skipped: 0,
+    errors: 0,
+    status: "ok" as "ok" | "error",
+    errorCode: "none",
+  };
+  const send = async (body: unknown, status = 200): Promise<Response> => {
+    if (status >= 400) {
+      heartbeat.status = "error";
+      heartbeat.errorCode = "job_failed";
+      heartbeat.errors = Math.max(heartbeat.errors, 1);
+    }
+    await recordPipelineHeartbeat(supabase, {
+      stationId: "archive_enqueue",
+      status: heartbeat.status,
+      trigger: "cron",
+      summary: {
+        queued: heartbeat.queued,
+        skipped: heartbeat.skipped,
+        errors: heartbeat.errors,
+      },
+      errorCode: heartbeat.errorCode,
+    });
+    return json(body, status);
+  };
 
   // run_id is deterministic for the UTC calendar day. Duplicate cron calls on
   // the same day collide on the unique (run_id, school_id) index and no-op. The
@@ -84,7 +111,7 @@ Deno.serve(async (req: Request) => {
       run_id: runId,
       error: err.message,
     });
-    return json({
+    return await send({
       error: `schools.yaml fetch failed: ${err.message}`,
     }, 502);
   }
@@ -101,7 +128,8 @@ Deno.serve(async (req: Request) => {
 
   if (allSchools.length === 0) {
     logEvent({ event: "no_schools_to_enqueue", run_id: runId });
-    return json({
+    heartbeat.skipped = skippedInvalid;
+    return await send({
       mode: "enqueue",
       run_id: runId,
       enqueued: 0,
@@ -133,7 +161,7 @@ Deno.serve(async (req: Request) => {
       url.searchParams.get("cooldown_days"),
     );
   } catch (error) {
-    return json({ error: (error as Error).message }, 400);
+    return await send({ error: (error as Error).message }, 400);
   }
 
   const inCooldown = new Set<string>();
@@ -280,6 +308,7 @@ Deno.serve(async (req: Request) => {
   // After cooldown filtering, rows may be empty. Short-circuit so we
   // don't issue an empty upsert (which Supabase rejects).
   if (rows.length === 0) {
+    heartbeat.skipped = inCooldown.size + skippedInvalid;
     logEvent({
       event: "enqueue_completed",
       run_id: runId,
@@ -288,7 +317,7 @@ Deno.serve(async (req: Request) => {
       skipped_cooldown: inCooldown.size,
       duration_ms: Date.now() - started,
     });
-    return json({
+    return await send({
       mode: "enqueue",
       run_id: runId,
       enqueued: 0,
@@ -316,7 +345,7 @@ Deno.serve(async (req: Request) => {
       intended_count: rows.length,
       error: error.message,
     });
-    return json({
+    return await send({
       error: `enqueue failed: ${error.message}`,
       run_id: runId,
       intended_count: rows.length,
@@ -325,6 +354,8 @@ Deno.serve(async (req: Request) => {
 
   const enqueued = Number(enqueuedCount ?? 0);
   const skippedExisting = rows.length - enqueued;
+  heartbeat.queued = enqueued;
+  heartbeat.skipped = skippedExisting + inCooldown.size + skippedInvalid;
   logEvent({
     event: "enqueue_completed",
     run_id: runId,
@@ -334,7 +365,7 @@ Deno.serve(async (req: Request) => {
     duration_ms: Date.now() - started,
   });
 
-  return json({
+  return await send({
     mode: "enqueue",
     run_id: runId,
     enqueued,

@@ -15,6 +15,7 @@ Use these no-auth JSON endpoints for agent and CLI workflows:
 - Compare schools: https://www.collegedata.fyi/api/compare?schools=mit,yale,university-of-chicago
 - Field dictionary: https://www.collegedata.fyi/api/fields
 - OpenAPI: https://www.collegedata.fyi/openapi.json
+- Pipeline clocks: https://www.collegedata.fyi/pipeline-observation.json
 
 Endowment health (IPEDS Finance Part H, fiscal years 2020+): request categories=finance for
 per-school endowment values, gifts, investment return, spending distribution, and the residual

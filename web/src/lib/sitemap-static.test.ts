@@ -4,6 +4,12 @@ import { SITEMAP_STATIC_PATHS, SITE_URL, staticSitemapEntries } from "./sitemap-
 describe("static sitemap entries", () => {
   it("includes browse, public recipes, and the About source pages", () => {
     expect(SITEMAP_STATIC_PATHS).toContain("/browse");
+    expect(SITEMAP_STATIC_PATHS).toContain("/pipeline-observation");
+    const pipeline = staticSitemapEntries().find((entry) =>
+      entry.url.endsWith("/pipeline-observation"),
+    );
+    expect(pipeline?.changeFrequency).toBe("daily");
+    expect(pipeline?.priority).toBe(0.7);
     expect(SITEMAP_STATIC_PATHS).toContain("/recipes/waitlist-odds");
     expect(SITEMAP_STATIC_PATHS).toContain("/recipes/endowment-draw-rate");
     expect(SITEMAP_STATIC_PATHS).toContain("/about/common-data-set");

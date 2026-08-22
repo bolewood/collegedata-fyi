@@ -247,6 +247,52 @@ def write_run_summary(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
 
 
+def count_extraction_pending(client: Client) -> int:
+    try:
+        result = (
+            client.table("cds_documents")
+            .select("id", count="exact", head=True)
+            .eq("extraction_status", "extraction_pending")
+            .execute()
+        )
+        return int(result.count or 0)
+    except Exception:
+        return 0
+
+
+def infer_stopped_reason(
+    *,
+    stopped_early: bool,
+    hit_error: bool,
+    limit: int | None,
+    processed_count: int,
+    pending_remaining: int,
+) -> str:
+    if hit_error:
+        return "error"
+    if stopped_early:
+        return "deadline"
+    if limit and processed_count >= limit and pending_remaining > 0:
+        return "cap"
+    return "complete"
+
+
+def with_heartbeat_fields(
+    payload: dict[str, Any],
+    *,
+    stopped_reason: str,
+    extracted: int,
+    failed: int,
+    pending_remaining: int,
+) -> dict[str, Any]:
+    out = dict(payload)
+    out["stopped_reason"] = stopped_reason
+    out["extracted"] = extracted
+    out["failed"] = failed
+    out["pending_remaining"] = pending_remaining
+    return out
+
+
 def extraction_success(action: str) -> ExtractionOutcome:
     return ExtractionOutcome(action, refresh_projection=True)
 
@@ -2000,7 +2046,8 @@ def main() -> int:
             + (" after reconcile." if reconcile_counts.get("reconciled") else "."),
         )
         if args.summary_json:
-            write_run_summary(args.summary_json, {
+            pending_remaining = count_extraction_pending(client)
+            write_run_summary(args.summary_json, with_heartbeat_fields({
                 "started_at": started_at,
                 "finished_at": utc_now_iso(),
                 "dry_run": args.dry_run,
@@ -2017,7 +2064,13 @@ def main() -> int:
                 "reconcile_counts": dict(reconcile_counts),
                 "stopped_early": False,
                 "documents": [],
-            })
+            }, stopped_reason=infer_stopped_reason(
+                stopped_early=False,
+                hit_error=False,
+                limit=args.limit,
+                processed_count=0,
+                pending_remaining=pending_remaining,
+            ), extracted=0, failed=0, pending_remaining=pending_remaining))
         return 0
 
     print(
@@ -2152,7 +2205,9 @@ def main() -> int:
                 print(f"  {bucket:30s} {projection_counts[bucket]:5d}")
         if projection_counts["errors"] or projection_counts["setup_error"]:
             if args.summary_json:
-                write_run_summary(args.summary_json, {
+                pending_remaining = count_extraction_pending(client)
+                extracted = max(0, processed_count - failure_count)
+                write_run_summary(args.summary_json, with_heartbeat_fields({
                     "started_at": started_at,
                     "finished_at": utc_now_iso(),
                     "dry_run": args.dry_run,
@@ -2169,10 +2224,18 @@ def main() -> int:
                     "reconcile_counts": dict(reconcile_counts),
                     "stopped_early": stopped_early,
                     "documents": summary_docs,
-                })
+                }, stopped_reason=infer_stopped_reason(
+                    stopped_early=stopped_early,
+                    hit_error=True,
+                    limit=args.limit,
+                    processed_count=processed_count,
+                    pending_remaining=pending_remaining,
+                ), extracted=extracted, failed=failure_count, pending_remaining=pending_remaining))
             return 2
     if args.summary_json:
-        write_run_summary(args.summary_json, {
+        pending_remaining = count_extraction_pending(client)
+        extracted = max(0, processed_count - failure_count)
+        write_run_summary(args.summary_json, with_heartbeat_fields({
             "started_at": started_at,
             "finished_at": utc_now_iso(),
             "dry_run": args.dry_run,
@@ -2189,7 +2252,13 @@ def main() -> int:
             "reconcile_counts": dict(reconcile_counts),
             "stopped_early": stopped_early,
             "documents": summary_docs,
-        })
+        }, stopped_reason=infer_stopped_reason(
+            stopped_early=stopped_early,
+            hit_error=False,
+            limit=args.limit,
+            processed_count=processed_count,
+            pending_remaining=pending_remaining,
+        ), extracted=extracted, failed=failure_count, pending_remaining=pending_remaining))
     return extraction_run_exit_code(failure_count)
 
 
