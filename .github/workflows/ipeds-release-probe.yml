@@ -38,6 +38,8 @@ jobs:
       INPUT_AS_OF: ${{ github.event_name == 'workflow_dispatch' && inputs.as_of || '' }}
       INPUT_FORCE_PROBE: ${{ github.event_name == 'workflow_dispatch' && inputs.force_probe || false }}
       INPUT_PROBE_DELAY_MONTHS: ${{ github.event_name == 'workflow_dispatch' && inputs.probe_delay_months || '10' }}
+      PIPELINE_TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'dispatch' }}
+      PIPELINE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -54,7 +56,16 @@ jobs:
       - name: Install probe dependencies
         run: python -m pip install -r tools/ci-requirements.txt
 
-      - name: Run release probe
+      - name: Heartbeat ipeds_release_probe start
+        run: |
+          python tools/ops/record_heartbeat.py \
+            --station ipeds_release_probe \
+            --status running \
+            --trigger "${PIPELINE_TRIGGER}" \
+            --run-url "${PIPELINE_RUN_URL}"
+
+      - id: run_probe
+        name: Run release probe
         shell: bash
         run: |
           set -euo pipefail
@@ -188,7 +199,44 @@ jobs:
               )
               minted += 1
           print(f"Created {minted} IPEDS release issue(s).")
+          summary["issue_opened"] = minted > 0
+          with open(path, "w", encoding="utf-8") as f:
+              json.dump(summary, f, indent=2, sort_keys=True)
+              f.write("\n")
           PY
+
+      - name: Heartbeat ipeds_release_probe finish
+        if: always()
+        env:
+          STEP_OUTCOME: ${{ steps.run_probe.outcome }}
+        run: |
+          mkdir -p ipeds-release-probe
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path("ipeds-release-probe/summary.json")
+          summary = {}
+          if path.exists():
+              summary = json.loads(path.read_text(encoding="utf-8"))
+          heartbeat = {
+              "new_release": bool((summary.get("available_count") or 0) > 0),
+              "issue_opened": bool(summary.get("issue_opened", False)),
+          }
+          Path("ipeds-release-probe/heartbeat.json").write_text(json.dumps(heartbeat) + "\n")
+          PY
+          status=ok
+          error=none
+          if [[ "$STEP_OUTCOME" == "failure" ]]; then
+            status=error
+            error=job_failed
+          fi
+          python tools/ops/record_heartbeat.py \
+            --station ipeds_release_probe \
+            --status "$status" \
+            --trigger "${PIPELINE_TRIGGER}" \
+            --summary-json ipeds-release-probe/heartbeat.json \
+            --error-code "$error" \
+            --run-url "${PIPELINE_RUN_URL}"
 
       - name: Upload probe artifact
         if: always()

@@ -1,0 +1,134 @@
+/* Pipeline observation exception. Site chrome stays paper/ink.
+   Lamps are page-local. run reuses --lamp-ok with a hatch. */
+
+.po-page {
+  --lamp-ok: #1f7a4d;
+  --lamp-late: #e0a106;
+  --lamp-down: #d7263d;
+  --lamp-lock: #6b3fa0;
+  --lamp-sso: #7a2f6a;
+  --lamp-waf: #c45c14;
+  --lamp-slate: #5c5a54;
+  --late-ink: #1c1400;
+}
+
+.po-strip {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 16px 0 0;
+  padding: 14px 18px;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.po-strip--down {
+  background: var(--lamp-down);
+  color: #fff;
+}
+
+.po-strip--late {
+  background: var(--lamp-late);
+  color: var(--late-ink);
+}
+
+.po-strip--ok {
+  background: var(--lamp-ok);
+  color: #fff;
+}
+
+.po-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 8px;
+}
+
+.po-tile {
+  min-height: 168px;
+  padding: 14px 14px 12px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.po-tile--ok,
+.po-tile--run {
+  background: var(--lamp-ok);
+}
+
+.po-tile--run {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.18) 0 8px,
+    transparent 8px 16px
+  );
+}
+
+.po-tile--down {
+  background: var(--lamp-down);
+}
+
+.po-tile--late {
+  background: var(--lamp-late);
+  color: var(--late-ink);
+}
+
+.po-tile--slate {
+  background: var(--lamp-slate);
+}
+
+.po-tile-id {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.po-tile h3 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.1;
+  margin: 8px 0 0;
+}
+
+.po-tile-ago {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  margin-top: 8px;
+}
+
+.po-tile-result {
+  font-size: 12px;
+  opacity: 0.92;
+  margin-top: 4px;
+}
+
+.po-tile-lamp {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 10px;
+}
+
+.po-manual {
+  margin-top: 20px;
+  font-size: 13px;
+  color: var(--ink-3);
+  font-family: var(--mono);
+}
+
+.po-method {
+  max-width: 720px;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.65;
+  display: grid;
+  gap: 14px;
+}

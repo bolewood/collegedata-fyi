@@ -1,12 +1,15 @@
 import type { NextConfig } from "next";
 import retiredSchoolAliases from "./src/data/school-redirects.json";
 import { APEX_TO_WWW_REDIRECTS } from "./src/lib/apex-redirect";
+import { PIPELINE_OBSERVATION_REDIRECTS } from "./src/lib/pipeline-redirect";
 import { buildRetiredSchoolRedirects } from "./src/lib/school-alias";
 
 const nextConfig: NextConfig = {
+  trailingSlash: false,
   async redirects() {
     return [
       ...APEX_TO_WWW_REDIRECTS,
+      ...PIPELINE_OBSERVATION_REDIRECTS,
       ...buildRetiredSchoolRedirects(retiredSchoolAliases),
     ];
   },

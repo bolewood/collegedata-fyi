@@ -656,12 +656,15 @@ def process_school(school: dict, args: argparse.Namespace,
     if not url and search_tried:
         method = last_attempted_method
 
+    replaced = False
     if url:
-        if not args.dry_run:
-            existing = school.get("discovery_seed_url") or school.get("cds_url_hint")
-            if should_replace_seed(existing, url):
+        existing = school.get("discovery_seed_url") or school.get("cds_url_hint")
+        if should_replace_seed(existing, url):
+            replaced = True
+            if not args.dry_run:
                 school["discovery_seed_url"] = url
                 school["scrape_policy"] = "active"
+        if not args.dry_run:
             record_probe(school, "found", method, patterns_tried, search_tried)
     else:
         if not args.dry_run:
@@ -674,10 +677,30 @@ def process_school(school: dict, args: argparse.Namespace,
         "method": method,
         "patterns_tried": patterns_tried,
         "search_tried": search_tried,
+        "replaced": replaced,
     }
 
 
-def _save_yaml(data: dict) -> None:
+def write_probe_summary(
+    path: Path | None,
+    *,
+    probed: int,
+    found: int,
+    replaced: int,
+    budget_remaining: int | None,
+    still_stuck: int | None = None,
+) -> None:
+    if path is None:
+        return
+    payload = {
+        "probed": probed,
+        "found": found,
+        "replaced": replaced,
+        "budget_remaining": budget_remaining,
+        "still_stuck": still_stuck if still_stuck is not None else max(0, probed - found),
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     """Dump data back to schools.yaml. Caller ensures single-threaded call."""
     SCHOOLS_YAML.write_text(
         yaml.dump(data, default_flow_style=False, sort_keys=False, allow_unicode=True)
@@ -750,6 +773,8 @@ def main():
                          f"never responds and would otherwise wedge a worker "
                          f"for ~33 minutes cycling through pattern × subdomain "
                          f"× year combinations.")
+    ap.add_argument("--summary-json", type=Path,
+                    help="Write probed/found/replaced/budget_remaining for pipeline heartbeats.")
     args = ap.parse_args()
 
     data = yaml.safe_load(SCHOOLS_YAML.read_text())
@@ -830,14 +855,29 @@ def main():
     print(f"Probing {total} schools with {args.workers} workers (rps={args.rps} per worker)")
     if skipped:
         print(f"Skipped {skipped} schools due to {args.cooldown_days}-day cooldown")
+    tracker = env.get("brave_tracker") or {}
+    def budget_remaining() -> int | None:
+        budget = tracker.get("budget")
+        if budget is None:
+            return None
+        return max(0, int(budget) - int(tracker.get("calls") or 0))
     if total == 0:
         print("Nothing to probe. Exiting.")
+        write_probe_summary(
+            args.summary_json,
+            probed=0,
+            found=0,
+            replaced=0,
+            budget_remaining=budget_remaining(),
+            still_stuck=0,
+        )
         return
 
     # ── Threadpool execution ──
     found = 0
     failed = 0
     completed = 0
+    replaced = 0
 
     with ThreadPoolExecutor(max_workers=args.workers) as executor:
         # Submit all schools; keep a mapping so we can attribute results
@@ -855,6 +895,8 @@ def main():
                     continue
 
                 prefix = f"[{completed:>5}/{total}]"
+                if result.get("replaced"):
+                    replaced += 1
                 if result["url"]:
                     found += 1
                     tag = f"[{result['method']}] " if result["method"] != "pattern" else ""
@@ -876,13 +918,19 @@ def main():
                 _save_yaml(data)
                 print(f"  [partial progress saved to {SCHOOLS_YAML}]")
             print(f"\nProbed: {completed}, Found: {found}, Not found: {failed}")
+            write_probe_summary(
+                args.summary_json,
+                probed=completed,
+                found=found,
+                replaced=replaced,
+                budget_remaining=budget_remaining(),
+            )
             return
 
     print(f"\nProbed: {completed}, Found: {found}, Not found: {failed}", end="")
     if skipped:
         print(f", Skipped (cooldown): {skipped}", end="")
     print()
-    tracker = env.get("brave_tracker") or {}
     if tracker.get("calls"):
         print(f"Brave API calls this run: {tracker['calls']}")
 
@@ -892,6 +940,13 @@ def main():
             print(f"Cleared {len(cleared)} duplicate seed(s) shared across UNITIDs")
         _save_yaml(data)
         print(f"Updated {SCHOOLS_YAML}")
+    write_probe_summary(
+        args.summary_json,
+        probed=completed,
+        found=found,
+        replaced=replaced,
+        budget_remaining=budget_remaining(),
+    )
 
 
 if __name__ == "__main__":

@@ -46,6 +46,11 @@ import {
   MAX_ATTEMPTS,
   type ArchiveQueueRow,
 } from "./queue.ts";
+import {
+  countArchiveUnfinished,
+  isWalledOutcome,
+  recordPipelineHeartbeat,
+} from "../_shared/pipeline_heartbeat.ts";
 
 // Relaxed client typing. supabase-js v2's strict generics collapse to never
 // when no Database type parameter is supplied, which breaks .update() with
@@ -217,10 +222,51 @@ async function runForceUrls(
 async function runQueueClaim(
   supabase: Client,
 ): Promise<Response> {
+  const summary = {
+    dequeued: 0,
+    queue_depth: 0,
+    inserted: 0,
+    refreshed: 0,
+    walled: 0,
+    events_written: 0,
+  };
+  const hb = { status: "ok" as "ok" | "error", errorCode: "none" };
+  try {
+    return await runQueueClaimInner(supabase, summary, hb);
+  } catch (_error) {
+    hb.status = "error";
+    hb.errorCode = "job_failed";
+    return json({ error: "archive-process failed" }, 500);
+  } finally {
+    summary.queue_depth = await countArchiveUnfinished(supabase);
+    await recordPipelineHeartbeat(supabase, {
+      stationId: "archive_process",
+      status: hb.status,
+      trigger: "cron",
+      summary,
+      errorCode: hb.errorCode,
+    });
+  }
+}
+
+async function runQueueClaimInner(
+  supabase: Client,
+  summary: {
+    dequeued: number;
+    queue_depth: number;
+    inserted: number;
+    refreshed: number;
+    walled: number;
+    events_written: number;
+  },
+  hb: { status: "ok" | "error"; errorCode: string },
+): Promise<Response> {
   const { data: claimed, error: claimErr } = await supabase
     .rpc("claim_archive_queue_row");
 
   if (claimErr) {
+    hb.status = "error";
+    hb.errorCode = "job_failed";
     logEvent({ event: "claim_error", error: claimErr.message });
     return json({ error: `claim failed: ${claimErr.message}` }, 500);
   }
@@ -231,6 +277,7 @@ async function runQueueClaim(
   }
 
   const row = claimed as ArchiveQueueRow;
+  summary.dequeued = 1;
   const started = Date.now();
   // attempts is already incremented by claim_archive_queue_row() so that a
   // worker which crashes before its finally block still consumes an attempt.
@@ -240,6 +287,8 @@ async function runQueueClaim(
   // returns, so a null here would indicate RPC-contract corruption; bail
   // loud rather than silently writing a bad guard.
   if (!row.claimed_at) {
+    hb.status = "error";
+    hb.errorCode = "job_failed";
     logEvent({
       event: "unexpected_null_claimed_at",
       id: row.id,
@@ -401,6 +450,8 @@ async function runQueueClaim(
   }
 
   if (terminalFailure) {
+    hb.status = "error";
+    hb.errorCode = "job_failed";
     return json({
       error: terminalFailure.error,
       school_id: row.school_id,
@@ -410,6 +461,15 @@ async function runQueueClaim(
   }
 
   const duration_ms = Date.now() - started;
+  if (outcome) {
+    const candidates = outcome.candidates ?? [];
+    summary.inserted = candidates.filter((c) => c.action === "inserted").length;
+    summary.refreshed = candidates.filter((c) => c.action === "refreshed").length;
+    summary.events_written = summary.inserted + summary.refreshed;
+    if (isWalledOutcome(outcome.outcome)) summary.walled = 1;
+  } else if (isWalledOutcome(failureCategory)) {
+    summary.walled = 1;
+  }
   logEvent({
     event: "completed",
     id: row.id,

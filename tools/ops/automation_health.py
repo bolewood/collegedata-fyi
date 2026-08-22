@@ -21,8 +21,12 @@ DEFAULT_REPO = "bolewood/collegedata-fyi"
 CRON_JOBS = (
     "archive-enqueue-daily",
     "archive-process-every-30s",
-    "refresh-coverage-every-15min",
+    "refresh-coverage-hourly",
+    "refresh-public-serving-caches-hourly",
 )
+# TODO: read public.pipeline_heartbeats (via service role) and drop GitHub
+# Actions scraping once PRD 030 M0 has been live long enough to trust the
+# clocks. This script stays operator-only.
 
 
 class HealthError(RuntimeError):

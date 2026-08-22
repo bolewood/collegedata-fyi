@@ -32,6 +32,8 @@ export function Footer() {
           <a href="https://github.com/bolewood/collegedata-fyi" target="_blank" rel="noopener noreferrer">
             GitHub
           </a>
+          <a href="/coverage">Coverage</a>
+          <a href="/pipeline-observation">Pipeline</a>
           <a href="/recipes">Recipes</a>
           <a href="/api">API</a>
           <a href="/privacy">Privacy</a>

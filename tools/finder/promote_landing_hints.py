@@ -36,6 +36,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from collections import Counter
@@ -439,6 +440,11 @@ def main() -> int:
         type=Path,
         help="Limit proposals to school ids listed in this file.",
     )
+    ap.add_argument(
+        "--summary-json",
+        type=Path,
+        help="Write proposals/promoted counts for pipeline heartbeats.",
+    )
     args = ap.parse_args()
 
     schools_data = yaml.safe_load(args.schools_yaml.read_text())
@@ -533,15 +539,29 @@ def main() -> int:
     if args.apply:
         if not proposals:
             print("No proposals to apply.", file=sys.stderr)
+            write_landing_summary(args.summary_json, proposals=0, promoted=0)
             return 0
         applied = apply_proposals(args.schools_yaml, proposals)
         print(f"Rewrote {applied} discovery_seed_url lines in {args.schools_yaml}",
               file=sys.stderr)
+        write_landing_summary(args.summary_json, proposals=len(proposals), promoted=applied)
         return 0
 
     write_proposal_report(args.report, proposals, len(direct_doc_schools))
     print(f"Wrote {args.report}", file=sys.stderr)
+    write_landing_summary(args.summary_json, proposals=len(proposals), promoted=0)
     return 0
+
+
+def write_landing_summary(path: Path | None, *, proposals: int, promoted: int) -> None:
+    if path is None:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps({"proposals": proposals, "promoted": promoted}, indent=2, sort_keys=True)
+        + "\n",
+        encoding="utf-8",
+    )
 
 
 if __name__ == "__main__":

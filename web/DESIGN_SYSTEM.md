@@ -144,6 +144,24 @@ None of these break functionality; they're palette-consistency debt.
 
 ---
 
+## Pipeline observation exception
+
+[`/pipeline-observation`](https://www.collegedata.fyi/pipeline-observation) is allowed to use page-local lamp colors. Site chrome (nav, footer, other routes) stays paper/ink/forest. The exception lives in [`web/src/app/pipeline-observation/pipeline-observation.css`](src/app/pipeline-observation/pipeline-observation.css) and must not leak teal or blue.
+
+| Token | Hex | Role |
+|---|---|---|
+| `--lamp-down` | `#d7263d` | overdue / error |
+| `--lamp-late` | `#e0a106` | extraction backlog (ink `#1c1400`) |
+| `--lamp-ok` | `#1f7a4d` | scheduled clock healthy |
+| `--lamp-slate` | `#5c5a54` | yearly, no heartbeat yet |
+| `--lamp-lock` | `#6b3fa0` | M1 vendor lock chips |
+| `--lamp-sso` | `#7a2f6a` | M1 SSO chips |
+| `--lamp-waf` | `#c45c14` | M1 bot-challenge chips |
+
+`run` reuses `--lamp-ok` with a CSS hatch plus the word `RUN`. Do not add a teal `--lamp-run`. Door cards (M1) stay `--paper` / `.cd-card`.
+
+---
+
 ## How to consult the reference
 
 Two ways to look at the system:
