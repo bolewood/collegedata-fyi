@@ -93,6 +93,17 @@ describe("pipeline observation JSON", () => {
     expect(seed.strip.lamp).toBe("down");
   });
 
+  it("every board station has plain-English help copy", () => {
+    const seed = seedPipelineSnapshot(NOW, false);
+    expect(seed.stations.length).toBeGreaterThan(0);
+    for (const station of seed.stations) {
+      expect(station.help.trim().length).toBeGreaterThan(40);
+      expect(station.help).not.toMatch(/\b(SLA|cron|GHA|RPC|service_role)\b/i);
+    }
+    const json = toPublicJson(seed);
+    expect(json.stations[0]).not.toHaveProperty("help");
+  });
+
   it("isStaticBuild seed paints SLA down and yearly slate", () => {
     const seed = seedPipelineSnapshot(NOW, false);
     expect(seed.load_error).toBe(false);
