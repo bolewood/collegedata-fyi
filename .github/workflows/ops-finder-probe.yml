@@ -49,6 +49,8 @@ jobs:
     name: Probe CDS listing URLs
     runs-on: ubuntu-latest
     timeout-minutes: 240
+    outputs:
+      create_pr: ${{ steps.flags.outputs.create_pr }}
     env:
       BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -66,6 +68,14 @@ jobs:
       PIPELINE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
       - uses: actions/checkout@v5
+
+      - name: Snapshot schools.yaml at start
+        run: |
+          mkdir -p finder-probe
+          cp tools/finder/schools.yaml finder-probe/schools-base.yaml
+
+      - id: flags
+        run: echo "create_pr=${INPUT_CREATE_PR}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-python@v6
         with:
@@ -316,18 +326,68 @@ jobs:
               print("Created coverage issue")
           PY
 
+      - name: Snapshot probed schools.yaml
+        if: always()
+        run: |
+          mkdir -p finder-probe
+          cp tools/finder/schools.yaml finder-probe/schools.yaml
+          git diff -- tools/finder/schools.yaml > finder-probe/schools.yaml.diff || true
+
+      - name: Upload probe artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: finder-probe
+          path: finder-probe/
+          if-no-files-found: warn
+
+  publish-seeds:
+    name: Open seed PR from latest main
+    needs: probe
+    if: success() && needs.probe.outputs.create_pr == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      INPUT_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'both' }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: finder-probe
+          path: finder-probe
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: python -m pip install pyyaml
+
+      - name: Overlay probed seeds onto current main
+        run: |
+          python tools/finder/merge_schools_yaml.py \
+            --base finder-probe/schools-base.yaml \
+            --main tools/finder/schools.yaml \
+            --probed finder-probe/schools.yaml \
+            --out tools/finder/schools.yaml
+
       - name: Open PR for seed updates
-        if: success() && (env.INPUT_CREATE_PR == 'true')
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add tools/finder/schools.yaml
           if git diff --cached --quiet; then
-            echo "No schools.yaml changes."
+            echo "No schools.yaml changes against origin/main."
             exit 0
           fi
           branch="chore/finder-probe-${GITHUB_RUN_ID}"
-          git checkout -b "$branch"
+          git checkout -B "$branch"
           git commit -m "$(cat <<'EOF'
           chore: refresh CDS discovery seeds from monthly finder probe
 
@@ -345,14 +405,6 @@ jobs:
 
           ## Test plan
           - [ ] Skim the PR diff for accidental satellite-campus seed copies
-          - [ ] After merge, weekly \`archive-enqueue\` picks up new listing seeds
+          - [ ] After merge, \`ops-archive-seed-catchup\` enqueues schools whose seed URL changed
           EOF
           )"
-
-      - name: Upload probe artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: finder-probe
-          path: finder-probe/
-          if-no-files-found: warn

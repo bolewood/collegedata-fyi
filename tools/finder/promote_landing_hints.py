@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from collections import Counter
@@ -54,6 +55,29 @@ try:
     from supabase import create_client
 except ImportError:
     create_client = None  # DB lookup will be skipped gracefully
+
+
+def supabase_credentials(env_path: Path) -> dict[str, str]:
+    """Prefer process env (GitHub Actions secrets) over a local .env file.
+
+    load_env() reads a file literally and raises if it is missing. The
+    finder workflow already has SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY
+    in the job environment; requiring `.env` on the runner dropped every
+    cds_documents landing proposal on 2026-08-21.
+    """
+    file_env: dict[str, str] = {}
+    if env_path.exists():
+        file_env = load_env(env_path)
+    url = os.environ.get("SUPABASE_URL") or file_env.get("SUPABASE_URL")
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or file_env.get(
+        "SUPABASE_SERVICE_ROLE_KEY"
+    )
+    if not url or not key:
+        raise RuntimeError(
+            "missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY "
+            f"(looked at env and {env_path})"
+        )
+    return {"SUPABASE_URL": url, "SUPABASE_SERVICE_ROLE_KEY": key}
 
 
 DOCUMENT_EXT_RE = re.compile(r"\.(pdf|xlsx|docx)(\?|#|$)", re.I)
@@ -461,8 +485,8 @@ def main() -> int:
     sb = None
     if not args.skip_db and create_client is not None:
         try:
-            env = load_env(args.env)
-            sb = create_client(env["SUPABASE_URL"], env["SUPABASE_SERVICE_ROLE_KEY"])
+            creds = supabase_credentials(args.env)
+            sb = create_client(creds["SUPABASE_URL"], creds["SUPABASE_SERVICE_ROLE_KEY"])
             print("Supabase client: ready", file=sys.stderr)
         except Exception as e:
             print(f"warn: Supabase client init failed ({e}); continuing with manual_urls only",

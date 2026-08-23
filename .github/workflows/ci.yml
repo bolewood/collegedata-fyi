@@ -42,7 +42,7 @@ jobs:
       - name: Audit retired school redirects
         run: python tools/finder/school_redirect_guard.py
       - name: Run finder identity tests
-        run: python -m unittest tools.finder.test_identity_guard tools.finder.test_school_redirect_guard tools.finder.test_probe_urls tools.finder.test_stuck_pdf_seeds
+        run: python -m unittest tools.finder.test_identity_guard tools.finder.test_school_redirect_guard tools.finder.test_probe_urls tools.finder.test_stuck_pdf_seeds tools.finder.test_apply_probe_log tools.finder.test_promote_landing_hints
       - name: Run scorecard loader tests
         run: python -m unittest tools.scorecard.test_load_directory
       - name: Run IPEDS loader tests
@@ -52,7 +52,7 @@ jobs:
       - name: Run discovery policy and engine tests
         run: python -m pytest tools/discovery -q
       - name: Run ops tests
-        run: python -m unittest tools.ops.test_automation_health tools.ops.test_record_heartbeat tools.ops.test_pipeline_writers tools.ops.test_directory_enqueue_autopilot tools.ops.test_directory_enqueue_batches tools.ops.test_extraction_backlog_audit
+        run: python -m unittest tools.ops.test_automation_health tools.ops.test_record_heartbeat tools.ops.test_pipeline_writers tools.ops.test_directory_enqueue_autopilot tools.ops.test_directory_enqueue_batches tools.ops.test_extraction_backlog_audit tools.ops.test_enqueue_changed_seeds
       - name: Run data-integrity audit support tests
         run: python -m unittest tools.data_quality.test_audit_support
 

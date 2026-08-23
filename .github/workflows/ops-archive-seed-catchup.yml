@@ -1,0 +1,47 @@
+name: Ops archive seed catchup
+
+# After finder seeds land on main, weekly archive would otherwise wait out
+# the 7-day success cooldown. Dispatch this once the updated archive-enqueue
+# (school_ids + force_recheck) is deployed. Do not auto-fire on push until
+# that function is in production — a missing school_ids filter plus
+# force_recheck would re-queue the whole corpus.
+
+on:
+  workflow_dispatch:
+    inputs:
+      before_ref:
+        description: "git ref for schools.yaml before the seed change (default: previous commit on main)"
+        required: false
+        default: "HEAD^"
+
+permissions:
+  contents: read
+
+jobs:
+  enqueue:
+    name: Enqueue changed seeds
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/ci-requirements.txt
+
+      - name: Install Python dependencies
+        run: python -m pip install -r tools/ci-requirements.txt
+
+      - name: Enqueue schools whose discovery seed changed
+        run: |
+          git show "${{ inputs.before_ref }}:tools/finder/schools.yaml" > /tmp/schools-before.yaml
+          python tools/ops/enqueue_changed_seeds.py \
+            --before /tmp/schools-before.yaml \
+            --after tools/finder/schools.yaml \
+            --apply

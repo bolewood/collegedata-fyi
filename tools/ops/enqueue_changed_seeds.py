@@ -1,0 +1,104 @@
+"""Enqueue archive work for schools whose discovery seed just changed.
+
+Weekly archive otherwise waits out the 7-day success cooldown, so a PDF
+that we just rewrote to a listing would sit for a week. After 4 silent
+months, new listings should be fetched the same day they land on main.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import uuid
+from pathlib import Path
+
+import yaml
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from tools.ops.directory_enqueue_batches import (  # noqa: E402
+    OpsError,
+    SupabaseClient,
+    require_supabase_credentials,
+)
+
+
+def seed_of(school: dict) -> str:
+    return str(school.get("discovery_seed_url") or school.get("cds_url_hint") or "")
+
+
+def changed_seed_ids(before: list[dict], after: list[dict]) -> list[str]:
+    before_map = {str(row.get("id")): row for row in before if row.get("id")}
+    changed: list[str] = []
+    for row in after:
+        sid = str(row.get("id") or "")
+        if not sid:
+            continue
+        prev = before_map.get(sid)
+        if prev is None:
+            if seed_of(row) and row.get("scrape_policy") == "active":
+                changed.append(sid)
+            continue
+        if seed_of(row) and seed_of(row) != seed_of(prev):
+            changed.append(sid)
+        elif (
+            prev.get("scrape_policy") != "active"
+            and row.get("scrape_policy") == "active"
+            and seed_of(row)
+        ):
+            changed.append(sid)
+    return changed
+
+
+def load_schools(path: Path) -> list[dict]:
+    data = yaml.safe_load(path.read_text())
+    return data.get("schools") or []
+
+
+def chunked(ids: list[str], size: int = 80) -> list[list[str]]:
+    return [ids[i : i + size] for i in range(0, len(ids), size)]
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__.strip().split("\n\n")[0])
+    ap.add_argument("--before", type=Path, required=True)
+    ap.add_argument("--after", type=Path, required=True)
+    ap.add_argument("--apply", action="store_true")
+    ap.add_argument("--env", type=Path, default=Path(".env"))
+    args = ap.parse_args()
+    ids = changed_seed_ids(load_schools(args.before), load_schools(args.after))
+    print(json.dumps({"changed": len(ids), "ids": ids}, indent=2))
+    if not ids:
+        print("No seed changes; skipping enqueue.", file=sys.stderr)
+        return 0
+    if not args.apply:
+        print("Dry-run. Pass --apply to enqueue.", file=sys.stderr)
+        return 0
+    url, key = require_supabase_credentials(args.env)
+    client = SupabaseClient(url, key)
+    enqueued = 0
+    run_id = str(uuid.uuid4())
+    for group in chunked(ids):
+        result = client.post_function(
+            "archive-enqueue",
+            {
+                "force_recheck": "true",
+                "school_ids": ",".join(group),
+                "run_id": run_id,
+            },
+        )
+        enqueued += int(result.get("enqueued") or 0)
+        print(json.dumps({"chunk": group, "result": result}))
+    print(json.dumps({"enqueued_total": enqueued}))
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except OpsError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        raise SystemExit(1) from exc
