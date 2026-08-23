@@ -32,17 +32,29 @@ def by_id(schools: list[dict]) -> dict[str, dict]:
     return {str(school.get("id")): school for school in schools if school.get("id")}
 
 
-def seed_signature(school: dict | None) -> tuple:
+def seed_url(school: dict | None) -> str | None:
+    if not school:
+        return None
+    return school.get("discovery_seed_url") or school.get("cds_url_hint")
+
+
+def seed_policy(school: dict | None):
+    if not school:
+        return None
+    return school.get("scrape_policy")
+
+
+def probe_state_signature(school: dict | None) -> tuple:
     if not school:
         return ()
     ps = school.get("probe_state") or {}
-    return (
-        school.get("discovery_seed_url") or school.get("cds_url_hint"),
-        school.get("scrape_policy"),
-        ps.get("last_result"),
-        ps.get("last_probed_at"),
-        ps.get("last_method"),
-    )
+    return (ps.get("last_result"), ps.get("last_probed_at"), ps.get("last_method"))
+
+
+def seed_signature(school: dict | None) -> tuple:
+    if not school:
+        return ()
+    return (seed_url(school), seed_policy(school), *probe_state_signature(school))
 
 
 def overlay_seed_fields(target: dict, source: dict) -> dict:
@@ -53,6 +65,13 @@ def overlay_seed_fields(target: dict, source: dict) -> dict:
         elif field in merged and field not in source:
             if field == "cds_url_hint":
                 continue
+    return merged
+
+
+def overlay_probe_state(target: dict, source: dict) -> dict:
+    merged = dict(target)
+    if "probe_state" in source:
+        merged["probe_state"] = source["probe_state"]
     return merged
 
 
@@ -70,10 +89,26 @@ def merge_school_lists(
         sid = str(school.get("id") or "")
         seen.add(sid)
         probed_school = probed_map.get(sid)
-        if probed_school is not None and seed_signature(probed_school) != seed_signature(
-            base_map.get(sid)
-        ):
+        if probed_school is None:
+            out.append(school)
+            continue
+        started = base_map.get(sid)
+        url_or_policy_changed = seed_url(probed_school) != seed_url(
+            started
+        ) or seed_policy(probed_school) != seed_policy(started)
+        state_changed = probe_state_signature(probed_school) != probe_state_signature(
+            started
+        )
+        if url_or_policy_changed:
+            # Probe actually rewrote the seed. That find wins even if main
+            # also moved the same school during the run.
             out.append(overlay_seed_fields(school, probed_school))
+            changed_ids.append(sid)
+        elif state_changed:
+            # Cooldown / not_found stamps must land, but must not revert a
+            # listing that merged to main while the probe still held the
+            # start-of-run PDF.
+            out.append(overlay_probe_state(school, probed_school))
             changed_ids.append(sid)
         else:
             out.append(school)

@@ -1,12 +1,17 @@
 name: Ops archive seed catchup
 
 # After finder seeds land on main, weekly archive would otherwise wait out
-# the 7-day success cooldown. Dispatch this once the updated archive-enqueue
-# (school_ids + force_recheck) is deployed. Do not auto-fire on push until
-# that function is in production — a missing school_ids filter plus
-# force_recheck would re-queue the whole corpus.
+# the 7-day success cooldown. Push-to-main is safe only because
+# archive-enqueue filters on school_ids and this job canaries that echo
+# before sending force_recheck. A missing filter plus force_recheck would
+# re-queue the whole corpus — the canary refuses to continue in that case.
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - tools/finder/schools.yaml
   workflow_dispatch:
     inputs:
       before_ref:
@@ -24,6 +29,7 @@ jobs:
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      BEFORE_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.before_ref || 'HEAD^' }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -40,7 +46,7 @@ jobs:
 
       - name: Enqueue schools whose discovery seed changed
         run: |
-          git show "${{ inputs.before_ref }}:tools/finder/schools.yaml" > /tmp/schools-before.yaml
+          git show "${BEFORE_REF}:tools/finder/schools.yaml" > /tmp/schools-before.yaml
           python tools/ops/enqueue_changed_seeds.py \
             --before /tmp/schools-before.yaml \
             --after tools/finder/schools.yaml \

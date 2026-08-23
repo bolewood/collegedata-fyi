@@ -80,6 +80,14 @@ def supabase_credentials(env_path: Path) -> dict[str, str]:
     return {"SUPABASE_URL": url, "SUPABASE_SERVICE_ROLE_KEY": key}
 
 
+def init_supabase_client(env_path: Path):
+    """Fail closed: a missing client used to look like '0 proposals'."""
+    if create_client is None:
+        raise RuntimeError("supabase package is not installed")
+    creds = supabase_credentials(env_path)
+    return create_client(creds["SUPABASE_URL"], creds["SUPABASE_SERVICE_ROLE_KEY"])
+
+
 DOCUMENT_EXT_RE = re.compile(r"\.(pdf|xlsx|docx)(\?|#|$)", re.I)
 
 # Box / Google Drive share URLs look like direct docs but aren't — skip
@@ -483,14 +491,14 @@ def main() -> int:
     print(f"manual_urls.yaml entries: {len(manual)}", file=sys.stderr)
 
     sb = None
-    if not args.skip_db and create_client is not None:
+    if not args.skip_db:
         try:
-            creds = supabase_credentials(args.env)
-            sb = create_client(creds["SUPABASE_URL"], creds["SUPABASE_SERVICE_ROLE_KEY"])
+            sb = init_supabase_client(args.env)
             print("Supabase client: ready", file=sys.stderr)
         except Exception as e:
-            print(f"warn: Supabase client init failed ({e}); continuing with manual_urls only",
-                  file=sys.stderr)
+            print(f"error: Supabase client init failed ({e})", file=sys.stderr)
+            write_landing_summary(args.summary_json, proposals=0, promoted=0)
+            return 2
 
     proposals = build_proposals(schools, manual, sb)
     print(f"Proposals (pre-verify): {len(proposals)}", file=sys.stderr)
@@ -552,6 +560,13 @@ def main() -> int:
         if rank.get(p.get("confidence") or "low", 0) >= min_rank
     ]
     if args.ids_file:
+        if not args.ids_file.exists():
+            print(
+                f"warn: ids-file {args.ids_file} missing; skipping promotions",
+                file=sys.stderr,
+            )
+            write_landing_summary(args.summary_json, proposals=0, promoted=0)
+            return 0
         allow = {
             line.strip()
             for line in args.ids_file.read_text().splitlines()

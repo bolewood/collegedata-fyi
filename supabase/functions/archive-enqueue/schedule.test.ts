@@ -7,6 +7,7 @@ import {
   parseCooldownDaysOverride,
   parseSchoolIdsOverride,
   restrictSchoolsToIds,
+  schoolIdsFilterMeta,
 } from "./schedule.ts";
 
 Deno.test("archiveEnqueueRunKey uses daily attempt buckets year-round", () => {
@@ -150,4 +151,19 @@ Deno.test("restrictSchoolsToIds keeps only requested ids", () => {
   const rows = [{ id: "a" }, { id: "b" }, { id: "c" }];
   assertEquals(restrictSchoolsToIds(rows, null), rows);
   assertEquals(restrictSchoolsToIds(rows, ["c", "a"]), [{ id: "a" }, { id: "c" }]);
+});
+
+Deno.test("schoolIdsFilterMeta is a positive assertion that the filter ran", () => {
+  assertEquals(schoolIdsFilterMeta(null, 2000), {
+    school_ids_requested: null,
+    school_ids_matched: null,
+  });
+  assertEquals(schoolIdsFilterMeta(["__canary__"], 0), {
+    school_ids_requested: 1,
+    school_ids_matched: 0,
+  });
+  assertEquals(schoolIdsFilterMeta(["a", "b"], 2), {
+    school_ids_requested: 2,
+    school_ids_matched: 2,
+  });
 });
