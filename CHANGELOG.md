@@ -26,6 +26,10 @@ This project uses four-part semantic versioning.
 - Stop copying Ohio University's main-campus CDS URL onto the five regional UNITIDs that share ohio.edu.
 - Mark coverage `cds_available_stale` when the latest extracted year is older than the finder freshness floor, even if weekly archive re-verified the same file.
 - Point Ohio University's main-campus seed at the IEA university-data listing instead of a 404 `/instres` PDF.
+- Keep monthly finder seed PRs based on current `main` and artifact `schools.yaml`, so a mid-run workflow edit cannot reject the push and eat a 2h45m Brave run.
+- Restore finder checkpoint saves (`_save_yaml`) that the pipeline-board heartbeat patch accidentally deleted.
+- Let landing-hint promotion read `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` from the Actions environment instead of requiring a `.env` file on the runner.
+- Recover 216 listing/seed replacements from the 2026-08-21 Brave run logs (the seed PR never left the runner) and skip search-junk URLs so news pages and non-CDS PDFs do not become seeds.
 
 ## [0.5.1.0] - 2026-08-10
 

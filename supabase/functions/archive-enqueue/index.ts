@@ -42,6 +42,8 @@ import {
   archiveCooldownDaysForOutcome,
   archiveEnqueueRunId,
   parseCooldownDaysOverride,
+  parseSchoolIdsOverride,
+  restrictSchoolsToIds,
 } from "./schedule.ts";
 import { recordPipelineHeartbeat } from "../_shared/pipeline_heartbeat.ts";
 
@@ -114,6 +116,27 @@ Deno.serve(async (req: Request) => {
     return await send({
       error: `schools.yaml fetch failed: ${err.message}`,
     }, 502);
+  }
+
+  let schoolIdsFilter: string[] | null;
+  try {
+    schoolIdsFilter = parseSchoolIdsOverride(
+      url.searchParams.get("school_ids"),
+    );
+  } catch (error) {
+    return await send({ error: (error as Error).message }, 400);
+  }
+  if (schoolIdsFilter) {
+    const before = allSchools.length;
+    allSchools = restrictSchoolsToIds(allSchools, schoolIdsFilter);
+    logEvent({
+      event: "school_ids_filter",
+      run_id: runId,
+      requested: schoolIdsFilter.length,
+      matched: allSchools.length,
+      unmatched: schoolIdsFilter.length - allSchools.length,
+      before,
+    });
   }
 
   if (skippedInvalid > 0) {

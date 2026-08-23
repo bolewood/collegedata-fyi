@@ -30,6 +30,24 @@ export function parseCooldownDaysOverride(raw: string | null): number | null {
   return days;
 }
 
+export function parseSchoolIdsOverride(raw: string | null): string[] | null {
+  if (raw === null) return null;
+  const ids = raw.split(/[,\s]+/).map((value) => value.trim()).filter(Boolean);
+  if (ids.length === 0) {
+    throw new Error("school_ids must list at least one school id");
+  }
+  return ids;
+}
+
+export function restrictSchoolsToIds<T extends { id: string }>(
+  schools: T[],
+  ids: string[] | null,
+): T[] {
+  if (ids === null) return schools;
+  const allow = new Set(ids);
+  return schools.filter((school) => allow.has(school.id));
+}
+
 export function archiveEnqueueRunKey(now: Date): string {
   const yyyy = now.getUTCFullYear().toString().padStart(4, "0");
   const mm = (now.getUTCMonth() + 1).toString().padStart(2, "0");

@@ -5,6 +5,8 @@ import {
   archiveEnqueueRunId,
   archiveEnqueueRunKey,
   parseCooldownDaysOverride,
+  parseSchoolIdsOverride,
+  restrictSchoolsToIds,
 } from "./schedule.ts";
 
 Deno.test("archiveEnqueueRunKey uses daily attempt buckets year-round", () => {
@@ -130,4 +132,22 @@ Deno.test("parseCooldownDaysOverride validates and bounds operator input", () =>
     }
     assertEquals(threw, true, `expected '${invalid}' to be rejected`);
   }
+});
+
+Deno.test("parseSchoolIdsOverride splits and rejects empty lists", () => {
+  assertEquals(parseSchoolIdsOverride(null), null);
+  assertEquals(parseSchoolIdsOverride("ou, uf"), ["ou", "uf"]);
+  let threw = false;
+  try {
+    parseSchoolIdsOverride("  ,  ");
+  } catch {
+    threw = true;
+  }
+  assertEquals(threw, true);
+});
+
+Deno.test("restrictSchoolsToIds keeps only requested ids", () => {
+  const rows = [{ id: "a" }, { id: "b" }, { id: "c" }];
+  assertEquals(restrictSchoolsToIds(rows, null), rows);
+  assertEquals(restrictSchoolsToIds(rows, ["c", "a"]), [{ id: "a" }, { id: "c" }]);
 });

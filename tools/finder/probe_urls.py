@@ -533,10 +533,54 @@ def brave_search(domain: str, api_key: str, tracker: dict | None = None) -> str 
         return None
 
     results = data.get("web", {}).get("results", [])
-    return select_brave_cds_url(results)
+    return select_brave_cds_url(results, domain)
 
 
-def select_brave_cds_url(results: list[dict]) -> str | None:
+def host_belongs_to_domain(url: str, domain: str) -> bool:
+    """True when the URL is on the school's own host, not a random search hit."""
+    host = (urllib.parse.urlparse(url).hostname or "").lower()
+    if host.startswith("www."):
+        host = host[4:]
+    domain = domain.lower().removeprefix("www.")
+    if not host or not domain:
+        return False
+    return host == domain or host.endswith("." + domain)
+
+
+def looks_like_search_junk(url: str) -> bool:
+    """Brave sometimes returns rewritten search-result URLs, not IR pages."""
+    path = (urllib.parse.urlparse(url).path or "").lower()
+    return "+" in path and "common+data" in path
+
+
+def looks_like_article_slug(url: str) -> bool:
+    """Drop SEO/blog slugs that matched 'Common Data Set' in a snippet."""
+    last = (urllib.parse.urlparse(url).path or "").rstrip("/").split("/")[-1]
+    last = last.lower()
+    if re.search(r"cds|common[-_]?data", last):
+        return False
+    if re.match(r"^(does|what|why|how|should|is|can|will)-", last):
+        return True
+    return last.count("-") >= 5
+
+
+def looks_like_news_or_blog(url: str) -> bool:
+    parsed = urllib.parse.urlparse(url)
+    path = (parsed.path or "").lower()
+    if re.search(r"/(news|blog|stories|noteworthy)(/|$)", path):
+        return True
+    return "page=" in (parsed.query or "").lower()
+
+
+def looks_like_non_cds_document(url: str) -> bool:
+    """A PDF/XLSX/DOCX whose filename does not mention CDS is usually a miss."""
+    path = (urllib.parse.urlparse(url).path or "").lower()
+    if not re.search(r"\.(pdf|xlsx|docx)$", path):
+        return False
+    return not re.search(r"cds|common[-_]?data", path)
+
+
+def select_brave_cds_url(results: list[dict], domain: str | None = None) -> str | None:
     """Pick a discovery seed from Brave web results.
 
     Prefer an HTML listing over a year-specific PDF. A PDF seed locks the
@@ -562,6 +606,14 @@ def select_brave_cds_url(results: list[dict]) -> str | None:
     for r in results:
         link = r.get("url", "")
         if not link or looks_like_template(link):
+            continue
+        if looks_like_search_junk(link):
+            continue
+        if looks_like_article_slug(link) or looks_like_news_or_blog(link):
+            continue
+        if looks_like_non_cds_document(link):
+            continue
+        if domain and not host_belongs_to_domain(link, domain):
             continue
         if link.lower().endswith(".pdf"):
             if pdf is None:
@@ -701,6 +753,9 @@ def write_probe_summary(
     }
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+
+
+def _save_yaml(data: dict) -> None:
     """Dump data back to schools.yaml. Caller ensures single-threaded call."""
     SCHOOLS_YAML.write_text(
         yaml.dump(data, default_flow_style=False, sort_keys=False, allow_unicode=True)
