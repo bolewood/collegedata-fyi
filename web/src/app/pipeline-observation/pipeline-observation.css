@@ -15,7 +15,7 @@
 .po-strip {
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 4;
   margin: 16px 0 0;
   padding: 14px 18px;
   font-family: var(--mono);
@@ -43,15 +43,32 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
   gap: 8px;
+  overflow: visible;
 }
 
 .po-tile {
+  position: relative;
   min-height: 168px;
   padding: 14px 14px 12px;
   color: #fff;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  cursor: help;
+}
+
+.po-tile:hover,
+.po-tile:focus-within {
+  z-index: 3;
+}
+
+.po-tile:focus {
+  outline: none;
+}
+
+.po-tile:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }
 
 .po-tile--ok,
@@ -115,6 +132,93 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   margin-top: 10px;
+}
+
+/* Paper slip over the lamp. Variables only — this file's hex allowlist
+   test rejects new colors. Place below the tile so the sticky strip
+   does not eat first-row copy. Center with margin, not transform, so
+   prefers-reduced-motion can still cancel the 4px slide. */
+.po-tile-tip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 3;
+  width: auto;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 12px 13px 13px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.45;
+  text-transform: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s;
+}
+
+.po-tile-tip::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 16px;
+  width: 9px;
+  height: 9px;
+  background: var(--paper);
+  border-left: 1px solid var(--rule-strong);
+  border-top: 1px solid var(--rule-strong);
+  transform: rotate(45deg);
+}
+
+@media (min-width: 640px) {
+  .po-tile-tip {
+    left: 50%;
+    right: auto;
+    width: 228px;
+    margin-left: -114px;
+  }
+
+  .po-tile-tip::before {
+    left: 50%;
+    margin-left: -5px;
+  }
+}
+
+.po-tile-tip-kicker {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 6px;
+}
+
+.po-tile:hover .po-tile-tip,
+.po-tile:focus-within .po-tile-tip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.po-board:focus-within .po-tile:hover:not(:focus-within) .po-tile-tip {
+  opacity: 0;
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .po-tile-tip {
+    transition: none;
+    transform: none;
+  }
 }
 
 .po-manual {

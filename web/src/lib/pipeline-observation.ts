@@ -51,6 +51,7 @@ export type PipelineStationView = {
   source_url: string | null;
   result_line: string;
   ago_label: string;
+  help: string;
   queue_unfinished: number | null;
   extraction_pending: number | null;
 };
@@ -76,20 +77,112 @@ const SEED_META: Array<{
   cadence_label: string;
   class: StationClass;
   on_board: boolean;
+  help: string;
 }> = [
-  { station_id: "finder_brave", display_name: "Finder", cadence_label: "monthly · scheduled SLA 40d", class: "monthly_sla", on_board: true },
-  { station_id: "finder_stuck_pdf", display_name: "Stuck PDFs", cadence_label: "monthly · scheduled SLA 40d", class: "monthly_sla", on_board: true },
-  { station_id: "finder_landing_hints", display_name: "Landing hints", cadence_label: "monthly · scheduled SLA 40d", class: "monthly_sla", on_board: true },
-  { station_id: "archive_enqueue", display_name: "Enqueue", cadence_label: "daily · SLA 36h", class: "daily_sla", on_board: true },
-  { station_id: "archive_process", display_name: "Process", cadence_label: "every 30s", class: "continuous_sla", on_board: true },
-  { station_id: "extraction_worker", display_name: "Extract", cadence_label: "daily · pending drain", class: "daily_sla", on_board: true },
-  { station_id: "coverage_refresh", display_name: "Coverage", cadence_label: "hourly · SLA 3h", class: "hourly_sla", on_board: true },
-  { station_id: "serving_cache_refresh", display_name: "Serving caches", cadence_label: "hourly · SLA 3h", class: "hourly_sla", on_board: true },
-  { station_id: "ipeds_release_probe", display_name: "IPEDS probe", cadence_label: "monthly · scheduled SLA 40d", class: "monthly_sla", on_board: true },
-  { station_id: "schema_build", display_name: "Schema", cadence_label: "yearly · slate until a heartbeat", class: "yearly", on_board: true },
-  { station_id: "scorecard_load", display_name: "Scorecard", cadence_label: "yearly · slate until a heartbeat", class: "yearly", on_board: true },
-  { station_id: "directory_enqueue", display_name: "Directory enqueue", cadence_label: "manual", class: "adhoc", on_board: false },
-  { station_id: "mirror_ingest", display_name: "Mirror ingest", cadence_label: "manual", class: "adhoc", on_board: false },
+  {
+    station_id: "finder_brave",
+    display_name: "Finder",
+    cadence_label: "monthly · scheduled SLA 40d",
+    class: "monthly_sla",
+    on_board: true,
+    help: "Once a month we ask Brave Search to find Common Data Set pages for schools that still have no listing. If this goes quiet, we stop discovering new files.",
+  },
+  {
+    station_id: "finder_stuck_pdf",
+    display_name: "Stuck PDFs",
+    cadence_label: "monthly · scheduled SLA 40d",
+    class: "monthly_sla",
+    on_board: true,
+    help: "Many seeds point at a single old PDF. This step re-checks those schools so we can find the office's actual CDS listing instead of one frozen year.",
+  },
+  {
+    station_id: "finder_landing_hints",
+    display_name: "Landing hints",
+    cadence_label: "monthly · scheduled SLA 40d",
+    class: "monthly_sla",
+    on_board: true,
+    help: "When a PDF seed is really a landing page — the office's CDS index — we rewrite it so weekly archive can collect every year they publish.",
+  },
+  {
+    station_id: "archive_enqueue",
+    display_name: "Enqueue",
+    cadence_label: "daily · SLA 36h",
+    class: "daily_sla",
+    on_board: true,
+    help: "Every night we decide which schools are due for a fresh look and put them on the archive queue. Schools we already checked recently are skipped.",
+  },
+  {
+    station_id: "archive_process",
+    display_name: "Process",
+    cadence_label: "every 30s",
+    class: "continuous_sla",
+    on_board: true,
+    help: "About every 30 seconds we take one school off the queue, download what we can, and archive it. This is the machine's pulse.",
+  },
+  {
+    station_id: "extraction_worker",
+    display_name: "Extract",
+    cadence_label: "daily · pending drain",
+    class: "daily_sla",
+    on_board: true,
+    help: "After a file is archived, we pull the numbers out of it. The daily job only drains a handful, so a backlog here is late — not necessarily a crash.",
+  },
+  {
+    station_id: "coverage_refresh",
+    display_name: "Coverage",
+    cadence_label: "hourly · SLA 3h",
+    class: "hourly_sla",
+    on_board: true,
+    help: "Hourly we rebuild the public coverage ledger: which schools have a current CDS, an older one, or none we could find.",
+  },
+  {
+    station_id: "serving_cache_refresh",
+    display_name: "Serving caches",
+    cadence_label: "hourly · SLA 3h",
+    class: "hourly_sla",
+    on_board: true,
+    help: "Hourly we refresh the homepage and API caches so the public site is not reading live tables on every visit.",
+  },
+  {
+    station_id: "ipeds_release_probe",
+    display_name: "IPEDS probe",
+    cadence_label: "monthly · scheduled SLA 40d",
+    class: "monthly_sla",
+    on_board: true,
+    help: "Once a month we check whether NCES has posted a new IPEDS Access database. A quiet \"no new release\" is still a healthy tick.",
+  },
+  {
+    station_id: "schema_build",
+    display_name: "Schema",
+    cadence_label: "yearly · slate until a heartbeat",
+    class: "yearly",
+    on_board: true,
+    help: "Once a year an operator loads the new CDS year schema. Gray until that happens; red only if it has been more than 18 months.",
+  },
+  {
+    station_id: "scorecard_load",
+    display_name: "Scorecard",
+    cadence_label: "yearly · slate until a heartbeat",
+    class: "yearly",
+    on_board: true,
+    help: "Once a year an operator loads College Scorecard. Gray until that load is recorded; red if it is more than 18 months old.",
+  },
+  {
+    station_id: "directory_enqueue",
+    display_name: "Directory enqueue",
+    cadence_label: "manual",
+    class: "adhoc",
+    on_board: false,
+    help: "Operator-only: seed the archive queue from the IPEDS directory. Not on the status strip.",
+  },
+  {
+    station_id: "mirror_ingest",
+    display_name: "Mirror ingest",
+    cadence_label: "manual",
+    class: "adhoc",
+    on_board: false,
+    help: "Operator-only: ingest a secondary-source mirror. Not on the status strip.",
+  },
 ];
 
 const ERROR_COPY: Record<string, string> = {
@@ -265,6 +358,7 @@ export function snapshotFromFacts(
       source_url: row.source_url,
       result_line: resultLine(row, lamp),
       ago_label: formatAgo(clockIso, now),
+      help: SEED_META.find((meta) => meta.station_id === row.station_id)?.help ?? "",
       queue_unfinished: row.queue_unfinished,
       extraction_pending: row.extraction_pending,
     };

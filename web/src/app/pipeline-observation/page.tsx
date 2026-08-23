@@ -75,7 +75,9 @@ export default async function PipelineObservationPage() {
             <article
               key={station.station_id}
               className={`po-tile po-tile--${station.lamp}`}
+              tabIndex={0}
               aria-label={`${station.display_name}: ${LAMP_WORD[station.lamp]}, ${station.ago_label}`}
+              aria-describedby={`po-tip-${station.station_id}`}
             >
               <div>
                 <div className="po-tile-id">{station.cadence_label}</div>
@@ -84,6 +86,14 @@ export default async function PipelineObservationPage() {
                 <div className="po-tile-ago">{station.ago_label}</div>
                 <div className="po-tile-result">{station.result_line}</div>
               </div>
+              <p
+                id={`po-tip-${station.station_id}`}
+                className="po-tile-tip"
+                role="tooltip"
+              >
+                <span className="po-tile-tip-kicker">What this does</span>
+                {station.help}
+              </p>
             </article>
           ))}
         </div>
