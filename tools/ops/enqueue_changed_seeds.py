@@ -25,6 +25,8 @@ from tools.ops.directory_enqueue_batches import (  # noqa: E402
     require_supabase_credentials,
 )
 
+CANARY_SCHOOL_ID = "__finder_seed_catchup_canary__"
+
 
 def seed_of(school: dict) -> str:
     return str(school.get("discovery_seed_url") or school.get("cds_url_hint") or "")
@@ -62,12 +64,70 @@ def chunked(ids: list[str], size: int = 80) -> list[list[str]]:
     return [ids[i : i + size] for i in range(0, len(ids), size)]
 
 
+def canary_filter_error(result: dict) -> str | None:
+    """Catch a rolled-back archive-enqueue that ignores school_ids.
+
+    A missing filter plus force_recheck would re-queue the whole corpus.
+    The canary itself never sends force_recheck; it refuses to continue
+    unless the function echoes that it applied a 1-id filter and matched
+    nothing.
+    """
+    requested = result.get("school_ids_requested")
+    matched = result.get("school_ids_matched")
+    enqueued = int(result.get("enqueued") or 0)
+    if requested != 1:
+        return (
+            f"school_ids_requested={requested!r}, expected 1 "
+            "(archive-enqueue school_ids filter is not live)"
+        )
+    if int(matched or 0) != 0:
+        return f"school_ids_matched={matched!r}, expected 0"
+    if enqueued != 0:
+        return f"enqueued={enqueued}, expected 0"
+    return None
+
+
+def chunk_filter_error(result: dict, group: list[str]) -> str | None:
+    requested = result.get("school_ids_requested")
+    matched = result.get("school_ids_matched")
+    enqueued = int(result.get("enqueued") or 0)
+    if requested != len(group):
+        return (
+            f"school_ids_requested={requested!r}, expected {len(group)} "
+            "(filter did not echo this chunk)"
+        )
+    if matched is None or int(matched) > len(group):
+        return f"school_ids_matched={matched!r} exceeds chunk of {len(group)}"
+    if enqueued > len(group):
+        return f"enqueued={enqueued} exceeds chunk of {len(group)}"
+    return None
+
+
+def assert_school_ids_filter(client: SupabaseClient) -> dict:
+    result = client.post_function(
+        "archive-enqueue",
+        {
+            "school_ids": CANARY_SCHOOL_ID,
+            "run_id": str(uuid.uuid4()),
+        },
+    )
+    error = canary_filter_error(result)
+    if error:
+        raise OpsError(error)
+    return result
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.strip().split("\n\n")[0])
     ap.add_argument("--before", type=Path, required=True)
     ap.add_argument("--after", type=Path, required=True)
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--env", type=Path, default=Path(".env"))
+    ap.add_argument(
+        "--skip-canary",
+        action="store_true",
+        help="Do not ping archive-enqueue with a fake school_id first.",
+    )
     args = ap.parse_args()
     ids = changed_seed_ids(load_schools(args.before), load_schools(args.after))
     print(json.dumps({"changed": len(ids), "ids": ids}, indent=2))
@@ -79,6 +139,9 @@ def main() -> int:
         return 0
     url, key = require_supabase_credentials(args.env)
     client = SupabaseClient(url, key)
+    if not args.skip_canary:
+        canary = assert_school_ids_filter(client)
+        print(json.dumps({"canary": canary}))
     enqueued = 0
     run_id = str(uuid.uuid4())
     for group in chunked(ids):
@@ -90,6 +153,9 @@ def main() -> int:
                 "run_id": run_id,
             },
         )
+        error = chunk_filter_error(result, group)
+        if error:
+            raise OpsError(error)
         enqueued += int(result.get("enqueued") or 0)
         print(json.dumps({"chunk": group, "result": result}))
     print(json.dumps({"enqueued_total": enqueued}))

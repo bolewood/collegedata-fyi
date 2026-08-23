@@ -174,7 +174,7 @@ jobs:
             --run-url "${PIPELINE_RUN_URL}"
 
       - name: Heartbeat finder_brave start
-        if: env.INPUT_MODE == 'both' || env.INPUT_MODE == 'unknown'
+        if: ${{ always() && !cancelled() && (env.INPUT_MODE == 'both' || env.INPUT_MODE == 'unknown') }}
         run: |
           python tools/ops/record_heartbeat.py \
             --station finder_brave \
@@ -184,7 +184,7 @@ jobs:
 
       - id: probe_unknown
         name: Probe unknown schools
-        if: env.INPUT_MODE == 'both' || env.INPUT_MODE == 'unknown'
+        if: ${{ always() && !cancelled() && (env.INPUT_MODE == 'both' || env.INPUT_MODE == 'unknown') }}
         run: |
           PYTHONUNBUFFERED=1 python tools/finder/probe_urls.py \
             --brave-fallback \
@@ -219,7 +219,7 @@ jobs:
             --run-url "${PIPELINE_RUN_URL}"
 
       - name: Heartbeat finder_landing_hints start
-        if: env.INPUT_APPLY_LANDING_HINTS == 'true'
+        if: ${{ always() && !cancelled() && env.INPUT_APPLY_LANDING_HINTS == 'true' }}
         run: |
           python tools/ops/record_heartbeat.py \
             --station finder_landing_hints \
@@ -229,7 +229,7 @@ jobs:
 
       - id: promote_landing_hints
         name: Promote high-confidence landing hints
-        if: env.INPUT_APPLY_LANDING_HINTS == 'true'
+        if: ${{ always() && !cancelled() && env.INPUT_APPLY_LANDING_HINTS == 'true' }}
         run: |
           python tools/finder/promote_landing_hints.py \
             --min-confidence medium \
@@ -344,7 +344,11 @@ jobs:
   publish-seeds:
     name: Open seed PR from latest main
     needs: probe
-    if: success() && needs.probe.outputs.create_pr == 'true'
+    # Probe can go red after Brave already checkpointed schools.yaml
+    # (landing-hints, coverage issue, a later heartbeat). Friday lost a
+    # 2h45m run because the seed push lived in the failing job. Publish
+    # from the artifact whenever the probe job actually ran.
+    if: ${{ always() && !cancelled() && needs.probe.outputs.create_pr == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -371,6 +375,8 @@ jobs:
 
       - name: Overlay probed seeds onto current main
         run: |
+          test -s finder-probe/schools-base.yaml
+          test -s finder-probe/schools.yaml
           python tools/finder/merge_schools_yaml.py \
             --base finder-probe/schools-base.yaml \
             --main tools/finder/schools.yaml \
@@ -381,10 +387,16 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tools/finder/schools.yaml
-          if git diff --cached --quiet; then
+          git add -- tools/finder/schools.yaml
+          staged="$(git diff --cached --name-only)"
+          if [[ -z "$staged" ]]; then
             echo "No schools.yaml changes against origin/main."
             exit 0
+          fi
+          if [[ "$staged" != "tools/finder/schools.yaml" ]]; then
+            echo "::error::publish-seeds may only commit tools/finder/schools.yaml"
+            printf '%s\n' "$staged"
+            exit 1
           fi
           branch="chore/finder-probe-${GITHUB_RUN_ID}"
           git checkout -B "$branch"
@@ -405,6 +417,6 @@ jobs:
 
           ## Test plan
           - [ ] Skim the PR diff for accidental satellite-campus seed copies
-          - [ ] After merge, \`ops-archive-seed-catchup\` enqueues schools whose seed URL changed
+          - [ ] Merging this PR auto-enqueues changed seeds via \`ops-archive-seed-catchup\`
           EOF
           )"

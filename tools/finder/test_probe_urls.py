@@ -211,6 +211,21 @@ class CheckpointHelpersTests(unittest.TestCase):
         self.assertEqual(payload["replaced"], 2)
         self.assertEqual(payload["still_stuck"], 9)
 
+    def test_save_yaml_writes_checkpoint(self) -> None:
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+
+        import tools.finder.probe_urls as probe_urls
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "schools.yaml"
+            with mock.patch.object(probe_urls, "SCHOOLS_YAML", path):
+                probe_urls._save_yaml({"schools": [{"id": "x", "name": "Xavier"}]})
+            text = path.read_text()
+        self.assertIn("id: x", text)
+        self.assertIn("Xavier", text)
+
 
 if __name__ == "__main__":
     unittest.main()

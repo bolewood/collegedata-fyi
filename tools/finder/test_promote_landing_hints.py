@@ -44,6 +44,14 @@ class SupabaseCredentialsTests(unittest.TestCase):
                 creds = supabase_credentials(env_path)
         self.assertEqual(creds["SUPABASE_URL"], "https://env.example")
 
+    def test_missing_package_fails_closed(self) -> None:
+        from tools.finder.promote_landing_hints import init_supabase_client
+
+        with mock.patch("tools.finder.promote_landing_hints.create_client", None):
+            with self.assertRaises(RuntimeError) as ctx:
+                init_supabase_client(Path(".env"))
+        self.assertIn("not installed", str(ctx.exception))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -30,6 +30,7 @@ This project uses four-part semantic versioning.
 - Restore finder checkpoint saves (`_save_yaml`) that the pipeline-board heartbeat patch accidentally deleted.
 - Let landing-hint promotion read `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` from the Actions environment instead of requiring a `.env` file on the runner.
 - Recover 216 listing/seed replacements from the 2026-08-21 Brave run logs (the seed PR never left the runner) and skip search-junk URLs so news pages and non-CDS PDFs do not become seeds.
+- Publish finder seed PRs even when a later probe step fails, keep a mid-run listing fix on `main` when the probe only stamped `probe_state`, and auto-enqueue changed seeds on merge after a `school_ids` canary so a rolled-back filter cannot re-queue the corpus.
 
 ## [0.5.1.0] - 2026-08-10
 

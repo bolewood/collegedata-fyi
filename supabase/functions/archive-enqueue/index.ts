@@ -44,6 +44,7 @@ import {
   parseCooldownDaysOverride,
   parseSchoolIdsOverride,
   restrictSchoolsToIds,
+  schoolIdsFilterMeta,
 } from "./schedule.ts";
 import { recordPipelineHeartbeat } from "../_shared/pipeline_heartbeat.ts";
 
@@ -138,6 +139,7 @@ Deno.serve(async (req: Request) => {
       before,
     });
   }
+  const idsMeta = schoolIdsFilterMeta(schoolIdsFilter, allSchools.length);
 
   if (skippedInvalid > 0) {
     // Not fatal — validation filters out malformed rows so the good ones
@@ -157,6 +159,7 @@ Deno.serve(async (req: Request) => {
       run_id: runId,
       enqueued: 0,
       note: "schools.yaml has no archivable schools",
+      ...idsMeta,
     });
   }
 
@@ -349,6 +352,7 @@ Deno.serve(async (req: Request) => {
       skipped_invalid_yaml: skippedInvalid,
       total_archivable: allSchools.length,
       note: "all archivable schools were in cooldown",
+      ...idsMeta,
     });
   }
 
@@ -372,6 +376,7 @@ Deno.serve(async (req: Request) => {
       error: `enqueue failed: ${error.message}`,
       run_id: runId,
       intended_count: rows.length,
+      ...idsMeta,
     }, 500);
   }
 
@@ -396,6 +401,7 @@ Deno.serve(async (req: Request) => {
     skipped_cooldown: inCooldown.size,
     skipped_invalid_yaml: skippedInvalid,
     total_archivable: allSchools.length,
+    ...idsMeta,
   });
 });
 

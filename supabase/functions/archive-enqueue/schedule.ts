@@ -48,6 +48,22 @@ export function restrictSchoolsToIds<T extends { id: string }>(
   return schools.filter((school) => allow.has(school.id));
 }
 
+export function schoolIdsFilterMeta(
+  filter: string[] | null,
+  matchedCount: number,
+): {
+  school_ids_requested: number | null;
+  school_ids_matched: number | null;
+} {
+  if (filter === null) {
+    return { school_ids_requested: null, school_ids_matched: null };
+  }
+  return {
+    school_ids_requested: filter.length,
+    school_ids_matched: matchedCount,
+  };
+}
+
 export function archiveEnqueueRunKey(now: Date): string {
   const yyyy = now.getUTCFullYear().toString().padStart(4, "0");
   const mm = (now.getUTCMonth() + 1).toString().padStart(2, "0");

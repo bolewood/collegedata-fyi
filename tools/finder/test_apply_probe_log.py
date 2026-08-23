@@ -131,6 +131,44 @@ class MergeListsTests(unittest.TestCase):
         self.assertEqual(merged[0]["notes"], "keep")
         self.assertEqual(merged[1]["discovery_seed_url"], "https://b.edu/iea/")
 
+    def test_probe_state_only_does_not_revert_main_listing(self) -> None:
+        base = [
+            {
+                "id": "ohio-university-main-campus",
+                "discovery_seed_url": "https://www.ohio.edu/instres/commondataset.pdf",
+                "scrape_policy": "active",
+                "probe_state": {"last_result": "found", "last_probed_at": "2026-04-14T00:00:00Z"},
+            }
+        ]
+        main = [
+            {
+                "id": "ohio-university-main-campus",
+                "discovery_seed_url": "https://www.ohio.edu/iea/university-data",
+                "scrape_policy": "active",
+                "probe_state": {"last_result": "found", "last_probed_at": "2026-04-14T00:00:00Z"},
+            }
+        ]
+        probed = [
+            {
+                "id": "ohio-university-main-campus",
+                "discovery_seed_url": "https://www.ohio.edu/instres/commondataset.pdf",
+                "scrape_policy": "active",
+                "probe_state": {
+                    "last_result": "not_found",
+                    "last_probed_at": "2026-09-02T14:18:00Z",
+                    "last_method": "brave",
+                },
+            }
+        ]
+        merged, changed = merge_school_lists(base, main, probed)
+        self.assertEqual(changed, ["ohio-university-main-campus"])
+        self.assertEqual(
+            merged[0]["discovery_seed_url"],
+            "https://www.ohio.edu/iea/university-data",
+        )
+        self.assertEqual(merged[0]["probe_state"]["last_result"], "not_found")
+        self.assertEqual(merged[0]["probe_state"]["last_probed_at"], "2026-09-02T14:18:00Z")
+
 
 if __name__ == "__main__":
     unittest.main()
