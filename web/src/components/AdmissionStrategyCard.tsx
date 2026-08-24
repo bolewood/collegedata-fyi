@@ -214,13 +214,21 @@ function WaitListStage({
   label,
   value,
   width,
+  admitted = false,
 }: {
   label: string;
   value: number | null;
   width: number;
+  admitted?: boolean;
 }) {
   return (
-    <div className="admission-strategy-wait-stage">
+    <div
+      className={
+        admitted
+          ? "admission-strategy-wait-stage admission-strategy-wait-stage--admitted"
+          : "admission-strategy-wait-stage"
+      }
+    >
       <div>
         <span>{label}</span>
         <strong>{maybeCount(value)}</strong>
@@ -280,6 +288,7 @@ function WaitListView({
               label="Admitted from wait list"
               value={admitted}
               width={shareOf(admitted, max)}
+              admitted
             />
           </div>
           <p>

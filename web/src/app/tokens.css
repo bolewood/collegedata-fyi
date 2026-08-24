@@ -2721,3 +2721,115 @@
     gap: 9px;
   }
 }
+
+/* School record inks. Wrapper sets --ink-a / --ink-b / --onb. Nav stays house. */
+.school-record {
+  --ink-a: var(--forest);
+  --ink-b: var(--ochre);
+  --onb: var(--paper);
+}
+.school-record .cd-school-header {
+  background: var(--ink-a);
+  color: var(--paper);
+  padding: 26px 28px 28px;
+  margin: 0 0 12px;
+}
+.school-record .cd-school-header a {
+  color: var(--paper);
+  text-decoration-color: color-mix(in srgb, var(--paper) 40%, transparent);
+}
+.school-record .cd-school-header h1 {
+  color: var(--paper);
+}
+.school-record .cd-school-header h1 span {
+  color: inherit;
+}
+.school-record[data-ink-b-on-a="true"] .cd-school-header h1 span {
+  color: var(--ink-b);
+}
+.school-record .cd-school-header .meta,
+.school-record .cd-school-header .mono,
+.school-record .cd-school-header__count,
+.school-record .cd-school-header__glyph,
+.school-record .cd-school-header__aside {
+  color: var(--paper);
+}
+.school-record .cd-school-header__years::before {
+  color: color-mix(in srgb, var(--paper) 55%, var(--ink-a));
+}
+.school-record .cd-school-header :focus-visible {
+  outline-color: var(--paper);
+}
+.school-record .cd-school-header a:hover {
+  color: var(--paper);
+  text-decoration-color: var(--paper);
+}
+.school-record .cd-school-header h2,
+.school-record .cd-school-header .cd-archive-lead__heading,
+.school-record .cd-school-header .cd-archive-lead p {
+  color: color-mix(in srgb, var(--paper) 88%, var(--ink-a));
+}
+.school-record .school-documents-ledger__head .meta {
+  color: var(--ink-a);
+}
+.school-record .positioning-range__track,
+.school-record .positioning-range__track::before,
+.school-record .positioning-range__track span {
+  border-color: var(--ink-a);
+}
+.school-record .positioning-range__track::before {
+  border-top-color: var(--ink-a);
+}
+.school-record .merit-profile-stat {
+  border-top-color: var(--ink-a);
+}
+.school-record .merit-profile-stat--muted {
+  border-top-color: var(--rule-strong);
+}
+.school-record .merit-profile-stat strong,
+.school-record .merit-profile-context strong,
+.school-record .outcomes-band .stat-num {
+  color: var(--ink-a);
+}
+.school-record .outcomes-band > div {
+  border-top: 4px solid var(--ink-a);
+  padding-top: 11px;
+}
+.school-record .outcomes-band > div:nth-child(2),
+.school-record .outcomes-band > div:nth-child(4) {
+  border-top-color: var(--ink-b);
+}
+.school-record .admission-strategy-seatbar__ed {
+  background: var(--ink-b);
+  color: var(--onb);
+}
+.school-record .admission-strategy-seatbar__regular {
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--ink-a) 14%, var(--paper)),
+    color-mix(in srgb, var(--ink-a) 14%, var(--paper)) 8px,
+    var(--paper) 8px,
+    var(--paper) 16px
+  );
+}
+.school-record .admission-strategy-flow-cell__bar--ed {
+  background: var(--ink-b);
+}
+.school-record .admission-strategy-flow-cell__bar--other {
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--ink-a) 18%, var(--paper)),
+    color-mix(in srgb, var(--ink-a) 18%, var(--paper)) 6px,
+    var(--paper) 6px,
+    var(--paper) 12px
+  );
+}
+.school-record .admission-strategy-flow-cell__bar--single {
+  background: var(--ink-a);
+}
+.school-record .admission-strategy-wait-stage__track i {
+  background: var(--ink-a);
+}
+.school-record .admission-strategy-wait-stage--admitted .admission-strategy-wait-stage__track i {
+  background: var(--ink-b);
+}

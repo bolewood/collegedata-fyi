@@ -125,25 +125,33 @@ export default async function SchoolYearPage({ params }: {
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}
       />
-      {/* Breadcrumb */}
-      <nav className="text-sm text-gray-500 mb-4">
-        <Link href="/schools" className="hover:text-gray-700">
-          Schools
-        </Link>
-        {" / "}
-        <Link
-          href={`/schools/${school_id}`}
-          className="hover:text-gray-700"
-        >
-          {schoolName}
-        </Link>
-        {" / "}
-        <span className="text-gray-900">{year}</span>
-      </nav>
-
-      {/* Header */}
-      <h1 className="text-3xl font-bold text-gray-900">{schoolName}</h1>
-      <h2 className="text-xl text-gray-600 mt-1">{yearLead.heading}</h2>
+      {/* Breadcrumb + year identity share the school plates with the overview. */}
+      <header className="cd-school-header">
+        <div>
+          <nav className="mono" style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>
+            <Link href="/schools">Schools</Link>
+            {" / "}
+            <Link href={`/schools/${school_id}`}>{schoolName}</Link>
+            {" / "}
+            <span>{year}</span>
+          </nav>
+          <h1
+            className="serif"
+            style={{
+              fontWeight: 400,
+              fontSize: "clamp(36px, 5vw, 52px)",
+              margin: 0,
+              letterSpacing: "-0.02em",
+              lineHeight: 1,
+            }}
+          >
+            {schoolName}
+          </h1>
+          <h2 className="serif" style={{ fontSize: 22, fontWeight: 400, margin: "10px 0 0" }}>
+            {yearLead.heading}
+          </h2>
+        </div>
+      </header>
       <ArchiveLead lead={yearLead} showHeading={false} />
 
       {/* Render each document variant. The spreadsheet download covers all
@@ -192,16 +200,14 @@ async function DocumentVariant({
     : null;
 
   return (
-    <div className="mt-8">
-      {/* Sub-institutional label */}
+    <div style={{ marginTop: 32 }}>
       {doc.sub_institutional && (
-        <h2 className="text-lg font-semibold text-gray-800 mb-2">
+        <h2 className="serif" style={{ fontSize: 22, fontWeight: 400, margin: "0 0 8px" }}>
           {doc.sub_institutional}
         </h2>
       )}
 
-      {/* Meta */}
-      <div className="flex items-center gap-3 flex-wrap">
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         {doc.source_format && (
           <Badge
             label={formatBadgeLabel(doc.source_format)}
@@ -213,7 +219,8 @@ async function DocumentVariant({
             href={sourceDownloadUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-blue-600 hover:text-blue-800"
+            className="mono"
+            style={{ fontSize: 13 }}
           >
             {sourceDownloadLabel(doc.source_format, doc.source_storage_path)}
           </a>
@@ -226,9 +233,8 @@ async function DocumentVariant({
         )}
       </div>
 
-      {/* Key stats */}
       {hasValues && (
-        <div className="mt-4">
+        <div style={{ marginTop: 16 }}>
           <KeyStats schemaVersion={schemaVersion ?? doc.cds_year ?? undefined} values={values} />
         </div>
       )}
@@ -244,22 +250,22 @@ async function DocumentVariant({
           document variant; for schools with sub-institutional variants, the
           Scorecard data is IPEDS-level and identical across them. */}
       {scorecard && !doc.sub_institutional && (
-        <div className="mt-6">
-          <h2 className="text-lg font-semibold text-gray-900">
+        <div style={{ marginTop: 24 }}>
+          <div className="meta">§ Federal outcomes</div>
+          <h2 className="serif" style={{ fontSize: 22, fontWeight: 400, margin: "6px 0 0" }}>
             Federal outcomes
           </h2>
-          <div className="mt-1"><ScorecardVintageNote scorecard={scorecard} /></div>
-          <div className="mt-3">
+          <div style={{ marginTop: 4 }}><ScorecardVintageNote scorecard={scorecard} /></div>
+          <div style={{ marginTop: 12 }}>
             <OutcomesBand scorecard={scorecard} />
           </div>
         </div>
       )}
 
-      {/* Full fields */}
       {hasValues ? (
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            All Extracted Fields
+        <div style={{ marginTop: 24 }}>
+          <h3 className="serif" style={{ fontSize: 22, fontWeight: 400, margin: "0 0 16px" }}>
+            All extracted fields
           </h3>
           <FieldsView
             schemaVersion={schemaVersion ?? doc.cds_year}
@@ -268,11 +274,11 @@ async function DocumentVariant({
           />
         </div>
       ) : isExtracted ? (
-        <div className="mt-4 rounded-lg border border-gray-200 p-6 text-center text-gray-500">
+        <div className="cd-card" style={{ marginTop: 16, padding: "24px 28px" }}>
           <p>No structured field values available for this document yet.</p>
         </div>
       ) : (
-        <div className="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-center text-yellow-800">
+        <div className="cd-card" style={{ marginTop: 16, padding: "24px 28px" }}>
           <p>
             Structured data coming soon. The source document is available for
             download above.

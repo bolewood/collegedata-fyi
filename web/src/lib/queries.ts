@@ -776,6 +776,27 @@ export const fetchInstitutionCoverage = cache(
   },
 );
 
+// Brand hexes are source values only. Plates are derived at render.
+// Missing columns (pre-migration) or a null row both mean house inks.
+export const fetchSchoolBrandColors = cache(
+  async function fetchSchoolBrandColors(
+    schoolId: string,
+  ): Promise<string[] | null> {
+    try {
+      const { data, error } = await (supabase as unknown as UntypedSupabase)
+        .from("institution_directory")
+        .select("brand_colors")
+        .eq("school_id", schoolId)
+        .maybeSingle();
+      if (error || !data) return null;
+      const colors = (data as { brand_colors: string[] | null }).brand_colors;
+      return Array.isArray(colors) && colors.length > 0 ? colors : null;
+    } catch {
+      return null;
+    }
+  },
+);
+
 // Resolve reviewed retired slugs from the checked-in manifest first, then use
 // the public crosswalk for other aliases. A primary alias wins over demoted
 // aliases; ambiguous rows return null so callers render normally instead of
