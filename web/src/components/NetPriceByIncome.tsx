@@ -58,7 +58,7 @@ export function NetPriceByIncome({
           </h3>
         </div>
         <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)" }}>
-          CDS H2A · {scorecard.scorecard_data_year}
+          Scorecard · {scorecard.scorecard_data_year}
         </div>
       </div>
 
@@ -98,7 +98,7 @@ export function NetPriceByIncome({
                     inset: 0,
                     right: "auto",
                     width: `${widthPct}%`,
-                    background: r.isModal ? "var(--forest)" : "var(--ink)",
+                    background: r.isModal ? "var(--ink-b, var(--forest))" : "var(--ink-a, var(--ink))",
                   }}
                 />
               </div>
@@ -107,7 +107,7 @@ export function NetPriceByIncome({
                 aria-hidden={!r.isModal}
                 style={{
                   fontSize: 10.5,
-                  color: "var(--forest)",
+                  color: "var(--ink-a, var(--forest))",
                   letterSpacing: "0.05em",
                   whiteSpace: "nowrap",
                   visibility: r.isModal ? "visible" : "hidden",

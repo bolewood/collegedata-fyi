@@ -5,6 +5,7 @@ import {
   fetchExtract,
 } from "@/lib/queries";
 import type { FieldValue } from "@/lib/types";
+import { cachedSchoolInks, schoolOgColors } from "@/lib/school-inks";
 
 export const alt = "Common Data Set year detail";
 export const size = { width: 1200, height: 630 };
@@ -48,19 +49,20 @@ export default async function Image({
   const { school_id, year } = await params;
   const resolvedSchoolId = (await fetchCanonicalSchoolId(school_id)) ?? school_id;
   const docs = await fetchDocumentsBySchoolAndYear(resolvedSchoolId, year);
+  const og = schoolOgColors(await cachedSchoolInks(resolvedSchoolId));
 
   if (docs.length === 0) {
     return new ImageResponse(
       (
         <div
           style={{
-            background: "#1e3a5f",
+            background: og.ground,
             width: "100%",
             height: "100%",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "#ffffff",
+            color: og.type,
             fontSize: 48,
           }}
         >
@@ -114,7 +116,7 @@ export default async function Image({
     (
       <div
         style={{
-          background: "linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%)",
+          background: og.ground,
           width: "100%",
           height: "100%",
           display: "flex",
@@ -128,7 +130,7 @@ export default async function Image({
           style={{
             display: "flex",
             fontSize: 20,
-            color: "#60a5fa",
+            color: og.accent,
             marginBottom: 16,
             letterSpacing: 1,
           }}
@@ -142,7 +144,7 @@ export default async function Image({
             display: "flex",
             fontSize: schoolName.length > 40 ? 40 : 52,
             fontWeight: 700,
-            color: "#ffffff",
+            color: og.type,
             lineHeight: 1.2,
           }}
         >
@@ -154,7 +156,7 @@ export default async function Image({
           style={{
             display: "flex",
             fontSize: 28,
-            color: "#94a3b8",
+            color: og.type,
             marginTop: 8,
             marginBottom: 32,
           }}
@@ -166,7 +168,7 @@ export default async function Image({
         {stats.length > 0 ? (
           <div style={{ display: "flex", gap: 32 }}>
             {stats.slice(0, 4).map((s) => (
-              <StatPill key={s.label} label={s.label} value={s.value} />
+              <StatPill key={s.label} label={s.label} value={s.value} type={og.type} />
             ))}
           </div>
         ) : null}
@@ -176,22 +178,30 @@ export default async function Image({
   );
 }
 
-function StatPill({ label, value }: { label: string; value: string }) {
+function StatPill({
+  label,
+  value,
+  type,
+}: {
+  label: string;
+  value: string;
+  type: string;
+}) {
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        background: "rgba(255,255,255,0.1)",
-        borderRadius: 16,
+        background: "rgba(241,236,225,0.12)",
+        borderRadius: 2,
         padding: "16px 32px",
       }}
     >
-      <div style={{ fontSize: 32, fontWeight: 700, color: "#ffffff" }}>
+      <div style={{ fontSize: 32, fontWeight: 700, color: type }}>
         {value}
       </div>
-      <div style={{ fontSize: 14, color: "#94a3b8", marginTop: 4 }}>
+      <div style={{ fontSize: 14, color: type, opacity: 0.72, marginTop: 4 }}>
         {label}
       </div>
     </div>

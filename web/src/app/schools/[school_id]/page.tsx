@@ -307,31 +307,21 @@ export default async function SchoolDetailPage({ params }: {
       />
 
       {/* Header */}
-      <header
-        className="cd-school-header"
-        style={{ paddingTop: 24, paddingBottom: 8 }}
-      >
+      <header className="cd-school-header">
         <div>
           <div
             className="mono"
             style={{
               fontSize: 11,
-              color: "var(--ink-3)",
               letterSpacing: "0.08em",
               marginBottom: 12,
               textTransform: "uppercase",
             }}
           >
-            <Link
-              href="/schools"
-              style={{
-                color: "var(--ink-3)",
-                textDecoration: "none",
-              }}
-            >
+            <Link href="/schools" style={{ textDecoration: "none" }}>
               SCHOOLS
             </Link>{" "}
-            / <span style={{ color: "var(--ink)" }}>{name.toUpperCase()}</span>
+            / <span>{name.toUpperCase()}</span>
           </div>
           <h1
             className="serif"
@@ -359,7 +349,6 @@ export default async function SchoolDetailPage({ params }: {
               gap: 22,
               marginTop: 16,
               alignItems: "baseline",
-              color: "var(--ink-2)",
               fontSize: 14,
             }}
           >
@@ -368,7 +357,6 @@ export default async function SchoolDetailPage({ params }: {
                 className="mono"
                 style={{
                   fontSize: 11.5,
-                  color: "var(--ink)",
                   letterSpacing: "0.05em",
                 }}
               >
@@ -380,7 +368,6 @@ export default async function SchoolDetailPage({ params }: {
                 className="mono"
                 style={{
                   fontSize: 11.5,
-                  color: "var(--ink-3)",
                   letterSpacing: "0.05em",
                 }}
               >
@@ -393,7 +380,6 @@ export default async function SchoolDetailPage({ params }: {
                 title="Federal College Scorecard Carnegie basic classification code"
                 style={{
                   fontSize: 11.5,
-                  color: "var(--ink-3)",
                   letterSpacing: "0.05em",
                 }}
               >
@@ -416,7 +402,7 @@ export default async function SchoolDetailPage({ params }: {
             )}
           </div>
           {history.length > 1 && (
-            <Sparkline data={history} w={120} h={26} color="var(--forest)" />
+            <Sparkline data={history} w={120} h={26} color="currentColor" />
           )}
         </div>
       </header>
@@ -522,13 +508,14 @@ async function DirectoryOnlySchoolPage({
         }}
       />
 
-      <header style={{ paddingTop: 48, paddingBottom: 32 }}>
+      <header className="cd-school-header">
+        <div>
         <div className="meta" style={{ marginBottom: 16 }}>
           § Institution directory
         </div>
         <h1
+          className="serif"
           style={{
-            fontFamily: "var(--serif)",
             fontWeight: 400,
             fontSize: "clamp(36px, 5.5vw, 56px)",
             lineHeight: 1.05,
@@ -540,14 +527,14 @@ async function DirectoryOnlySchoolPage({
           {tail && (
             <>
               {" "}
-              <span style={{ fontStyle: "italic", color: "var(--ink-2)" }}>{tail}</span>
+              <span style={{ fontStyle: "italic" }}>{tail}</span>
             </>
           )}
         </h1>
         {location && (
           <div
             className="mono"
-            style={{ marginTop: 12, fontSize: 13, color: "var(--ink-3)" }}
+            style={{ marginTop: 12, fontSize: 13 }}
           >
             {location}
             {coverage.undergraduate_enrollment != null && (
@@ -557,6 +544,7 @@ async function DirectoryOnlySchoolPage({
             )}
           </div>
         )}
+        </div>
       </header>
 
       <section
