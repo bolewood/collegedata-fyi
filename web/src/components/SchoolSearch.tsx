@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import type { InstitutionSearchResult } from "@/lib/types";
 import { trackSchoolSearchSelected } from "@/lib/analytics";
 import { CoverageBadge } from "./CoverageBadge";
+import { isCanonicalCdsYear } from "@/lib/format";
 
 // PRD 015 M4 — server-backed autocomplete over institution_cds_coverage.
 // Calls the search_institutions RPC with a debounced query so missing-
@@ -194,7 +195,7 @@ export function SchoolSearch() {
                     }}
                   >
                     <span>{[r.city, r.state].filter(Boolean).join(", ")}</span>
-                    {r.latest_available_cds_year && (
+                    {isCanonicalCdsYear(r.latest_available_cds_year) && (
                       <span>
                         CDS {r.latest_available_cds_year}
                       </span>

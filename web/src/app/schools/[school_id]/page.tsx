@@ -24,7 +24,7 @@ import { Sparkline } from "@/components/Sparkline";
 import { CoverageBadge } from "@/components/CoverageBadge";
 import { SubmissionForm } from "@/components/SubmissionForm";
 import { FederalBaselineTable } from "@/components/FederalBaselineTable";
-import { storageUrl, yearRange } from "@/lib/format";
+import { isCanonicalCdsYear, storageUrl, yearRange } from "@/lib/format";
 import { archiveLead } from "@/lib/archive-lead";
 import { ArchiveLead } from "@/components/ArchiveLead";
 import type { ManifestRow, InstitutionCoverage } from "@/lib/types";
@@ -66,7 +66,7 @@ export async function generateMetadata({
   const location = formatLocation(coverage);
   const years = docs
     .map((d) => d.canonical_year)
-    .filter((y): y is string => y != null)
+    .filter(isCanonicalCdsYear)
     .sort();
   const path = `/schools/${resolvedSchoolId}`;
   const archiveCount = `${docs.length} CDS document${docs.length !== 1 ? "s" : ""}`;
@@ -129,7 +129,7 @@ function formatLocation(
 function archiveHistory(docs: ManifestRow[]): number[] {
   const years = docs
     .map((d) => d.canonical_year)
-    .filter((y): y is string => y != null)
+    .filter(isCanonicalCdsYear)
     .sort();
   if (years.length === 0) return [];
   const series: number[] = [];
@@ -192,7 +192,7 @@ export default async function SchoolDetailPage({ params }: {
   const location = formatLocation(coverage);
   const years = docs
     .map((d) => d.canonical_year)
-    .filter((y): y is string => y != null)
+    .filter(isCanonicalCdsYear)
     .sort();
 
   const hasSubs = docs.some((d) => d.sub_institutional != null);

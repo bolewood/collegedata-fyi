@@ -23,6 +23,7 @@ This project uses four-part semantic versioning.
 ### Fixed
 
 - Rank Jump-to-school exact slugs and nicknames (MIT, Penn) ahead of accidental name substrings, and prefer schools that already have a CDS year.
+- Ignore sentinel CDS years such as `unknown` when choosing a school's latest coverage year, so search no longer labels a current extract (Michigan 2025-26) as "Older CDS available".
 - Point Oklahoma's archive seed at the IRR listing (`/irr/other-reports`) instead of a single 2023-24 DAM PDF, and prefer Brave HTML listings over year-specific PDFs so sibling years are not frozen out.
 - Stop copying Ohio University's main-campus CDS URL onto the five regional UNITIDs that share ohio.edu.
 - Mark coverage `cds_available_stale` when the latest extracted year is older than the finder freshness floor, even if weekly archive re-verified the same file.

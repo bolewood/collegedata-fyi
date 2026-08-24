@@ -1,4 +1,4 @@
-import { formatShortDate } from "./format";
+import { formatShortDate, isCanonicalCdsYear } from "./format";
 
 export type FreshnessFacts = {
   source_modification_date?: string | null;
@@ -64,8 +64,10 @@ export function freshnessSentence(signal: FreshnessSignal | null): string | null
 export function latestDocumentFreshness<T extends FreshnessFacts & { canonical_year?: string | null }>(
   documents: T[],
 ): FreshnessSignal | null {
+  const yearKey = (year: string | null | undefined) =>
+    isCanonicalCdsYear(year) ? year : "";
   const sorted = [...documents].sort((a, b) =>
-    (b.canonical_year ?? "").localeCompare(a.canonical_year ?? ""),
+    yearKey(b.canonical_year).localeCompare(yearKey(a.canonical_year)),
   );
   for (const doc of sorted) {
     const signal = pickFreshnessSignal(doc);

@@ -1,4 +1,4 @@
-import { yearRange } from "./format";
+import { isCanonicalCdsYear, yearRange } from "./format";
 import {
   getOfficialCdsPage,
   type OfficialCdsPage,
@@ -82,7 +82,7 @@ function uniqueYears(documents: ArchiveDocumentFacts[]): string[] {
     new Set(
       documents
         .map((doc) => doc.canonical_year)
-        .filter((year): year is string => Boolean(year)),
+        .filter(isCanonicalCdsYear),
     ),
   ).sort();
 }

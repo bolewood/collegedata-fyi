@@ -93,6 +93,34 @@ describe("archiveLead", () => {
     expect(leadContainsBannedCopy(leadPlainText(lead))).toBe(false);
   });
 
+  it("ignores sentinel CDS years when naming the archive range", () => {
+    const lead = archiveLead({
+      schoolId: "umich",
+      schoolName: "University of Michigan",
+      documents: [
+        {
+          canonical_year: "unknown",
+          source_format: "pdf_flat",
+          extraction_status: "extracted",
+        },
+        {
+          canonical_year: "2025-26",
+          source_format: "xlsx",
+          extraction_status: "extracted",
+        },
+        {
+          canonical_year: "2000-01",
+          source_format: "pdf_flat",
+          extraction_status: "extracted",
+        },
+      ],
+    });
+    const text = leadPlainText(lead);
+    expect(text).toContain("2000–2025");
+    expect(text).toContain("Latest extracted year is 2025-26");
+    expect(text).not.toContain("unknown");
+  });
+
   it("states when a year-page date is only this archive's discovery", () => {
     const lead = yearArchiveLead({
       schoolId: "thin-college",

@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import type { InstitutionSearchResult } from "@/lib/types";
 import { trackSchoolSearchSelected } from "@/lib/analytics";
 import { CoverageBadge } from "./CoverageBadge";
+import { isCanonicalCdsYear } from "@/lib/format";
 
 const DEBOUNCE_MS = 180;
 
@@ -126,7 +127,9 @@ export function HeaderSchoolSearch() {
                 <span className="cd-header-search__name">{result.school_name}</span>
                 <span className="cd-header-search__meta">
                   {[result.city, result.state].filter(Boolean).join(", ") || "Institution profile"}
-                  {result.latest_available_cds_year ? ` - CDS ${result.latest_available_cds_year}` : ""}
+                  {isCanonicalCdsYear(result.latest_available_cds_year)
+                    ? ` - CDS ${result.latest_available_cds_year}`
+                    : ""}
                 </span>
               </span>
               <CoverageBadge
