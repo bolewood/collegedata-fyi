@@ -256,8 +256,8 @@
 }
 .cd-header-search__result {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
+  grid-template-columns: 17px minmax(0, 1fr) auto;
+  column-gap: 14px;
   align-items: center;
   padding: 10px 12px;
   cursor: pointer;
@@ -2832,4 +2832,44 @@
 }
 .school-record .admission-strategy-wait-stage--admitted .admission-strategy-wait-stage__track i {
   background: var(--ink-b);
+}
+
+/* Two-dot school glyph. Decorative; always sits next to the name. */
+.school-glyph {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 3px;
+}
+.school-glyph i {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.school-glyph i.school-glyph__dot--hollow {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+.school-glyph--sm i {
+  width: 6px;
+  height: 6px;
+}
+.school-glyph--lg i {
+  width: 8px;
+  height: 8px;
+}
+.school-name-with-glyph {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+}
+.school-name-with-glyph--lg {
+  gap: 9px;
+}
+.school-crumb-with-glyph {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
 }

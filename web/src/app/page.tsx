@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { fetchManifest, fetchSiteStats } from "@/lib/queries";
+import { fetchManifest, fetchSiteStats, fetchBrandColorIndex } from "@/lib/queries";
 import { formatCount, formatShortDate } from "@/lib/format";
 import type { ManifestRow } from "@/lib/types";
 import { SchoolSearch } from "@/components/SchoolSearch";
+import { SchoolGlyph } from "@/components/SchoolGlyph";
 
 export const revalidate = 3600; // ISR: revalidate every hour
 
@@ -40,12 +41,17 @@ function formatDrainDate(iso: string): string {
 type DrainEntry = {
   when: string;
   school: string;
+  schoolId: string;
   action: string;
   tag: string;
   href: string;
+  brandColors: string[] | null;
 };
 
-function latestDrain(rows: ManifestRow[]): DrainEntry[] {
+function latestDrain(
+  rows: ManifestRow[],
+  brandIndex: Record<string, string[]>,
+): DrainEntry[] {
   const sorted = rows
     .filter((r) => r.discovered_at && r.school_name && r.school_id)
     .slice()
@@ -62,17 +68,23 @@ function latestDrain(rows: ManifestRow[]): DrainEntry[] {
     out.push({
       when: formatDrainDate(r.discovered_at!),
       school: r.school_name ?? sid,
+      schoolId: sid,
       action: `+ ${r.canonical_year ?? "new"} CDS`,
       tag: tagForFormat(r.source_format),
       href: r.canonical_year ? `/schools/${sid}/${r.canonical_year}` : `/schools/${sid}`,
+      brandColors: brandIndex[sid] ?? null,
     });
   }
   return out;
 }
 
 export default async function HomePage() {
-  const [manifest, stats] = await Promise.all([fetchManifest(), fetchSiteStats()]);
-  const drain = latestDrain(manifest);
+  const [manifest, stats, brandIndex] = await Promise.all([
+    fetchManifest(),
+    fetchSiteStats(),
+    fetchBrandColorIndex(),
+  ]);
+  const drain = latestDrain(manifest, brandIndex);
 
   const schoolsValue = stats.total_schools.toLocaleString();
   const docsValue = stats.total_documents.toLocaleString();
@@ -210,7 +222,7 @@ export default async function HomePage() {
                   display: "grid",
                   gridTemplateColumns: "96px 1fr auto auto",
                   gap: 16,
-                  alignItems: "baseline",
+                  alignItems: "center",
                   padding: "10px 0",
                   fontSize: 14,
                   color: "inherit",
@@ -218,7 +230,10 @@ export default async function HomePage() {
                 }}
               >
                 <span className="mono" style={{ color: "var(--ink-3)", fontSize: 12 }}>{r.when}</span>
-                <span style={{ fontFamily: "var(--serif)", fontSize: 18 }}>{r.school}</span>
+                <span className="cd-drain-row__school">
+                  <SchoolGlyph brandColors={r.brandColors} />
+                  {r.school}
+                </span>
                 <span className="mono" style={{ fontSize: 12, color: "var(--ink-2)" }}>{r.action}</span>
                 <span className="cd-chip">{r.tag}</span>
               </Link>
@@ -228,14 +243,22 @@ export default async function HomePage() {
       )}
 
       <style>{`
-        .cd-drain-row:hover span:nth-child(2) { color: var(--forest-ink); text-decoration: underline; text-underline-offset: 3px; }
+        .cd-drain-row__school {
+          display: inline-flex;
+          min-width: 0;
+          align-items: center;
+          gap: 14px;
+          font-family: var(--serif);
+          font-size: 18px;
+        }
+        .cd-drain-row:hover .cd-drain-row__school { color: var(--forest-ink); text-decoration: underline; text-underline-offset: 3px; }
         @media (max-width: 860px) {
           .cd-hero { grid-template-columns: 1fr !important; padding-top: 48px !important; }
           .cd-marginalia-left, .cd-marginalia-right { display: none !important; }
           .cd-stat-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 24px !important; }
           .cd-drain { grid-template-columns: 1fr !important; gap: 16px !important; }
           .cd-drain-row { grid-template-columns: 88px 1fr auto !important; gap: 10px 12px !important; }
-          .cd-drain-row span:nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
+          .cd-drain-row__school { grid-column: 1 / -1; grid-row: 2; }
         }
       `}</style>
     </div>

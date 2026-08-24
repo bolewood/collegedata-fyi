@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { fetchCoverageRows } from "@/lib/queries";
+import { fetchCoverageRows, fetchBrandColorIndex } from "@/lib/queries";
 import { CoverageDashboard } from "@/components/CoverageDashboard";
 
 export const revalidate = 900; // ISR: 15 minutes, matches the refresh-coverage cron
@@ -14,7 +14,14 @@ export const metadata: Metadata = {
 };
 
 export default async function CoveragePage() {
-  const rows = await fetchCoverageRows();
+  const [rows, brandIndex] = await Promise.all([
+    fetchCoverageRows(),
+    fetchBrandColorIndex(),
+  ]);
+  const coloredRows = rows.map((row) => ({
+    ...row,
+    brand_colors: brandIndex[row.school_id] ?? null,
+  }));
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
@@ -55,7 +62,7 @@ export default async function CoveragePage() {
           search params via useSearchParams; without it, Next.js bails
           out of static generation for /coverage. */}
       <Suspense fallback={<div className="mono" style={{ padding: "32px 0", color: "var(--ink-3)" }}>LOADING COVERAGE DATA…</div>}>
-        <CoverageDashboard rows={rows} />
+        <CoverageDashboard rows={coloredRows} />
       </Suspense>
 
       <section style={{ marginTop: 64, maxWidth: 760 }}>

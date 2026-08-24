@@ -166,6 +166,7 @@ export interface SchoolSummary {
   latest_year: string | null;
   formats: string[];
   has_extracted: boolean;
+  brand_colors?: string[] | null;
 }
 
 // PRD 015 M3 — coverage_status_t enum from
@@ -194,6 +195,7 @@ export interface InstitutionSearchResult {
   coverage_status: CoverageStatus;
   coverage_label: string;
   latest_available_cds_year: string | null;
+  brand_colors?: string[] | null;
 }
 
 // fetchInstitutionCoverage() return shape — a single row from
@@ -213,6 +215,7 @@ export interface InstitutionCoverage {
   latest_available_cds_year: string | null;
   last_checked_at: string | null;
   can_submit_source: boolean;
+  brand_colors?: string[] | null;
 }
 
 export type FederalFactQuality =

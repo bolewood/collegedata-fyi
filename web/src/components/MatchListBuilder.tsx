@@ -73,9 +73,11 @@ function downloadCsv(filename: string, contents: string) {
 export function MatchListBuilder({
   schools,
   initialCode,
+  brandColors,
 }: {
   schools: MatchBuilderSchool[];
   initialCode?: string;
+  brandColors?: Record<string, string[]>;
 }) {
   const [profile, setProfile] = useState<MatchProfile | null>(null);
   const [filters, setFilters] = useState<MatchFilters>(DEFAULT_MATCH_FILTERS);
@@ -376,7 +378,11 @@ export function MatchListBuilder({
                   </div>
                   <div className="match-tier-group__rows">
                     {rows.map((school) => (
-                      <SchoolListItem key={school.documentId} school={school} />
+                      <SchoolListItem
+                        key={school.documentId}
+                        school={school}
+                        brandColors={brandColors?.[school.schoolId]}
+                      />
                     ))}
                   </div>
                 </section>

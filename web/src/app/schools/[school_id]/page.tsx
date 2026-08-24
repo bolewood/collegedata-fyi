@@ -12,6 +12,7 @@ import {
   fetchChangeEventsBySchoolId,
   fetchSchoolFederalFacts,
   fetchCanonicalSchoolId,
+  fetchSchoolBrandColors,
 } from "@/lib/queries";
 import { OutcomesSection } from "@/components/OutcomesSection";
 import { PositioningCard } from "@/components/PositioningCard";
@@ -27,6 +28,7 @@ import { FederalBaselineTable } from "@/components/FederalBaselineTable";
 import { isCanonicalCdsYear, storageUrl, yearRange } from "@/lib/format";
 import { archiveLead } from "@/lib/archive-lead";
 import { ArchiveLead } from "@/components/ArchiveLead";
+import { SchoolGlyph } from "@/components/SchoolGlyph";
 import type { ManifestRow, InstitutionCoverage } from "@/lib/types";
 
 export const revalidate = 3600;
@@ -173,6 +175,7 @@ export default async function SchoolDetailPage({ params }: {
     changeEvents,
     coverage,
     federalFacts,
+    brandColors,
   ] = await Promise.all([
     fetchScorecardByIpedsId(ipedsId),
     fetchBrowserRowBySchoolId(school_id),
@@ -182,6 +185,7 @@ export default async function SchoolDetailPage({ params }: {
     fetchChangeEventsBySchoolId(school_id),
     fetchInstitutionCoverage(school_id),
     fetchSchoolFederalFacts(school_id),
+    fetchSchoolBrandColors(school_id),
   ]);
   const positioningSchool = browserRow
     ? { ...browserRow, ...gpaProfile }
@@ -321,7 +325,11 @@ export default async function SchoolDetailPage({ params }: {
             <Link href="/schools" style={{ textDecoration: "none" }}>
               SCHOOLS
             </Link>{" "}
-            / <span>{name.toUpperCase()}</span>
+            /{" "}
+            <span className="school-crumb-with-glyph">
+              <SchoolGlyph size="lg" brandColors={brandColors} />
+              <span>{name.toUpperCase()}</span>
+            </span>
           </div>
           <h1
             className="serif"

@@ -6,13 +6,17 @@ import { supabase } from "@/lib/supabase";
 import type { InstitutionSearchResult } from "@/lib/types";
 import { trackSchoolSearchSelected } from "@/lib/analytics";
 import { CoverageBadge } from "./CoverageBadge";
+import { SchoolGlyph } from "./SchoolGlyph";
+import { withGlyph, type GlyphInks } from "@/lib/derive-inks";
 import { isCanonicalCdsYear } from "@/lib/format";
 
 const DEBOUNCE_MS = 180;
 
+type SearchHit = InstitutionSearchResult & { glyph: GlyphInks };
+
 export function HeaderSchoolSearch() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<InstitutionSearchResult[]>([]);
+  const [results, setResults] = useState<SearchHit[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -50,7 +54,7 @@ export function HeaderSchoolSearch() {
         setResults([]);
         return;
       }
-      setResults(data ?? []);
+      setResults((data ?? []).map(withGlyph));
       setSelectedIndex(0);
     }, DEBOUNCE_MS);
 
@@ -123,6 +127,7 @@ export function HeaderSchoolSearch() {
               data-active={index === selectedIndex ? "true" : "false"}
               onMouseDown={() => handleSelect(result.school_id, "mouse")}
             >
+              <SchoolGlyph inks={result.glyph} />
               <span className="cd-header-search__school">
                 <span className="cd-header-search__name">{result.school_name}</span>
                 <span className="cd-header-search__meta">
