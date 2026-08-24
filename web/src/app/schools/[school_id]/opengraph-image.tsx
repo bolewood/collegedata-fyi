@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { fetchCanonicalSchoolId, fetchSchoolDocuments } from "@/lib/queries";
-import { yearRange } from "@/lib/format";
+import { isCanonicalCdsYear, yearRange } from "@/lib/format";
 import { cachedSchoolInks, schoolOgColors } from "@/lib/school-inks";
 
 export const alt = "School Common Data Set archive";
@@ -43,7 +43,7 @@ export default async function Image({
   const name = docs[0].school_name ?? resolvedSchoolId;
   const years = docs
     .map((d) => d.canonical_year)
-    .filter((y): y is string => y != null)
+    .filter(isCanonicalCdsYear)
     .sort();
 
   return new ImageResponse(

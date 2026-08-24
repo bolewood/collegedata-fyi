@@ -52,6 +52,17 @@ describe("pickFreshnessSignal", () => {
     ]);
     expect(signal?.kind).toBe("http_last_modified");
   });
+
+  it("ignores sentinel years when picking the latest document", () => {
+    const signal = latestDocumentFreshness([
+      { canonical_year: "unknown", discovered_at: "2026-08-01T00:00:00Z" },
+      {
+        canonical_year: "2025-26",
+        source_http_last_modified: "2026-07-01T00:00:00Z",
+      },
+    ]);
+    expect(signal?.kind).toBe("http_last_modified");
+  });
 });
 
 describe("buildSchoolRss", () => {

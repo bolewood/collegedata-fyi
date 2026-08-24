@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatRecipeShare, sourceDownloadLabel } from "./format";
+import { formatRecipeShare, isCanonicalCdsYear, sourceDownloadLabel } from "./format";
 
 describe("formatRecipeShare", () => {
   it("uses whole percents at 10% and above", () => {
@@ -17,6 +17,16 @@ describe("formatRecipeShare", () => {
   it("lets draw-rate figures keep a tenth even above 10%", () => {
     expect(formatRecipeShare(0.048, 1)).toBe("4.8%");
     expect(formatRecipeShare(0.151, 1)).toBe("15.1%");
+  });
+});
+
+describe("isCanonicalCdsYear", () => {
+  it("accepts YYYY-YY cycles and rejects sentinels", () => {
+    expect(isCanonicalCdsYear("2025-26")).toBe(true);
+    expect(isCanonicalCdsYear("2000-01")).toBe(true);
+    expect(isCanonicalCdsYear("unknown")).toBe(false);
+    expect(isCanonicalCdsYear(null)).toBe(false);
+    expect(isCanonicalCdsYear("2025")).toBe(false);
   });
 });
 

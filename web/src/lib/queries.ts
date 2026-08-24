@@ -35,6 +35,7 @@ import {
   type SchoolAliasRow,
 } from "./school-alias";
 import retiredSchoolAliases from "../data/school-redirects.json";
+import { isCanonicalCdsYear } from "./format";
 
 // Documents with these participation_status values are excluded from every
 // public-facing manifest query. 'withdrawn' = takedown per ADR 0008.
@@ -603,14 +604,16 @@ export function aggregateSchools(rows: ManifestRow[]): SchoolSummary[] {
         school_id: sid,
         school_name: sname,
         doc_count: 1,
-        latest_year: row.canonical_year,
+        latest_year: isCanonicalCdsYear(row.canonical_year)
+          ? row.canonical_year
+          : null,
         formats: row.source_format ? [row.source_format] : [],
         has_extracted: row.extraction_status === "extracted",
       });
     } else {
       existing.doc_count += 1;
       if (
-        row.canonical_year &&
+        isCanonicalCdsYear(row.canonical_year) &&
         (!existing.latest_year || row.canonical_year > existing.latest_year)
       ) {
         existing.latest_year = row.canonical_year;
@@ -633,7 +636,7 @@ export function computeStats(rows: ManifestRow[]): CorpusStats {
   const schoolIds = new Set(rows.map((r) => r.school_id).filter(Boolean));
   const years = rows
     .map((r) => r.canonical_year)
-    .filter((y): y is string => y != null && y !== "unknown" && /^\d{4}/.test(y))
+    .filter(isCanonicalCdsYear)
     .sort();
   const extracted = rows.filter(
     (r) => r.extraction_status === "extracted"

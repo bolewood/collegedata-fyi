@@ -135,6 +135,13 @@ export function formatRecipeShare(
   return `${pct.toFixed(places)}%`;
 }
 
+// Canonical CDS cycle like 2025-26. Sentinels such as "unknown" sort
+// after real years in text ORDER BY cds_year DESC and must not be treated
+// as the latest available year.
+export function isCanonicalCdsYear(year: string | null | undefined): year is string {
+  return typeof year === "string" && /^\d{4}-\d{2}$/.test(year);
+}
+
 export function yearRange(
   earliest: string | null,
   latest: string | null
