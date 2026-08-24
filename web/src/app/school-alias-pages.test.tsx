@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   fetchMeritProfileBySchoolId: vi.fn(),
   fetchChangeEventsBySchoolId: vi.fn(),
   fetchSchoolFederalFacts: vi.fn(),
+  fetchSchoolBrandColors: vi.fn(),
   permanentRedirect: vi.fn(),
   notFound: vi.fn(),
   imageResponse: vi.fn(),
@@ -33,6 +34,7 @@ vi.mock("@/lib/queries", () => ({
   fetchMeritProfileBySchoolId: mocks.fetchMeritProfileBySchoolId,
   fetchChangeEventsBySchoolId: mocks.fetchChangeEventsBySchoolId,
   fetchSchoolFederalFacts: mocks.fetchSchoolFederalFacts,
+  fetchSchoolBrandColors: mocks.fetchSchoolBrandColors,
 }));
 
 vi.mock("next/navigation", () => ({
@@ -59,6 +61,7 @@ describe("retired alias pages and Open Graph images", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.fetchCanonicalSchoolId.mockResolvedValue("tufts");
+    mocks.fetchSchoolBrandColors.mockResolvedValue(null);
     mocks.permanentRedirect.mockImplementation(() => {
       throw redirectSentinel;
     });

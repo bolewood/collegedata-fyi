@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { SchoolGlyph } from "./SchoolGlyph";
 import { trackEvent, trackSourceOpened } from "@/lib/analytics";
 import { academicFitLabel, admissionsOutlookLabel, type Caveat } from "@/lib/positioning";
 import type { RankedMatchSchool } from "@/lib/list-builder";
@@ -38,7 +39,13 @@ function caveatLabel(caveat: Caveat): string {
   }
 }
 
-export function SchoolListItem({ school }: { school: RankedMatchSchool }) {
+export function SchoolListItem({
+  school,
+  brandColors,
+}: {
+  school: RankedMatchSchool;
+  brandColors?: string[] | null;
+}) {
   const caveats = school.result.caveats
     .filter((caveat) =>
       ["low_sat_submit_rate", "stale_cds", "sub_15_admit_rate_suppression", "data_incomplete", "no_admit_rate"].includes(caveat),
@@ -51,6 +58,7 @@ export function SchoolListItem({ school }: { school: RankedMatchSchool }) {
         <div className="match-school-row__name">
           <Link
             href={school.schoolUrl}
+            className="school-name-with-glyph"
             onClick={() =>
               trackEvent("match_school_opened", {
                 school_id: school.schoolId,
@@ -60,6 +68,7 @@ export function SchoolListItem({ school }: { school: RankedMatchSchool }) {
               })
             }
           >
+            <SchoolGlyph brandColors={brandColors} />
             {school.schoolName}
           </Link>
         </div>

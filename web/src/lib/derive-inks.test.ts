@@ -8,8 +8,12 @@ import {
   PAPER,
   TARGET_A,
   TARGET_ON_B,
+  UNKNOWN_GLYPH_A,
+  UNKNOWN_GLYPH_B,
   contrast,
   deriveInks,
+  glyphInks,
+  glyphSearchFields,
 } from "./derive-inks";
 
 describe("deriveInks", () => {
@@ -72,5 +76,68 @@ describe("deriveInks", () => {
     expect(contrast(HOUSE_A, PAPER)).toBeLessThan(TARGET_A);
     expect(contrast("#ffcb05", PAPER)).toBeGreaterThanOrEqual(MIN_B_ON_CREAM);
     expect(contrast("#ffcb05", PAPER)).toBeLessThan(1.3);
+  });
+});
+
+describe("glyphInks", () => {
+  it("returns grey plus a hollow B when no colours are on file", () => {
+    expect(glyphInks(null)).toEqual({
+      a: UNKNOWN_GLYPH_A,
+      b: UNKNOWN_GLYPH_B,
+      hollowB: true,
+      unknown: true,
+    });
+    expect(glyphInks([])).toEqual(glyphInks(null));
+  });
+
+  it("does not use house forest and ochre for an unknown school", () => {
+    const inks = glyphInks(null);
+    expect(inks.a).not.toBe(HOUSE_A);
+    expect(inks.b).not.toBe(HOUSE_B);
+  });
+
+  it("keeps Michigan maize as the B dot", () => {
+    const inks = glyphInks(["#00274C", "#FFCB05"]);
+    expect(inks.unknown).toBe(false);
+    expect(inks.hollowB).toBe(false);
+    expect(inks.a).toBe("#00274c");
+    expect(inks.b).toBe("#ffcb05");
+  });
+
+  it("treats a lone dark as A and derives a bright B", () => {
+    const inks = glyphInks(["#18453B"]);
+    expect(inks.unknown).toBe(false);
+    expect(inks.a).toBe("#18453b");
+    expect(inks.b).toBe("#159c84");
+  });
+
+  it("rejects black as a plate and keeps the gold", () => {
+    const inks = glyphInks(["#000000", "#FFCC00"]);
+    expect(inks.unknown).toBe(false);
+    expect(inks.a).toBe("#333f48");
+    expect(inks.b).toBe("#ffcc00");
+  });
+
+  it("ships a, b, and hollow_b for the search payload", () => {
+    expect(glyphSearchFields(null)).toEqual({
+      a: UNKNOWN_GLYPH_A,
+      b: UNKNOWN_GLYPH_B,
+      hollow_b: true,
+    });
+    expect(glyphSearchFields(["#00274C", "#FFCB05"])).toEqual({
+      a: "#00274c",
+      b: "#ffcb05",
+      hollow_b: false,
+    });
+  });
+
+  it("keeps scouted Michigan A plates as given", () => {
+    expect(glyphInks(["#6C4023", "#B5A167"]).a).toBe("#6c4023");
+    expect(glyphInks(["#6A0032"]).a).toBe("#6a0032");
+    expect(glyphInks(["#005841", "#FFB600"])).toMatchObject({
+      a: "#005841",
+      b: "#ffb600",
+      unknown: false,
+    });
   });
 });

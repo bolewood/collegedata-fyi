@@ -13,6 +13,7 @@ import {
 } from "@/lib/browser-search";
 import { trackDownload, trackEvent, trackSourceOpened } from "@/lib/analytics";
 import { formatBadgeLabel, formatCurrency, formatPercent } from "@/lib/format";
+import { SchoolGlyph } from "./SchoolGlyph";
 
 type FilterState = {
   undergradMin: string;
@@ -160,7 +161,11 @@ function downloadCsv(rows: BrowserRow[]) {
   URL.revokeObjectURL(url);
 }
 
-export function SchoolBrowser() {
+export function SchoolBrowser({
+  brandColors,
+}: {
+  brandColors?: Record<string, string[]>;
+}) {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [sortIndex, setSortIndex] = useState(1);
   const [page, setPage] = useState(1);
@@ -372,7 +377,7 @@ export function SchoolBrowser() {
 
       <div className="browser-mobile-results" style={{ opacity: loading ? 0.62 : 1 }}>
         {rows.map((row) => (
-          <BrowserResultCard key={row.document_id} row={row} />
+          <BrowserResultCard key={row.document_id} row={row} brandColors={brandColors?.[row.school_id]} />
         ))}
       </div>
 
@@ -398,6 +403,7 @@ export function SchoolBrowser() {
                 <td style={{ padding: "12px 10px 12px 0" }}>
                   <Link
                     href={`/schools/${row.school_id}`}
+                    className="school-name-with-glyph"
                     style={{ fontFamily: "var(--serif)", fontSize: 18 }}
                     onClick={() =>
                       trackEvent("browser_school_opened", {
@@ -407,6 +413,7 @@ export function SchoolBrowser() {
                       })
                     }
                   >
+                    <SchoolGlyph size="sm" brandColors={brandColors?.[row.school_id]} />
                     {row.school_name}
                   </Link>
                   {row.sub_institutional && (
@@ -543,13 +550,20 @@ export function SchoolBrowser() {
   );
 }
 
-function BrowserResultCard({ row }: { row: BrowserRow }) {
+function BrowserResultCard({
+  row,
+  brandColors,
+}: {
+  row: BrowserRow;
+  brandColors?: string[] | null;
+}) {
   return (
     <article className="cd-card" style={{ padding: 14 }}>
       <div style={{ display: "flex", gap: 10, alignItems: "flex-start", justifyContent: "space-between" }}>
         <div style={{ minWidth: 0 }}>
           <Link
             href={`/schools/${row.school_id}`}
+            className="school-name-with-glyph"
             style={{ fontFamily: "var(--serif)", fontSize: 19, lineHeight: 1.15 }}
             onClick={() =>
               trackEvent("browser_school_opened", {
@@ -559,6 +573,7 @@ function BrowserResultCard({ row }: { row: BrowserRow }) {
               })
             }
           >
+            <SchoolGlyph brandColors={brandColors} />
             {row.school_name}
           </Link>
           {row.sub_institutional && (

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { SchoolBrowser } from "@/components/SchoolBrowser";
-import { fetchSiteStats } from "@/lib/queries";
+import { fetchSiteStats, fetchBrandColorIndex } from "@/lib/queries";
 import { formatCount, formatShortDate } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -14,7 +14,10 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export default async function BrowsePage() {
-  const stats = await fetchSiteStats();
+  const [stats, brandColors] = await Promise.all([
+    fetchSiteStats(),
+    fetchBrandColorIndex(),
+  ]);
 
   return (
     <div className="mx-auto max-w-6xl" style={{ padding: "52px 24px 72px" }}>
@@ -77,7 +80,7 @@ export default async function BrowsePage() {
         </div>
       </section>
 
-      <SchoolBrowser />
+      <SchoolBrowser brandColors={brandColors} />
 
       <style>{`
         @media (max-width: 760px) {

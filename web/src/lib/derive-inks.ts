@@ -276,6 +276,47 @@ export function deriveInks(brand: string | string[] | null | undefined): Derived
   return finish(a, bright.hex, "ideal pair — both plates used as given");
 }
 
+// Glyph-only neutrals. A school with no colours on file still prints house
+// inks on its own page (the site's voice). Beside the school's name in a
+// list, forest + ochre would claim those are the school's colours.
+export const UNKNOWN_GLYPH_A = "#8a8779";
+export const UNKNOWN_GLYPH_B = "#a8a59a";
+
+export type GlyphInks = {
+  a: string;
+  b: string;
+  hollowB: boolean;
+  unknown: boolean;
+};
+
+export function glyphInks(
+  brand: string | string[] | null | undefined,
+): GlyphInks {
+  const plates = deriveInks(brand);
+  if (plates.house) {
+    return {
+      a: UNKNOWN_GLYPH_A,
+      b: UNKNOWN_GLYPH_B,
+      hollowB: true,
+      unknown: true,
+    };
+  }
+  return { a: plates.a, b: plates.b, hollowB: false, unknown: false };
+}
+
+export function glyphSearchFields(
+  brand: string | string[] | null | undefined,
+): { a: string; b: string; hollow_b: boolean } {
+  const inks = glyphInks(brand);
+  return { a: inks.a, b: inks.b, hollow_b: inks.hollowB };
+}
+
+export function withGlyph<T extends { brand_colors?: string[] | null }>(
+  row: T,
+): T & { glyph: GlyphInks } {
+  return { ...row, glyph: glyphInks(row.brand_colors) };
+}
+
 export function inkStyle(inks: DerivedInks): Record<string, string> {
   return {
     "--ink-a": inks.a,

@@ -22,6 +22,7 @@ import Link from "next/link";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { CoverageStatus, InstitutionCoverage } from "@/lib/types";
 import { CoverageBadge } from "./CoverageBadge";
+import { SchoolGlyph } from "./SchoolGlyph";
 
 // Display order for both the histogram and the status filter chips.
 // Mirrors PRD line 309 (most-positive → least-positive → never-checked).
@@ -433,6 +434,7 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
                   >
                     <Link
                       href={`/schools/${r.school_id}`}
+                      className="school-name-with-glyph"
                       style={{
                         fontFamily: "var(--serif)",
                         fontSize: 16,
@@ -441,6 +443,7 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
                         textDecoration: "none",
                       }}
                     >
+                      <SchoolGlyph size="sm" brandColors={r.brand_colors} />
                       {r.school_name}
                     </Link>
                     <span className="mono" style={{ fontSize: 12, color: "var(--ink-2)" }}>

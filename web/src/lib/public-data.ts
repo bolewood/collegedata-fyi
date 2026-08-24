@@ -1,10 +1,12 @@
 import { supabase, STORAGE_BASE_URL } from "./supabase";
 import {
   fetchInstitutionCoverage,
+  fetchSchoolBrandColors,
   fetchSchoolDocuments,
   fetchSchoolFederalFacts,
   fetchScorecardByIpedsId,
 } from "./queries";
+import { glyphSearchFields } from "./derive-inks";
 import type { InstitutionCoverage, ManifestRow, SchoolFactUnifiedRow } from "./types";
 import {
   federalCategory,
@@ -796,6 +798,7 @@ export async function searchSchools(query: string, limit = 10) {
     state: string | null;
     coverage_status: string;
     latest_available_cds_year: string | null;
+    brand_colors?: string[] | null;
   }>;
 
   const rpcResults = await Promise.all(
@@ -812,6 +815,7 @@ export async function searchSchools(query: string, limit = 10) {
         has_cds: row.latest_available_cds_year != null,
         has_federal_baseline: facts.length > 0,
         school_url: `${SITE_URL}/schools/${row.school_id}`,
+        ...glyphSearchFields(row.brand_colors),
       };
     }),
   );
@@ -829,6 +833,7 @@ export async function searchSchools(query: string, limit = 10) {
             has_cds: exactCoverage.latest_available_cds_year != null,
             has_federal_baseline: (await fetchSchoolFederalFacts(exactCoverage.school_id)).length > 0,
             school_url: `${SITE_URL}/schools/${exactCoverage.school_id}`,
+            ...glyphSearchFields(await fetchSchoolBrandColors(exactCoverage.school_id)),
           },
         ]
       : [];

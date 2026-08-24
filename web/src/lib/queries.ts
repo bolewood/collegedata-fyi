@@ -800,6 +800,41 @@ export const fetchSchoolBrandColors = cache(
   },
 );
 
+export const fetchBrandColorIndex = cache(
+  async function fetchBrandColorIndex(): Promise<Record<string, string[]>> {
+    const PAGE = 1000;
+    const out: Record<string, string[]> = {};
+    try {
+      for (let start = 0; start < 50_000; start += PAGE) {
+        const { data, error } = await (supabase as unknown as UntypedSupabase)
+          .from("institution_directory")
+          .select("school_id, brand_colors")
+          .not("brand_colors", "is", null)
+          .range(start, start + PAGE - 1);
+        if (error) break;
+        const page = (data as Array<{ school_id: string | null; brand_colors: string[] | null }>) ?? [];
+        for (const row of page) {
+          if (row.school_id && Array.isArray(row.brand_colors) && row.brand_colors.length > 0) {
+            out[row.school_id] = row.brand_colors;
+          }
+        }
+        if (page.length < PAGE) break;
+      }
+    } catch {
+      return out;
+    }
+    return out;
+  },
+);
+
+export function brandColorsFor(
+  index: Record<string, string[]>,
+  schoolId: string | null | undefined,
+): string[] | null {
+  if (!schoolId) return null;
+  return index[schoolId] ?? null;
+}
+
 // Resolve reviewed retired slugs from the checked-in manifest first, then use
 // the public crosswalk for other aliases. A primary alias wins over demoted
 // aliases; ambiguous rows return null so callers render normally instead of

@@ -6,7 +6,11 @@ import { supabase } from "@/lib/supabase";
 import type { InstitutionSearchResult } from "@/lib/types";
 import { trackSchoolSearchSelected } from "@/lib/analytics";
 import { CoverageBadge } from "./CoverageBadge";
+import { SchoolGlyph } from "./SchoolGlyph";
+import { withGlyph, type GlyphInks } from "@/lib/derive-inks";
 import { isCanonicalCdsYear } from "@/lib/format";
+
+type SearchHit = InstitutionSearchResult & { glyph: GlyphInks };
 
 // PRD 015 M4 — server-backed autocomplete over institution_cds_coverage.
 // Calls the search_institutions RPC with a debounced query so missing-
@@ -21,7 +25,7 @@ const DEBOUNCE_MS = 220;
 
 export function SchoolSearch() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<InstitutionSearchResult[]>([]);
+  const [results, setResults] = useState<SearchHit[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -65,7 +69,7 @@ export function SchoolSearch() {
         setResults([]);
         return;
       }
-      setResults(data ?? []);
+      setResults((data ?? []).map(withGlyph));
       setSelectedIndex(0);
     }, DEBOUNCE_MS);
     return () => clearTimeout(timer);
@@ -162,15 +166,16 @@ export function SchoolSearch() {
               onMouseDown={() => handleSelect(r.school_id, "mouse")}
               style={{
                 display: "grid",
-                gridTemplateColumns: "1fr auto",
-                gap: 12,
-                alignItems: "baseline",
+                gridTemplateColumns: "17px minmax(0, 1fr) auto",
+                columnGap: 14,
+                alignItems: "center",
                 padding: "10px 14px",
                 cursor: "pointer",
                 background: i === selectedIndex ? "var(--paper-2)" : "transparent",
                 borderTop: i === 0 ? "none" : "1px solid var(--rule)",
               }}
             >
+              <SchoolGlyph inks={r.glyph} />
               <div style={{ minWidth: 0 }}>
                 <div
                   style={{

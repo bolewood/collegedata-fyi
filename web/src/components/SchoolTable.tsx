@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import type { SchoolSummary } from "@/lib/types";
 import { Badge } from "./Badge";
+import { SchoolGlyph } from "./SchoolGlyph";
 import { formatBadgeLabel, formatColor } from "@/lib/format";
 
 type SortKey = "name" | "docs" | "year";
@@ -89,8 +90,9 @@ export function SchoolTable({ schools }: { schools: SchoolSummary[] }) {
                 <td className="py-2.5 pr-4">
                   <Link
                     href={`/schools/${school.school_id}`}
-                    className="text-blue-600 hover:text-blue-800 font-medium"
+                    className="school-name-with-glyph text-blue-600 hover:text-blue-800 font-medium"
                   >
+                    <SchoolGlyph size="sm" brandColors={school.brand_colors} />
                     {school.school_name}
                   </Link>
                 </td>

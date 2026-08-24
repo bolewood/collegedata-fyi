@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { MatchListBuilder } from "@/components/MatchListBuilder";
-import { fetchMatchBuilderSchools } from "@/lib/queries";
+import { fetchMatchBuilderSchools, fetchBrandColorIndex } from "@/lib/queries";
 
 export const revalidate = 3600;
 
@@ -16,7 +16,11 @@ export default async function MatchPage({
 }: {
   searchParams: Promise<{ code?: string }>;
 }) {
-  const [{ code }, schools] = await Promise.all([searchParams, fetchMatchBuilderSchools()]);
+  const [{ code }, schools, brandColors] = await Promise.all([
+    searchParams,
+    fetchMatchBuilderSchools(),
+    fetchBrandColorIndex(),
+  ]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8 match-page">
@@ -29,7 +33,7 @@ export default async function MatchPage({
         </p>
       </header>
 
-      <MatchListBuilder schools={schools} initialCode={code} />
+      <MatchListBuilder schools={schools} initialCode={code} brandColors={brandColors} />
     </div>
   );
 }

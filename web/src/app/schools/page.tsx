@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { fetchManifest, aggregateSchools } from "@/lib/queries";
+import { fetchManifest, aggregateSchools, fetchBrandColorIndex } from "@/lib/queries";
 import { SchoolTable } from "@/components/SchoolTable";
 
 export const metadata: Metadata = {
@@ -13,8 +13,14 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export default async function SchoolsPage() {
-  const manifest = await fetchManifest();
-  const schools = aggregateSchools(manifest);
+  const [manifest, brandIndex] = await Promise.all([
+    fetchManifest(),
+    fetchBrandColorIndex(),
+  ]);
+  const schools = aggregateSchools(manifest).map((school) => ({
+    ...school,
+    brand_colors: brandIndex[school.school_id] ?? null,
+  }));
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">

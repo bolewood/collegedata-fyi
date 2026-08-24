@@ -7,6 +7,7 @@ import {
   fetchExtract,
   fetchScorecardByIpedsId,
   fetchCanonicalSchoolId,
+  fetchSchoolBrandColors,
 } from "@/lib/queries";
 import type { FieldValue, ArtifactNotes } from "@/lib/types";
 import { storageUrl, formatBadgeLabel, sourceDownloadLabel } from "@/lib/format";
@@ -20,6 +21,7 @@ import { AdmissionStrategyCard } from "@/components/AdmissionStrategyCard";
 import { SpreadsheetDownloadLinks } from "@/components/SpreadsheetDownloadLinks";
 import { ArchiveLead } from "@/components/ArchiveLead";
 import { yearArchiveLead } from "@/lib/archive-lead";
+import { SchoolGlyph } from "@/components/SchoolGlyph";
 
 export const revalidate = 3600;
 
@@ -72,7 +74,10 @@ export default async function SchoolYearPage({ params }: {
   // Scorecard is per-school, not per-year — pull once at the page level
   // and render under KeyStats in each document variant.
   const ipedsId = docs.find((d) => d.ipeds_id)?.ipeds_id ?? null;
-  const scorecard = await fetchScorecardByIpedsId(ipedsId);
+  const [scorecard, brandColors] = await Promise.all([
+    fetchScorecardByIpedsId(ipedsId),
+    fetchSchoolBrandColors(school_id),
+  ]);
 
   const schoolName = docs[0].school_name ?? "Unknown school";
   const yearLead = yearArchiveLead({
@@ -131,7 +136,10 @@ export default async function SchoolYearPage({ params }: {
           <nav className="mono" style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>
             <Link href="/schools">Schools</Link>
             {" / "}
-            <Link href={`/schools/${school_id}`}>{schoolName}</Link>
+            <span className="school-crumb-with-glyph">
+              <SchoolGlyph size="lg" brandColors={brandColors} />
+              <Link href={`/schools/${school_id}`}>{schoolName}</Link>
+            </span>
             {" / "}
             <span>{year}</span>
           </nav>
