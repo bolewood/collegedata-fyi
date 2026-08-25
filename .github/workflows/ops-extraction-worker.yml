@@ -42,9 +42,14 @@ on:
         required: false
         default: "100"
   schedule:
-    # Tiny daily pending-row drain. Full corpus drains belong on manual
-    # operator machines or a self-hosted runner, not regular hosted CI.
+    # Daily pending-row drain (10 docs / 40 minutes). Full Docling/OCR
+    # corpus redrains still belong on an operator laptop or self-hosted
+    # runner, not regular hosted CI.
     - cron: "17 9 * * *"
+    # Catch-up while extraction_pending is non-zero. Hosted max is 100
+    # rows; empty queues exit in preflight so this does not install
+    # Docling six times a day forever.
+    - cron: "47 */2 * * *"
 
 concurrency:
   group: ops-extraction-worker
@@ -60,8 +65,89 @@ permissions:
   issues: write
 
 jobs:
+  preflight:
+    name: Count pending extraction rows
+    runs-on: ubuntu-latest
+    outputs:
+      run_drain: ${{ steps.decide.outputs.run_drain }}
+      limit: ${{ steps.decide.outputs.limit }}
+      deadline: ${{ steps.decide.outputs.deadline }}
+      pending: ${{ steps.decide.outputs.pending }}
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      EVENT_NAME: ${{ github.event_name }}
+      EVENT_SCHEDULE: ${{ github.event.schedule }}
+      DISPATCH_LIMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.limit || '' }}
+      DISPATCH_DEADLINE: ${{ github.event_name == 'workflow_dispatch' && inputs.deadline_minutes || '' }}
+    steps:
+      - id: decide
+        name: Choose drain size
+        shell: bash
+        run: |
+          set -euo pipefail
+          DAILY_CRON='17 9 * * *'
+          pending=""
+
+          count_pending() {
+            if [[ -z "${SUPABASE_URL}" || -z "${SUPABASE_SERVICE_ROLE_KEY}" ]]; then
+              echo "SUPABASE secrets missing; cannot count pending rows." >&2
+              return 1
+            fi
+            headers=$(mktemp)
+            curl -sS -D "$headers" -o /dev/null \
+              -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+              -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+              -H "Prefer: count=exact" \
+              -H "Range: 0-0" \
+              "${SUPABASE_URL}/rest/v1/cds_documents?extraction_status=eq.extraction_pending&select=id"
+            range=$(grep -i '^content-range:' "$headers" | tr -d '\r' || true)
+            rm -f "$headers"
+            # Content-Range: 0-0/875  or  */0
+            pending=${range##*/}
+            if ! [[ "${pending}" =~ ^[0-9]+$ ]]; then
+              echo "Could not parse pending count from '${range}'." >&2
+              return 1
+            fi
+            echo "Pending extraction rows: ${pending}"
+          }
+
+          if [[ "${EVENT_NAME}" == "workflow_dispatch" ]]; then
+            limit="${DISPATCH_LIMIT}"
+            deadline="${DISPATCH_DEADLINE}"
+            run_drain=true
+            count_pending || pending=unknown
+          elif [[ "${EVENT_SCHEDULE}" == "${DAILY_CRON}" ]]; then
+            limit=10
+            deadline=40
+            run_drain=true
+            count_pending || pending=unknown
+          else
+            limit=100
+            deadline=100
+            if ! count_pending; then
+              echo "Catch-up count failed; draining anyway." >&2
+              pending=unknown
+              run_drain=true
+            elif [[ "${pending}" == "0" ]]; then
+              run_drain=false
+              echo "Catch-up no-op: extraction queue is empty."
+            else
+              run_drain=true
+            fi
+          fi
+
+          {
+            echo "run_drain=${run_drain}"
+            echo "limit=${limit}"
+            echo "deadline=${deadline}"
+            echo "pending=${pending}"
+          } >> "$GITHUB_OUTPUT"
+
   drain-pending:
     name: Drain pending extraction rows
+    needs: preflight
+    if: needs.preflight.outputs.run_drain == 'true'
     runs-on: ubuntu-latest
     # Headroom over the worker's --deadline-minutes budget (default 100). The
     # worker stops itself gracefully before the budget; this hard cap only
@@ -71,7 +157,7 @@ jobs:
     # in extraction_pending. See --reconcile-pending below.
     timeout-minutes: 120
     env:
-      INPUT_LIMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.limit || '5' }}
+      INPUT_LIMIT: ${{ needs.preflight.outputs.limit }}
       INPUT_SCHOOL: ${{ github.event_name == 'workflow_dispatch' && inputs.school || '' }}
       INPUT_DOCUMENT_IDS: ${{ github.event_name == 'workflow_dispatch' && inputs.document_ids || '' }}
       INPUT_REQUEUE_DOCUMENT_IDS: ${{ github.event_name == 'workflow_dispatch' && inputs.requeue_document_ids || '' }}
@@ -79,7 +165,7 @@ jobs:
       INPUT_SEED_PROJECTION_METADATA: ${{ github.event_name != 'workflow_dispatch' || inputs.seed_projection_metadata }}
       INPUT_LOW_FIELD_THRESHOLD: ${{ github.event_name == 'workflow_dispatch' && inputs.low_field_threshold || '25' }}
       INPUT_MIN_YEAR_START: ${{ github.event_name == 'workflow_dispatch' && inputs.min_year_start || '' }}
-      INPUT_DEADLINE_MINUTES: ${{ github.event_name == 'workflow_dispatch' && inputs.deadline_minutes || '25' }}
+      INPUT_DEADLINE_MINUTES: ${{ needs.preflight.outputs.deadline }}
       PIPELINE_TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'dispatch' }}
       PIPELINE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

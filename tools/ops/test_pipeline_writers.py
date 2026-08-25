@@ -27,6 +27,16 @@ class PipelineWriterLintTests(unittest.TestCase):
             self.assertRegex(text, r"(?m)^  schedule:\s*$", msg=f"{path.name} lost on.schedule")
             self.assertRegex(text, r"- cron:")
 
+    def test_extraction_daily_cap_is_ten_with_catchup(self) -> None:
+        text = EXTRACTION.read_text(encoding="utf-8")
+        self.assertIn('- cron: "17 9 * * *"', text)
+        self.assertIn('- cron: "47 */2 * * *"', text)
+        self.assertIn("limit=10", text)
+        self.assertIn("deadline=40", text)
+        self.assertIn("limit=100", text)
+        self.assertIn("Catch-up no-op: extraction queue is empty.", text)
+        self.assertIn("needs.preflight.outputs.run_drain == 'true'", text)
+
     def test_finder_heartbeats_are_mode_guarded_and_id_keyed(self) -> None:
         text = FINDER.read_text(encoding="utf-8")
         self.assertIn("id: re_probe_stuck", text)

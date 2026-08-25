@@ -6,6 +6,10 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Raise the scheduled extraction drain from 5 documents / 25 minutes to 10 / 40, and add a every-two-hour catch-up (up to 100 hosted rows) that no-ops when `extraction_pending` is empty so an 800+ backlog cannot sit behind the daily cap.
+
 ## [0.6.0.1] - 2026-08-25
 
 ### Added
