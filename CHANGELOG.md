@@ -6,8 +6,11 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.0.0] - 2026-08-25
+
 ### Added
 
+- Show researched brand colors for 204 more public schools, with source and confidence evidence for every reviewed school and explicit null results where no defensible digital value was found; see the [coverage-gap implementation record](docs/plans/brand-colors-coverage-gap-plan.md).
 - Theme school records with a two-plate riso ink pair derived from each school's brand hexes, seeded for the 19 brief schools that exist in the Scorecard directory, and keep house forest/ochre when no usable colour is on file.
 - Show a two-dot school glyph beside school names in search, directory, coverage, browse, match, breadcrumbs, and the latest-drain feed, using grey plus a hollow B when colours are not on file.
 - Show a data-generated Common Data Set archive lead on school hubs and year pages, including an official IR link when we have a usable HTML URL, and gated-request copy only for schools we have actually read (Virginia Tech).
@@ -23,6 +26,7 @@ This project uses four-part semantic versioning.
 
 ### Fixed
 
+- Resolve school glyph colors through reviewed aliases while preserving direct school identities and refusing incomplete or ambiguous crosswalk matches.
 - Rank Jump-to-school exact slugs and nicknames (MIT, Penn) ahead of accidental name substrings, and prefer schools that already have a CDS year.
 - Ignore sentinel CDS years such as `unknown` when choosing a school's latest coverage year, so search no longer labels a current extract (Michigan 2025-26) as "Older CDS available".
 - Point Oklahoma's archive seed at the IRR listing (`/irr/other-reports`) instead of a single 2023-24 DAM PDF, and prefer Brave HTML listings over year-specific PDFs so sibling years are not frozen out.

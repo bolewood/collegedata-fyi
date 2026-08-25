@@ -805,20 +805,62 @@ export const fetchBrandColorIndex = cache(
     const PAGE = 1000;
     const out: Record<string, string[]> = {};
     try {
+      const directSchoolIds = new Set<string>();
+      let directoryComplete = false;
       for (let start = 0; start < 50_000; start += PAGE) {
         const { data, error } = await (supabase as unknown as UntypedSupabase)
           .from("institution_directory")
           .select("school_id, brand_colors")
-          .not("brand_colors", "is", null)
+          .order("school_id")
           .range(start, start + PAGE - 1);
         if (error) break;
         const page = (data as Array<{ school_id: string | null; brand_colors: string[] | null }>) ?? [];
         for (const row of page) {
-          if (row.school_id && Array.isArray(row.brand_colors) && row.brand_colors.length > 0) {
+          if (!row.school_id) continue;
+          directSchoolIds.add(row.school_id);
+          if (Array.isArray(row.brand_colors) && row.brand_colors.length > 0) {
             out[row.school_id] = row.brand_colors;
           }
         }
-        if (page.length < PAGE) break;
+        if (page.length < PAGE) {
+          directoryComplete = true;
+          break;
+        }
+      }
+      if (!directoryComplete) return out;
+
+      const aliasesBySlug = new Map<string, SchoolAliasRow[]>();
+      let crosswalkComplete = false;
+      for (let start = 0; start < 50_000; start += PAGE) {
+        const { data, error } = await (supabase as unknown as UntypedSupabase)
+          .from("institution_slug_crosswalk")
+          .select("school_id, alias, is_primary")
+          .order("alias")
+          .order("ipeds_id")
+          .range(start, start + PAGE - 1);
+        // Partial crosswalk data can make an ambiguous alias appear unique.
+        if (error) return out;
+        const page = (data as SchoolAliasRow[] | null) ?? [];
+        for (const row of page) {
+          if (!row.alias) continue;
+          const rows = aliasesBySlug.get(row.alias) ?? [];
+          rows.push(row);
+          aliasesBySlug.set(row.alias, rows);
+        }
+        if (page.length < PAGE) {
+          crosswalkComplete = true;
+          break;
+        }
+      }
+      if (!crosswalkComplete) return out;
+
+      for (const [alias, rows] of aliasesBySlug) {
+        // A real directory ID is more authoritative than an alias collision.
+        if (directSchoolIds.has(alias)) continue;
+        const canonicalSchoolId = resolveCanonicalSchoolId(alias, rows);
+        if (canonicalSchoolId && out[canonicalSchoolId]) {
+          out[alias] = out[canonicalSchoolId];
+        }
       }
     } catch {
       return out;
