@@ -6,6 +6,12 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.0.1] - 2026-08-25
+
+### Added
+
+- Show Goshen College's official purple in its school glyph, backed by the college athletics communications palette.
+
 ## [0.6.0.0] - 2026-08-25
 
 ### Added
