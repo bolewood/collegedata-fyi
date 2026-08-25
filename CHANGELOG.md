@@ -10,7 +10,7 @@ This project uses four-part semantic versioning.
 
 ### Added
 
-- Show researched brand colors for 204 more public schools, with source and confidence evidence for every reviewed school and explicit null results where no defensible digital value was found.
+- Show researched brand colors for 204 more public schools, with source and confidence evidence for every reviewed school and explicit null results where no defensible digital value was found; see the [coverage-gap implementation record](docs/plans/brand-colors-coverage-gap-plan.md).
 - Theme school records with a two-plate riso ink pair derived from each school's brand hexes, seeded for the 19 brief schools that exist in the Scorecard directory, and keep house forest/ochre when no usable colour is on file.
 - Show a two-dot school glyph beside school names in search, directory, coverage, browse, match, breadcrumbs, and the latest-drain feed, using grey plus a hollow B when colours are not on file.
 - Show a data-generated Common Data Set archive lead on school hubs and year pages, including an official IR link when we have a usable HTML URL, and gated-request copy only for schools we have actually read (Virginia Tech).

@@ -5,6 +5,15 @@ and `tools/brand-colors/`) just populated `institution_directory.brand_colors` f
 This plan covers what's left, verified against production at the time of writing — **re-run the
 queries below before starting Phase 1, the counts move as scouting continues.**
 
+## Implementation result (2026-08-25)
+
+Phases 0 and 1 shipped in this branch. The eight reviewed batches record 204 sourced color
+sets and 33 explicit null results across all 237 in-scope gaps. Alias-aware glyph lookup plus
+three reviewed manual aliases reduce the unmatched identity bucket to the deliberately unresolved
+Houston system-administration record. After the migrations are applied, projected `/schools`
+coverage is 682 colored schools, 33 in-scope nulls, 9 out-of-scope nulls, and 1 unmatched record.
+Phase 2 remains deferred because it requires a separate directory-scope decision.
+
 ## Current state (verified against production, 2026-08-24)
 
 Of the **725 schools** visible on `/schools` (distinct `cds_manifest.school_id`, active
