@@ -27,8 +27,8 @@ see a path (Match / Browse / API) without being the lede.
 ### Meta
 
 - Title: collegedata.fyi — College facts from the schools
-- Description: School-published college facts, kept public and current, with
-  the original file one click away — plus federal context you can tell apart.
+- Description: The most comprehensive free college data we know of — school
+  Common Data Set reports, IPEDS, and College Scorecard, in one public place.
 
 ### Hero
 
@@ -36,11 +36,11 @@ Keep the headline: **College data,** *straight from the source.*
 
 Replace the current lede with:
 
-> School-published college facts, kept public and current, with the original
-> file one click away — plus federal context you can tell apart.
+> The most comprehensive free college data we know of — each school’s
+> Common Data Set, plus IPEDS and College Scorecard, in one public place.
 >
-> Search a school to see the latest report it published. Compare admissions,
-> cost, and aid. No account. Nothing to sell.
+> Search a school. Compare admissions, cost, and aid. Open the original
+> file. No account.
 
 Marginalia can stay (OPEN DATA / SOURCE LINKS / PUBLIC API on the left;
 ADMISSIONS / AFFORDABILITY / OUTCOMES on the right). Those are catalog
@@ -82,15 +82,16 @@ Keep the title **The *Uncommon* Data Set** — it’s brand, not jargon.
 ### Meta
 
 - Title: About
-- Description: Why collegedata.fyi exists: school-published facts you can
-  use, originals you can open, federal context you can tell apart. No account.
+- Description: The most comprehensive free college data we know of. School
+  Common Data Set reports, IPEDS, and College Scorecard, in one public place.
+  No account.
 
 ### Proposed body
 
 **Lede.** Choosing a college should not mean a dozen tabs, a paid search
-product, and a PDF you can’t compare. The numbers already exist. Schools
-publish them. The Department of Education publishes federal context. We put
-those in one public place and keep the labels on.
+product, and a PDF you can’t compare. This is the most comprehensive free
+college data we know of: each school’s Common Data Set, plus IPEDS and
+College Scorecard, in one public place.
 
 **What you can do.**
 
@@ -102,9 +103,9 @@ those in one public place and keep the labels on.
 
 **How this is different.** Commercial college-search tools can be useful.
 They often want an account, hide where a number came from, or build a student
-profile along the way. We don’t. Every school-year page links the original
-document. Federal figures stay labeled as federal, so they aren’t mistaken
-for the school’s own report.
+profile along the way. We don’t. The school’s own report sits next to the
+federal numbers, the original file is one click away, and you don’t have to
+pay or log in.
 
 **The reports, in one line each.** (Links, not a seminar.)
 

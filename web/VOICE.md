@@ -4,17 +4,23 @@ Editorial source of truth for public copy. Visual rules stay in
 [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md). If they conflict, this file wins
 for *what we say*; the design system wins for *how it looks*.
 
-Locked 2026-08-26 after Anthony’s Wave 1 decisions.
+Locked 2026-08-26 after Anthony’s Wave 1 decisions. Promise revised the
+same day: completeness over “tell the sources apart.”
 
 ---
 
 ## Site promise
 
-School-published college facts, kept public and current, with the original
-file one click away — plus federal context you can tell apart.
+The most comprehensive free college data we know of — each school’s Common
+Data Set, plus IPEDS and College Scorecard, in one public place.
 
-That sentence is the product. Every public page should make it usable, not
-explain how the archive is built.
+That sentence is the product. The benefit is *everything in one place, for
+free.* Naming the three sources is how we say what “everything” is, not a
+lecture on keeping them apart. Labels on numbers stay as product behavior;
+they are not the homepage claim.
+
+Every public page should make the promise usable, not explain how the
+archive is built.
 
 ---
 
@@ -60,9 +66,10 @@ Keep plumbing visible to people who want it. Don’t put it on the front door.
 appear in a methodology appendix. It does not belong on
 `/about/common-data-set`.
 
-**Three sources** is a product *behavior* (labels on numbers), not a lecture.
-Methodology gets one sentence: so a federal outcome is not mistaken for a
-school-published aid figure.
+**Three sources** belong in the promise as what we bring together (school
+CDS, IPEDS, College Scorecard). On the page, keep labels so a federal
+outcome is not mistaken for the school’s own report. Methodology may say
+that in one sentence. Product ledes do not.
 
 ---
 
@@ -100,7 +107,7 @@ Product copy prefers the right-hand column. Operator docs may use the left.
 | extracted / extractor / Docling / AcroForm / Tier 4 | read from the school’s file |
 | canonical year | 2025–26 (the actual year) |
 | drain, manifest, projection, browser row | recently added files; schools you can compare |
-| “we keep three sources separate” | labeled school-published vs federal |
+| “we keep three sources separate” / “federal context you can tell apart” | the three public sources, in one place |
 | CDS field IDs in a lede (`C.101`, `AP_RECD_1ST_MEN_N`) | the fact in English, ID only in tables or API docs |
 | “a 47-page PDF is not a database” as the hook | what a family or counselor can *do* with the report |
 
@@ -118,8 +125,9 @@ not a ranking product.
 Versus a raw CDS PDF: a shareable year page, comparable fields, coverage you
 can see, historical files the school may have taken down.
 
-Versus IPEDS Data Center / Scorecard sitewide: school-authored current
-figures when the school publishes them; federal context kept labeled.
+Versus IPEDS Data Center or Scorecard alone: those are one federal system
+each. We put the school’s own report next to them, in public, without a
+paywall.
 
 ---
 
