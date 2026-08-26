@@ -102,13 +102,6 @@ export default function CommonDataSetPage() {
         </li>
       </ul>
 
-      <p>
-        Harvey Mudd publishes a fillable 2025–26 file —{" "}
-        <Link href="/schools/harvey-mudd/2025-26">open the year page</Link>.
-        Virginia Tech&apos;s landing page asks you to email;{" "}
-        <Link href="/schools/virginia-tech/2025-26">the file is public here</Link>.
-      </p>
-
       <h2>We don&apos;t replace the school, or the feds</h2>
       <p>
         The numbers are the college&apos;s, as the school published them. We

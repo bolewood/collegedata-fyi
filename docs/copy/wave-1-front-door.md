@@ -223,11 +223,8 @@ All of the extractor narrative, including:
 and, if we want a public professional pointer, a methodology appendix or
 GitHub known-issues index. Not this URL.
 
-**Optional keep, rewritten:** Harvey Mudd as a *positive* example — a school
-that publishes a fillable 2025–26 file, [open the year page](/schools/harvey-mudd/2025-26)
-— without teaching the parser. Virginia Tech as a *coverage* example: the
-school’s landing page asks you to email; the file is public here. One
-sentence each, or cut both from Wave 1 and save them for methodology.
+**Cut from Wave 1:** Harvey Mudd fillable-file example and Virginia Tech
+email-gate example. Save for methodology if they earn a place later.
 
 ---
 
