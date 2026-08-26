@@ -7,6 +7,8 @@ for *what we say*; the design system wins for *how it looks*.
 Locked 2026-08-26 after Anthony’s Wave 1 decisions. Promise revised the
 same day: completeness over “tell the sources apart.” Persona-read the
 same evening: homepage says the gloss first; named sources stay on About.
+Follow-up calls: keep the punchier comprehensiveness claim; do not advertise
+takedowns; `/browse` is Compare; homepage title keeps “free.”
 
 ---
 
@@ -93,7 +95,10 @@ Homepage ledes do not name the three systems.
 
 - **Footer:** keep Pipeline, like a status link. Fine.
 - **More menu:** do not treat Pipeline as a product destination. Wave 1
-  should drop it from secondary nav and leave it in the footer.
+  drops it from secondary nav and leaves it in the footer. More is Compare,
+  Coverage, Recipes, About, GitHub.
+- Public name for `/browse` is **Compare** — nav, buttons, later browse
+  chrome. Do not say “Browser” on product pages.
 - Primary nav stays Match / Schools / API.
 
 ---
@@ -124,7 +129,8 @@ Product copy prefers the right-hand column. Operator docs may use the left.
 |---|---|
 | extracted / extractor / Docling / AcroForm / Tier 4 | read from the school’s file |
 | canonical year | 2025–26 (the actual year) |
-| drain, manifest, projection, browser row, comparer | recently added files; schools you can compare |
+| drain, manifest, projection, browser row, comparer, Browser | recently added files; schools you can compare; Compare |
+| “files a school has since taken down” | historical years; the original file (do not advertise takedowns) |
 | “we keep three sources separate” / “federal context you can tell apart” | the three public sources, in one place |
 | CDS field IDs in a lede (`C.101`, `AP_RECD_1ST_MEN_N`) | the fact in English, ID only in tables or API docs |
 | “a 47-page PDF is not a database” as the hook | what a family or counselor can *do* with the report |
@@ -147,7 +153,7 @@ build or sell a student profile, the original school file is linked, this is
 not a ranking product.
 
 Versus a raw CDS PDF: a shareable year page, comparable fields, coverage you
-can see, historical files the school may have taken down.
+can see. Do not say “files a school has since taken down” on product pages.
 
 Versus IPEDS Data Center or Scorecard alone: those are one federal system
 each. We put the school’s own report next to them, in public, without a

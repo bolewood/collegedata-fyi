@@ -5,8 +5,10 @@ a React diff. Locked decisions: three primary personas, the site promise
 (named sources on About; gloss first on the homepage), Harvey Mudd Docling
 off the CDS explainer, Pipeline stays in the footer.
 
-Persona-read 2026-08-26 applied **1, 2, 5, 8, 9** below. **3, 4, 6, 7** are
-open questions at the end of this deck.
+Persona-read 2026-08-26 applied **1, 2, 5, 8, 9**. Anthony called **3, 4, 6,
+7** the same evening: keep the punchier comprehensiveness claim; drop the
+takedown sentence from public copy; `/browse` is **Compare** everywhere;
+homepage title keeps “free.”
 
 **Not in this deck:** live TSX. Sign the prose, then we implement.
 
@@ -16,8 +18,11 @@ open questions at the end of this deck.
 
 **Keep in footer (status-style):** Pipeline, plus Coverage, API, About, GitHub.
 
-**Drop from the More menu:** Pipeline. More stays Browser, Coverage, Recipes,
-About, GitHub until question 6 is called (Compare vs Browser for `/browse`).
+**Drop from the More menu:** Pipeline. More becomes Compare, Coverage,
+Recipes, About, GitHub.
+
+Public name for `/browse` is **Compare** — button, More item, and later
+browse-page chrome. Do not say “Browser” in product copy.
 
 Primary nav unchanged: Match, Schools, API.
 
@@ -26,12 +31,11 @@ Primary nav unchanged: Match, Schools, API.
 ## Homepage (`/`)
 
 **Primary persona:** parents and students. Counselors and IR should still
-see a path (Match / Browse / API) without being the lede.
+see a path (Match / Compare / API) without being the lede.
 
 ### Meta
 
-- Title: collegedata.fyi — College facts from the schools
-  *(question 7 — alternative title parked below)*
+- Title: collegedata.fyi — Free college data, straight from the source
 - Description: The most comprehensive free college data we know of — the
   report each college publishes, plus the government’s own numbers, in one
   public place.
@@ -61,7 +65,7 @@ implementer to improvise. Button row stays Match / Compare / Schools as
 today:
 
 - **Build match list** → `/match`
-- **Compare schools** → `/browse` *(label vs nav “Browser” is question 6)*
+- **Compare schools** → `/browse`
 - **Browse all schools** → `/schools`
 
 Ghost: **API** and **GitHub** (IR/builders, not the parent path).
@@ -167,12 +171,13 @@ URL. IR is secondary (they already know).
 ### Lede (replace the current “47-page PDF is not a data system”)
 
 > Colleges publish a yearly report of admissions, cost, and financial aid.
-> It’s called the Common Data Set. We keep those reports public — including
-> files a school has since taken down — and turn them into pages you can
-> search, compare, and share.
+> It’s called the Common Data Set. We keep those reports public and turn
+> them into pages you can search, compare, and share.
 
-Keep the takedown claim (true; Stanford 2017–18). Don’t escalate it on
-school-page copy in Wave 2. Quiet link to the takedown policy is question 4.
+Do not say “files a school has since taken down” on this page, or on Wave 2
+school pages. The archive still holds historical files; we don’t advertise
+takedowns. Takedown process stays in [ADR 0008](../decisions/0008-takedown-process.md),
+not in product copy. No quiet policy link from this explainer.
 
 ### Body outline
 
@@ -234,27 +239,17 @@ If any of those fail, the page isn’t done.
 
 ---
 
-## Open questions (Anthony’s call)
+## Locked calls (persona-read 3, 4, 6, 7)
 
-Persona-read applied 1, 2, 5, 8, and 9. These four stay parked:
+**3. Keep the punchier claim.** “The most comprehensive free college data we
+know of” — do not insert “collection of.” Hedge stays “we know of.”
 
-**3. “Collection of.”** “Most comprehensive free college data” can be read
-as a swipe at IPEDS itself — which is free and covers ~6,000 institutions.
-Safer: “the most comprehensive free *collection of* college data we know of.”
-Slightly less punchy; meaningfully harder to rebut. Flagged, not blocking.
-Deck currently keeps the punchier line.
+**4. Drop the takedown sentence.** CDS explainer does not say “including
+files a school has since taken down.” No quiet link to ADR 0008 from this
+page. Wave 2 school-page copy must not escalate it either.
 
-**4. Takedown claim.** “Including files a school has since taken down” stays
-in the CDS explainer lede. Wave 2 school-page copy should not escalate it.
-Do we add a quiet link from the CDS explainer to the takedown policy
-([ADR 0008](../decisions/0008-takedown-process.md), or wherever the public
-policy will live)?
+**6. Compare everywhere.** Public name for `/browse` is Compare (More menu
+item, homepage button, later browse chrome). Not Browser.
 
-**6. Compare vs Browser.** Homepage button says “Compare schools”; More menu
-says “Browser.” Two names for `/browse` in the same viewport. Pick
-**Compare** for both (More item becomes “Compare”), or keep **Browser**
-everywhere. This deck does not choose.
-
-**7. Homepage title tag.** Current proposal: `collegedata.fyi — College
-facts from the schools`. Alternative that keeps “free”: `collegedata.fyi —
-Free college data, straight from the source`.
+**7. Homepage title.** `collegedata.fyi — Free college data, straight from
+the source` — matches the hero, keeps “free.”
