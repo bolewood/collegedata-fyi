@@ -5,7 +5,8 @@ Editorial source of truth for public copy. Visual rules stay in
 for *what we say*; the design system wins for *how it looks*.
 
 Locked 2026-08-26 after Anthony’s Wave 1 decisions. Promise revised the
-same day: completeness over “tell the sources apart.”
+same day: completeness over “tell the sources apart.” Persona-read the
+same evening: homepage says the gloss first; named sources stay on About.
 
 ---
 
@@ -16,8 +17,20 @@ Data Set, plus IPEDS and College Scorecard, in one public place.
 
 That sentence is the product. The benefit is *everything in one place, for
 free.* Naming the three sources is how we say what “everything” is, not a
-lecture on keeping them apart. Labels on numbers stay as product behavior;
-they are not the homepage claim.
+lecture on keeping them apart. Use this named-sources form on About and in
+PR copy.
+
+**Homepage lede** is the same promise in English first. Source names appear
+lower on the page, or as the labeled links they already are:
+
+The most comprehensive free college data we know of — the report each
+college publishes about itself, plus the government’s own numbers, in one
+public place.
+
+Counselors and IR still recognize the product from “the report each college
+publishes.” Do not open the homepage with three proper nouns.
+
+Labels on numbers stay as product behavior; they are not the homepage claim.
 
 Every public page should make the promise usable, not explain how the
 archive is built.
@@ -36,7 +49,8 @@ numbers they can act on: is this school in range, what does it cost, can I
 compare without a paywall or a student-data profile.
 
 Say “the report the college publishes” once, then use the numbers. Link the
-original file. Do not teach the template.
+original file. Do not teach the template. The homepage follows this rule
+in the lede; it does not lead with Common Data Set, IPEDS, and Scorecard.
 
 ### College counselors
 
@@ -66,10 +80,12 @@ Keep plumbing visible to people who want it. Don’t put it on the front door.
 appear in a methodology appendix. It does not belong on
 `/about/common-data-set`.
 
-**Three sources** belong in the promise as what we bring together (school
-CDS, IPEDS, College Scorecard). On the page, keep labels so a federal
-outcome is not mistaken for the school’s own report. Methodology may say
-that in one sentence. Product ledes do not.
+**Three sources** belong in the named-sources promise (school CDS, IPEDS,
+College Scorecard) used on About and in PR copy. The homepage lede uses
+the gloss (“the report each college publishes,” “the government’s own
+numbers”). On every page, keep labels so a federal outcome is not mistaken
+for the school’s own report. Methodology may say that in one sentence.
+Homepage ledes do not name the three systems.
 
 ---
 
@@ -92,6 +108,8 @@ that in one sentence. Product ledes do not.
 4. Update title, description, and JSON-LD in the same change as the prose.
 5. Read-aloud test: would a parent, a counselor, and an IR director each
    know what to do in 20 seconds?
+6. Homepage ledes use the gloss, not three proper nouns. When claiming
+   current or accurate, say “as the school published it.”
 
 Design-system rule **never hide a source** still holds. Added rule: **never
 make the pipeline the story on a product page.**
@@ -106,13 +124,19 @@ Product copy prefers the right-hand column. Operator docs may use the left.
 |---|---|
 | extracted / extractor / Docling / AcroForm / Tier 4 | read from the school’s file |
 | canonical year | 2025–26 (the actual year) |
-| drain, manifest, projection, browser row | recently added files; schools you can compare |
+| drain, manifest, projection, browser row, comparer | recently added files; schools you can compare |
 | “we keep three sources separate” / “federal context you can tell apart” | the three public sources, in one place |
 | CDS field IDs in a lede (`C.101`, `AP_RECD_1ST_MEN_N`) | the fact in English, ID only in tables or API docs |
 | “a 47-page PDF is not a database” as the hook | what a family or counselor can *do* with the report |
 
 Keep saying **Common Data Set** on the explainer and in SEO. Define it in
 the first sentence, then talk about the numbers.
+
+When claiming **current** or **accurate**, anchor to “as the school
+published it.” Never imply we verified the school’s math. Parents want
+accurate numbers; our honest posture is the school’s own report, labeled,
+with the original file one click away. Federal figures stay labeled as
+federal.
 
 ---
 
@@ -127,7 +151,10 @@ can see, historical files the school may have taken down.
 
 Versus IPEDS Data Center or Scorecard alone: those are one federal system
 each. We put the school’s own report next to them, in public, without a
-paywall.
+paywall. If a school hasn’t published its own report, you still get the
+federal numbers. That fallback is load-bearing: most in-scope schools have
+no archived CDS, so “search a school and see current numbers” is only true
+because of it.
 
 ---
 

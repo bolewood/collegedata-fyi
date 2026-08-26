@@ -1,8 +1,12 @@
 # Wave 1 copy deck — front door
 
 Read this as a parent, then as a counselor, then as IR. Do not review it as
-a React diff. Locked decisions: three primary personas, the site promise,
-Harvey Mudd Docling off the CDS explainer, Pipeline stays in the footer.
+a React diff. Locked decisions: three primary personas, the site promise
+(named sources on About; gloss first on the homepage), Harvey Mudd Docling
+off the CDS explainer, Pipeline stays in the footer.
+
+Persona-read 2026-08-26 applied **1, 2, 5, 8, 9** below. **3, 4, 6, 7** are
+open questions at the end of this deck.
 
 **Not in this deck:** live TSX. Sign the prose, then we implement.
 
@@ -13,7 +17,7 @@ Harvey Mudd Docling off the CDS explainer, Pipeline stays in the footer.
 **Keep in footer (status-style):** Pipeline, plus Coverage, API, About, GitHub.
 
 **Drop from the More menu:** Pipeline. More stays Browser, Coverage, Recipes,
-About, GitHub.
+About, GitHub until question 6 is called (Compare vs Browser for `/browse`).
 
 Primary nav unchanged: Match, Schools, API.
 
@@ -27,17 +31,22 @@ see a path (Match / Browse / API) without being the lede.
 ### Meta
 
 - Title: collegedata.fyi — College facts from the schools
-- Description: The most comprehensive free college data we know of — school
-  Common Data Set reports, IPEDS, and College Scorecard, in one public place.
+  *(question 7 — alternative title parked below)*
+- Description: The most comprehensive free college data we know of — the
+  report each college publishes, plus the government’s own numbers, in one
+  public place.
 
 ### Hero
 
 Keep the headline: **College data,** *straight from the source.*
 
-Replace the current lede with:
+Replace the current lede with the gloss. Do not name Common Data Set, IPEDS,
+or College Scorecard in this paragraph — those links already live on the
+page:
 
-> The most comprehensive free college data we know of — each school’s
-> Common Data Set, plus IPEDS and College Scorecard, in one public place.
+> The most comprehensive free college data we know of — the report each
+> college publishes about itself, plus the government’s own numbers, in one
+> public place.
 >
 > Search a school. Compare admissions, cost, and aid. Open the original
 > file. No account.
@@ -46,8 +55,15 @@ Marginalia can stay (OPEN DATA / SOURCE LINKS / PUBLIC API on the left;
 ADMISSIONS / AFFORDABILITY / OUTCOMES on the right). Those are catalog
 chrome, not operator jargon.
 
-CTAs: keep Search as the front door. Buttons: **Find a school** (→ `/schools`
-or just rely on search), **Build a match list**, **Compare schools** (Browse).
+CTAs: Search is the door. **No “Find a school” button** — search is already
+the dominant element, and inventing a fourth destination forces the
+implementer to improvise. Button row stays Match / Compare / Schools as
+today:
+
+- **Build match list** → `/match`
+- **Compare schools** → `/browse` *(label vs nav “Browser” is question 6)*
+- **Browse all schools** → `/schools`
+
 Ghost: **API** and **GitHub** (IR/builders, not the parent path).
 
 ### Stat band
@@ -59,10 +75,10 @@ Keep live counts. Relabel the operator notes:
 | Schools in archive / N extracted | Schools | Latest reports we have on file |
 | Source documents / year span | Documents | School files, 1998–2025 (live span) |
 | Queryable fields / field schema | Facts you can compare | From current school reports |
-| Browser rows / N schools | Schools in the comparer | Refreshed {date} |
+| Browser rows / N schools | Schools you can compare | side by side · refreshed {date} |
 
 Exact note wording can use the live stats. Ban “extracted,” “schema,”
-“browser rows” on this band.
+“browser rows,” and “comparer” on this band.
 
 ### Recently added (today: “§ Latest drain”)
 
@@ -96,10 +112,17 @@ College Scorecard, in one public place.
 **What you can do.**
 
 - Search a school and open the latest report it published.
+- If a school hasn’t published its own report, you still get the federal
+  numbers.
 - Download the original file the school posted.
 - Compare admissions, enrollment, test scores, cost, and aid across schools.
 - Build a match list on your device. We don’t store a student profile.
 - If you’re in IR or research: use the same data through a public API.
+
+The federal-fallback line is load-bearing. Roughly 507 schools have a
+current CDS, 189 are stale, and ~1,473 in-scope schools have never published
+one we could find. Without it, “search a school and see current numbers”
+fails for the majority of schools, and the comprehensiveness claim weakens.
 
 **How this is different.** Commercial college-search tools can be useful.
 They often want an account, hide where a number came from, or build a student
@@ -147,6 +170,9 @@ URL. IR is secondary (they already know).
 > It’s called the Common Data Set. We keep those reports public — including
 > files a school has since taken down — and turn them into pages you can
 > search, compare, and share.
+
+Keep the takedown claim (true; Stanford 2017–18). Don’t escalate it on
+school-page copy in Wave 2. Quiet link to the takedown policy is question 4.
 
 ### Body outline
 
@@ -198,9 +224,37 @@ sentence each, or cut both from Wave 1 and save them for methodology.
 
 ## Read-aloud checks
 
-- Parent: “I can search a school and see current numbers plus the original
-  file.”
+- Parent: “I can search a school and see current numbers — the school’s
+  report if they published one, federal numbers if they didn’t — plus the
+  original file when we have it.”
 - Counselor: “I can share a year URL and I know it’s the school’s report.”
 - IR: “I know where the API and GitHub are, and that plumbing lives there.”
 
 If any of those fail, the page isn’t done.
+
+---
+
+## Open questions (Anthony’s call)
+
+Persona-read applied 1, 2, 5, 8, and 9. These four stay parked:
+
+**3. “Collection of.”** “Most comprehensive free college data” can be read
+as a swipe at IPEDS itself — which is free and covers ~6,000 institutions.
+Safer: “the most comprehensive free *collection of* college data we know of.”
+Slightly less punchy; meaningfully harder to rebut. Flagged, not blocking.
+Deck currently keeps the punchier line.
+
+**4. Takedown claim.** “Including files a school has since taken down” stays
+in the CDS explainer lede. Wave 2 school-page copy should not escalate it.
+Do we add a quiet link from the CDS explainer to the takedown policy
+([ADR 0008](../decisions/0008-takedown-process.md), or wherever the public
+policy will live)?
+
+**6. Compare vs Browser.** Homepage button says “Compare schools”; More menu
+says “Browser.” Two names for `/browse` in the same viewport. Pick
+**Compare** for both (More item becomes “Compare”), or keep **Browser**
+everywhere. This deck does not choose.
+
+**7. Homepage title tag.** Current proposal: `collegedata.fyi — College
+facts from the schools`. Alternative that keeps “free”: `collegedata.fyi —
+Free college data, straight from the source`.
