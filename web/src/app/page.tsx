@@ -7,6 +7,17 @@ import { SchoolGlyph } from "@/components/SchoolGlyph";
 
 export const revalidate = 3600; // ISR: revalidate every hour
 
+const HOME_DESCRIPTION =
+  "The most comprehensive free college data we know of — the report each college publishes, plus the government’s own numbers, in one public place.";
+
+const homeJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "collegedata.fyi",
+  url: "https://www.collegedata.fyi",
+  description: HOME_DESCRIPTION,
+};
+
 // Short calendar-year-boundary format for the two-segment year-range label.
 // Collapses "1998-99" -> "1998" and "2025-26" -> "2025" so mobile viewports
 // don't break on internal hyphens. Falls back to the raw value if either
@@ -69,7 +80,7 @@ function latestDrain(
       when: formatDrainDate(r.discovered_at!),
       school: r.school_name ?? sid,
       schoolId: sid,
-      action: `+ ${r.canonical_year ?? "new"} CDS`,
+      action: `+ ${r.canonical_year ?? "new"} report`,
       tag: tagForFormat(r.source_format),
       href: r.canonical_year ? `/schools/${sid}/${r.canonical_year}` : `/schools/${sid}`,
       brandColors: brandIndex[sid] ?? null,
@@ -94,6 +105,12 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto max-w-5xl" style={{ padding: "0 24px" }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(homeJsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
       {/* Hero with left/right marginalia */}
       <section
         className="cd-hero"
@@ -110,9 +127,6 @@ export default async function HomePage() {
         </div>
 
         <div style={{ textAlign: "center", maxWidth: 780, margin: "0 auto" }}>
-          <div className="meta" style={{ marginBottom: 24 }}>
-            Open-source college data with source links, federal baselines, and an API
-          </div>
           <h1
             style={{
               fontFamily: "var(--serif)",
@@ -138,11 +152,23 @@ export default async function HomePage() {
               textWrap: "balance",
             }}
           >
-            CollegeData.FYI is building a public data layer for college decisions: school-published
-            Common Data Set files, NCES/IPEDS baseline facts, College Scorecard outcomes, and
-            source-linked APIs in one place. Compare schools, check affordability signals, build
-            match lists, audit missing data, or power your own tools.{" "}
-            <Link href="/about">Read the method.</Link>
+            The most comprehensive free college data we know of — the report each
+            college publishes about itself, plus the government&apos;s own numbers,
+            in one public place.
+          </p>
+          <p
+            style={{
+              marginTop: 16,
+              fontSize: 16,
+              lineHeight: 1.55,
+              color: "var(--ink-2)",
+              maxWidth: 580,
+              marginInline: "auto",
+              textWrap: "balance",
+            }}
+          >
+            Search a school. Compare admissions, cost, and aid. Open the original
+            file. No account.
           </p>
 
           <div style={{ marginTop: 36, maxWidth: 560, marginInline: "auto" }}>
@@ -154,22 +180,14 @@ export default async function HomePage() {
               Build match list
             </Link>
             <Link href="/browse" className="cd-btn">
-              Query schools
+              Compare schools
             </Link>
             <Link href="/schools" className="cd-btn">
               Browse all schools
             </Link>
             <Link href="/api" className="cd-btn cd-btn--ghost">
-              API docs
+              API
             </Link>
-            <a
-              href="https://github.com/bolewood/collegedata-fyi"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cd-btn cd-btn--ghost"
-            >
-              GitHub
-            </a>
           </div>
         </div>
 
@@ -191,14 +209,18 @@ export default async function HomePage() {
             gap: 40,
           }}
         >
-          <StatCell label="Schools in archive" value={schoolsValue} note={`${stats.extracted_count.toLocaleString()} extracted`} />
-          <StatCell label="Source documents" value={docsValue} note={`${yearRangeValue} CDS span`} />
-          <StatCell label="Queryable fields" value={queryableFieldsValue} note={`${formatCount(stats.schema_field_count)} field schema`} />
-          <StatCell label="Browser rows" value={browserRowsValue} note={`${formatCount(stats.browser_school_count)} schools; refreshed ${formatShortDate(stats.browser_updated_at)}`} />
+          <StatCell label="Schools" value={schoolsValue} note="Latest reports we have on file" />
+          <StatCell label="Documents" value={docsValue} note={`School files, ${yearRangeValue}`} />
+          <StatCell label="Facts you can compare" value={queryableFieldsValue} note="From current school reports" />
+          <StatCell
+            label="Schools you can compare"
+            value={browserRowsValue}
+            note={`side by side · refreshed ${formatShortDate(stats.browser_updated_at)}`}
+          />
         </div>
       </section>
 
-      {/* Latest drain feed — sourced from the live manifest, one row per
+      {/* Recently added — sourced from the live manifest, one row per
           most-recently-discovered school. */}
       {drain.length > 0 && (
         <section
@@ -206,10 +228,10 @@ export default async function HomePage() {
           style={{ padding: "64px 0 48px", display: "grid", gridTemplateColumns: "200px 1fr", gap: 40 }}
         >
           <div>
-            <div className="meta" style={{ marginBottom: 6 }}>§ Latest drain</div>
+            <div className="meta" style={{ marginBottom: 6 }}>Recently added</div>
             <div style={{ fontSize: 14, color: "var(--ink-3)", lineHeight: 1.5 }}>
-              The newest school-published source files added to the archive.
-              Each row links back to the original document and its extracted facts.
+              New school reports in the archive. Each row opens the school and
+              the original file.
             </div>
           </div>
           <div>

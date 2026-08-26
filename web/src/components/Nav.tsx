@@ -12,9 +12,8 @@ const PRIMARY_NAV_LINKS = [
 ];
 
 const SECONDARY_NAV_LINKS = [
-  { href: "/browse", label: "Browser" },
+  { href: "/browse", label: "Compare" },
   { href: "/coverage", label: "Coverage" },
-  { href: "/pipeline-observation", label: "Pipeline" },
   { href: "/recipes", label: "Recipes" },
   { href: "/about", label: "About" },
 ];

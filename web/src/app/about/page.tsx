@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "About",
   description:
-    "The story behind collegedata.fyi, an open-source archive of U.S. college Common Data Set documents with source-labeled federal baseline facts.",
+    "The most comprehensive free college data we know of. School Common Data Set reports, IPEDS, and College Scorecard, in one public place. No account.",
   alternates: { canonical: "/about" },
   openGraph: { url: "/about" },
 };
+
+const linkStyle = {
+  textDecorationColor: "var(--rule-strong)",
+  textUnderlineOffset: 3,
+} as const;
 
 export default function AboutPage() {
   return (
@@ -27,293 +33,128 @@ export default function AboutPage() {
 
       <div className="mt-8 space-y-5 text-base leading-relaxed">
         <p>
-          Choosing a college should not require stitching together a dozen
-          tabs, a spreadsheet, a federal database, and a commercial search
-          product just to answer basic questions.
-        </p>
-
-        <p>
-          The good news is that a lot of the data already exists. Colleges
-          publish{" "}
-          <a
-            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
-            href="https://commondataset.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          Choosing a college should not mean a dozen tabs, a paid search
+          product, and a PDF you can&apos;t compare. This is the most
+          comprehensive free college data we know of: each school&apos;s{" "}
+          <Link href="/about/common-data-set" style={linkStyle}>
             Common Data Set
-          </a>{" "}
-          files. The Department of Education publishes{" "}
-          <a
-            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
-            href="https://collegescorecard.ed.gov/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            College Scorecard
-          </a>{" "}
-          and{" "}
-          <a
-            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
-            href="https://nces.ed.gov/ipeds/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          </Link>
+          , plus{" "}
+          <Link href="/about/ipeds" style={linkStyle}>
             IPEDS
-          </a>{" "}
-          data. The hard part is that none of those sources, by itself, gives
-          families a simple, current, trustworthy way to browse the college
-          landscape.
-        </p>
-
-        <p>
-          <a
-            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
-            href="https://nces.ed.gov/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            NCES
-          </a>{" "}
-          is the Department of Education&apos;s statistical center, and IPEDS is
-          its core postsecondary data system for institution-reported federal
-          data.
+          </Link>{" "}
+          and{" "}
+          <Link href="/about/college-scorecard" style={linkStyle}>
+            College Scorecard
+          </Link>
+          , in one public place.
         </p>
 
         <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
-          Three sources
+          What you can do
         </h2>
 
-        <p>
-          The data already exists. It lives in three systems that do not
-          replace each other. These notes are the long versions; this page
-          stays the product story.
-        </p>
-
         <ul className="ml-6 list-disc space-y-2 marker:text-gray-400">
+          <li>Search a school and open the latest report it published.</li>
           <li>
-            <a
-              style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
-              href="/about/common-data-set"
-            >
-              What is the Common Data Set
-            </a>
-            {" "}
-            — the voluntary school-authored form, why a 47-page PDF is not a
-            database, and what “extracted” means here.
+            If a school hasn&apos;t published its own report, you still get the
+            federal numbers.
+          </li>
+          <li>Download the original file the school posted.</li>
+          <li>
+            Compare admissions, enrollment, test scores, cost, and aid across
+            schools.
           </li>
           <li>
-            <a
-              style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
-              href="/about/college-scorecard"
-            >
-              College Scorecard, and why it is not a CDS
-            </a>
-            {" "}
-            — federal outcomes and net price, lagged on purpose, never mixed
-            into §C or §H.
+            Build a match list on your device. We don&apos;t store a student
+            profile.
           </li>
           <li>
-            <a
-              style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
-              href="/about/ipeds"
-            >
-              What IPEDS is, and what it cannot replace
-            </a>
-            {" "}
-            — NCES survey tables keyed by UNITID, and the wait-list / H2A
-            facts they do not carry.
+            If you&apos;re in IR or research: use the same data through a{" "}
+            <Link href="/api" style={linkStyle}>
+              public API
+            </Link>
+            .
           </li>
         </ul>
 
-        <p>
-          And if you want enriched data, the default option has often been a
-          proprietary vendor platform. Those tools can be useful, but they may
-          require accounts, hide their source lineage, limit API access, or
-          create another student-data profile along the way.
-        </p>
-
-        <p>
-          So the gap was not &ldquo;does college data exist?&rdquo; The gap was:
-          where can a student, parent, counselor, journalist, or builder browse
-          the freshest school-published facts, federal baseline data, source
-          links, and an open API in one place?
-        </p>
-
         <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
-          What you can do now
+          How this is different
         </h2>
 
         <p>
-          <strong style={{ fontWeight: 600, color: "var(--ink)" }}>collegedata.fyi</strong>{" "}
-          is a public college-data browser built around source transparency.
-          Search for a school, see whether we found a public CDS, inspect the
-          original source file, read extracted fields, and compare key facts
-          across schools without creating an account.
+          Commercial college-search tools can be useful. They often want an
+          account, hide where a number came from, or build a student profile
+          along the way. We don&apos;t. The school&apos;s own report sits next
+          to the federal numbers, the original file is one click away, and you
+          don&apos;t have to pay or log in.
         </p>
+
+        <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
+          The reports, in one line each
+        </h2>
 
         <ul className="ml-6 list-disc space-y-2 marker:text-gray-400">
           <li>
-            Find a school&apos;s latest archived Common Data Set and download the
-            original PDF, XLSX, DOCX, or HTML source.
+            <Link href="/about/common-data-set" style={linkStyle}>
+              Common Data Set
+            </Link>{" "}
+            — the yearly report the college writes.
           </li>
           <li>
-            Browse extracted admissions, enrollment, test-score, aid, and
-            academic fields across schools.
+            <Link href="/about/college-scorecard" style={linkStyle}>
+              College Scorecard
+            </Link>{" "}
+            — federal outcomes and net price.
           </li>
           <li>
-            See source-labeled federal baseline facts for schools where no
-            public CDS is archived.
-          </li>
-          <li>
-            Use academic positioning, admission strategy, merit-aid, and match
-            list tools without sending student profile data to a server.
-          </li>
-          <li>
-            Query the same data through a public REST API for spreadsheets,
-            research, dashboards, or your own tools.
+            <Link href="/about/ipeds" style={linkStyle}>
+              IPEDS
+            </Link>{" "}
+            — the federal statistical baseline.
           </li>
         </ul>
-
-        <p>
-          If you want starter ideas, the{" "}
-          <a
-            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
-            href="/recipes"
-          >
-            Recipes
-          </a>{" "}
-          page has worked examples you can adapt.
-        </p>
-
-        <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
-          What makes it different
-        </h2>
-
-        <ol className="ml-6 list-decimal space-y-2 marker:text-gray-400">
-          <li>
-            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Fresh school-authored data first.</strong>{" "}
-            When a current CDS exists, we treat it as the primary source for
-            CDS-native fields.
-          </li>
-          <li>
-            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Federal coverage where CDS is missing.</strong>{" "}
-            NCES/IPEDS fills in source-labeled baseline facts for institutions
-            that do not publish a public CDS.
-          </li>
-          <li>
-            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Clear provenance.</strong>{" "}
-            Values keep their source attached: CDS, IPEDS provisional/final, or
-            Scorecard context. We do not blend them into one unlabeled number.
-          </li>
-          <li>
-            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Accessible tables and durable links.</strong>{" "}
-            Public pages prioritize readable, keyboard-friendly tables and link
-            back to the original source documents.
-          </li>
-          <li>
-            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Open API.</strong>{" "}
-            The API is the same data surface the website uses, so researchers
-            and builders do not have to scrape the site.
-          </li>
-          <li>
-            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Privacy by default.</strong>{" "}
-            The core site works without accounts. Student profile tools are
-            local-first unless a future feature explicitly says otherwise.
-          </li>
-          <li>
-            <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Built for everyday use.</strong>{" "}
-            Pages are designed to be fast, readable, accessible, and stable
-            enough for families, counselors, and builders to rely on.
-          </li>
-        </ol>
-
-        <p>
-          Structured extracts are useful, but source documents still matter.
-          Every school-year page links back to the original file, and federal
-          baseline rows keep enough source context to understand where a number
-          came from and how it should be read.
-        </p>
 
         <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
           Open source
         </h2>
 
         <p>
-          The entire project is open source under the MIT license. The code,
-          the schema, the extraction pipeline, and the archived documents are
-          all public.
+          Code, schema, pipeline, and archived files are public (MIT).{" "}
+          <a
+            href="https://github.com/bolewood/collegedata-fyi"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={linkStyle}
+          >
+            GitHub
+          </a>
+          .{" "}
+          <Link href="/api" style={linkStyle}>
+            API
+          </Link>
+          . Developers who want extractors and known issues start there, not
+          on this page.
         </p>
-
-        <ul className="ml-6 list-disc space-y-2 marker:text-gray-400">
-          <li>
-            <a
-              style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
-              href="https://github.com/bolewood/collegedata-fyi"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              GitHub repository
-            </a>
-          </li>
-          <li>
-            <a
-              style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
-              href="/api"
-            >
-              Public API
-            </a>
-          </li>
-          <li>
-            <a
-              style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
-              href="https://commondataset.org/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              CDS Initiative
-            </a>{" "}
-            (the original template publisher)
-          </li>
-        </ul>
 
         <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>Credits</h2>
 
         <p>
           Built on{" "}
           <a
-            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
             href="https://supabase.com"
             target="_blank"
             rel="noopener noreferrer"
+            style={linkStyle}
           >
             Supabase
-          </a>{" "}
-          (Postgres, Edge Functions, Storage). Extraction powered by{" "}
+          </a>
+          . Federal baseline facts come from official{" "}
           <a
-            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
-            href="https://github.com/DS4SD/docling"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Docling
-          </a>{" "}
-          for flattened PDFs.{" "}
-          <a
-            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
-            href="https://reducto.ai"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Reducto
-          </a>{" "}
-          reference extracts used as a quality benchmark. Federal baseline
-          facts come from official{" "}
-          <a
-            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
             href="https://nces.ed.gov/ipeds/"
             target="_blank"
             rel="noopener noreferrer"
+            style={linkStyle}
           >
             NCES/IPEDS
           </a>{" "}
@@ -329,10 +170,10 @@ export default function AboutPage() {
         <ul className="ml-6 list-disc space-y-2 marker:text-gray-400">
           <li>
             <a
-              style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
               href="https://bolewood.com"
               target="_blank"
               rel="noopener noreferrer"
+              style={linkStyle}
             >
               Bolewood Group
             </a>
