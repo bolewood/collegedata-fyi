@@ -1,16 +1,13 @@
 # Wave 1 copy deck — front door
 
 Read this as a parent, then as a counselor, then as IR. Do not review it as
-a React diff. Locked decisions: three primary personas, the site promise
-(named sources on About; gloss first on the homepage), Harvey Mudd Docling
-off the CDS explainer, Pipeline stays in the footer.
+a React diff. **Signed 2026-08-26** with one condition: API stays in the
+header. GitHub is demoted off the hero (More menu + footer only).
 
-Persona-read 2026-08-26 applied **1, 2, 5, 8, 9**. Anthony called **3, 4, 6,
-7** the same evening: keep the punchier comprehensiveness claim; drop the
-takedown sentence from public copy; `/browse` is **Compare** everywhere;
-homepage title keeps “free.”
-
-**Not in this deck:** live TSX. Sign the prose, then we implement.
+Locked: three primary personas; named sources on About / gloss first on the
+homepage; Harvey Mudd Docling off the CDS explainer; Pipeline in the footer,
+not More; Compare everywhere for `/browse`; punchier comprehensiveness
+claim; no takedown sentence on product pages.
 
 ---
 
@@ -21,10 +18,14 @@ homepage title keeps “free.”
 **Drop from the More menu:** Pipeline. More becomes Compare, Coverage,
 Recipes, About, GitHub.
 
+**Primary nav:** Match, Schools, **API**. API stays in the header — researchers
+use it, and so do parents who point an LLM at a public endpoint to build a
+list. Do not move it into More.
+
 Public name for `/browse` is **Compare** — button, More item, and later
 browse-page chrome. Do not say “Browser” in product copy.
 
-Primary nav unchanged: Match, Schools, API.
+GitHub is not a header or hero destination. It lives in More and the footer.
 
 ---
 
@@ -68,7 +69,8 @@ today:
 - **Compare schools** → `/browse`
 - **Browse all schools** → `/schools`
 
-Ghost: **API** and **GitHub** (IR/builders, not the parent path).
+Ghost: **API** only (researchers, and parents using LLMs). GitHub is
+demoted: More menu and footer, not the hero.
 
 ### Stat band
 
@@ -253,3 +255,5 @@ item, homepage button, later browse chrome). Not Browser.
 
 **7. Homepage title.** `collegedata.fyi — Free college data, straight from
 the source` — matches the hero, keeps “free.”
+
+**API in the header.** Keep it. Demote GitHub off the hero.

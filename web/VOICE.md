@@ -8,7 +8,8 @@ Locked 2026-08-26 after Anthony’s Wave 1 decisions. Promise revised the
 same day: completeness over “tell the sources apart.” Persona-read the
 same evening: homepage says the gloss first; named sources stay on About.
 Follow-up calls: keep the punchier comprehensiveness claim; do not advertise
-takedowns; `/browse` is Compare; homepage title keeps “free.”
+takedowns; `/browse` is Compare; homepage title keeps “free.” Signed with
+API in the header (researchers and parents using LLMs); GitHub off the hero.
 
 ---
 
@@ -42,7 +43,8 @@ archive is built.
 ## Personas (primary)
 
 Journalists and developers are welcome. They are not a fourth homepage
-audience. Point them at `/api`, GitHub, and methodology.
+audience. Point them at `/api` (already in the header), GitHub, and
+methodology.
 
 ### Parents and students
 
@@ -93,13 +95,16 @@ Homepage ledes do not name the three systems.
 
 ## Chrome
 
-- **Footer:** keep Pipeline, like a status link. Fine.
+- **Footer:** keep Pipeline, like a status link. Fine. GitHub belongs here
+  and in More, not in the header or the homepage hero.
 - **More menu:** do not treat Pipeline as a product destination. Wave 1
   drops it from secondary nav and leaves it in the footer. More is Compare,
   Coverage, Recipes, About, GitHub.
 - Public name for `/browse` is **Compare** — nav, buttons, later browse
   chrome. Do not say “Browser” on product pages.
-- Primary nav stays Match / Schools / API.
+- **Primary nav stays Match / Schools / API.** API is load-bearing in the
+  header: researchers, and parents who will point an LLM at a public
+  endpoint to build a college list. Do not demote it into More.
 
 ---
 
