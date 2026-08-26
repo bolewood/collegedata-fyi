@@ -127,6 +127,9 @@ export default async function HomePage() {
         </div>
 
         <div style={{ textAlign: "center", maxWidth: 780, margin: "0 auto" }}>
+          <div className="meta" style={{ marginBottom: 24 }}>
+            Free data · source links · federal numbers · public API
+          </div>
           <h1
             style={{
               fontFamily: "var(--serif)",
@@ -142,8 +145,10 @@ export default async function HomePage() {
             <span style={{ fontStyle: "italic", color: "var(--forest-ink)" }}>straight from the source.</span>
           </h1>
           <p
+            className="serif"
             style={{
               marginTop: 28,
+              fontStyle: "italic",
               fontSize: 18,
               lineHeight: 1.55,
               color: "var(--ink-2)",
@@ -160,7 +165,7 @@ export default async function HomePage() {
             style={{
               marginTop: 16,
               fontSize: 16,
-              lineHeight: 1.55,
+              lineHeight: 1.6,
               color: "var(--ink-2)",
               maxWidth: 580,
               marginInline: "auto",
@@ -211,11 +216,11 @@ export default async function HomePage() {
         >
           <StatCell label="Schools" value={schoolsValue} note="Latest reports we have on file" />
           <StatCell label="Documents" value={docsValue} note={`School files, ${yearRangeValue}`} />
-          <StatCell label="Facts you can compare" value={queryableFieldsValue} note="From current school reports" />
+          <StatCell label="Facts" value={queryableFieldsValue} note="You can compare · from current school reports" />
           <StatCell
-            label="Schools you can compare"
+            label="Compare"
             value={browserRowsValue}
-            note={`side by side · refreshed ${formatShortDate(stats.browser_updated_at)}`}
+            note={`Side by side · refreshed ${formatShortDate(stats.browser_updated_at)}`}
           />
         </div>
       </section>
@@ -228,7 +233,7 @@ export default async function HomePage() {
           style={{ padding: "64px 0 48px", display: "grid", gridTemplateColumns: "200px 1fr", gap: 40 }}
         >
           <div>
-            <div className="meta" style={{ marginBottom: 6 }}>Recently added</div>
+            <div className="meta" style={{ marginBottom: 6 }}>§ Recently added</div>
             <div style={{ fontSize: 14, color: "var(--ink-3)", lineHeight: 1.5 }}>
               New school reports in the archive. Each row opens the school and
               the original file.

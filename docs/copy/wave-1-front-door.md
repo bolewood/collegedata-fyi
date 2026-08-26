@@ -80,11 +80,13 @@ Keep live counts. Relabel the operator notes:
 |---|---|---|
 | Schools in archive / N extracted | Schools | Latest reports we have on file |
 | Source documents / year span | Documents | School files, 1998–2025 (live span) |
-| Queryable fields / field schema | Facts you can compare | From current school reports |
-| Browser rows / N schools | Schools you can compare | side by side · refreshed {date} |
+| Queryable fields / field schema | Facts | You can compare · from current school reports |
+| Browser rows / N schools | Compare | Side by side · refreshed {date} |
 
 Exact note wording can use the live stats. Ban “extracted,” “schema,”
-“browser rows,” and “comparer” on this band.
+“browser rows,” and “comparer” on this band. Stat *labels* stay short —
+`.meta` uppercases them, so “Facts you can compare” becomes a shouting
+caption. Put the sentence in the note.
 
 ### Recently added (today: “§ Latest drain”)
 

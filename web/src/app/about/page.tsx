@@ -9,19 +9,14 @@ export const metadata: Metadata = {
   openGraph: { url: "/about" },
 };
 
-const linkStyle = {
-  textDecorationColor: "var(--rule-strong)",
-  textUnderlineOffset: 3,
-} as const;
-
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12" style={{ color: "var(--ink-2)" }}>
       <h1
+        className="serif"
         style={{
-          fontFamily: "var(--serif)",
           fontWeight: 400,
-          fontSize: 48,
+          fontSize: "clamp(40px, 6vw, 56px)",
           lineHeight: 1.05,
           letterSpacing: "-0.02em",
           color: "var(--ink)",
@@ -31,30 +26,26 @@ export default function AboutPage() {
         The <span style={{ fontStyle: "italic", color: "var(--forest-ink)" }}>Uncommon</span> Data Set
       </h1>
 
-      <div className="mt-8 space-y-5 text-base leading-relaxed">
-        <p>
-          Choosing a college should not mean a dozen tabs, a paid search
-          product, and a PDF you can&apos;t compare. This is the most
-          comprehensive free college data we know of: each school&apos;s{" "}
-          <Link href="/about/common-data-set" style={linkStyle}>
-            Common Data Set
-          </Link>
-          , plus{" "}
-          <Link href="/about/ipeds" style={linkStyle}>
-            IPEDS
-          </Link>{" "}
-          and{" "}
-          <Link href="/about/college-scorecard" style={linkStyle}>
-            College Scorecard
-          </Link>
-          , in one public place.
-        </p>
+      <p
+        className="serif"
+        style={{
+          fontStyle: "italic",
+          fontSize: 18,
+          lineHeight: 1.55,
+          color: "var(--ink-2)",
+          margin: "20px 0 0",
+          maxWidth: "40rem",
+        }}
+      >
+        Choosing a college should not mean a dozen tabs, a paid search product,
+        and a PDF you can&apos;t compare. This is the most comprehensive free
+        college data we know of: each school&apos;s Common Data Set, plus IPEDS
+        and College Scorecard, in one public place.
+      </p>
 
-        <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
-          What you can do
-        </h2>
-
-        <ul className="ml-6 list-disc space-y-2 marker:text-gray-400">
+      <div className="cd-source-story">
+        <h2>What you can do</h2>
+        <ul>
           <li>Search a school and open the latest report it published.</li>
           <li>
             If a school hasn&apos;t published its own report, you still get the
@@ -71,17 +62,11 @@ export default function AboutPage() {
           </li>
           <li>
             If you&apos;re in IR or research: use the same data through a{" "}
-            <Link href="/api" style={linkStyle}>
-              public API
-            </Link>
-            .
+            <Link href="/api">public API</Link>.
           </li>
         </ul>
 
-        <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
-          How this is different
-        </h2>
-
+        <h2>How this is different</h2>
         <p>
           Commercial college-search tools can be useful. They often want an
           account, hide where a number came from, or build a student profile
@@ -90,63 +75,40 @@ export default function AboutPage() {
           don&apos;t have to pay or log in.
         </p>
 
-        <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
-          The reports, in one line each
-        </h2>
-
-        <ul className="ml-6 list-disc space-y-2 marker:text-gray-400">
+        <h2>The reports, in one line each</h2>
+        <ul>
           <li>
-            <Link href="/about/common-data-set" style={linkStyle}>
-              Common Data Set
-            </Link>{" "}
-            — the yearly report the college writes.
+            <Link href="/about/common-data-set">Common Data Set</Link>
+            {" "}— the yearly report the college writes.
           </li>
           <li>
-            <Link href="/about/college-scorecard" style={linkStyle}>
-              College Scorecard
-            </Link>{" "}
-            — federal outcomes and net price.
+            <Link href="/about/college-scorecard">College Scorecard</Link>
+            {" "}— federal outcomes and net price.
           </li>
           <li>
-            <Link href="/about/ipeds" style={linkStyle}>
-              IPEDS
-            </Link>{" "}
-            — the federal statistical baseline.
+            <Link href="/about/ipeds">IPEDS</Link>
+            {" "}— the federal statistical baseline.
           </li>
         </ul>
 
-        <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
-          Open source
-        </h2>
-
+        <h2>Open source</h2>
         <p>
           Code, schema, pipeline, and archived files are public (MIT).{" "}
           <a
             href="https://github.com/bolewood/collegedata-fyi"
             target="_blank"
             rel="noopener noreferrer"
-            style={linkStyle}
           >
             GitHub
           </a>
-          .{" "}
-          <Link href="/api" style={linkStyle}>
-            API
-          </Link>
-          . Developers who want extractors and known issues start there, not
-          on this page.
+          . <Link href="/api">API</Link>. Developers who want extractors and
+          known issues start there, not on this page.
         </p>
 
-        <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>Credits</h2>
-
+        <h2>Credits</h2>
         <p>
           Built on{" "}
-          <a
-            href="https://supabase.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={linkStyle}
-          >
+          <a href="https://supabase.com" target="_blank" rel="noopener noreferrer">
             Supabase
           </a>
           . Federal baseline facts come from official{" "}
@@ -154,33 +116,23 @@ export default function AboutPage() {
             href="https://nces.ed.gov/ipeds/"
             target="_blank"
             rel="noopener noreferrer"
-            style={linkStyle}
           >
             NCES/IPEDS
           </a>{" "}
           releases.
         </p>
 
-        <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
-          Project Sponsors
-        </h2>
-
+        <h2>Project Sponsors</h2>
         <p>collegedata.fyi is supported by:</p>
-
-        <ul className="ml-6 list-disc space-y-2 marker:text-gray-400">
+        <ul>
           <li>
-            <a
-              href="https://bolewood.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={linkStyle}
-            >
+            <a href="https://bolewood.com" target="_blank" rel="noopener noreferrer">
               Bolewood Group
             </a>
           </li>
         </ul>
 
-        <div style={{ marginTop: 40, borderTop: "1px solid var(--rule)", paddingTop: 24, fontSize: 13, fontStyle: "italic", fontFamily: "var(--serif)", color: "var(--ink-3)" }}>
+        <div style={{ marginTop: 24, borderTop: "1px solid var(--rule)", paddingTop: 24, fontSize: 13, fontStyle: "italic", fontFamily: "var(--serif)", color: "var(--ink-3)" }}>
           Better college decisions start with better access to the facts.
         </div>
       </div>

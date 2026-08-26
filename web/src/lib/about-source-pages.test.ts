@@ -39,6 +39,7 @@ describe("Wave 1 product copy", () => {
     expect(home).toContain('href="/api"');
     expect(home).toContain("Compare schools");
     expect(home).toContain("Recently added");
+    expect(home).toContain('className="serif"');
     expect(home).not.toContain("Latest drain");
     expect(home).not.toContain("github.com/bolewood/collegedata-fyi");
     expect(home).not.toMatch(/\bextracted\b/);
@@ -56,7 +57,7 @@ describe("Wave 1 product copy", () => {
     expect(cds).not.toMatch(/harvey-mudd-2025-26\.md/);
 
     const about = src("app/about/page.tsx");
-    expect(about).toMatch(/you still get the federal numbers/);
+    expect(about).toMatch(/you still get the\s+federal numbers/);
     expect(about).not.toMatch(/Docling/);
     expect(about).not.toMatch(/Reducto/);
   });
