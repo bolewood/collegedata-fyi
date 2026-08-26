@@ -1,6 +1,7 @@
 # collegedata.fyi — Design system
 
 > **Read this before touching any frontend UI.** Same spirit as `AGENTS.md`.
+> Public copy: [`VOICE.md`](VOICE.md).
 
 **Canonical tokens:** [`web/src/app/tokens.css`](src/app/tokens.css)
 **Live reference page:** [`/design-system/`](https://collegedata.fyi/design-system/) (also in repo at [`web/public/design-system/index.html`](public/design-system/index.html))
@@ -120,14 +121,16 @@ Wordmark on the left, links on the right. Stacks under the wordmark at ≤ 640 p
 
 ## Voice
 
+**What we say** is in [`VOICE.md`](VOICE.md) (personas, site promise, glossary).
+This section is **how it looks**.
+
 Marginalia, ledger entries, catalog cards, editorial serif headlines with an italic accent word. Literally:
 
 - **"College data, *straight from the source.*"** (home hero, italic on the second clause)
 - **"Worked *examples*."** (recipes hero)
 - **"The *Uncommon* Data Set"** (about hero)
-- **"§ Latest drain"** (mono caption before a ledger section)
 
-Mono captions always lead with `§` and use uppercase tracking (0.08em). Numbers and IDs are mono; names are serif.
+Mono captions may lead with `§` and use uppercase tracking (0.08em). Numbers and IDs are mono; names are serif. Do not use operator words (`drain`, `extracted`, `browser rows`) in public captions — see `VOICE.md`.
 
 ---
 
