@@ -24,6 +24,10 @@ name. The lead then talks like a parent.
 - `VOICE.md` already allows this: Common Data Set on the explainer
   **and in SEO**.
 
+Fable review 2026-08-27: **ship with patches.** Must-fixes and the
+should-fixes that survived a code check are applied below. Full write-up:
+[`wave-2-fable-review.md`](wave-2-fable-review.md).
+
 **Not in this deck:** live TSX. Sign the prose, then we implement.
 
 ---
@@ -50,36 +54,50 @@ secondary (CSV / filters).
 
 - Title: Compare schools
 - Description: Compare admissions, cost, and aid across schools. Each row is
-  the latest report the school published that we can put side by side. The
+  the latest school report we can compare, as the school published it. The
   original file is one click away.
 
 **Chrome**
 
 - Kicker: § Compare
-- Sub: 2024–25+ · side by side
+- Sub: 2024-25+
 
 **H1:** Compare schools, *side by side.*
 
 **Lede** (Newsreader italic, 18 / 1.55):
 
-> Filter admissions, enrollment, cost, and aid. Each row is the latest
-> school report we can compare, as the school published it. Open the
-> original file from the same row.
+> Filter admissions, cost, and aid. Each row is the latest school report
+> we can compare, as the school published it. Open the original file from
+> the same row.
 
-**Stats** (short labels — `.meta` uppercases them):
+**Hero stats** (short labels — `.meta` uppercases them):
+
+The “Rows” count is every primary row from 2024-25 on, not latest-year-
+per-school (`site_stats.browser_primary_row_count`). Label it as what it
+is.
 
 | Now | Label | Note |
 |---|---|---|
 | Schools in scope | Schools | In this table |
-| Primary rows | Rows | Latest year per school |
-| Queryable fields | Facts | From current reports |
+| Primary rows | Reports | 2024-25 and newer |
+| Queryable fields | Facts | From the latest reports |
 | Data refreshed | Refreshed | {date} |
 
-**In-table caption:** Latest reports, 2024–25+. Schools missing a number
-needed for your filters are counted separately. Looking for a match list?
-Use Match.
+**Filter-band stats** (the live dashboard under the filters — write it so
+the implementer does not invent “Browser rows” again):
 
-**Error:** Couldn’t load these schools.
+| Now | Label |
+|---|---|
+| Schools in scope | Schools |
+| Matching filters | Match your filters |
+| With required fields | Have every number |
+| Missing fields | Missing a number |
+
+**In-table caption:** Latest reports, 2024-25+. Schools missing a number
+your filters need are counted above. Building a list? Use Match.
+
+**Error:** label `Couldn’t load` (`.meta` will shout a full sentence).
+Body: Try again in a moment.
 
 Ban on this page: browser, browser rows, primary row, queryable.
 
@@ -98,10 +116,21 @@ Ban on this page: browser, browser rows, primary row, queryable.
 ### Proposed
 
 - Title: Schools
-- Description: Find a college and open the reports it published.
+- Description: Every college with a Common Data Set on file. Open the
+  reports each school published.
 - H1 (serif, display): Schools
-- Lede (italic serif): Every school we have a report for. Search by name.
+- Lede (italic serif): Every school we have a report from. Don’t see
+  yours? Check [Coverage](/coverage) — schools without a report still get
+  a page with the federal numbers.
 - Caption: {n} schools
+- Empty (on-page search, no matches): No reports on file match “{query}.”
+  Try the site search — schools without a report still have a page with
+  the federal numbers.
+
+This table is only schools with a CDS on file. The header search and
+Coverage are how a parent reaches the common case (no CDS, federal
+numbers). Write the empty state; the live copy dead-ends (“No schools
+found matching…”).
 
 Keep the table. Restyle onto paper/ink/serif in the same change as the
 prose — the gray heading is the design-system debt on this page.
@@ -141,11 +170,14 @@ twice without stuffing the headline.
 
 ### Proposed archive lead
 
-Name the term once, then use “report” and the numbers:
+Name the term once, then use “report” and the numbers. Do not say the
+page *is* the Common Data Set — it is our copy of {n} of them, next to
+the federal numbers. The publisher line only renders when we know the
+school’s page, so the lead has to stand on its own.
 
-> This is the {name} Common Data Set — the yearly report the college
-> publishes. {n} reports, {range}. Latest year is {year}. Downloads
-> include {formats}.
+> The {name} Common Data Set is the yearly report the college publishes
+> about itself. {n} reports on file, {range}; the latest is {year}.
+> Downloads include {formats}.
 
 If the school’s own page is public:
 
@@ -166,17 +198,29 @@ took a file down.
 ### Directory-only (no CDS on file)
 
 Keep the stub. Title still `{name} Common Data Set` — that’s the query
-that got them here. Then tell the truth:
+that got them here. Then tell the truth. Do not promise federal numbers
+on pages that have neither Scorecard nor an IPEDS baseline table
+(live copy: “FEDERAL OUTCOMES DATA NOT AVAILABLE FOR THIS INSTITUTION”).
 
-> We don’t have a Common Data Set this school published. You still get
-> the federal numbers.
+With any federal data on the page:
+
+> We haven’t found a Common Data Set from this school. The federal
+> numbers are below.
+
+With neither:
+
+> We haven’t found a Common Data Set from this school, and we don’t have
+> federal numbers for it either.
 
 Contribute remains on this page (IR path).
 
 ### JSON-LD
 
-Same facts, no “extracted by.” Dataset description: admissions, enrollment,
-cost, and aid as the school published them.
+Same facts, no “extracted by.” Kill “keyed to the canonical 1,105-field
+schema” too — “canonical” is glossary-banned.
+
+Dataset description: Every Common Data Set year we have for {name}, as
+the school published it.
 
 ---
 
@@ -194,20 +238,24 @@ cost, and aid as the school published them.
 
 ### Proposed meta
 
-- Title: `{name} Common Data Set {year} | collegedata.fyi`
-  (keep the query in the title — “Virginia Tech Common Data Set
-  2024-2025” is a real search. Don’t add “Archive.”)
+- Title: `{name} Common Data Set {year}`
+  (template appends `| collegedata.fyi` — do not write the suffix into
+  the title or it doubles. Keep the query; “Virginia Tech Common Data
+  Set 2024-2025” is a real search. Don’t add “Archive.”)
 - Description: `{name} {year}: the school’s Common Data Set —
-  admissions, cost, aid, and enrollment — plus the original file
-  to download.` (keep “Common Data Set” once; drop “extracted”)
+  admissions, cost, and aid — plus the original file to download.`
+  (keep “Common Data Set” once; drop “extracted”)
 
 ### Proposed lead
 
-Name Common Data Set once, then “this year’s report”:
+Name Common Data Set once, then “this year’s report.” The download link
+is conditional (`source_storage_path` can be null). The publisher link
+is the school’s reports page, not its homepage.
 
-> The {year} Common Data Set for {name} — admissions, cost, aid, and
-> enrollment, as the school published them. [Download the original
-> file](url). See the [school’s own page](url). Subscribe via [RSS](feed).
+> The {year} Common Data Set for {name} — admissions, cost, and aid, as
+> the school published them. [Download the original file](url) (omit if
+> none). See the [school’s page for these reports](url). Subscribe via
+> [RSS](feed).
 
 After that sentence, “the numbers” and “this year’s report” are
 enough. Don’t keep saying Common Data Set.
@@ -221,8 +269,12 @@ Empty (file on disk, numbers not on the page yet):
 > The original file is above. The numbers from this report aren’t on the
 > page yet.
 
-Ban: extracted field tables, structured data coming soon (too product-y
-without saying what to do).
+Empty, no downloadable file:
+
+> The numbers from this report aren’t on the page yet.
+
+Ban: extracted field tables, structured data coming soon, “No structured
+field values available.”
 
 ---
 
@@ -250,9 +302,9 @@ without saying what to do).
 
 **Lede** (italic serif):
 
-> Enter a profile on this device. Filter by scores, fit, and admit rate.
-> Export a list with the year and the original file. We don’t store a
-> student profile.
+> Enter scores and GPA — they stay on this device. Filter by fit and
+> admit rate. Export a list with the year and the original file. We
+> don’t store a student profile.
 
 “Corpus” and “source-backed” leave the page. The file link stays — that’s
 the counselor proof.
@@ -268,13 +320,15 @@ The H1 already works: What we have, *and what we don’t.*
 ### Tighten
 
 - Title: Coverage (drop “— collegedata.fyi”; the template adds it)
-- Description: Which schools have a current report, which are stale, and
-  which we’ve never found. Filter by state and size.
-- Lede can stay, minus “resolver”:
+- Description: Which schools have a current Common Data Set, which have
+  only older years, and which have none we could find. Filter by state
+  and size.
+- Lede, minus “resolver” and minus “Title-IV” (parents land here after a
+  failed school search; keep the statute in Methodology):
 
-> Every undergraduate Title-IV school, with whether we have a public
-> report on file. Publishing is voluntary. Some schools post the file,
-> some bury it, some don’t publish one we could find.
+> Every U.S. college that takes federal student aid, and whether we have
+> a public report on file. Publishing is voluntary. Some schools post
+> the file, some bury it, some don’t publish one we could find.
 
 **Methodology** (on this page, still English):
 

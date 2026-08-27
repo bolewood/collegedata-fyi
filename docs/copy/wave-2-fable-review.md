@@ -2,6 +2,13 @@
 
 Verdict: **ship with patches**
 
+Patches applied to `wave-2-product-surfaces.md` 2026-08-27 (must-fixes 1–6
+and should-fixes 1–8, with one honesty tweak on #4: “no Scorecard row”
+is not the same as “no federal numbers” — IPEDS baseline can still
+render. The deck now splits on any federal data vs neither). Nits left
+for Anthony except the Compare error shout and “side by side” on the
+sub-kicker.
+
 The deck's direction is right on every surface — the ban lists are the correct
 bans, the locks are respected, and the worst live copy dies ("Queryable school
 browser," "archive and extract," "filter the corpus," "the resolver has not
