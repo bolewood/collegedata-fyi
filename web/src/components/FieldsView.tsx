@@ -465,7 +465,7 @@ function ProvenanceNote({
       }}
     >
       <span className="meta" style={{ color: "var(--forest)" }}>
-        § Extraction
+        § This report
       </span>
       <span className="serif stat-num" style={{ fontSize: 18 }}>
         {totalExtracted.toLocaleString("en-US")}
@@ -479,7 +479,7 @@ function ProvenanceNote({
         )}
       </span>
       <span style={{ color: "var(--ink-2)" }}>
-        field{totalExtracted === 1 ? "" : "s"} parsed from this CDS.
+        number{totalExtracted === 1 ? "" : "s"} from this report.
       </span>
     </div>
   );
