@@ -185,8 +185,6 @@ because of it.
 2. Anthony reads as a reader.
 3. Then implement in `web/`.
 4. Small PRs per wave. Wave 1 (front door) shipped 2026-08-27. Wave 2
-   product surfaces shipped 2026-08-27. Wave 3 Recipes (IR and data
-   analysts first) copy is locked in
-   [`docs/copy/wave-3-recipes.md`](../docs/copy/wave-3-recipes.md).
-
-Wave 4 (methodology, API) waits until Wave 3 lands.
+   product surfaces shipped 2026-08-27. Wave 3 Recipes shipped 2026-08-27.
+   Wave 4 (methodology, API) wraps the public-voice project. Deck:
+   [`docs/copy/wave-4-methodology-api.md`](../docs/copy/wave-4-methodology-api.md).
