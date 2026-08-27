@@ -174,8 +174,8 @@ because of it.
 1. Draft in a copy deck (`docs/copy/`), not in a 400-line React diff.
 2. Anthony reads as a reader.
 3. Then implement in `web/`.
-4. Small PRs per wave. Wave 1 is the front door: homepage, About, CDS
-   explainer, metadata, nav chrome.
+4. Small PRs per wave. Wave 1 (front door) shipped 2026-08-27. Wave 2 is
+   the product surfaces: Compare, schools directory, school and year pages,
+   Match, Coverage. Deck: [`docs/copy/wave-2-product-surfaces.md`](../docs/copy/wave-2-product-surfaces.md).
 
-Waves 2–4 (school pages, methodology, API) wait until Wave 1’s dialect is
-stable.
+Waves 3–4 (methodology, API) wait until Wave 2’s dialect is signed.
