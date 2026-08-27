@@ -140,8 +140,10 @@ Product copy prefers the right-hand column. Operator docs may use the left.
 | CDS field IDs in a lede (`C.101`, `AP_RECD_1ST_MEN_N`) | the fact in English, ID only in tables or API docs |
 | “a 47-page PDF is not a database” as the hook | what a family or counselor can *do* with the report |
 
-Keep saying **Common Data Set** on the explainer and in SEO. Define it in
-the first sentence, then talk about the numbers.
+Keep saying **Common Data Set** on the explainer and in SEO. School and
+year pages are a Google door: people search `{name} Common Data Set`.
+Put that phrase in the title, description, and first sentence. H1 can
+be the school name. Define the term once, then talk about the numbers.
 
 When claiming **current** or **accurate**, anchor to “as the school
 published it.” Never imply we verified the school’s math. Parents want

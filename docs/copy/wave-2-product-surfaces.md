@@ -10,6 +10,20 @@ About; `/browse` is **Compare**; API in the header; GitHub off the hero; no
 takedown advertising; when claiming current or accurate, say “as the school
 published it.”
 
+**School pages are a Google door.** People search “Virginia Tech Common Data
+Set.” Title and first sentence keep those words. The H1 can stay the school
+name. The lead then talks like a parent.
+
+- **H1 vs title.** Title and description carry the search query
+  (`{name} Common Data Set`). H1 is the school name — that’s what
+  the human is looking at. A `.meta` kicker can say Common Data Set
+  once so the page isn’t a mystery. After the first sentence, say
+  “report” and “the numbers,” not CDS every paragraph.
+- **Year pages** keep `{name} Common Data Set {year}` in the title —
+  that’s the long-tail (“Virginia Tech Common Data Set 2024-2025”).
+- `VOICE.md` already allows this: Common Data Set on the explainer
+  **and in SEO**.
+
 **Not in this deck:** live TSX. Sign the prose, then we implement.
 
 ---
@@ -110,18 +124,28 @@ contribute.
 - Directory-only stub exists (good) but does not say you still get federal
   numbers
 
-### Proposed meta
+### Proposed meta (SEO + readable)
 
-- Title: `{name}`
-- Description: `{name} — the report the college publishes, plus federal
-  numbers, in one place. Open the original file.`
+People type `{name} Common Data Set`. Match that. Drop “Archive” and the
+parenthetical “(CDS)” — both are extra syllables that aren’t the query.
+
+- Title: `{name} Common Data Set`
+  (template → `Virginia Tech Common Data Set | collegedata.fyi`)
+- Description: `{name} Common Data Set — the yearly report the college
+  publishes on admissions, cost, and aid, plus federal numbers. Years on
+  file: {range}. Download the original file.`
+
+H1 stays the school name (serif, institutional suffix italic). A `.meta`
+kicker above it can read `Common Data Set` so the phrase is on the page
+twice without stuffing the headline.
 
 ### Proposed archive lead
 
-Heading can stay the school name (already the H1). Body:
+Name the term once, then use “report” and the numbers:
 
-> This page has {n} reports from {range}. Latest year is {year}.
-> Downloads include {formats}.
+> This is the {name} Common Data Set — the yearly report the college
+> publishes. {n} reports, {range}. Latest year is {year}. Downloads
+> include {formats}.
 
 If the school’s own page is public:
 
@@ -141,10 +165,11 @@ took a file down.
 
 ### Directory-only (no CDS on file)
 
-Keep the stub. Add the Wave 1 fallback in product voice:
+Keep the stub. Title still `{name} Common Data Set` — that’s the query
+that got them here. Then tell the truth:
 
-> We don’t have a report this school published. You still get the federal
-> numbers.
+> We don’t have a Common Data Set this school published. You still get
+> the federal numbers.
 
 Contribute remains on this page (IR path).
 
@@ -161,6 +186,7 @@ cost, and aid as the school published them.
 
 ### Now
 
+- Title: `{name} Common Data Set {year}` (keep this — it’s the query)
 - Description: “official source download plus extracted admissions…”
 - Lead: “archived source file … plus the extracted field tables”
 - Heading: “All extracted fields”
@@ -168,15 +194,23 @@ cost, and aid as the school published them.
 
 ### Proposed meta
 
-- Title: `{name}, {year}`
-- Description: `{name} {year} — the report the college published, as it
-  published it. Download the original file.`
+- Title: `{name} Common Data Set {year} | collegedata.fyi`
+  (keep the query in the title — “Virginia Tech Common Data Set
+  2024-2025” is a real search. Don’t add “Archive.”)
+- Description: `{name} {year}: the school’s Common Data Set —
+  admissions, cost, aid, and enrollment — plus the original file
+  to download.` (keep “Common Data Set” once; drop “extracted”)
 
 ### Proposed lead
 
-> This is {name}’s {year} report, as the school published it.
-> [Download the original file](url). See the [school’s own page](url).
-> Subscribe via [RSS](feed).
+Name Common Data Set once, then “this year’s report”:
+
+> The {year} Common Data Set for {name} — admissions, cost, aid, and
+> enrollment, as the school published them. [Download the original
+> file](url). See the [school’s own page](url). Subscribe via [RSS](feed).
+
+After that sentence, “the numbers” and “this year’s report” are
+enough. Don’t keep saying Common Data Set.
 
 ### Fields heading
 
