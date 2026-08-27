@@ -140,8 +140,10 @@ Product copy prefers the right-hand column. Operator docs may use the left.
 | CDS field IDs in a lede (`C.101`, `AP_RECD_1ST_MEN_N`) | the fact in English, ID only in tables or API docs |
 | “a 47-page PDF is not a database” as the hook | what a family or counselor can *do* with the report |
 
-Keep saying **Common Data Set** on the explainer and in SEO. Define it in
-the first sentence, then talk about the numbers.
+Keep saying **Common Data Set** on the explainer and in SEO. School and
+year pages are a Google door: people search `{name} Common Data Set`.
+Put that phrase in the title, description, and first sentence. H1 can
+be the school name. Define the term once, then talk about the numbers.
 
 When claiming **current** or **accurate**, anchor to “as the school
 published it.” Never imply we verified the school’s math. Parents want
@@ -174,8 +176,9 @@ because of it.
 1. Draft in a copy deck (`docs/copy/`), not in a 400-line React diff.
 2. Anthony reads as a reader.
 3. Then implement in `web/`.
-4. Small PRs per wave. Wave 1 is the front door: homepage, About, CDS
-   explainer, metadata, nav chrome.
+4. Small PRs per wave. Wave 1 (front door) shipped 2026-08-27. Wave 2
+   product surfaces (Compare, schools directory, school and year pages,
+   Match, Coverage) signed after Fable review 2026-08-27. Deck:
+   [`docs/copy/wave-2-product-surfaces.md`](../docs/copy/wave-2-product-surfaces.md).
 
-Waves 2–4 (school pages, methodology, API) wait until Wave 1’s dialect is
-stable.
+Waves 3–4 (methodology, API) wait until Wave 2’s dialect is signed.

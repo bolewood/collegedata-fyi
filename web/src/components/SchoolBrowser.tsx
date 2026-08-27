@@ -154,7 +154,7 @@ function downloadCsv(rows: BrowserRow[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "collegedata-browser-export.csv";
+  a.download = "collegedata-compare.csv";
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -355,23 +355,23 @@ export function SchoolBrowser({
           }}
           className="browser-meta-grid"
         >
-          <MetaStat label="Schools in scope" value={metadata ? metadata.schools_in_scope.toLocaleString() : "..."} />
-          <MetaStat label="Matching filters" value={metadata ? metadata.total_rows.toLocaleString() : "..."} />
-          <MetaStat label="With required fields" value={metadata ? metadata.schools_with_required_fields.toLocaleString() : "..."} />
-          <MetaStat label="Missing fields" value={metadata ? metadata.schools_missing_required_fields.toLocaleString() : "..."} />
+          <MetaStat label="Schools" value={metadata ? metadata.schools_in_scope.toLocaleString() : "..."} />
+          <MetaStat label="Match your filters" value={metadata ? metadata.total_rows.toLocaleString() : "..."} />
+          <MetaStat label="Have every number" value={metadata ? metadata.schools_with_required_fields.toLocaleString() : "..."} />
+          <MetaStat label="Missing a number" value={metadata ? metadata.schools_missing_required_fields.toLocaleString() : "..."} />
         </div>
         <p className="meta" style={{ marginTop: 14, lineHeight: 1.55 }}>
-          Latest primary school-year rows, 2024-25+. Fields needed for the current filters: {requiredLabels}.
+          Latest reports, 2024-25+. Schools missing a number your filters need are counted above. Fields needed: {requiredLabels}.
           {metadata ? ` Filtered out by your criteria: ${metadata.schools_failing_filters.toLocaleString()}.` : ""}
           {" "}
-          <Link href="/match">Looking for fit ranking? Use Match.</Link>
+          <Link href="/match">Building a list? Use Match.</Link>
         </p>
       </section>
 
       {error && (
         <div className="cd-card" style={{ padding: 16, borderColor: "var(--brick)", marginBottom: 18 }}>
-          <div className="meta" style={{ color: "var(--brick)", marginBottom: 6 }}>Browser query failed</div>
-          <p style={{ margin: 0, color: "var(--ink-2)", fontSize: 14 }}>{error}</p>
+          <div className="meta" style={{ color: "var(--brick)", marginBottom: 6 }}>Couldn&apos;t load</div>
+          <p style={{ margin: 0, color: "var(--ink-2)", fontSize: 14 }}>Try again in a moment.</p>
         </div>
       )}
 

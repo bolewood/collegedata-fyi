@@ -7,9 +7,9 @@ import { CoverageDashboard } from "@/components/CoverageDashboard";
 export const revalidate = 900; // ISR: 15 minutes, matches the refresh-coverage cron
 
 export const metadata: Metadata = {
-  title: "Coverage — collegedata.fyi",
+  title: "Coverage",
   description:
-    "Per-institution Common Data Set coverage status across every active, undergraduate-serving Title-IV institution. Filter by state, enrollment, and the resolver's last attempt to see which schools we have, which we have an older year for, and which haven't yet published one we could find.",
+    "Which schools have a current Common Data Set, which have only older years, and which have none we could find. Filter by state and size.",
   alternates: { canonical: "/coverage" },
 };
 
@@ -42,19 +42,19 @@ export default async function CoveragePage() {
           What we have, <span style={{ fontStyle: "italic", color: "var(--forest-ink)" }}>and what we don&rsquo;t.</span>
         </h1>
         <p
+          className="serif"
           style={{
             marginTop: 18,
-            fontSize: 16,
+            fontSize: 18,
+            fontStyle: "italic",
             lineHeight: 1.55,
             color: "var(--ink-2)",
             maxWidth: 720,
           }}
         >
-          Every active, undergraduate-serving Title-IV institution in the
-          United States, with our latest verdict on whether we have a public
-          Common Data Set archived. The Common Data Set is voluntary; some
-          schools publish openly, some bury it, and some don&rsquo;t publish
-          at all. This page is an honest accounting of which is which.
+          Every U.S. college that takes federal student aid, and whether we have
+          a public report on file. Publishing is voluntary. Some schools post
+          the file, some bury it, some don&rsquo;t publish one we could find.
         </p>
       </header>
 
@@ -93,17 +93,15 @@ export default async function CoveragePage() {
             usable public source turning up. That is different from saying the
             school never publishes one: CDS files are voluntary, and some are
             posted in places automated discovery cannot reliably reach.
-            <em> Not checked yet</em> means the school is in scope, but the
-            resolver has not scanned it.
+            <em> Not checked yet</em> means we haven&rsquo;t checked this
+            school yet.
           </p>
           <p style={{ margin: 0 }}>
             Coverage refreshes every 15 minutes from{" "}
             <a href="https://collegescorecard.ed.gov/" target="_blank" rel="noopener noreferrer">
               College Scorecard
-            </a>. CDS files are often newer than federal outcome datasets, while
-            NCES/IPEDS and Scorecard provide broader baseline context. We keep
-            those sources labeled separately so readers can tell what came from
-            a school publication and what came from federal data.
+            </a>. CDS files are often newer than federal outcome datasets.
+            Federal numbers stay labeled as federal.
           </p>
           <p style={{ margin: 0 }}>
             Know where one of these is published? Open the school page and{" "}

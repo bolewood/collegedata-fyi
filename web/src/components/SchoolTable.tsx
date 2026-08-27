@@ -43,8 +43,8 @@ export function SchoolTable({ schools }: { schools: SchoolSummary[] }) {
   }
 
   function SortIcon({ col }: { col: SortKey }) {
-    if (sortKey !== col) return <span className="text-gray-300 ml-1">&#x2195;</span>;
-    return <span className="ml-1">{sortDir === "asc" ? "↑" : "↓"}</span>;
+    if (sortKey !== col) return <span style={{ marginLeft: 6, color: "var(--ink-4)" }}>↕</span>;
+    return <span style={{ marginLeft: 6 }}>{sortDir === "asc" ? "↑" : "↓"}</span>;
   }
 
   return (
@@ -53,57 +53,75 @@ export function SchoolTable({ schools }: { schools: SchoolSummary[] }) {
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Filter schools..."
-        className="mb-4 w-full max-w-md rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+        placeholder="Search by name"
+        aria-label="Search schools by name"
+        style={{
+          marginBottom: 16,
+          width: "100%",
+          maxWidth: 420,
+          height: 36,
+          padding: "0 12px",
+          border: "1px solid var(--rule)",
+          background: "#faf6ec",
+          color: "var(--ink)",
+          fontFamily: "var(--sans)",
+          fontSize: 14,
+          borderRadius: 2,
+          outline: "none",
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.borderColor = "var(--forest)";
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.borderColor = "var(--rule)";
+        }}
       />
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", minWidth: 640, borderCollapse: "collapse", fontSize: 14 }}>
           <thead>
-            <tr className="border-b border-gray-200 text-left text-gray-500">
+            <tr className="meta" style={{ textAlign: "left", borderBottom: "1px solid var(--rule-strong)" }}>
               <th
-                className="py-2 pr-4 cursor-pointer select-none"
+                style={{ padding: "9px 16px 9px 0", cursor: "pointer", userSelect: "none" }}
                 onClick={() => toggleSort("name")}
               >
                 School <SortIcon col="name" />
               </th>
               <th
-                className="py-2 pr-4 cursor-pointer select-none text-right"
+                style={{ padding: "9px 16px", cursor: "pointer", userSelect: "none", textAlign: "right" }}
                 onClick={() => toggleSort("docs")}
               >
-                Documents <SortIcon col="docs" />
+                Reports <SortIcon col="docs" />
               </th>
               <th
-                className="py-2 pr-4 cursor-pointer select-none"
+                style={{ padding: "9px 16px", cursor: "pointer", userSelect: "none" }}
                 onClick={() => toggleSort("year")}
               >
-                Latest Year <SortIcon col="year" />
+                Latest year <SortIcon col="year" />
               </th>
-              <th className="py-2">Formats</th>
+              <th style={{ padding: "9px 0" }}>Formats</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((school) => (
-              <tr
-                key={school.school_id}
-                className="border-b border-gray-100 hover:bg-gray-50"
-              >
-                <td className="py-2.5 pr-4">
+              <tr key={school.school_id} className="rule">
+                <td style={{ padding: "12px 16px 12px 0" }}>
                   <Link
                     href={`/schools/${school.school_id}`}
-                    className="school-name-with-glyph text-blue-600 hover:text-blue-800 font-medium"
+                    className="school-name-with-glyph"
+                    style={{ fontFamily: "var(--serif)", fontSize: 18 }}
                   >
                     <SchoolGlyph size="sm" brandColors={school.brand_colors} />
                     {school.school_name}
                   </Link>
                 </td>
-                <td className="py-2.5 pr-4 text-right text-gray-600">
+                <td className="nums" style={{ padding: "12px 16px", textAlign: "right" }}>
                   {school.doc_count}
                 </td>
-                <td className="py-2.5 pr-4 text-gray-600">
+                <td className="nums" style={{ padding: "12px 16px" }}>
                   {school.latest_year ?? "—"}
                 </td>
-                <td className="py-2.5">
-                  <div className="flex gap-1 flex-wrap">
+                <td style={{ padding: "12px 0" }}>
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
                     {school.formats.map((f) => (
                       <Badge
                         key={f}
@@ -119,13 +137,11 @@ export function SchoolTable({ schools }: { schools: SchoolSummary[] }) {
         </table>
       </div>
       {filtered.length === 0 && (
-        <p className="mt-8 text-center text-gray-500">
-          No schools found matching &ldquo;{search}&rdquo;
+        <p style={{ marginTop: 28, maxWidth: 520, color: "var(--ink-2)", lineHeight: 1.55 }}>
+          No reports on file match &ldquo;{search}.&rdquo; Try the site search —
+          schools without a report still have a page with the federal numbers.
         </p>
       )}
-      <p className="mt-4 text-xs text-gray-400">
-        {filtered.length} of {schools.length} schools
-      </p>
     </div>
   );
 }

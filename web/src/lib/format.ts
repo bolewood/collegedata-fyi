@@ -55,13 +55,13 @@ export function sourceDownloadLabel(
 export function formatExtractionStatus(status: string): string {
   switch (status) {
     case "extracted":
-      return "Extracted";
+      return "On the page";
     case "extraction_pending":
-      return "Pending";
+      return "Not yet";
     case "failed":
-      return "Failed";
+      return "Couldn't read";
     case "discovered":
-      return "Discovered";
+      return "File only";
     default:
       return status;
   }

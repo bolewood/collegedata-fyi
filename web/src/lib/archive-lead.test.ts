@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   archiveLead,
+  directoryOnlyLead,
   leadContainsBannedCopy,
   leadPlainText,
   yearArchiveLead,
@@ -30,7 +31,7 @@ describe("archiveLead", () => {
       documents: vtDocs,
     });
     expect(leadPlainText(lead)).toMatchInlineSnapshot(
-      `"Virginia Tech Common Data Set archive, 2011–2025 (3 documents). This page archives 3 documents from 2011–2025. Latest extracted year is 2025-26. Downloads include PDF, XLSX, and CSV. The school's own CDS page currently asks the public to request the file. This page is the archived source plus extract. What is a Common Data Set? Subscribe to school-published files via RSS."`,
+      `"Virginia Tech Common Data Set The Virginia Tech Common Data Set is the yearly report the college publishes about itself. 3 reports on file, 2011–2025; the latest is 2025-26. Downloads include PDF, XLSX, and CSV. The school's own page currently asks you to request the file. The original is here. What is a Common Data Set? Subscribe to new reports via RSS."`,
     );
     expect(leadContainsBannedCopy(leadPlainText(lead))).toBe(false);
   });
@@ -43,7 +44,7 @@ describe("archiveLead", () => {
       documents: hmcDocs,
     });
     expect(leadPlainText(lead)).toMatchInlineSnapshot(
-      `"Harvey Mudd College Common Data Set archive, 2010–2025 (16 documents). This page archives 16 documents from 2010–2025. Latest extracted year is 2025-26. Downloads include PDF, XLSX, and CSV. The school's own CDS page is the publisher; this page is the archive and extract. What is a Common Data Set? Subscribe to school-published files via RSS."`,
+      `"Harvey Mudd College Common Data Set The Harvey Mudd College Common Data Set is the yearly report the college publishes about itself. 16 reports on file, 2010–2025; the latest is 2025-26. Downloads include PDF, XLSX, and CSV. The school's own page is the publisher. This page is the public copy, with the numbers next to the file. What is a Common Data Set? Subscribe to new reports via RSS."`,
     );
     expect(leadContainsBannedCopy(leadPlainText(lead))).toBe(false);
   });
@@ -61,7 +62,7 @@ describe("archiveLead", () => {
       ],
     });
     expect(leadPlainText(lead)).toMatchInlineSnapshot(
-      `"Thin College Common Data Set archive, 2023-24 (1 document). This page archives 1 document from 2023-24. Latest extracted year is 2023-24. Downloads include PDF, XLSX, and CSV. What is a Common Data Set? Subscribe to school-published files via RSS."`,
+      `"Thin College Common Data Set The Thin College Common Data Set is the yearly report the college publishes about itself. 1 report on file, 2023-24; the latest is 2023-24. Downloads include PDF, XLSX, and CSV. What is a Common Data Set? Subscribe to new reports via RSS."`,
     );
   });
 
@@ -76,7 +77,16 @@ describe("archiveLead", () => {
     ).toBeNull();
   });
 
-  it("year-page lead names the school, year, and source file", () => {
+  it("tells the truth on directory-only pages with and without federal numbers", () => {
+    expect(directoryOnlyLead(true)).toBe(
+      "We haven’t found a Common Data Set from this school. The federal numbers are below.",
+    );
+    expect(directoryOnlyLead(false)).toBe(
+      "We haven’t found a Common Data Set from this school, and we don’t have federal numbers for it either.",
+    );
+  });
+
+  it("year-page lead names the school, year, and original file", () => {
     const lead = yearArchiveLead({
       schoolId: "virginia-tech",
       schoolName: "Virginia Tech",
@@ -86,11 +96,23 @@ describe("archiveLead", () => {
       sourceDownloadHref: "https://example.invalid/vt.xlsx",
     });
     expect(lead.heading).toBe("Virginia Tech Common Data Set 2025-26");
-    expect(leadPlainText(lead)).toContain("archived source file");
-    expect(leadPlainText(lead)).toContain("extracted field tables");
-    expect(leadPlainText(lead)).toContain("school's own CDS page");
-    expect(leadPlainText(lead)).toContain("RSS");
-    expect(leadContainsBannedCopy(leadPlainText(lead))).toBe(false);
+    const text = leadPlainText(lead);
+    expect(text).toContain("The 2025-26 Common Data Set for Virginia Tech");
+    expect(text).toContain("as the school published them");
+    expect(text).toContain("Download the original file");
+    expect(text).toContain("school's page for these reports");
+    expect(text).toContain("RSS");
+    expect(text).not.toMatch(/extracted/i);
+    expect(leadContainsBannedCopy(text)).toBe(false);
+  });
+
+  it("omits the download link when there is no stored file", () => {
+    const lead = yearArchiveLead({
+      schoolId: "thin-college",
+      schoolName: "Thin College",
+      year: "2023-24",
+    });
+    expect(leadPlainText(lead)).not.toContain("Download the original file");
   });
 
   it("ignores sentinel CDS years when naming the archive range", () => {
@@ -117,8 +139,9 @@ describe("archiveLead", () => {
     });
     const text = leadPlainText(lead);
     expect(text).toContain("2000–2025");
-    expect(text).toContain("Latest extracted year is 2025-26");
+    expect(text).toContain("the latest is 2025-26");
     expect(text).not.toContain("unknown");
+    expect(text).not.toMatch(/extracted/i);
   });
 
   it("states when a year-page date is only this archive's discovery", () => {

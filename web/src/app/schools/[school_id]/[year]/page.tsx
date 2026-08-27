@@ -42,7 +42,7 @@ export async function generateMetadata({
   const path = `/schools/${resolvedSchoolId}/${year}`;
   const title = `${doc.school_name} Common Data Set ${year}`;
   const description =
-    `View ${doc.school_name} Common Data Set ${year}: official source download plus extracted admissions, enrollment, SAT/ACT, financial aid, and field-level CDS data.`;
+    `${doc.school_name} ${year}: the school’s Common Data Set — admissions, cost, and aid — plus the original file to download.`;
 
   return {
     title,
@@ -99,7 +99,7 @@ export default async function SchoolYearPage({ params }: {
       "@context": "https://schema.org",
       "@type": "Dataset",
       name: `${schoolName} Common Data Set ${year}`,
-      description: `Common Data Set ${year} for ${schoolName}, containing admissions, enrollment, financial aid, and other institutional data.`,
+      description: `Common Data Set ${year} for ${schoolName}: admissions, cost, and aid as the school published them.`,
       url: canonicalUrl,
       creator: { "@type": "Organization", name: schoolName },
       temporalCoverage: year,
@@ -156,7 +156,7 @@ export default async function SchoolYearPage({ params }: {
             {schoolName}
           </h1>
           <h2 className="serif" style={{ fontSize: 22, fontWeight: 400, margin: "10px 0 0" }}>
-            {yearLead.heading}
+            {year}
           </h2>
         </div>
       </header>
@@ -273,7 +273,7 @@ async function DocumentVariant({
       {hasValues ? (
         <div style={{ marginTop: 24 }}>
           <h3 className="serif" style={{ fontSize: 22, fontWeight: 400, margin: "0 0 16px" }}>
-            All extracted fields
+            The numbers, as published
           </h3>
           <FieldsView
             schemaVersion={schemaVersion ?? doc.cds_year}
@@ -281,15 +281,12 @@ async function DocumentVariant({
             totalFields={totalFields}
           />
         </div>
-      ) : isExtracted ? (
-        <div className="cd-card" style={{ marginTop: 16, padding: "24px 28px" }}>
-          <p>No structured field values available for this document yet.</p>
-        </div>
       ) : (
         <div className="cd-card" style={{ marginTop: 16, padding: "24px 28px" }}>
           <p>
-            Structured data coming soon. The source document is available for
-            download above.
+            {sourceDownloadUrl
+              ? "The original file is above. The numbers from this report aren&apos;t on the page yet."
+              : "The numbers from this report aren&apos;t on the page yet."}
           </p>
         </div>
       )}
