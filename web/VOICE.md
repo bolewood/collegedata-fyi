@@ -176,8 +176,9 @@ because of it.
 1. Draft in a copy deck (`docs/copy/`), not in a 400-line React diff.
 2. Anthony reads as a reader.
 3. Then implement in `web/`.
-4. Small PRs per wave. Wave 1 (front door) shipped 2026-08-27. Wave 2 is
-   the product surfaces: Compare, schools directory, school and year pages,
-   Match, Coverage. Deck: [`docs/copy/wave-2-product-surfaces.md`](../docs/copy/wave-2-product-surfaces.md).
+4. Small PRs per wave. Wave 1 (front door) shipped 2026-08-27. Wave 2
+   product surfaces (Compare, schools directory, school and year pages,
+   Match, Coverage) signed after Fable review 2026-08-27. Deck:
+   [`docs/copy/wave-2-product-surfaces.md`](../docs/copy/wave-2-product-surfaces.md).
 
 Waves 3–4 (methodology, API) wait until Wave 2’s dialect is signed.

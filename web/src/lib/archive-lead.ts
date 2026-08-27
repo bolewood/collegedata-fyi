@@ -66,6 +66,9 @@ const BANNED_LEAD_WORDS = [
   "top stem",
   "chance me",
   "how to get in",
+  "extracted",
+  "extractor",
+  "archive and extract",
 ];
 
 export function officialPageLabel(url: string): string {
@@ -85,12 +88,6 @@ function uniqueYears(documents: ArchiveDocumentFacts[]): string[] {
         .filter(isCanonicalCdsYear),
     ),
   ).sort();
-}
-
-function extractedYears(documents: ArchiveDocumentFacts[]): string[] {
-  return uniqueYears(
-    documents.filter((doc) => doc.extraction_status === "extracted"),
-  );
 }
 
 function formatLabels(documents: ArchiveDocumentFacts[]): string[] {
@@ -127,28 +124,29 @@ export function archiveLead(facts: ArchiveLeadFacts): ArchiveLead | null {
   if (facts.documents.length === 0) return null;
 
   const years = uniqueYears(facts.documents);
-  const extracted = extractedYears(facts.documents);
   const range = years.length > 0 ? yearRange(years[0], years[years.length - 1]) : null;
+  const latest = years.length > 0 ? years[years.length - 1] : null;
   const count = facts.documents.length;
-  const countLabel = `${count} document${count === 1 ? "" : "s"}`;
-  const heading = range
-    ? `${facts.schoolName} Common Data Set archive, ${range} (${countLabel}).`
-    : `${facts.schoolName} Common Data Set archive (${countLabel}).`;
+  const countLabel = `${count} report${count === 1 ? "" : "s"}`;
+  const heading = `${facts.schoolName} Common Data Set`;
 
   const paragraphs: LeadPart[][] = [];
 
   const first: LeadPart[] = [
     {
       type: "text",
-      text: range
-        ? `This page archives ${countLabel} from ${range}.`
-        : `This page archives ${countLabel}.`,
+      text: `The ${facts.schoolName} Common Data Set is the yearly report the college publishes about itself.`,
     },
   ];
-  if (extracted.length > 0) {
+  if (range && latest) {
     first.push({
       type: "text",
-      text: ` Latest extracted year is ${extracted[extracted.length - 1]}.`,
+      text: ` ${countLabel} on file, ${range}; the latest is ${latest}.`,
+    });
+  } else {
+    first.push({
+      type: "text",
+      text: ` ${countLabel} on file.`,
     });
   }
   const formats = formatLabels(facts.documents);
@@ -165,7 +163,7 @@ export function archiveLead(facts: ArchiveLeadFacts): ArchiveLead | null {
     const sourceLink: LeadPart = {
       type: "link",
       href: official.url,
-      text: "school's own CDS page",
+      text: "school's own page",
       external: true,
     };
     if (official.access === "request") {
@@ -174,14 +172,17 @@ export function archiveLead(facts: ArchiveLeadFacts): ArchiveLead | null {
         sourceLink,
         {
           type: "text",
-          text: " currently asks the public to request the file. This page is the archived source plus extract.",
+          text: " currently asks you to request the file. The original is here.",
         },
       ]);
     } else {
       paragraphs.push([
         { type: "text", text: "The " },
         sourceLink,
-        { type: "text", text: " is the publisher; this page is the archive and extract." },
+        {
+          type: "text",
+          text: " is the publisher. This page is the public copy, with the numbers next to the file.",
+        },
       ]);
     }
   }
@@ -201,7 +202,7 @@ export function archiveLead(facts: ArchiveLeadFacts): ArchiveLead | null {
     paragraphs.push([{ type: "text", text: freshness }]);
   }
   paragraphs.push([
-    { type: "text", text: "Subscribe to school-published files via " },
+    { type: "text", text: "Subscribe to new reports via " },
     {
       type: "link",
       href: schoolFeedPath(facts.schoolId),
@@ -213,25 +214,27 @@ export function archiveLead(facts: ArchiveLeadFacts): ArchiveLead | null {
   return { heading, paragraphs };
 }
 
+export function directoryOnlyLead(hasFederal: boolean): string {
+  return hasFederal
+    ? "We haven’t found a Common Data Set from this school. The federal numbers are below."
+    : "We haven’t found a Common Data Set from this school, and we don’t have federal numbers for it either.";
+}
+
 export function yearArchiveLead(facts: YearArchiveLeadFacts): ArchiveLead {
   const official = officialSource(facts.schoolId, facts.ipedsId);
   const parts: LeadPart[] = [
     {
       type: "text",
-      text: `This is the archived source file for ${facts.schoolName} Common Data Set ${facts.year}`,
+      text: `The ${facts.year} Common Data Set for ${facts.schoolName} — admissions, cost, and aid, as the school published them.`,
     },
   ];
-  if (facts.hasExtract) {
-    parts.push({ type: "text", text: " plus the extracted field tables" });
-  }
-  parts.push({ type: "text", text: "." });
 
   if (facts.sourceDownloadHref) {
     parts.push({ type: "text", text: " " });
     parts.push({
       type: "link",
       href: facts.sourceDownloadHref,
-      text: "Download the source",
+      text: "Download the original file",
       external: true,
     });
     parts.push({ type: "text", text: "." });
@@ -242,7 +245,7 @@ export function yearArchiveLead(facts: YearArchiveLeadFacts): ArchiveLead {
     parts.push({
       type: "link",
       href: official.url,
-      text: "school's own CDS page",
+      text: "school's page for these reports",
       external: true,
     });
     parts.push({ type: "text", text: "." });

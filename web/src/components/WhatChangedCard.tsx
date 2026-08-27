@@ -74,7 +74,7 @@ export function WhatChangedCard({ events }: WhatChangedCardProps) {
           <div className="what-changed-card__count">
             <span className="meta">Published signals</span>
             <strong className="serif stat-num">{visibleEvents.length}</strong>
-            <small>Generated from extracted Common Data Set fields.</small>
+            <small>From year-over-year school reports.</small>
           </div>
         </div>
 
@@ -113,7 +113,7 @@ export function WhatChangedCard({ events }: WhatChangedCardProps) {
         </div>
 
         <div className="what-changed-card__source card-source-actions rule mono">
-          <span>§ SOURCE: COMMON DATA SET YEAR-OVER-YEAR FIELD PROJECTION</span>
+          <span>§ SOURCE: COMMON DATA SET YEAR-OVER-YEAR</span>
         </div>
       </div>
     </section>

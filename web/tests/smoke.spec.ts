@@ -51,9 +51,9 @@ test("coverage page renders filterable accountability data", async ({ page }) =>
 test("browser loads live rows and source links resolve", async ({ page, request }) => {
   await page.goto("/browse");
   await expect(
-    page.getByRole("heading", { name: /Queryable school browser/i }),
+    page.getByRole("heading", { name: /Compare schools/i }),
   ).toBeVisible();
-  await expect(page.getByText("Browser query failed")).toHaveCount(0);
+  await expect(page.getByText("Couldn't load")).toHaveCount(0);
   await expect(page.getByText(/Showing 1-/)).toBeVisible();
 
   const source = page.locator('[data-testid="browser-source-link"]:visible').first();

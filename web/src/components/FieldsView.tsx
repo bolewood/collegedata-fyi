@@ -215,7 +215,7 @@ function SubsectionBlock({
         <div style={{ marginTop: reconstructedTables.length > 0 ? 14 : 0 }}>
           {reconstructedTables.length > 0 && (
             <div className="meta" style={{ marginBottom: 6 }}>
-              Other extracted fields
+              Other fields
             </div>
           )}
           <KVRows fields={fallbackFields} schemaVersion={schemaVersion} />

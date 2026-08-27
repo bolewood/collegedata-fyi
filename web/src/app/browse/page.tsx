@@ -4,9 +4,9 @@ import { fetchSiteStats, fetchBrandColorIndex } from "@/lib/queries";
 import { formatCount, formatShortDate } from "@/lib/format";
 
 export const metadata: Metadata = {
-  title: "Queryable School Browser",
+  title: "Compare schools",
   description:
-    "Filter the 2024-25+ Common Data Set browser rows by admissions, enrollment, price, and outcome metrics.",
+    "Compare admissions, cost, and aid across schools. Each row is the latest school report we can compare, as the school published it. The original file is one click away.",
   alternates: { canonical: "/browse" },
   openGraph: { url: "/browse" },
 };
@@ -32,9 +32,8 @@ export default async function BrowsePage() {
         className="browser-hero"
       >
         <div className="meta" style={{ paddingTop: 10, lineHeight: 1.8 }}>
-          <div>§ BROWSER</div>
+          <div>§ Compare</div>
           <div>2024-25+</div>
-          <div>PRIMARY ROWS</div>
         </div>
         <div>
           <h1
@@ -47,20 +46,25 @@ export default async function BrowsePage() {
               letterSpacing: "-0.02em",
             }}
           >
-            Queryable school <span style={{ fontStyle: "italic", color: "var(--forest-ink)" }}>browser.</span>
+            Compare schools,{" "}
+            <span style={{ fontStyle: "italic", color: "var(--forest-ink)" }}>
+              side by side.
+            </span>
           </h1>
           <p
+            className="serif"
             style={{
               margin: "20px 0 0",
               maxWidth: 720,
               color: "var(--ink-2)",
-              fontSize: 17,
-              lineHeight: 1.6,
+              fontSize: 18,
+              fontStyle: "italic",
+              lineHeight: 1.55,
             }}
           >
-            Filter the curated 2024-25+ browser rows without losing the source trail.
-            The default view chooses the latest primary row per school that can answer
-            the active filters, then reports how many schools were missing values.
+            Filter admissions, cost, and aid. Each row is the latest school report
+            we can compare, as the school published it. Open the original file from
+            the same row.
           </p>
           <div
             className="browser-hero-stats rule-2"
@@ -72,10 +76,25 @@ export default async function BrowsePage() {
               gap: 18,
             }}
           >
-            <BrowserHeroStat label="Schools in scope" value={formatCount(stats.browser_school_count)} />
-            <BrowserHeroStat label="Primary rows" value={formatCount(stats.browser_primary_row_count)} />
-            <BrowserHeroStat label="Queryable fields" value={formatCount(stats.queryable_field_count)} />
-            <BrowserHeroStat label="Data refreshed" value={formatShortDate(stats.browser_updated_at)} />
+            <BrowserHeroStat
+              label="Schools"
+              value={formatCount(stats.browser_school_count)}
+              note="In this table"
+            />
+            <BrowserHeroStat
+              label="Reports"
+              value={formatCount(stats.browser_primary_row_count)}
+              note="2024-25 and newer"
+            />
+            <BrowserHeroStat
+              label="Facts"
+              value={formatCount(stats.queryable_field_count)}
+              note="From the latest reports"
+            />
+            <BrowserHeroStat
+              label="Refreshed"
+              value={formatShortDate(stats.browser_updated_at)}
+            />
           </div>
         </div>
       </section>
@@ -102,11 +121,24 @@ export default async function BrowsePage() {
   );
 }
 
-function BrowserHeroStat({ label, value }: { label: string; value: string }) {
+function BrowserHeroStat({
+  label,
+  value,
+  note,
+}: {
+  label: string;
+  value: string;
+  note?: string;
+}) {
   return (
     <div>
       <div className="meta" style={{ marginBottom: 4 }}>{label}</div>
       <div className="nums" style={{ fontSize: 22, color: "var(--ink)" }}>{value}</div>
+      {note ? (
+        <div style={{ marginTop: 6, fontSize: 13, color: "var(--ink-3)", lineHeight: 1.4 }}>
+          {note}
+        </div>
+      ) : null}
     </div>
   );
 }

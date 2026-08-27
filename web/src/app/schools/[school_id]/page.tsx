@@ -26,7 +26,7 @@ import { CoverageBadge } from "@/components/CoverageBadge";
 import { SubmissionForm } from "@/components/SubmissionForm";
 import { FederalBaselineTable } from "@/components/FederalBaselineTable";
 import { isCanonicalCdsYear, storageUrl, yearRange } from "@/lib/format";
-import { archiveLead } from "@/lib/archive-lead";
+import { archiveLead, directoryOnlyLead } from "@/lib/archive-lead";
 import { ArchiveLead } from "@/components/ArchiveLead";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
 import type { ManifestRow, InstitutionCoverage } from "@/lib/types";
@@ -48,15 +48,17 @@ export async function generateMetadata({
     const coverage = await fetchInstitutionCoverage(resolvedSchoolId);
     if (coverage) {
       const path = `/schools/${resolvedSchoolId}`;
+      const title = `${coverage.school_name} Common Data Set`;
+      const description = `We haven’t found a Common Data Set from this school. ${coverage.coverage_summary}`;
       return {
-        title: `${coverage.school_name} - ${coverage.coverage_label}`,
-        description: coverage.coverage_summary,
+        title,
+        description,
         alternates: { canonical: path },
         robots: { index: false, follow: true },
         openGraph: {
           url: path,
-          title: coverage.school_name,
-          description: coverage.coverage_summary,
+          title,
+          description,
         },
       };
     }
@@ -64,18 +66,15 @@ export async function generateMetadata({
   }
 
   const name = docs[0].school_name;
-  const coverage = await fetchInstitutionCoverage(resolvedSchoolId);
-  const location = formatLocation(coverage);
   const years = docs
     .map((d) => d.canonical_year)
     .filter(isCanonicalCdsYear)
     .sort();
   const path = `/schools/${resolvedSchoolId}`;
-  const archiveCount = `${docs.length} CDS document${docs.length !== 1 ? "s" : ""}`;
-  const locationLead = location ? ` for ${location}` : "";
+  const yearsOnFile = years.length > 0 ? yearRange(years[0], years[years.length - 1]) : "none";
   const description =
-    `Download ${name} Common Data Set files${locationLead}. Browse extracted admissions, enrollment, financial aid, SAT/ACT, and source links. ${archiveCount}, ${yearRange(years[0], years[years.length - 1])}.`;
-  const title = `${name} Common Data Set (CDS) Archive`;
+    `${name} Common Data Set — the yearly report the college publishes on admissions, cost, and aid, plus federal numbers. Years on file: ${yearsOnFile}. Download the original file.`;
+  const title = `${name} Common Data Set`;
 
   return {
     title,
@@ -228,7 +227,7 @@ export default async function SchoolDetailPage({ params }: {
       "@type": "CollegeOrUniversity",
       name,
       url: schoolUrl,
-      description: `Common Data Set archive for ${name}. ${docs.length} document${docs.length !== 1 ? "s" : ""} archived${years.length > 0 ? `, ${yearRange(years[0], years[years.length - 1])}` : ""}.`,
+      description: `${docs.length} Common Data Set report${docs.length !== 1 ? "s" : ""} for ${name}${years.length > 0 ? `, ${yearRange(years[0], years[years.length - 1])}` : ""}.`,
       ...(coverage?.city || coverage?.state
         ? {
             address: {
@@ -250,9 +249,9 @@ export default async function SchoolDetailPage({ params }: {
     {
       "@context": "https://schema.org",
       "@type": "DataCatalog",
-      name: `${name} Common Data Set archive`,
+      name: `${name} Common Data Set`,
       url: schoolUrl,
-      description: `Every archived Common Data Set year for ${name}, keyed to the canonical 1,105-field schema published by the Common Data Set Initiative.`,
+      description: `Every Common Data Set year we have for ${name}, as the school published it.`,
       creator: { "@type": "Organization", name, url: schoolUrl },
       provider: { "@type": "Organization", name: "collegedata.fyi", url: "https://www.collegedata.fyi" },
       isAccessibleForFree: true,
@@ -260,7 +259,7 @@ export default async function SchoolDetailPage({ params }: {
       dataset: uniqueYears.map((year) => ({
         "@type": "Dataset",
         name: `${name} Common Data Set ${year}`,
-        description: `Common Data Set ${year} for ${name}, containing admissions, enrollment, financial aid, and other institutional data extracted by collegedata.fyi.`,
+        description: `Common Data Set ${year} for ${name}: admissions, cost, and aid as the school published them.`,
         url: `https://www.collegedata.fyi/schools/${school_id}/${year}`,
         creator: { "@type": "Organization", name },
         provider: { "@type": "Organization", name: "collegedata.fyi", url: "https://www.collegedata.fyi" },
@@ -331,6 +330,9 @@ export default async function SchoolDetailPage({ params }: {
               <span>{name.toUpperCase()}</span>
             </span>
           </div>
+          <div className="meta" style={{ marginBottom: 12 }}>
+            Common Data Set
+          </div>
           <h1
             className="serif"
             style={{
@@ -349,7 +351,7 @@ export default async function SchoolDetailPage({ params }: {
               name
             )}
           </h1>
-          {schoolLead ? <ArchiveLead lead={schoolLead} /> : null}
+          {schoolLead ? <ArchiveLead lead={schoolLead} showHeading={false} /> : null}
           <div
             style={{
               display: "flex",
@@ -401,7 +403,7 @@ export default async function SchoolDetailPage({ params }: {
           <div className="meta cd-school-header__count">
             <span className="cd-school-header__glyph">§</span>
             <span>
-              {docs.length} document{docs.length !== 1 ? "s" : ""} archived
+              {docs.length} report{docs.length !== 1 ? "s" : ""}
             </span>
             {earliestYear && latestYear && earliestYear !== latestYear && (
               <span className="cd-school-header__years">
@@ -498,6 +500,8 @@ async function DirectoryOnlySchoolPage({
         year: "numeric",
       })
     : null;
+  const hasFederal = Boolean(scorecard) || federalFacts.length > 0;
+  const lead = directoryOnlyLead(hasFederal);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -519,7 +523,7 @@ async function DirectoryOnlySchoolPage({
       <header className="cd-school-header">
         <div>
         <div className="meta" style={{ marginBottom: 16 }}>
-          § Institution directory
+          Common Data Set
         </div>
         <h1
           className="serif"
@@ -590,7 +594,7 @@ async function DirectoryOnlySchoolPage({
             maxWidth: 640,
           }}
         >
-          {coverage.coverage_summary}
+          {lead}
         </p>
         {coverage.website_url && (
           <p
@@ -653,9 +657,9 @@ async function DirectoryOnlySchoolPage({
           maxWidth: 640,
         }}
       >
-        We track every active, undergraduate-serving Title-IV institution
-        and refresh CDS coverage every 15 minutes. Federal data above comes
-        from NCES/IPEDS and College Scorecard when available.{" "}
+        We look for a public report from every U.S. college that takes
+        federal student aid. Federal data above comes from NCES/IPEDS and
+        College Scorecard when we have it.{" "}
         <Link href="/about">Read the method</Link>.
       </p>
     </div>
