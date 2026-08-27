@@ -66,7 +66,14 @@ and see coverage gaps and year-over-year shifts.
 
 They want peer files, definitions, bulk access, a way to contribute a missing
 year, and data they can take elsewhere. They care about sourcing, schema, and
-the API — not extractor war stories on the explainer page.
+the API — not extractor war stories.
+
+**Recipes (`/recipes`)** are this persona first, data analysts with them.
+Counselors and journalists are welcome; they are not the H1. Analytical
+jargon is fine when it names the method (yield, C2, Carnegie class, draw
+rate, submission rate as a proxy). Field IDs belong in chips, captions, and
+the method note — not as the hook. Still no extractor war stories
+(Docling, AcroForm, drain, “extracted,” how we parsed the PDF).
 
 ---
 
@@ -76,8 +83,8 @@ Keep plumbing visible to people who want it. Don’t put it on the front door.
 
 | Layer | Audience | Lives on | Says |
 |---|---|---|---|
-| **Product** | Parents/students first; counselors second | `/`, `/about`, school pages, `/browse`, `/match`, `/recipes`, `/coverage`, cards, empty states, metadata | Benefit, then action, then one plain-English source line |
-| **Professional** | IR, researchers, counselors who want the trail | `/methodology/*`, `/api`, rewritten source-story pages | Sourcing, definitions, portability, school-authored vs federal — still English |
+| **Product** | Parents/students first; counselors second | `/`, `/about`, school pages, `/browse`, `/match`, `/coverage`, cards, empty states, metadata | Benefit, then action, then one plain-English source line |
+| **Professional** | IR, researchers, analysts; counselors who want the trail | `/recipes`, `/methodology/*`, `/api`, rewritten source-story pages | The question, the method, the number, the source — jargon is fine when it earns the point. Still no extractor war stories |
 | **Operator** | Maintainers and OSS contributors | `/pipeline-observation`, `docs/`, `docs/known-issues/`, GitHub | Extractors, Docling vs AcroForm, Harvey Mudd C1, drains, heartbeats |
 
 **Harvey Mudd / Docling C1 shift** stays in `docs/known-issues/` and may
@@ -114,7 +121,8 @@ Homepage ledes do not name the three systems.
 2. Outline: **benefit → what to do on this page → what the number is → one
    source line → link for people who want the trail.**
 3. Never start a product lede with process (extractors, field IDs, “print
-   form,” “canonical,” “drain”).
+   form,” “canonical,” “drain”). Recipes may name section IDs (C2, Part H)
+   in the method line; they still do not open on extractors.
 4. Update title, description, and JSON-LD in the same change as the prose.
 5. Read-aloud test: would a parent, a counselor, and an IR director each
    know what to do in 20 seconds?
@@ -137,7 +145,7 @@ Product copy prefers the right-hand column. Operator docs may use the left.
 | drain, manifest, projection, browser row, comparer, Browser | recently added files; schools you can compare; Compare |
 | “files a school has since taken down” | historical years; the original file (do not advertise takedowns) |
 | “we keep three sources separate” / “federal context you can tell apart” | the three public sources, in one place |
-| CDS field IDs in a lede (`C.101`, `AP_RECD_1ST_MEN_N`) | the fact in English, ID only in tables or API docs |
+| CDS field IDs in a product lede (`C.101`, `AP_RECD_1ST_MEN_N`) | the fact in English; IDs in tables, recipe chips, or API docs |
 | “a 47-page PDF is not a database” as the hook | what a family or counselor can *do* with the report |
 
 Keep saying **Common Data Set** on the explainer and in SEO. School and
@@ -177,8 +185,8 @@ because of it.
 2. Anthony reads as a reader.
 3. Then implement in `web/`.
 4. Small PRs per wave. Wave 1 (front door) shipped 2026-08-27. Wave 2
-   product surfaces (Compare, schools directory, school and year pages,
-   Match, Coverage) signed after Fable review 2026-08-27. Deck:
-   [`docs/copy/wave-2-product-surfaces.md`](../docs/copy/wave-2-product-surfaces.md).
+   product surfaces shipped 2026-08-27. Wave 3 is Recipes: IR and data
+   analysts first. Deck:
+   [`docs/copy/wave-3-recipes.md`](../docs/copy/wave-3-recipes.md).
 
-Waves 3–4 (methodology, API) wait until Wave 2’s dialect is signed.
+Wave 4 (methodology, API) waits until Wave 3’s dialect is signed.
