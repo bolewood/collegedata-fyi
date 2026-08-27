@@ -33,17 +33,18 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.collegedata.fyi"),
   title: {
-    default: "collegedata.fyi - Open College Data",
+    default: "collegedata.fyi — Free college data, straight from the source",
     template: "%s | collegedata.fyi",
   },
   description:
-    "Open-source college data with source-linked Common Data Set files, NCES/IPEDS baselines, College Scorecard context, and a public API.",
+    "The most comprehensive free college data we know of — the report each college publishes, plus the government’s own numbers, in one public place.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "collegedata.fyi",
-    description: "Open-source college data with source links, federal baselines, and a public API.",
+    title: "collegedata.fyi — Free college data, straight from the source",
+    description:
+      "The most comprehensive free college data we know of — the report each college publishes, plus the government’s own numbers, in one public place.",
     url: "/",
     siteName: "collegedata.fyi",
     type: "website",

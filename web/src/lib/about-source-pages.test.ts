@@ -19,6 +19,47 @@ describe("About source-story metadata", () => {
     ]);
     expect(aboutMetadata.alternates?.canonical).toBe("/about");
     expect(canonicals).not.toContain("/methodology/common-data-set");
+    expect(String(cdsMetadata.description)).toMatch(/yearly report a college publishes/i);
+    expect(String(aboutMetadata.description)).toMatch(/most comprehensive free college data/i);
+  });
+});
+
+describe("Wave 1 product copy", () => {
+  const src = (rel: string) =>
+    readFileSync(join(process.cwd(), "src", rel), "utf8");
+
+  it("keeps API in the header and demotes GitHub off the hero", () => {
+    const nav = src("components/Nav.tsx");
+    expect(nav).toMatch(/href: "\/api", label: "API"/);
+    expect(nav).toMatch(/href: "\/browse", label: "Compare"/);
+    expect(nav).not.toMatch(/label: "Browser"/);
+    expect(nav).not.toMatch(/pipeline-observation/);
+
+    const home = src("app/page.tsx");
+    expect(home).toContain('href="/api"');
+    expect(home).toContain("Compare schools");
+    expect(home).toContain("Recently added");
+    expect(home).toContain('className="serif"');
+    expect(home).not.toContain("Latest drain");
+    expect(home).not.toContain("github.com/bolewood/collegedata-fyi");
+    expect(home).not.toMatch(/\bextracted\b/);
+    expect(home).not.toMatch(/field schema/);
+    expect(home).not.toMatch(/Browser rows/);
+  });
+
+  it("keeps extractor narrative and takedowns off the CDS explainer", () => {
+    const cds = src("app/about/common-data-set/page.tsx");
+    expect(cds).toContain("It's called the Common Data Set");
+    expect(cds).not.toMatch(/Docling/);
+    expect(cds).not.toMatch(/AcroForm/);
+    expect(cds).not.toMatch(/AP_RECD_1ST_MEN_N/);
+    expect(cds).not.toMatch(/taken down/);
+    expect(cds).not.toMatch(/harvey-mudd-2025-26\.md/);
+
+    const about = src("app/about/page.tsx");
+    expect(about).toMatch(/you still get the\s+federal numbers/);
+    expect(about).not.toMatch(/Docling/);
+    expect(about).not.toMatch(/Reducto/);
   });
 });
 

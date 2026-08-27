@@ -1,5 +1,8 @@
 # Harvey Mudd College, CDS 2025-26 — known extraction issues
 
+Public copy on `/about/common-data-set` does not carry this extractor
+narrative. These notes stay here for maintainers.
+
 **Source PDF:** `CDS-HMC-2025.2026_shared.pdf`
 **Source format:** Unflattened fillable PDF (1,026 AcroForm fields, 558 populated)
 **Recommended extractor:** `pypdf.get_fields()` (Tier 2) — **not** Docling
