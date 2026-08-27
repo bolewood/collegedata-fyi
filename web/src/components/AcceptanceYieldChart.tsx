@@ -83,7 +83,7 @@ export function AcceptanceYieldChart() {
           gap: 8,
         }}
       >
-        <div className="meta">Fig. 1 · 2024-25 cycle, 18 schools</div>
+        <div className="meta">Fig. 1 · 18-school seed, mostly 2024-25</div>
         <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)" }}>
           DOT SIZE = ENROLLED CLASS · FOREST = HAND-AUDITED
         </div>

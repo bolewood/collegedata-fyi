@@ -697,9 +697,10 @@ export function WaitlistOddsExplorer() {
           <p style={{ color: "var(--ink-2)", fontSize: 14, lineHeight: 1.6, margin: "8px 0 0" }}>
             {WAITLIST_ANALYSIS_SUMMARY.reportedAnomalyRows} high-volume rows report that at least 95%
             of students who accepted a wait-list spot were admitted. Some of those values appear
-            verbatim in the source PDFs, and at least one row has a blank accepted-count cell that the
-            extractor filled from the admitted-count row. They are preserved below as source-reported
-            anomalies, but excluded from medians, bucket summaries, and the main chart.
+            verbatim in the source PDFs; at least one inspected PDF leaves the accepted-count row
+            blank, and the published count does not match the source. They are preserved below as
+            source-reported anomalies, but excluded from medians, bucket summaries, and the main
+            chart.
           </p>
           <div style={{ overflowX: "auto", marginTop: 12 }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>

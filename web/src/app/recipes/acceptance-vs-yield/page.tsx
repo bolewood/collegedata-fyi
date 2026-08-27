@@ -6,7 +6,7 @@ import { TrackedLink } from "@/components/TrackedLink";
 export const metadata: Metadata = {
   title: "Acceptance rate vs. yield",
   description:
-    "Two numbers, eighteen schools worth of context: how selective a school looks on paper (acceptance rate) against how selective it actually is (yield).",
+    "Acceptance rate (C1) against yield for an eighteen-school seed, with the API query and XLSX starter that extend it to every school with a complete C1 row.",
   alternates: { canonical: "/recipes/acceptance-vs-yield" },
   openGraph: { url: "/recipes/acceptance-vs-yield" },
 };
@@ -80,22 +80,22 @@ export default function AcceptanceVsYieldPage() {
             <span style={{ fontStyle: "italic" }}>vs.</span> yield
           </h1>
           <p
+            className="serif"
             style={{
-              maxWidth: 640,
+              maxWidth: 720,
               marginTop: 12,
               color: "var(--ink-2)",
-              fontSize: 16,
+              fontSize: 18,
+              fontStyle: "italic",
               lineHeight: 1.55,
             }}
           >
-            Two numbers, eighteen schools worth of context. A{" "}
-            <span
-              className="serif"
-              style={{ fontStyle: "italic" }}
-            >
-              collegedata.fyi
-            </span>{" "}
-            recipe.
+            Acceptance rate (C1) against yield, for an eighteen-school seed —
+            three hand-checked anchors plus fifteen rows from the public API,
+            most on the 2024-25 cycle. Four quadrants: selective-and-desired,
+            loved-despite-openness, selective-but-second-choice,
+            accessible-and-optional. The XLSX starter and API query extend it
+            past the seed.
           </p>
         </div>
         <div
@@ -230,7 +230,7 @@ export default function AcceptanceVsYieldPage() {
       {/* Query block */}
       <section style={{ marginTop: 48 }}>
         <div className="meta" style={{ marginBottom: 10 }}>
-          § Scale to all 697 schools
+          § Scale to every school with a complete 2024-25 C1 row
         </div>
         <pre
           style={{

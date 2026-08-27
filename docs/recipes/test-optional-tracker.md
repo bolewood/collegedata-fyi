@@ -1,8 +1,8 @@
 # Recipe: Test-optional tracker
 
-**Who this is for:** students and parents deciding whether a school is a realistic test-optional option; counselors tracking policy whiplash year over year; reporters covering the post-COVID testing debate.
+**Who this is for:** IR and policy analysts reading effective policy from C9 submission rates; C8 is the written version. Counselors and reporters are welcome.
 
-**What this reveals:** how many students actually submit SAT or ACT scores at each school, year by year — the single most honest signal of how "optional" a test-optional policy really is. Written policy alone does not tell you much: a school can publish "test-optional" on its admissions page while admitting 85% of its class from students who submitted scores. The Common Data Set forces schools to report the actual submission rate of enrolled first-years, which makes the policy measurable.
+**What this reveals:** how many students actually submit SAT or ACT scores at each school, year by year — the single most honest signal of how "optional" a test-optional policy really is. Written policy underdetermines practice: a school can publish "test-optional" on its admissions page while admitting 85% of its class from students who submitted scores. The Common Data Set forces schools to report the actual submission rate of enrolled first-years, which makes the policy measurable.
 
 **CDS sections used:** C.901 (Percent Submitting SAT Scores), C.902 (Percent Submitting ACT Scores), C.801–C.8G (written policy disclosures, as a tiebreaker when submission numbers are ambiguous).
 
@@ -33,7 +33,7 @@ This is intentionally an *outcome* measure, not a policy measure. A school's wri
 The seed data in the demo is hand-verified for each of the seven charted schools. To reproduce the full-corpus picture, pull C.901 and C.902 across every year and school in the archive:
 
 ```bash
-# 1) List every extracted manifest entry for the years you care about
+# 1) List every manifest entry for the years you care about
 curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?canonical_year=in.(2018-19,2019-20,2020-21,2021-22,2022-23,2023-24,2024-25)&extraction_status=eq.extracted&select=document_id,ipeds_id,school_id,school_name,canonical_year' \
   -H 'apikey: <anon key>' -H 'Authorization: Bearer <anon key>' \
   > manifest.json
@@ -52,7 +52,7 @@ If you want a single blob rather than per-document queries, the /api page at [co
 
 ## Known caveats
 
-1. **Older records are noisier.** Tier 4 (flattened-PDF) extraction has historically weaker coverage on pre-2018 docs. The Caltech 2010-11 value of 38% in the chart is a plausible extraction-noise outlier inside an otherwise stable ~99% baseline; when you see a single-year spike that contradicts a long-run pattern, cross-check the source PDF on that school's year page.
+1. **Older records are noisier.** Pre-2018 filings are sparser. The Caltech 2010-11 value of 38% in the chart sits inside an otherwise stable ~99% baseline; when you see a single-year spike that contradicts a long-run pattern, cross-check the source PDF on that school's year page.
 2. **SAT-only reporters vs ACT-only reporters.** A few schools only fill C.901 (SAT) or only C.902 (ACT) because their regional population is heavily one test or the other. When summing for the bucket classification, we cap the sum at 100% to avoid double-counting students who took both. Individual school lines in the chart show SAT only; the tooltip exposes ACT when reported.
 3. **Two versions of "policy."** A school can be formally test-optional (C.801 = Yes, tests considered when submitted) but effectively test-required by submission rate. This is common among highly selective schools — the "test-optional" policy is real, but the accepted students disproportionately self-select for having strong scores. The two measures are complementary, not contradictory.
 4. **The 2025-26 corpus is still filling in.** Many schools have not yet published their 2025-26 CDS at time of writing. Expect the 2025-26 points to be sparse until late in the cycle.

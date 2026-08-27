@@ -1,6 +1,6 @@
 # Recipe: Wait-list odds
 
-**Who this is for:** students deciding whether to stay on a wait list, parents trying to set expectations after May 1, counselors explaining why a "maybe" can still be a long-shot, and reporters who want a corpus baseline instead of one-school anecdotes.
+**Who this is for:** enrollment managers and IR. C2 offer / accept / admit, bucketed by C1 selectivity and by federal control, size, and Carnegie class. Counselors and reporters are welcome.
 
 **Inspiration:** Roshan Fernandez's May 10, 2026 Wall Street Journal story, ["The Only Thing Harder Than Getting Into College Is Getting Off the Wait List"](https://www.wsj.com/us-news/education/college-waitlists-national-decision-day-4cb7b5d8), described wait lists that have grown into thousands of students while some schools admit few or none from the pool. This recipe uses that question as the prompt, then recomputes the answer from collegedata.fyi's Common Data Set corpus.
 
@@ -12,7 +12,7 @@
 
 Open [`/recipes/waitlist-odds`](https://www.collegedata.fyi/recipes/waitlist-odds) for the interactive chart.
 
-The recipe reads the current `school_browser_rows` projection and keeps every school-year row that exposes wait-list data. A row is counted in the rate analysis only when it has all three C2 counts and the math is internally valid:
+The recipe reads the current `school_browser_rows` table and keeps every school-year row that exposes wait-list data. A row is counted in the rate analysis only when it has all three C2 counts and the math is internally valid:
 
 - applicants offered a wait-list spot
 - applicants accepting a wait-list spot
@@ -26,7 +26,7 @@ wait-list success rate = wait-listed students admitted / students accepting a wa
 
 That is the applicant-facing number. "Admitted divided by offered a spot" is also useful for understanding how much a school over-offers the list, but students usually make the decision after they have already accepted a spot.
 
-High-volume rows that report near-total wait-list admission are treated as data-quality caveats rather than odds estimates. Rows with at least 100 students accepting a wait-list spot and a reported success rate of at least 95% are preserved in the recipe but excluded from medians, bucket summaries, and the main chart. Some of these values appear verbatim in school PDFs; at least one inspected PDF leaves the accepted-count row blank and was over-filled by Tier 4 extraction. Exact duplicate school-year rows are collapsed before analysis, and the extremes table shows at most one row per school.
+High-volume rows that report near-total wait-list admission are treated as data-quality caveats rather than odds estimates. Rows with at least 100 students accepting a wait-list spot and a reported success rate of at least 95% are preserved in the recipe but excluded from medians, bucket summaries, and the main chart. Some of these values appear verbatim in school PDFs; at least one inspected PDF leaves the accepted-count row blank, and the published count does not match the source. Exact duplicate school-year rows are collapsed before analysis, and the extremes table shows at most one row per school.
 
 ## What it shows
 
@@ -44,9 +44,7 @@ The median is not the lesson by itself. The split matters:
 - public flagships can swing dramatically year to year because small enrollment-model misses create huge wait-list movement
 - very large wait lists are often option value for the institution, not a promise to the applicant
 
-The practical answer is: hope is allowed, but planning on a wait-list admit is usually bad strategy. Treat it as an upside option while getting excited about the school that actually admitted you.
-
-The Berkeley history panel, inspired by a chart idea from [@neetu_arnold](https://x.com/neetu_arnold), is a hand-audited example from the nine Berkeley CDS files currently in the archive. The browser projection only exposes the two newest Berkeley wait-list rows, so the older values were read directly from archived source files:
+The Berkeley history panel, inspired by a chart idea from [@neetu_arnold](https://x.com/neetu_arnold), is a hand-audited example from the nine Berkeley CDS files currently in the archive. The public `school_browser_rows` table only exposes the two newest Berkeley wait-list rows, so the older values were read directly from archived source files:
 
 | CDS year | Offered | Accepted | Admitted | Success |
 | --- | ---: | ---: | ---: | ---: |
@@ -62,7 +60,7 @@ The Berkeley history panel, inspired by a chart idea from [@neetu_arnold](https:
 
 ## How to reproduce
 
-The page is generated from public-facing browser rows:
+The page is generated from public-facing `school_browser_rows`:
 
 ```bash
 curl 'https://api.collegedata.fyi/rest/v1/school_browser_rows?select=document_id,ipeds_id,school_id,school_name,canonical_year,acceptance_rate,wait_list_policy,wait_list_offered,wait_list_accepted,wait_list_admitted&wait_list_offered=not.is.null'
@@ -87,8 +85,8 @@ wait_list_offered >= wait_list_accepted >= wait_list_admitted >= 0
 
 ## Caveats
 
-1. **This is CDS-reported, not counselor-rumor-reported.** When schools publish conflicting press figures or later updates, this recipe follows the Common Data Set projection.
-2. **Partial C2 rows are not rate rows.** Some PDFs expose offered and accepted counts but not admitted counts in the current projection. Those rows remain visible as caveats but do not enter medians.
+1. **This is CDS-reported, not counselor-rumor-reported.** When schools publish conflicting press figures or later updates, this recipe follows the Common Data Set.
+2. **Partial C2 rows are not rate rows.** Some PDFs expose offered and accepted counts but not admitted counts. Those rows remain visible as caveats but do not enter medians.
 3. **Near-total high-volume admits are suspicious.** A school may publish them that way, but rows like IU Bloomington and UC Irvine can dominate the right edge of the chart while saying more about reporting quality than applicant odds.
 4. **One-year wait-list rates are volatile.** A school can admit hundreds one year and almost none the next. The chart is best read by bucket and by multi-year pattern, not as a guarantee for a single future class.
 5. **The accepted-wait-list denominator is applicant behavior.** Schools control how many spots they offer; students control whether they accept one. Both denominators are shown because they answer different questions.

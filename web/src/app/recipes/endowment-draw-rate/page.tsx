@@ -65,9 +65,12 @@ export default function EndowmentDrawRatePage() {
           <small>{latest.above7Count.toLocaleString()} of {latest.eligible.toLocaleString()} eligible schools</small>
         </div>
         <div>
-          <span className="meta">School-year rows</span>
+          <span className="meta">Rows</span>
           <strong>{ENDOWMENT_DRAW_RATE_META.rowCount.toLocaleString()}</strong>
-          <small>{ENDOWMENT_DRAW_RATE_META.schoolCount.toLocaleString()} schools across five years</small>
+          <small>
+            {ENDOWMENT_DRAW_RATE_META.schoolCount.toLocaleString()} schools,{" "}
+            {fiscalYearRange}
+          </small>
         </div>
         <div>
           <span className="meta">Latest status</span>

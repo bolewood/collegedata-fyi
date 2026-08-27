@@ -1,8 +1,6 @@
 # Recipe: Endowment draw-rate tracker
 
-**Who this is for:** college finance reporters, institutional researchers, trustees, counselors,
-and readers who want a careful public baseline for how much private nonprofit colleges report
-spending from their endowments.
+**Who this is for:** IR, college-finance reporters, trustees. IPEDS F2 Part H estimate.
 
 **Source:** NCES IPEDS Finance form F2, Part H. The interactive recipe is an independent estimate
 from public federal data; it is not a reproduction of audited-financial-statement analysis.

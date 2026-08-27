@@ -6,7 +6,7 @@ import { TrackedLink } from "@/components/TrackedLink";
 export const metadata: Metadata = {
   title: "Test-optional tracker",
   description:
-    "What share of enrolled first-years actually submitted SAT scores, year by year. Written disclosures lie; enrollment numbers don't.",
+    "C9 SAT submission rate, year by year, for seven well-documented schools. Effective test-optional policy, read from what enrolled first-years did — C8 is the written version.",
   alternates: { canonical: "/recipes/test-optional-tracker" },
   openGraph: { url: "/recipes/test-optional-tracker" },
 };
@@ -77,23 +77,26 @@ export default function TestOptionalTrackerPage() {
               lineHeight: 1,
             }}
           >
-            Test-<span style={{ fontStyle: "italic" }}>optional</span>?
+            SAT submission as{" "}
+            <span style={{ fontStyle: "italic" }}>effective policy.</span>
           </h1>
           <p
+            className="serif"
             style={{
-              maxWidth: 640,
+              maxWidth: 720,
               marginTop: 12,
               color: "var(--ink-2)",
-              fontSize: 16,
+              fontSize: 18,
+              fontStyle: "italic",
               lineHeight: 1.55,
             }}
           >
-            What share of enrolled first-years actually submitted SAT
-            scores, year by year. A{" "}
-            <span className="serif" style={{ fontStyle: "italic" }}>
-              collegedata.fyi
-            </span>{" "}
-            recipe.
+            C9 SAT submission rate, year by year, for seven well-documented
+            schools. ≥85% behaves like test-required; 10–85% is genuinely
+            optional; &lt;10% behaves like test-blind. Written policy is C8;
+            this chart is what enrolled first-years actually did. Bands score
+            combined SAT + ACT submission, capped at 100%; the lines plot SAT
+            only.
           </p>
         </div>
         <div
@@ -137,9 +140,9 @@ export default function TestOptionalTrackerPage() {
               lineHeight: 1.3,
             }}
           >
-            &ldquo;Policy claims;
+            &ldquo;Written policy
             <br />
-            enrollment proves.&rdquo;
+            underdetermines practice.&rdquo;
           </div>
         </div>
         <p
@@ -163,8 +166,8 @@ export default function TestOptionalTrackerPage() {
           <span className="serif" style={{ fontStyle: "italic" }}>
             genuinely
           </span>{" "}
-          test-optional. Written policy and effective practice do not
-          always match — which is the whole point.
+          test-optional. Written policy underdetermines practice; the
+          submission rate is the outcome measure.
         </p>
       </section>
 
