@@ -7,9 +7,9 @@ const ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzZHV3bXlndm1kb3pocHZ6YWl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDk3NTksImV4cCI6MjA5MTY4NTc1OX0.fYZOIHyrOWzidgc-CVxWCY5Fe9pQk12-6YjDIS6y9qs";
 
 export const metadata: Metadata = {
-  title: "Academic Positioning Methodology",
+  title: "Academic profile methodology",
   description:
-    "How collegedata.fyi compares student scores to a school's published Common Data Set admitted-class bands.",
+    "How collegedata.fyi compares a student's scores to a school's published Common Data Set score bands for enrolled first-years. Not a chance-me.",
   alternates: { canonical: "/methodology/positioning" },
   openGraph: { url: "/methodology/positioning" },
 };
@@ -44,10 +44,22 @@ export default function PositioningMethodologyPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <div className="meta">§ Methodology</div>
-      <h1 className="serif mt-3 text-5xl leading-none">Academic positioning</h1>
-      <p className="mt-5 text-lg leading-relaxed text-[var(--ink-2)]">
-        This page shows where your scores would land in a school&apos;s admitted-class
-        numbers. It is not a chance-me, and it does not predict admissions decisions.
+      <h1 className="serif mt-3 text-5xl leading-none">
+        Academic <span style={{ fontStyle: "italic" }}>profile.</span>
+      </h1>
+      <p
+        className="serif mt-5"
+        style={{
+          color: "var(--ink-2)",
+          fontSize: 18,
+          fontStyle: "italic",
+          lineHeight: 1.55,
+        }}
+      >
+        Where a student&apos;s SAT or ACT would land in the numbers the school
+        published for its enrolled first-years — the entering class, not the
+        admitted pool. It is not a chance-me, and it does not predict an
+        admissions decision.
       </p>
 
       <section className="mt-10">
@@ -59,9 +71,10 @@ export default function PositioningMethodologyPage() {
             but the methodology treats them as descriptive data rather than decision weights.
           </FieldUse>
           <FieldUse field="C.8" title="Test policies and score-use context">
-            We use C.8 to frame whether score bands represent all admitted students or only
-            the subset who submitted scores. At test-optional schools, the card repeats the
-            submitter-only caveat inline with the SAT and ACT ranges.
+            We use C.8 to frame whether score bands describe all enrolled
+            first-years or only the subset who submitted scores. At test-optional
+            schools, the card repeats the submitter-only caveat inline with the SAT
+            and ACT ranges.
           </FieldUse>
           <FieldUse field="C.9" title="SAT and ACT score bands">
             C.9 provides the 25th, 50th, and 75th percentile anchors. For Bowdoin College,
@@ -71,14 +84,15 @@ export default function PositioningMethodologyPage() {
             admission.
           </FieldUse>
           <FieldUse field="C.11" title="High-school class rank">
-            C.11 can describe class-rank distribution where schools publish it. v1 does not
-            score rank because many schools omit rank or receive it from too small a subset
+            C.11 can describe class-rank distribution where schools publish it. This card
+            does not score rank because many schools omit rank or receive it from too small a subset
             of applicants to compare responsibly across institutions.
           </FieldUse>
           <FieldUse field="C.12" title="High-school GPA">
-            C.12 provides average high-school GPA and the percent submitting GPA. v1 displays
-            the school average beside your entered GPA, but GPA never contributes to academic
-            fit because weighted and unweighted scales are not consistently documented.
+            C.12 provides average high-school GPA and the percent submitting GPA. The card
+            displays the school average beside the student&apos;s entered GPA; GPA never
+            contributes to academic fit because weighted and unweighted scales are not
+            consistently documented.
           </FieldUse>
           <FieldUse field="C.1 / C.2" title="Applicant, admitted, and enrolled counts">
             C.1 and C.2 supply applicant and admit counts. The serving layer derives admit
@@ -104,15 +118,15 @@ export default function PositioningMethodologyPage() {
       <section className="mt-10 border-t border-[var(--rule-strong)] pt-6">
         <h2 className="serif text-3xl">Why this isn&apos;t a chance-me</h2>
         <p className="mt-4 text-sm leading-relaxed text-[var(--ink-2)]">
-          A position compares your numbers with published admitted-class bands. A
-          prediction estimates the probability that an applicant with many hidden traits
-          will be admitted. The Common Data Set supports the first task and does not
-          support the second.
+          A position compares a student&apos;s numbers with the bands the school
+          published for enrolled first-years. A prediction estimates the probability
+          that an applicant with many hidden traits will be admitted. The Common Data
+          Set supports the first task and does not support the second.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
           Test-optional reporting makes the distinction sharper. A school can publish a
           high SAT middle 50% while only a minority of enrolled students submitted SAT
-          scores. That means the range describes submitters, not the full admitted class.
+          scores. That means the range describes submitters, not the full entering class.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
           Selective admissions also include institutional priorities that are absent from
@@ -121,8 +135,8 @@ export default function PositioningMethodologyPage() {
           admit rate.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
-          Current cards read 2024-25 or newer CDS rows. If a future card uses a CDS
-          year more than three years old, the scoring result carries a stale-data caveat.
+          If the newest archived CDS for a school is more than three years old, the
+          card carries a stale-data caveat.
         </p>
       </section>
 
@@ -138,8 +152,8 @@ export default function PositioningMethodologyPage() {
   -H 'apikey: ${ANON_KEY.slice(0, 24)}...' \\
   -H 'Authorization: Bearer ${ANON_KEY.slice(0, 24)}...'`}</CodeBlock>
         <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
-          The endpoint is the same public PostgREST resource documented on the{" "}
-          <Link href="/api">API page</Link>; PRD 016 does not add a new API resource.
+          The serving table is documented on the{" "}
+          <Link href="/api">API page</Link>.
         </p>
       </section>
     </main>

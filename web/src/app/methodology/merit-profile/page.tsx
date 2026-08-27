@@ -7,9 +7,9 @@ const ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzZHV3bXlndm1kb3pocHZ6YWl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDk3NTksImV4cCI6MjA5MTY4NTc1OX0.fYZOIHyrOWzidgc-CVxWCY5Fe9pQk12-6YjDIS6y9qs";
 
 export const metadata: Metadata = {
-  title: "Merit Profile Methodology",
+  title: "Merit and need aid methodology",
   description:
-    "How collegedata.fyi derives merit-aid, need-aid, net-price, and outcome context from Common Data Set Section H and College Scorecard data.",
+    "How collegedata.fyi reads merit-aid and need-aid from Common Data Set Section H, with federal College Scorecard net-price and outcome context. Not a personalized price estimate.",
   alternates: { canonical: "/methodology/merit-profile" },
   openGraph: { url: "/methodology/merit-profile" },
 };
@@ -44,8 +44,18 @@ export default function MeritProfileMethodologyPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <div className="meta">§ Methodology</div>
-      <h1 className="serif mt-3 text-5xl leading-none">Merit profile</h1>
-      <p className="mt-5 text-lg leading-relaxed text-[var(--ink-2)]">
+      <h1 className="serif mt-3 text-5xl leading-none">
+        Merit and need <span style={{ fontStyle: "italic" }}>aid.</span>
+      </h1>
+      <p
+        className="serif mt-5"
+        style={{
+          color: "var(--ink-2)",
+          fontSize: 18,
+          fontStyle: "italic",
+          lineHeight: 1.55,
+        }}
+      >
         The merit profile combines source-reported CDS Section H aid facts with
         federal College Scorecard affordability and outcome context. It is built
         to answer what a school says it awarded, not to predict any applicant&apos;s
@@ -106,10 +116,9 @@ export default function MeritProfileMethodologyPage() {
         <h2 className="serif text-3xl">Missing data policy</h2>
         <p className="mt-4 text-sm leading-relaxed text-[var(--ink-2)]">
           Missing CDS fields stay missing. We do not impute merit awards from peer
-          schools, marketing copy, or third-party scholarship pages. After the
-          May 3, 2026 Tier 4 redrain, direct H.2A02 answerability was 244 of 365
-          latest primary 2024+ schools (66.8%), and effective first-year merit
-          answerability was 252 of 365 (69.0%).
+          schools, marketing copy, or third-party scholarship pages. The average
+          no-need grant (H.2A02) is currently reported for 335 of 488 schools in
+          the merit view (69%).
         </p>
       </section>
 

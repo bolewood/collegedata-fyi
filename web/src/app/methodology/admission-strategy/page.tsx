@@ -7,9 +7,9 @@ const ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzZHV3bXlndm1kb3pocHZ6YWl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDk3NTksImV4cCI6MjA5MTY4NTc1OX0.fYZOIHyrOWzidgc-CVxWCY5Fe9pQk12-6YjDIS6y9qs";
 
 export const metadata: Metadata = {
-  title: "Admission Strategy Methodology",
+  title: "Admission rounds methodology",
   description:
-    "How collegedata.fyi derives Early Decision, Early Action, yield, wait-list, and admission-factor context from Common Data Set fields.",
+    "How collegedata.fyi reads Early Decision, Early Action, yield, wait-list, and admission-factor context from Common Data Set Section C — and which rates CDS will not support.",
   alternates: { canonical: "/methodology/admission-strategy" },
   openGraph: { url: "/methodology/admission-strategy" },
 };
@@ -44,11 +44,21 @@ export default function AdmissionStrategyMethodologyPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <div className="meta">§ Methodology</div>
-      <h1 className="serif mt-3 text-5xl leading-none">Admission strategy</h1>
-      <p className="mt-5 text-lg leading-relaxed text-[var(--ink-2)]">
-        The headline admit rate in most college guides is a weighted average across
-        application rounds. This page explains what we surface from the Common Data Set,
-        what those numbers mean, and what they do not prove.
+      <h1 className="serif mt-3 text-5xl leading-none">
+        Admission <span style={{ fontStyle: "italic" }}>rounds.</span>
+      </h1>
+      <p
+        className="serif mt-5"
+        style={{
+          color: "var(--ink-2)",
+          fontSize: 18,
+          fontStyle: "italic",
+          lineHeight: 1.55,
+        }}
+      >
+        The headline admit rate in most college guides averages across rounds.
+        This note says what Section C actually publishes, what we derive, and
+        what those numbers do not prove.
       </p>
 
       <section className="mt-10">
@@ -105,7 +115,7 @@ export default function AdmissionStrategyMethodologyPage() {
         <p className="mt-4 text-sm leading-relaxed text-[var(--ink-2)]">
           Published ED rates include recruited athletes, legacy applicants, and other
           institutional-priority applicants. We do not estimate a general-pool ED rate
-          in v1 because CDS does not separate those applicant groups.
+          because CDS does not separate those applicant groups.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
           For context, the NBER paper{" "}
@@ -166,16 +176,12 @@ export default function AdmissionStrategyMethodologyPage() {
         <h2 className="serif text-3xl">Sources and audit trail</h2>
         <p className="mt-4 text-sm leading-relaxed text-[var(--ink-2)]">
           Every school card links to the archived CDS source for the displayed year.
-          The public serving table is <code>school_browser_rows</code>; PRD 016B adds
-          columns to that resource, not a new API endpoint.
+          The serving table is <code>school_browser_rows</code>, documented on the{" "}
+          <Link href="/api">API page</Link>.
         </p>
         <CodeBlock>{`curl '${BASE}/rest/v1/school_browser_rows?school_id=eq.bowdoin&select=school_id,school_name,canonical_year,applied,admitted,ed_offered,ed_applicants,ed_admitted,ea_offered,ea_restrictive,wait_list_offered,wait_list_accepted,wait_list_admitted,admission_strategy_card_quality' \\
   -H 'apikey: ${ANON_KEY.slice(0, 24)}...' \\
   -H 'Authorization: Bearer ${ANON_KEY.slice(0, 24)}...'`}</CodeBlock>
-        <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
-          Phase 0 measurement results are preserved in the repository&apos;s PRD
-          findings note; the API page documents the public columns exposed by this card.
-        </p>
       </section>
     </main>
   );

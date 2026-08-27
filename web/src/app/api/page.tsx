@@ -8,7 +8,7 @@ import { TrackedLink } from "@/components/TrackedLink";
 export const metadata: Metadata = {
   title: "API",
   description:
-    "Public REST API for the collegedata.fyi Common Data Set archive and source-labeled NCES/IPEDS federal baseline facts.",
+    "Public API for Common Data Set filings and federal data — no-auth JSON for agents, and the full PostgREST archive. Same sources the site uses.",
   alternates: { canonical: "/api" },
   openGraph: { url: "/api" },
 };
@@ -35,7 +35,7 @@ function CodeBlock({ children }: { children: string }) {
           }}
         />
       </div>
-      <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded border border-gray-200 bg-gray-50 px-4 py-3 pr-16 text-xs leading-relaxed text-gray-800">
+      <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded border border-[var(--rule)] bg-[var(--paper-2)] px-4 py-3 pr-16 text-xs leading-relaxed text-[var(--ink)]">
         <code>{children}</code>
       </pre>
     </div>
@@ -47,11 +47,24 @@ export default async function ApiDocsPage() {
   const scorecardVintage = stats.scorecard_data_year ?? "the current published Scorecard vintage";
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 text-gray-800">
-      <h1 className="text-3xl font-bold text-gray-900">API</h1>
-      <p className="mt-3 text-base leading-relaxed text-gray-600">
-        CollegeData.FYI now exposes two public surfaces: simple no-auth JSON
-        endpoints for agents and command-line tools, and the full read-only{" "}
+    <div className="mx-auto max-w-3xl px-4 py-12">
+      <div className="meta">§ API</div>
+      <h1
+        className="serif mt-3 leading-none"
+        style={{ fontSize: "clamp(40px, 6vw, 64px)" }}
+      >
+        The <span style={{ fontStyle: "italic" }}>public</span> API.
+      </h1>
+      <p
+        className="serif mt-5"
+        style={{
+          color: "var(--ink-2)",
+          fontSize: 18,
+          fontStyle: "italic",
+          lineHeight: 1.55,
+        }}
+      >
+        Two ways in: simple no-auth JSON for agents and scripts, and the full{" "}
         <a
           className={API_LINK_CLASS}
           href="https://postgrest.org/"
@@ -60,19 +73,19 @@ export default async function ApiDocsPage() {
         >
           PostgREST
         </a>{" "}
-        API at{" "}
-        <code className="break-all rounded bg-gray-100 px-1.5 py-0.5 text-sm">{BASE}</code>
-        . Every page on this site is built from the same endpoints documented
-        below: archived Common Data Set documents, structured CDS fields,
-        source-labeled NCES/IPEDS baseline facts, and curated federal Scorecard
-        context.
+        archive at{" "}
+        <code className="break-all rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-sm not-italic">
+          {BASE}
+        </code>{" "}
+        for bulk work. Every page on this site is built from the endpoints
+        below. Keep the source label next to the number.
       </p>
 
-      <h2 className="mt-10 text-xl font-semibold text-gray-900">
+      <h2 className="serif mt-10 text-2xl">
         Simple endpoints
       </h2>
-      <p className="mt-2 text-sm leading-relaxed text-gray-700">
-        Start here for MCP tools, CLIs, notebooks, and quick integrations. These
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
+        The friendly surface for MCP tools, CLIs, notebooks, and quick integrations. These
         endpoints do not require the Supabase anon key and return source labels
         next to facts so agents can cite values without guessing where they came
         from.
@@ -90,13 +103,13 @@ curl 'https://www.collegedata.fyi/api/compare?schools=mit,yale,university-of-chi
 curl 'https://www.collegedata.fyi/api/fields'
 
 curl 'https://www.collegedata.fyi/openapi.json'`}</CodeBlock>
-      <p className="mt-4 text-sm leading-relaxed text-gray-700">
+      <p className="mt-4 text-sm leading-relaxed text-[var(--ink-2)]">
         The same simple endpoints from R, with no API key.{" "}
-        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">httr2</code>{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">httr2</code>{" "}
         and{" "}
-        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">jsonlite</code>{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">jsonlite</code>{" "}
         are enough. Send{" "}
-        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
           X-CollegeData-Client
         </code>{" "}
         so we can tell research scripts apart from other traffic.
@@ -118,43 +131,43 @@ compare <- request("https://www.collegedata.fyi/api/compare") |>
   req_headers(\`X-CollegeData-Client\` = "r-httr2") |>
   req_perform() |>
   resp_body_json()`}</CodeBlock>
-      <p className="mt-3 text-sm leading-relaxed text-gray-700">
+      <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
         The per-school facts endpoint accepts the <code>finance</code> category
         for endowment facts. The fixed-schema compare endpoint does not: a
         compare request containing <code>finance</code> returns <code>400</code>
         instead of substituting unrelated fields. A categories filter with no
         recognized values also returns <code>400</code> on either endpoint.
       </p>
-      <p className="mt-3 text-sm leading-relaxed text-gray-700">
+      <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
         The minimal MCP server and CLI live in the repo under{" "}
-        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
           packages/mcp-server
         </code>{" "}
         and{" "}
-        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
           packages/cli
         </code>
         . Both wrap the simple endpoints rather than reimplementing query logic.
       </p>
-      <p className="mt-3 text-sm leading-relaxed text-gray-700">
+      <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
         If you build on these endpoints, send a short{" "}
-        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
           X-CollegeData-Client
         </code>{" "}
         header such as{" "}
-        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
           my-app-name
         </code>
         . It helps us understand API usage and keep the free public surface
         healthy without requiring API keys.
       </p>
 
-      <h2 className="mt-10 text-xl font-semibold text-gray-900">
-        Runbook
+      <h2 className="serif mt-10 text-2xl">
+        Start here
       </h2>
-      <div className="mt-4 space-y-6 text-sm leading-relaxed text-gray-700">
+      <div className="mt-4 space-y-6 text-sm leading-relaxed text-[var(--ink-2)]">
         <section>
-          <h3 className="font-semibold text-gray-900">1. Smoke-test the API</h3>
+          <h3 className="serif text-lg">1. Try search, facts, and compare</h3>
           <p className="mt-1">
             Start with search, facts, and compare. If these three work, the
             friendly API surface is healthy enough for most agent and CLI use.
@@ -165,11 +178,11 @@ curl 'https://www.collegedata.fyi/api/compare?schools=mit,yale,university-of-chi
         </section>
 
         <section>
-          <h3 className="font-semibold text-gray-900">2. Run the CLI</h3>
+          <h3 className="serif text-lg">2. Run the CLI</h3>
           <p className="mt-1">
             From a checkout of the repo, the CLI can point at production,
             preview, or localhost with{" "}
-            <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
               COLLEGEDATA_API_BASE
             </code>
             .
@@ -180,7 +193,7 @@ COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegeda
         </section>
 
         <section>
-          <h3 className="font-semibold text-gray-900">3. Connect an MCP client</h3>
+          <h3 className="serif text-lg">3. Connect an MCP client</h3>
           <p className="mt-1">
             The MCP server is read-only and uses the same friendly API. Configure
             a client to run the server command from the repository root.
@@ -199,27 +212,28 @@ COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegeda
         </section>
 
         <section>
-          <h3 className="font-semibold text-gray-900">4. Use snapshots for local work</h3>
+          <h3 className="serif text-lg">4. Pin a snapshot</h3>
           <p className="mt-1">
             Use pinned snapshot paths for reproducible notebooks and the{" "}
-            <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
               latest
             </code>{" "}
-            alias for quick experiments.
+            alias for quick experiments. The manifest names the snapshot id.
           </p>
           <CodeBlock>{`curl 'https://www.collegedata.fyi/snapshots/latest/manifest.json'
 curl 'https://www.collegedata.fyi/snapshots/latest/schools.jsonl'
-curl 'https://www.collegedata.fyi/snapshots/latest/school_facts.jsonl'`}</CodeBlock>
+curl 'https://www.collegedata.fyi/snapshots/latest/school_facts.jsonl'
+curl 'https://www.collegedata.fyi/snapshots/<snapshot-id>/schools.jsonl'`}</CodeBlock>
         </section>
 
         <section>
-          <h3 className="font-semibold text-gray-900">5. Troubleshoot source gaps</h3>
+          <h3 className="serif text-lg">5. When a value is missing</h3>
           <p className="mt-1">
-            A missing value is usually one of three things: the school has no
-            public CDS, the field is not part of the V1 friendly dictionary, or
-            the source row is intentionally withheld because the projected value
-            failed a sanity check. The sources endpoint shows the document and
-            federal release context behind the page.
+            A missing value is usually one of four things: the school has no
+            public CDS, the school&apos;s filing leaves the field blank, the field
+            is not in the friendly dictionary, or the row failed a sanity check
+            and was withheld. The sources endpoint shows the document and the
+            federal release behind the page.
           </p>
           <CodeBlock>{`curl 'https://www.collegedata.fyi/api/schools/mit/sources'
 curl 'https://www.collegedata.fyi/api/fields?category=admissions'
@@ -227,16 +241,16 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         </section>
       </div>
 
-      <h2 className="mt-10 text-xl font-semibold text-gray-900">
+      <h2 className="serif mt-10 text-2xl">
         Raw PostgREST authentication
       </h2>
-      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
         All requests require a Supabase{" "}
-        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">anon</code>{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">anon</code>{" "}
         key passed as both an{" "}
-        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">apikey</code>{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">apikey</code>{" "}
         query parameter and an{" "}
-        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
           Authorization
         </code>{" "}
         bearer header. The anon key is public and grants read-only access to
@@ -244,14 +258,14 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
       </p>
       <CodeBlock>{ANON_KEY}</CodeBlock>
 
-      <h2 className="mt-10 text-xl font-semibold text-gray-900">
+      <h2 className="serif mt-10 text-2xl">
         Resources
       </h2>
 
       <div className="mt-4 space-y-6">
         <Resource
           name="cds_manifest"
-          description="One row per archived CDS document. Joins schools, source URLs, format detection, and extraction status. Carries ipeds_id so federal-data joins are one query away."
+          description="One row per archived CDS document — school, year, source URL, format, extraction_status. Carries ipeds_id so federal joins are one query."
           fields={[
             "school_id",
             "school_name",
@@ -309,7 +323,7 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         />
         <Resource
           name="cds_artifacts"
-          description="Raw extraction artifacts keyed by document. Most consumers should prefer cds_fields for field-level queries or the selected-result helper semantics documented below."
+          description="Raw artifacts keyed by document. Prefer cds_fields for field-level queries."
           fields={[
             "document_id",
             "kind",
@@ -332,7 +346,7 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         />
         <Resource
           name="cds_fields"
-          description={`${formatCount(stats.queryable_field_count)} normalized field rows from selected 2024-25+ extraction results. Use this for direct canonical-field queries across schools; derived metrics such as acceptance_rate live in school_browser_rows/browser-search.`}
+          description={`${formatCount(stats.queryable_field_count)} normalized field rows from 2024-25 and newer filings. Derived metrics such as acceptance_rate live on school_browser_rows.`}
           fields={[
             "school_id",
             "school_name",
@@ -370,7 +384,7 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         />
         <Resource
           name="school_browser_rows"
-          description={`${formatCount(stats.browser_primary_row_count)} primary 2024-25+ rows across ${formatCount(stats.browser_school_count)} schools, refreshed ${formatShortDate(stats.browser_updated_at)}. This is the curated serving layer for the website browser, CSV exports, and the per-school academic positioning and admission strategy cards.`}
+          description={`${formatCount(stats.browser_primary_row_count)} primary 2024-25+ rows across ${formatCount(stats.browser_school_count)} schools, refreshed ${formatShortDate(stats.browser_updated_at)}. The curated serving layer behind Compare, CSV export, and the academic-profile and admission-rounds cards.`}
           fields={[
             "school_id",
             "school_name",
@@ -928,12 +942,12 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         />
       </div>
 
-      <h2 className="mt-10 text-xl font-semibold text-gray-900">Examples</h2>
+      <h2 className="serif mt-10 text-2xl">Examples</h2>
 
-      <h3 className="mt-6 text-base font-semibold text-gray-900">
+      <h3 className="serif mt-6 text-lg">
         Fetch federal baseline facts for a no-CDS school
       </h3>
-      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
         Federal baseline facts come from <code>school_facts_unified</code>. Keep
         the release type, source table/variable, quality flag, and definition
         alignment visible if you reuse these values; they are NCES/IPEDS facts,
@@ -943,10 +957,10 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 
-      <h3 className="mt-6 text-base font-semibold text-gray-900">
+      <h3 className="serif mt-6 text-lg">
         Fetch a historical IPEDS time series
       </h3>
-      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
         Historical IPEDS queries are fastest when they use the public{" "}
         <code>ipeds_id</code> key, one or more <code>field_key</code> values, and
         a bounded <code>data_year</code> range. Avoid filtering raw{" "}
@@ -956,10 +970,10 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 
-      <h3 className="mt-6 text-base font-semibold text-gray-900">
+      <h3 className="serif mt-6 text-lg">
         Compute an endowment draw-rate series
       </h3>
-      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
         Finance Part H reports beginning and ending endowment values plus the
         components of change from fiscal year 2020 onward. A sign-normalized
         spending rate is <code>abs(F2H03C) / F2H01</code>. Keep the quality and
@@ -973,13 +987,13 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 
-      <h3 className="mt-6 text-base font-semibold text-gray-900">
-        Search the curated school browser
+      <h3 className="serif mt-6 text-lg">
+        Search latest-per-school rows (Compare)
       </h3>
-      <p className="mt-2 text-sm leading-relaxed text-gray-700">
-        The browser uses an Edge Function so latest-per-school ranking can account
-        for required fields and null answerability. Percent and rate values are
-        stored as fractions from <code>0</code> to <code>1</code>.
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
+        Compare&apos;s latest-per-school ranking runs through an Edge Function so it
+        can account for required fields and null answerability. Percent and
+        rate values are stored as fractions from <code>0</code> to <code>1</code>.
       </p>
       <CodeBlock>{`curl '${BASE}/functions/v1/browser-search' \\
   -H 'apikey: <anon key>' \\
@@ -987,11 +1001,11 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
   -H 'content-type: application/json' \\
   --data '{"mode":"latest_per_school","variant_scope":"primary_only","min_year_start":2024,"filters":[{"field":"acceptance_rate","op":"<=","value":0.1}],"page_size":10}'`}</CodeBlock>
 
-      <h3 className="mt-6 text-base font-semibold text-gray-900">
-        Fetch academic positioning data for one school
+      <h3 className="serif mt-6 text-lg">
+        Fetch academic-profile data for one school
       </h3>
-      <p className="mt-2 text-sm leading-relaxed text-gray-700">
-        The academic positioning card reads the already-public{" "}
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
+        The academic-profile card reads the already-public{" "}
         <code>school_browser_rows</code> resource. SAT/ACT submit rates are stored
         as fractions, and the card links to{" "}
         <Link href="/methodology/positioning" className={API_LINK_CLASS}>
@@ -1003,11 +1017,11 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 
-      <h3 className="mt-6 text-base font-semibold text-gray-900">
-        Fetch admission strategy data for one school
+      <h3 className="serif mt-6 text-lg">
+        Fetch admission-rounds data for one school
       </h3>
-      <p className="mt-2 text-sm leading-relaxed text-gray-700">
-        Admission strategy fields are also served from{" "}
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
+        Admission-rounds fields are also served from{" "}
         <code>school_browser_rows</code>. ED counts are published when the CDS reports
         them; EA is limited to offered/restrictive flags because CDS C.22 does not
         include EA applicant or admit counts. The card methodology is documented at{" "}
@@ -1020,10 +1034,10 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 
-      <h3 className="mt-6 text-base font-semibold text-gray-900">
+      <h3 className="serif mt-6 text-lg">
         Fetch merit-aid context for one school
       </h3>
-      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
         Merit profile data comes from <code>school_merit_profile</code>, a latest
         primary CDS Section H view joined to Scorecard affordability and outcome
         fields. H2A non-need award values are source-reported institutional facts,
@@ -1037,42 +1051,37 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 
-      <h3 className="mt-6 text-base font-semibold text-gray-900">
+      <h3 className="serif mt-6 text-lg">
         List the most recent year for every school
       </h3>
       <CodeBlock>{`curl '${BASE}/rest/v1/cds_manifest?removed_at=is.null&select=school_id,school_name,canonical_year&order=canonical_year.desc&limit=10' \\
   -H 'apikey: ${ANON_KEY.slice(0, 24)}…' \\
   -H 'Authorization: Bearer ${ANON_KEY.slice(0, 24)}…'`}</CodeBlock>
 
-      <h3 className="mt-6 text-base font-semibold text-gray-900">
+      <h3 className="serif mt-6 text-lg">
         Fetch all archived years for one school
       </h3>
       <CodeBlock>{`curl '${BASE}/rest/v1/cds_manifest?school_id=eq.harvard-university&removed_at=is.null&select=canonical_year,source_format,extraction_status' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 
-      <h3 className="mt-6 text-base font-semibold text-gray-900">
-        Fetch extracted field values for a document
+      <h3 className="serif mt-6 text-lg">
+        Fetch the canonical artifact for a document
       </h3>
-      <p className="mt-2 text-sm leading-relaxed text-gray-700">
-        The selected extraction contract chooses the deterministic canonical
-        artifact first. For Tier 4 Docling extracts, the LLM fallback cleaned row
-        can fill gaps, but deterministic values win conflicts. Raw consumers can
-        reproduce that behavior by fetching <code>kind=eq.canonical</code> plus
-        rows with{" "}
-        <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
-          producer=eq.tier4_llm_fallback
-        </code>{" "}
-        and overlaying the canonical values on top.
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
+        Prefer <code>cds_fields</code> for field-level queries. If you need the
+        underlying artifact, fetch <code>kind=eq.canonical</code> on{" "}
+        <code>cds_artifacts</code> — the canonical artifact is the one the site
+        serves.
       </p>
       <CodeBlock>{`curl '${BASE}/rest/v1/cds_artifacts?document_id=eq.<uuid>&kind=eq.canonical&select=notes' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 
-      <h2 className="mt-10 text-xl font-semibold text-gray-900">
+      <h2 className="serif mt-10 text-2xl">
         JavaScript client
       </h2>
-      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
         The same{" "}
         <a
           className={API_LINK_CLASS}
@@ -1098,22 +1107,22 @@ const { data } = await supabase
   .is("removed_at", null)
   .limit(20);`}</CodeBlock>
 
-      <h2 className="mt-10 text-xl font-semibold text-gray-900">
+      <h2 className="serif mt-10 text-2xl">
         Source documents
       </h2>
-      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
         Original CDS files are hosted on Supabase Storage. Once you have a
         manifest row, build the public URL as{" "}
-        <code className="break-all rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+        <code className="break-all rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
           {BASE}/storage/v1/object/public/sources/&lt;source_storage_path&gt;
         </code>
         . Every file is content-addressed by SHA-256.
       </p>
 
-      <h2 className="mt-10 text-xl font-semibold text-gray-900">
+      <h2 className="serif mt-10 text-2xl">
         Schema and licensing
       </h2>
-      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
         Field IDs follow the canonical 1,105-field schema derived from the CDS
         Initiative&apos;s 2025-26 XLSX template. The full schema is checked
         into the repo at{" "}
@@ -1130,7 +1139,7 @@ const { data } = await supabase
         public-document status.
       </p>
 
-      <div className="mt-10 border-t border-gray-200 pt-6 text-sm text-gray-500">
+      <div className="mt-10 border-t border-[var(--rule)] pt-6 text-sm text-[var(--ink-3)]">
         Found something missing or wrong? Open an issue on{" "}
         <a
           className={API_LINK_CLASS}
@@ -1148,7 +1157,7 @@ const { data } = await supabase
 
 function FieldChip({ name }: { name: string }) {
   return (
-    <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-700">
+    <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs text-[var(--ink-2)]">
       {name}
     </code>
   );
@@ -1172,9 +1181,9 @@ function Resource({
   const highlighted = new Set(fields);
   const extras = allFields?.filter((f) => !highlighted.has(f)) ?? [];
   return (
-    <div className="rounded border border-gray-200 p-4">
+    <div className="rounded border border-[var(--rule)] p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <code className="min-w-0 break-all text-sm font-semibold text-gray-900">
+        <code className="min-w-0 break-all text-sm font-semibold text-[var(--ink)]">
           GET /rest/v1/{name}
         </code>
         <TrackedLink
@@ -1192,7 +1201,7 @@ function Resource({
           try it →
         </TrackedLink>
       </div>
-      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
         {description}
       </p>
       <div className="mt-2 flex flex-wrap gap-1.5">
