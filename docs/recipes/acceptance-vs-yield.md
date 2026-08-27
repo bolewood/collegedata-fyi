@@ -1,6 +1,6 @@
 # Recipe: Acceptance rate vs yield
 
-**Who this is for:** students and parents building a target list; counselors who want to calibrate reach/match/safety; anyone curious which schools are truly selective vs. just hard to get into.
+**Who this is for:** IR comparing peer yield; analysts pulling every complete C1 row from the API; counselors calibrating reach/match/safety.
 
 **What this reveals:** the gap between how selective a school *looks* on paper (acceptance rate) and how selective it actually *is* in practice (yield, the share of admitted students who actually enroll). A school can have a 6% acceptance rate and still lose most of its admits to cross-admit peers. A school can have a 20% acceptance rate and capture nearly everyone it admits. Both facts matter for understanding the admissions market, and neither is visible from acceptance rate alone.
 
@@ -23,7 +23,7 @@ The plot divides roughly into four quadrants:
 - **Bottom-left — selective but second-choice.** Hard to get into, but most admits choose somewhere else. Often cross-admit peers of top-left schools — they admit strong students who would also get into the Harvards of the world, and lose the cross-admit battle. Dartmouth at 5.4% / 69% is edge-of-this-quadrant; it wins a solid majority of its admits but loses some to HYPS peers.
 - **Bottom-right — accessible and optional.** Admits freely, captures a smaller share. Common safety-school territory. Harvey Mudd at 12% / 37% is here — a top-tier STEM liberal arts college with a specific fit, so its admits often accept offers from MIT, Caltech, Stanford instead.
 
-## How to populate this with all 700+ schools
+## How to pull every complete C1 row
 
 The XLSX ships with three ground-truth rows pre-filled and formulas wired for acceptance rate, yield, and total UG. Add rows by pulling data from the API. The API-Queries tab in the XLSX has copy-pasteable examples; the two most useful for this recipe:
 
@@ -72,7 +72,7 @@ use `school_id` as a federal-data identity key.
 
 ## Known caveats
 
-Corpus-wide coverage on C1 is currently 50-60% for Tier 4 flattened PDFs (see [`docs/extraction-quality.md`](../extraction-quality.md) for the per-section breakdown). That means this recipe produces a clean scatter plot for the ~400-500 schools whose C1 extraction is complete, and leaves gaps for the rest. Tier 1 (XLSX) and Tier 2 (fillable PDF) schools have near-100% C1 coverage; Tier 4 schools are hit-or-miss until the cleaner or an LLM fallback reaches those cells. Flag any school with suspiciously round or missing numbers and check the source PDF.
+Corpus-wide coverage on C1 is currently 50–60%. That means this recipe produces a clean scatter plot for the ~400–500 schools with a complete C1 row, and leaves gaps for the rest. Flag any school with suspiciously round or missing numbers and check the source PDF.
 
 A few things to keep in mind when interpreting:
 
@@ -92,4 +92,4 @@ Once you have the data in the sheet, some natural follow-ups:
 
 ## Attribution
 
-All three seed data points come from hand-verified ground-truth fixtures in [`tools/extraction-validator/ground_truth/`](../../tools/extraction-validator/ground_truth/). Numbers are transcribed directly from source PDFs on the dates noted in each fixture, and the scorers in [`tools/extraction-validator/`](../../tools/extraction-validator/) ensure extraction output matches these ground-truth values to within the reported accuracy.
+All three seed data points come from hand-verified ground-truth fixtures in [`tools/extraction-validator/ground_truth/`](../../tools/extraction-validator/ground_truth/). Numbers are transcribed directly from source PDFs on the dates noted in each fixture.

@@ -5,7 +5,7 @@ import { TrackedLink } from "@/components/TrackedLink";
 export const metadata: Metadata = {
   title: "Recipes",
   description:
-    "Worked examples of what you can do with the collegedata.fyi CDS and federal-data archive, with reproducible interactive charts and public API queries.",
+    "Worked examples from Common Data Set filings and federal data — method, chart, and the public API query behind each. Built for institutional researchers and analysts.",
   alternates: { canonical: "/recipes" },
   openGraph: { url: "/recipes" },
 };
@@ -28,7 +28,7 @@ const RECIPES: Recipe[] = [
     tagline:
       "Scatter plot of how selective a school looks on paper (acceptance rate) against how selective it actually is in practice (yield). Four quadrants with teeth: selective-and-desired, loved-despite-openness, selective-but-second-choice, accessible-and-optional.",
     audience:
-      "Students and parents building a target list; counselors calibrating reach/match/safety.",
+      "IR comparing peer yield; analysts pulling every complete C1 row from the API; counselors calibrating reach/match/safety.",
     demoPath: "/recipes/acceptance-vs-yield",
     writeupUrl:
       "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/acceptance-vs-yield.md",
@@ -44,9 +44,9 @@ const RECIPES: Recipe[] = [
     slug: "test-optional-tracker",
     title: "Test-optional tracker",
     tagline:
-      "Line chart of SAT submission percentage over time for seven well-documented schools (Yale 2009\u20132024, Caltech 2002\u20132020, MIT, Princeton, Stanford, Harvard, Wake Forest). Uses the submission rate as an honest proxy for effective test-optional policy \u2014 written disclosures lie, enrollment numbers don't.",
+      "Line chart of SAT submission percentage over time for seven well-documented schools (Yale 2009\u20132024, Caltech 2002\u20132020, MIT, Princeton, Stanford, Harvard, Wake Forest). Uses the submission rate as an honest proxy for effective test-optional policy \u2014 C8 states the rule; C9 counts what enrolled first-years did.",
     audience:
-      "Students deciding whether a school's \u201ctest-optional\u201d is real; reporters tracking the post-COVID reversion.",
+      "IR and policy analysts reading effective policy from C9 submission rates; C8 is the written version.",
     demoPath: "/recipes/test-optional-tracker",
     writeupUrl:
       "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/test-optional-tracker.md",
@@ -56,13 +56,13 @@ const RECIPES: Recipe[] = [
     slug: "waitlist-odds",
     title: "Wait-list odds",
     tagline:
-      "A corpus-wide look at CDS C2 wait-list outcomes: how many students accept a spot, how many get admitted, and how the odds differ by selectivity, control, size, and Carnegie class.",
+      "A corpus-wide look at CDS C2 wait-list outcomes: offer, accept, and admit counts, bucketed by C1 selectivity and by federal control, size, and Carnegie class.",
     audience:
-      "Students deciding whether to stay emotionally invested; counselors setting expectations after May 1; reporters checking one school's wait-list narrative against the corpus.",
+      "Enrollment managers and IR. C2 offer / accept / admit, bucketed.",
     demoPath: "/recipes/waitlist-odds",
     writeupUrl:
       "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/waitlist-odds.md",
-    sourceLabel: "CDS C2 · C1",
+    sourceLabel: "CDS C2 · C1 · Scorecard",
   },
   {
     slug: "endowment-draw-rate",
@@ -70,7 +70,7 @@ const RECIPES: Recipe[] = [
     tagline:
       "Five fiscal years of private nonprofit IPEDS Finance filings: sector distributions, shares above 5%, 7%, and 15%, plus a school-by-school value and draw-rate history. An independent federal-data estimate, not a reproduction of audited-statement analysis.",
     audience:
-      "College finance reporters, institutional researchers, trustees, and readers looking for a careful public baseline.",
+      "IR, college-finance reporters, trustees. IPEDS F2 Part H estimate.",
     demoPath: "/recipes/endowment-draw-rate",
     writeupUrl:
       "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/endowment-draw-rate.md",
@@ -95,18 +95,19 @@ export default function RecipesPage() {
       >
         Worked <span style={{ fontStyle: "italic", color: "var(--forest-ink)" }}>examples</span>.
       </h1>
-      <p style={{ marginTop: 20, fontSize: 16, lineHeight: 1.6, color: "var(--ink-2)" }}>
-        What you can do with the archive. Each recipe pairs a short write-up with an interactive
-        artifact built from checked-in, reviewable data, plus copy-pasteable API queries that
-        reproduce or extend the analysis. If you want to contribute one,{" "}
-        <a
-          href="https://github.com/bolewood/collegedata-fyi/blob/main/CONTRIBUTING.md"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          PRs welcome
-        </a>
-        .
+      <p
+        className="serif"
+        style={{
+          marginTop: 20,
+          maxWidth: 720,
+          color: "var(--ink-2)",
+          fontSize: 18,
+          fontStyle: "italic",
+          lineHeight: 1.55,
+        }}
+      >
+        One question, the method in sight, a chart you can operate, and the API
+        query behind it. Written for IR and analysts. Counselors are welcome.
       </p>
 
       <div className="mt-8 space-y-5">

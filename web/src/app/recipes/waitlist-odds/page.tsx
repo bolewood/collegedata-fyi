@@ -54,18 +54,24 @@ export default function WaitlistOddsPage() {
               margin: "12px 0 0",
             }}
           >
-            Should you get your hopes up about a{" "}
-            <span style={{ fontStyle: "italic" }}>wait list</span>?
+            Offered, accepted,{" "}
+            <span style={{ fontStyle: "italic" }}>admitted.</span>
           </h1>
           <p
+            className="serif"
             style={{
               color: "var(--ink-2)",
-              fontSize: 16,
+              fontSize: 18,
+              fontStyle: "italic",
               lineHeight: 1.55,
               marginTop: 14,
               maxWidth: 720,
             }}
           >
+            Offer, accept, and admit counts from CDS C2, across every complete
+            row in the corpus, bucketed by C1 selectivity and by federal
+            control, size, and Carnegie class. High-volume near-total admit
+            rows are flagged as data-quality caveats, not dropped silently.
             Inspired by Roshan Fernandez&apos;s{" "}
             <TrackedLink
               external
@@ -79,12 +85,8 @@ export default function WaitlistOddsPage() {
                 source: "wsj",
               }}
             >
-              May 10, 2026 Wall Street Journal story
-            </TrackedLink>{" "}
-            on ballooning college wait lists, this recipe ignores anecdotes and
-            looks across every complete C2 wait-list row currently visible in
-            the collegedata.fyi CDS corpus, with high-volume near-total admit
-            rows treated as data-quality caveats.
+              May 2026 WSJ story
+            </TrackedLink>; the numbers here are from the filings, not the article.
           </p>
         </div>
         <div
@@ -116,7 +118,7 @@ export default function WaitlistOddsPage() {
           <p style={{ color: "var(--ink-2)", fontSize: 16, lineHeight: 1.65, marginTop: 10 }}>
             The CDS asks schools how many applicants were offered a wait-list
             spot, how many accepted it, and how many were eventually admitted.
-            This page uses the success rate that matters to an applicant:{" "}
+            The rate here is{" "}
             <span className="serif" style={{ fontStyle: "italic" }}>
               admitted divided by accepted wait-list spots
             </span>

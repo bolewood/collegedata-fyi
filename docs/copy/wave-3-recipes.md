@@ -17,7 +17,8 @@ Fable review 2026-08-27: **ship with patches.** Must-fixes and the
 should-fixes that survived a code check are applied below. Full write-up:
 [`wave-3-fable-review.md`](wave-3-fable-review.md).
 
-**Not in this deck:** live TSX. Sign the prose, then we implement.
+**Not in this deck:** live TSX was the review constraint. Anthony signed
+the patched prose 2026-08-27; the recipe pages implement it.
 Methodology and API docs wait for Wave 4. Discover waits (soft-launch,
 unindexed). GitHub write-ups in `docs/recipes/` may keep SQL; they drop
 extractor war stories in the same change as the pages. Named cuts:
