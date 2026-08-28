@@ -73,6 +73,63 @@ test("facts endpoint returns flat JSON", async ({ request }) => {
   expect(typeof body.raw).toBe("object");
 });
 
+test("hosted MCP Streamable HTTP handshake and search", async ({ request }) => {
+  const probe = await request.get("/api/mcp");
+  expect(probe.ok()).toBeTruthy();
+  const descriptor = await probe.json();
+  expect(descriptor.transport).toBe("streamable-http");
+  expect(descriptor.tools).toEqual([
+    "search_schools",
+    "get_school_facts",
+    "compare_schools",
+    "get_source_documents",
+    "get_field_dictionary",
+  ]);
+
+  const init = await request.post("/api/mcp", {
+    headers: {
+      Accept: "application/json, text/event-stream",
+      "Content-Type": "application/json",
+    },
+    data: {
+      jsonrpc: "2.0",
+      id: 0,
+      method: "initialize",
+      params: {
+        protocolVersion: "2025-03-26",
+        capabilities: {},
+        clientInfo: { name: "playwright", version: "test" },
+      },
+    },
+  });
+  expect(init.ok()).toBeTruthy();
+  const initBody = await init.json();
+  expect(initBody.result.serverInfo.name).toBe("collegedata-fyi");
+  expect(initBody.result.capabilities.tools).toBeTruthy();
+
+  const listed = await request.post("/api/mcp", {
+    data: { jsonrpc: "2.0", id: 1, method: "tools/list" },
+  });
+  expect(listed.ok()).toBeTruthy();
+  const listedBody = await listed.json();
+  expect(listedBody.result.tools.map((tool: { name: string }) => tool.name)).toEqual(
+    descriptor.tools,
+  );
+
+  const search = await request.post("/api/mcp", {
+    data: {
+      jsonrpc: "2.0",
+      id: 2,
+      method: "tools/call",
+      params: { name: "search_schools", arguments: { query: "Carleton College" } },
+    },
+  });
+  expect(search.ok()).toBeTruthy();
+  const searchBody = await search.json();
+  expect(searchBody.result.isError).toBeFalsy();
+  expect(searchBody.result.content[0].text).toMatch(/carleton-college/i);
+});
+
 test("school-year page renders reconstructed CDS tables", async ({ page }) => {
   await page.goto("/schools/bowdoin/2024-25");
   await expect(

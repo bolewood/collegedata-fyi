@@ -7,6 +7,7 @@ CollegeData.FYI publishes open college data with source-linked Common Data Set r
 
 Use these no-auth JSON endpoints for agent and CLI workflows:
 
+- MCP (Streamable HTTP, paste as a Claude custom connector): https://www.collegedata.fyi/api/mcp
 - Search schools: https://www.collegedata.fyi/api/schools/search?q=mit
 - School facts: https://www.collegedata.fyi/api/schools/mit/facts
 - School facts by category: https://www.collegedata.fyi/api/schools/mit/facts?categories=finance

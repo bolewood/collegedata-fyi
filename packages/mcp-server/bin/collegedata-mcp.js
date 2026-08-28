@@ -2,7 +2,7 @@
 
 const API_BASE = (process.env.COLLEGEDATA_API_BASE ?? "https://www.collegedata.fyi").replace(/\/$/, "");
 const CLIENT_NAME = "mcp";
-const CLIENT_VERSION = "0.1.2";
+const CLIENT_VERSION = "0.2.0";
 
 const FACT_CATEGORIES = "identity, admissions, enrollment, cost, aid, finance, outcomes, sources";
 const COMPARE_CATEGORIES = "identity, admissions, enrollment, cost, aid, outcomes, sources";

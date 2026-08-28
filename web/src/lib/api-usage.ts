@@ -96,6 +96,7 @@ export function routeKindFromPath(pathname: string): string {
   if (pathname === "/api/compare") return "compare";
   if (pathname === "/api/fields") return "fields";
   if (pathname === "/api/snapshots") return "snapshots";
+  if (pathname === "/api/mcp") return "mcp";
   return "other_api";
 }
 
