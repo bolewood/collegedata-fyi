@@ -2,7 +2,7 @@
 
 const API_BASE = (process.env.COLLEGEDATA_API_BASE ?? "https://www.collegedata.fyi").replace(/\/$/, "");
 const CLIENT_NAME = "mcp";
-const CLIENT_VERSION = "0.1.1";
+const CLIENT_VERSION = "0.1.2";
 
 const FACT_CATEGORIES = "identity, admissions, enrollment, cost, aid, finance, outcomes, sources";
 const COMPARE_CATEGORIES = "identity, admissions, enrollment, cost, aid, outcomes, sources";
@@ -125,59 +125,89 @@ async function callTool(name, args) {
   throw new Error(`Unknown tool: ${name}`);
 }
 
-function send(id, result) {
-  const body = JSON.stringify({ jsonrpc: "2.0", id, result });
-  process.stdout.write(`Content-Length: ${Buffer.byteLength(body, "utf8")}\r\n\r\n${body}`);
+function writeMessage(message) {
+  process.stdout.write(`${JSON.stringify(message)}\n`);
 }
 
-function sendError(id, error) {
-  const body = JSON.stringify({
+function sendResult(id, result) {
+  writeMessage({ jsonrpc: "2.0", id, result });
+}
+
+function sendError(id, error, code = -32000) {
+  writeMessage({
     jsonrpc: "2.0",
-    id,
-    error: { code: -32000, message: error.message },
+    id: id ?? null,
+    error: { code, message: error.message ?? String(error) },
   });
-  process.stdout.write(`Content-Length: ${Buffer.byteLength(body, "utf8")}\r\n\r\n${body}`);
+}
+
+async function handleMessage(message) {
+  if (message.method === "initialize") {
+    const requested = message.params?.protocolVersion;
+    sendResult(message.id, {
+      protocolVersion: requested || "2024-11-05",
+      capabilities: { tools: {} },
+      serverInfo: { name: "collegedata-fyi", version: CLIENT_VERSION },
+    });
+    return;
+  }
+  if (message.method === "notifications/initialized" || message.method === "notifications/cancelled") {
+    return;
+  }
+  if (message.method === "ping") {
+    sendResult(message.id, {});
+    return;
+  }
+  if (message.method === "tools/list") {
+    sendResult(message.id, { tools });
+    return;
+  }
+  if (message.method === "tools/call") {
+    try {
+      const payload = await callTool(message.params?.name, message.params?.arguments ?? {});
+      sendResult(message.id, {
+        content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+      });
+    } catch (error) {
+      sendResult(message.id, {
+        content: [{ type: "text", text: error.message ?? String(error) }],
+        isError: true,
+      });
+    }
+    return;
+  }
+  if (message.id != null) {
+    sendError(message.id, new Error(`Method not found: ${message.method}`), -32601);
+  }
 }
 
 let buffer = "";
-process.stdin.setEncoding("utf8");
-process.stdin.on("data", async (chunk) => {
-  buffer += chunk;
+let queue = Promise.resolve();
+
+function drain() {
   while (true) {
-    const headerEnd = buffer.indexOf("\r\n\r\n");
-    if (headerEnd === -1) return;
-    const header = buffer.slice(0, headerEnd);
-    const match = header.match(/Content-Length:\s*(\d+)/i);
-    if (!match) {
-      buffer = "";
-      return;
-    }
-    const length = Number(match[1]);
-    const bodyStart = headerEnd + 4;
-    if (buffer.length < bodyStart + length) return;
-    const body = buffer.slice(bodyStart, bodyStart + length);
-    buffer = buffer.slice(bodyStart + length);
+    const newline = buffer.indexOf("\n");
+    if (newline === -1) return;
+    const line = buffer.slice(0, newline).replace(/\r$/, "");
+    buffer = buffer.slice(newline + 1);
+    if (!line.trim()) continue;
     let message;
     try {
-      message = JSON.parse(body);
-      if (message.method === "initialize") {
-        send(message.id, {
-          protocolVersion: "2024-11-05",
-          capabilities: { tools: {} },
-          serverInfo: { name: "collegedata-fyi", version: "0.1.0" },
-        });
-      } else if (message.method === "tools/list") {
-        send(message.id, { tools });
-      } else if (message.method === "tools/call") {
-        const payload = await callTool(message.params.name, message.params.arguments ?? {});
-        send(message.id, {
-          content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
-        });
-      } else if (message.id != null) {
-        send(message.id, {});
-      }
+      message = JSON.parse(line);
     } catch (error) {
-      sendError(message?.id ?? null, error);
+      sendError(null, error, -32700);
+      continue;
     }
+    queue = queue.then(() => handleMessage(message)).catch((error) => {
+      sendError(message?.id ?? null, error);
+    });
   }
+}
+
+process.stderr.write(`collegedata-mcp ${CLIENT_VERSION} ${API_BASE}\n`);
+process.stdin.setEncoding("utf8");
+process.stdin.on("data", (chunk) => {
+  buffer += chunk;
+  drain();
 });
+process.stdin.on("end", drain);

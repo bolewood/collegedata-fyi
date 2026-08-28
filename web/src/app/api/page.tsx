@@ -195,17 +195,54 @@ COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegeda
         <section>
           <h3 className="serif text-lg">3. Connect an MCP client</h3>
           <p className="mt-1">
-            The MCP server is read-only and uses the same friendly API. Configure
-            a client to run the server command from the repository root.
+            The MCP server is a single Node file in the repo (
+            <a
+              className={API_LINK_CLASS}
+              href="https://github.com/bolewood/collegedata-fyi/blob/main/packages/mcp-server/bin/collegedata-mcp.js"
+            >
+              packages/mcp-server/bin/collegedata-mcp.js
+            </a>
+            ). It is read-only and uses the same friendly API — no API key.
+            Claude Desktop launches it as a subprocess, so the path in{" "}
+            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
+              args
+            </code>{" "}
+            must be absolute; a path relative to the git checkout will not
+            connect. Node 20 or newer. After saving, fully quit and reopen
+            Claude Desktop.
+          </p>
+          <p className="mt-2">
+            Config file: macOS{" "}
+            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
+              ~/Library/Application Support/Claude/claude_desktop_config.json
+            </code>
+            ; Windows{" "}
+            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
+              %APPDATA%\Claude\claude_desktop_config.json
+            </code>
+            . If Claude reports{" "}
+            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
+              spawn node ENOENT
+            </code>
+            , set{" "}
+            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
+              command
+            </code>{" "}
+            to the path that{" "}
+            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
+              which node
+            </code>{" "}
+            prints.{" "}
+            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
+              COLLEGEDATA_API_BASE
+            </code>{" "}
+            is optional and defaults to production.
           </p>
           <CodeBlock>{`{
   "mcpServers": {
     "collegedata": {
       "command": "node",
-      "args": ["packages/mcp-server/bin/collegedata-mcp.js"],
-      "env": {
-        "COLLEGEDATA_API_BASE": "https://www.collegedata.fyi"
-      }
+      "args": ["/absolute/path/to/collegedata-fyi/packages/mcp-server/bin/collegedata-mcp.js"]
     }
   }
 }`}</CodeBlock>
