@@ -23,6 +23,8 @@ describe("Wave 3 Recipes copy", () => {
     );
     expect(page).toContain("Enrollment managers and IR. C2 offer / accept / admit, bucketed.");
     expect(page).toContain("IR, college-finance reporters, trustees. IPEDS F2 Part H estimate.");
+    expect(page).toContain("Hover any school.");
+    expect(page).toContain("CDS SAT scores to federal earnings, debt, and endowment.");
     expect(page).toContain("C8 states the rule; C9 counts what enrolled first-years did.");
     expect(page).toContain("federal control, size, and Carnegie class");
     expect(page).not.toMatch(/PRs welcome/);
