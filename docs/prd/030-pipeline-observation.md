@@ -151,7 +151,7 @@ get three tiles because they get three writes.
 | `finder_landing_hints` | Landing-hint promotion | same Action, **Promote high-confidence landing hints**. Guarded by `INPUT_APPLY_LANDING_HINTS` only (not by mode). On `schedule`, that env is forced `true` (`ops-finder-probe.yml:63`). Do not spec a scheduled skip path. | monthly SLA | same 40-day scheduled clock |
 | `archive_enqueue` | Archive enqueue | pg_cron `archive-enqueue-daily` (`0 2 * * *`) → `archive-enqueue` | daily SLA | `last_scheduled_status` not `ok` inside **36 hours** |
 | `archive_process` | Archive process | pg_cron `archive-process-every-30s` → `archive-process` | continuous SLA | see below |
-| `extraction_worker` | Extraction | `ops-extraction-worker.yml` (schedule `--limit 5`, `--deadline-minutes 25`) | daily SLA | see below |
+| `extraction_worker` | Extraction | `ops-extraction-worker.yml` (daily schedule `--limit 10`, `--deadline-minutes 40`; catch-up `--limit 100` every 2h while pending > 0) | daily SLA | see below |
 | `coverage_refresh` | Coverage refresh | pg_cron `refresh-coverage-hourly` (`17 * * * *`) → `refresh-coverage` | hourly SLA | `last_scheduled_status` not `ok` inside **3 hours** |
 | `serving_cache_refresh` | Public serving caches | pg_cron `refresh-public-serving-caches-hourly` (`23 * * * *`, plain SQL `refresh_public_serving_caches()`) (D4) | hourly SLA | `last_scheduled_status` not `ok` inside **3 hours** |
 | `ipeds_release_probe` | IPEDS release probe | `ipeds-release-probe.yml` | monthly SLA | `last_scheduled_status` not `ok` inside **40 days**. A monthly no-op still writes `ok` with `new_release=false`. |
@@ -205,8 +205,9 @@ Today the worker summary (`tools/extraction_worker/worker.py` ~2174)
 emits `processed_count`, `failure_count`, `stopped_early`,
 `extraction_counts` — **not** `stopped_reason` / `extracted` /
 `pending`. Cap is enforced in `ops-extraction-worker.yml` (hosted
-`--limit` 100 max; schedule `--limit 5`). The worker slices
-`docs[:args.limit]`. `--deadline-minutes` on schedule is **25**.
+`--limit` 100 max; daily schedule `--limit 10`). The worker slices
+`docs[:args.limit]`. `--deadline-minutes` on the daily tick is **40**;
+catch-up uses **100**.
 
 **M0 worker change (required, not a wrapper):** emit in `summary.json`:
 
