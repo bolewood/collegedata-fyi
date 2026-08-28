@@ -119,6 +119,17 @@ jobs:
       - name: Run data-integrity resolver support tests
         run: deno test tools/data_quality/reprobe_resolver_cohort.test.ts
 
+  mcp:
+    name: MCP stdio handshake
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - name: Run MCP stdio tests
+        run: node --test packages/mcp-server/collegedata-mcp.test.js
+
   web:
     name: Next.js build
     runs-on: ubuntu-latest
