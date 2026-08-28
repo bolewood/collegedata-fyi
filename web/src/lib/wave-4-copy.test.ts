@@ -66,12 +66,15 @@ describe("Wave 4 methodology and API copy", () => {
     expect(page).toContain("Two ways in");
     expect(page).toContain("api.collegedata.fyi");
     expect(page).toContain("Start here");
+    expect(page).toContain("https://www.collegedata.fyi/api/mcp");
+    expect(page).toContain("Add custom connector");
     expect(page).toContain("claude_desktop_config.json");
     expect(page).toContain(
       "/absolute/path/to/collegedata-fyi/packages/mcp-server/bin/collegedata-mcp.js",
     );
     expect(page).not.toMatch(/"args": \["packages\/mcp-server\/bin\/collegedata-mcp\.js"\]/);
     expect(page).not.toMatch(/from the repository root/);
+    expect(page).not.toMatch(/The MCP server is a single Node file in the repo/);
     expect(page).toContain("When a value is missing");
     expect(page).toContain("the school&apos;s filing leaves the field blank");
     expect(page).toContain("Search latest-per-school rows (Compare)");

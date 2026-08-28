@@ -59,6 +59,7 @@ describe("api usage attribution", () => {
 
   it("normalizes public API route kinds", () => {
     expect(routeKindFromPath("/api/schools/search")).toBe("schools_search");
+    expect(routeKindFromPath("/api/mcp")).toBe("mcp");
     expect(routeKindFromPath("/api/schools/mit/sources")).toBe("school_sources");
     expect(routeKindFromPath("/api/facts/mit")).toBe("legacy_school_facts");
   });

@@ -8,7 +8,7 @@ import { TrackedLink } from "@/components/TrackedLink";
 export const metadata: Metadata = {
   title: "API",
   description:
-    "Public API for Common Data Set filings and federal data — no-auth JSON for agents, and the full PostgREST archive. Same sources the site uses.",
+    "Public API for Common Data Set filings and federal data — no-auth JSON for agents, a Streamable HTTP MCP endpoint, and the full PostgREST archive. Same sources the site uses.",
   alternates: { canonical: "/api" },
   openGraph: { url: "/api" },
 };
@@ -64,7 +64,8 @@ export default async function ApiDocsPage() {
           lineHeight: 1.55,
         }}
       >
-        Two ways in: simple no-auth JSON for agents and scripts, and the full{" "}
+        Two ways in: simple no-auth JSON for agents and scripts — including a
+        pasteable MCP URL — and the full{" "}
         <a
           className={API_LINK_CLASS}
           href="https://postgrest.org/"
@@ -139,13 +140,17 @@ compare <- request("https://www.collegedata.fyi/api/compare") |>
         recognized values also returns <code>400</code> on either endpoint.
       </p>
       <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
-        The minimal MCP server and CLI live in the repo under{" "}
+        The hosted MCP endpoint is{" "}
         <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
-          packages/mcp-server
+          https://www.collegedata.fyi/api/mcp
+        </code>
+        . The CLI and the stdio MCP file (local dev / Claude Code) live in the repo under{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
+          packages/cli
         </code>{" "}
         and{" "}
         <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
-          packages/cli
+          packages/mcp-server
         </code>
         . Both wrap the simple endpoints rather than reimplementing query logic.
       </p>
@@ -195,31 +200,40 @@ COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegeda
         <section>
           <h3 className="serif text-lg">3. Connect an MCP client</h3>
           <p className="mt-1">
-            The MCP server is a single Node file in the repo (
+            The hosted MCP endpoint is Streamable HTTP, no API key, same five
+            tools as the stdio server. In Claude: Settings → Connectors → Add custom connector, then paste the URL. That works on web, desktop,
+            mobile, and Cowork — no Node, no config file, no restart.
+          </p>
+          <CodeBlock>{`https://www.collegedata.fyi/api/mcp`}</CodeBlock>
+          <p className="mt-2">
+            Tools: <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">search_schools</code>,{" "}
+            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">get_school_facts</code>,{" "}
+            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">compare_schools</code>,{" "}
+            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">get_source_documents</code>,{" "}
+            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">get_field_dictionary</code>
+            . Auth: none. The PostgREST host at{" "}
+            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
+              api.collegedata.fyi
+            </code>{" "}
+            is not an MCP endpoint.
+          </p>
+          <p className="mt-2">
+            The stdio Node file is for local development and Claude Code. Point{" "}
+            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
+              COLLEGEDATA_API_BASE
+            </code>{" "}
+            at localhost, use an{" "}
+            <strong>absolute path</strong> in{" "}
+            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
+              claude_desktop_config.json
+            </code>
+            , Node 20 or newer. File:{" "}
             <a
               className={API_LINK_CLASS}
               href="https://github.com/bolewood/collegedata-fyi/blob/main/packages/mcp-server/bin/collegedata-mcp.js"
             >
               packages/mcp-server/bin/collegedata-mcp.js
             </a>
-            ). It is read-only and uses the same friendly API — no API key.
-            Claude Desktop launches it as a subprocess, so the path in{" "}
-            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
-              args
-            </code>{" "}
-            must be absolute; a path relative to the git checkout will not
-            connect. Node 20 or newer. After saving, fully quit and reopen
-            Claude Desktop.
-          </p>
-          <p className="mt-2">
-            Config file: macOS{" "}
-            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
-              ~/Library/Application Support/Claude/claude_desktop_config.json
-            </code>
-            ; Windows{" "}
-            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
-              %APPDATA%\Claude\claude_desktop_config.json
-            </code>
             . If Claude reports{" "}
             <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
               spawn node ENOENT
@@ -232,11 +246,7 @@ COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegeda
             <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
               which node
             </code>{" "}
-            prints.{" "}
-            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
-              COLLEGEDATA_API_BASE
-            </code>{" "}
-            is optional and defaults to production.
+            prints.
           </p>
           <CodeBlock>{`{
   "mcpServers": {

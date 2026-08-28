@@ -79,6 +79,22 @@ export async function GET() {
             responses: { "200": { description: "Sparse comparison matrix" } },
           },
         },
+        "/api/mcp": {
+          post: {
+            summary: "MCP Streamable HTTP endpoint",
+            description:
+              "JSON-RPC MCP server. Paste https://www.collegedata.fyi/api/mcp as a Claude custom connector. No API key.",
+            requestBody: {
+              required: true,
+              content: {
+                "application/json": {
+                  schema: { type: "object", additionalProperties: true },
+                },
+              },
+            },
+            responses: { "200": { description: "JSON-RPC result" } },
+          },
+        },
         "/api/fields": {
           get: {
             summary: "List V1 friendly field definitions",
