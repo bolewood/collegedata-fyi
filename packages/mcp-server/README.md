@@ -25,8 +25,8 @@ Claude:
 }
 ```
 
-If Claude reports `spawn node ENOENT`, set `command` to the full path from
-`which node`. Node 20 or newer. `COLLEGEDATA_API_BASE` is optional and
+If Claude reports `spawn node ENOENT`, set `command` to the path that
+`which node` prints. Node 20 or newer. `COLLEGEDATA_API_BASE` is optional and
 defaults to `https://www.collegedata.fyi`.
 
 Tools:

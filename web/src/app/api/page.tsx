@@ -228,11 +228,11 @@ COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegeda
             <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
               command
             </code>{" "}
-            to the full path from{" "}
+            to the path that{" "}
             <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
               which node
-            </code>
-            .{" "}
+            </code>{" "}
+            prints.{" "}
             <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
               COLLEGEDATA_API_BASE
             </code>{" "}
