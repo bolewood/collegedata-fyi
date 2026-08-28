@@ -12,6 +12,7 @@ describe("static sitemap entries", () => {
     expect(pipeline?.priority).toBe(0.7);
     expect(SITEMAP_STATIC_PATHS).toContain("/recipes/waitlist-odds");
     expect(SITEMAP_STATIC_PATHS).toContain("/recipes/endowment-draw-rate");
+    expect(SITEMAP_STATIC_PATHS).toContain("/recipes/alignment-gap");
     expect(SITEMAP_STATIC_PATHS).toContain("/about/common-data-set");
     expect(SITEMAP_STATIC_PATHS).toContain("/about/college-scorecard");
     expect(SITEMAP_STATIC_PATHS).toContain("/about/ipeds");

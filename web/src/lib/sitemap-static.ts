@@ -30,6 +30,7 @@ const STATIC_PAGES: StaticEntry[] = [
   { path: "/recipes/test-optional-tracker", changeFrequency: "monthly", priority: 0.5 },
   { path: "/recipes/waitlist-odds", changeFrequency: "monthly", priority: 0.5 },
   { path: "/recipes/endowment-draw-rate", changeFrequency: "monthly", priority: 0.5 },
+  { path: "/recipes/alignment-gap", changeFrequency: "monthly", priority: 0.5 },
 ];
 
 export const SITEMAP_STATIC_PATHS = STATIC_PAGES.map((page) => page.path);

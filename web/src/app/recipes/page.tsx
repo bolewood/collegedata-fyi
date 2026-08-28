@@ -76,6 +76,18 @@ const RECIPES: Recipe[] = [
       "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/endowment-draw-rate.md",
     sourceLabel: "IPEDS F2 · PART H",
   },
+  {
+    slug: "alignment-gap",
+    title: "Alignment gap",
+    tagline:
+      "The net-price change that would put a school's graduates at the corpus median debt burden, plotted against endowment per undergraduate. Hover any school. Four quadrants: capacity, constrained, endowment-absorbs-it, earnings-do-the-work.",
+    audience:
+      "IR, college-finance reporters, and analysts joining CDS SAT scores to federal earnings, debt, and endowment.",
+    demoPath: "/recipes/alignment-gap",
+    writeupUrl:
+      "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/alignment-gap.md",
+    sourceLabel: "CDS C9 · Scorecard · IPEDS",
+  },
 ];
 
 export default function RecipesPage() {
