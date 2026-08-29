@@ -51,7 +51,7 @@ function yGap(gap: number): number {
 function tercileColor(endowmentPerStudent: number): string {
   const band = endowmentTercile(endowmentPerStudent, TERCILES[0], TERCILES[1]);
   if (band === 2) return "var(--ink)";
-  if (band === 1) return "var(--forest)";
+  if (band === 1) return "var(--forest-2)";
   return "var(--ochre)";
 }
 
@@ -325,7 +325,7 @@ export function AlignmentGapMeritChart() {
                 cy={pt.cy}
                 r={active ? 6.5 : 4}
                 fill={tercileColor(pt.endowmentPerStudent)}
-                fillOpacity={active ? 1 : 0.82}
+                fillOpacity={active ? 1 : 0.92}
                 stroke={active ? "var(--ink)" : "none"}
                 strokeWidth={active ? 1.25 : 0}
                 pointerEvents="none"
@@ -421,7 +421,7 @@ export function AlignmentGapMeritChart() {
         <span style={{ color: "var(--ochre)" }}>
           ■ under {formatEndowmentPerStudent(TERCILES[0])}
         </span>
-        <span style={{ color: "var(--forest)" }}>
+        <span style={{ color: "var(--forest-2)" }}>
           ■ {formatEndowmentPerStudent(TERCILES[0])}–{formatEndowmentPerStudent(TERCILES[1])}
         </span>
         <span style={{ color: "var(--ink)" }}>
