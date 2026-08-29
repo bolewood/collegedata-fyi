@@ -50,9 +50,9 @@ function yGap(gap: number): number {
 
 function tercileColor(endowmentPerStudent: number): string {
   const band = endowmentTercile(endowmentPerStudent, TERCILES[0], TERCILES[1]);
-  if (band === 2) return "var(--forest-ink)";
+  if (band === 2) return "var(--ink)";
   if (band === 1) return "var(--forest)";
-  return "var(--forest-2)";
+  return "var(--ochre)";
 }
 
 function shortName(name: string): string {
@@ -418,13 +418,13 @@ export function AlignmentGapMeritChart() {
         }}
       >
         <span>ENDOWMENT / UNDERGRADUATE</span>
-        <span style={{ color: "var(--forest-2)" }}>
+        <span style={{ color: "var(--ochre)" }}>
           ■ under {formatEndowmentPerStudent(TERCILES[0])}
         </span>
         <span style={{ color: "var(--forest)" }}>
           ■ {formatEndowmentPerStudent(TERCILES[0])}–{formatEndowmentPerStudent(TERCILES[1])}
         </span>
-        <span style={{ color: "var(--forest-ink)" }}>
+        <span style={{ color: "var(--ink)" }}>
           ■ {formatEndowmentPerStudent(TERCILES[1])} and over
         </span>
         <span style={{ color: "var(--brick)" }}>— merit = gap</span>
