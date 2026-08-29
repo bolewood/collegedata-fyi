@@ -6,6 +6,7 @@ import {
   computeGap,
   computeInstructionShare,
   computeMeritPerFirstYear,
+  endowmentBand,
   instructionShareBand,
   quadrantFor,
 } from "./alignment-gap-recipe-analysis";
@@ -28,8 +29,9 @@ describe("alignment-gap arithmetic", () => {
     expect(quadrantFor(-5714, 50_000, 64_000)).toBe("earnings");
   });
 
-  it("computes merit spend as share times average grant", () => {
+  it("computes merit spend as share times average grant, including $0", () => {
     expect(computeMeritPerFirstYear(0.29, 45_857)).toBeCloseTo(13_298.53, 1);
+    expect(computeMeritPerFirstYear(0, 0)).toBe(0);
   });
 
   it("uses the same low/mid/high marks for endowment and instruction bands", () => {
@@ -39,5 +41,11 @@ describe("alignment-gap arithmetic", () => {
     expect(instructionShareBand(0.4)).toBe(0);
     expect(instructionShareBand(0.7)).toBe(1);
     expect(instructionShareBand(1.22)).toBe(2);
+  });
+
+  it("shares endowment band cuts with the same low/mid/high marks", () => {
+    expect(endowmentBand(10_000, 18_405, 64_403)).toBe(0);
+    expect(endowmentBand(18_405, 18_405, 64_403)).toBe(1);
+    expect(endowmentBand(64_403, 18_405, 64_403)).toBe(2);
   });
 });

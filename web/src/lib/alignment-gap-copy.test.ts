@@ -71,6 +71,11 @@ describe("alignment-gap recipe", () => {
     expect(merit).toContain("var(--ochre)");
     expect(merit).toContain("var(--forest)");
     expect(merit).toContain("○ ");
+    expect(merit).toContain("NO MERIT AID");
+    expect(merit).toContain("GAP ≤ 0");
+    expect(merit).toContain("alignment-gap-zero-rail");
+    expect(merit).not.toContain("NO GAP TO CLOSE");
+    expect(merit).not.toContain("endowmentTercile");
     expect(merit).not.toContain("var(--forest-ink)");
 
     const analysis = src("lib/alignment-gap-recipe-analysis.ts");
@@ -97,6 +102,16 @@ describe("alignment-gap recipe", () => {
     expect(page).toContain("The vertical axis is");
     expect(page).toContain("College Scorecard");
     expect(page).toContain("excludes some mixed-need merit awards");
+    expect(page).toContain("limit=1000&offset=1000");
+    expect(page).toContain("limit=1000&offset=2000");
+    expect(page).toContain("Content-Range: 0-999/2158");
+    expect(page).toContain("[0, $80,000]");
+    expect(page).toContain("institution_directory.undergraduate_enrollment");
+    expect(page).toContain("undergrad_enrollment_scorecard");
+    expect(page).toContain("A published $0 grant is kept");
+    expect(page).not.toContain("which is why its n is larger");
+    expect(page).not.toContain("land far below what those scores predict");
+    expect(page).not.toContain("Each panel uses the median burden of the sample it plots");
   });
 
   it("recomputes merit-join region counts against the plotted sample", () => {
@@ -125,7 +140,59 @@ describe("alignment-gap recipe", () => {
       ALIGNMENT_GAP_MERIT_META.coversShare,
       3,
     );
-    expect(Math.round(ALIGNMENT_GAP_MERIT_META.coversShare * 100)).toBe(63);
+    expect(Math.round(ALIGNMENT_GAP_MERIT_META.coversShare * 100)).toBe(61);
+    const recipesIndex = src("app/recipes/page.tsx");
+    expect(recipesIndex).toContain("61% already spend more per first-year");
+    expect(recipesIndex).not.toContain("63% already spend more per first-year");
+  });
+
+  it("keeps published $0 merit aid and shares one median with Panel B", () => {
+    expect(ALIGNMENT_GAP_MERIT_META.medianBurden).toBe(
+      ALIGNMENT_GAP_META.medianBurden,
+    );
+    expect(ALIGNMENT_GAP_MERIT_META.endowmentHighCut).toBe(
+      ALIGNMENT_GAP_META.medianEndowmentPerStudent,
+    );
+    expect(ALIGNMENT_GAP_MERIT_META.zeroMeritCount).toBe(5);
+    expect(ALIGNMENT_GAP_MERIT_META.exclusions.rangeGrant).toBe(1);
+    const zeros = ALIGNMENT_GAP_MERIT_SCHOOLS.filter(
+      (row) => row.meritPerFirstYear === 0,
+    );
+    expect(zeros.map((row) => row.schoolId).sort()).toEqual([
+      "amherst",
+      "barnard",
+      "colgate-university",
+      "haverford-college",
+      "university-of-the-incarnate-word",
+    ]);
+    const incarnate = zeros.find(
+      (row) => row.schoolId === "university-of-the-incarnate-word",
+    );
+    expect(incarnate).toBeDefined();
+    expect(incarnate!.gap).toBeGreaterThan(0);
+    expect(meritRegion(incarnate!.gap, incarnate!.meritPerFirstYear)).toBe(
+      "constrained",
+    );
+    const endowmentById = new Map(
+      ALIGNMENT_GAP_SCHOOLS.map((row) => [row.schoolId, row]),
+    );
+    for (const id of ["hollins-university", "beloit-college", "pratt-institute-main"]) {
+      const merit = ALIGNMENT_GAP_MERIT_SCHOOLS.find((row) => row.schoolId === id);
+      const endowment = endowmentById.get(id);
+      expect(merit).toBeDefined();
+      expect(endowment).toBeDefined();
+      expect(Math.abs(merit!.gap - endowment!.gap)).toBeLessThan(0.05);
+    }
+    const ex = ALIGNMENT_GAP_MERIT_META.exclusions;
+    expect(
+      ex.qualityLimited +
+        ex.qualityMissing +
+        ex.missingH2a +
+        ex.rangeShare +
+        ex.rangeGrant +
+        ex.missingScorecard +
+        ALIGNMENT_GAP_MERIT_META.schoolCount,
+    ).toBe(ex.universe);
   });
 
   it("keeps Bard and Grinnell on the endowment panel and out of the merit join", () => {
@@ -160,7 +227,7 @@ describe("alignment-gap merit arithmetic", () => {
     expect(meritShareInRange(1.045)).toBe(false);
     expect(meritShareInRange(0.193)).toBe(true);
     expect(meritGrantInRange(85_600)).toBe(false);
-    expect(meritGrantInRange(0)).toBe(false);
+    expect(meritGrantInRange(0)).toBe(true);
     expect(meritGrantInRange(27_587)).toBe(true);
   });
 });

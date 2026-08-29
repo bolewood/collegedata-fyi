@@ -34,6 +34,7 @@ const COVERS_EXAMPLE_IDS = [
 ] as const;
 
 const TRAPPED_EXAMPLE_IDS = [
+  "university-of-the-incarnate-word",
   "kentucky-state-university",
   "hollins-university",
   "baker-college",
@@ -67,13 +68,13 @@ const REGIONS = [
     num: "B",
     head: "Genuinely constrained",
     count: ALIGNMENT_GAP_MERIT_META.regions.constrained,
-    body: "Positive gap, merit spend below it. This list is mostly regional publics and HBCUs. It is the control group, not a target list — schools whose discount is already spoken for, or was never large enough to close the gap.",
+    body: "Positive gap, merit spend below it. This list is mostly regional publics and HBCUs. Incarnate Word sits on the $0 rail: it awards no non-need aid and still has a gap to close. Control group, not a target list — schools whose discount is already spoken for, or was never large enough to close the gap.",
   },
   {
     num: "C",
     head: "No gap to close",
     count: ALIGNMENT_GAP_MERIT_META.regions.none,
-    body: "Burden at or below this merit sample’s median. The money question does not arise. They stay on the chart so the diagonal has a below as well as an above.",
+    body: "Burden at or below the 375-school corpus median. The money question does not arise. They stay on the chart so the diagonal has a below as well as an above.",
   },
 ];
 
@@ -105,12 +106,12 @@ const QUADRANTS = [
 ];
 
 export default function AlignmentGapPage() {
-  const meritMedianBurden = formatRecipeShare(
-    ALIGNMENT_GAP_MERIT_META.medianBurden,
+  const corpusMedianBurden = formatRecipeShare(
+    ALIGNMENT_GAP_META.medianBurden,
     2,
   );
-  const endowmentMedianBurden = formatRecipeShare(
-    ALIGNMENT_GAP_META.medianBurden,
+  const sampleMedianBurden = formatRecipeShare(
+    ALIGNMENT_GAP_MERIT_META.sampleMedianBurden,
     2,
   );
   const medianEndowment = formatEndowmentPerStudent(
@@ -209,9 +210,9 @@ export default function AlignmentGapPage() {
           <small>Positive gap, merit spend below it — merit sample</small>
         </div>
         <div>
-          <span className="meta">Median burden</span>
-          <strong>{meritMedianBurden}</strong>
-          <small>Merit sample of {ALIGNMENT_GAP_MERIT_META.schoolCount} — Panel A</small>
+          <span className="meta">$0 merit aid</span>
+          <strong>{ALIGNMENT_GAP_MERIT_META.zeroMeritCount.toLocaleString("en-US")}</strong>
+          <small>Need-only schools, plotted on the left rail</small>
         </div>
       </section>
 
@@ -225,7 +226,7 @@ export default function AlignmentGapPage() {
           color: "var(--ink)",
         }}
       >
-        {ALIGNMENT_GAP_MERIT_META.regions.covers} of {ALIGNMENT_GAP_MERIT_META.positiveGap} — {coversPct} — spend more per first-year student on non-need merit aid than their entire annual alignment gap. For nearly two-thirds of the schools whose graduates carry an above-median debt burden, the money to close that gap is already leaving the building. It is going to students who don&apos;t need it.
+        {ALIGNMENT_GAP_MERIT_META.regions.covers} of {ALIGNMENT_GAP_MERIT_META.positiveGap} — {coversPct} — spend more per first-year student on non-need merit aid than their entire annual alignment gap. For those schools, the money to close that gap is already leaving the building. It is going to students who don&apos;t need it.
       </p>
 
       <section style={{ marginTop: 28 }}>
@@ -331,8 +332,8 @@ export default function AlignmentGapPage() {
         </div>
         <div>
           <span className="meta">Median debt burden</span>
-          <strong>{endowmentMedianBurden}</strong>
-          <small>Endowment sample of {ALIGNMENT_GAP_META.schoolCount} — Panel B</small>
+          <strong>{corpusMedianBurden}</strong>
+          <small>375-school endowment join — both panels</small>
         </div>
         <div>
           <span className="meta">Above that burden</span>
@@ -390,8 +391,7 @@ export default function AlignmentGapPage() {
       <section style={{ marginTop: 48, maxWidth: 760 }}>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: 0 }}>
           Bard and Grinnell enroll students with almost identical median SATs — 1510
-          and 1490 — and both land far below what those scores predict for earnings.
-          Grinnell charges $17,648 net; Bard charges $34,649. Grinnell&apos;s graduates
+          and 1490. Grinnell charges $17,648 net; Bard charges $34,649. Grinnell&apos;s graduates
           carry a 3.5% debt burden, Bard&apos;s 6.6%. Grinnell also holds $1.54M in
           endowment per undergraduate against Bard&apos;s $69.5k — 22 times as much.
           Same students, same outcomes, opposite prices, and the reason is on the
@@ -427,11 +427,11 @@ export default function AlignmentGapPage() {
           <code>gap = completer_debt × (1 − median_burden / burden) / 4</code>.
           Merit spend per first-year is{" "}
           <code>non_need_aid_share_first_year_ft × avg_non_need_grant_first_year_ft</code>.
-          Each panel uses the median burden of the sample it plots: {meritMedianBurden} on
-          the {ALIGNMENT_GAP_MERIT_META.schoolCount}-school merit join (Panel A),{" "}
-          {endowmentMedianBurden} on the {ALIGNMENT_GAP_META.schoolCount}-school
-          endowment join (Panel B). Hover any dot — not only the labeled ones — for
-          the school name.
+          Both panels measure the gap against the {ALIGNMENT_GAP_META.schoolCount}-school
+          endowment-join median burden, {corpusMedianBurden}. The merit sample&apos;s own
+          median is {sampleMedianBurden}; it stays in this note so a school that
+          appears in both figures is not two numbers. Hover any dot — not only the
+          labeled ones — for the school name.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
           Panel A is the join that makes the eyebrow true. The vertical axis is
@@ -439,8 +439,10 @@ export default function AlignmentGapPage() {
           endowment per undergraduate. Panel B keeps the full corpus — including
           Bard, Grinnell, Bennington, Sarah Lawrence, Oberlin, and Earlham, which
           have no usable H2A — with IPEDS endowment on x and instruction ÷ net
-          price in color. Panel B still requires a CDS SAT midpoint, which is why
-          its n is larger than the merit sample rather than a superset of it.
+          price in color. Panel A is smaller because it requires usable H2A, not
+          because Panel B is a superset of it. Panel B does not require H2A; it
+          does require a CDS SAT midpoint. The samples overlap, but neither
+          contains the other.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
           n = {ALIGNMENT_GAP_MERIT_META.schoolCount} on Panel A after data guards,
@@ -448,10 +450,13 @@ export default function AlignmentGapPage() {
           <code>school_merit_profile</code>. Dropped: quality limited ({ex.qualityLimited})
           or missing ({ex.qualityMissing}); missing H2A share or average grant ({ex.missingH2a});
           share outside 0–100% ({ex.rangeShare}, including Cal State Chico at 12,087%
-          and Dickinson at 104.5%); average grant outside (0, $80,000] ({ex.rangeGrant});
-          and rows without Scorecard earnings, debt, net price, and endowment ({ex.missingScorecard}).
-          The quality flag said strong on every range violation. The guards are in
-          the recipe query; they are not optional.
+          and Dickinson at 104.5%); average grant outside [0, $80,000] ({ex.rangeGrant},
+          Duke at $85,600). A published $0 grant is kept: {ALIGNMENT_GAP_MERIT_META.zeroMeritCount}{" "}
+          schools award no non-need aid, including four with no gap to close and
+          Incarnate Word, which does. Also dropped: rows without Scorecard earnings,
+          debt, net price, and endowment ({ex.missingScorecard}). The quality flag
+          said strong on every range violation. The guards are in the recipe query;
+          they are not optional.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
           CDS H2A excludes some mixed-need merit awards and can understate total
@@ -492,27 +497,42 @@ export default function AlignmentGapPage() {
             overflowX: "auto",
           }}
         >
-{`# Panel A — CDS H2A merit × Scorecard
+{`# Panel A — CDS H2A merit × Scorecard (488 rows; under the 1,000-row cap)
 curl 'https://api.collegedata.fyi/rest/v1/school_merit_profile?select=school_id,school_name,canonical_year,merit_profile_quality,non_need_aid_share_first_year_ft,avg_non_need_grant_first_year_ft,avg_need_grant_first_year_ft,earnings_10yr_median,median_debt_completers,median_debt_monthly_payment,avg_net_price&limit=1000' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'
 
-# Panel B — Scorecard + IPEDS endowment
-curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,endowment_end,instructional_expenditure_fte,enrollment&earnings_10yr_median=gt.0&median_debt_monthly_payment=gt.0&avg_net_price=gt.0&endowment_end=gt.0' \\
+# Panel B — Scorecard + IPEDS endowment (2,158 matching rows)
+# PostgREST max-rows is 1,000. limit=5000 and Range: 0-4999 are both capped
+# at 1,000 with HTTP 206 / Content-Range: 0-999/2158 — no error body.
+# Page with offset (or Range: 0-999, then 1000-1999, then 2000-2999):
+curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,endowment_end,instructional_expenditure_fte,enrollment&earnings_10yr_median=gt.0&median_debt_monthly_payment=gt.0&avg_net_price=gt.0&endowment_end=gt.0&limit=1000&offset=0' \\
+  -H 'apikey: <anon key>' \\
+  -H 'Authorization: Bearer <anon key>'
+curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,endowment_end,instructional_expenditure_fte,enrollment&earnings_10yr_median=gt.0&median_debt_monthly_payment=gt.0&avg_net_price=gt.0&endowment_end=gt.0&limit=1000&offset=1000' \\
+  -H 'apikey: <anon key>' \\
+  -H 'Authorization: Bearer <anon key>'
+curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,endowment_end,instructional_expenditure_fte,enrollment&earnings_10yr_median=gt.0&median_debt_monthly_payment=gt.0&avg_net_price=gt.0&endowment_end=gt.0&limit=1000&offset=2000' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}
         </pre>
         <p style={{ color: "var(--ink-2)", fontSize: 14, lineHeight: 1.55, margin: "16px 0 0" }}>
           Keep <code>non_need_aid_share_first_year_ft</code> in [0, 1] and{" "}
-          <code>avg_non_need_grant_first_year_ft</code> in (0, 80000]; require{" "}
+          <code>avg_non_need_grant_first_year_ft</code> in [0, 80000]; require{" "}
           <code>merit_profile_quality</code> in <code>strong</code> or{" "}
-          <code>partial</code>. Join endowment from <code>scorecard_summary</code>{" "}
-          and undergraduate enrollment from <code>school_browser_rows</code>. Then{" "}
+          <code>partial</code>. A published $0 grant is kept. Panel A joins
+          endowment from <code>scorecard_summary</code> and undergraduate
+          enrollment from <code>school_browser_rows.undergrad_enrollment_scorecard</code>.
+          Panel B joins undergraduate enrollment from{" "}
+          <code>institution_directory.undergraduate_enrollment</code>, falling back
+          to <code>scorecard_summary.enrollment</code>, and keeps only rows with a
+          CDS SAT midpoint in <code>school_browser_rows</code>. Then{" "}
           <code>burden = monthly × 12 / earnings</code>,{" "}
           <code>gap = completer_debt × (1 − median_burden / burden) / 4</code>, and{" "}
-          <code>merit_per_fy = share × avg_non_need_grant</code>. The anon key is
-          on the <Link href="/api">API page</Link>. Rebuild the checked-in dataset
-          with <code>python3 tools/scorecard/build_alignment_gap_recipe.py</code>.
+          <code>merit_per_fy = share × avg_non_need_grant</code>, using the
+          375-school median burden on both panels. The anon key is on the{" "}
+          <Link href="/api">API page</Link>. Rebuild the checked-in dataset with{" "}
+          <code>python3 tools/scorecard/build_alignment_gap_recipe.py</code>.
         </p>
         <div style={{ marginTop: 14, display: "flex", gap: 16, flexWrap: "wrap", fontSize: 13 }}>
           <TrackedLink
