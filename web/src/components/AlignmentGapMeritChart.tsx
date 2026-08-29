@@ -138,10 +138,10 @@ function diagonalPoints(): string {
     const t = i / steps;
     const merit = MERIT_MIN * (MERIT_MAX / MERIT_MIN) ** t;
     if (merit > GAP_MAX) {
-      pts.push(`${logX(GAP_MAX)},${yGap(GAP_MAX)}`);
+      pts.push(`${Math.round(logX(GAP_MAX))},${Math.round(yGap(GAP_MAX))}`);
       break;
     }
-    pts.push(`${logX(merit)},${yGap(merit)}`);
+    pts.push(`${Math.round(logX(merit))},${Math.round(yGap(merit))}`);
   }
   return pts.join(" ");
 }
