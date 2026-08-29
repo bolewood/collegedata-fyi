@@ -65,8 +65,9 @@ describe("alignment-gap recipe", () => {
     expect(merit).toContain("{hover.schoolName}");
     expect(merit).toContain("CDS H2A");
     expect(merit).toContain("var(--ochre)");
-    expect(merit).toContain("var(--forest-2)");
-    expect(merit).toContain("var(--ink)");
+    expect(merit).toContain("var(--forest)");
+    expect(merit).toContain('fill: "none"');
+    expect(merit).toContain("○ ");
     expect(merit).not.toContain("var(--forest-ink)");
   });
 

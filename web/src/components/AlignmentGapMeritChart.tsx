@@ -48,11 +48,14 @@ function yGap(gap: number): number {
   return M.t + (1 - t) * IH;
 }
 
-function tercileColor(endowmentPerStudent: number): string {
+function tercileMark(endowmentPerStudent: number): {
+  fill: string;
+  open: boolean;
+} {
   const band = endowmentTercile(endowmentPerStudent, TERCILES[0], TERCILES[1]);
-  if (band === 2) return "var(--ink)";
-  if (band === 1) return "var(--forest-2)";
-  return "var(--ochre)";
+  if (band === 2) return { fill: "none", open: true };
+  if (band === 1) return { fill: "var(--forest)", open: false };
+  return { fill: "var(--ochre)", open: false };
 }
 
 function shortName(name: string): string {
@@ -309,6 +312,7 @@ export function AlignmentGapMeritChart() {
         </text>
         {pts.map((pt) => {
           const active = hover?.schoolId === pt.schoolId;
+          const mark = tercileMark(pt.endowmentPerStudent);
           return (
             <g key={pt.schoolId}>
               <circle
@@ -324,10 +328,10 @@ export function AlignmentGapMeritChart() {
                 cx={pt.cx}
                 cy={pt.cy}
                 r={active ? 6.5 : 4}
-                fill={tercileColor(pt.endowmentPerStudent)}
-                fillOpacity={active ? 1 : 0.92}
-                stroke={active ? "var(--ink)" : "none"}
-                strokeWidth={active ? 1.25 : 0}
+                fill={mark.fill}
+                fillOpacity={mark.open ? 1 : active ? 1 : 0.92}
+                stroke={active || mark.open ? "var(--ink)" : "none"}
+                strokeWidth={mark.open ? (active ? 2 : 1.45) : active ? 1.25 : 0}
                 pointerEvents="none"
               />
             </g>
@@ -421,11 +425,11 @@ export function AlignmentGapMeritChart() {
         <span style={{ color: "var(--ochre)" }}>
           ■ under {formatEndowmentPerStudent(TERCILES[0])}
         </span>
-        <span style={{ color: "var(--forest-2)" }}>
+        <span style={{ color: "var(--forest)" }}>
           ■ {formatEndowmentPerStudent(TERCILES[0])}–{formatEndowmentPerStudent(TERCILES[1])}
         </span>
         <span style={{ color: "var(--ink)" }}>
-          ■ {formatEndowmentPerStudent(TERCILES[1])} and over
+          ○ {formatEndowmentPerStudent(TERCILES[1])} and over
         </span>
         <span style={{ color: "var(--brick)" }}>— merit = gap</span>
       </div>
