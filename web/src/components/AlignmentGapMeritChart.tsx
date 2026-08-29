@@ -464,9 +464,11 @@ export function AlignmentGapMeritChart() {
           <div>
             Merit spend {hover.zeroMerit ? "$0 · no merit aid" : `${formatUsd(hover.meritPerFirstYear)} / first-year`}
           </div>
-          <div>
-            {formatRecipeShare(hover.meritShare, 0)} receive {formatUsd(hover.avgMeritGrant)}
-          </div>
+          {!hover.zeroMerit && (
+            <div>
+              {formatRecipeShare(hover.meritShare, 0)} receive {formatUsd(hover.avgMeritGrant)}
+            </div>
+          )}
           <div>Endowment {formatEndowmentPerStudent(hover.endowmentPerStudent)}/student</div>
           <div>Burden {formatRecipeShare(hover.burden, 1)}</div>
         </div>
