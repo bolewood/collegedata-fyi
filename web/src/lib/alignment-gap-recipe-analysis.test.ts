@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  bandMark,
   computeBurden,
   computeEndowmentPerStudent,
   computeGap,
   computeInstructionShare,
   computeMeritPerFirstYear,
+  instructionShareBand,
   quadrantFor,
 } from "./alignment-gap-recipe-analysis";
 
@@ -28,5 +30,14 @@ describe("alignment-gap arithmetic", () => {
 
   it("computes merit spend as share times average grant", () => {
     expect(computeMeritPerFirstYear(0.29, 45_857)).toBeCloseTo(13_298.53, 1);
+  });
+
+  it("uses the same low/mid/high marks for endowment and instruction bands", () => {
+    expect(bandMark(0)).toEqual({ fill: "var(--ochre)", open: false });
+    expect(bandMark(1)).toEqual({ fill: "var(--forest)", open: false });
+    expect(bandMark(2)).toEqual({ fill: "none", open: true });
+    expect(instructionShareBand(0.4)).toBe(0);
+    expect(instructionShareBand(0.7)).toBe(1);
+    expect(instructionShareBand(1.22)).toBe(2);
   });
 });

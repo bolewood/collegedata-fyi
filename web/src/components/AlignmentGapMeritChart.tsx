@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { formatRecipeShare } from "@/lib/format";
 import {
+  bandCircleStyle,
+  bandMark,
   endowmentTercile,
   formatEndowmentPerStudent,
   formatGapUsd,
@@ -48,14 +50,8 @@ function yGap(gap: number): number {
   return M.t + (1 - t) * IH;
 }
 
-function tercileMark(endowmentPerStudent: number): {
-  fill: string;
-  open: boolean;
-} {
-  const band = endowmentTercile(endowmentPerStudent, TERCILES[0], TERCILES[1]);
-  if (band === 2) return { fill: "none", open: true };
-  if (band === 1) return { fill: "var(--forest)", open: false };
-  return { fill: "var(--ochre)", open: false };
+function tercileMark(endowmentPerStudent: number) {
+  return bandMark(endowmentTercile(endowmentPerStudent, TERCILES[0], TERCILES[1]));
 }
 
 function shortName(name: string): string {
@@ -328,10 +324,7 @@ export function AlignmentGapMeritChart() {
                 cx={pt.cx}
                 cy={pt.cy}
                 r={active ? 6.5 : 4}
-                fill={mark.fill}
-                fillOpacity={mark.open ? 1 : active ? 1 : 0.92}
-                stroke={active || mark.open ? "var(--ink)" : "none"}
-                strokeWidth={mark.open ? (active ? 2 : 1.45) : active ? 1.25 : 0}
+                {...bandCircleStyle(mark, active)}
                 pointerEvents="none"
               />
             </g>

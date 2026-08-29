@@ -57,6 +57,10 @@ describe("alignment-gap recipe", () => {
     expect(chart).toContain("{hover.schoolName}");
     expect(chart).toContain("Could they afford to?");
     expect(chart).toContain("Hover any dot — every school is named");
+    expect(chart).toContain("var(--ochre)");
+    expect(chart).toContain("○ 90% and over");
+    expect(chart).not.toContain("var(--forest-2)");
+    expect(chart).not.toContain("var(--forest-ink)");
     expect(chart).not.toMatch(/best\.nm \?/);
 
     const merit = src("components/AlignmentGapMeritChart.tsx");
@@ -66,9 +70,13 @@ describe("alignment-gap recipe", () => {
     expect(merit).toContain("CDS H2A");
     expect(merit).toContain("var(--ochre)");
     expect(merit).toContain("var(--forest)");
-    expect(merit).toContain('fill: "none"');
     expect(merit).toContain("○ ");
     expect(merit).not.toContain("var(--forest-ink)");
+
+    const analysis = src("lib/alignment-gap-recipe-analysis.ts");
+    expect(analysis).toContain('fill: "none"');
+    expect(analysis).toContain('fill: "var(--ochre)"');
+    expect(analysis).toContain('fill: "var(--forest)"');
   });
 
   it("applies the seven copy fixes", () => {

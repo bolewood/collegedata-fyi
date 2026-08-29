@@ -161,14 +161,42 @@ export function meritRegion(
   return coversGap(meritPerFirstYear, gap) ? "covers" : "constrained";
 }
 
+export type OrdinalBand = 0 | 1 | 2;
+
+export type BandMark = {
+  fill: string;
+  open: boolean;
+};
+
 export function endowmentTercile(
   endowmentPerStudent: number,
   firstBreak: number,
   secondBreak: number,
-): 0 | 1 | 2 {
+): OrdinalBand {
   if (endowmentPerStudent >= secondBreak) return 2;
   if (endowmentPerStudent >= firstBreak) return 1;
   return 0;
+}
+
+export function instructionShareBand(share: number): OrdinalBand {
+  if (share >= 0.9) return 2;
+  if (share >= 0.55) return 1;
+  return 0;
+}
+
+export function bandMark(band: OrdinalBand): BandMark {
+  if (band === 2) return { fill: "none", open: true };
+  if (band === 1) return { fill: "var(--forest)", open: false };
+  return { fill: "var(--ochre)", open: false };
+}
+
+export function bandCircleStyle(mark: BandMark, active: boolean) {
+  return {
+    fill: mark.fill,
+    fillOpacity: mark.open ? 1 : active ? 1 : 0.92,
+    stroke: active || mark.open ? "var(--ink)" : "none",
+    strokeWidth: mark.open ? (active ? 2 : 1.45) : active ? 1.25 : 0,
+  };
 }
 
 export function formatUsd(value: number): string {

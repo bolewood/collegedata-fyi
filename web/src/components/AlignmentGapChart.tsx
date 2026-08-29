@@ -3,9 +3,12 @@
 import { useMemo, useState } from "react";
 import { formatRecipeShare } from "@/lib/format";
 import {
+  bandCircleStyle,
+  bandMark,
   formatEndowmentPerStudent,
   formatGapUsd,
   formatInstructionShare,
+  instructionShareBand,
   quadrantFor,
 } from "@/lib/alignment-gap-recipe-analysis";
 import {
@@ -55,10 +58,8 @@ function yGap(gap: number): number {
   return M.t + (1 - t) * IH;
 }
 
-function shareColor(share: number): string {
-  if (share >= 0.9) return "var(--forest-ink)";
-  if (share >= 0.55) return "var(--forest)";
-  return "var(--forest-2)";
+function shareMark(share: number) {
+  return bandMark(instructionShareBand(share));
 }
 
 function shortName(name: string): string {
@@ -296,6 +297,7 @@ export function AlignmentGapChart() {
         </text>
         {pts.map((pt) => {
           const active = hover?.schoolId === pt.schoolId;
+          const mark = shareMark(pt.instructionShare);
           return (
             <g key={pt.schoolId}>
               <circle
@@ -311,10 +313,7 @@ export function AlignmentGapChart() {
                 cx={pt.cx}
                 cy={pt.cy}
                 r={active ? 6.5 : 4}
-                fill={shareColor(pt.instructionShare)}
-                fillOpacity={active ? 1 : 0.82}
-                stroke={active ? "var(--ink)" : "none"}
-                strokeWidth={active ? 1.25 : 0}
+                {...bandCircleStyle(mark, active)}
                 pointerEvents="none"
               />
             </g>
@@ -409,9 +408,9 @@ export function AlignmentGapChart() {
         }}
       >
         <span>INSTRUCTION / NET PRICE</span>
-        <span style={{ color: "var(--forest-2)" }}>■ under 55%</span>
+        <span style={{ color: "var(--ochre)" }}>■ under 55%</span>
         <span style={{ color: "var(--forest)" }}>■ 55–90%</span>
-        <span style={{ color: "var(--forest-ink)" }}>■ 90% and over</span>
+        <span style={{ color: "var(--ink)" }}>○ 90% and over</span>
         <span style={{ color: "var(--brick)" }}>— median burden</span>
       </div>
     </div>
