@@ -1,15 +1,15 @@
 # Alignment gap
 
-**Question:** For schools we can join across CDS SAT scores, College Scorecard
-earnings and debt, net price, and endowment, how far is each school's graduate
-debt burden from the corpus median — and does the school have the endowment to
-close that gap?
+**Question:** Of schools whose graduates carry an above-median debt burden,
+how many are already spending more per first-year student on non-need merit
+aid than it would take to close that gap?
 
 Open [`/recipes/alignment-gap`](https://www.collegedata.fyi/recipes/alignment-gap)
-for the interactive scatter. Hover any dot for the school name, the gap,
-endowment per undergraduate, and instruction as a share of net price. A handful
-of schools are labeled on the chart; every school is named on hover or via Find
-a school.
+for two interactive scatters. Panel A is the CDS join: merit spend per
+first-year (H2A) against the alignment gap (Scorecard), colored by endowment
+per undergraduate (IPEDS). Panel B keeps the endowment scatter so Bard,
+Grinnell, Bennington, Sarah Lawrence, Oberlin, and Earlham — no usable H2A —
+stay on the page. Hover any dot for the school name.
 
 ## What the recipe computes
 
@@ -21,27 +21,43 @@ burden = median_debt_monthly_payment × 12 / earnings_10yr_median
 ```
 
 The **alignment gap** is the completer debt that would have to be shed to reach
-this corpus's median burden at that school's own earnings, divided across four
-years of college so it reads as dollars per year of net price:
+this sample's median burden at that school's own earnings, expressed per year
+of enrollment:
 
 ```text
 gap = median_debt_completers × (1 − median_burden / burden) / 4
 ```
 
-A positive gap means graduates carry a heavier burden than the median. The
-horizontal axis is endowment per undergraduate (`endowment_end / undergraduate_enrollment`),
-log scale. Color is instructional expenditure per FTE divided by average net
-price. Shares above 100% mean the school spends more on instruction than it
-collects from students.
+**Merit spend per first-year** is the discount a school chooses to hand to
+students who did not demonstrate need:
+
+```text
+merit_per_fy = non_need_aid_share_first_year_ft × avg_non_need_grant_first_year_ft
+```
+
+The diagonal on Panel A is `merit_per_fy = gap`. Each panel uses the median
+burden of the sample it plots.
 
 ## Join
 
-- College Scorecard 2022-23: earnings, monthly payment, completer debt, average
-  net price, endowment, instructional expenditure per FTE
-- `institution_directory`: undergraduate enrollment and canonical `school_id`
-- Latest 2024-25 or 2025-26 `school_browser_rows` row with a SAT composite
-  midpoint (C9). Schools without a published SAT midpoint are out of this
-  universe on purpose.
+Panel A starts from `school_merit_profile` (already a CDS H2A × Scorecard
+view), then attaches `scorecard_summary.endowment_end` and
+`school_browser_rows.undergrad_enrollment_scorecard`. Guards, required:
+
+1. Drop `non_need_aid_share_first_year_ft` outside `[0, 1]`.
+2. Drop `avg_non_need_grant_first_year_ft` outside `(0, 80000]`.
+3. Require `merit_profile_quality` in `strong` or `partial`.
+4. Require Scorecard earnings, debt, net price, and endowment.
+
+`merit_profile_quality` is a field-count flag. It does not catch range errors.
+The 2026-08-29 build dropped three shares outside 0–100% (Cal State Chico at
+12,087%, Dickinson at 104.5%, Illinois Chicago at 153%) even though all three
+were flagged `strong`.
+
+Panel B is unchanged from the endowment recipe: Scorecard 2022-23 debt,
+earnings, net price, endowment, and instructional expenditure, joined to
+directory undergraduate enrollment and a 2024-25 or 2025-26 SAT composite
+midpoint (C9).
 
 Rebuild:
 
@@ -49,14 +65,16 @@ Rebuild:
 python3 tools/scorecard/build_alignment_gap_recipe.py
 ```
 
-## How to read the quadrants
+## How to read the panels
 
-- **Capacity exists** — burden and endowment both above the median.
-- **Constrained** — burden above the median, endowment below it.
-- **Endowment absorbs it** — low burden next to large per-student wealth.
-- **Earnings do the work** — low burden without unusual wealth.
+- **Already spending it** — positive gap, merit spend ≥ gap.
+- **Genuinely constrained** — positive gap, merit spend below it. Control
+  group, not a target list.
+- **No gap to close** — burden at or below the merit sample median.
+- Panel B quadrants split the same gap against endowment per undergraduate.
 
-Scorecard earnings cover federally aided students and describe a cohort that
-enrolled about a decade before the CDS SAT row. The join is institutional, not
-longitudinal. Median federal debt piles against the borrowing cap, so debt
-measures burden, not sticker price.
+CDS H2A excludes some mixed-need merit awards and covers first-year full-time
+students only, so it describes the recruiting discount, not the whole aid
+budget. Scorecard earnings cover federally aided students and describe a
+cohort that enrolled about a decade before the CDS row. The join is
+institutional, not longitudinal.

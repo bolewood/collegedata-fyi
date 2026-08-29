@@ -688,6 +688,7 @@
 @media (max-width: 720px) {
   .cd-recipe-guide      { grid-template-columns: 1fr !important; gap: 14px !important; }
   .cd-recipe-quadrants  { grid-template-columns: 1fr !important; }
+  .cd-recipe-regions    { grid-template-columns: 1fr !important; }
   .cd-recipe-bands      { grid-template-columns: 1fr !important; }
   .waitlist-recipe-header,
   .waitlist-recipe-stats,

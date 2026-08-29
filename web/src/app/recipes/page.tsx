@@ -80,13 +80,13 @@ const RECIPES: Recipe[] = [
     slug: "alignment-gap",
     title: "Alignment gap",
     tagline:
-      "The net-price change that would put a school's graduates at the corpus median debt burden, plotted against endowment per undergraduate. Hover any school. Four quadrants: capacity, constrained, endowment-absorbs-it, earnings-do-the-work.",
+      "Of schools with a positive alignment gap and clean CDS H2A merit data, 63% already spend more per first-year on non-need aid than the annual gap. Two panels: merit spend versus the gap, then endowment. Hover any school.",
     audience:
-      "IR, college-finance reporters, and analysts joining CDS SAT scores to federal earnings, debt, and endowment.",
+      "IR, college-finance reporters, and analysts joining CDS H2A merit aid to Scorecard earnings and debt, and IPEDS endowment.",
     demoPath: "/recipes/alignment-gap",
     writeupUrl:
       "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/alignment-gap.md",
-    sourceLabel: "CDS C9 · Scorecard · IPEDS",
+    sourceLabel: "CDS H2A · Scorecard · IPEDS",
   },
 ];
 
