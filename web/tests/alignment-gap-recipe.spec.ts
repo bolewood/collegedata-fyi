@@ -6,9 +6,9 @@ test("alignment-gap merit panel names the school on every dot", async ({ page })
   await expect(
     page.getByRole("heading", { name: /what a school charges, against what it delivers/i }),
   ).toBeVisible();
-  await expect(
-    page.getByText(/the completer debt a school would have to shed to reach the corpus median burden/i),
-  ).toBeVisible();
+  await expect(page.locator("header p.serif")).toContainText(
+    /completer debt a school would have to shed/i,
+  );
   await expect(page.getByText(/are they already spending it/i)).toBeVisible();
   await expect(page.getByText(/merit spend = annual gap/i)).toBeVisible();
 
