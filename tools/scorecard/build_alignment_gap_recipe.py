@@ -121,7 +121,13 @@ def _float(value: Any) -> float | None:
 
 def build_artifact(base_url: str, api_key: str, *, generated_at: str) -> dict[str, Any]:
     endowment = build_endowment_panel(base_url, api_key, generated_at=generated_at)
-    merit = build_merit_panel(base_url, api_key, generated_at=generated_at)
+    merit = build_merit_panel(
+        base_url,
+        api_key,
+        generated_at=generated_at,
+        canonical_median_burden=float(endowment["meta"]["medianBurden"]),
+        canonical_median_endowment=float(endowment["meta"]["medianEndowmentPerStudent"]),
+    )
     return {
         "meta": endowment["meta"],
         "schools": endowment["schools"],
@@ -305,7 +311,14 @@ def build_endowment_panel(base_url: str, api_key: str, *, generated_at: str) -> 
     }
 
 
-def build_merit_panel(base_url: str, api_key: str, *, generated_at: str) -> dict[str, Any]:
+def build_merit_panel(
+    base_url: str,
+    api_key: str,
+    *,
+    generated_at: str,
+    canonical_median_burden: float,
+    canonical_median_endowment: float,
+) -> dict[str, Any]:
     merit_rows = postgrest_get_all(
         base_url,
         api_key,
@@ -388,7 +401,7 @@ def build_merit_panel(base_url: str, api_key: str, *, generated_at: str) -> dict
             if row.get("school_name"):
                 range_share_schools.append(str(row["school_name"]))
             continue
-        if not 0 < grant <= 80_000:
+        if grant < 0 or grant > 80_000:
             exclusions["rangeGrant"] += 1
             continue
         earnings = _float(row.get("earnings_10yr_median"))
@@ -448,15 +461,21 @@ def build_merit_panel(base_url: str, api_key: str, *, generated_at: str) -> dict
         )
 
     burdens = [row["burden"] for row in joined]
-    median_burden = statistics.median(burdens)
+    sample_median_burden = statistics.median(burdens)
+    median_burden = canonical_median_burden
     for row in joined:
         row["gap"] = (row["medianDebtCompleters"] * (1 - median_burden / row["burden"])) / 4
-    endowments = [row["endowmentPerStudent"] for row in joined]
-    terciles = statistics.quantiles(endowments, n=3)
+    below_median = [
+        row["endowmentPerStudent"]
+        for row in joined
+        if row["endowmentPerStudent"] < canonical_median_endowment
+    ]
+    low_cut = statistics.median(below_median) if below_median else canonical_median_endowment / 2
     covers = sum(1 for row in joined if row["gap"] > 0 and row["meritPerFirstYear"] >= row["gap"])
     constrained = sum(1 for row in joined if row["gap"] > 0 and row["meritPerFirstYear"] < row["gap"])
     none = sum(1 for row in joined if row["gap"] <= 0)
     positive = covers + constrained
+    zero_merit = sum(1 for row in joined if row["meritPerFirstYear"] == 0)
     if covers + constrained + none != len(joined):
         raise ValueError("merit region counts do not sum to plotted n")
 
@@ -492,8 +511,11 @@ def build_merit_panel(base_url: str, api_key: str, *, generated_at: str) -> dict
             "schoolCount": len(schools),
             "sample": "merit-join",
             "medianBurden": round(median_burden, 6),
-            "endowmentTerciles": [round(terciles[0], 2), round(terciles[1], 2)],
+            "sampleMedianBurden": round(sample_median_burden, 6),
+            "endowmentHighCut": round(canonical_median_endowment, 2),
+            "endowmentLowCut": round(low_cut, 2),
             "positiveGap": positive,
+            "zeroMeritCount": zero_merit,
             "regions": {
                 "covers": covers,
                 "constrained": constrained,
@@ -506,8 +528,9 @@ def build_merit_panel(base_url: str, api_key: str, *, generated_at: str) -> dict
                 "school_merit_profile CDS H2A non-need share and average grant, joined to "
                 "scorecard_summary endowment and school_browser_rows undergraduate enrollment. "
                 "Dropped quality limited/missing, missing H2A, share outside [0, 1], average "
-                "grant outside (0, 80000], and rows without Scorecard earnings, debt, net "
-                "price, and endowment"
+                "grant outside [0, 80000], and rows without Scorecard earnings, debt, net "
+                "price, and endowment. A published $0 grant is kept. Gaps use the "
+                "375-school endowment-join median burden so both panels share one y-axis."
             ),
         },
         "schools": schools,

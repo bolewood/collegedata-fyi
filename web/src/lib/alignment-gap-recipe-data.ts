@@ -6418,27 +6418,27 @@ export const ALIGNMENT_GAP_MERIT_META = {
     "2024-25",
     "2025-26"
   ],
-  "schoolCount": 218,
+  "schoolCount": 223,
   "sample": "merit-join",
-  "medianBurden": 0.045005,
-  "endowmentTerciles": [
-    21627.85,
-    98768.62
-  ],
-  "positiveGap": 109,
+  "medianBurden": 0.043992,
+  "sampleMedianBurden": 0.044959,
+  "endowmentHighCut": 64403.29,
+  "endowmentLowCut": 18405.46,
+  "positiveGap": 120,
+  "zeroMeritCount": 5,
   "regions": {
-    "covers": 69,
-    "constrained": 40,
-    "none": 109
+    "covers": 73,
+    "constrained": 47,
+    "none": 103
   },
-  "coversShare": 0.633,
+  "coversShare": 0.6083,
   "exclusions": {
     "universe": 488,
     "qualityLimited": 116,
     "qualityMissing": 49,
     "missingH2a": 83,
     "rangeShare": 3,
-    "rangeGrant": 6,
+    "rangeGrant": 1,
     "missingScorecard": 13
   },
   "rangeShareSchools": [
@@ -6446,7 +6446,7 @@ export const ALIGNMENT_GAP_MERIT_META = {
     "Dickinson College",
     "University of Illinois Chicago"
   ],
-  "join": "school_merit_profile CDS H2A non-need share and average grant, joined to scorecard_summary endowment and school_browser_rows undergraduate enrollment. Dropped quality limited/missing, missing H2A, share outside [0, 1], average grant outside (0, 80000], and rows without Scorecard earnings, debt, net price, and endowment"
+  "join": "school_merit_profile CDS H2A non-need share and average grant, joined to scorecard_summary endowment and school_browser_rows undergraduate enrollment. Dropped quality limited/missing, missing H2A, share outside [0, 1], average grant outside [0, 80000], and rows without Scorecard earnings, debt, net price, and endowment. A published $0 grant is kept. Gaps use the 375-school endowment-join median burden so both panels share one y-axis."
 } as const;
 
 export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
@@ -6464,7 +6464,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 236894913,
     "undergraduateEnrollment": 836,
     "burden": 0.060471,
-    "gap": 1710.31,
+    "gap": 1822.37,
     "endowmentPerStudent": 283367.12
   },
   {
@@ -6481,8 +6481,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 270838687,
     "undergraduateEnrollment": 1156,
     "burden": 0.05534,
-    "gap": 1260.52,
+    "gap": 1384.12,
     "endowmentPerStudent": 234289.52
+  },
+  {
+    "schoolId": "amherst",
+    "schoolName": "Amherst College",
+    "cdsYear": "2024-25",
+    "meritShare": 0.0,
+    "avgMeritGrant": 0.0,
+    "meritPerFirstYear": 0.0,
+    "earnings10yrMedian": 77644,
+    "medianDebtCompleters": 13740,
+    "medianDebtMonthlyPayment": 145.67,
+    "avgNetPrice": 23367,
+    "endowmentEnd": 3549576398,
+    "undergraduateEnrollment": 1911,
+    "burden": 0.022514,
+    "gap": -3277.08,
+    "endowmentPerStudent": 1857444.48
   },
   {
     "schoolId": "arizona-state-university-campus-immersion",
@@ -6498,7 +6515,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1321499440,
     "undergraduateEnrollment": 64674,
     "burden": 0.039586,
-    "gap": -667.42,
+    "gap": -542.63,
     "endowmentPerStudent": 20433.24
   },
   {
@@ -6515,7 +6532,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 126552473,
     "undergraduateEnrollment": 1965,
     "burden": 0.053709,
-    "gap": 1012.82,
+    "gap": 1130.74,
     "endowmentPerStudent": 64403.29
   },
   {
@@ -6532,7 +6549,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 348024578,
     "undergraduateEnrollment": 3026,
     "burden": 0.088758,
-    "gap": 3080.91,
+    "gap": 3152.27,
     "endowmentPerStudent": 115011.43
   },
   {
@@ -6549,8 +6566,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 179867612,
     "undergraduateEnrollment": 2842,
     "burden": 0.063466,
-    "gap": 1963.37,
+    "gap": 2071.14,
     "endowmentPerStudent": 63289.1
+  },
+  {
+    "schoolId": "barnard",
+    "schoolName": "Barnard College",
+    "cdsYear": "2025-26",
+    "meritShare": 0.0,
+    "avgMeritGrant": 0.0,
+    "meritPerFirstYear": 0.0,
+    "earnings10yrMedian": 80516,
+    "medianDebtCompleters": 18000,
+    "medianDebtMonthlyPayment": 190.83,
+    "avgNetPrice": 28800,
+    "endowmentEnd": 503444000,
+    "undergraduateEnrollment": 3264,
+    "burden": 0.028441,
+    "gap": -2460.5,
+    "endowmentPerStudent": 154241.42
   },
   {
     "schoolId": "barton-college",
@@ -6566,7 +6600,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 25410090,
     "undergraduateEnrollment": 982,
     "burden": 0.06871,
-    "gap": 2231.84,
+    "gap": 2327.24,
     "endowmentPerStudent": 25875.86
   },
   {
@@ -6583,7 +6617,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 84013471,
     "undergraduateEnrollment": 926,
     "burden": 0.06148,
-    "gap": 1724.26,
+    "gap": 1830.32,
     "endowmentPerStudent": 90727.29
   },
   {
@@ -6600,7 +6634,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 362644000,
     "undergraduateEnrollment": 4474,
     "burden": 0.026319,
-    "gap": -4441.68,
+    "gap": -4200.82,
     "endowmentPerStudent": 81055.88
   },
   {
@@ -6617,7 +6651,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 2583406000,
     "undergraduateEnrollment": 1873,
     "burden": 0.028447,
-    "gap": -2692.11,
+    "gap": -2527.36,
     "endowmentPerStudent": 1379287.77
   },
   {
@@ -6634,7 +6668,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1167275000,
     "undergraduateEnrollment": 3876,
     "burden": 0.036616,
-    "gap": -1546.43,
+    "gap": -1359.63,
     "endowmentPerStudent": 301154.54
   },
   {
@@ -6651,7 +6685,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 187532916,
     "undergraduateEnrollment": 25042,
     "burden": 0.02831,
-    "gap": -2358.89,
+    "gap": -2215.71,
     "endowmentPerStudent": 7488.74
   },
   {
@@ -6668,7 +6702,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 58296181,
     "undergraduateEnrollment": 15023,
     "burden": 0.031212,
-    "gap": -1625.73,
+    "gap": -1506.3,
     "endowmentPerStudent": 3880.46
   },
   {
@@ -6685,7 +6719,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 23739490,
     "undergraduateEnrollment": 2492,
     "burden": 0.068181,
-    "gap": 1827.03,
+    "gap": 1906.92,
     "endowmentPerStudent": 9526.28
   },
   {
@@ -6702,7 +6736,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 2396658000,
     "undergraduateEnrollment": 6437,
     "burden": 0.034701,
-    "gap": -1781.74,
+    "gap": -1606.53,
     "endowmentPerStudent": 372325.31
   },
   {
@@ -6719,7 +6753,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 386330862,
     "undergraduateEnrollment": 1235,
     "burden": 0.065183,
-    "gap": 1934.72,
+    "gap": 2031.88,
     "endowmentPerStudent": 312818.51
   },
   {
@@ -6736,7 +6770,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 98924047,
     "undergraduateEnrollment": 1070,
     "burden": 0.063202,
-    "gap": 1942.28,
+    "gap": 2050.44,
     "endowmentPerStudent": 92452.38
   },
   {
@@ -6753,7 +6787,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 99588764,
     "undergraduateEnrollment": 7822,
     "burden": 0.048445,
-    "gap": 395.84,
+    "gap": 512.45,
     "endowmentPerStudent": 12731.88
   },
   {
@@ -6770,7 +6804,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 402704759,
     "undergraduateEnrollment": 1400,
     "burden": 0.051855,
-    "gap": 891.63,
+    "gap": 1023.54,
     "endowmentPerStudent": 287646.26
   },
   {
@@ -6787,7 +6821,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 419791742,
     "undergraduateEnrollment": 2705,
     "burden": 0.037231,
-    "gap": -1101.27,
+    "gap": -957.73,
     "endowmentPerStudent": 155191.03
   },
   {
@@ -6804,7 +6838,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 486846000,
     "undergraduateEnrollment": 2214,
     "burden": 0.054572,
-    "gap": 1172.78,
+    "gap": 1297.0,
     "endowmentPerStudent": 219894.31
   },
   {
@@ -6821,8 +6855,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 57556431,
     "undergraduateEnrollment": 10377,
     "burden": 0.063936,
-    "gap": 1758.01,
+    "gap": 1852.12,
     "endowmentPerStudent": 5546.54
+  },
+  {
+    "schoolId": "colgate-university",
+    "schoolName": "Colgate University",
+    "cdsYear": "2024-25",
+    "meritShare": 0.0,
+    "avgMeritGrant": 0.0,
+    "meritPerFirstYear": 0.0,
+    "earnings10yrMedian": 85139,
+    "medianDebtCompleters": 15000,
+    "medianDebtMonthlyPayment": 159.02,
+    "avgNetPrice": 28786,
+    "endowmentEnd": 1254676903,
+    "undergraduateEnrollment": 3180,
+    "burden": 0.022413,
+    "gap": -3610.38,
+    "endowmentPerStudent": 394552.49
   },
   {
     "schoolId": "colorado-college",
@@ -6838,7 +6889,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 989823357,
     "undergraduateEnrollment": 2014,
     "burden": 0.035611,
-    "gap": -1204.12,
+    "gap": -1074.24,
     "endowmentPerStudent": 491471.38
   },
   {
@@ -6855,7 +6906,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 59770524,
     "undergraduateEnrollment": 8143,
     "burden": 0.06108,
-    "gap": 1447.47,
+    "gap": 1538.72,
     "endowmentPerStudent": 7340.11
   },
   {
@@ -6872,7 +6923,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 27145639,
     "undergraduateEnrollment": 3042,
     "burden": 0.049228,
-    "gap": 461.1,
+    "gap": 571.74,
     "endowmentPerStudent": 8923.62
   },
   {
@@ -6889,7 +6940,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 45356064,
     "undergraduateEnrollment": 1504,
     "burden": 0.056306,
-    "gap": 948.32,
+    "gap": 1033.35,
     "endowmentPerStudent": 30156.96
   },
   {
@@ -6906,7 +6957,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 482358000,
     "undergraduateEnrollment": 1937,
     "burden": 0.039862,
-    "gap": -758.06,
+    "gap": -608.72,
     "endowmentPerStudent": 249023.23
   },
   {
@@ -6923,7 +6974,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 20848338,
     "undergraduateEnrollment": 2071,
     "burden": 0.058656,
-    "gap": 1367.23,
+    "gap": 1468.73,
     "endowmentPerStudent": 10066.8
   },
   {
@@ -6940,7 +6991,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1374503853,
     "undergraduateEnrollment": 1867,
     "burden": 0.029207,
-    "gap": -2527.16,
+    "gap": -2365.06,
     "endowmentPerStudent": 736209.88
   },
   {
@@ -6957,7 +7008,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 37018763,
     "undergraduateEnrollment": 4398,
     "burden": 0.067083,
-    "gap": 2139.24,
+    "gap": 2237.42,
     "endowmentPerStudent": 8417.18
   },
   {
@@ -6974,7 +7025,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 932562848,
     "undergraduateEnrollment": 1905,
     "burden": 0.048703,
-    "gap": 512.49,
+    "gap": 652.93,
     "endowmentPerStudent": 489534.3
   },
   {
@@ -6991,7 +7042,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 105714112,
     "undergraduateEnrollment": 2128,
     "burden": 0.053525,
-    "gap": 1026.16,
+    "gap": 1148.21,
     "endowmentPerStudent": 49677.68
   },
   {
@@ -7008,7 +7059,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 55388935,
     "undergraduateEnrollment": 2561,
     "burden": 0.051479,
-    "gap": 767.49,
+    "gap": 887.62,
     "endowmentPerStudent": 21627.85
   },
   {
@@ -7025,7 +7076,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 31921283,
     "undergraduateEnrollment": 1114,
     "burden": 0.040547,
-    "gap": -742.15,
+    "gap": -573.45,
     "endowmentPerStudent": 28654.65
   },
   {
@@ -7042,7 +7093,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 661012000,
     "undergraduateEnrollment": 5350,
     "burden": 0.04467,
-    "gap": -49.18,
+    "gap": 99.65,
     "endowmentPerStudent": 123553.64
   },
   {
@@ -7059,7 +7110,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 320106984,
     "undergraduateEnrollment": 19896,
     "burden": 0.052484,
-    "gap": 810.43,
+    "gap": 920.24,
     "endowmentPerStudent": 16089.01
   },
   {
@@ -7076,7 +7127,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 20588771,
     "undergraduateEnrollment": 3418,
     "burden": 0.054633,
-    "gap": 1068.38,
+    "gap": 1180.82,
     "endowmentPerStudent": 6023.63
   },
   {
@@ -7093,7 +7144,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 18485220,
     "undergraduateEnrollment": 2172,
     "burden": 0.052043,
-    "gap": 693.01,
+    "gap": 792.8,
     "endowmentPerStudent": 8510.69
   },
   {
@@ -7110,7 +7161,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 48340888,
     "undergraduateEnrollment": 6222,
     "burden": 0.042848,
-    "gap": -245.47,
+    "gap": -130.18,
     "endowmentPerStudent": 7769.35
   },
   {
@@ -7127,7 +7178,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 12396185000,
     "undergraduateEnrollment": 7298,
     "burden": 0.028972,
-    "gap": -2524.83,
+    "gap": -2365.25,
     "endowmentPerStudent": 1698572.9
   },
   {
@@ -7144,7 +7195,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 411058000,
     "undergraduateEnrollment": 5373,
     "burden": 0.037251,
-    "gap": -1353.03,
+    "gap": -1176.22,
     "endowmentPerStudent": 76504.37
   },
   {
@@ -7161,7 +7212,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 50118000,
     "undergraduateEnrollment": 1990,
     "burden": 0.055532,
-    "gap": 1184.75,
+    "gap": 1298.79,
     "endowmentPerStudent": 25184.92
   },
   {
@@ -7178,7 +7229,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 50118000,
     "undergraduateEnrollment": 2627,
     "burden": 0.055532,
-    "gap": 1184.75,
+    "gap": 1298.79,
     "endowmentPerStudent": 19078.04
   },
   {
@@ -7195,7 +7246,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 7579659,
     "undergraduateEnrollment": 9552,
     "burden": 0.026834,
-    "gap": -2491.74,
+    "gap": -2352.79,
     "endowmentPerStudent": 793.52
   },
   {
@@ -7212,7 +7263,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 103836772,
     "undergraduateEnrollment": 13874,
     "burden": 0.041089,
-    "gap": -419.85,
+    "gap": -311.2,
     "endowmentPerStudent": 7484.27
   },
   {
@@ -7229,7 +7280,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 3166993332,
     "undergraduateEnrollment": 18785,
     "burden": 0.026828,
-    "gap": -3671.13,
+    "gap": -3466.48,
     "endowmentPerStudent": 168591.61
   },
   {
@@ -7246,7 +7297,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 425385470,
     "undergraduateEnrollment": 2099,
     "burden": 0.048027,
-    "gap": 424.69,
+    "gap": 567.11,
     "endowmentPerStudent": 202661.01
   },
   {
@@ -7263,7 +7314,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 209408812,
     "undergraduateEnrollment": 18854,
     "burden": 0.055542,
-    "gap": 1161.91,
+    "gap": 1273.66,
     "endowmentPerStudent": 11106.86
   },
   {
@@ -7280,7 +7331,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 53235205000,
     "undergraduateEnrollment": 7601,
     "burden": 0.017493,
-    "gap": -5504.89,
+    "gap": -5302.14,
     "endowmentPerStudent": 7003710.7
   },
   {
@@ -7297,8 +7348,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 454549500,
     "undergraduateEnrollment": 921,
     "burden": 0.022933,
-    "gap": -6015.55,
+    "gap": -5739.38,
     "endowmentPerStudent": 493539.09
+  },
+  {
+    "schoolId": "haverford-college",
+    "schoolName": "Haverford College",
+    "cdsYear": "2025-26",
+    "meritShare": 0.0,
+    "avgMeritGrant": 0.0,
+    "meritPerFirstYear": 0.0,
+    "earnings10yrMedian": 79966,
+    "medianDebtCompleters": 13621,
+    "medianDebtMonthlyPayment": 144.41,
+    "avgNetPrice": 25314,
+    "endowmentEnd": 702245110,
+    "undergraduateEnrollment": 1430,
+    "burden": 0.021671,
+    "gap": -3507.48,
+    "endowmentPerStudent": 491080.5
   },
   {
     "schoolId": "hollins-university",
@@ -7314,7 +7382,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 303839322,
     "undergraduateEnrollment": 665,
     "burden": 0.085711,
-    "gap": 3205.71,
+    "gap": 3285.51,
     "endowmentPerStudent": 456901.24
   },
   {
@@ -7331,7 +7399,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1032497000,
     "undergraduateEnrollment": 10108,
     "burden": 0.049423,
-    "gap": 547.43,
+    "gap": 673.01,
     "endowmentPerStudent": 102146.52
   },
   {
@@ -7348,7 +7416,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 255858735,
     "undergraduateEnrollment": 1582,
     "burden": 0.048467,
-    "gap": 482.06,
+    "gap": 623.19,
     "endowmentPerStudent": 161731.19
   },
   {
@@ -7365,7 +7433,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 98577436,
     "undergraduateEnrollment": 6764,
     "burden": 0.066822,
-    "gap": 2187.33,
+    "gap": 2288.92,
     "endowmentPerStudent": 14573.84
   },
   {
@@ -7382,7 +7450,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 13063073000,
     "undergraduateEnrollment": 5693,
     "burden": 0.014894,
-    "gap": -5180.65,
+    "gap": -5006.31,
     "endowmentPerStudent": 2294585.1
   },
   {
@@ -7399,7 +7467,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 132688469,
     "undergraduateEnrollment": 1191,
     "burden": 0.060348,
-    "gap": 1716.09,
+    "gap": 1829.43,
     "endowmentPerStudent": 111409.29
   },
   {
@@ -7416,7 +7484,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1019065645,
     "undergraduateEnrollment": 15142,
     "burden": 0.047212,
-    "gap": 248.35,
+    "gap": 362.38,
     "endowmentPerStudent": 67300.6
   },
   {
@@ -7433,7 +7501,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 124042454,
     "undergraduateEnrollment": 41254,
     "burden": 0.052683,
-    "gap": 868.36,
+    "gap": 982.97,
     "endowmentPerStudent": 3006.8
   },
   {
@@ -7450,7 +7518,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 202182612,
     "undergraduateEnrollment": 19320,
     "burden": 0.068672,
-    "gap": 2110.87,
+    "gap": 2201.26,
     "endowmentPerStudent": 10464.94
   },
   {
@@ -7467,7 +7535,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 22486515,
     "undergraduateEnrollment": 1309,
     "burden": 0.090701,
-    "gap": 3266.92,
+    "gap": 3339.37,
     "endowmentPerStudent": 17178.39
   },
   {
@@ -7484,7 +7552,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 626603453,
     "undergraduateEnrollment": 1732,
     "burden": 0.032814,
-    "gap": -1720.8,
+    "gap": -1577.77,
     "endowmentPerStudent": 361780.28
   },
   {
@@ -7501,7 +7569,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 45035669,
     "undergraduateEnrollment": 6180,
     "burden": 0.06151,
-    "gap": 1744.08,
+    "gap": 1851.17,
     "endowmentPerStudent": 7287.33
   },
   {
@@ -7518,7 +7586,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1140250000,
     "undergraduateEnrollment": 2757,
     "burden": 0.022268,
-    "gap": -4084.14,
+    "gap": -3902.12,
     "endowmentPerStudent": 413583.61
   },
   {
@@ -7535,7 +7603,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 32936546,
     "undergraduateEnrollment": 2617,
     "burden": 0.075792,
-    "gap": 2614.91,
+    "gap": 2700.98,
     "endowmentPerStudent": 12585.61
   },
   {
@@ -7552,7 +7620,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1872716000,
     "undergraduateEnrollment": 5898,
     "burden": 0.02646,
-    "gap": -3847.95,
+    "gap": -3637.7,
     "endowmentPerStudent": 317517.12
   },
   {
@@ -7569,7 +7637,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 99176307,
     "undergraduateEnrollment": 8312,
     "burden": 0.053866,
-    "gap": 910.24,
+    "gap": 1014.34,
     "endowmentPerStudent": 11931.7
   },
   {
@@ -7586,7 +7654,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1054708355,
     "undergraduateEnrollment": 11737,
     "burden": 0.042964,
-    "gap": -286.97,
+    "gap": -144.53,
     "endowmentPerStudent": 89861.83
   },
   {
@@ -7603,7 +7671,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 191145000,
     "undergraduateEnrollment": 996,
     "burden": 0.061108,
-    "gap": 1778.7,
+    "gap": 1890.64,
     "endowmentPerStudent": 191912.65
   },
   {
@@ -7620,7 +7688,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 160164930,
     "undergraduateEnrollment": 2744,
     "burden": 0.038321,
-    "gap": -1133.88,
+    "gap": -961.99,
     "endowmentPerStudent": 58369.14
   },
   {
@@ -7637,7 +7705,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 91722343,
     "undergraduateEnrollment": 952,
     "burden": 0.060071,
-    "gap": 1692.91,
+    "gap": 1806.78,
     "endowmentPerStudent": 96347.0
   },
   {
@@ -7654,7 +7722,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 468284843,
     "undergraduateEnrollment": 5182,
     "burden": 0.04087,
-    "gap": -632.35,
+    "gap": -477.39,
     "endowmentPerStudent": 90367.59
   },
   {
@@ -7671,7 +7739,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 132098420,
     "undergraduateEnrollment": 2259,
     "burden": 0.060291,
-    "gap": 1623.91,
+    "gap": 1731.57,
     "endowmentPerStudent": 58476.5
   },
   {
@@ -7688,7 +7756,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 28890481,
     "undergraduateEnrollment": 15002,
     "burden": 0.052508,
-    "gap": 767.98,
+    "gap": 871.71,
     "endowmentPerStudent": 1925.78
   },
   {
@@ -7705,7 +7773,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 4986233000,
     "undergraduateEnrollment": 40922,
     "burden": 0.043981,
-    "gap": -135.32,
+    "gap": -1.4,
     "endowmentPerStudent": 121847.25
   },
   {
@@ -7722,7 +7790,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 169088791,
     "undergraduateEnrollment": 5955,
     "burden": 0.040657,
-    "gap": -668.21,
+    "gap": -512.5,
     "endowmentPerStudent": 28394.42
   },
   {
@@ -7739,7 +7807,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1433391648,
     "undergraduateEnrollment": 2738,
     "burden": 0.023102,
-    "gap": -3284.48,
+    "gap": -3132.53,
     "endowmentPerStudent": 523517.77
   },
   {
@@ -7756,7 +7824,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 46859301,
     "undergraduateEnrollment": 5728,
     "burden": 0.054131,
-    "gap": 990.73,
+    "gap": 1100.74,
     "endowmentPerStudent": 8180.74
   },
   {
@@ -7773,7 +7841,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 90335690,
     "undergraduateEnrollment": 2654,
     "burden": 0.038564,
-    "gap": -1127.49,
+    "gap": -950.12,
     "endowmentPerStudent": 34037.56
   },
   {
@@ -7790,7 +7858,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 53877747,
     "undergraduateEnrollment": 3019,
     "burden": 0.057235,
-    "gap": 1024.26,
+    "gap": 1109.12,
     "endowmentPerStudent": 17846.22
   },
   {
@@ -7807,7 +7875,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 282592656,
     "undergraduateEnrollment": 5521,
     "burden": 0.035656,
-    "gap": -1524.18,
+    "gap": -1358.99,
     "endowmentPerStudent": 51185.05
   },
   {
@@ -7824,7 +7892,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 40378556,
     "undergraduateEnrollment": 2219,
     "burden": 0.059565,
-    "gap": 1220.23,
+    "gap": 1305.15,
     "endowmentPerStudent": 18196.74
   },
   {
@@ -7841,7 +7909,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 312991891,
     "undergraduateEnrollment": 14451,
     "burden": 0.053742,
-    "gap": 914.47,
+    "gap": 1020.53,
     "endowmentPerStudent": 21658.84
   },
   {
@@ -7858,7 +7926,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 36754025,
     "undergraduateEnrollment": 2626,
     "burden": 0.052298,
-    "gap": 634.8,
+    "gap": 723.0,
     "endowmentPerStudent": 13996.2
   },
   {
@@ -7875,7 +7943,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 70848750,
     "undergraduateEnrollment": 4578,
     "burden": 0.06553,
-    "gap": 1742.21,
+    "gap": 1828.22,
     "endowmentPerStudent": 15475.92
   },
   {
@@ -7892,7 +7960,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1101548227,
     "undergraduateEnrollment": 2169,
     "burden": 0.049875,
-    "gap": 559.03,
+    "gap": 675.35,
     "endowmentPerStudent": 507859.95
   },
   {
@@ -7909,7 +7977,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 24549502,
     "undergraduateEnrollment": 1533,
     "burden": 0.05941,
-    "gap": 1636.58,
+    "gap": 1751.71,
     "endowmentPerStudent": 16014.03
   },
   {
@@ -7926,7 +7994,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 13151236,
     "undergraduateEnrollment": 1451,
     "burden": 0.031569,
-    "gap": -1212.86,
+    "gap": -1121.39,
     "endowmentPerStudent": 9063.57
   },
   {
@@ -7943,7 +8011,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 201941618,
     "undergraduateEnrollment": 12182,
     "burden": 0.077293,
-    "gap": 2819.66,
+    "gap": 2908.15,
     "endowmentPerStudent": 16577.05
   },
   {
@@ -7960,7 +8028,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 139739937,
     "undergraduateEnrollment": 2428,
     "burden": 0.051842,
-    "gap": 807.71,
+    "gap": 927.43,
     "endowmentPerStudent": 57553.52
   },
   {
@@ -7977,7 +8045,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1711265094,
     "undergraduateEnrollment": 17326,
     "burden": 0.033339,
-    "gap": -2121.57,
+    "gap": -1937.3,
     "endowmentPerStudent": 98768.62
   },
   {
@@ -7994,7 +8062,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 283386638,
     "undergraduateEnrollment": 22903,
     "burden": 0.044446,
-    "gap": -59.76,
+    "gap": 48.54,
     "endowmentPerStudent": 12373.34
   },
   {
@@ -8011,7 +8079,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 19835537,
     "undergraduateEnrollment": 6556,
     "burden": 0.057994,
-    "gap": 1202.36,
+    "gap": 1296.16,
     "endowmentPerStudent": 3025.55
   },
   {
@@ -8028,7 +8096,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 10981265000,
     "undergraduateEnrollment": 9201,
     "burden": 0.021354,
-    "gap": -4153.51,
+    "gap": -3975.56,
     "endowmentPerStudent": 1193486.03
   },
   {
@@ -8045,7 +8113,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 654297483,
     "undergraduateEnrollment": 1877,
     "burden": 0.038526,
-    "gap": -967.06,
+    "gap": -815.82,
     "endowmentPerStudent": 348586.83
   },
   {
@@ -8062,7 +8130,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 319812987,
     "undergraduateEnrollment": 17514,
     "burden": 0.055601,
-    "gap": 1143.41,
+    "gap": 1252.76,
     "endowmentPerStudent": 18260.42
   },
   {
@@ -8079,7 +8147,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1028304309,
     "undergraduateEnrollment": 30743,
     "burden": 0.042177,
-    "gap": -355.74,
+    "gap": -228.28,
     "endowmentPerStudent": 33448.4
   },
   {
@@ -8096,7 +8164,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 32677120,
     "undergraduateEnrollment": 1223,
     "burden": 0.059067,
-    "gap": 1606.95,
+    "gap": 1722.75,
     "endowmentPerStudent": 26718.82
   },
   {
@@ -8113,7 +8181,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 64811367,
     "undergraduateEnrollment": 1516,
     "burden": 0.048766,
-    "gap": 447.74,
+    "gap": 568.38,
     "endowmentPerStudent": 42751.56
   },
   {
@@ -8130,7 +8198,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 4190478239,
     "undergraduateEnrollment": 42284,
     "burden": 0.050138,
-    "gap": 639.78,
+    "gap": 766.09,
     "endowmentPerStudent": 99103.17
   },
   {
@@ -8147,7 +8215,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1319031000,
     "undergraduateEnrollment": 3553,
     "burden": 0.036063,
-    "gap": -1457.48,
+    "gap": -1292.33,
     "endowmentPerStudent": 371244.3
   },
   {
@@ -8164,7 +8232,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 191881805,
     "undergraduateEnrollment": 1227,
     "burden": 0.030656,
-    "gap": -1960.07,
+    "gap": -1821.65,
     "endowmentPerStudent": 156382.89
   },
   {
@@ -8181,7 +8249,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 64289492,
     "undergraduateEnrollment": 2331,
     "burden": 0.074906,
-    "gap": 2694.43,
+    "gap": 2785.74,
     "endowmentPerStudent": 27580.22
   },
   {
@@ -8198,7 +8266,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 290371269,
     "undergraduateEnrollment": 3910,
     "burden": 0.060921,
-    "gap": 1698.09,
+    "gap": 1806.21,
     "endowmentPerStudent": 74263.75
   },
   {
@@ -8215,7 +8283,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 18115236,
     "undergraduateEnrollment": 1010,
     "burden": 0.060618,
-    "gap": 1545.37,
+    "gap": 1645.67,
     "endowmentPerStudent": 17935.88
   },
   {
@@ -8232,7 +8300,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 74282583,
     "undergraduateEnrollment": 6038,
     "burden": 0.056817,
-    "gap": 1247.32,
+    "gap": 1354.33,
     "endowmentPerStudent": 12302.51
   },
   {
@@ -8249,7 +8317,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 431583452,
     "undergraduateEnrollment": 1836,
     "burden": 0.041536,
-    "gap": -454.44,
+    "gap": -321.71,
     "endowmentPerStudent": 235067.24
   },
   {
@@ -8266,7 +8334,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 7931811000,
     "undergraduateEnrollment": 4776,
     "burden": 0.015598,
-    "gap": -5184.54,
+    "gap": -5005.89,
     "endowmentPerStudent": 1660764.45
   },
   {
@@ -8283,7 +8351,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 44324445,
     "undergraduateEnrollment": 840,
     "burden": 0.067454,
-    "gap": 2163.21,
+    "gap": 2260.85,
     "endowmentPerStudent": 52767.2
   },
   {
@@ -8300,7 +8368,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 19710242,
     "undergraduateEnrollment": 2657,
     "burden": 0.060417,
-    "gap": 1307.33,
+    "gap": 1393.29,
     "endowmentPerStudent": 7418.23
   },
   {
@@ -8317,7 +8385,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 109975868,
     "undergraduateEnrollment": 5989,
     "burden": 0.061216,
-    "gap": 1655.07,
+    "gap": 1758.53,
     "endowmentPerStudent": 18362.98
   },
   {
@@ -8334,7 +8402,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 247436298,
     "undergraduateEnrollment": 1916,
     "burden": 0.053426,
-    "gap": 985.05,
+    "gap": 1103.59,
     "endowmentPerStudent": 129142.12
   },
   {
@@ -8351,7 +8419,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 95450950,
     "undergraduateEnrollment": 1092,
     "burden": 0.055858,
-    "gap": 1307.66,
+    "gap": 1429.76,
     "endowmentPerStudent": 87409.29
   },
   {
@@ -8368,7 +8436,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 84407176,
     "undergraduateEnrollment": 6057,
     "burden": 0.043429,
-    "gap": -190.51,
+    "gap": -68.01,
     "endowmentPerStudent": 13935.48
   },
   {
@@ -8385,7 +8453,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 469998443,
     "undergraduateEnrollment": 4206,
     "burden": 0.042429,
-    "gap": -296.06,
+    "gap": -179.63,
     "endowmentPerStudent": 111744.76
   },
   {
@@ -8402,7 +8470,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 207715718,
     "undergraduateEnrollment": 27601,
     "burden": 0.024159,
-    "gap": -3235.92,
+    "gap": -3078.62,
     "endowmentPerStudent": 7525.66
   },
   {
@@ -8419,7 +8487,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 503038388,
     "undergraduateEnrollment": 1113,
     "burden": 0.022149,
-    "gap": -3482.67,
+    "gap": -3328.26,
     "endowmentPerStudent": 451966.21
   },
   {
@@ -8436,7 +8504,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 488201000,
     "undergraduateEnrollment": 2694,
     "burden": 0.035765,
-    "gap": -1259.54,
+    "gap": -1121.41,
     "endowmentPerStudent": 181217.89
   },
   {
@@ -8453,7 +8521,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 120375603,
     "undergraduateEnrollment": 6373,
     "burden": 0.062123,
-    "gap": 1481.06,
+    "gap": 1568.73,
     "endowmentPerStudent": 18888.37
   },
   {
@@ -8470,7 +8538,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 40457103,
     "undergraduateEnrollment": 6295,
     "burden": 0.051427,
-    "gap": 694.56,
+    "gap": 804.16,
     "endowmentPerStudent": 6426.86
   },
   {
@@ -8487,7 +8555,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 31160986,
     "undergraduateEnrollment": 1010,
     "burden": 0.064862,
-    "gap": 2018.59,
+    "gap": 2121.6,
     "endowmentPerStudent": 30852.46
   },
   {
@@ -8504,7 +8572,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 151031721,
     "undergraduateEnrollment": 2565,
     "burden": 0.044184,
-    "gap": -107.99,
+    "gap": 25.31,
     "endowmentPerStudent": 58881.76
   },
   {
@@ -8521,7 +8589,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 45029041,
     "undergraduateEnrollment": 1603,
     "burden": 0.044445,
-    "gap": -66.25,
+    "gap": 53.45,
     "endowmentPerStudent": 28090.48
   },
   {
@@ -8538,7 +8606,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 135381137,
     "undergraduateEnrollment": 8728,
     "burden": 0.06,
-    "gap": 1462.54,
+    "gap": 1561.38,
     "endowmentPerStudent": 15511.13
   },
   {
@@ -8555,7 +8623,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 786159357,
     "undergraduateEnrollment": 18101,
     "burden": 0.031127,
-    "gap": -2031.86,
+    "gap": -1883.5,
     "endowmentPerStudent": 43431.82
   },
   {
@@ -8572,7 +8640,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 41663666,
     "undergraduateEnrollment": 3869,
     "burden": 0.036852,
-    "gap": -1078.5,
+    "gap": -944.45,
     "endowmentPerStudent": 10768.59
   },
   {
@@ -8589,7 +8657,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 47820260,
     "undergraduateEnrollment": 1839,
     "burden": 0.025096,
-    "gap": -2181.61,
+    "gap": -2070.57,
     "endowmentPerStudent": 26003.4
   },
   {
@@ -8606,7 +8674,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 38742427,
     "undergraduateEnrollment": 9912,
     "burden": 0.051852,
-    "gap": 676.74,
+    "gap": 776.89,
     "endowmentPerStudent": 3908.64
   },
   {
@@ -8623,7 +8691,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 139062959,
     "undergraduateEnrollment": 8034,
     "burden": 0.056417,
-    "gap": 1163.09,
+    "gap": 1266.37,
     "endowmentPerStudent": 17309.31
   },
   {
@@ -8640,7 +8708,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 19114830674,
     "undergraduateEnrollment": 59615,
     "burden": 0.031416,
-    "gap": -1925.33,
+    "gap": -1781.76,
     "endowmentPerStudent": 320637.94
   },
   {
@@ -8657,7 +8725,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 2615547000,
     "undergraduateEnrollment": 11026,
     "burden": 0.039975,
-    "gap": -676.31,
+    "gap": -540.06,
     "endowmentPerStudent": 237216.31
   },
   {
@@ -8674,7 +8742,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 411758097,
     "undergraduateEnrollment": 36177,
     "burden": 0.046947,
-    "gap": 217.12,
+    "gap": 330.44,
     "endowmentPerStudent": 11381.76
   },
   {
@@ -8691,7 +8759,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 133171935,
     "undergraduateEnrollment": 8767,
     "burden": 0.043239,
-    "gap": -196.32,
+    "gap": -83.72,
     "endowmentPerStudent": 15190.14
   },
   {
@@ -8708,7 +8776,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 69014000,
     "undergraduateEnrollment": 7105,
     "burden": 0.04034,
-    "gap": -672.15,
+    "gap": -526.14,
     "endowmentPerStudent": 9713.44
   },
   {
@@ -8725,7 +8793,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 437822692,
     "undergraduateEnrollment": 1730,
     "burden": 0.056538,
-    "gap": 1351.34,
+    "gap": 1470.08,
     "endowmentPerStudent": 253076.7
   },
   {
@@ -8742,7 +8810,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1565891763,
     "undergraduateEnrollment": 33227,
     "burden": 0.048873,
-    "gap": 450.04,
+    "gap": 567.97,
     "endowmentPerStudent": 47127.09
   },
   {
@@ -8759,7 +8827,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 215568292,
     "undergraduateEnrollment": 10074,
     "burden": 0.048499,
-    "gap": 351.15,
+    "gap": 453.01,
     "endowmentPerStudent": 21398.48
   },
   {
@@ -8776,7 +8844,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1187949666,
     "undergraduateEnrollment": 30418,
     "burden": 0.043286,
-    "gap": -203.52,
+    "gap": -83.55,
     "endowmentPerStudent": 39054.17
   },
   {
@@ -8793,7 +8861,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 858859362,
     "undergraduateEnrollment": 21751,
     "burden": 0.033564,
-    "gap": -1533.99,
+    "gap": -1398.13,
     "endowmentPerStudent": 39485.97
   },
   {
@@ -8810,7 +8878,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 386783155,
     "undergraduateEnrollment": 21005,
     "burden": 0.044969,
-    "gap": -3.63,
+    "gap": 97.77,
     "endowmentPerStudent": 18413.86
   },
   {
@@ -8827,7 +8895,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 212481451,
     "undergraduateEnrollment": 7440,
     "burden": 0.038213,
-    "gap": -761.54,
+    "gap": -647.93,
     "endowmentPerStudent": 28559.33
   },
   {
@@ -8844,7 +8912,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 150334381,
     "undergraduateEnrollment": 9805,
     "burden": 0.075614,
-    "gap": 2530.01,
+    "gap": 2613.77,
     "endowmentPerStudent": 15332.42
   },
   {
@@ -8861,7 +8929,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 2253994000,
     "undergraduateEnrollment": 7767,
     "burden": 0.041221,
-    "gap": -470.53,
+    "gap": -344.54,
     "endowmentPerStudent": 290201.36
   },
   {
@@ -8878,7 +8946,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 567467656,
     "undergraduateEnrollment": 2046,
     "burden": 0.036379,
-    "gap": -1502.01,
+    "gap": -1325.57,
     "endowmentPerStudent": 277354.67
   },
   {
@@ -8895,7 +8963,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 334053266,
     "undergraduateEnrollment": 9052,
     "burden": 0.063474,
-    "gap": 1691.22,
+    "gap": 1784.01,
     "endowmentPerStudent": 36903.81
   },
   {
@@ -8912,7 +8980,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 858989211,
     "undergraduateEnrollment": 11635,
     "burden": 0.052055,
-    "gap": 754.99,
+    "gap": 863.52,
     "endowmentPerStudent": 73828.04
   },
   {
@@ -8929,7 +8997,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 773217000,
     "undergraduateEnrollment": 32253,
     "burden": 0.020459,
-    "gap": -3899.4,
+    "gap": -3738.42,
     "endowmentPerStudent": 23973.49
   },
   {
@@ -8946,7 +9014,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 899356000,
     "undergraduateEnrollment": 30197,
     "burden": 0.023636,
-    "gap": -3390.43,
+    "gap": -3229.65,
     "endowmentPerStudent": 29782.96
   },
   {
@@ -8963,7 +9031,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1557815000,
     "undergraduateEnrollment": 34948,
     "burden": 0.023215,
-    "gap": -3637.17,
+    "gap": -3468.02,
     "endowmentPerStudent": 44575.23
   },
   {
@@ -8980,7 +9048,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 444044000,
     "undergraduateEnrollment": 23113,
     "burden": 0.023763,
-    "gap": -3127.19,
+    "gap": -2978.01,
     "endowmentPerStudent": 19211.87
   },
   {
@@ -8997,7 +9065,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 277082000,
     "undergraduateEnrollment": 22593,
     "burden": 0.032886,
-    "gap": -1612.27,
+    "gap": -1477.46,
     "endowmentPerStudent": 12264.06
   },
   {
@@ -9014,7 +9082,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 201916665,
     "undergraduateEnrollment": 59146,
     "burden": 0.039687,
-    "gap": -609.37,
+    "gap": -493.26,
     "endowmentPerStudent": 3413.87
   },
   {
@@ -9031,7 +9099,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 9124340657,
     "undergraduateEnrollment": 7569,
     "burden": 0.020768,
-    "gap": -4376.56,
+    "gap": -4193.59,
     "endowmentPerStudent": 1205488.26
   },
   {
@@ -9048,7 +9116,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 600849076,
     "undergraduateEnrollment": 19835,
     "burden": 0.036965,
-    "gap": -1169.17,
+    "gap": -1021.83,
     "endowmentPerStudent": 30292.37
   },
   {
@@ -9065,7 +9133,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 2448293000,
     "undergraduateEnrollment": 35629,
     "burden": 0.026656,
-    "gap": -2581.44,
+    "gap": -2438.88,
     "endowmentPerStudent": 68716.3
   },
   {
@@ -9082,7 +9150,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1313224792,
     "undergraduateEnrollment": 38380,
     "burden": 0.037108,
-    "gap": -968.03,
+    "gap": -843.82,
     "endowmentPerStudent": 34216.38
   },
   {
@@ -9099,7 +9167,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 64433695,
     "undergraduateEnrollment": 12555,
     "burden": 0.044544,
-    "gap": -48.58,
+    "gap": 58.06,
     "endowmentPerStudent": 5132.11
   },
   {
@@ -9116,7 +9184,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 2606081833,
     "undergraduateEnrollment": 36258,
     "burden": 0.030606,
-    "gap": -2293.5,
+    "gap": -2132.1,
     "endowmentPerStudent": 71876.05
   },
   {
@@ -9133,7 +9201,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 479309000,
     "undergraduateEnrollment": 8496,
     "burden": 0.065371,
-    "gap": 1947.1,
+    "gap": 2043.99,
     "endowmentPerStudent": 56415.84
   },
   {
@@ -9150,7 +9218,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1171369937,
     "undergraduateEnrollment": 30760,
     "burden": 0.029172,
-    "gap": -2578.2,
+    "gap": -2413.2,
     "endowmentPerStudent": 38080.95
   },
   {
@@ -9167,7 +9235,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 579704081,
     "undergraduateEnrollment": 23671,
     "burden": 0.040429,
-    "gap": -644.18,
+    "gap": -501.55,
     "endowmentPerStudent": 24490.05
   },
   {
@@ -9184,7 +9252,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 210448000,
     "undergraduateEnrollment": 11434,
     "burden": 0.046484,
-    "gap": 188.5,
+    "gap": 317.69,
     "endowmentPerStudent": 18405.46
   },
   {
@@ -9201,7 +9269,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1589857455,
     "undergraduateEnrollment": 12913,
     "burden": 0.029556,
-    "gap": -2286.98,
+    "gap": -2136.98,
     "endowmentPerStudent": 123120.69
   },
   {
@@ -9218,7 +9286,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 18894762000,
     "undergraduateEnrollment": 34177,
     "burden": 0.029657,
-    "gap": -2522.92,
+    "gap": -2356.35,
     "endowmentPerStudent": 552850.22
   },
   {
@@ -9235,7 +9303,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 24639517,
     "undergraduateEnrollment": 1729,
     "burden": 0.044921,
-    "gap": -9.57,
+    "gap": 106.04,
     "endowmentPerStudent": 14250.73
   },
   {
@@ -9252,7 +9320,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 924527426,
     "undergraduateEnrollment": 21473,
     "burden": 0.049895,
-    "gap": 490.02,
+    "gap": 591.57,
     "endowmentPerStudent": 43055.35
   },
   {
@@ -9269,7 +9337,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 213276450,
     "undergraduateEnrollment": 6817,
     "burden": 0.039998,
-    "gap": -586.83,
+    "gap": -468.07,
     "endowmentPerStudent": 31285.97
   },
   {
@@ -9286,7 +9354,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 127708077,
     "undergraduateEnrollment": 5024,
     "burden": 0.047973,
-    "gap": 309.34,
+    "gap": 414.95,
     "endowmentPerStudent": 25419.6
   },
   {
@@ -9303,7 +9371,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 418236000,
     "undergraduateEnrollment": 24622,
     "burden": 0.044959,
-    "gap": -5.03,
+    "gap": 104.57,
     "endowmentPerStudent": 16986.27
   },
   {
@@ -9320,7 +9388,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 5728314165,
     "undergraduateEnrollment": 20752,
     "burden": 0.024668,
-    "gap": -2885.51,
+    "gap": -2741.73,
     "endowmentPerStudent": 276036.73
   },
   {
@@ -9337,7 +9405,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 344668261,
     "undergraduateEnrollment": 24453,
     "burden": 0.047745,
-    "gap": 308.46,
+    "gap": 422.53,
     "endowmentPerStudent": 14095.13
   },
   {
@@ -9354,7 +9422,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 35896353,
     "undergraduateEnrollment": 5330,
     "burden": 0.073271,
-    "gap": 2411.06,
+    "gap": 2497.5,
     "endowmentPerStudent": 6734.78
   },
   {
@@ -9371,7 +9439,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 85078881,
     "undergraduateEnrollment": 16146,
     "burden": 0.045042,
-    "gap": 3.57,
+    "gap": 103.41,
     "endowmentPerStudent": 5269.35
   },
   {
@@ -9388,7 +9456,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 224410285,
     "undergraduateEnrollment": 7529,
     "burden": 0.045402,
-    "gap": 42.96,
+    "gap": 152.83,
     "endowmentPerStudent": 29806.12
   },
   {
@@ -9405,7 +9473,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 18245327000,
     "undergraduateEnrollment": 8818,
     "burden": 0.024176,
-    "gap": -4092.3,
+    "gap": -3893.21,
     "endowmentPerStudent": 2069100.36
   },
   {
@@ -9422,7 +9490,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1554332000,
     "undergraduateEnrollment": 22734,
     "burden": 0.041625,
-    "gap": -419.28,
+    "gap": -293.58,
     "endowmentPerStudent": 68370.37
   },
   {
@@ -9439,7 +9507,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 5757792571,
     "undergraduateEnrollment": 20370,
     "burden": 0.046655,
-    "gap": 214.4,
+    "gap": 346.07,
     "endowmentPerStudent": 282660.41
   },
   {
@@ -9456,7 +9524,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 471468000,
     "undergraduateEnrollment": 1594,
     "burden": 0.0457,
-    "gap": 95.07,
+    "gap": 233.65,
     "endowmentPerStudent": 295776.66
   },
   {
@@ -9473,7 +9541,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 317751177,
     "undergraduateEnrollment": 13381,
     "burden": 0.040587,
-    "gap": -605.49,
+    "gap": -466.62,
     "endowmentPerStudent": 23746.44
   },
   {
@@ -9490,7 +9558,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 3245089000,
     "undergraduateEnrollment": 2980,
     "burden": 0.03507,
-    "gap": -1487.33,
+    "gap": -1335.63,
     "endowmentPerStudent": 1088956.04
   },
   {
@@ -9507,7 +9575,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 2989014000,
     "undergraduateEnrollment": 6331,
     "burden": 0.033799,
-    "gap": -1740.63,
+    "gap": -1583.23,
     "endowmentPerStudent": 472123.52
   },
   {
@@ -9524,7 +9592,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 714021000,
     "undergraduateEnrollment": 5671,
     "burden": 0.03373,
-    "gap": -1917.07,
+    "gap": -1744.78,
     "endowmentPerStudent": 125907.42
   },
   {
@@ -9541,7 +9609,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 319717006,
     "undergraduateEnrollment": 3554,
     "burden": 0.046012,
-    "gap": 147.66,
+    "gap": 296.32,
     "endowmentPerStudent": 89959.77
   },
   {
@@ -9558,7 +9626,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 317638024,
     "undergraduateEnrollment": 5439,
     "burden": 0.0578,
-    "gap": 1305.58,
+    "gap": 1408.99,
     "endowmentPerStudent": 58400.08
   },
   {
@@ -9575,7 +9643,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 8092846000,
     "undergraduateEnrollment": 20443,
     "burden": 0.024757,
-    "gap": -3680.52,
+    "gap": -3496.33,
     "endowmentPerStudent": 395873.7
   },
   {
@@ -9592,7 +9660,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 160211786,
     "undergraduateEnrollment": 5292,
     "burden": 0.05373,
-    "gap": 816.13,
+    "gap": 910.93,
     "endowmentPerStudent": 30274.34
   },
   {
@@ -9609,8 +9677,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 6177255191,
     "undergraduateEnrollment": 42855,
     "burden": 0.034717,
-    "gap": -1518.83,
+    "gap": -1369.24,
     "endowmentPerStudent": 144143.16
+  },
+  {
+    "schoolId": "university-of-the-incarnate-word",
+    "schoolName": "University of the Incarnate Word",
+    "cdsYear": "2024-25",
+    "meritShare": 0.0,
+    "avgMeritGrant": 0.0,
+    "meritPerFirstYear": 0.0,
+    "earnings10yrMedian": 56733,
+    "medianDebtCompleters": 27000,
+    "medianDebtMonthlyPayment": 286.24,
+    "avgNetPrice": 22775,
+    "endowmentEnd": 187996471,
+    "undergraduateEnrollment": 4440,
+    "burden": 0.060545,
+    "gap": 1845.42,
+    "endowmentPerStudent": 42341.55
   },
   {
     "schoolId": "university-of-the-ozarks",
@@ -9626,7 +9711,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 141527346,
     "undergraduateEnrollment": 767,
     "burden": 0.059835,
-    "gap": 1293.43,
+    "gap": 1381.82,
     "endowmentPerStudent": 184520.66
   },
   {
@@ -9643,7 +9728,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 388044243,
     "undergraduateEnrollment": 9770,
     "burden": 0.055907,
-    "gap": 1084.66,
+    "gap": 1185.48,
     "endowmentPerStudent": 39717.94
   },
   {
@@ -9660,7 +9745,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1650635000,
     "undergraduateEnrollment": 27264,
     "burden": 0.035986,
-    "gap": -1190.56,
+    "gap": -1056.81,
     "endowmentPerStudent": 60542.66
   },
   {
@@ -9677,7 +9762,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 896299000,
     "undergraduateEnrollment": 11743,
     "burden": 0.042666,
-    "gap": -287.16,
+    "gap": -162.76,
     "endowmentPerStudent": 76326.24
   },
   {
@@ -9694,7 +9779,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 5343267349,
     "undergraduateEnrollment": 31942,
     "burden": 0.023695,
-    "gap": -3285.93,
+    "gap": -3129.68,
     "endowmentPerStudent": 167280.3
   },
   {
@@ -9711,7 +9796,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 111318069,
     "undergraduateEnrollment": 5457,
     "burden": 0.023695,
-    "gap": -3285.93,
+    "gap": -3129.68,
     "endowmentPerStudent": 20399.13
   },
   {
@@ -9728,7 +9813,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 111318069,
     "undergraduateEnrollment": 4185,
     "burden": 0.023695,
-    "gap": -3285.93,
+    "gap": -3129.68,
     "endowmentPerStudent": 26599.3
   },
   {
@@ -9745,7 +9830,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 76742889,
     "undergraduateEnrollment": 8895,
     "burden": 0.045423,
-    "gap": 48.11,
+    "gap": 164.72,
     "endowmentPerStudent": 8627.64
   },
   {
@@ -9762,7 +9847,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 63937536,
     "undergraduateEnrollment": 6341,
     "burden": 0.044806,
-    "gap": -20.59,
+    "gap": 84.0,
     "endowmentPerStudent": 10083.19
   },
   {
@@ -9779,7 +9864,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 6101887051,
     "undergraduateEnrollment": 36902,
     "burden": 0.035314,
-    "gap": -1405.3,
+    "gap": -1258.35,
     "endowmentPerStudent": 165353.83
   },
   {
@@ -9796,7 +9881,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 635292413,
     "undergraduateEnrollment": 20272,
     "burden": 0.033771,
-    "gap": -1192.64,
+    "gap": -1085.07,
     "endowmentPerStudent": 31338.42
   },
   {
@@ -9813,7 +9898,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 311933000,
     "undergraduateEnrollment": 2083,
     "burden": 0.054241,
-    "gap": 1146.89,
+    "gap": 1272.72,
     "endowmentPerStudent": 149751.8
   },
   {
@@ -9830,7 +9915,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 10247727490,
     "undergraduateEnrollment": 7208,
     "burden": 0.019451,
-    "gap": -4598.19,
+    "gap": -4415.85,
     "endowmentPerStudent": 1421715.8
   },
   {
@@ -9847,7 +9932,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 2885706877,
     "undergraduateEnrollment": 20753,
     "burden": 0.047056,
-    "gap": 234.26,
+    "gap": 350.0,
     "endowmentPerStudent": 139050.11
   },
   {
@@ -9864,7 +9949,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1939700000,
     "undergraduateEnrollment": 30923,
     "burden": 0.03348,
-    "gap": -1850.24,
+    "gap": -1687.55,
     "endowmentPerStudent": 62726.77
   },
   {
@@ -9881,7 +9966,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 428982792,
     "undergraduateEnrollment": 866,
     "burden": 0.049103,
-    "gap": 563.34,
+    "gap": 702.64,
     "endowmentPerStudent": 495361.19
   },
   {
@@ -9898,7 +9983,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 2043225000,
     "undergraduateEnrollment": 1881,
     "burden": 0.026166,
-    "gap": -3510.09,
+    "gap": -3321.3,
     "endowmentPerStudent": 1086244.02
   },
   {
@@ -9915,7 +10000,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 12006026000,
     "undergraduateEnrollment": 7857,
     "burden": 0.025833,
-    "gap": -3246.9,
+    "gap": -3075.29,
     "endowmentPerStudent": 1528067.46
   },
   {
@@ -9932,7 +10017,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 602398000,
     "undergraduateEnrollment": 15587,
     "burden": 0.050539,
-    "gap": 581.68,
+    "gap": 688.2,
     "endowmentPerStudent": 38647.46
   },
   {
@@ -9949,7 +10034,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 2991224000,
     "undergraduateEnrollment": 2300,
     "burden": 0.015002,
-    "gap": -4999.74,
+    "gap": -4830.88,
     "endowmentPerStudent": 1300532.17
   },
   {
@@ -9966,7 +10051,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1583306000,
     "undergraduateEnrollment": 3067,
     "burden": 0.029267,
-    "gap": -2285.39,
+    "gap": -2138.24,
     "endowmentPerStudent": 516239.32
   },
   {
@@ -9983,7 +10068,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 69403013,
     "undergraduateEnrollment": 14164,
     "burden": 0.048805,
-    "gap": 457.36,
+    "gap": 579.34,
     "endowmentPerStudent": 4899.96
   },
   {
@@ -10000,7 +10085,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 137206458,
     "undergraduateEnrollment": 6917,
     "burden": 0.048891,
-    "gap": 387.41,
+    "gap": 488.45,
     "endowmentPerStudent": 19836.12
   },
   {
@@ -10017,7 +10102,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 60241105,
     "undergraduateEnrollment": 2603,
     "burden": 0.044344,
-    "gap": -95.06,
+    "gap": 50.62,
     "endowmentPerStudent": 23142.95
   },
   {
@@ -10034,7 +10119,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 125985155,
     "undergraduateEnrollment": 13544,
     "burden": 0.037615,
-    "gap": -908.62,
+    "gap": -784.03,
     "endowmentPerStudent": 9301.92
   },
   {
@@ -10051,7 +10136,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 72161507,
     "undergraduateEnrollment": 823,
     "burden": 0.04275,
-    "gap": -293.48,
+    "gap": -161.63,
     "endowmentPerStudent": 87681.05
   },
   {
@@ -10068,7 +10153,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 92162206,
     "undergraduateEnrollment": 1302,
     "burden": 0.045662,
-    "gap": 83.57,
+    "gap": 212.56,
     "endowmentPerStudent": 70785.1
   },
   {
@@ -10085,7 +10170,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 335902000,
     "undergraduateEnrollment": 10780,
     "burden": 0.050609,
-    "gap": 567.42,
+    "gap": 670.04,
     "endowmentPerStudent": 31159.74
   },
   {
@@ -10102,7 +10187,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 67211296,
     "undergraduateEnrollment": 1985,
     "burden": 0.052127,
-    "gap": 888.06,
+    "gap": 1014.42,
     "endowmentPerStudent": 33859.59
   },
   {
@@ -10119,7 +10204,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1454415648,
     "undergraduateEnrollment": 7055,
     "burden": 0.032026,
-    "gap": -1874.48,
+    "gap": -1728.14,
     "endowmentPerStudent": 206153.88
   },
   {
@@ -10136,7 +10221,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 62386000,
     "undergraduateEnrollment": 5144,
     "burden": 0.046731,
-    "gap": 198.53,
+    "gap": 315.08,
     "endowmentPerStudent": 12127.92
   },
   {
@@ -10153,7 +10238,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 153809620,
     "undergraduateEnrollment": 6762,
     "burden": 0.05847,
-    "gap": 1309.76,
+    "gap": 1408.33,
     "endowmentPerStudent": 22746.17
   }
 ];

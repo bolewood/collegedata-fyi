@@ -136,7 +136,7 @@ export function meritShareInRange(share: number): boolean {
 }
 
 export function meritGrantInRange(grant: number): boolean {
-  return grant > MERIT_GRANT_MIN && grant <= MERIT_GRANT_MAX;
+  return grant >= MERIT_GRANT_MIN && grant <= MERIT_GRANT_MAX;
 }
 
 export function computeMeritPerFirstYear(
@@ -144,7 +144,7 @@ export function computeMeritPerFirstYear(
   avgMeritGrant: number,
 ): number {
   if (!meritShareInRange(meritShare) || !meritGrantInRange(avgMeritGrant)) {
-    throw new Error("merit spend requires a 0–1 share and a grant in (0, 80000]");
+    throw new Error("merit spend requires a 0–1 share and a grant in [0, 80000]");
   }
   return meritShare * avgMeritGrant;
 }
@@ -168,13 +168,13 @@ export type BandMark = {
   open: boolean;
 };
 
-export function endowmentTercile(
+export function endowmentBand(
   endowmentPerStudent: number,
-  firstBreak: number,
-  secondBreak: number,
+  lowCut: number,
+  highCut: number,
 ): OrdinalBand {
-  if (endowmentPerStudent >= secondBreak) return 2;
-  if (endowmentPerStudent >= firstBreak) return 1;
+  if (endowmentPerStudent >= highCut) return 2;
+  if (endowmentPerStudent >= lowCut) return 1;
   return 0;
 }
 

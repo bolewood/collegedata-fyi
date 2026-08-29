@@ -7,9 +7,11 @@ aid than it would take to close that gap?
 Open [`/recipes/alignment-gap`](https://www.collegedata.fyi/recipes/alignment-gap)
 for two interactive scatters. Panel A is the CDS join: merit spend per
 first-year (H2A) against the alignment gap (Scorecard), colored by endowment
-per undergraduate (IPEDS). Panel B keeps the endowment scatter so Bard,
+per undergraduate (IPEDS). Schools that award no merit aid sit on a dedicated
+`$0` rail, off the log scale. Panel B keeps the endowment scatter so Bard,
 Grinnell, Bennington, Sarah Lawrence, Oberlin, and Earlham — no usable H2A —
-stay on the page. Hover any dot for the school name.
+stay on the page. Both panels measure the gap against the same 375-school
+median burden. Hover any dot for the school name.
 
 ## What the recipe computes
 
@@ -21,8 +23,8 @@ burden = median_debt_monthly_payment × 12 / earnings_10yr_median
 ```
 
 The **alignment gap** is the completer debt that would have to be shed to reach
-this sample's median burden at that school's own earnings, expressed per year
-of enrollment:
+the 375-school corpus median burden at that school's own earnings, expressed
+per year of enrollment:
 
 ```text
 gap = median_debt_completers × (1 − median_burden / burden) / 4
@@ -35,8 +37,10 @@ students who did not demonstrate need:
 merit_per_fy = non_need_aid_share_first_year_ft × avg_non_need_grant_first_year_ft
 ```
 
-The diagonal on Panel A is `merit_per_fy = gap`. Each panel uses the median
-burden of the sample it plots.
+The diagonal on Panel A is `merit_per_fy = gap`. A published `$0` grant is
+kept and plotted on the left rail. The merit sample's own median burden is
+disclosed in the methodology so a school that appears in both figures is not
+two numbers.
 
 ## Join
 
@@ -45,19 +49,25 @@ view), then attaches `scorecard_summary.endowment_end` and
 `school_browser_rows.undergrad_enrollment_scorecard`. Guards, required:
 
 1. Drop `non_need_aid_share_first_year_ft` outside `[0, 1]`.
-2. Drop `avg_non_need_grant_first_year_ft` outside `(0, 80000]`.
+2. Drop `avg_non_need_grant_first_year_ft` outside `[0, 80000]`. A published
+   `$0` grant is kept.
 3. Require `merit_profile_quality` in `strong` or `partial`.
 4. Require Scorecard earnings, debt, net price, and endowment.
 
 `merit_profile_quality` is a field-count flag. It does not catch range errors.
 The 2026-08-29 build dropped three shares outside 0–100% (Cal State Chico at
-12,087%, Dickinson at 104.5%, Illinois Chicago at 153%) even though all three
-were flagged `strong`.
+12,087%, Dickinson at 104.5%, Illinois Chicago at 153%) and one average grant
+above $80,000 (Duke at $85,600) even though all four were flagged `strong`.
 
-Panel B is unchanged from the endowment recipe: Scorecard 2022-23 debt,
-earnings, net price, endowment, and instructional expenditure, joined to
-directory undergraduate enrollment and a 2024-25 or 2025-26 SAT composite
-midpoint (C9).
+Panel B is the endowment recipe: Scorecard 2022-23 debt, earnings, net price,
+endowment, and instructional expenditure, joined to directory undergraduate
+enrollment (`institution_directory.undergraduate_enrollment`, Scorecard
+`enrollment` as fallback) and a 2024-25 or 2025-26 SAT composite midpoint
+(C9). Panel A is smaller because it requires usable H2A, not because Panel B
+is a superset of it.
+
+The Panel B `scorecard_summary` query matches more than 2,000 rows. PostgREST
+caps an unpaginated request at 1,000, so the recipe curl sends `limit=5000`.
 
 Rebuild:
 
@@ -69,9 +79,11 @@ python3 tools/scorecard/build_alignment_gap_recipe.py
 
 - **Already spending it** — positive gap, merit spend ≥ gap.
 - **Genuinely constrained** — positive gap, merit spend below it. Control
-  group, not a target list.
-- **No gap to close** — burden at or below the merit sample median.
+  group, not a target list. Includes schools that award $0 merit aid and
+  still have a gap.
+- **Gap ≤ 0** — burden at or below the corpus median.
 - Panel B quadrants split the same gap against endowment per undergraduate.
+  “High endowment” on both panels means at or above the 375-school median.
 
 CDS H2A excludes some mixed-need merit awards and covers first-year full-time
 students only, so it describes the recruiting discount, not the whole aid
