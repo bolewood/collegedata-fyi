@@ -3,33 +3,25 @@
 import { useMemo, useState } from "react";
 import { formatRecipeShare } from "@/lib/format";
 import {
+  endowmentTercile,
   formatEndowmentPerStudent,
   formatGapUsd,
-  formatInstructionShare,
-  quadrantFor,
+  formatUsd,
+  meritRegion,
 } from "@/lib/alignment-gap-recipe-analysis";
 import {
-  ALIGNMENT_GAP_META,
-  ALIGNMENT_GAP_SCHOOLS,
+  ALIGNMENT_GAP_MERIT_META,
+  ALIGNMENT_GAP_MERIT_SCHOOLS,
 } from "@/lib/alignment-gap-recipe-data";
 
 const LABEL_IDS = new Set([
-  "hollins-university",
-  "bennington-college",
-  "sarah-lawrence-college",
-  "bard-college",
+  "quincy-university",
+  "depauw-university",
+  "beloit-college",
   "pratt-institute-main",
-  "mcpherson-college",
-  "catawba-college",
-  "mount-holyoke-college",
-  "grinnell-college",
-  "bentley-university",
-  "santa-clara-university",
-  "babson-college",
-  "wellesley-college",
-  "princeton",
-  "stanford",
-  "earlham-college",
+  "kentucky-state-university",
+  "hollins-university",
+  "north-carolina-a-and-t-state-university",
 ]);
 
 const W = 920;
@@ -37,16 +29,17 @@ const H = 560;
 const M = { l: 72, r: 28, t: 36, b: 56 };
 const IW = W - M.l - M.r;
 const IH = H - M.t - M.b;
-const EPS_MIN = 2000;
-const EPS_MAX = 8_000_000;
+const MERIT_MIN = 50;
+const MERIT_MAX = 40_000;
 const GAP_MIN = -8000;
 const GAP_MAX = 4000;
+const TERCILES = ALIGNMENT_GAP_MERIT_META.endowmentTerciles;
 
-function logX(eps: number): number {
-  const clamped = Math.min(EPS_MAX, Math.max(EPS_MIN, eps));
+function logX(merit: number): number {
+  const clamped = Math.min(MERIT_MAX, Math.max(MERIT_MIN, merit));
   const t =
-    (Math.log10(clamped) - Math.log10(EPS_MIN)) /
-    (Math.log10(EPS_MAX) - Math.log10(EPS_MIN));
+    (Math.log10(clamped) - Math.log10(MERIT_MIN)) /
+    (Math.log10(MERIT_MAX) - Math.log10(MERIT_MIN));
   return M.l + t * IW;
 }
 
@@ -55,9 +48,10 @@ function yGap(gap: number): number {
   return M.t + (1 - t) * IH;
 }
 
-function shareColor(share: number): string {
-  if (share >= 0.9) return "var(--forest-ink)";
-  if (share >= 0.55) return "var(--forest)";
+function tercileColor(endowmentPerStudent: number): string {
+  const band = endowmentTercile(endowmentPerStudent, TERCILES[0], TERCILES[1]);
+  if (band === 2) return "var(--forest-ink)";
+  if (band === 1) return "var(--forest)";
   return "var(--forest-2)";
 }
 
@@ -66,12 +60,14 @@ function shortName(name: string): string {
     .replace(" Institute of Technology", "")
     .replace(" Institute-Main", "")
     .replace(" Institute", "")
+    .replace(" State University", "")
     .replace(/ \(.*\)$/, "")
+    .replace("North Carolina A & T", "NC A&T")
     .replace(/ University$/, "")
     .replace(/ College$/, "");
 }
 
-type Point = (typeof ALIGNMENT_GAP_SCHOOLS)[number] & {
+type Point = (typeof ALIGNMENT_GAP_MERIT_SCHOOLS)[number] & {
   cx: number;
   cy: number;
 };
@@ -89,11 +85,10 @@ function svgCoords(
   return { x: loc.x, y: loc.y };
 }
 
-const QUADRANT_LABEL: Record<string, string> = {
-  capacity: "capacity exists",
-  constrained: "constrained",
-  absorbs: "endowment absorbs it",
-  earnings: "earnings do the work",
+const REGION_LABEL: Record<string, string> = {
+  covers: "already spending it",
+  constrained: "genuinely constrained",
+  none: "no gap to close",
 };
 
 function hitRadiusInSvg(svg: SVGSVGElement): number {
@@ -122,15 +117,30 @@ function nearestPoint(
   return best;
 }
 
-export function AlignmentGapChart() {
+function diagonalPoints(): string {
+  const pts: string[] = [];
+  const steps = 48;
+  for (let i = 0; i <= steps; i += 1) {
+    const t = i / steps;
+    const merit = MERIT_MIN * (MERIT_MAX / MERIT_MIN) ** t;
+    if (merit > GAP_MAX) {
+      pts.push(`${logX(GAP_MAX)},${yGap(GAP_MAX)}`);
+      break;
+    }
+    pts.push(`${logX(merit)},${yGap(merit)}`);
+  }
+  return pts.join(" ");
+}
+
+export function AlignmentGapMeritChart() {
   const [hoverId, setHoverId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
 
   const pts: Point[] = useMemo(
     () =>
-      ALIGNMENT_GAP_SCHOOLS.map((row) => ({
+      ALIGNMENT_GAP_MERIT_SCHOOLS.map((row) => ({
         ...row,
-        cx: logX(row.endowmentPerStudent),
+        cx: logX(row.meritPerFirstYear),
         cy: yGap(row.gap),
       })),
     [],
@@ -146,8 +156,8 @@ export function AlignmentGapChart() {
     : null;
   const hover = searched ?? (hoverId ? pts.find((pt) => pt.schoolId === hoverId) ?? null : null);
 
-  const medianX = logX(ALIGNMENT_GAP_META.medianEndowmentPerStudent);
   const zeroY = yGap(0);
+  const diagonal = useMemo(() => diagonalPoints(), []);
 
   const pickFromPointer = (
     event: React.MouseEvent<SVGSVGElement> | React.PointerEvent<SVGSVGElement>,
@@ -166,7 +176,7 @@ export function AlignmentGapChart() {
   return (
     <div
       className="cd-card"
-      data-testid="alignment-gap-endowment-chart"
+      data-testid="alignment-gap-merit-chart"
       style={{ padding: 24, position: "relative" }}
     >
       <div
@@ -180,23 +190,24 @@ export function AlignmentGapChart() {
         }}
       >
         <div>
-          <div className="meta">Fig. 2 · Could they afford to?</div>
+          <div className="meta">Fig. 1 · Are they already spending it?</div>
           <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--ink-2)", maxWidth: 640, lineHeight: 1.5 }}>
             Vertical axis: alignment gap, dollars per year — College Scorecard.
-            Horizontal axis: endowment per undergraduate, log scale — IPEDS.
-            Color: instructional spending as a share of net price. Dots above the
-            brick line have a heavier graduate debt burden than this 375-school
-            sample&apos;s median. Hover any dot — every school is named.
+            Horizontal axis: non-need merit spend per first-year student, log
+            scale — CDS H2A. Color: endowment per undergraduate — IPEDS. The
+            brick diagonal is where merit spend equals the annual gap.
+            Everything to its right is already spending more than it would take
+            to close it. Hover any dot — every school is named.
           </p>
         </div>
         <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: "var(--ink-3)" }}>
           Find a school
           <input
-            list="alignment-gap-schools"
+            list="alignment-gap-merit-schools"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Hollins, Stanford…"
-            aria-label="Find a school in the endowment join"
+            placeholder="Quincy, Hollins…"
+            aria-label="Find a school in the merit join"
             style={{
               border: "1px solid var(--rule-strong)",
               background: "var(--paper)",
@@ -206,8 +217,8 @@ export function AlignmentGapChart() {
               minWidth: 220,
             }}
           />
-          <datalist id="alignment-gap-schools">
-            {ALIGNMENT_GAP_SCHOOLS.map((row) => (
+          <datalist id="alignment-gap-merit-schools">
+            {ALIGNMENT_GAP_MERIT_SCHOOLS.map((row) => (
               <option key={row.schoolId} value={row.schoolName} />
             ))}
           </datalist>
@@ -221,14 +232,19 @@ export function AlignmentGapChart() {
         viewBox={`0 0 ${W} ${H}`}
         style={{ display: "block", margin: "0 auto", maxWidth: "100%", height: "auto" }}
         role="img"
-        aria-label="Scatter plot of alignment gap against endowment per undergraduate"
+        aria-label="Scatter plot of alignment gap against merit spend per first-year student"
         onMouseMove={pickFromPointer}
         onPointerMove={pickFromPointer}
         onMouseLeave={() => setHoverId(null)}
         onPointerLeave={() => setHoverId(null)}
       >
-        <line x1={M.l} x2={W - M.r} y1={zeroY} y2={zeroY} stroke="var(--brick)" strokeWidth={1.25} />
-        <line x1={medianX} x2={medianX} y1={M.t} y2={H - M.b} stroke="var(--rule-strong)" />
+        <line x1={M.l} x2={W - M.r} y1={zeroY} y2={zeroY} stroke="var(--rule-strong)" />
+        <polyline
+          points={diagonal}
+          fill="none"
+          stroke="var(--brick)"
+          strokeWidth={1.5}
+        />
         {[-6000, -3000, 0, 3000].map((tick) => (
           <g key={`y${tick}`}>
             <text
@@ -243,7 +259,7 @@ export function AlignmentGapChart() {
             </text>
           </g>
         ))}
-        {[2000, 10_000, 50_000, 250_000, 1_000_000, 5_000_000].map((tick) => (
+        {[50, 200, 1000, 5000, 20_000].map((tick) => (
           <text
             key={`x${tick}`}
             x={logX(tick)}
@@ -253,11 +269,11 @@ export function AlignmentGapChart() {
             fontSize="11"
             fill="var(--chart-axis)"
           >
-            {formatEndowmentPerStudent(tick)}
+            {formatUsd(tick)}
           </text>
         ))}
         <text x={M.l} y={22} fontFamily="var(--mono)" fontSize="10" fill="var(--ink-3)" letterSpacing="0.06em">
-          CONSTRAINED · {ALIGNMENT_GAP_META.quadrants.constrained}
+          GENUINELY CONSTRAINED · {ALIGNMENT_GAP_MERIT_META.regions.constrained}
         </text>
         <text
           x={W - M.r}
@@ -268,31 +284,28 @@ export function AlignmentGapChart() {
           fill="var(--ink-3)"
           letterSpacing="0.06em"
         >
-          CAPACITY EXISTS · {ALIGNMENT_GAP_META.quadrants.capacity}
-        </text>
-        <text x={M.l} y={H - 8} fontFamily="var(--mono)" fontSize="10" fill="var(--ink-3)" letterSpacing="0.06em">
-          EARNINGS DO THE WORK · {ALIGNMENT_GAP_META.quadrants.earnings}
+          ALREADY SPENDING IT · {ALIGNMENT_GAP_MERIT_META.regions.covers}
         </text>
         <text
-          x={W - M.r}
+          x={M.l + IW / 2}
           y={H - 8}
-          textAnchor="end"
+          textAnchor="middle"
           fontFamily="var(--mono)"
           fontSize="10"
           fill="var(--ink-3)"
           letterSpacing="0.06em"
         >
-          ENDOWMENT ABSORBS IT · {ALIGNMENT_GAP_META.quadrants.absorbs}
+          NO GAP TO CLOSE · {ALIGNMENT_GAP_MERIT_META.regions.none}
         </text>
         <text
-          x={W - M.r}
-          y={zeroY - 6}
-          textAnchor="end"
+          x={logX(1400)}
+          y={yGap(1400) - 8}
+          textAnchor="middle"
           fontFamily="var(--mono)"
           fontSize="10"
           fill="var(--brick)"
         >
-          median burden {formatRecipeShare(ALIGNMENT_GAP_META.medianBurden, 2)}
+          merit spend = annual gap
         </text>
         {pts.map((pt) => {
           const active = hover?.schoolId === pt.schoolId;
@@ -311,7 +324,7 @@ export function AlignmentGapChart() {
                 cx={pt.cx}
                 cy={pt.cy}
                 r={active ? 6.5 : 4}
-                fill={shareColor(pt.instructionShare)}
+                fill={tercileColor(pt.endowmentPerStudent)}
                 fillOpacity={active ? 1 : 0.82}
                 stroke={active ? "var(--ink)" : "none"}
                 strokeWidth={active ? 1.25 : 0}
@@ -343,7 +356,7 @@ export function AlignmentGapChart() {
           fill="var(--chart-axis)"
           letterSpacing="0.08em"
         >
-          ALIGNMENT GAP · $ PER YEAR
+          ALIGNMENT GAP · $ PER YEAR · SCORECARD
         </text>
         <text
           x={M.l + IW / 2}
@@ -354,13 +367,13 @@ export function AlignmentGapChart() {
           fill="var(--chart-axis)"
           letterSpacing="0.08em"
         >
-          ENDOWMENT PER UNDERGRADUATE · LOG SCALE
+          MERIT SPEND PER FIRST-YEAR · LOG SCALE · CDS H2A
         </text>
       </svg>
 
       {hover && (
         <div
-          data-testid="alignment-gap-tooltip"
+          data-testid="alignment-gap-merit-tooltip"
           style={{
             position: "absolute",
             left: `${Math.min(((hover.cx + 12) / W) * 100, 72)}%`,
@@ -379,18 +392,14 @@ export function AlignmentGapChart() {
             {hover.schoolName}
           </div>
           <div style={{ color: "var(--paper-3)", marginTop: 2 }}>
-            CDS {hover.cdsYear} ·{" "}
-            {QUADRANT_LABEL[
-              quadrantFor(
-                hover.gap,
-                hover.endowmentPerStudent,
-                ALIGNMENT_GAP_META.medianEndowmentPerStudent,
-              )
-            ]}
+            CDS {hover.cdsYear} · {REGION_LABEL[meritRegion(hover.gap, hover.meritPerFirstYear)]}
           </div>
           <div style={{ marginTop: 6 }}>Gap {formatGapUsd(hover.gap)}/yr</div>
+          <div>Merit spend {formatUsd(hover.meritPerFirstYear)} / first-year</div>
+          <div>
+            {formatRecipeShare(hover.meritShare, 0)} receive {formatUsd(hover.avgMeritGrant)}
+          </div>
           <div>Endowment {formatEndowmentPerStudent(hover.endowmentPerStudent)}/student</div>
-          <div>Instruction {formatInstructionShare(hover.instructionShare)}</div>
           <div>Burden {formatRecipeShare(hover.burden, 1)}</div>
         </div>
       )}
@@ -408,11 +417,17 @@ export function AlignmentGapChart() {
           letterSpacing: "0.04em",
         }}
       >
-        <span>INSTRUCTION / NET PRICE</span>
-        <span style={{ color: "var(--forest-2)" }}>■ under 55%</span>
-        <span style={{ color: "var(--forest)" }}>■ 55–90%</span>
-        <span style={{ color: "var(--forest-ink)" }}>■ 90% and over</span>
-        <span style={{ color: "var(--brick)" }}>— median burden</span>
+        <span>ENDOWMENT / UNDERGRADUATE</span>
+        <span style={{ color: "var(--forest-2)" }}>
+          ■ under {formatEndowmentPerStudent(TERCILES[0])}
+        </span>
+        <span style={{ color: "var(--forest)" }}>
+          ■ {formatEndowmentPerStudent(TERCILES[0])}–{formatEndowmentPerStudent(TERCILES[1])}
+        </span>
+        <span style={{ color: "var(--forest-ink)" }}>
+          ■ {formatEndowmentPerStudent(TERCILES[1])} and over
+        </span>
+        <span style={{ color: "var(--brick)" }}>— merit = gap</span>
       </div>
     </div>
   );

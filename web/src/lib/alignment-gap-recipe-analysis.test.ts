@@ -4,6 +4,7 @@ import {
   computeEndowmentPerStudent,
   computeGap,
   computeInstructionShare,
+  computeMeritPerFirstYear,
   quadrantFor,
 } from "./alignment-gap-recipe-analysis";
 
@@ -23,5 +24,9 @@ describe("alignment-gap arithmetic", () => {
     expect(quadrantFor(3190, 63_000, 64_000)).toBe("constrained");
     expect(quadrantFor(-7727, 4_982_000, 64_000)).toBe("absorbs");
     expect(quadrantFor(-5714, 50_000, 64_000)).toBe("earnings");
+  });
+
+  it("computes merit spend as share times average grant", () => {
+    expect(computeMeritPerFirstYear(0.29, 45_857)).toBeCloseTo(13_298.53, 1);
   });
 });

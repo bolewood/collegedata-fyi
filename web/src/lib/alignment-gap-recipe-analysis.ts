@@ -16,6 +16,31 @@ export type AlignmentGapRow = {
   instructionShare: number;
 };
 
+export type AlignmentGapMeritRow = {
+  schoolId: string;
+  schoolName: string;
+  cdsYear: string;
+  meritShare: number;
+  avgMeritGrant: number;
+  meritPerFirstYear: number;
+  earnings10yrMedian: number;
+  medianDebtCompleters: number;
+  medianDebtMonthlyPayment: number;
+  avgNetPrice: number;
+  endowmentEnd: number;
+  undergraduateEnrollment: number;
+  burden: number;
+  gap: number;
+  endowmentPerStudent: number;
+};
+
+export type MeritRegion = "covers" | "constrained" | "none";
+
+export const MERIT_SHARE_MIN = 0;
+export const MERIT_SHARE_MAX = 1;
+export const MERIT_GRANT_MIN = 0;
+export const MERIT_GRANT_MAX = 80_000;
+
 export type AlignmentGapQuadrant =
   | "capacity"
   | "constrained"
@@ -104,4 +129,48 @@ export function formatEndowmentPerStudent(value: number): string {
 export function formatInstructionShare(share: number): string {
   if (share >= 2) return `${share.toFixed(1)}× net price`;
   return `${Math.round(share * 100)}% of net price`;
+}
+
+export function meritShareInRange(share: number): boolean {
+  return share >= MERIT_SHARE_MIN && share <= MERIT_SHARE_MAX;
+}
+
+export function meritGrantInRange(grant: number): boolean {
+  return grant > MERIT_GRANT_MIN && grant <= MERIT_GRANT_MAX;
+}
+
+export function computeMeritPerFirstYear(
+  meritShare: number,
+  avgMeritGrant: number,
+): number {
+  if (!meritShareInRange(meritShare) || !meritGrantInRange(avgMeritGrant)) {
+    throw new Error("merit spend requires a 0–1 share and a grant in (0, 80000]");
+  }
+  return meritShare * avgMeritGrant;
+}
+
+export function coversGap(meritPerFirstYear: number, gap: number): boolean {
+  return meritPerFirstYear >= gap;
+}
+
+export function meritRegion(
+  gap: number,
+  meritPerFirstYear: number,
+): MeritRegion {
+  if (gap <= 0) return "none";
+  return coversGap(meritPerFirstYear, gap) ? "covers" : "constrained";
+}
+
+export function endowmentTercile(
+  endowmentPerStudent: number,
+  firstBreak: number,
+  secondBreak: number,
+): 0 | 1 | 2 {
+  if (endowmentPerStudent >= secondBreak) return 2;
+  if (endowmentPerStudent >= firstBreak) return 1;
+  return 0;
+}
+
+export function formatUsd(value: number): string {
+  return `$${Math.round(value).toLocaleString("en-US")}`;
 }
