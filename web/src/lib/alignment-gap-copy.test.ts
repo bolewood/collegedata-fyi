@@ -102,7 +102,9 @@ describe("alignment-gap recipe", () => {
     expect(page).toContain("The vertical axis is");
     expect(page).toContain("College Scorecard");
     expect(page).toContain("excludes some mixed-need merit awards");
-    expect(page).toContain("limit=5000");
+    expect(page).toContain("limit=1000&offset=1000");
+    expect(page).toContain("limit=1000&offset=2000");
+    expect(page).toContain("Content-Range: 0-999/2158");
     expect(page).toContain("[0, $80,000]");
     expect(page).toContain("institution_directory.undergraduate_enrollment");
     expect(page).toContain("undergrad_enrollment_scorecard");

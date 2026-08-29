@@ -66,8 +66,11 @@ enrollment (`institution_directory.undergraduate_enrollment`, Scorecard
 (C9). Panel A is smaller because it requires usable H2A, not because Panel B
 is a superset of it.
 
-The Panel B `scorecard_summary` query matches more than 2,000 rows. PostgREST
-caps an unpaginated request at 1,000, so the recipe curl sends `limit=5000`.
+The Panel B `scorecard_summary` query matches 2,158 rows. PostgREST
+`max-rows` is 1,000: `limit=5000` and `Range: 0-4999` both return HTTP 206
+with `Content-Range: 0-999/2158` and no error body. Page with
+`limit=1000&offset=0`, then `offset=1000`, then `offset=2000` (or `Range:
+0-999`, `1000-1999`, `2000-2999`) until a page is short.
 
 Rebuild:
 

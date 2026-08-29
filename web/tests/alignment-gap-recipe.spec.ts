@@ -57,10 +57,14 @@ test("alignment-gap panels share one gap number for Pratt", async ({ page }) => 
   await expect(endowmentTooltip).toContainText(`Gap ${meritGap}`);
 });
 
-test("alignment-gap reproducibility curl does not silently truncate Panel B", async ({ page }) => {
+test("alignment-gap reproducibility curl pages Panel B past the 1,000-row cap", async ({ page }) => {
   await page.goto("/recipes/alignment-gap");
-  await expect(page.locator("pre")).toContainText("limit=5000");
-  await expect(page.locator("pre")).toContainText("silently truncates");
+  const recipe = page.locator("pre");
+  await expect(recipe).toContainText("offset=0");
+  await expect(recipe).toContainText("offset=1000");
+  await expect(recipe).toContainText("offset=2000");
+  await expect(recipe).toContainText("Content-Range: 0-999/2158");
+  await expect(recipe).toContainText("limit=5000 and Range: 0-4999 are both capped");
 });
 
 test("alignment-gap endowment panel still names Bard and Grinnell", async ({ page }) => {

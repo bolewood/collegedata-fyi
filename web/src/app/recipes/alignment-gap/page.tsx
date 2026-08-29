@@ -497,14 +497,22 @@ export default function AlignmentGapPage() {
             overflowX: "auto",
           }}
         >
-{`# Panel A — CDS H2A merit × Scorecard (488 rows)
+{`# Panel A — CDS H2A merit × Scorecard (488 rows; under the 1,000-row cap)
 curl 'https://api.collegedata.fyi/rest/v1/school_merit_profile?select=school_id,school_name,canonical_year,merit_profile_quality,non_need_aid_share_first_year_ft,avg_non_need_grant_first_year_ft,avg_need_grant_first_year_ft,earnings_10yr_median,median_debt_completers,median_debt_monthly_payment,avg_net_price&limit=1000' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'
 
-# Panel B — Scorecard + IPEDS endowment (2,158 matching rows; PostgREST
-# caps an unpaginated request at 1,000 — without limit= the join silently truncates)
-curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,endowment_end,instructional_expenditure_fte,enrollment&earnings_10yr_median=gt.0&median_debt_monthly_payment=gt.0&avg_net_price=gt.0&endowment_end=gt.0&limit=5000' \\
+# Panel B — Scorecard + IPEDS endowment (2,158 matching rows)
+# PostgREST max-rows is 1,000. limit=5000 and Range: 0-4999 are both capped
+# at 1,000 with HTTP 206 / Content-Range: 0-999/2158 — no error body.
+# Page with offset (or Range: 0-999, then 1000-1999, then 2000-2999):
+curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,endowment_end,instructional_expenditure_fte,enrollment&earnings_10yr_median=gt.0&median_debt_monthly_payment=gt.0&avg_net_price=gt.0&endowment_end=gt.0&limit=1000&offset=0' \\
+  -H 'apikey: <anon key>' \\
+  -H 'Authorization: Bearer <anon key>'
+curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,endowment_end,instructional_expenditure_fte,enrollment&earnings_10yr_median=gt.0&median_debt_monthly_payment=gt.0&avg_net_price=gt.0&endowment_end=gt.0&limit=1000&offset=1000' \\
+  -H 'apikey: <anon key>' \\
+  -H 'Authorization: Bearer <anon key>'
+curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,endowment_end,instructional_expenditure_fte,enrollment&earnings_10yr_median=gt.0&median_debt_monthly_payment=gt.0&avg_net_price=gt.0&endowment_end=gt.0&limit=1000&offset=2000' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}
         </pre>
