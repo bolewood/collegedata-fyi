@@ -6171,6 +6171,42 @@ _RESOLVERS = [
 ]
 
 
+_H2A_GRANT_MAX = 80_000
+
+
+def _field_float(rec: dict | None) -> float | None:
+    if not rec:
+        return None
+    raw = rec.get("value")
+    if raw is None or raw == "":
+        return None
+    try:
+        return float(str(raw).replace(",", "").replace("$", "").strip())
+    except (TypeError, ValueError):
+        return None
+
+
+def apply_h2a_range_guards(values: dict[str, dict]) -> None:
+    """Withhold first-year H2A fields that cannot be a 0–1 share or a real award.
+
+    `merit_profile_quality` is a field-count flag. It will label a 12,087%
+    H.2A01/H.201 share as strong. Drop the impossible count or grant here so
+    the derived share never ships from the cleaner.
+    """
+    first_year = _field_float(values.get("H.201"))
+    recipients = _field_float(values.get("H.2A01"))
+    grant = _field_float(values.get("H.2A02"))
+    if (
+        first_year is not None
+        and first_year > 0
+        and recipients is not None
+        and not (0 <= recipients / first_year <= 1)
+    ):
+        values.pop("H.2A01", None)
+    if grant is not None and (grant < 0 or grant > _H2A_GRANT_MAX):
+        values.pop("H.2A02", None)
+
+
 def clean(
     markdown: str,
     schema: SchemaIndex | None = None,
@@ -6379,6 +6415,7 @@ def clean(
             elif qn not in values:
                 values[qn] = rec
 
+    apply_h2a_range_guards(values)
     return values
 
 

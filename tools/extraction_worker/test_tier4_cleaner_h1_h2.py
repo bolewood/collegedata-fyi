@@ -117,6 +117,38 @@ Which needs-analysis methodology does your institution use in awarding instituti
         self.assertEqual(values["H.2A11"]["value"], "3")
         self.assertEqual(values["H.2A12"]["value"], "8186")
 
+    def test_h2a_share_above_one_withholds_recipient_count(self):
+        markdown = """
+|    | Number of Enrolled Students Awarded Aid | First-time Full- time First-year Students | Full-time Undergrad (Incl. First-Year) | Less Than Full-time Undergrad |
+|----|-----------------------------------------|--------------------------------------------|-----------------------------------------|--------------------------------|
+| A  | Number of degree-seeking undergraduate students (CDS Item B1 if reporting on Fall 2024 cohort) | 2 | 7534 | 1583 |
+
+|    | Number of Enrolled Students Awarded Non-need- based Scholarships and Grants | First-time Full-time First-year Students | Full-time Undergrad (Incl. First-year.) | Less Than Full-time Undergrad |
+|----|--------------------------------------------------------------------------------|------------------------------------------|------------------------------------------|--------------------------------|
+| N  | Number of students in line a who had no financial need and who were awarded institutional non-need-based scholarship or grant aid | 260 | 75 | 0 |
+| O  | Average dollar amount of institutional non-need-based scholarship and grant aid awarded to students in line n | $ 3,609 | $ 1,556 | $ 0 |
+"""
+
+        values = clean(markdown)
+
+        self.assertEqual(values["H.201"]["value"], "2")
+        self.assertNotIn("H.2A01", values)
+        self.assertEqual(values["H.2A02"]["value"], "3609")
+
+    def test_h2a_average_grant_above_80000_is_withheld(self):
+        markdown = """
+|    | Number of Enrolled Students Awarded Non-need- based Scholarships and Grants | First-time Full-time First-year Students | Full-time Undergrad (Incl. First-year.) | Less Than Full-time Undergrad |
+|----|--------------------------------------------------------------------------------|------------------------------------------|------------------------------------------|--------------------------------|
+| N  | Number of students in line a who had no financial need and who were awarded institutional non-need-based scholarship or grant aid | 11 | 75 | 0 |
+| O  | Average dollar amount of institutional non-need-based scholarship and grant aid awarded to students in line n | $ 85,600 | $ 1,556 | $ 0 |
+"""
+
+        values = clean(markdown)
+
+        self.assertEqual(values["H.2A01"]["value"], "11")
+        self.assertNotIn("H.2A02", values)
+        self.assertEqual(values["H.2A06"]["value"], "1556")
+
     def test_h2_i_m_blank_header_continuation_table(self):
         markdown = """
 | I   | On average, the percentage of need that was met of students who were awarded any need-based aid. | 59%     | 55%     | 39%     |
