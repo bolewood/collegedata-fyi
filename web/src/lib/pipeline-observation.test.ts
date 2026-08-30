@@ -117,6 +117,7 @@ describe("pipeline observation JSON", () => {
       "directory_enqueue",
       "mirror_ingest",
     ]);
+    expect(seed.stations.some((station) => station.station_id === "headless_archive")).toBe(true);
   });
 });
 

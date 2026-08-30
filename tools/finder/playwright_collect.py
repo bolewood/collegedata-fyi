@@ -1,16 +1,15 @@
 """
-Playwright-driven URL collection for the top-100 schools.
+Playwright-driven URL collection for JS-rendered IR listings.
 
 For each school in the target list, visits the best-guess CDS landing page
 with a real headless Chromium (waits for JS to render), collects every
-PDF/XLSX/DOCX <a href> that looks CDS-ish, and emits a YAML sidecar file
-the operator can review before bulk-archiving.
+PDF/XLSX/DOCX <a href> that looks CDS-ish, and emits a YAML sidecar.
 
-This is the Week 2 "spike" from PRD 004's Option C: use Playwright as a
-URL-COLLECTION TOOL (low risk, one-off), not as a PRODUCTION COMPONENT
-(high risk, permanent). The output is a human-reviewable manual_urls.yaml;
-from there, a separate command fires archive-process's `force_school` +
-well-known-paths fallback to do the actual archiving.
+The scheduled production ingest path is `tools/finder/headless_archive.py`
+(GitHub Actions `ops-headless-archive.yml`), which reuses `collect_for_school`
+then downloads with Chromium. This CLI remains useful for a reviewable
+`manual_urls.yaml` dump. Do not pipe WAF-gated URLs through Deno
+`force_urls` — that fetch path is what 405s.
 
 Usage:
     tools/extraction_worker/.venv/bin/python \\
@@ -118,7 +117,8 @@ STARTING_URLS: dict[str, str] = {
     "emory-university": "https://provost.emory.edu/planning-administration/data/common-data-set.html",
     "university-of-virginia-main-campus": "https://ira.virginia.edu/data-analytics/common-data-set-initiatve",
     "university-of-southern-california": "https://oir.usc.edu/statistics-data-visualization/common-data-set/",
-    "new-york-university": "https://www.nyu.edu/employees/resources-and-services/administrative-services/institutional-research/self-service-reporting-resources/factbook.html?challenge=d06e90d7-4d8f-4b88-9d8c-10b73beb60f1",
+    "nyu": "https://www.nyu.edu/employees/resources-and-services/administrative-services/institutional-research/self-service-reporting-resources/factbook.html",
+    "new-york-university": "https://www.nyu.edu/employees/resources-and-services/administrative-services/institutional-research/self-service-reporting-resources/factbook.html",
     "university-of-florida": "https://ir.aa.ufl.edu/reports/cds-reports/",
     "university-of-texas-at-austin": "https://reports.utexas.edu/common-data-set",
     "university-of-wisconsin-madison": "https://data.wisc.edu/common-data-set-and-rankings/",

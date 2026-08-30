@@ -260,8 +260,9 @@ describe("stripLamp", () => {
     expect(stripLamp(["ok", "down", "late"])).toBe("down");
   });
 
-  it("board has eleven stations", () => {
-    expect(BOARD_STATION_IDS).toHaveLength(11);
+  it("board has twelve stations", () => {
+    expect(BOARD_STATION_IDS).toHaveLength(12);
+    expect(BOARD_STATION_IDS).toContain("headless_archive");
     expect(BOARD_STATION_IDS).not.toContain("directory_enqueue");
   });
 });

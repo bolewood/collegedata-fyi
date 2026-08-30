@@ -4,6 +4,13 @@
 
 **Status:** SPIKE APPROVED (Option C via /autoplan 2026-04-17)
 
+**Update 2026-08-30:** Playwright ingest is a scheduled production worker
+(`tools/finder/headless_archive.py`, `.github/workflows/ops-headless-archive.yml`).
+It crawls WAF/JS landings in Chromium and uploads bytes directly — Deno
+`force_urls` is not used, because those hosts 405 the same fetch path as
+archive-process. Operator downloads are no longer the ingest path for
+public listings.
+
 **Update 2026-04-19:** The URL hint refactor's hosting observations drain
 quantified the JS-rendered cohort for the first time: **51 active schools
 classified as `rendering: js_required`** out of 807 observations. Query

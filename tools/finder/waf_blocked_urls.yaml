@@ -1,7 +1,11 @@
-# Operator worklist for WAF-blocked CDS files that archive-process cannot
+# Worklist for WAF-blocked CDS files that Deno archive-process cannot
 # fetch (NYU 405, Notre Dame Drive, JHU Cloudflare, Williams 403).
 # Keys MUST be canonical schools.yaml ids (nyu, not new-york-university).
-# Ingest with: python tools/finder/headless_download.py --only nyu
+# Ingest is scheduled: .github/workflows/ops-headless-archive.yml runs
+# tools/finder/headless_archive.py daily. YAML urls are the fallback when
+# the landing crawl finds nothing; new years on the live listing are
+# discovered automatically. headless_download.py remains the lower-level
+# "fetch these exact URLs" tool.
 schools:
   university-of-notre-dame:
     school_name: University of Notre Dame

@@ -370,9 +370,9 @@ schools:
   notes: >-
     Factbook landing is WAF-gated (HTTP 405 on non-browser GET, including
     Chrome UA without a real TLS fingerprint). archive-process cannot fetch
-    it; new years go in tools/finder/waf_blocked_urls.yaml under school_id
-    `nyu` and are ingested with tools/finder/headless_download.py. DAM
-    folders change yearly (cds-on-website/, cds-2024-2025/, cds-2025-2026/).
+    it. Daily ops-headless-archive.yml crawls this listing with Playwright
+    and uploads new years. DAM folders change yearly (cds-on-website/,
+    cds-2024-2025/, cds-2025-2026/).
   probe_state:
     last_probed_at: '2026-04-14T15:35:51Z'
     last_result: found

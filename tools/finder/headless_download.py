@@ -24,15 +24,18 @@ Input:
   tools/finder/waf_blocked_urls.yaml (see bottom for shape)
 
 Usage:
-  tools/extraction_worker/.venv/bin/python tools/finder/headless_download.py
-  ... --dry-run        # Don't upload; just print what would happen
-  ... --only notre-dame  # Run for one school
+  Daily ingest is tools/finder/headless_archive.py (ops-headless-archive.yml).
+  This CLI fetches an explicit YAML URL list:
+
+  python tools/finder/headless_download.py --only nyu
+  python tools/finder/headless_download.py --dry-run
 """
 
 from __future__ import annotations
 
 import argparse
 import hashlib
+import os
 import re
 import sys
 import time
@@ -42,10 +45,6 @@ from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
 from typing import Optional
-
-_TOOLS_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(_TOOLS_ROOT / "extraction_worker"))
-from worker import load_env
 
 from supabase import create_client
 
@@ -59,6 +58,26 @@ except ImportError:  # python tools/finder/headless_download.py
         canonical_waf_school_id,
         select_waf_schools,
     )
+
+
+def load_env(path: Path) -> dict[str, str]:
+    values: dict[str, str] = {}
+    if path.exists():
+        for raw in path.read_text(encoding="utf-8").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            values[key.strip()] = value.strip().strip('"').strip("'")
+    url = os.environ.get("SUPABASE_URL") or values.get("SUPABASE_URL")
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or values.get(
+        "SUPABASE_SERVICE_ROLE_KEY"
+    )
+    if url:
+        values["SUPABASE_URL"] = url
+    if key:
+        values["SUPABASE_SERVICE_ROLE_KEY"] = key
+    return values
 
 try:
     from playwright.sync_api import sync_playwright

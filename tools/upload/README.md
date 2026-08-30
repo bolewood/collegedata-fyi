@@ -2,7 +2,7 @@
 
 Operator CLI for uploading a CDS file directly to the archive when the resolver can't fetch it.
 
-Use this when a school's file is behind a WAF (Cloudflare / Akamai), an auth wall (Microsoft SSO / intranet), a JS-dropdown XLSX download, a private Drive link, or any other obstacle that blocks automated fetch. You download the file in your browser, point this tool at the file, and the archive picks it up with `source_provenance='operator_manual'`.
+Use this when a school's file is behind an auth wall (Microsoft SSO / intranet), a JS-dropdown XLSX download, a private Drive link with no listing page, Tableau/PowerBI, or any other obstacle that a headless browser cannot crawl. Public WAF-gated listings (NYU Factbook, Cloudflare IR pages) are ingested by the scheduled Playwright worker — you should not need to download those by hand.
 
 ## What's in the directory
 
@@ -40,12 +40,13 @@ Reads `.env` for `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. No new deps bey
 | Situation | Use |
 |---|---|
 | You have a URL and it works with `curl` | `archive-process?POST force_urls` |
-| You have a URL but Cloudflare / auth blocks automated fetch | `tools/finder/headless_download.py` (Playwright-based) |
+| You have a URL but Cloudflare / Akamai blocks Deno fetch | Scheduled `ops-headless-archive.yml`, or `tools/finder/headless_archive.py --only <school>` |
 | You have the **file** but not a working URL | **this tool** |
 | You have the file AND a URL to record for provenance | this tool with `--source-url` |
 
 ## See also
 
 - [`supabase/functions/archive-upload/index.ts`](../../supabase/functions/archive-upload/index.ts) — the edge function this tool calls
-- [`tools/finder/headless_download.py`](../finder/headless_download.py) — Playwright-driven fetcher for WAF-blocked direct URLs
+- [`tools/finder/headless_archive.py`](../finder/headless_archive.py) — scheduled Playwright crawl + download for WAF/JS landings
+- [`tools/finder/headless_download.py`](../finder/headless_download.py) — lower-level Playwright fetch of an explicit URL list
 - [`docs/backlog.md`](../../docs/backlog.md) "Public CDS upload form" — the future public pathway this is a precursor to

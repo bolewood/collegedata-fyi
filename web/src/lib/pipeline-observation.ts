@@ -120,6 +120,14 @@ const SEED_META: Array<{
     help: "About every 30 seconds we take one school off the queue, download what we can, and archive it. This is the machine's pulse.",
   },
   {
+    station_id: "headless_archive",
+    display_name: "Headless archive",
+    cadence_label: "daily · WAF/JS ingest",
+    class: "daily_sla",
+    on_board: true,
+    help: "Once a day a real browser opens the listings that block ordinary downloads, finds new Common Data Set files, and archives them. This is how WAF-gated schools stay current without a person clicking Save.",
+  },
+  {
     station_id: "extraction_worker",
     display_name: "Extract",
     cadence_label: "daily · pending drain",
@@ -251,6 +259,8 @@ function resultLine(row: PipelineFactRow, lamp: Lamp): string {
       return `${num(summary.queued)} queued · ${num(summary.skipped)} skipped`;
     case "archive_process":
       return `queue ${num(row.queue_unfinished ?? summary.queue_depth)} · ${num(summary.inserted)} inserted · ${num(summary.events_written)} events`;
+    case "headless_archive":
+      return `${num(summary.inserted)} inserted · ${num(summary.discovered)} newly listed · ${num(summary.failed)} failed`;
     case "extraction_worker":
       return `${num(row.extraction_pending ?? summary.pending_remaining)} pending · ${String(summary.stopped_reason ?? "—")}`;
     case "coverage_refresh":

@@ -141,7 +141,8 @@ Headline: **The clocks, and the locked doors.**
 
 ## Stations
 
-Eleven stations on the **dispatch board**. Finder's three **work** steps
+Eleven stations on the **dispatch board**, plus **Headless archive** as a
+twelfth daily SLA. Finder's three **work** steps
 get three tiles because they get three writes.
 
 | `station_id` | Plain name | Actual job | Class | Overdue predicate |
@@ -151,6 +152,7 @@ get three tiles because they get three writes.
 | `finder_landing_hints` | Landing-hint promotion | same Action, **Promote high-confidence landing hints**. Guarded by `INPUT_APPLY_LANDING_HINTS` only (not by mode). On `schedule`, that env is forced `true` (`ops-finder-probe.yml:63`). Do not spec a scheduled skip path. | monthly SLA | same 40-day scheduled clock |
 | `archive_enqueue` | Archive enqueue | pg_cron `archive-enqueue-daily` (`0 2 * * *`) → `archive-enqueue` | daily SLA | `last_scheduled_status` not `ok` inside **36 hours** |
 | `archive_process` | Archive process | pg_cron `archive-process-every-30s` → `archive-process` | continuous SLA | see below |
+| `headless_archive` | Headless archive | `ops-headless-archive.yml` (Playwright crawl + ingest of WAF/JS landings) | daily SLA | `last_scheduled_status` not `ok` inside **36 hours** |
 | `extraction_worker` | Extraction | `ops-extraction-worker.yml` (schedule `--limit 5`, `--deadline-minutes 25`) | daily SLA | see below |
 | `coverage_refresh` | Coverage refresh | pg_cron `refresh-coverage-hourly` (`17 * * * *`) → `refresh-coverage` | hourly SLA | `last_scheduled_status` not `ok` inside **3 hours** |
 | `serving_cache_refresh` | Public serving caches | pg_cron `refresh-public-serving-caches-hourly` (`23 * * * *`, plain SQL `refresh_public_serving_caches()`) (D4) | hourly SLA | `last_scheduled_status` not `ok` inside **3 hours** |
@@ -170,8 +172,9 @@ rows. Heartbeat silence is the public signal.
 `directory_enqueue`, `mirror_ingest`.
 
 **Not on the page:** IPEDS CSV load, `build_school_list.py`, PRD 019,
-Playwright, gated `/changes`, PRD 026 `/discover`. No
-`publish_alerts` station.
+gated `/changes`, PRD 026 `/discover`. No
+`publish_alerts` station. Playwright ingest is on the board as
+`headless_archive`.
 
 ### Archive-process predicate
 
@@ -357,6 +360,7 @@ an exhaustive fixture next to it (D6). **No Python lamp tests.**
 | `finder_landing_hints` | `proposals`, `promoted` |
 | `archive_enqueue` | `queued`, `skipped`, `errors` |
 | `archive_process` | `dequeued`, `queue_depth`, `inserted`, `refreshed`, `walled`, `events_written` |
+| `headless_archive` | `schools_attempted`, `inserted`, `unchanged`, `failed` |
 | `extraction_worker` | `extracted`, `failed`, `pending_remaining`, `stopped_reason` |
 | `coverage_refresh` | `current`, `stale`, `inaccessible`, `never_found` |
 | `serving_cache_refresh` | `ok` (bool) |
