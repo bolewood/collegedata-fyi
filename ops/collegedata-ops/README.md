@@ -27,12 +27,19 @@ public repo.
 | `fetch-residential` | `spoke-ops` (`self-hosted,macOS,spoke-ops,cds-headless`) | **none** (job fails if the service role is present) |
 | `commit-hosted` | GitHub-hosted `ubuntu-latest` | same as plan |
 
-Default school is `nyu`. Cloudflare/Drive ingest stays on the public
+Default school is `nyu` (the only id on the sticky residential
+allowlist). Cloudflare/Drive ingest stays on the public
 `ops-headless-archive.yml` hosted job.
 
-Until the fetch/commit split is on `main`, the workflow checks out
-`cursor/nyu-cds-coverage-audit-339c`. After that PR merges, change the
-default `collegedata_ref` in the workflow to `main`.
+The workflow checks out `bolewood/collegedata-fyi` `main` by default.
+Scheduled runs start at **10:00 UTC** so they consume that morning's
+hosted archive (08:00 UTC), not the day before. Cap is 5 school ids per
+run, enforced in Python (`--require-only --max-only 5`). Adding a
+school requires an operator edit to
+`data/watchlists/residential_allowlist.yaml` — hosted failure does not
+auto-promote anyone.
+
+## GitHub repo settings (required)
 
 ## GitHub repo settings (required)
 
@@ -71,12 +78,27 @@ The cloud agent cannot SSH to `spoke-ops`. Do this on the Mac.
 
 Labels must be exactly: `self-hosted,macOS,spoke-ops,cds-headless`.
 
+## Post-reboot hardening (required before a second allowlist school)
+
+Do not add a second `school_id` to `residential_allowlist.yaml` until an
+operator has rebooted spoke-ops and confirmed:
+
+1. FileVault unlock is an accepted human step (no unattended boot).
+2. `pf` rules for `gha-runner` persist (anchor in `/etc/pf.conf`) or a
+   boot script reloads them.
+3. Tailscale is a system service, not only a login item — or it is
+   intentionally off on guest Wi-Fi.
+4. Guest SSID still cannot reach the house LAN, NAS, or router admin.
+5. Runner user is still `gha-runner` (not admin); the fetch job is still
+   secretless.
+6. One NYU dispatch still archives after reboot.
+
 ## First run
 
 1. Confirm the runner is idle in the private repo’s Actions → Runners list.
 2. Actions → **Residential headless archive** → Run workflow.
    - `only`: `nyu`
-   - `collegedata_ref`: `cursor/nyu-cds-coverage-audit-339c` until merge
+   - `collegedata_ref`: `main`
 3. Expect the Mac job to write a PDF artifact and the hosted commit job to
    insert CDS 2025-26 (or `unchanged_verified` if a later run repeats).
 

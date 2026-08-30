@@ -6,6 +6,17 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.0.2] - 2026-08-30
+
+### Added
+
+- Keep an operator 100-school coverage cohort current by scoring listing seeds and archived source bytes each night, then fetching JavaScript, Cloudflare, and Drive gaps with hosted Chromium.
+- Fetch NYU Common Data Set files from the house Mac only when that school is on a sticky residential allowlist, with a hard five-school cap and no secrets on the Mac.
+
+### Changed
+
+- Point Notre Dame and Williams discovery seeds at HTML listings instead of a single old PDF, and run the residential job after the hosted archive so it can use the same morning's result.
+
 ## [0.6.0.1] - 2026-08-25
 
 ### Added

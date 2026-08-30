@@ -9,7 +9,7 @@
 schools:
   university-of-notre-dame:
     school_name: University of Notre Dame
-    landing_url: null
+    landing_url: https://iris.nd.edu/institutional-research/common-data-set-cds/
     urls:
     - url: https://drive.google.com/uc?export=download&id=1jKjPHBrOR_G0Xzj5sLWEppmXd05kBaMd&confirm=t
       year: 2007-08

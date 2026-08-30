@@ -10,7 +10,9 @@ import yaml
 from tools.finder.waf_school_ids import (
     WAF_SCHOOL_ID_ALIASES,
     canonical_waf_school_id,
+    parse_only_ids,
     select_waf_schools,
+    validate_only_ids,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -70,6 +72,22 @@ class WafBlockedUrlTests(unittest.TestCase):
             ["johns-hopkins-university"],
         )
         self.assertEqual(select_waf_schools(schools, "missing"), {})
+
+    def test_parse_only_comma_list_and_aliases(self) -> None:
+        self.assertEqual(parse_only_ids("nyu"), ["nyu"])
+        self.assertEqual(
+            parse_only_ids("new-york-university,caltech,nyu"),
+            ["nyu", "caltech"],
+        )
+        self.assertEqual(parse_only_ids(" , , "), [])
+        self.assertEqual(parse_only_ids(None), [])
+
+    def test_validate_only_rejects_empty_and_over_cap(self) -> None:
+        self.assertEqual(validate_only_ids(["nyu"], require=True, cap=5), ["nyu"])
+        with self.assertRaises(SystemExit):
+            validate_only_ids([], require=True, cap=5)
+        with self.assertRaises(SystemExit):
+            validate_only_ids(["a", "b", "c", "d", "e", "f"], cap=5)
 
 
 if __name__ == "__main__":

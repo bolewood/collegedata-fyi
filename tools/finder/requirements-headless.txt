@@ -1,3 +1,4 @@
 playwright>=1.49
 pyyaml>=6.0
 supabase>=2.9
+python-dotenv>=1.0
