@@ -6,21 +6,29 @@ and year selection so CI can lock the worker without Chromium.
 
 from __future__ import annotations
 
+import json
+import os
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from tools.finder.headless_archive import (
     ArchiveCandidate,
     SchoolTarget,
     archive_school,
+    assert_fetch_has_no_service_role,
     build_targets,
     canonicalize_url,
+    commit_fetched_files,
     crawl_candidates,
     is_waf_captcha_bytes,
+    make_fetch_store,
     merge_candidates,
     merge_waf_school_entries,
     resolve_landing,
+    run,
     select_candidates,
     should_crawl_landing,
     strip_challenge_query,
@@ -354,6 +362,158 @@ class ArchiveSchoolTests(unittest.TestCase):
         )
         self.assertEqual(row["failed"], 1)
         self.assertEqual(row["actions"][0]["error"], "waf_captcha")
+
+    def test_fetch_store_counts_as_fetched(self) -> None:
+        target = SchoolTarget(
+            school_id="nyu",
+            school_name="New York University",
+            landing_url="https://www.nyu.edu/factbook.html",
+            entry={
+                "urls": [{
+                    "url": "https://www.nyu.edu/cds-2025-2026.pdf",
+                    "year": "2025-26",
+                }],
+                "landing_url": "https://www.nyu.edu/factbook.html",
+            },
+        )
+        with TemporaryDirectory() as tmp:
+            files_acc: list[dict] = []
+            store = make_fetch_store(Path(tmp), files_acc)
+            collect = MagicMock(return_value=SimpleNamespace(status="ok", anchors=[]))
+            download = MagicMock(
+                return_value=(b"%PDF-1.4 fake", "application/pdf", 200,
+                              "https://www.nyu.edu/cds-2025-2026.pdf"),
+            )
+            row = archive_school(
+                target=target,
+                known_years=set(),
+                skip_known=True,
+                max_new=2,
+                min_year="2024-25",
+                dry_run=False,
+                page=object(),
+                browser_ctx=object(),
+                collect_fn=collect,
+                download_fn=download,
+                upload_fn=store,
+                detect_ext_fn=lambda *_args: "pdf",
+            )
+            self.assertEqual(row["fetched"], 1)
+            self.assertEqual(row["inserted"], 0)
+            self.assertEqual(len(files_acc), 1)
+            self.assertTrue((Path(tmp) / files_acc[0]["relpath"]).is_file())
+
+
+class PhaseSplitTests(unittest.TestCase):
+    def test_fetch_refuses_service_role_env(self) -> None:
+        with patch.dict(os.environ, {"SUPABASE_SERVICE_ROLE_KEY": "nope"}):
+            with self.assertRaises(SystemExit) as ctx:
+                assert_fetch_has_no_service_role()
+        self.assertIn("must not receive", str(ctx.exception))
+
+    def test_commit_uploads_artifact_bytes(self) -> None:
+        with TemporaryDirectory() as tmp:
+            artifact = Path(tmp)
+            files_acc: list[dict] = []
+            store = make_fetch_store(artifact, files_acc)
+            body = b"%PDF-1.4 test-bytes"
+            store(
+                "nyu", "2025-26", body, "pdf", "application/pdf",
+                "https://example.edu/cds.pdf", "NYU",
+            )
+            (artifact / "manifest.json").write_text(json.dumps({
+                "schools": [{"school_id": "nyu", "failed": 0}],
+                "files": files_acc,
+                "schools_attempted": 1,
+                "crawled": 0,
+                "discovered": 0,
+                "skipped_known": 0,
+                "failed": 0,
+            }))
+            seen: list[tuple] = []
+
+            def upload(school_id, year, data, ext, content_type, source_url, school_name):
+                seen.append((school_id, year, data, ext, source_url, school_name))
+                return {"action": "inserted"}
+
+            summary = commit_fetched_files(artifact, upload)
+            self.assertEqual(summary.inserted, 1)
+            self.assertEqual(summary.phase, "commit")
+            self.assertEqual(seen[0][0], "nyu")
+            self.assertEqual(seen[0][2], body)
+
+    def test_commit_rejects_sha_mismatch(self) -> None:
+        with TemporaryDirectory() as tmp:
+            artifact = Path(tmp)
+            rel = Path("files/nyu/2025-26/deadbeef.pdf")
+            dest = artifact / rel
+            dest.parent.mkdir(parents=True)
+            dest.write_bytes(b"%PDF-1.4 other")
+            (artifact / "manifest.json").write_text(json.dumps({
+                "files": [{
+                    "school_id": "nyu",
+                    "school_name": "NYU",
+                    "year": "2025-26",
+                    "source_url": "https://example.edu/cds.pdf",
+                    "ext": "pdf",
+                    "content_type": "application/pdf",
+                    "sha256": "0" * 64,
+                    "relpath": rel.as_posix(),
+                }],
+            }))
+            with self.assertRaises(SystemExit) as ctx:
+                commit_fetched_files(artifact, MagicMock())
+            self.assertIn("sha256 mismatch", str(ctx.exception))
+
+    def test_run_fetch_does_not_open_supabase(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            waf = root / "waf.yaml"
+            waf.write_text(
+                "schools:\n  nyu:\n    school_name: NYU\n"
+                "    landing_url: https://www.nyu.edu/factbook.html\n"
+                "    urls:\n      - url: https://www.nyu.edu/cds-2025-2026.pdf\n"
+                "        year: '2025-26'\n",
+                encoding="utf-8",
+            )
+            schools = root / "schools.yaml"
+            schools.write_text("schools: []\n", encoding="utf-8")
+            artifact = root / "artifact"
+            collect = MagicMock(return_value=SimpleNamespace(status="ok", anchors=[]))
+            download = MagicMock(
+                return_value=(b"%PDF-1.4 fake", "application/pdf", 200,
+                              "https://www.nyu.edu/cds-2025-2026.pdf"),
+            )
+
+            def factory(callback):
+                return callback(object(), object())
+
+            with patch.dict(os.environ, {"SUPABASE_SERVICE_ROLE_KEY": ""}, clear=False):
+                os.environ.pop("SUPABASE_SERVICE_ROLE_KEY", None)
+                summary = run(
+                    waf_path=waf,
+                    schools_yaml=schools,
+                    env_path=root / "missing.env",
+                    only="nyu",
+                    dry_run=False,
+                    skip_known=True,
+                    include_queue=False,
+                    max_schools=20,
+                    max_new=2,
+                    min_year="2024-25",
+                    json_out=None,
+                    phase="fetch",
+                    artifact_dir=artifact,
+                    collect_fn=collect,
+                    download_fn=download,
+                    browser_factory=factory,
+                    upload_fn=None,
+                )
+            self.assertEqual(summary.fetched, 1)
+            self.assertEqual(summary.phase, "fetch")
+            self.assertTrue((artifact / "manifest.json").is_file())
+            manifest = json.loads((artifact / "manifest.json").read_text())
+            self.assertEqual(len(manifest["files"]), 1)
 
 
 if __name__ == "__main__":

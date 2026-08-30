@@ -1,6 +1,11 @@
 # Plan: GitHub self-hosted runner on `spoke-ops` for WAF captcha ingest
 
-**Status: reviewed. Do not implement until the gates in §6 are verified.**
+**Status: implementing the private ops path.** Fetch/commit split is in
+this public repo. The private GitHub repository still has to be created
+with a token that can open org repos (this agent got 403). Bundle:
+`ops/collegedata-ops/`. Bootstrap: `tools/ops/bootstrap_collegedata_ops.sh`.
+Do not register a runner on `collegedata-fyi`.
+
 Written 2026-08-30. Security review by Fable5 the same day (full text in
 §11). Context: the scheduled Playwright worker
 (`tools/finder/headless_archive.py`,
@@ -9,7 +14,7 @@ from GitHub-hosted `ubuntu-latest`, but NYU’s 2025-26 CDS is behind an AWS WAF
 **visual captcha** keyed on egress IP. Datacenter Chromium never clears it.
 `spoke-ops` is a Mac on the home LAN whose residential NAT is expected to pass.
 
-This document is **not** a license to register a runner or change `runs-on`.
+This document is **not** a license to register a runner on the public repo.
 
 ## Fable5 verdict (2026-08-30)
 

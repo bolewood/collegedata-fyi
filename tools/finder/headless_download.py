@@ -46,8 +46,6 @@ from io import BytesIO
 from pathlib import Path
 from typing import Optional
 
-from supabase import create_client
-
 try:
     from tools.finder.waf_school_ids import (
         canonical_waf_school_id,
@@ -351,6 +349,8 @@ def main() -> int:
         return 2
 
     env = load_env(Path(args.env))
+    from supabase import create_client
+
     sb = create_client(env["SUPABASE_URL"], env["SUPABASE_SERVICE_ROLE_KEY"])
     if sync_playwright is None:
         print(

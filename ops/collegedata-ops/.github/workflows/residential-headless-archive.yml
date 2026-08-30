@@ -1,0 +1,279 @@
+name: Residential headless archive
+
+# Private-repo only. Do not copy this workflow onto bolewood/collegedata-fyi.
+# spoke-ops runs the fetch job with no secrets. Hosted Ubuntu plans known
+# years, then commits bytes to Supabase after the Mac artifact lands.
+#
+# Default target is NYU (AWS WAF visual captcha). Cloudflare/Drive schools
+# stay on the public repo's ubuntu-latest workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "School id (canonical or alias). Default nyu."
+        required: false
+        default: "nyu"
+      collegedata_ref:
+        description: "bolewood/collegedata-fyi ref to check out"
+        required: false
+        default: "cursor/nyu-cds-coverage-audit-339c"
+      min_year:
+        description: "Skip YAML/crawl URLs older than this CDS year"
+        required: false
+        default: "2024-25"
+      include_existing:
+        description: "Re-fetch years already in cds_documents"
+        type: boolean
+        required: false
+        default: false
+  schedule:
+    - cron: "30 7 * * *"
+
+concurrency:
+  group: residential-headless-archive
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  COLLEGEDATA_REPO: bolewood/collegedata-fyi
+
+jobs:
+  plan-hosted:
+    name: Plan known years (hosted)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      INPUT_ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.only || 'nyu' }}
+      INPUT_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.collegedata_ref || 'cursor/nyu-cds-coverage-audit-339c' }}
+      PIPELINE_TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'dispatch' }}
+      PIPELINE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - name: Check out collegedata.fyi
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: bolewood/collegedata-fyi
+          ref: ${{ env.INPUT_REF }}
+          persist-credentials: false
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Install plan-phase dependencies
+        run: python -m pip install pyyaml supabase
+
+      - name: Heartbeat headless_archive start
+        run: |
+          python tools/ops/record_heartbeat.py \
+            --station headless_archive \
+            --status running \
+            --trigger "${PIPELINE_TRIGGER}" \
+            --run-url "${PIPELINE_RUN_URL}"
+
+      - name: Write known-years plan
+        run: |
+          set -euo pipefail
+          if [[ -z "${SUPABASE_URL}" || -z "${SUPABASE_SERVICE_ROLE_KEY}" ]]; then
+            echo "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY secrets are required on hosted jobs." >&2
+            exit 2
+          fi
+          mkdir -p ops-summary
+          extra=()
+          if [[ -n "${INPUT_ONLY}" ]]; then
+            extra+=(--only "${INPUT_ONLY}")
+          fi
+          python tools/finder/headless_archive.py \
+            --phase plan \
+            --plan-json ops-summary/plan.json \
+            --json-out ops-summary/plan-summary.json \
+            --no-queue \
+            "${extra[@]}"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: headless-plan
+          path: ops-summary/plan.json
+          if-no-files-found: error
+
+  fetch-residential:
+    name: Fetch bytes (spoke-ops, no secrets)
+    needs: plan-hosted
+    runs-on: [self-hosted, macOS, spoke-ops, cds-headless]
+    timeout-minutes: 50
+    env:
+      INPUT_ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.only || 'nyu' }}
+      INPUT_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.collegedata_ref || 'cursor/nyu-cds-coverage-audit-339c' }}
+      INPUT_MIN_YEAR: ${{ github.event_name == 'workflow_dispatch' && inputs.min_year || '2024-25' }}
+      INPUT_INCLUDE_EXISTING: ${{ github.event_name == 'workflow_dispatch' && inputs.include_existing || false }}
+    steps:
+      - name: Check out collegedata.fyi
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: bolewood/collegedata-fyi
+          ref: ${{ env.INPUT_REF }}
+          persist-credentials: false
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Install fetch-phase dependencies (no supabase)
+        run: |
+          python -m pip install playwright pyyaml
+          python -m playwright install chromium
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: headless-plan
+          path: ops-summary
+
+      - name: Fetch CDS bytes
+        run: |
+          set -euo pipefail
+          if [[ -n "${SUPABASE_SERVICE_ROLE_KEY:-}" ]]; then
+            echo "fetch job must not receive SUPABASE_SERVICE_ROLE_KEY" >&2
+            exit 2
+          fi
+          mkdir -p ops-artifact
+          extra=(--no-queue)
+          if [[ -n "${INPUT_ONLY}" ]]; then
+            extra+=(--only "${INPUT_ONLY}")
+          fi
+          if [[ "${INPUT_INCLUDE_EXISTING}" == "true" ]]; then
+            extra+=(--include-existing)
+          fi
+          python tools/finder/headless_archive.py \
+            --phase fetch \
+            --plan-json ops-summary/plan.json \
+            --artifact-dir ops-artifact \
+            --json-out ops-artifact/summary.json \
+            --min-year "${INPUT_MIN_YEAR}" \
+            "${extra[@]}"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: headless-fetch
+          path: ops-artifact/
+          if-no-files-found: error
+
+  commit-hosted:
+    name: Commit bytes (hosted)
+    needs: fetch-residential
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PIPELINE_TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'dispatch' }}
+      PIPELINE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      INPUT_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.collegedata_ref || 'cursor/nyu-cds-coverage-audit-339c' }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - name: Check out collegedata.fyi
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: bolewood/collegedata-fyi
+          ref: ${{ env.INPUT_REF }}
+          persist-credentials: false
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Install commit-phase dependencies
+        run: python -m pip install pyyaml supabase
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: headless-fetch
+          path: ops-artifact
+
+      - id: commit
+        name: Upload to Supabase
+        run: |
+          set -euo pipefail
+          if [[ -z "${SUPABASE_URL}" || -z "${SUPABASE_SERVICE_ROLE_KEY}" ]]; then
+            echo "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY secrets are required on hosted jobs." >&2
+            exit 2
+          fi
+          python tools/finder/headless_archive.py \
+            --phase commit \
+            --artifact-dir ops-artifact \
+            --json-out ops-summary/summary.json
+
+      - name: Heartbeat headless_archive finish
+        if: always()
+        env:
+          STEP_OUTCOME: ${{ steps.commit.outcome }}
+        run: |
+          mkdir -p ops-summary
+          if [[ ! -f ops-summary/summary.json ]]; then
+            printf '{"schools_attempted":0,"inserted":0,"unchanged":0,"failed":0}\n' > ops-summary/heartbeat.json
+          else
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          summary = json.loads(Path("ops-summary/summary.json").read_text())
+          Path("ops-summary/heartbeat.json").write_text(json.dumps({
+              "schools_attempted": summary.get("schools_attempted", 0),
+              "inserted": summary.get("inserted", 0),
+              "unchanged": summary.get("unchanged", 0),
+              "failed": summary.get("failed", 0),
+              "fetched": summary.get("fetched", 0),
+              "crawled": summary.get("crawled", 0),
+              "discovered": summary.get("discovered", 0),
+              "skipped_known": summary.get("skipped_known", 0),
+              "phase": summary.get("phase", "commit"),
+          }) + "\n")
+          PY
+          fi
+          status=ok
+          error=none
+          if [[ "$STEP_OUTCOME" == "failure" ]]; then
+            status=error
+            error=job_failed
+          fi
+          python tools/ops/record_heartbeat.py \
+            --station headless_archive \
+            --status "${status}" \
+            --trigger "${PIPELINE_TRIGGER}" \
+            --error-code "${error}" \
+            --run-url "${PIPELINE_RUN_URL}" \
+            --summary-json ops-summary/heartbeat.json
+
+  heartbeat-on-failure:
+    name: Heartbeat if fetch never committed
+    if: ${{ always() && (needs.plan-hosted.result == 'failure' || needs.fetch-residential.result == 'failure' || needs.commit-hosted.result == 'failure') }}
+    needs: [plan-hosted, fetch-residential, commit-hosted]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PIPELINE_TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'dispatch' }}
+      PIPELINE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      INPUT_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.collegedata_ref || 'cursor/nyu-cds-coverage-audit-339c' }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - name: Check out collegedata.fyi
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: bolewood/collegedata-fyi
+          ref: ${{ env.INPUT_REF }}
+          persist-credentials: false
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Record error heartbeat
+        run: |
+          python tools/ops/record_heartbeat.py \
+            --station headless_archive \
+            --status error \
+            --trigger "${PIPELINE_TRIGGER}" \
+            --error-code job_failed \
+            --run-url "${PIPELINE_RUN_URL}"

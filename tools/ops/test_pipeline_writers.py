@@ -60,6 +60,10 @@ class PipelineWriterLintTests(unittest.TestCase):
         ingest = text.split("id: ingest", 1)[1]
         ingest_run = ingest.split("- name:", 1)[0]
         self.assertNotIn("force_urls", ingest_run)
+        self.assertIn("runs-on: ubuntu-latest", text)
+        self.assertNotRegex(text, r"(?m)^    runs-on:.*self-hosted")
+        self.assertIn("--phase all", text)
+        self.assertIn("collegedata-ops", text)
 
 
 if __name__ == "__main__":

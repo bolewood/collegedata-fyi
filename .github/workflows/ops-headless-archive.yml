@@ -7,6 +7,11 @@ name: Ops headless archive
 #
 # Daily at 08:00 UTC, before the 09:17 extraction drain, so newly archived
 # files can extract the same morning.
+#
+# This public-repo job stays on GitHub-hosted ubuntu-latest (Cloudflare/Drive).
+# AWS WAF visual captcha (NYU) is fetched from the private ops repo
+# bolewood/collegedata-ops on spoke-ops — never register a self-hosted
+# runner on this public repository. See ops/collegedata-ops/.
 
 on:
   workflow_dispatch:
@@ -114,6 +119,7 @@ jobs:
             extra+=(--include-existing)
           fi
           python tools/finder/headless_archive.py \
+            --phase all \
             --max-schools "${INPUT_MAX_SCHOOLS}" \
             --max-new-per-school "${INPUT_MAX_NEW}" \
             --min-year "${INPUT_MIN_YEAR}" \

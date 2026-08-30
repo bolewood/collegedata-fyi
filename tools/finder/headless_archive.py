@@ -18,11 +18,18 @@ same way archive-process does.
 Usage:
   python tools/finder/headless_archive.py --only nyu
   python tools/finder/headless_archive.py --dry-run --max-schools 5
+
+Residential (spoke-ops) split — fetch has no Supabase credentials:
+  python tools/finder/headless_archive.py --phase plan --plan-json plan.json --only nyu
+  python tools/finder/headless_archive.py --phase fetch --plan-json plan.json \\
+      --artifact-dir ops-artifact --only nyu --no-queue
+  python tools/finder/headless_archive.py --phase commit --artifact-dir ops-artifact
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -452,11 +459,14 @@ class RunSummary:
     inserted: int = 0
     unchanged: int = 0
     failed: int = 0
+    fetched: int = 0
     crawled: int = 0
     discovered: int = 0
     skipped_known: int = 0
     dry_run: bool = False
+    phase: str = "all"
     schools: list[dict] = field(default_factory=list)
+    files: list[dict] = field(default_factory=list)
 
     def as_heartbeat(self) -> dict[str, Any]:
         return {
@@ -464,25 +474,105 @@ class RunSummary:
             "inserted": self.inserted,
             "unchanged": self.unchanged,
             "failed": self.failed,
+            "fetched": self.fetched,
             "crawled": self.crawled,
             "discovered": self.discovered,
             "skipped_known": self.skipped_known,
             "dry_run": self.dry_run,
+            "phase": self.phase,
         }
 
     def as_json(self) -> dict[str, Any]:
         payload = self.as_heartbeat()
         payload["schools"] = self.schools
+        payload["files"] = self.files
         payload["finished_at"] = datetime.now(timezone.utc).strftime(
             "%Y-%m-%dT%H:%M:%SZ"
         )
         return payload
 
 
+PHASES = ("all", "plan", "fetch", "commit")
+
 CollectFn = Callable[..., Any]
 DownloadFn = Callable[..., tuple]
 UploadFn = Callable[..., dict]
 DetectExtFn = Callable[[bytes, str, str], str | None]
+
+
+def assert_fetch_has_no_service_role() -> None:
+    """Fail closed if a fetch job was given production write credentials."""
+    if os.environ.get("SUPABASE_SERVICE_ROLE_KEY"):
+        raise SystemExit(
+            "fetch phase must not receive SUPABASE_SERVICE_ROLE_KEY "
+            "(residential runner is secretless)"
+        )
+
+
+def known_years_from_plan(plan: dict[str, Any]) -> dict[str, set[str]]:
+    raw = plan.get("known_years") or {}
+    return {
+        str(school_id): {str(year) for year in (years or [])}
+        for school_id, years in raw.items()
+    }
+
+
+def load_plan_json(path: Path) -> dict[str, Any]:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def write_plan_json(
+    path: Path, *, known: dict[str, set[str]], queue_school_ids: list[str]
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "known_years": {sid: sorted(years) for sid, years in known.items()},
+        "queue_school_ids": list(queue_school_ids),
+    }
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+
+def make_fetch_store(artifact_dir: Path, files_acc: list[dict[str, Any]]) -> UploadFn:
+    """Write bytes to the artifact dir instead of uploading to Supabase."""
+
+    def store(
+        school_id: str,
+        year: str,
+        body: bytes,
+        ext: str,
+        content_type: str,
+        source_url: str,
+        school_name: str,
+    ) -> dict[str, Any]:
+        sha = hashlib.sha256(body).hexdigest()
+        rel = Path("files") / school_id / year / f"{sha}.{ext}"
+        dest = artifact_dir / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(body)
+        rec = {
+            "school_id": school_id,
+            "school_name": school_name,
+            "year": year,
+            "source_url": source_url,
+            "ext": ext,
+            "content_type": content_type,
+            "sha256": sha,
+            "relpath": rel.as_posix(),
+            "byte_count": len(body),
+        }
+        files_acc.append(rec)
+        return {"action": "fetched", "sha256": sha, "relpath": rec["relpath"]}
+
+    return store
+
+
+def require_supabase(env_path: Path):
+    url, key = supabase_creds(env_path)
+    if not url or not key:
+        raise SystemExit("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required")
+    from supabase import create_client
+
+    return create_client(url, key)
 
 
 def _load_download_helpers():
@@ -554,7 +644,7 @@ def archive_school(
         min_year=min_year,
     )
     actions: list[dict[str, Any]] = []
-    inserted = unchanged = failed = 0
+    inserted = unchanged = failed = fetched = 0
     for cand in selected:
         if dry_run:
             actions.append({
@@ -620,8 +710,12 @@ def archive_school(
             inserted += 1
         elif action == "unchanged_verified":
             unchanged += 1
+        elif action == "fetched":
+            fetched += 1
         actions.append({
             "url": cand.url, "year": year, "source": cand.source, "action": action,
+            "relpath": result.get("relpath"),
+            "sha256": result.get("sha256"),
         })
         time.sleep(0.5)
     return {
@@ -635,8 +729,67 @@ def archive_school(
         "inserted": inserted,
         "unchanged": unchanged,
         "failed": failed,
+        "fetched": fetched,
         "actions": actions,
     }
+
+
+def commit_fetched_files(
+    artifact_dir: Path,
+    upload_fn: UploadFn,
+) -> RunSummary:
+    manifest_path = artifact_dir / "manifest.json"
+    if not manifest_path.exists():
+        raise SystemExit(f"no fetch manifest at {manifest_path}")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    summary = RunSummary(phase="commit")
+    summary.schools = list(manifest.get("schools") or [])
+    summary.schools_attempted = int(manifest.get("schools_attempted") or len(summary.schools))
+    summary.crawled = int(manifest.get("crawled") or 0)
+    summary.discovered = int(manifest.get("discovered") or 0)
+    summary.skipped_known = int(manifest.get("skipped_known") or 0)
+    summary.failed = int(manifest.get("failed") or 0)
+
+    for rec in manifest.get("files") or []:
+        rel = rec.get("relpath") or ""
+        path = artifact_dir / rel
+        if not path.is_file():
+            summary.failed += 1
+            print(f"  missing artifact file {rel}", file=sys.stderr)
+            continue
+        body = path.read_bytes()
+        sha = hashlib.sha256(body).hexdigest()
+        expected = rec.get("sha256") or ""
+        if expected and sha != expected:
+            raise SystemExit(f"sha256 mismatch for {rel}")
+        try:
+            result = upload_fn(
+                rec["school_id"],
+                rec["year"],
+                body,
+                rec["ext"],
+                rec.get("content_type") or "",
+                rec.get("source_url") or "",
+                rec.get("school_name") or rec["school_id"],
+            )
+        except Exception as exc:  # noqa: BLE001
+            summary.failed += 1
+            print(
+                f"  upload {rec.get('school_id')} {rec.get('year')} "
+                f"failed: {type(exc).__name__}: {exc}"[:200],
+                file=sys.stderr,
+            )
+            continue
+        action = result.get("action") or "inserted"
+        if action == "inserted":
+            summary.inserted += 1
+        elif action == "unchanged_verified":
+            summary.unchanged += 1
+        print(
+            f"  {action} {rec.get('school_id')} {rec.get('year')} {rel}",
+            file=sys.stderr,
+        )
+    return summary
 
 
 def run(
@@ -652,26 +805,65 @@ def run(
     max_new: int,
     min_year: str | None,
     json_out: Path | None,
+    phase: str = "all",
+    artifact_dir: Path | None = None,
+    plan_json: Path | None = None,
     collect_fn: CollectFn | None = None,
     download_fn: DownloadFn | None = None,
     upload_fn: UploadFn | None = None,
     browser_factory: Callable | None = None,
 ) -> RunSummary:
+    if phase not in PHASES:
+        raise SystemExit(f"phase must be one of {', '.join(PHASES)}")
+    if phase == "fetch":
+        assert_fetch_has_no_service_role()
+
+    if phase == "commit":
+        if artifact_dir is None:
+            raise SystemExit("commit phase requires --artifact-dir")
+        if upload_fn is None:
+            sb = require_supabase(env_path)
+            _ua, _detect, _dl, upload_and_record, _year = _load_download_helpers()
+
+            def default_upload(
+                school_id, year, body, ext, content_type, source_url, school_name,
+            ):
+                return upload_and_record(
+                    sb, school_id, year, body, ext, content_type, source_url,
+                    school_name,
+                )
+
+            upload_fn = default_upload
+        summary = commit_fetched_files(artifact_dir, upload_fn)
+        if json_out:
+            json_out.parent.mkdir(parents=True, exist_ok=True)
+            json_out.write_text(json.dumps(summary.as_json(), indent=2) + "\n")
+        print("\n== Summary ==", file=sys.stderr)
+        print(json.dumps(summary.as_heartbeat(), indent=2), file=sys.stderr)
+        return summary
+
     waf_doc = yaml.safe_load(waf_path.read_text(encoding="utf-8")) or {}
     waf_entries = merge_waf_school_entries(waf_doc.get("schools") or {})
     seed_by_id = load_seed_urls(schools_yaml) if schools_yaml.exists() else {}
 
-    url, key = supabase_creds(env_path)
-    if not url or not key:
-        raise SystemExit("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required")
-    from supabase import create_client
-    sb = create_client(url, key)
-
+    sb = None
     extra: list[str] = []
-    if include_queue:
-        extra = fetch_bot_challenge_ids(sb, limit=40)
-        if extra:
-            print(f"queue bot_challenge schools: {', '.join(extra[:20])}", file=sys.stderr)
+    known: dict[str, set[str]] = {}
+    plan_path = plan_json
+
+    if phase in {"all", "plan"}:
+        sb = require_supabase(env_path)
+        if include_queue:
+            extra = fetch_bot_challenge_ids(sb, limit=40)
+            if extra:
+                print(
+                    f"queue bot_challenge schools: {', '.join(extra[:20])}",
+                    file=sys.stderr,
+                )
+    elif phase == "fetch" and plan_path and plan_path.exists():
+        plan = load_plan_json(plan_path)
+        extra = list(plan.get("queue_school_ids") or [])
+        known = known_years_from_plan(plan)
 
     targets = build_targets(
         waf_entries, extra, seed_by_id, STARTING_URLS, only, max_schools,
@@ -679,23 +871,61 @@ def run(
     if only and not targets:
         raise SystemExit(f"no target for {only}")
 
-    known = fetch_known_years(sb, [t.school_id for t in targets])
-    summary = RunSummary(dry_run=dry_run)
+    if phase in {"all", "plan"} and sb is not None:
+        known = fetch_known_years(sb, [t.school_id for t in targets])
+
+    if phase == "plan":
+        if plan_path is None:
+            raise SystemExit("plan phase requires --plan-json")
+        write_plan_json(plan_path, known=known, queue_school_ids=extra)
+        summary = RunSummary(phase="plan", dry_run=dry_run)
+        summary.schools_attempted = len(targets)
+        summary.skipped_known = sum(len(years) for years in known.values())
+        if json_out:
+            json_out.parent.mkdir(parents=True, exist_ok=True)
+            payload = summary.as_json()
+            payload["plan_json"] = str(plan_path)
+            json_out.write_text(json.dumps(payload, indent=2) + "\n")
+        print("\n== Summary ==", file=sys.stderr)
+        print(json.dumps(summary.as_heartbeat(), indent=2), file=sys.stderr)
+        return summary
+
+    summary = RunSummary(dry_run=dry_run, phase=phase)
+    files_acc: list[dict[str, Any]] = []
 
     collect = collect_fn or collect_for_school
+    need_helpers = (
+        download_fn is None or upload_fn is None or browser_factory is None
+    )
     ua, detect_ext, download_via_page, upload_and_record, _year = (
-        _load_download_helpers()
-        if download_fn is None or upload_fn is None or browser_factory is None
-        else (None, None, None, None, None)
+        _load_download_helpers() if need_helpers else (None, None, None, None, None)
     )
     download = download_fn or download_via_page
 
-    def default_upload(school_id, year, body, ext, content_type, source_url, school_name):
-        return upload_and_record(
-            sb, school_id, year, body, ext, content_type, source_url, school_name,
-        )
+    if upload_fn is None and phase == "fetch":
+        if artifact_dir is None:
+            raise SystemExit("fetch phase requires --artifact-dir")
+        artifact_dir.mkdir(parents=True, exist_ok=True)
+        upload_fn = make_fetch_store(artifact_dir, files_acc)
+    elif upload_fn is None:
+        if sb is None:
+            sb = require_supabase(env_path)
+            _ua, detect_ext, download_via_page, upload_and_record, _year = (
+                _load_download_helpers()
+            )
+            download = download_fn or download_via_page
 
-    upload = upload_fn or default_upload
+        def default_upload(
+            school_id, year, body, ext, content_type, source_url, school_name,
+        ):
+            return upload_and_record(
+                sb, school_id, year, body, ext, content_type, source_url,
+                school_name,
+            )
+
+        upload_fn = default_upload
+
+    upload = upload_fn
 
     def with_browser(callback):
         if browser_factory:
@@ -706,7 +936,7 @@ def run(
             raise SystemExit(
                 "playwright not installed. "
                 "pip install -r tools/finder/requirements-headless.txt "
-                "&& python -m playwright install --with-deps chromium"
+                "&& python -m playwright install chromium"
             ) from exc
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch(headless=True)
@@ -746,6 +976,7 @@ def run(
             summary.inserted += row["inserted"]
             summary.unchanged += row["unchanged"]
             summary.failed += row["failed"]
+            summary.fetched += row.get("fetched", 0)
             summary.crawled += row["crawled_anchors"]
             summary.discovered += row["discovered"]
             summary.skipped_known += row["skipped_known"]
@@ -754,6 +985,7 @@ def run(
                 f"  crawl={row['crawl_status']} anchors={row['crawled_anchors']} "
                 f"discovered={row['discovered']} selected={row['selected']} "
                 f"inserted={row['inserted']} unchanged={row['unchanged']} "
+                f"fetched={row.get('fetched', 0)} "
                 f"failed={row['failed']} skipped_known={row['skipped_known']}",
                 file=sys.stderr,
             )
@@ -762,6 +994,15 @@ def run(
 
     if targets:
         with_browser(work)
+
+    summary.files = files_acc
+    if phase == "fetch" and artifact_dir is not None:
+        artifact_dir.mkdir(parents=True, exist_ok=True)
+        manifest = summary.as_json()
+        (artifact_dir / "manifest.json").write_text(
+            json.dumps(manifest, indent=2) + "\n", encoding="utf-8",
+        )
+
     if json_out:
         json_out.parent.mkdir(parents=True, exist_ok=True)
         json_out.write_text(json.dumps(summary.as_json(), indent=2) + "\n")
@@ -799,9 +1040,25 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-new-per-school", type=int, default=2)
     parser.add_argument("--min-year", default="2024-25")
     parser.add_argument("--json-out", type=Path)
+    parser.add_argument(
+        "--phase",
+        choices=PHASES,
+        default="all",
+        help="all = hosted crawl+upload; plan/fetch/commit = secretless Mac split",
+    )
+    parser.add_argument(
+        "--artifact-dir",
+        type=Path,
+        help="Fetch writes files here; commit reads them (no secrets on fetch)",
+    )
+    parser.add_argument(
+        "--plan-json",
+        type=Path,
+        help="Plan phase writes known years; fetch phase reads them",
+    )
     args = parser.parse_args(argv)
 
-    if not args.input.exists():
+    if not args.input.exists() and args.phase != "commit":
         print(f"error: {args.input} does not exist", file=sys.stderr)
         return 2
 
@@ -818,6 +1075,9 @@ def main(argv: list[str] | None = None) -> int:
             max_new=args.max_new_per_school,
             min_year=args.min_year or None,
             json_out=args.json_out,
+            phase=args.phase,
+            artifact_dir=args.artifact_dir,
+            plan_json=args.plan_json,
         )
     except SystemExit as exc:
         if isinstance(exc.code, str):

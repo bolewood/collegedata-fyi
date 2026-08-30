@@ -1,0 +1,6 @@
+.runner
+_work/
+_diag/
+_update/
+*.env
+.credentials
