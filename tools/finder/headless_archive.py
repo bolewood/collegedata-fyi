@@ -18,6 +18,7 @@ same way archive-process does.
 Usage:
   python tools/finder/headless_archive.py --only nyu
   python tools/finder/headless_archive.py --dry-run --max-schools 5
+  python tools/finder/headless_archive.py --only nyu,caltech --require-only --max-only 5
 
 Residential (spoke-ops) split — fetch has no Supabase credentials:
   python tools/finder/headless_archive.py --phase plan --plan-json plan.json --only nyu
@@ -51,11 +52,17 @@ try:
     from tools.finder.waf_school_ids import (
         WAF_SCHOOL_ID_ALIASES,
         canonical_waf_school_id,
+        parse_only_ids,
+        validate_only_ids,
+        RESIDENTIAL_ONLY_CAP,
     )
 except ImportError:  # python tools/finder/headless_archive.py
     from waf_school_ids import (  # type: ignore
         WAF_SCHOOL_ID_ALIASES,
         canonical_waf_school_id,
+        parse_only_ids,
+        validate_only_ids,
+        RESIDENTIAL_ONLY_CAP,
     )
 
 try:
@@ -358,20 +365,24 @@ def build_targets(
     extra_school_ids: list[str],
     seed_by_id: dict[str, str],
     starting_urls: dict[str, str],
-    only: str | None,
+    only: str | list[str] | None,
     max_schools: int,
 ) -> list[SchoolTarget]:
     merged = dict(waf_entries)
     for raw in extra_school_ids:
         sid = canonical_waf_school_id(raw)
         merged.setdefault(sid, {"school_name": sid, "landing_url": None, "urls": []})
-    if only:
-        want = canonical_waf_school_id(only)
-        merged = {sid: entry for sid, entry in merged.items() if sid == want}
-        if only in waf_entries and want not in merged:
-            merged[want] = waf_entries[only]
-        if not merged and want:
-            merged[want] = {"school_name": want, "landing_url": None, "urls": []}
+    only_ids = parse_only_ids(only)
+    if only_ids:
+        filtered: dict[str, dict] = {}
+        for sid in only_ids:
+            if sid in merged:
+                filtered[sid] = merged[sid]
+            elif sid in waf_entries:
+                filtered[sid] = waf_entries[sid]
+            else:
+                filtered[sid] = {"school_name": sid, "landing_url": None, "urls": []}
+        merged = filtered
     targets: list[SchoolTarget] = []
     for sid, entry in merged.items():
         landing = resolve_landing(entry, sid, seed_by_id, starting_urls)
@@ -808,6 +819,9 @@ def run(
     phase: str = "all",
     artifact_dir: Path | None = None,
     plan_json: Path | None = None,
+    extra_ids: str | None = None,
+    require_only: bool = False,
+    max_only: int | None = None,
     collect_fn: CollectFn | None = None,
     download_fn: DownloadFn | None = None,
     upload_fn: UploadFn | None = None,
@@ -850,14 +864,21 @@ def run(
     extra: list[str] = []
     known: dict[str, set[str]] = {}
     plan_path = plan_json
+    only_ids = validate_only_ids(
+        parse_only_ids(only),
+        require=require_only,
+        cap=RESIDENTIAL_ONLY_CAP if require_only and max_only is None else max_only,
+    )
+    extra.extend(parse_only_ids(extra_ids))
 
     if phase in {"all", "plan"}:
         sb = require_supabase(env_path)
         if include_queue:
-            extra = fetch_bot_challenge_ids(sb, limit=40)
-            if extra:
+            queue_ids = fetch_bot_challenge_ids(sb, limit=40)
+            extra.extend(queue_ids)
+            if queue_ids:
                 print(
-                    f"queue bot_challenge schools: {', '.join(extra[:20])}",
+                    f"queue bot_challenge schools: {', '.join(queue_ids[:20])}",
                     file=sys.stderr,
                 )
     elif phase == "fetch" and plan_path and plan_path.exists():
@@ -866,10 +887,10 @@ def run(
         known = known_years_from_plan(plan)
 
     targets = build_targets(
-        waf_entries, extra, seed_by_id, STARTING_URLS, only, max_schools,
+        waf_entries, extra, seed_by_id, STARTING_URLS, only_ids, max_schools,
     )
-    if only and not targets:
-        raise SystemExit(f"no target for {only}")
+    if only_ids and not targets:
+        raise SystemExit(f"no target for {','.join(only_ids)}")
 
     if phase in {"all", "plan"} and sb is not None:
         known = fetch_known_years(sb, [t.school_id for t in targets])
@@ -1024,7 +1045,25 @@ def main(argv: list[str] | None = None) -> int:
         default=_REPO_ROOT / "tools/finder/schools.yaml",
     )
     parser.add_argument("--env", type=Path, default=Path(".env"))
-    parser.add_argument("--only", help="Canonical or alias school_id")
+    parser.add_argument(
+        "--only",
+        help="Canonical or alias school_id, or a comma-separated list",
+    )
+    parser.add_argument(
+        "--extra-ids",
+        help="Comma-separated school ids to merge into the target list",
+    )
+    parser.add_argument(
+        "--require-only",
+        action="store_true",
+        help="Reject empty --only (residential plan/fetch)",
+    )
+    parser.add_argument(
+        "--max-only",
+        type=int,
+        default=None,
+        help="Reject --only lists longer than this (residential cap is 5)",
+    )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
         "--include-existing",
@@ -1078,6 +1117,9 @@ def main(argv: list[str] | None = None) -> int:
             phase=args.phase,
             artifact_dir=args.artifact_dir,
             plan_json=args.plan_json,
+            extra_ids=args.extra_ids,
+            require_only=args.require_only,
+            max_only=args.max_only,
         )
     except SystemExit as exc:
         if isinstance(exc.code, str):

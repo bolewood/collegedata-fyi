@@ -24105,7 +24105,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www3.nd.edu/~instres/CDS/2022-2023/CDS_2022-2023.pdf
+  discovery_seed_url: https://iris.nd.edu/institutional-research/common-data-set-cds/
 - id: university-of-oklahoma-health-sciences-center
   name: University of Oklahoma-Health Sciences Center
   domain: ouhsc.edu

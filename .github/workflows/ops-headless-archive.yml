@@ -6,7 +6,9 @@ name: Ops headless archive
 # archive-process force_urls, which uses the same blocked fetch path.
 #
 # Daily at 08:00 UTC, before the 09:17 extraction drain, so newly archived
-# files can extract the same morning.
+# files can extract the same morning. The job first scores
+# data/watchlists/priority_coverage.yaml (JSON artifact, no new heartbeat
+# station) and merges hosted-route gaps into the Playwright target list.
 #
 # This public-repo job stays on GitHub-hosted ubuntu-latest (Cloudflare/Drive).
 # AWS WAF visual captcha (NYU) is fetched from the private ops repo
@@ -17,7 +19,7 @@ on:
   workflow_dispatch:
     inputs:
       only:
-        description: "Optional school_id (canonical or alias, e.g. nyu)"
+        description: "Optional school_id or comma list (canonical or alias)"
         required: false
         default: ""
       max_schools:
@@ -82,6 +84,17 @@ jobs:
           python -m pip install -r tools/finder/requirements-headless.txt
           python -m playwright install --with-deps chromium
 
+      - name: Score priority-100 coverage
+        id: score
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          mkdir -p ops-summary
+          python tools/ops/top100_coverage.py --json-out ops-summary/coverage.json
+          hosted="$(python tools/ops/top100_coverage.py --hosted-gap-ids --from-json ops-summary/coverage.json || true)"
+          echo "hosted_ids=${hosted}" >> "$GITHUB_OUTPUT"
+          jq -r '.summary' ops-summary/coverage.json >> "$GITHUB_STEP_SUMMARY" || true
+
       - name: Heartbeat headless_archive start
         run: |
           python tools/ops/record_heartbeat.py \
@@ -111,6 +124,10 @@ jobs:
           extra=()
           if [[ -n "${INPUT_ONLY}" ]]; then
             extra+=(--only "${INPUT_ONLY}")
+          fi
+          hosted_ids="${{ steps.score.outputs.hosted_ids }}"
+          if [[ -z "${INPUT_ONLY}" && -n "${hosted_ids}" ]]; then
+            extra+=(--extra-ids "${hosted_ids}")
           fi
           if [[ "${INPUT_DRY_RUN}" == "true" ]]; then
             extra+=(--dry-run)

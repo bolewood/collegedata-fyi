@@ -11,13 +11,13 @@ on:
   workflow_dispatch:
     inputs:
       only:
-        description: "School id (canonical or alias). Default nyu."
+        description: "School id or comma list, must be on the residential allowlist. Default nyu. Cap 5."
         required: false
         default: "nyu"
       collegedata_ref:
         description: "bolewood/collegedata-fyi ref to check out"
         required: false
-        default: "cursor/nyu-cds-coverage-audit-339c"
+        default: "main"
       min_year:
         description: "Skip YAML/crawl URLs older than this CDS year"
         required: false
@@ -28,7 +28,7 @@ on:
         required: false
         default: false
   schedule:
-    - cron: "30 7 * * *"
+    - cron: "0 10 * * *"
 
 concurrency:
   group: residential-headless-archive
@@ -47,7 +47,7 @@ jobs:
     timeout-minutes: 10
     env:
       INPUT_ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.only || 'nyu' }}
-      INPUT_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.collegedata_ref || 'cursor/nyu-cds-coverage-audit-339c' }}
+      INPUT_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.collegedata_ref || 'main' }}
       PIPELINE_TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'dispatch' }}
       PIPELINE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -65,7 +65,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install plan-phase dependencies
-        run: python -m pip install pyyaml supabase
+        run: python -m pip install pyyaml supabase python-dotenv
 
       - name: Heartbeat headless_archive start
         run: |
@@ -83,15 +83,14 @@ jobs:
             exit 2
           fi
           mkdir -p ops-summary
-          extra=()
-          if [[ -n "${INPUT_ONLY}" ]]; then
-            extra+=(--only "${INPUT_ONLY}")
-          fi
+          python tools/ops/top100_coverage.py --json-out ops-summary/coverage.json || true
+          ONLY="$(python tools/ops/top100_coverage.py --resolve-residential-only --dispatch-only "${INPUT_ONLY}" --max 5)"
+          echo "residential only=${ONLY}"
+          extra=(--only "${ONLY}" --require-only --max-only 5 --no-queue)
           python tools/finder/headless_archive.py \
             --phase plan \
             --plan-json ops-summary/plan.json \
             --json-out ops-summary/plan-summary.json \
-            --no-queue \
             "${extra[@]}"
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -107,7 +106,7 @@ jobs:
     timeout-minutes: 50
     env:
       INPUT_ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.only || 'nyu' }}
-      INPUT_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.collegedata_ref || 'cursor/nyu-cds-coverage-audit-339c' }}
+      INPUT_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.collegedata_ref || 'main' }}
       INPUT_MIN_YEAR: ${{ github.event_name == 'workflow_dispatch' && inputs.min_year || '2024-25' }}
       INPUT_INCLUDE_EXISTING: ${{ github.event_name == 'workflow_dispatch' && inputs.include_existing || false }}
     steps:
@@ -140,7 +139,7 @@ jobs:
             exit 2
           fi
           mkdir -p ops-artifact
-          extra=(--no-queue)
+          extra=(--no-queue --require-only --max-only 5)
           if [[ -n "${INPUT_ONLY}" ]]; then
             extra+=(--only "${INPUT_ONLY}")
           fi
@@ -169,7 +168,7 @@ jobs:
     env:
       PIPELINE_TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'dispatch' }}
       PIPELINE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      INPUT_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.collegedata_ref || 'cursor/nyu-cds-coverage-audit-339c' }}
+      INPUT_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.collegedata_ref || 'main' }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:
@@ -254,7 +253,7 @@ jobs:
     env:
       PIPELINE_TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'dispatch' }}
       PIPELINE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      INPUT_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.collegedata_ref || 'cursor/nyu-cds-coverage-audit-339c' }}
+      INPUT_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.collegedata_ref || 'main' }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:

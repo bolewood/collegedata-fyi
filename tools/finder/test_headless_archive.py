@@ -32,6 +32,7 @@ from tools.finder.headless_archive import (
     select_candidates,
     should_crawl_landing,
     strip_challenge_query,
+    write_plan_json,
     yaml_candidates,
 )
 from tools.finder.playwright_collect import STARTING_URLS, AnchorResult
@@ -55,6 +56,14 @@ class UrlHygieneTests(unittest.TestCase):
         for key in ("nyu", "new-york-university"):
             self.assertNotIn("challenge=", STARTING_URLS[key], key)
             self.assertTrue(STARTING_URLS[key].endswith("factbook.html"))
+
+    def test_nd_and_williams_starting_urls_are_listings(self) -> None:
+        nd = STARTING_URLS["university-of-notre-dame"]
+        self.assertIn("iris.nd.edu", nd)
+        self.assertFalse(nd.lower().endswith(".pdf"))
+        williams = STARTING_URLS["williams-college"]
+        self.assertIn("common-data-set", williams)
+        self.assertFalse(williams.lower().endswith(".pdf"))
 
     def test_canonicalize_drops_fragment(self) -> None:
         self.assertEqual(
@@ -219,6 +228,20 @@ class TargetBuildTests(unittest.TestCase):
         self.assertEqual(len(targets), 1)
         self.assertEqual(targets[0].school_id, "emory")
         self.assertEqual(targets[0].landing_url, "https://provost.emory.edu/cds.html")
+
+    def test_only_comma_list_preserves_order(self) -> None:
+        targets = build_targets(
+            {
+                "nyu": {"school_name": "NYU", "landing_url": "https://www.nyu.edu/factbook.html", "urls": [{"url": "https://e.edu/n.pdf", "year": "2025-26"}]},
+                "caltech": {"school_name": "Caltech", "landing_url": "https://finance.caltech.edu/Resources/cds", "urls": []},
+            },
+            extra_school_ids=[],
+            seed_by_id={},
+            starting_urls={},
+            only="caltech,new-york-university",
+            max_schools=20,
+        )
+        self.assertEqual([t.school_id for t in targets], ["caltech", "nyu"])
 
 
 class ArchiveSchoolTests(unittest.TestCase):
@@ -410,6 +433,76 @@ class PhaseSplitTests(unittest.TestCase):
             with self.assertRaises(SystemExit) as ctx:
                 assert_fetch_has_no_service_role()
         self.assertIn("must not receive", str(ctx.exception))
+
+    def test_require_only_rejects_empty_targeting(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            waf = root / "waf.yaml"
+            waf.write_text("schools: {}\n", encoding="utf-8")
+            schools = root / "schools.yaml"
+            schools.write_text("schools: []\n", encoding="utf-8")
+            with self.assertRaises(SystemExit) as ctx:
+                run(
+                    waf_path=waf,
+                    schools_yaml=schools,
+                    env_path=root / "no.env",
+                    only=None,
+                    dry_run=True,
+                    skip_known=True,
+                    include_queue=False,
+                    max_schools=20,
+                    max_new=2,
+                    min_year="2024-25",
+                    json_out=None,
+                    phase="fetch",
+                    require_only=True,
+                    artifact_dir=root / "artifact",
+                    collect_fn=MagicMock(),
+                    download_fn=MagicMock(),
+                    browser_factory=MagicMock(),
+                    upload_fn=None,
+                )
+        self.assertIn("require --only", str(ctx.exception))
+
+    def test_over_cap_only_list_exits(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            waf = root / "waf.yaml"
+            waf.write_text("schools: {}\n", encoding="utf-8")
+            schools = root / "schools.yaml"
+            schools.write_text("schools: []\n", encoding="utf-8")
+            with self.assertRaises(SystemExit) as ctx:
+                run(
+                    waf_path=waf,
+                    schools_yaml=schools,
+                    env_path=root / "no.env",
+                    only="a,b,c,d,e,f",
+                    dry_run=True,
+                    skip_known=True,
+                    include_queue=False,
+                    max_schools=20,
+                    max_new=2,
+                    min_year="2024-25",
+                    json_out=None,
+                    phase="fetch",
+                    require_only=True,
+                    artifact_dir=root / "artifact",
+                    collect_fn=MagicMock(),
+                    download_fn=MagicMock(),
+                    browser_factory=MagicMock(),
+                    upload_fn=None,
+                )
+        self.assertIn("cap is 5", str(ctx.exception))
+
+    def test_plan_json_has_no_secret_keys(self) -> None:
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "plan.json"
+            write_plan_json(path, known={"nyu": {"2025-26"}}, queue_school_ids=["nyu"])
+            payload = json.loads(path.read_text())
+        self.assertEqual(set(payload), {"known_years", "queue_school_ids"})
+        blob = json.dumps(payload).lower()
+        self.assertNotIn("service_role", blob)
+        self.assertNotIn("supabase", blob)
 
     def test_commit_uploads_artifact_bytes(self) -> None:
         with TemporaryDirectory() as tmp:

@@ -71,7 +71,7 @@ STARTING_URLS: dict[str, str] = {
     "princeton": "https://registrar.princeton.edu/common-data-set",
     "duke": "https://provost.duke.edu/about/administration/office-of-institutional-research/common-data-set/",
     "northwestern": "https://enrollment.northwestern.edu/data/",
-    "university-of-notre-dame": "https://www3.nd.edu/~instres/CDS/2022-2023/CDS_2022-2023.pdf",
+    "university-of-notre-dame": "https://iris.nd.edu/institutional-research/common-data-set-cds/",
     "university-of-rochester": "https://www.rochester.edu/provost/ir/data-reports/common-data-set/",
     "university-of-miami": "https://irsa.miami.edu/facts-and-information/common-data-set/",
     "university-of-illinois-urbana-champaign": "https://www.dmi.illinois.edu/stuenr/",
@@ -101,7 +101,7 @@ STARTING_URLS: dict[str, str] = {
     "wesleyan-university": "https://www.wesleyan.edu/ir/data-sets/cds.html",
     "university-of-richmond": "https://ifx.richmond.edu/cds",
     "macalester-college": "https://www.macalester.edu/institutional-research/common-data-set/",
-    "williams-college": "https://www.williams.edu/institutional-research/files/2019/08/2010-2011_williams_common_data_set.pdf",
+    "williams-college": "https://www.williams.edu/institutional-research/common-data-set/",
 
     # Not in schools.yaml at all — curated from public IR pages
     "university-of-chicago": "https://data.uchicago.edu/common-data-set/",

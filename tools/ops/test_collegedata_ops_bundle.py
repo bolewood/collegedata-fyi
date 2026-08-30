@@ -64,6 +64,21 @@ class CollegedataOpsBundleTests(unittest.TestCase):
         self.assertNotRegex(text, r"(?m)^    runs-on:.*spoke-ops")
         self.assertIn("runs-on: ubuntu-latest", text)
 
+    def test_defaults_to_public_main_and_runs_after_hosted(self) -> None:
+        text = WORKFLOW.read_text(encoding="utf-8")
+        header = text.split("jobs:", 1)[0]
+        self.assertIn('cron: "0 10 * * *"', header)
+        self.assertNotIn("30 7", header)
+        self.assertIn('default: "main"', text)
+        self.assertNotIn("cursor/nyu-cds-coverage-audit", text)
+        plan = text.split("plan-hosted:", 1)[1].split("fetch-residential:", 1)[0]
+        self.assertIn("--require-only", plan)
+        self.assertIn("--max-only 5", plan)
+        self.assertIn("top100_coverage.py", plan)
+        fetch = text.split("fetch-residential:", 1)[1].split("commit-hosted:", 1)[0]
+        self.assertIn("--require-only", fetch)
+        self.assertIn("--max-only 5", fetch)
+
 
 if __name__ == "__main__":
     unittest.main()

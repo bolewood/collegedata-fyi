@@ -27,6 +27,11 @@ import yaml
 from dotenv import load_dotenv
 from supabase import create_client
 
+try:
+    from tools.data_quality.published_years import fetch_published_years
+except ImportError:  # python tools/data_quality/active_schools_missing_recent.py
+    from published_years import fetch_published_years
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCHOOLS_YAML = REPO_ROOT / "tools" / "finder" / "schools.yaml"
 DEFAULT_YEARS = ["2022-23", "2023-24", "2024-25", "2025-26"]
@@ -36,25 +41,6 @@ def load_active_schools() -> list[dict]:
     with open(SCHOOLS_YAML) as fp:
         data = yaml.safe_load(fp)
     return [s for s in data.get("schools", []) if s.get("scrape_policy") == "active"]
-
-
-def fetch_published_years(sb, school_ids: list[str], years: list[str]) -> dict[str, set[str]]:
-    """Return {school_id: {years_present}} for published documents."""
-    have: dict[str, set[str]] = {sid: set() for sid in school_ids}
-    page_size = 1000
-    offset = 0
-    while True:
-        batch = sb.table("cds_documents").select(
-            "school_id, cds_year, participation_status"
-        ).in_("cds_year", years).range(offset, offset + page_size - 1).execute().data or []
-        for row in batch:
-            sid = row["school_id"]
-            if sid in have and row.get("participation_status") == "published":
-                have[sid].add(row["cds_year"])
-        if len(batch) < page_size:
-            break
-        offset += page_size
-    return have
 
 
 def main() -> int:

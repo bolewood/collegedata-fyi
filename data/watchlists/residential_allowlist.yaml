@@ -1,0 +1,14 @@
+version: 0.1.0
+status: operator_residential_v1
+description: >
+  Sticky operator-approved list of schools that may run on spoke-ops.
+  Hosted Playwright failure, Cloudflare, Drive, or a redirect loop is not
+  enough to add a school. Do not add a second id until the post-reboot
+  spoke-ops hardening checklist in ops/collegedata-ops/README.md passes.
+schools:
+- school_id: nyu
+  approved_on: "2026-08-30"
+  last_hosted_error: http_405
+  reason: >
+    NYU DAM returns HTTP 405 to datacenter fetch and an AWS WAF visual
+    captcha to GitHub-hosted Chromium. A house browser retrieved 2025-26.
