@@ -36,7 +36,12 @@ import {
   objectExists,
   uploadSource,
 } from "./storage.ts";
-import { authWallOutcome, ProbeOutcome } from "./probe_outcome.ts";
+import {
+  authWallOutcome,
+  downloadHttpStatusIsPermanent,
+  outcomeForDownloadHttpStatus,
+  ProbeOutcome,
+} from "./probe_outcome.ts";
 
 // Transient: worth retrying next tick or next cron. Counts against the
 // MAX_ATTEMPTS budget in archive-process. Carries a typed
@@ -1095,11 +1100,15 @@ async function downloadWithCaps(url: string): Promise<DownloadResult> {
     );
   }
 
-  if (resp.status === 404 || resp.status === 410) {
-    throw new PermanentError(`download HTTP ${resp.status} at ${url}`, "dead_url");
-  }
   if (!resp.ok) {
-    throw new TransientError(`download HTTP ${resp.status} at ${url}`, "transient");
+    const outcome = outcomeForDownloadHttpStatus(resp.status);
+    const msg = outcome === "bot_challenge"
+      ? `download HTTP ${resp.status} bot challenge at ${url}`
+      : `download HTTP ${resp.status} at ${url}`;
+    if (downloadHttpStatusIsPermanent(outcome)) {
+      throw new PermanentError(msg, outcome);
+    }
+    throw new TransientError(msg, outcome);
   }
 
   const contentType = resp.headers.get("content-type") ?? "";

@@ -255,7 +255,7 @@ schools:
   domain: emory.edu
   ipeds_id: '139658'
   scrape_policy: active
-  discovery_seed_url: https://provost.emory.edu/planning-administration/_includes/documents/sections/institutional-data/emory-common-data-set-2024-2025.pdf
+  discovery_seed_url: https://provost.emory.edu/planning-administration/data/common-data-set.html
   probe_state:
     last_probed_at: '2026-04-14T15:35:47Z'
     last_result: found
@@ -366,7 +366,13 @@ schools:
   domain: nyu.edu
   ipeds_id: '193900'
   scrape_policy: active
-  discovery_seed_url: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-on-website/NYU_Common_Data_Set_2020-21.4.30.pdf
+  discovery_seed_url: https://www.nyu.edu/employees/resources-and-services/administrative-services/institutional-research/self-service-reporting-resources/factbook.html
+  notes: >-
+    Factbook landing is WAF-gated (HTTP 405 on non-browser GET, including
+    Chrome UA without a real TLS fingerprint). archive-process cannot fetch
+    it. Daily ops-headless-archive.yml crawls this listing with Playwright
+    and uploads new years. DAM folders change yearly (cds-on-website/,
+    cds-2024-2025/, cds-2025-2026/).
   probe_state:
     last_probed_at: '2026-04-14T15:35:51Z'
     last_result: found
@@ -812,9 +818,12 @@ schools:
   name: University of Chicago
   domain: uchicago.edu
   ipeds_id: '144050'
-  scrape_policy: verified_absent
-  notes: Refuses to publish CDS. Commands fields be marked 'not published'. Strategic
-    opacity around yield protection.
+  scrape_policy: active
+  discovery_seed_url: https://data.uchicago.edu/common-data-set/
+  notes: >-
+    Historically refused CDS as yield-protection opacity; resumed publishing
+    on data.uchicago.edu (2021-22 through 2024-25 confirmed). Keep scrape_policy
+    active so weekly archive can pick up 2025-26 when it lands.
 - id: a-t-still-university-of-health-sciences
   name: A T Still University of Health Sciences
   domain: atsu.edu
@@ -3842,7 +3851,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://finance.caltech.edu/documents/25197/cds_2023.pdf
+  discovery_seed_url: https://finance.caltech.edu/Resources/cds
 - id: california-institute-of-the-arts
   name: California Institute of the Arts
   domain: calarts.edu

@@ -1,3 +1,11 @@
+# Worklist for WAF-blocked CDS files that Deno archive-process cannot
+# fetch (NYU 405, Notre Dame Drive, JHU Cloudflare, Williams 403).
+# Keys MUST be canonical schools.yaml ids (nyu, not new-york-university).
+# Ingest is scheduled: .github/workflows/ops-headless-archive.yml runs
+# tools/finder/headless_archive.py daily. YAML urls are the fallback when
+# the landing crawl finds nothing; new years on the live listing are
+# discovered automatically. headless_download.py remains the lower-level
+# "fetch these exact URLs" tool.
 schools:
   university-of-notre-dame:
     school_name: University of Notre Dame
@@ -53,10 +61,12 @@ schools:
     urls:
     - url: https://oira.jhu.edu/wp-content/uploads/2025-2026-CDS-Johns-Hopkins-University.pdf
       year: 2025-26
-  new-york-university:
+  nyu:
     school_name: New York University
     landing_url: https://www.nyu.edu/employees/resources-and-services/administrative-services/institutional-research/self-service-reporting-resources/factbook.html
     urls:
+    - url: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-2025-2026/CDS%202025-2026%20FINAL%20(no%20G).pdf
+      year: 2025-26
     - url: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-2024-2025/CDS_2024-2025.xlsx
       year: 2024-25
     - url: https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-2024-2025/CDS_2024-2025-1.pdf

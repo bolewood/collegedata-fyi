@@ -1,0 +1,186 @@
+name: Ops headless archive
+
+# Chromium ingest for WAF/JS landings that Deno fetch cannot download
+# (NYU Akamai 405, Cloudflare 403, cookie-gated IR pages). Discovers new
+# CDS years from the live listing, then uploads via Playwright — not via
+# archive-process force_urls, which uses the same blocked fetch path.
+#
+# Daily at 08:00 UTC, before the 09:17 extraction drain, so newly archived
+# files can extract the same morning.
+#
+# This public-repo job stays on GitHub-hosted ubuntu-latest (Cloudflare/Drive).
+# AWS WAF visual captcha (NYU) is fetched from the private ops repo
+# bolewood/collegedata-ops on spoke-ops — never register a self-hosted
+# runner on this public repository. See ops/collegedata-ops/.
+
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Optional school_id (canonical or alias, e.g. nyu)"
+        required: false
+        default: ""
+      max_schools:
+        description: "Cap schools processed this run"
+        required: false
+        default: "20"
+      max_new_per_school:
+        description: "Newest missing years to ingest per school"
+        required: false
+        default: "2"
+      min_year:
+        description: "Skip YAML/crawl URLs older than this CDS year"
+        required: false
+        default: "2024-25"
+      dry_run:
+        description: "Crawl and select URLs but do not upload"
+        type: boolean
+        required: false
+        default: false
+      include_existing:
+        description: "Re-fetch years already in cds_documents"
+        type: boolean
+        required: false
+        default: false
+  schedule:
+    - cron: "0 8 * * *"
+
+concurrency:
+  group: ops-headless-archive
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  archive:
+    name: Playwright WAF/JS ingest
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      INPUT_ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.only || '' }}
+      INPUT_MAX_SCHOOLS: ${{ github.event_name == 'workflow_dispatch' && inputs.max_schools || '20' }}
+      INPUT_MAX_NEW: ${{ github.event_name == 'workflow_dispatch' && inputs.max_new_per_school || '2' }}
+      INPUT_MIN_YEAR: ${{ github.event_name == 'workflow_dispatch' && inputs.min_year || '2024-25' }}
+      INPUT_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
+      INPUT_INCLUDE_EXISTING: ${{ github.event_name == 'workflow_dispatch' && inputs.include_existing || false }}
+      PIPELINE_TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'dispatch' }}
+      PIPELINE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/finder/requirements-headless.txt
+
+      - name: Install headless archive dependencies
+        run: |
+          python -m pip install -r tools/finder/requirements-headless.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Heartbeat headless_archive start
+        run: |
+          python tools/ops/record_heartbeat.py \
+            --station headless_archive \
+            --status running \
+            --trigger "${PIPELINE_TRIGGER}" \
+            --run-url "${PIPELINE_RUN_URL}"
+
+      - id: ingest
+        name: Crawl landings and archive new CDS files
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${SUPABASE_URL}" || -z "${SUPABASE_SERVICE_ROLE_KEY}" ]]; then
+            echo "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY secrets are required." >&2
+            exit 2
+          fi
+          if ! [[ "${INPUT_MAX_SCHOOLS}" =~ ^[0-9]+$ ]]; then
+            echo "max_schools must be an integer" >&2
+            exit 2
+          fi
+          if ! [[ "${INPUT_MAX_NEW}" =~ ^[0-9]+$ ]]; then
+            echo "max_new_per_school must be an integer" >&2
+            exit 2
+          fi
+          mkdir -p ops-summary
+          extra=()
+          if [[ -n "${INPUT_ONLY}" ]]; then
+            extra+=(--only "${INPUT_ONLY}")
+          fi
+          if [[ "${INPUT_DRY_RUN}" == "true" ]]; then
+            extra+=(--dry-run)
+          fi
+          if [[ "${INPUT_INCLUDE_EXISTING}" == "true" ]]; then
+            extra+=(--include-existing)
+          fi
+          python tools/finder/headless_archive.py \
+            --phase all \
+            --max-schools "${INPUT_MAX_SCHOOLS}" \
+            --max-new-per-school "${INPUT_MAX_NEW}" \
+            --min-year "${INPUT_MIN_YEAR}" \
+            --json-out ops-summary/summary.json \
+            "${extra[@]}"
+
+      - name: Write GitHub summary
+        if: always()
+        run: |
+          if [[ -f ops-summary/summary.json ]]; then
+            {
+              echo "## Headless archive"
+              jq -r '"Schools: \(.schools_attempted)\nInserted: \(.inserted)\nUnchanged: \(.unchanged)\nFailed: \(.failed)\nDiscovered on landing: \(.discovered)\nSkipped known years: \(.skipped_known)"' ops-summary/summary.json
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No summary.json was produced." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload summary artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: headless-archive-summary
+          path: ops-summary/
+          if-no-files-found: warn
+
+      - name: Heartbeat headless_archive finish
+        if: always()
+        env:
+          STEP_OUTCOME: ${{ steps.ingest.outcome }}
+        run: |
+          mkdir -p ops-summary
+          if [[ ! -f ops-summary/summary.json ]]; then
+            printf '{"schools_attempted":0,"inserted":0,"unchanged":0,"failed":0}\n' > ops-summary/heartbeat.json
+          else
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          summary = json.loads(Path("ops-summary/summary.json").read_text())
+          Path("ops-summary/heartbeat.json").write_text(json.dumps({
+              "schools_attempted": summary.get("schools_attempted", 0),
+              "inserted": summary.get("inserted", 0),
+              "unchanged": summary.get("unchanged", 0),
+              "failed": summary.get("failed", 0),
+              "crawled": summary.get("crawled", 0),
+              "discovered": summary.get("discovered", 0),
+              "skipped_known": summary.get("skipped_known", 0),
+              "dry_run": summary.get("dry_run", False),
+          }) + "\n")
+          PY
+          fi
+          status=ok
+          error=none
+          if [[ "$STEP_OUTCOME" == "failure" ]]; then
+            status=error
+            error=job_failed
+          fi
+          python tools/ops/record_heartbeat.py \
+            --station headless_archive \
+            --status "${status}" \
+            --trigger "${PIPELINE_TRIGGER}" \
+            --error-code "${error}" \
+            --run-url "${PIPELINE_RUN_URL}" \
+            --summary-json ops-summary/heartbeat.json

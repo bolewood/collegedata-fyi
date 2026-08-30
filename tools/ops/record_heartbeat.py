@@ -36,6 +36,7 @@ REGISTRY_STATIONS = (
     "finder_landing_hints",
     "archive_enqueue",
     "archive_process",
+    "headless_archive",
     "extraction_worker",
     "coverage_refresh",
     "serving_cache_refresh",

@@ -24,15 +24,18 @@ Input:
   tools/finder/waf_blocked_urls.yaml (see bottom for shape)
 
 Usage:
-  tools/extraction_worker/.venv/bin/python tools/finder/headless_download.py
-  ... --dry-run        # Don't upload; just print what would happen
-  ... --only notre-dame  # Run for one school
+  Daily ingest is tools/finder/headless_archive.py (ops-headless-archive.yml).
+  This CLI fetches an explicit YAML URL list:
+
+  python tools/finder/headless_download.py --only nyu
+  python tools/finder/headless_download.py --dry-run
 """
 
 from __future__ import annotations
 
 import argparse
 import hashlib
+import os
 import re
 import sys
 import time
@@ -43,11 +46,36 @@ from io import BytesIO
 from pathlib import Path
 from typing import Optional
 
-_TOOLS_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(_TOOLS_ROOT / "extraction_worker"))
-from worker import load_env
+try:
+    from tools.finder.waf_school_ids import (
+        canonical_waf_school_id,
+        select_waf_schools,
+    )
+except ImportError:  # python tools/finder/headless_download.py
+    from waf_school_ids import (  # type: ignore
+        canonical_waf_school_id,
+        select_waf_schools,
+    )
 
-from supabase import create_client
+
+def load_env(path: Path) -> dict[str, str]:
+    values: dict[str, str] = {}
+    if path.exists():
+        for raw in path.read_text(encoding="utf-8").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            values[key.strip()] = value.strip().strip('"').strip("'")
+    url = os.environ.get("SUPABASE_URL") or values.get("SUPABASE_URL")
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or values.get(
+        "SUPABASE_SERVICE_ROLE_KEY"
+    )
+    if url:
+        values["SUPABASE_URL"] = url
+    if key:
+        values["SUPABASE_SERVICE_ROLE_KEY"] = key
+    return values
 
 try:
     from playwright.sync_api import sync_playwright
@@ -315,14 +343,14 @@ def main() -> int:
         print(f"error: {args.input} does not exist", file=sys.stderr)
         return 2
     doc = yaml.safe_load(args.input.read_text())
-    schools = doc.get("schools", {})
-    if args.only:
-        schools = {args.only: schools.get(args.only, {})}
-        if not schools[args.only]:
-            print(f"no entry for {args.only}", file=sys.stderr)
-            return 2
+    schools = select_waf_schools(doc.get("schools", {}) or {}, args.only)
+    if args.only and not schools:
+        print(f"no entry for {args.only}", file=sys.stderr)
+        return 2
 
     env = load_env(Path(args.env))
+    from supabase import create_client
+
     sb = create_client(env["SUPABASE_URL"], env["SUPABASE_SERVICE_ROLE_KEY"])
     if sync_playwright is None:
         print(
@@ -339,9 +367,13 @@ def main() -> int:
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         ctx = browser.new_context(user_agent=UA, accept_downloads=True)
-        for sid, school in schools.items():
+        for raw_sid, school in schools.items():
+            sid = canonical_waf_school_id(raw_sid)
             landing = school.get("landing_url")
             school_name = school.get("school_name") or sid
+            if sid != raw_sid:
+                print(f"  remapped YAML key {raw_sid!r} → {sid!r}",
+                      file=sys.stderr)
             items = school.get("urls", [])
             print(f"\n=== {sid} ({len(items)} urls, landing={landing}) ===",
                   file=sys.stderr)

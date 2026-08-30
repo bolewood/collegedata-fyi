@@ -29,6 +29,7 @@ export const BOARD_STATION_IDS = [
   "finder_landing_hints",
   "archive_enqueue",
   "archive_process",
+  "headless_archive",
   "extraction_worker",
   "coverage_refresh",
   "serving_cache_refresh",
@@ -43,6 +44,7 @@ export const RUN_STATION_IDS = new Set<string>([
   "finder_brave",
   "finder_stuck_pdf",
   "finder_landing_hints",
+  "headless_archive",
   "extraction_worker",
 ]);
 
