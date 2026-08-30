@@ -290,6 +290,14 @@ DERIVED_COMPONENT_FALLBACK_FIELDS = {
     ),
 }
 
+# 2025-26 residency block after a Total-last zip: All, In-State, Out-of-State,
+# Nonresidents, Unknown. Used to detect the Issue #159 in-state-as-total shift.
+C1_RESIDENCY_SHIFT_FIELDS = {
+    ("2025-26", "applied"): ("C.116", "C.119", "C.122", "C.125", "C.128"),
+    ("2025-26", "admitted"): ("C.117", "C.120", "C.123", "C.126", "C.129"),
+    ("2025-26", "first_year_enrolled"): ("C.118", "C.121", "C.124", "C.127", "C.130"),
+}
+
 
 def load_env(env_path: Path = REPO_ROOT / ".env") -> dict[str, str]:
     env: dict[str, str] = {}
@@ -1029,8 +1037,14 @@ def evaluate_metric(
                 if fallback_value is not None:
                     return fallback_value
         total = sum(reported_values, Decimal("0"))
-        if total == 0 and component_fallback_value is not None and component_fallback_value > 0:
-            return component_fallback_value
+        if component_fallback_value is not None:
+            if total == 0 and component_fallback_value > 0:
+                return component_fallback_value
+            if _c1_total_impossible_vs_gender(total, selected, schema_defs, metric):
+                return component_fallback_value
+            shifted_total = _c1_residency_shift_total(selected, schema_defs, metric)
+            if shifted_total is not None:
+                return shifted_total
         return total
     if any(value is None for value in values):
         return None
@@ -1055,6 +1069,72 @@ def evaluate_component_fallback_metric(
         reported_values = [value for value in values if value is not None]
         if reported_values:
             return sum(reported_values, Decimal("0"))
+    return None
+
+
+def _c1_gender_component_values(
+    metric: MetricDefinition,
+    selected: SelectedExtractionResult,
+    schema_defs: dict[str, FieldDefinition],
+) -> list[Decimal]:
+    fallback_groups = DERIVED_COMPONENT_FALLBACK_FIELDS.get(
+        (selected.schema_version, metric.canonical_metric)
+    )
+    if not fallback_groups:
+        return []
+    values = [
+        parse_metric_component(field_id, selected, schema_defs, metric)
+        for field_id in fallback_groups[0]
+    ]
+    return [value for value in values if value is not None]
+
+
+def _c1_total_impossible_vs_gender(
+    total: Decimal,
+    selected: SelectedExtractionResult,
+    schema_defs: dict[str, FieldDefinition],
+    metric: MetricDefinition,
+) -> bool:
+    """A published total cannot be smaller than any gender component."""
+    components = _c1_gender_component_values(metric, selected, schema_defs)
+    return any(total < component for component in components)
+
+
+def _c1_residency_shift_total(
+    selected: SelectedExtractionResult,
+    schema_defs: dict[str, FieldDefinition],
+    metric: MetricDefinition,
+) -> Optional[Decimal]:
+    """Detect the 2025-26 Total-last residency zip that lands the college total in Nonresidents or Unknown."""
+    field_ids = C1_RESIDENCY_SHIFT_FIELDS.get((selected.schema_version, metric.canonical_metric))
+    if not field_ids:
+        return None
+    parsed = [
+        parse_metric_component(field_id, selected, schema_defs, metric)
+        for field_id in field_ids
+    ]
+    total, in_state, out_of_state, nonresidents, unknown = parsed
+    gender_values = _c1_gender_component_values(metric, selected, schema_defs)
+    gender_sum = sum(gender_values, Decimal("0")) if gender_values else None
+    if (
+        total is not None
+        and in_state is not None
+        and out_of_state is not None
+        and nonresidents is not None
+        and abs((total + in_state + out_of_state) - nonresidents) <= 1
+        and gender_sum is not None
+        and abs(nonresidents - gender_sum) <= 1
+        and abs(total - nonresidents) > 1
+    ):
+        return gender_sum
+    if (
+        unknown is not None
+        and gender_sum is not None
+        and abs(unknown - gender_sum) <= 1
+        and total is not None
+        and total < unknown
+    ):
+        return gender_sum
     return None
 
 

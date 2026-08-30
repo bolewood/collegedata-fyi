@@ -48,7 +48,7 @@ from openpyxl.utils import get_column_letter
 
 
 PRODUCER_NAME = "tier1_xlsx"
-PRODUCER_VERSION = "0.2.2"
+PRODUCER_VERSION = "0.2.3"
 MIN_TEMPLATE_FIELDS_BEFORE_FALLBACK = 25
 
 # Default template path relative to the repo root.
@@ -370,8 +370,12 @@ def recover_c1_application_values(
 
     Several schools publish the standard 2024-25 workbook with C1 answers in
     the visible table's Total / residency columns instead of the template's
-    mapped answer cells. The row labels and section-C column order are stable
-    enough to recover the C1 values deterministically.
+    mapped answer cells. The 2025-26 template keeps those residency columns
+    but puts Total last (In-State, Out-of-State, International, Unknown,
+    Total). Compacting non-empty numbers left-to-right and zipping them onto
+    All-first slots therefore treats in-state as the college total — Issue
+    #159, Wabash 911 vs 2,496. Map by header when the residency block is
+    present, and never publish a total smaller than a gender component.
     """
     available_sheets = set(wb.sheetnames)
     sheet_name = "CDS-C" if "CDS-C" in available_sheets else build_sheet_aliases(available_sheets).get("CDS-C")
@@ -379,6 +383,7 @@ def recover_c1_application_values(
         return 0
     ws = wb[sheet_name]
     recovered: dict[str, object] = {}
+    residency_columns: dict[int, str] | None = None
 
     def lookup(gender: str, residency: str, action: str, unit_load: str = "All") -> str | None:
         target_gender_aliases = {
@@ -421,8 +426,33 @@ def recover_c1_application_values(
                 return value
         return None
 
+    def gender_sum_for_action(action: str) -> float | None:
+        total = 0.0
+        found = False
+        for gender in ("Males", "Females", "Another Gender", "Unknown"):
+            qnum = lookup(gender, "All", action)
+            raw = recovered.get(qnum) if qnum else None
+            if raw is None and qnum:
+                raw = values.get(qnum, {}).get("value")
+            parsed = _parse_number_like(raw)
+            if parsed is None:
+                continue
+            total += parsed
+            found = True
+        return total if found else None
+
+    def assign_residency(action: str, residency: str, raw_value) -> None:
+        qnum = lookup("All", residency, action)
+        if qnum and _is_number_like(raw_value):
+            recovered[qnum] = raw_value
+
     for row in ws.iter_rows(max_col=12):
         row_values = [cell.value for cell in row]
+        header_columns = _c1_residency_header_columns(row_values)
+        if header_columns:
+            residency_columns = header_columns
+            continue
+
         label_col = None
         label = ""
         for idx, value in enumerate(row_values):
@@ -449,9 +479,9 @@ def recover_c1_application_values(
             continue
 
         gender = None
-        if " men " in f" {label} ":
+        if " men " in f" {label} " or " males " in f" {label} ":
             gender = "Males"
-        elif " women " in f" {label} ":
+        elif " women " in f" {label} " or " females " in f" {label} ":
             gender = "Females"
         elif "another gender" in label:
             gender = "Another Gender"
@@ -475,27 +505,143 @@ def recover_c1_application_values(
         if " who " not in label:
             continue
 
+        if residency_columns:
+            for col_idx, residency in residency_columns.items():
+                assign_residency(action, residency, _row_value(row_values, col_idx))
+            continue
+
         numeric_values = [value for value in row_values[label_col + 1:] if _is_number_like(value)]
         if not numeric_values:
+            continue
+        gender_total = gender_sum_for_action(action)
+        last_number = _parse_number_like(numeric_values[-1])
+        if (
+            len(numeric_values) >= 2
+            and gender_total is not None
+            and last_number is not None
+            and abs(last_number - gender_total) <= 1
+        ):
+            assign_residency(action, "All", numeric_values[-1])
+            for residency, value in zip(
+                ("In-State", "Out-of-State", "Nonresidents", "Unknown"),
+                numeric_values[:-1],
+            ):
+                assign_residency(action, residency, value)
             continue
         for residency, value in zip(
             ("All", "In-State", "Out-of-State", "Nonresidents", "Unknown"),
             numeric_values,
         ):
-            qnum = lookup("All", residency, action)
-            if qnum:
-                recovered[qnum] = value
+            assign_residency(action, residency, value)
 
     count = 0
     for qnum, raw_value in recovered.items():
         if qnum not in qnum_to_field:
             continue
-        value = str(raw_value).strip()
+        value = _format_recovered_number(raw_value)
         if not value:
             continue
         if values.get(qnum, {}).get("value") == value:
             continue
         values[qnum] = _field_record(qnum, value, qnum_to_field)
+        count += 1
+    count += _restore_incoherent_c1_totals(values, qnum_to_field)
+    return count
+
+
+def _c1_header_residency(normalized: str) -> str | None:
+    if normalized in {"total", "all", "grand total"}:
+        return "All"
+    if "out of state" in normalized:
+        return "Out-of-State"
+    if normalized in {"in state", "instate"} or normalized.startswith("in state"):
+        return "In-State"
+    if "international" in normalized or "nonresident" in normalized:
+        return "Nonresidents"
+    if normalized in {"unknown", "unknown residency"}:
+        return "Unknown"
+    return None
+
+
+def _c1_residency_header_columns(row_values: list) -> dict[int, str] | None:
+    found: dict[int, str] = {}
+    for idx, value in enumerate(row_values):
+        residency = _c1_header_residency(_norm_label(value))
+        if residency:
+            found[idx] = residency
+    labels = set(found.values())
+    if "In-State" in labels and ("All" in labels or "Out-of-State" in labels):
+        return found
+    return None
+
+
+def _parse_number_like(value) -> float | None:
+    if not _is_number_like(value):
+        return None
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    try:
+        return float(str(value).replace(",", "").strip())
+    except ValueError:
+        return None
+
+
+def _format_recovered_number(value) -> str:
+    parsed = _parse_number_like(value)
+    if parsed is None:
+        return str(value).strip() if value is not None else ""
+    if parsed.is_integer():
+        return str(int(parsed))
+    return str(value).strip()
+
+
+def _restore_incoherent_c1_totals(values: dict, qnum_to_field: dict[str, dict]) -> int:
+    """Replace a published C1 total that is smaller than a gender component."""
+    count = 0
+    for action in ("applied", "admitted", "enrolled"):
+        total_qnum = None
+        gender_qnums: list[str] = []
+        for qnum, field in qnum_to_field.items():
+            if not str(qnum).startswith("C.1"):
+                continue
+            if str(field.get("residency") or "All") != "All":
+                continue
+            question = _norm_label(field.get("question"))
+            if action == "admitted":
+                if "admitted" not in question:
+                    continue
+            elif action == "applied":
+                if "applied" not in question:
+                    continue
+            elif action == "enrolled":
+                if "enrolled" not in question:
+                    continue
+                if "full time" in question or "part time" in question:
+                    continue
+            gender = _norm_label(field.get("gender"))
+            if gender == "all":
+                total_qnum = qnum
+            elif gender in {"men", "male", "males", "women", "female", "females", "another gender", "unknown", "students of unknown sex", "unknown gender"}:
+                gender_qnums.append(qnum)
+        if not total_qnum or not gender_qnums:
+            continue
+        gender_values = [
+            parsed
+            for parsed in (_parse_number_like(values.get(qnum, {}).get("value")) for qnum in gender_qnums)
+            if parsed is not None
+        ]
+        if not gender_values:
+            continue
+        total_value = _parse_number_like(values.get(total_qnum, {}).get("value"))
+        gender_sum = sum(gender_values)
+        if total_value is not None and total_value + 0.5 >= max(gender_values):
+            continue
+        restored = _format_recovered_number(gender_sum)
+        if values.get(total_qnum, {}).get("value") == restored:
+            continue
+        values[total_qnum] = _field_record(total_qnum, restored, qnum_to_field)
         count += 1
     return count
 

@@ -11,6 +11,63 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from extract import extract
 
 
+def _c1_field(
+    qnum: str,
+    question: str,
+    *,
+    gender: str = "All",
+    residency: str = "All",
+    unit_load: str = "All",
+) -> dict:
+    return {
+        "question_number": qnum,
+        "word_tag": None,
+        "question": question,
+        "section": "First-Time, First-Year Admission",
+        "subsection": "Applications",
+        "value_type": "Number",
+        "gender": gender,
+        "residency": residency,
+        "unit_load": unit_load,
+    }
+
+
+def _schema_2025_c1() -> dict:
+    fields = [
+        _c1_field("C.101", "Total first-time, first-year males who applied", gender="Males"),
+        _c1_field("C.102", "Total first-time, first-year females who applied", gender="Females"),
+        _c1_field("C.103", "Total first-time, first-year students of unknown sex who applied", gender="Unknown"),
+        _c1_field("C.104", "Total first-time, first-year males who were admitted", gender="Males"),
+        _c1_field("C.105", "Total first-time, first-year females who were admitted", gender="Females"),
+        _c1_field("C.106", "Total first-time, first-year students of unknown sex who were admitted", gender="Unknown"),
+        _c1_field("C.107", "Total first-time, first-year males who enrolled", gender="Males"),
+        _c1_field("C.108", "Total first-time, first-year females who enrolled", gender="Females"),
+        _c1_field("C.109", "Total first-time, first-year students of unknown sex who enrolled", gender="Unknown"),
+        _c1_field(
+            "C.110",
+            "Total full-time, first-time, first-year males who enrolled",
+            gender="Males",
+            unit_load="FT",
+        ),
+        _c1_field("C.116", "Total first-time, first-year students who applied"),
+        _c1_field("C.117", "Total first-time, first-year students who were admitted"),
+        _c1_field("C.118", "Total first-time, first-year students who enrolled"),
+        _c1_field("C.119", "Total first-time, first-year who applied", residency="In-State"),
+        _c1_field("C.120", "Total first-time, first-year who were admitted", residency="In-State"),
+        _c1_field("C.121", "Total first-time, first-year who enrolled", residency="In-State"),
+        _c1_field("C.122", "Total first-time, first-year who applied", residency="Out-of-State"),
+        _c1_field("C.123", "Total first-time, first-year who were admitted", residency="Out-of-State"),
+        _c1_field("C.124", "Total first-time, first-year who enrolled", residency="Out-of-State"),
+        _c1_field("C.125", "Total first-time, first-year who applied", residency="Nonresidents"),
+        _c1_field("C.126", "Total first-time, first-year who were admitted", residency="Nonresidents"),
+        _c1_field("C.127", "Total first-time, first-year who enrolled", residency="Nonresidents"),
+        _c1_field("C.128", "Total first-time, first-year who applied", residency="Unknown"),
+        _c1_field("C.129", "Total first-time, first-year who were admitted", residency="Unknown"),
+        _c1_field("C.130", "Total first-time, first-year who enrolled", residency="Unknown"),
+    ]
+    return {"schema_version": "2025-26", "fields": fields}
+
+
 class Tier1ExtractTests(unittest.TestCase):
     def test_uses_short_section_tab_aliases_for_template_cell_map(self):
         wb = openpyxl.Workbook()
@@ -251,6 +308,102 @@ class Tier1ExtractTests(unittest.TestCase):
         self.assertEqual(result["values"]["C.118"]["value"], "23446")
         self.assertEqual(result["values"]["C.119"]["value"], "6218")
         self.assertEqual(result["stats"]["application_fields_recovered"], 11)
+
+    def test_maps_2025_residency_block_total_last_not_in_state_as_all(self):
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "CDS-C"
+        ws["B11"] = "Total first-time, first-year males who applied"
+        ws["E11"] = 2496
+        ws["B16"] = "Total first-time, first-year males who were admitted"
+        ws["E16"] = 1424
+        ws["B21"] = "Total first-time, first-year males who enrolled"
+        ws["E21"] = 264
+        ws["B26"] = "Total full-time, first-time, first-year males who enrolled"
+        ws["E26"] = 264
+        ws["E36"] = "In-State"
+        ws["F36"] = "Out-of-State"
+        ws["G36"] = "International"
+        ws["H36"] = "Unknown"
+        ws["I36"] = "Total"
+        ws["B37"] = "Total first-time, first-year (degree-seeking) who applied"
+        ws["E37"] = 911
+        ws["F37"] = 741
+        ws["G37"] = 844
+        ws["I37"] = 2496
+        ws["B38"] = "Total first-time, first-year (degree-seeking) who were admitted"
+        ws["E38"] = 657
+        ws["F38"] = 519
+        ws["G38"] = 248
+        ws["I38"] = 1424
+        ws["B39"] = "Total first-time, first-year (degree-seeking) who enrolled"
+        ws["E39"] = 185
+        ws["F39"] = 56
+        ws["G39"] = 23
+        ws["I39"] = 264
+
+        schema = _schema_2025_c1()
+        # Template map already has the correct Total cells; recovery must
+        # not zip the in-state column onto C.116/C.117/C.118.
+        cell_map = {
+            "C.101": ("CDS-C", "E11"),
+            "C.104": ("CDS-C", "E16"),
+            "C.107": ("CDS-C", "E21"),
+            "C.116": ("CDS-C", "I37"),
+            "C.117": ("CDS-C", "I38"),
+            "C.118": ("CDS-C", "I39"),
+            "C.119": ("CDS-C", "E37"),
+            "C.122": ("CDS-C", "F37"),
+            "C.125": ("CDS-C", "G37"),
+        }
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx") as tmp:
+            wb.save(tmp.name)
+            result = extract(Path(tmp.name), schema, cell_map)
+
+        self.assertEqual(result["values"]["C.101"]["value"], "2496")
+        self.assertEqual(result["values"]["C.116"]["value"], "2496")
+        self.assertEqual(result["values"]["C.117"]["value"], "1424")
+        self.assertEqual(result["values"]["C.118"]["value"], "264")
+        self.assertEqual(result["values"]["C.119"]["value"], "911")
+        self.assertEqual(result["values"]["C.122"]["value"], "741")
+        self.assertEqual(result["values"]["C.125"]["value"], "844")
+        self.assertEqual(result["values"]["C.120"]["value"], "657")
+        self.assertEqual(result["values"]["C.123"]["value"], "519")
+        self.assertEqual(result["values"]["C.126"]["value"], "248")
+
+    def test_maps_2025_residency_block_when_unknown_column_is_filled(self):
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "CDS-C"
+        ws["B11"] = "Total first-time, first-year males who applied"
+        ws["E11"] = 1000
+        ws["B12"] = "Total first-time, first-year females who applied"
+        ws["E12"] = 2000
+        ws["E36"] = "In-State"
+        ws["F36"] = "Out-of-State"
+        ws["G36"] = "International"
+        ws["H36"] = "Unknown"
+        ws["I36"] = "Total"
+        ws["B37"] = "Total first-time, first-year (degree-seeking) who applied"
+        ws["E37"] = 1100
+        ws["F37"] = 1200
+        ws["G37"] = 400
+        ws["H37"] = 300
+        ws["I37"] = 3000
+
+        schema = _schema_2025_c1()
+        with tempfile.NamedTemporaryFile(suffix=".xlsx") as tmp:
+            wb.save(tmp.name)
+            result = extract(Path(tmp.name), schema, {"C.101": ("CDS-C", "Z99")})
+
+        self.assertEqual(result["values"]["C.101"]["value"], "1000")
+        self.assertEqual(result["values"]["C.102"]["value"], "2000")
+        self.assertEqual(result["values"]["C.116"]["value"], "3000")
+        self.assertEqual(result["values"]["C.119"]["value"], "1100")
+        self.assertEqual(result["values"]["C.122"]["value"], "1200")
+        self.assertEqual(result["values"]["C.125"]["value"], "400")
+        self.assertEqual(result["values"]["C.128"]["value"], "300")
 
     def test_recovers_freshman_c9_header_and_clears_blank_visible_rows(self):
         wb = openpyxl.Workbook()

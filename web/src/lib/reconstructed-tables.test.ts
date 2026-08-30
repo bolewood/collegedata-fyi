@@ -205,6 +205,32 @@ describe("buildReconstructedTables", () => {
     expect(c1?.usedFieldIds).toContain("C.117");
   });
 
+  it("does not display an in-state C1 total that is smaller than the male count", () => {
+    const tables = buildReconstructedTables(
+      {
+        "C.101": field("2496", "Total first-time, first-year males who applied"),
+        "C.104": field("1424", "Total first-time, first-year males who were admitted"),
+        "C.116": field("911", "Total first-time, first-year students who applied"),
+        "C.117": field("657", "Total first-time, first-year students who were admitted"),
+      },
+      "2025-26",
+    );
+
+    const c1 = tables.find((table) => table.key === "c1-admissions");
+    expect(c1?.rows[0].cells.map((cell) => cell.display)).toEqual([
+      "2,496",
+      "Not reported",
+      "Not reported",
+      "2,496",
+    ]);
+    expect(c1?.rows[1].cells.map((cell) => cell.display)).toEqual([
+      "1,424",
+      "Not reported",
+      "Not reported",
+      "1,424",
+    ]);
+  });
+
   it("uses the 2024 C1 layout when the question text exposes another gender fields", () => {
     const tables = buildReconstructedTables({
       "C.101": field("1200", "Total first-time, first-year men who applied"),
