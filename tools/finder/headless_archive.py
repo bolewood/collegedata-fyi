@@ -74,6 +74,51 @@ DRIVE_HOST_RE = re.compile(
     re.I,
 )
 YEAR_RE = re.compile(r"(20\d{2})-(\d{2})")
+WAF_CAPTCHA_MARKERS = (
+    "human verification",
+    "awswaf.com",
+    "amzn-captcha",
+    "let's confirm you are human",
+    "x-amzn-waf-action",
+    "captcha.awswaf.com",
+)
+
+
+def is_waf_captcha_bytes(body: bytes | None, content_type: str = "") -> bool:
+    """True when the response is an AWS WAF / Cloudflare visual captcha page.
+
+    Silent JS challenges that set a cookie and reload are not this — those
+    we wait out. Visual puzzles (Choose all the hats) cannot be a scheduled
+    ingest step.
+    """
+    if not body:
+        return False
+    head = body[:6000].decode("utf-8", errors="ignore").lower()
+    ct = (content_type or "").lower()
+    if "text/html" in ct or head.lstrip().startswith("<!doctype") or "<html" in head[:200]:
+        return any(marker in head for marker in WAF_CAPTCHA_MARKERS)
+    return any(marker in head for marker in WAF_CAPTCHA_MARKERS)
+
+
+def wait_for_waf_pass(page, timeout_ms: int = 12_000) -> bool:
+    """Wait for a silent bot-challenge page to navigate away.
+
+    Returns True if the title is no longer a verification interstitial.
+    Visual captchas stay on 'Human Verification' and return False.
+    """
+    try:
+        page.wait_for_function(
+            """() => {
+              const t = (document.title || '').toLowerCase();
+              return !t.includes('human verification')
+                && !t.includes('just a moment')
+                && !t.includes('attention required');
+            }""",
+            timeout=timeout_ms,
+        )
+        return True
+    except Exception:
+        return False
 
 
 def strip_challenge_query(url: str) -> str:
@@ -482,9 +527,16 @@ def archive_school(
     crawl_status = "skipped"
     if should_crawl_landing(target.landing_url) and page is not None:
         try:
+            wait_for_waf_pass(page, timeout_ms=8_000)
             result = collect_fn(page, target.school_id, target.landing_url)
             crawled = crawl_candidates(result.anchors)
             crawl_status = result.status
+            try:
+                html = page.content().encode("utf-8", errors="ignore")
+            except Exception:
+                html = b""
+            if crawl_status in {"no_anchors", "nav_error"} and is_waf_captcha_bytes(html):
+                crawl_status = "waf_captcha"
         except Exception as exc:  # noqa: BLE001 — YAML fallback still runs
             crawl_status = "nav_error"
             print(
@@ -533,10 +585,15 @@ def archive_school(
         )
         if not ext:
             failed += 1
+            error = (
+                "waf_captcha"
+                if is_waf_captcha_bytes(body, content_type or "")
+                else f"unknown ext ct={content_type} size={len(body)}"
+            )
             actions.append({
                 "url": cand.url, "year": cand.year, "source": cand.source,
                 "action": "failed",
-                "error": f"unknown ext ct={content_type} size={len(body)}",
+                "error": error,
             })
             continue
         year_fn = year_from_url or normalize_year

@@ -17,6 +17,7 @@ from tools.finder.headless_archive import (
     build_targets,
     canonicalize_url,
     crawl_candidates,
+    is_waf_captcha_bytes,
     merge_candidates,
     merge_waf_school_entries,
     resolve_landing,
@@ -52,6 +53,15 @@ class UrlHygieneTests(unittest.TestCase):
             canonicalize_url("https://example.edu/cds.pdf#page=2"),
             "https://example.edu/cds.pdf",
         )
+
+    def test_detects_aws_waf_captcha_html(self) -> None:
+        html = (
+            b"<!DOCTYPE html><title>Human Verification</title>"
+            b"<script src='https://captcha.awswaf.com/challenge.js'></script>"
+            b"<div id='amzn-captcha-verify-button'>Begin</div>"
+        )
+        self.assertTrue(is_waf_captcha_bytes(html, "text/html"))
+        self.assertFalse(is_waf_captcha_bytes(b"%PDF-1.4 school cds", "application/pdf"))
 
 
 class WafMergeTests(unittest.TestCase):
@@ -308,6 +318,42 @@ class ArchiveSchoolTests(unittest.TestCase):
         upload.assert_called_once()
         self.assertEqual(row["inserted"], 1)
         self.assertEqual(row["failed"], 0)
+
+    def test_captcha_html_is_labeled_not_unknown_ext(self) -> None:
+        target = SchoolTarget(
+            school_id="nyu",
+            school_name="New York University",
+            landing_url="https://www.nyu.edu/factbook.html",
+            entry={
+                "urls": [{
+                    "url": "https://www.nyu.edu/cds-2025-2026.pdf",
+                    "year": "2025-26",
+                }],
+                "landing_url": "https://www.nyu.edu/factbook.html",
+            },
+        )
+        html = (
+            b"<!DOCTYPE html><title>Human Verification</title>"
+            b"<script src='https://captcha.awswaf.com/x'></script>"
+        )
+        collect = MagicMock(return_value=SimpleNamespace(status="ok", anchors=[]))
+        download = MagicMock(return_value=(html, "text/html; charset=UTF-8", 405, "https://www.nyu.edu/cds-2025-2026.pdf"))
+        row = archive_school(
+            target=target,
+            known_years=set(),
+            skip_known=True,
+            max_new=2,
+            min_year="2024-25",
+            dry_run=False,
+            page=SimpleNamespace(wait_for_function=MagicMock(side_effect=TimeoutError()), content=lambda: html.decode()),
+            browser_ctx=object(),
+            collect_fn=collect,
+            download_fn=download,
+            upload_fn=MagicMock(),
+            detect_ext_fn=lambda *_args: None,
+        )
+        self.assertEqual(row["failed"], 1)
+        self.assertEqual(row["actions"][0]["error"], "waf_captcha")
 
 
 if __name__ == "__main__":
