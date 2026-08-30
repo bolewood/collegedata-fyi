@@ -1,17 +1,17 @@
 # Alignment gap
 
-**Question:** Of schools whose graduates carry an above-median debt burden,
-how many are already spending more per first-year student on non-need merit
-aid than it would take to close that gap?
+**Question:** How does graduate debt burden compare with non-need merit aid
+and with an institution's financial resources when College Scorecard, CDS
+H2A, and IPEDS are joined?
 
 Open [`/recipes/alignment-gap`](https://www.collegedata.fyi/recipes/alignment-gap)
-for two interactive scatters. Panel A is the CDS join: merit spend per
-first-year (H2A) against the alignment gap (Scorecard), colored by endowment
-per undergraduate (IPEDS). Schools that award no merit aid sit on a dedicated
-`$0` rail, off the log scale. Panel B keeps the endowment scatter so Bard,
-Grinnell, Bennington, Sarah Lawrence, Oberlin, and Earlham — no usable H2A —
-stay on the page. Both panels measure the gap against the same 375-school
-median burden. Hover any dot for the school name.
+for two interactive scatters. Panel A plots the alignment gap (Scorecard)
+against estimated non-need merit aid per first-year student (CDS H2A),
+colored by endowment per undergraduate (IPEDS). Schools that award no
+non-need merit aid sit on a dedicated `$0` rail, off the log scale. Panel B
+keeps a broader endowment comparison so schools without a usable H2A row —
+including Bard and Grinnell — stay on the page. Both panels measure the gap
+against the same 375-school median burden. Hover any dot for the school name.
 
 ## What the recipe computes
 
@@ -22,16 +22,16 @@ earnings:
 burden = median_debt_monthly_payment × 12 / earnings_10yr_median
 ```
 
-The **alignment gap** is the completer debt that would have to be shed to reach
-the 375-school corpus median burden at that school's own earnings, expressed
-per year of enrollment:
+The **alignment gap** estimates how much lower median completer debt would
+need to be for the school to reach the 375-school median burden at its
+existing earnings, expressed per year of enrollment:
 
 ```text
 gap = median_debt_completers × (1 − median_burden / burden) / 4
 ```
 
-**Merit spend per first-year** is the discount a school chooses to hand to
-students who did not demonstrate need:
+**Merit aid per first-year student** is the H2A non-need share times the
+average non-need grant:
 
 ```text
 merit_per_fy = non_need_aid_share_first_year_ft × avg_non_need_grant_first_year_ft
@@ -80,16 +80,17 @@ python3 tools/scorecard/build_alignment_gap_recipe.py
 
 ## How to read the panels
 
-- **Already spending it** — positive gap, merit spend ≥ gap.
-- **Genuinely constrained** — positive gap, merit spend below it. Control
-  group, not a target list. Includes schools that award $0 merit aid and
-  still have a gap.
-- **Gap ≤ 0** — burden at or below the corpus median.
-- Panel B quadrants split the same gap against endowment per undergraduate.
-  “High endowment” on both panels means at or above the 375-school median.
+- **Merit aid is larger than the gap** — positive gap, merit spend ≥ gap.
+- **Merit aid is smaller than the gap** — positive gap, merit spend below it.
+  Includes schools that award $0 merit aid and still have a gap.
+- **Debt burden is at or below the median** — no positive alignment gap under
+  this definition.
+- Panel B quadrants split the same gap against endowment per undergraduate:
+  higher/lower debt burden × higher/lower endowment. “High endowment” on both
+  panels means at or above the 375-school median.
 
-CDS H2A excludes some mixed-need merit awards and covers first-year full-time
-students only, so it describes the recruiting discount, not the whole aid
-budget. Scorecard earnings cover federally aided students and describe a
-cohort that enrolled about a decade before the CDS row. The join is
-institutional, not longitudinal.
+CDS H2A covers first-year full-time students and specifically reports
+non-need aid. Some awards that combine need and merit may not appear. Scorecard
+earnings cover federally aided students and describe a cohort that enrolled
+about a decade before the CDS row. The join is institutional, not longitudinal.
+The gap is a comparison measure, not a recommended tuition price.
