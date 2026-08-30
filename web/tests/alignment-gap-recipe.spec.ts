@@ -63,11 +63,13 @@ test("alignment-gap fig 1 tooltip stays off the pointer on the right side", asyn
   const cy = pointer!.y + pointer!.height / 2;
   const pad = 8;
   const coversPointer =
-    cx >= box!.x - pad &&
-    cx <= box!.x + box!.width + pad &&
-    cy >= box!.y - pad &&
-    cy <= box!.y + box!.height + pad;
+    cx > box!.x - pad &&
+    cx < box!.x + box!.width + pad &&
+    cy > box!.y - pad &&
+    cy < box!.y + box!.height + pad;
   expect(coversPointer).toBe(false);
+  expect(box!.x + box!.width).toBeLessThan(cx);
+  expect(Math.abs(box!.y + box!.height / 2 - cy)).toBeLessThan(120);
 });
 
 test("alignment-gap panels share one gap number for Pratt", async ({ page }) => {

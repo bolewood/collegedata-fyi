@@ -22,7 +22,9 @@ describe("placeTooltipAwayFromPointer", () => {
       pointerY: 220,
     });
     expect(placed.side).toBe("left");
-    expect(placed.left + 260).toBeLessThanOrEqual(860 - 18);
+    expect(placed.left + 260).toBeCloseTo(860 - 18, 5);
+    expect(placed.top).toBeLessThan(220);
+    expect(placed.top + 150).toBeGreaterThan(220);
     expect(
       tooltipCoversPointer(
         { left: placed.left, top: placed.top, width: 260, height: 150 },
@@ -40,7 +42,7 @@ describe("placeTooltipAwayFromPointer", () => {
       pointerY: 300,
     });
     expect(placed.side).toBe("right");
-    expect(placed.left).toBeGreaterThanOrEqual(80 + 18);
+    expect(placed.left).toBeCloseTo(80 + 18, 5);
     expect(
       tooltipCoversPointer(
         { left: placed.left, top: placed.top, width: 260, height: 150 },

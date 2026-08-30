@@ -25,10 +25,10 @@ export function tooltipCoversPointer(
   gap = 0,
 ): boolean {
   return (
-    pointerX >= box.left - gap &&
-    pointerX <= box.left + box.width + gap &&
-    pointerY >= box.top - gap &&
-    pointerY <= box.top + box.height + gap
+    pointerX > box.left - gap &&
+    pointerX < box.left + box.width + gap &&
+    pointerY > box.top - gap &&
+    pointerY < box.top + box.height + gap
   );
 }
 
