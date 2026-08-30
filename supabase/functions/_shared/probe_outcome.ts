@@ -46,6 +46,18 @@ export type ProbeOutcome =
 //                              public.bot_challenged_documents view +
 //                              ops-extraction-worker GitHub-issue notification.
 
+// Map a download HTTP status to a ProbeOutcome. Used by downloadWithCaps
+// so 405 (NYU-style WAF) is bot_challenge rather than a daily transient.
+export function outcomeForDownloadHttpStatus(status: number): ProbeOutcome {
+  if (status === 404 || status === 410) return "dead_url";
+  if (status === 405) return "bot_challenge";
+  return "transient";
+}
+
+export function downloadHttpStatusIsPermanent(outcome: ProbeOutcome): boolean {
+  return outcome === "dead_url" || outcome === "bot_challenge";
+}
+
 export const PROBE_OUTCOME_VALUES: ProbeOutcome[] = [
   "inserted",
   "refreshed",
@@ -178,6 +190,13 @@ export function categoriseLegacyError(
   // HTTP-status-specific
   if (m.includes("http 404") || m.includes("http 410") || m.includes("upstream_gone")) {
     return "dead_url";
+  }
+  // NYU's Akamai WAF rejects non-browser GET with 405 + HTML. That used
+  // to match neither 404 nor 5xx, so archive-process recorded it as
+  // transient, re-enqueued every day, and never minted a bot_challenge
+  // issue. 405 on GET of a document URL is a WAF fingerprint, not a blip.
+  if (m.includes("http 405")) {
+    return "bot_challenge";
   }
   if (
     m.includes("http 5") ||

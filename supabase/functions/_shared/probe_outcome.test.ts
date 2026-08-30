@@ -5,6 +5,8 @@ import {
   authWallOutcome,
   categoriseLegacyError,
   DEFAULT_COOLDOWN_DAYS,
+  downloadHttpStatusIsPermanent,
+  outcomeForDownloadHttpStatus,
   PROBE_OUTCOME_VALUES,
   type ProbeOutcome,
 } from "./probe_outcome.ts";
@@ -93,6 +95,27 @@ Deno.test("categoriseLegacyError: HTTP 503 → transient", () => {
     categoriseLegacyError("download HTTP 503 at https://x.edu/cds.pdf"),
     "transient",
   );
+});
+
+Deno.test("categoriseLegacyError: HTTP 405 → bot_challenge (NYU WAF)", () => {
+  assertEquals(
+    categoriseLegacyError(
+      "exhausted 3 attempts (last: TransientError: download HTTP 405 at https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-on-website/NYU_Common_Data_Set_2020-21.4.30.pdf)",
+    ),
+    "bot_challenge",
+  );
+  assertEquals(
+    categoriseLegacyError("PermanentError: download HTTP 405 bot challenge at https://www.nyu.edu/factbook.html"),
+    "bot_challenge",
+  );
+});
+
+Deno.test("outcomeForDownloadHttpStatus: 405 is a permanent bot_challenge", () => {
+  assertEquals(outcomeForDownloadHttpStatus(405), "bot_challenge");
+  assertEquals(downloadHttpStatusIsPermanent("bot_challenge"), true);
+  assertEquals(outcomeForDownloadHttpStatus(404), "dead_url");
+  assertEquals(outcomeForDownloadHttpStatus(503), "transient");
+  assertEquals(downloadHttpStatusIsPermanent("transient"), false);
 });
 
 Deno.test("categoriseLegacyError: timeout → transient", () => {
