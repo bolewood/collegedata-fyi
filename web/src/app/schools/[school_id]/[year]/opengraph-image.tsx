@@ -4,6 +4,7 @@ import {
   fetchDocumentsBySchoolAndYear,
   fetchExtract,
 } from "@/lib/queries";
+import { c1HeadlineTotals, fieldNumber } from "@/lib/c1-headline-totals";
 import type { FieldValue } from "@/lib/types";
 import { cachedSchoolInks, schoolOgColors } from "@/lib/school-inks";
 
@@ -18,27 +19,7 @@ function getNum(
   values: Record<string, FieldValue>,
   id: string
 ): number | null {
-  const field = values[id];
-  if (!field) return null;
-  const v = field.value_decoded ?? field.value;
-  const n = parseFloat(v.replace(/,/g, ""));
-  return isNaN(n) ? null : n;
-}
-
-function sumFields(
-  values: Record<string, FieldValue>,
-  ...ids: string[]
-): number | null {
-  let total = 0;
-  let found = false;
-  for (const id of ids) {
-    const n = getNum(values, id);
-    if (n != null) {
-      total += n;
-      found = true;
-    }
-  }
-  return found ? total : null;
+  return fieldNumber(values, id);
 }
 
 export default async function Image({
@@ -81,9 +62,11 @@ export default async function Image({
   const doc = docs[0];
   if (doc.extraction_status === "extracted" && doc.document_id) {
     const { mergedValues: values } = await fetchExtract(doc.document_id);
-
-    const totalApplied = sumFields(values, "C.101", "C.102", "C.103");
-    const totalAdmitted = sumFields(values, "C.104", "C.105", "C.106");
+    const schemaVersion = doc.canonical_year ?? doc.cds_year;
+    const { applied: totalApplied, admitted: totalAdmitted } = c1HeadlineTotals(
+      values,
+      schemaVersion,
+    );
 
     if (totalApplied && totalAdmitted && totalApplied > 0) {
       stats.push({

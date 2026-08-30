@@ -76,6 +76,18 @@ def defs():
             "C.116": FieldDefinition("2025-26", "C.116", "Applied", "Admission", "Applications", "Number"),
             "C.117": FieldDefinition("2025-26", "C.117", "Admitted", "Admission", "Applications", "Number"),
             "C.118": FieldDefinition("2025-26", "C.118", "Enrolled", "Admission", "Applications", "Number"),
+            "C.119": FieldDefinition("2025-26", "C.119", "Applied in-state", "Admission", "Applications", "Number"),
+            "C.120": FieldDefinition("2025-26", "C.120", "Admitted in-state", "Admission", "Applications", "Number"),
+            "C.121": FieldDefinition("2025-26", "C.121", "Enrolled in-state", "Admission", "Applications", "Number"),
+            "C.122": FieldDefinition("2025-26", "C.122", "Applied out-of-state", "Admission", "Applications", "Number"),
+            "C.123": FieldDefinition("2025-26", "C.123", "Admitted out-of-state", "Admission", "Applications", "Number"),
+            "C.124": FieldDefinition("2025-26", "C.124", "Enrolled out-of-state", "Admission", "Applications", "Number"),
+            "C.125": FieldDefinition("2025-26", "C.125", "Applied international", "Admission", "Applications", "Number"),
+            "C.126": FieldDefinition("2025-26", "C.126", "Admitted international", "Admission", "Applications", "Number"),
+            "C.127": FieldDefinition("2025-26", "C.127", "Enrolled international", "Admission", "Applications", "Number"),
+            "C.128": FieldDefinition("2025-26", "C.128", "Applied unknown residency", "Admission", "Applications", "Number"),
+            "C.129": FieldDefinition("2025-26", "C.129", "Admitted unknown residency", "Admission", "Applications", "Number"),
+            "C.130": FieldDefinition("2025-26", "C.130", "Enrolled unknown residency", "Admission", "Applications", "Number"),
             "C.201": FieldDefinition("2025-26", "C.201", "Wait list policy", "Admission", "Wait List", "YesNo"),
             "C.202": FieldDefinition("2025-26", "C.202", "Wait list offered", "Admission", "Wait List", "Number"),
             "C.203": FieldDefinition("2025-26", "C.203", "Wait list accepted", "Admission", "Wait List", "Number"),
@@ -279,6 +291,81 @@ class BrowserProjectionTests(unittest.TestCase):
         self.assertEqual(browser["applied"], 220)
         self.assertEqual(browser["admitted"], 22)
         self.assertEqual(browser["acceptance_rate"], "0.100000")
+
+    def test_2025_total_smaller_than_gender_component_uses_gender_sum(self):
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2025-26"),
+            [
+                artifact(values={
+                    "C.101": {"value": "2496"},
+                    "C.104": {"value": "1424"},
+                    "C.107": {"value": "264"},
+                    "C.116": {"value": "911"},
+                    "C.117": {"value": "657"},
+                    "C.118": {"value": "185"},
+                    "C.119": {"value": "741"},
+                    "C.120": {"value": "519"},
+                    "C.121": {"value": "56"},
+                    "C.122": {"value": "844"},
+                    "C.123": {"value": "248"},
+                    "C.124": {"value": "23"},
+                    "C.125": {"value": "2496"},
+                    "C.126": {"value": "1424"},
+                    "C.127": {"value": "264"},
+                })
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["applied"], 2496)
+        self.assertEqual(browser["admitted"], 1424)
+        self.assertEqual(browser["enrolled_first_year"], 264)
+        self.assertEqual(browser["acceptance_rate"], "0.570513")
+        self.assertEqual(browser["yield_rate"], "0.185393")
+
+    def test_2025_residency_shift_fingerprint_uses_gender_sum(self):
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2025-26"),
+            [
+                artifact(values={
+                    "C.101": {"value": "5000"},
+                    "C.102": {"value": "4958"},
+                    "C.104": {"value": "2000"},
+                    "C.105": {"value": "1900"},
+                    "C.116": {"value": "8120"},
+                    "C.117": {"value": "2500"},
+                    "C.119": {"value": "1688"},
+                    "C.120": {"value": "900"},
+                    "C.122": {"value": "150"},
+                    "C.123": {"value": "500"},
+                    "C.125": {"value": "9958"},
+                    "C.126": {"value": "3900"},
+                })
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["applied"], 9958)
+        self.assertEqual(browser["admitted"], 3900)
+
+    def test_2025_duplicate_gender_counts_do_not_replace_matching_total(self):
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2025-26"),
+            [
+                artifact(values={
+                    "C.101": {"value": "2070"},
+                    "C.102": {"value": "2070"},
+                    "C.104": {"value": "500"},
+                    "C.105": {"value": "500"},
+                    "C.116": {"value": "2070"},
+                    "C.117": {"value": "500"},
+                })
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["applied"], 2070)
+        self.assertEqual(browser["admitted"], 500)
 
     def test_sat_act_promoted_fields_project_to_browser_columns(self):
         fields, browser = build_projection_rows(

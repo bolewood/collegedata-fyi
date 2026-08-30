@@ -1,4 +1,5 @@
 import type { FieldValue } from "@/lib/types";
+import { c1HeadlineTotals } from "@/lib/c1-headline-totals";
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
@@ -17,50 +18,6 @@ function getNum(values: Record<string, FieldValue>, id: string): number | null {
   return isNaN(n) ? null : n;
 }
 
-function sumFields(
-  values: Record<string, FieldValue>,
-  ...ids: string[]
-): number | null {
-  let total = 0;
-  let found = false;
-  for (const id of ids) {
-    const n = getNum(values, id);
-    if (n != null) {
-      total += n;
-      found = true;
-    }
-  }
-  return found ? total : null;
-}
-
-function c1TotalsForSchema(schemaVersion: string | undefined): {
-  applied: string[];
-  admitted: string[];
-  enrolled: string[];
-} {
-  if (schemaVersion === "2024-25") {
-    return {
-      applied: ["C.117"],
-      admitted: ["C.118"],
-      enrolled: ["C.119"],
-    };
-  }
-
-  if (schemaVersion === "2025-26") {
-    return {
-      applied: ["C.116"],
-      admitted: ["C.117"],
-      enrolled: ["C.118"],
-    };
-  }
-
-  return {
-    applied: ["C.101", "C.102", "C.103"],
-    admitted: ["C.104", "C.105", "C.106"],
-    enrolled: ["C.107", "C.108", "C.109"],
-  };
-}
-
 export function KeyStats({
   schemaVersion,
   values,
@@ -70,10 +27,8 @@ export function KeyStats({
 }) {
   const stats: { label: string; value: string }[] = [];
 
-  const c1Totals = c1TotalsForSchema(schemaVersion);
-  const totalApplied = sumFields(values, ...c1Totals.applied);
-  const totalAdmitted = sumFields(values, ...c1Totals.admitted);
-  const totalEnrolled = sumFields(values, ...c1Totals.enrolled);
+  const { applied: totalApplied, admitted: totalAdmitted, enrolled: totalEnrolled } =
+    c1HeadlineTotals(values, schemaVersion);
 
   // Acceptance rate
   if (totalApplied && totalAdmitted && totalApplied > 0) {

@@ -1,3 +1,4 @@
+import { c1HeadlineTotals } from "./c1-headline-totals";
 import { formatFieldValue } from "./format";
 import { isSchema2024_25 } from "./schema-labels";
 import type { FieldValue } from "./types";
@@ -456,39 +457,72 @@ function isC12024Layout(values: Record<string, FieldValue>): boolean {
 }
 
 function c1Table2025(values: Record<string, FieldValue>): ReconstructedTable {
-  return makeTable({
-    key: "c1-admissions",
-    title: "C1 first-year admissions",
-    caption:
-      "First-time, first-year applicants, admits, and enrolled students by sex or status.",
-    columns: ["Males", "Females", "Unknown sex", "Total"],
-    rows: [
-      ["applied", "Applied", ["C.101", "C.102", "C.103", "C.116"]],
-      ["admitted", "Admitted", ["C.104", "C.105", "C.106", "C.117"]],
-      ["enrolled", "Enrolled", ["C.107", "C.108", "C.109", "C.118"]],
-      ["enrolled-ft", "Enrolled full-time", ["C.110", "C.112", "C.114", null]],
-      ["enrolled-pt", "Enrolled part-time", ["C.111", "C.113", "C.115", null]],
-    ],
+  return patchC1HeadlineTotals(
+    makeTable({
+      key: "c1-admissions",
+      title: "C1 first-year admissions",
+      caption:
+        "First-time, first-year applicants, admits, and enrolled students by sex or status.",
+      columns: ["Males", "Females", "Unknown sex", "Total"],
+      rows: [
+        ["applied", "Applied", ["C.101", "C.102", "C.103", "C.116"]],
+        ["admitted", "Admitted", ["C.104", "C.105", "C.106", "C.117"]],
+        ["enrolled", "Enrolled", ["C.107", "C.108", "C.109", "C.118"]],
+        ["enrolled-ft", "Enrolled full-time", ["C.110", "C.112", "C.114", null]],
+        ["enrolled-pt", "Enrolled part-time", ["C.111", "C.113", "C.115", null]],
+      ],
+      values,
+    }),
     values,
-  });
+    "2025-26",
+  );
 }
 
 function c1Table2024(values: Record<string, FieldValue>): ReconstructedTable {
-  return makeTable({
-    key: "c1-admissions",
-    title: "C1 first-year admissions",
-    caption:
-      "First-time, first-year applicants, admits, and enrolled students by gender or status.",
-    columns: ["Men", "Women", "Another gender", "Unknown gender", "Total"],
-    rows: [
-      ["applied", "Applied", ["C.101", "C.102", "C.103", "C.104", "C.117"]],
-      ["admitted", "Admitted", ["C.105", "C.106", "C.107", "C.108", "C.118"]],
-      ["enrolled-ft", "Enrolled full-time", ["C.109", "C.111", "C.113", "C.115", null]],
-      ["enrolled-pt", "Enrolled part-time", ["C.110", "C.112", "C.114", "C.116", null]],
-      ["enrolled-total", "Enrolled total", [null, null, null, null, "C.119"]],
-    ],
+  return patchC1HeadlineTotals(
+    makeTable({
+      key: "c1-admissions",
+      title: "C1 first-year admissions",
+      caption:
+        "First-time, first-year applicants, admits, and enrolled students by gender or status.",
+      columns: ["Men", "Women", "Another gender", "Unknown gender", "Total"],
+      rows: [
+        ["applied", "Applied", ["C.101", "C.102", "C.103", "C.104", "C.117"]],
+        ["admitted", "Admitted", ["C.105", "C.106", "C.107", "C.108", "C.118"]],
+        ["enrolled-ft", "Enrolled full-time", ["C.109", "C.111", "C.113", "C.115", null]],
+        ["enrolled-pt", "Enrolled part-time", ["C.110", "C.112", "C.114", "C.116", null]],
+        ["enrolled-total", "Enrolled total", [null, null, null, null, "C.119"]],
+      ],
+      values,
+    }),
     values,
-  });
+    "2024-25",
+  );
+}
+
+function patchC1HeadlineTotals(
+  table: ReconstructedTable,
+  values: Record<string, FieldValue>,
+  schemaVersion: string,
+): ReconstructedTable {
+  const headlines = c1HeadlineTotals(values, schemaVersion);
+  const byRow: Record<string, number | null> = {
+    applied: headlines.applied,
+    admitted: headlines.admitted,
+    enrolled: headlines.enrolled,
+    "enrolled-total": headlines.enrolled,
+  };
+  for (const row of table.rows) {
+    const coherent = byRow[row.key];
+    if (coherent == null) continue;
+    const cell = row.cells.at(-1);
+    if (!cell) continue;
+    const display = formatFieldValue(String(coherent), "Number");
+    if (cell.display === display) continue;
+    cell.display = display;
+    cell.missing = false;
+  }
+  return table;
 }
 
 function buildC7Tables(values: Record<string, FieldValue>): ReconstructedTable[] {
