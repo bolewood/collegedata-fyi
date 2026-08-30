@@ -38,33 +38,40 @@ describe("alignment-gap recipe", () => {
     expect(formatEndowmentPerStudent(4_982_000)).toBe("$4.98M");
   });
 
-  it("writes the lede as burden, then a debt gap, then two panels", () => {
+  it("writes the lede as debt burden, then an alignment gap, then two panels", () => {
     const page = src("app/recipes/alignment-gap/page.tsx");
-    expect(page).toContain("What a school charges, against what it");
-    expect(page).toContain("Debt burden is the share of median 10-year earnings");
-    expect(page).toContain("expressed per year of enrollment");
+    expect(page).toContain("Debt burden, aid, and");
+    expect(page).toContain("financial resources");
+    expect(page).toContain("College affordability data lives in several different places.");
+    expect(page).toContain("The starting point is");
+    expect(page).toContain("debt burden");
+    expect(page).toContain("alignment gap");
+    expect(page).toContain("expressed per year of college");
     expect(page).toContain("completer");
-    expect(page).toContain("corpus median burden");
     expect(page).not.toContain("how much net price would have to fall");
     expect(page).not.toContain("or could rise");
-    expect(page).toContain("Hover any dot");
+    expect(page).not.toContain("already leaving the building");
+    expect(page).not.toContain("students who don");
+    expect(page).not.toContain("What a school charges, against what it");
     expect(page).not.toMatch(/Recipe 1B/);
     expect(page).not.toMatch(/IPERS/);
     expect(page).not.toMatch(/Naming it would be accurate and unfair/);
 
     const chart = src("components/AlignmentGapChart.tsx");
-    expect(chart).toContain("data-testid=\"alignment-gap-tooltip\"");
+    expect(chart).toContain("testId=\"alignment-gap-tooltip\"");
     expect(chart).toContain("{hover.schoolName}");
-    expect(chart).toContain("Could they afford to?");
-    expect(chart).toContain("Hover any dot — every school is named");
+    expect(chart).toContain("Compare debt burden with endowment per student");
+    expect(chart).toContain("Hover over any dot to see the");
     expect(chart).toContain("var(--ochre)");
     expect(chart).toContain("○ 90% and over");
+    expect(chart).toContain("ChartHoverTooltip");
+    expect(chart).not.toContain("Could they afford to?");
     expect(chart).not.toContain("var(--forest-2)");
     expect(chart).not.toContain("var(--forest-ink)");
     expect(chart).not.toMatch(/best\.nm \?/);
 
     const merit = src("components/AlignmentGapMeritChart.tsx");
-    expect(merit).toContain("Are they already spending it?");
+    expect(merit).toContain("Compare the debt gap with merit aid");
     expect(merit).toContain("merit spend = annual gap");
     expect(merit).toContain("{hover.schoolName}");
     expect(merit).toContain("CDS H2A");
@@ -72,11 +79,23 @@ describe("alignment-gap recipe", () => {
     expect(merit).toContain("var(--forest)");
     expect(merit).toContain("○ ");
     expect(merit).toContain("NO MERIT AID");
-    expect(merit).toContain("GAP ≤ 0");
+    expect(merit).toContain("AT OR BELOW MEDIAN");
+    expect(merit).toContain("LARGER THAN THE GAP");
+    expect(merit).toContain("SMALLER THAN THE GAP");
     expect(merit).toContain("alignment-gap-zero-rail");
+    expect(merit).toContain("The vertical axis shows the alignment gap");
+    expect(merit).toContain("ChartHoverTooltip");
+    expect(merit).not.toContain("Are they already spending it?");
     expect(merit).not.toContain("NO GAP TO CLOSE");
+    expect(merit).not.toContain("GENUINELY CONSTRAINED");
+    expect(merit).not.toContain("ALREADY SPENDING IT");
     expect(merit).not.toContain("endowmentTercile");
     expect(merit).not.toContain("var(--forest-ink)");
+
+    const tooltip = src("components/ChartHoverTooltip.tsx");
+    expect(tooltip).toContain("placeTooltipAwayFromPointer");
+    expect(tooltip).toContain("data-tooltip-side");
+    expect(tooltip).toContain("pointerEvents: \"none\"");
 
     const analysis = src("lib/alignment-gap-recipe-analysis.ts");
     expect(analysis).toContain('fill: "none"');
@@ -84,31 +103,35 @@ describe("alignment-gap recipe", () => {
     expect(analysis).toContain('fill: "var(--forest)"');
   });
 
-  it("applies the seven copy fixes", () => {
-    const page = src("app/recipes/alignment-gap/page.tsx");
-    expect(page).toContain(
-      "the lowest instruction-to-net-price ratio of its peer group at 0.76",
-    );
+  it("keeps the method notes and drops the old punchy panel names", () => {
+    const page = src("app/recipes/alignment-gap/page.tsx").replace(/\s+/g, " ");
+    expect(page).toContain("instructional spending equal to about");
+    expect(page).toContain("% of its average net price.");
     expect(page).not.toContain("already spending most of net price on instruction");
     expect(page).toContain(
-      "Instruction often exceeds net price — at these endowment levels, tuition is not what pays for the classroom.",
+      "reported instructional spending per student exceeds average net price",
     );
     expect(page).not.toContain("because the endowment, not tuition, is paying");
     expect(page).toContain("federal aggregate borrowing");
     expect(page).toContain("dependent undergraduates");
-    expect(page).toContain("Bard and Grinnell enroll students with almost identical median SATs");
-    expect(page).toContain("whether an applicant should be able to see both numbers before");
+    expect(page).toContain("An example: Bard and Grinnell");
+    expect(page).toContain("Those numbers do");
+    expect(page).not.toContain("whether an applicant should be able to see both numbers before");
+    expect(page).not.toContain("Same students, same outcomes, opposite prices");
     expect(page).toContain("CDS H2A");
-    expect(page).toContain("The vertical axis is");
     expect(page).toContain("College Scorecard");
-    expect(page).toContain("excludes some mixed-need merit awards");
+    expect(page).toContain("Some awards that combine need and merit may not appear");
     expect(page).toContain("limit=1000&offset=1000");
     expect(page).toContain("limit=1000&offset=2000");
     expect(page).toContain("Content-Range: 0-999/2158");
-    expect(page).toContain("[0, $80,000]");
+    expect(page).toContain("[0, 80000]");
     expect(page).toContain("institution_directory.undergraduate_enrollment");
     expect(page).toContain("undergrad_enrollment_scorecard");
     expect(page).toContain("A published $0 grant is kept");
+    expect(page).toContain("Merit aid is larger than the gap");
+    expect(page).toContain("Merit aid is smaller than the gap");
+    expect(page).not.toContain("Already spending it");
+    expect(page).not.toContain("Genuinely constrained");
     expect(page).not.toContain("which is why its n is larger");
     expect(page).not.toContain("land far below what those scores predict");
     expect(page).not.toContain("Each panel uses the median burden of the sample it plots");
@@ -142,7 +165,10 @@ describe("alignment-gap recipe", () => {
     );
     expect(Math.round(ALIGNMENT_GAP_MERIT_META.coversShare * 100)).toBe(61);
     const recipesIndex = src("app/recipes/page.tsx");
-    expect(recipesIndex).toContain("61% already spend more per first-year");
+    expect(recipesIndex).toContain(
+      "Compare the alignment gap with merit aid, then with endowment per student. Hover any school.",
+    );
+    expect(recipesIndex).not.toContain("61% already spend more per first-year");
     expect(recipesIndex).not.toContain("63% already spend more per first-year");
   });
 

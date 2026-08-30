@@ -5,20 +5,21 @@ import { AlignmentGapMeritChart } from "@/components/AlignmentGapMeritChart";
 import { TrackedLink } from "@/components/TrackedLink";
 import { formatRecipeShare } from "@/lib/format";
 import {
-  formatEndowmentPerStudent,
   formatUsd,
   type AlignmentGapMeritRow,
+  type AlignmentGapRow,
 } from "@/lib/alignment-gap-recipe-analysis";
 import {
   ALIGNMENT_GAP_MERIT_META,
   ALIGNMENT_GAP_MERIT_SCHOOLS,
   ALIGNMENT_GAP_META,
+  ALIGNMENT_GAP_SCHOOLS,
 } from "@/lib/alignment-gap-recipe-data";
 
 export const metadata: Metadata = {
   title: "Alignment gap",
   description:
-    "Whether a school is already spending its alignment gap on non-need merit aid, plotted against College Scorecard debt burden and IPEDS endowment.",
+    "Debt burden, aid, and financial resources — College Scorecard, CDS H2A merit aid, and IPEDS endowment in one comparison.",
   alternates: { canonical: "/recipes/alignment-gap" },
   openGraph: { url: "/recipes/alignment-gap" },
 };
@@ -45,6 +46,9 @@ const TRAPPED_EXAMPLE_IDS = [
 const meritById = new Map(
   ALIGNMENT_GAP_MERIT_SCHOOLS.map((row) => [row.schoolId, row]),
 );
+const endowmentById = new Map(
+  ALIGNMENT_GAP_SCHOOLS.map((row) => [row.schoolId, row]),
+);
 
 function requireMerit(id: string): AlignmentGapMeritRow {
   const row = meritById.get(id);
@@ -52,56 +56,78 @@ function requireMerit(id: string): AlignmentGapMeritRow {
   return row;
 }
 
+function requireEndowment(id: string): AlignmentGapRow {
+  const row = endowmentById.get(id);
+  if (!row) throw new Error(`endowment join missing ${id}`);
+  return row;
+}
+
+function roundUsd(value: number, step: number): string {
+  return formatUsd(Math.round(value / step) * step);
+}
+
 const COVERS_EXAMPLES = COVERS_EXAMPLE_IDS.map(requireMerit);
 const TRAPPED_EXAMPLES = TRAPPED_EXAMPLE_IDS.map(requireMerit);
+const quincy = requireMerit("quincy-university");
+const hollins = requireEndowment("hollins-university");
+const bennington = requireEndowment("bennington-college");
+const bard = requireEndowment("bard-college");
+const grinnell = requireEndowment("grinnell-college");
 const ex = ALIGNMENT_GAP_MERIT_META.exclusions;
-const coversPct = formatRecipeShare(ALIGNMENT_GAP_MERIT_META.coversShare, 0);
+const medianEndowmentUsd = roundUsd(
+  ALIGNMENT_GAP_META.medianEndowmentPerStudent,
+  1000,
+);
+const hollinsEndowmentUsd = roundUsd(hollins.endowmentPerStudent, 1000);
+const bardEndowmentUsd = roundUsd(bard.endowmentPerStudent, 100);
+const grinnellEndowmentMillions = (grinnell.endowmentPerStudent / 1_000_000).toFixed(2);
+const benningtonInstructionPct = Math.round(bennington.instructionShare * 100);
 
 const REGIONS = [
   {
     num: "A",
-    head: "Already spending it",
+    head: "Merit aid is larger than the gap",
     count: ALIGNMENT_GAP_MERIT_META.regions.covers,
-    body: `${ALIGNMENT_GAP_MERIT_META.regions.covers} of ${ALIGNMENT_GAP_MERIT_META.positiveGap} — ${coversPct} — spend more per first-year student on non-need merit aid than their entire annual alignment gap. Quincy is the discounting model in one row: every first-year gets merit aid averaging $27,587 against a $20,359 net price.`,
+    body: `Among the ${ALIGNMENT_GAP_MERIT_META.positiveGap} schools in this view with above-median debt burden, ${ALIGNMENT_GAP_MERIT_META.regions.covers} report average non-need merit aid per first-year student that is larger than their annual alignment gap. Quincy University is an especially visible example. It reports non-need merit aid for every full-time first-year student, averaging ${formatUsd(quincy.avgMeritGrant)}, compared with an average net price of ${formatUsd(quincy.avgNetPrice)} and an alignment gap of ${formatUsd(quincy.gap)} per year. That does not mean Quincy could simply move ${formatUsd(quincy.gap)} from one budget line to another. It does show that the scale of its existing merit discount is large relative to the debt adjustment represented by the gap.`,
   },
   {
     num: "B",
-    head: "Genuinely constrained",
+    head: "Merit aid is smaller than the gap",
     count: ALIGNMENT_GAP_MERIT_META.regions.constrained,
-    body: "Positive gap, merit spend below it. This list is mostly regional publics and HBCUs. Incarnate Word sits on the $0 rail: it awards no non-need aid and still has a gap to close. Control group, not a target list — schools whose discount is already spoken for, or was never large enough to close the gap.",
+    body: "These schools also have above-median debt burden, but their reported non-need merit aid per first-year student is smaller than the alignment gap. Some award very little non-need merit aid at all. The University of the Incarnate Word, for example, reports $0 in this CDS measure while still showing a positive alignment gap. For these schools, Panel A provides less evidence that a large non-need merit program is part of the affordability picture. Other factors—price, need-based aid, student borrowing, graduate earnings, and the institution's broader finances—matter more.",
   },
   {
     num: "C",
-    head: "No gap to close",
+    head: "Debt burden is at or below the median",
     count: ALIGNMENT_GAP_MERIT_META.regions.none,
-    body: "Burden at or below the 375-school corpus median. The money question does not arise. They stay on the chart so the diagonal has a below as well as an above.",
+    body: `These schools have no positive alignment gap under this definition because their debt burden is already at or below the ${formatRecipeShare(ALIGNMENT_GAP_META.medianBurden, 2)} median used for the comparison. They remain on the chart so the relationship between merit aid and debt burden can be seen across the full sample.`,
   },
 ];
 
 const QUADRANTS = [
   {
     num: "I",
-    head: "Capacity exists",
+    head: "Higher debt burden · higher endowment",
     count: ALIGNMENT_GAP_META.quadrants.capacity,
-    body: "Burden above the median, and endowment above it too. If price and outcome are out of line here, the money to close the gap is on the balance sheet. Hollins sits furthest out: an 8.6% burden against about $457k per student.",
+    body: `These schools have debt burden above the sample median and endowment per undergraduate above the sample median. That combination does not tell us what a school should charge or how much of its endowment could be used for financial aid. It does tell us that the institution has relatively greater financial resources while its graduates still carry a relatively high federal-loan burden. Hollins University is near the outer edge of this group, with a ${formatRecipeShare(hollins.burden, 1)} debt burden and roughly ${hollinsEndowmentUsd} in endowment per undergraduate.`,
   },
   {
     num: "II",
-    head: "Constrained",
+    head: "Higher debt burden · lower endowment",
     count: ALIGNMENT_GAP_META.quadrants.constrained,
-    body: "The same elevated burden, without the endowment to buy the price down. Bennington lives here — high burden on a modest per-student endowment, and the lowest instruction-to-net-price ratio of its peer group at 0.76.",
+    body: `These schools also have above-median debt burden, but their endowment per undergraduate is below the median. That is an important distinction. Two colleges can produce a similar debt burden for graduates while having very different financial resources available to support students or subsidize the cost of instruction. Bennington College is one example: relatively high debt burden, a more modest endowment per student, and instructional spending equal to about ${benningtonInstructionPct}% of its average net price.`,
   },
   {
     num: "III",
-    head: "Endowment absorbs it",
+    head: "Lower debt burden · higher endowment",
     count: ALIGNMENT_GAP_META.quadrants.absorbs,
-    body: "Grinnell, Princeton, Stanford, Wellesley — low burden next to large per-student wealth. Instruction often exceeds net price — at these endowment levels, tuition is not what pays for the classroom.",
+    body: "These schools combine debt burden at or below the median with above-median endowment per undergraduate. This group includes Grinnell, Princeton, Stanford, and Wellesley. At a number of highly endowed colleges, reported instructional spending per student exceeds average net price. In other words, tuition and other payments from students are only part of what funds the educational program.",
   },
   {
     num: "IV",
-    head: "Earnings do the work",
+    head: "Lower debt burden · lower endowment",
     count: ALIGNMENT_GAP_META.quadrants.earnings,
-    body: "No unusual wealth, low burden anyway, because graduates earn enough to carry the debt. Bentley, Babson, and Santa Clara sit here.",
+    body: "These schools keep debt burden at or below the median without an unusually large endowment per student. Graduate earnings can be an important part of that result because earnings are the denominator in the debt-burden calculation. Debt levels matter too. Bentley, Babson, and Santa Clara are examples in this part of the chart.",
   },
 ];
 
@@ -113,9 +139,6 @@ export default function AlignmentGapPage() {
   const sampleMedianBurden = formatRecipeShare(
     ALIGNMENT_GAP_MERIT_META.sampleMedianBurden,
     2,
-  );
-  const medianEndowment = formatEndowmentPerStudent(
-    ALIGNMENT_GAP_META.medianEndowmentPerStudent,
   );
 
   return (
@@ -153,81 +176,86 @@ export default function AlignmentGapPage() {
               fontSize: "clamp(36px, 5.5vw, 52px)",
               margin: "12px 0 0",
               letterSpacing: "-0.02em",
-              lineHeight: 1,
+              lineHeight: 1.05,
             }}
           >
-            What a school charges, against what it{" "}
-            <span style={{ fontStyle: "italic" }}>delivers.</span>
+            Debt burden, aid, and{" "}
+            <span style={{ fontStyle: "italic" }}>financial resources</span>
           </h1>
-          <p
-            className="serif"
-            style={{
-              maxWidth: 740,
-              marginTop: 12,
-              color: "var(--ink-2)",
-              fontSize: 18,
-              fontStyle: "italic",
-              lineHeight: 1.55,
-            }}
-          >
-            Debt burden is the share of median 10-year earnings that goes to
-            federal loan payments each year. The alignment gap is the completer
-            debt a school would have to shed to reach the corpus median burden
-            at its own earnings, expressed per year of enrollment. Panel A asks
-            whether the school is already spending that money on students who
-            did not demonstrate need. Panel B asks whether the endowment could
-            close it.
-          </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
           <span className="cd-chip">CDS H2A</span>
-          <span className="cd-chip">Scorecard</span>
+          <span className="cd-chip">College Scorecard</span>
           <span className="cd-chip">IPEDS</span>
         </div>
       </header>
+
+      <div style={{ maxWidth: 760, marginTop: 16 }}>
+        <p
+          className="serif"
+          style={{
+            margin: 0,
+            color: "var(--ink-2)",
+            fontSize: 18,
+            fontStyle: "italic",
+            lineHeight: 1.55,
+          }}
+        >
+          College affordability data lives in several different places.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          The College Scorecard tells us about student debt, loan payments,
+          earnings, and net price. The Common Data Set tells us how colleges
+          use non-need merit aid. IPEDS tells us about institutional finances,
+          including endowment and instructional spending.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          This page joins those sources to look at them together.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          The starting point is <strong>debt burden</strong>: the share of
+          median earnings that would go toward federal student-loan payments
+          each year. We then calculate an <strong>alignment gap</strong> for
+          each school: roughly how much less debt its graduates would need to
+          carry, expressed per year of college, to reach the median debt burden
+          in this group of schools.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          The gap is not a recommended tuition price or a claim that lowering
+          price by exactly that amount would produce the same reduction in
+          borrowing. It is a common yardstick that lets us compare the size of
+          the debt burden with other financial measures from the college.
+        </p>
+      </div>
 
       <section
         className="endowment-recipe-ledger rule-2"
         style={{ marginTop: 28 }}
       >
         <div>
-          <span className="meta">Merit join</span>
           <strong>{ALIGNMENT_GAP_MERIT_META.schoolCount.toLocaleString("en-US")}</strong>
-          <small>CDS H2A × Scorecard × IPEDS, after range guards</small>
+          <small>Schools with usable merit-aid, debt, earnings, price, and endowment data</small>
         </div>
         <div>
-          <span className="meta">Already spending it</span>
+          <strong>{ALIGNMENT_GAP_MERIT_META.positiveGap.toLocaleString("en-US")}</strong>
+          <small>
+            Debt burden above the {corpusMedianBurden} median used on this page
+          </small>
+        </div>
+        <div>
           <strong>
             {ALIGNMENT_GAP_MERIT_META.regions.covers} of {ALIGNMENT_GAP_MERIT_META.positiveGap}
           </strong>
           <small>
-            {coversPct} of schools with a positive gap — merit sample
+            Schools where estimated non-need merit aid per first-year student is
+            larger than the annual alignment gap
           </small>
         </div>
         <div>
-          <span className="meta">Genuinely constrained</span>
-          <strong>{ALIGNMENT_GAP_MERIT_META.regions.constrained.toLocaleString("en-US")}</strong>
-          <small>Positive gap, merit spend below it — merit sample</small>
-        </div>
-        <div>
-          <span className="meta">$0 merit aid</span>
           <strong>{ALIGNMENT_GAP_MERIT_META.zeroMeritCount.toLocaleString("en-US")}</strong>
-          <small>Need-only schools, plotted on the left rail</small>
+          <small>Schools in this sample reporting no non-need merit aid</small>
         </div>
       </section>
-
-      <p
-        className="serif"
-        style={{
-          maxWidth: 760,
-          marginTop: 28,
-          fontSize: 20,
-          lineHeight: 1.45,
-          color: "var(--ink)",
-        }}
-      >
-        {ALIGNMENT_GAP_MERIT_META.regions.covers} of {ALIGNMENT_GAP_MERIT_META.positiveGap} — {coversPct} — spend more per first-year student on non-need merit aid than their entire annual alignment gap. For those schools, the money to close that gap is already leaving the building. It is going to students who don&apos;t need it.
-      </p>
 
       <section style={{ marginTop: 28 }}>
         <AlignmentGapMeritChart />
@@ -272,7 +300,7 @@ export default function AlignmentGapPage() {
 
       <section style={{ marginTop: 36, overflowX: "auto" }}>
         <div className="meta" style={{ marginBottom: 10 }}>
-          Worked examples · already spending it
+          Worked examples · merit aid larger than the gap
         </div>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
@@ -302,7 +330,7 @@ export default function AlignmentGapPage() {
 
       <section style={{ marginTop: 28, overflowX: "auto" }}>
         <div className="meta" style={{ marginBottom: 10 }}>
-          Worked examples · genuinely constrained
+          Worked examples · merit aid smaller than the gap
         </div>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
@@ -324,26 +352,39 @@ export default function AlignmentGapPage() {
         </table>
       </section>
 
-      <section className="endowment-recipe-ledger rule-2" style={{ marginTop: 48 }}>
+      <section style={{ marginTop: 48, maxWidth: 760 }}>
+        <h2 className="serif" style={{ fontSize: 28, margin: "0 0 12px", letterSpacing: "-0.015em" }}>
+          Now add financial resources
+        </h2>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: 0 }}>
+          The merit-aid comparison only works for schools with usable CDS H2A
+          data. Many colleges do not publish that field consistently.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          A second view uses a larger group of {ALIGNMENT_GAP_META.schoolCount}{" "}
+          schools and asks a different question: <strong>how does graduate
+          debt burden compare with the financial resources of the
+          institution?</strong> Here we plot the same alignment gap against
+          endowment per undergraduate.
+        </p>
+      </section>
+
+      <section className="endowment-recipe-ledger rule-2" style={{ marginTop: 28 }}>
         <div>
-          <span className="meta">Endowment join</span>
           <strong>{ALIGNMENT_GAP_META.schoolCount.toLocaleString("en-US")}</strong>
-          <small>SAT midpoint, Scorecard, net price, endowment — Panel B</small>
+          <small>Schools in the endowment comparison</small>
         </div>
         <div>
-          <span className="meta">Median debt burden</span>
           <strong>{corpusMedianBurden}</strong>
-          <small>375-school endowment join — both panels</small>
+          <small>Median debt burden in this group</small>
         </div>
         <div>
-          <span className="meta">Above that burden</span>
           <strong>{ALIGNMENT_GAP_META.aboveMedianBurden.toLocaleString("en-US")}</strong>
-          <small>Schools whose graduates carry more than the Panel B median</small>
+          <small>Debt burden above the median</small>
         </div>
         <div>
-          <span className="meta">Median endowment</span>
-          <strong>{medianEndowment}</strong>
-          <small>Per undergraduate — the vertical divider</small>
+          <strong>{medianEndowmentUsd}</strong>
+          <small>Median endowment per undergraduate</small>
         </div>
       </section>
 
@@ -389,101 +430,219 @@ export default function AlignmentGapPage() {
       </section>
 
       <section style={{ marginTop: 48, maxWidth: 760 }}>
+        <h2 className="serif" style={{ fontSize: 28, margin: "0 0 12px", letterSpacing: "-0.015em" }}>
+          An example: Bard and Grinnell
+        </h2>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: 0 }}>
-          Bard and Grinnell enroll students with almost identical median SATs — 1510
-          and 1490. Grinnell charges $17,648 net; Bard charges $34,649. Grinnell&apos;s graduates
-          carry a 3.5% debt burden, Bard&apos;s 6.6%. Grinnell also holds $1.54M in
-          endowment per undergraduate against Bard&apos;s $69.5k — 22 times as much.
-          Same students, same outcomes, opposite prices, and the reason is on the
-          balance sheet rather than in the admissions office.
+          Bard and Grinnell illustrate why putting these datasets together can
+          be useful.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          The pair shows the mechanism, not the choice set. Grinnell admitted 14.5%
-          of applicants in 2024–25 — 1,416 of 9,758 — so most students choosing Bard
-          were never choosing between the two. Neither school appears in Panel A:
-          they file no usable H2A row. That is why Panel B stays.
+          Their published median SAT scores are similar: {bard.satCompositeP50}{" "}
+          for Bard and {grinnell.satCompositeP50} for Grinnell. But the financial
+          picture in the joined data is very different.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          A 17-year-old comparing these two schools is choosing between a 3.5% debt
-          burden and a 6.6% one. Neither school publishes that number. Both publish a
-          sticker price. Whether a school <em>should</em> price to its outcomes is
-          arguable — whether an applicant should be able to see both numbers before
-          signing is not.
+          Grinnell&apos;s average net price is {formatUsd(grinnell.avgNetPrice)},
+          compared with {formatUsd(bard.avgNetPrice)} at Bard. Grinnell&apos;s
+          graduate debt burden is {formatRecipeShare(grinnell.burden, 1)},
+          compared with {formatRecipeShare(bard.burden, 1)} at Bard. And Grinnell
+          reports about ${grinnellEndowmentMillions} million in endowment per
+          undergraduate, compared with about {bardEndowmentUsd} at Bard.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          Those numbers do <strong>not</strong> make Bard and Grinnell equivalent
+          colleges, nor do they prove that the difference in endowment caused
+          the difference in price or debt. Admissions alone make that clear:
+          Grinnell admitted 1,416 of 9,758 applicants in 2024–25, or 14.5%.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          The comparison simply shows what becomes visible when data that
+          normally sits in separate systems is placed side by side. Two
+          colleges can enroll students with similar published test profiles
+          while having very different prices, graduate debt burdens, and
+          institutional resources.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          Neither Bard nor Grinnell appears in the first chart because neither
+          has a usable H2A merit-aid row in this dataset. That is why the
+          second chart uses the broader endowment comparison.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          For a student or family, that is the practical point of the exercise:
+          sticker price, financial aid, debt, earnings, and a college&apos;s
+          financial resources are usually presented separately. Looking at them
+          together gives a more complete picture.
         </p>
       </section>
 
       <section style={{ marginTop: 48, maxWidth: 760 }}>
-        <div className="meta" style={{ marginBottom: 8 }}>
-          § How the gap is computed
-        </div>
         <h2 className="serif" style={{ fontSize: 28, margin: "0 0 12px", letterSpacing: "-0.015em" }}>
-          Burden first, then a price movement.
+          How the alignment gap is calculated
         </h2>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: 0 }}>
-          Burden is <code>median_debt_monthly_payment × 12 ÷ earnings_10yr_median</code>.
-          The alignment gap is the completer debt a school would have to shed to
-          reach the corpus median burden at its own earnings, expressed per year
-          of enrollment:{" "}
-          <code>gap = completer_debt × (1 − median_burden / burden) / 4</code>.
-          Merit spend per first-year is{" "}
-          <code>non_need_aid_share_first_year_ft × avg_non_need_grant_first_year_ft</code>.
-          Both panels measure the gap against the {ALIGNMENT_GAP_META.schoolCount}-school
-          endowment-join median burden, {corpusMedianBurden}. The merit sample&apos;s own
-          median is {sampleMedianBurden}; it stays in this note so a school that
-          appears in both figures is not two numbers. Hover any dot — not only the
-          labeled ones — for the school name.
+          The calculation starts with debt burden.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          Panel A is the join that makes the eyebrow true. The vertical axis is
-          College Scorecard. The horizontal axis is CDS H2A. Color is IPEDS
-          endowment per undergraduate. Panel B keeps the full corpus — including
-          Bard, Grinnell, Bennington, Sarah Lawrence, Oberlin, and Earlham, which
-          have no usable H2A — with IPEDS endowment on x and instruction ÷ net
-          price in color. Panel A is smaller because it requires usable H2A, not
-          because Panel B is a superset of it. Panel B does not require H2A; it
-          does require a CDS SAT midpoint. The samples overlap, but neither
-          contains the other.
+          <code>debt burden = median monthly federal loan payment × 12 ÷ median earnings 10 years after enrollment</code>
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          n = {ALIGNMENT_GAP_MERIT_META.schoolCount} on Panel A after data guards,
-          from {ex.universe.toLocaleString("en-US")} rows in{" "}
-          <code>school_merit_profile</code>. Dropped: quality limited ({ex.qualityLimited})
-          or missing ({ex.qualityMissing}); missing H2A share or average grant ({ex.missingH2a});
-          share outside 0–100% ({ex.rangeShare}, including Cal State Chico at 12,087%
-          and Dickinson at 104.5%); average grant outside [0, $80,000] ({ex.rangeGrant},
-          Duke at $85,600). A published $0 grant is kept: {ALIGNMENT_GAP_MERIT_META.zeroMeritCount}{" "}
-          schools award no non-need aid, including four with no gap to close and
-          Incarnate Word, which does. Also dropped: rows without Scorecard earnings,
-          debt, net price, and endowment ({ex.missingScorecard}). The quality flag
-          said strong on every range violation. The guards are in the recipe query;
-          they are not optional.
+          A school with annual loan payments of $3,000 and median earnings of
+          $60,000 would therefore have a debt burden of 5%.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          CDS H2A excludes some mixed-need merit awards and can understate total
-          merit availability. It also covers first-year full-time students only, so
-          it describes the discount a school uses to recruit, not its whole aid
-          budget.
+          The median debt burden in the {ALIGNMENT_GAP_META.schoolCount}-school
+          comparison on this page is <strong>{corpusMedianBurden}</strong>.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          Median federal debt in the {ALIGNMENT_GAP_META.schoolCount}-school endowment
-          join spans {formatUsd(ALIGNMENT_GAP_META.debtMin)} to {formatUsd(ALIGNMENT_GAP_META.debtMax)},
-          and {formatUsd(ALIGNMENT_GAP_META.debtMode)} — the federal aggregate borrowing
-          limit for dependent undergraduates — is the single most common value,
-          shared by {ALIGNMENT_GAP_META.debtModeCount} schools. Debt cannot measure
-          how expensive a school is. It measures burden. Net price is the price
-          variable. Scorecard earnings cover federally aided students and describe
-          a cohort that enrolled about a decade before the CDS row joined to it.
-          The join is institutional, not longitudinal. Figures here are{" "}
-          {ALIGNMENT_GAP_META.scorecardYears.join(", ")} College Scorecard against
-          2024–26 CDS. Instructional expenditure per FTE and endowment are IPEDS
-          figures surfaced through the Scorecard join.
+          For schools above that level, the alignment gap estimates how much
+          lower median completer debt would need to be for the school to reach
+          a {corpusMedianBurden} burden at its existing earnings level. We
+          divide that amount by four so it can be read as an annual figure.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          <code>alignment gap = completer debt × (1 − median burden ÷ school burden) ÷ 4</code>
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          A positive gap means debt burden is above the sample median. A zero
+          or negative gap means it is at or below the median.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          Again, this is a comparison measure. It should not be read as a
+          prediction that reducing annual net price by the same number would
+          reduce student debt one-for-one.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          For the first chart, we also estimate non-need merit aid per
+          full-time first-year student:
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          <code>merit aid per first-year student = share receiving non-need merit aid × average non-need merit grant</code>
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          For example, if 40% of first-year students receive non-need merit aid
+          and the average grant among recipients is $20,000, the measure used
+          here is $8,000 per first-year student.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          Both charts use the same {corpusMedianBurden} median debt burden so a
+          school does not have a different benchmark depending on which chart
+          you are viewing. The smaller merit-aid sample has a very similar
+          median of {sampleMedianBurden}.
+        </p>
+      </section>
+
+      <section style={{ marginTop: 48, maxWidth: 760 }}>
+        <h2 className="serif" style={{ fontSize: 28, margin: "0 0 12px", letterSpacing: "-0.015em" }}>
+          What is being joined
+        </h2>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: 0 }}>
+          Panel A combines three sources. College Scorecard supplies debt, loan
+          payments, earnings, and net price. Common Data Set H2A supplies
+          non-need merit-aid information for full-time first-year students.
+          IPEDS supplies endowment information.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          After data-quality checks, {ALIGNMENT_GAP_MERIT_META.schoolCount}{" "}
+          schools have enough usable information for this view.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          Panel B does not require H2A merit-aid data, so it can include many
+          schools that are missing from Panel A. It uses College Scorecard
+          debt, earnings, and net price; IPEDS endowment and instructional
+          spending; and a recent CDS SAT midpoint to define the{" "}
+          {ALIGNMENT_GAP_META.schoolCount}-school comparison group.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          The two samples overlap, but neither is simply a subset of the other.
+        </p>
+      </section>
+
+      <section style={{ marginTop: 48, maxWidth: 760 }}>
+        <h2 className="serif" style={{ fontSize: 28, margin: "0 0 12px", letterSpacing: "-0.015em" }}>
+          Data limits
+        </h2>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: 0 }}>
+          This page combines institutional data from different systems and
+          different years, so the numbers should not be read as if they
+          describe one group of students moving through college at the same
+          time.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          The College Scorecard figures used here are from{" "}
+          {ALIGNMENT_GAP_META.scorecardYears.join(", ")}. Earnings data describe
+          federally aided students from an earlier cohort, roughly a decade
+          after they first enrolled. The CDS data are from 2024–25 or 2025–26.
+          The join is by institution, not by individual student or graduating
+          class.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          CDS H2A also has limits. It covers full-time first-year students and
+          specifically reports non-need aid. Some awards that combine need and
+          merit may not appear in the measure. It is best understood as a view
+          of one part of a school&apos;s recruiting and tuition-discount strategy,
+          not its total financial-aid budget.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          Federal student debt has limits as a measure of affordability as
+          well. Median debt in this {ALIGNMENT_GAP_META.schoolCount}-school
+          sample ranges from {formatUsd(ALIGNMENT_GAP_META.debtMin)} to{" "}
+          {formatUsd(ALIGNMENT_GAP_META.debtMax)}, and           {formatUsd(ALIGNMENT_GAP_META.debtMode)}—the
+          federal aggregate borrowing limit for many dependent undergraduates—is
+          the most common value in the sample. Families may
+          pay college costs with income, savings, parent borrowing, private
+          loans, grants, or other resources that are not captured by this debt
+          number.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          That is why this page does not use federal debt as a substitute for
+          price. Net price remains the price measure. Debt burden tells us
+          something different: how large federal loan payments are relative to
+          later earnings.
+        </p>
+      </section>
+
+      <section style={{ marginTop: 48, maxWidth: 760 }}>
+        <h2 className="serif" style={{ fontSize: 28, margin: "0 0 12px", letterSpacing: "-0.015em" }}>
+          Data-quality checks
+        </h2>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: 0 }}>
+          Panel A begins with {ex.universe.toLocaleString("en-US")} possible
+          merit-profile rows. We keep {ALIGNMENT_GAP_MERIT_META.schoolCount} after
+          requiring usable CDS merit-aid data and the Scorecard and IPEDS
+          fields needed for the comparison.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          Rows are removed when the merit profile is too incomplete, required
+          values are missing, or published values fall outside reasonable
+          ranges. That includes {ex.rangeShare} reported merit-aid shares
+          outside 0–100% and {ex.rangeGrant} average grant above $80,000. A
+          legitimate published value of $0 is kept.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          {ALIGNMENT_GAP_MERIT_META.zeroMeritCount} schools in the final sample
+          report no non-need merit aid. Four already have debt burden at or
+          below the median. The University of the Incarnate Word has a positive
+          alignment gap.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          The checks matter because joining datasets can make a bad source
+          value look much more meaningful than it really is. The filters used
+          for this page are part of the reproducible recipe rather than manual
+          exclusions made after looking at the chart.
         </p>
       </section>
 
       <section style={{ marginTop: 48 }}>
-        <div className="meta" style={{ marginBottom: 10 }}>
-          § Pull the join yourself
-        </div>
+        <h2 className="serif" style={{ fontSize: 28, margin: "0 0 12px", letterSpacing: "-0.015em" }}>
+          Pull the data yourself
+        </h2>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "0 0 16px", maxWidth: 760 }}>
+          The underlying data and calculations are public. The queries below
+          reproduce the source rows used for the two panels. Panel B contains
+          more rows than the API&apos;s 1,000-row response limit, so retrieve it
+          in pages.
+        </p>
         <pre
           style={{
             background: "var(--ink)",
@@ -517,22 +676,40 @@ curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,earn
   -H 'Authorization: Bearer <anon key>'`}
         </pre>
         <p style={{ color: "var(--ink-2)", fontSize: 14, lineHeight: 1.55, margin: "16px 0 0" }}>
-          Keep <code>non_need_aid_share_first_year_ft</code> in [0, 1] and{" "}
-          <code>avg_non_need_grant_first_year_ft</code> in [0, 80000]; require{" "}
-          <code>merit_profile_quality</code> in <code>strong</code> or{" "}
-          <code>partial</code>. A published $0 grant is kept. Panel A joins
-          endowment from <code>scorecard_summary</code> and undergraduate
-          enrollment from <code>school_browser_rows.undergrad_enrollment_scorecard</code>.
+          For Panel A, keep non-need aid shares between 0 and 1, average
+          non-need grants between $0 and $80,000, and merit profiles rated{" "}
+          <code>strong</code> or <code>partial</code>. Keep{" "}
+          <code>non_need_aid_share_first_year_ft</code> in [0, 1] and{" "}
+          <code>avg_non_need_grant_first_year_ft</code> in [0, 80000]. A
+          published $0 grant is kept.
+        </p>
+        <p style={{ color: "var(--ink-2)", fontSize: 14, lineHeight: 1.55, margin: "14px 0 0" }}>
+          Panel A joins endowment from <code>scorecard_summary</code> and
+          undergraduate enrollment from{" "}
+          <code>school_browser_rows.undergrad_enrollment_scorecard</code>.
+        </p>
+        <p style={{ color: "var(--ink-2)", fontSize: 14, lineHeight: 1.55, margin: "14px 0 0" }}>
           Panel B joins undergraduate enrollment from{" "}
-          <code>institution_directory.undergraduate_enrollment</code>, falling back
-          to <code>scorecard_summary.enrollment</code>, and keeps only rows with a
-          CDS SAT midpoint in <code>school_browser_rows</code>. Then{" "}
-          <code>burden = monthly × 12 / earnings</code>,{" "}
-          <code>gap = completer_debt × (1 − median_burden / burden) / 4</code>, and{" "}
-          <code>merit_per_fy = share × avg_non_need_grant</code>, using the
-          375-school median burden on both panels. The anon key is on the{" "}
-          <Link href="/api">API page</Link>. Rebuild the checked-in dataset with{" "}
-          <code>python3 tools/scorecard/build_alignment_gap_recipe.py</code>.
+          <code>institution_directory.undergraduate_enrollment</code>, using
+          Scorecard enrollment as a fallback, and keeps schools with a recent
+          CDS SAT composite midpoint.
+        </p>
+        <p style={{ color: "var(--ink-2)", fontSize: 14, lineHeight: 1.55, margin: "14px 0 0" }}>
+          Both panels then use the same calculations:
+        </p>
+        <p style={{ color: "var(--ink-2)", fontSize: 14, lineHeight: 1.55, margin: "14px 0 0" }}>
+          <code>burden = monthly payment × 12 ÷ earnings</code>
+        </p>
+        <p style={{ color: "var(--ink-2)", fontSize: 14, lineHeight: 1.55, margin: "8px 0 0" }}>
+          <code>gap = completer debt × (1 − median burden ÷ burden) ÷ 4</code>
+        </p>
+        <p style={{ color: "var(--ink-2)", fontSize: 14, lineHeight: 1.55, margin: "8px 0 0" }}>
+          <code>merit per first-year = share receiving non-need aid × average non-need grant</code>
+        </p>
+        <p style={{ color: "var(--ink-2)", fontSize: 14, lineHeight: 1.55, margin: "14px 0 0" }}>
+          The anonymous API key is available on the <Link href="/api">API page</Link>.
+          To rebuild the checked-in dataset:{" "}
+          <code>python3 tools/scorecard/build_alignment_gap_recipe.py</code>
         </p>
         <div style={{ marginTop: 14, display: "flex", gap: 16, flexWrap: "wrap", fontSize: 13 }}>
           <TrackedLink

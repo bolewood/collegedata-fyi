@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { ChartHoverTooltip } from "@/components/ChartHoverTooltip";
 import { formatRecipeShare } from "@/lib/format";
 import {
   bandCircleStyle,
@@ -100,9 +101,9 @@ function svgCoords(
 }
 
 const REGION_LABEL: Record<string, string> = {
-  covers: "already spending it",
-  constrained: "genuinely constrained",
-  none: "gap ≤ 0",
+  covers: "merit aid larger than the gap",
+  constrained: "merit aid smaller than the gap",
+  none: "debt burden at or below the median",
 };
 
 function hitRadiusInSvg(svg: SVGSVGElement): number {
@@ -147,6 +148,7 @@ function diagonalPoints(): string {
 }
 
 export function AlignmentGapMeritChart() {
+  const wrapRef = useRef<HTMLDivElement>(null);
   const [hoverId, setHoverId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
 
@@ -205,19 +207,27 @@ export function AlignmentGapMeritChart() {
         }}
       >
         <div>
-          <div className="meta">Fig. 1 · Are they already spending it?</div>
+          <div className="meta">Fig. 1 · Compare the debt gap with merit aid</div>
           <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--ink-2)", maxWidth: 640, lineHeight: 1.5 }}>
-            Vertical axis: alignment gap, dollars per year — College Scorecard,
-            against the same {formatRecipeShare(ALIGNMENT_GAP_MERIT_META.medianBurden, 2)}{" "}
-            median as Fig. 2. Horizontal axis: non-need merit spend per
-            first-year student — CDS H2A. Values above $0 use a log scale;{" "}
-            {ALIGNMENT_GAP_MERIT_META.zeroMeritCount} schools that award no
-            merit aid sit on the left rail, off that scale. Color: endowment
-            per undergraduate — IPEDS, with the same{" "}
-            {formatEndowmentPerStudent(HIGH_CUT)} high cut as Fig. 2. The brick
-            diagonal is where merit spend equals the annual gap. Everything to
-            its right is already spending more than it would take to close it.
-            Hover any dot — every school is named.
+            The vertical axis shows the alignment gap in dollars per year. The
+            horizontal axis shows estimated non-need merit aid per full-time
+            first-year student, using the Common Data Set. Because most values
+            are spread over a wide range, the axis uses a log scale. Schools
+            reporting no non-need merit aid are shown separately at $0.
+          </p>
+          <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--ink-2)", maxWidth: 640, lineHeight: 1.5 }}>
+            The diagonal line is where the two amounts are equal. Schools to the
+            lower-right of the line report more non-need merit aid per first-year
+            student than the size of their alignment gap. Schools to the
+            upper-left report less. Color shows endowment per undergraduate,
+            adding another measure of the institution&apos;s financial resources.
+          </p>
+          <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--ink-2)", maxWidth: 640, lineHeight: 1.5 }}>
+            These amounts are useful for comparison, but they are not
+            interchangeable dollar for dollar. Merit aid is generally a tuition
+            discount rather than a cash expenditure, and changing a college&apos;s
+            aid policy would not necessarily produce an equal change in student
+            borrowing. Hover over any dot to see the school.
           </p>
         </div>
         <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: "var(--ink-3)" }}>
@@ -245,7 +255,7 @@ export function AlignmentGapMeritChart() {
         </label>
       </div>
 
-      <div style={{ position: "relative" }}>
+      <div ref={wrapRef} style={{ position: "relative" }}>
       <svg
         width={W}
         height={H}
@@ -330,7 +340,7 @@ export function AlignmentGapMeritChart() {
           </text>
         ))}
         <text x={LOG_L} y={22} fontFamily="var(--mono)" fontSize="10" fill="var(--ink-3)" letterSpacing="0.06em">
-          GENUINELY CONSTRAINED · {ALIGNMENT_GAP_MERIT_META.regions.constrained}
+          SMALLER THAN THE GAP · {ALIGNMENT_GAP_MERIT_META.regions.constrained}
         </text>
         <text
           x={PLOT_R}
@@ -341,7 +351,7 @@ export function AlignmentGapMeritChart() {
           fill="var(--ink-3)"
           letterSpacing="0.06em"
         >
-          ALREADY SPENDING IT · {ALIGNMENT_GAP_MERIT_META.regions.covers}
+          LARGER THAN THE GAP · {ALIGNMENT_GAP_MERIT_META.regions.covers}
         </text>
         <text
           x={(LOG_L + PLOT_R) / 2}
@@ -352,7 +362,7 @@ export function AlignmentGapMeritChart() {
           fill="var(--ink-3)"
           letterSpacing="0.06em"
         >
-          GAP ≤ 0 · {ALIGNMENT_GAP_MERIT_META.regions.none}
+          AT OR BELOW MEDIAN · {ALIGNMENT_GAP_MERIT_META.regions.none}
         </text>
         <text
           x={PLOT_R}
@@ -438,21 +448,14 @@ export function AlignmentGapMeritChart() {
       </svg>
 
       {hover && (
-        <div
-          data-testid="alignment-gap-merit-tooltip"
-          style={{
-            position: "absolute",
-            left: `${Math.min(((hover.cx + 12) / W) * 100, 72)}%`,
-            top: `${Math.max(((hover.cy - 36) / H) * 100, 6)}%`,
-            pointerEvents: "none",
-            background: "var(--ink)",
-            color: "var(--paper)",
-            padding: "10px 12px",
-            fontSize: 13,
-            lineHeight: 1.45,
-            minWidth: 200,
-            zIndex: 2,
-          }}
+        <ChartHoverTooltip
+          wrapRef={wrapRef}
+          viewW={W}
+          viewH={H}
+          cx={hover.cx}
+          cy={hover.cy}
+          placementKey={hover.schoolId}
+          testId="alignment-gap-merit-tooltip"
         >
           <div className="serif" style={{ fontSize: 16 }}>
             {hover.schoolName}
@@ -471,7 +474,7 @@ export function AlignmentGapMeritChart() {
           )}
           <div>Endowment {formatEndowmentPerStudent(hover.endowmentPerStudent)}/student</div>
           <div>Burden {formatRecipeShare(hover.burden, 1)}</div>
-        </div>
+        </ChartHoverTooltip>
       )}
       </div>
 

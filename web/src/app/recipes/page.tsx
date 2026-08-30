@@ -80,7 +80,7 @@ const RECIPES: Recipe[] = [
     slug: "alignment-gap",
     title: "Alignment gap",
     tagline:
-      "Of schools with a positive alignment gap and clean CDS H2A merit data, 61% already spend more per first-year on non-need aid than the annual gap. Two panels: merit spend versus the gap, then endowment. Hover any school.",
+      "Debt burden from College Scorecard, joined to CDS H2A merit aid and IPEDS endowment. Compare the alignment gap with merit aid, then with endowment per student. Hover any school.",
     audience:
       "IR, college-finance reporters, and analysts joining CDS H2A merit aid to Scorecard earnings and debt, and IPEDS endowment.",
     demoPath: "/recipes/alignment-gap",

@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { ChartHoverTooltip } from "@/components/ChartHoverTooltip";
 import { formatRecipeShare } from "@/lib/format";
 import {
   bandCircleStyle,
   bandMark,
   formatEndowmentPerStudent,
   formatGapUsd,
+  formatUsd,
   formatInstructionShare,
   instructionShareBand,
   quadrantFor,
@@ -91,10 +93,10 @@ function svgCoords(
 }
 
 const QUADRANT_LABEL: Record<string, string> = {
-  capacity: "capacity exists",
-  constrained: "constrained",
-  absorbs: "endowment absorbs it",
-  earnings: "earnings do the work",
+  capacity: "higher burden · higher endowment",
+  constrained: "higher burden · lower endowment",
+  absorbs: "lower burden · higher endowment",
+  earnings: "lower burden · lower endowment",
 };
 
 function hitRadiusInSvg(svg: SVGSVGElement): number {
@@ -124,6 +126,7 @@ function nearestPoint(
 }
 
 export function AlignmentGapChart() {
+  const wrapRef = useRef<HTMLDivElement>(null);
   const [hoverId, setHoverId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
 
@@ -181,13 +184,27 @@ export function AlignmentGapChart() {
         }}
       >
         <div>
-          <div className="meta">Fig. 2 · Could they afford to?</div>
+          <div className="meta">Fig. 2 · Compare debt burden with endowment per student</div>
           <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--ink-2)", maxWidth: 640, lineHeight: 1.5 }}>
-            Vertical axis: alignment gap, dollars per year — College Scorecard.
-            Horizontal axis: endowment per undergraduate, log scale — IPEDS.
-            Color: instructional spending as a share of net price. Dots above the
-            brick line have a heavier graduate debt burden than this 375-school
-            sample&apos;s median. Hover any dot — every school is named.
+            The vertical axis again shows the alignment gap. A value above zero
+            means the school&apos;s debt burden is above the{" "}
+            {formatRecipeShare(ALIGNMENT_GAP_META.medianBurden, 2)} median. A
+            value below zero means it is below the median. The horizontal axis
+            shows endowment per undergraduate on a log scale. The vertical
+            divider marks the sample median of about{" "}
+            {formatUsd(Math.round(ALIGNMENT_GAP_META.medianEndowmentPerStudent / 1000) * 1000)}{" "}
+            per undergraduate.
+          </p>
+          <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--ink-2)", maxWidth: 640, lineHeight: 1.5 }}>
+            Color shows instructional spending per student as a share of average
+            net price. This adds some context about the relationship between
+            what students pay and what the institution reports spending on
+            instruction. Endowment per student is only a broad measure of
+            financial capacity. Endowments contain restricted funds, and two
+            colleges with the same endowment per student may have very different
+            obligations and spending policies. The chart is intended to show
+            financial context, not available cash. Hover over any dot to see the
+            school.
           </p>
         </div>
         <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: "var(--ink-3)" }}>
@@ -215,7 +232,7 @@ export function AlignmentGapChart() {
         </label>
       </div>
 
-      <div style={{ position: "relative" }}>
+      <div ref={wrapRef} style={{ position: "relative" }}>
       <svg
         width={W}
         height={H}
@@ -258,7 +275,7 @@ export function AlignmentGapChart() {
           </text>
         ))}
         <text x={M.l} y={22} fontFamily="var(--mono)" fontSize="10" fill="var(--ink-3)" letterSpacing="0.06em">
-          CONSTRAINED · {ALIGNMENT_GAP_META.quadrants.constrained}
+          II · HIGHER BURDEN, LOWER ENDOWMENT · {ALIGNMENT_GAP_META.quadrants.constrained}
         </text>
         <text
           x={W - M.r}
@@ -269,10 +286,10 @@ export function AlignmentGapChart() {
           fill="var(--ink-3)"
           letterSpacing="0.06em"
         >
-          CAPACITY EXISTS · {ALIGNMENT_GAP_META.quadrants.capacity}
+          I · HIGHER BURDEN, HIGHER ENDOWMENT · {ALIGNMENT_GAP_META.quadrants.capacity}
         </text>
         <text x={M.l} y={H - 8} fontFamily="var(--mono)" fontSize="10" fill="var(--ink-3)" letterSpacing="0.06em">
-          EARNINGS DO THE WORK · {ALIGNMENT_GAP_META.quadrants.earnings}
+          IV · LOWER BURDEN, LOWER ENDOWMENT · {ALIGNMENT_GAP_META.quadrants.earnings}
         </text>
         <text
           x={W - M.r}
@@ -283,7 +300,7 @@ export function AlignmentGapChart() {
           fill="var(--ink-3)"
           letterSpacing="0.06em"
         >
-          ENDOWMENT ABSORBS IT · {ALIGNMENT_GAP_META.quadrants.absorbs}
+          III · LOWER BURDEN, HIGHER ENDOWMENT · {ALIGNMENT_GAP_META.quadrants.absorbs}
         </text>
         <text
           x={W - M.r}
@@ -358,21 +375,14 @@ export function AlignmentGapChart() {
       </svg>
 
       {hover && (
-        <div
-          data-testid="alignment-gap-tooltip"
-          style={{
-            position: "absolute",
-            left: `${Math.min(((hover.cx + 12) / W) * 100, 72)}%`,
-            top: `${Math.max(((hover.cy - 36) / H) * 100, 6)}%`,
-            pointerEvents: "none",
-            background: "var(--ink)",
-            color: "var(--paper)",
-            padding: "10px 12px",
-            fontSize: 13,
-            lineHeight: 1.45,
-            minWidth: 200,
-            zIndex: 2,
-          }}
+        <ChartHoverTooltip
+          wrapRef={wrapRef}
+          viewW={W}
+          viewH={H}
+          cx={hover.cx}
+          cy={hover.cy}
+          placementKey={hover.schoolId}
+          testId="alignment-gap-tooltip"
         >
           <div className="serif" style={{ fontSize: 16 }}>
             {hover.schoolName}
@@ -391,7 +401,7 @@ export function AlignmentGapChart() {
           <div>Endowment {formatEndowmentPerStudent(hover.endowmentPerStudent)}/student</div>
           <div>Instruction {formatInstructionShare(hover.instructionShare)}</div>
           <div>Burden {formatRecipeShare(hover.burden, 1)}</div>
-        </div>
+        </ChartHoverTooltip>
       )}
       </div>
 
