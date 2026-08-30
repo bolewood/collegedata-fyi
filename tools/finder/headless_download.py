@@ -50,6 +50,17 @@ from worker import load_env
 from supabase import create_client
 
 try:
+    from tools.finder.waf_school_ids import (
+        canonical_waf_school_id,
+        select_waf_schools,
+    )
+except ImportError:  # python tools/finder/headless_download.py
+    from waf_school_ids import (  # type: ignore
+        canonical_waf_school_id,
+        select_waf_schools,
+    )
+
+try:
     from playwright.sync_api import sync_playwright
 except ModuleNotFoundError:  # pragma: no cover - exercised by operator envs
     sync_playwright = None
@@ -315,12 +326,10 @@ def main() -> int:
         print(f"error: {args.input} does not exist", file=sys.stderr)
         return 2
     doc = yaml.safe_load(args.input.read_text())
-    schools = doc.get("schools", {})
-    if args.only:
-        schools = {args.only: schools.get(args.only, {})}
-        if not schools[args.only]:
-            print(f"no entry for {args.only}", file=sys.stderr)
-            return 2
+    schools = select_waf_schools(doc.get("schools", {}) or {}, args.only)
+    if args.only and not schools:
+        print(f"no entry for {args.only}", file=sys.stderr)
+        return 2
 
     env = load_env(Path(args.env))
     sb = create_client(env["SUPABASE_URL"], env["SUPABASE_SERVICE_ROLE_KEY"])
@@ -339,9 +348,13 @@ def main() -> int:
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         ctx = browser.new_context(user_agent=UA, accept_downloads=True)
-        for sid, school in schools.items():
+        for raw_sid, school in schools.items():
+            sid = canonical_waf_school_id(raw_sid)
             landing = school.get("landing_url")
             school_name = school.get("school_name") or sid
+            if sid != raw_sid:
+                print(f"  remapped YAML key {raw_sid!r} → {sid!r}",
+                      file=sys.stderr)
             items = school.get("urls", [])
             print(f"\n=== {sid} ({len(items)} urls, landing={landing}) ===",
                   file=sys.stderr)
