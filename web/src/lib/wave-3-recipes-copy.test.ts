@@ -16,7 +16,7 @@ describe("Wave 3 Recipes copy", () => {
     expect(page).toContain("a chart you can operate");
     expect(page).toContain("Written for IR and analysts. Counselors are welcome.");
     expect(page).toContain(
-      "IR comparing peer yield; analysts pulling every complete C1 row from the API; counselors calibrating reach/match/safety.",
+      "IR and enrollment managers comparing peer yield and federal-loan burden; analysts joining IPEDS ADM counts to College Scorecard.",
     );
     expect(page).toContain(
       "IR and policy analysts reading effective policy from C9 submission rates; C8 is the written version.",
@@ -34,17 +34,19 @@ describe("Wave 3 Recipes copy", () => {
     expect(page).not.toMatch(/Audit your own school's extraction/);
   });
 
-  it("keeps the acceptance seed honest and drops the 697 denominator", () => {
+  it("retires the eighteen-school seed for the pricing-power rebuild", () => {
+    // The full copy contract for the rebuilt page lives in
+    // pricing-power-copy.test.ts; this suite only guards that the old
+    // seed-era framing cannot come back.
     const page = src("app/recipes/acceptance-vs-yield/page.tsx");
-    expect(page).toContain("eighteen-school seed");
-    expect(page).toContain("three hand-checked anchors plus fifteen rows");
-    expect(page).toContain("Scale to every school with a complete 2024-25 C1 row");
+    expect(page).toContain("College Pricing Power");
+    expect(page).not.toMatch(/eighteen-school seed/);
+    expect(page).not.toMatch(/three hand-checked anchors/);
     expect(page).not.toMatch(/Scale to all 697 schools/);
-    expect(page).not.toMatch(/eighteen schools with a complete 2024-25 row/);
 
     const chart = src("components/AcceptanceYieldChart.tsx");
-    expect(chart).toContain("Fig. 1 · 18-school seed, mostly 2024-25");
-    expect(chart).not.toMatch(/2024-25 cycle, 18 schools/);
+    expect(chart).toContain("Fig. 1 · Acceptance rate vs. yield");
+    expect(chart).not.toMatch(/18-school seed/);
   });
 
   it("writes test-optional as effective policy from C9, not a parent wink", () => {

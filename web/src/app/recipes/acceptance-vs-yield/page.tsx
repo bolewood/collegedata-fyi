@@ -251,7 +251,7 @@ export default function AcceptanceVsYieldPage() {
           A school toward the upper-left is below this sample&apos;s median
           acceptance rate and above its median yield. A school toward the
           lower-right is the reverse. Because the median school admits about{" "}
-          {medianAcceptancePct} of applicants, &ldquo;below the median&rdquo; is
+          {medianAcceptancePct}{" "}of applicants, &ldquo;below the median&rdquo; is
           not another way of saying highly selective.
         </p>
         <p style={prose}>
@@ -339,7 +339,7 @@ export default function AcceptanceVsYieldPage() {
           Figure 2 uses a smaller sample ({panelBCount} schools) because it
           requires Scorecard debt, earnings, net price, and instructional
           spending. Its yield median is {medianYieldBPct}, not the{" "}
-          {medianYieldPct} used in Figure 1. A school can sit on different
+          {medianYieldPct}{" "}used in Figure 1. A school can sit on different
           sides of &ldquo;higher yield&rdquo; in the two charts.
         </p>
       </section>

@@ -444,7 +444,7 @@ export default function AlignmentGapPage() {
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
           Grinnell&apos;s average net price is {formatUsd(grinnell.avgNetPrice)},
-          compared with {formatUsd(bard.avgNetPrice)} at Bard. Grinnell&apos;s
+          compared with {formatUsd(bard.avgNetPrice)}{" "}at Bard. Grinnell&apos;s
           graduate debt burden is {formatRecipeShare(grinnell.burden, 1)},
           compared with {formatRecipeShare(bard.burden, 1)} at Bard. And Grinnell
           reports about ${grinnellEndowmentMillions} million in endowment per
