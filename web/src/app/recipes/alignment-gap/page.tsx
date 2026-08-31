@@ -722,7 +722,7 @@ curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,earn
           >
             Read the full write-up →
           </TrackedLink>
-          <Link href="/recipes/acceptance-vs-yield">Acceptance rate vs. yield</Link>
+          <Link href="/recipes/acceptance-vs-yield">College Pricing Power</Link>
         </div>
       </section>
     </div>

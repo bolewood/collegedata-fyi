@@ -1,95 +1,376 @@
-# Recipe: Acceptance rate vs yield
+# College Pricing Power
 
-**Who this is for:** IR comparing peer yield; analysts pulling every complete C1 row from the API; counselors calibrating reach/match/safety.
+**Question:** How much pricing power does a college appear to have, and what
+financial outcomes do its students experience afterward?
 
-**What this reveals:** the gap between how selective a school *looks* on paper (acceptance rate) and how selective it actually *is* in practice (yield, the share of admitted students who actually enroll). A school can have a 6% acceptance rate and still lose most of its admits to cross-admit peers. A school can have a 20% acceptance rate and capture nearly everyone it admits. Both facts matter for understanding the admissions market, and neither is visible from acceptance rate alone.
+“Pricing power” is a shorthand for a cluster of related questions. It is not a
+number this page computes. The charts do not estimate how enrollment would
+change if a college changed its price.
 
-**CDS sections used:** C1 (applications, admissions, enrollment), B1 (full-time undergraduate enrollment), B22 (retention rate, as a secondary context signal).
+Open [`/recipes/acceptance-vs-yield`](https://www.collegedata.fyi/recipes/acceptance-vs-yield)
+for two interactive scatters. Panel A plots IPEDS fall 2024 acceptance rate
+against yield for 1,744 schools. Panel B keeps yield and adds College Scorecard
+federal-loan burden for 1,557 of those schools. Dividers are this sample’s
+medians, not 50% lines. Each school is drawn at the same size; average net
+price is in the tooltip. Hover any dot, or search, to see the underlying
+counts. Many schools overlap.
 
----
+**Who this is for:** IR and enrollment managers comparing peer yield and
+federal-loan burden; analysts joining IPEDS ADM counts to College Scorecard.
 
-## The demo
+**Sources:** IPEDS ADM2024 (fall 2024) raw applicant / admitted / enrolled
+counts; College Scorecard 2022–23 debt, payments, earnings, net price, and
+instructional spending; CDS 2024–25 C1 acceptance and yield as a tooltip
+cross-check only (356 of 1,744 Panel A schools). Plotted positions always use
+IPEDS.
 
-Open [`/recipes/acceptance-vs-yield`](https://www.collegedata.fyi/recipes/acceptance-vs-yield) for the interactive scatter plot. It now shows eighteen schools across the top 100: three ground-truth anchors (Harvard, Dartmouth, Harvey Mudd) plus fifteen rows pulled directly from the collegedata.fyi public API for Stanford, Princeton, Brown, Duke, Cornell, Northeastern, Notre Dame, Rice, Johns Hopkins, NYU, USC, Washington University in St. Louis, Boston College, UVA, and William & Mary. Acceptance rate is on the x-axis (0–40%) and yield on the y-axis (0–100%); each dot is sized by the enrolled first-year class. Hover over a dot for applied / admitted / enrolled counts and the data source (ground-truth vs. API).
+The XLSX starter
+([`acceptance-vs-yield-starter.xlsx`](../../web/public/recipes/acceptance-vs-yield-starter.xlsx))
+is the same dataset in workbook form. Regenerate it with
+`python3 tools/ipeds/build_pricing_power_starter_xlsx.py` after rebuilding the
+checked-in TypeScript file.
 
-Eighteen points is enough to see the four quadrants resolve — but still only 2–3% of the addressable corpus. The XLSX starter ([`acceptance-vs-yield-starter.xlsx`](../../web/public/recipes/acceptance-vs-yield-starter.xlsx)) is designed to be populated from the public API; instructions are below.
+## What the recipe computes
 
-## How to read it
+Acceptance rate and yield are computed from IPEDS ADM raw counts, not from the
+integer-rounded DRVADM derived-rate fields (`admit_rate_total`,
+`yield_rate_total`). Those derived rates are never plotted.
 
-The plot divides roughly into four quadrants:
+```text
+acceptance = admissions_total / applicants_total
+yield      = enrolled_total / admissions_total
+```
 
-- **Top-left — selective and desired.** Low acceptance, high yield. Harvard sits here: 3.6% accept rate and 84% yield. Schools in this quadrant are both hard to get into and hard to turn down, usually because their market position is strong enough that most admits don't have meaningfully better options.
-- **Top-right — loved despite openness.** Higher acceptance but strong yield. Often state flagships, religious-fit schools, or institutions with strong regional pull. Admits know what they're getting and most of them come.
-- **Bottom-left — selective but second-choice.** Hard to get into, but most admits choose somewhere else. Often cross-admit peers of top-left schools — they admit strong students who would also get into the Harvards of the world, and lose the cross-admit battle. Dartmouth at 5.4% / 69% is edge-of-this-quadrant; it wins a solid majority of its admits but loses some to HYPS peers.
-- **Bottom-right — accessible and optional.** Admits freely, captures a smaller share. Common safety-school territory. Harvey Mudd at 12% / 37% is here — a top-tier STEM liberal arts college with a specific fit, so its admits often accept offers from MIT, Caltech, Stanford instead.
+Rates are exact `Decimal` ratios from the counts and are rounded only at
+serialization (four decimal places in `[0, 1]`).
 
-## How to pull every complete C1 row
+Debt **burden** is annual estimated federal loan service as a share of median
+10-year earnings:
 
-The XLSX ships with three ground-truth rows pre-filled and formulas wired for acceptance rate, yield, and total UG. Add rows by pulling data from the API. The API-Queries tab in the XLSX has copy-pasteable examples; the two most useful for this recipe:
+```text
+burden = median_debt_monthly_payment × 12 / earnings_10yr_median
+```
+
+A $3,000 annual payment against $60,000 of earnings is a 5% burden. The monthly
+payment is a Scorecard estimate derived from median federal debt among
+completers, not the amount a typical alumnus is observed to send a servicer.
+Earnings are for federally aided students working and not enrolled, including
+people who did not complete. Debt and earnings are therefore not the same
+population.
+
+**Instruction / net-price** is instructional expenditure per FTE divided by
+average net price. It is not the share of a college’s budget spent on teaching.
+The denominator is College Scorecard average net price for Title IV aid
+recipients, not total spending. The ratio lives in tooltips only; it is not a
+plotted channel.
+
+Average net price tells us what undergraduates who received Title IV federal
+aid paid, on average, after grant and scholarship aid. It is not the bill for a
+full-pay family, and full-pay students are not in the average.
+
+## Join
+
+Panel A starts from `school_facts_unified`, which is long-format: one row per
+`field_key` per school. The builder requests the three ADM2024 count fields
+separately (`applicants_total`, `admissions_total`, `enrolled_total` with
+`source_table=eq.ADM2024`), pivots on `ipeds_id`, and computes rates from those
+counts.
+
+Guards, required:
+
+1. Drop institutions that are out of directory scope (`in_scope` is not true).
+   This build: **195**.
+2. Drop missing or non-positive applicant, admitted, or enrolled counts.
+   This build: **17**.
+3. Drop `admitted > applied`. This build: **0**.
+4. Drop `enrolled > admitted`. This build: **0**.
+
+Result: **1,744** schools. Median acceptance **77.61%**. Median yield
+**21.54%**. Quadrant counts against those medians: 463 / 409 / 408 / 464
+(lower acceptance · higher yield / higher acceptance · higher yield / lower
+acceptance · lower yield / higher acceptance · lower yield).
+
+Panel B joins Panel A to `scorecard_summary` on `ipeds_id` and keeps rows where
+earnings, monthly payment, completer debt, average net price, and instructional
+expenditure per FTE are all present and positive. This build dropped **187**
+schools for missing or non-positive Scorecard fields. Directory and Scorecard
+join misses were **0**.
+
+Result: **1,557** schools. Median yield **20.10%** — not the 21.54% used in
+Figure 1. Median burden **5.21%**. Quadrant counts: 361 / 418 / 418 / 360.
+A school can sit on different sides of “higher yield” in the two charts.
+
+CDS 2024–25 C1 is attached last, from `school_browser_rows` with
+`canonical_year=eq.2024-25`, `sub_institutional=is.null`, and non-null
+`acceptance_rate` and `yield_rate`. This build found **371** complete C1 rows
+and attached **356** of them to a Panel A school. Syracuse has no CDS C1 row
+in the serving data. Those rates appear only as a labeled tooltip cross-check.
+
+Rebuild:
 
 ```bash
-# 1) Get the list of schools with a 2024-25 CDS document
-curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?canonical_year=eq.2024-25&select=document_id,school_id,school_name,ipeds_id' \
-  > schools-2024-25.json
-
-# 2) Pull the C1 and B1 fields we need, for all those schools
-curl 'https://api.collegedata.fyi/rest/v1/cds_fields?canonical_year=eq.2024-25&field_id=in.(c1_total_applied,c1_total_admitted,c1_total_enrolled,b1_ft_total_ug_men,b1_ft_total_ug_women,b22_retention_pct)&select=document_id,ipeds_id,school_id,canonical_year,field_id,value_numeric' \
-  > fields-2024-25.json
+python3 tools/ipeds/build_pricing_power_recipe.py
+python3 tools/ipeds/build_pricing_power_starter_xlsx.py
 ```
 
-From R, the projected `school_browser_rows` table is usually enough: it already has acceptance rate and yield. Ask PostgREST for CSV so the result is a data frame. The public anon key is on [`/api`](https://www.collegedata.fyi/api).
+The first command writes `web/src/lib/pricing-power-recipe-data.ts`. The second
+reads that file and writes the public XLSX. Dataset generated 2026-08-31.
 
-```r
-library(httr2)
-library(readr)
+## How to read the panels
 
-anon <- "<anon key>"
+Dividers are this sample’s medians, not 50% lines. A 50% × 50% grid would put
+most of Panel A in one corner: 84% of these schools accept at least half of
+applicants, and the median school admits about 78%. “Below-median acceptance”
+still includes many colleges that admit 60% or 70% of applicants.
 
-rows <- request("https://api.collegedata.fyi/rest/v1/school_browser_rows") |>
-  req_url_query(
-    select = "school_id,school_name,canonical_year,applied,admitted,enrolled_first_year,acceptance_rate,yield_rate",
-    canonical_year = "eq.2024-25",
-    sub_institutional = "is.null",
-    acceptance_rate = "not.is.null",
-    yield_rate = "not.is.null"
-  ) |>
-  req_headers(
-    apikey = anon,
-    Authorization = paste("Bearer", anon),
-    Accept = "text/csv",
-    `X-CollegeData-Client` = "r-httr2"
-  ) |>
-  req_perform() |>
-  resp_body_string() |>
-  read_csv()
+**Fig. 1 · Acceptance rate vs. yield.** Horizontal axis: acceptance. Vertical
+axis: yield. Dividers: 77.6% acceptance and 21.5% yield among 1,744 schools.
+
+- **I. Lower acceptance · higher yield** — These schools admit a smaller share
+  of applicants than the sample median and enroll a larger share of those they
+  accept than the sample median. That combination can reflect student
+  preference, binding Early Decision, geography, aid, athletics, or a
+  self-selected applicant pool. The chart does not tell us which.
+- **II. Higher acceptance · higher yield** — These schools admit a larger share
+  of applicants while still enrolling a relatively large share of those they
+  accept. That can happen at public flagships, regional institutions,
+  specialized colleges, or schools whose applicants are especially likely to
+  enroll if admitted.
+- **III. Lower acceptance · lower yield** — These schools admit a smaller share
+  of applicants than this sample’s median (77.6%) but enroll a smaller share of
+  admits than the median (21.5%). In this file, “below-median acceptance” still
+  includes many colleges that admit 60% or 70% of applicants. Many of these
+  schools compete for students who have several attractive alternatives. A
+  below-median yield should not be read as evidence that the school is
+  undesirable.
+- **IV. Higher acceptance · lower yield** — These schools admit a larger share
+  of applicants and enroll a smaller share of those admitted. For enrollment
+  teams, this combination can make class size harder to predict because more
+  offers may be required to fill each seat.
+
+Yield is conversion, not a second selectivity score. A high yield can reflect
+strong student demand, binding Early Decision, geography, price, financial aid,
+athletics, a specialized mission, or simply an applicant pool that already
+knows the school well. A low yield can reflect intense competition for students
+rather than weak academic quality.
+
+**Fig. 2 · Yield vs. graduate debt burden.** Horizontal axis: yield. Vertical
+axis: debt burden. Dividers: 20.1% yield and 5.21% debt burden among 1,557
+schools. Each school is drawn at the same size. Average net price is in the
+tooltip. It is the College Scorecard average for Title IV aid recipients, not
+the price a full-pay family pays.
+
+Acceptance and yield describe how a college fills a class: how many applicants
+it admits, and how many of those admits enroll. They do not tell us what
+happens financially to students who enroll. Burden answers a narrower question:
+how large are median federal loan payments, as estimated from completer debt,
+relative to median earnings of federally aided students about 10 years after
+they first enrolled?
+
+This is not a measure of total college cost. It covers federal student debt,
+and many families pay for college with savings, current income, grants, parent
+borrowing, private loans, or other resources.
+
+- **I. Higher yield · higher debt burden** — Higher yield means a larger share
+  of admits enrolled. That is not the same thing as students preferring the
+  school over every alternative. The debt measure asks a separate question
+  about federal borrowing among federally aided students afterward.
+- **II. Lower yield · higher debt burden** — A smaller share of admits
+  enrolled, and federal loan payments are also above the sample median relative
+  to later earnings. It does not tell us why either condition exists —
+  competition, aid design, applicant mix, earnings, or borrowing can each
+  produce the same pair of numbers.
+- **III. Higher yield · lower debt burden** — Both of these measures sit on the
+  better-looking side of this sample’s medians. That says nothing by itself
+  about academic quality, access, family wealth, or the experience of students
+  who do not borrow.
+- **IV. Lower yield · lower debt burden** — A below-median yield in one
+  admissions cycle does not mean a college produces poor federal-loan outcomes
+  for the federally aided students in the Scorecard file.
+
+## Syracuse: high published price, ordinary federal-loan burden
+
+Syracuse University (`syracuse-university`, IPEDS 196413) is in both panels.
+Fall 2024 ADM2024: 44,480 applied, 20,427 admitted, 3,835 enrolled →
+acceptance **45.92%**, yield **18.77%**. Scorecard 2022–23: median completer
+debt $26,000; monthly payment $275.64 (annual $3,308); median 10-year earnings
+$79,164; burden **4.18%** (below the 5.21% Panel B median); Title IV average
+net price **$38,793**.
+
+The admissions figures on this page are from the fall 2024 entering class, the
+most recent IPEDS ADM release. The Wall Street Journal’s August 2026 account
+describes a 1.5% budget shortfall for the academic year that began in August
+2026, late merit-aid offers for the fall 2025 class, and a published cost of
+attendance of $98,544. The charts do not depict the shortfall year, and the
+Scorecard debt and earnings figures describe earlier cohorts still.
+
+A published cost of attendance near $100,000 does not, in this federal-loan
+measure, come with unusually heavy payments relative to later earnings. The
+fall 2024 admissions file shows a high average net price for Title IV
+recipients and a yield near the middle of this sample. It does not show a
+federal-debt-burden outlier, and it does not depict the fall 2025 recruiting
+scramble or the fall 2026 shortfall described by the Journal.
+
+Syracuse is not the only college in this part of the chart. Fordham University
+(9.7% yield, 3.61% burden, $44,338 net price), American University (15.6%,
+3.74%, $41,943), and Southern Methodist University (17.8%, 3.17%, $40,892)
+also sit below both Panel B medians on yield and burden while posting
+above-median Title IV net prices. Northeastern, Boston University, and NYU —
+the Journal’s full-pay comparison set — do not: each has a much higher fall
+2024 yield.
+
+Federal data for 2023–24, as reported by The Wall Street Journal, show 21% of
+Syracuse undergraduates paying full sticker price, compared with 40% at
+Northeastern, 49% at Boston University, and 58% at NYU. Those three schools
+are not yield peers in this file: each converted a much larger share of its
+fall 2024 admits than Syracuse did.
+
+Sticker price is important, but it is not the College Scorecard net-price
+figure. That figure averages what Title IV aid recipients paid after grant
+aid; it is not what a full-pay family is billed.
+
+Syracuse’s chancellor told the Journal that in April 2026 the university could
+have pulled from its wait list and largely decided not to, in order to
+maintain academic standards, and that the shortfall was not due to a lack of
+demand.
+
+The Journal describes several forces that can lower enrollment without showing
+up as a federal-loan burden, and this page does not separate them:
+international enrollment, geography, competition from cheaper public flagships,
+sports visibility, admissions execution and late merit-aid offers, the April
+2026 wait-list choice, housing, and a falling number of 18- to 24-year-olds.
+
+## What we mean by pricing power
+
+“Pricing power” is a shorthand for a cluster of related questions. It is not a
+number this page computes.
+
+We are putting several published measures about the same college on one page:
+how broadly it admits, how often admits enroll, what Title IV recipients pay
+after grant aid, and how large federal loan payments are relative to later
+earnings.
+
+High yield is sometimes treated as a sign that a school could raise price
+without losing students. This page does not test that. It does not estimate
+elasticity, markups, or the price at which a class would fail to fill. A
+school can post a high yield because of binding Early Decision, generous aid,
+geography, athletics, a specialized mission, or an applicant pool that already
+planned to enroll.
+
+Low yield does not prove a school needs to lower its price, and it does not
+measure how many students wanted to attend.
+
+## What is being joined
+
+The two charts join different years. Acceptance and yield are IPEDS ADM2024
+(first-time students entering fall 2024). Average net price, federal debt,
+estimated monthly payments, 10-year earnings, and instructional spending per
+FTE come from the College Scorecard 2022–23 file. Scorecard earnings describe
+federally aided students from a much earlier entering cohort, measured about
+10 years after they first enrolled. Average net price is also from 2022–23,
+not from the fall 2024 class. The join is by institution, not by one class of
+students moving through college.
+
+Where a school also has a complete Common Data Set C1 row for 2024–25, the
+tooltip shows that acceptance and yield as a cross-check. In this build that
+is 356 of 1,744 schools. Plotted positions always use IPEDS ADM2024.
+
+## Limitations
+
+1. **Yield is not pure demand.** Early Decision, geography, price, aid,
+   athletics, a specialized mission, and a self-selected applicant pool can
+   all produce the same conversion rate. A low yield can be competition rather
+   than weak academic quality. At most schools, yield has fallen by about half
+   over two decades as students apply to about three times as many schools
+   (federal data, as reported by the Journal). The sample also includes very
+   small and special-mission institutions with near-100% yield. Those schools
+   pull the mean yield up. Quadrants use medians so that tail does not set the
+   middle of the chart.
+
+2. **Average net price is not sticker price, and it is Title IV-only.** The
+   College Scorecard figure averages what undergraduates who received Title IV
+   federal aid paid after grant aid. Full-pay students are not in that
+   average, so the number is not what a typical full-pay family pays and is
+   not an enrollment-weighted average of the whole undergraduate body.
+
+3. **Debt burden is federal only, and the payment is modeled.** It does not
+   include parent PLUS, private loans, or cash tuition. The monthly payment is
+   a Scorecard estimate from median completer debt, not an observed typical
+   bill. Median federal completer debt clusters at common federal loan limits.
+   In this sample, 170 schools report exactly $27,000. A lower debt burden at
+   a high-price college can be high later earnings, not a smaller bill.
+   Syracuse at $26,000 sits in that pile.
+
+4. **Three clocks, not one cohort.** This page combines institutional data
+   from different systems and different years. The numbers should not be read
+   as if they describe one group of students moving through college at the
+   same time. Earnings are from federally aided students who enrolled about a
+   decade before the Scorecard 2022–23 file. Fall 2024 admits are not those
+   earners, and they are not the fall 2026 class in the Journal article.
+   Figure 2 uses a smaller sample (1,557 schools) because it requires
+   Scorecard debt, earnings, net price, and instructional spending. Its yield
+   median is 20.1%, not the 21.5% used in Figure 1.
+
+5. **Instruction / net-price is not a budget share.** Never treat the
+   remainder as administration. Instructional expenditure per FTE and Title IV
+   net price come from different systems and describe different populations.
+   The ratio is a tooltip field, not a plotted dimension.
+
+6. **Correlation is not causation.** The page does not estimate elasticity,
+   markups, or a recommended price. Some branch campuses inherit a parent
+   College Scorecard record, so debt, earnings, and burden can repeat across
+   related institutions. Those repeats are kept as reported. They do not
+   include Syracuse. “1,557 schools” is not 1,557 independent outcome draws.
+
+## How to reproduce it
+
+`school_facts_unified` is long-format (one row per field per school) and
+PostgREST `max-rows` is 1,000. `limit=5000` and `Range: 0-4999` both return
+HTTP 206 with `Content-Range: 0-999/…` and no error body. Page with
+`limit=1000&offset=0`, then `offset=1000`, then `offset=2000` until a page is
+short. Repeat the ADM count query for each of the three field keys. The
+anonymous API key is on [`/api`](https://www.collegedata.fyi/api).
+
+```bash
+# ADM2024 applicant counts. Repeat for admissions_total and enrolled_total.
+# Do not plot admit_rate_total or yield_rate_total (integer-rounded DRVADM).
+curl 'https://api.collegedata.fyi/rest/v1/school_facts_unified?select=school_id,school_name,ipeds_id,in_scope,field_key,value_numeric,source_table,data_year,quality_flag&field_key=eq.applicants_total&source_table=eq.ADM2024&order=ipeds_id.asc&limit=1000&offset=0' \
+  -H 'apikey: <anon key>' \
+  -H 'Authorization: Bearer <anon key>'
+curl 'https://api.collegedata.fyi/rest/v1/school_facts_unified?select=school_id,school_name,ipeds_id,in_scope,field_key,value_numeric,source_table,data_year,quality_flag&field_key=eq.applicants_total&source_table=eq.ADM2024&order=ipeds_id.asc&limit=1000&offset=1000' \
+  -H 'apikey: <anon key>' \
+  -H 'Authorization: Bearer <anon key>'
+curl 'https://api.collegedata.fyi/rest/v1/school_facts_unified?select=school_id,school_name,ipeds_id,in_scope,field_key,value_numeric,source_table,data_year,quality_flag&field_key=eq.applicants_total&source_table=eq.ADM2024&order=ipeds_id.asc&limit=1000&offset=2000' \
+  -H 'apikey: <anon key>' \
+  -H 'Authorization: Bearer <anon key>'
+
+# Directory scope (paginate the same way)
+curl 'https://api.collegedata.fyi/rest/v1/institution_directory?select=ipeds_id,school_id,school_name,in_scope&order=ipeds_id.asc&limit=1000&offset=0' \
+  -H 'apikey: <anon key>' \
+  -H 'Authorization: Bearer <anon key>'
+
+# Scorecard 2022-23 join fields
+curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,scorecard_data_year,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,instructional_expenditure_fte&order=ipeds_id.asc&limit=1000&offset=0' \
+  -H 'apikey: <anon key>' \
+  -H 'Authorization: Bearer <anon key>'
+curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,scorecard_data_year,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,instructional_expenditure_fte&order=ipeds_id.asc&limit=1000&offset=1000' \
+  -H 'apikey: <anon key>' \
+  -H 'Authorization: Bearer <anon key>'
+curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,scorecard_data_year,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,instructional_expenditure_fte&order=ipeds_id.asc&limit=1000&offset=2000' \
+  -H 'apikey: <anon key>' \
+  -H 'Authorization: Bearer <anon key>'
+
+# CDS 2024-25 C1 cross-check only (do not mix into plotted series)
+curl 'https://api.collegedata.fyi/rest/v1/school_browser_rows?select=school_id,ipeds_id,canonical_year,sub_institutional,acceptance_rate,yield_rate,updated_at&canonical_year=eq.2024-25&sub_institutional=is.null&acceptance_rate=not.is.null&yield_rate=not.is.null&order=updated_at.desc&limit=1000&offset=0' \
+  -H 'apikey: <anon key>' \
+  -H 'Authorization: Bearer <anon key>'
 ```
 
-The Field Reference tab in the XLSX documents exactly which field IDs to pull. Join CDS fields to
-the manifest on `document_id`, retain `(document_id, ipeds_id, school_id)` as provenance, and paste
-the values into the spreadsheet; the formulas compute acceptance rate, yield, and total UG
-automatically. If you add IPEDS or Scorecard context, join it only by the guarded `ipeds_id`; do not
-use `school_id` as a federal-data identity key.
-
-## Known caveats
-
-Corpus-wide coverage on C1 is currently 50–60%. That means this recipe produces a clean scatter plot for the ~400–500 schools with a complete C1 row, and leaves gaps for the rest. Flag any school with suspiciously round or missing numbers and check the source PDF.
-
-A few things to keep in mind when interpreting:
-
-1. **C1 "total" vs. residency splits.** Some schools publish their C1 totals only by residency (in-state/out-of-state/international) rather than as a single total row. The field `c1_total_applied` should be the sum; verify against the source PDF if a school's number looks off.
-2. **Gender-split vs total sums.** `c1_total_applied` is the schema's top-level, but some schools only fill gender splits. The formulas in the XLSX expect `c1_total_*` — if your school only has gender-split rows, sum them first.
-3. **CDS year alignment.** Most schools are on a 2024-25 cycle in the current corpus; a few (Harvey Mudd is an example) are on 2025-26. Pick one year when comparing.
-4. **Yield is sensitive to waitlist timing.** Some schools admit heavily from the waitlist after the initial round. Their C1 C2 (wait-list) section adds detail, but the yield number in C1 is the final post-waitlist figure.
-
-## What else to try
-
-Once you have the data in the sheet, some natural follow-ups:
-
-- Plot acceptance rate vs. retention (B22) instead of yield, to see academic stickiness separately from admissions desirability.
-- Add SAT 50th percentile (C9) as dot color to layer in selectivity-by-test-score.
-- Compare the same school year-over-year to see whether it's getting more or less selective. The API supports `canonical_year=in.(2022-23,2023-24,2024-25)` for trend analysis.
-- Cross-reference with IPEDS Carnegie classification to filter by peer set (R1 universities, liberal arts colleges, regional comprehensives).
-
-## Attribution
-
-All three seed data points come from hand-verified ground-truth fixtures in [`tools/extraction-validator/ground_truth/`](../../tools/extraction-validator/ground_truth/). Numbers are transcribed directly from source PDFs on the dates noted in each fixture.
+From those rows: keep in-scope schools with complete positive ADM counts and
+`admitted ≤ applied`, `enrolled ≤ admitted`; compute acceptance and yield from
+the counts; inner-join Scorecard on `ipeds_id` where all five outcome fields
+are positive; compute `burden = monthly × 12 ÷ earnings` and
+`instruction / net-price = instruction_fte ÷ avg_net_price`; attach CDS rates
+as tooltip extras only. The generator source
+(`tools/ipeds/build_pricing_power_recipe.py`) contains the exact pagination,
+exclusion, median, and rounding logic.
