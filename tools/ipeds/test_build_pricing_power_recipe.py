@@ -530,6 +530,28 @@ class PricingPowerRecipeBuilderTests(unittest.TestCase):
                 yields,
             )
 
+    def test_build_assertions_reject_axis_overflow_and_missing_anchors(self) -> None:
+        yields = {Decimal("0.1") + Decimal("0.0001") * i for i in range(120)}
+        meta = {"panelACount": 1800, "panelBCount": 1600}
+        syracuse = {
+            "schoolId": SYRACUSE_SCHOOL_ID,
+            "ipedsId": SYRACUSE_IPEDS_ID,
+            "burdenExact": Decimal("0.0418"),
+            "yieldRate": 0.1877,
+        }
+        overflow = {
+            "schoolId": "outlier-college",
+            "ipedsId": "999999",
+            "burdenExact": Decimal("0.17"),
+            "yieldRate": 0.25,
+        }
+        with self.assertRaisesRegex(ValueError, "Figure 2 axis maximum"):
+            _assert_build_invariants(
+                [syracuse, overflow], [syracuse, overflow], meta, yields
+            )
+        with self.assertRaisesRegex(ValueError, "anchor school.*fordham"):
+            _assert_build_invariants([syracuse], [syracuse], meta, yields)
+
     def test_parse_helpers_reject_nonfinite_and_fractional_values(self) -> None:
         for bad in (None, "NaN", "inf", "-Infinity", "abc", ""):
             self.assertIsNone(parse_decimal(bad), repr(bad))

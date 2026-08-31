@@ -177,8 +177,10 @@ export function YieldDebtBurdenChart({
       )?.pt ??
       null)
     : null;
+  // Live pointer hover wins over the search pin so a typed query does not
+  // make the rest of the chart untouchable; clearing the pointer restores it.
   const hover =
-    searched ?? (hoverId ? pts.find((pt) => pt.schoolId === hoverId) ?? null : null);
+    (hoverId ? pts.find((pt) => pt.schoolId === hoverId) ?? null : null) ?? searched;
   const syracuse = pts.find(
     (pt) => pt.schoolId === PRICING_POWER_ANNOTATION_SCHOOL_ID,
   );

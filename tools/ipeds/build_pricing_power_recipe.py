@@ -55,6 +55,19 @@ PANEL_B_MAX = 1750
 SYRACUSE_BURDEN_MIN = Decimal("0.041")
 SYRACUSE_BURDEN_MAX = Decimal("0.043")
 MIN_DISTINCT_YIELDS = 100
+# Figure 2's y-axis tops out at 16% and clamps silently; must match
+# YieldDebtBurdenChart.tsx (BURDEN_MAX) so a regen that produces a higher
+# burden fails here instead of misplotting the school at the axis edge.
+BURDEN_AXIS_MAX = Decimal("0.16")
+# Worked-example anchors the page requires at module scope (requirePanelB in
+# recipes/acceptance-vs-yield/page.tsx). Missing anchors should fail the
+# builder run, not the later next build.
+REQUIRED_PANEL_B_ANCHORS = (
+    SYRACUSE_SCHOOL_ID,
+    "fordham-university",
+    "american-university",
+    "southern-methodist-university",
+)
 PANEL_A_QUADRANTS = (
     "lowerAcceptanceHigherYield",
     "higherAcceptanceHigherYield",
@@ -306,7 +319,9 @@ def fetch_recipe_inputs(base_url: str, api_key: str) -> dict[str, list[dict[str,
             "sub_institutional": "is.null",
             "acceptance_rate": "not.is.null",
             "yield_rate": "not.is.null",
-            "order": "updated_at.desc",
+            # school_id tiebreaker keeps offset pagination stable when many
+            # rows share an updated_at timestamp.
+            "order": "updated_at.desc,school_id.asc",
         },
     )
     return {
@@ -730,6 +745,22 @@ def _assert_build_invariants(
         raise ValueError(
             f"only {len(distinct_yields)} distinct yield values; "
             "refusing integer-rounded rate series"
+        )
+    for row in panel_b:
+        if row["burdenExact"] > BURDEN_AXIS_MAX:
+            raise ValueError(
+                f"{row['schoolId']} burden {row['burdenExact']} exceeds the "
+                f"Figure 2 axis maximum {BURDEN_AXIS_MAX}"
+            )
+    missing_anchors = [
+        school_id
+        for school_id in REQUIRED_PANEL_B_ANCHORS
+        if school_id not in panel_b_ids
+    ]
+    if missing_anchors:
+        raise ValueError(
+            "required Panel B anchor school(s) missing: "
+            + ", ".join(missing_anchors)
         )
 
 
