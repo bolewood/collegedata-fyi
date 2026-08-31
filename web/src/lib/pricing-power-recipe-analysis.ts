@@ -44,6 +44,7 @@ export type PricingPowerExclusions = {
   missingZeroCounts: number;
   admittedGtApplied: number;
   enrolledGtAdmitted: number;
+  smallEnteringClass: number;
   outOfScope: number;
   missingNonpositiveScorecard: number;
 };

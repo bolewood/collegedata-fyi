@@ -48,10 +48,15 @@ SYRACUSE_IPEDS_ID = "196413"
 RATE_PLACES = Decimal("0.0001")
 MONEY_PLACES = Decimal("1")
 CENTS_PLACES = Decimal("0.01")
-PANEL_A_MIN = 1700
-PANEL_A_MAX = 2000
-PANEL_B_MIN = 1500
-PANEL_B_MAX = 1750
+# Entering classes under 100 are dominated by direct-matriculation
+# special-mission schools whose IPEDS filings show admitted == enrolled
+# (a near-100% "yield" that is a record-keeping artifact, not a market
+# signal), and the recipe's audience applies to larger schools anyway.
+MIN_ENTERING_CLASS = 100
+PANEL_A_MIN = 1300
+PANEL_A_MAX = 1600
+PANEL_B_MIN = 1250
+PANEL_B_MAX = 1550
 SYRACUSE_BURDEN_MIN = Decimal("0.041")
 SYRACUSE_BURDEN_MAX = Decimal("0.043")
 MIN_DISTINCT_YIELDS = 100
@@ -481,6 +486,7 @@ def build_recipe_artifact(
         "missingZeroCounts": 0,
         "admittedGtApplied": 0,
         "enrolledGtAdmitted": 0,
+        "smallEnteringClass": 0,
         "outOfScope": 0,
         "missingNonpositiveScorecard": 0,
     }
@@ -534,6 +540,9 @@ def build_recipe_artifact(
             continue
         if enrolled > admitted:
             exclusions["enrolledGtAdmitted"] += 1
+            continue
+        if enrolled < MIN_ENTERING_CLASS:
+            exclusions["smallEnteringClass"] += 1
             continue
         school_id = (
             (directory_row or {}).get("schoolId")

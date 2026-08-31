@@ -297,8 +297,10 @@ def _readme_rows(
             f"{exclusions.get('outOfScope', 0)}; missing/zero ADM counts "
             f"{exclusions.get('missingZeroCounts', 0)}; admitted > applied "
             f"{exclusions.get('admittedGtApplied', 0)}; enrolled > admitted "
-            f"{exclusions.get('enrolledGtAdmitted', 0)}; missing or non-positive "
-            f"Scorecard fields {exclusions.get('missingNonpositiveScorecard', 0)}.",
+            f"{exclusions.get('enrolledGtAdmitted', 0)}; entering class under "
+            f"100 {exclusions.get('smallEnteringClass', 0)}; missing or "
+            "non-positive Scorecard fields "
+            f"{exclusions.get('missingNonpositiveScorecard', 0)}.",
         ),
         ("", ""),
         ("Limitations (one line each)", ""),

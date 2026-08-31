@@ -613,11 +613,14 @@ export default function AcceptanceVsYieldPage() {
         <p style={prose}>
           After requiring positive applicant, admitted, and enrolled counts,
           with admitted no greater than applied and enrolled no greater than
-          admitted, and after dropping institutions outside the public
-          directory&apos;s in-scope set, {panelACount} schools remain for Figure
-          1. {PRICING_POWER_META.exclusions.missingZeroCounts} rows are removed
-          for missing or zero counts, and{" "}
-          {PRICING_POWER_META.exclusions.outOfScope} are out of scope.
+          admitted, requiring an entering class of at least 100 students, and
+          after dropping institutions outside the public directory&apos;s
+          in-scope set, {panelACount} schools remain for Figure 1.{" "}
+          {PRICING_POWER_META.exclusions.missingZeroCounts} rows are removed
+          for missing or zero counts,{" "}
+          {PRICING_POWER_META.exclusions.smallEnteringClass} for an entering
+          class under 100, and {PRICING_POWER_META.exclusions.outOfScope} are
+          out of scope.
         </p>
         <p style={prose}>
           Figure 2 keeps the {panelBCount} of those schools that also have
@@ -682,9 +685,13 @@ export default function AcceptanceVsYieldPage() {
           Those repeats are kept as reported. They do not include Syracuse.
         </p>
         <p style={prose}>
-          The sample includes very small and special-mission institutions with
-          near-100% yield. Those schools pull the mean yield up. Quadrants use
-          medians so that tail does not set the middle of the chart.
+          Schools with an entering class under 100 are excluded. In IPEDS
+          filings from very small direct-matriculation institutions, the
+          admitted count often equals the enrolled count, which reads as 100%
+          yield but reflects record-keeping, not a market signal. A few larger
+          schools with near-100% reported yield remain and are kept as
+          reported. Quadrants use medians so that tail does not set the middle
+          of the chart.
         </p>
         <p style={prose}>
           Instructional spending per student divided by average net price is

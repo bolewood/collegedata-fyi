@@ -6,6 +6,18 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.1.1] - 2026-08-31
+
+### Changed
+
+- Exclude entering classes under 100 students from the College Pricing Power
+  recipe (Panel A 1,744 → 1,417 schools; Panel B 1,557 → 1,386). In IPEDS
+  filings from very small direct-matriculation institutions the admitted count
+  often equals the enrolled count, which reads as 100% yield but reflects
+  record-keeping rather than a market signal; the near-100% yield band drops
+  from 80 schools to 2. Methodology copy, docs, and the XLSX starter now state
+  the filter and its tally.
+
 ## [0.6.1.0] - 2026-08-31
 
 ### Changed
