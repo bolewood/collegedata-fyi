@@ -6,6 +6,16 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.0.3] - 2026-08-31
+
+### Added
+
+- Keep Syracuse University's 2017-18 through 2021-22 Common Data Set files in the archive after the school took the live PDFs down, using complete Archive.org snapshots.
+
+### Changed
+
+- Fetch Wayback Machine CDS links as the original file instead of the HTML toolbar page, and refuse truncated Archive.org PDFs that look complete but have no trailer.
+
 ## [0.6.0.2] - 2026-08-30
 
 ### Added
