@@ -189,10 +189,15 @@ describe("pricing-power generated dataset", () => {
     const panelB = panelBSchools(PRICING_POWER_SCHOOLS);
     expect(PRICING_POWER_SCHOOLS).toHaveLength(PRICING_POWER_META.panelACount);
     expect(panelB).toHaveLength(PRICING_POWER_META.panelBCount);
-    expect(PRICING_POWER_META.panelACount).toBeGreaterThanOrEqual(1700);
-    expect(PRICING_POWER_META.panelACount).toBeLessThanOrEqual(2000);
-    expect(PRICING_POWER_META.panelBCount).toBeGreaterThanOrEqual(1500);
-    expect(PRICING_POWER_META.panelBCount).toBeLessThanOrEqual(1750);
+    // Bounds mirror PANEL_A_MIN/MAX and PANEL_B_MIN/MAX in the Python builder
+    // (entering classes under 100 are excluded upstream).
+    expect(PRICING_POWER_META.panelACount).toBeGreaterThanOrEqual(1300);
+    expect(PRICING_POWER_META.panelACount).toBeLessThanOrEqual(1600);
+    expect(PRICING_POWER_META.panelBCount).toBeGreaterThanOrEqual(1250);
+    expect(PRICING_POWER_META.panelBCount).toBeLessThanOrEqual(1550);
+    for (const school of PRICING_POWER_SCHOOLS) {
+      expect(school.enrolled, school.schoolId).toBeGreaterThanOrEqual(100);
+    }
 
     const quadrantASum = Object.values(PRICING_POWER_META.quadrantsA).reduce(
       (sum, count) => sum + count,

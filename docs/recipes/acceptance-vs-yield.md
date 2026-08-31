@@ -9,8 +9,9 @@ change if a college changed its price.
 
 Open [`/recipes/acceptance-vs-yield`](https://www.collegedata.fyi/recipes/acceptance-vs-yield)
 for two interactive scatters. Panel A plots IPEDS fall 2024 acceptance rate
-against yield for 1,744 schools. Panel B keeps yield and adds College Scorecard
-federal-loan burden for 1,557 of those schools. Dividers are this sample’s
+against yield for 1,417 schools with entering classes of at least 100 students.
+Panel B keeps yield and adds College Scorecard
+federal-loan burden for 1,386 of those schools. Dividers are this sample’s
 medians, not 50% lines. Each school is drawn at the same size; average net
 price is in the tooltip. Hover any dot, or search, to see the underlying
 counts. Many schools overlap.
@@ -21,7 +22,7 @@ federal-loan burden; analysts joining IPEDS ADM counts to College Scorecard.
 **Sources:** IPEDS ADM2024 (fall 2024) raw applicant / admitted / enrolled
 counts; College Scorecard 2022–23 debt, payments, earnings, net price, and
 instructional spending; CDS 2024–25 C1 acceptance and yield as a tooltip
-cross-check only (356 of 1,744 Panel A schools). Plotted positions always use
+cross-check only (356 of 1,417 Panel A schools). Plotted positions always use
 IPEDS.
 
 The XLSX starter
@@ -84,20 +85,27 @@ Guards, required:
    This build: **17**.
 3. Drop `admitted > applied`. This build: **0**.
 4. Drop `enrolled > admitted`. This build: **0**.
+5. Drop entering classes under **100** students. This build: **327**. In
+   IPEDS filings from very small direct-matriculation institutions (seminaries,
+   yeshivas, small trade schools), the admitted count often equals the enrolled
+   count, which reads as 100% yield but reflects record-keeping rather than a
+   market signal — and the recipe’s audience applies to larger schools.
 
-Result: **1,744** schools. Median acceptance **77.61%**. Median yield
-**21.54%**. Quadrant counts against those medians: 463 / 409 / 408 / 464
+Result: **1,417** schools. Median acceptance **76.78%**. Median yield
+**19.31%**. Quadrant counts against those medians: 397 / 312 / 311 / 397
 (lower acceptance · higher yield / higher acceptance · higher yield / lower
 acceptance · lower yield / higher acceptance · lower yield).
 
 Panel B joins Panel A to `scorecard_summary` on `ipeds_id` and keeps rows where
 earnings, monthly payment, completer debt, average net price, and instructional
-expenditure per FTE are all present and positive. This build dropped **187**
+expenditure per FTE are all present and positive. This build dropped **31**
 schools for missing or non-positive Scorecard fields. Directory and Scorecard
 join misses were **0**.
 
-Result: **1,557** schools. Median yield **20.10%** — not the 21.54% used in
-Figure 1. Median burden **5.21%**. Quadrant counts: 361 / 418 / 418 / 360.
+Result: **1,386** schools. Median yield **19.13%** — not the 19.31% used in
+Figure 1. Median burden **5.20%**. Quadrant counts: 322 / 375 / 371 / 318
+(higher yield · higher burden / lower yield · higher burden / higher yield ·
+lower burden / lower yield · lower burden).
 A school can sit on different sides of “higher yield” in the two charts.
 
 CDS 2024–25 C1 is attached last, from `school_browser_rows` with
@@ -124,11 +132,11 @@ exclusion figures quoted in this write-up — the web page derives them from
 
 Dividers are this sample’s medians, not 50% lines. A 50% × 50% grid would put
 most of Panel A in one corner: 84% of these schools accept at least half of
-applicants, and the median school admits about 78%. “Below-median acceptance”
+applicants, and the median school admits about 77%. “Below-median acceptance”
 still includes many colleges that admit 60% or 70% of applicants.
 
 **Fig. 1 · Acceptance rate vs. yield.** Horizontal axis: acceptance. Vertical
-axis: yield. Dividers: 77.6% acceptance and 21.5% yield among 1,744 schools.
+axis: yield. Dividers: 76.8% acceptance and 19.3% yield among 1,417 schools.
 
 - **I. Lower acceptance · higher yield** — These schools admit a smaller share
   of applicants than the sample median and enroll a larger share of those they
@@ -141,8 +149,8 @@ axis: yield. Dividers: 77.6% acceptance and 21.5% yield among 1,744 schools.
   specialized colleges, or schools whose applicants are especially likely to
   enroll if admitted.
 - **III. Lower acceptance · lower yield** — These schools admit a smaller share
-  of applicants than this sample’s median (77.6%) but enroll a smaller share of
-  admits than the median (21.5%). In this file, “below-median acceptance” still
+  of applicants than this sample’s median (76.8%) but enroll a smaller share of
+  admits than the median (19.3%). In this file, “below-median acceptance” still
   includes many colleges that admit 60% or 70% of applicants. Many of these
   schools compete for students who have several attractive alternatives. A
   below-median yield should not be read as evidence that the school is
@@ -159,7 +167,7 @@ knows the school well. A low yield can reflect intense competition for students
 rather than weak academic quality.
 
 **Fig. 2 · Yield vs. graduate debt burden.** Horizontal axis: yield. Vertical
-axis: debt burden. Dividers: 20.1% yield and 5.21% debt burden among 1,557
+axis: debt burden. Dividers: 19.1% yield and 5.20% debt burden among 1,386
 schools. Each school is drawn at the same size. Average net price is in the
 tooltip. It is the College Scorecard average for Title IV aid recipients, not
 the price a full-pay family pays.
@@ -198,7 +206,7 @@ Syracuse University (`syracuse-university`, IPEDS 196413) is in both panels.
 Fall 2024 ADM2024: 44,480 applied, 20,427 admitted, 3,835 enrolled →
 acceptance **45.92%**, yield **18.77%**. Scorecard 2022–23: median completer
 debt $26,000; monthly payment $275.64 (annual $3,308); median 10-year earnings
-$79,164; burden **4.18%** (below the 5.21% Panel B median); Title IV average
+$79,164; burden **4.18%** (below the 5.20% Panel B median); Title IV average
 net price **$38,793**.
 
 The admissions figures on this page are from the fall 2024 entering class, the
@@ -277,7 +285,7 @@ students moving through college.
 
 Where a school also has a complete Common Data Set C1 row for 2024–25, the
 tooltip shows that acceptance and yield as a cross-check. In this build that
-is 356 of 1,744 schools. Plotted positions always use IPEDS ADM2024.
+is 356 of 1,417 schools. Plotted positions always use IPEDS ADM2024.
 
 ## Limitations
 
@@ -286,10 +294,13 @@ is 356 of 1,744 schools. Plotted positions always use IPEDS ADM2024.
    all produce the same conversion rate. A low yield can be competition rather
    than weak academic quality. At most schools, yield has fallen by about half
    over two decades as students apply to about three times as many schools
-   (federal data, as reported by the Journal). The sample also includes very
-   small and special-mission institutions with near-100% yield. Those schools
-   pull the mean yield up. Quadrants use medians so that tail does not set the
-   middle of the chart.
+   (federal data, as reported by the Journal). Schools with an entering class
+   under 100 are excluded: in IPEDS filings from very small
+   direct-matriculation institutions, the admitted count often equals the
+   enrolled count, which reads as 100% yield but reflects record-keeping
+   rather than a market signal. A few larger schools with near-100% reported
+   yield remain and are kept as reported. Quadrants use medians so that tail
+   does not set the middle of the chart.
 
 2. **Average net price is not sticker price, and it is Title IV-only.** The
    College Scorecard figure averages what undergraduates who received Title IV
@@ -301,7 +312,7 @@ is 356 of 1,744 schools. Plotted positions always use IPEDS ADM2024.
    include parent PLUS, private loans, or cash tuition. The monthly payment is
    a Scorecard estimate from median completer debt, not an observed typical
    bill. Median federal completer debt clusters at common federal loan limits.
-   In this sample, 170 schools report exactly $27,000. A lower debt burden at
+   In this sample, 159 schools report exactly $27,000. A lower debt burden at
    a high-price college can be high later earnings, not a smaller bill.
    Syracuse at $26,000 sits in that pile.
 
@@ -311,9 +322,9 @@ is 356 of 1,744 schools. Plotted positions always use IPEDS ADM2024.
    same time. Earnings are from federally aided students who enrolled about a
    decade before the Scorecard 2022–23 file. Fall 2024 admits are not those
    earners, and they are not the fall 2026 class in the Journal article.
-   Figure 2 uses a smaller sample (1,557 schools) because it requires
+   Figure 2 uses a smaller sample (1,386 schools) because it requires
    Scorecard debt, earnings, net price, and instructional spending. Its yield
-   median is 20.1%, not the 21.5% used in Figure 1.
+   median is 19.1%, not the 19.3% used in Figure 1.
 
 5. **Instruction / net-price is not a budget share.** Never treat the
    remainder as administration. Instructional expenditure per FTE and Title IV
@@ -324,7 +335,7 @@ is 356 of 1,744 schools. Plotted positions always use IPEDS ADM2024.
    markups, or a recommended price. Some branch campuses inherit a parent
    College Scorecard record, so debt, earnings, and burden can repeat across
    related institutions. Those repeats are kept as reported. They do not
-   include Syracuse. “1,557 schools” is not 1,557 independent outcome draws.
+   include Syracuse. “1,386 schools” is not 1,386 independent outcome draws.
 
 ## How to reproduce it
 
@@ -370,8 +381,9 @@ curl 'https://api.collegedata.fyi/rest/v1/school_browser_rows?select=school_id,i
   -H 'Authorization: Bearer <anon key>'
 ```
 
-From those rows: keep in-scope schools with complete positive ADM counts and
-`admitted ≤ applied`, `enrolled ≤ admitted`; compute acceptance and yield from
+From those rows: keep in-scope schools with complete positive ADM counts,
+`admitted ≤ applied`, `enrolled ≤ admitted`, and an entering class of at least
+100 students; compute acceptance and yield from
 the counts; inner-join Scorecard on `ipeds_id` where all five outcome fields
 are positive; compute `burden = monthly × 12 ÷ earnings` and
 `instruction / net-price = instruction_fte ÷ avg_net_price`; attach CDS rates

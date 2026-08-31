@@ -196,6 +196,14 @@ class PricingPowerRecipeBuilderTests(unittest.TestCase):
                 enrolled=4,
                 in_scope=False,
             )
+            + adm_rows(
+                "100007",
+                school_id="tiny-college",
+                name="Tiny College",
+                applied=120,
+                admitted=110,
+                enrolled=99,
+            )
         )
         current = adm_rows(
             "100006",
@@ -217,6 +225,7 @@ class PricingPowerRecipeBuilderTests(unittest.TestCase):
                 directory_row("100004", "over-enroll", "Over Enroll"),
                 directory_row("100005", "oos-college", "Out of Scope College", in_scope=False),
                 directory_row("100006", "oos-current", "Current OOS", in_scope=False),
+                directory_row("100007", "tiny-college", "Tiny College"),
             ],
             scorecard_rows=[scorecard_row(SYRACUSE_IPEDS_ID)],
             browser_rows=[],
@@ -227,6 +236,8 @@ class PricingPowerRecipeBuilderTests(unittest.TestCase):
         self.assertEqual(exclusions["missingZeroCounts"], 2)
         self.assertEqual(exclusions["admittedGtApplied"], 1)
         self.assertEqual(exclusions["enrolledGtAdmitted"], 1)
+        # 99 enrolled sits just under the 100-student entering-class floor.
+        self.assertEqual(exclusions["smallEnteringClass"], 1)
         self.assertEqual(exclusions["outOfScope"], 2)
         self.assertEqual(artifact["meta"]["panelACount"], 1)
         self.assertEqual(artifact["schools"][0]["schoolId"], SYRACUSE_SCHOOL_ID)
@@ -236,9 +247,9 @@ class PricingPowerRecipeBuilderTests(unittest.TestCase):
             "100010",
             school_id="no-earnings",
             name="No Earnings College",
-            applied=100,
-            admitted=50,
-            enrolled=20,
+            applied=1000,
+            admitted=500,
+            enrolled=200,
         )
         artifact = build_recipe_artifact(
             fact_rows=facts,
@@ -261,7 +272,7 @@ class PricingPowerRecipeBuilderTests(unittest.TestCase):
     def test_scorecard_join_miss_is_counted_separately(self) -> None:
         artifact = build_recipe_artifact(
             fact_rows=syracuse_facts()
-            + adm_rows("100011", school_id="orphan", name="Orphan College", applied=10, admitted=5, enrolled=2),
+            + adm_rows("100011", school_id="orphan", name="Orphan College", applied=1000, admitted=500, enrolled=200),
             directory_rows=[],
             scorecard_rows=[scorecard_row(SYRACUSE_IPEDS_ID)],
             browser_rows=[],
@@ -315,7 +326,7 @@ class PricingPowerRecipeBuilderTests(unittest.TestCase):
             ("d", "0.70", "0.10", "0.02"),
         ]
         for index, (slug, acc, yld, burden) in enumerate(specs, start=1):
-            applied = 1000
+            applied = 10000
             admitted = int(Decimal(acc) * applied)
             enrolled = int(Decimal(yld) * admitted)
             ipeds = f"20000{index}"
@@ -358,7 +369,7 @@ class PricingPowerRecipeBuilderTests(unittest.TestCase):
     def test_cds_crosscheck_is_optional_and_dedupes_latest_row(self) -> None:
         artifact = build_recipe_artifact(
             fact_rows=syracuse_facts()
-            + adm_rows("102614", school_id="alaska", name="Alaska", applied=100, admitted=50, enrolled=20),
+            + adm_rows("102614", school_id="alaska", name="Alaska", applied=1000, admitted=500, enrolled=200),
             directory_rows=[],
             scorecard_rows=[
                 scorecard_row(SYRACUSE_IPEDS_ID),
@@ -402,9 +413,9 @@ class PricingPowerRecipeBuilderTests(unittest.TestCase):
                 "168148",
                 school_id="tufts-university",
                 name="Tufts University",
-                applied=100,
-                admitted=20,
-                enrolled=10,
+                applied=1000,
+                admitted=200,
+                enrolled=100,
             )
             + syracuse_facts(),
             directory_rows=[
@@ -473,7 +484,7 @@ class PricingPowerRecipeBuilderTests(unittest.TestCase):
             _assert_build_invariants(
                 schools,
                 [],
-                {"panelACount": 1800, "panelBCount": 1600},
+                {"panelACount": 1417, "panelBCount": 1386},
                 {0.1877},
             )
         syracuse_row = {
@@ -486,21 +497,21 @@ class PricingPowerRecipeBuilderTests(unittest.TestCase):
             _assert_build_invariants(
                 [syracuse_row],
                 [],
-                {"panelACount": 1800, "panelBCount": 1600},
+                {"panelACount": 1417, "panelBCount": 1386},
                 {0.1877},
             )
         with self.assertRaisesRegex(ValueError, "integer-rounded"):
             _assert_build_invariants(
                 [syracuse_row],
                 [syracuse_row],
-                {"panelACount": 1800, "panelBCount": 1600},
+                {"panelACount": 1417, "panelBCount": 1386},
                 {Decimal("0.01") * i for i in range(80)},
             )
         with self.assertRaisesRegex(ValueError, "Panel A count"):
             _assert_build_invariants(
                 [syracuse_row],
                 [syracuse_row],
-                {"panelACount": 50, "panelBCount": 1600},
+                {"panelACount": 50, "panelBCount": 1386},
                 {Decimal("0.1") + Decimal("0.0001") * i for i in range(120)},
             )
 
@@ -518,7 +529,7 @@ class PricingPowerRecipeBuilderTests(unittest.TestCase):
             _assert_build_invariants(
                 [drifted],
                 [drifted],
-                {"panelACount": 1800, "panelBCount": 1600},
+                {"panelACount": 1417, "panelBCount": 1386},
                 yields,
             )
         healthy = dict(drifted, burdenExact=Decimal("0.0418"))
@@ -526,13 +537,13 @@ class PricingPowerRecipeBuilderTests(unittest.TestCase):
             _assert_build_invariants(
                 [healthy],
                 [healthy],
-                {"panelACount": 1800, "panelBCount": 50},
+                {"panelACount": 1417, "panelBCount": 50},
                 yields,
             )
 
     def test_build_assertions_reject_axis_overflow_and_missing_anchors(self) -> None:
         yields = {Decimal("0.1") + Decimal("0.0001") * i for i in range(120)}
-        meta = {"panelACount": 1800, "panelBCount": 1600}
+        meta = {"panelACount": 1417, "panelBCount": 1386}
         syracuse = {
             "schoolId": SYRACUSE_SCHOOL_ID,
             "ipedsId": SYRACUSE_IPEDS_ID,
