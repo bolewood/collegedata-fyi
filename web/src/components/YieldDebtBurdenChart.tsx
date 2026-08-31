@@ -36,7 +36,7 @@ const QUADRANT_LABEL: Record<string, string> = {
 
 const PANEL_B = panelBSchools(PRICING_POWER_SCHOOLS);
 
-type Point = (typeof PANEL_B)[number] & {
+export type Point = (typeof PANEL_B)[number] & {
   cx: number;
   cy: number;
   r: number;
@@ -46,12 +46,12 @@ function xs(rate: number): number {
   return M.l + rate * IW;
 }
 
-function ys(burden: number): number {
+export function ys(burden: number): number {
   const t = Math.min(1, Math.max(0, burden / BURDEN_MAX));
   return M.t + (1 - t) * IH;
 }
 
-function radiusForNetPrice(
+export function radiusForNetPrice(
   netPrice: number,
   minPrice: number,
   maxPrice: number,
@@ -85,7 +85,7 @@ function hitRadiusInSvg(svg: SVGSVGElement): number {
   return 20 / scale;
 }
 
-function nearestPoint(
+export function nearestPoint(
   pts: readonly Point[],
   x: number,
   y: number,

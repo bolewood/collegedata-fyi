@@ -24,6 +24,37 @@ import {
   panelBSchools,
 } from "./pricing-power-recipe-analysis";
 
+describe("pricing-power guard rails", () => {
+  it("throws on non-positive denominators instead of returning Infinity/NaN", () => {
+    expect(() => computeAcceptanceRate(100, 0)).toThrow(/positive applicant/);
+    expect(() => computeAcceptanceRate(100, -5)).toThrow(/positive applicant/);
+    expect(() => computeYieldRate(50, 0)).toThrow(/positive admitted/);
+    expect(() => computeBurden(0, 60000)).toThrow(/positive/);
+    expect(() => computeBurden(250, 0)).toThrow(/positive/);
+    expect(() => computeInstructionNetPriceRatio(0, 30000)).toThrow(/positive/);
+    expect(() => computeInstructionNetPriceRatio(20000, 0)).toThrow(/positive/);
+    expect(() => median([])).toThrow(/empty/);
+  });
+
+  it("keeps the page's worked-example anchors in Panel B of the dataset", () => {
+    // The page throws at build time (requirePanelB) if a dataset regen drops
+    // any of these schools; this catches that in the test run instead.
+    const anchors = [
+      PRICING_POWER_ANNOTATION_SCHOOL_ID,
+      "fordham-university",
+      "american-university",
+      "southern-methodist-university",
+    ];
+    for (const schoolId of anchors) {
+      const row = PRICING_POWER_SCHOOLS.find((s) => s.schoolId === schoolId);
+      expect(row, schoolId).toBeDefined();
+      expect(isPanelBSchool(row!), `${schoolId} must have Panel B fields`).toBe(
+        true,
+      );
+    }
+  });
+});
+
 describe("pricing-power arithmetic", () => {
   it("reproduces Syracuse rates, burden, and instruction/net-price from raw inputs", () => {
     expect(computeAcceptanceRate(20427, 44480)).toBeCloseTo(0.4592, 4);
