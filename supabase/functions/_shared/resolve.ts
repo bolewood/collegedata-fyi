@@ -221,6 +221,25 @@ export function rewriteBoxUrl(url: string): string {
   return url;
 }
 
+// Wayback Machine toolbar URLs (`/web/TIMESTAMP/https://...`) return an
+// HTML wrapper, not the original bytes. The `id_` flag strips the
+// wrapper. Some captures of PDFs larger than ~1 MB are also truncated
+// on older snapshots; callers should pick a CDX row whose `length`
+// matches the downloaded size. This rewrite only injects `id_`.
+//
+//   https://web.archive.org/web/20220701053930/https://example.edu/cds.pdf
+//   → https://web.archive.org/web/20220701053930id_/https://example.edu/cds.pdf
+const WAYBACK_RE =
+  /^https?:\/\/web\.archive\.org\/web\/(\d{8,14})([a-z]{1,3}_)?\/(https?:\/\/.+)$/i;
+
+export function rewriteWaybackUrl(url: string): string {
+  const m = url.match(WAYBACK_RE);
+  if (!m) return url;
+  const [, timestamp, flags, original] = m;
+  if ((flags ?? "").toLowerCase() === "id_") return url;
+  return `https://web.archive.org/web/${timestamp}id_/${original}`;
+}
+
 export function rewriteGoogleDriveUrl(url: string): string {
   const fileMatch = url.match(GOOGLE_DRIVE_FILE_RE);
   if (fileMatch) {
@@ -482,12 +501,13 @@ export function extractCdsAnchors(html: string, baseUrl: string): CdsAnchor[] {
       continue;
     }
 
-    // Rewrite Google Drive share URLs into direct-download form before
-    // any classification. Without this, the subsequent two-hop fetch
-    // lands on Drive's HTML viewer and we can't classify it as a
-    // document. See rewriteGoogleDriveUrl comment above.
+    // Rewrite Google Drive / Box / Wayback URLs into raw-byte form
+    // before any classification. Without this, the subsequent two-hop
+    // fetch lands on a viewer/toolbar HTML page and we can't classify
+    // it as a document.
     absoluteUrl = rewriteGoogleDriveUrl(absoluteUrl);
     absoluteUrl = rewriteBoxUrl(absoluteUrl);
+    absoluteUrl = rewriteWaybackUrl(absoluteUrl);
 
     const parsed = new URL(absoluteUrl);
 
@@ -612,9 +632,10 @@ export function findDownloadLinks(html: string, baseUrl: string): CdsAnchor[] {
       continue;
     }
 
-    // Same Google Drive rewrite as extractCdsAnchors.
+    // Same Drive / Box / Wayback rewrite as extractCdsAnchors.
     absoluteUrl = rewriteGoogleDriveUrl(absoluteUrl);
     absoluteUrl = rewriteBoxUrl(absoluteUrl);
+    absoluteUrl = rewriteWaybackUrl(absoluteUrl);
 
     const parsed = new URL(absoluteUrl);
     if (isExcludedDocumentHost(parsed.hostname)) continue;
@@ -1020,15 +1041,18 @@ export async function resolveCdsForSchool(
   // that year and walk past every other year in the same directory. The
   // parent walk is best-effort: if every ancestor 403s or has no CDS
   // anchors, we still return the direct doc (current pre-upgrade behavior).
-  if (DOCUMENT_EXT_RE.test(hint)) {
-    const parsed = new URL(hint);
+  const rewrittenHint = rewriteWaybackUrl(
+    rewriteBoxUrl(rewriteGoogleDriveUrl(hint)),
+  );
+  if (DOCUMENT_EXT_RE.test(hint) || DOCUMENT_EXT_RE.test(rewrittenHint)) {
+    const parsed = new URL(rewrittenHint);
     const filename = decodeURIComponent(
       parsed.pathname.split("/").filter(Boolean).pop() ?? "",
     );
-    const year = normalizeYear(hint) ?? normalizeYear(filename);
+    const year = normalizeYear(rewrittenHint) ?? normalizeYear(filename);
     const directDoc: ResolvedDocument = {
       candidate_kind: "single_document",
-      url: hint,
+      url: rewrittenHint,
       cds_year: year ?? UNKNOWN_YEAR_SENTINEL,
       filename,
       is_section_file: isSectionFile(filename),

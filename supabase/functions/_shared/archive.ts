@@ -32,6 +32,7 @@ import {
 import {
   buildSourcePath,
   extForResponse,
+  isTruncatedWaybackPdf,
   MAX_SOURCE_BYTES,
   objectExists,
   uploadSource,
@@ -426,8 +427,12 @@ export async function archiveManualUrls(
     );
   }
   const { normalizeYear } = await import("./year.ts");
-  const { UNKNOWN_YEAR_SENTINEL, rewriteBoxUrl, rewriteGoogleDriveUrl } =
-    await import("./resolve.ts");
+  const {
+    UNKNOWN_YEAR_SENTINEL,
+    rewriteBoxUrl,
+    rewriteGoogleDriveUrl,
+    rewriteWaybackUrl,
+  } = await import("./resolve.ts");
 
   const candidates: CandidateOutcome[] = [];
   const skipped: { url: string; reason: string; category: ProbeOutcome }[] = [];
@@ -435,10 +440,11 @@ export async function archiveManualUrls(
     const rawUrl = typeof raw === "string" ? raw : raw.url;
     const explicitYear = typeof raw === "string" ? null : (raw.year ?? null);
 
-    // Rewrite share-viewer URLs (Google Drive, Box) into direct-download
-    // form before handing to the downloader.
+    // Rewrite share-viewer / Wayback toolbar URLs into raw-byte form
+    // before handing to the downloader.
     let url = rewriteGoogleDriveUrl(rawUrl);
     url = rewriteBoxUrl(url);
+    url = rewriteWaybackUrl(url);
 
     let parsedUrl: URL;
     try {
@@ -649,6 +655,12 @@ async function archiveSectionPackage(
       );
     }
     const ext = extForResponse(downloaded.contentType, downloaded.finalUrl, downloaded.bytes);
+    if (isTruncatedWaybackPdf(downloaded.finalUrl, downloaded.bytes)) {
+      throw new PermanentError(
+        `truncated Wayback PDF (missing %%EOF) at ${downloaded.finalUrl}`,
+        "wrong_content_type",
+      );
+    }
     if (ext !== "pdf") {
       throw new PermanentError(
         `section ${part.section} is ${ext ?? "unknown"}, expected pdf at ${downloaded.finalUrl}`,
@@ -805,6 +817,12 @@ async function archiveOneCandidate(
   // The magic-byte path is what rescues Google Drive (serves everything
   // as application/octet-stream) and any other host whose download
   // endpoint doesn't set a canonical Content-Type.
+  if (isTruncatedWaybackPdf(finalUrl, bytes)) {
+    throw new PermanentError(
+      `truncated Wayback PDF (missing %%EOF) at ${finalUrl}`,
+      "wrong_content_type",
+    );
+  }
   const ext = extForResponse(contentType, finalUrl, bytes);
   if (!ext) {
     throw new PermanentError(

@@ -7,6 +7,7 @@ import {
   findDownloadLinks,
   rewriteGoogleDriveUrl,
   rewriteBoxUrl,
+  rewriteWaybackUrl,
   parentLandingCandidates,
   wellKnownPathUrls,
 } from "./resolve.ts";
@@ -362,6 +363,19 @@ Deno.test("rewriteGoogleDriveUrl: /open?id=ID form", () => {
 Deno.test("rewriteGoogleDriveUrl: non-drive URL passes through", () => {
   const input = "https://example.edu/cds-2024-25.pdf";
   assertEquals(rewriteGoogleDriveUrl(input), input);
+});
+
+Deno.test("extractCdsAnchors: Wayback toolbar links rewritten to id_", () => {
+  const html = `
+    <a href="https://web.archive.org/web/20220701053930/https://example.edu/cds_2019-2020.pdf">CDS 2019-2020</a>
+  `;
+  const anchors = extractCdsAnchors(html, "https://example.edu/ir/");
+  assertEquals(anchors.length, 1);
+  assertEquals(
+    anchors[0].url,
+    "https://web.archive.org/web/20220701053930id_/https://example.edu/cds_2019-2020.pdf",
+  );
+  assertEquals(anchors[0].year, "2019-20");
 });
 
 Deno.test("extractCdsAnchors: Stanford-style Google Drive links rewritten", () => {
@@ -800,6 +814,35 @@ Deno.test("rewriteBoxUrl: already-rewritten URL passes through", () => {
   // /shared/static/ form has no /s/ segment, so the rewrite doesn't fire.
   const got = rewriteBoxUrl("https://upenn.box.com/shared/static/abc");
   assertEquals(got, "https://upenn.box.com/shared/static/abc");
+});
+
+Deno.test("rewriteWaybackUrl: toolbar URL gets id_ flag", () => {
+  const input =
+    "https://web.archive.org/web/20220701053930/https://example.edu/cds.pdf";
+  assertEquals(
+    rewriteWaybackUrl(input),
+    "https://web.archive.org/web/20220701053930id_/https://example.edu/cds.pdf",
+  );
+});
+
+Deno.test("rewriteWaybackUrl: existing id_ is unchanged", () => {
+  const input =
+    "https://web.archive.org/web/20220701053930id_/https://example.edu/cds.pdf";
+  assertEquals(rewriteWaybackUrl(input), input);
+});
+
+Deno.test("rewriteWaybackUrl: if_ flag becomes id_", () => {
+  const input =
+    "https://web.archive.org/web/20220701053930if_/https://example.edu/cds.pdf";
+  assertEquals(
+    rewriteWaybackUrl(input),
+    "https://web.archive.org/web/20220701053930id_/https://example.edu/cds.pdf",
+  );
+});
+
+Deno.test("rewriteWaybackUrl: non-wayback URL passes through", () => {
+  const input = "https://example.edu/cds.pdf";
+  assertEquals(rewriteWaybackUrl(input), input);
 });
 
 Deno.test("wellKnownPathUrls: rejects malformed/non-http URLs", () => {
