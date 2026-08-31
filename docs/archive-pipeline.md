@@ -909,7 +909,12 @@ The Deno suite now covers more than the original resolver-only archive tests:
   year-labeled + year-less drops, multi-candidate all-year-less null
   return, clean-vs-demoted partitioning, CSULB-style demoted fallback,
   cross-subpage URL dedup, empty-list pass-through), parent-landing walks,
-  well-known CDS paths, Box URL rewrites, and Google Drive rewrites.
+  well-known CDS paths, Box URL rewrites, Google Drive rewrites, and
+  Wayback `id_` rewrites.
+
+- **`storage.test.ts`** — content-type vs magic-byte sniffing, plus
+  truncated Wayback PDF rejection (missing `%%EOF` trailer on
+  `web.archive.org` captures that still sniff as `%PDF`).
 
 - **`hosting.test.ts` / `probe_outcome.test.ts` / `schools.test.ts`** —
   hosting-observation inference, auth-wall classification, cooldown windows,

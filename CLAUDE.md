@@ -34,7 +34,9 @@ whole corpus, not a one-off.
   same failure shape and redrain the similar files after the parser/cleaner fix.
 - For finding/discovery issues, find and archive the most recent two CDS years when
   available, then add a durable finder or archiver hint so the next year's document
-  can be found automatically.
+  can be found automatically. If the school took the live PDFs down, pin complete
+  Archive.org `id_` snapshots in `tools/finder/school_overrides.yaml` (toolbar
+  URLs return HTML; some captures truncate at 1 MB without `%%EOF`).
 - For school identity changes, run `python tools/finder/identity_guard.py` before
   writing generated data, then run `python tools/finder/school_redirect_guard.py`
   to verify the checked-in web redirect manifest. Treat `retired_aliases` as

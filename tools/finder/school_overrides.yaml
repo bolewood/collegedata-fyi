@@ -19,12 +19,17 @@
 #     direct_archive_urls:                    # explicit list of year-tagged
 #                                             # archive URLs. Used when the
 #                                             # school hosts on Box/Drive/
-#                                             # SharePoint or behind any
-#                                             # storage that the resolver
-#                                             # can't crawl. Each entry must
-#                                             # carry an explicit `year`
-#                                             # because share-viewer URLs
-#                                             # are opaque (Box /s/<id>,
+#                                             # SharePoint, behind storage
+#                                             # the resolver can't crawl, or
+#                                             # when live PDFs were taken
+#                                             # down and only Archive.org
+#                                             # still has them (use Wayback
+#                                             # `id_` URLs, not toolbar
+#                                             # captures; some snapshots
+#                                             # truncate at 1 MB). Each
+#                                             # entry must carry an explicit
+#                                             # `year` because share-viewer
+#                                             # URLs are opaque (Box /s/<id>,
 #                                             # Drive /file/d/<id>) — the
 #                                             # extraction worker still
 #                                             # validates by reading the

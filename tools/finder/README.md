@@ -13,7 +13,7 @@ This directory turns that problem into a reproducible pipeline. You run one comm
 | File | Purpose |
 |---|---|
 | `schools.yaml` | The corpus. 2,434 schools keyed by IPEDS ID, with `discovery_seed_url` (the resolver's seed URL; renamed from `cds_url_hint` in PR 5 of the URL hint refactor), optional `browse_url` (human-friendly URL for contributor tools), `scrape_policy`, `probe_state`. |
-| `school_overrides.yaml` | Operator-supplied per-school overrides keyed by `school_id`. Hand-curated `browse_url`, `direct_archive_urls` (year-tagged for Box/Drive/SharePoint-hosted schools), `hosting_override` (CMS/file_storage/auth_required/rendering/waf/notes). Read at edge-function runtime by `_shared/schools.ts`; NOT touched by `build_school_list.py`. |
+| `school_overrides.yaml` | Operator-supplied per-school overrides keyed by `school_id`. Hand-curated `browse_url`, `direct_archive_urls` (year-tagged for Box/Drive/SharePoint-hosted schools and Archive.org snapshots of taken-down school PDFs; use Wayback `id_` URLs, not toolbar captures), `hosting_override` (CMS/file_storage/auth_required/rendering/waf/notes). Read at edge-function runtime by `_shared/schools.ts`; NOT touched by `build_school_list.py`. |
 | `build_school_list.py` | Rebuilds `schools.yaml` from IPEDS HD data, preserving hand-curated overrides. Run rarely (once per IPEDS release). Includes `assert_no_duplicates()` build-time guard. |
 | `identity_guard.py` | CI and loader guard that checks every `schools.yaml` UNITID against a checked-in official NCES HD identity snapshot. It blocks when neither official name nor website domain agrees; exact reviewed exceptions cannot use wildcards and must remain in use. |
 | `school_redirect_guard.py` | CI guard that derives reviewed retired aliases from `schools.yaml` and verifies `web/src/data/school-redirects.json` has exactly one valid permanent redirect for each alias, with no canonical-slug collisions or conflicting destinations. |
@@ -293,7 +293,7 @@ cd /path/to/collegedata-fyi && \
 ## See also
 
 - [`schools.yaml`](schools.yaml) — the corpus this tool maintains
-- [`school_overrides.yaml`](school_overrides.yaml) — operator-supplied per-school overrides (browse_url, hand-curated direct PDFs, hosting fingerprints). Read alongside schools.yaml at edge-function runtime.
+- [`school_overrides.yaml`](school_overrides.yaml) — operator-supplied per-school overrides (browse_url, hand-curated direct PDFs including complete Archive.org `id_` snapshots, hosting fingerprints). Read alongside schools.yaml at edge-function runtime.
 - [`seed_urls.md`](seed_urls.md) — hand-curated known publishers and non-publishers
 - [`build_school_list.py`](build_school_list.py) — regenerates schools.yaml from IPEDS (run rarely)
 - [`debug_brave.py`](debug_brave.py) — run when a Brave run misbehaves
