@@ -119,6 +119,21 @@ def test_verify_workbook_rejects_row_drift(tmp_path: Path) -> None:
         verify_workbook(dest, drifted)
 
 
+def test_loader_parses_real_render_typescript_output(tmp_path: Path) -> None:
+    """Round-trip against the actual builder serializer, not a hand fixture."""
+    from tools.ipeds.build_pricing_power_recipe import render_typescript
+
+    artifact = {
+        "meta": _meta(2, 1),
+        "schools": [_school("alpha-college", True), _school("beta-college", False)],
+    }
+    src = tmp_path / "generated.ts"
+    src.write_text(render_typescript(artifact), encoding="utf-8")
+    meta, rows = load_pricing_power_dataset(src)
+    assert meta["panelACount"] == 2
+    assert [row["schoolId"] for row in rows] == ["alpha-college", "beta-college"]
+
+
 def test_headers_stay_in_sync_with_page_contract() -> None:
     assert PANEL_B_HEADERS[: len(PANEL_A_HEADERS)] == PANEL_A_HEADERS
     assert "burden" in PANEL_B_HEADERS

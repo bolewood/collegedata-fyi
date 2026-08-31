@@ -116,6 +116,10 @@ python3 tools/ipeds/build_pricing_power_starter_xlsx.py
 The first command writes `web/src/lib/pricing-power-recipe-data.ts`. The second
 reads that file and writes the public XLSX. Dataset generated 2026-08-31.
 
+After a regen, also refresh the counts, medians, quadrant tallies, and
+exclusion figures quoted in this write-up — the web page derives them from
+`PRICING_POWER_META` and updates itself, but this document does not.
+
 ## How to read the panels
 
 Dividers are this sample’s medians, not 50% lines. A 50% × 50% grid would put

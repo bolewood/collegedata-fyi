@@ -204,7 +204,12 @@ def _pct(value: float, digits: int = 2) -> str:
     return f"{value * 100:.{digits}f}%"
 
 
-def _readme_rows(meta: dict[str, Any], panel_a_n: int, panel_b_n: int) -> list[tuple[str, str]]:
+def _readme_rows(
+    meta: dict[str, Any],
+    panel_a_n: int,
+    panel_b_n: int,
+    debt_at_27000: int,
+) -> list[tuple[str, str]]:
     exclusions = meta.get("exclusions") or {}
     scorecard_years = ", ".join(meta.get("scorecardYears") or []) or "2022-23"
     return [
@@ -321,8 +326,9 @@ def _readme_rows(meta: dict[str, Any], panel_a_n: int, panel_b_n: int) -> list[t
         (
             "Debt bunches at loan limits",
             "Median completer debt clusters at common federal limits "
-            "(170 Panel B schools report exactly $27,000). Burden differences "
-            "in the middle of the sample are often earnings differences.",
+            f"({debt_at_27000} Panel B schools report exactly $27,000). "
+            "Burden differences in the middle of the sample are often "
+            "earnings differences.",
         ),
         (
             "Branch campuses share Scorecard records",
@@ -376,11 +382,17 @@ def write_workbook(
             f"{meta.get('panelBCount')}"
         )
 
+    debt_at_27000 = sum(
+        1 for row in schools if is_panel_b(row) and row.get("medianDebt") == 27000
+    )
+
     wb = Workbook()
     readme = wb.active
     assert readme is not None
     readme.title = "README"
-    for label, value in _readme_rows(meta, len(panel_a_rows), len(panel_b_rows)):
+    for label, value in _readme_rows(
+        meta, len(panel_a_rows), len(panel_b_rows), debt_at_27000
+    ):
         readme.append([label, value])
     for row in readme.iter_rows(min_row=1, max_row=readme.max_row, max_col=2):
         for cell in row:

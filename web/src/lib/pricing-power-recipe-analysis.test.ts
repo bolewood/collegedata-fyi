@@ -55,6 +55,67 @@ describe("pricing-power guard rails", () => {
   });
 });
 
+describe("pricing-power prose claims stay true under dataset regen", () => {
+  const panelB = panelBSchools(PRICING_POWER_SCHOOLS);
+  const grab = (schoolId: string) => {
+    const row = panelB.find((s) => s.schoolId === schoolId);
+    expect(row, schoolId).toBeDefined();
+    return row!;
+  };
+
+  it("keeps Fordham, American, and SMU below both Panel B medians with above-median net price", () => {
+    // page.tsx: "Fordham, American, and SMU also sit below both Panel B
+    // medians on yield and burden while posting above-median Title IV net
+    // prices." Nothing else guards this relational claim against a regen.
+    const medianNetPrice = median(panelB.map((s) => s.avgNetPrice));
+    for (const schoolId of [
+      "fordham-university",
+      "american-university",
+      "southern-methodist-university",
+    ]) {
+      const row = grab(schoolId);
+      expect(row.yieldRate, `${schoolId} yield`).toBeLessThan(
+        PRICING_POWER_META.medianYieldB,
+      );
+      expect(row.burden, `${schoolId} burden`).toBeLessThan(
+        PRICING_POWER_META.medianBurden,
+      );
+      expect(row.avgNetPrice, `${schoolId} net price`).toBeGreaterThan(
+        medianNetPrice,
+      );
+    }
+  });
+
+  it("keeps Northeastern, BU, and NYU yields above Syracuse's", () => {
+    // page.tsx: "each has a much higher fall 2024 yield" than Syracuse.
+    const syracuse = grab(PRICING_POWER_ANNOTATION_SCHOOL_ID);
+    for (const schoolId of ["northeastern", "boston-university", "nyu"]) {
+      expect(grab(schoolId).yieldRate, schoolId).toBeGreaterThan(
+        syracuse.yieldRate,
+      );
+    }
+  });
+
+  it("keeps every Panel B burden inside Figure 2's 0-16% axis window", () => {
+    // YieldDebtBurdenChart clamps burden to BURDEN_MAX = 0.16; a regen
+    // that exceeds it would silently pin dots to the top gridline.
+    for (const row of panelB) {
+      expect(row.burden, row.schoolId).toBeLessThanOrEqual(0.16);
+    }
+  });
+
+  it("keeps the Figure 2 drop-count arithmetic consistent", () => {
+    // page.tsx renders panelACount - panelBCount as the join drop; this
+    // pins that difference to the builder's own tallies.
+    expect(
+      PRICING_POWER_META.panelACount - PRICING_POWER_META.panelBCount,
+    ).toBe(
+      PRICING_POWER_META.exclusions.missingNonpositiveScorecard +
+        PRICING_POWER_META.joinMisses.scorecard,
+    );
+  });
+});
+
 describe("pricing-power arithmetic", () => {
   it("reproduces Syracuse rates, burden, and instruction/net-price from raw inputs", () => {
     expect(computeAcceptanceRate(20427, 44480)).toBeCloseTo(0.4592, 4);

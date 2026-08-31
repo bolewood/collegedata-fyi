@@ -359,7 +359,7 @@ export default function AcceptanceVsYieldPage() {
         </div>
         <div>
           <strong>{PRICING_POWER_META.exclusions.missingNonpositiveScorecard}</strong>
-          <small>Schools dropped from Figure 1 for missing Scorecard fields</small>
+          <small>Figure 1 schools dropped from Figure 2 for missing Scorecard fields</small>
         </div>
       </section>
 
@@ -623,8 +623,10 @@ export default function AcceptanceVsYieldPage() {
           Figure 2 keeps the {panelBCount} of those schools that also have
           positive College Scorecard debt, earnings, net price, and
           instructional spending.{" "}
-          {PRICING_POWER_META.exclusions.missingNonpositiveScorecard} schools
-          drop at that join.
+          {(
+            PRICING_POWER_META.panelACount - PRICING_POWER_META.panelBCount
+          ).toLocaleString("en-US")}{" "}
+          schools drop at that join.
         </p>
         <p style={prose}>
           Where a school also has a complete Common Data Set C1 row for

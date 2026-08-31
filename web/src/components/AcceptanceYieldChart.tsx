@@ -18,6 +18,8 @@ const M = { l: 72, r: 28, t: 40, b: 58 };
 const IW = W - M.l - M.r;
 const IH = H - M.t - M.b;
 const DOT_R = 3.5;
+// Pointer hit radius in CSS pixels, rescaled into SVG units per event.
+const HIT_RADIUS_CSS_PX = 20;
 
 const QUADRANT_LABEL: Record<string, string> = {
   lowerAcceptanceHigherYield: "lower acceptance · higher yield",
@@ -40,7 +42,7 @@ function ys(rate: number): number {
 }
 
 function svgCoords(
-  event: React.MouseEvent<SVGSVGElement> | React.PointerEvent<SVGSVGElement>,
+  event: React.PointerEvent<SVGSVGElement>,
 ): { x: number; y: number } | null {
   const svg = event.currentTarget;
   const ctm = svg.getScreenCTM();
@@ -54,10 +56,10 @@ function svgCoords(
 
 function hitRadiusInSvg(svg: SVGSVGElement): number {
   const ctm = svg.getScreenCTM();
-  if (!ctm) return 20;
+  if (!ctm) return HIT_RADIUS_CSS_PX;
   const scale = Math.hypot(ctm.a, ctm.b);
-  if (!Number.isFinite(scale) || scale <= 0) return 20;
-  return 20 / scale;
+  if (!Number.isFinite(scale) || scale <= 0) return HIT_RADIUS_CSS_PX;
+  return HIT_RADIUS_CSS_PX / scale;
 }
 
 function nearestPoint(
@@ -104,14 +106,42 @@ export function AcceptanceYieldChart() {
     [pts],
   );
 
+  // Eight school names appear more than once in the dataset (branch
+  // campuses in different states). Disambiguate their search labels so
+  // every school is reachable and the tooltip never shows a namesake's
+  // numbers.
+  const searchable = useMemo(() => {
+    const nameCounts = new Map<string, number>();
+    for (const pt of pts) {
+      const key = pt.name.toLowerCase();
+      nameCounts.set(key, (nameCounts.get(key) ?? 0) + 1);
+    }
+    return pts.map((pt) => ({
+      pt,
+      label:
+        (nameCounts.get(pt.name.toLowerCase()) ?? 0) > 1
+          ? `${pt.name} (IPEDS ${pt.ipedsId})`
+          : pt.name,
+    }));
+  }, [pts]);
+
+  const datalistOptions = useMemo(
+    () =>
+      searchable.map(({ pt, label }) => (
+        <option key={pt.schoolId} value={label} />
+      )),
+    [searchable],
+  );
+
   const match = query.trim().toLowerCase();
   const searched = match
-    ? pts.find(
-        (pt) =>
-          pt.name.toLowerCase() === match ||
-          pt.name.toLowerCase().includes(match) ||
-          pt.schoolId.includes(match.replace(/\s+/g, "-")),
-      ) ?? null
+    ? (searchable.find((s) => s.label.toLowerCase() === match)?.pt ??
+      searchable.find(
+        (s) =>
+          s.label.toLowerCase().includes(match) ||
+          s.pt.schoolId.includes(match.replace(/\s+/g, "-")),
+      )?.pt ??
+      null)
     : null;
   const hover =
     searched ?? (hoverId ? pts.find((pt) => pt.schoolId === hoverId) ?? null : null);
@@ -122,9 +152,7 @@ export function AcceptanceYieldChart() {
   const medianX = xs(PRICING_POWER_META.medianAcceptance);
   const medianY = ys(PRICING_POWER_META.medianYield);
 
-  const pickFromPointer = (
-    event: React.MouseEvent<SVGSVGElement> | React.PointerEvent<SVGSVGElement>,
-  ) => {
+  const pickFromPointer = (event: React.PointerEvent<SVGSVGElement>) => {
     const loc = svgCoords(event);
     if (!loc) return;
     const next = nearestPoint(
@@ -206,11 +234,7 @@ export function AcceptanceYieldChart() {
               minWidth: 220,
             }}
           />
-          <datalist id="pricing-power-panel-a-schools">
-            {PRICING_POWER_SCHOOLS.map((row) => (
-              <option key={row.schoolId} value={row.name} />
-            ))}
-          </datalist>
+          <datalist id="pricing-power-panel-a-schools">{datalistOptions}</datalist>
         </label>
       </div>
 
@@ -222,9 +246,7 @@ export function AcceptanceYieldChart() {
           style={{ display: "block", margin: "0 auto", maxWidth: "100%", height: "auto" }}
           role="img"
           aria-label={`Scatter plot of acceptance rate against yield for ${PRICING_POWER_META.panelACount} schools. Both axes run from 0 to 100 percent. Dividers mark the sample medians.`}
-          onMouseMove={pickFromPointer}
           onPointerMove={pickFromPointer}
-          onMouseLeave={() => setHoverId(null)}
           onPointerLeave={() => setHoverId(null)}
         >
           <rect width={W} height={H} fill="transparent" />

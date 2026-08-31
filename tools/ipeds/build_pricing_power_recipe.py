@@ -16,7 +16,6 @@ import json
 import os
 import statistics
 import sys
-from collections import defaultdict
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from pathlib import Path

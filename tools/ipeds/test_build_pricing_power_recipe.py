@@ -22,6 +22,8 @@ from tools.ipeds.build_pricing_power_recipe import (
     main as recipe_builder_main,
     panel_a_quadrant,
     panel_b_quadrant,
+    parse_count,
+    parse_decimal,
     rate_json,
     render_typescript,
     round_rate,
@@ -501,6 +503,41 @@ class PricingPowerRecipeBuilderTests(unittest.TestCase):
                 {"panelACount": 50, "panelBCount": 1600},
                 {Decimal("0.1") + Decimal("0.0001") * i for i in range(120)},
             )
+
+    def test_build_assertions_reject_bad_syracuse_burden_and_panel_b_count(
+        self,
+    ) -> None:
+        yields = {Decimal("0.1") + Decimal("0.0001") * i for i in range(120)}
+        drifted = {
+            "schoolId": SYRACUSE_SCHOOL_ID,
+            "ipedsId": SYRACUSE_IPEDS_ID,
+            "burdenExact": Decimal("0.09"),
+            "yieldRate": 0.1877,
+        }
+        with self.assertRaisesRegex(ValueError, "Syracuse burden"):
+            _assert_build_invariants(
+                [drifted],
+                [drifted],
+                {"panelACount": 1800, "panelBCount": 1600},
+                yields,
+            )
+        healthy = dict(drifted, burdenExact=Decimal("0.0418"))
+        with self.assertRaisesRegex(ValueError, "Panel B count"):
+            _assert_build_invariants(
+                [healthy],
+                [healthy],
+                {"panelACount": 1800, "panelBCount": 50},
+                yields,
+            )
+
+    def test_parse_helpers_reject_nonfinite_and_fractional_values(self) -> None:
+        for bad in (None, "NaN", "inf", "-Infinity", "abc", ""):
+            self.assertIsNone(parse_decimal(bad), repr(bad))
+        self.assertEqual(parse_decimal("0.5"), Decimal("0.5"))
+        self.assertEqual(parse_decimal(10), Decimal(10))
+        self.assertIsNone(parse_count("10.5"))
+        self.assertIsNone(parse_count("NaN"))
+        self.assertEqual(parse_count("10"), Decimal(10))
 
     def test_fetches_each_adm_field_from_unified_and_current_facts(self) -> None:
         with patch(

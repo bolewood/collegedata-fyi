@@ -74,8 +74,16 @@ export type PricingPowerMeta = {
   joinMisses: PricingPowerJoinMisses;
 };
 
+// Deliberate duplicates of the constants in the generated dataset file:
+// the test suite asserts the two pairs match, so a dataset regen that
+// re-points the annotation fails loudly instead of silently moving it.
 export const PRICING_POWER_ANNOTATION_SCHOOL_ID = "syracuse-university" as const;
 export const PRICING_POWER_ANNOTATION_IPEDS_ID = "196413" as const;
+
+// The compute* helpers and median() below are a TypeScript mirror of the
+// Python builder's arithmetic. Production code renders precomputed values
+// from the generated dataset; these exist so the test suite can recompute
+// the shipped artifact's numbers from raw inputs and catch regen drift.
 
 export function computeAcceptanceRate(admitted: number, applied: number): number {
   if (applied <= 0) {
