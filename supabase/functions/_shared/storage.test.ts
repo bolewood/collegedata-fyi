@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert";
-import { extForResponse, sniffBytesForExt } from "./storage.ts";
+import { extForResponse, isTruncatedWaybackPdf, sniffBytesForExt } from "./storage.ts";
 
 Deno.test("extForResponse: rejects HTML challenge bytes at PDF URL", () => {
   const bytes = new TextEncoder().encode(
@@ -37,5 +37,29 @@ Deno.test("extForResponse: bytes beat misleading content type", () => {
   assertEquals(
     extForResponse("text/html; charset=UTF-8", "https://example.edu/cds.pdf", bytes),
     "pdf",
+  );
+});
+
+Deno.test("isTruncatedWaybackPdf: missing trailer on archive.org is truncated", () => {
+  const bytes = new TextEncoder().encode("%PDF-1.7\n" + "x".repeat(100));
+  const url =
+    "https://web.archive.org/web/20220701041620id_/https://example.edu/cds.pdf";
+  assertEquals(isTruncatedWaybackPdf(url, bytes), true);
+  assertEquals(extForResponse("application/pdf", url, bytes), null);
+});
+
+Deno.test("isTruncatedWaybackPdf: complete Wayback PDF is kept", () => {
+  const bytes = new TextEncoder().encode("%PDF-1.7\n1 0 obj\n%%EOF\n");
+  const url =
+    "https://web.archive.org/web/20221231221445id_/https://example.edu/cds.pdf";
+  assertEquals(isTruncatedWaybackPdf(url, bytes), false);
+  assertEquals(extForResponse("application/pdf", url, bytes), "pdf");
+});
+
+Deno.test("isTruncatedWaybackPdf: school-hosted prefix without EOF is not flagged", () => {
+  const bytes = new TextEncoder().encode("%PDF-1.7\n");
+  assertEquals(
+    isTruncatedWaybackPdf("https://example.edu/cds.pdf", bytes),
+    false,
   );
 });

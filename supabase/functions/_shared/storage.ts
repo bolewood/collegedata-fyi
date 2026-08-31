@@ -125,8 +125,33 @@ export function extForResponse(
     return null;
   }
 
+  // Wayback's playback cap truncates some PDFs at 1 MB. The prefix still
+  // sniffs as %PDF but has no trailer. Refuse those so we don't archive
+  // incomplete sources as canonical CDS.
+  if (fromBytes === "pdf" && isTruncatedWaybackPdf(finalUrl, bytes)) {
+    return null;
+  }
+
   if (fromBytes) return fromBytes;
   return fromCt ?? fromUrl;
+}
+
+// True when `url` is a Wayback capture whose body starts like a PDF but
+// has no %%EOF in the last 2 KB. Toolbar HTML used to fail closed
+// (wrong_content_type); the id_ rewrite can turn that into a truncated
+// PDF that would otherwise pass magic-byte checks.
+export function isTruncatedWaybackPdf(url: string, bytes: Uint8Array): boolean {
+  let host: string;
+  try {
+    host = new URL(url).hostname.toLowerCase();
+  } catch {
+    return false;
+  }
+  if (host !== "web.archive.org") return false;
+  if (sniffBytesForExt(bytes) !== "pdf") return false;
+  const start = Math.max(0, bytes.length - 2048);
+  const tail = bytes.subarray(start);
+  return !new TextDecoder("latin1").decode(tail).includes("%%EOF");
 }
 
 // XSS mitigation (PRD 008): the `sources` Storage bucket is public-read,

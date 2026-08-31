@@ -19,12 +19,17 @@
 #     direct_archive_urls:                    # explicit list of year-tagged
 #                                             # archive URLs. Used when the
 #                                             # school hosts on Box/Drive/
-#                                             # SharePoint or behind any
-#                                             # storage that the resolver
-#                                             # can't crawl. Each entry must
-#                                             # carry an explicit `year`
-#                                             # because share-viewer URLs
-#                                             # are opaque (Box /s/<id>,
+#                                             # SharePoint, behind storage
+#                                             # the resolver can't crawl, or
+#                                             # when live PDFs were taken
+#                                             # down and only Archive.org
+#                                             # still has them (use Wayback
+#                                             # `id_` URLs, not toolbar
+#                                             # captures; some snapshots
+#                                             # truncate at 1 MB). Each
+#                                             # entry must carry an explicit
+#                                             # `year` because share-viewer
+#                                             # URLs are opaque (Box /s/<id>,
 #                                             # Drive /file/d/<id>) — the
 #                                             # extraction worker still
 #                                             # validates by reading the
@@ -70,6 +75,32 @@ overrides:
         IR landing page (https://www.adelphi.edu/institutional-research/research/data/)
         is publicly readable but the linked PDFs are not. Verified
         2026-04-18 via the force_resolve batch.
+
+  # Syracuse took the WordPress CDS PDFs offline. The live IR page
+  # (institutionaldata.syr.edu/key-data/) has no document anchors.
+  # Wayback still has 2017-18 through 2021-22 from the June 2022
+  # uploads. Use `id_` snapshots: toolbar URLs return HTML, and the
+  # 2021-22 20220701 capture is truncated at 1 MB.
+  - school_id: syracuse-university
+    browse_url: https://institutionaldata.syr.edu/key-data/
+    direct_archive_urls:
+      - { url: https://web.archive.org/web/20220701035727id_/https://institutionalresearch.syr.edu/wp-content/uploads/2022/06/syracuse_university_cds_2017-2018.pdf, year: "2017-18" }
+      - { url: https://web.archive.org/web/20220701052926id_/https://institutionalresearch.syr.edu/wp-content/uploads/2022/06/syracuse_university_cds_2018-2019.pdf, year: "2018-19" }
+      - { url: https://web.archive.org/web/20220701053930id_/https://institutionalresearch.syr.edu/wp-content/uploads/2022/06/syracuse_university_cds_2019-2020.pdf, year: "2019-20" }
+      - { url: https://web.archive.org/web/20220701050154id_/https://institutionalresearch.syr.edu/wp-content/uploads/2022/06/syracuse_university_cds_2020-2021.pdf, year: "2020-21" }
+      - { url: https://web.archive.org/web/20221231221445id_/https://institutionalresearch.syr.edu/wp-content/uploads/2022/06/syracuse_university_cds_2021-2022.pdf, year: "2021-22" }
+    hosting_override:
+      file_storage: same_origin
+      cms: wordpress
+      notes: >-
+        Syracuse IR stopped publishing CDS PDFs; the current key-data
+        page has no document links (manual_urls.yaml status no_anchors).
+        Archive.org still has the June 2022 WordPress uploads for
+        2017-18 through 2021-22. Fetch via web.archive.org `id_` URLs
+        (toolbar captures are HTML). The 2021-22 file must use a
+        2022-12 or later snapshot — the 20220701041620 capture truncates
+        at 1 MB without %%EOF. No 2022-23+ captures found. Re-check
+        institutionaldata.syr.edu/key-data/ if they resume publishing.
 
   # RPI hosts on Box, which serves auth-walled responses to crawlers.
   # The Brave/search-engine probe path can't index Box content, and the

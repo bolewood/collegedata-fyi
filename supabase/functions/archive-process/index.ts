@@ -145,7 +145,16 @@ async function runForceUrls(
     : null;
   const sourceProvenance = rawProvenance && ALLOWED_PROVENANCE.has(rawProvenance)
     ? rawProvenance
-    : undefined;
+    : items.some((item) => {
+      const u = typeof item === "string" ? item : item.url;
+      try {
+        return new URL(u).hostname.toLowerCase() === "web.archive.org";
+      } catch {
+        return false;
+      }
+    })
+      ? "operator_manual"
+      : undefined;
 
   // school_name resolution is fail-closed: either the caller supplies
   // it, or schools.yaml knows the school_id, or we reject with 400.

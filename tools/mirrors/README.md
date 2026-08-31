@@ -22,7 +22,7 @@ tools/mirrors/<mirror_name>/
 
 `archive.ts` and `db.ts` encode this policy:
 
-- **Inserts** default to `source_provenance='school_direct'` unless the caller explicitly passes a mirror value.
+- **Inserts** default to `source_provenance='school_direct'` unless the caller explicitly passes a mirror value. `runForceUrls` is the exception: Wayback (`web.archive.org`) URLs without an explicit tag default to `operator_manual` there, before they reach `db.ts`.
 - **Refreshes** (new sha for an existing row) also default to `school_direct`. This means: if we previously ingested a mirror copy of school X year Y, and later the resolver finds the school's own current file for that year, the refresh branch upgrades the provenance. The school's publication always wins over a mirror.
 - **Mirror ingest scripts never call refresh.** They check the DB first; if the row already exists they skip, regardless of whether the bytes match. This avoids flip-flopping provenance between mirrors or re-downloading files we already have from the school directly.
 
