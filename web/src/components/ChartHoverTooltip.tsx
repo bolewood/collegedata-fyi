@@ -102,6 +102,7 @@ export function ChartHoverTooltip({
       ref={tipRef}
       data-testid={testId}
       data-tooltip-side={pos?.side ?? "pending"}
+      role="status"
       style={style}
     >
       {children}

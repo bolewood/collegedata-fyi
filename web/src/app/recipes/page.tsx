@@ -24,15 +24,15 @@ type Recipe = {
 const RECIPES: Recipe[] = [
   {
     slug: "acceptance-vs-yield",
-    title: "Acceptance rate vs. yield",
+    title: "College Pricing Power",
     tagline:
-      "Scatter plot of how selective a school looks on paper (acceptance rate) against how selective it actually is in practice (yield). Four quadrants with teeth: selective-and-desired, loved-despite-openness, selective-but-second-choice, accessible-and-optional.",
+      "Acceptance rate and yield from IPEDS ADM2024 (fall 2024), joined to College Scorecard federal-loan burden and Title IV net price. Two scatters divided at this sample's medians — not an estimate of how enrollment would respond to a price change.",
     audience:
-      "IR comparing peer yield; analysts pulling every complete C1 row from the API; counselors calibrating reach/match/safety.",
+      "IR and enrollment managers comparing peer yield and federal-loan burden; analysts joining IPEDS ADM counts to College Scorecard.",
     demoPath: "/recipes/acceptance-vs-yield",
     writeupUrl:
       "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/acceptance-vs-yield.md",
-    sourceLabel: "CDS C1 · B1 · B22",
+    sourceLabel: "IPEDS · College Scorecard · CDS C1 cross-check",
     extras: [
       {
         label: "XLSX starter",

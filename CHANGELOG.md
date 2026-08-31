@@ -6,7 +6,23 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
-## [0.6.0.3] - 2026-08-31
+## [0.6.1.0] - 2026-08-31
+
+### Changed
+
+- Rebuild the Acceptance × Yield recipe as College Pricing Power: two IPEDS-backed
+  scatter panels (acceptance vs. yield for 1,744 schools; yield vs. debt burden for
+  1,557 schools with College Scorecard debt, earnings, and net price), a Syracuse
+  University worked example motivated by fall 2026 reporting, quadrant reading
+  guides, an adversarially reviewed methodology section, and a regenerated
+  downloadable starter workbook.
+
+### Added
+
+- Reproducible pricing-power data pipeline (`tools/ipeds/build_pricing_power_recipe.py`)
+  that emits the checked-in recipe dataset with build invariants for anchor schools,
+  axis windows, panel counts, and rate granularity, plus regen-drift tests that pin
+  the page's prose claims to the data.
 
 ### Added
 
