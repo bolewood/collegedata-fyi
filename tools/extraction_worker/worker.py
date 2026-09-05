@@ -891,7 +891,12 @@ def _run_tier1(
     dry_run: bool,
     force_reextract: bool = False,
 ) -> ExtractionOutcome:
-    """Tier 1 path: read filled CDS XLSX via template cell-position map."""
+    """Tier 1 path: template cell map, or workbook-native answer columns.
+
+    ``cell_map`` may be empty when the year has no hidden lookup template
+    (notably 2023-24). ``tier1_extract`` then scans Question Number / Answer
+    columns in the filled workbook.
+    """
     try:
         canonical = tier1_extract(xlsx_bytes, resolution.schema, cell_map)
         attach_schema_metadata(canonical, resolution)
@@ -1464,18 +1469,24 @@ def extract_one(
     if not dry_run:
         write_source_metadata(client, document_id, pdf_bytes, source_format)
 
-    cell_map = (cell_maps or {}).get(resolution.schema_version)
-    if source_format == "xlsx" and cell_map:
+    # 2024-25 / 2025-26 templates ship a hidden lookup map. 2023-24 and older
+    # official templates are visual-only, so build_cell_maps_for_schemas leaves
+    # those years empty. Tier 1 still works for many filled workbooks via the
+    # embedded Question Number / Answer column scanner — pass an empty map so
+    # that fallback can run instead of hard-failing the cron on tier1_no_cell_map.
+    if source_format == "xlsx":
+        cell_map = dict((cell_maps or {}).get(resolution.schema_version) or {})
+        if not cell_map:
+            print(
+                f"    tier1_no_template_map: school={school_id} "
+                f"document={document_id} schema_version={resolution.schema_version}; "
+                "trying workbook-native answer columns",
+                flush=True,
+            )
         return _run_tier1(
             client, document_id, school_id, pdf_bytes,
             source_format, resolution, cell_map, source_artifact, dry_run,
             force_reextract,
-        )
-    if source_format == "xlsx" and not cell_map:
-        if not dry_run:
-            mark_extraction_status(client, document_id, "failed", source_format)
-        return extraction_no_project(
-            f"tier1_no_cell_map schema_version={resolution.schema_version}"
         )
 
     # Tier 6 (PRD 008): HTML → markdown → tier4_cleaner. Must run before

@@ -106,7 +106,7 @@ the `2024+` projection, the median populated field count is 521 and the max is
 
 ## Known gaps
 
-1. **Only templates with machine-readable question/cell maps get deterministic maps.** The worker currently has deterministic Tier 1 cell maps for 2024-25 and 2025-26. The 2023-24 canonical schema improves PDF/Tier 4 targeting, but its XLSX template is a visual form layout and currently yields no Tier 1 cell map. Filled XLSXs from 2019-20 through 2023-24 can use different cell positions; those docs use workbook-native fallback detection unless a visual-layout cell mapper is added for that year.
+1. **Only templates with machine-readable question/cell maps get deterministic maps.** The worker currently has deterministic Tier 1 cell maps for 2024-25 and 2025-26. The 2023-24 XLSX template is a visual form layout with no hidden lookup map, so the worker passes an empty map and relies on workbook-native Question Number / Answer column detection. Filled XLSXs from 2019-20 through 2023-24 that lack those columns still need a visual-layout mapper or a PDF Tier 4 route.
 2. **Custom template variants.** Some schools post an Excel file that looks like a CDS but uses a custom layout (no standard section tabs, no stable question/answer columns, or renamed tabs). These can still populate zero fields. Route them to Tier 4 via PDF conversion as a fallback.
 3. **DOCX is routed, not extracted.** ZIP internals are now inspected before routing, so DOCX no longer lands in Tier 1 as fake XLSX. Those rows correctly route to Tier 3, whose extractor is still pending PRD 007.
 4. **No type coercion.** Every value is emitted as a string, matching the Tier 2 pattern. Downstream consumers coerce per field using the schema's `value_type` metadata.
