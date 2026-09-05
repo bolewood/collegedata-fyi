@@ -174,6 +174,37 @@ class Tier1ExtractTests(unittest.TestCase):
         self.assertEqual(result["stats"]["schema_fields_populated"], 1)
         self.assertEqual(result["values"]["C.101"]["value"], "1234")
 
+    def test_empty_template_map_uses_embedded_answer_columns(self):
+        """2023-24 has no hidden lookup map; worker passes {} into extract."""
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "CDS-C"
+        ws["AA1"] = "Question Number"
+        ws["AB1"] = "Question"
+        ws["AC1"] = "Answer"
+        ws["AA2"] = "C.101"
+        ws["AB2"] = "Total first-time, first-year males who applied"
+        ws["AC2"] = 4321
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx") as tmp:
+            wb.save(tmp.name)
+            schema = {
+                "schema_version": "2023-24",
+                "fields": [{
+                    "question_number": "C.101",
+                    "word_tag": "c1_male_applicants",
+                    "question": "Total first-time, first-year males who applied",
+                    "section": "First-Time, First-Year Admission",
+                    "subsection": "Applications",
+                    "value_type": "Number",
+                }],
+            }
+            result = extract(Path(tmp.name), schema, {})
+
+        self.assertEqual(result["stats"]["extraction_layout"], "embedded_answer_columns")
+        self.assertEqual(result["stats"]["schema_fields_populated"], 1)
+        self.assertEqual(result["values"]["C.101"]["value"], "4321")
+
     def test_recovers_shifted_c9_academic_profile_rows_by_label(self):
         wb = openpyxl.Workbook()
         ws = wb.active
