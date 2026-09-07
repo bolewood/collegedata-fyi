@@ -155,6 +155,61 @@ B2 Enrollment by Racial/Ethnic Category
         self.assertEqual(values["B.177"]["value"], "11090")
         self.assertEqual(values["B.178"]["value"], "54384")
 
+    def test_b1_2024_25_interleaved_gender_columns(self):
+        """2024-25 schemas interleave Men/Women/Another/Unknown per row.
+
+        The 2025-26 hand-coded B1 map must not run here: it would write
+        all-other men into B.102/B.103 (women / another-gender FY) and park
+        real women counts on B.126. Empty Another Gender cells must not shift
+        Unknown left.
+        """
+        from pathlib import Path
+
+        from tier4_cleaner import SchemaIndex
+
+        markdown = """
+## B1 Institutional Enrollment - Men and Women
+
+| Undergraduate Students: Full-Time              | Men    | Women   | Another Gender   | Unknown   |
+|------------------------------------------------|--------|---------|------------------|-----------|
+| Degree-seeking, first-time first-year students | 1,089  | 1,667   |                  | 3         |
+| Other first-year, degree-seeking               |        |         |                  |           |
+| All other degree-seeking                       | 8,571  | 11,216  |                  | 43        |
+| Total degree-seeking                           | 9,660  | 12,883  | 0                | 46        |
+| All other undergraduates enrolled in credit    | 26     | 49      |                  |           |
+| Total undergraduate Full-Time Students         | 9,686  | 12,932  | 0                | 46        |
+| Undergraduate Students: Part-Time              | Men    | Women   | Another Gender   | Unknown   |
+| Total degree-seeking                           | 0      | 0       | 0                | 0         |
+| All other undergraduates enrolled in credit    | 19     | 12      |                  |           |
+| Total undergraduate Part-Time Students         | 19     | 12      | 0                | 0         |
+| Undergraduate Students: All                    | Men    | Women   | Another Gender   | Unknown   |
+| Total undergraduate Students                   | 9,705  | 12,944  |                  | 46        |
+| Total all undergraduates                       | 22,695 |         |                  |           |
+| Total all graduate                             | 17,079 |         |                  |           |
+| GRAND TOTAL ALL STUDENTS                       | 39,774 |         |                  |           |
+
+## B2 Enrollment by Racial/Ethnic Category
+"""
+        schema = SchemaIndex(Path("schemas/cds_schema_2024_25.json"))
+        values = clean(markdown, schema=schema, canonical_year="2024-25")
+
+        self.assertEqual(values["B.101"]["value"], "1089")
+        self.assertEqual(values["B.102"]["value"], "1667")
+        self.assertNotIn("B.103", values)
+        self.assertEqual(values["B.104"]["value"], "3")
+        self.assertEqual(values["B.109"]["value"], "8571")
+        self.assertEqual(values["B.110"]["value"], "11216")
+        self.assertEqual(values["B.112"]["value"], "43")
+        self.assertEqual(values["B.149"]["value"], "9705")
+        self.assertEqual(values["B.150"]["value"], "12944")
+        self.assertEqual(values["B.152"]["value"], "46")
+        self.assertEqual(values["B.193"]["value"], "22695")
+        self.assertEqual(values["B.194"]["value"], "17079")
+        self.assertEqual(values["B.195"]["value"], "39774")
+        # Pre-fix symptom: women FY parked on B.126, all-other men on B.102.
+        self.assertNotIn("B.126", values)
+        self.assertNotEqual(values.get("B.102", {}).get("value"), "8571")
+
 
 if __name__ == "__main__":
     unittest.main()
