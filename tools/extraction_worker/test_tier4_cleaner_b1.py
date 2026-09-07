@@ -210,6 +210,29 @@ B2 Enrollment by Racial/Ethnic Category
         self.assertNotIn("B.126", values)
         self.assertNotEqual(values.get("B.102", {}).get("value"), "8571")
 
+    def test_b1_2024_25_total_undergrad_uses_schema_cohort_fallback(self):
+        """B.149/B.150 live under cohort 'Total understand' in 2024-25 schema."""
+        from pathlib import Path
+
+        from tier4_cleaner import SchemaIndex
+
+        # Markdown table only (no layout rollup lines) so the table parser
+        # must resolve total undergraduate men/women via the fallback.
+        markdown = """
+## B1 Institutional Enrollment - Men and Women
+
+| Undergraduate Students: All | Men | Women | Another Gender | Unknown |
+|-----------------------------|-----|-------|----------------|---------|
+| Total undergraduate Students | 9,705 | 12,944 | | 46 |
+
+## B2 Enrollment by Racial/Ethnic Category
+"""
+        schema = SchemaIndex(Path("schemas/cds_schema_2024_25.json"))
+        values = clean(markdown, schema=schema, canonical_year="2024-25")
+        self.assertEqual(values["B.149"]["value"], "9705")
+        self.assertEqual(values["B.150"]["value"], "12944")
+        self.assertEqual(values["B.152"]["value"], "46")
+
 
 if __name__ == "__main__":
     unittest.main()

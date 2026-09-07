@@ -2236,8 +2236,10 @@ def resolve_b1_enrollment(
                 num = _extract_number(row["values"][col_idx])
                 if num is None:
                     continue
-                qn = schema.lookup(
-                    subsection="Institutional Enrollment",
+                # Use shared lookup so 2024-25 schema typos/fallbacks
+                # (e.g. cohort "Total understand" for B.149/B.150) apply.
+                qn = _b1_schema_lookup(
+                    schema,
                     gender=gender,
                     unit_load=local_ul,
                     student_group=local_sg,
