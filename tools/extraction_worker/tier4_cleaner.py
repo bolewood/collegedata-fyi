@@ -467,6 +467,39 @@ _SCHEMA_FIXED_C1_FIELD_MAP_QNS = {
     f"C.{n:03d}" for n in range(101, 119)
 }
 
+# B1 hand-coded map entries use 2025-26 question numbers (all-males block
+# then all-females block: B.101 men FY, B.102 other-FY men, B.126 women FY).
+# 2023-24 / 2024-25 interleave Men/Women/Another Gender[/Unknown] per row
+# (B.101 men FY, B.102 women FY, B.103 another gender FY). Applying the
+# 2025-26 map against those schemas writes all-other men into B.102/B.103
+# and parks real women counts on B.126 — the Northeastern 2024-25 failure.
+_SCHEMA_FIXED_B1_FIELD_MAP_QNS = {
+    "B.101",
+    "B.102",
+    "B.103",
+    "B.104",
+    "B.106",
+    "B.126",
+    "B.127",
+    "B.128",
+    "B.129",
+    "B.131",
+    "B.151",
+}
+
+# Schema years that use the interleaved Men/Women/Another Gender layout.
+_B1_INTERLEAVED_GENDER_YEARS = frozenset({"2023-24", "2024-25"})
+
+_GENDER_ALIASES: dict[str, frozenset[str]] = {
+    "Males": frozenset({"Males", "Men"}),
+    "Men": frozenset({"Males", "Men"}),
+    "Females": frozenset({"Females", "Women"}),
+    "Women": frozenset({"Females", "Women"}),
+    "Another Gender": frozenset({"Another Gender"}),
+    "Unknown": frozenset({"Unknown"}),
+    "All": frozenset({"All"}),
+}
+
 # C9 percentile tables normally use 25th/50th/75th columns, but some schools
 # publish 25th/75th/50th/mean. Keep row matching by assessment label while
 # mapping columns by header role whenever Docling preserves the headers.
@@ -556,8 +589,10 @@ class SchemaIndex:
                 continue
             if question_norm is not None and f["_q_norm"] != question_norm:
                 continue
-            if gender is not None and f["gender"] != gender:
-                continue
+            if gender is not None:
+                allowed = _GENDER_ALIASES.get(gender, frozenset({gender}))
+                if f["gender"] not in allowed:
+                    continue
             if cohort is not None and f["cohort"] != cohort:
                 continue
             if unit_load is not None and f["unit_load"] != unit_load:
@@ -1614,11 +1649,62 @@ def resolve_b5_graduation(
 # new `##` headers, so the resolver must track (unit_load, student_group)
 # context as rows are scanned.
 #
-# Column index (0-3) → gender:
-#   0 = Males, 1 = Females, 2 = Unknown (from "Another Gender" column),
-#   3 = ignored (second "Unknown" column duplicates data for Unknown gender
-#       in the 2024-25 template; the schema collapses both into one field).
+# Column index → gender for the 2025-26 (and older non-interleaved) layout:
+#   0 = Males, 1 = Females, 2 = Unknown. SchemaIndex gender aliases map
+#   Males/Females onto Men/Women when a 2023-24/2024-25 schema is loaded.
 _B1_COL_GENDER = ["Males", "Females", "Unknown"]
+
+
+def _b1_col_genders(schema: SchemaIndex) -> list[str]:
+    """Return B1 value-column gender labels for this schema year."""
+    if schema.schema_version == "2024-25":
+        return ["Men", "Women", "Another Gender", "Unknown"]
+    if schema.schema_version == "2023-24":
+        return ["Men", "Women", "Another Gender"]
+    return list(_B1_COL_GENDER)
+
+
+def _b1_grand_total_qn(schema: SchemaIndex) -> str:
+    if schema.schema_version in _B1_INTERLEAVED_GENDER_YEARS:
+        return "B.195"
+    return "B.178"
+
+
+def _b1_line_values(line: str) -> tuple[str, list[str]] | None:
+    """Split a B1 data line into (label, value cells).
+
+    Markdown pipe tables must keep empty cells so a blank Another Gender
+    column does not shift Unknown left. Plain OCR/pypdf lines fall back to
+    regex number extraction (empty cells are already lost in that text).
+    """
+    stripped = line.strip()
+    if stripped.startswith("|") and stripped.count("|") >= 3:
+        cells = [c.strip() for c in stripped.strip("|").split("|")]
+        if len(cells) < 2:
+            return None
+        # Skip separator / header rows.
+        if all(re.fullmatch(r":?-{3,}:?", c) for c in cells[1:] if c):
+            return None
+        headerish = {_normalize_label(c) for c in cells[1:] if c}
+        if headerish and headerish <= {
+            "men",
+            "women",
+            "males",
+            "females",
+            "another gender",
+            "unknown",
+            "total",
+        }:
+            return None
+        return cells[0], cells[1:]
+
+    nums = re.findall(r"\b\d[\d,]*\b", stripped)
+    if not nums:
+        return None
+    first_num = re.search(r"\b\d[\d,]*\b", stripped)
+    if not first_num:
+        return None
+    return stripped[: first_num.start()].strip(), nums
 
 # Context-change patterns. Order matters — longest match first so
 # "undergraduate students full time" takes priority over "undergraduate
@@ -1641,10 +1727,13 @@ _B1_CONTEXT_RULES: list[tuple[str, str, str]] = [
 _B1_ROW_RULES: list[tuple[str, str, str]] = [
     ("degree seeking first time first year", "First-time, first-year", "Degree-seeking"),
     ("other first year degree seeking",       "Other first-year",       "Degree-seeking"),
-    ("all other degree seeking",              "All other",              "Degree-seeking"),
-    ("total degree seeking",                  "Total",                  "Degree-seeking"),
+    # Enrolled-in-credit rows before the broader "all other degree seeking"
+    # rule so Docling-merged labels like "All other degree-seeking All other
+    # graduates enrolled in credit courses" still resolve to credit courses.
     ("all other undergraduates enrolled",     "All other",              "Enrolled in Credit Courses"),
     ("all other graduates enrolled",          "All other",              "Enrolled in Credit Courses"),
+    ("all other degree seeking",              "All other",              "Degree-seeking"),
+    ("total degree seeking",                  "Total",                  "Degree-seeking"),
     ("degree seeking first time",             "First-time",             "Degree-seeking"),  # graduates-only
     # Rollup totals. "Total" sums by unit_load are disambiguated by the
     # current context (FT / PT / All).
@@ -1660,6 +1749,16 @@ _B1_ROW_RULES: list[tuple[str, str, str]] = [
 
 def _match_b1_row(label_norm: str) -> tuple[str, str] | None:
     """Pick the first row rule whose substring matches the label."""
+    # Docling sometimes concatenates an empty row into the next data row
+    # ("Other first-year, degree-seeking All other degree-seeking"). Prefer
+    # the later, data-bearing cohort when both markers are present.
+    if "all other undergraduates enrolled" in label_norm or "all other graduates enrolled" in label_norm:
+        return "All other", "Enrolled in Credit Courses"
+    if (
+        "all other degree seeking" in label_norm
+        and "other first year degree seeking" in label_norm
+    ):
+        return "All other", "Degree-seeking"
     for substr, cohort, category in _B1_ROW_RULES:
         if substr in label_norm:
             return cohort, category
@@ -1674,13 +1773,16 @@ def _match_b1_context(label_norm: str) -> tuple[str, str] | None:
     return None
 
 
-def _b1_rollup_qn(label_norm: str) -> str | None:
+def _b1_rollup_qn(label_norm: str, schema: SchemaIndex | None = None) -> str | None:
+    interleaved = bool(
+        schema and schema.schema_version in _B1_INTERLEAVED_GENDER_YEARS
+    )
     if "grand total all students" in label_norm:
-        return "B.178"
+        return "B.195" if interleaved else "B.178"
     if "total all undergraduates" in label_norm:
-        return "B.176"
+        return "B.193" if interleaved else "B.176"
     if "total all graduate" in label_norm:
-        return "B.177"
+        return "B.194" if interleaved else "B.177"
     return None
 
 
@@ -1797,7 +1899,7 @@ def _resolve_b1_compact_full_part_time_grid(block: str, schema: SchemaIndex) -> 
             pending_label = ""
         label_norm = _normalize_label(label)
 
-        rollup_qn = _b1_rollup_qn(label_norm)
+        rollup_qn = _b1_rollup_qn(label_norm, schema)
         if rollup_qn:
             out[rollup_qn] = {
                 "value": _extract_number(nums[0]),
@@ -1891,8 +1993,8 @@ def _resolve_b1_layout(markdown: str, schema: SchemaIndex) -> dict[str, dict]:
             pending_label = ""
             continue
 
-        nums = re.findall(r"\b\d[\d,]*\b", line)
-        if not nums:
+        parsed = _b1_line_values(line)
+        if not parsed:
             if unit_load is not None and (
                 line_norm.startswith("degree seeking")
                 or line_norm.startswith("all other")
@@ -1903,10 +2005,7 @@ def _resolve_b1_layout(markdown: str, schema: SchemaIndex) -> dict[str, dict]:
                 pending_label = f"{pending_label} {line}".strip()
             continue
 
-        first_num = re.search(r"\b\d[\d,]*\b", line)
-        if not first_num:
-            continue
-        label = line[:first_num.start()].strip()
+        label, nums = parsed
         if pending_label:
             # Blank rows sometimes precede the next total row. If the next
             # numeric row is itself a total, the pending wrapped label had no
@@ -1918,12 +2017,17 @@ def _resolve_b1_layout(markdown: str, schema: SchemaIndex) -> dict[str, dict]:
             pending_label = ""
         label_norm = _normalize_label(label)
 
-        rollup_qn = _b1_rollup_qn(label_norm)
+        rollup_qn = _b1_rollup_qn(label_norm, schema)
         if rollup_qn and nums:
-            out[rollup_qn] = {
-                "value": _extract_number(nums[0]),
-                "source": "tier4_cleaner",
-            }
+            first_num = next(
+                (n for n in nums if _extract_number(n) is not None),
+                None,
+            )
+            if first_num is not None:
+                out[rollup_qn] = {
+                    "value": _extract_number(first_num),
+                    "source": "tier4_cleaner",
+                }
             continue
 
         if unit_load is None or student_group is None:
@@ -1951,16 +2055,11 @@ def _resolve_b1_layout(markdown: str, schema: SchemaIndex) -> dict[str, dict]:
             local_ul, local_sg = "All", "All Students"
 
         col_values: list[tuple[str, str]] = []
-        if len(nums) >= 1:
-            col_values.append(("Males", nums[0]))
-        if len(nums) >= 2:
-            col_values.append(("Females", nums[1]))
-        if len(nums) >= 3:
-            # The 2024-25 table has both Another Gender and Unknown columns,
-            # while the canonical schema has one Unknown bucket. Use the
-            # Another Gender value when present; the fourth PDF column is only
-            # a fallback in templates where the third column is absent.
-            col_values.append(("Unknown", nums[2]))
+        genders = _b1_col_genders(schema)
+        for col_idx, gender in enumerate(genders):
+            if col_idx >= len(nums):
+                break
+            col_values.append((gender, nums[col_idx]))
 
         for gender, raw_value in col_values:
             num = _extract_number(raw_value)
@@ -2045,7 +2144,13 @@ def resolve_b1_enrollment(
     every label and using whichever fires.
     """
     out: dict[str, dict] = _resolve_b1_layout(markdown, schema)
-    if "B.178" in out:
+    # 2025-26 layout text is complete enough to trust alone. Interleaved
+    # 2023-24/2024-25 years still benefit from structured markdown tables,
+    # which preserve empty Another Gender cells that plain number scans lose.
+    if (
+        schema.schema_version not in _B1_INTERLEAVED_GENDER_YEARS
+        and _b1_grand_total_qn(schema) in out
+    ):
         return out
 
     # Detect B1 tables by section name or by gendered column headers.
@@ -2069,6 +2174,7 @@ def resolve_b1_enrollment(
     # ones (e.g. a "Part-Time" fragment) are appended as continuations.
     unit_load: str | None = None
     student_group: str | None = None
+    prefer_table = schema.schema_version in _B1_INTERLEAVED_GENDER_YEARS
 
     for table in b1_tables:
         # Section header or column headers may advertise the (unit_load,
@@ -2124,7 +2230,7 @@ def resolve_b1_enrollment(
             elif "total all students" in label_norm:
                 local_ul, local_sg = "All", "All Students"
 
-            for col_idx, gender in enumerate(_B1_COL_GENDER):
+            for col_idx, gender in enumerate(_b1_col_genders(schema)):
                 if col_idx >= len(row["values"]):
                     continue
                 num = _extract_number(row["values"][col_idx])
@@ -2138,7 +2244,7 @@ def resolve_b1_enrollment(
                     cohort=cohort,
                     category=category,
                 )
-                if qn and qn not in out:
+                if qn and (prefer_table or qn not in out):
                     out[qn] = {"value": num, "source": "tier4_cleaner"}
 
     return out
@@ -6261,6 +6367,11 @@ def clean(
                 if (
                     idx.schema_version != "2025-26"
                     and qnum in _SCHEMA_FIXED_C1_FIELD_MAP_QNS
+                ):
+                    continue
+                if (
+                    idx.schema_version != "2025-26"
+                    and qnum in _SCHEMA_FIXED_B1_FIELD_MAP_QNS
                 ):
                     continue
                 if substr not in label_norm:
