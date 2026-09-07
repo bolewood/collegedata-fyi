@@ -1851,6 +1851,190 @@ def _b1_schema_lookup(
     return qn
 
 
+def _b1_extract_cell_number(value_str: str) -> str | None:
+    """Extract a B1 cell number, tolerating Docling gender prefixes.
+
+    Some markdown tables pack the column header into the cell
+    (``Men 11,827``). Plain ``_extract_number`` rejects those; strip a
+    leading gender word and retry.
+    """
+    num = _extract_number(value_str)
+    if num is not None:
+        return num
+    s = value_str.strip()
+    if not s:
+        return None
+    m = re.match(
+        r"(?i)^(?:men|women|males|females|another\s+gender|unknown)\s+"
+        r"([-+]?\d[\d,]*(?:\.\d+)?)\s*$",
+        s,
+    )
+    if m:
+        return _extract_number(m.group(1))
+    return None
+
+
+def _b1_salvage_values_from_label(label: str, values: list[str]) -> tuple[str, list[str]]:
+    """Move a trailing count out of a Total* label into the first empty cell.
+
+    Docling occasionally merges the Men count into the row label, e.g.
+    ``Total Undergraduate Part-time Students 33`` with values
+    ``["", "28", "0", "0"]``.
+    """
+    label_norm = _normalize_label(label)
+    if not label_norm.startswith("total"):
+        return label, values
+    if values and values[0].strip():
+        return label, values
+    m = re.search(r"^(.*?)[\s:]+(\d[\d,]*)\s*$", label.strip())
+    if not m:
+        return label, values
+    clean_label = m.group(1).strip()
+    # Require the cleaned label to still look like a total row.
+    if not _normalize_label(clean_label).startswith("total"):
+        return label, values
+    salvaged = list(values) if values else [""]
+    if not salvaged:
+        salvaged = [m.group(2)]
+    else:
+        salvaged[0] = m.group(2)
+    return clean_label, salvaged
+
+
+def _b1_value_int(entry: dict | None) -> int | None:
+    if not entry or entry.get("value") is None:
+        return None
+    try:
+        return int(float(str(entry["value"]).replace(",", "")))
+    except (TypeError, ValueError):
+        return None
+
+
+def _b1_derive_all_totals_from_ft_pt(
+    out: dict[str, dict], schema: SchemaIndex
+) -> None:
+    """Fill missing All unit_load gender totals from FT + PT (or UG + Grad).
+
+    Many 2023-24/2024-25 Docling extracts keep FT/PT total rows intact but
+    omit or garble the All sub-table. CDS defines All = FT + PT for each
+    gender, so deriving missing All cells is safe when the inputs exist.
+    Never overwrites an All value already present.
+    """
+    genders = _b1_col_genders(schema)
+
+    def _qn(gender: str, unit_load: str, student_group: str) -> str | None:
+        return _b1_schema_lookup(
+            schema,
+            gender=gender,
+            unit_load=unit_load,
+            student_group=student_group,
+            cohort="Total",
+            category="All",
+        )
+
+    for student_group in ("Undergraduates", "Graduates"):
+        for gender in genders:
+            all_qn = _qn(gender, "All", student_group)
+            if not all_qn or all_qn in out:
+                continue
+            ft_qn = _qn(gender, "FT", student_group)
+            pt_qn = _qn(gender, "PT", student_group)
+            ft_n = _b1_value_int(out.get(ft_qn)) if ft_qn else None
+            pt_n = _b1_value_int(out.get(pt_qn)) if pt_qn else None
+            # Require both sides for this gender. Treating a missing PT cell
+            # as 0 is unsafe when Docling dropped that gender's PT total
+            # (Butler-style single-column merges).
+            if ft_n is None or pt_n is None:
+                continue
+            out[all_qn] = {
+                "value": str(ft_n + pt_n),
+                "source": "tier4_cleaner",
+            }
+
+    # All Students gender totals = undergrad All + graduate All.
+    for gender in genders:
+        all_qn = _qn(gender, "All", "All Students")
+        if not all_qn or all_qn in out:
+            continue
+        ug_qn = _qn(gender, "All", "Undergraduates")
+        gr_qn = _qn(gender, "All", "Graduates")
+        ug_n = _b1_value_int(out.get(ug_qn)) if ug_qn else None
+        gr_n = _b1_value_int(out.get(gr_qn)) if gr_qn else None
+        if ug_n is None or gr_n is None:
+            continue
+        out[all_qn] = {
+            "value": str(ug_n + gr_n),
+            "source": "tier4_cleaner",
+        }
+
+
+def _resolve_b1_field_id_rows(markdown: str, schema: SchemaIndex) -> dict[str, dict]:
+    """Parse Docling tables that embed canonical B1xx IDs in the label cell.
+
+    Butler (and similar) fillable-PDF → markdown extracts look like::
+
+        | B149 Total | undergraduate students:men | 1772 |
+        | B146 B147  | ... women ... another     | 135 1 |
+
+    When the template question number is present, map it directly.
+    """
+    block = _section_between(
+        markdown,
+        r"\bB1\b\.?\s*(?:Institutional Enrollment)?",
+        r"\bB2\b\.?\s*Enrollment by Racial/Ethnic Category|"
+        r"\bEnrollment by Racial/Ethnic Category",
+    )
+    if not block:
+        block = markdown
+
+    known = {
+        f["question_number"]
+        for f in schema.filter(subsection="Institutional Enrollment")
+        if str(f.get("question_number", "")).startswith("B.")
+    }
+    # Rollup totals live outside Institutional Enrollment on some years.
+    for qn in ("B.193", "B.194", "B.195", "B.176", "B.177", "B.178"):
+        known.add(qn)
+
+    out: dict[str, dict] = {}
+    for raw_line in block.splitlines():
+        line = raw_line.strip()
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        if len(cells) < 2:
+            continue
+        id_text = " ".join(cells[:-1])
+        ids = re.findall(r"\bB\.?\s*(\d{3})\b", id_text, flags=re.IGNORECASE)
+        if not ids:
+            continue
+        qns = [f"B.{num}" for num in ids]
+        qns = [qn for qn in qns if qn in known and 101 <= int(qn[2:]) <= 195]
+        if not qns:
+            continue
+        nums = re.findall(r"\d[\d,]*", cells[-1])
+        if not nums:
+            continue
+        if len(qns) == 1:
+            num = _extract_number(nums[0])
+            if num is not None:
+                out[qns[0]] = {"value": num, "source": "tier4_cleaner"}
+            continue
+        # Multiple IDs in one row: zip with trailing numbers when counts match.
+        if len(nums) >= len(qns):
+            paired = list(zip(qns, nums[: len(qns)]))
+        elif len(nums) == 1 and len(qns) > 1:
+            # Ambiguous merge — skip rather than assign one value to many IDs.
+            continue
+        else:
+            paired = list(zip(qns[: len(nums)], nums))
+        for qn, raw in paired:
+            num = _extract_number(raw)
+            if num is not None:
+                out[qn] = {"value": num, "source": "tier4_cleaner"}
+    return out
+
+
 def _resolve_b1_compact_full_part_time_grid(block: str, schema: SchemaIndex) -> dict[str, dict]:
     """Parse OCR layout where FT and PT B1 columns are side-by-side."""
     if "full time part time" not in _normalize_label(block):
@@ -2015,17 +2199,18 @@ def _resolve_b1_layout(markdown: str, schema: SchemaIndex) -> dict[str, dict]:
             else:
                 label = f"{pending_label} {label}".strip()
             pending_label = ""
+        label, nums = _b1_salvage_values_from_label(label, nums)
         label_norm = _normalize_label(label)
 
         rollup_qn = _b1_rollup_qn(label_norm, schema)
         if rollup_qn and nums:
             first_num = next(
-                (n for n in nums if _extract_number(n) is not None),
+                (n for n in nums if _b1_extract_cell_number(n) is not None),
                 None,
             )
             if first_num is not None:
                 out[rollup_qn] = {
-                    "value": _extract_number(first_num),
+                    "value": _b1_extract_cell_number(first_num),
                     "source": "tier4_cleaner",
                 }
             continue
@@ -2052,6 +2237,10 @@ def _resolve_b1_layout(markdown: str, schema: SchemaIndex) -> dict[str, dict]:
         elif "total graduate students" in label_norm:
             local_ul, local_sg = "All", "Graduates"
         elif "total all students" in label_norm:
+            # Yale-style FT/PT "Total All Students" rows are not schema
+            # fields; only the ungated All-by-gender row maps to B.189+.
+            if "full time" in label_norm or "part time" in label_norm:
+                continue
             local_ul, local_sg = "All", "All Students"
 
         col_values: list[tuple[str, str]] = []
@@ -2062,7 +2251,7 @@ def _resolve_b1_layout(markdown: str, schema: SchemaIndex) -> dict[str, dict]:
             col_values.append((gender, nums[col_idx]))
 
         for gender, raw_value in col_values:
-            num = _extract_number(raw_value)
+            num = _b1_extract_cell_number(raw_value)
             if num is None:
                 continue
             qn = schema.lookup(
@@ -2151,6 +2340,9 @@ def resolve_b1_enrollment(
         schema.schema_version not in _B1_INTERLEAVED_GENDER_YEARS
         and _b1_grand_total_qn(schema) in out
     ):
+        for qn, entry in _resolve_b1_field_id_rows(markdown, schema).items():
+            out[qn] = entry
+        _b1_derive_all_totals_from_ft_pt(out, schema)
         return out
 
     # Detect B1 tables by section name or by gendered column headers.
@@ -2168,6 +2360,9 @@ def resolve_b1_enrollment(
             b1_tables.append(t)
 
     if not b1_tables:
+        for qn, entry in _resolve_b1_field_id_rows(markdown, schema).items():
+            out[qn] = entry
+        _b1_derive_all_totals_from_ft_pt(out, schema)
         return out
 
     # The B1 data typically lives in the first qualifying table; subsequent
@@ -2202,6 +2397,26 @@ def resolve_b1_enrollment(
             if ctx:
                 unit_load, student_group = ctx
 
+            # Scalar rollups (Total all undergraduates / graduate / GRAND
+            # TOTAL) must not fall through to gendered All-Students cells —
+            # "grand total all students" contains "total all students".
+            rollup_qn = _b1_rollup_qn(label_norm, schema)
+            if rollup_qn:
+                first_num = next(
+                    (
+                        _b1_extract_cell_number(v)
+                        for v in row["values"]
+                        if _b1_extract_cell_number(v) is not None
+                    ),
+                    None,
+                )
+                if first_num is not None and (prefer_table or rollup_qn not in out):
+                    out[rollup_qn] = {
+                        "value": first_num,
+                        "source": "tier4_cleaner",
+                    }
+                continue
+
             if unit_load is None or student_group is None:
                 continue
 
@@ -2228,16 +2443,33 @@ def resolve_b1_enrollment(
             elif "total graduate students" in label_norm:
                 local_ul, local_sg = "All", "Graduates"
             elif "total all students" in label_norm:
+                if "full time" in label_norm or "part time" in label_norm:
+                    continue
                 local_ul, local_sg = "All", "All Students"
 
+            row_values = list(row["values"])
+            label_for_row = row["label"]
+            label_for_row, row_values = _b1_salvage_values_from_label(
+                label_for_row, row_values
+            )
+            if label_for_row != row["label"]:
+                label_norm = _normalize_label(label_for_row)
+                # Re-apply local_ul after salvage (label lost trailing digits).
+                if "total undergraduate part time" in label_norm:
+                    local_ul, local_sg = "PT", "Undergraduates"
+                elif "total undergraduate full time" in label_norm:
+                    local_ul, local_sg = "FT", "Undergraduates"
+
             for col_idx, gender in enumerate(_b1_col_genders(schema)):
-                if col_idx >= len(row["values"]):
+                if col_idx >= len(row_values):
                     continue
-                num = _extract_number(row["values"][col_idx])
+                num = _b1_extract_cell_number(row_values[col_idx])
                 if num is None:
                     continue
-                qn = schema.lookup(
-                    subsection="Institutional Enrollment",
+                # Use shared lookup so 2024-25 schema typos/fallbacks
+                # (e.g. cohort "Total understand" for B.149/B.150) apply.
+                qn = _b1_schema_lookup(
+                    schema,
                     gender=gender,
                     unit_load=local_ul,
                     student_group=local_sg,
@@ -2247,6 +2479,12 @@ def resolve_b1_enrollment(
                 if qn and (prefer_table or qn not in out):
                     out[qn] = {"value": num, "source": "tier4_cleaner"}
 
+    # Explicit B1xx IDs in Docling cells are authoritative when present.
+    field_id_vals = _resolve_b1_field_id_rows(markdown, schema)
+    for qn, entry in field_id_vals.items():
+        out[qn] = entry
+
+    _b1_derive_all_totals_from_ft_pt(out, schema)
     return out
 
 
