@@ -233,6 +233,122 @@ B2 Enrollment by Racial/Ethnic Category
         self.assertEqual(values["B.150"]["value"], "12944")
         self.assertEqual(values["B.152"]["value"], "46")
 
+    def test_b1_2024_25_derives_all_totals_from_ft_pt(self):
+        """When the All sub-table is missing, All gender totals = FT + PT."""
+        from pathlib import Path
+
+        from tier4_cleaner import SchemaIndex
+
+        markdown = """
+## B1 Institutional Enrollment - Men and Women
+
+## Undergraduate Students: Full-Time
+
+| Category | Men | Women | Another Gender | Unknown |
+|----------|-----|-------|----------------|---------|
+| Total Undergraduate Full-time Students | 3234 | 3422 | 97 | 0 |
+
+## Undergraduate Students: Part-Time
+
+| Category | Men | Women | Another Gender | Unknown |
+|----------|-----|-------|----------------|---------|
+| Total Undergraduate Part-time Students 33 |  | 28 | 0 | 0 |
+
+## Graduate Students: Full-Time
+
+| Category | Men | Women | Another Gender | Unknown |
+|----------|-----|-------|----------------|---------|
+| Total Graduate Full-Time Students | 3732 | 4460 | 173 | 3 |
+
+## Graduate Students: Part-Time
+
+| Category | Men | Women | Another Gender | Unknown |
+|----------|-----|-------|----------------|---------|
+| Total Graduate Part-Time Students | 126 | 215 | 6 | 35 |
+
+## Total All Students (Total Undergraduate Students + Total Graduate Students)
+
+| Total All Students | Men | Women | Another Gender | Unknown |
+|--------------------|-----|-------|----------------|---------|
+| Total All Students: Full-time | 6966 | 7882 | 270 | 3 |
+| Total All Students: Part-time | 159 | 243 | 6 | 35 |
+
+Total all undergraduates: 6814
+Total all graduate: 8750
+GRAND TOTAL All STUDENTS: 15564
+
+## B2 Enrollment by Racial/Ethnic Category
+"""
+        schema = SchemaIndex(Path("schemas/cds_schema_2024_25.json"))
+        values = clean(markdown, schema=schema, canonical_year="2024-25")
+
+        self.assertEqual(values["B.145"]["value"], "33")
+        self.assertEqual(values["B.146"]["value"], "28")
+        self.assertEqual(values["B.149"]["value"], "3267")  # 3234+33
+        self.assertEqual(values["B.150"]["value"], "3450")  # 3422+28
+        self.assertEqual(values["B.185"]["value"], "3858")  # 3732+126
+        self.assertEqual(values["B.186"]["value"], "4675")  # 4460+215
+        self.assertEqual(values["B.189"]["value"], "7125")  # 3267+3858
+        self.assertEqual(values["B.190"]["value"], "8125")  # 3450+4675
+        # Must not park FT/PT all-students rows on B.189/B.190.
+        self.assertNotEqual(values["B.189"]["value"], "159")
+        self.assertEqual(values["B.193"]["value"], "6814")
+        self.assertEqual(values["B.195"]["value"], "15564")
+
+    def test_b1_2024_25_parses_gender_prefixed_all_cells(self):
+        """NYU-style packed All row: cell values like 'Men 11,827'."""
+        from pathlib import Path
+
+        from tier4_cleaner import SchemaIndex
+
+        markdown = """
+## B1 Institutional Enrollment - Men and Women
+
+| Undergraduate Students: Full-Time | Men | Women | Another Gender | Unknown |
+|-----------------------------------|-----|-------|----------------|---------|
+| Total undergraduate Full-Time Students | 100 | 200 | 0 | 0 |
+| Undergraduate Students: Part-Time | Men | Women | Another Gender | Unknown |
+| Total undergraduate Part-Time Students | 10 | 20 | 0 | 0 |
+| Undergraduate Students: All Total undergraduate Students | Men 110 | Women 220 | 0 | 0 |
+
+## B2 Enrollment by Racial/Ethnic Category
+"""
+        schema = SchemaIndex(Path("schemas/cds_schema_2024_25.json"))
+        values = clean(markdown, schema=schema, canonical_year="2024-25")
+        self.assertEqual(values["B.149"]["value"], "110")
+        self.assertEqual(values["B.150"]["value"], "220")
+
+    def test_b1_2024_25_field_id_labeled_rows(self):
+        """Butler-style markdown embeds B1xx IDs in the first cell."""
+        from pathlib import Path
+
+        from tier4_cleaner import SchemaIndex
+
+        markdown = """
+B1 Institutional Enrollment
+
+| B121 | Total undergraduate Full-Time Students:men | 1701 |
+| B122 | Total undergraduate Full-Time Students:women | 2581 |
+| B145 | Total undergraduate Part-Time Students:men | 71 |
+| B146 B147 | Total undergraduate Part-Time Students:women Total undergraduate Part-Time Students: another gender | 135 1 |
+| B149 Total | undergraduate students:men | 1772 |
+| B150 Total | undergraduate students:women | 2716 |
+| B193 | Total all undergraduates | 4489 |
+| B195 | Grand Total All Students | 5746 |
+
+## Enrollment by Racial/Ethnic Category.
+"""
+        schema = SchemaIndex(Path("schemas/cds_schema_2024_25.json"))
+        values = clean(markdown, schema=schema, canonical_year="2024-25")
+        self.assertEqual(values["B.121"]["value"], "1701")
+        self.assertEqual(values["B.145"]["value"], "71")
+        self.assertEqual(values["B.146"]["value"], "135")
+        self.assertEqual(values["B.147"]["value"], "1")
+        self.assertEqual(values["B.149"]["value"], "1772")
+        self.assertEqual(values["B.150"]["value"], "2716")
+        self.assertEqual(values["B.193"]["value"], "4489")
+        self.assertEqual(values["B.195"]["value"], "5746")
+
 
 if __name__ == "__main__":
     unittest.main()
