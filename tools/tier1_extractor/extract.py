@@ -182,6 +182,15 @@ def extract(xlsx_path: Path, schema: dict, cell_map: dict[str, tuple[str, str]])
 
     wb.close()
 
+    # All undergrad/grad gender totals are often blank in filled workbooks
+    # even when FT/PT are present. Derive missing All cells (CDS: All=FT+PT).
+    sys.path.insert(0, str(_REPO_ROOT / "tools" / "extraction_worker"))
+    from b1_derive_totals import apply_b1_derived_all_totals  # noqa: WPS433
+
+    b1_all_totals_derived = apply_b1_derived_all_totals(
+        values, schema_fields=schema.get("fields") or []
+    )
+
     return {
         "producer": PRODUCER_NAME,
         "producer_version": PRODUCER_VERSION,
@@ -196,6 +205,7 @@ def extract(xlsx_path: Path, schema: dict, cell_map: dict[str, tuple[str, str]])
             "extraction_layout": extraction_layout,
             "academic_profile_fields_recovered": academic_profile_recovered,
             "application_fields_recovered": application_fields_recovered,
+            "b1_all_totals_derived": b1_all_totals_derived,
         },
         "values": values,
     }

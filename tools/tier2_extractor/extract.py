@@ -113,6 +113,15 @@ def extract(pdf_path: Path, schema: dict) -> dict:
     schema_tags = set(tag_to_field)
     present_tags = set(acroform) & schema_tags
 
+    # 2023-24/2024-25 All gender totals have null pdf_tags, so AcroForm
+    # never populates them. Derive from FT+PT when both sides exist.
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "extraction_worker"))
+    from b1_derive_totals import apply_b1_derived_all_totals  # noqa: WPS433
+
+    b1_all_totals_derived = apply_b1_derived_all_totals(
+        values, schema_fields=schema.get("fields") or []
+    )
+
     return {
         "producer": PRODUCER_NAME,
         "producer_version": PRODUCER_VERSION,
@@ -122,8 +131,9 @@ def extract(pdf_path: Path, schema: dict) -> dict:
         "stats": {
             "acroform_fields_total": len(acroform),
             "schema_fields_total": len(tag_to_field),
-            "schema_fields_populated": len(present_tags),
+            "schema_fields_populated": len(present_tags) + b1_all_totals_derived,
             "unmapped_acroform_fields": len(unmapped),
+            "b1_all_totals_derived": b1_all_totals_derived,
         },
         "values": values,
         "unmapped_fields": unmapped,
