@@ -21114,14 +21114,13 @@ schools:
   name: The Continents States University
   domain: continents.us
   ipeds_id: '492087'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-09-02T17:59:07Z'
-    last_result: found
+    last_result: not_found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.continents.us/does-harvard-accept-2-9-gpa/5/
 - id: the-cooper-union-for-the-advancement-of-science-and-art
   name: The Cooper Union for the Advancement of Science and Art
   domain: cooper.edu
