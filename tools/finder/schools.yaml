@@ -2196,7 +2196,7 @@ schools:
   ipeds_id: '446048'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:16:52Z'
+    last_probed_at: '2026-09-02T17:56:24Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -3963,7 +3963,7 @@ schools:
   ipeds_id: '441937'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:17:25Z'
+    last_probed_at: '2026-09-02T17:56:25Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -5111,7 +5111,7 @@ schools:
   ipeds_id: '138947'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:17:46Z'
+    last_probed_at: '2026-09-02T17:56:28Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -5402,7 +5402,7 @@ schools:
   ipeds_id: '132851'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:17:52Z'
+    last_probed_at: '2026-09-02T17:56:51Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -5460,7 +5460,7 @@ schools:
   ipeds_id: '174747'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:17:53Z'
+    last_probed_at: '2026-09-02T17:56:48Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -6428,13 +6428,14 @@ schools:
   name: Dalton State College
   domain: daltonstate.edu
   ipeds_id: '139463'
-  scrape_policy: unknown
+  scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:18:10Z'
-    last_result: not_found
+    last_probed_at: '2026-09-02T17:56:48Z'
+    last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
+  discovery_seed_url: https://www.daltonstate.edu/about/roadrunner-spotlight-archive.cms?contentType=textonly
 - id: davenport-university
   name: Davenport University
   domain: davenport.edu
@@ -7155,7 +7156,7 @@ schools:
   ipeds_id: '446233'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:18:23Z'
+    last_probed_at: '2026-09-02T17:56:50Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -8626,7 +8627,7 @@ schools:
   ipeds_id: '139968'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:18:51Z'
+    last_probed_at: '2026-09-02T17:57:14Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -8819,7 +8820,7 @@ schools:
   ipeds_id: '182306'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:18:54Z'
+    last_probed_at: '2026-09-02T17:57:12Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -9250,7 +9251,7 @@ schools:
   ipeds_id: '166054'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:19:02Z'
+    last_probed_at: '2026-09-02T17:57:13Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -10456,11 +10457,11 @@ schools:
   name: Johnson & Wales University-Providence
   domain: jwu.edu
   ipeds_id: '217235'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
-    last_result: found
-    last_method: brave
+    last_probed_at: '2026-09-02T18:00:10Z'
+    last_result: shared_parent_seed
+    last_method: shared_parent
     patterns_tried: 0
     search_fallback_tried: true
   discovery_seed_url: https://www.jwu.edu/about-jwu/terms-of-use.html
@@ -10583,7 +10584,7 @@ schools:
   ipeds_id: '179812'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:19:25Z'
+    last_probed_at: '2026-09-02T17:57:13Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -10594,7 +10595,7 @@ schools:
   ipeds_id: '490601'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:19:25Z'
+    last_probed_at: '2026-09-02T17:57:13Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -12102,7 +12103,7 @@ schools:
   ipeds_id: '161299'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:19:53Z'
+    last_probed_at: '2026-09-02T17:57:35Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -14239,7 +14240,7 @@ schools:
   ipeds_id: '262129'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:20:32Z'
+    last_probed_at: '2026-09-02T17:57:35Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -14634,7 +14635,7 @@ schools:
   ipeds_id: '204422'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:20:39Z'
+    last_probed_at: '2026-09-02T17:57:53Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -15043,7 +15044,7 @@ schools:
   ipeds_id: '207306'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:20:46Z'
+    last_probed_at: '2026-09-02T17:57:59Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -15892,7 +15893,7 @@ schools:
   ipeds_id: '120865'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:21:00Z'
+    last_probed_at: '2026-09-02T17:57:57Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -16134,11 +16135,11 @@ schools:
   name: Saint Joseph's University - Lancaster
   domain: sju.edu
   ipeds_id: '442356'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
-    last_result: found
-    last_method: brave
+    last_probed_at: '2026-09-02T18:00:10Z'
+    last_result: shared_parent_seed
+    last_method: shared_parent
     patterns_tried: 0
     search_fallback_tried: true
   discovery_seed_url: https://sites.sju.edu/academicadmin/files/2017/01/SJU-Common-Data-Set-2015-2016-Part-One.pdf
@@ -16546,7 +16547,7 @@ schools:
   ipeds_id: '127820'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:21:11Z'
+    last_probed_at: '2026-09-02T17:57:57Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -16672,7 +16673,7 @@ schools:
   ipeds_id: '456481'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:21:14Z'
+    last_probed_at: '2026-09-02T17:58:17Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -16683,7 +16684,7 @@ schools:
   ipeds_id: '456490'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:21:14Z'
+    last_probed_at: '2026-09-02T17:58:19Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -17172,7 +17173,7 @@ schools:
   ipeds_id: '233301'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:21:23Z'
+    last_probed_at: '2026-09-02T17:58:18Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -17181,13 +17182,14 @@ schools:
   name: Randolph-Macon College
   domain: rmc.edu
   ipeds_id: '233295'
-  scrape_policy: unknown
+  scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:21:23Z'
-    last_result: not_found
+    last_probed_at: '2026-09-02T17:58:22Z'
+    last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
+  discovery_seed_url: https://www.rmc.edu/wp-content/uploads/2024/05/CDS_2023_2024_F.pdf
 - id: ranken-technical-college
   name: Ranken Technical College
   domain: ranken.edu
@@ -17542,7 +17544,7 @@ schools:
   ipeds_id: '194958'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:21:29Z'
+    last_probed_at: '2026-09-02T17:58:41Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -17860,7 +17862,7 @@ schools:
   ipeds_id: '199582'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:21:35Z'
+    last_probed_at: '2026-09-02T17:58:41Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -17960,7 +17962,7 @@ schools:
   ipeds_id: '174792'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:21:36Z'
+    last_probed_at: '2026-09-02T17:58:40Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -20489,7 +20491,7 @@ schools:
   ipeds_id: '155973'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:22:23Z'
+    last_probed_at: '2026-09-02T17:58:44Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -20511,7 +20513,7 @@ schools:
   ipeds_id: '102298'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:22:24Z'
+    last_probed_at: '2026-09-02T17:59:01Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -20774,7 +20776,7 @@ schools:
   ipeds_id: '224545'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:22:28Z'
+    last_probed_at: '2026-09-02T17:59:02Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -21058,7 +21060,7 @@ schools:
   ipeds_id: '174899'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:22:33Z'
+    last_probed_at: '2026-09-02T17:59:02Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -21112,13 +21114,14 @@ schools:
   name: The Continents States University
   domain: continents.us
   ipeds_id: '492087'
-  scrape_policy: unknown
+  scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:22:34Z'
-    last_result: not_found
+    last_probed_at: '2026-09-02T17:59:07Z'
+    last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
+  discovery_seed_url: https://www.continents.us/does-harvard-accept-2-9-gpa/5/
 - id: the-cooper-union-for-the-advancement-of-science-and-art
   name: The Cooper Union for the Advancement of Science and Art
   domain: cooper.edu
@@ -21215,7 +21218,7 @@ schools:
   ipeds_id: '195049'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:22:36Z'
+    last_probed_at: '2026-09-02T17:59:22Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -21729,7 +21732,7 @@ schools:
   ipeds_id: '176406'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:22:47Z'
+    last_probed_at: '2026-09-02T17:59:24Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -22568,7 +22571,7 @@ schools:
   ipeds_id: '108092'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:23:02Z'
+    last_probed_at: '2026-09-02T17:59:29Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -22579,7 +22582,7 @@ schools:
   ipeds_id: '161873'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:23:03Z'
+    last_probed_at: '2026-09-02T17:59:53Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -23650,7 +23653,7 @@ schools:
   ipeds_id: '101693'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:23:23Z'
+    last_probed_at: '2026-09-02T17:59:46Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -23694,7 +23697,7 @@ schools:
   ipeds_id: '204185'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:23:24Z'
+    last_probed_at: '2026-09-02T17:59:46Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -25327,7 +25330,7 @@ schools:
   ipeds_id: '197142'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-04-14T13:24:07Z'
+    last_probed_at: '2026-09-02T18:00:08Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -25998,13 +26001,14 @@ schools:
   name: West Virginia State University
   domain: wvstateu.edu
   ipeds_id: '237899'
-  scrape_policy: unknown
+  scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:24:20Z'
-    last_result: not_found
+    last_probed_at: '2026-09-02T18:00:10Z'
+    last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
+  discovery_seed_url: https://wvstateu.edu/administration/institutional-research/irae-mission/
 - id: west-virginia-university
   name: West Virginia University
   domain: wvu.edu
