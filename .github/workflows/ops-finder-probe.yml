@@ -114,15 +114,14 @@ jobs:
         name: Re-probe stuck PDF seeds
         if: env.INPUT_MODE == 'both' || env.INPUT_MODE == 'stuck-pdf'
         run: |
+          set -euo pipefail
+          # No nested bash heredocs in this step. GHA keeps relative indent, so
+          # an indented terminator never closes and bash fails at parse time
+          # even on the empty-ids branch (2026-09-02: 110 stuck, 0 re-probed).
           if [[ ! -s finder-probe/stuck-ids.txt ]]; then
             echo "No stuck PDF seeds to re-probe."
-            python - <<'PY'
-            import json
-            from pathlib import Path
-            Path("finder-probe/stuck-probe-summary.json").write_text(json.dumps({
-                "probed": 0, "found": 0, "replaced": 0, "budget_remaining": 0, "still_stuck": 0,
-            }) + "\n")
-            PY
+            printf '%s\n' '{"probed":0,"found":0,"replaced":0,"budget_remaining":0,"still_stuck":0}' \
+              > finder-probe/stuck-probe-summary.json
             exit 0
           fi
           PYTHONUNBUFFERED=1 python tools/finder/probe_urls.py \
@@ -143,11 +142,10 @@ jobs:
           if [[ -f finder-probe/stuck-ids.txt ]]; then
             stuck=$(grep -cve '^[[:space:]]*$' finder-probe/stuck-ids.txt || true)
           fi
-          python - "$stuck" "$STEP_OUTCOME" <<'PY'
-          import json, sys
+          python -c '
+          import json, os, sys
           from pathlib import Path
           stuck = int(sys.argv[1])
-          outcome = sys.argv[2]
           path = Path("finder-probe/stuck-probe-summary.json")
           summary = {"probed": 0, "found": 0, "replaced": 0, "still_stuck": 0}
           if path.exists():
@@ -155,10 +153,12 @@ jobs:
           Path("finder-probe/stuck-heartbeat.json").write_text(json.dumps({
               "stuck": stuck,
               "reprobed": summary.get("probed", 0),
-              "still_stuck": summary.get("still_stuck", max(0, summary.get("probed", 0) - summary.get("found", 0))),
+              "still_stuck": summary.get(
+                  "still_stuck",
+                  max(0, summary.get("probed", 0) - summary.get("found", 0)),
+              ),
           }) + "\n")
-          print(outcome)
-          PY
+          ' "$stuck"
           status=ok
           error=none
           if [[ "$STEP_OUTCOME" == "failure" ]]; then
@@ -173,6 +173,24 @@ jobs:
             --error-code "$error" \
             --run-url "${PIPELINE_RUN_URL}"
 
+      - name: Open issue when stuck-PDF re-probe fails
+        if: failure() && steps.re_probe_stuck.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          python tools/ops/upsert_pipeline_alert_issue.py \
+            --repo "${REPO}" \
+            --component finder_stuck_pdf \
+            --title "Pipeline alert: Stuck PDFs re-probe failed" \
+            --run-url "${PIPELINE_RUN_URL}" \
+            --body "The monthly/dispatch finder step \`Re-probe stuck PDF seeds\` failed.
+
+          When this stays red, archive keeps hitting stale single-year PDF seeds and new CDS years stop arriving.
+
+          Run: ${PIPELINE_RUN_URL}
+          "
+
       - name: Heartbeat finder_brave start
         if: ${{ always() && !cancelled() && (env.INPUT_MODE == 'both' || env.INPUT_MODE == 'unknown') }}
         run: |
@@ -186,6 +204,7 @@ jobs:
         name: Probe unknown schools
         if: ${{ always() && !cancelled() && (env.INPUT_MODE == 'both' || env.INPUT_MODE == 'unknown') }}
         run: |
+          set -euo pipefail
           PYTHONUNBUFFERED=1 python tools/finder/probe_urls.py \
             --brave-fallback \
             --include-active-no-hint \
@@ -231,6 +250,7 @@ jobs:
         name: Promote high-confidence landing hints
         if: ${{ always() && !cancelled() && env.INPUT_APPLY_LANDING_HINTS == 'true' }}
         run: |
+          set -euo pipefail
           python tools/finder/promote_landing_hints.py \
             --min-confidence medium \
             --ids-file finder-probe/stuck-ids.txt \
@@ -292,39 +312,40 @@ jobs:
       - name: Upsert coverage issue
         if: success()
         run: |
-          python - <<'PY'
+          # Prefer python -c over nested bash heredocs (GHA relative-indent trap).
+          python -c "
           import json, os, subprocess, sys
           from pathlib import Path
-          repo = os.environ["REPO"]
-          path = Path("finder-probe/stuck-after.md")
+          repo = os.environ['REPO']
+          path = Path('finder-probe/stuck-after.md')
           if not path.exists():
-              path = Path("finder-probe/stuck.md")
+              path = Path('finder-probe/stuck.md')
           if not path.exists():
-              print("No stuck report; skipping issue.")
+              print('No stuck report; skipping issue.')
               sys.exit(0)
-          title = "Finder: stuck PDF discovery seeds"
+          title = 'Finder: stuck PDF discovery seeds'
           body = path.read_text()[:60000]
           existing = subprocess.run(
-              ["gh", "issue", "list", "--repo", repo, "--state", "open",
-               "--search", f'in:title "{title}"', "--json", "number,title"],
+              ['gh', 'issue', 'list', '--repo', repo, '--state', 'open',
+               '--search', 'in:title \"' + title + '\"', '--json', 'number,title'],
               check=True, text=True, stdout=subprocess.PIPE,
           )
-          rows = json.loads(existing.stdout or "[]")
-          match = next((r for r in rows if r.get("title") == title), None)
+          rows = json.loads(existing.stdout or '[]')
+          match = next((r for r in rows if r.get('title') == title), None)
           if match:
               subprocess.run(
-                  ["gh", "issue", "comment", str(match["number"]),
-                   "--repo", repo, "--body", body],
+                  ['gh', 'issue', 'comment', str(match['number']),
+                   '--repo', repo, '--body', body],
                   check=True,
               )
-              print(f"Commented on existing issue #{match['number']}")
+              print('Commented on existing issue #%s' % match['number'])
           else:
               subprocess.run(
-                  ["gh", "issue", "create", "--repo", repo, "--title", title, "--body", body],
+                  ['gh', 'issue', 'create', '--repo', repo, '--title', title, '--body', body],
                   check=True,
               )
-              print("Created coverage issue")
-          PY
+              print('Created coverage issue')
+          "
 
       - name: Snapshot probed schools.yaml
         if: always()
@@ -353,6 +374,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      issues: write
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       INPUT_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'both' }}
@@ -383,8 +405,13 @@ jobs:
             --probed finder-probe/schools.yaml \
             --out tools/finder/schools.yaml
 
-      - name: Open PR for seed updates
+      - id: open_seed_pr
+        name: Open PR for seed updates
+        env:
+          REPO: ${{ github.repository }}
+          PIPELINE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -- tools/finder/schools.yaml
@@ -400,23 +427,54 @@ jobs:
           fi
           branch="chore/finder-probe-${GITHUB_RUN_ID}"
           git checkout -B "$branch"
-          git commit -m "$(cat <<'EOF'
-          chore: refresh CDS discovery seeds from monthly finder probe
-
-          Re-probe stale PDF seeds and unknowns via the Brave Search API, and
-          promote high-confidence HTML listings so weekly archive is not stuck
-          on a single year file.
-
-          EOF
-          )"
+          # Avoid nested indented heredocs; multi-line -m is enough.
+          git commit -m "$(printf '%s\n' \
+            'chore: refresh CDS discovery seeds from monthly finder probe' \
+            '' \
+            'Re-probe stale PDF seeds and unknowns via the Brave Search API, and' \
+            'promote high-confidence HTML listings so weekly archive is not stuck' \
+            'on a single year file.')"
           git push -u origin HEAD
-          gh pr create --title "chore: refresh CDS discovery seeds from monthly finder probe" --body "$(cat <<EOF
-          ## Summary
-          - Monthly finder probe (\`${INPUT_MODE}\`) updated \`tools/finder/schools.yaml\`.
-          - Stuck PDF-seed report is in the workflow artifacts / coverage issue.
+          body="$(printf '%s\n' \
+            '## Summary' \
+            "- Monthly finder probe (\`${INPUT_MODE}\`) updated \`tools/finder/schools.yaml\`." \
+            '- Stuck PDF-seed report is in the workflow artifacts / coverage issue.' \
+            '' \
+            '## Test plan' \
+            '- [ ] Skim the PR diff for accidental satellite-campus seed copies' \
+            '- [ ] Merging this PR auto-enqueues changed seeds via \`ops-archive-seed-catchup\`')"
+          if gh pr create \
+            --title "chore: refresh CDS discovery seeds from monthly finder probe" \
+            --body "$body"; then
+            exit 0
+          fi
+          # Repo setting "Allow GitHub Actions to create and approve pull
+          # requests" may be off — branch is still on origin; surface an issue
+          # with a one-click compare link instead of silently stranding seeds
+          # (2026-09-02 left chore/finder-probe-33664025899 with no PR).
+          compare="https://github.com/${REPO}/compare/main...${branch}?quick_pull=1"
+          echo "::error::gh pr create failed after pushing ${branch}. Open ${compare}"
+          printf '%s\n' "$branch" > finder-probe-seed-branch.txt
+          printf '%s\n' "$compare" > finder-probe-seed-compare.txt
+          exit 1
 
-          ## Test plan
-          - [ ] Skim the PR diff for accidental satellite-campus seed copies
-          - [ ] Merging this PR auto-enqueues changed seeds via \`ops-archive-seed-catchup\`
-          EOF
-          )"
+      - name: Open issue when seed PR publish fails
+        if: failure() && steps.open_seed_pr.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PIPELINE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          branch="chore/finder-probe-${GITHUB_RUN_ID}"
+          compare="https://github.com/${REPO}/compare/main...${branch}?quick_pull=1"
+          python tools/ops/upsert_pipeline_alert_issue.py \
+            --repo "${REPO}" \
+            --component finder_seed_publish \
+            --title "Pipeline alert: Finder seed branch needs PR" \
+            --run-url "${PIPELINE_RUN_URL}" \
+            --body "Finder probe pushed \`${branch}\` but could not open the PR (often: Actions is not permitted to create pull requests).
+
+          One-click PR: ${compare}
+
+          Merge that PR so \`ops-archive-seed-catchup\` enqueues the new seeds. Without it, archive keeps using stale URLs and intake stalls.
+          "

@@ -30,6 +30,23 @@ class FinderProbeWorkflowTests(unittest.TestCase):
             FINDER,
         )
 
+    
+    def test_stuck_reprobe_avoids_nested_heredocs_and_uses_pipefail(self) -> None:
+        _, step = FINDER.split("id: re_probe_stuck", 1)
+        run = step.split("- name:", 1)[0]
+        self.assertIn("set -euo pipefail", run)
+        self.assertNotIn("<<", run)
+        self.assertIn("printf", run)
+
+    def test_failures_open_pipeline_alert_issues(self) -> None:
+        self.assertIn("upsert_pipeline_alert_issue.py", FINDER)
+        self.assertIn("--component", FINDER)
+        self.assertIn("Pipeline alert: Stuck PDFs re-probe failed", FINDER)
+        self.assertIn("Pipeline alert: Finder seed branch needs PR", FINDER)
+        _, publish = FINDER.split("publish-seeds:", 1)
+        self.assertIn("issues: write", publish.split("steps:", 1)[0])
+        self.assertIn("id: open_seed_pr", publish)
+
     def test_probe_always_snapshots_yaml_into_the_artifact(self) -> None:
         self.assertIn("cp tools/finder/schools.yaml finder-probe/schools.yaml", FINDER)
         self.assertIn("cp tools/finder/schools.yaml finder-probe/schools-base.yaml", FINDER)

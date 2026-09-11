@@ -266,6 +266,13 @@ The guard catches all three at build time before they ship.
 
 **SIGINT saves partial progress.** `Ctrl-C` triggers a finally-block save in `probe_urls.py`, so the fraction of schools probed before interrupt get committed to `schools.yaml`. Tested via an 11-minute wedge + SIGINT during the elite-seed pattern run.
 
+## Silent-failure guards
+
+The monthly Action used to die quietly in two ways:
+
+1. **Indented bash heredocs inside `run: |`** — GHA keeps relative indent, so a nested terminator never closes and bash fails at *parse* time (even on the empty-ids branch). CI now runs `tools/ops/lint_gha_heredocs.py` on every workflow.
+2. **Seed PR create blocked** — if the repo setting "Allow GitHub Actions to create and approve pull requests" is off, the publish job still pushes `chore/finder-probe-<run_id>` and opens a **Pipeline alert** issue with a one-click compare link. Stuck-PDF re-probe failures also open a Pipeline alert issue so a red observation lamp is not the only signal.
+
 ## Recommended monthly cron
 
 GitHub Actions runs this on the 2nd of each month (`ops-finder-probe.yml`). It needs the `BRAVE_API_KEY` repository secret — the finder talks to `api.search.brave.com`, not public brave.com. Manual dispatch:
