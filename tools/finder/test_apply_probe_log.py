@@ -85,6 +85,39 @@ class ApplyHitTests(unittest.TestCase):
         self.assertEqual(apply_hit(school, hit, "2026-08-21T22:51:00Z"), "skipped_junk")
         self.assertEqual(school["discovery_seed_url"], "https://www.elms.edu/old.pdf")
 
+    def test_paginated_blog_slug_is_skipped_junk(self) -> None:
+        school = {
+            "id": "the-continents-states-university",
+            "domain": "continents.us",
+            "ipeds_id": "492087",
+            "scrape_policy": "unknown",
+        }
+        hit = parse_probe_log(
+            "[    1/1] The Continents States University (continents.us) ... "
+            "[brave] FOUND: https://www.continents.us/does-harvard-accept-2-9-gpa/5/\n"
+        )[0]
+        self.assertEqual(apply_hit(school, hit, "2026-09-02T17:59:07Z"), "skipped_junk")
+        self.assertNotIn("discovery_seed_url", school)
+        self.assertEqual(school["scrape_policy"], "unknown")
+
+    def test_missing_official_record_does_not_flip_active(self) -> None:
+        school = {
+            "id": "the-continents-states-university",
+            "domain": "continents.us",
+            "ipeds_id": "492087",
+            "scrape_policy": "unknown",
+        }
+        hit = parse_probe_log(
+            "[    1/1] The Continents States University (continents.us) ... "
+            "[brave] FOUND: https://www.continents.us/institutional-research/common-data-set/\n"
+        )[0]
+        self.assertEqual(
+            apply_hit(school, hit, "2026-09-02T17:59:07Z", official_records={}),
+            "replaced",
+        )
+        self.assertEqual(school["scrape_policy"], "unknown")
+        self.assertTrue(school["discovery_seed_url"].endswith("common-data-set/"))
+
 
 class WriteYamlTests(unittest.TestCase):
     def test_rewrites_seed_policy_and_probe_state(self) -> None:

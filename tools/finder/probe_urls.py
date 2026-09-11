@@ -3,7 +3,8 @@
 
 For each school in schools.yaml with scrape_policy == "unknown", tries the
 URL pattern ladder against the school's domain. On a hit, updates the entry
-with discovery_seed_url and flips scrape_policy to "active".
+with discovery_seed_url and flips scrape_policy to "active" only when the
+UNITID exists in the IPEDS identity snapshot (otherwise CI fails closed).
 
 Records probe_state per school so we don't re-query paid search APIs for
 schools that genuinely don't publish.
@@ -52,6 +53,11 @@ import yaml
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
+from tools.finder.identity_guard import (  # noqa: E402
+    DEFAULT_SNAPSHOT,
+    load_identity_snapshot,
+    normalize_ipeds,
+)
 from tools.finder.stuck_pdf_seeds import (  # noqa: E402
     choose_canonical_school,
     is_direct_doc_seed,
@@ -555,13 +561,34 @@ def looks_like_search_junk(url: str) -> bool:
 
 def looks_like_article_slug(url: str) -> bool:
     """Drop SEO/blog slugs that matched 'Common Data Set' in a snippet."""
-    last = (urllib.parse.urlparse(url).path or "").rstrip("/").split("/")[-1]
-    last = last.lower()
+    parts = [p for p in (urllib.parse.urlparse(url).path or "").lower().split("/") if p]
+    # Brave hits often append a page index ("/does-harvard-accept-2-9-gpa/5/").
+    while parts and re.fullmatch(r"\d+", parts[-1]):
+        parts.pop()
+    if not parts:
+        return False
+    last = parts[-1]
     if re.search(r"cds|common[-_]?data", last):
         return False
     if re.match(r"^(does|what|why|how|should|is|can|will)-", last):
         return True
     return last.count("-") >= 5
+
+
+def may_mark_active(
+    school: dict,
+    official_records: dict[str, dict[str, str]] | None,
+) -> bool:
+    """Refuse scrape_policy=active when identity_guard would fail CI.
+
+    Missing UNITIDs are warnings while the school stays unknown. Flipping
+    them to active (the Sept 2 Continents States Brave miss) turns the
+    next seed PR red.
+    """
+    if official_records is None:
+        return True
+    ipeds_id = normalize_ipeds(school.get("ipeds_id"))
+    return bool(ipeds_id and ipeds_id in official_records)
 
 
 def looks_like_news_or_blog(url: str) -> bool:
@@ -709,6 +736,15 @@ def process_school(school: dict, args: argparse.Namespace,
         method = last_attempted_method
 
     replaced = False
+    official_records = env.get("official_records")
+    if url and not may_mark_active(school, official_records):
+        print(
+            f"  skip activate {school.get('id')}: UNITID "
+            f"{school.get('ipeds_id')} is not in the IPEDS identity snapshot",
+            file=sys.stderr,
+        )
+        url = None
+        method = last_attempted_method if search_tried else method
     if url:
         existing = school.get("discovery_seed_url") or school.get("cds_url_hint")
         if should_replace_seed(existing, url):
@@ -835,10 +871,16 @@ def main():
     data = yaml.safe_load(SCHOOLS_YAML.read_text())
     schools = data.get("schools", [])
 
+    try:
+        _, official_records = load_identity_snapshot(DEFAULT_SNAPSHOT)
+    except (OSError, ValueError) as exc:
+        print(f"identity snapshot unavailable ({exc}); will not flip scrape_policy", file=sys.stderr)
+        official_records = {}
     env = {
         "google_api_key": os.environ.get("GOOGLE_API_KEY"),
         "google_cx": os.environ.get("GOOGLE_CX"),
         "brave_api_key": os.environ.get("BRAVE_API_KEY"),
+        "official_records": official_records,
         "brave_tracker": {
             "calls": 0,
             "budget": None if args.brave_budget == 0 else args.brave_budget,

@@ -10,6 +10,7 @@ from tools.finder.probe_urls import (
     host_belongs_to_domain,
     is_cds_page,
     looks_like_search_junk,
+    may_mark_active,
     select_brave_cds_url,
     should_replace_seed,
     should_skip,
@@ -104,11 +105,31 @@ class SelectBraveCdsUrlTests(unittest.TestCase):
                 "https://www.continents.us/does-harvard-accept-2-9-gpa/"
             )
         )
+        self.assertTrue(
+            looks_like_article_slug(
+                "https://www.continents.us/does-harvard-accept-2-9-gpa/5/"
+            )
+        )
         self.assertFalse(
             looks_like_article_slug(
                 "https://www.albion.edu/offices/registrar/institutional-data/"
             )
         )
+        self.assertFalse(
+            looks_like_article_slug(
+                "https://provost.tufts.edu/institutionalresearch/wp-content/uploads/sites/5/CDS_2024-2025-1.pdf"
+            )
+        )
+
+    def test_select_brave_rejects_paginated_blog_slug(self) -> None:
+        results = [
+            {
+                "url": "https://www.continents.us/does-harvard-accept-2-9-gpa/5/",
+                "title": "Common Data Set",
+                "description": "Common Data Set",
+            }
+        ]
+        self.assertIsNone(select_brave_cds_url(results, "continents.us"))
 
     def test_rejects_news_pages_and_non_cds_pdfs(self) -> None:
         from tools.finder.probe_urls import (
@@ -225,6 +246,23 @@ class CheckpointHelpersTests(unittest.TestCase):
             text = path.read_text()
         self.assertIn("id: x", text)
         self.assertIn("Xavier", text)
+
+
+class IdentityActivateTests(unittest.TestCase):
+    def test_missing_official_record_cannot_become_active(self) -> None:
+        school = {
+            "id": "the-continents-states-university",
+            "ipeds_id": "492087",
+            "scrape_policy": "unknown",
+        }
+        self.assertFalse(may_mark_active(school, {}))
+        self.assertTrue(
+            may_mark_active(
+                {**school, "ipeds_id": "168148"},
+                {"168148": {"official_name": "Tufts University"}},
+            )
+        )
+        self.assertTrue(may_mark_active(school, None))
 
 
 if __name__ == "__main__":
