@@ -747,9 +747,9 @@ schools:
   scrape_policy: active
   notes: James Caldwell (IR office) ships a CDS PDF autofill script — UVA may have
     clean form-layer PDFs
-  discovery_seed_url: https://ira.virginia.edu/sites/ira/files/2025-03/CDS_2024-2025_508.pdf
+  discovery_seed_url: https://ira.virginia.edu/data-analytics/common-data-set-initiatve
   probe_state:
-    last_probed_at: '2026-04-14T15:35:59Z'
+    last_probed_at: '2026-09-11T22:32:58Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -1087,7 +1087,7 @@ schools:
   ipeds_id: '100724'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:32:55Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -2057,12 +2057,12 @@ schools:
   ipeds_id: '100830'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:16:50Z'
+    last_probed_at: '2026-09-11T22:32:56Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.aum.edu/wp-content/uploads/2025/05/CDS-2024-2025.pdf
+  discovery_seed_url: https://www.aum.edu/institutional-effectiveness/
 - id: augsburg-university
   name: Augsburg University
   domain: augsburg.edu
@@ -2388,7 +2388,7 @@ schools:
   ipeds_id: '150136'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:32:55Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -2748,12 +2748,12 @@ schools:
   ipeds_id: '145619'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:17:02Z'
+    last_probed_at: '2026-09-11T22:33:18Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://ben.edu/wp-content/uploads/2025/04/Benedictine-University-Common-Data-Set-2024-2025.pdf
+  discovery_seed_url: https://ben.edu/institutional-research/
 - id: benjamin-franklin-cummings-institute-of-technology
   name: Benjamin Franklin Cummings Institute of Technology
   domain: bfit.edu
@@ -3033,12 +3033,12 @@ schools:
   ipeds_id: '132602'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:33:17Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.cookman.edu/ie/_files/cds_2020-2021.pdf
+  discovery_seed_url: https://www.cookman.edu/ie/ieresearch/reports.html
 - id: beulah-heights-university
   name: Beulah Heights University
   domain: beulah.edu
@@ -3393,7 +3393,7 @@ schools:
   ipeds_id: '139199'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:33:18Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -3904,12 +3904,12 @@ schools:
   ipeds_id: '115755'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:17:24Z'
+    last_probed_at: '2026-09-11T22:33:19Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.humboldt.edu/sites/default/files/irar/2024-11/2024-2025-cds-cal-poly-humboldt-printable.pdf
+  discovery_seed_url: https://www.humboldt.edu/irar/common-data-sets
 - id: california-state-polytechnic-university-pomona
   name: California State Polytechnic University-Pomona
   domain: cpp.edu
@@ -4080,24 +4080,24 @@ schools:
   ipeds_id: '110617'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:17:27Z'
+    last_probed_at: '2026-09-11T22:33:38Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.csus.edu/information-resources-technology/institutional-research/common-data-set/cds_2024-2025-final.pdf
+  discovery_seed_url: https://www.csus.edu/information-resources-technology/institutional-research/data-center.html
 - id: california-state-university-san-bernardino
   name: California State University-San Bernardino
   domain: csusb.edu
   ipeds_id: '110510'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:17:28Z'
+    last_probed_at: '2026-09-11T22:33:39Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.csusb.edu/sites/default/files/upload/file/2024/CDS_2024-2025.pdf
+  discovery_seed_url: https://www.csusb.edu/institutional-research/studies-reports
 - id: california-state-university-san-marcos
   name: California State University-San Marcos
   domain: csusm.edu
@@ -4116,7 +4116,7 @@ schools:
   ipeds_id: '110495'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:33:39Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -4652,7 +4652,7 @@ schools:
   ipeds_id: '169248'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:33:41Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -4855,12 +4855,12 @@ schools:
   ipeds_id: '211556'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:17:41Z'
+    last_probed_at: '2026-09-11T22:33:59Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.chatham.edu/_documents/_about/cds-2024-2025.pdf
+  discovery_seed_url: https://www.chatham.edu/about-us/institutional-research/common-data-set.html
 - id: chemeketa-community-college
   name: Chemeketa Community College
   domain: chemeketa.edu
@@ -5156,7 +5156,7 @@ schools:
   ipeds_id: '153126'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:34:02Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -5448,8 +5448,8 @@ schools:
   ipeds_id: '167394'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:17:52Z'
-    last_result: found
+    last_probed_at: '2026-09-11T22:34:01Z'
+    last_result: not_found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
@@ -5677,7 +5677,7 @@ schools:
   ipeds_id: '177065'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:34:22Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -5689,7 +5689,7 @@ schools:
   ipeds_id: '217934'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:34:22Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -5700,7 +5700,7 @@ schools:
   ipeds_id: '144281'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:17:57Z'
+    last_probed_at: '2026-09-11T22:34:23Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -5797,7 +5797,7 @@ schools:
   ipeds_id: '237330'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:17:59Z'
+    last_probed_at: '2026-09-11T22:34:23Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -6182,12 +6182,12 @@ schools:
   ipeds_id: '190567'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:18:06Z'
+    last_probed_at: '2026-09-11T22:34:24Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.ccny.cuny.edu/sites/default/files/2025-03/20250324_FINAL%20CDS-2024-2025.pdf
+  discovery_seed_url: https://www.ccny.cuny.edu/institutionalresearch/cds
 - id: cuny-graduate-school-and-university-center
   name: CUNY Graduate School and University Center
   domain: gc.cuny.edu
@@ -6216,7 +6216,7 @@ schools:
   ipeds_id: '190600'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:34:43Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -6588,7 +6588,7 @@ schools:
   ipeds_id: '175616'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:34:45Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -6658,7 +6658,7 @@ schools:
   ipeds_id: '210739'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:18:14Z'
+    last_probed_at: '2026-09-11T22:34:44Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -6795,7 +6795,7 @@ schools:
   ipeds_id: '113698'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:34:45Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -7049,7 +7049,7 @@ schools:
   ipeds_id: '156620'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:35:04Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -7372,7 +7372,7 @@ schools:
   ipeds_id: '153302'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:35:05Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -7586,7 +7586,7 @@ schools:
   ipeds_id: '184603'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:18:31Z'
+    last_probed_at: '2026-09-11T22:35:07Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -7654,12 +7654,12 @@ schools:
   ipeds_id: '196042'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:18:33Z'
+    last_probed_at: '2026-09-11T22:35:07Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.farmingdale.edu/institutional-research/pdf/cds_2024-2025_fsc.pdf
+  discovery_seed_url: https://www.farmingdale.edu/institutional-research/enrollment_dashboard.shtml
 - id: fashion-institute-of-technology
   name: Fashion Institute of Technology
   domain: fitnyc.edu
@@ -7943,8 +7943,8 @@ schools:
   ipeds_id: '133508'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
-    last_result: not_found
+    last_probed_at: '2026-09-11T22:35:25Z'
+    last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
@@ -8058,12 +8058,12 @@ schools:
   ipeds_id: '139719'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:35:27Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.fvsu.edu/content/userfiles/files/2023/01/Academic-Year-2012-2013.pdf
+  discovery_seed_url: https://www.fvsu.edu/about-fvsu/resource-center
 - id: francis-marion-university
   name: Francis Marion University
   domain: fmarion.edu
@@ -8287,7 +8287,7 @@ schools:
   ipeds_id: '224961'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:35:29Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -8400,7 +8400,7 @@ schools:
   ipeds_id: '139861'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:35:29Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -8956,12 +8956,12 @@ schools:
   ipeds_id: '212832'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:35:47Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.gmercyu.edu/pdfs/legacy-cds_2024-2025_updated_4_11_2025_compressed.pdf
+  discovery_seed_url: https://www.gmercyu.edu/about-gmercyu/gmercyu-administration/institutional-research
 - id: hackensack-meridian-school-of-medicine
   name: Hackensack Meridian School of Medicine
   domain: hmsom.org
@@ -9059,7 +9059,7 @@ schools:
   ipeds_id: '225247'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:35:49Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -9517,7 +9517,7 @@ schools:
   ipeds_id: '170286'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:35:51Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -9848,7 +9848,7 @@ schools:
   ipeds_id: '487524'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:35:50Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -9951,12 +9951,12 @@ schools:
   ipeds_id: '145813'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:19:14Z'
+    last_probed_at: '2026-09-11T22:36:08Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://prpa.illinoisstate.edu/downloads/CDS-2024-2025_ISU_FINAL.pdf
+  discovery_seed_url: https://ir.library.illinoisstate.edu/cds/1/
 - id: illinois-wesleyan-university
   name: Illinois Wesleyan University
   domain: iwu.edu
@@ -10345,7 +10345,7 @@ schools:
   ipeds_id: '134945'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:36:10Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -10459,7 +10459,7 @@ schools:
   ipeds_id: '217235'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-09-02T18:00:10Z'
+    last_probed_at: '2026-09-11T22:35:04Z'
     last_result: shared_parent_seed
     last_method: shared_parent
     patterns_tried: 0
@@ -10629,7 +10629,7 @@ schools:
   ipeds_id: '155414'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:36:11Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -11194,7 +11194,7 @@ schools:
   ipeds_id: '226091'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:36:13Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -11401,7 +11401,7 @@ schools:
   domain: lr.edu
   ipeds_id: '198835'
   scrape_policy: active
-  discovery_seed_url: https://www.lr.edu/sites/default/files/2021-08/cds-section-b-enrollment-2016-2017.pdf
+  discovery_seed_url: https://www.lr.edu/institutional-research
 - id: lesley-university
   name: Lesley University
   domain: lesley.edu
@@ -11579,7 +11579,7 @@ schools:
   ipeds_id: '213598'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:36:32Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -11614,12 +11614,12 @@ schools:
   ipeds_id: '209065'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:19:44Z'
+    last_probed_at: '2026-09-11T22:36:32Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.linfield.edu/assets/files/institutional-research/CDS-2024-2025-PDF-Linfield-04.21.2025.pdf
+  discovery_seed_url: https://www.linfield.edu/about/institutional-research/common-data-sets.html
 - id: lipscomb-university
   name: Lipscomb University
   domain: lipscomb.edu
@@ -11750,7 +11750,7 @@ schools:
   ipeds_id: '474863'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:36:34Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -11979,7 +11979,7 @@ schools:
   ipeds_id: '213668'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:19:51Z'
+    last_probed_at: '2026-09-11T22:36:52Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -12125,7 +12125,7 @@ schools:
   ipeds_id: '203775'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:36:54Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -12339,12 +12339,12 @@ schools:
   ipeds_id: '237525'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:36:55Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.marshall.edu/irp/files/CDS_23-24.pdf
+  discovery_seed_url: https://www.marshall.edu/irp/institutional-data/
 - id: martin-luther-college
   name: Martin Luther College
   domain: mlc-wels.edu
@@ -12440,7 +12440,7 @@ schools:
   ipeds_id: '178059'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:36:57Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -12587,7 +12587,7 @@ schools:
   ipeds_id: '155511'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:37:14Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -13073,12 +13073,12 @@ schools:
   ipeds_id: '220978'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:20:10Z'
+    last_probed_at: '2026-09-11T22:37:17Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://iepr.mtsu.edu/wp-content/uploads/sites/23/2025/02/CDS_2024_2025.pdf
+  discovery_seed_url: https://iepr.mtsu.edu/common_data/
 - id: middlebury-college
   name: Middlebury College
   domain: middlebury.edu
@@ -13210,12 +13210,12 @@ schools:
   ipeds_id: '214041'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:20:13Z'
+    last_probed_at: '2026-09-11T22:37:16Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.millersville.edu/iea/ir/cds_2024-25_final.pdf
+  discovery_seed_url: https://www.millersville.edu/iea/ir/common-data-set.php
 - id: milligan-university
   name: Milligan University
   domain: milligan.edu
@@ -13313,7 +13313,7 @@ schools:
   ipeds_id: '174358'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:37:19Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -13929,7 +13929,7 @@ schools:
   ipeds_id: '163462'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:37:37Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -13941,7 +13941,7 @@ schools:
   ipeds_id: '204194'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:37:37Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -14004,7 +14004,7 @@ schools:
   ipeds_id: '127653'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:37:39Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -14353,8 +14353,8 @@ schools:
   ipeds_id: '188030'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
-    last_result: found
+    last_probed_at: '2026-09-11T22:37:41Z'
+    last_result: not_found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
@@ -14542,7 +14542,7 @@ schools:
   ipeds_id: '167260'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:38:00Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -14588,12 +14588,12 @@ schools:
   ipeds_id: '199157'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:20:38Z'
+    last_probed_at: '2026-09-11T22:37:58Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://myeol.nccu.edu/sites/default/files/2025-02/Common-Data-set-2024-2025.pdf
+  discovery_seed_url: https://myeol.nccu.edu/documents/document/242947942
 - id: north-carolina-state-university-at-raleigh
   name: North Carolina State University at Raleigh
   domain: ncsu.edu
@@ -15190,7 +15190,7 @@ schools:
   ipeds_id: '171571'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:38:00Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -15595,7 +15595,7 @@ schools:
   ipeds_id: '207582'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:38:02Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -16137,7 +16137,7 @@ schools:
   ipeds_id: '442356'
   scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-09-02T18:00:10Z'
+    last_probed_at: '2026-09-11T22:39:28Z'
     last_result: shared_parent_seed
     last_method: shared_parent
     patterns_tried: 0
@@ -16639,12 +16639,12 @@ schools:
   ipeds_id: '215442'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:21:13Z'
+    last_probed_at: '2026-09-11T22:38:23Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.pointpark.edu/about/admindepts/institutionalresearch/media/files_cds/cds_2024_2025_final_updated_03242025.pdf
+  discovery_seed_url: https://www.pointpark.edu/about/admindepts/institutionalresearch/commondataset
 - id: point-university
   name: Point University
   domain: point.edu
@@ -16810,7 +16810,7 @@ schools:
   ipeds_id: '218539'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:38:22Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -16912,19 +16912,19 @@ schools:
   ipeds_id: '127884'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:38:24Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://pueblocc.edu/sites/default/files/2022-02/CDS-PCC-2020-2021.pdf
+  discovery_seed_url: https://pueblocc.edu/document/common-data-set
 - id: purdue-university-fort-wayne
   name: Purdue University Fort Wayne
   domain: pfw.edu
   ipeds_id: '151102'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:38:42Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -17184,7 +17184,7 @@ schools:
   ipeds_id: '233295'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-09-02T17:58:22Z'
+    last_probed_at: '2026-09-11T22:38:44Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -17275,7 +17275,7 @@ schools:
   ipeds_id: '231651'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:38:44Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -17310,7 +17310,7 @@ schools:
   ipeds_id: '140872'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:21:25Z'
+    last_probed_at: '2026-09-11T22:38:45Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -17995,7 +17995,7 @@ schools:
   ipeds_id: '215770'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:39:03Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -18077,7 +18077,7 @@ schools:
   ipeds_id: '174817'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:39:05Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -18236,12 +18236,12 @@ schools:
   ipeds_id: '163851'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:21:42Z'
+    last_probed_at: '2026-09-11T22:39:05Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.salisbury.edu/administration/university-analysis-reporting-and-assessment/_files/cds-2024-2025-Final.pdf
+  discovery_seed_url: https://www.salisbury.edu/administration/university-analysis-reporting-and-assessment/reporting/institutional-research.aspx
 - id: salish-kootenai-college
   name: Salish Kootenai College
   domain: skc.edu
@@ -18383,7 +18383,7 @@ schools:
   ipeds_id: '122506'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:39:06Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -18407,7 +18407,7 @@ schools:
   ipeds_id: '227979'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:39:25Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -19358,7 +19358,7 @@ schools:
   ipeds_id: '149222'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:39:26Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -19730,12 +19730,12 @@ schools:
   ipeds_id: '167899'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:22:10Z'
+    last_probed_at: '2026-09-11T22:39:28Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://springfield.edu/sites/default/files/springfield-college-2024-25-common-data-set-usnews-v4.pdf
+  discovery_seed_url: https://springfield.edu/institutional-research
 - id: springfield-college-regional-online-and-continuing-education
   name: Springfield College-Regional, Online, and Continuing Education
   domain: springfield.edu
@@ -20054,12 +20054,12 @@ schools:
   ipeds_id: '228431'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:22:15Z'
+    last_probed_at: '2026-09-11T22:39:37Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.sfasu.edu/docs/institutional-research/common-data-set-complete-24-25.pdf
+  discovery_seed_url: https://www.sfasu.edu/sair/reports/cds
 - id: stephens-college
   name: Stephens College
   domain: stephens.edu
@@ -20145,7 +20145,7 @@ schools:
   ipeds_id: '186876'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:39:46Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -20366,7 +20366,7 @@ schools:
   ipeds_id: '196024'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:39:48Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -20613,7 +20613,7 @@ schools:
   ipeds_id: '152530'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:39:49Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -20821,7 +20821,7 @@ schools:
   ipeds_id: '228981'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:39:59Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -20844,12 +20844,12 @@ schools:
   ipeds_id: '228459'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:22:30Z'
+    last_probed_at: '2026-09-11T22:40:07Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://docs.gato.txst.edu/743980/CDS-2024-2025%20from%20richard.pdf
+  discovery_seed_url: https://dair.txst.edu/reports/cds.html
 - id: texas-tech-university
   name: Texas Tech University
   domain: ttu.edu
@@ -20913,12 +20913,12 @@ schools:
   ipeds_id: '229179'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:22:31Z'
+    last_probed_at: '2026-09-11T22:40:09Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://twu.edu/media/documents/irdm/CDS_2024-2025_v2.pdf
+  discovery_seed_url: https://twu.edu/institutional-research/facts-and-trends/
 - id: the-catholic-university-of-america
   name: The Catholic University of America
   domain: catholic.edu
@@ -21528,7 +21528,7 @@ schools:
   ipeds_id: '227368'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:40:10Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -22764,7 +22764,7 @@ schools:
   ipeds_id: '126562'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:40:20Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -23498,7 +23498,7 @@ schools:
   ipeds_id: '220862'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:40:29Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -23522,12 +23522,12 @@ schools:
   ipeds_id: '171137'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:23:20Z'
+    last_probed_at: '2026-09-11T22:40:30Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://umdearborn.edu/sites/default/files/unmanaged/pdf/ire/cds-2024-2025.pdf
+  discovery_seed_url: https://umdearborn.edu/institutional-research-and-effectiveness/data-and-dashboards/published-data-ipeds-cds-etc
 - id: university-of-michigan-flint
   name: University of Michigan-Flint
   domain: umflint.edu
@@ -23617,7 +23617,7 @@ schools:
   ipeds_id: '178402'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:40:32Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -23833,12 +23833,12 @@ schools:
   ipeds_id: '183044'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:23:26Z'
+    last_probed_at: '2026-09-11T22:40:42Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.unh.edu/institutional-research/sites/default/files/media/2025-02/cds-2024-2025-2.12.25_0.pdf
+  discovery_seed_url: https://www.unh.edu/institutional-research/data-reports/common-data-set
 - id: university-of-new-haven
   name: University of New Haven
   domain: newhaven.edu
@@ -23927,19 +23927,19 @@ schools:
   ipeds_id: '199281'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:23:28Z'
+    last_probed_at: '2026-09-11T22:40:51Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.uncp.edu/_files/0_2024-2025_CDS_All.pdf
+  discovery_seed_url: https://www.uncp.edu/about/administration/administrative-offices/institutional-research/index.html
 - id: university-of-north-carolina-school-of-the-arts
   name: University of North Carolina School of the Arts
   domain: uncsa.edu
   ipeds_id: '199184'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:40:52Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -24022,7 +24022,7 @@ schools:
   ipeds_id: '484905'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:40:53Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -24232,8 +24232,8 @@ schools:
   ipeds_id: '121691'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
-    last_result: found
+    last_probed_at: '2026-09-11T22:41:03Z'
+    last_result: not_found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
@@ -24500,12 +24500,12 @@ schools:
   ipeds_id: '151306'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:23:43Z'
+    last_probed_at: '2026-09-11T22:41:12Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.usi.edu/media/jkvps14g/pdf-cds_2024-2025.pdf
+  discovery_seed_url: https://www.usi.edu/institutional-analytics/institutional-data/common-data-set
 - id: university-of-southern-maine
   name: University of Southern Maine
   domain: usm.maine.edu
@@ -24615,12 +24615,12 @@ schools:
   ipeds_id: '225627'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:23:50Z'
+    last_probed_at: '2026-09-11T22:41:13Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://my.uiw.edu/ir/_docs/cds-24-25.pdf
+  discovery_seed_url: https://my.uiw.edu/ir/interactive-fact-books/common-data-sets.html
 - id: university-of-the-ozarks
   name: University of the Ozarks
   domain: ozarks.edu
@@ -24849,7 +24849,7 @@ schools:
   ipeds_id: '240453'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:41:14Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -24975,12 +24975,12 @@ schools:
   ipeds_id: '240189'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:41:26Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://web-ns-vip.uww.edu/documents/IRAP/External%20Reports/Common%20Data%20Set/CDS_2022-2023.pdf
+  discovery_seed_url: https://www.uww.edu/irap/external-reports
 - id: university-of-wyoming
   name: University of Wyoming
   domain: uwyo.edu
@@ -25238,7 +25238,7 @@ schools:
   ipeds_id: '123651'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:41:33Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -25262,12 +25262,12 @@ schools:
   ipeds_id: '188340'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:41:36Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.vaughn.edu/wp-content/uploads/2020/09/CDS_2021-2022.pdf
+  discovery_seed_url: https://www.vaughn.edu/about/student-consumer-information/
 - id: veritas-baptist-college
   name: Veritas Baptist College
   domain: vbc.edu
@@ -25635,7 +25635,7 @@ schools:
   ipeds_id: '156082'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:41:36Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -25659,7 +25659,7 @@ schools:
   ipeds_id: '162210'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:41:49Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -25671,12 +25671,12 @@ schools:
   ipeds_id: '164216'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:24:14Z'
+    last_probed_at: '2026-09-11T22:41:54Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.washcoll.edu/people_departments/offices/institutional-research/common_data_sets_cds/common-data-set-2024-2025.pdf
+  discovery_seed_url: https://www.washcoll.edu/people_departments/offices/institutional-research/common-data-set.php
 - id: washington-state-community-college
   name: Washington State College of Ohio
   domain: wsco.edu
@@ -25694,12 +25694,12 @@ schools:
   ipeds_id: '236939'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:24:14Z'
+    last_probed_at: '2026-09-11T22:41:57Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://wpcdn.web.wsu.edu/wsuwp/uploads/sites/3447/2025/09/CDS-2024-2025-For-Website.pdf
+  discovery_seed_url: https://data.wsu.edu/system-data/reporting/
 - id: washington-university-in-st-louis
   name: Washington University in St Louis
   domain: wustl.edu
@@ -26071,7 +26071,7 @@ schools:
   ipeds_id: '128391'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:41:58Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -26118,7 +26118,7 @@ schools:
   ipeds_id: '157951'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:42:11Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -26130,12 +26130,12 @@ schools:
   ipeds_id: '172699'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:24:23Z'
+    last_probed_at: '2026-09-11T22:42:16Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://files.wmich.edu/s3fs-public/2025-02/wmu_cds_2024-25_0.pdf
+  discovery_seed_url: https://wmich.edu/institutionalresearch/commondataset
 - id: western-michigan-university-homer-stryker-m-d-school-of
   name: Western Michigan University Homer Stryker M.D. School of Medicine
   domain: wmed.edu
@@ -26187,12 +26187,12 @@ schools:
   ipeds_id: '210429'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:24:24Z'
+    last_probed_at: '2026-09-11T22:42:20Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://cdn.wou.edu/institutionalresearch/files/2025/09/CDS-2024-2025.pdf
+  discovery_seed_url: https://wou.edu/institutionalresearch/ir-resources/
 - id: western-seminary
   name: Western Seminary
   domain: westernseminary.edu
@@ -26439,7 +26439,7 @@ schools:
   ipeds_id: '216852'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:24:28Z'
+    last_probed_at: '2026-09-11T22:42:20Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -26643,7 +26643,7 @@ schools:
   ipeds_id: '131113'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:42:32Z'
     last_result: not_found
     last_method: brave
     patterns_tried: 0
@@ -26801,7 +26801,7 @@ schools:
   ipeds_id: '125897'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:42:38Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -26870,12 +26870,12 @@ schools:
   ipeds_id: '206604'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-04-14T13:24:36Z'
+    last_probed_at: '2026-09-11T22:42:42Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.wright.edu/sites/www.wright.edu/files/page/attachments/CDS_2024-2025_Lake.pdf
+  discovery_seed_url: https://corescholar.libraries.wright.edu/common-data-set/
 - id: xavier-university
   name: Xavier University
   domain: xavier.edu
@@ -26894,7 +26894,7 @@ schools:
   ipeds_id: '160904'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:42:41Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
@@ -27468,7 +27468,7 @@ schools:
   ipeds_id: '141361'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
+    last_probed_at: '2026-09-11T22:42:55Z'
     last_result: found
     last_method: brave
     patterns_tried: 0
