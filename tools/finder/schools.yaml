@@ -7654,7 +7654,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.farmingdale.edu/institutional-research/enrollment_dashboard.shtml
+  discovery_seed_url: https://www.farmingdale.edu/institutional-research/pdf/cds_2024-2025_fsc.pdf
 - id: fashion-institute-of-technology
   name: Fashion Institute of Technology
   domain: fitnyc.edu
@@ -8058,7 +8058,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.fvsu.edu/about-fvsu/resource-center
+  discovery_seed_url: https://www.fvsu.edu/content/userfiles/files/2023/01/Academic-Year-2012-2013.pdf
 - id: francis-marion-university
   name: Francis Marion University
   domain: fmarion.edu
@@ -9951,7 +9951,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://ir.library.illinoisstate.edu/cds/1/
+  discovery_seed_url: https://prpa.illinoisstate.edu/downloads/CDS-2024-2025_ISU_FINAL.pdf
 - id: illinois-wesleyan-university
   name: Illinois Wesleyan University
   domain: iwu.edu
@@ -14585,7 +14585,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://myeol.nccu.edu/documents/document/242947942
+  discovery_seed_url: https://myeol.nccu.edu/sites/default/files/2025-02/Common-Data-set-2024-2025.pdf
 - id: north-carolina-state-university-at-raleigh
   name: North Carolina State University at Raleigh
   domain: ncsu.edu
@@ -25256,7 +25256,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.vaughn.edu/about/student-consumer-information/
+  discovery_seed_url: https://www.vaughn.edu/wp-content/uploads/2020/09/CDS_2021-2022.pdf
 - id: veritas-baptist-college
   name: Veritas Baptist College
   domain: vbc.edu
