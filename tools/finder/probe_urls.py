@@ -43,10 +43,11 @@ import urllib.request
 import urllib.error
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from threading import Lock
 from collections import defaultdict
+from typing import Callable
 
 import yaml
 
@@ -148,6 +149,21 @@ DEFAULT_COOLDOWN_DAYS = 30
 # while keeping monthly cron runtime bounded at 2400 schools × 60s / workers.
 DEFAULT_SCHOOL_BUDGET_SEC = 60.0
 
+# Search hits and active HTML seeds are untrusted URLs. One MiB is enough to
+# inspect a landing page and document magic without downloading a whole CDS.
+MAX_VALIDATION_BYTES = 1024 * 1024
+VALIDATION_VALID = "valid"
+VALIDATION_INVALID = "invalid"
+VALIDATION_UNVERIFIABLE = "unverifiable"
+TERMINAL_ARCHIVE_STATUSES = {"done", "failed_permanent"}
+AUDITABLE_ARCHIVE_OUTCOMES = {
+    "dead_url",
+    "marked_removed",
+    "no_pdfs_found",
+    "wrong_content_type",
+}
+ACTIVE_HTML_AUDIT_LOOKBACK_DAYS = 180
+
 
 # ── HTTP helpers ────────────────────────────────────────────────────────────
 
@@ -206,6 +222,175 @@ def _head(url: str, timeout: int = 10) -> tuple[int, dict]:
             return resp.status, headers
     except (urllib.error.URLError, urllib.error.HTTPError, OSError, ValueError):
         return -1, {}
+
+
+def _get_bounded(
+    url: str,
+    timeout: int = 15,
+    max_bytes: int = MAX_VALIDATION_BYTES,
+) -> tuple[int, dict, bytes, str, bool]:
+    """Fetch at most max_bytes for content validation.
+
+    Unlike `_get`, HTTP status is preserved. Callers must distinguish a
+    definitive miss (404/410 or successful non-CDS content) from a transient
+    or access-controlled response that cannot safely demote an existing seed.
+    """
+    req = urllib.request.Request(url, headers={"User-Agent": _UA})
+    deadline = time.monotonic() + timeout
+    try:
+        with urllib.request.urlopen(req, timeout=timeout, context=_SSL_CTX) as resp:
+            status = resp.status
+            headers = {k.lower(): v for k, v in resp.getheaders()}
+            content = bytearray()
+            read = getattr(resp, "read1", resp.read)
+            while len(content) <= max_bytes:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutError("validation fetch deadline exceeded")
+                try:
+                    resp.fp.raw._sock.settimeout(remaining)
+                except (AttributeError, OSError):
+                    pass
+                chunk = read(min(64 * 1024, max_bytes + 1 - len(content)))
+                if not chunk:
+                    break
+                content.extend(chunk)
+            return (
+                status,
+                headers,
+                bytes(content[:max_bytes]),
+                resp.geturl(),
+                len(content) > max_bytes,
+            )
+    except urllib.error.HTTPError as exc:
+        headers = {k.lower(): v for k, v in exc.headers.items()} if exc.headers else {}
+        return exc.code, headers, b"", exc.geturl() or url, False
+    except (urllib.error.URLError, OSError, ValueError):
+        return -1, {}, b"", url, False
+
+
+class _CdsContentParser(html.parser.HTMLParser):
+    """Collect link targets and text without executing untrusted HTML."""
+
+    def __init__(self):
+        super().__init__()
+        self.links: list[tuple[str, str]] = []
+        self._current_link: int | None = None
+
+    def handle_starttag(self, tag, attrs):
+        values = dict(attrs)
+        target = ""
+        if tag == "a":
+            target = values.get("href", "")
+        elif tag in {"embed", "iframe", "source"}:
+            target = values.get("src", "")
+        elif tag == "object":
+            target = values.get("data", "")
+        if target:
+            self.links.append((target, ""))
+            self._current_link = len(self.links) - 1 if tag == "a" else None
+
+    def handle_endtag(self, tag):
+        if tag == "a":
+            self._current_link = None
+
+    def handle_data(self, data):
+        if self._current_link is None:
+            return
+        target, text = self.links[self._current_link]
+        self.links[self._current_link] = (target, text + " " + data)
+
+
+def html_has_cds_content_or_anchors(content: bytes) -> bool:
+    """Require real CDS content or a CDS/document link, not snippet text."""
+    text = content.decode("utf-8", errors="ignore")
+    normalized = re.sub(r"\s+", " ", text).lower()
+    has_cds_phrase = bool(re.search(r"common\s+data\s+set", normalized))
+
+    parser = _CdsContentParser()
+    try:
+        parser.feed(text)
+    except (AssertionError, ValueError):
+        return False
+
+    for target, label in parser.links:
+        combined = urllib.parse.unquote(f"{target} {label}").lower()
+        path = urllib.parse.unquote(urllib.parse.urlparse(target).path).lower()
+        is_document = bool(re.search(r"\.(pdf|xlsx|docx)(?:$|[?#])", path))
+        cds_signal = bool(re.search(r"(?:\bcds\b|common[-_\s]*data[-_\s]*set)", combined))
+        year_signal = bool(re.search(r"20\d{2}\s*[-–_]\s*(?:20)?\d{2}", combined))
+        contextual_target = bool(
+            re.search(
+                (
+                    r"(?:\bcds\b|common[-_]?data[-_]?set)"
+                    r"[-_/\s]*(?:committee|definition|faq|glossary|overview|policy)"
+                    r"(?:[-_/\s]|$)"
+                ),
+                combined,
+            )
+        )
+        if (
+            cds_signal
+            and not contextual_target
+            and target
+            and not target.startswith("#")
+        ):
+            return True
+        if is_document:
+            if has_cds_phrase and year_signal:
+                return True
+
+    # A CDS can itself be HTML rather than a landing page. Require multiple
+    # canonical form signals so an IR mission page mentioning CDS in navigation
+    # does not qualify as the dataset.
+    form_signals = sum(
+        marker in normalized
+        for marker in (
+            "first-time, first-year",
+            "first time, first year",
+            "applicants",
+            "enrolled",
+            "tuition",
+            "degrees conferred",
+        )
+    )
+    return has_cds_phrase and form_signals >= 3
+
+
+def validate_cds_url(url: str) -> tuple[str, str]:
+    """Return (valid|invalid|unverifiable, reason) for a fetched URL."""
+    status, headers, body, final_url, truncated = _get_bounded(url)
+    if status < 0:
+        return VALIDATION_UNVERIFIABLE, "network_error"
+    if status in {401, 403, 405, 408, 425, 429} or status >= 500:
+        return VALIDATION_UNVERIFIABLE, f"http_{status}"
+    if status < 200 or status >= 300:
+        return VALIDATION_INVALID, f"http_{status}"
+
+    content_type = headers.get("content-type", "").lower()
+    stripped = body.lstrip()
+    final_path = urllib.parse.urlparse(final_url).path.lower()
+    if stripped.startswith(b"%PDF-"):
+        return VALIDATION_VALID, "pdf_magic"
+    if stripped.startswith(b"PK\x03\x04") and (
+        re.search(r"\.(xlsx|docx)$", final_path)
+        or "spreadsheet" in content_type
+        or "wordprocessingml" in content_type
+    ):
+        return VALIDATION_VALID, "office_magic"
+
+    looks_html = "html" in content_type or bool(
+        re.search(br"(?is)<!doctype\s+html|<html(?:\s|>)", body[:4096])
+    )
+    if looks_html:
+        if looks_like_news_or_blog(final_url):
+            return VALIDATION_INVALID, "contextual_page_path"
+        if html_has_cds_content_or_anchors(body):
+            return VALIDATION_VALID, "html_cds"
+        if truncated:
+            return VALIDATION_UNVERIFIABLE, "html_validation_window_exhausted"
+        return VALIDATION_INVALID, "html_without_cds_content_or_anchors"
+    return VALIDATION_INVALID, "unsupported_content"
 
 
 def is_cds_page(content: bytes, content_type: str) -> bool:
@@ -539,7 +724,11 @@ def brave_search(domain: str, api_key: str, tracker: dict | None = None) -> str 
         return None
 
     results = data.get("web", {}).get("results", [])
-    return select_brave_cds_url(results, domain)
+    for candidate in brave_cds_candidates(results, domain):
+        validation, _reason = validate_cds_url(candidate)
+        if validation == VALIDATION_VALID:
+            return candidate
+    return None
 
 
 def host_belongs_to_domain(url: str, domain: str) -> bool:
@@ -594,7 +783,12 @@ def may_mark_active(
 def looks_like_news_or_blog(url: str) -> bool:
     parsed = urllib.parse.urlparse(url)
     path = (parsed.path or "").lower()
-    if re.search(r"/(news|blog|stories|noteworthy)(/|$)", path):
+    if re.search(
+        r"/(news|blog|stories|noteworthy|careers?|jobs?|oldstudents)(?:[-_/]|$)",
+        path,
+    ):
+        return True
+    if re.search(r"(?:^|[-_/])thesis(?:[-_./]|$)", path):
         return True
     return "page=" in (parsed.query or "").lower()
 
@@ -607,8 +801,8 @@ def looks_like_non_cds_document(url: str) -> bool:
     return not re.search(r"cds|common[-_]?data", path)
 
 
-def select_brave_cds_url(results: list[dict], domain: str | None = None) -> str | None:
-    """Pick a discovery seed from Brave web results.
+def brave_cds_candidates(results: list[dict], domain: str | None = None) -> list[str]:
+    """Return plausible Brave candidates in listing-before-document order.
 
     Prefer an HTML listing over a year-specific PDF. A PDF seed locks the
     archive resolver onto one file — OU's 2023-24 Combined.pdf instead of
@@ -628,11 +822,12 @@ def select_brave_cds_url(results: list[dict], domain: str | None = None) -> str 
         p = url_str.lower()
         return any(kw in p for kw in bad_keywords)
 
-    landing = None
-    pdf = None
+    landing: list[str] = []
+    documents: list[str] = []
+    seen: set[str] = set()
     for r in results:
         link = r.get("url", "")
-        if not link or looks_like_template(link):
+        if not link or link in seen or looks_like_template(link):
             continue
         if looks_like_search_junk(link):
             continue
@@ -642,16 +837,26 @@ def select_brave_cds_url(results: list[dict], domain: str | None = None) -> str 
             continue
         if domain and not host_belongs_to_domain(link, domain):
             continue
+        seen.add(link)
         if link.lower().endswith(".pdf"):
-            if pdf is None:
-                pdf = link
+            documents.append(link)
             continue
         desc = r.get("description", "").lower()
         title = r.get("title", "").lower()
         if "common data set" in desc or "common data set" in title:
-            if landing is None:
-                landing = link
-    return landing or pdf
+            landing.append(link)
+    return landing + documents
+
+
+def select_brave_cds_url(results: list[dict], domain: str | None = None) -> str | None:
+    """Return the first syntactically plausible Brave candidate.
+
+    Production discovery uses `brave_search`, which bounded-fetches every
+    candidate and continues through alternatives. This helper stays useful for
+    diagnostics that only inspect Brave ranking.
+    """
+    candidates = brave_cds_candidates(results, domain)
+    return candidates[0] if candidates else None
 
 
 def google_dork(domain: str, api_key: str, cx: str) -> str | None:
@@ -769,6 +974,190 @@ def process_school(school: dict, args: argparse.Namespace,
     }
 
 
+def _chunks(values: list[str], size: int = 100) -> list[list[str]]:
+    return [values[i:i + size] for i in range(0, len(values), size)]
+
+
+def fetch_latest_terminal_archive_rows(
+    schools: list[dict],
+    *,
+    supabase_url: str,
+    service_role_key: str,
+) -> list[dict]:
+    """Read bounded latest terminal outcomes for active HTML seeds.
+
+    The existing RPC is index-backed and returns one terminal row per school.
+    Active queue rows are excluded so an old terminal result cannot demote a
+    seed while a newer attempt is ready or processing.
+    """
+    try:
+        from supabase import create_client
+    except ImportError as exc:
+        raise RuntimeError("supabase package is required for --audit-active-html") from exc
+
+    school_ids = [
+        str(school.get("id"))
+        for school in schools
+        if school.get("id")
+        and school.get("scrape_policy") == "active"
+        and (school.get("discovery_seed_url") or school.get("cds_url_hint"))
+        and not is_direct_doc_seed(
+            school.get("discovery_seed_url") or school.get("cds_url_hint")
+        )
+    ]
+    if not school_ids:
+        return []
+
+    sb = create_client(supabase_url, service_role_key)
+    since = (
+        datetime.now(timezone.utc)
+        - timedelta(days=ACTIVE_HTML_AUDIT_LOOKBACK_DAYS)
+    ).isoformat()
+    terminal_rows: list[dict] = []
+    for ids in _chunks(school_ids):
+        terminal = sb.rpc(
+            "latest_archive_terminal_rows",
+            {
+                "p_since": since,
+                "p_school_ids": ids,
+            },
+        ).execute()
+        for row in terminal.data or []:
+            terminal_rows.append(dict(row))
+
+    return [
+        row
+        for row in terminal_rows
+        if not row.get("active_work")
+        and row.get("last_outcome") in AUDITABLE_ARCHIVE_OUTCOMES
+        and row.get("status") in TERMINAL_ARCHIVE_STATUSES
+        and row.get("cds_url_hint")
+    ]
+
+
+def fetch_active_archive_school_ids(
+    school_ids: list[str],
+    *,
+    supabase_url: str,
+    service_role_key: str,
+) -> set[str]:
+    """Recheck active work in bulk immediately before seed mutation."""
+    if not school_ids:
+        return set()
+    try:
+        from supabase import create_client
+    except ImportError as exc:
+        raise RuntimeError("supabase package is required for active-work recheck") from exc
+
+    sb = create_client(supabase_url, service_role_key)
+    active_ids: set[str] = set()
+    for ids in _chunks(list(dict.fromkeys(school_ids))):
+        active = (
+            sb.table("archive_queue")
+            .select("school_id")
+            .in_("school_id", ids)
+            .in_("status", ["ready", "processing"])
+            .execute()
+        )
+        active_ids.update(
+            str(row.get("school_id"))
+            for row in active.data or []
+            if row.get("school_id")
+        )
+    return active_ids
+
+
+def audit_active_html_seeds(
+    schools: list[dict],
+    archive_rows: list[dict],
+    *,
+    dry_run: bool = False,
+    workers: int = 8,
+    active_recheck: Callable[[list[str]], set[str]] | None = None,
+) -> list[dict]:
+    """Demote definitively invalid active HTML seeds after archive failure.
+
+    Network errors, 403/405, rate limits, and 5xx responses are unverifiable
+    and never remove a seed. The latest archive result is a second independent
+    gate, limiting the monthly audit to seeds the archive pipeline already
+    classified as a terminal URL/content miss.
+    """
+    latest: dict[str, dict] = {}
+    for row in archive_rows:
+        sid = str(row.get("school_id") or "")
+        if not sid:
+            continue
+        previous = latest.get(sid)
+        if previous is None or str(row.get("processed_at") or "") > str(
+            previous.get("processed_at") or ""
+        ):
+            latest[sid] = row
+
+    candidates: list[tuple[dict, str, str, dict]] = []
+    for school in schools:
+        sid = str(school.get("id") or "")
+        seed = school.get("discovery_seed_url") or school.get("cds_url_hint") or ""
+        row = latest.get(sid)
+        if (
+            school.get("scrape_policy") != "active"
+            or not seed
+            or is_direct_doc_seed(seed)
+            or row is None
+            or row.get("status") not in TERMINAL_ARCHIVE_STATUSES
+            or row.get("last_outcome") not in AUDITABLE_ARCHIVE_OUTCOMES
+            or str(row.get("cds_url_hint") or "").strip() != seed.strip()
+        ):
+            continue
+        candidates.append((school, sid, seed, row))
+
+    if not candidates:
+        return []
+
+    # Each validation has a bounded network timeout. Parallel validation keeps
+    # the monthly audit's worst case below the workflow deadline even if every
+    # active school is slow, while mutation remains serial and deterministic.
+    with ThreadPoolExecutor(
+        max_workers=max(1, min(workers, len(candidates)))
+    ) as executor:
+        validations = executor.map(
+            validate_cds_url,
+            (seed for _school, _sid, seed, _row in candidates),
+        )
+
+    audited: list[tuple[dict, dict]] = []
+    for (school, sid, seed, row), (validation, reason) in zip(
+        candidates,
+        validations,
+    ):
+        result = {
+            "school_id": sid,
+            "url": seed,
+            "archive_outcome": row.get("last_outcome"),
+            "validation": validation,
+            "reason": reason,
+            "demoted": validation == VALIDATION_INVALID,
+        }
+        audited.append((school, result))
+
+    invalid_ids = [
+        str(result["school_id"])
+        for _school, result in audited
+        if result["demoted"]
+    ]
+    active_ids = active_recheck(invalid_ids) if active_recheck else set()
+    for school, result in audited:
+        if str(result["school_id"]) in active_ids:
+            result["demoted"] = False
+            result["reason"] = "active_work_started"
+        if not result["demoted"] or dry_run:
+            continue
+        school.pop("discovery_seed_url", None)
+        school.pop("cds_url_hint", None)
+        school["scrape_policy"] = "unknown"
+        record_probe(school, "not_found", "active_html_audit", 0, False)
+    return [result for _school, result in audited]
+
+
 def write_probe_summary(
     path: Path | None,
     *,
@@ -777,6 +1166,8 @@ def write_probe_summary(
     replaced: int,
     budget_remaining: int | None,
     still_stuck: int | None = None,
+    audited: int = 0,
+    demoted: int = 0,
 ) -> None:
     if path is None:
         return
@@ -786,6 +1177,8 @@ def write_probe_summary(
         "replaced": replaced,
         "budget_remaining": budget_remaining,
         "still_stuck": still_stuck if still_stuck is not None else max(0, probed - found),
+        "audited": audited,
+        "demoted": demoted,
     }
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
@@ -866,6 +1259,18 @@ def main():
                          f"× year combinations.")
     ap.add_argument("--summary-json", type=Path,
                     help="Write probed/found/replaced/budget_remaining for pipeline heartbeats.")
+    ap.add_argument(
+        "--audit-active-html",
+        action="store_true",
+        help="Validate active HTML seeds whose latest archive result is a "
+             "terminal URL/content miss; definitively invalid seeds are "
+             "demoted before normal discovery continues.",
+    )
+    ap.add_argument(
+        "--audit-report-json",
+        type=Path,
+        help="Write per-seed active HTML validation results.",
+    )
     args = ap.parse_args()
 
     data = yaml.safe_load(SCHOOLS_YAML.read_text())
@@ -904,6 +1309,58 @@ def main():
     targeted = only_ids is not None
     reprobe_found = targeted or args.reprobe_pdf_seeds
 
+    audited_results: list[dict] = []
+    demoted_ids: set[str] = set()
+    if args.audit_active_html:
+        audit_schools = [
+            school
+            for school in schools
+            if only_ids is None or str(school.get("id") or "") in only_ids
+        ]
+        supabase_url = os.environ.get("SUPABASE_URL")
+        service_role_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        if not supabase_url or not service_role_key:
+            ap.error(
+                "--audit-active-html requires SUPABASE_URL and "
+                "SUPABASE_SERVICE_ROLE_KEY"
+            )
+        archive_rows = fetch_latest_terminal_archive_rows(
+            audit_schools,
+            supabase_url=supabase_url,
+            service_role_key=service_role_key,
+        )
+        active_recheck = lambda ids: fetch_active_archive_school_ids(
+            ids,
+            supabase_url=supabase_url,
+            service_role_key=service_role_key,
+        )
+        audited_results = audit_active_html_seeds(
+            audit_schools,
+            archive_rows,
+            dry_run=args.dry_run,
+            active_recheck=active_recheck,
+        )
+        demoted_ids = {
+            str(result["school_id"])
+            for result in audited_results
+            if result["demoted"] and not args.dry_run
+        }
+        for result in audited_results:
+            print(
+                f"[active-html-audit] {result['school_id']} "
+                f"{result['validation']} ({result['reason']})"
+            )
+        print(
+            f"Active HTML audit: {len(audited_results)} checked, "
+            f"{sum(bool(result['demoted']) for result in audited_results)} "
+            f"{'would be demoted' if args.dry_run else 'demoted'}"
+        )
+        if args.audit_report_json:
+            args.audit_report_json.parent.mkdir(parents=True, exist_ok=True)
+            args.audit_report_json.write_text(
+                json.dumps(audited_results, indent=2, sort_keys=True) + "\n"
+            )
+
     # ── Build candidate list (apply all filters up front) ──
     name_filter = args.name_contains.lower() if args.name_contains else None
     candidates: list[dict] = []
@@ -938,8 +1395,13 @@ def main():
                 continue
         if name_filter and name_filter not in name.lower():
             continue
-        if not targeted and args.cooldown_days > 0 and should_skip(
-            school, args.cooldown_days, reprobe_found=reprobe_found
+        if (
+            sid not in demoted_ids
+            and not targeted
+            and args.cooldown_days > 0
+            and should_skip(
+                school, args.cooldown_days, reprobe_found=reprobe_found
+            )
         ):
             skipped += 1
             continue
@@ -967,7 +1429,12 @@ def main():
             replaced=0,
             budget_remaining=budget_remaining(),
             still_stuck=0,
+            audited=len(audited_results),
+            demoted=len(demoted_ids),
         )
+        if demoted_ids and not args.dry_run:
+            _save_yaml(data)
+            print(f"Updated {SCHOOLS_YAML}")
         return
 
     # ── Threadpool execution ──
@@ -1021,6 +1488,8 @@ def main():
                 found=found,
                 replaced=replaced,
                 budget_remaining=budget_remaining(),
+                audited=len(audited_results),
+                demoted=len(demoted_ids),
             )
             return
 
@@ -1043,6 +1512,8 @@ def main():
         found=found,
         replaced=replaced,
         budget_remaining=budget_remaining(),
+        audited=len(audited_results),
+        demoted=len(demoted_ids),
     )
 
 

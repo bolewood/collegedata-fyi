@@ -168,7 +168,11 @@ def write_school_updates(schools_yaml: Path, schools: list[dict], changed_ids: s
         if current_sid not in changed_ids or wrote_seed:
             return
         school = by_id.get(current_sid or "")
-        url = school.get("discovery_seed_url") if school else None
+        url = (
+            school.get("discovery_seed_url") or school.get("cds_url_hint")
+            if school
+            else None
+        )
         if not url:
             return
         out.append(f"  discovery_seed_url: {url}\n")
@@ -190,12 +194,17 @@ def write_school_updates(schools_yaml: Path, schools: list[dict], changed_ids: s
 
         seed_match = SEED_RE.match(line)
         if seed_match:
-            url = school.get("discovery_seed_url")
+            url = school.get("discovery_seed_url") or school.get("cds_url_hint")
             if url:
                 out.append(f"{seed_match.group(1)}discovery_seed_url{seed_match.group(2)}{url}\n")
                 wrote_seed = True
                 applied += 1
                 continue
+            # The in-memory school intentionally removed its seed. Do not
+            # append the original line below or a merge/replay resurrects it.
+            wrote_seed = True
+            applied += 1
+            continue
 
         policy_match = POLICY_RE.match(line)
         if policy_match and school.get("scrape_policy"):
