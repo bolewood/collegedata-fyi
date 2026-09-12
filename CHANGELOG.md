@@ -6,6 +6,19 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.2.0] - 2026-09-12
+
+### Added
+
+- Show the last 14 days of extraction finishes (up to 50 files) on
+  `/pipeline-observation`, backed by a private append-only run/item ledger
+  so operators can see what drained without exposing document IDs, hashes,
+  or raw worker errors.
+- Keep University of Colorado Boulder on the headless-archive worklist with
+  the public Data & Analytics listing as the crawl seed. IR confirmed the
+  SharePoint folder is downloadable; the SharePoint host itself stays
+  uncrawled.
+
 ## [0.6.1.1] - 2026-08-31
 
 ### Changed

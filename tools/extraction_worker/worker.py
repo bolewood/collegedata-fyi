@@ -83,6 +83,8 @@ import json
 import re
 import sys
 import tempfile
+import time
+import uuid
 import zipfile
 from collections import Counter
 from dataclasses import dataclass
@@ -115,6 +117,9 @@ TEMPLATE_DIR = SCHEMA_DIR / "templates"
 MIN_TIER1_FIELDS = 5
 MIN_TIER4_FIELDS = 25
 MIN_TIER2_LABEL_FALLBACK_ACROFORM_FIELDS = 50
+PIPELINE_RUN_URL_RE = re.compile(
+    r"^https://github\.com/bolewood/collegedata-fyi/actions/runs/[0-9]+$",
+)
 
 
 @dataclass(frozen=True)
@@ -157,6 +162,104 @@ def is_failure_action(action: str) -> bool:
     if "_error" in action or action_name.endswith("_no_tables"):
         return True
     return False
+
+
+def normalized_ledger_source_format(value: Any) -> str:
+    source_format = str(value or "unknown")
+    if source_format in {
+        "pdf_fillable",
+        "pdf_flat",
+        "pdf_scanned",
+        "xlsx",
+        "docx",
+        "html",
+        "other",
+    }:
+        return source_format
+    return "unknown"
+
+
+def extraction_ledger_tier(source_format: str, action: str) -> str:
+    if action == "reconciled":
+        return "reconciliation"
+    if "fallback_tier4" in action:
+        return "tier4_fallback"
+    return {
+        "xlsx": "tier1",
+        "pdf_fillable": "tier2",
+        "docx": "tier3",
+        "pdf_flat": "tier4",
+        "pdf_scanned": "tier4_ocr",
+        "html": "tier6",
+        "other": "unsupported",
+    }.get(source_format, "unknown")
+
+
+def extraction_ledger_failure_code(action: str) -> str:
+    if not is_failure_action(action):
+        return "none"
+    if action == "no_source_artifact":
+        return "source_missing"
+    if action.startswith("download_error"):
+        return "source_download_failed"
+    if action.startswith("stub_"):
+        return "unsupported_format"
+    if action.startswith("tier1_no_cell_map"):
+        return "schema_failed"
+    if "_low_fields" in action or "_no_tables" in action:
+        return "low_coverage"
+    if "artifact_insert_error" in action:
+        return "artifact_write_failed"
+    if action.startswith("worker_error"):
+        return "worker_failed"
+    if "_error" in action:
+        return "extraction_failed"
+    return "unknown_failure"
+
+
+def extraction_ledger_outcome(action: str, *, force_reextract: bool) -> str:
+    if action == "reconciled":
+        return "reconciled"
+    if is_failure_action(action):
+        return "failed"
+    if action == "already_extracted" or action.endswith("_already_extracted"):
+        return "already_current"
+    return "re_extracted" if force_reextract else "extracted"
+
+
+def extraction_ledger_item(
+    doc: dict[str, Any],
+    action: str,
+    *,
+    ordinal: int,
+    force_reextract: bool,
+    occurred_at: str | None = None,
+) -> dict[str, Any]:
+    source_format = normalized_ledger_source_format(doc.get("source_format"))
+    return {
+        "ordinal": ordinal,
+        "document_id": str(doc["id"]),
+        "school_id": str(doc["school_id"]),
+        "school_name": str(doc.get("school_name") or doc["school_id"]),
+        "canonical_year": str(
+            doc.get("detected_year") or doc.get("cds_year") or "unknown"
+        ),
+        "occurred_at": occurred_at or utc_now_iso(),
+        "outcome": extraction_ledger_outcome(
+            action,
+            force_reextract=force_reextract,
+        ),
+        "source_format": source_format,
+        "extraction_tier": extraction_ledger_tier(source_format, action),
+        "field_count": parsed_field_count(action),
+        "failure_code": extraction_ledger_failure_code(action),
+    }
+
+
+def sanitize_pipeline_run_url(value: str | None) -> str | None:
+    if value and PIPELINE_RUN_URL_RE.fullmatch(value):
+        return value
+    return None
 
 
 def low_field_quality_flag(fields: int, threshold: int = MIN_TIER4_FIELDS) -> str | None:
@@ -245,6 +348,118 @@ def pending_doc_priority_key(row: dict[str, Any]) -> tuple[int, int, str]:
 def write_run_summary(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+
+
+LEDGER_PAYLOAD_KEYS = frozenset({
+    "p_run_id",
+    "p_trigger",
+    "p_run_url",
+    "p_started_at",
+    "p_finished_at",
+    "p_dry_run",
+    "p_stopped_reason",
+    "p_pending_remaining",
+    "p_run_error_code",
+    "p_items",
+})
+
+
+def record_extraction_ledger_payload(
+    client: Client,
+    payload: dict[str, Any],
+) -> tuple[bool, Exception | None]:
+    last_error: Exception | None = None
+    for attempt in range(3):
+        if attempt:
+            time.sleep(0.5 * attempt)
+        try:
+            client.rpc("record_pipeline_extraction_run", payload).execute()
+            return True, None
+        except Exception as exc:
+            last_error = exc
+    return False, last_error
+
+
+def replay_extraction_ledger(client: Client, path: Path) -> bool:
+    payload = json.loads(path.read_text())
+    if not isinstance(payload, dict) or set(payload) != LEDGER_PAYLOAD_KEYS:
+        raise ValueError("ledger replay payload has unknown or missing keys")
+    if not isinstance(payload.get("p_items"), list):
+        raise ValueError("ledger replay p_items must be a list")
+    recorded, error = record_extraction_ledger_payload(client, payload)
+    if not recorded:
+        raise RuntimeError("ledger replay failed after 3 attempts") from error
+    return True
+
+
+def finalize_extraction_run(
+    client: Client,
+    *,
+    run_id: str,
+    trigger: str,
+    run_url: str | None,
+    summary_path: Path | None,
+    summary: dict[str, Any],
+    ledger_items: list[dict[str, Any]],
+    run_error_code: str,
+) -> bool:
+    """Persist the machine summary and the closed, normalized run ledger."""
+    payload = {
+        "p_run_id": run_id,
+        "p_trigger": trigger,
+        "p_run_url": sanitize_pipeline_run_url(run_url),
+        "p_started_at": summary["started_at"],
+        "p_finished_at": summary["finished_at"],
+        "p_dry_run": bool(summary["dry_run"]),
+        "p_stopped_reason": summary["stopped_reason"],
+        "p_pending_remaining": int(summary["pending_remaining"]),
+        "p_run_error_code": run_error_code,
+        "p_items": ledger_items,
+    }
+    recorded, last_error = record_extraction_ledger_payload(client, payload)
+    summary_ok = True
+    if summary_path:
+        try:
+            write_run_summary(summary_path, summary)
+        except Exception as exc:
+            summary_ok = False
+            message = str(exc).splitlines()[0][:200]
+            print(
+                f"extraction summary write failed: {type(exc).__name__}: {message}",
+                file=sys.stderr,
+                flush=True,
+            )
+    if recorded:
+        return summary_ok
+
+    message = str(last_error).splitlines()[0][:200] if last_error else "unknown"
+    print(
+        "extraction ledger write failed after 3 attempts: "
+        f"{type(last_error).__name__}: {message}",
+        file=sys.stderr,
+        flush=True,
+    )
+    replay_path = (
+        summary_path.parent / "ledger-replay.json"
+        if summary_path
+        else Path("scratch/extraction-worker") / f"ledger-replay-{run_id}.json"
+    )
+    try:
+        write_run_summary(replay_path, payload)
+        print(
+            f"Replay payload saved to {replay_path}.",
+            file=sys.stderr,
+            flush=True,
+        )
+    except Exception as exc:
+        replay_message = str(exc).splitlines()[0][:200]
+        print(
+            "ledger replay payload write failed: "
+            f"{type(exc).__name__}: {replay_message}",
+            file=sys.stderr,
+            flush=True,
+        )
+    return False
 
 
 def count_extraction_pending(client: Client) -> int:
@@ -1442,6 +1657,10 @@ def extract_one(
                 f"year={detected_year}",
                 flush=True,
             )
+        # Activity is built after extract_one returns. Keep the in-memory
+        # year in sync with the write so the ledger does not publish the
+        # archive-time sentinel (often "unknown") after detection.
+        doc["detected_year"] = detected_year
 
     canonical_year = canonical_year_for_doc(doc, detected_year)
     resolution = resolve_schema_for_year(canonical_year, schema_registry)
@@ -1460,6 +1679,9 @@ def extract_one(
             f"stored={doc.get('source_format') or 'null'} detected={source_format}",
             flush=True,
         )
+    # Activity is built after extract_one returns. Preserve the byte-sniffed
+    # route on the in-memory row when the database label was stale or null.
+    doc["source_format"] = source_format
 
     # Capture embedded source-file metadata (PDF /CreationDate, /ModDate,
     # /Producer or XLSX dcterms:created, dcterms:modified, /creator) and
@@ -1772,6 +1994,29 @@ def main() -> int:
     )
     parser.add_argument("--env", default=".env")
     parser.add_argument(
+        "--trigger",
+        choices=("schedule", "dispatch", "operator"),
+        default="operator",
+        help="Closed run-origin label for the extraction activity ledger.",
+    )
+    parser.add_argument(
+        "--run-url",
+        default=None,
+        help=(
+            "Optional GitHub Actions run URL. The database allowlist drops "
+            "all non-repository, query-string, and otherwise unsafe URLs."
+        ),
+    )
+    parser.add_argument(
+        "--replay-ledger-json",
+        type=Path,
+        default=None,
+        help=(
+            "Replay a normalized ledger-replay.json payload from a prior "
+            "failed run without reprocessing documents."
+        ),
+    )
+    parser.add_argument(
         "--schema",
         default=None,
         help=(
@@ -1925,6 +2170,19 @@ def main() -> int:
 
     client: Client = create_client(url, key)
 
+    if args.replay_ledger_json:
+        try:
+            replay_extraction_ledger(client, args.replay_ledger_json)
+            print(f"Replayed extraction ledger: {args.replay_ledger_json}")
+            return 0
+        except Exception as exc:
+            message = str(exc).splitlines()[0][:200]
+            print(
+                f"extraction ledger replay failed: {type(exc).__name__}: {message}",
+                file=sys.stderr,
+            )
+            return 2
+
     if args.detect_year_only:
         return run_detect_year_only(
             client,
@@ -1988,7 +2246,7 @@ def main() -> int:
         )
 
     query = client.table("cds_documents").select(
-        "id, school_id, cds_year, detected_year, source_format, "
+        "id, school_id, school_name, cds_year, detected_year, source_format, "
         "extraction_status, discovered_at, source_sha256",
     )
     if args.include_failed:
@@ -2003,6 +2261,7 @@ def main() -> int:
         query = query.in_("source_format", source_formats)
     query = query.order("school_id")
 
+    run_id = str(uuid.uuid4())
     started_at = utc_now_iso()
     docs = query.execute().data or []
     if args.min_year_start is not None:
@@ -2036,6 +2295,7 @@ def main() -> int:
     # nibbling at it 25 rows a day. --force-reextract opts out: the operator
     # explicitly wants the bytes re-extracted, not short-circuited.
     reconcile_counts: Counter = Counter()
+    ledger_items: list[dict[str, Any]] = []
     if args.reconcile_pending and not args.force_reextract:
         reconciled_ids, reconcile_counts = reconcile_pending_documents(
             client, docs, projection_definitions, projection_enabled, args.dry_run,
@@ -2047,6 +2307,25 @@ def main() -> int:
                 "to 'extracted' (no re-extraction).",
                 flush=True,
             )
+            reconciled_at = utc_now_iso()
+            reconcile_base = len(ledger_items)
+            ledger_items.extend(
+                extraction_ledger_item(
+                    doc,
+                    "reconciled",
+                    ordinal=reconcile_base + index,
+                    force_reextract=False,
+                    occurred_at=reconciled_at,
+                )
+                for index, doc in enumerate(
+                    (
+                        row
+                        for row in docs
+                        if str(row["id"]) in reconciled_ids
+                    ),
+                    1,
+                )
+            )
             docs = [d for d in docs if str(d["id"]) not in reconciled_ids]
 
     if args.limit:
@@ -2056,33 +2335,45 @@ def main() -> int:
             "No rows left to drain"
             + (" after reconcile." if reconcile_counts.get("reconciled") else "."),
         )
-        if args.summary_json:
-            pending_remaining = count_extraction_pending(client)
-            write_run_summary(args.summary_json, with_heartbeat_fields({
-                "started_at": started_at,
-                "finished_at": utc_now_iso(),
-                "dry_run": args.dry_run,
-                "limit": args.limit,
-                "school": args.school,
-                "include_failed": args.include_failed,
-                "low_field_threshold": args.low_field_threshold,
-                "processed_count": 0,
-                "failure_count": 0,
-                "mean_fields": None,
-                "low_field_docs": [],
-                "extraction_counts": {},
-                "projection_counts": dict(projection_counts),
-                "reconcile_counts": dict(reconcile_counts),
-                "stopped_early": False,
-                "documents": [],
-            }, stopped_reason=infer_stopped_reason(
-                stopped_early=False,
-                hit_error=False,
-                limit=args.limit,
-                processed_count=0,
-                pending_remaining=pending_remaining,
-            ), extracted=0, failed=0, pending_remaining=pending_remaining))
-        return 0
+        pending_remaining = count_extraction_pending(client)
+        hit_reconcile_error = bool(reconcile_counts["projection_errors"])
+        summary = with_heartbeat_fields({
+            "started_at": started_at,
+            "finished_at": utc_now_iso(),
+            "dry_run": args.dry_run,
+            "limit": args.limit,
+            "school": args.school,
+            "include_failed": args.include_failed,
+            "low_field_threshold": args.low_field_threshold,
+            "processed_count": 0,
+            "failure_count": 0,
+            "mean_fields": None,
+            "low_field_docs": [],
+            "extraction_counts": {},
+            "projection_counts": dict(projection_counts),
+            "reconcile_counts": dict(reconcile_counts),
+            "stopped_early": False,
+            "documents": [],
+        }, stopped_reason=infer_stopped_reason(
+            stopped_early=False,
+            hit_error=hit_reconcile_error,
+            limit=args.limit,
+            processed_count=0,
+            pending_remaining=pending_remaining,
+        ), extracted=0, failed=0, pending_remaining=pending_remaining)
+        ledger_ok = finalize_extraction_run(
+            client,
+            run_id=run_id,
+            trigger=args.trigger,
+            run_url=args.run_url,
+            summary_path=args.summary_json,
+            summary=summary,
+            ledger_items=ledger_items,
+            run_error_code=(
+                "projection_error" if hit_reconcile_error else "none"
+            ),
+        )
+        return 0 if ledger_ok and not hit_reconcile_error else 2
 
     print(
         f"Processing {len(docs)} document(s){' (dry run)' if args.dry_run else ''}...",
@@ -2184,6 +2475,14 @@ def main() -> int:
                 message = str(e).splitlines()[0][:200]
                 projection_note = f"; projection_error={type(e).__name__}: {message}"
 
+        ledger_items.append(
+            extraction_ledger_item(
+                doc,
+                outcome.action,
+                ordinal=len(ledger_items) + 1,
+                force_reextract=args.force_reextract,
+            )
+        )
         summary_docs.append({
             "document_id": str(doc["id"]),
             "school_id": doc["school_id"],
@@ -2214,62 +2513,49 @@ def main() -> int:
         for bucket in ("documents", "fields", "browser_rows", "errors", "setup_error"):
             if projection_counts[bucket]:
                 print(f"  {bucket:30s} {projection_counts[bucket]:5d}")
-        if projection_counts["errors"] or projection_counts["setup_error"]:
-            if args.summary_json:
-                pending_remaining = count_extraction_pending(client)
-                extracted = max(0, processed_count - failure_count)
-                write_run_summary(args.summary_json, with_heartbeat_fields({
-                    "started_at": started_at,
-                    "finished_at": utc_now_iso(),
-                    "dry_run": args.dry_run,
-                    "limit": args.limit,
-                    "school": args.school,
-                    "include_failed": args.include_failed,
-                    "low_field_threshold": args.low_field_threshold,
-                    "processed_count": processed_count,
-                    "failure_count": failure_count,
-                    "mean_fields": mean_or_none(field_counts),
-                    "low_field_docs": low_field_docs,
-                    "extraction_counts": dict(counts),
-                    "projection_counts": dict(projection_counts),
-                    "reconcile_counts": dict(reconcile_counts),
-                    "stopped_early": stopped_early,
-                    "documents": summary_docs,
-                }, stopped_reason=infer_stopped_reason(
-                    stopped_early=stopped_early,
-                    hit_error=True,
-                    limit=args.limit,
-                    processed_count=processed_count,
-                    pending_remaining=pending_remaining,
-                ), extracted=extracted, failed=failure_count, pending_remaining=pending_remaining))
-            return 2
-    if args.summary_json:
-        pending_remaining = count_extraction_pending(client)
-        extracted = max(0, processed_count - failure_count)
-        write_run_summary(args.summary_json, with_heartbeat_fields({
-            "started_at": started_at,
-            "finished_at": utc_now_iso(),
-            "dry_run": args.dry_run,
-            "limit": args.limit,
-            "school": args.school,
-            "include_failed": args.include_failed,
-            "low_field_threshold": args.low_field_threshold,
-            "processed_count": processed_count,
-            "failure_count": failure_count,
-            "mean_fields": mean_or_none(field_counts),
-            "low_field_docs": low_field_docs,
-            "extraction_counts": dict(counts),
-            "projection_counts": dict(projection_counts),
-            "reconcile_counts": dict(reconcile_counts),
-            "stopped_early": stopped_early,
-            "documents": summary_docs,
-        }, stopped_reason=infer_stopped_reason(
-            stopped_early=stopped_early,
-            hit_error=False,
-            limit=args.limit,
-            processed_count=processed_count,
-            pending_remaining=pending_remaining,
-        ), extracted=extracted, failed=failure_count, pending_remaining=pending_remaining))
+    hit_projection_error = bool(
+        projection_counts["errors"]
+        or projection_counts["setup_error"]
+        or reconcile_counts["projection_errors"]
+    )
+    pending_remaining = count_extraction_pending(client)
+    extracted = max(0, processed_count - failure_count)
+    summary = with_heartbeat_fields({
+        "started_at": started_at,
+        "finished_at": utc_now_iso(),
+        "dry_run": args.dry_run,
+        "limit": args.limit,
+        "school": args.school,
+        "include_failed": args.include_failed,
+        "low_field_threshold": args.low_field_threshold,
+        "processed_count": processed_count,
+        "failure_count": failure_count,
+        "mean_fields": mean_or_none(field_counts),
+        "low_field_docs": low_field_docs,
+        "extraction_counts": dict(counts),
+        "projection_counts": dict(projection_counts),
+        "reconcile_counts": dict(reconcile_counts),
+        "stopped_early": stopped_early,
+        "documents": summary_docs,
+    }, stopped_reason=infer_stopped_reason(
+        stopped_early=stopped_early,
+        hit_error=hit_projection_error,
+        limit=args.limit,
+        processed_count=processed_count,
+        pending_remaining=pending_remaining,
+    ), extracted=extracted, failed=failure_count, pending_remaining=pending_remaining)
+    ledger_ok = finalize_extraction_run(
+        client,
+        run_id=run_id,
+        trigger=args.trigger,
+        run_url=args.run_url,
+        summary_path=args.summary_json,
+        summary=summary,
+        ledger_items=ledger_items,
+        run_error_code="projection_error" if hit_projection_error else "none",
+    )
+    if hit_projection_error or not ledger_ok:
+        return 2
     return extraction_run_exit_code(failure_count)
 
 

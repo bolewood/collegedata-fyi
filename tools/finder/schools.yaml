@@ -2340,14 +2340,13 @@ schools:
   name: Baker University
   domain: bakeru.edu
   ipeds_id: '154688'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
-    last_result: found
-    last_method: brave
+    last_probed_at: '2026-09-12T13:59:42Z'
+    last_result: not_found
+    last_method: active_html_audit
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.bakeru.edu/about-baker/careers-baker
 - id: bakersfield-college
   name: Bakersfield College
   domain: bakersfieldcollege.edu
@@ -5990,14 +5989,13 @@ schools:
   name: Cornell College
   domain: cornellcollege.edu
   ipeds_id: '153162'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
-    last_result: found
-    last_method: brave
+    last_probed_at: '2026-09-12T13:59:42Z'
+    last_result: not_found
+    last_method: active_html_audit
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.cornellcollege.edu/institutional-research/institutional-profile/common-data-sets.shtml
 - id: cornerstone-university
   name: Cornerstone University
   domain: cornerstone.edu
@@ -6428,14 +6426,13 @@ schools:
   name: Dalton State College
   domain: daltonstate.edu
   ipeds_id: '139463'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-09-02T17:56:48Z'
-    last_result: found
-    last_method: brave
+    last_probed_at: '2026-09-12T13:59:42Z'
+    last_result: not_found
+    last_method: active_html_audit
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.daltonstate.edu/about/roadrunner-spotlight-archive.cms?contentType=textonly
 - id: davenport-university
   name: Davenport University
   domain: davenport.edu
@@ -6691,14 +6688,13 @@ schools:
   name: Dickinson State University
   domain: dickinsonstate.edu
   ipeds_id: '200059'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
-    last_result: found
-    last_method: brave
+    last_probed_at: '2026-09-12T13:59:42Z'
+    last_result: not_found
+    last_method: active_html_audit
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.dickinsonstate.edu/about/institutional-research/
 - id: dillard-university
   name: Dillard University
   domain: dillard.edu
@@ -7094,14 +7090,13 @@ schools:
   name: Eastern New Mexico University-Main Campus
   domain: enmu.edu
   ipeds_id: '187648'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
-    last_result: found
-    last_method: brave
+    last_probed_at: '2026-09-12T13:59:42Z'
+    last_result: not_found
+    last_method: active_html_audit
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://my.enmu.edu/web/institutional-research/common-data-set
 - id: eastern-oregon-university
   name: Eastern Oregon University
   domain: eou.edu
@@ -10434,14 +10429,13 @@ schools:
   name: Johnson & Wales University-Charlotte
   domain: jwu.edu
   ipeds_id: '445708'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
-    last_result: found
-    last_method: brave
+    last_probed_at: '2026-09-12T13:59:42Z'
+    last_result: not_found
+    last_method: active_html_audit
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.jwu.edu/about-jwu/terms-of-use.html
 - id: johnson-and-wales-university-online
   name: Johnson & Wales University-Online
   domain: online.jwu.edu
@@ -10464,7 +10458,6 @@ schools:
     last_method: shared_parent
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.jwu.edu/about-jwu/terms-of-use.html
 - id: johnson-c-smith-university
   name: Johnson C Smith University
   domain: jcsu.edu
@@ -14091,14 +14084,13 @@ schools:
   name: Naval Postgraduate School
   domain: nps.edu
   ipeds_id: '119678'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
-    last_result: found
-    last_method: brave
+    last_probed_at: '2026-09-12T13:59:42Z'
+    last_result: not_found
+    last_method: active_html_audit
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://faculty.nps.edu/ncrowe/oldstudents/jshaver_thesis.htm
 - id: navarro-college
   name: Navarro College
   domain: navarrocollege.edu
@@ -16142,7 +16134,6 @@ schools:
     last_method: shared_parent
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://sites.sju.edu/academicadmin/files/2017/01/SJU-Common-Data-Set-2015-2016-Part-One.pdf
 - id: pennsylvania-college-of-technology
   name: Pennsylvania College of Technology
   domain: pct.edu
@@ -24711,14 +24702,13 @@ schools:
   name: University of Valley Forge
   domain: valleyforge.edu
   ipeds_id: '216542'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
-    last_result: found
-    last_method: brave
+    last_probed_at: '2026-09-12T13:59:42Z'
+    last_result: not_found
+    last_method: active_html_audit
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://valleyforge.edu/careers-at-uvf/director-of-financial-services/
 - id: university-of-vermont
   name: University of Vermont
   domain: uvm.edu
@@ -24927,14 +24917,13 @@ schools:
   name: University of Wisconsin-Stevens Point
   domain: uwsp.edu
   ipeds_id: '240480'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-08-21T22:51:00Z'
-    last_result: found
-    last_method: brave
+    last_probed_at: '2026-09-12T13:59:42Z'
+    last_result: not_found
+    last_method: active_html_audit
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www3.uwsp.edu/oire/Pages/accountability-effectiveness.aspx
 - id: university-of-wisconsin-stout
   name: University of Wisconsin-Stout
   domain: uwstout.edu
@@ -26000,14 +25989,13 @@ schools:
   name: West Virginia State University
   domain: wvstateu.edu
   ipeds_id: '237899'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-09-02T18:00:10Z'
-    last_result: found
-    last_method: brave
+    last_probed_at: '2026-09-12T13:59:42Z'
+    last_result: not_found
+    last_method: active_html_audit
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://wvstateu.edu/administration/institutional-research/irae-mission/
 - id: west-virginia-university
   name: West Virginia University
   domain: wvu.edu

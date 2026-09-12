@@ -180,6 +180,8 @@ jobs:
           args=(
             --env .env.ops
             --limit "${INPUT_LIMIT}"
+            --trigger "${PIPELINE_TRIGGER}"
+            --run-url "${PIPELINE_RUN_URL}"
             --reconcile-pending
             --summary-json ops-summary/summary.json
             --low-field-threshold "${INPUT_LOW_FIELD_THRESHOLD}"

@@ -547,12 +547,14 @@ async function sha256Hex(bytes: Uint8Array): Promise<string> {
     .join("");
 }
 
-async function buildPdfBundle(parts: DownloadedSectionPart[]): Promise<Uint8Array> {
-  const merged = await PDFDocument.create();
+export async function buildPdfBundle(
+  parts: Pick<DownloadedSectionPart, "section" | "final_url" | "bytes">[],
+): Promise<Uint8Array> {
+  const merged = await PDFDocument.create({ updateMetadata: false });
   for (const part of parts) {
     let pdf: PDFDocument;
     try {
-      pdf = await PDFDocument.load(part.bytes);
+      pdf = await PDFDocument.load(part.bytes, { updateMetadata: false });
     } catch (e) {
       throw new PermanentError(
         `section ${part.section} is not a mergeable PDF (${part.final_url}): ${(e as Error).message}`,

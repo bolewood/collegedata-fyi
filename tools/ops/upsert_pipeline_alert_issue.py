@@ -35,8 +35,8 @@ def main() -> int:
     args = parser.parse_args()
 
     if not os.environ.get("GH_TOKEN") and not os.environ.get("GITHUB_TOKEN"):
-        print("::warning::no GH_TOKEN; skipping pipeline alert issue", file=sys.stderr)
-        return 0
+        print("::error::no GH_TOKEN; cannot upsert pipeline alert issue", file=sys.stderr)
+        return 1
 
     labels = ["pipeline-alert", f"component:{args.component}"]
     body = args.body.strip() + "\n"
@@ -58,8 +58,8 @@ def main() -> int:
         ]
     )
     if listed.returncode != 0:
-        print(f"::warning::gh issue list failed: {listed.stderr.strip()}", file=sys.stderr)
-        return 0
+        print(f"::error::gh issue list failed: {listed.stderr.strip()}", file=sys.stderr)
+        return 1
 
     rows = json.loads(listed.stdout or "[]")
     match = next((row for row in rows if row.get("title") == args.title), None)
@@ -77,10 +77,10 @@ def main() -> int:
         )
         if commented.returncode != 0:
             print(
-                f"::warning::gh issue comment failed: {commented.stderr.strip()}",
+                f"::error::gh issue comment failed: {commented.stderr.strip()}",
                 file=sys.stderr,
             )
-            return 0
+            return 1
         print(f"Commented on alert issue #{match['number']}")
         return 0
 
@@ -117,10 +117,10 @@ def main() -> int:
         )
         if created.returncode != 0:
             print(
-                f"::warning::gh issue create failed: {created.stderr.strip()}",
+                f"::error::gh issue create failed: {created.stderr.strip()}",
                 file=sys.stderr,
             )
-            return 0
+            return 1
     print(f"Opened alert issue: {created.stdout.strip()}")
     return 0
 

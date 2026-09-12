@@ -228,6 +228,136 @@
   font-family: var(--mono);
 }
 
+.po-activity {
+  margin-top: 64px;
+}
+
+.po-activity h2 {
+  font-size: 22px;
+  line-height: 1.2;
+  margin: 8px 0 16px;
+}
+
+.po-ledger {
+  border-top: 1px solid var(--rule-strong);
+}
+
+.po-ledger-row {
+  display: grid;
+  grid-template-columns: 92px minmax(180px, 1.4fr) minmax(140px, 1fr) minmax(120px, 0.8fr) 96px;
+  gap: 14px;
+  align-items: center;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+
+.po-ledger-time,
+.po-ledger-method,
+.po-ledger-run,
+.po-ledger-school span,
+.po-ledger-outcome span {
+  color: var(--ink-3);
+}
+
+.po-ledger-school {
+  min-width: 0;
+}
+
+.po-ledger-school a {
+  display: block;
+  overflow: hidden;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.po-ledger-school span,
+.po-ledger-outcome span {
+  display: block;
+  margin-top: 2px;
+}
+
+.po-ledger-outcome strong {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.po-ledger-outcome--failed strong {
+  color: var(--brick);
+}
+
+.po-ledger-run {
+  display: grid;
+  gap: 3px;
+  justify-items: end;
+  text-align: right;
+}
+
+.po-ledger-empty {
+  margin: 0;
+  padding: 18px 0;
+  border-top: 1px solid var(--rule-strong);
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.po-ledger-empty--error {
+  border-color: var(--brick);
+  color: var(--brick);
+}
+
+@media (max-width: 760px) {
+  .po-ledger-row {
+    grid-template-columns: 82px minmax(0, 1fr) auto;
+    gap: 8px 12px;
+  }
+
+  .po-ledger-school {
+    grid-column: 2 / 4;
+  }
+
+  .po-ledger-method {
+    grid-column: 2;
+  }
+
+  .po-ledger-outcome {
+    grid-column: 2;
+  }
+
+  .po-ledger-run {
+    grid-column: 3;
+    grid-row: 3 / 5;
+    align-self: end;
+  }
+
+  .po-ledger-school a {
+    display: flex;
+    width: 100%;
+    min-height: 44px;
+    align-items: center;
+  }
+
+  .po-ledger-run a {
+    display: inline-flex;
+    min-width: 44px;
+    min-height: 44px;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+  }
+}
+
 .po-method {
   max-width: 720px;
   color: var(--ink-2);

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { fetchPipelineObservation } from "@/lib/pipeline-observation";
+import type { ExtractionActivityItem } from "@/lib/pipeline-observation";
 import type { Lamp } from "@/lib/pipeline-lamps";
 import "./pipeline-observation.css";
 
@@ -18,6 +20,38 @@ const LAMP_WORD: Record<Lamp, string> = {
   ok: "OK",
   run: "RUN",
   slate: "SLATE",
+};
+
+const FORMAT_LABEL: Record<ExtractionActivityItem["source_format"], string> = {
+  pdf_fillable: "fillable PDF",
+  pdf_flat: "flat PDF",
+  pdf_scanned: "scanned PDF",
+  xlsx: "XLSX",
+  docx: "DOCX",
+  html: "HTML",
+  other: "other",
+  unknown: "unknown format",
+};
+
+const TIER_LABEL: Record<ExtractionActivityItem["extraction_tier"], string> = {
+  tier1: "Tier 1",
+  tier2: "Tier 2",
+  tier3: "Tier 3",
+  tier4: "Tier 4",
+  tier4_ocr: "Tier 4 + OCR",
+  tier4_fallback: "Tier 4 fallback",
+  tier6: "Tier 6",
+  reconciliation: "Reconcile",
+  unsupported: "Unsupported",
+  unknown: "Unknown tier",
+};
+
+const OUTCOME_LABEL: Record<ExtractionActivityItem["outcome"], string> = {
+  extracted: "First extraction",
+  re_extracted: "Re-extraction",
+  already_current: "Already current",
+  reconciled: "Reconciled",
+  failed: "Failed",
 };
 
 export default async function PipelineObservationPage() {
@@ -103,6 +137,64 @@ export default async function PipelineObservationPage() {
             .map((source) => `${source.display_name} — ${source.ago_label}`)
             .join(" · ")}
         </p>
+      </section>
+
+      <section className="po-activity">
+        <div className="meta">§ Last 14 days · 50 files max</div>
+        <h2 className="serif">Recent extraction activity</h2>
+        {snapshot.extraction_activity.length ? (
+          <div className="po-ledger" role="list">
+            {snapshot.extraction_activity.map((item, index) => (
+              <article
+                className="po-ledger-row"
+                key={`${item.activity_at}-${item.school_id}-${index}`}
+                role="listitem"
+              >
+                <time dateTime={item.activity_at} className="po-ledger-time">
+                  {item.ago_label} ago
+                </time>
+                <div className="po-ledger-school">
+                  <Link href={`/schools/${item.school_id}`}>
+                    {item.school_name}
+                  </Link>
+                  <span>{item.canonical_year}</span>
+                </div>
+                <div className="po-ledger-method">
+                  {FORMAT_LABEL[item.source_format]} ·{" "}
+                  {TIER_LABEL[item.extraction_tier]}
+                </div>
+                <div className={`po-ledger-outcome po-ledger-outcome--${item.outcome}`}>
+                  <strong>{OUTCOME_LABEL[item.outcome]}</strong>
+                  {item.field_count !== null ? (
+                    <span>{item.field_count} fields</span>
+                  ) : null}
+                </div>
+                <div className="po-ledger-run">
+                  <span>{item.trigger_label}</span>
+                  {item.run_url ? (
+                    <a
+                      href={item.run_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Run ↗
+                    </a>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p
+            className={`po-ledger-empty${
+              snapshot.activity_load_error ? " po-ledger-empty--error" : ""
+            }`}
+          >
+            {snapshot.activity_load_error
+              ? "Recent extraction activity could not be loaded. Refresh this page or check the latest extraction run."
+              : "No extraction finishes recorded in the last 14 days."}
+          </p>
+        )}
       </section>
 
       <section style={{ marginTop: 64 }}>

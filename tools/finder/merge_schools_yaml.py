@@ -62,9 +62,10 @@ def overlay_seed_fields(target: dict, source: dict) -> dict:
     for field in SEED_FIELDS:
         if field in source:
             merged[field] = source[field]
-        elif field in merged and field not in source:
-            if field == "cds_url_hint":
-                continue
+        elif field in {"discovery_seed_url", "cds_url_hint"}:
+            # Absence is meaningful for a demotion. Keeping main's value here
+            # resurrects a seed that the probe explicitly deleted.
+            merged.pop(field, None)
     return merged
 
 

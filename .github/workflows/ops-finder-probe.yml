@@ -133,46 +133,6 @@ jobs:
             --summary-json finder-probe/stuck-probe-summary.json \
             2>&1 | tee finder-probe/stuck-probe.log
 
-      - name: Heartbeat finder_stuck_pdf finish
-        if: always() && (env.INPUT_MODE == 'both' || env.INPUT_MODE == 'stuck-pdf')
-        env:
-          STEP_OUTCOME: ${{ steps.re_probe_stuck.outcome }}
-        run: |
-          stuck=0
-          if [[ -f finder-probe/stuck-ids.txt ]]; then
-            stuck=$(grep -cve '^[[:space:]]*$' finder-probe/stuck-ids.txt || true)
-          fi
-          python -c '
-          import json, os, sys
-          from pathlib import Path
-          stuck = int(sys.argv[1])
-          path = Path("finder-probe/stuck-probe-summary.json")
-          summary = {"probed": 0, "found": 0, "replaced": 0, "still_stuck": 0}
-          if path.exists():
-              summary.update(json.loads(path.read_text()))
-          Path("finder-probe/stuck-heartbeat.json").write_text(json.dumps({
-              "stuck": stuck,
-              "reprobed": summary.get("probed", 0),
-              "still_stuck": summary.get(
-                  "still_stuck",
-                  max(0, summary.get("probed", 0) - summary.get("found", 0)),
-              ),
-          }) + "\n")
-          ' "$stuck"
-          status=ok
-          error=none
-          if [[ "$STEP_OUTCOME" == "failure" ]]; then
-            status=error
-            error=job_failed
-          fi
-          python tools/ops/record_heartbeat.py \
-            --station finder_stuck_pdf \
-            --status "$status" \
-            --trigger "${PIPELINE_TRIGGER}" \
-            --summary-json finder-probe/stuck-heartbeat.json \
-            --error-code "$error" \
-            --run-url "${PIPELINE_RUN_URL}"
-
       - name: Open issue when stuck-PDF re-probe fails
         if: failure() && steps.re_probe_stuck.outcome == 'failure'
         env:
@@ -207,6 +167,8 @@ jobs:
           set -euo pipefail
           PYTHONUNBUFFERED=1 python tools/finder/probe_urls.py \
             --brave-fallback \
+            --audit-active-html \
+            --audit-report-json finder-probe/active-html-audit.json \
             --include-active-no-hint \
             --cooldown-days "${INPUT_COOLDOWN_DAYS}" \
             --brave-budget "${INPUT_BRAVE_BUDGET}" \
@@ -287,6 +249,49 @@ jobs:
             --out-json finder-probe/stuck-after.json \
             --out-md finder-probe/stuck-after.md \
             --out-ids finder-probe/stuck-ids-after.txt
+
+      - name: Heartbeat finder_stuck_pdf finish
+        if: always() && (env.INPUT_MODE == 'both' || env.INPUT_MODE == 'stuck-pdf')
+        env:
+          STEP_OUTCOME: ${{ steps.re_probe_stuck.outcome }}
+        run: |
+          python -c '
+          import json
+          from pathlib import Path
+
+          def count_ids(path):
+              return sum(1 for line in path.read_text().splitlines() if line.strip())
+
+          initial_path = Path("finder-probe/stuck-ids.txt")
+          after_path = Path("finder-probe/stuck-ids-after.txt")
+          initial_stuck = count_ids(initial_path) if initial_path.exists() else 0
+          summary_path = Path("finder-probe/stuck-probe-summary.json")
+          summary = {"probed": 0, "replaced": 0}
+          if summary_path.exists():
+              summary.update(json.loads(summary_path.read_text()))
+          if after_path.exists():
+              still_stuck = count_ids(after_path)
+          else:
+              still_stuck = max(0, initial_stuck - int(summary.get("replaced", 0)))
+          Path("finder-probe/stuck-heartbeat.json").write_text(json.dumps({
+              "stuck": initial_stuck,
+              "reprobed": summary.get("probed", 0),
+              "still_stuck": still_stuck,
+          }) + "\n")
+          '
+          status=ok
+          error=none
+          if [[ "$STEP_OUTCOME" == "failure" ]]; then
+            status=error
+            error=job_failed
+          fi
+          python tools/ops/record_heartbeat.py \
+            --station finder_stuck_pdf \
+            --status "$status" \
+            --trigger "${PIPELINE_TRIGGER}" \
+            --summary-json finder-probe/stuck-heartbeat.json \
+            --error-code "$error" \
+            --run-url "${PIPELINE_RUN_URL}"
 
       - name: Add run summary
         if: always()

@@ -8,6 +8,9 @@ test("dispatch tiles explain themselves on hover and focus", async ({
   await expect(
     page.getByRole("heading", { name: /The clocks/i }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Recent extraction activity" }),
+  ).toBeVisible();
 
   const finder = page.getByRole("article", { name: /Finder:/ });
   const finderTip = page.locator("#po-tip-finder_brave");
