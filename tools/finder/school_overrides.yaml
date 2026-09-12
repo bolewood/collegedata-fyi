@@ -743,10 +743,16 @@ overrides:
       cms: drupal
       waf: cloudflare
       notes: >-
-        CU Boulder's Data & Analytics Common Data Set report points to a
-        SharePoint folder and labels the covered academic term as 2025.
-        The page is public, but the folder needs manual or headless source
-        discovery to identify the specific CDS file before archive.
+        Listing seed is https://data.colorado.edu/reports/common-data-set
+        (already discovery_seed_url). It redirects to a public SharePoint
+        folder; IR confirmed 2026-09-03 that the files are downloadable
+        without a campus login. Deno archive-process still records
+        auth_walled_microsoft on SharePoint viewer URLs, so keep this
+        school on the headless-archive worklist (waf_blocked_urls.yaml)
+        and crawl the colorado.edu listing — not the sharepoint.com host,
+        which the worker will not crawl. Operator ingested 2020-21 through
+        2025-26 from IR the same day.
+
 
   - school_id: the-university-of-alabama
     browse_url: https://oira.ua.edu/reports/commonDataSet/

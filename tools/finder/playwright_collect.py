@@ -120,6 +120,7 @@ STARTING_URLS: dict[str, str] = {
     "nyu": "https://www.nyu.edu/employees/resources-and-services/administrative-services/institutional-research/self-service-reporting-resources/factbook.html",
     "new-york-university": "https://www.nyu.edu/employees/resources-and-services/administrative-services/institutional-research/self-service-reporting-resources/factbook.html",
     "university-of-florida": "https://ir.aa.ufl.edu/reports/cds-reports/",
+    "colorado": "https://data.colorado.edu/reports/common-data-set",
     "university-of-texas-at-austin": "https://reports.utexas.edu/common-data-set",
     "university-of-wisconsin-madison": "https://data.wisc.edu/common-data-set-and-rankings/",
     "georgia-institute-of-technology-main-campus": "https://irp.gatech.edu/common-data-set",

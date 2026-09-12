@@ -136,6 +136,16 @@ class LandingTests(unittest.TestCase):
         self.assertTrue(
             should_crawl_landing("https://www.nyu.edu/factbook.html")
         )
+        self.assertTrue(
+            should_crawl_landing(
+                "https://data.colorado.edu/reports/common-data-set"
+            )
+        )
+        self.assertFalse(
+            should_crawl_landing(
+                "https://colorado.sharepoint.com/sites/IR/Shared%20Documents"
+            )
+        )
 
 
 class CandidateTests(unittest.TestCase):

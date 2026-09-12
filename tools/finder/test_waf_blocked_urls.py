@@ -40,6 +40,23 @@ class WafBlockedUrlTests(unittest.TestCase):
                 "which is not a schools.yaml id",
             )
 
+    def test_colorado_listing_is_canonical_and_crawled(self) -> None:
+        from tools.finder.headless_archive import should_crawl_landing
+
+        schools = _waf_schools()
+        self.assertIn("colorado", schools)
+        landing = schools["colorado"]["landing_url"]
+        self.assertEqual(
+            landing,
+            "https://data.colorado.edu/reports/common-data-set",
+        )
+        self.assertTrue(should_crawl_landing(landing))
+        self.assertFalse(
+            should_crawl_landing(
+                "https://colorado.sharepoint.com/sites/IR/Shared%20Documents"
+            )
+        )
+
     def test_nyu_entry_uses_canonical_id_and_includes_2025_26(self) -> None:
         schools = _waf_schools()
         self.assertIn("nyu", schools)
