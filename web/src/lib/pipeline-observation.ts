@@ -33,6 +33,77 @@ export type PipelineFactRow = {
   extraction_pending: number | null;
 };
 
+const ACTIVITY_FORMAT_VALUES = [
+  "pdf_fillable",
+  "pdf_flat",
+  "pdf_scanned",
+  "xlsx",
+  "docx",
+  "html",
+  "other",
+  "unknown",
+] as const;
+
+const ACTIVITY_TIER_VALUES = [
+  "tier1",
+  "tier2",
+  "tier3",
+  "tier4",
+  "tier4_ocr",
+  "tier4_fallback",
+  "tier6",
+  "reconciliation",
+  "unsupported",
+  "unknown",
+] as const;
+
+const ACTIVITY_OUTCOME_VALUES = [
+  "extracted",
+  "re_extracted",
+  "already_current",
+  "reconciled",
+  "failed",
+] as const;
+
+const ACTIVITY_TRIGGER_VALUES = [
+  "schedule",
+  "dispatch",
+  "operator",
+] as const;
+
+type ActivitySourceFormat = (typeof ACTIVITY_FORMAT_VALUES)[number];
+type ActivityTier = (typeof ACTIVITY_TIER_VALUES)[number];
+type ActivityOutcome = (typeof ACTIVITY_OUTCOME_VALUES)[number];
+type ActivityTrigger = (typeof ACTIVITY_TRIGGER_VALUES)[number];
+
+export type ExtractionActivityRow = {
+  activity_at: string;
+  school_id: string;
+  school_name: string;
+  canonical_year: string;
+  source_format: string;
+  extraction_tier: string;
+  field_count: number | null;
+  outcome: string;
+  trigger: string;
+  run_url: string | null;
+};
+
+export type ExtractionActivityItem = {
+  activity_at: string;
+  school_id: string;
+  school_name: string;
+  canonical_year: string;
+  source_format: ActivitySourceFormat;
+  extraction_tier: ActivityTier;
+  field_count: number | null;
+  outcome: ActivityOutcome;
+  trigger: ActivityTrigger;
+  trigger_label: "Scheduled" | "Manual run" | "Operator";
+  run_url: string | null;
+  ago_label: string;
+};
+
 export type PipelineStationView = {
   station_id: string;
   display_name: string;
@@ -61,6 +132,8 @@ export type PipelineSnapshot = {
   load_error: boolean;
   strip: { lamp: StripLamp; text: string };
   stations: PipelineStationView[];
+  extraction_activity: ExtractionActivityItem[];
+  activity_load_error: boolean;
   locked_doors: [];
   manual_sources: Array<{
     station_id: string;
@@ -202,11 +275,57 @@ const ERROR_COPY: Record<string, string> = {
   none: "",
 };
 
-type UntypedRpc = {
-  rpc: (
-    fn: string,
-  ) => Promise<{ data: PipelineFactRow[] | null; error: { message: string } | null }>;
+type PipelineRpcResponse = {
+  data: unknown[] | null;
+  error: { message: string } | null;
 };
+
+type PipelineRpcRequest = PromiseLike<PipelineRpcResponse> & {
+  abortSignal?: (signal: AbortSignal) => PromiseLike<PipelineRpcResponse>;
+};
+
+export type PipelineRpcClient = {
+  rpc: (fn: string) => PipelineRpcRequest;
+};
+
+function withTimeout<T>(
+  promise: PromiseLike<T>,
+  milliseconds: number,
+  onTimeout?: () => void,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(
+      () => {
+        onTimeout?.();
+        reject(new Error("pipeline observation request timed out"));
+      },
+      milliseconds,
+    );
+    Promise.resolve(promise).then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
+function rpcWithTimeout(
+  rpc: PipelineRpcClient,
+  name: string,
+  milliseconds: number,
+): Promise<PipelineRpcResponse> {
+  const controller = new AbortController();
+  const request = rpc.rpc(name);
+  const bounded = request.abortSignal
+    ? request.abortSignal(controller.signal)
+    : request;
+  return withTimeout(bounded, milliseconds, () => controller.abort());
+}
 
 function isStaticBuild(): boolean {
   return (
@@ -229,6 +348,25 @@ function asStatus(value: unknown): HeartbeatStatus | null {
   return null;
 }
 
+const ACTIVITY_FORMATS = new Set<ExtractionActivityItem["source_format"]>([
+  ...ACTIVITY_FORMAT_VALUES,
+]);
+
+const ACTIVITY_TIERS = new Set<ExtractionActivityItem["extraction_tier"]>([
+  ...ACTIVITY_TIER_VALUES,
+]);
+
+const ACTIVITY_OUTCOMES = new Set<ExtractionActivityItem["outcome"]>([
+  ...ACTIVITY_OUTCOME_VALUES,
+]);
+
+const ACTIVITY_TRIGGERS = new Set<ExtractionActivityItem["trigger"]>([
+  ...ACTIVITY_TRIGGER_VALUES,
+]);
+
+const RUN_URL_RE =
+  /^https:\/\/github\.com\/bolewood\/collegedata-fyi\/actions\/runs\/[0-9]+$/;
+
 export function formatAgo(iso: string | null | undefined, now: Date): string {
   if (!iso) return "no heartbeat";
   const ms = now.getTime() - new Date(iso).getTime();
@@ -241,6 +379,67 @@ export function formatAgo(iso: string | null | undefined, now: Date): string {
   if (hours < 48) return hours === 1 ? "1 hour" : `${hours} hours`;
   const days = Math.round(hours / 24);
   return days === 1 ? "1 day" : `${days} days`;
+}
+
+export function activityFromRows(
+  rows: ExtractionActivityRow[],
+  now: Date,
+): ExtractionActivityItem[] {
+  const cutoff = now.getTime() - 14 * 24 * 60 * 60 * 1000;
+  return rows
+    .flatMap((row): ExtractionActivityItem[] => {
+      const activityMs = new Date(row.activity_at).getTime();
+      if (
+        !Number.isFinite(activityMs) ||
+        activityMs < cutoff ||
+        activityMs > now.getTime() + 5 * 60 * 1000 ||
+        !/^[a-z0-9][a-z0-9-]*$/.test(row.school_id) ||
+        typeof row.school_name !== "string" ||
+        !row.school_name.trim() ||
+        !ACTIVITY_FORMATS.has(
+          row.source_format as ExtractionActivityItem["source_format"],
+        ) ||
+        !ACTIVITY_TIERS.has(
+          row.extraction_tier as ExtractionActivityItem["extraction_tier"],
+        ) ||
+        !ACTIVITY_OUTCOMES.has(
+          row.outcome as ExtractionActivityItem["outcome"],
+        ) ||
+        !ACTIVITY_TRIGGERS.has(
+          row.trigger as ExtractionActivityItem["trigger"],
+        )
+      ) {
+        return [];
+      }
+      const trigger = row.trigger as ExtractionActivityItem["trigger"];
+      const triggerLabel = {
+        schedule: "Scheduled",
+        dispatch: "Manual run",
+        operator: "Operator",
+      }[trigger] as ExtractionActivityItem["trigger_label"];
+      return [{
+        activity_at: new Date(activityMs).toISOString(),
+        school_id: row.school_id,
+        school_name: row.school_name.trim(),
+        canonical_year: row.canonical_year || "unknown",
+        source_format:
+          row.source_format as ExtractionActivityItem["source_format"],
+        extraction_tier:
+          row.extraction_tier as ExtractionActivityItem["extraction_tier"],
+        field_count:
+          Number.isInteger(row.field_count) && Number(row.field_count) >= 0
+            ? Number(row.field_count)
+            : null,
+        outcome: row.outcome as ExtractionActivityItem["outcome"],
+        trigger,
+        trigger_label: triggerLabel,
+        run_url:
+          row.run_url && RUN_URL_RE.test(row.run_url) ? row.run_url : null,
+        ago_label: formatAgo(row.activity_at, now),
+      }];
+    })
+    .sort((a, b) => b.activity_at.localeCompare(a.activity_at))
+    .slice(0, 50);
 }
 
 function resultLine(row: PipelineFactRow, lamp: Lamp): string {
@@ -330,7 +529,11 @@ function stripText(lamp: StripLamp, stations: PipelineStationView[], loadError: 
 export function snapshotFromFacts(
   facts: PipelineFactRow[],
   now: Date,
-  options: { loadError?: boolean } = {},
+  options: {
+    loadError?: boolean;
+    activityRows?: ExtractionActivityRow[];
+    activityLoadError?: boolean;
+  } = {},
 ): PipelineSnapshot {
   const byId = new Map(facts.map((row) => [row.station_id, row]));
   const merged = SEED_META.map((meta) => byId.get(meta.station_id) ?? seedFacts().find((row) => row.station_id === meta.station_id)!);
@@ -375,11 +578,21 @@ export function snapshotFromFacts(
   });
   const board = stations.filter((station) => station.on_board);
   const lamp = options.loadError ? "down" : stripLamp(board.map((station) => station.lamp));
+  let extractionActivity: ExtractionActivityItem[] = [];
+  let activityLoadError = Boolean(options.activityLoadError);
+  try {
+    extractionActivity = activityFromRows(options.activityRows ?? [], now);
+  } catch {
+    extractionActivity = [];
+    activityLoadError = true;
+  }
   return {
     as_of: now.toISOString(),
     load_error: Boolean(options.loadError),
     strip: { lamp, text: stripText(lamp, stations, Boolean(options.loadError)) },
     stations: board,
+    extraction_activity: extractionActivity,
+    activity_load_error: activityLoadError,
     locked_doors: [],
     manual_sources: stations
       .filter((station) => !station.on_board)
@@ -415,6 +628,20 @@ export function toPublicJson(snapshot: PipelineSnapshot) {
       summary: station.summary,
       error_code: station.error_code,
     })),
+    extraction_activity: snapshot.extraction_activity.map((item) => ({
+      activity_at: item.activity_at,
+      school_id: item.school_id,
+      school_name: item.school_name,
+      canonical_year: item.canonical_year,
+      source_format: item.source_format,
+      extraction_tier: item.extraction_tier,
+      field_count: item.field_count,
+      outcome: item.outcome,
+      trigger: item.trigger,
+      trigger_label: item.trigger_label,
+      run_url: item.run_url,
+    })),
+    activity_load_error: snapshot.activity_load_error,
     locked_doors: snapshot.locked_doors,
     manual_sources: snapshot.manual_sources.map((source) => ({
       station_id: source.station_id,
@@ -426,18 +653,54 @@ export function toPublicJson(snapshot: PipelineSnapshot) {
 
 export { LAMP_HEX };
 
+export async function snapshotFromRpc(
+  rpc: PipelineRpcClient,
+  now: Date,
+  activityTimeoutMs = 2_000,
+  factsTimeoutMs = 5_000,
+): Promise<PipelineSnapshot> {
+  const [factsResult, activityResult] = await Promise.allSettled([
+    rpcWithTimeout(rpc, "pipeline_station_facts", factsTimeoutMs),
+    rpcWithTimeout(
+      rpc,
+      "pipeline_recent_extraction_activity",
+      activityTimeoutMs,
+    ),
+  ]);
+  const activityLoadError =
+    activityResult.status === "rejected" || Boolean(activityResult.value.error);
+  const activityRows =
+    activityResult.status === "fulfilled" && !activityResult.value.error
+      ? (activityResult.value.data as ExtractionActivityRow[] | null) ?? []
+      : [];
+  const factsFailed =
+    factsResult.status === "rejected" ||
+    Boolean(factsResult.value.error) ||
+    !factsResult.value.data?.length;
+  const facts = factsFailed
+    ? seedFacts()
+    : factsResult.status === "fulfilled"
+      ? (factsResult.value.data as PipelineFactRow[])
+      : seedFacts();
+  return snapshotFromFacts(facts, now, {
+    loadError: factsFailed,
+    activityRows,
+    activityLoadError,
+  });
+}
+
 export const fetchPipelineObservation = cache(async function fetchPipelineObservation(): Promise<PipelineSnapshot> {
   const now = new Date();
-  if (isStaticBuild()) return seedPipelineSnapshot(now, false);
+  if (isStaticBuild()) {
+    return snapshotFromFacts(seedFacts(), now, { activityLoadError: true });
+  }
   try {
     const { supabase } = await import("./supabase");
-    const { data, error } = await (supabase as unknown as UntypedRpc).rpc(
-      "pipeline_station_facts",
-    );
-    if (error) throw new Error(error.message);
-    if (!data?.length) return seedPipelineSnapshot(now, true);
-    return snapshotFromFacts(data, now);
+    return snapshotFromRpc(supabase as unknown as PipelineRpcClient, now);
   } catch {
-    return seedPipelineSnapshot(now, true);
+    return snapshotFromFacts(seedFacts(), now, {
+      loadError: true,
+      activityLoadError: true,
+    });
   }
 });

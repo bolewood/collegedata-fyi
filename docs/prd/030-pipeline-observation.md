@@ -1,8 +1,8 @@
 # PRD 030: Public pipeline observation
 
-**Status:** Implementing M0 — board, heartbeats, writers, JSON. Locked-door wall is M1.
+**Status:** M0 live; implementing M2 extraction activity. Locked-door wall is M1.
 **Created:** 2026-08-21
-**Updated:** 2026-08-21 (eng review T1: match the codebase; split M0/M1)
+**Updated:** 2026-09-12 (durable extraction activity slice)
 **Author:** Anthony Showalter (with Cursor Grok, via CEO-design)
 **URL:** `https://www.collegedata.fyi/pipeline-observation`
 **Related:** [ARCHITECTURE](../ARCHITECTURE.md), [PRD 015 coverage](015-institution-directory-and-cds-coverage.md), [PRD 029 freshness](029-discovery-freshness-and-publish-alerts.md), [probe outcomes](../../supabase/functions/_shared/probe_outcome.ts), [design system](../../web/DESIGN_SYSTEM.md), [eng review](../../.context/prd-030-eng-review.md)
@@ -57,6 +57,7 @@ Two PRs. Do not land M0+M1 together: the migration must come from
 |---|---|---|
 | **M0** | Registry + heartbeats + RPC + facts function + writers + board + JSON + nav/footer/sitemap | Locked-door wall |
 | **M1** | `pipeline_locked_doors`, override YAML, wall UI, JSON `locked_doors` populated | RSS |
+| **M2** | Private extraction run/item ledger + normalized worker writer + 14-day/50-file public activity | Raw actions, errors, paths, hashes, source URLs, document IDs |
 | **M3** | Incident feed, reusing `cds_publish_events` as the event-log precedent | New event tables unless that pattern does not fit |
 
 Writers ship with the M0 UI. A board without writers is a pretty lie.
@@ -127,9 +128,11 @@ Not an operator console. No enqueue / force_school buttons.
 
 3. DISPATCH BOARD
 
-4. LOCKED DOORS (M1 only; M0 omits the section)
+4. RECENT EXTRACTION ACTIVITY (M2; last 14 days, 50 files)
 
-5. METHODOLOGY
+5. LOCKED DOORS (M1 only; omitted until that slice ships)
+
+6. METHODOLOGY
 ```
 
 Mobile: sticky strip; vertical tiles; M1 door groups accordion with
@@ -236,6 +239,32 @@ Empty drain still writes a scheduled heartbeat. Dispatch is a footnote.
 
 Confirm an index on `cds_documents(extraction_status)` or add one in
 the M0 migration so the pending count is not a seq scan every minute.
+
+### Extraction activity ledger (M2)
+
+Heartbeat rows remain the last-write-wins SLA clock. Completed extraction
+runs also write one immutable `pipeline_extraction_runs` row and an ordered
+set of `pipeline_extraction_run_items` through a service-role-only RPC. The
+RPC is transactional and idempotent by `run_id`; direct table mutation is
+revoked and update/delete triggers enforce append-only history.
+
+The worker maps its free-form action strings to closed values before the
+RPC call. Public outcomes are `extracted`, `re_extracted`,
+`already_current`, `reconciled`, or `failed`. Source format, extraction
+tier, field count, scheduled/manual trigger, and a sanitizer-approved
+GitHub Actions run link may be stored. Raw action/error text, source URLs,
+storage paths, hashes, secrets, arbitrary JSON, and document IDs never
+cross the public reader.
+
+`pipeline_recent_extraction_activity()` is a zero-argument
+`SECURITY DEFINER` boundary. It returns at most 50 non-dry-run file
+outcomes from the last 14 days, newest first. The page and JSON route call
+it independently from `pipeline_station_facts()`: an activity-read failure
+renders an unavailable ledger but does not turn healthy station clocks red.
+The worker retries a lost writer response with the same `run_id`; if all
+attempts fail, the workflow artifact includes a closed `ledger-replay.json`
+payload that can be delivered with `worker.py --replay-ledger-json` without
+reprocessing or changing document quality state.
 
 ### Schedule vs dispatch
 
@@ -639,7 +668,6 @@ from anon.
 - Automatic Tableau / IRM detection
 - Seed URLs / SAS tokens
 - IPEDS CSV load, `build_school_list`, PRD 019, Playwright, `/changes`
-- Recent-results history UI
 - Incident RSS (M3)
 - `publish_alerts` station
 - Rewriting `automation_health.py` beyond the stale name + TODO (D9)
