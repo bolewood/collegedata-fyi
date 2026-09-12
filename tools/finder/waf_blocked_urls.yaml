@@ -133,3 +133,7 @@ schools:
       year: 2012-13
     - url: https://www.fordham.edu/media/home/departments-centers-and-offices/office-of-the-provost/pdfs/common_data_set_2011-2012.pdf
       year: 2011-12
+  colorado:
+    school_name: University of Colorado Boulder
+    landing_url: https://data.colorado.edu/reports/common-data-set
+    urls: []

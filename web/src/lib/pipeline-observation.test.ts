@@ -6,10 +6,14 @@ import nextConfig from "../../next.config";
 import { LAMP_HEX } from "./pipeline-lamps";
 import { PIPELINE_OBSERVATION_REDIRECTS } from "./pipeline-redirect";
 import {
+  activityFromRows,
   seedPipelineSnapshot,
   snapshotFromFacts,
+  snapshotFromRpc,
   toPublicJson,
+  type ExtractionActivityRow,
   type PipelineFactRow,
+  type PipelineRpcClient,
 } from "./pipeline-observation";
 
 const NOW = new Date("2026-08-21T20:00:00.000Z");
@@ -47,6 +51,25 @@ function fact(partial: Partial<PipelineFactRow> & Pick<PipelineFactRow, "station
     source_url: null,
     queue_unfinished: null,
     extraction_pending: null,
+    ...partial,
+  };
+}
+
+function activity(
+  partial: Partial<ExtractionActivityRow> = {},
+): ExtractionActivityRow {
+  return {
+    activity_at: "2026-08-21T19:00:00.000Z",
+    school_id: "harvey-mudd-college",
+    school_name: "Harvey Mudd College",
+    canonical_year: "2025-26",
+    source_format: "pdf_flat",
+    extraction_tier: "tier4",
+    field_count: 210,
+    outcome: "extracted",
+    trigger: "schedule",
+    run_url:
+      "https://github.com/bolewood/collegedata-fyi/actions/runs/123",
     ...partial,
   };
 }
@@ -102,6 +125,184 @@ describe("pipeline observation JSON", () => {
     }
     const json = toPublicJson(seed);
     expect(json.stations[0]).not.toHaveProperty("help");
+  });
+
+  it("publishes only normalized recent extraction activity", () => {
+    const rows = Array.from({ length: 55 }, (_, index) =>
+      activity({
+        activity_at: new Date(NOW.getTime() - index * 60_000).toISOString(),
+        school_id: `school-${index}`,
+        school_name: `School ${index}`,
+        trigger: index === 0 ? "dispatch" : "schedule",
+        outcome: index === 0 ? "re_extracted" : "extracted",
+        run_url:
+          index === 1
+            ? "https://evil.example/run?token=secret"
+            : activity().run_url,
+      }),
+    );
+    rows.push(
+      activity({
+        activity_at: "2026-07-01T00:00:00.000Z",
+        school_id: "too-old",
+      }),
+    );
+    rows.push(activity({ school_id: "../unsafe" }));
+
+    const normalized = activityFromRows(rows, NOW);
+    expect(normalized).toHaveLength(50);
+    expect(normalized[0]).toMatchObject({
+      school_id: "school-0",
+      outcome: "re_extracted",
+      trigger_label: "Manual run",
+      ago_label: "0 sec",
+    });
+    expect(normalized[1]?.run_url).toBeNull();
+    expect(normalized.some((row) => row.school_id === "too-old")).toBe(false);
+    expect(normalized.some((row) => row.school_id === "../unsafe")).toBe(false);
+
+    const snapshot = snapshotFromFacts([], NOW, { activityRows: rows });
+    const json = toPublicJson(snapshot);
+    expect(json.extraction_activity).toHaveLength(50);
+    expect(json.extraction_activity[0]).not.toHaveProperty("ago_label");
+    const blob = JSON.stringify(json.extraction_activity);
+    expect(blob).not.toMatch(/evil\.example|token=|document_id|failure_code/);
+  });
+
+  it("drops malformed vocabularies and bounds field counts", () => {
+    const rows = [
+      activity({ school_id: "bad-format", source_format: "exe" }),
+      activity({ school_id: "bad-tier", extraction_tier: "tier99" }),
+      activity({ school_id: "bad-outcome", outcome: "stack trace" }),
+      activity({ school_id: "bad-trigger", trigger: "pull_request" }),
+      activity({
+        school_id: "future-row",
+        activity_at: "2026-08-22T20:00:00.000Z",
+      }),
+      activity({ school_id: "valid-row", field_count: -4 }),
+    ];
+    const normalized = activityFromRows(rows, NOW);
+    expect(normalized).toHaveLength(1);
+    expect(normalized[0]?.school_id).toBe("valid-row");
+    expect(normalized[0]?.field_count).toBeNull();
+  });
+
+  it("drops a null school name without turning station clocks red", () => {
+    const rows = [
+      activity({ school_id: "null-name", school_name: null as unknown as string }),
+      activity({ school_id: "valid-name", school_name: "Harvey Mudd" }),
+    ];
+    expect(activityFromRows(rows, NOW).map((row) => row.school_id)).toEqual([
+      "valid-name",
+    ]);
+    const snapshot = snapshotFromFacts(
+      [
+        fact({
+          station_id: "archive_enqueue",
+          display_name: "Enqueue",
+          class: "daily_sla",
+          last_scheduled_status: "ok",
+          last_scheduled_finished_at: "2026-08-21T09:00:00.000Z",
+        }),
+      ],
+      NOW,
+      { activityRows: rows },
+    );
+    expect(snapshot.load_error).toBe(false);
+    expect(snapshot.activity_load_error).toBe(false);
+    expect(snapshot.extraction_activity).toHaveLength(1);
+  });
+
+  it("activity failure does not mark healthy station clocks as load errors", () => {
+    const snapshot = snapshotFromFacts(
+      [
+        fact({
+          station_id: "archive_enqueue",
+          display_name: "Enqueue",
+          class: "daily_sla",
+          last_scheduled_status: "ok",
+          last_scheduled_finished_at: "2026-08-21T09:00:00.000Z",
+        }),
+      ],
+      NOW,
+      { activityLoadError: true },
+    );
+    expect(snapshot.load_error).toBe(false);
+    expect(snapshot.activity_load_error).toBe(true);
+    expect(snapshot.extraction_activity).toEqual([]);
+  });
+
+  it("RPC activity failure stays independent from station facts", async () => {
+    const healthyFact = fact({
+      station_id: "archive_enqueue",
+      display_name: "Enqueue",
+      class: "daily_sla",
+      last_scheduled_status: "ok",
+      last_scheduled_finished_at: "2026-08-21T19:30:00.000Z",
+    });
+    const rpc: PipelineRpcClient = {
+      rpc: async (name) =>
+        name === "pipeline_station_facts"
+          ? { data: [healthyFact], error: null }
+          : { data: null, error: { message: "activity unavailable" } },
+    };
+    const snapshot = await snapshotFromRpc(rpc, NOW);
+    expect(snapshot.load_error).toBe(false);
+    expect(snapshot.activity_load_error).toBe(true);
+    expect(snapshot.extraction_activity).toEqual([]);
+  });
+
+  it("activity timeout does not hold the dispatch board open", async () => {
+    const rpc: PipelineRpcClient = {
+      rpc: async (name) => {
+        if (name === "pipeline_station_facts") {
+          return {
+            data: [
+              fact({
+                station_id: "archive_enqueue",
+                display_name: "Enqueue",
+                class: "daily_sla",
+              }),
+            ],
+            error: null,
+          };
+        }
+        return new Promise(() => undefined);
+      },
+    };
+    const snapshot = await snapshotFromRpc(rpc, NOW, 1);
+    expect(snapshot.load_error).toBe(false);
+    expect(snapshot.activity_load_error).toBe(true);
+  });
+
+  it("facts timeout still returns independently loaded activity", async () => {
+    let factsAborted = false;
+    const never = Object.assign(
+      new Promise<{ data: unknown[] | null; error: { message: string } | null }>(
+        () => undefined,
+      ),
+      {
+        abortSignal: (signal: AbortSignal) => {
+          signal.addEventListener("abort", () => {
+            factsAborted = true;
+          });
+          return never;
+        },
+      },
+    );
+    const rpc: PipelineRpcClient = {
+      rpc: (name) => {
+        if (name === "pipeline_recent_extraction_activity") {
+          return Promise.resolve({ data: [activity()], error: null });
+        }
+        return never;
+      },
+    };
+    const snapshot = await snapshotFromRpc(rpc, NOW, 5, 1);
+    expect(snapshot.load_error).toBe(true);
+    expect(snapshot.activity_load_error).toBe(false);
+    expect(snapshot.extraction_activity).toHaveLength(1);
+    expect(factsAborted).toBe(true);
   });
 
   it("isStaticBuild seed paints SLA down and yearly slate", () => {
