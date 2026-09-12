@@ -10,6 +10,7 @@ from tools.finder.apply_probe_log import (
     apply_hit,
     apply_logs,
     parse_probe_log,
+    write_school_updates,
 )
 from tools.finder.merge_schools_yaml import merge_school_lists
 
@@ -143,6 +144,30 @@ class WriteYamlTests(unittest.TestCase):
         self.assertIn("last_probed_at: '2026-08-21T22:51:00Z'", text)
         self.assertIn("scrape_policy: unknown", text)
 
+    def test_explicit_seed_deletion_removes_existing_yaml_line(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "schools.yaml"
+            path.write_text(YAML_FIXTURE)
+            schools = [
+                {
+                    "id": "albion-college",
+                    "name": "Albion College",
+                    "domain": "albion.edu",
+                    "scrape_policy": "unknown",
+                    "probe_state": {
+                        "last_probed_at": "2026-09-12T00:00:00Z",
+                        "last_result": "not_found",
+                        "last_method": "active_html_audit",
+                    },
+                }
+            ]
+            write_school_updates(path, schools, {"albion-college"})
+            text = path.read_text()
+        self.assertNotIn("https://www.albion.edu/wp-content/uploads/cds-2023.pdf", text)
+        self.assertNotIn("discovery_seed_url:", text.split("- id: elms-college")[0])
+        self.assertIn("scrape_policy: unknown", text)
+        self.assertIn("last_method: active_html_audit", text)
+
 
 class MergeListsTests(unittest.TestCase):
     def test_overlays_only_schools_the_probe_changed(self) -> None:
@@ -201,6 +226,42 @@ class MergeListsTests(unittest.TestCase):
         )
         self.assertEqual(merged[0]["probe_state"]["last_result"], "not_found")
         self.assertEqual(merged[0]["probe_state"]["last_probed_at"], "2026-09-02T14:18:00Z")
+
+    def test_probe_seed_deletion_wins_over_current_main(self) -> None:
+        base = [
+            {
+                "id": "bad-seed",
+                "discovery_seed_url": "https://example.edu/mission",
+                "cds_url_hint": "https://example.edu/legacy-mission",
+                "scrape_policy": "active",
+            }
+        ]
+        main = [
+            {
+                "id": "bad-seed",
+                "discovery_seed_url": "https://example.edu/mission",
+                "cds_url_hint": "https://example.edu/legacy-mission",
+                "scrape_policy": "active",
+                "notes": "preserve me",
+            }
+        ]
+        probed = [
+            {
+                "id": "bad-seed",
+                "scrape_policy": "unknown",
+                "probe_state": {
+                    "last_result": "not_found",
+                    "last_probed_at": "2026-09-12T00:00:00Z",
+                    "last_method": "active_html_audit",
+                },
+            }
+        ]
+        merged, changed = merge_school_lists(base, main, probed)
+        self.assertEqual(changed, ["bad-seed"])
+        self.assertNotIn("discovery_seed_url", merged[0])
+        self.assertNotIn("cds_url_hint", merged[0])
+        self.assertEqual(merged[0]["scrape_policy"], "unknown")
+        self.assertEqual(merged[0]["notes"], "preserve me")
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ months, new listings should be fetched the same day they land on main.
 from __future__ import annotations
 
 import argparse
+import collections
 import json
 import sys
 import uuid
@@ -32,19 +33,41 @@ def seed_of(school: dict) -> str:
     return str(school.get("discovery_seed_url") or school.get("cds_url_hint") or "")
 
 
+def institution_identity(school: dict) -> tuple[str, str] | None:
+    """Return the stable comparison key for one institution."""
+    ipeds_id = str(school.get("ipeds_id") or "").strip()
+    if ipeds_id:
+        return ("ipeds_id", ipeds_id)
+    school_id = str(school.get("id") or "").strip()
+    if school_id:
+        return ("id", school_id)
+    return None
+
+
 def changed_seed_ids(before: list[dict], after: list[dict]) -> list[str]:
-    before_map = {str(row.get("id")): row for row in before if row.get("id")}
+    before_map = {
+        identity: row
+        for row in before
+        if (identity := institution_identity(row)) is not None
+    }
     changed: list[str] = []
     for row in after:
         sid = str(row.get("id") or "")
         if not sid:
             continue
-        prev = before_map.get(sid)
+        identity = institution_identity(row)
+        prev = before_map.get(identity) if identity is not None else None
         if prev is None:
             if seed_of(row) and row.get("scrape_policy") == "active":
                 changed.append(sid)
             continue
-        if seed_of(row) and seed_of(row) != seed_of(prev):
+        if (
+            seed_of(row)
+            and row.get("scrape_policy") == "active"
+            and sid != str(prev.get("id") or "")
+        ):
+            changed.append(sid)
+        elif seed_of(row) and seed_of(row) != seed_of(prev):
             changed.append(sid)
         elif (
             prev.get("scrape_policy") != "active"
@@ -52,7 +75,9 @@ def changed_seed_ids(before: list[dict], after: list[dict]) -> list[str]:
             and seed_of(row)
         ):
             changed.append(sid)
-    return changed
+    # The archive API filters by school slug, so duplicate-IPEDs rows with the
+    # same slug must produce one request token even when both seeds changed.
+    return list(dict.fromkeys(changed))
 
 
 def load_schools(path: Path) -> list[dict]:
@@ -87,19 +112,28 @@ def canary_filter_error(result: dict) -> str | None:
     return None
 
 
-def chunk_filter_error(result: dict, group: list[str]) -> str | None:
+def chunk_filter_error(
+    result: dict,
+    group: list[str],
+    *,
+    expected_matches: int | None = None,
+) -> str | None:
     requested = result.get("school_ids_requested")
     matched = result.get("school_ids_matched")
     enqueued = int(result.get("enqueued") or 0)
+    maximum_matches = expected_matches if expected_matches is not None else len(group)
     if requested != len(group):
         return (
             f"school_ids_requested={requested!r}, expected {len(group)} "
             "(filter did not echo this chunk)"
         )
-    if matched is None or int(matched) > len(group):
-        return f"school_ids_matched={matched!r} exceeds chunk of {len(group)}"
-    if enqueued > len(group):
-        return f"enqueued={enqueued} exceeds chunk of {len(group)}"
+    if matched is None or int(matched) > maximum_matches:
+        return (
+            f"school_ids_matched={matched!r} exceeds expected school rows "
+            f"{maximum_matches}"
+        )
+    if enqueued > maximum_matches:
+        return f"enqueued={enqueued} exceeds expected school rows {maximum_matches}"
     return None
 
 
@@ -129,7 +163,14 @@ def main() -> int:
         help="Do not ping archive-enqueue with a fake school_id first.",
     )
     args = ap.parse_args()
-    ids = changed_seed_ids(load_schools(args.before), load_schools(args.after))
+    before_schools = load_schools(args.before)
+    after_schools = load_schools(args.after)
+    ids = changed_seed_ids(before_schools, after_schools)
+    active_seed_counts = collections.Counter(
+        str(row.get("id") or "")
+        for row in after_schools
+        if row.get("scrape_policy") == "active" and seed_of(row)
+    )
     print(json.dumps({"changed": len(ids), "ids": ids}, indent=2))
     if not ids:
         print("No seed changes; skipping enqueue.", file=sys.stderr)
@@ -153,7 +194,11 @@ def main() -> int:
                 "run_id": run_id,
             },
         )
-        error = chunk_filter_error(result, group)
+        error = chunk_filter_error(
+            result,
+            group,
+            expected_matches=sum(active_seed_counts[sid] for sid in group),
+        )
         if error:
             raise OpsError(error)
         enqueued += int(result.get("enqueued") or 0)

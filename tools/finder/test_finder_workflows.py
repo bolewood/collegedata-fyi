@@ -38,6 +38,27 @@ class FinderProbeWorkflowTests(unittest.TestCase):
         self.assertNotIn("<<", run)
         self.assertIn("printf", run)
 
+    def test_stuck_heartbeat_prefers_post_run_classifier_count(self) -> None:
+        refresh_at = FINDER.index("- name: Refresh stuck report after seed rewrites")
+        heartbeat_at = FINDER.index("- name: Heartbeat finder_stuck_pdf finish")
+        self.assertLess(refresh_at, heartbeat_at)
+        heartbeat = FINDER[heartbeat_at:].split("\n      - name:", 1)[0]
+        self.assertIn('after_path = Path("finder-probe/stuck-ids-after.txt")', heartbeat)
+        self.assertIn("still_stuck = count_ids(after_path)", heartbeat)
+        self.assertIn(
+            'initial_stuck - int(summary.get("replaced", 0))',
+            heartbeat,
+        )
+
+    def test_unknown_probe_audits_failed_active_html_seeds(self) -> None:
+        _, step = FINDER.split("id: probe_unknown", 1)
+        run = step.split("- name:", 1)[0]
+        self.assertIn("--audit-active-html", run)
+        self.assertIn(
+            "--audit-report-json finder-probe/active-html-audit.json",
+            run,
+        )
+
     def test_failures_open_pipeline_alert_issues(self) -> None:
         self.assertIn("upsert_pipeline_alert_issue.py", FINDER)
         self.assertIn("--component", FINDER)
