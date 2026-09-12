@@ -26,7 +26,7 @@ class XlsxNoTemplateMapRoutingTests(unittest.TestCase):
             "school_id": "example-university",
             "cds_year": "2023-24",
             "detected_year": None,
-            "source_format": "xlsx",
+            "source_format": "pdf_flat",
         }
         resolution = SchemaResolution(
             schema={"schema_version": "2023-24", "fields": []},
@@ -68,6 +68,7 @@ class XlsxNoTemplateMapRoutingTests(unittest.TestCase):
         run_tier1.assert_called_once()
         cell_map_arg = run_tier1.call_args.args[6]
         self.assertEqual(cell_map_arg, {})
+        self.assertEqual(doc["source_format"], "xlsx")
         mark_status.assert_not_called()
 
     def test_xlsx_with_template_map_passes_it_through(self) -> None:

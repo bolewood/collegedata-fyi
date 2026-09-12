@@ -52,6 +52,14 @@ class PipelineWriterLintTests(unittest.TestCase):
         self.assertIn('"new_release": bool((summary.get("available_count") or 0) > 0)', text)
         self.assertIn("issue_opened", text)
 
+    def test_extraction_worker_passes_closed_ledger_run_metadata(self) -> None:
+        text = EXTRACTION.read_text(encoding="utf-8")
+        drain = text.split("id: drain_pending", 1)[1].split("- name:", 1)[0]
+        self.assertIn('--trigger "${PIPELINE_TRIGGER}"', drain)
+        self.assertIn('--run-url "${PIPELINE_RUN_URL}"', drain)
+        self.assertIn("--reconcile-pending", drain)
+        self.assertIn("--summary-json ops-summary/summary.json", drain)
+
     def test_headless_archive_uses_playwright_not_force_urls(self) -> None:
         text = HEADLESS.read_text(encoding="utf-8")
         self.assertIn("playwright install --with-deps chromium", text)
