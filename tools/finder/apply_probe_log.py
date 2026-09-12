@@ -32,8 +32,13 @@ from tools.finder.probe_urls import (  # noqa: E402
     looks_like_news_or_blog,
     looks_like_non_cds_document,
     looks_like_search_junk,
+    may_mark_active,
     record_probe,
     should_replace_seed,
+)
+from tools.finder.identity_guard import (  # noqa: E402
+    DEFAULT_SNAPSHOT,
+    load_identity_snapshot,
 )
 
 FOUND_RE = re.compile(
@@ -122,7 +127,12 @@ def url_is_usable(url: str, domain: str | None) -> bool:
     return True
 
 
-def apply_hit(school: dict, hit: ProbeHit, probed_at: str) -> str:
+def apply_hit(
+    school: dict,
+    hit: ProbeHit,
+    probed_at: str,
+    official_records: dict[str, dict[str, str]] | None = None,
+) -> str:
     """Mutate school. Returns action: replaced, found_kept, not_found, skipped_junk."""
     if hit.found:
         url = hit.url or ""
@@ -131,7 +141,8 @@ def apply_hit(school: dict, hit: ProbeHit, probed_at: str) -> str:
         existing = school.get("discovery_seed_url") or school.get("cds_url_hint")
         if should_replace_seed(existing, url):
             school["discovery_seed_url"] = url
-            school["scrape_policy"] = "active"
+            if may_mark_active(school, official_records):
+                school["scrape_policy"] = "active"
             record_probe(school, "found", hit.method, 0, hit.method != "pattern")
             school["probe_state"]["last_probed_at"] = probed_at
             return "replaced"
@@ -228,6 +239,10 @@ def apply_logs(
     data = yaml.safe_load(schools_yaml.read_text())
     schools = data.get("schools") or []
     by_key = index_schools(schools)
+    try:
+        _, official_records = load_identity_snapshot(DEFAULT_SNAPSHOT)
+    except (OSError, ValueError):
+        official_records = {}
     counts = {
         "hits": 0,
         "unmatched": 0,
@@ -245,7 +260,7 @@ def apply_logs(
                 counts["unmatched"] += 1
                 print(f"unmatched: {hit.name} ({hit.domain})", file=sys.stderr)
                 continue
-            action = apply_hit(school, hit, probed_at)
+            action = apply_hit(school, hit, probed_at, official_records)
             counts[action] = counts.get(action, 0) + 1
             sid = str(school.get("id") or "")
             if sid and action != "skipped_junk":
