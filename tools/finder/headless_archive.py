@@ -49,6 +49,10 @@ _REPO_ROOT = _TOOLS_ROOT.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 try:
+    from tools.finder.archive_identity import (
+        UnknownArchiveSchoolError,
+        resolve_archive_identity,
+    )
     from tools.finder.waf_school_ids import (
         WAF_SCHOOL_ID_ALIASES,
         canonical_waf_school_id,
@@ -57,6 +61,10 @@ try:
         RESIDENTIAL_ONLY_CAP,
     )
 except ImportError:  # python tools/finder/headless_archive.py
+    from archive_identity import (  # type: ignore
+        UnknownArchiveSchoolError,
+        resolve_archive_identity,
+    )
     from waf_school_ids import (  # type: ignore
         WAF_SCHOOL_ID_ALIASES,
         canonical_waf_school_id,
@@ -87,7 +95,7 @@ DRIVE_HOST_RE = re.compile(
     r"onedrive\.live\.com|sharepoint\.com)",
     re.I,
 )
-YEAR_RE = re.compile(r"(20\d{2})-(\d{2})")
+YEAR_RE = re.compile(r"(19\d{2}|20\d{2})-(\d{2})")
 WAF_CAPTCHA_MARKERS = (
     "human verification",
     "awswaf.com",
@@ -387,6 +395,12 @@ def build_targets(
     for sid, entry in merged.items():
         landing = resolve_landing(entry, sid, seed_by_id, starting_urls)
         name = entry.get("school_name") or sid
+        try:
+            identity = resolve_archive_identity(sid)
+            if not name or name == sid:
+                name = identity["school_name"]
+        except UnknownArchiveSchoolError:
+            pass
         if not landing and not (entry.get("urls") or []):
             continue
         targets.append(SchoolTarget(

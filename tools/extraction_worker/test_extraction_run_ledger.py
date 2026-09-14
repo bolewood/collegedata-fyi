@@ -62,6 +62,9 @@ class FakeDocumentsQuery:
     def order(self, *_args, **_kwargs):
         return self
 
+    def limit(self, *_args, **_kwargs):
+        return self
+
     def execute(self):
         return SimpleNamespace(data=self.docs)
 
@@ -71,6 +74,8 @@ class FakeMainClient:
         self.docs = docs
 
     def table(self, name: str):
+        if name == "institution_directory":
+            return FakeDocumentsQuery([])
         if name != "cds_documents":
             raise AssertionError(f"unexpected table: {name}")
         return FakeDocumentsQuery(self.docs)

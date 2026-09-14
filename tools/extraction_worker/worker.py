@@ -227,6 +227,75 @@ def extraction_ledger_outcome(action: str, *, force_reextract: bool) -> str:
     return "re_extracted" if force_reextract else "extracted"
 
 
+def document_identity_needs_repair(doc: dict[str, Any]) -> bool:
+    """True when the row is missing UNITID or is labeled with its slug."""
+    school_id = str(doc.get("school_id") or "").strip()
+    name = str(doc.get("school_name") or "").strip()
+    ipeds = str(doc.get("ipeds_id") or "").strip()
+    return bool(school_id) and ((not ipeds) or (not name) or name == school_id)
+
+
+def stamp_document_identity(
+    client: Client,
+    doc: dict[str, Any],
+    *,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    """Attach directory name + UNITID before extract/ledger publish.
+
+    Archive writers are supposed to stamp these. The Python headless path
+    historically omitted them, so the extraction queue must not copy a
+    slug-as-name / null-IPEDS row into the public activity log.
+    """
+    if not document_identity_needs_repair(doc):
+        return doc
+    school_id = str(doc.get("school_id") or "").strip()
+    document_id = str(doc.get("id") or "")
+    try:
+        result = (
+            client.table("institution_directory")
+            .select("school_id,school_name,ipeds_id")
+            .eq("school_id", school_id)
+            .limit(1)
+            .execute()
+        )
+    except Exception as e:
+        print(
+            f"    identity_lookup_error: school={school_id} document={document_id} "
+            f"{type(e).__name__}: {e}",
+            file=sys.stderr,
+            flush=True,
+        )
+        return doc
+    rows = result.data or []
+    if not rows:
+        return doc
+    row = rows[0]
+    name = str(row.get("school_name") or "").strip()
+    ipeds = str(row.get("ipeds_id") or "").strip()
+    if not name or not ipeds:
+        return doc
+    patch: dict[str, str] = {}
+    if not str(doc.get("ipeds_id") or "").strip():
+        doc["ipeds_id"] = ipeds
+        patch["ipeds_id"] = ipeds
+    current_name = str(doc.get("school_name") or "").strip()
+    if not current_name or current_name == school_id:
+        doc["school_name"] = name
+        patch["school_name"] = name
+    if patch and not dry_run and document_id:
+        try:
+            client.table("cds_documents").update(patch).eq("id", document_id).execute()
+        except Exception as e:
+            print(
+                f"    identity_write_error: school={school_id} document={document_id} "
+                f"{type(e).__name__}: {e}",
+                file=sys.stderr,
+                flush=True,
+            )
+    return doc
+
+
 def extraction_ledger_item(
     doc: dict[str, Any],
     action: str,
@@ -2246,8 +2315,8 @@ def main() -> int:
         )
 
     query = client.table("cds_documents").select(
-        "id, school_id, school_name, cds_year, detected_year, source_format, "
-        "extraction_status, discovered_at, source_sha256",
+        "id, school_id, school_name, ipeds_id, cds_year, detected_year, "
+        "source_format, extraction_status, discovered_at, source_sha256",
     )
     if args.include_failed:
         query = query.in_("extraction_status", ["extraction_pending", "failed"])
@@ -2311,7 +2380,7 @@ def main() -> int:
             reconcile_base = len(ledger_items)
             ledger_items.extend(
                 extraction_ledger_item(
-                    doc,
+                    stamp_document_identity(client, doc, dry_run=args.dry_run),
                     "reconciled",
                     ordinal=reconcile_base + index,
                     force_reextract=False,
@@ -2406,6 +2475,7 @@ def main() -> int:
         # an old CDS year that resolves to a schema without a 'fields' key).
         # One bad row must not abort the whole drain and strand every
         # remaining document — mark it failed and keep going.
+        doc = stamp_document_identity(client, doc, dry_run=args.dry_run)
         try:
             outcome = extract_one(
                 client,

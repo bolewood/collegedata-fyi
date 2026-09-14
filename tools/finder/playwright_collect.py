@@ -43,6 +43,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
+try:
+    from tools.finder.academic_year import normalize_academic_year
+except ImportError:  # python tools/finder/playwright_collect.py
+    from academic_year import normalize_academic_year  # type: ignore
+
 
 # Hand-compiled starting URLs for the top-100 schools. For schools already in
 # schools.yaml we prefer a LANDING-page URL (not a specific PDF) because we
@@ -163,7 +168,6 @@ STARTING_URLS: dict[str, str] = {
 # CDS-keyword regex mirrors the resolver's detection.
 CDS_KEYWORDS_RE = re.compile(r"common\s*data\s*set|\bcds(?![a-z])", re.I)
 DOCUMENT_EXT_RE = re.compile(r"\.(pdf|xlsx|docx)(\?|#|$)", re.I)
-YEAR_RE = re.compile(r"(20\d\d)[-_](20\d\d|\d\d)")
 
 COMMONDATASET_ORG_RE = re.compile(r"^https?://(?:[^/]+\.)?commondataset\.org", re.I)
 
@@ -291,13 +295,7 @@ def is_download_nav_error(msg: str) -> bool:
 
 
 def normalize_year(text: str) -> str | None:
-    m = YEAR_RE.search(text)
-    if not m:
-        return None
-    y1, y2 = m.group(1), m.group(2)
-    if len(y2) == 2:
-        y2 = y1[:2] + y2
-    return f"{y1[:4]}-{y2[-2:]}"
+    return normalize_academic_year(text)
 
 
 def is_cds_like(href: str, text: str) -> bool:
