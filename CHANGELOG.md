@@ -6,6 +6,15 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.2.1] - 2026-09-14
+
+### Fixed
+
+- Keep archived Common Data Set files attached to the official school
+  name and IPEDS UNITID, including 1990s filenames such as UF's
+  `cds1997-98.pdf`. The public slug stays `uf`; the file no longer
+  publishes as a nameless `unknown` year.
+
 ## [0.6.2.0] - 2026-09-12
 
 ### Added
