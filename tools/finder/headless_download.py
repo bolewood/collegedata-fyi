@@ -36,7 +36,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import os
-import re
 import sys
 import time
 import yaml
@@ -47,11 +46,15 @@ from pathlib import Path
 from typing import Optional
 
 try:
+    from tools.finder.academic_year import normalize_academic_year
+    from tools.finder.archive_identity import resolve_archive_identity
     from tools.finder.waf_school_ids import (
         canonical_waf_school_id,
         select_waf_schools,
     )
 except ImportError:  # python tools/finder/headless_download.py
+    from academic_year import normalize_academic_year  # type: ignore
+    from archive_identity import resolve_archive_identity  # type: ignore
     from waf_school_ids import (  # type: ignore
         canonical_waf_school_id,
         select_waf_schools,
@@ -153,13 +156,7 @@ def sniff_ext_from_bytes(body: bytes) -> Optional[str]:
 
 
 def normalize_year(s: str) -> Optional[str]:
-    m = re.search(r"(20\d\d)[-_](20\d\d|\d\d)", s)
-    if not m:
-        return None
-    y1, y2 = m.group(1), m.group(2)
-    if len(y2) == 2:
-        y2 = y1[:2] + y2
-    return f"{y1[:4]}-{y2[-2:]}"
+    return normalize_academic_year(s)
 
 
 def download_via_page(
@@ -291,13 +288,21 @@ def upload_and_record(sb, school_id: str, year: str, body: bytes,
     )
     # supabase-py returns different shapes on success; errors raise.
 
+    identity = resolve_archive_identity(school_id)
+    official_name = identity["school_name"]
+    offered = (school_name or "").strip()
+    if offered and offered != school_id:
+        official_name = offered
+
     # Upsert cds_documents row. Composite key (school_id, sub_institutional, cds_year);
     # sub_institutional is NULL for our top-100 schools.
     doc_row = {
-        "school_id": school_id,
-        "school_name": school_name or school_id,
+        "school_id": identity["school_id"],
+        "school_name": official_name,
+        "ipeds_id": identity["ipeds_id"],
         "cds_year": year,
         "source_url": source_url,
+        "source_sha256": sha,
         "source_format": "pdf_flat" if ext == "pdf" else
                          ("xlsx" if ext == "xlsx" else "docx"),
         "extraction_status": "extraction_pending",
