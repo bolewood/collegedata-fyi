@@ -33,6 +33,7 @@ CREATE INDEX IF NOT EXISTS institution_directory_opeid6_main_idx
 CREATE OR REPLACE FUNCTION public.apply_directory_opeid_fill(updates jsonb)
 RETURNS integer
 LANGUAGE plpgsql
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   updated integer;
@@ -41,6 +42,7 @@ BEGIN
   SET opeid = u.opeid
   FROM jsonb_to_recordset(updates) AS u(ipeds_id text, opeid text)
   WHERE d.ipeds_id = u.ipeds_id
+    AND d.opeid IS NULL
     AND u.opeid ~ '^[0-9]{8}$';
   GET DIAGNOSTICS updated = ROW_COUNT;
   RETURN updated;
@@ -82,7 +84,16 @@ CREATE TABLE IF NOT EXISTS public.fsa_nonpayment_facts (
   created_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (release_id, opeid),
   CONSTRAINT fsa_nonpayment_facts_rate_fraction
-    CHECK (nonpayment_rate IS NULL OR (nonpayment_rate >= 0 AND nonpayment_rate <= 1))
+    CHECK (nonpayment_rate IS NULL OR (nonpayment_rate >= 0 AND nonpayment_rate <= 1)),
+  CONSTRAINT fsa_nonpayment_facts_public_visible_ok
+    CHECK (
+      NOT public_visible
+      OR (
+        school_id IS NOT NULL
+        AND suppressed IS NOT TRUE
+        AND nonpayment_rate IS NOT NULL
+      )
+    )
 );
 
 COMMENT ON TABLE public.fsa_nonpayment_facts IS
@@ -111,6 +122,91 @@ CREATE POLICY fsa_nonpayment_facts_public_read
 
 GRANT SELECT ON public.fsa_releases TO anon, authenticated;
 GRANT SELECT ON public.fsa_nonpayment_facts TO anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.apply_fsa_nonpayment_release(
+  release jsonb,
+  facts jsonb
+) RETURNS uuid
+LANGUAGE plpgsql
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  rid uuid;
+BEGIN
+  SELECT id INTO rid
+  FROM public.fsa_releases
+  WHERE source_sha256 = release->>'source_sha256';
+
+  IF rid IS NULL THEN
+    INSERT INTO public.fsa_releases (
+      as_of_date, as_of_label, cohort_window_start, cohort_window_end,
+      source_url, source_sha256, announcement_url, title, downloaded_at
+    )
+    VALUES (
+      (release->>'as_of_date')::date,
+      release->>'as_of_label',
+      (release->>'cohort_window_start')::date,
+      (release->>'cohort_window_end')::date,
+      release->>'source_url',
+      release->>'source_sha256',
+      release->>'announcement_url',
+      release->>'title',
+      COALESCE((release->>'downloaded_at')::timestamptz, now())
+    )
+    RETURNING id INTO rid;
+  ELSE
+    UPDATE public.fsa_releases
+    SET
+      as_of_date = (release->>'as_of_date')::date,
+      as_of_label = release->>'as_of_label',
+      cohort_window_start = (release->>'cohort_window_start')::date,
+      cohort_window_end = (release->>'cohort_window_end')::date,
+      source_url = release->>'source_url',
+      announcement_url = release->>'announcement_url',
+      title = release->>'title',
+      downloaded_at = COALESCE((release->>'downloaded_at')::timestamptz, now())
+    WHERE id = rid;
+    DELETE FROM public.fsa_nonpayment_facts WHERE release_id = rid;
+  END IF;
+
+  INSERT INTO public.fsa_nonpayment_facts (
+    release_id, opeid, school_id, school_name_raw, school_type, state,
+    borrowers_in_denom, borrowers_raw, nonpayment_rate, rate_raw,
+    suppressed, public_visible
+  )
+  SELECT
+    rid,
+    f.opeid,
+    f.school_id,
+    f.school_name_raw,
+    f.school_type,
+    f.state,
+    f.borrowers_in_denom,
+    f.borrowers_raw,
+    f.nonpayment_rate,
+    f.rate_raw,
+    COALESCE(f.suppressed, false),
+    COALESCE(f.public_visible, false)
+  FROM jsonb_to_recordset(facts) AS f(
+    opeid text,
+    school_id text,
+    school_name_raw text,
+    school_type text,
+    state text,
+    borrowers_in_denom integer,
+    borrowers_raw text,
+    nonpayment_rate numeric,
+    rate_raw text,
+    suppressed boolean,
+    public_visible boolean
+  );
+
+  RETURN rid;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.apply_fsa_nonpayment_release(jsonb, jsonb) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.apply_fsa_nonpayment_release(jsonb, jsonb) TO service_role;
 
 CREATE OR REPLACE VIEW public.fsa_nonpayment_current
 WITH (security_invoker = true) AS

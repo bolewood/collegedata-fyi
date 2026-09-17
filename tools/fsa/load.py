@@ -200,13 +200,6 @@ def apply_release(
     source_sha256: str,
     announcement_url: str | None,
 ) -> str:
-    existing = (
-        client.table("fsa_releases")
-        .select("id")
-        .eq("source_sha256", source_sha256)
-        .limit(1)
-        .execute()
-    )
     payload = {
         "as_of_date": parsed.as_of_date.isoformat(),
         "as_of_label": parsed.as_of_label,
@@ -218,17 +211,13 @@ def apply_release(
         "title": parsed.title,
         "downloaded_at": datetime.now(timezone.utc).isoformat(),
     }
-    if existing.data:
-        release_id = existing.data[0]["id"]
-        client.table("fsa_releases").update(payload).eq("id", release_id).execute()
-        client.table("fsa_nonpayment_facts").delete().eq("release_id", release_id).execute()
-    else:
-        inserted = client.table("fsa_releases").insert(payload).execute()
-        release_id = inserted.data[0]["id"]
-    for i in range(0, len(facts), 500):
-        batch = [{**row, "release_id": release_id} for row in facts[i : i + 500]]
-        client.table("fsa_nonpayment_facts").insert(batch).execute()
-    return release_id
+    response = client.rpc(
+        "apply_fsa_nonpayment_release",
+        {"release": payload, "facts": facts},
+    ).execute()
+    if not response.data:
+        raise RuntimeError("apply_fsa_nonpayment_release returned no release id")
+    return str(response.data)
 
 
 def main() -> int:

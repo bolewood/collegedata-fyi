@@ -274,6 +274,23 @@ async function DocumentVariant({
           <div style={{ marginTop: 12 }}>
             <OutcomesBand scorecard={scorecard} nonpayment={nonpayment} />
           </div>
+          {nonpayment?.nonpayment_rate != null && (
+            <p
+              className="mono"
+              style={{
+                marginTop: 12,
+                fontSize: 11,
+                color: "var(--ink-3)",
+                letterSpacing: "0.04em",
+                maxWidth: 640,
+                lineHeight: 1.5,
+              }}
+            >
+              Nonpayment is the share of Direct Loan borrowers who entered
+              repayment January 2020–May 2025 and were 90+ days delinquent at
+              the FSA pull. It is not the official cohort default rate.
+            </p>
+          )}
         </div>
       )}
 
