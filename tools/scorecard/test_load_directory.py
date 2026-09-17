@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from tools.scorecard.load_directory import (  # noqa: E402
     DEFAULT_SCHOOLS_YAML,
+    DIRECTORY_COLUMN_MAP,
     _scope_decision,
     audit_directory_identities,
     assign_slugs,
@@ -645,6 +646,7 @@ class LoaderMainIdentityGuardTests(unittest.TestCase):
             "STABBR": "MA",
             "ZIP": "02747",
             "INSTURL": "https://www.umassd.edu/",
+            "OPEID": "00221000",
             "UGDS": "5221",
             "CONTROL": "1",
             "ICLEVEL": "1",
@@ -866,6 +868,50 @@ class DirectoryRefreshDeltaTests(unittest.TestCase):
             requested_ranges,
             [(0, 999), (1000, 1999), (2000, 2999)],
         )
+
+
+class DirectoryOpeidTests(unittest.TestCase):
+    def test_maps_opeid_column(self):
+        self.assertEqual(DIRECTORY_COLUMN_MAP["opeid"], "OPEID")
+
+    def test_pads_scorecard_opeid_to_eight(self):
+        row = build_directory_row(
+            {
+                "UNITID": "134130",
+                "INSTNM": "University of Florida",
+                "OPEID": 153500,
+                "OPEID6": "001535",
+                "UGDS": 30000,
+                "CONTROL": 1,
+                "ICLEVEL": 1,
+                "PREDDEG": 3,
+                "HIGHDEG": 4,
+                "CURROPER": 1,
+                "MAIN": 1,
+            },
+            "2022-23",
+        )
+        self.assertEqual(row["opeid"], "00153500")
+        self.assertNotIn("opeid6", row)
+
+    def test_does_not_six_pad_eight_digit_opeid(self):
+        row = build_directory_row(
+            {
+                "UNITID": "1",
+                "INSTNM": "Example",
+                "OPEID": "00100201",
+                "UGDS": 100,
+                "CONTROL": 1,
+                "ICLEVEL": 1,
+                "PREDDEG": 3,
+                "HIGHDEG": 3,
+                "CURROPER": 1,
+                "MAIN": 1,
+            },
+            "2022-23",
+        )
+        self.assertEqual(row["opeid"], "00100201")
+        self.assertNotEqual(row["opeid"], "100201")
 
 
 if __name__ == "__main__":
