@@ -422,7 +422,7 @@ school-authored source; IPEDS is a federal baseline with visible provenance.
 
 ## How the pipelines compose
 
-The eleven pipelines are loosely coupled but they do depend on each other in specific ways. A quick walkthrough of "what happens when" for each type of work:
+The twelve pipelines are loosely coupled but they do depend on each other in specific ways. A quick walkthrough of "what happens when" for each type of work:
 
 **When a new CDS year is published by commondataset.org:**
 1. Download the new XLSX template to `scratch/`
