@@ -131,5 +131,24 @@ class ApplyReleaseTests(unittest.TestCase):
             self.assertEqual(args["facts"][0]["opeid"], "001535")
 
 
+class ScorecardOpeidTests(unittest.TestCase):
+    def test_opeid6_mismatch_keeps_eight_digit_opeid(self):
+        import tempfile
+        from pathlib import Path
+
+        from tools.fsa.load import read_scorecard_opeids
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "scorecard.csv"
+            path.write_text(
+                "UNITID,OPEID,OPEID6,INSTNM\n"
+                "458973,10145901,001459,Strayer University-Texas\n",
+                encoding="utf-8",
+            )
+            rows = read_scorecard_opeids(path)
+        self.assertEqual(rows["458973"]["OPEID"], "10145901")
+        self.assertEqual(rows["458973"]["OPEID6"], "101459")
+
+
 if __name__ == "__main__":
     unittest.main()
