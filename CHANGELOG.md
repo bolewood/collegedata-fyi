@@ -6,6 +6,15 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.3.0] - 2026-09-17
+
+### Added
+
+- Load Federal Student Aid institutional nonpayment rates as a Title IV
+  companion (not a fourth named homepage source). School pages show a
+  Nonpayment KPI with the FSA as-of date and an explicit "not the official
+  cohort default rate" hint. The public view is `fsa_nonpayment_current`.
+
 ## [0.6.2.1] - 2026-09-14
 
 ### Fixed

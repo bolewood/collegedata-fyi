@@ -8,6 +8,7 @@ import {
   fetchScorecardByIpedsId,
   fetchCanonicalSchoolId,
   fetchSchoolBrandColors,
+  fetchFsaNonpaymentBySchoolId,
 } from "@/lib/queries";
 import type { FieldValue, ArtifactNotes } from "@/lib/types";
 import { storageUrl, formatBadgeLabel, sourceDownloadLabel } from "@/lib/format";
@@ -74,9 +75,10 @@ export default async function SchoolYearPage({ params }: {
   // Scorecard is per-school, not per-year — pull once at the page level
   // and render under KeyStats in each document variant.
   const ipedsId = docs.find((d) => d.ipeds_id)?.ipeds_id ?? null;
-  const [scorecard, brandColors] = await Promise.all([
+  const [scorecard, brandColors, nonpayment] = await Promise.all([
     fetchScorecardByIpedsId(ipedsId),
     fetchSchoolBrandColors(school_id),
+    fetchFsaNonpaymentBySchoolId(school_id),
   ]);
 
   const schoolName = docs[0].school_name ?? "Unknown school";
@@ -169,6 +171,7 @@ export default async function SchoolYearPage({ params }: {
           key={doc.document_id}
           doc={doc}
           scorecard={scorecard}
+          nonpayment={nonpayment}
           showSpreadsheetLinks={i === 0}
         />
       ))}
@@ -179,10 +182,12 @@ export default async function SchoolYearPage({ params }: {
 async function DocumentVariant({
   doc,
   scorecard,
+  nonpayment,
   showSpreadsheetLinks,
 }: {
   doc: Awaited<ReturnType<typeof fetchDocumentsBySchoolAndYear>>[number];
   scorecard: Awaited<ReturnType<typeof fetchScorecardByIpedsId>>;
+  nonpayment: Awaited<ReturnType<typeof fetchFsaNonpaymentBySchoolId>>;
   showSpreadsheetLinks: boolean;
 }) {
   const sourceDownloadUrl = storageUrl(doc.source_storage_path);
@@ -257,16 +262,35 @@ async function DocumentVariant({
       {/* Federal outcomes — Scorecard data. Only render under the first
           document variant; for schools with sub-institutional variants, the
           Scorecard data is IPEDS-level and identical across them. */}
-      {scorecard && !doc.sub_institutional && (
+      {(scorecard || nonpayment) && !doc.sub_institutional && (
         <div style={{ marginTop: 24 }}>
           <div className="meta">§ Federal outcomes</div>
           <h2 className="serif" style={{ fontSize: 22, fontWeight: 400, margin: "6px 0 0" }}>
             Federal outcomes
           </h2>
+          {scorecard && (
           <div style={{ marginTop: 4 }}><ScorecardVintageNote scorecard={scorecard} /></div>
+          )}
           <div style={{ marginTop: 12 }}>
-            <OutcomesBand scorecard={scorecard} />
+            <OutcomesBand scorecard={scorecard} nonpayment={nonpayment} />
           </div>
+          {nonpayment?.nonpayment_rate != null && (
+            <p
+              className="mono"
+              style={{
+                marginTop: 12,
+                fontSize: 11,
+                color: "var(--ink-3)",
+                letterSpacing: "0.04em",
+                maxWidth: 640,
+                lineHeight: 1.5,
+              }}
+            >
+              Nonpayment is the share of Direct Loan borrowers who entered
+              repayment January 2020–May 2025 and were 90+ days delinquent at
+              the FSA pull. It is not the official cohort default rate.
+            </p>
+          )}
         </div>
       )}
 

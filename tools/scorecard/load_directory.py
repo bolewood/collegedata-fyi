@@ -66,6 +66,7 @@ from tools.finder.identity_guard import (  # noqa: E402
     school_claim_retired_alias_map,
     school_claim_slug_map,
 )
+from tools.fsa.opeid import normalize_opeid8  # noqa: E402
 
 
 # Scorecard CSV column → directory field. Source-of-truth list comes
@@ -78,6 +79,7 @@ DIRECTORY_COLUMN_MAP: dict[str, str] = {
     "state":                     "STABBR",
     "zip":                       "ZIP",
     "website_url":               "INSTURL",
+    "opeid":                     "OPEID",
     "undergraduate_enrollment":  "UGDS",
     "control":                   "CONTROL",
     "institution_level":         "ICLEVEL",
@@ -408,6 +410,16 @@ def build_directory_row(
         out[target] = _coerce(raw.get(source), target)
     if not out.get("school_name"):
         return None
+    out["opeid"] = normalize_opeid8(out.get("opeid") or raw.get("OPEID"))
+    opeid6_csv = raw.get("OPEID6")
+    if out["opeid"] and opeid6_csv not in (None, "", "NULL", "PrivacySuppressed"):
+        from tools.fsa.opeid import restore_fsa_opeid
+        csv6 = restore_fsa_opeid(opeid6_csv)
+        if csv6 and csv6 != out["opeid"][:6]:
+            raise ValueError(
+                f"Scorecard OPEID6 {csv6} != left(OPEID,6) {out['opeid'][:6]} "
+                f"for UNITID {ipeds}"
+            )
 
     # PREDDEG is a derived annual classification, not a statement that the
     # institution stopped awarding degrees. The March 2026 Scorecard release

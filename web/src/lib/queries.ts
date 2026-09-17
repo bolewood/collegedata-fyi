@@ -18,6 +18,7 @@ import type {
   MeritProfileQuality,
   MeritProfileRow,
   SchoolFactUnifiedRow,
+  FsaNonpaymentCurrent,
 } from "./types";
 import type { SchoolFeedEvent } from "./school-rss";
 import type { SchoolAcademicProfile } from "./positioning";
@@ -1019,6 +1020,30 @@ export const fetchSchoolFederalFacts = cache(
     } catch (error) {
       console.warn(`fetchSchoolFederalFacts: ${String(error)}`);
       return [];
+    }
+  },
+);
+
+export const fetchFsaNonpaymentBySchoolId = cache(
+  async function fetchFsaNonpaymentBySchoolId(
+    schoolId: string,
+  ): Promise<FsaNonpaymentCurrent | null> {
+    try {
+      const { data, error } = await (supabase as unknown as UntypedSupabase)
+        .from("fsa_nonpayment_current")
+        .select(
+          "school_id,opeid,school_name_raw,school_type,state,borrowers_in_denom,nonpayment_rate,rate_raw,as_of_date,as_of_label,cohort_window_start,cohort_window_end,source_url,source_sha256,announcement_url,title",
+        )
+        .eq("school_id", schoolId)
+        .maybeSingle();
+      if (error) {
+        console.warn(`fetchFsaNonpaymentBySchoolId: ${error.message}`);
+        return null;
+      }
+      return (data as FsaNonpaymentCurrent) ?? null;
+    } catch (error) {
+      console.warn(`fetchFsaNonpaymentBySchoolId: ${String(error)}`);
+      return null;
     }
   },
 );

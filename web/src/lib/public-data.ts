@@ -5,9 +5,10 @@ import {
   fetchSchoolDocuments,
   fetchSchoolFederalFacts,
   fetchScorecardByIpedsId,
+  fetchFsaNonpaymentBySchoolId,
 } from "./queries";
 import { glyphSearchFields } from "./derive-inks";
-import type { InstitutionCoverage, ManifestRow, SchoolFactUnifiedRow } from "./types";
+import type { InstitutionCoverage, ManifestRow, SchoolFactUnifiedRow, FsaNonpaymentCurrent } from "./types";
 import {
   federalCategory,
   type PublicFactCategory,
@@ -22,7 +23,7 @@ type UntypedSupabase = {
   rpc: (fn: string, args?: Record<string, unknown>) => any;
 };
 
-export type PublicSourceLayer = "cds" | "ipeds" | "scorecard" | "derived" | "directory";
+export type PublicSourceLayer = "cds" | "ipeds" | "scorecard" | "fsa" | "derived" | "directory";
 
 export type PublicFactQualityFlag =
   | "reported"
@@ -387,6 +388,19 @@ export const FRIENDLY_FACT_FIELDS: FactDefinitionInput[] = [
     source_fields: ["median_debt_completers"],
     path: "scorecard.median_debt_completers",
   },
+  {
+    key: "nonpayment_rate",
+    label: "Nonpayment rate",
+    category: "outcomes",
+    source_layer: "fsa",
+    unit: "percent",
+    value_type: "percent",
+    definition:
+      "Share of Direct Loan borrowers who entered repayment January 2020–May 2025 and were 90+ days delinquent at the FSA institutional nonpayment pull. Not the official cohort default rate.",
+    source_fields: ["nonpayment_rate"],
+    path: "nonpayment.nonpayment_rate",
+    caveat: "Not the official cohort default rate (CDR).",
+  },
 ];
 
 const FIELD_BY_KEY = new Map(FRIENDLY_FACT_FIELDS.map((field) => [field.key, field]));
@@ -543,6 +557,16 @@ function sourceForDefinition(
       data_year: scorecardYear(context.scorecard),
     };
   }
+  if (definition.source_layer === "fsa") {
+    return {
+      layer: "fsa",
+      name: "Federal Student Aid institutional nonpayment",
+      url: context.nonpayment?.source_url ?? "https://studentaid.gov/data-center/student/portfolio",
+      data_year: context.nonpayment?.as_of_date
+        ? Number(context.nonpayment.as_of_date.slice(0, 4))
+        : null,
+    };
+  }
   const doc = latestPrimaryDoc(context.docs);
   if (definition.source_layer === "cds" || definition.source_layer === "derived") {
     return {
@@ -606,6 +630,7 @@ function getByPath(context: PublicSchoolContext, path: string | undefined): unkn
   if (scope === "coverage") return context.coverage?.[key as keyof InstitutionCoverage] ?? null;
   if (scope === "browser") return context.browserRow?.[key] ?? null;
   if (scope === "scorecard") return context.scorecard?.[key as keyof NonNullable<PublicSchoolContext["scorecard"]>] ?? null;
+  if (scope === "nonpayment") return context.nonpayment?.[key as keyof FsaNonpaymentCurrent] ?? null;
   if (scope === "merit") return context.meritRow?.[key] ?? null;
   return null;
 }
@@ -654,6 +679,7 @@ type PublicSchoolContext = {
   browserRow: BrowserRow | null;
   meritRow: MeritRow | null;
   scorecard: Awaited<ReturnType<typeof fetchScorecardByIpedsId>>;
+  nonpayment: FsaNonpaymentCurrent | null;
   federalFacts: SchoolFactUnifiedRow[];
 };
 
@@ -695,15 +721,16 @@ async function fetchMeritFactsRow(schoolId: string): Promise<MeritRow | null> {
 }
 
 async function buildSchoolContext(schoolId: string): Promise<PublicSchoolContext | null> {
-  const [docs, coverage, browserRow, meritRow, federalFacts] = await Promise.all([
+  const [docs, coverage, browserRow, meritRow, federalFacts, nonpayment] = await Promise.all([
     fetchSchoolDocuments(schoolId),
     fetchInstitutionCoverage(schoolId),
     fetchBrowserFactsRow(schoolId),
     fetchMeritFactsRow(schoolId),
     fetchSchoolFederalFacts(schoolId),
+    fetchFsaNonpaymentBySchoolId(schoolId),
   ]);
 
-  if (docs.length === 0 && !coverage && !browserRow && federalFacts.length === 0) return null;
+  if (docs.length === 0 && !coverage && !browserRow && federalFacts.length === 0 && !nonpayment) return null;
 
   const ipedsId =
     coverage?.ipeds_id ?? docs.find((doc) => doc.ipeds_id)?.ipeds_id ?? federalFacts[0]?.ipeds_id ?? null;
@@ -719,6 +746,7 @@ async function buildSchoolContext(schoolId: string): Promise<PublicSchoolContext
     browserRow,
     meritRow,
     scorecard,
+    nonpayment,
     federalFacts,
   };
 }

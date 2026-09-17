@@ -556,6 +556,36 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
           ]}
         />
         <Resource
+          name="fsa_nonpayment_current"
+          description="Latest Federal Student Aid institutional nonpayment vintage, one public row per matched school_id. Direct Loan borrowers who entered repayment January 2020–May 2025 and were 90+ days delinquent at the FSA pull. This is not the official cohort default rate. institution_directory now also exposes opeid (8-digit Scorecard key) and opeid6 (left 6)."
+          fields={[
+            "school_id",
+            "opeid",
+            "nonpayment_rate",
+            "as_of_date",
+            "as_of_label",
+            "source_url",
+          ]}
+          allFields={[
+            "school_id",
+            "opeid",
+            "school_name_raw",
+            "school_type",
+            "state",
+            "borrowers_in_denom",
+            "nonpayment_rate",
+            "rate_raw",
+            "as_of_date",
+            "as_of_label",
+            "cohort_window_start",
+            "cohort_window_end",
+            "source_url",
+            "source_sha256",
+            "announcement_url",
+            "title",
+          ]}
+        />
+        <Resource
           name="ipeds_current_facts"
           description="Latest public IPEDS fact per public ipeds_id and field key. Prefers newer data years, then final over provisional over preliminary within the same data year. This view is backed by a materialized serving cache; use school_facts_unified for school-page display because it already joins institution names, slugs, and in-scope filtering."
           fields={[
@@ -990,6 +1020,20 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
       </div>
 
       <h2 className="serif mt-10 text-2xl">Examples</h2>
+
+      <h3 className="serif mt-6 text-lg">
+        Fetch the current FSA nonpayment rate for one school
+      </h3>
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
+        <code>fsa_nonpayment_current</code> is the latest workbook vintage,
+        already joined to <code>school_id</code>. Keep the as-of date and
+        source URL next to the number, and do not label it as the official
+        cohort default rate. Directory <code>opeid</code> / <code>opeid6</code>
+        are Scorecard Title IV keys, not this FSA 6-digit main-campus key.
+      </p>
+      <CodeBlock>{`curl '${BASE}/rest/v1/fsa_nonpayment_current?school_id=eq.uf&select=school_id,nonpayment_rate,as_of_label,as_of_date,source_url' \\
+  -H 'apikey: <anon key>' \\
+  -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 
       <h3 className="serif mt-6 text-lg">
         Fetch federal baseline facts for a no-CDS school

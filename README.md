@@ -30,7 +30,7 @@ We also archive source files on discovery, because some schools do occasionally 
 - **A source-labeled NCES/IPEDS federal baseline** ([PRD 021](docs/prd/021-ipeds-coverage-layer.md)) — curated enrollment, admissions, cost, aid, and outcome-adjacent facts for in-scope institutions, especially schools where no public CDS is archived. Provisional/final release status, source table/variable, imputation status, and definition-alignment notes stay visible.
 - **Fit-data products on top of the raw CDS** — academic positioning ([PRD 016](docs/prd/016-academic-positioning-card.md)), admission strategy ([PRD 016B](docs/prd/016B-admission-strategy-card.md)), match-list building ([PRD 017](docs/prd/017-match-list-builder.md)), and merit profile data ([PRD 018](docs/prd/018-open-college-fit-data.md))
 - **Change intelligence alpha** ([PRD 019](docs/prd/019-cds-change-intelligence.md)) — deterministic year-over-year events for material deltas, newly missing/reported fields, producer or quality changes, and an operator review workflow before anything becomes public or reportable
-- **A public API** at `https://api.collegedata.fyi` that tracks discovery status, last-verified dates, participation status, per-document provenance, per-institution coverage state, browser-ready admissions/profile rows, source-labeled IPEDS baseline facts, Scorecard joins, and merit-aid profiles
+- **A public API** at `https://api.collegedata.fyi` that tracks discovery status, last-verified dates, participation status, per-document provenance, per-institution coverage state, browser-ready admissions/profile rows, source-labeled IPEDS baseline facts, Scorecard joins, FSA institutional nonpayment (`fsa_nonpayment_current`), and merit-aid profiles
 - **An extensible artifact model** so community cleanup tools can publish their own extracts alongside the primary ones without replacing them
 
 ## Quick look
@@ -80,9 +80,10 @@ curl 'https://api.collegedata.fyi/rest/v1/ipeds_facts?ipeds_id=eq.110635&field_k
 2. A Python worker prioritizes fresh CDS years, routes each document from byte-derived `source_format`, and extracts by tier. Tiers that ship today: filled XLSX -> template or embedded answer-column cell map + openpyxl; fillable PDF with AcroForm fields -> deterministic direct read ([`tools/tier2_extractor/`](tools/tier2_extractor/)); flattened PDF -> Docling layout extraction + schema-targeting cleaner ([`tools/extraction_worker/tier4_cleaner.py`](tools/extraction_worker/tier4_cleaner.py)); image-only scans -> force-OCR pass through the same Docling pipeline; structured HTML -> HTML normalizer reusing the Tier 4 cleaner. Remaining tier scoped but not yet built: filled DOCX via Structured Document Tags ([PRD 007](docs/prd/007-tier3-docx-extraction.md)).
 3. All extractors produce output keyed to CDS canonical field IDs using the schemas at [`schemas/`](schemas/). 2025-26 and 2024-25 are canonical template years; 2023-24 is supported by a synthesized canonical schema built from the official 2023-24 PDF form tags plus the 2024-25 field map. Older structural schemas remain available for audits and overlays.
 4. The IPEDS pipeline loads official NCES metadata workbooks and selected CSV table ZIPs into release, metadata, raw-row, and curated-fact tables. Historical releases from 2004-05 through 2024-25 can be loaded with Access fallback for older releases. `school_facts_unified` is the public serving view for source-labeled federal baseline facts; `ipeds_current_facts` is backed by a materialized cache; raw IPEDS rows are preserved for audit, not treated as the product API.
-5. PostgREST exposes the manifest, field substrate, browser rows, institution coverage, IPEDS facts, Scorecard joins, and merit profiles as a public read-only API at `api.collegedata.fyi`. The `browser-search` Edge Function powers the queryable browser and match list; `school_merit_profile` joins Section H CDS facts with federal affordability/outcome fields.
-6. PRD 019 projects selected year-over-year changes from comparable primary CDS rows into `cds_field_change_events`. Generated candidates are service-role/operator data by default; the school-page "What changed" card only reads events marked `public_visible=true` after verification.
-7. Community cleanup tools can register via `cleaners.yaml` and publish their own artifacts alongside the primary ones — see [ADR 0002](docs/decisions/0002-publish-raw-over-clean.md) for the rationale.
+5. An operator-run FSA pipeline loads the public institutional nonpayment workbook into `fsa_releases` and `fsa_nonpayment_facts`, stamps `school_id` at load, and serves `fsa_nonpayment_current`. School pages cite FSA on the number. This is not the official cohort default rate and is not a fourth named homepage source.
+6. PostgREST exposes the manifest, field substrate, browser rows, institution coverage, IPEDS facts, Scorecard joins, FSA nonpayment, and merit profiles as a public read-only API at `api.collegedata.fyi`. The `browser-search` Edge Function powers the queryable browser and match list; `school_merit_profile` joins Section H CDS facts with federal affordability/outcome fields.
+7. PRD 019 projects selected year-over-year changes from comparable primary CDS rows into `cds_field_change_events`. Generated candidates are service-role/operator data by default; the school-page "What changed" card only reads events marked `public_visible=true` after verification.
+8. Community cleanup tools can register via `cleaners.yaml` and publish their own artifacts alongside the primary ones — see [ADR 0002](docs/decisions/0002-publish-raw-over-clean.md) for the rationale.
 
 Full architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
@@ -93,6 +94,7 @@ collegedata.fyi sits between official higher-education data systems and the docu
 - [Common Data Set Initiative](https://commondataset.org/) — the canonical CDS templates and field definitions this project follows.
 - [College Scorecard API](https://collegescorecard.ed.gov/data/api/) — federal outcomes, net-price, debt, completion, and earnings data; joined into `cds_scorecard`.
 - [IPEDS](https://nces.ed.gov/ipeds/) — federal postsecondary reporting system, source of UNITID identity metadata, and source for the PRD 021 federal baseline fact layer.
+- [Federal Student Aid Data Center](https://studentaid.gov/data-center/student/portfolio) — public institutional nonpayment workbook (`nonpayment-rates.xlsx`); not the official cohort default rate.
 - [Docling](https://github.com/docling-project/docling) — open-source document conversion toolkit used for flattened PDF, scanned PDF, and layout-aware extraction.
 - [UrbanInstitute/ipeds-scraper](https://github.com/UrbanInstitute/ipeds-scraper) — downloader for IPEDS complete data files.
 - [UrbanInstitute/education-data-package-r](https://github.com/UrbanInstitute/education-data-package-r) — R package for accessing education data including IPEDS and College Scorecard data.
@@ -101,7 +103,7 @@ collegedata.fyi sits between official higher-education data systems and the docu
 
 ## Docs and decisions
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — eleven-pipeline map of the whole system (schema, corpus, discovery, mirror, extraction, scorecard, institution directory + coverage, IPEDS federal baseline, change intelligence, consumer API, frontend)
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — twelve-pipeline map of the whole system (schema, corpus, discovery, mirror, extraction, scorecard, institution directory + coverage, IPEDS federal baseline, FSA institutional nonpayment, change intelligence, consumer API, frontend)
 - [`docs/data-extraction-pipeline.md`](docs/data-extraction-pipeline.md) — operational diagram of the discovery/archive/extraction/projection flow, including cadence, storage, and known issues
 - [`docs/extraction-quality.md`](docs/extraction-quality.md) — current accuracy by tier, per-section corpus-wide coverage, and reproducible scoring commands
 - [`docs/api-usage-attribution.md`](docs/api-usage-attribution.md) — low-PII friendly API usage attribution for MCP, CLI, and cooperative external integrations
@@ -115,6 +117,7 @@ collegedata.fyi sits between official higher-education data systems and the docu
 - [`tools/finder/README.md`](tools/finder/README.md) — school-corpus runbook, including the NCES identity audit and snapshot refresh workflow
 - [`tools/scorecard/README.md`](tools/scorecard/README.md) — College Scorecard pipeline runbook (`/rest/v1/cds_scorecard` returns CDS docs joined with federal earnings, debt, net price by income, completion)
 - [`tools/ipeds/README.md`](tools/ipeds/README.md) — NCES/IPEDS release loader and scheduled release-probe runbook
+- [`tools/fsa/README.md`](tools/fsa/README.md) — FSA institutional nonpayment loader (`fsa_nonpayment_current`)
 - [`docs/research/cds-vs-college-scorecard.md`](docs/research/cds-vs-college-scorecard.md) — CDS vs College Scorecard schema comparison
 - [`docs/decisions/`](docs/decisions/) — Architectural Decision Records
 - [`docs/known-issues/`](docs/known-issues/) — per-school extraction quality notes
