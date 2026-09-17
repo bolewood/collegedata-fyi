@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
 import unittest
+from pathlib import Path
 from unittest.mock import MagicMock
 
 from tools.finder.archive_identity import (
@@ -23,6 +27,22 @@ class ArchiveIdentityTests(unittest.TestCase):
     def test_unknown_slug_is_rejected(self) -> None:
         with self.assertRaises(UnknownArchiveSchoolError):
             resolve_archive_identity("university-of-florida")
+
+    def test_script_entry_imports_without_package_path(self) -> None:
+        """Ops runs `python tools/finder/headless_archive.py`, not -m."""
+        repo = Path(__file__).resolve().parents[2]
+        env = os.environ.copy()
+        env.pop("PYTHONPATH", None)
+        proc = subprocess.run(
+            [sys.executable, "tools/finder/headless_archive.py", "--help"],
+            cwd=str(repo),
+            env=env,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("usage:", proc.stdout.lower() + proc.stderr.lower())
 
 
 class HeadlessTargetIdentityTests(unittest.TestCase):

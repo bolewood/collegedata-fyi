@@ -14,7 +14,10 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Any
 
-from tools.finder.identity_guard import load_school_claims
+try:
+    from tools.finder.identity_guard import load_school_claims
+except ModuleNotFoundError:  # python tools/finder/headless_archive.py
+    from identity_guard import load_school_claims
 
 
 class UnknownArchiveSchoolError(ValueError):
