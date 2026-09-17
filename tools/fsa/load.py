@@ -74,9 +74,10 @@ def read_scorecard_opeids(path: Path) -> dict[str, dict[str, Any]]:
                 from tools.fsa.opeid import restore_fsa_opeid
                 opeid6_csv = restore_fsa_opeid(raw.get("OPEID6"))
             if opeid and opeid6_csv and opeid6_csv != opeid[:6]:
-                raise ValueError(
-                    f"Scorecard OPEID6 {opeid6_csv} != left(OPEID,6) {opeid[:6]} "
-                    f"for UNITID {ipeds_id}"
+                print(
+                    f"WARN Scorecard OPEID6 {opeid6_csv} != left(OPEID,6) {opeid[:6]} "
+                    f"for UNITID {ipeds_id}; using OPEID {opeid}",
+                    file=sys.stderr,
                 )
             by_unitid[ipeds_id] = {
                 "OPEID": opeid,
