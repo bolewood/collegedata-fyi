@@ -59,6 +59,77 @@ class FactRecordTests(unittest.TestCase):
         self.assertFalse(facts[0]["public_visible"])
         self.assertIsNone(facts[0]["nonpayment_rate"])
 
+    def test_omitted_after_collapse_hides_both_rollups(self):
+        parsed = _parsed(
+            FsaRow("001535", "A", "PUBLIC", "FL", 100, "100", 0.1, "0.1", False, True),
+            FsaRow("001536", "B", "PUBLIC", "FL", 200, "200", 0.2, "0.2", False, True),
+        )
+        facts, summary = fact_records(
+            parsed,
+            [
+                DirectoryRow("134130", "uf", "UF", True, True, "00153500", "001535"),
+                DirectoryRow("134131", "uf", "UF", True, True, "00153600", "001536"),
+            ],
+        )
+        self.assertEqual(summary["omitted_after_collapse"], ["uf"])
+        self.assertTrue(all(row["school_id"] is None for row in facts))
+        self.assertTrue(all(not row["public_visible"] for row in facts))
+
+
+class ApplyReleaseTests(unittest.TestCase):
+    def test_same_sha_reload_is_one_rpc(self):
+        from tools.fsa.load import apply_release
+
+        parsed = _parsed(
+            FsaRow("001535", "UF", "PUBLIC", "FL", 100, "100", 0.05, "0.05", False, True),
+        )
+        facts, _ = fact_records(
+            parsed,
+            [DirectoryRow("134130", "uf", "UF", True, True, "00153500", "001535")],
+        )
+
+        class FakeClient:
+            def __init__(self):
+                self.calls: list[tuple[str, dict]] = []
+
+            def rpc(self, name, args):
+                self.calls.append((name, args))
+
+                class Chain:
+                    def execute(_self):
+                        class Result:
+                            data = "rel-1"
+
+                        return Result()
+
+                return Chain()
+
+        client = FakeClient()
+        first = apply_release(
+            client,
+            parsed,
+            facts,
+            source_url="https://example.test/nonpayment-rates.xlsx",
+            source_sha256="abc",
+            announcement_url=None,
+        )
+        second = apply_release(
+            client,
+            parsed,
+            facts,
+            source_url="https://example.test/nonpayment-rates.xlsx",
+            source_sha256="abc",
+            announcement_url=None,
+        )
+        self.assertEqual(first, "rel-1")
+        self.assertEqual(second, "rel-1")
+        self.assertEqual(len(client.calls), 2)
+        for name, args in client.calls:
+            self.assertEqual(name, "apply_fsa_nonpayment_release")
+            self.assertEqual(args["release"]["source_sha256"], "abc")
+            self.assertEqual(len(args["facts"]), 1)
+            self.assertEqual(args["facts"][0]["opeid"], "001535")
+
 
 if __name__ == "__main__":
     unittest.main()
