@@ -273,6 +273,25 @@ export interface CorpusStats {
   extraction_pct: number;
 }
 
+export interface FsaNonpaymentCurrent {
+  school_id: string;
+  opeid: string;
+  school_name_raw: string | null;
+  school_type: string | null;
+  state: string | null;
+  borrowers_in_denom: number | null;
+  nonpayment_rate: number | null;
+  rate_raw: string | null;
+  as_of_date: string;
+  as_of_label: string | null;
+  cohort_window_start: string | null;
+  cohort_window_end: string | null;
+  source_url: string;
+  source_sha256: string;
+  announcement_url: string | null;
+  title: string | null;
+}
+
 export interface SiteStats extends CorpusStats {
   schema_field_count: number | null;
   queryable_field_count: number | null;

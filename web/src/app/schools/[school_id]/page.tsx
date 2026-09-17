@@ -11,6 +11,7 @@ import {
   fetchMeritProfileBySchoolId,
   fetchChangeEventsBySchoolId,
   fetchSchoolFederalFacts,
+  fetchFsaNonpaymentBySchoolId,
   fetchCanonicalSchoolId,
   fetchSchoolBrandColors,
 } from "@/lib/queries";
@@ -175,6 +176,7 @@ export default async function SchoolDetailPage({ params }: {
     coverage,
     federalFacts,
     brandColors,
+    nonpayment,
   ] = await Promise.all([
     fetchScorecardByIpedsId(ipedsId),
     fetchBrowserRowBySchoolId(school_id),
@@ -185,6 +187,7 @@ export default async function SchoolDetailPage({ params }: {
     fetchInstitutionCoverage(school_id),
     fetchSchoolFederalFacts(school_id),
     fetchSchoolBrandColors(school_id),
+    fetchFsaNonpaymentBySchoolId(school_id),
   ]);
   const positioningSchool = browserRow
     ? { ...browserRow, ...gpaProfile }
@@ -444,8 +447,8 @@ export default async function SchoolDetailPage({ params }: {
 
       <FederalBaselineTable facts={federalFacts} />
 
-      {scorecard ? (
-        <OutcomesSection scorecard={scorecard} />
+      {scorecard || nonpayment ? (
+        <OutcomesSection scorecard={scorecard} nonpayment={nonpayment} />
       ) : ipedsId ? (
         <p
           className="mono"
@@ -487,9 +490,10 @@ async function DirectoryOnlySchoolPage({
   coverage: InstitutionCoverage;
   school_id: string;
 }) {
-  const [scorecard, federalFacts] = await Promise.all([
+  const [scorecard, federalFacts, nonpayment] = await Promise.all([
     fetchScorecardByIpedsId(coverage.ipeds_id),
     fetchSchoolFederalFacts(school_id),
+    fetchFsaNonpaymentBySchoolId(school_id),
   ]);
 
   const { head, tail } = splitInstitutionalSuffix(coverage.school_name);
@@ -500,7 +504,7 @@ async function DirectoryOnlySchoolPage({
         year: "numeric",
       })
     : null;
-  const hasFederal = Boolean(scorecard) || federalFacts.length > 0;
+  const hasFederal = Boolean(scorecard) || federalFacts.length > 0 || Boolean(nonpayment);
   const lead = directoryOnlyLead(hasFederal);
 
   const jsonLd = {
@@ -625,9 +629,9 @@ async function DirectoryOnlySchoolPage({
 
       <FederalBaselineTable facts={federalFacts} compact />
 
-      {scorecard ? (
+      {scorecard || nonpayment ? (
         <div style={{ marginTop: 56 }}>
-          <OutcomesSection scorecard={scorecard} />
+          <OutcomesSection scorecard={scorecard} nonpayment={nonpayment} />
         </div>
       ) : (
         <p
