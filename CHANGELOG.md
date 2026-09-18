@@ -6,6 +6,15 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.4.0] - 2026-09-18
+
+### Fixed
+
+- Archive Oklahoma State University's Common Data Set PDFs from the
+  IRA listing at ira.okstate.edu. Cloudflare was blocking the normal
+  downloader; the daily Playwright job now crawls that page so new
+  years keep landing.
+
 ## [0.6.3.0] - 2026-09-17
 
 ### Added
