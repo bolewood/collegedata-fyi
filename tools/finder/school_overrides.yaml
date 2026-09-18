@@ -205,6 +205,27 @@ overrides:
         archive fetches can receive a Cloudflare challenge page. Use the
         WAF-aware headless downloader and verify source bytes are real PDFs.
 
+  # OSU IRA is behind a Cloudflare JS challenge (HTTP 403, cf-mitigated:
+  # challenge, "Just a moment..."). Finder already has the landing page
+  # and PDF list; Deno archive-process cannot fetch bytes. Headless
+  # ingest lives in waf_blocked_urls.yaml.
+  - school_id: oklahoma-state-university-main-campus
+    browse_url: https://ira.okstate.edu/cds
+    direct_archive_urls:
+      - { url: https://ira.okstate.edu/site-files/documents/cds/CDS-2025-2026-PDF.pdf, year: "2025-26" }
+      - { url: https://ira.okstate.edu/site-files/documents/cds/cds2425.pdf, year: "2024-25" }
+    hosting_override:
+      file_storage: same_origin
+      cms: custom
+      waf: cloudflare
+      notes: >-
+        ira.okstate.edu returns a Cloudflare bot challenge to non-browser
+        GET (landing page and PDFs). Discovery already found 2013-14
+        through 2025-26 on https://ira.okstate.edu/cds. Do not force_urls
+        through Deno archive-process; use tools/finder/headless_archive.py
+        (waf_blocked_urls.yaml). New years on the live listing are
+        discovered by the daily Playwright job.
+
   - school_id: kent-state-university-at-kent
     browse_url: https://www.kent.edu/ir/common-dataset-cds
     direct_archive_urls:

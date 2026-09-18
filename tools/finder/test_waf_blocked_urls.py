@@ -40,6 +40,22 @@ class WafBlockedUrlTests(unittest.TestCase):
                 "which is not a schools.yaml id",
             )
 
+    def test_osu_listing_is_canonical_and_crawled(self) -> None:
+        from tools.finder.headless_archive import should_crawl_landing
+
+        schools = _waf_schools()
+        self.assertIn("oklahoma-state-university-main-campus", schools)
+        landing = schools["oklahoma-state-university-main-campus"]["landing_url"]
+        self.assertEqual(landing, "https://ira.okstate.edu/cds")
+        self.assertTrue(should_crawl_landing(landing))
+        years = {
+            item.get("year")
+            for item in schools["oklahoma-state-university-main-campus"].get("urls", [])
+            if isinstance(item, dict)
+        }
+        self.assertIn("2025-26", years)
+        self.assertIn("2013-14", years)
+
     def test_colorado_listing_is_canonical_and_crawled(self) -> None:
         from tools.finder.headless_archive import should_crawl_landing
 

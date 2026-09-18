@@ -1,5 +1,5 @@
 # Worklist for WAF-blocked CDS files that Deno archive-process cannot
-# fetch (NYU 405, Notre Dame Drive, JHU Cloudflare, Williams 403).
+# fetch (NYU 405, Notre Dame Drive, JHU/OSU Cloudflare, Williams 403).
 # Keys MUST be canonical schools.yaml ids (nyu, not new-york-university).
 # Ingest is scheduled: .github/workflows/ops-headless-archive.yml runs
 # tools/finder/headless_archive.py daily. YAML urls are the fallback when
@@ -137,3 +137,33 @@ schools:
     school_name: University of Colorado Boulder
     landing_url: https://data.colorado.edu/reports/common-data-set
     urls: []
+  oklahoma-state-university-main-campus:
+    school_name: Oklahoma State University-Main Campus
+    landing_url: https://ira.okstate.edu/cds
+    urls:
+    - url: https://ira.okstate.edu/site-files/documents/cds/CDS-2025-2026-PDF.pdf
+      year: 2025-26
+    - url: https://ira.okstate.edu/site-files/documents/cds/cds2425.pdf
+      year: 2024-25
+    - url: https://ira.okstate.edu/site-files/documents/cds/cds2324v3.pdf
+      year: 2023-24
+    - url: https://ira.okstate.edu/site-files/documents/cds/cds2223v2.pdf
+      year: 2022-23
+    - url: https://ira.okstate.edu/site-files/documents/cds/cds2122.pdf
+      year: 2021-22
+    - url: https://ira.okstate.edu/site-files/documents/cds/cds2021.pdf
+      year: 2020-21
+    - url: https://ira.okstate.edu/site-files/documents/cds/cds1920.pdf
+      year: 2019-20
+    - url: https://ira.okstate.edu/site-files/documents/cds/cds1819.pdf
+      year: 2018-19
+    - url: https://ira.okstate.edu/site-files/documents/cds/cds1718.pdf
+      year: 2017-18
+    - url: https://ira.okstate.edu/site-files/documents/cds/cds1617.pdf
+      year: 2016-17
+    - url: https://ira.okstate.edu/site-files/documents/cds/cds1516.pdf
+      year: 2015-16
+    - url: https://ira.okstate.edu/site-files/documents/cds/cds1415.pdf
+      year: 2014-15
+    - url: https://ira.okstate.edu/site-files/documents/cds/cds1314.pdf
+      year: 2013-14
