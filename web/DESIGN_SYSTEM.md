@@ -154,7 +154,8 @@ None of these break functionality; they're palette-consistency debt.
 | Token | Hex | Role |
 |---|---|---|
 | `--lamp-down` | `#d7263d` | overdue / error |
-| `--lamp-late` | `#e0a106` | extraction backlog (ink `#1c1400`) |
+| `--lamp-late` | `#e0a106` | extraction ran and extracted nothing while files are still waiting (ink `#1c1400`) |
+| `--lamp-capped` | `#d5e3cf` | daily extract cap or 25-minute deadline reached, files still waiting (ink `#27321f`) |
 | `--lamp-ok` | `#1f7a4d` | scheduled clock healthy |
 | `--lamp-slate` | `#5c5a54` | yearly, no heartbeat yet |
 | `--lamp-lock` | `#6b3fa0` | M1 vendor lock chips |

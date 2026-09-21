@@ -8,11 +8,13 @@ export type StationClass =
 
 export type HeartbeatStatus = "never" | "running" | "ok" | "error";
 
-export type Lamp = "down" | "late" | "ok" | "run" | "slate";
+export type Lamp = "capped" | "down" | "late" | "ok" | "run" | "slate";
 
 export type StripLamp = "down" | "late" | "ok";
 
 export const LAMP_HEX = {
+  capped: "#d5e3cf",
+  cappedInk: "#27321f",
   down: "#d7263d",
   late: "#e0a106",
   ok: "#1f7a4d",
@@ -105,10 +107,11 @@ function extractionLamp(input: StationLampInput): Lamp {
   const stoppedReason = String(summary.stopped_reason ?? "");
   if (
     pending > 0 &&
-    (stoppedReason === "cap" || stoppedReason === "deadline" || extracted === 0)
+    (stoppedReason === "cap" || stoppedReason === "deadline")
   ) {
-    return "late";
+    return "capped";
   }
+  if (pending > 0 && extracted === 0) return "late";
   return "ok";
 }
 

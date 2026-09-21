@@ -228,8 +228,8 @@ Heartbeat step reads that file. `llm_fallback` is **not** required
 Collapsed lamp (scheduled clock only):
 
 - No scheduled finish inside **36 hours** (including `never`) → `down`
-- Live `extraction_pending` > 0 AND (`stopped_reason` in `{cap, deadline}`
-  OR `extracted = 0`) → `late`
+- Live `extraction_pending` > 0 AND `stopped_reason` in `{cap, deadline}` → `capped` (tile copy “Daily Cap Reached”, light green). Does not turn the strip late.
+- Live `extraction_pending` > 0 AND `extracted = 0` and the stop was not a cap or deadline → `late`
 - Else → `ok`
 
 Missing required keys on a finish write → `down` with
@@ -690,7 +690,7 @@ from anon.
 8. `running` > 8h → `down`.
 9. Exhaustive (class, status, age) lamp matrix in `pipeline-lamps.test.ts`.
 10. Heartbeat POST failure exits 0 and prints `::warning::`.
-11. Worker summary contains `stopped_reason` / `extracted` / `failed` / `pending_remaining`; cap → `late`.
+11. Worker summary contains `stopped_reason` / `extracted` / `failed` / `pending_remaining`; cap or deadline with pending remaining → `capped`.
 12. `isStaticBuild()` path renders seed lamps.
 13. `/pipeline` 308 and `/pipeline-observation/` 308 tests; sitemap-static guard updated.
 14. JSON snapshot: `as_of`, precomputed lamps, no secret-shaped strings; hex allowlist (no teal, no blue).

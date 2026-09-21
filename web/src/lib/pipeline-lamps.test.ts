@@ -153,7 +153,7 @@ describe("stationLamp", () => {
     ).toBe("run");
   });
 
-  it("extraction cap with pending remaining is late, not down", () => {
+  it("extraction cap or deadline with pending remaining is capped, not late", () => {
     expect(
       stationLamp(
         base({
@@ -170,7 +170,24 @@ describe("stationLamp", () => {
           },
         }),
       ),
-    ).toBe("late");
+    ).toBe("capped");
+    expect(
+      stationLamp(
+        base({
+          stationId: "extraction_worker",
+          class: "daily_sla",
+          lastScheduledStatus: "ok",
+          lastScheduledFinishedAt: hoursAgo(1),
+          extractionPending: 3,
+          lastScheduledSummary: {
+            extracted: 4,
+            failed: 0,
+            pending_remaining: 3,
+            stopped_reason: "deadline",
+          },
+        }),
+      ),
+    ).toBe("capped");
   });
 
   it("extraction extracted=0 with pending is late", () => {
@@ -256,6 +273,7 @@ describe("stationLamp", () => {
 describe("stripLamp", () => {
   it("omits yearly slate and manual stations from the brick", () => {
     expect(stripLamp(["ok", "ok", "slate", "run"])).toBe("ok");
+    expect(stripLamp(["ok", "capped", "slate"])).toBe("ok");
     expect(stripLamp(["ok", "late", "slate"])).toBe("late");
     expect(stripLamp(["ok", "down", "late"])).toBe("down");
   });

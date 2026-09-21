@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 };
 
 const LAMP_WORD: Record<Lamp, string> = {
+  capped: "Daily Cap Reached",
   down: "DOWN",
   late: "LATE",
   ok: "OK",

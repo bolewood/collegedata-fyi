@@ -3,6 +3,8 @@
 
 .po-page {
   --lamp-ok: #1f7a4d;
+  --lamp-capped: #d5e3cf;
+  --capped-ink: #27321f;
   --lamp-late: #e0a106;
   --lamp-down: #d7263d;
   --lamp-lock: #6b3fa0;
@@ -91,6 +93,17 @@
 .po-tile--late {
   background: var(--lamp-late);
   color: var(--late-ink);
+}
+
+.po-tile--capped {
+  background: var(--lamp-capped);
+  color: var(--capped-ink);
+}
+
+.po-tile--capped .po-tile-lamp {
+  text-transform: none;
+  letter-spacing: 0.01em;
+  line-height: 1.35;
 }
 
 .po-tile--slate {
