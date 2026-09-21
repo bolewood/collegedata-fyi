@@ -206,7 +206,7 @@ const SEED_META: Array<{
     cadence_label: "daily · pending drain",
     class: "daily_sla",
     on_board: true,
-    help: "After a file is archived, we pull the numbers out of it. The daily job only drains a handful, so a backlog here is late — not necessarily a crash.",
+    help: "After a file is archived, we pull the numbers out of it. The daily job stops after a handful of files or 25 minutes. Light green means that cap was reached and a few files are still waiting for the next run.",
   },
   {
     station_id: "coverage_refresh",
@@ -461,6 +461,9 @@ function resultLine(row: PipelineFactRow, lamp: Lamp): string {
     case "headless_archive":
       return `${num(summary.inserted)} inserted · ${num(summary.discovered)} newly listed · ${num(summary.failed)} failed`;
     case "extraction_worker":
+      if (lamp === "capped") {
+        return `${num(row.extraction_pending ?? summary.pending_remaining)} still waiting`;
+      }
       return `${num(row.extraction_pending ?? summary.pending_remaining)} pending · ${String(summary.stopped_reason ?? "—")}`;
     case "coverage_refresh":
       return `${num(summary.current)} current · ${num(summary.stale)} stale`;

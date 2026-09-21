@@ -6,6 +6,14 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.5.0] - 2026-09-21
+
+### Changed
+
+- The Extract clock says Daily Cap Reached on a light green tile when
+  the daily drain stops on purpose and files are still waiting. A missed
+  run stays red, and a run that extracts nothing stays yellow.
+
 ## [0.6.4.0] - 2026-09-18
 
 ### Fixed

@@ -20,6 +20,8 @@ const NOW = new Date("2026-08-21T20:00:00.000Z");
 
 const ALLOWED_HEX = new Set(
   [
+    LAMP_HEX.capped,
+    LAMP_HEX.cappedInk,
     LAMP_HEX.down,
     LAMP_HEX.late,
     LAMP_HEX.ok,
@@ -319,6 +321,33 @@ describe("pipeline observation JSON", () => {
       "mirror_ingest",
     ]);
     expect(seed.stations.some((station) => station.station_id === "headless_archive")).toBe(true);
+  });
+
+  it("paints a daily extract cap as capped with files still waiting", () => {
+    const snapshot = snapshotFromFacts(
+      [
+        fact({
+          station_id: "extraction_worker",
+          display_name: "Extract",
+          class: "daily_sla",
+          last_scheduled_status: "ok",
+          last_scheduled_finished_at: "2026-08-21T16:23:00.000Z",
+          last_scheduled_summary: {
+            extracted: 4,
+            failed: 0,
+            pending_remaining: 3,
+            stopped_reason: "deadline",
+          },
+          extraction_pending: 3,
+        }),
+      ],
+      NOW,
+    );
+    const extract = snapshot.stations.find(
+      (station) => station.station_id === "extraction_worker",
+    );
+    expect(extract?.lamp).toBe("capped");
+    expect(extract?.result_line).toBe("3 still waiting");
   });
 });
 
