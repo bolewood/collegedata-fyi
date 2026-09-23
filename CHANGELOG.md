@@ -6,6 +6,21 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.6.1] - 2026-09-23
+
+### Fixed
+
+- School and year pages skip the waitlist sentence when the reported
+  counts contradict each other (more admitted from the waitlist than
+  offered a spot, or than accepted one). Two schools were showing one.
+
+### Changed
+
+- PRD 031 rev 2: stat pages now start with a measured history backfill
+  (no pre-2024-25 numbers are in the tables a stat page would read), a
+  canonical-slug freeze, and a single acceptance-rate pilot capped by an
+  allowlist sitemap.
+
 ## [0.6.6.0] - 2026-09-23
 
 ### Fixed
