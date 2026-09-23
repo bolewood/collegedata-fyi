@@ -2878,6 +2878,7 @@
 /* PRD 031 — per-school acceptance-rate page. Ledger table + a
    zero-baseline column chart in one ink colour. */
 .school-record .cd-school-header[data-accent="paper"] h1 span { color: var(--paper); }
+.acc-title { text-wrap: balance; }
 .acc-lead p { font-size: 16px; }
 .acc-section {
   margin-top: 40px;

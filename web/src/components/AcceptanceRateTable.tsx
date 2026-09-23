@@ -53,7 +53,7 @@ export function AcceptanceRateTable({
   return (
     <>
       <p className="acc-table-hint" aria-hidden="true">
-        Scroll for enrolled, yield, and source →
+        More columns: admitted, enrolled, yield, source →
       </p>
       <div className="acc-table-frame">
       <div

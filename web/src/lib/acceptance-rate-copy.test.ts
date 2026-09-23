@@ -22,7 +22,8 @@ import {
   sourceNote,
   DESCRIPTION_MAX,
   dominantChange,
-  turningPoint,
+  rateShape,
+  firstYearSentence,
 } from "./acceptance-rate-copy";
 import { archiveLead, leadContainsBannedCopy, leadPlainText } from "./archive-lead";
 import type { FieldValue } from "./types";
@@ -94,35 +95,58 @@ const PILOT_NAMES = [
 
 const EXTRA_BANNED = ["odds", "chance", "selective", "best ", "top ", "easy to get", "hard to get", "parsed", "projection", "because", "due to", "driven by", "after ", "as a result", "led to", "thanks to"];
 
+function fromFixture(id: string) {
+  const school = pilotFixture.find((row) => row.school === id)!;
+  return history(school.years.map(([start, applied, admitted]) => [start, applied, admitted] as [number, number, number]));
+}
+const georgetown = fromFixture("georgetown");
+const jhu = fromFixture("johns-hopkins");
+
 describe("lead: answer first, then history", () => {
-  it("Duke: no turning point, applications span, missing years disclosed", () => {
+  it("Duke: latest year is a record low; long-run start in its own sentence", () => {
     expect(leadSentences("Duke University", duke)).toEqual([
-      "Duke University admitted 5.7% of first-year applicants for fall 2024 (2,957 of 51,795), down from 8.9% for fall 2018.",
+      "Duke University admitted 5.7% of first-year applicants for fall 2024 (2,957 of 51,795), the lowest in the five years shown, down from 6.8% for fall 2023.",
+      "It was 8.9% for fall 2018.",
       "Applications rose from 35,767 to 51,795 over that span.",
       "Usable figures for fall 2021 and fall 2022 are not in our archive.",
     ]);
   });
 
-  it("Brown: names the low and the latest application drop", () => {
+  it("Brown: the most recent low the series has moved away from, then the start", () => {
     expect(leadSentences("Brown University", brown)).toEqual([
-      "Brown University admitted 6.3% of first-year applicants for fall 2025 (2,710 of 42,774).",
-      "That is up from a low of 5.1% for fall 2022 and down from 7.7% for fall 2018.",
+      "Brown University admitted 6.3% of first-year applicants for fall 2025 (2,710 of 42,774), up from 5.4% for fall 2024 and from a low of 5.1% for fall 2022.",
+      "It was 7.7% for fall 2018.",
       "Applications fell 12.5% for fall 2025, to 42,774 from 48,904; they peaked at 51,316 for fall 2023.",
     ]);
   });
 
-  it("Virginia Tech (3 years): answer plus the plain year-over-year change", () => {
+  it("Georgetown: the recent low, not the one-year 2020 spike", () => {
+    expect(leadSentences("Georgetown University", georgetown)).toEqual([
+      "Georgetown University admitted 13.5% of first-year applicants for fall 2025 (3,618 of 26,822), up from 12.9% for fall 2024 and from a low of 12.0% for fall 2021.",
+      "It was 14.5% for fall 2018.",
+      "Applications rose 2.6% for fall 2025, to 26,822 from 26,131; they peaked at 27,506 for fall 2021.",
+    ]);
+  });
+
+  it("Virginia Tech (3 years, monotone): answer plus the plain year-over-year change", () => {
     expect(leadSentences("Virginia Tech", vt)).toEqual([
       "Virginia Tech admitted 54.6% of first-year applicants for fall 2025 (31,515 of 57,755), down from 57.0% for fall 2023.",
       "Applications rose 10.4% for fall 2025, to 57,755 from 52,296.",
     ]);
   });
 
-  it("Northeastern: names the one year that made most of the drop", () => {
+  it("Northeastern: monotone, with the dominant year last and both counts", () => {
     expect(leadSentences("Northeastern University", northeastern)).toEqual([
       "Northeastern University admitted 5.2% of first-year applicants for fall 2024 (5,133 of 98,425), down from 20.5% for fall 2020, while applications rose from 64,459 to 98,425.",
-      "Most of the drop came in one year, from 18.4% for fall 2021 to 6.8% for fall 2022, when admits fell from 13,829 to 6,191.",
+      "Most of the drop came in one year, from 18.4% for fall 2021 to 6.8% for fall 2022, when applications rose from 75,244 to 91,000 and admits fell from 13,829 to 6,191.",
     ]);
+  });
+
+  it("Johns Hopkins: admits that rose in the drop year read as 'went from', beside applications", () => {
+    const lead = leadSentences("Johns Hopkins University", jhu);
+    expect(lead[lead.length - 1]).toBe(
+      "Most of the drop came in one year, from 7.5% for fall 2023 to 6.4% for fall 2024, when applications rose from 38,893 to 45,895 and admits went from 2,923 to 2,954.",
+    );
   });
 
   it("Haverford: a low in the previous year reads as part of the answer", () => {
@@ -142,38 +166,59 @@ describe("lead: answer first, then history", () => {
   });
 });
 
-describe("turning points", () => {
-  it("finds an interior low below both ends", () => {
-    expect(turningPoint(brown)).toMatchObject({ kind: "low", row: { yearStart: 2022 } });
+describe("rate shape: the most recent extreme the series moved away from", () => {
+  it("monotone series: no turn, compare with the first year only", () => {
+    expect(rateShape(northeastern)).toEqual({ kind: "monotone" });
+    expect(rateShape(vt)).toEqual({ kind: "monotone" });
+    expect(firstYearSentence(northeastern)).toBeNull();
   });
 
-  it("finds an interior high above both ends", () => {
-    const h = history([[2025, 100, 10], [2024, 100, 30], [2023, 100, 20], [2022, 100, 12]]);
-    expect(turningPoint(h)).toMatchObject({ kind: "high", row: { yearStart: 2024 } });
+  it("latest year is itself the extreme: a record", () => {
+    expect(rateShape(duke)).toEqual({ kind: "record", extreme: "low" });
+    const high = history([[2025, 100, 40], [2024, 100, 30], [2023, 100, 35], [2022, 100, 20]]);
+    expect(rateShape(high)).toEqual({ kind: "record", extreme: "high" });
+    expect(leadSentences("X College", high)[0]).toBe(
+      "X College admitted 40.0% of first-year applicants for fall 2025 (40 of 100), the highest in the four years shown, up from 30.0% for fall 2024.",
+    );
+  });
+
+  it("picks the recent low over an older spike (Georgetown)", () => {
+    expect(rateShape(georgetown)).toMatchObject({ kind: "turn", extreme: "low", row: { yearStart: 2021 }, global: true });
+    expect(rateShape(brown)).toMatchObject({ kind: "turn", extreme: "low", row: { yearStart: 2022 }, global: true });
+  });
+
+  it("falling latest: the most recent high", () => {
+    const h = history([[2025, 100, 15], [2024, 100, 20], [2023, 100, 30], [2022, 100, 12]]);
+    expect(rateShape(h)).toMatchObject({ kind: "turn", extreme: "high", row: { yearStart: 2023 }, global: true });
+    expect(leadSentences("X College", h).slice(0, 2)).toEqual([
+      "X College admitted 15.0% of first-year applicants for fall 2025 (15 of 100), down from 20.0% for fall 2024 and from a high of 30.0% for fall 2023.",
+      "It was 12.0% for fall 2022.",
+    ]);
+  });
+
+  it("a local extreme says 'since' instead of claiming a low of all years", () => {
+    // 50 -> 10 -> 40 -> 20 -> 30: rising latest; last year at or above 30.0% is fall 2023 (40.0%).
+    const h = history([[2025, 100, 30], [2024, 100, 20], [2023, 100, 40], [2022, 100, 10], [2021, 100, 50]]);
+    expect(rateShape(h)).toMatchObject({ kind: "turn", row: { yearStart: 2024 }, global: false, since: { yearStart: 2023 } });
     expect(leadSentences("X College", h)[0]).toBe(
-      "X College admitted 10.0% of first-year applicants for fall 2025 (10 of 100), down from 30.0% for fall 2024, the highest in the four years shown.",
+      "X College admitted 30.0% of first-year applicants for fall 2025 (30 of 100), up from 20.0% for fall 2024.",
     );
-    const earlier = history([[2025, 100, 10], [2024, 100, 20], [2023, 100, 30], [2022, 100, 12]]);
-    expect(leadSentences("X College", earlier)[1]).toBe(
-      "That is down from a high of 30.0% for fall 2023 and down from 12.0% for fall 2022.",
+    const two = history([[2025, 100, 35], [2024, 100, 25], [2023, 100, 20], [2022, 100, 40], [2021, 100, 10]]);
+    expect(leadSentences("X College", two)[0]).toBe(
+      "X College admitted 35.0% of first-year applicants for fall 2025 (35 of 100), up from 25.0% for fall 2024 and from 20.0% for fall 2023, the lowest since fall 2022.",
     );
-    expect(dominantChange(vt)).toBeNull();
   });
 
-  it("returns none for a series that keeps one direction overall", () => {
-    expect(turningPoint(duke)).toBeNull();
-    expect(turningPoint(northeastern)).toBeNull();
+  it("ties at one decimal go to the most recent tied year", () => {
+    // 11.8% for both fall 2022 and fall 2023 (Hamilton): the turn is fall 2023.
+    const h = history([[2024, 1000, 136], [2023, 1000, 118], [2022, 1000, 118], [2021, 1000, 141], [2020, 1000, 184]]);
+    expect(rateShape(h)).toMatchObject({ kind: "turn", row: { yearStart: 2023 } });
   });
 
-  it("ignores differences that vanish at one decimal", () => {
-    const h = history([[2025, 10000, 1001], [2024, 10000, 1000], [2023, 10000, 1002]]);
-    expect(turningPoint(h)).toBeNull();
-    expect(leadSentences("X College", h)[0]).toContain("the same as 10.0% for fall 2023");
-  });
-
-  it("picks the extreme farther from the latest rate when both exist", () => {
-    const h = history([[2025, 100, 20], [2024, 100, 5], [2023, 100, 50], [2022, 100, 25]]);
-    expect(turningPoint(h)).toMatchObject({ kind: "high", row: { yearStart: 2023 } });
+  it("flat latest change compares with the first year", () => {
+    const h = history([[2025, 10000, 1001], [2024, 10000, 1000], [2023, 10000, 1200], [2022, 10000, 900]]);
+    expect(rateShape(h)).toEqual({ kind: "flat" });
+    expect(leadSentences("X College", h)[0]).toContain("up from 9.0% for fall 2022");
   });
 });
 
@@ -181,6 +226,7 @@ describe("dominant single-year change", () => {
   it("fires at >= 60% of the span's change, consecutive years only", () => {
     expect(dominantChange(northeastern)).toMatchObject({ from: { yearStart: 2021 }, to: { yearStart: 2022 } });
     expect(dominantChange(duke)).toBeNull();
+    expect(dominantChange(vt)).toBeNull();
     // 40.0% -> 30.0% -> 20.0% -> 10.0%: each step is a third of the change.
     expect(dominantChange(history([[2025, 100, 10], [2024, 100, 20], [2023, 100, 30], [2022, 100, 40]]))).toBeNull();
     // The big step spans a gap year, so it is not one year.
@@ -188,18 +234,17 @@ describe("dominant single-year change", () => {
     expect(dominantChange(gapped)).toBeNull();
   });
 
-  it("does not fire when the series turns (the drop is not one-directional)", () => {
-    expect(turningPoint(brown)).not.toBeNull();
+  it("does not fire when the series turns", () => {
+    expect(rateShape(brown).kind).toBe("turn");
     expect(dominantChange(brown)).toBeNull();
   });
 
-  it("phrases a rise the same way", () => {
+  it("phrases a rise the same way, with both counts", () => {
     const h = history([[2025, 1000, 400], [2024, 1000, 380], [2023, 1000, 150], [2022, 1000, 140]]);
     const lead = leadSentences("X College", h);
     expect(lead[lead.length - 1]).toBe(
-      "Most of the rise came in one year, from 15.0% for fall 2023 to 38.0% for fall 2024, when admits rose from 150 to 380.",
+      "Most of the rise came in one year, from 15.0% for fall 2023 to 38.0% for fall 2024, when applications held at 1,000 and admits rose from 150 to 380.",
     );
-    expect(lead[lead.length - 1]).not.toContain("applications");
   });
 });
 
@@ -210,8 +255,8 @@ describe("peaks and lows are true extremes of the years shown", () => {
       "Applications fell 10.0% for fall 2025, to 900 from 1,000; they peaked at 1,200 for fall 2023 in the years shown.",
     );
     const low = history([[2025, 100, 30], [2024, 100, 20], [2022, 100, 5], [2021, 100, 25]]);
-    expect(leadSentences("X College", low)[1]).toBe(
-      "That is up from a low of 5.0% for fall 2022 (the lowest in the years shown) and up from 25.0% for fall 2021.",
+    expect(leadSentences("X College", low)[0]).toBe(
+      "X College admitted 30.0% of first-year applicants for fall 2025 (30 of 100), the highest in the four years shown, up from 20.0% for fall 2024.",
     );
   });
 
@@ -257,15 +302,20 @@ describe("all 20 pilot schools", () => {
         }
       }
     }
-    expect(checked).toBeGreaterThan(10);
+    expect(checked).toBeGreaterThanOrEqual(8);
   });
 
-  it("puts the dominant-year sentence after the history, without applications", () => {
+  it("puts the dominant-year sentence last (before missing years), with both counts for both years", () => {
     for (const school of schools) {
       const lead = leadSentences(school.name, school.history);
       const at = lead.findIndex((sentence) => sentence.startsWith("Most of the"));
       if (at < 0) continue;
-      expect(lead[at]).not.toMatch(/application/i);
+      const dominant = dominantChange(school.history)!;
+      for (const row of [dominant.from, dominant.to]) {
+        expect(lead[at]).toContain(row.applied.toLocaleString("en-US"));
+        expect(lead[at]).toContain(row.admitted.toLocaleString("en-US"));
+      }
+      expect(lead[at]).not.toMatch(/\b(because|after|as a result|due to|led to|driven by)\b/i);
       expect(lead.slice(at + 1).every((sentence) => sentence.startsWith("Usable figures"))).toBe(true);
     }
   });

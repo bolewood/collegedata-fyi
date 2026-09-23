@@ -118,7 +118,7 @@ export default async function AcceptanceRatePage({ params }: { params: Promise<P
             {KICKER}
           </div>
           <h1
-            className="serif"
+            className="serif acc-title"
             style={{
               fontWeight: 400,
               fontSize: "clamp(36px, 5.5vw, 54px)",
