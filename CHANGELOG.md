@@ -6,6 +6,33 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.6.0] - 2026-09-23
+
+### Fixed
+
+- Virginia Tech 2025-26 and twelve other school years load again. Since
+  2026-08-25 their old slugs redirected to a school page that didn't have
+  those years, so they returned 404. School and year pages now include
+  years that were archived under a school's other slug (Virginia Tech,
+  Rutgers, Texas A&M, UVA, Georgia Tech).
+- The sitemap and the Schools list only show URLs that load, list each
+  school once, and carry last-modified dates.
+- Lists built from the full archive no longer drop or repeat rows where
+  a school's reports cross a page boundary. The sitemap was missing
+  Louisiana Tech, Eastern Connecticut, and Susquehanna years, and the
+  public `sources.jsonl` snapshot had six duplicate rows.
+
+### Added
+
+- School and year pages open with the school's own numbers in plain
+  English: applicants, admits, acceptance rate, yield, test scores,
+  early decision, waitlist, and a comparison with the year before.
+  Search descriptions carry the same numbers, and year pages include
+  both "2025-26" and "2025-2026".
+- Every school page links all of its years, not just the latest three.
+- Draft PRD 031 for per-school stat pages (acceptance rate, early
+  decision, test scores, waitlist), for review.
+
 ## [0.6.5.0] - 2026-09-21
 
 ### Changed

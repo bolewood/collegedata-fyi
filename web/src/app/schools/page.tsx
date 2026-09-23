@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { fetchManifest, aggregateSchools, fetchBrandColorIndex } from "@/lib/queries";
+import {
+  fetchManifest,
+  aggregateSchools,
+  fetchBrandColorIndex,
+  fetchSchoolSlugResolver,
+} from "@/lib/queries";
+import { canonicalizeSchoolRows } from "@/lib/school-alias";
 import { SchoolTable } from "@/components/SchoolTable";
 
 export const metadata: Metadata = {
@@ -14,10 +20,14 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export default async function SchoolsPage() {
-  const [manifest, brandIndex] = await Promise.all([
+  const [rawManifest, brandIndex] = await Promise.all([
     fetchManifest(),
     fetchBrandColorIndex(),
   ]);
+  const resolve = await fetchSchoolSlugResolver(
+    rawManifest.map((row) => row.school_id ?? ""),
+  );
+  const manifest = canonicalizeSchoolRows(rawManifest, resolve);
   const schools = aggregateSchools(manifest).map((school) => ({
     ...school,
     brand_colors: brandIndex[school.school_id] ?? null,

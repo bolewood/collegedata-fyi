@@ -99,7 +99,7 @@ export async function snapshotFile(file: string): Promise<{ body: string; conten
     const browserRows = await fetchPagedRows<Record<string, unknown>>(
       "school_browser_rows",
       "school_id, school_name, canonical_year, year_start, applied, admitted, enrolled_first_year, acceptance_rate, yield_rate, sat_submit_rate, act_submit_rate, sat_composite_p50, act_composite_p50, ed_offered, ed_applicants, ed_admitted, ea_offered, wait_list_offered",
-      (query) => query.gte("year_start", 2024).is("sub_institutional", null).order("school_id", { ascending: true }).order("year_start", { ascending: false }),
+      (query) => query.gte("year_start", 2024).is("sub_institutional", null).order("school_id", { ascending: true }).order("year_start", { ascending: false }).order("document_id", { ascending: true }),
     );
     const latest = new Map<string, Record<string, unknown>>();
     for (const row of browserRows) {
