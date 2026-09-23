@@ -145,6 +145,75 @@ document's markdown, which the survey did not pull, so the real count is
 lower. Re-run `ACCEPTANCE_MEASURE=survey` against a markdown-aware survey
 before the M0 go/no-go (threshold: 150 schools with ≥ 4).
 
+### One number everywhere (site-wide resolver)
+
+The hub summary and meta description, the year page summary, and the
+year page's key stats now read the latest year's C1 counts through the same
+printed-total resolver as the acceptance-rate page (`withPrintedTotals` in
+`web/src/lib/acceptance-history-data.ts`; cached, at most one extra
+artifact read per hub render). `web/tests/acceptance-rate-consistency.spec.ts`
+checks all 20 pilot schools: applied, admitted, and rate match on the hub
+summary, hub meta, year page, and stat page. (Rice's hub picks its 2025-26
+report, which has no usable counts, so the hub states no acceptance figure;
+the stat page ends at 2024-25.)
+
+Corpus-wide estimate: of 469 schools' latest projected rows, 47
+hub summaries change (17 of them had no projected counts at all). This is a
+lower bound: the survey lacks the markdown the reader uses to confirm
+sums. Only the pilot rows are source-checked; non-pilot readings where
+applied equals admitted (Lake Superior State, Front Range CC) deserve a
+look before indexing anything built on them.
+
+| School | Year | Projection (applied / admitted) | Printed |
+|---|---|---:|---:|
+| southern-connecticut-state-university | 2025-26 | 8,120 / 7,224 | 9,958 / 8,701 |
+| front-range-community-college | 2024-25 | — / 6,820 | 6,506 / 6,506 |
+| wichita-state-university | 2025-26 | 4,784 / 3,361 | 8,736 / 6,311 |
+| university-of-houston | 2025-26 | 28,115 / 21,788 | 34,728 / 26,312 |
+| saint-marys-college-of-california | 2024-25 | 4,309 / 3,816 | 4,310 / 3,816 |
+| university-of-wisconsin-green-bay | 2025-26 | 7,755 / 5,914 | 8,984 / 6,716 |
+| brigham-young-university | 2025-26 | 751 / 8,331 | 12,141 / 8,331 |
+| university-of-south-dakota | 2024-25 | — / — | 5,965 / 5,892 |
+| university-of-arkansas | 2024-25 | 30,549 / 22,701 | 28,873 / 22,701 |
+| pratt-institute-main | 2025-26 | 1,890 / 1,375 | 7,579 / 6,547 |
+| the-evergreen-state-college | 2024-25 | — / — | 1,300 / 1,253 |
+| west-virginia-university | 2024-25 | — / — | 20,150 / 15,570 |
+| louisiana-tech-university | 2025-26 | 2,343 / 1,292 | 6,299 / 4,496 |
+| augustana-university | 2025-26 | 776 / 719 | 3,294 / 2,401 |
+| loyola-university-chicago | 2025-26 | 362 / 33,009 | 43,954 / 33,009 |
+| pacific-university | 2025-26 | 1,028 / 932 | 2,909 / 2,614 |
+| samford-university | 2024-25 | 159 / 39 | 7,842 / 6,696 |
+| lake-superior-state-university | 2024-25 | 2,146 / 2,106 | 2,106 / 2,106 |
+| trinity-college | 2024-25 | — / — | 6,396 / 2,144 |
+| rhodes-college | 2025-26 | 936 / 637 | 5,682 / 2,927 |
+| university-of-rochester | 2024-25 | 21,384 / 8,569 | 21,384 / 8,570 |
+| central-connecticut-state-university | 2025-26 | 8,577 / 7,164 | 10,176 / 8,070 |
+| baldwin-wallace-university | 2025-26 | 23 / 7 | 4,406 / 3,410 |
+| washington-university-in-st-louis | 2025-26 | 7,830 / 575 | 35,316 / 4,359 |
+| hobart-william-smith-colleges | 2024-25 | — / — | 5,904 / 3,778 |
+| university-at-buffalo | 2024-25 | 40,856 / 30,308 | 40,855 / 30,307 |
+| mount-holyoke-college | 2024-25 | — / — | 5,226 / 1,883 |
+| franklin-and-marshall-college | 2024-25 | 9,881 / 2,789 | 9,881 / 2,785 |
+| millersville-university-of-pennsylvania | 2024-25 | — / — | 7,662 / 6,604 |
+| missouri-university-of-science-and-technology | 2025-26 | 2,966 / 2,585 | 8,330 / 6,550 |
+| university-of-north-carolina-at-charlotte | 2025-26 | 18,398 / 15,202 | 27,218 / 21,170 |
+| texas-state-university | 2024-25 | — / — | 33,907 / 30,498 |
+| saginaw-valley-state-university | 2025-26 | 9,532 / 7,650 | 11,586 / 9,087 |
+| washington-college | 2024-25 | — / — | 4,048 / 2,303 |
+| gettysburg-college | 2024-25 | — / — | 8,366 / 3,254 |
+| southwestern-university | 2024-25 | — / — | 6,313 / 2,718 |
+| rose-hulman-institute-of-technology | 2024-25 | — / — | 955 / 658 |
+| allegheny-college | 2025-26 | 1,435 / 1,184 | 6,151 / 3,615 |
+| rollins-college | 2024-25 | 8,860 / 4,212 | 8,860 / 4,213 |
+| troy-university | 2024-25 | — / — | 9,474 / 9,099 |
+| university-of-houston-system-administration | 2025-26 | 28,115 / 21,788 | 34,728 / 26,312 |
+| amherst | 2024-25 | 13,742 / 1,238 | 13,743 / 1,238 |
+| florida-international-university | 2024-25 | — / — | 32,855 / 17,957 |
+| scripps-college | 2024-25 | — / — | 3,199 / 1,225 |
+| fitchburg-state-university | 2024-25 | 4,582 / 3,983 | 3,831 / 3,404 |
+| virginia-commonwealth-university | 2024-25 | — / — | 24,804 / 20,769 |
+| north-carolina-central-university | 2024-25 | 18,363 / 15,971 | 18,368 / 15,972 |
+
 ## Johns Hopkins before 2021-22
 
 The hub serves five Johns Hopkins reports (2021-22 to 2025-26); earlier

@@ -75,7 +75,10 @@ export default async function AcceptanceRatePage({ params }: { params: Promise<P
 
   const { schoolName, history, documents, decision } = page;
   const rows = acceptanceTableRows(history, documents);
-  const lead = leadSentences(schoolName, history).join(" ");
+  const reportYears = new Set(
+    documents.filter((doc) => doc.sub_institutional == null).map((doc) => doc.canonical_year ?? ""),
+  );
+  const lead = leadSentences(schoolName, history, reportYears).join(" ");
   const latest = history.years[0];
   const hubPath = `/schools/${school_id}`;
   const pageUrl = `${SITE}${acceptanceRatePath(school_id)}`;

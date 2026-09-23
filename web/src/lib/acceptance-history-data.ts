@@ -1,9 +1,11 @@
 import { cache } from "react";
 import type { MetadataRoute } from "next";
 import { fetchExtract, fetchSchoolDocuments, fetchSchoolYearFacts } from "./queries";
+import type { SchoolYearFacts } from "./school-summary";
 import {
   buildAcceptanceHistory,
   isHistoryCandidate,
+  readAcceptanceYear,
   type AcceptanceHistory,
   type BrowserCounts,
   type HistoryExtract,
@@ -68,6 +70,76 @@ export const fetchAcceptanceHistory = cache(async function fetchAcceptanceHistor
     ),
   };
 });
+
+/**
+ * One fact, one number: the school's printed C1 counts for one document,
+ * read the same way the acceptance-rate page reads them (readAcceptanceYear
+ * with the projected row as fallback). Cached per document, so a hub or
+ * year page costs at most one extra artifact read. Null when the extract
+ * has no usable reading; callers then keep the projected row.
+ */
+const printedCountsForDocument = cache(async function printedCountsForDocument(
+  documentId: string,
+  canonicalYear: string,
+  applied: number | null,
+  admitted: number | null,
+  enrolled: number | null,
+): Promise<BrowserCounts | null> {
+  try {
+    const extract = await fetchHistoryExtract(documentId);
+    const reading = readAcceptanceYear(
+      {
+        document_id: documentId,
+        canonical_year: canonicalYear,
+        extraction_status: "extracted",
+        data_quality_flag: null,
+        sub_institutional: null,
+        source_storage_path: null,
+        source_format: null,
+      },
+      extract,
+      { applied, admitted, enrolled },
+    );
+    if (!reading.ok || reading.row.source === "projection") return null;
+    return { applied: reading.row.applied, admitted: reading.row.admitted, enrolled: reading.row.enrolled };
+  } catch (error) {
+    console.warn(`printedCountsForDocument: ${String(error)}`);
+    return null;
+  }
+});
+
+/**
+ * The projected facts row with its C1 counts replaced by the school's
+ * printed totals when those differ. Used by the hub summary and meta, the
+ * year page summary, and (through readAcceptanceYear) the acceptance-rate
+ * page, so all of them show the same applied, admitted, and rate.
+ */
+export async function withPrintedTotals(
+  row: SchoolYearFacts | null,
+  documents: Pick<ManifestRow, "document_id" | "extraction_status">[],
+): Promise<SchoolYearFacts | null> {
+  if (!row?.document_id) return row;
+  const doc = documents.find((d) => d.document_id === row.document_id);
+  if (!doc || doc.extraction_status !== "extracted") return row;
+  const printed = await printedCountsForDocument(
+    row.document_id,
+    row.canonical_year,
+    row.applied,
+    row.admitted,
+    row.enrolledFirstYear,
+  );
+  if (!printed) return row;
+  if (printed.applied === row.applied && printed.admitted === row.admitted && printed.enrolled === row.enrolledFirstYear) {
+    return row;
+  }
+  return {
+    ...row,
+    applied: printed.applied,
+    admitted: printed.admitted,
+    enrolledFirstYear: printed.enrolled,
+    acceptanceRate: null,
+  };
+}
 
 /** True when /schools/{id}/acceptance-rate renders. Never throws; the hub calls it. */
 export const fetchAcceptancePageServed = cache(async function fetchAcceptancePageServed(

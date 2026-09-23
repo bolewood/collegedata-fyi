@@ -157,7 +157,12 @@ export function rateShape(history: AcceptanceHistory): RateShape {
   return { kind: "turn", extreme: rising ? "low" : "high", row: series[best], global, since: series[ref] };
 }
 
-type AnswerParts = { sentence: string; named: Set<AcceptanceYear> };
+type AnswerParts = {
+  sentence: string;
+  /** The far extreme, as its own sentence ("The high was 9.3%, for fall 2020."). */
+  contrast: string | null;
+  named: Set<AcceptanceYear>;
+};
 
 /**
  * The answer and which years it already named (so "It was …" never
@@ -170,9 +175,10 @@ type AnswerParts = { sentence: string; named: Set<AcceptanceYear> };
  *   is folded in, with every tied year named if it is the lowest/highest;
  *   older, it is "a low of" when global, else "the lowest since fall Z (v%)"
  *   where Z is the most recent earlier year that printed lower.
- * - Far extreme: moving down but not the series low → "but above a low of
- *   …" (mirror for up), unless the first year ties it (the "It was"
- *   sentence then carries it) or it was already named.
+ * - Far extreme: moving down but not the series low → its own sentence,
+ *   "The low was 7.3%, for fall 2022." (mirror for up), unless the first
+ *   year ties it (the "It was" sentence then carries it) or it was already
+ *   named. Kept out of the answer so it stays under ~35 words.
  */
 function answerParts(schoolName: string, history: AcceptanceHistory): AnswerParts | null {
   const series = oldestFirst(history);
@@ -182,7 +188,7 @@ function answerParts(schoolName: string, history: AcceptanceHistory): AnswerPart
   const prev = series[series.length - 2];
   const base = answerBase(schoolName, last);
   const named = new Set<AcceptanceYear>([last]);
-  if (first === last) return { sentence: `${base}.`, named };
+  if (first === last) return { sentence: `${base}.`, contrast: null, named };
   const shape = rateShape(history);
   const allSame = series.every((r) => tenths(r.rate) === tenths(last.rate));
 
@@ -199,14 +205,9 @@ function answerParts(schoolName: string, history: AcceptanceHistory): AnswerPart
     others.forEach((r) => named.add(r));
     const against = shape.kind === "monotone" ? first : prev;
     named.add(against);
-    let tail = "";
-    if (shape.kind === "monotone" && dominantChange(history)) {
-      tail = first.applied === last.applied
-        ? `, while applications held at ${count(last.applied)}`
-        : `, while applications ${last.applied > first.applied ? "rose" : "fell"} from ${count(first.applied)} to ${count(last.applied)}`;
-    }
     return {
-      sentence: `${base}, the ${recordKind === "low" ? "lowest" : "highest"} in ${yearsPhrase(history)}${tie}, ${comparedWith(last, against)}${tail}.`,
+      sentence: `${base}, the ${recordKind === "low" ? "lowest" : "highest"} in ${yearsPhrase(history)}${tie}, ${comparedWith(last, against)}.`,
+      contrast: null,
       named,
     };
   }
@@ -241,6 +242,7 @@ function answerParts(schoolName: string, history: AcceptanceHistory): AnswerPart
     }
   }
 
+  let contrast: string | null = null;
   const direction = Math.sign(tenths(last.rate) - tenths(prev.rate));
   if (direction !== 0) {
     const kind = direction < 0 ? "low" : "high";
@@ -249,15 +251,20 @@ function answerParts(schoolName: string, history: AcceptanceHistory): AnswerPart
     const covered = group.some((r) => named.has(r) || r === first);
     if (!covered) {
       group.forEach((r) => named.add(r));
-      clauses.push(`, but ${kind === "low" ? "above a low" : "below a high"} of ${pct(extremeRow.rate)} for ${falls(group)}`);
+      contrast = `The ${kind} was ${pct(extremeRow.rate)}, for ${falls(group)}.`;
     }
   }
-  return { sentence: `${base}, ${head}${clauses.join("")}.`, named };
+  return { sentence: `${base}, ${head}${clauses.join("")}.`, contrast, named };
 }
 
 /** Answer first: the latest year with exact counts, then where it stands. */
 export function answerSentence(schoolName: string, history: AcceptanceHistory): string | null {
   return answerParts(schoolName, history)?.sentence ?? null;
+}
+
+/** "The low was 7.3%, for fall 2022." when the answer's direction hides the series extreme. */
+export function contrastSentence(history: AcceptanceHistory): string | null {
+  return answerParts("", history)?.contrast ?? null;
 }
 
 /**
@@ -358,7 +365,7 @@ function applicationsExtreme(series: AcceptanceYear[]): { kind: "peak" | "low"; 
  */
 export function applicationsSentence(history: AcceptanceHistory): string | null {
   const series = oldestFirst(history);
-  if (series.length < 2 || dominantChange(history)) return null;
+  if (series.length < 2) return null;
   const first = series[0];
   const last = series[series.length - 1];
   const prev = series[series.length - 2];
@@ -383,11 +390,10 @@ export function applicationsSentence(history: AcceptanceHistory): string | null 
         ? `Applications ${latestChange}; ${most}.`
         : `Applications were ${count(last.applied)} for fall ${fallYear(last.yearStart)}; ${most}.`;
     }
-    const low = `a low of ${count(extreme.row.applied)} for ${when}`;
-    if (latestChange && last.applied > prev.applied) return `Applications ${latestChange}, up from ${low}.`;
+    const fewest = `the fewest in ${yearsNoun(history)} was ${count(extreme.row.applied)}, for ${when}`;
     return latestChange
-      ? `Applications ${latestChange}; the fewest in ${yearsNoun(history)} was ${count(extreme.row.applied)}, for ${when}.`
-      : `Applications were ${count(last.applied)} for fall ${fallYear(last.yearStart)}, up from ${low}.`;
+      ? `Applications ${latestChange}; ${fewest}.`
+      : `Applications were ${count(last.applied)} for fall ${fallYear(last.yearStart)}; ${fewest}.`;
   }
 
   if (first.applied === last.applied) {
@@ -402,21 +408,41 @@ export function applicationsSentence(history: AcceptanceHistory): string | null 
   return `${span}.`;
 }
 
-export function gapSentence(history: AcceptanceHistory): string | null {
+/**
+ * Missing years, in the table's terms: a report on file whose counts are
+ * not usable, or no report in the archive at all. `reportYears` holds the
+ * canonical years with a whole-institution report on file; without it,
+ * every gap is described as missing usable figures.
+ */
+export function gapSentence(history: AcceptanceHistory, reportYears?: ReadonlySet<string>): string | null {
   if (history.gaps.length === 0) return null;
-  const falls = [...history.gaps]
-    .sort()
-    .map((year) => `fall ${Number(year.slice(0, 4))}`);
-  return `Usable figures for ${joinAnd(falls)} are not in our archive.`;
+  const sorted = [...history.gaps].sort();
+  const label = (year: string) => `fall ${Number(year.slice(0, 4))}`;
+  const unusable = reportYears ? sorted.filter((y) => reportYears.has(y)) : sorted;
+  const absent = reportYears ? sorted.filter((y) => !reportYears.has(y)) : [];
+  const noReport = absent.length > 0
+    ? `No report${absent.length > 1 ? "s" : ""} for ${joinAnd(absent.map(label))} ${absent.length > 1 ? "are" : "is"} in our archive`
+    : null;
+  if (noReport && unusable.length === 0) return `${noReport}.`;
+  if (!noReport) return `Usable figures for ${joinAnd(unusable.map(label))} are not in our archive.`;
+  return `${noReport}, and usable figures for ${joinAnd(unusable.map(label))} are not.`;
 }
 
-export function leadSentences(schoolName: string, history: AcceptanceHistory): string[] {
+export const LEDE_MAX_WORDS = 35;
+export const LEDE_MAX_SENTENCES = 5;
+
+export function leadSentences(
+  schoolName: string,
+  history: AcceptanceHistory,
+  reportYears?: ReadonlySet<string>,
+): string[] {
   return [
     answerSentence(schoolName, history),
+    contrastSentence(history),
     firstYearSentence(history),
     applicationsSentence(history),
     dominantSentence(history),
-    gapSentence(history),
+    gapSentence(history, reportYears),
   ].filter((sentence): sentence is string => Boolean(sentence));
 }
 

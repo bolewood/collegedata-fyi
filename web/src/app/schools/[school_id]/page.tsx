@@ -38,7 +38,7 @@ import { SubmissionForm } from "@/components/SubmissionForm";
 import { FederalBaselineTable } from "@/components/FederalBaselineTable";
 import { isCanonicalCdsYear, storageUrl, yearRange } from "@/lib/format";
 import { archiveLead, directoryOnlyLead } from "@/lib/archive-lead";
-import { fetchAcceptancePageServed } from "@/lib/acceptance-history-data";
+import { fetchAcceptancePageServed, withPrintedTotals } from "@/lib/acceptance-history-data";
 import { acceptanceRatePath } from "@/lib/acceptance-pilot";
 import { ArchiveLead } from "@/components/ArchiveLead";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
@@ -85,11 +85,14 @@ export async function generateMetadata({
     .sort();
   const path = `/schools/${resolvedSchoolId}`;
   const yearsOnFile = years.length > 0 ? yearRange(years[0], years[years.length - 1]) : "none";
-  const latestFacts = latestUsableFacts(
-    servedFacts(
-      await fetchSchoolYearFacts(resolvedSchoolId),
-      docs.map((doc) => doc.document_id),
+  const latestFacts = await withPrintedTotals(
+    latestUsableFacts(
+      servedFacts(
+        await fetchSchoolYearFacts(resolvedSchoolId),
+        docs.map((doc) => doc.document_id),
+      ),
     ),
+    docs,
   );
   const fragment = metaFactFragment(latestFacts);
   const description = fragment && latestFacts
@@ -260,7 +263,7 @@ export default async function SchoolDetailPage({ params }: {
     ),
   );
   const shownFacts = servedFacts(yearFacts, docs.map((doc) => doc.document_id));
-  const latestFacts = latestUsableFacts(shownFacts);
+  const latestFacts = await withPrintedTotals(latestUsableFacts(shownFacts), docs);
   const summary = [
     ...yearSummarySentences(name, latestFacts),
     yearOverYearSentence(

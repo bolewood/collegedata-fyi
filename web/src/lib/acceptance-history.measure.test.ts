@@ -89,6 +89,54 @@ describe.skipIf(MODE !== "survey")("acceptance history corpus survey", () => {
   });
 });
 
+describe.skipIf(MODE !== "hubs")("hub summaries changed by the printed-total resolver", () => {
+  it("counts latest browser rows whose printed counts differ", async () => {
+    loadEnv();
+    const { supabase } = await import("./supabase");
+    const { readAcceptanceYear } = await import("./acceptance-history");
+    type Row = { document_id: string; school_id: string; canonical_year: string; year_start: number; applied: number | null; admitted: number | null; enrolled_first_year: number | null; data_quality_flag: string | null };
+    const rows: Row[] = [];
+    for (let start = 0; ; start += 1000) {
+      const { data, error } = await (supabase as unknown as { from: (t: string) => any })
+        .from("school_browser_rows")
+        .select("document_id,school_id,canonical_year,year_start,applied,admitted,enrolled_first_year,data_quality_flag")
+        .is("sub_institutional", null)
+        .range(start, start + 999);
+      if (error) throw error;
+      rows.push(...(data as Row[]));
+      if (data.length < 1000) break;
+    }
+    const survey = JSON.parse(readFileSync(resolve(OUT_DIR, "c1-survey.json"), "utf8")) as {
+      artifacts: Record<string, { canonical: (Record<string, string | null> & { producer: string; sv: string | null }) | null }>;
+    };
+    const latest = new Map<string, Row>();
+    for (const row of rows) {
+      if (["wrong_file", "blank_template", "low_coverage"].includes(row.data_quality_flag ?? "")) continue;
+      const seen = latest.get(row.school_id);
+      if (!seen || row.year_start > seen.year_start) latest.set(row.school_id, row);
+    }
+    const changed = [];
+    let compared = 0;
+    for (const row of latest.values()) {
+      const a = survey.artifacts[row.document_id]?.canonical;
+      if (!a) continue;
+      const values: Record<string, FieldValue> = {};
+      for (let i = 101; i <= 130; i++) if (a[`c${i}`] != null && a[`c${i}`] !== "") values[`C.${i}`] = { value: String(a[`c${i}`]) };
+      const reading = readAcceptanceYear(
+        { document_id: row.document_id, canonical_year: row.canonical_year, extraction_status: "extracted", data_quality_flag: null, sub_institutional: null, source_storage_path: null, source_format: null },
+        { values, schemaVersion: a.sv, producer: a.producer, markdown: a.producer === "tier4_docling" ? "| survey |" : null },
+        { applied: row.applied, admitted: row.admitted, enrolled: row.enrolled_first_year },
+      );
+      compared += 1;
+      if (reading.ok && reading.row.source !== "projection" && (reading.row.applied !== row.applied || reading.row.admitted !== row.admitted)) {
+        changed.push({ school: row.school_id, year: row.canonical_year, projection: [row.applied, row.admitted], printed: [reading.row.applied, reading.row.admitted] });
+      }
+    }
+    mkdirSync(OUT_DIR, { recursive: true });
+    writeFileSync(resolve(OUT_DIR, "hub-changes.json"), JSON.stringify({ schools: latest.size, compared, changed }, null, 1));
+  }, 300_000);
+});
+
 describe.skipIf(MODE !== "live")("acceptance history live measurement", () => {
   it("reports the allowlist and compares 2024-25+ with school_browser_rows", async () => {
     loadEnv();
@@ -143,6 +191,7 @@ describe.skipIf(MODE !== "live")("acceptance history live measurement", () => {
           enrolled: y.enrolled, rate: Number((y.rate * 100).toFixed(2)), file: y.sourceStoragePath,
         })),
         gaps: history.gaps,
+        reportYears: docs.filter((doc) => doc.sub_institutional == null).map((doc) => doc.canonical_year),
         excluded: history.excluded,
         comparisons,
       });

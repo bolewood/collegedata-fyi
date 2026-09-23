@@ -2879,6 +2879,8 @@
    zero-baseline column chart in one ink colour. */
 .school-record .cd-school-header[data-accent="paper"] h1 span { color: var(--paper); }
 .acc-title { text-wrap: balance; }
+/* The accent rule colours every span in a plate H1; the name stays paper. */
+.school-record .cd-school-header h1.acc-title span.acc-title__name { color: var(--paper); }
 /* Keep the school name on one line when the plate is wide enough; the
    italic "acceptance rate" wraps instead. Phones may still break names. */
 @media (min-width: 641px) {
@@ -2977,11 +2979,13 @@
   white-space: nowrap;
 }
 .acc-table th:first-child { padding-left: 0; }
-.acc-col--year { width: 18%; }
-.acc-col--rate { width: 20%; }
-.acc-col--applied, .acc-col--admitted, .acc-col--enrolled { width: 13%; }
-.acc-col--yield { width: 11%; }
-.acc-col--source { width: 12%; }
+/* Year fits "2024–25 report"; Rate fits its header. Both sized to content
+   so the rate sits close to its year. */
+.acc-col--year { width: 12%; }
+.acc-col--rate { width: 13%; }
+.acc-col--applied, .acc-col--admitted, .acc-col--enrolled { width: 15%; }
+.acc-col--yield { width: 12%; }
+.acc-col--source { width: 18%; }
 .acc-th-short { display: none; }
 .acc-table .acc-table__gap-label {
   text-align: left;

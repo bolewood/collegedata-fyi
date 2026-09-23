@@ -21,7 +21,8 @@ import {
   yearSummarySentences,
   type SchoolYearFacts,
 } from "@/lib/school-summary";
-import type { FieldValue, ArtifactNotes } from "@/lib/types";
+import type { FieldValue, ArtifactNotes, ManifestRow } from "@/lib/types";
+import { withPrintedTotals } from "@/lib/acceptance-history-data";
 import { readC1Totals, type C1HeadlineTotals } from "@/lib/c1-headline-totals";
 import { academicYearStart } from "@/lib/acceptance-history";
 import { storageUrl, formatBadgeLabel, sourceDownloadLabel } from "@/lib/format";
@@ -47,7 +48,7 @@ type Params = { school_id: string; year: string };
 async function schoolContext(
   schoolId: string,
   fallbackName: string | null,
-): Promise<{ name: string; facts: SchoolYearFacts[] }> {
+): Promise<{ name: string; facts: SchoolYearFacts[]; docs: ManifestRow[] }> {
   const [schoolDocs, facts] = await Promise.all([
     fetchSchoolDocuments(schoolId),
     fetchSchoolYearFacts(schoolId),
@@ -55,6 +56,7 @@ async function schoolContext(
   return {
     name: schoolDocs?.[0]?.school_name ?? fallbackName ?? "Unknown school",
     facts: servedFacts(facts ?? [], (schoolDocs ?? []).map((doc) => doc.document_id)),
+    docs: schoolDocs ?? [],
   };
 }
 
@@ -70,10 +72,10 @@ export async function generateMetadata({
   if (docs.length === 0) return { title: "Document Not Found" };
 
   const doc = docs[0];
-  const { name: schoolName, facts } = await schoolContext(resolvedSchoolId, doc.school_name);
+  const { name: schoolName, facts, docs: schoolDocs } = await schoolContext(resolvedSchoolId, doc.school_name);
   const path = `/schools/${resolvedSchoolId}/${year}`;
   const title = `${schoolName} Common Data Set ${year}`;
-  const { current } = factsForYear(facts, year);
+  const current = await withPrintedTotals(factsForYear(facts, year).current, schoolDocs);
   const fragment = metaFactFragment(current);
   const printedYear = longYear(year);
   const yearLabel = printedYear ? `${year} (${printedYear})` : year;
@@ -119,7 +121,8 @@ export default async function SchoolYearPage({ params }: {
   ]);
 
   const schoolName = school.name;
-  const { current: currentFacts, prior: priorFacts } = factsForYear(school.facts, year);
+  const { current: projectedCurrent, prior: priorFacts } = factsForYear(school.facts, year);
+  const currentFacts = await withPrintedTotals(projectedCurrent, school.docs);
   const yearLead = yearArchiveLead({
     schoolId: school_id,
     schoolName,

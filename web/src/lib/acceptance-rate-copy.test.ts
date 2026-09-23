@@ -122,7 +122,8 @@ describe("lead: answer first, then history", () => {
 
   it("Georgetown: the recent low, not the one-year 2020 spike", () => {
     expect(leadSentences("Georgetown University", georgetown)).toEqual([
-      "Georgetown University admitted 13.5% of first-year applicants for fall 2025 (3,618 of 26,822), up from 12.9% for fall 2024 and from a low of 12.0% for fall 2021, but below a high of 16.8% for fall 2020.",
+      "Georgetown University admitted 13.5% of first-year applicants for fall 2025 (3,618 of 26,822), up from 12.9% for fall 2024 and from a low of 12.0% for fall 2021.",
+      "The high was 16.8%, for fall 2020.",
       "It was 14.5% for fall 2018.",
       "Applications rose 2.6% for fall 2025, to 26,822 from 26,131; the most in the years shown was 27,506, for fall 2021.",
     ]);
@@ -137,7 +138,8 @@ describe("lead: answer first, then history", () => {
 
   it("Northeastern: monotone, with the dominant year last and both counts", () => {
     expect(leadSentences("Northeastern University", northeastern)).toEqual([
-      "Northeastern University admitted 5.2% of first-year applicants for fall 2024 (5,133 of 98,425), the lowest in the five years shown, down from 20.5% for fall 2020, while applications rose from 64,459 to 98,425.",
+      "Northeastern University admitted 5.2% of first-year applicants for fall 2024 (5,133 of 98,425), the lowest in the five years shown, down from 20.5% for fall 2020.",
+      "Applications rose from 64,459 to 98,425 over that span.",
       "Most of the drop came in one year, from 18.4% for fall 2021 to 6.8% for fall 2022, when applications rose from 75,244 to 91,000 and admits fell from 13,829 to 6,191.",
     ]);
   });
@@ -205,7 +207,7 @@ describe("rate shape: the most recent extreme the series moved away from", () =>
     );
     const two = history([[2025, 100, 35], [2024, 100, 25], [2023, 100, 20], [2022, 100, 40], [2021, 100, 10]]);
     expect(leadSentences("X College", two)[0]).toBe(
-      "X College admitted 35.0% of first-year applicants for fall 2025 (35 of 100), up from 25.0% for fall 2024 and from 20.0% for fall 2023, the lowest since fall 2021 (10.0%), but below a high of 40.0% for fall 2022.",
+      "X College admitted 35.0% of first-year applicants for fall 2025 (35 of 100), up from 25.0% for fall 2024 and from 20.0% for fall 2023, the lowest since fall 2021 (10.0%).",
     );
   });
 

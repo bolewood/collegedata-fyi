@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import pilotFixture from "./__fixtures__/acceptance-pilot-histories.json";
 import { buildAcceptanceHistory, type HistoryDocument } from "./acceptance-history";
-import { leadSentences } from "./acceptance-rate-copy";
+import { LEDE_MAX_SENTENCES, LEDE_MAX_WORDS, leadSentences } from "./acceptance-rate-copy";
 import { auditLead, type AuditRow } from "./acceptance-lead-audit";
 import type { FieldValue } from "./types";
 
@@ -21,7 +21,7 @@ function doc(year: string): HistoryDocument {
   };
 }
 
-function lead(name: string, rows: AuditRow[]): string {
+function lead(name: string, rows: AuditRow[], reportYears?: string[]): string {
   const history = buildAcceptanceHistory(
     [...rows]
       .sort((a, b) => b.yearStart - a.yearStart)
@@ -36,7 +36,7 @@ function lead(name: string, rows: AuditRow[]): string {
         };
       }),
   );
-  return leadSentences(name, history).join(" ");
+  return leadSentences(name, history, reportYears ? new Set(reportYears) : undefined).join(" ");
 }
 
 const pilots = pilotFixture.map((school) => ({
@@ -50,11 +50,12 @@ function rows(spec: [number, number, number][]): AuditRow[] {
 
 describe("lead audit", () => {
   it.each(pilots.map((school) => [school.school, school] as const))("%s: every claim checks out", (_, school) => {
-    const text = lead(school.name, school.rows);
-    expect(auditLead(text, school.rows), text).toEqual([]);
+    const text = lead(school.name, school.rows, school.reportYears);
+    const onFile = new Set(school.reportYears.map((y) => Number(y.slice(0, 4))));
+    expect(auditLead(text, school.rows, onFile), text).toEqual([]);
   });
 
-  it("keeps every pilot lead to at most four sentences", () => {
+  it("keeps every pilot lead to at most five sentences of at most 35 words", () => {
     for (const school of pilots) {
       const history = buildAcceptanceHistory(
         [...school.rows].sort((a, b) => b.yearStart - a.yearStart).map((row) => ({
@@ -67,7 +68,11 @@ describe("lead audit", () => {
           },
         })),
       );
-      expect(leadSentences(school.name, history).length, school.school).toBeLessThanOrEqual(4);
+      const sentences = leadSentences(school.name, history, new Set(school.reportYears));
+      expect(sentences.length, school.school).toBeLessThanOrEqual(LEDE_MAX_SENTENCES);
+      for (const sentence of sentences) {
+        expect(sentence.split(/\s+/).length, sentence).toBeLessThanOrEqual(LEDE_MAX_WORDS);
+      }
     }
   });
 

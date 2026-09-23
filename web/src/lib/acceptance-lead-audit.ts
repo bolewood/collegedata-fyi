@@ -19,7 +19,7 @@ function years(list: string): number[] {
   return Array.from(list.matchAll(/fall (\d{4})/g), (m) => Number(m[1]));
 }
 
-export function auditLead(lead: string, rows: AuditRow[]): string[] {
+export function auditLead(lead: string, rows: AuditRow[], reportYears?: ReadonlySet<number>): string[] {
   const problems: string[] = [];
   const series = [...rows].sort((a, b) => a.yearStart - b.yearStart).map((r) => ({ ...r, rate: r.admitted / r.applied }));
   const byYear = new Map(series.map((r) => [r.yearStart, r]));
@@ -100,6 +100,14 @@ export function auditLead(lead: string, rows: AuditRow[]): string[] {
     }
   }
 
+  // "The low/high was V%, for fall Y": the series extreme, every tie named.
+  for (const m of lead.matchAll(/The (low|high) was (\d+\.\d)%, for ((?:fall \d{4}(?:, and |, | and )?)+)/g)) {
+    const listed = years(m[3]);
+    for (const y of listed) if (display(y) !== m[2]) fail(`"${m[0]}": fall ${y} printed ${display(y)}%`);
+    if (!isExtreme(listed[0], m[1])) fail(`"${m[0]}": not the ${m[1]} of the years shown`);
+    if (!sameSet(listed, sameShown(listed[0]))) fail(`"${m[0]}": tied years not all named`);
+  }
+
   // "It was V% for fall Y"
   for (const m of lead.matchAll(/It was (\d+\.\d)% for fall (\d{4})/g)) {
     if (display(Number(m[2])) !== m[1]) fail(`"${m[0]}": printed ${display(Number(m[2]))}%`);
@@ -112,7 +120,8 @@ export function auditLead(lead: string, rows: AuditRow[]): string[] {
       const target = d < 0 ? Math.min(...series.map((r) => shown(r.rate))) : Math.max(...series.map((r) => shown(r.rate)));
       if (shown(last.rate) !== target) {
         const holders = series.filter((r) => shown(r.rate) === target);
-        const mentioned = holders.some((r) => lead.includes(`${(target / 10).toFixed(1)}% for`) && lead.includes(`fall ${r.yearStart}`));
+        const value = (target / 10).toFixed(1);
+        const mentioned = holders.some((r) => (lead.includes(`${value}% for`) || lead.includes(`${value}%, for`)) && lead.includes(`fall ${r.yearStart}`));
         if (!mentioned) fail(`series ${d < 0 ? "low" : "high"} of ${(target / 10).toFixed(1)}% is not named`);
       }
     }
@@ -153,8 +162,21 @@ export function auditLead(lead: string, rows: AuditRow[]): string[] {
   // Missing years named exactly.
   const missing: number[] = [];
   for (let y = series[0].yearStart + 1; y < last.yearStart; y++) if (!byYear.has(y)) missing.push(y);
-  const gapSentence = /Usable figures for (.*?) are not in our archive\./.exec(lead);
-  if (!sameSet(gapSentence ? years(gapSentence[1]) : [], missing)) fail(`missing years should be ${missing.join(", ") || "none"}`);
+  const absent = /No reports? for (.*?) (?:is|are) in our archive/.exec(lead);
+  const unusable = /[Uu]sable figures for (.*?) are not/.exec(lead);
+  const absentYears = absent ? years(absent[1]) : [];
+  const unusableYears = unusable ? years(unusable[1]) : [];
+  if (!sameSet([...absentYears, ...unusableYears], missing)) fail(`missing years should be ${missing.join(", ") || "none"}`);
+  if (reportYears) {
+    for (const y of absentYears) if (reportYears.has(y)) fail(`fall ${y} has a report on file but the lead says none`);
+    for (const y of unusableYears) if (!reportYears.has(y)) fail(`fall ${y} has no report on file`);
+  }
+
+  // Length: every sentence at most 35 words.
+  for (const sentence of lead.split(/(?<=\.)\s+(?=[A-Z])/)) {
+    const words = sentence.trim().split(/\s+/).length;
+    if (words > 35) fail(`sentence of ${words} words: "${sentence.slice(0, 60)}…"`);
+  }
 
   return problems;
 }
