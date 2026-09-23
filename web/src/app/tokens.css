@@ -2874,3 +2874,178 @@
   align-items: center;
   gap: 9px;
 }
+
+/* PRD 031 — per-school acceptance-rate page. Ledger table + a small
+   zero-baseline column chart. Ink bars, forest only on the latest year. */
+.acc-section {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule-strong);
+}
+.acc-section__title {
+  font-size: 30px;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  margin: 0 0 20px;
+}
+.acc-chart {
+  margin: 0 0 28px;
+  max-width: 42rem;
+}
+.acc-chart__plot {
+  display: flex;
+  align-items: flex-end;
+}
+.acc-chart__col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.acc-chart__track {
+  height: 118px;
+  padding: 0 3px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid var(--chart-axis);
+}
+.acc-chart__value {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.acc-chart__bar {
+  display: block;
+  width: min(100%, 44px);
+  background: var(--chart-ink);
+}
+.acc-chart__col--latest .acc-chart__bar { background: var(--chart-accent); }
+.acc-chart__col--latest .acc-chart__value { color: var(--forest-ink); }
+.acc-chart__col--gap .acc-chart__value {
+  color: var(--ink-4);
+  font-size: 10px;
+}
+.acc-chart__year {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  text-align: center;
+  padding-top: 6px;
+}
+.acc-chart__caption {
+  margin-top: 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
+.acc-table-hint {
+  display: none;
+  margin: 0 0 6px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  text-align: right;
+}
+.acc-table-scroll {
+  overflow-x: auto;
+  border-top: 1px solid var(--rule-strong);
+  border-bottom: 1px solid var(--rule-strong);
+}
+.acc-table-scroll:focus-visible { outline-offset: 4px; }
+.acc-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+.acc-table th,
+.acc-table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+.acc-table tbody tr:last-child th,
+.acc-table tbody tr:last-child td { border-bottom: 0; }
+.acc-table thead th {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  vertical-align: bottom;
+}
+.acc-table tbody th {
+  font-weight: 400;
+  position: sticky;
+  left: 0;
+  background: var(--paper);
+  z-index: 1;
+}
+.acc-table .acc-num {
+  text-align: right;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.acc-table__year {
+  font-family: var(--mono);
+  font-size: 14px;
+}
+.acc-table__term {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+.acc-table__rate { color: var(--ink); font-weight: 600; }
+.acc-table__file { font-family: var(--mono); font-size: 12.5px; }
+.acc-table__gap td,
+.acc-table__gap .acc-table__year { color: var(--ink-3); }
+.acc-notes {
+  max-width: 42rem;
+  margin-top: 16px;
+}
+.acc-notes p {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.cd-theme .acc-notes .acc-notes__definition {
+  font-size: 11px;
+  line-height: 1.6;
+  text-transform: none;
+  letter-spacing: 0.03em;
+  color: var(--ink-3);
+  margin-bottom: 12px;
+}
+.acc-related {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 20px;
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+  font-size: 15px;
+}
+@media (max-width: 640px) {
+  .acc-chart__track { padding: 0 2px; }
+  .acc-chart__value { font-size: 9.5px; }
+  .acc-chart__year { font-size: 9.5px; }
+  .acc-section__title { font-size: 26px; }
+  .acc-table-hint { display: block; }
+}

@@ -38,6 +38,8 @@ import { SubmissionForm } from "@/components/SubmissionForm";
 import { FederalBaselineTable } from "@/components/FederalBaselineTable";
 import { isCanonicalCdsYear, storageUrl, yearRange } from "@/lib/format";
 import { archiveLead, directoryOnlyLead } from "@/lib/archive-lead";
+import { fetchAcceptancePageServed } from "@/lib/acceptance-history-data";
+import { acceptanceRatePath } from "@/lib/acceptance-pilot";
 import { ArchiveLead } from "@/components/ArchiveLead";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
 import type { ManifestRow, InstitutionCoverage } from "@/lib/types";
@@ -200,6 +202,7 @@ export default async function SchoolDetailPage({ params }: {
     brandColors,
     nonpayment,
     yearFacts,
+    acceptancePageServed,
   ] = await Promise.all([
     fetchScorecardByIpedsId(ipedsId),
     fetchBrowserRowBySchoolId(school_id),
@@ -212,6 +215,7 @@ export default async function SchoolDetailPage({ params }: {
     fetchSchoolBrandColors(school_id),
     fetchFsaNonpaymentBySchoolId(school_id),
     fetchSchoolYearFacts(school_id),
+    fetchAcceptancePageServed(school_id),
   ]);
   const positioningSchool = browserRow
     ? { ...browserRow, ...gpaProfile }
@@ -322,6 +326,7 @@ export default async function SchoolDetailPage({ params }: {
     ipedsId,
     documents: docs,
     summary,
+    acceptanceRateHref: acceptancePageServed ? acceptanceRatePath(school_id) : null,
   });
   const carnegieCode = scorecard?.carnegie_basic;
   const positioningSourceDoc = positioningSchool
