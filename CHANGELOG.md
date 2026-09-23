@@ -6,6 +6,22 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.7.0] - 2026-09-23
+
+### Added
+
+- Twenty schools now have an acceptance-rate page with the school's own
+  first-year counts by entering class, a chart when four or more years
+  are available, and a link to each original file. The pages are not
+  indexed yet.
+
+### Changed
+
+- School and year pages use the count printed in the Common Data Set
+  when it is clearer than the projected row, and they hide a figure
+  that does not match federal admissions data or belongs to a system
+  office rather than a college.
+
 ## [0.6.6.1] - 2026-09-23
 
 ### Fixed

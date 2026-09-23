@@ -24,6 +24,8 @@ export type ArchiveLeadFacts = {
   directoryOnly?: boolean;
   /** Plain-English sentences about the latest reported year. */
   summary?: string[];
+  /** When the acceptance-rate page is served, the summary's first "acceptance rate" links to it. */
+  acceptanceRateHref?: string | null;
 };
 
 export type YearArchiveLeadFacts = {
@@ -125,6 +127,17 @@ function officialSource(
   return getOfficialCdsPage(schoolId, ipedsId);
 }
 
+function linkFirstPhrase(text: string, phrase: string, href: string | null | undefined): LeadPart[] {
+  const at = href ? text.indexOf(phrase) : -1;
+  if (!href || at < 0) return [{ type: "text", text }];
+  const parts: LeadPart[] = [];
+  if (at > 0) parts.push({ type: "text", text: text.slice(0, at) });
+  parts.push({ type: "link", href, text: phrase });
+  const rest = text.slice(at + phrase.length);
+  if (rest) parts.push({ type: "text", text: rest });
+  return parts;
+}
+
 export function archiveLead(facts: ArchiveLeadFacts): ArchiveLead | null {
   if (facts.directoryOnly) return null;
   if (facts.documents.length === 0) return null;
@@ -165,7 +178,9 @@ export function archiveLead(facts: ArchiveLeadFacts): ArchiveLead | null {
   paragraphs.push(first);
 
   if (facts.summary && facts.summary.length > 0) {
-    paragraphs.push([{ type: "text", text: facts.summary.join(" ") }]);
+    paragraphs.push(
+      linkFirstPhrase(facts.summary.join(" "), "acceptance rate", facts.acceptanceRateHref),
+    );
   }
 
   const official = officialSource(facts.schoolId, facts.ipedsId);

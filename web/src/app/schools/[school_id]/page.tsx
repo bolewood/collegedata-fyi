@@ -38,6 +38,9 @@ import { SubmissionForm } from "@/components/SubmissionForm";
 import { FederalBaselineTable } from "@/components/FederalBaselineTable";
 import { isCanonicalCdsYear, storageUrl, yearRange } from "@/lib/format";
 import { archiveLead, directoryOnlyLead } from "@/lib/archive-lead";
+import { fetchAcceptancePageServed, gatedYearFacts } from "@/lib/acceptance-history-data";
+import { ipedsAdmissions } from "@/lib/c1-hub-gate";
+import { acceptanceRatePath } from "@/lib/acceptance-pilot";
 import { ArchiveLead } from "@/components/ArchiveLead";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
 import type { ManifestRow, InstitutionCoverage } from "@/lib/types";
@@ -83,11 +86,18 @@ export async function generateMetadata({
     .sort();
   const path = `/schools/${resolvedSchoolId}`;
   const yearsOnFile = years.length > 0 ? yearRange(years[0], years[years.length - 1]) : "none";
-  const latestFacts = latestUsableFacts(
-    servedFacts(
-      await fetchSchoolYearFacts(resolvedSchoolId),
-      docs.map((doc) => doc.document_id),
-    ),
+  const [metaYearFacts, metaFederalFacts] = await Promise.all([
+    fetchSchoolYearFacts(resolvedSchoolId),
+    fetchSchoolFederalFacts(resolvedSchoolId),
+  ]);
+  const latestFacts = await gatedYearFacts(
+    latestUsableFacts(servedFacts(metaYearFacts, docs.map((doc) => doc.document_id))),
+    docs,
+    {
+      schoolId: resolvedSchoolId,
+      ipedsId: docs.find((d) => d.ipeds_id)?.ipeds_id ?? null,
+      federalFacts: metaFederalFacts,
+    },
   );
   const fragment = metaFactFragment(latestFacts);
   const description = fragment && latestFacts
@@ -200,6 +210,7 @@ export default async function SchoolDetailPage({ params }: {
     brandColors,
     nonpayment,
     yearFacts,
+    acceptancePageServed,
   ] = await Promise.all([
     fetchScorecardByIpedsId(ipedsId),
     fetchBrowserRowBySchoolId(school_id),
@@ -212,8 +223,10 @@ export default async function SchoolDetailPage({ params }: {
     fetchSchoolBrandColors(school_id),
     fetchFsaNonpaymentBySchoolId(school_id),
     fetchSchoolYearFacts(school_id),
+    fetchAcceptancePageServed(school_id),
   ]);
-  const positioningSchool = browserRow
+  const administrativeUnit = ipedsAdmissions(federalFacts, ipedsId).administrativeUnit;
+  const projectedPositioning = browserRow && !administrativeUnit
     ? { ...browserRow, ...gpaProfile }
     : null;
 
@@ -256,7 +269,20 @@ export default async function SchoolDetailPage({ params }: {
     ),
   );
   const shownFacts = servedFacts(yearFacts, docs.map((doc) => doc.document_id));
-  const latestFacts = latestUsableFacts(shownFacts);
+  const latestFacts = await gatedYearFacts(latestUsableFacts(shownFacts), docs, {
+    schoolId: school_id,
+    ipedsId,
+    federalFacts,
+  });
+  // One number everywhere: the positioning card's admit rate uses the same
+  // gated counts as the summary for that year.
+  const positioningSchool = projectedPositioning && latestFacts && projectedPositioning.cdsYear === latestFacts.canonical_year
+    ? {
+        ...projectedPositioning,
+        acceptanceRate:
+          latestFacts.applied && latestFacts.admitted != null ? latestFacts.admitted / latestFacts.applied : null,
+      }
+    : projectedPositioning;
   const summary = [
     ...yearSummarySentences(name, latestFacts),
     yearOverYearSentence(
@@ -322,6 +348,7 @@ export default async function SchoolDetailPage({ params }: {
     ipedsId,
     documents: docs,
     summary,
+    acceptanceRateHref: acceptancePageServed ? acceptanceRatePath(school_id) : null,
   });
   const carnegieCode = scorecard?.carnegie_basic;
   const positioningSourceDoc = positioningSchool
@@ -487,7 +514,7 @@ export default async function SchoolDetailPage({ params }: {
         />
       )}
 
-      {admissionStrategySchool && (
+      {admissionStrategySchool && !administrativeUnit && (
         <AdmissionStrategyCard
           school={admissionStrategySchool}
           sourceHref={admissionStrategySourceHref}

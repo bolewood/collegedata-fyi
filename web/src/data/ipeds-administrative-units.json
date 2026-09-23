@@ -1,0 +1,149 @@
+{
+ "source": "tools/finder/ipeds_identity_snapshot.csv (NCES HD2024): system / central administrative offices, which report no students of their own",
+ "units": [
+  {
+   "ipeds_id": "100733",
+   "name": "University of Alabama System Office"
+  },
+  {
+   "ipeds_id": "105136",
+   "name": "Maricopa Community College System Office"
+  },
+  {
+   "ipeds_id": "108056",
+   "name": "University of Arkansas System Office"
+  },
+  {
+   "ipeds_id": "121178",
+   "name": "Peralta Community College System Office"
+  },
+  {
+   "ipeds_id": "124557",
+   "name": "University of California-System Administration Central Office"
+  },
+  {
+   "ipeds_id": "125019",
+   "name": "Ventura County Community College System Office"
+  },
+  {
+   "ipeds_id": "128300",
+   "name": "University of Colorado System Office"
+  },
+  {
+   "ipeds_id": "130882",
+   "name": "Delaware Technical Community College-Central Office"
+  },
+  {
+   "ipeds_id": "141963",
+   "name": "University of Hawaii System Office"
+  },
+  {
+   "ipeds_id": "149240",
+   "name": "Southern Illinois University-System Office"
+  },
+  {
+   "ipeds_id": "149587",
+   "name": "University of Illinois System Offices"
+  },
+  {
+   "ipeds_id": "161280",
+   "name": "University of Maine-System Central Office"
+  },
+  {
+   "ipeds_id": "166665",
+   "name": "University of Massachusetts-Central Office"
+  },
+  {
+   "ipeds_id": "178439",
+   "name": "University of Missouri-System Office"
+  },
+  {
+   "ipeds_id": "181747",
+   "name": "University of Nebraska-Central Administration System Office"
+  },
+  {
+   "ipeds_id": "182519",
+   "name": "Nevada System of Higher Education-System Office"
+  },
+  {
+   "ipeds_id": "183327",
+   "name": "University System of New Hampshire System Office"
+  },
+  {
+   "ipeds_id": "190035",
+   "name": "CUNY System Office"
+  },
+  {
+   "ipeds_id": "195827",
+   "name": "SUNY-System Office"
+  },
+  {
+   "ipeds_id": "214661",
+   "name": "Pennsylvania State System of Higher Education-Central Office"
+  },
+  {
+   "ipeds_id": "222497",
+   "name": "Alamo Community College District Central Office"
+  },
+  {
+   "ipeds_id": "228732",
+   "name": "Texas A & M University-System Office"
+  },
+  {
+   "ipeds_id": "229090",
+   "name": "The University of Texas System Office"
+  },
+  {
+   "ipeds_id": "229407",
+   "name": "University of Houston-System Administration"
+  },
+  {
+   "ipeds_id": "240435",
+   "name": "University of Wisconsin-System Administration"
+  },
+  {
+   "ipeds_id": "242671",
+   "name": "Inter American University of Puerto Rico-Central Office"
+  },
+  {
+   "ipeds_id": "243160",
+   "name": "University of Puerto Rico-Central Administration"
+  },
+  {
+   "ipeds_id": "247083",
+   "name": "University of Louisiana-System Administration"
+  },
+  {
+   "ipeds_id": "409379",
+   "name": "Tennessee Board of Regents"
+  },
+  {
+   "ipeds_id": "420802",
+   "name": "Arizona Board of Regents"
+  },
+  {
+   "ipeds_id": "428453",
+   "name": "Minnesota State Colleges and Universities System Office"
+  },
+  {
+   "ipeds_id": "439154",
+   "name": "Texas Tech University System Administration"
+  },
+  {
+   "ipeds_id": "440138",
+   "name": "Antioch University-System Administration"
+  },
+  {
+   "ipeds_id": "443368",
+   "name": "Illinois Eastern Community College-System Office"
+  },
+  {
+   "ipeds_id": "446978",
+   "name": "Colorado State University-System Office"
+  },
+  {
+   "ipeds_id": "492263",
+   "name": "The University of Tennessee System Office"
+  }
+ ]
+}

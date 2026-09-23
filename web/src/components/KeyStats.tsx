@@ -1,5 +1,5 @@
 import type { FieldValue } from "@/lib/types";
-import { c1HeadlineTotals } from "@/lib/c1-headline-totals";
+import { c1HeadlineTotals, type C1HeadlineTotals } from "@/lib/c1-headline-totals";
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
@@ -21,14 +21,17 @@ function getNum(values: Record<string, FieldValue>, id: string): number | null {
 export function KeyStats({
   schemaVersion,
   values,
+  c1,
 }: {
   schemaVersion?: string;
   values: Record<string, FieldValue>;
+  /** Pre-read C1 totals (see readC1Totals); computed from values when omitted. */
+  c1?: C1HeadlineTotals;
 }) {
   const stats: { label: string; value: string }[] = [];
 
   const { applied: totalApplied, admitted: totalAdmitted, enrolled: totalEnrolled } =
-    c1HeadlineTotals(values, schemaVersion);
+    c1 ?? c1HeadlineTotals(values, schemaVersion);
 
   // Acceptance rate
   if (totalApplied && totalAdmitted && totalApplied > 0) {

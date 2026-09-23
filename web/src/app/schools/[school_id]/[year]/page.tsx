@@ -11,6 +11,7 @@ import {
   fetchSchoolBrandColors,
   fetchFsaNonpaymentBySchoolId,
   fetchSchoolYearFacts,
+  fetchSchoolFederalFacts,
 } from "@/lib/queries";
 import {
   factsForYear,
@@ -21,7 +22,12 @@ import {
   yearSummarySentences,
   type SchoolYearFacts,
 } from "@/lib/school-summary";
-import type { FieldValue, ArtifactNotes } from "@/lib/types";
+import type { FieldValue, ArtifactNotes, ManifestRow, SchoolFactUnifiedRow } from "@/lib/types";
+import { gatedYearFacts } from "@/lib/acceptance-history-data";
+import { gateC1Counts, ipedsAdmissions, type IpedsAdmissions } from "@/lib/c1-hub-gate";
+import { isAcceptancePilotSchool } from "@/lib/acceptance-pilot";
+import { readC1Totals, type C1HeadlineTotals } from "@/lib/c1-headline-totals";
+import { academicYearStart } from "@/lib/acceptance-history";
 import { storageUrl, formatBadgeLabel, sourceDownloadLabel } from "@/lib/format";
 import { Badge } from "@/components/Badge";
 import { KeyStats } from "@/components/KeyStats";
@@ -45,14 +51,17 @@ type Params = { school_id: string; year: string };
 async function schoolContext(
   schoolId: string,
   fallbackName: string | null,
-): Promise<{ name: string; facts: SchoolYearFacts[] }> {
-  const [schoolDocs, facts] = await Promise.all([
+): Promise<{ name: string; facts: SchoolYearFacts[]; docs: ManifestRow[]; federalFacts: SchoolFactUnifiedRow[] }> {
+  const [schoolDocs, facts, federalFacts] = await Promise.all([
     fetchSchoolDocuments(schoolId),
     fetchSchoolYearFacts(schoolId),
+    fetchSchoolFederalFacts(schoolId),
   ]);
   return {
     name: schoolDocs?.[0]?.school_name ?? fallbackName ?? "Unknown school",
     facts: servedFacts(facts ?? [], (schoolDocs ?? []).map((doc) => doc.document_id)),
+    docs: schoolDocs ?? [],
+    federalFacts: federalFacts ?? [],
   };
 }
 
@@ -68,10 +77,14 @@ export async function generateMetadata({
   if (docs.length === 0) return { title: "Document Not Found" };
 
   const doc = docs[0];
-  const { name: schoolName, facts } = await schoolContext(resolvedSchoolId, doc.school_name);
+  const { name: schoolName, facts, docs: schoolDocs, federalFacts } = await schoolContext(resolvedSchoolId, doc.school_name);
   const path = `/schools/${resolvedSchoolId}/${year}`;
   const title = `${schoolName} Common Data Set ${year}`;
-  const { current } = factsForYear(facts, year);
+  const current = await gatedYearFacts(factsForYear(facts, year).current, schoolDocs, {
+    schoolId: resolvedSchoolId,
+    ipedsId: doc.ipeds_id ?? null,
+    federalFacts,
+  });
   const fragment = metaFactFragment(current);
   const printedYear = longYear(year);
   const yearLabel = printedYear ? `${year} (${printedYear})` : year;
@@ -117,7 +130,15 @@ export default async function SchoolYearPage({ params }: {
   ]);
 
   const schoolName = school.name;
-  const { current: currentFacts, prior: priorFacts } = factsForYear(school.facts, year);
+  const { current: projectedCurrent, prior: priorFacts } = factsForYear(school.facts, year);
+  const currentFacts = await gatedYearFacts(projectedCurrent, school.docs, {
+    schoolId: school_id,
+    ipedsId,
+    federalFacts: school.federalFacts,
+  });
+  const ipeds = ipedsAdmissions(school.federalFacts, ipedsId);
+  const administrativeUnit = ipeds.administrativeUnit;
+  const gate = { pilot: isAcceptancePilotSchool(school_id), ipeds };
   const yearLead = yearArchiveLead({
     schoolId: school_id,
     schoolName,
@@ -212,6 +233,14 @@ export default async function SchoolYearPage({ params }: {
           scorecard={scorecard}
           nonpayment={nonpayment}
           showSpreadsheetLinks={i === 0}
+          gate={gate}
+          gatedC1={
+            administrativeUnit
+              ? { applied: null, admitted: null, enrolled: null }
+              : currentFacts && currentFacts.document_id === doc.document_id
+                ? { applied: currentFacts.applied, admitted: currentFacts.admitted, enrolled: currentFacts.enrolledFirstYear }
+                : undefined
+          }
         />
       ))}
     </div>
@@ -224,12 +253,18 @@ async function DocumentVariant({
   scorecard,
   nonpayment,
   showSpreadsheetLinks,
+  gatedC1,
+  gate,
 }: {
   doc: Awaited<ReturnType<typeof fetchDocumentsBySchoolAndYear>>[number];
   schoolId: string;
   scorecard: Awaited<ReturnType<typeof fetchScorecardByIpedsId>>;
   nonpayment: Awaited<ReturnType<typeof fetchFsaNonpaymentBySchoolId>>;
   showSpreadsheetLinks: boolean;
+  /** Counts the hub shows for this document (c1-hub-gate); overrides the extract reading. */
+  gatedC1?: C1HeadlineTotals;
+  /** Gate for documents with no projected row (older years). */
+  gate: { pilot: boolean; ipeds: IpedsAdmissions };
 }) {
   const sourceDownloadUrl = storageUrl(doc.source_storage_path);
   const isExtracted = doc.extraction_status === "extracted";
@@ -238,6 +273,7 @@ async function DocumentVariant({
   let totalFields: number | undefined;
   let markdown: string | undefined;
   let schemaVersion: string | undefined;
+  let c1: C1HeadlineTotals | undefined;
 
   if (isExtracted && doc.document_id) {
     const { canonical, mergedValues } = await fetchExtract(doc.document_id);
@@ -246,6 +282,19 @@ async function DocumentVariant({
     totalFields = notes?.stats?.total_fields;
     markdown = notes?.markdown ?? undefined;
     schemaVersion = notes?.schema_version ?? doc.cds_year ?? undefined;
+    const reading = readC1Totals({
+      values,
+      schemaVersion: notes?.schema_version ?? null,
+      producer: canonical?.producer ?? null,
+      yearStart: academicYearStart(doc.canonical_year),
+      markdown: notes?.markdown ?? null,
+    });
+    const yearStart = academicYearStart(doc.canonical_year);
+    c1 = gatedC1 ??
+      (reading.totals && yearStart != null
+        ? gateC1Counts({ pilot: gate.pilot, yearStart, projection: null, resolver: reading.totals, ipeds: gate.ipeds }).counts
+        : null) ??
+      { applied: null, admitted: null, enrolled: null };
   }
 
   const hasValues = Object.keys(values).length > 0;
@@ -289,7 +338,7 @@ async function DocumentVariant({
 
       {hasValues && (
         <div style={{ marginTop: 16 }}>
-          <KeyStats schemaVersion={schemaVersion ?? doc.cds_year ?? undefined} values={values} />
+          <KeyStats schemaVersion={schemaVersion ?? doc.cds_year ?? undefined} values={values} c1={c1} />
         </div>
       )}
 

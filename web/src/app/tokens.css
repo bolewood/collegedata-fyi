@@ -2874,3 +2874,222 @@
   align-items: center;
   gap: 9px;
 }
+
+/* PRD 031 — per-school acceptance-rate page. Ledger table + a
+   zero-baseline column chart in one ink colour. */
+.school-record .cd-school-header[data-accent="paper"] h1 span { color: var(--paper); }
+.acc-title { text-wrap: balance; }
+/* The accent rule colours every span in a plate H1; the name stays paper. */
+.school-record .cd-school-header h1.acc-title span.acc-title__name { color: var(--paper); }
+/* Keep the school name on one line when the plate is wide enough; the
+   italic "acceptance rate" wraps instead. Phones may still break names. */
+@media (min-width: 641px) {
+  .acc-title__name { white-space: nowrap; }
+}
+.acc-lead p { font-size: 16px; }
+.acc-section {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule-strong);
+}
+.acc-section__title {
+  font-size: 30px;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  margin: 0 0 24px;
+}
+.acc-chart { margin: 0 0 32px; }
+.acc-chart__plot {
+  display: flex;
+  align-items: flex-end;
+  height: 180px;
+}
+.acc-chart__col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.acc-chart__track {
+  height: 160px;
+  padding: 0 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid var(--chart-axis);
+}
+.acc-chart__value {
+  font-family: var(--sans);
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.acc-chart__bar {
+  display: block;
+  width: min(100%, 64px);
+  background: var(--chart-ink);
+}
+.acc-chart__col--gap .acc-chart__value { color: var(--ink-3); }
+.acc-chart__year {
+  font-family: var(--sans);
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  text-align: center;
+  padding-top: 6px;
+}
+.acc-chart__caption {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+.acc-table-hint {
+  display: none;
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--ink-3);
+  text-align: right;
+}
+.acc-table-scroll {
+  overflow-x: auto;
+  border-top: 1px solid var(--rule-strong);
+  border-bottom: 1px solid var(--rule-strong);
+}
+.acc-table-scroll:focus-visible { outline-offset: 4px; }
+.acc-table {
+  width: 100%;
+  min-width: 600px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+.acc-table th,
+.acc-table td {
+  padding: 11px 0 11px 12px;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+.acc-table th:first-child { padding-left: 0; }
+/* Year fits "2024–25 report"; Rate fits its header. Both sized to content
+   so the rate sits close to its year. */
+.acc-col--year { width: 12%; }
+.acc-col--rate { width: 13%; }
+.acc-col--applied, .acc-col--admitted, .acc-col--enrolled, .acc-col--yield { width: 14%; }
+.acc-col--source { width: 19%; }
+.acc-th-short { display: none; }
+.acc-table .acc-table__gap-label {
+  text-align: left;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--ink-3);
+  white-space: normal;
+}
+.acc-table-frame { position: relative; }
+.acc-table .acc-table__file { text-align: right; }
+.acc-table tbody tr:last-child th,
+.acc-table tbody tr:last-child td { border-bottom: 0; }
+.acc-table thead th {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  vertical-align: bottom;
+}
+.acc-table tbody th {
+  font-weight: 400;
+  position: sticky;
+  left: 0;
+  background: var(--paper);
+  z-index: 1;
+}
+/* Figures use the sans: JetBrains Mono's zero carries an inner mark that
+   "zero" 0 cannot remove, and 57.0% read as 57.Ø%. Scoped to this page. */
+.acc-table .acc-num {
+  text-align: right;
+  font-family: var(--sans);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+.acc-table__fall {
+  display: block;
+  font-family: var(--sans);
+  font-size: 15px;
+}
+.acc-table__report {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+.acc-table__rate { color: var(--ink); font-weight: 600; }
+.acc-table__file { font-size: 13px; }
+.acc-table .acc-table__merged { color: var(--ink-3); }
+.acc-table__gap-note {
+  display: none;
+  margin-top: 4px;
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--ink-3);
+  white-space: normal;
+}
+.acc-table__gap .acc-table__fall,
+.acc-table__gap .acc-table__file { color: var(--ink-3); }
+.acc-note {
+  max-width: 44rem;
+  margin: 16px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.acc-related {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 24px;
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+  font-size: 15px;
+}
+@media (max-width: 640px) {
+  .acc-section__title { font-size: 24px; }
+  .acc-chart__track { padding: 0 2px; }
+  .acc-chart__value { font-size: 11px; }
+  .acc-chart__year { font-size: 12px; }
+  .acc-table { font-size: 14px; }
+  .acc-table th,
+  .acc-table td { padding: 10px 12px 10px 0; }
+  /* Year, Rate, and Applied fill the visible width exactly (38/28/34 of
+     it), so the scroll cut lands on the Admitted column's edge. The table
+     is 2.1 viewports wide; 32px is the page gutter. */
+  .acc-table { width: calc((100vw - 32px) * 2.1); min-width: 0; }
+  .acc-col--year { width: 18.1%; }
+  .acc-col--rate { width: 13.3%; }
+  .acc-col--applied { width: 16.2%; }
+  .acc-col--admitted, .acc-col--enrolled { width: 14%; }
+  .acc-col--yield { width: 11%; }
+  .acc-col--source { width: 13.4%; }
+  .acc-th-long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .acc-th-short { display: inline; }
+  .acc-table .acc-table__gap-label { visibility: hidden; }
+  .acc-table thead th { white-space: normal; line-height: 1.35; }
+  .acc-table__gap-note { display: block; }
+  .acc-table .acc-table__merged { visibility: hidden; }
+  .acc-related { flex-direction: column; gap: 12px; }
+  .acc-table__fall { font-size: 14px; }
+  .acc-table-hint { display: block; }
+}
