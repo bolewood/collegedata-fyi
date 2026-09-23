@@ -22,6 +22,8 @@ import {
   type SchoolYearFacts,
 } from "@/lib/school-summary";
 import type { FieldValue, ArtifactNotes } from "@/lib/types";
+import { readC1Totals, type C1HeadlineTotals } from "@/lib/c1-headline-totals";
+import { academicYearStart } from "@/lib/acceptance-history";
 import { storageUrl, formatBadgeLabel, sourceDownloadLabel } from "@/lib/format";
 import { Badge } from "@/components/Badge";
 import { KeyStats } from "@/components/KeyStats";
@@ -238,6 +240,7 @@ async function DocumentVariant({
   let totalFields: number | undefined;
   let markdown: string | undefined;
   let schemaVersion: string | undefined;
+  let c1: C1HeadlineTotals | undefined;
 
   if (isExtracted && doc.document_id) {
     const { canonical, mergedValues } = await fetchExtract(doc.document_id);
@@ -246,6 +249,14 @@ async function DocumentVariant({
     totalFields = notes?.stats?.total_fields;
     markdown = notes?.markdown ?? undefined;
     schemaVersion = notes?.schema_version ?? doc.cds_year ?? undefined;
+    const reading = readC1Totals({
+      values,
+      schemaVersion: notes?.schema_version ?? null,
+      producer: canonical?.producer ?? null,
+      yearStart: academicYearStart(doc.canonical_year),
+      markdown: notes?.markdown ?? null,
+    });
+    c1 = reading.totals ?? { applied: null, admitted: null, enrolled: null };
   }
 
   const hasValues = Object.keys(values).length > 0;
@@ -289,7 +300,7 @@ async function DocumentVariant({
 
       {hasValues && (
         <div style={{ marginTop: 16 }}>
-          <KeyStats schemaVersion={schemaVersion ?? doc.cds_year ?? undefined} values={values} />
+          <KeyStats schemaVersion={schemaVersion ?? doc.cds_year ?? undefined} values={values} c1={c1} />
         </div>
       )}
 

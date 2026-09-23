@@ -1,0 +1,143 @@
+# PRD 031 M0-lite — acceptance history validation
+
+Operator doc. 2026-09-23, production data (read-only, anon key). Code:
+`web/src/lib/acceptance-history.ts`, `web/src/lib/c1-headline-totals.ts`
+(`readC1Totals`). Measurement: `web/src/lib/acceptance-history.measure.test.ts`
+(opt-in, `ACCEPTANCE_MEASURE=live|survey`). Source check:
+`scratch/prd-031/verify_sources.py` (gitignored; downloads each original file
+from public storage and compares C1 lines).
+
+## What the page reads
+
+For a canonical school id: `fetchSchoolDocuments` rows that are extracted,
+whole-institution, canonical academic year, **2018-19 or later**, and not
+`wrong_file` / `blank_template` / `low_coverage`. Each row's extract goes
+through `readC1Totals`. From 2024-25 on, a sane `school_browser_rows` row
+for the same document wins field by field (so the stat page never disagrees
+with the hub sentence); the extract fills fields the projection left empty.
+
+A year is usable when applied > 0, 0 < admitted ≤ applied, and enrolled
+(if shown) ≤ admitted. Enrolled that fails its own checks is shown as "—"
+rather than dropping the year.
+
+## Mapping findings (the PRD 014 risk was real)
+
+The artifact's `schema_version` plus producer decides the C1 numbering.
+Corpus survey of 5,074 extracted whole-institution documents:
+
+| Producer / schema_version | Docs | Numbering actually used | Decision |
+|---|---:|---|---|
+| tier4_docling, **none** | 2,903 | 2025-26 ids (Tier 4 label map is hard-coded) | read as 2025-26 |
+| tier4_docling, 2025-26 (pre-2024 years) | 974 | 2025-26 | read as 2025-26 |
+| tier4_docling / tier1 / tier2, 2024-25 | 472 | 2024-25 | read as 2024-25 |
+| tier4_docling / tier1 / tier2, 2023-24 | 88 | 2023-24 (2024-25 minus unknown-gender rows) | **new spec** |
+| tier1_xlsx, 2025-26, year < 2024 | 320 | 2025-26 *cell map* on an older layout: garbage | **excluded** |
+| tier2_acroform, 2025-26, year < 2024 | 50 | coherent (totals = sums) | read as 2025-26 |
+| tier6_html, none | 3 | 2025-26 | read as 2025-26 |
+
+Bugs found and fixed (all also affected live year pages, which now read
+through the same `readC1Totals`):
+
+1. **Men-only counts on older year pages.** With no `schema_version`, the old
+   default spec treated C.101 (men) as the total; whenever men ≥ women it
+   returned men only. 305 of 2,584 older Tier 4 docs showed wrong applicant
+   or admit counts (Colorado School of Mines 2018-19: 8,726 shown, 12,661 in
+   the file).
+2. **Older XLSX files** (e.g. Virginia Tech 2012-13 to 2022-23, NYU 2021-22,
+   Northeastern 2018-20) were read with the 2025-26 cell map; values like VT
+   2021-22 "12.6%" (real: ~57%) passed the bounds. Excluded; year pages no
+   longer show C1 stats for them.
+3. **Third sex category dropped.** The label map misses "of another gender"
+   and "other/unknown", so men + women sums undercount (UCLA 2022-23: 144,233
+   applicants shown vs 149,815 in the file; rate 8.7% vs 8.4%). Now recovered
+   from the extract's markdown C1 rows; without markdown, a sum with no
+   third-category cell is not shown (AcroForm `NON_BINARY` fields, e.g. Wake
+   Forest and UW-Madison 2024-25).
+4. **Part-time first-years dropped** on templates that print only full-time
+   and part-time enrolled rows (C.107/C.108 hold full-time). Part-time is now
+   added back; when the markdown lost one part-time row (Georgetown 2018-19,
+   NYU 2019-20), enrolled is withheld.
+5. **In-state row read as the total** (UC Riverside 2023-24: 48,180 in-state
+   vs 55,750 total). Fixed in `preferCoherentTotal`.
+6. **One sex missing / one column read twice** (UT Austin 2018-19 showed
+   75.9%; Wellesley 2019-20 and 2021-22 doubled). Such sums are dropped.
+
+Note: `school_browser_rows` disagrees with the extract for Stanford 2024-25
+(projection empty), UW-Madison and Wake Forest 2024-25 (projection zeros),
+UCLA 2024-25 (no enrolled), Amherst 2024-25 (13,742 vs the school's printed
+13,743). These are projection issues for PRD 014 follow-up; the page uses
+the projection when sane, else the extract.
+
+## Source-file check
+
+168 school-years (the 20 pilot schools plus 9 candidates) were compared
+with the school's own file: 154 matched automatically (the number printed,
+or the exact sum of the sex rows), and the other 14 were reconciled by hand:
+decimal residency tables (Emory, Amherst, UW-Madison 2023-24), fillable
+forms with no text layer (read via form fields), and multi-column layouts
+(NYU 2022-23).
+
+Known source inconsistency: Virginia Tech 2023-24 prints 47,207 in its
+residency table while its sex rows add to 47,208. The page shows the
+school's printed total.
+
+The 2024-25+ comparison is checked in as a fixture
+(`web/src/lib/__fixtures__/acceptance-2024-plus.json`): 42 of 45 extract
+readings equal `school_browser_rows` exactly; the three differences are the
+documented ones above.
+
+## Allowlist and usable years
+
+Named five, plus 15 high-profile schools with ≥ 4 usable, source-checked
+years. Split-slug pairs waiting on M1 (Georgia Tech, Tulane, UChicago,
+Caltech, Rutgers, Texas A&M, UVA, UW) are left out. Wellesley and Dartmouth
+fall to 3 usable years; Stanford (4, with 2020-21 to 2023-24 missing),
+UT Austin, UW-Madison, and Lafayette are alternates.
+
+| School | Canonical id | Usable | Span | Gaps named | Auto-matched | Enrolled "—" |
+|---|---|---:|---|---|---:|---:|
+| Virginia Tech | `virginia-polytechnic-institute-and-state-university` | 3 | 2023-24–2025-26 | — | 2/3 | 0 |
+| Haverford College | `haverford-college` | 8 | 2018-19–2025-26 | — | 8/8 | 3 |
+| Brown University | `brown` | 8 | 2018-19–2025-26 | — | 8/8 | 0 |
+| Northeastern University | `northeastern` | 5 | 2020-21–2024-25 | — | 5/5 | 1 |
+| Duke University | `duke` | 5 | 2018-19–2024-25 | 2021-22, 2022-23 | 5/5 | 1 |
+| University of Pennsylvania | `upenn` | 7 | 2018-19–2024-25 | — | 7/7 | 0 |
+| Harvard University | `harvard` | 7 | 2018-19–2025-26 | 2020-21 | 6/7 | 4 |
+| Princeton University | `princeton` | 5 | 2018-19–2025-26 | 2019-20 to 2021-22 | 5/5 | 0 |
+| Johns Hopkins University | `johns-hopkins` | 5 | 2021-22–2025-26 | — | 5/5 | 0 |
+| Northwestern University | `northwestern` | 6 | 2018-19–2024-25 | 2021-22 | 6/6 | 0 |
+| Emory University | `emory` | 6 | 2018-19–2024-25 | 2020-21 | 5/6 | 1 |
+| Rice University | `rice` | 6 | 2018-19–2024-25 | 2020-21 | 6/6 | 0 |
+| University of Notre Dame | `university-of-notre-dame` | 7 | 2018-19–2025-26 | 2021-22 | 7/7 | 0 |
+| Georgetown University | `georgetown` | 8 | 2018-19–2025-26 | — | 7/8 | 1 |
+| New York University | `nyu` | 6 | 2018-19–2025-26 | 2021-22, 2023-24 | 6/6 | 1 |
+| Bowdoin College | `bowdoin` | 6 | 2020-21–2025-26 | — | 6/6 | 0 |
+| Amherst College | `amherst` | 5 | 2019-20–2024-25 | 2020-21 | 4/5 | 2 |
+| Hamilton College | `hamilton` | 6 | 2019-20–2024-25 | — | 6/6 | 2 |
+| University of Richmond | `university-of-richmond` | 7 | 2018-19–2024-25 | — | 4/7 | 2 |
+| Bates College | `bates` | 8 | 2018-19–2025-26 | — | 8/8 | 2 |
+
+"Auto-matched" below the year count means the rest were reconciled by hand
+(see above). Every published applicant and admit count matches its file.
+
+Adjacent-year changes > 2× (PRD 031's change-intelligence candidates):
+Northeastern 2021-22 → 2022-23, admits 13,829 → 6,191 and rate 18% → 6.8%.
+Both years match the files; this is the real drop the PRD cites. Not
+written to the PRD 019 queue (no production writes in this change).
+
+## Corpus-wide yield (for the M0 go/no-go)
+
+Before the completeness guards and the 2018-19 floor, the survey found 348
+schools with ≥ 3 usable years (latest ≥ 2023-24), 300 with ≥ 4, and 237
+with ≥ 5 (raw slugs, aliases not folded). The final rules need each
+document's markdown, which the survey did not pull, so the real count is
+lower. Re-run `ACCEPTANCE_MEASURE=survey` against a markdown-aware survey
+before the M0 go/no-go (threshold: 150 schools with ≥ 4).
+
+## Not done here
+
+- The durable fix is in the Tier 4 cleaner's label map ("of another
+  gender", "other/unknown", part-time rows) plus a re-drain, then the
+  Python projection below 2024-25 (PRD 031 M0 proper). This TypeScript
+  layer is the read-side stopgap.
+- Years before 2018-19 are not shown; their templates were not checked.
