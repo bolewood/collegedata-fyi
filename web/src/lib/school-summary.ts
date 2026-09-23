@@ -3,6 +3,7 @@
 // omitted when its inputs are missing or fail a sanity check, never guessed.
 
 export type SchoolYearFacts = {
+  document_id: string | null;
   school_id: string | null;
   ipeds_id: string | null;
   canonical_year: string;
@@ -205,6 +206,15 @@ export function metaFactFragment(row: SchoolYearFacts | null | undefined): strin
   const ed = edRateOf(row);
   if (ed != null) parts.push(`${share(ed)} early decision admit rate`);
   return parts.length > 0 ? parts.join(", ") : null;
+}
+
+/** Keep only rows for documents the page serves, so sentences match the files shown. */
+export function servedFacts(
+  rows: SchoolYearFacts[],
+  documentIds: Iterable<string | null | undefined>,
+): SchoolYearFacts[] {
+  const served = new Set(Array.from(documentIds).filter(Boolean));
+  return rows.filter((row) => row.document_id != null && served.has(row.document_id));
 }
 
 export function factsForYear(

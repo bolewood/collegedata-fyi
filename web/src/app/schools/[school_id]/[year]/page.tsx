@@ -16,8 +16,10 @@ import {
   factsForYear,
   longYear,
   metaFactFragment,
+  servedFacts,
   yearOverYearSentence,
   yearSummarySentences,
+  type SchoolYearFacts,
 } from "@/lib/school-summary";
 import type { FieldValue, ArtifactNotes } from "@/lib/types";
 import { storageUrl, formatBadgeLabel, sourceDownloadLabel } from "@/lib/format";
@@ -39,12 +41,19 @@ type Params = { school_id: string; year: string };
 
 // Same name as the school hub (its newest report), so year pages for years
 // that exist under two slugs don't switch between a school's two names.
-async function schoolDisplayName(
+// The summary only quotes rows for documents the school pages serve.
+async function schoolContext(
   schoolId: string,
-  fallback: string | null,
-): Promise<string> {
-  const schoolDocs = await fetchSchoolDocuments(schoolId);
-  return schoolDocs?.[0]?.school_name ?? fallback ?? "Unknown school";
+  fallbackName: string | null,
+): Promise<{ name: string; facts: SchoolYearFacts[] }> {
+  const [schoolDocs, facts] = await Promise.all([
+    fetchSchoolDocuments(schoolId),
+    fetchSchoolYearFacts(schoolId),
+  ]);
+  return {
+    name: schoolDocs?.[0]?.school_name ?? fallbackName ?? "Unknown school",
+    facts: servedFacts(facts ?? [], (schoolDocs ?? []).map((doc) => doc.document_id)),
+  };
 }
 
 export async function generateMetadata({
@@ -59,10 +68,10 @@ export async function generateMetadata({
   if (docs.length === 0) return { title: "Document Not Found" };
 
   const doc = docs[0];
-  const schoolName = await schoolDisplayName(resolvedSchoolId, doc.school_name);
+  const { name: schoolName, facts } = await schoolContext(resolvedSchoolId, doc.school_name);
   const path = `/schools/${resolvedSchoolId}/${year}`;
   const title = `${schoolName} Common Data Set ${year}`;
-  const { current } = factsForYear(await fetchSchoolYearFacts(resolvedSchoolId), year);
+  const { current } = factsForYear(facts, year);
   const fragment = metaFactFragment(current);
   const printedYear = longYear(year);
   const yearLabel = printedYear ? `${year} (${printedYear})` : year;
@@ -100,15 +109,15 @@ export default async function SchoolYearPage({ params }: {
   // Scorecard is per-school, not per-year — pull once at the page level
   // and render under KeyStats in each document variant.
   const ipedsId = docs.find((d) => d.ipeds_id)?.ipeds_id ?? null;
-  const [scorecard, brandColors, nonpayment, yearFacts] = await Promise.all([
+  const [scorecard, brandColors, nonpayment, school] = await Promise.all([
     fetchScorecardByIpedsId(ipedsId),
     fetchSchoolBrandColors(school_id),
     fetchFsaNonpaymentBySchoolId(school_id),
-    fetchSchoolYearFacts(school_id),
+    schoolContext(school_id, docs[0].school_name),
   ]);
 
-  const schoolName = await schoolDisplayName(school_id, docs[0].school_name);
-  const { current: currentFacts, prior: priorFacts } = factsForYear(yearFacts, year);
+  const schoolName = school.name;
+  const { current: currentFacts, prior: priorFacts } = factsForYear(school.facts, year);
   const yearLead = yearArchiveLead({
     schoolId: school_id,
     schoolName,

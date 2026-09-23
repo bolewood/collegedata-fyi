@@ -4,6 +4,7 @@ import {
   factsForYear,
   longYear,
   metaFactFragment,
+  servedFacts,
   yearOverYearSentence,
   yearSummarySentences,
   type SchoolYearFacts,
@@ -11,6 +12,7 @@ import {
 
 function facts(overrides: Partial<SchoolYearFacts>): SchoolYearFacts {
   return {
+    document_id: null,
     school_id: "cornell",
     ipeds_id: "190415",
     canonical_year: "2025-26",
@@ -113,6 +115,14 @@ describe("metadata helpers", () => {
   it("prints the template's long year form", () => {
     expect(longYear("2025-26")).toBe("2025-2026");
     expect(longYear("unknown")).toBeNull();
+  });
+
+  it("keeps only rows for served documents", () => {
+    const rows = [
+      { ...cornell2025, document_id: "shown" },
+      { ...cornell2025, document_id: "duplicate-file", applied: 1 },
+    ];
+    expect(servedFacts(rows, ["shown"]).map((row) => row.document_id)).toEqual(["shown"]);
   });
 
   it("finds the current and prior year rows", () => {

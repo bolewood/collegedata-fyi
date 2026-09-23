@@ -63,6 +63,31 @@ describe("mergeAliasDocuments", () => {
     expect(merged).toHaveLength(1);
   });
 
+  it("uses the passed canonical IPEDS id when a single-year query has no canonical row", () => {
+    const merged = mergeAliasDocuments(
+      "rutgers",
+      [doc("rutgers-camden", "2019-20", "186399"), doc("rutgers-nb", "2019-20", null)],
+      "186380",
+    );
+    expect(merged.map((row) => row.school_id)).toEqual(["rutgers-nb"]);
+  });
+
+  it("prefers an extracted alias row over an unextracted canonical row", () => {
+    const merged = mergeAliasDocuments(VT, [
+      { ...doc(VT, "2023-24", "233921"), extraction_status: "failed", document_id: "b" },
+      { ...doc("virginia-tech", "2023-24"), extraction_status: "extracted", document_id: "a" },
+    ]);
+    expect(merged.map((row) => row.school_id)).toEqual(["virginia-tech"]);
+  });
+
+  it("keeps an extracted canonical row over an extracted alias row", () => {
+    const merged = mergeAliasDocuments(VT, [
+      { ...doc(VT, "2023-24", "233921"), extraction_status: "extracted", document_id: "b" },
+      { ...doc("virginia-tech", "2023-24"), extraction_status: "extracted", document_id: "a" },
+    ]);
+    expect(merged.map((row) => row.school_id)).toEqual([VT]);
+  });
+
   it("keeps sub-institutional variants as separate slots", () => {
     const merged = mergeAliasDocuments("a", [
       doc("a", "2024-25", null, null),

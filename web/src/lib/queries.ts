@@ -959,39 +959,51 @@ export const fetchCoverageRows = cache(async function fetchCoverageRows(): Promi
 // (e.g. `virginia-tech` for `virginia-polytechnic-institute-and-state-university`).
 // The alias URL redirects to the canonical page, so the canonical page must
 // serve the alias-only years or they 404.
-export const fetchLiveAliasSlugs = cache(async function fetchLiveAliasSlugs(
+// Throws on lookup errors: a silent empty result would render alias-only
+// years as 404s and ISR would cache that for the revalidate window.
+export type LiveAliasContext = { aliases: string[]; ipedsId: string | null };
+
+export const fetchLiveAliasContext = cache(async function fetchLiveAliasContext(
   canonicalSchoolId: string,
-): Promise<string[]> {
-  try {
-    const client = supabase as unknown as UntypedSupabase;
-    const { data: owned, error: ownedError } = await client
-      .from("institution_slug_crosswalk")
-      .select("school_id, alias, is_primary")
-      .eq("school_id", canonicalSchoolId);
-    if (ownedError || !owned?.length) return [];
+): Promise<LiveAliasContext> {
+  const client = supabase as unknown as UntypedSupabase;
+  const { data: owned, error: ownedError } = await client
+    .from("institution_slug_crosswalk")
+    .select("school_id, alias, is_primary, ipeds_id")
+    .eq("school_id", canonicalSchoolId);
+  if (ownedError) {
+    throw new Error(`Failed to fetch school aliases: ${ownedError.message}`);
+  }
+  const ownedRows = (owned as (SchoolAliasRow & { ipeds_id: string | null })[] | null) ?? [];
+  const ipedsId =
+    ownedRows.find((row) => row.is_primary && row.ipeds_id)?.ipeds_id ??
+    ownedRows.find((row) => row.ipeds_id)?.ipeds_id ??
+    null;
 
-    const candidates = Array.from(
-      new Set(
-        (owned as SchoolAliasRow[])
-          .map((row) => row.alias)
-          .filter((alias): alias is string => Boolean(alias) && alias !== canonicalSchoolId),
-      ),
-    );
-    if (candidates.length === 0) return [];
+  const candidates = Array.from(
+    new Set(
+      ownedRows
+        .map((row) => row.alias)
+        .filter((alias): alias is string => Boolean(alias) && alias !== canonicalSchoolId),
+    ),
+  );
+  if (candidates.length === 0) return { aliases: [], ipedsId };
 
-    const { data: rows, error } = await client
-      .from("institution_slug_crosswalk")
-      .select("school_id, alias, is_primary")
-      .in("alias", candidates);
-    if (error) return [];
-    return liveAliasSlugsFor(
+  const { data: rows, error } = await client
+    .from("institution_slug_crosswalk")
+    .select("school_id, alias, is_primary")
+    .in("alias", candidates);
+  if (error) {
+    throw new Error(`Failed to fetch school aliases: ${error.message}`);
+  }
+  return {
+    aliases: liveAliasSlugsFor(
       canonicalSchoolId,
       (rows as SchoolAliasRow[] | null) ?? [],
       retiredSchoolAliases,
-    );
-  } catch {
-    return [];
-  }
+    ),
+    ipedsId,
+  };
 });
 
 export type SchoolSlugResolver = (schoolId: string) => string | null;
@@ -1006,14 +1018,21 @@ export const fetchSchoolSlugResolver = cache(async function fetchSchoolSlugResol
   const rowsByAlias = new Map<string, SchoolAliasRow[]>();
   const unique = Array.from(new Set(schoolIds.filter(Boolean)));
   const CHUNK = 100;
+  const chunks: string[][] = [];
+  for (let i = 0; i < unique.length; i += CHUNK) chunks.push(unique.slice(i, i + CHUNK));
   try {
-    for (let i = 0; i < unique.length; i += CHUNK) {
-      const { data, error } = await (supabase as unknown as UntypedSupabase)
-        .from("institution_slug_crosswalk")
-        .select("school_id, alias, is_primary")
-        .in("alias", unique.slice(i, i + CHUNK));
-      if (error) throw new Error(error.message);
-      for (const row of (data as SchoolAliasRow[] | null) ?? []) {
+    const pages = await Promise.all(
+      chunks.map(async (chunk) => {
+        const { data, error } = await (supabase as unknown as UntypedSupabase)
+          .from("institution_slug_crosswalk")
+          .select("school_id, alias, is_primary")
+          .in("alias", chunk);
+        if (error) throw new Error(error.message);
+        return (data as SchoolAliasRow[] | null) ?? [];
+      }),
+    );
+    for (const page of pages) {
+      for (const row of page) {
         if (!row.alias) continue;
         const list = rowsByAlias.get(row.alias) ?? [];
         list.push(row);
@@ -1033,7 +1052,7 @@ export const fetchSchoolSlugResolver = cache(async function fetchSchoolSlugResol
 export const fetchSchoolDocuments = cache(async function fetchSchoolDocuments(
   schoolId: string
 ): Promise<ManifestRow[]> {
-  const aliases = await fetchLiveAliasSlugs(schoolId);
+  const { aliases, ipedsId } = await fetchLiveAliasContext(schoolId);
   const { data, error } = await supabase
     .from("cds_manifest")
     .select("*")
@@ -1044,7 +1063,7 @@ export const fetchSchoolDocuments = cache(async function fetchSchoolDocuments(
 
   if (error)
     throw new Error(`Failed to fetch school documents: ${error.message}`);
-  return mergeAliasDocuments(schoolId, data ?? []);
+  return mergeAliasDocuments(schoolId, data ?? [], ipedsId);
 });
 
 export const fetchSchoolDirectPublishEvents = cache(
@@ -1132,16 +1151,16 @@ export const fetchFsaNonpaymentBySchoolId = cache(
 );
 
 const SCHOOL_YEAR_FACTS_SELECT =
-  "school_id, ipeds_id, canonical_year, year_start, sub_institutional, data_quality_flag, applied, admitted, enrolled_first_year, acceptance_rate, sat_composite_p25, sat_composite_p75, act_composite_p25, act_composite_p75, ed_applicants, ed_admitted, wait_list_offered, wait_list_accepted, wait_list_admitted";
+  "document_id, school_id, ipeds_id, canonical_year, year_start, sub_institutional, data_quality_flag, applied, admitted, enrolled_first_year, acceptance_rate, sat_composite_p25, sat_composite_p75, act_composite_p25, act_composite_p75, ed_applicants, ed_admitted, wait_list_offered, wait_list_accepted, wait_list_admitted";
 
 // Every whole-institution browser row for a school (and its live aliases),
-// newest first, one row per year. Powers the plain-English summary and the
-// year-over-year line on school and year pages.
+// newest first. Powers the plain-English summary and the year-over-year line
+// on school and year pages; callers narrow it to the documents they serve.
 export const fetchSchoolYearFacts = cache(async function fetchSchoolYearFacts(
   schoolId: string,
 ): Promise<SchoolYearFacts[]> {
   try {
-    const aliases = await fetchLiveAliasSlugs(schoolId);
+    const { aliases, ipedsId } = await fetchLiveAliasContext(schoolId);
     const { data, error } = await (supabase as unknown as UntypedSupabase)
       .from("school_browser_rows")
       .select(SCHOOL_YEAR_FACTS_SELECT)
@@ -1155,6 +1174,7 @@ export const fetchSchoolYearFacts = cache(async function fetchSchoolYearFacts(
     return mergeAliasDocuments(
       schoolId,
       (data as Record<string, unknown>[]).map((row) => ({
+        document_id: row.document_id == null ? null : String(row.document_id),
         school_id: row.school_id == null ? null : String(row.school_id),
         ipeds_id: row.ipeds_id == null ? null : String(row.ipeds_id),
         canonical_year: String(row.canonical_year),
@@ -1175,6 +1195,7 @@ export const fetchSchoolYearFacts = cache(async function fetchSchoolYearFacts(
         waitListAccepted: numberOrNull(row.wait_list_accepted),
         waitListAdmitted: numberOrNull(row.wait_list_admitted),
       })),
+      ipedsId,
     );
   } catch (error) {
     console.warn(`fetchSchoolYearFacts: ${errorText(error)}`);
@@ -1629,7 +1650,7 @@ export const fetchDocumentsBySchoolAndYear = cache(async function fetchDocuments
   schoolId: string,
   year: string
 ): Promise<ManifestRow[]> {
-  const aliases = await fetchLiveAliasSlugs(schoolId);
+  const { aliases, ipedsId } = await fetchLiveAliasContext(schoolId);
   const { data, error } = await supabase
     .from("cds_manifest")
     .select("*")
@@ -1642,7 +1663,7 @@ export const fetchDocumentsBySchoolAndYear = cache(async function fetchDocuments
   if (error) {
     throw new Error(`Failed to fetch documents: ${error.message}`);
   }
-  return mergeAliasDocuments(schoolId, data ?? []);
+  return mergeAliasDocuments(schoolId, data ?? [], ipedsId);
 });
 
 export async function fetchCanonicalArtifact(

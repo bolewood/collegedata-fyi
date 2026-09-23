@@ -65,32 +65,52 @@ type AliasMergeableDocument = {
   ipeds_id: string | null;
   canonical_year: string | null;
   sub_institutional: string | null;
+  extraction_status?: string | null;
+  document_id?: string | null;
 };
 
 /**
- * Serve a canonical school page from its own documents, filling only the
- * year/variant slots it lacks from live alias slugs. Alias documents that
- * carry a different IPEDS id are never merged.
+ * Serve a canonical school page from its own documents, filling each
+ * year/variant slot from live alias slugs only when the canonical slug has
+ * nothing usable there: no row at all, or no extracted row while an alias
+ * has one. Alias documents that carry a different IPEDS id are never merged.
+ * Pass `canonicalIpedsId` when `rows` may not include a canonical row that
+ * carries it (e.g. a single-year query).
  */
 export function mergeAliasDocuments<T extends AliasMergeableDocument>(
   canonicalSchoolId: string,
   rows: T[],
+  canonicalIpedsId: string | null = null,
 ): T[] {
-  const own = rows.filter((row) => row.school_id === canonicalSchoolId);
-  const canonicalIpeds = own.find((row) => row.ipeds_id)?.ipeds_id ?? null;
-  const slotKey = (row: T) =>
-    `${row.canonical_year ?? ""}|${row.sub_institutional ?? ""}`;
-  const taken = new Set(own.map(slotKey));
-  const merged = [...own];
-  const aliasRows = rows
-    .filter((row) => row.school_id !== canonicalSchoolId)
-    .sort((a, b) => (a.school_id ?? "").localeCompare(b.school_id ?? ""));
-  for (const row of aliasRows) {
-    if (row.ipeds_id && canonicalIpeds && row.ipeds_id !== canonicalIpeds) continue;
-    const key = slotKey(row);
-    if (taken.has(key)) continue;
-    taken.add(key);
-    merged.push(row);
+  const canonicalIpeds =
+    canonicalIpedsId ??
+    rows.find((row) => row.school_id === canonicalSchoolId && row.ipeds_id)?.ipeds_id ??
+    null;
+  const slots = new Map<string, { own: T[]; alias: T[] }>();
+  for (const row of rows) {
+    const isOwn = row.school_id === canonicalSchoolId;
+    if (!isOwn && row.ipeds_id && canonicalIpeds && row.ipeds_id !== canonicalIpeds) continue;
+    const key = `${row.canonical_year ?? ""}|${row.sub_institutional ?? ""}`;
+    const slot = slots.get(key) ?? { own: [], alias: [] };
+    (isOwn ? slot.own : slot.alias).push(row);
+    slots.set(key, slot);
+  }
+
+  const extracted = (row: T) => row.extraction_status === "extracted";
+  const stable = (a: T, b: T) =>
+    (a.school_id ?? "").localeCompare(b.school_id ?? "") ||
+    (a.document_id ?? "").localeCompare(b.document_id ?? "");
+  const merged: T[] = [];
+  for (const { own, alias } of slots.values()) {
+    const aliasSorted = [...alias].sort(stable);
+    const aliasExtracted = aliasSorted.find(extracted);
+    if (own.length > 0 && (own.some(extracted) || !aliasExtracted)) {
+      merged.push(...own);
+    } else if (aliasExtracted) {
+      merged.push(aliasExtracted);
+    } else if (aliasSorted.length > 0) {
+      merged.push(aliasSorted[0]);
+    }
   }
   return merged.sort((a, b) => {
     const year = (b.canonical_year ?? "").localeCompare(a.canonical_year ?? "");

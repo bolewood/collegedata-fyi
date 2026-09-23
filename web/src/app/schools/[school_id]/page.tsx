@@ -19,6 +19,7 @@ import {
 import {
   factsForYear,
   metaFactFragment,
+  servedFacts,
   usableFacts,
   yearOverYearSentence,
   yearSummarySentences,
@@ -82,7 +83,12 @@ export async function generateMetadata({
     .sort();
   const path = `/schools/${resolvedSchoolId}`;
   const yearsOnFile = years.length > 0 ? yearRange(years[0], years[years.length - 1]) : "none";
-  const latestFacts = latestUsableFacts(await fetchSchoolYearFacts(resolvedSchoolId));
+  const latestFacts = latestUsableFacts(
+    servedFacts(
+      await fetchSchoolYearFacts(resolvedSchoolId),
+      docs.map((doc) => doc.document_id),
+    ),
+  );
   const fragment = metaFactFragment(latestFacts);
   const description = fragment && latestFacts
     ? `${name} Common Data Set, ${yearsOnFile}. ${latestFacts.canonical_year} report: ${fragment}. Download the original file.`
@@ -249,12 +255,13 @@ export default async function SchoolDetailPage({ params }: {
         .filter((docName): docName is string => Boolean(docName) && docName !== name),
     ),
   );
-  const latestFacts = latestUsableFacts(yearFacts);
+  const shownFacts = servedFacts(yearFacts, docs.map((doc) => doc.document_id));
+  const latestFacts = latestUsableFacts(shownFacts);
   const summary = [
     ...yearSummarySentences(name, latestFacts),
     yearOverYearSentence(
       latestFacts,
-      latestFacts ? factsForYear(yearFacts, latestFacts.canonical_year).prior : null,
+      latestFacts ? factsForYear(shownFacts, latestFacts.canonical_year).prior : null,
     ),
   ].filter((sentence): sentence is string => Boolean(sentence));
 
