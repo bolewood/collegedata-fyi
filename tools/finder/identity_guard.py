@@ -529,7 +529,7 @@ def main() -> int:
     parser.add_argument("--schools-yaml", type=Path, default=DEFAULT_SCHOOLS_YAML)
     parser.add_argument("--snapshot", type=Path, default=DEFAULT_SNAPSHOT)
     parser.add_argument("--exceptions", type=Path, default=DEFAULT_EXCEPTIONS)
-    parser.add_argument("--public-slugs", type=Path, default=DEFAULT_PUBLIC_SLUGS))
+    parser.add_argument("--public-slugs", type=Path, default=DEFAULT_PUBLIC_SLUGS)
     parser.add_argument(
         "--build-snapshot",
         type=Path,
