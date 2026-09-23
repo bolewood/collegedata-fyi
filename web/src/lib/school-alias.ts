@@ -34,6 +34,96 @@ export function resolveCanonicalSchoolId(
   return canonicalIds.size === 1 ? [...canonicalIds][0] : null;
 }
 
+/**
+ * Live crosswalk aliases that resolve unambiguously to `canonicalSchoolId`.
+ * Retired aliases are excluded: their documents are stale by review and must
+ * never render under the canonical page.
+ */
+export function liveAliasSlugsFor(
+  canonicalSchoolId: string,
+  rows: SchoolAliasRow[],
+  retiredEntries: RetiredSchoolAlias[] = [],
+): string[] {
+  const retired = new Set(retiredEntries.map((entry) => entry.alias));
+  const candidates = new Set(
+    rows
+      .filter((row) => row.school_id === canonicalSchoolId && row.alias)
+      .map((row) => row.alias as string),
+  );
+  return [...candidates]
+    .filter(
+      (alias) =>
+        alias !== canonicalSchoolId &&
+        !retired.has(alias) &&
+        resolveCanonicalSchoolId(alias, rows) === canonicalSchoolId,
+    )
+    .sort();
+}
+
+type AliasMergeableDocument = {
+  school_id: string | null;
+  ipeds_id: string | null;
+  canonical_year: string | null;
+  sub_institutional: string | null;
+};
+
+/**
+ * Serve a canonical school page from its own documents, filling only the
+ * year/variant slots it lacks from live alias slugs. Alias documents that
+ * carry a different IPEDS id are never merged.
+ */
+export function mergeAliasDocuments<T extends AliasMergeableDocument>(
+  canonicalSchoolId: string,
+  rows: T[],
+): T[] {
+  const own = rows.filter((row) => row.school_id === canonicalSchoolId);
+  const canonicalIpeds = own.find((row) => row.ipeds_id)?.ipeds_id ?? null;
+  const slotKey = (row: T) =>
+    `${row.canonical_year ?? ""}|${row.sub_institutional ?? ""}`;
+  const taken = new Set(own.map(slotKey));
+  const merged = [...own];
+  const aliasRows = rows
+    .filter((row) => row.school_id !== canonicalSchoolId)
+    .sort((a, b) => (a.school_id ?? "").localeCompare(b.school_id ?? ""));
+  for (const row of aliasRows) {
+    if (row.ipeds_id && canonicalIpeds && row.ipeds_id !== canonicalIpeds) continue;
+    const key = slotKey(row);
+    if (taken.has(key)) continue;
+    taken.add(key);
+    merged.push(row);
+  }
+  return merged.sort((a, b) => {
+    const year = (b.canonical_year ?? "").localeCompare(a.canonical_year ?? "");
+    if (year !== 0) return year;
+    return (a.sub_institutional ?? "").localeCompare(b.sub_institutional ?? "");
+  });
+}
+
+/**
+ * Re-key corpus rows to the slug that serves them, merging alias rows the
+ * same way the school page does. `resolve` returns null for slugs whose rows
+ * must not be listed at all (retired aliases).
+ */
+export function canonicalizeSchoolRows<T extends AliasMergeableDocument>(
+  rows: T[],
+  resolve: (schoolId: string) => string | null,
+): T[] {
+  const groups = new Map<string, T[]>();
+  for (const row of rows) {
+    if (!row.school_id) continue;
+    const canonical = resolve(row.school_id);
+    if (!canonical) continue;
+    const group = groups.get(canonical) ?? [];
+    group.push(row);
+    groups.set(canonical, group);
+  }
+  return [...groups].flatMap(([canonical, group]) =>
+    mergeAliasDocuments(canonical, group).map((row) =>
+      row.school_id === canonical ? row : { ...row, school_id: canonical },
+    ),
+  );
+}
+
 /** Replace only the path for a same-origin permanent redirect; preserve query parameters. */
 export function schoolRedirectUrl(requestUrl: string, pathname: string): URL {
   const url = new URL(requestUrl);

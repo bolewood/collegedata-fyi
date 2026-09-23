@@ -14,7 +14,16 @@ import {
   fetchFsaNonpaymentBySchoolId,
   fetchCanonicalSchoolId,
   fetchSchoolBrandColors,
+  fetchSchoolYearFacts,
 } from "@/lib/queries";
+import {
+  factsForYear,
+  metaFactFragment,
+  usableFacts,
+  yearOverYearSentence,
+  yearSummarySentences,
+  type SchoolYearFacts,
+} from "@/lib/school-summary";
 import { OutcomesSection } from "@/components/OutcomesSection";
 import { PositioningCard } from "@/components/PositioningCard";
 import { AdmissionStrategyCard } from "@/components/AdmissionStrategyCard";
@@ -73,8 +82,11 @@ export async function generateMetadata({
     .sort();
   const path = `/schools/${resolvedSchoolId}`;
   const yearsOnFile = years.length > 0 ? yearRange(years[0], years[years.length - 1]) : "none";
-  const description =
-    `${name} Common Data Set — the yearly report the college publishes on admissions, cost, and aid, plus federal numbers. Years on file: ${yearsOnFile}. Download the original file.`;
+  const latestFacts = latestUsableFacts(await fetchSchoolYearFacts(resolvedSchoolId));
+  const fragment = metaFactFragment(latestFacts);
+  const description = fragment && latestFacts
+    ? `${name} Common Data Set, ${yearsOnFile}. ${latestFacts.canonical_year} report: ${fragment}. Download the original file.`
+    : `${name} Common Data Set — the yearly report the college publishes on admissions, cost, and aid, plus federal numbers. Years on file: ${yearsOnFile}. Download the original file.`;
   const title = `${name} Common Data Set`;
 
   return {
@@ -88,6 +100,10 @@ export async function generateMetadata({
     },
     openGraph: { url: path, title, description },
   };
+}
+
+function latestUsableFacts(rows: SchoolYearFacts[]): SchoolYearFacts | null {
+  return rows.find(usableFacts) ?? null;
 }
 
 // Italicize a trailing institution-type word ("University", "College", etc.)
@@ -177,6 +193,7 @@ export default async function SchoolDetailPage({ params }: {
     federalFacts,
     brandColors,
     nonpayment,
+    yearFacts,
   ] = await Promise.all([
     fetchScorecardByIpedsId(ipedsId),
     fetchBrowserRowBySchoolId(school_id),
@@ -188,6 +205,7 @@ export default async function SchoolDetailPage({ params }: {
     fetchSchoolFederalFacts(school_id),
     fetchSchoolBrandColors(school_id),
     fetchFsaNonpaymentBySchoolId(school_id),
+    fetchSchoolYearFacts(school_id),
   ]);
   const positioningSchool = browserRow
     ? { ...browserRow, ...gpaProfile }
@@ -224,11 +242,28 @@ export default async function SchoolDetailPage({ params }: {
   const latestYear =
     years.length > 0 ? years[years.length - 1]?.split("-")[0] : null;
 
+  const alternateNames = Array.from(
+    new Set(
+      docs
+        .map((doc) => doc.school_name)
+        .filter((docName): docName is string => Boolean(docName) && docName !== name),
+    ),
+  );
+  const latestFacts = latestUsableFacts(yearFacts);
+  const summary = [
+    ...yearSummarySentences(name, latestFacts),
+    yearOverYearSentence(
+      latestFacts,
+      latestFacts ? factsForYear(yearFacts, latestFacts.canonical_year).prior : null,
+    ),
+  ].filter((sentence): sentence is string => Boolean(sentence));
+
   const jsonLd = [
     {
       "@context": "https://schema.org",
       "@type": "CollegeOrUniversity",
       name,
+      ...(alternateNames.length > 0 ? { alternateName: alternateNames } : {}),
       url: schoolUrl,
       description: `${docs.length} Common Data Set report${docs.length !== 1 ? "s" : ""} for ${name}${years.length > 0 ? `, ${yearRange(years[0], years[years.length - 1])}` : ""}.`,
       ...(coverage?.city || coverage?.state
@@ -279,6 +314,7 @@ export default async function SchoolDetailPage({ params }: {
     schoolName: name,
     ipedsId,
     documents: docs,
+    summary,
   });
   const carnegieCode = scorecard?.carnegie_basic;
   const positioningSourceDoc = positioningSchool
@@ -421,6 +457,21 @@ export default async function SchoolDetailPage({ params }: {
       </header>
 
       <SchoolDocumentsLedger groups={groups} />
+      {uniqueYears.length > 3 && (
+        <nav
+          aria-label={`All ${name} Common Data Set years`}
+          className="meta"
+          style={{ marginTop: 12, lineHeight: 1.9 }}
+        >
+          All years:{" "}
+          {[...uniqueYears].reverse().map((year, i) => (
+            <span key={year}>
+              {i > 0 ? " · " : ""}
+              <Link href={`/schools/${school_id}/${year}`}>{year}</Link>
+            </span>
+          ))}
+        </nav>
+      )}
 
       {positioningSchool && (
         <PositioningCard

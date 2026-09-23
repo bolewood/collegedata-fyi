@@ -9,7 +9,15 @@ import {
   fetchCanonicalSchoolId,
   fetchSchoolBrandColors,
   fetchFsaNonpaymentBySchoolId,
+  fetchSchoolYearFacts,
 } from "@/lib/queries";
+import {
+  factsForYear,
+  longYear,
+  metaFactFragment,
+  yearOverYearSentence,
+  yearSummarySentences,
+} from "@/lib/school-summary";
 import type { FieldValue, ArtifactNotes } from "@/lib/types";
 import { storageUrl, formatBadgeLabel, sourceDownloadLabel } from "@/lib/format";
 import { Badge } from "@/components/Badge";
@@ -42,8 +50,13 @@ export async function generateMetadata({
   const doc = docs[0];
   const path = `/schools/${resolvedSchoolId}/${year}`;
   const title = `${doc.school_name} Common Data Set ${year}`;
-  const description =
-    `${doc.school_name} ${year}: the school’s Common Data Set — admissions, cost, and aid — plus the original file to download.`;
+  const { current } = factsForYear(await fetchSchoolYearFacts(resolvedSchoolId), year);
+  const fragment = metaFactFragment(current);
+  const printedYear = longYear(year);
+  const yearLabel = printedYear ? `${year} (${printedYear})` : year;
+  const description = fragment
+    ? `${doc.school_name} Common Data Set ${yearLabel}: ${fragment}. The school’s own report, plus the original file to download.`
+    : `${doc.school_name} ${yearLabel}: the school’s Common Data Set — admissions, cost, and aid — plus the original file to download.`;
 
   return {
     title,
@@ -75,13 +88,15 @@ export default async function SchoolYearPage({ params }: {
   // Scorecard is per-school, not per-year — pull once at the page level
   // and render under KeyStats in each document variant.
   const ipedsId = docs.find((d) => d.ipeds_id)?.ipeds_id ?? null;
-  const [scorecard, brandColors, nonpayment] = await Promise.all([
+  const [scorecard, brandColors, nonpayment, yearFacts] = await Promise.all([
     fetchScorecardByIpedsId(ipedsId),
     fetchSchoolBrandColors(school_id),
     fetchFsaNonpaymentBySchoolId(school_id),
+    fetchSchoolYearFacts(school_id),
   ]);
 
   const schoolName = docs[0].school_name ?? "Unknown school";
+  const { current: currentFacts, prior: priorFacts } = factsForYear(yearFacts, year);
   const yearLead = yearArchiveLead({
     schoolId: school_id,
     schoolName,
@@ -93,6 +108,8 @@ export default async function SchoolYearPage({ params }: {
     source_creation_date: docs[0]?.source_creation_date,
     source_http_last_modified: docs[0]?.source_http_last_modified,
     discovered_at: docs[0]?.discovered_at,
+    summary: yearSummarySentences(schoolName, currentFacts),
+    yearOverYear: yearOverYearSentence(currentFacts, priorFacts),
   });
 
   const canonicalUrl = `https://www.collegedata.fyi/schools/${school_id}/${year}`;
@@ -170,6 +187,7 @@ export default async function SchoolYearPage({ params }: {
         <DocumentVariant
           key={doc.document_id}
           doc={doc}
+          schoolId={school_id}
           scorecard={scorecard}
           nonpayment={nonpayment}
           showSpreadsheetLinks={i === 0}
@@ -181,11 +199,13 @@ export default async function SchoolYearPage({ params }: {
 
 async function DocumentVariant({
   doc,
+  schoolId,
   scorecard,
   nonpayment,
   showSpreadsheetLinks,
 }: {
   doc: Awaited<ReturnType<typeof fetchDocumentsBySchoolAndYear>>[number];
+  schoolId: string;
   scorecard: Awaited<ReturnType<typeof fetchScorecardByIpedsId>>;
   nonpayment: Awaited<ReturnType<typeof fetchFsaNonpaymentBySchoolId>>;
   showSpreadsheetLinks: boolean;
@@ -238,9 +258,9 @@ async function DocumentVariant({
             {sourceDownloadLabel(doc.source_format, doc.source_storage_path)}
           </a>
         )}
-        {showSpreadsheetLinks && hasValues && doc.school_id && doc.canonical_year && (
+        {showSpreadsheetLinks && hasValues && doc.canonical_year && (
           <SpreadsheetDownloadLinks
-            schoolId={doc.school_id}
+            schoolId={schoolId}
             year={doc.canonical_year}
           />
         )}

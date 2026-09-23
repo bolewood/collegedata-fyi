@@ -22,6 +22,8 @@ export type ArchiveLeadFacts = {
   ipedsId?: string | null;
   documents: ArchiveDocumentFacts[];
   directoryOnly?: boolean;
+  /** Plain-English sentences about the latest reported year. */
+  summary?: string[];
 };
 
 export type YearArchiveLeadFacts = {
@@ -35,6 +37,10 @@ export type YearArchiveLeadFacts = {
   source_creation_date?: string | null;
   source_http_last_modified?: string | null;
   discovered_at?: string | null;
+  /** Plain-English sentences about this year's reported numbers. */
+  summary?: string[];
+  /** One sentence comparing this year with the previous one. */
+  yearOverYear?: string | null;
 };
 
 export type LeadPart =
@@ -158,6 +164,10 @@ export function archiveLead(facts: ArchiveLeadFacts): ArchiveLead | null {
   }
   paragraphs.push(first);
 
+  if (facts.summary && facts.summary.length > 0) {
+    paragraphs.push([{ type: "text", text: facts.summary.join(" ") }]);
+  }
+
   const official = officialSource(facts.schoolId, facts.ipedsId);
   if (official) {
     const sourceLink: LeadPart = {
@@ -265,9 +275,15 @@ export function yearArchiveLead(facts: YearArchiveLeadFacts): ArchiveLead {
   });
   parts.push({ type: "text", text: "." });
 
+  const paragraphs: LeadPart[][] = [parts];
+  const numbers = [...(facts.summary ?? []), facts.yearOverYear ?? ""]
+    .filter(Boolean)
+    .join(" ");
+  if (numbers) paragraphs.push([{ type: "text", text: numbers }]);
+
   return {
     heading: `${facts.schoolName} Common Data Set ${facts.year}`,
-    paragraphs: [parts],
+    paragraphs,
   };
 }
 
