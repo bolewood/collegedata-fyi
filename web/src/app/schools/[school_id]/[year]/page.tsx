@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import {
   fetchDocumentsBySchoolAndYear,
+  fetchSchoolDocuments,
   fetchAdmissionStrategyByDocumentId,
   fetchExtract,
   fetchScorecardByIpedsId,
@@ -36,6 +37,16 @@ export const revalidate = 3600;
 
 type Params = { school_id: string; year: string };
 
+// Same name as the school hub (its newest report), so year pages for years
+// that exist under two slugs don't switch between a school's two names.
+async function schoolDisplayName(
+  schoolId: string,
+  fallback: string | null,
+): Promise<string> {
+  const schoolDocs = await fetchSchoolDocuments(schoolId);
+  return schoolDocs?.[0]?.school_name ?? fallback ?? "Unknown school";
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -48,15 +59,16 @@ export async function generateMetadata({
   if (docs.length === 0) return { title: "Document Not Found" };
 
   const doc = docs[0];
+  const schoolName = await schoolDisplayName(resolvedSchoolId, doc.school_name);
   const path = `/schools/${resolvedSchoolId}/${year}`;
-  const title = `${doc.school_name} Common Data Set ${year}`;
+  const title = `${schoolName} Common Data Set ${year}`;
   const { current } = factsForYear(await fetchSchoolYearFacts(resolvedSchoolId), year);
   const fragment = metaFactFragment(current);
   const printedYear = longYear(year);
   const yearLabel = printedYear ? `${year} (${printedYear})` : year;
   const description = fragment
-    ? `${doc.school_name} Common Data Set ${yearLabel}: ${fragment}. The school’s own report, plus the original file to download.`
-    : `${doc.school_name} ${yearLabel}: the school’s Common Data Set — admissions, cost, and aid — plus the original file to download.`;
+    ? `${schoolName} Common Data Set ${yearLabel}: ${fragment}. The school’s own report, plus the original file to download.`
+    : `${schoolName} ${yearLabel}: the school’s Common Data Set — admissions, cost, and aid — plus the original file to download.`;
 
   return {
     title,
@@ -95,7 +107,7 @@ export default async function SchoolYearPage({ params }: {
     fetchSchoolYearFacts(school_id),
   ]);
 
-  const schoolName = docs[0].school_name ?? "Unknown school";
+  const schoolName = await schoolDisplayName(school_id, docs[0].school_name);
   const { current: currentFacts, prior: priorFacts } = factsForYear(yearFacts, year);
   const yearLead = yearArchiveLead({
     schoolId: school_id,

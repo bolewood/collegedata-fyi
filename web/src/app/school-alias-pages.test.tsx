@@ -212,6 +212,24 @@ describe("retired alias pages and Open Graph images", () => {
     expect(vtYear.alternates).not.toEqual({ canonical: "/" });
   });
 
+  it("titles year pages with the hub's school name when a year comes from the other slug", async () => {
+    const vt = "virginia-polytechnic-institute-and-state-university";
+    mocks.fetchCanonicalSchoolId.mockImplementation(async (schoolId: string) => schoolId);
+    mocks.fetchSchoolDocuments.mockResolvedValue([
+      { school_id: "virginia-tech", school_name: "Virginia Tech", canonical_year: "2025-26" },
+      { school_id: vt, school_name: "Virginia Polytechnic Institute and State University", canonical_year: "2024-25" },
+    ]);
+    mocks.fetchDocumentsBySchoolAndYear.mockResolvedValue([
+      { school_id: vt, school_name: "Virginia Polytechnic Institute and State University" },
+    ]);
+
+    const metadata = await generateSchoolYearMetadata({
+      params: Promise.resolve({ school_id: vt, year: "2024-25" }),
+    });
+
+    expect(metadata.title).toBe("Virginia Tech Common Data Set 2024-25");
+  });
+
   it("loads the canonical school for the school-level Open Graph image", async () => {
     mocks.fetchSchoolDocuments.mockResolvedValue([
       {
