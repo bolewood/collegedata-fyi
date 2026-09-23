@@ -36,6 +36,7 @@ import {
   acceptancePageDecision,
   acceptanceRatePath,
   acceptanceSitemapEntries,
+  headerAccentReadable,
 } from "@/lib/acceptance-pilot";
 import { acceptanceRateSitemap, fetchAcceptancePageServed } from "@/lib/acceptance-history-data";
 import { buildAcceptanceHistory } from "@/lib/acceptance-history";
@@ -130,10 +131,18 @@ describe("acceptance-rate route", () => {
       manifest("duke", "Duke University", ["2025-26", "2024-25", "2023-24"]),
     );
     const metadata = await generateMetadata(params("duke"));
-    expect(metadata.title).toBe("Duke University Acceptance Rate by Year, 2023–2025");
+    expect(metadata.title).toBe("Duke University Acceptance Rate: 5.0% for Fall 2025 (2023–2025)");
     expect(metadata.robots).toEqual({ index: false, follow: true });
     expect(metadata.alternates).toEqual({ canonical: "/schools/duke/acceptance-rate" });
     await expect(AcceptanceRatePage(params("duke"))).resolves.toBeTruthy();
+  });
+});
+
+describe("header accent contrast", () => {
+  it("falls back to paper when the bright plate is under 4.5:1 on the dark plate", () => {
+    expect(headerAccentReadable({ a: "#1c1e1b", b: "#f1ece1", bTypeOnA: true })).toBe(true);
+    expect(headerAccentReadable({ a: "#4e3629", b: "#c00404", bTypeOnA: true })).toBe(false);
+    expect(headerAccentReadable({ a: "#1c1e1b", b: "#f1ece1", bTypeOnA: false })).toBe(false);
   });
 });
 

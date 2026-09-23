@@ -7,16 +7,21 @@ import {
   acceptancePageDecision,
   acceptanceRatePath,
   acceptanceRobots,
+  headerAccentReadable,
   isAcceptancePilotSchool,
 } from "@/lib/acceptance-pilot";
 import {
-  DEFINITION_NOTE,
-  METHOD_NOTES,
+  KICKER,
   acceptanceDescription,
   acceptanceTitle,
   degradedNote,
   leadSentences,
+  relatedLinks,
+  sectionHeading,
+  sourceNote,
+  spanLabel,
 } from "@/lib/acceptance-rate-copy";
+import { deriveInks } from "@/lib/derive-inks";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
 import { AcceptanceRateTable, acceptanceTableRows } from "@/components/AcceptanceRateTable";
 import { AcceptanceRateChart } from "@/components/AcceptanceRateChart";
@@ -73,9 +78,11 @@ export default async function AcceptanceRatePage({ params }: { params: Promise<P
   const rows = acceptanceTableRows(history, documents);
   const lead = leadSentences(schoolName, history).join(" ");
   const latest = history.years[0];
-  const first = history.years[history.years.length - 1];
   const hubPath = `/schools/${school_id}`;
   const pageUrl = `${SITE}${acceptanceRatePath(school_id)}`;
+  const span = spanLabel(history);
+  const related = relatedLinks(schoolName, latest?.year ?? null);
+  const accentReadable = headerAccentReadable(deriveInks(brandColors));
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -93,7 +100,7 @@ export default async function AcceptanceRatePage({ params }: { params: Promise<P
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
-      <header className="cd-school-header">
+      <header className="cd-school-header" data-accent={accentReadable ? "ink-b" : "paper"}>
         <div>
           <nav
             aria-label="Breadcrumb"
@@ -110,7 +117,7 @@ export default async function AcceptanceRatePage({ params }: { params: Promise<P
             <span aria-current="page">Acceptance rate</span>
           </nav>
           <div className="meta" style={{ marginBottom: 12 }}>
-            § C1 · First-year admissions
+            {KICKER}
           </div>
           <h1
             className="serif"
@@ -124,45 +131,31 @@ export default async function AcceptanceRatePage({ params }: { params: Promise<P
           >
             {schoolName} <span style={{ fontStyle: "italic" }}>acceptance rate</span>
           </h1>
-          <div className="cd-archive-lead">
+          <div className="cd-archive-lead acc-lead">
             {lead ? <p>{lead}</p> : null}
-            {decision.kind === "serve-degraded" ? <p className="meta">{degradedNote()}</p> : null}
+            {decision.kind === "serve-degraded" ? <p>{degradedNote()}</p> : null}
           </div>
         </div>
-        {first && latest && first !== latest ? (
+        {span ? (
           <div className="cd-school-header__aside">
-            <div className="meta cd-school-header__count">
-              <span className="cd-school-header__glyph">§</span>
-              <span>
-                {history.years.length} year{history.years.length === 1 ? "" : "s"} shown
-              </span>
-              <span className="cd-school-header__years">
-                {first.yearStart}&ndash;{latest.yearStart}
-              </span>
-            </div>
+            <div className="meta cd-school-header__count">{span}</div>
           </div>
         ) : null}
       </header>
 
       <section aria-labelledby="acceptance-by-year" className="acc-section">
         <h2 id="acceptance-by-year" className="serif acc-section__title">
-          By year
+          {sectionHeading(schoolName, history)}
         </h2>
         <AcceptanceRateChart schoolName={schoolName} rows={rows} />
         <AcceptanceRateTable schoolId={school_id} schoolName={schoolName} rows={rows} />
-        <div className="acc-notes">
-          <p className="meta acc-notes__definition">{DEFINITION_NOTE}</p>
-          {METHOD_NOTES.map((note) => (
-            <p key={note}>{note}</p>
-          ))}
-        </div>
+        <p className="acc-note">{sourceNote(schoolName)}</p>
       </section>
 
       <nav aria-label={`More on ${schoolName}`} className="acc-related">
-        <span className="meta">More on {schoolName}</span>
-        <Link href={hubPath}>The school page</Link>
-        {latest ? (
-          <Link href={`/schools/${school_id}/${latest.year}`}>The {latest.year} report</Link>
+        <Link href={hubPath}>{related.hub}</Link>
+        {latest && related.latest ? (
+          <Link href={`/schools/${school_id}/${latest.year}`}>{related.latest}</Link>
         ) : null}
       </nav>
     </div>

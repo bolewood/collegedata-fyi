@@ -1,13 +1,15 @@
 import type { AcceptanceTableRow } from "./AcceptanceRateTable";
-import { share } from "@/lib/school-summary";
+import { pct, shortFall } from "@/lib/acceptance-rate-copy";
 
-const BAR_MAX_PX = 96;
+const BAR_MAX_PX = 136;
+/** Below this many usable years the table says everything; no chart. */
+export const CHART_MIN_YEARS = 4;
 
 /**
- * Column chart of acceptance rate by report year, oldest on the left.
- * Bars start at zero and are scaled to the highest rate shown. Missing
- * years keep their slot so gaps stay visible. The table below carries the
- * same numbers; the chart's accessible name lists them.
+ * Column chart of acceptance rate by entering class, oldest on the left.
+ * One ink colour; bars start at zero, scaled to the highest rate shown.
+ * Missing years keep their slot so gaps stay visible. The accessible name
+ * lists every value; the table below carries the same numbers.
  */
 export function AcceptanceRateChart({
   schoolName,
@@ -18,42 +20,42 @@ export function AcceptanceRateChart({
 }) {
   const slots = [...rows].reverse();
   const rates = slots.flatMap((slot) => (slot.kind === "year" ? [slot.row.rate] : []));
-  if (rates.length < 2) return null;
+  if (rates.length < CHART_MIN_YEARS) return null;
   const max = Math.max(...rates);
-  const latest = rows.find((slot) => slot.kind === "year");
-  const latestYear = latest?.kind === "year" ? latest.row.year : null;
-  const label = `${schoolName} acceptance rate by report year, oldest first: ${slots
+  const hasGap = slots.some((slot) => slot.kind === "gap");
+  const label = `${schoolName} acceptance rate by entering class, oldest first: ${slots
     .map((slot) =>
-      slot.kind === "year" ? `${slot.row.year}, ${share(slot.row.rate)}` : `${slot.year}, no data`,
+      slot.kind === "year"
+        ? `fall ${slot.row.yearStart}, ${pct(slot.row.rate)}`
+        : `fall ${slot.yearStart}, not available`,
     )
     .join("; ")}.`;
 
   return (
-    <figure className="acc-chart" style={{ maxWidth: `min(42rem, ${slots.length * 76}px)` }}>
+    <figure className="acc-chart">
       <div className="acc-chart__plot" role="img" aria-label={label}>
         {slots.map((slot) => {
-          const year = slot.kind === "year" ? slot.row.year : slot.year;
+          const yearStart = slot.kind === "year" ? slot.row.yearStart : slot.yearStart;
           const gap = slot.kind === "gap";
           const height = gap ? 0 : Math.max(2, Math.round((slot.row.rate / max) * BAR_MAX_PX));
-          const classes = [
-            "acc-chart__col",
-            gap ? "acc-chart__col--gap" : "",
-            year === latestYear ? "acc-chart__col--latest" : "",
-          ].filter(Boolean).join(" ");
           return (
-            <div key={year} className={classes} aria-hidden="true">
+            <div
+              key={yearStart}
+              className={gap ? "acc-chart__col acc-chart__col--gap" : "acc-chart__col"}
+              aria-hidden="true"
+            >
               <div className="acc-chart__track">
-                <span className="acc-chart__value">{gap ? "—" : share(slot.row.rate)}</span>
+                <span className="acc-chart__value">{gap ? "—" : pct(slot.row.rate)}</span>
                 <span className="acc-chart__bar" style={{ height }} />
               </div>
-              <span className="acc-chart__year">{year.slice(2)}</span>
+              <span className="acc-chart__year">{shortFall(yearStart)}</span>
             </div>
           );
         })}
       </div>
       <figcaption className="acc-chart__caption">
-        Acceptance rate by report year. Bars start at zero.
-        {slots.some((slot) => slot.kind === "gap") ? " A dash marks a year with no usable report." : ""}
+        Share of first-year applicants admitted, by fall entering class. Bars start at zero.
+        {hasGap ? " — = not available." : ""}
       </figcaption>
     </figure>
   );

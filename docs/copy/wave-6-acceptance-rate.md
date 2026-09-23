@@ -1,6 +1,7 @@
 # Wave 6 copy deck — per-school acceptance-rate pages (PRD 031 M2)
 
 Read this as a parent, then as a counselor, then as IR. **Not signed yet.**
+Revision 2 (after the round 1 editorial review).
 
 Route: `/schools/{id}/acceptance-rate`. Pilot only: 20 allowlisted schools,
 `noindex`, not in the sitemap until the M1 slug decision
@@ -8,192 +9,137 @@ Route: `/schools/{id}/acceptance-rate`. Pilot only: 20 allowlisted schools,
 
 **Persona.** Primary: parents and students who searched
 `{school} acceptance rate`. Secondary: counselors who want the trend in one
-shareable URL instead of five PDFs.
+shareable URL.
 
-**Protocol (VOICE.md).** Benefit → what's on the page → what the number is →
-one source line → the trail. Product layer: no field IDs in the lead, no
-process words (extracted, parsed, projection), no advice, no prestige
-adjectives, no "odds" or "chances" anywhere. Every sentence is generated
-from years whose numbers passed the checks; a year that fails is left out
-and named. Nothing is estimated.
+**Rules.** Product layer (VOICE.md). Answer first, then the history. No field
+IDs in the lead, no process words, no advice, no prestige adjectives, no
+"odds"/"chances", **no causal language** (no "because", "due to", "driven
+by"). Every sentence is generated from years that passed the checks
+(`web/src/lib/acceptance-rate-copy.ts`, tested in
+`acceptance-rate-copy.test.ts`).
 
-Percent style matches the site: one decimal under 10%, whole numbers
-otherwise (5.7%, 55%).
+**Precision.** One decimal for every rate on this page: lead, chart, table,
+title, meta (5.7%, 20.5%, 57.0%). The hub and year pages keep the site
+style (one decimal under 10%, whole numbers otherwise).
+
+**Year labels.** The CDS report for 2024–25 counts the class that entered
+in **fall 2024** (checked in the files: C1 says "applied … in Fall 2024").
+Primary label everywhere is the fall: "Fall 2024". Secondary, in the table
+only, 11px: "2024–25 report" (links to the year page). Chart axis: "’18 …
+’24". En dashes in all spans.
 
 ---
 
 ## Templates
 
-**Title (`<title>`)**
+**Title** (≤ 65 characters before " | collegedata.fyi"; falls back in order):
 
-> {school} Acceptance Rate by Year, {first year start}–{last year start}
+1. `{school} Acceptance Rate: {rate} for Fall {latest} ({first}–{latest} History)`
+2. `{school} Acceptance Rate: {rate} for Fall {latest} ({first}–{latest})`
+3. `{school} Acceptance Rate: {rate} for Fall {latest}`
+4. `{school} Acceptance Rate by Year`
 
-The span is the first and last *usable* year, never the archive's range.
-A school with usable years 2021-22 to 2025-26 reads "2021–2025".
-
-**Meta description**
-
-> {span sentence} In {latest year}, {admitted} of {applied} applicants were
-> admitted ({rate}), with the original files.
+**Meta description:** answer sentence [+ turning-point sentence] +
+"Year-by-year figures from {school}’s Common Data Set, with source files."
 
 **Breadcrumb:** SCHOOLS / {SCHOOL} / ACCEPTANCE RATE
+**Kicker:** First-year admissions
+**H1:** {school} *acceptance rate*
+**Header strip:** Fall {first}–fall {latest}
 
-**Eyebrow (meta):** § C1 · First-year admissions
+**Lead** (deterministic):
 
-**H1:** {school} *acceptance rate* (second clause italic, per the design
-system's serif-with-italic-accent headline).
+1. **Answer.** "{school} admitted {rate} of first-year applicants for fall
+   {latest} ({admitted} of {applied})" + ", down from / up from / the same
+   as {first rate} for fall {first}." when there is no turning point.
+2. **Turning point** (only when an interior year is below both ends — a
+   low — or above both — a high — at one decimal; if both, the one farther
+   from the latest rate): "That is up from a low of {rate} for fall {year}
+   and down from {first rate} for fall {first}." / "That is down from a high
+   of …".
+3. **Applications.** Four or more years: "Applications rose from {first} to
+   {latest} over that span." — plus ", but fell {x}% for fall {latest}
+   ({prev} to {latest})" when the latest consecutive change runs the other
+   way (≥ 1%). Fewer than four years: only the latest change,
+   "Applications rose {x}% for fall {latest} ({prev} to {latest})."
+4. **Missing years:** "Figures for fall {year}[, fall {year}, and fall
+   {year}] are not available."
 
-**Lead** (up to three generated sentences, one paragraph):
+**Section heading:** {school}’s acceptance rate, fall {first}–{latest}
 
-1. Span: "{school}’s reports from {first year} to {last year} show the
-   acceptance rate going from {first rate} to {last rate}."
-   If both round to the same share: "…show an acceptance rate of {rate} in
-   both years."
-2. Applications: "Over the same years, first-year applications went from
-   {first applied} to {last applied}."
-3. Gaps (only when a year between the first and last is missing): "There is
-   no usable report for {year}[, {year}, or {year}], so that year is / those
-   years are left out."
+**Chart** (four or more usable years only): full width, 180px, one ink
+colour, bars from zero, 13px mono values. Caption: "Share of first-year
+applicants admitted, by fall entering class. Bars start at zero." + " — =
+not available." when a year is missing.
 
-The hub keeps its single-year sentence; this page leads with the span so the
-two URLs don't say the same thing.
+**Table** (newest first): Year · Acceptance rate · Applied · Admitted ·
+Enrolled · Yield · Source. Sticky year column. At 390px, Year, Acceptance
+rate, and Applied fit without scrolling; a hint reads "Scroll for enrolled,
+yield, and source →".
 
-**Chart** (small column chart, decoration for the table, `aria-hidden`
-bars with a visible caption):
+Missing year rows: one "—" across the five data columns, and the source
+cell says which case it is (checked against the archive's documents):
 
-> Acceptance rate by report year. Bars start at zero.
+- **Report on file; counts not usable** — the school's report for that
+  year is in the archive, but its admissions counts did not pass the
+  checks. The "{year} report" link goes to the year page.
+- **No report in our archive** — no report for that year is on file. We
+  do not say the school never published one; we have not verified that.
 
-Missing years render as an empty slot labeled "no data".
+**Note** (one 13px style):
 
-**Table caption (visually hidden, read by screen readers):**
+> Source: Common Data Set reports published by {school}, section C1
+> (first-time, first-year, degree-seeking students). Note: Acceptance rate is
+> admitted ÷ applied; yield is enrolled ÷ admitted. Each year is the class
+> entering that fall; the 2024–25 report covers fall 2024. — = not reported
+> or not usable.
 
-> {school} first-year applicants, admits, acceptance rate, enrolled, and
-> yield by report year, newest first.
+**Related:** {school} overview · {school}’s {latest report} Common Data Set
 
-Columns: Report year (with "fall {yyyy}" beneath) · Applied · Admitted ·
-Acceptance rate · Enrolled · Yield · Original file.
-
-- Report year links to the year page.
-- Original file links to the school's file: "PDF", "XLSX".
-- Missing years get a row: "—" in each number cell and, in the file cell,
-  "Report on file" (linked to the year page) or "No report on file".
-- On phones the table scrolls sideways; the scroll region is labeled
-  "{school} acceptance rate table, scrolls sideways".
-
-**Definition note (meta style, under the table):**
-
-> From each year’s Common Data Set, section C1: first-time, first-year,
-> degree-seeking applicants and admits.
-
-**Method lines (small, under the note):**
-
-- Acceptance rate is admitted ÷ applied. Yield is enrolled ÷ admitted.
-- Each report covers the class that entered that fall: the 2024-25 report
-  counts students who applied to start in fall 2024.
-- Numbers are as the school reported them. A dash means that count isn’t
-  shown for the year because it could not be read in full from the report.
-
-**Related:**
-
-> More on {school}: [the school page](/schools/{id}) · [the {latest year}
-> report](/schools/{id}/{latest year})
-
-**Hub link.** In the hub's existing sentence "…an acceptance rate of 8.4%."
-the words *acceptance rate* link here, only when this page is served. The
-sentence is otherwise unchanged.
-
-**Degraded state** (a URL that was submitted in a sitemap and later lost a
-year; never a silent 404):
-
-> Some years that used to appear here are no longer shown. The table lists
-> the years we can still stand behind.
+**Hub link.** In the hub sentence "…an acceptance rate of 8.4%.", the words
+*acceptance rate* link here only when this page is served.
 
 ---
 
 ## Filled examples (production data, 2026-09-23)
 
-### Virginia Tech
+**Brown University** — *Brown University Acceptance Rate: 6.3% for Fall
+2025 (2018–2025)*
 
-- **Title:** Virginia Tech Acceptance Rate by Year, 2023–2025
-- **Description:** Virginia Tech’s reports from 2023-24 to 2025-26 show the
-  acceptance rate going from 57% to 55%. In 2025-26, 31,515 of 57,755
-  applicants were admitted (55%), with the original files.
-- **H1:** Virginia Tech *acceptance rate*
-- **Lead:** Virginia Tech’s reports from 2023-24 to 2025-26 show the
-  acceptance rate going from 57% to 55%. Over the same years, first-year
-  applications went from 47,207 to 57,755.
+> Brown University admitted 6.3% of first-year applicants for fall 2025
+> (2,710 of 42,774). That is up from a low of 5.1% for fall 2022 and down
+> from 7.7% for fall 2018. Applications rose from 35,437 to 42,774 over that
+> span, but fell 12.5% for fall 2025 (48,904 to 42,774).
 
-| Report year | Applied | Admitted | Rate | Enrolled | Yield |
-|---|---:|---:|---:|---:|---:|
-| 2025-26 (fall 2025) | 57,755 | 31,515 | 55% | 7,133 | 23% |
-| 2024-25 (fall 2024) | 52,296 | 28,758 | 55% | 7,289 | 25% |
-| 2023-24 (fall 2023) | 47,207 | 26,923 | 57% | 7,196 | 27% |
+**Duke University** — *Duke University Acceptance Rate: 5.7% for Fall 2024
+(2018–2024)*
 
-Virginia Tech has XLSX reports back to 2012-13, but their admissions
-table can't be read reliably yet, so the page starts at 2023-24 (see the
-validation note). Three years is the eligibility floor.
+> Duke University admitted 5.7% of first-year applicants for fall 2024
+> (2,957 of 51,795), down from 8.9% for fall 2018. Applications rose from
+> 35,767 to 51,795 over that span. Figures for fall 2021 and fall 2022 are
+> not available.
 
-### Duke University
+Table rows: Fall 2022 — "No report in our archive"; Fall 2021 (2021–22
+report) — "Report on file; counts not usable".
 
-- **Title:** Duke University Acceptance Rate by Year, 2018–2024
-- **Description:** Duke University’s reports from 2018-19 to 2024-25 show
-  the acceptance rate going from 8.9% to 5.7%. In 2024-25, 2,957 of 51,795
-  applicants were admitted (5.7%), with the original files.
-- **Lead:** Duke University’s reports from 2018-19 to 2024-25 show the
-  acceptance rate going from 8.9% to 5.7%. Over the same years, first-year
-  applications went from 35,767 to 51,795. There is no usable report for
-  2021-22 or 2022-23, so those years are left out.
+**Virginia Tech** (3 years, no chart) — *Virginia Tech Acceptance Rate:
+54.6% for Fall 2025 (2023–2025)*
 
-| Report year | Applied | Admitted | Rate | Enrolled | Yield |
-|---|---:|---:|---:|---:|---:|
-| 2024-25 | 51,795 | 2,957 | 5.7% | 1,740 | 59% |
-| 2023-24 | 46,366 | 3,145 | 6.8% | — | — |
-| 2022-23 | — | — | — | — | — (no report on file) |
-| 2021-22 | — | — | — | — | — (report on file) |
-| 2020-21 | 39,603 | 3,085 | 7.8% | 1,584 | 51% |
-| 2019-20 | 41,471 | 3,190 | 7.7% | 1,730 | 54% |
-| 2018-19 | 35,767 | 3,189 | 8.9% | 1,745 | 55% |
+> Virginia Tech admitted 54.6% of first-year applicants for fall 2025
+> (31,515 of 57,755), down from 57.0% for fall 2023. Applications rose 10.4%
+> for fall 2025 (52,296 to 57,755).
 
-### Brown University
+## Checked, no footnote
 
-- **Title:** Brown University Acceptance Rate by Year, 2018–2025
-- **Description:** Brown University’s reports from 2018-19 to 2025-26 show
-  the acceptance rate going from 7.7% to 6.3%. In 2025-26, 2,710 of 42,774
-  applicants were admitted (6.3%), with the original files.
-- **Lead:** Brown University’s reports from 2018-19 to 2025-26 show the
-  acceptance rate going from 7.7% to 6.3%. Over the same years, first-year
-  applications went from 35,437 to 42,774.
-
-| Report year | Applied | Admitted | Rate | Enrolled | Yield |
-|---|---:|---:|---:|---:|---:|
-| 2025-26 | 42,774 | 2,710 | 6.3% | 1,719 | 63% |
-| 2024-25 | 48,904 | 2,638 | 5.4% | 1,719 | 65% |
-| 2023-24 | 51,316 | 2,686 | 5.2% | 1,695 | 63% |
-| 2022-23 | 50,649 | 2,562 | 5.1% | 1,717 | 67% |
-| 2021-22 | 46,568 | 2,568 | 5.5% | 1,705 | 66% |
-| 2020-21 | 36,793 | 2,822 | 7.7% | 1,751 | 62% |
-| 2019-20 | 38,674 | 2,733 | 7.1% | 1,662 | 61% |
-| 2018-19 | 35,437 | 2,718 | 7.7% | 1,652 | 61% |
-
-(Brown's 2024-25 and 2025-26 reports both list 1,719 enrolled; each matches
-its own file.)
-
----
-
-## Words we don't use here
-
-odds, chances, admit odds, "chance me", "how to get in", prestigious, elite,
-selective / most selective, top, best, easy / hard to get into, extracted,
-parsed, projection. Tested in `acceptance-rate-copy.test.ts` against the
-shared `BANNED_LEAD_WORDS` plus this page's additions.
+- Brown lists 1,719 enrolled for both fall 2024 and fall 2025. Both are in
+  the files: 855 + 863 + 1 (total printed 1,719) and 844 + 875 + 0.
+- Northeastern admits fell from 13,829 (fall 2021) to 6,191 (fall 2022).
+  Both totals are printed in the school's C1 tables; neither report
+  describes a change in who is counted, so the page adds no footnote.
 
 ## Open for Anthony
 
-1. The applications sentence is new relative to the PRD's lead (which was
-   the span alone). It explains why a rate falls; drop it if it reads as
-   editorializing.
-2. "There is no usable report for…" is the PRD's phrase. "Usable" is honest
-   but a little internal; alternative: "We don't have numbers we can check
-   for…".
-3. Chart: the PRD said no chart in the pilot. This one is small, starts at
-   zero, and repeats the table. Keep or cut.
+1. "No report in our archive" is accurate but reads a little internal;
+   "No report on file" is the shorter alternative.
+2. The page uses the hub's display name ("Duke University"). The reviewer's
+   examples used "Duke"; short names would need a curated list.

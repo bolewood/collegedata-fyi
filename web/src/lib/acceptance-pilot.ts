@@ -7,6 +7,7 @@ import type { MetadataRoute } from "next";
 import { acceptanceEligibility, type AcceptanceHistory } from "./acceptance-history";
 import urls from "../data/acceptance-rate-urls.json";
 import { SITE_URL } from "./sitemap-static";
+import { contrast, type DerivedInks } from "./derive-inks";
 
 export const ACCEPTANCE_PILOT_INDEXABLE: boolean = false;
 
@@ -77,6 +78,17 @@ export function acceptancePageDecision(
     return { kind: "serve-degraded", reason: eligibility.reason };
   }
   return { kind: "not-found", reason: eligibility.reason };
+}
+
+/**
+ * The italic accent in the header uses the school's bright plate only when
+ * it clears 4.5:1 on the dark plate; below that it falls back to paper.
+ * (The site-wide rule is 3:1, the large-text minimum.)
+ */
+export const HEADER_ACCENT_MIN_CONTRAST = 4.5;
+
+export function headerAccentReadable(inks: Pick<DerivedInks, "a" | "b" | "bTypeOnA">): boolean {
+  return inks.bTypeOnA && contrast(inks.b, inks.a) >= HEADER_ACCENT_MIN_CONTRAST;
 }
 
 export function acceptanceRobots(indexable: boolean = ACCEPTANCE_PILOT_INDEXABLE) {
