@@ -37,6 +37,7 @@ import {
   acceptanceRatePath,
   acceptanceSitemapEntries,
   headerAccentReadable,
+  isAcceptancePilotSchool,
 } from "@/lib/acceptance-pilot";
 import { acceptanceRateSitemap, fetchAcceptancePageServed } from "@/lib/acceptance-history-data";
 import { buildAcceptanceHistory } from "@/lib/acceptance-history";
@@ -72,6 +73,7 @@ const params = (school_id: string) => ({ params: Promise.resolve({ school_id }) 
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.fetchCanonicalSchoolId.mockImplementation(async (id: string) => id);
+  mocks.fetchSchoolDocuments.mockResolvedValue([]);
   mocks.fetchSchoolYearFacts.mockResolvedValue([]);
   mocks.fetchSchoolBrandColors.mockResolvedValue(null);
   mocks.fetchExtract.mockImplementation(async (documentId: string) =>
@@ -96,13 +98,13 @@ describe("acceptance-rate route", () => {
     expect(sorted[0]).toBe("/schools/[school_id]/acceptance-rate");
   });
 
-  it("redirects an alias slug to the canonical acceptance-rate URL", async () => {
-    mocks.fetchCanonicalSchoolId.mockResolvedValue(
-      "virginia-polytechnic-institute-and-state-university",
-    );
-    await expect(AcceptanceRatePage(params("virginia-tech"))).rejects.toBe(redirectSentinel);
+  it("redirects the legal-name slug to the searchable acceptance-rate URL", async () => {
+    mocks.fetchCanonicalSchoolId.mockResolvedValue("virginia-tech");
+    await expect(
+      AcceptanceRatePage(params("virginia-polytechnic-institute-and-state-university")),
+    ).rejects.toBe(redirectSentinel);
     expect(mocks.permanentRedirect).toHaveBeenCalledWith(
-      "/schools/virginia-polytechnic-institute-and-state-university/acceptance-rate",
+      "/schools/virginia-tech/acceptance-rate",
     );
     expect(mocks.fetchSchoolDocuments).not.toHaveBeenCalled();
   });
@@ -114,25 +116,25 @@ describe("acceptance-rate route", () => {
     expect(metadata.robots).toEqual({ index: false, follow: true });
   });
 
-  it("404s an allowlisted school with fewer than three usable years", async () => {
+  it("keeps serving a submitted URL that no longer has three usable years", async () => {
     mocks.fetchSchoolDocuments.mockResolvedValue(manifest("duke", "Duke University", ["2025-26", "2024-25"]));
-    await expect(AcceptanceRatePage(params("duke"))).rejects.toBe(notFoundSentinel);
+    await expect(AcceptanceRatePage(params("duke"))).resolves.toBeTruthy();
   });
 
-  it("404s an allowlisted school whose latest usable year is before 2023-24", async () => {
+  it("keeps serving a submitted URL whose latest usable year is before 2023-24", async () => {
     mocks.fetchSchoolDocuments.mockResolvedValue(
       manifest("duke", "Duke University", ["2022-23", "2021-22", "2020-21", "2019-20"]),
     );
-    await expect(AcceptanceRatePage(params("duke"))).rejects.toBe(notFoundSentinel);
+    await expect(AcceptanceRatePage(params("duke"))).resolves.toBeTruthy();
   });
 
-  it("serves an eligible pilot school as noindex with a self canonical and the usable span in the title", async () => {
+  it("serves an eligible pilot school as indexable with a self canonical and the usable span in the title", async () => {
     mocks.fetchSchoolDocuments.mockResolvedValue(
       manifest("duke", "Duke University", ["2025-26", "2024-25", "2023-24"]),
     );
     const metadata = await generateMetadata(params("duke"));
     expect(metadata.title).toBe("Duke University Acceptance Rate: 5.0% for Fall 2025");
-    expect(metadata.robots).toEqual({ index: false, follow: true });
+    expect(metadata.robots).toEqual({ index: true, follow: true });
     expect(metadata.alternates).toEqual({ canonical: "/schools/duke/acceptance-rate" });
     await expect(AcceptanceRatePage(params("duke"))).resolves.toBeTruthy();
   });
@@ -147,13 +149,13 @@ describe("header accent contrast", () => {
 });
 
 describe("pilot gating", () => {
-  it("keeps the pilot noindex until the slug decision", () => {
-    expect(ACCEPTANCE_PILOT_INDEXABLE).toBe(false);
+  it("indexes the pilot after the searchable-slug freeze", () => {
+    expect(ACCEPTANCE_PILOT_INDEXABLE).toBe(true);
   });
 
-  it("lists the named pilot schools by canonical id", () => {
+  it("lists the named pilot schools by searchable public id", () => {
     for (const id of [
-      "virginia-polytechnic-institute-and-state-university",
+      "virginia-tech",
       "haverford-college",
       "brown",
       "northeastern",
@@ -161,35 +163,53 @@ describe("pilot gating", () => {
     ]) {
       expect(ACCEPTANCE_PILOT_SCHOOLS).toContain(id);
     }
-    expect(ACCEPTANCE_PILOT_SCHOOLS).not.toContain("virginia-tech");
+    expect(ACCEPTANCE_PILOT_SCHOOLS).not.toContain(
+      "virginia-polytechnic-institute-and-state-university",
+    );
     expect(ACCEPTANCE_PILOT_SCHOOLS.length).toBeLessThanOrEqual(20);
   });
 
-  it("adds nothing to the sitemap while the gate is off, and reads no data", async () => {
-    await expect(acceptanceRateSitemap()).resolves.toEqual([]);
-    expect(mocks.fetchSchoolDocuments).not.toHaveBeenCalled();
-    expect(acceptanceSitemapEntries(["duke"])).toEqual([]);
+  it("treats the legal-name slug as the same pilot school", () => {
+    expect(isAcceptancePilotSchool("virginia-tech")).toBe(true);
+    expect(
+      isAcceptancePilotSchool("virginia-polytechnic-institute-and-state-university"),
+    ).toBe(true);
   });
 
-  it("lists served pilot pages when the gate is on", () => {
-    expect(acceptanceSitemapEntries(["duke", "cornell"], true)).toEqual([
+  it("lists served pilot pages in the sitemap", () => {
+    expect(acceptanceSitemapEntries(["duke", "cornell"])).toEqual([
       {
         url: "https://www.collegedata.fyi/schools/duke/acceptance-rate",
         changeFrequency: "monthly",
         priority: 0.6,
       },
     ]);
+    expect(
+      acceptanceSitemapEntries(["virginia-polytechnic-institute-and-state-university"]),
+    ).toEqual([
+      {
+        url: "https://www.collegedata.fyi/schools/virginia-tech/acceptance-rate",
+        changeFrequency: "monthly",
+        priority: 0.6,
+      },
+    ]);
   });
 
-  it("tells the hub the page is served only for eligible pilot schools", async () => {
+  it("lists submitted pilot pages in the live sitemap", async () => {
+    const entries = await acceptanceRateSitemap();
+    expect(entries).toHaveLength(ACCEPTANCE_PILOT_SCHOOLS.length);
+    expect(entries.map((entry) => entry.url)).toContain(
+      "https://www.collegedata.fyi/schools/virginia-tech/acceptance-rate",
+    );
+  });
+
+  it("tells the hub the page is served only for eligible or submitted pilot schools", async () => {
     await expect(fetchAcceptancePageServed("cornell")).resolves.toBe(false);
     expect(mocks.fetchSchoolDocuments).not.toHaveBeenCalled();
     mocks.fetchSchoolDocuments.mockResolvedValue(
       manifest("brown", "Brown University", ["2025-26", "2024-25", "2023-24"]),
     );
     await expect(fetchAcceptancePageServed("brown")).resolves.toBe(true);
-    mocks.fetchSchoolDocuments.mockResolvedValue(manifest("bates", "Bates College", ["2025-26"]));
-    await expect(fetchAcceptancePageServed("bates")).resolves.toBe(false);
   });
 });
 

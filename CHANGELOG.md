@@ -6,6 +6,16 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.8.0] - 2026-09-23
+
+### Changed
+
+- School pages use the name people search as the public URL. Virginia Tech
+  is `/schools/virginia-tech`, Caltech is `/schools/caltech`, and Tulane is
+  `/schools/tulane-university`. The legal federal names still work and
+  redirect. Brand colors stay with the school.
+- The twenty acceptance-rate pages are in the sitemap and can be indexed.
+
 ## [0.6.7.0] - 2026-09-23
 
 ### Added

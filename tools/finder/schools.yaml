@@ -1,3 +1,8 @@
+# Canonical public slugs. When a school has a legal federal name and a
+# shorter name people actually search, `id` is the searchable URL
+# (`virginia-tech`, not `virginia-polytechnic-institute-and-state-university`).
+# The Scorecard INSTNM slug stays a live alias. Durable exceptions are in
+# public_slugs.yaml and are checked by identity_guard.py.
 schools:
 - id: carnegie-mellon
   name: Carnegie Mellon University
@@ -3839,7 +3844,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-- id: california-institute-of-technology
+- id: caltech
   name: California Institute of Technology
   domain: caltech.edu
   ipeds_id: '110404'
@@ -22062,7 +22067,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-- id: tulane-university-of-louisiana
+- id: tulane-university
   name: Tulane University of Louisiana
   domain: tulane.edu
   ipeds_id: '160755'
@@ -25381,7 +25386,7 @@ schools:
     patterns_tried: 0
     search_fallback_tried: true
   discovery_seed_url: https://www.vmi.edu/media/content-assets/documents/oie/CDS_2023-2024.pdf
-- id: virginia-polytechnic-institute-and-state-university
+- id: virginia-tech
   name: Virginia Polytechnic Institute and State University
   domain: vt.edu
   ipeds_id: '233921'

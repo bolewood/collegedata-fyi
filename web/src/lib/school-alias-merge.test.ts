@@ -5,7 +5,8 @@ import {
   mergeAliasDocuments,
 } from "./school-alias";
 
-const VT = "virginia-polytechnic-institute-and-state-university";
+const VT = "virginia-tech";
+const VT_LEGAL = "virginia-polytechnic-institute-and-state-university";
 
 function doc(
   school_id: string,
@@ -20,9 +21,9 @@ describe("liveAliasSlugsFor", () => {
   it("returns live crosswalk aliases that resolve to the canonical slug", () => {
     const rows = [
       { school_id: VT, alias: VT, is_primary: true },
-      { school_id: VT, alias: "virginia-tech", is_primary: false },
+      { school_id: VT, alias: VT_LEGAL, is_primary: false },
     ];
-    expect(liveAliasSlugsFor(VT, rows)).toEqual(["virginia-tech"]);
+    expect(liveAliasSlugsFor(VT, rows)).toEqual([VT_LEGAL]);
   });
 
   it("never merges retired aliases or aliases owned by another primary", () => {
@@ -43,15 +44,15 @@ describe("mergeAliasDocuments", () => {
     const merged = mergeAliasDocuments(VT, [
       doc(VT, "2024-25", "233921"),
       doc(VT, "2023-24", "233921"),
-      doc("virginia-tech", "2025-26"),
-      doc("virginia-tech", "2024-25"),
-      doc("virginia-tech", "2012-13"),
+      doc(VT_LEGAL, "2025-26"),
+      doc(VT_LEGAL, "2024-25"),
+      doc(VT_LEGAL, "2012-13"),
     ]);
     expect(merged.map((row) => `${row.school_id}:${row.canonical_year}`)).toEqual([
-      "virginia-tech:2025-26",
+      `${VT_LEGAL}:2025-26`,
       `${VT}:2024-25`,
       `${VT}:2023-24`,
-      "virginia-tech:2012-13",
+      `${VT_LEGAL}:2012-13`,
     ]);
   });
 
@@ -75,15 +76,15 @@ describe("mergeAliasDocuments", () => {
   it("prefers an extracted alias row over an unextracted canonical row", () => {
     const merged = mergeAliasDocuments(VT, [
       { ...doc(VT, "2023-24", "233921"), extraction_status: "failed", document_id: "b" },
-      { ...doc("virginia-tech", "2023-24"), extraction_status: "extracted", document_id: "a" },
+      { ...doc(VT_LEGAL, "2023-24"), extraction_status: "extracted", document_id: "a" },
     ]);
-    expect(merged.map((row) => row.school_id)).toEqual(["virginia-tech"]);
+    expect(merged.map((row) => row.school_id)).toEqual([VT_LEGAL]);
   });
 
   it("keeps an extracted canonical row over an extracted alias row", () => {
     const merged = mergeAliasDocuments(VT, [
       { ...doc(VT, "2023-24", "233921"), extraction_status: "extracted", document_id: "b" },
-      { ...doc("virginia-tech", "2023-24"), extraction_status: "extracted", document_id: "a" },
+      { ...doc(VT_LEGAL, "2023-24"), extraction_status: "extracted", document_id: "a" },
     ]);
     expect(merged.map((row) => row.school_id)).toEqual([VT]);
   });
@@ -100,12 +101,12 @@ describe("mergeAliasDocuments", () => {
 describe("canonicalizeSchoolRows", () => {
   it("re-keys alias rows, dedupes shared years, and drops retired slugs", () => {
     const resolve = (id: string) =>
-      id === "tufts-university" ? null : id === "virginia-tech" ? VT : id;
+      id === "tufts-university" ? null : id === VT_LEGAL ? VT : id;
     const rows = canonicalizeSchoolRows(
       [
         doc(VT, "2024-25", "233921"),
-        doc("virginia-tech", "2024-25"),
-        doc("virginia-tech", "2025-26"),
+        doc(VT_LEGAL, "2024-25"),
+        doc(VT_LEGAL, "2025-26"),
         doc("tufts-university", "2019-20"),
       ],
       resolve,

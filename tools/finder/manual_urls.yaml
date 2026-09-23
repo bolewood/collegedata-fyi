@@ -7953,15 +7953,6 @@ schools:
       , waiting until \"domcontentloaded\"\n"
     duration_ms: 44342
     anchors: []
-  virginia-polytechnic-institute-and-state-university:
-    starting_url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/23-24/CDS_2023-2024.pdf
-    landing_url_found: null
-    final_url: null
-    status: nav_error
-    error: "Page.goto: Download is starting\nCall log:\n  - navigating to \"https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/23-24/CDS_2023-2024.pdf\"\
-      , waiting until \"domcontentloaded\"\n"
-    duration_ms: 27502
-    anchors: []
   washington-state-university:
     starting_url: https://wpcdn.web.wsu.edu/wsuwp/uploads/sites/3447/2025/09/CDS-2024-2025-For-Website.pdf
     landing_url_found: null
@@ -9556,15 +9547,6 @@ schools:
     error: "Page.goto: Timeout 15000ms exceeded.\nCall log:\n  - navigating to \"https://dev.bradley.edu/offices/academic/institutionaleffectiveness/assets/documents/CDS_2023_2024.pdf\"\
       , waiting until \"domcontentload"
     duration_ms: 102979
-    anchors: []
-  california-institute-of-technology:
-    starting_url: https://finance.caltech.edu/documents/25197/cds_2023.pdf
-    landing_url_found: null
-    final_url: null
-    status: nav_error
-    error: "Page.goto: Download is starting\nCall log:\n  - navigating to \"https://finance.caltech.edu/documents/25197/cds_2023.pdf\"\
-      , waiting until \"domcontentloaded\"\n"
-    duration_ms: 14442
     anchors: []
   california-state-university-fullerton:
     starting_url: https://www.fullerton.edu/data/_resources/pdfs/presentations/CAIR2017_CDS_Furuichi.pdf

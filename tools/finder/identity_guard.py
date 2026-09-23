@@ -7,6 +7,10 @@ UNITID can otherwise poison the directory, coverage, federal facts, and every
 derived recipe at once.  This module provides one pure audit used by CI and by
 the Scorecard directory loader before it opens a database connection.
 
+When a legal federal name and the name people search differ, schools.yaml
+``id`` is the searchable public URL. ``public_slugs.yaml`` pins those
+exceptions so a later INSTNM refresh cannot silently restore the long slug.
+
 CI usage:
     python3 tools/finder/identity_guard.py
 
@@ -39,6 +43,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SCHOOLS_YAML = REPO_ROOT / "tools" / "finder" / "schools.yaml"
 DEFAULT_SNAPSHOT = REPO_ROOT / "tools" / "finder" / "ipeds_identity_snapshot.csv"
 DEFAULT_EXCEPTIONS = REPO_ROOT / "tools" / "finder" / "ipeds_identity_exceptions.json"
+DEFAULT_PUBLIC_SLUGS = REPO_ROOT / "tools" / "finder" / "public_slugs.yaml"
 IPEDS_SOURCE_URL = "https://nces.ed.gov/ipeds/datacenter/data/HD{year}.zip"
 
 
@@ -188,10 +193,52 @@ def unique_school_claim_slug_map(
     }
 
 
+def load_public_slugs(path: Path = DEFAULT_PUBLIC_SLUGS) -> dict[str, str]:
+    """IPEDS UNITID → searchable public school_id. Empty when the file is absent."""
+    if not path.exists():
+        return {}
+    payload = yaml.safe_load(path.read_text()) or {}
+    out: dict[str, str] = {}
+    for raw_ipeds, slug in (payload.get("by_ipeds") or {}).items():
+        ipeds_id = normalize_ipeds(raw_ipeds)
+        school_id = str(slug or "").strip()
+        if not ipeds_id or not school_id:
+            raise ValueError(f"Invalid public slug mapping: {raw_ipeds!r} → {slug!r}")
+        existing = out.get(ipeds_id)
+        if existing and existing != school_id:
+            raise ValueError(
+                f"public_slugs.yaml maps {ipeds_id} to both {existing!r} and {school_id!r}"
+            )
+        out[ipeds_id] = school_id
+    return out
+
+
+def audit_public_slugs(
+    claims: Iterable[dict[str, Any]],
+    public_slugs: dict[str, str],
+) -> list[dict[str, str]]:
+    """Fail when a pinned searchable slug is missing or yaml used the legal name."""
+    by_ipeds = {claim["ipeds_id"]: claim["school_id"] for claim in claims}
+    errors: list[dict[str, str]] = []
+    for ipeds_id, expected in sorted(public_slugs.items()):
+        actual = by_ipeds.get(ipeds_id)
+        if actual != expected:
+            errors.append(
+                {
+                    "kind": "public_slug_mismatch",
+                    "ipeds_id": ipeds_id,
+                    "expected_school_id": expected,
+                    "school_id": actual or "",
+                }
+            )
+    return errors
+
+
 def validated_unique_school_claim_slug_map(
     schools_path: Path = DEFAULT_SCHOOLS_YAML,
     snapshot_path: Path = DEFAULT_SNAPSHOT,
     exceptions_path: Path = DEFAULT_EXCEPTIONS,
+    public_slugs_path: Path = DEFAULT_PUBLIC_SLUGS,
 ) -> dict[str, str]:
     """Load canonical slugs only after the checked-in official audit passes."""
     claims = load_school_claims(schools_path)
@@ -201,6 +248,8 @@ def validated_unique_school_claim_slug_map(
         official_records,
         load_identity_exceptions(exceptions_path),
     )
+    public_errors = audit_public_slugs(claims, load_public_slugs(public_slugs_path))
+    audit["errors"].extend(public_errors)
     if audit["errors"]:
         raise ValueError(
             "Refusing canonical school slug map: "
@@ -480,6 +529,7 @@ def main() -> int:
     parser.add_argument("--schools-yaml", type=Path, default=DEFAULT_SCHOOLS_YAML)
     parser.add_argument("--snapshot", type=Path, default=DEFAULT_SNAPSHOT)
     parser.add_argument("--exceptions", type=Path, default=DEFAULT_EXCEPTIONS)
+    parser.add_argument("--public-slugs", type=Path, default=DEFAULT_PUBLIC_SLUGS))
     parser.add_argument(
         "--build-snapshot",
         type=Path,
@@ -500,6 +550,9 @@ def main() -> int:
     claims = load_school_claims(args.schools_yaml)
     exceptions = load_identity_exceptions(args.exceptions)
     audit = audit_school_identities(claims, official_records, exceptions)
+    audit["errors"].extend(
+        audit_public_slugs(claims, load_public_slugs(args.public_slugs))
+    )
     audit["snapshot"] = metadata
 
     if args.json:

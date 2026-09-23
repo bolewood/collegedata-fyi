@@ -1,0 +1,20 @@
+# Searchable public URL slugs. When a school's legal federal name and the
+# name people actually search differ, schools.yaml `id` must match the
+# searchable slug here. The Scorecard INSTNM slug stays a live alias so
+# old URLs 308 and archived years still merge. identity_guard.py fails CI
+# if yaml drifts back to the legal-name slug.
+#
+# Add a row when choosing a public URL that is not the INSTNM auto-slug.
+# Do not put a searchable slug in retired_aliases — that drops it from merge.
+version: 1
+by_ipeds:
+  "110404": caltech
+  "134130": uf
+  "139755": georgia-tech
+  "144050": uchicago
+  "160755": tulane-university
+  "186380": rutgers
+  "228723": texas-am
+  "233921": virginia-tech
+  "234076": uva
+  "236948": uw
