@@ -85,6 +85,23 @@ export function edRateOf(row: SchoolYearFacts): number | null {
   return ratio(row.edAdmitted, row.edApplicants);
 }
 
+/**
+ * C2 waitlist counts when they are mutually consistent:
+ * admitted ≤ accepted a spot ≤ offered a spot. Contradictory counts are
+ * treated as a bad extract and return null rather than a partial sentence.
+ */
+export function waitlistCounts(
+  row: SchoolYearFacts,
+): { offered: number; accepted: number | null; admitted: number } | null {
+  const offered = row.waitListOffered;
+  const admitted = row.waitListAdmitted;
+  const accepted = row.waitListAccepted;
+  if (offered == null || offered <= 0 || admitted == null || admitted < 0) return null;
+  if (admitted > offered) return null;
+  if (accepted != null && (accepted < admitted || accepted > offered)) return null;
+  return { offered, accepted, admitted };
+}
+
 /** Sentences for one reported year, in reading order. */
 export function yearSummarySentences(
   schoolName: string,
@@ -134,16 +151,12 @@ export function yearSummarySentences(
     );
   }
 
-  const offered = row.waitListOffered;
-  const waitAdmitted = row.waitListAdmitted;
-  if (offered != null && offered > 0 && waitAdmitted != null && waitAdmitted >= 0) {
-    const accepted = row.waitListAccepted;
+  const waitlist = waitlistCounts(row);
+  if (waitlist) {
     const acceptedClause =
-      accepted != null && accepted >= 0 && accepted <= offered && waitAdmitted <= accepted
-        ? `, ${count(accepted)} accepted one,`
-        : "";
+      waitlist.accepted != null ? `, ${count(waitlist.accepted)} accepted one,` : "";
     sentences.push(
-      `Waitlist: ${count(offered)} offered a spot${acceptedClause} and ${count(waitAdmitted)} admitted from it.`,
+      `Waitlist: ${count(waitlist.offered)} offered a spot${acceptedClause} and ${count(waitlist.admitted)} admitted from it.`,
     );
   }
 
