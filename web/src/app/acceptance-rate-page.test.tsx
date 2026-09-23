@@ -131,7 +131,7 @@ describe("acceptance-rate route", () => {
       manifest("duke", "Duke University", ["2025-26", "2024-25", "2023-24"]),
     );
     const metadata = await generateMetadata(params("duke"));
-    expect(metadata.title).toBe("Duke University Acceptance Rate: 5.0% for Fall 2025 (2023–2025)");
+    expect(metadata.title).toBe("Duke University Acceptance Rate: 5.0% for Fall 2025");
     expect(metadata.robots).toEqual({ index: false, follow: true });
     expect(metadata.alternates).toEqual({ canonical: "/schools/duke/acceptance-rate" });
     await expect(AcceptanceRatePage(params("duke"))).resolves.toBeTruthy();

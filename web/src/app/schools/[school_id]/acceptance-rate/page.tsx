@@ -19,7 +19,6 @@ import {
   relatedLinks,
   sectionHeading,
   sourceNote,
-  spanLabel,
 } from "@/lib/acceptance-rate-copy";
 import { deriveInks } from "@/lib/derive-inks";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
@@ -80,7 +79,6 @@ export default async function AcceptanceRatePage({ params }: { params: Promise<P
   const latest = history.years[0];
   const hubPath = `/schools/${school_id}`;
   const pageUrl = `${SITE}${acceptanceRatePath(school_id)}`;
-  const span = spanLabel(history);
   const related = relatedLinks(schoolName, latest?.year ?? null);
   const accentReadable = headerAccentReadable(deriveInks(brandColors));
 
@@ -136,11 +134,6 @@ export default async function AcceptanceRatePage({ params }: { params: Promise<P
             {decision.kind === "serve-degraded" ? <p>{degradedNote()}</p> : null}
           </div>
         </div>
-        {span ? (
-          <div className="cd-school-header__aside">
-            <div className="meta cd-school-header__count">{span}</div>
-          </div>
-        ) : null}
       </header>
 
       <section aria-labelledby="acceptance-by-year" className="acc-section">

@@ -54,7 +54,7 @@ export function AcceptanceRateChart({
         })}
       </div>
       <figcaption className="acc-chart__caption">
-        Share of first-year applicants admitted, by fall entering class. Bars start at zero.
+        Share of first-year applicants admitted, by fall entering class.
         {hasGap ? " — = not available." : ""}
       </figcaption>
     </figure>

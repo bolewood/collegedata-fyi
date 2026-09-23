@@ -2914,7 +2914,8 @@
   border-bottom: 1px solid var(--chart-axis);
 }
 .acc-chart__value {
-  font-family: var(--mono);
+  font-family: var(--sans);
+  font-feature-settings: "tnum" 1, "lnum" 1;
   font-size: 13px;
   font-variant-numeric: tabular-nums;
   color: var(--ink);
@@ -2927,7 +2928,8 @@
 }
 .acc-chart__col--gap .acc-chart__value { color: var(--ink-3); }
 .acc-chart__year {
-  font-family: var(--mono);
+  font-family: var(--sans);
+  font-feature-settings: "tnum" 1, "lnum" 1;
   font-size: 13px;
   font-variant-numeric: tabular-nums;
   color: var(--ink-3);
@@ -2955,19 +2957,21 @@
 .acc-table-scroll:focus-visible { outline-offset: 4px; }
 .acc-table {
   width: 100%;
+  min-width: 600px;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 15px;
 }
 .acc-table th,
 .acc-table td {
-  padding: 11px 20px 11px 0;
+  padding: 11px 0 11px 12px;
   border-bottom: 1px solid var(--rule);
   text-align: left;
   vertical-align: baseline;
   white-space: nowrap;
-  width: 1%;
 }
-.acc-table .acc-table__file { width: auto; padding-left: 28px; }
+.acc-table th:first-child { padding-left: 0; }
+.acc-table .acc-table__file { text-align: right; }
 .acc-table tbody tr:last-child th,
 .acc-table tbody tr:last-child td { border-bottom: 0; }
 .acc-table thead th {
@@ -2986,10 +2990,13 @@
   background: var(--paper);
   z-index: 1;
 }
+/* Figures use the sans: JetBrains Mono's zero carries an inner mark that
+   "zero" 0 cannot remove, and 57.0% read as 57.Ø%. Scoped to this page. */
 .acc-table .acc-num {
   text-align: right;
-  font-family: var(--mono);
-  font-variant-numeric: tabular-nums;
+  font-family: var(--sans);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
 }
 .acc-table__fall {
   display: block;
@@ -3007,6 +3014,15 @@
 .acc-table__rate { color: var(--ink); font-weight: 600; }
 .acc-table__file { font-size: 13px; }
 .acc-table .acc-table__merged { text-align: left; padding-left: 28px; color: var(--ink-3); }
+.acc-table__gap-note {
+  display: none;
+  margin-top: 4px;
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--ink-3);
+  white-space: normal;
+}
 .acc-table__gap .acc-table__fall,
 .acc-table__gap .acc-table__file { color: var(--ink-3); }
 .acc-note {
@@ -3033,8 +3049,11 @@
   .acc-chart__year { font-size: 12px; }
   .acc-table { font-size: 14px; }
   .acc-table th,
-  .acc-table td { padding: 10px 12px 10px 0; }
-  .acc-table .acc-table__merged { padding-left: 16px; }
+  .acc-table td { padding: 10px 0 10px 10px; }
+  .acc-table thead th { white-space: normal; line-height: 1.35; }
+  .acc-table__gap-note { display: block; }
+  .acc-table .acc-table__merged { visibility: hidden; }
+  .acc-related { flex-direction: column; gap: 12px; }
   .acc-table__fall { font-size: 14px; }
   .acc-table-hint { display: block; }
 }

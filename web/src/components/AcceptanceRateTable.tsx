@@ -66,6 +66,15 @@ export function AcceptanceRateTable({
             {schoolName} first-year acceptance rate, applicants, admits, enrolled, and yield by
             entering class, newest first.
           </caption>
+          <colgroup>
+            <col style={{ width: "24%" }} />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "13%" }} />
+            <col style={{ width: "13%" }} />
+            <col style={{ width: "13%" }} />
+            <col style={{ width: "11%" }} />
+            <col style={{ width: "12%" }} />
+          </colgroup>
           <thead>
             <tr>
               <th scope="col">Year</th>
@@ -89,6 +98,9 @@ export function AcceptanceRateTable({
                           {reportLabel(item.year)}
                         </Link>
                       ) : null}
+                      <span className="acc-table__gap-note" aria-hidden="true">
+                        {gapLabel(item.hasReport)}
+                      </span>
                     </th>
                     <td colSpan={5} className="acc-num acc-table__merged">
                       —

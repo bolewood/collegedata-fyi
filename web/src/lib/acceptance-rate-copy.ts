@@ -102,30 +102,123 @@ function change(from: number, to: number): string {
   return pct(Math.abs(to - from) / from);
 }
 
-/** Answer first: the latest year with exact counts, then the history. */
+/** Rate in tenths of a point, as printed: 0.0567 → 57. Comparisons use this. */
+function tenths(rate: number): number {
+  return Math.round(rate * 1000);
+}
+
+const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
+
+function yearsShown(n: number): string {
+  return `the ${NUMBER_WORDS[n] ?? String(n)} years shown`;
+}
+
+function answerBase(schoolName: string, last: AcceptanceYear): string {
+  return `${schoolName} admitted ${pct(last.rate)} of first-year applicants for fall ${fallYear(last.yearStart)} (${count(last.admitted)} of ${count(last.applied)})`;
+}
+
+/** A turning point in the year just before the latest one reads as part of the answer. */
+function turnIsPrevious(history: AcceptanceHistory, turn: TurningPoint | null): boolean {
+  const series = oldestFirst(history);
+  const last = series[series.length - 1];
+  return Boolean(turn && last && turn.row.yearStart === last.yearStart - 1 && series[series.length - 2] === turn.row);
+}
+
+/** Answer first: the latest year with exact counts. */
 export function answerSentence(schoolName: string, history: AcceptanceHistory): string | null {
   const series = oldestFirst(history);
   const last = series[series.length - 1];
   if (!last) return null;
   const first = series[0];
-  const base = `${schoolName} admitted ${pct(last.rate)} of first-year applicants for fall ${fallYear(last.yearStart)} (${count(last.admitted)} of ${count(last.applied)})`;
-  if (first === last || turningPoint(history)) return `${base}.`;
+  const base = answerBase(schoolName, last);
+  const turn = turningPoint(history);
+  if (turn && turnIsPrevious(history, turn)) {
+    const dir = turn.kind === "low" ? "up from" : "down from";
+    const extreme = turn.kind === "low" ? "lowest" : "highest";
+    return `${base}, ${dir} ${pct(turn.row.rate)} for fall ${fallYear(turn.row.yearStart)}, the ${extreme} in ${yearsShown(series.length)}.`;
+  }
+  if (first === last || turn) return `${base}.`;
   return `${base}, ${comparedWith(last, first)}.`;
 }
 
 export function turningSentence(history: AcceptanceHistory): string | null {
   const turn = turningPoint(history);
-  if (!turn) return null;
+  if (!turn || turnIsPrevious(history, turn)) return null;
   const series = oldestFirst(history);
   const first = series[0];
   const last = series[series.length - 1];
-  const extreme = `${turn.kind === "low" ? "up from a low" : "down from a high"} of ${pct(turn.row.rate)} for fall ${fallYear(turn.row.yearStart)}`;
+  const shown = history.gaps.length > 0 ? " (the lowest in the years shown)" : "";
+  const extreme = turn.kind === "low"
+    ? `up from a low of ${pct(turn.row.rate)} for fall ${fallYear(turn.row.yearStart)}${shown}`
+    : `down from a high of ${pct(turn.row.rate)} for fall ${fallYear(turn.row.yearStart)}${shown.replace("lowest", "highest")}`;
   return `That is ${extreme} and ${comparedWith(last, first)}.`;
 }
 
+export const DOMINANT_SHARE = 0.6;
+
 /**
- * Four or more years: the span, plus the latest change when it runs the
- * other way. Fewer: just the latest change, since the table is short.
+ * The one consecutive-year change that makes up at least DOMINANT_SHARE of
+ * the whole span's rate change, in the same direction. Only for four or
+ * more years with no turning point, so "most of the drop" is literally
+ * true and not a restatement of a short table.
+ */
+export function dominantChange(
+  history: AcceptanceHistory,
+): { from: AcceptanceYear; to: AcceptanceYear } | null {
+  const series = oldestFirst(history);
+  if (series.length < 4 || turningPoint(history)) return null;
+  const total = tenths(series[series.length - 1].rate) - tenths(series[0].rate);
+  if (total === 0) return null;
+  let best: { from: AcceptanceYear; to: AcceptanceYear; delta: number } | null = null;
+  for (let i = 1; i < series.length; i++) {
+    const from = series[i - 1];
+    const to = series[i];
+    if (to.yearStart !== from.yearStart + 1) continue;
+    const delta = tenths(to.rate) - tenths(from.rate);
+    if (Math.sign(delta) !== Math.sign(total)) continue;
+    if (!best || Math.abs(delta) > Math.abs(best.delta)) best = { from, to, delta };
+  }
+  if (!best || Math.abs(best.delta) < DOMINANT_SHARE * Math.abs(total)) return null;
+  return { from: best.from, to: best.to };
+}
+
+export function dominantSentence(history: AcceptanceHistory): string | null {
+  const dominant = dominantChange(history);
+  if (!dominant) return null;
+  const { from, to } = dominant;
+  const series = oldestFirst(history);
+  const drop = series[series.length - 1].rate < series[0].rate;
+  const step = `from ${pct(from.rate)} for fall ${fallYear(from.yearStart)} to ${pct(to.rate)} for fall ${fallYear(to.yearStart)}`;
+  const admits = to.admitted === from.admitted
+    ? `admits held at ${count(to.admitted)}`
+    : `admits ${to.admitted < from.admitted ? "fell" : "rose"} from ${count(from.admitted)} to ${count(to.admitted)}`;
+  const apps = to.applied === from.applied
+    ? `applications held at ${count(to.applied)}`
+    : `applications ${to.applied > from.applied ? "rose" : "fell"} ${change(from.applied, to.applied)}`;
+  return `Most of the ${drop ? "drop" : "rise"} came in one year, ${step}: ${admits}, while ${apps}.`;
+}
+
+/** Most recent interior year whose applications are above (peak) or below (low) both ends. */
+function applicationsExtreme(series: AcceptanceYear[]): { kind: "peak" | "low"; row: AcceptanceYear } | null {
+  const first = series[0];
+  const last = series[series.length - 1];
+  for (let i = series.length - 2; i >= 1; i--) {
+    const row = series[i];
+    const interior = series.slice(1, -1).map((r) => r.applied);
+    if (row.applied === Math.max(...interior) && row.applied > first.applied && row.applied > last.applied) {
+      return { kind: "peak", row };
+    }
+    if (row.applied === Math.min(...interior) && row.applied < first.applied && row.applied < last.applied) {
+      return { kind: "low", row };
+    }
+  }
+  return null;
+}
+
+/**
+ * Four or more years: a peak or low in applications when there is one
+ * (the true max or min of the years shown), else the span; plus the latest
+ * change. Fewer: just the latest change.
  */
 export function applicationsSentence(history: AcceptanceHistory): string | null {
   const series = oldestFirst(history);
@@ -136,12 +229,27 @@ export function applicationsSentence(history: AcceptanceHistory): string | null 
   const consecutive = prev.yearStart === last.yearStart - 1;
   const latestChange =
     consecutive && prev.applied !== last.applied
-      ? `${last.applied > prev.applied ? "rose" : "fell"} ${change(prev.applied, last.applied)} for fall ${fallYear(last.yearStart)} (${count(prev.applied)} to ${count(last.applied)})`
+      ? `${last.applied > prev.applied ? "rose" : "fell"} ${change(prev.applied, last.applied)} for fall ${fallYear(last.yearStart)}, to ${count(last.applied)}`
       : null;
 
   if (series.length < 4) {
     return latestChange ? `Applications ${latestChange}.` : null;
   }
+
+  const extreme = applicationsExtreme(series);
+  if (extreme) {
+    if (extreme.row === prev && latestChange) return `Applications ${latestChange}.`;
+    const shown = history.gaps.length > 0 ? " in the years shown" : "";
+    const where = `${count(extreme.row.applied)} for fall ${fallYear(extreme.row.yearStart)}${shown}`;
+    const head = extreme.kind === "peak" ? `Applications peaked at ${where}` : `Applications were lowest at ${where}`;
+    const awayFromExtreme = extreme.kind === "peak" ? last.applied < prev.applied : last.applied > prev.applied;
+    if (latestChange && awayFromExtreme) return `${head} and ${latestChange}.`;
+    const tail = latestChange
+      ? `, ${last.applied > prev.applied ? "up" : "down"} ${change(prev.applied, last.applied)} from fall ${fallYear(prev.yearStart)}`
+      : "";
+    return `${head} and were ${count(last.applied)} for fall ${fallYear(last.yearStart)}${tail}.`;
+  }
+
   if (first.applied === last.applied) {
     return `Applications were ${count(last.applied)} for both fall ${fallYear(first.yearStart)} and fall ${fallYear(last.yearStart)}.`;
   }
@@ -159,13 +267,14 @@ export function gapSentence(history: AcceptanceHistory): string | null {
   const falls = [...history.gaps]
     .sort()
     .map((year) => `fall ${Number(year.slice(0, 4))}`);
-  return `Figures for ${joinAnd(falls)} are not available.`;
+  return `Usable figures for ${joinAnd(falls)} are not in our archive.`;
 }
 
 export function leadSentences(schoolName: string, history: AcceptanceHistory): string[] {
   return [
     answerSentence(schoolName, history),
     turningSentence(history),
+    dominantSentence(history),
     applicationsSentence(history),
     gapSentence(history),
   ].filter((sentence): sentence is string => Boolean(sentence));
@@ -177,45 +286,55 @@ function span(history: AcceptanceHistory): { first: AcceptanceYear; last: Accept
   return { first: series[0], last: series[series.length - 1] };
 }
 
-/**
- * "{school} Acceptance Rate: 5.7% for Fall 2024 (2018–2024 History)", kept
- * within TITLE_MAX characters before the site suffix by dropping the word
- * "History", then the range, then the rate.
- */
+/** "{school} Acceptance Rate: 6.3% for Fall 2025", or "by Year" when that runs past TITLE_MAX. */
 export function acceptanceTitle(schoolName: string, history: AcceptanceHistory): string {
   const ends = span(history);
-  if (!ends) return `${schoolName} Acceptance Rate by Year`;
-  const { first, last } = ends;
-  const head = `${schoolName} Acceptance Rate: ${pct(last.rate)} for Fall ${fallYear(last.yearStart)}`;
-  const range = `${fallYear(first.yearStart)}–${fallYear(last.yearStart)}`;
-  const options = [
-    first === last ? head : `${head} (${range} History)`,
-    first === last ? head : `${head} (${range})`,
-    head,
-    `${schoolName} Acceptance Rate by Year`,
-  ];
-  return options.find((option) => option.length <= TITLE_MAX) ?? options[options.length - 1];
+  const head = ends
+    ? `${schoolName} Acceptance Rate: ${pct(ends.last.rate)} for Fall ${fallYear(ends.last.yearStart)}`
+    : null;
+  return head && head.length <= TITLE_MAX ? head : `${schoolName} Acceptance Rate by Year`;
 }
 
+export const DESCRIPTION_MAX = 155;
+
+/**
+ * Answer sentence plus how far back the figures go, within
+ * DESCRIPTION_MAX. Longer names drop whole sentences or clauses, never
+ * part of a number.
+ */
 export function acceptanceDescription(schoolName: string, history: AcceptanceHistory): string {
-  const lead = [answerSentence(schoolName, history), turningSentence(history)].filter(Boolean).join(" ");
-  const tail = `Year-by-year figures from ${possessive(schoolName)} Common Data Set, with source files.`;
-  return lead ? `${lead} ${tail}` : tail;
+  const ends = span(history);
+  if (!ends) return `First-year acceptance rate by year for ${schoolName}, with source files.`;
+  const { first, last } = ends;
+  const rate = pct(last.rate);
+  const fall = fallYear(last.yearStart);
+  const core = `${answerBase(schoolName, last)}.`;
+  const back = first === last
+    ? "With source files."
+    : history.gaps.length > 0
+      ? `Figures back to fall ${fallYear(first.yearStart)}, with source files.`
+      : `Figures for each year since fall ${fallYear(first.yearStart)}, with source files.`;
+  const options = [
+    `${core} ${back}`,
+    `${core} With source files.`,
+    core,
+    `${schoolName} admitted ${rate} of first-year applicants for fall ${fall}.`,
+    `${schoolName} acceptance rate: ${rate} for fall ${fall}.`,
+    `First-year acceptance rate: ${rate} for fall ${fall}, with source files.`,
+  ];
+  return options.find((option) => option.length <= DESCRIPTION_MAX) ?? options[options.length - 1];
 }
 
 export function sectionHeading(schoolName: string, history: AcceptanceHistory): string {
   const ends = span(history);
   if (!ends) return `${possessive(schoolName)} acceptance rate`;
   const { first, last } = ends;
-  return first === last
-    ? `${possessive(schoolName)} acceptance rate, fall ${fallYear(last.yearStart)}`
-    : `${possessive(schoolName)} acceptance rate, fall ${fallYear(first.yearStart)}–${fallYear(last.yearStart)}`;
-}
-
-export function spanLabel(history: AcceptanceHistory): string | null {
-  const ends = span(history);
-  if (!ends || ends.first === ends.last) return null;
-  return `Fall ${fallYear(ends.first.yearStart)}–fall ${fallYear(ends.last.yearStart)}`;
+  const range = first === last
+    ? `fall ${fallYear(last.yearStart)}`
+    : `fall ${fallYear(first.yearStart)}–${fallYear(last.yearStart)}`;
+  return history.years.length < 4
+    ? `${schoolName} first-year admissions, ${range}`
+    : `${possessive(schoolName)} acceptance rate, ${range}`;
 }
 
 export const KICKER = "First-year admissions";
