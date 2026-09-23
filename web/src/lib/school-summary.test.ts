@@ -79,6 +79,17 @@ describe("yearSummarySentences", () => {
     expect(sentences).toEqual([]);
   });
 
+  it("drops the waitlist sentence when its counts contradict each other", () => {
+    const waitlistOnly = (overrides: Partial<SchoolYearFacts>) =>
+      yearSummarySentences("Example College", facts({ waitListOffered: 100, ...overrides }));
+    expect(waitlistOnly({ waitListAdmitted: 150 })).toEqual([]);
+    expect(waitlistOnly({ waitListAccepted: 40, waitListAdmitted: 60 })).toEqual([]);
+    expect(waitlistOnly({ waitListAccepted: 120, waitListAdmitted: 10 })).toEqual([]);
+    expect(waitlistOnly({ waitListAdmitted: 10 })).toEqual([
+      "Waitlist: 100 offered a spot and 10 admitted from it.",
+    ]);
+  });
+
   it("says nothing for rows hidden by data quality flags", () => {
     expect(
       yearSummarySentences("Cornell University", { ...cornell2025, dataQualityFlag: "wrong_file" }),

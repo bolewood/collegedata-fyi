@@ -1,256 +1,305 @@
-# PRD 031: Per-school stat pages (acceptance rate, early decision, test scores, waitlist)
+# PRD 031: Per-school stat pages (acceptance rate first)
 
-**Status:** Draft for review (2026-09-23). Not approved to build.
+**Status:** Rev 2 (2026-09-23), after red-team review. **Not approved to build.** Blocked on M0 (history backfill) and M1 (canonical slug freeze).
 **Author:** Anthony Showalter (with Claude)
-**Related:** [PRD 028](028-organic-search-cds-queries.md) (organic search; M4 gate this PRD asks to open), [GSC CDS memo](028-gsc-cds-queries-2026-08.md), [PRD 002](002-frontend.md), [PRD 019](019-cds-change-intelligence.md), [PRD 021](021-ipeds-coverage-layer.md), [`web/VOICE.md`](../../web/VOICE.md), [`web/DESIGN_SYSTEM.md`](../../web/DESIGN_SYSTEM.md), copy deck [wave 5](../copy/wave-5-school-page-numbers.md)
+**Related:** [PRD 028](028-organic-search-cds-queries.md), [GSC CDS memo](028-gsc-cds-queries-2026-08.md), [PRD 014](014-cross-year-canonical-schema.md) (cross-year schema; M0 dependency), [PRD 019](019-cds-change-intelligence.md), [`web/VOICE.md`](../../web/VOICE.md), [`web/DESIGN_SYSTEM.md`](../../web/DESIGN_SYSTEM.md), copy deck [wave 5](../copy/wave-5-school-page-numbers.md)
 
 ---
 
-## Reviewer brief
+## What changed from rev 1
 
-You are reviewing a plan, not code. Please answer the **Open questions** at
-the bottom and challenge anything in **Scope**, **Eligibility**, and
-**Risks**. The author's bias is toward shipping; the house rules in PRD 028
-(protect Virginia Tech, no manufactured essays, no parallel URL trees) are
-binding unless you argue them down explicitly.
+Rev 1 proposed four stat templates at corpus scale, justified by a "rate by
+year" story. A red-team review and a production count (below) showed that
+story is not in the data yet. Rev 2:
 
-## Summary
+- **Measures year depth instead of guessing.** The source rev 1 allowed has
+  no history at all (see "Measured depth"). A projection backfill is now M0
+  and gates everything else.
+- **One URL, not four.** Pilot `/schools/{id}/acceptance-rate` only. Early
+  decision is second, after a real C21 note is on the page. Waitlist and test
+  scores wait for the first URL to be indexed.
+- **PRD 028 M4 stays closed.** Virginia Tech was position ~3.8 in August,
+  which is page one but not top 3, and M4 described a field-level year URL
+  that this PRD rejects. This pilot stands on its own evidence and a sitemap
+  cap. It does not cite M4.
+- **Freezes the canonical slug first** (M1). `/schools/virginia-tech`
+  already 308s to the long federal slug; minting stat URLs on either slug
+  before that decision risks a second move on the site's only ranking term.
+- **Drops** the 3× human-review gate, Dataset JSON-LD, the IPEDS comparison
+  row, and all "odds" wording.
+- **Fixes the eligibility query** (per-metric latest year, ACT counted,
+  waitlist bounds, alias folding, served documents only).
+- **Adds a de-eligibility rule:** an indexed URL never silently 404s.
+- **Cannibalization:** the stat page leads with the multi-year span; the hub
+  keeps the single-year sentence and links the stat page.
 
-Add four school-level pages that answer the most-searched CDS questions with
-a multi-year table from the school's own reports:
+Corrections to the review: `web/src/lib/school-summary.ts` shipped to `main`
+in [#184](https://github.com/bolewood/collegedata-fyi/pull/184) (v0.6.6.0),
+so the sentence and sanity-check dependency is merged, not on a branch. The
+waitlist bound the review flagged also applied to the live hub sentence; it
+is fixed in the same change as this revision (2 of 211 live waitlist
+sentences had contradictory counts and are now omitted).
 
-| URL | Answers |
-|-----|---------|
-| `/schools/{id}/acceptance-rate` | `{school} acceptance rate`, `… acceptance rate history`, `… by year` |
-| `/schools/{id}/early-decision` | `{school} early decision acceptance rate`, `ED vs RD` |
-| `/schools/{id}/test-scores` | `{school} SAT scores`, `middle 50% SAT`, `test optional submit rate` |
-| `/schools/{id}/waitlist` | `{school} waitlist acceptance rate`, `waitlist odds` |
+## Measured depth (production, 2026-09-23)
 
-One page per school per metric, never per year. A page exists only when the
-school reported that metric in at least two usable years.
+Queries are checked in under `scratch/seo/` on the operator machine and
+reproduced in the appendix. All counts fold live alias slugs into their
+canonical slug and exclude removed, withdrawn, and quality-flagged rows.
 
-## Why (evidence)
+| Measure | Value |
+|---|---:|
+| `school_browser_rows` whole-institution rows | 736 |
+| …of those before 2024-25 | **0** |
+| `cds_fields` rows before 2024-25 | **0** |
+| Schools with a usable acceptance year | 411 |
+| …with exactly 1 usable year | 263 |
+| …with 2 usable years (the maximum possible) | 148 |
+| Median usable acceptance years | 1 |
+| Eligible today under rev 1 rules: acceptance / ED / tests / waitlist | 148 / 27 / 157 / 44 |
+| Extracted public reports before 2024-25 (all schools) | 4,309 |
+| Schools with any extracted pre-2024 report | 632 |
+| Schools with ≥ 5 extracted years since 2018-19 | 408 |
 
-1. **Demand we already see but cannot serve.** The August GSC export
-   classified ~2,700 impressions as "Not CDS" noise: acceptance-rate,
-   tuition, enrollment, and "is duke test-optional" queries hitting
-   school/year pages that don't answer them (memo, "Noise to ignore"). That
-   is the demand slice PRD 028 M4 said to wait for.
-2. **The SERP is thin, federal-only, and beatable.** Checked 2026-09-23:
-   - `northeastern acceptance rate history` → admitstats, preptodone,
-     prepmaven, Ivy Coach. All IPEDS-derived tables or blog posts; none
-     links the school's own file.
-   - `duke early decision acceptance rate common data set` → Duke's PDFs,
-     then College Transitions "Inside the Numbers" built from CDS C1 + C21.
-     That article is this page, hand-written, for one school.
-   - IPEDS has no early decision, waitlist, or test-submission-by-cohort
-     detail. CDS does (C2, C21, C9). Competitors using IPEDS cannot show it.
-3. **The data already exists.** `school_browser_rows` holds per-year
-   `applied`, `admitted`, `enrolled_first_year`, SAT/ACT 25th/50th/75th,
-   submit rates, `ed_applicants`, `ed_admitted`, `wait_list_offered`,
-   `wait_list_accepted`, `wait_list_admitted`. The wave-5 school summary
-   (branch `fix/seo-school-pages`) already renders these as sentences with
-   sanity checks in `web/src/lib/school-summary.ts`.
+Why: the browser projection hard-codes `MIN_YEAR_START = 2024`
+(`tools/browser_backend/project_browser_data.py`) and its field map only
+covers the 2024-25 and 2025-26 templates. Older year pages show numbers
+because they read the extract artifact directly; those values never reach
+the tables a stat page would query.
 
-## Scope
+So today every "history" would be two years at most, and the eligibility
+rule would correctly produce a short list of 148 two-row tables. That is not
+worth a new URL. The files for a real history exist (4,309 extracted older
+reports); whether their admissions fields are sane is unknown until they are
+projected. The reviewer's examples show it varies by school: Duke 2018-19
+yields a rate, Northeastern 2018-19 does not, Virginia Tech 2016-17 is not
+extracted.
 
-### In
+## Milestones
 
-- Four static-segment routes under `web/src/app/schools/[school_id]/`:
-  `acceptance-rate/page.tsx`, `early-decision/page.tsx`,
-  `test-scores/page.tsx`, `waitlist/page.tsx`. Static segments win over the
-  `[year]` dynamic segment in the App Router; add a test that proves it.
-- Same identity handling as school pages: `fetchCanonicalSchoolId` →
-  `permanentRedirect` for aliases; data via the alias-aware fetchers
-  (`fetchSchoolYearFacts`, which merges live alias slugs).
-- Sitemap entries for eligible pages only, `lastModified` from the newest
-  contributing document.
-- Links in: school hub summary sentences link the metric phrase ("acceptance
-  rate", "early decision", "middle-50% SAT", "Waitlist") to the page when it
-  exists; year pages link the same phrases. Links out: each table row links
-  the year page and the original file.
+### M0 — History backfill (prerequisite, its own PR)
 
-### Out (v1)
+1. Extend the projection below 2024-25 for the admissions fields this page
+   needs: C1 applied/admitted/enrolled totals (gender-split on older
+   templates), C21 ED counts, C2 waitlist counts, C9 SAT/ACT percentiles.
+   Map each older template's field IDs explicitly; do not guess.
+   **Dependency:** [PRD 014](014-cross-year-canonical-schema.md) found that
+   documents were extracted against the current template's field IDs, and
+   older templates move and split fields. Pre-2024 extracts may hold C1
+   values under the wrong IDs, which would explain the school-by-school
+   variation (Duke 2018-19 yields a rate; Northeastern 2018-19 does not).
+   Confirm PRD 014's year-aware mapping covers the pre-2024 templates, or
+   re-extract, before trusting any backfilled number.
+2. Write the projected rows to a history table (or `school_browser_rows`
+   with a `history` flag). Do not change which rows existing browse/match
+   cards read; those stay `year_start >= 2024`.
+3. Re-run the appendix query and **record the per-metric yield in this PRD**:
+   how many schools reach ≥ 3 and ≥ 5 usable acceptance years.
+4. Go/no-go for M2: at least **150 schools with ≥ 4 usable acceptance years**
+   ending 2023-24 or later. Below that, stop: the product is a short list and
+   the hub's year-over-year line already covers it.
 
-- Cost / net price pages (Section G + Scorecard mixing needs its own labeling
-  design).
-- Ranked cross-school lists ("lowest acceptance rates"). That is a separate
-  project (hub pages); it will reuse these pages as link targets.
-- Comparison pages (`/compare/a-vs-b`).
-- Any per-year metric URL (`/2025-26/waitlist`). Rejected: multiplies near-
-  duplicate pages by ~8x for no new answer.
-- FAQ / HowTo structured data. Google restricted FAQ rich results in 2023;
-  it is spam-prone at scale (PRD 028 M4 note).
-- LLM-written prose of any kind.
+M0 is useful even if M2 never ships: year pages and the hub summary gain
+sanity-checked numbers for older years.
 
-## Page anatomy (all four)
+### M1 — Freeze the canonical slug (decision, then data change)
 
-Follow `web/DESIGN_SYSTEM.md` (paper, ink, one forest accent, tabular mono
-numbers, `cd-card`) and `web/VOICE.md` (product layer). Reuse existing
-components where they fit (`Sparkline`, school header plates, `ArchiveLead`
-typesetting). Example numbers below are illustrative, not checked
-against our extracts.
+Decide whether `virginia-tech` or
+`virginia-polytechnic-institute-and-state-university` is canonical, and the
+same for the other split pairs (Rutgers, Texas A&M, UVA, Georgia Tech,
+Caltech, Tulane, UChicago, UW). Apply it through the crosswalk from `main`,
+update PRD 028's "protect" canary to the frozen URL, and wait for GSC to
+show the frozen URL as the ranking page. No stat URL enters a sitemap before
+this.
+
+### M2 — Pilot: `/schools/{id}/acceptance-rate`
+
+Only after M0's go and M1.
+
+- **Allowlist is the sitemap.** Named schools only: Virginia Tech, Haverford,
+  Brown, Northeastern, Duke, plus up to 45 more by GSC impressions on their
+  school/year pages. The route 404s for any school not on the allowlist,
+  even if eligible. Expansion is a code change to the allowlist, reviewed
+  against the pilot readout.
+- **Measure 6 weeks** (see Success metrics). Kill signal: more than a third
+  of pilot URLs "Crawled – currently not indexed," or any drop in the Virginia
+  Tech head term.
+
+### M3 — Early decision page
+
+After M2 is indexed and earning impressions, and only for schools whose own
+C21 "significant details" note is present in the extract and shown on the
+page (not a stock disclaimer). This is the stronger long-term wedge (IPEDS
+cannot answer it) and the easier page to get wrong.
+
+### Later (not scheduled)
+
+Waitlist and test-score pages, after M3. IPEDS comparison block, as a
+separate project with cohort-year alignment. Ranked cross-school lists.
+
+## The acceptance-rate page
+
+Follow `web/DESIGN_SYSTEM.md` and `web/VOICE.md` (product layer). Draft the
+copy in `docs/copy/` before code.
 
 1. **Breadcrumb:** Schools / {school} / Acceptance rate.
-2. **H1:** `{school} acceptance rate` (per page type). The school name
-   stays in the H1 because that is the query.
-3. **Answer sentence (first paragraph, server-rendered):** the latest year in
-   plain English, reusing `yearSummarySentences` wording. Example:
-   "In its 2025-26 report, Northeastern University says 98,373 first-year
-   students applied and 5,115 were admitted, an acceptance rate of 5.2%."
-4. **Trend line:** one sentence across the span, e.g. "Across 9 reports
-   (2017-18 to 2025-26) the acceptance rate went from 27% to 5.2%." Only
-   from reported years; gaps are named ("no report for 2019-20").
-5. **Table:** one row per year, newest first. Columns per page type:
-   - Acceptance: year, applicants, admitted, acceptance rate, enrolled, yield, source.
-   - Early decision: year, ED applicants, ED admitted, ED rate, overall rate, ED share of admits, source.
-   - Test scores: year, SAT 25/50/75, ACT 25/50/75, % submitting SAT, % submitting ACT, source.
-   - Waitlist: year, offered, accepted a spot, admitted, admit rate from waitlist, source.
-   "Source" links to the year page and the original file.
-6. **Chart:** a small trend chart of the headline rate. Tabular numbers are
-   the primary content; the chart is optional polish.
-7. **Definition note (meta style):** what the CDS item counts, in English,
-   with the section ID in the note only (e.g. "From the school's report,
-   section C1."). Early decision page must note that schools define ED admit
-   counts differently (Duke's includes QuestBridge and deferred-then-admitted
-   students) and show the school's own C21 note text when present.
-8. **Federal comparison (labeled):** when IPEDS has the same concept
-   (`ADM*` admissions and test fields), one labeled row block "Federal
-   (IPEDS) figure for {year}" with its source table, per PRD 021 labeling.
-   Never blended into the CDS row. Omit on early decision and waitlist.
-9. **Related:** links to the other metric pages for this school, the school
-   hub, and the latest year page.
+2. **H1:** `{school} acceptance rate`.
+3. **Lead: the span, not the single year.** Generated only from usable
+   years: "{school}'s reports from 2018-19 to 2025-26 show the acceptance rate
+   going from X% to Y%." Missing years are named ("no usable report for
+   2020-21"). The hub keeps its single-year sentence and links "acceptance
+   rate" here, so the two URLs do not repeat each other.
+4. **Table**, newest first: year, applied, admitted, acceptance rate,
+   enrolled, yield, link to the year page and the original file.
+5. **Definition note (meta style):** "From each year's Common Data Set,
+   section C1: first-time, first-year, degree-seeking applicants and admits."
+6. **Related:** hub, latest year page.
 
-### Titles and descriptions
+No chart in the pilot. No federal numbers on the page. No prose beyond
+generated sentences.
 
-- Title: `{school} Acceptance Rate by Year (2017–2025) | collegedata.fyi`
-  (span from data). Variants: `Early Decision Acceptance Rate`,
-  `SAT & ACT Scores`, `Waitlist Acceptance Rate`.
-- Description: answer fragment + span, e.g. "Northeastern's acceptance rate
-  was 5.2% in 2025-26 (5,115 of 98,373). Every year from the school's own
-  Common Data Set since 2017-18, with the original files."
-- Canonical: the page itself. Never canonicalize to the school hub.
+### Title, description, structured data
 
-### Structured data
+- **Title:** `{school} Acceptance Rate by Year, {first}–{last}`. The span is
+  taken from **usable** years only. A school with usable years 2021-22 to
+  2025-26 is titled "2021–2025", never the archive's full span.
+- **Description:** span sentence + latest rate + "with the original files."
+- **Canonical:** the page itself.
+- **Structured data:** `BreadcrumbList` only. No `Dataset`: the school
+  published a Common Data Set, we published a derivative table, and a
+  `creator` of the school would say otherwise.
 
-- `BreadcrumbList`.
-- `Dataset` with `name` "{school} acceptance rate, 2017–2025",
-  `variableMeasured` (e.g. "Acceptance rate", "Applicants", "Admitted"),
-  `temporalCoverage` "2017/2026", `creator` the school, `provider`
-  collegedata.fyi, `isBasedOn` the year-page URLs. No FAQ schema.
+### Wording rules
 
-## Eligibility (the anti-thin-content gate)
+- No "odds," "chances," or "admit odds" anywhere: route, title, headings,
+  alt text.
+- Rates are "acceptance rate" (admitted ÷ applied), never "admission odds."
+- When waitlist pages come later: the rate is admitted from the waitlist ÷
+  **accepted a spot**, shown with offered a spot beside it, labeled
+  "admitted from the waitlist." Never "odds."
+- When test-score pages come later: keep "enrolled students who sent
+  scores" in the H1 and lead. The page does not answer "is {school}
+  test-optional" (that is C8 policy, not C9 scores) and must not claim to.
 
-A metric page is **indexable and in the sitemap** only if all hold:
+## Eligibility (acceptance rate)
 
-1. At least **2 usable years** for that metric (usable = not
-   `wrong_file`/`blank_template`/`low_coverage`, passes the sanity checks in
-   `school-summary.ts`: admitted ≤ applied, 25th ≤ 75th, scores in range).
-2. The **latest usable year is 2022-23 or newer** (stale pages rank badly
-   and mislead).
-3. For early decision: `ed_applicants > 0` in ≥ 2 years. For waitlist:
-   `wait_list_offered > 0` in ≥ 2 years. For test scores: SAT or ACT range in
-   ≥ 2 years.
+A pilot school's page is served only if all hold:
 
-Otherwise the route returns 404 (preferred over thin noindex pages; no
-internal links point at it). Estimate eligible counts before building:
+1. On the allowlist.
+2. At least **3 usable years** (usable = extracted, public, not
+   `wrong_file`/`blank_template`/`low_coverage`, `applied > 0`,
+   `0 ≤ admitted ≤ applied`).
+3. The latest **usable acceptance** year is 2023-24 or newer (per metric,
+   not the school's latest row of any kind).
 
-```sql
--- per-metric eligible schools (run read-only against production)
-select
-  count(*) filter (where acc >= 2 and latest >= 2022) as acceptance,
-  count(*) filter (where ed  >= 2 and latest >= 2022) as early_decision,
-  count(*) filter (where sat >= 2 and latest >= 2022) as test_scores,
-  count(*) filter (where wl  >= 2 and latest >= 2022) as waitlist
-from (
-  select school_id, max(year_start) as latest,
-    count(*) filter (where applied > 0 and admitted between 0 and applied) as acc,
-    count(*) filter (where ed_applicants > 0 and ed_admitted between 0 and ed_applicants) as ed,
-    count(*) filter (where sat_composite_p25 between 400 and sat_composite_p75 and sat_composite_p75 <= 1600) as sat,
-    count(*) filter (where wait_list_offered > 0 and wait_list_admitted >= 0) as wl
-  from school_browser_rows
-  where sub_institutional is null
-    and coalesce(data_quality_flag, '') not in ('wrong_file','blank_template','low_coverage')
-  group by school_id
-) t;
-```
+Otherwise 404, and nothing links to it.
 
-Note: the query groups by raw `school_id`; alias slugs (e.g. `virginia-tech`)
-must be folded into their canonical slug first (see
-`canonicalizeSchoolRows` in `web/src/lib/school-alias.ts`). Expected order
-of magnitude: ~500–700 acceptance pages, fewer for the others. If
-`school_browser_rows` only holds recent years for most schools, this PRD's
-value drops sharply; confirm year depth first (open question 1).
+### Once a URL has been in the sitemap
 
-## Rollout
+It never silently 404s. If it later fails eligibility (a quality flag flips,
+a year is withdrawn):
 
-1. **Pilot:** acceptance-rate and early-decision pages for the ~50 schools
-   with the most GSC impressions on school/year pages (from the next GSC
-   export), plus Virginia Tech, Haverford, Brown, Northeastern, Duke.
-2. **Measure 6 weeks:** GSC impressions/clicks for queries containing
-   `acceptance rate`, `early decision`, `sat`, `waitlist` landing on the new
-   URLs; indexing status ("Crawled – currently not indexed" is the kill
-   signal); no drop on the Virginia Tech head term.
-3. **Expand** to all eligible schools and add test-scores and waitlist pages
-   if the pilot pages are indexed and earning impressions. If more than a
-   third of pilot pages sit in "crawled, not indexed" after 6 weeks, stop and
-   rework the template before expanding.
+- Serve the last good table with a meta note naming the withdrawn year, and
+  keep it in the sitemap, **or**
+- Return **410** deliberately after a human decision, and drop it from the
+  sitemap in the same change.
 
-## Success metrics (90 days after full rollout)
+Implementation: store the set of URLs ever submitted (a checked-in list for
+the pilot is enough) and test that each still returns 200 or an explicit 410.
 
-- New query class: ≥ 5,000 monthly impressions and ≥ 1% CTR on
-  `{school} acceptance rate|early decision|sat|waitlist` queries.
-- ≥ 70% of sitemap-listed stat pages indexed.
-- Virginia Tech `common data set` head term stays top 3 (PRD 028 guardrail).
-- Pages/visitor up from ~1.75 (stat pages link to year pages and files).
+### Adjacent-year check (replaces rev 1's 3× gate)
+
+Real selectivity shifts and bad extracts look alike across a span (a 27% →
+5% drop is real for Northeastern). So nothing blocks publication of a
+sourced table. Instead: when an adjacent-year change in applied, admitted,
+or rate exceeds 2×, emit a PRD 019 change-intelligence candidate for that
+document pair. The existing verification queue owns it. A confirmed
+extractor error flags the document, which removes the year from the table
+under the rules above.
+
+## Success metrics (pilot, 6 weeks after sitemap submission)
+
+- ≥ 2/3 of pilot URLs indexed.
+- Impressions for `{school} acceptance rate` queries landing on the stat URL,
+  not the hub. If Google keeps showing the hub for those queries, that is
+  cannibalization; revisit the lead before expanding.
+- No drop in the Virginia Tech head term (PRD 028 guardrail) or in hub CTR
+  for pilot schools.
 
 ## Risks
 
 | Risk | Mitigation |
 |------|-----------|
-| Scaled-content demotion | Eligibility gate; every page carries a school-specific multi-year table with sourced numbers; no templated prose beyond generated sentences; pilot before scale; kill signal defined. |
-| Cannibalizing the school hub or year pages | Distinct intent: hub/year pages target `{school} common data set`; stat pages target the metric. Hub keeps its title. Watch GSC for URL flipping on the same query. |
-| Wrong numbers (bad extraction) published as "the acceptance rate" | Sanity checks + quality flags; show source link per row; year-over-year jumps > 3x flagged for review before first publish (reuse PRD 019 change-intelligence events). |
-| ED definitions differ by school | Definition note + school's own C21 note; never compute "RD rate" unless the school reports it (the Duke CDS/announcement mismatch is the canonical example). |
-| Mixing federal and CDS numbers | Separate labeled block, PRD 021 labels; never in the same row. |
-| Alias slugs split data (the Aug 25 regression) | Pages use alias-aware fetchers; add a Virginia Tech fixture test that 2025-26 appears. |
-| Voice drift toward admissions advice | Copy deck first (VOICE.md "Shipping copy"); banned-words test extended to these pages. |
+| No real history after backfill | M0 go/no-go with a measured threshold |
+| Scaled-content classification | One template, ≤ 50 URLs, allowlist = sitemap, kill signal |
+| Hub/stat cannibalization | Span lead on stat page; hub keeps single year and links it |
+| Title span overstates data | Span from usable years only; tested |
+| Bad extract published as "the rate" | Sanity bounds + flags + adjacent-year candidates into the PRD 019 queue |
+| Slug move on the ranking term | M1 before any stat URL is submitted |
+| Indexed URL disappears overnight | Never-silent-404 rule and test |
 
-## Implementation notes for the builder
+## Appendix: eligibility / depth query
 
-- Data: extend `fetchSchoolYearFacts` (or add a sibling) with the extra
-  columns: `yield_rate`, `sat_composite_p50`, `act_composite_p50`,
-  `sat_submit_rate`, `act_submit_rate`, `ed_offered`. Keep sanity rules in
-  `school-summary.ts` so hub, year, and stat pages cannot disagree.
-- Eligibility: one pure function `statPageEligibility(rows)` returning which
-  of the four pages exist, used by the route (404), the sitemap, and the
-  internal links. Unit-test it with Virginia Tech (alias merge), a school
-  with one year, and a flagged file.
-- Sitemap: add stat URLs from the same eligibility function; keep
-  `lastModified`.
-- Tests: route precedence (`acceptance-rate` vs `[year]`), canonical tags,
-  alias redirect, VT fixture, banned copy, 404 for ineligible.
-- Performance: pages are ISR (`revalidate = 3600`) like school pages; one
-  `school_browser_rows` query per render.
+```sql
+-- Read-only. Folds live aliases; per-metric latest year; served docs only.
+with alias_map as (
+  select c.alias, min(c.school_id) as canonical
+  from institution_slug_crosswalk c
+  where c.alias <> c.school_id
+    and c.alias <> 'tufts-university'            -- retired aliases never fold
+    and not exists (select 1 from institution_slug_crosswalk p
+                    where p.alias = c.alias and p.is_primary and p.school_id = c.alias)
+  group by c.alias
+  having count(distinct c.school_id) = 1
+),
+rows as (
+  select coalesce(a.canonical, r.school_id) as school, r.year_start,
+    (r.applied > 0 and r.admitted between 0 and r.applied) as acc_ok,
+    (r.ed_applicants > 0 and r.ed_admitted between 0 and r.ed_applicants) as ed_ok,
+    ((r.sat_composite_p25 between 400 and 1600 and r.sat_composite_p75 between r.sat_composite_p25 and 1600)
+      or (r.act_composite_p25 between 1 and 36 and r.act_composite_p75 between r.act_composite_p25 and 36)) as test_ok,
+    (r.wait_list_offered > 0 and r.wait_list_admitted between 0 and r.wait_list_offered
+      and (r.wait_list_accepted is null
+           or r.wait_list_accepted between r.wait_list_admitted and r.wait_list_offered)) as wl_ok
+  from school_browser_rows r
+  join cds_manifest m on m.document_id = r.document_id
+  left join alias_map a on a.alias = r.school_id
+  where r.sub_institutional is null
+    and m.removed_at is null
+    and coalesce(m.participation_status, '') not in ('withdrawn', 'verified_absent')
+    and coalesce(r.data_quality_flag, '') not in ('wrong_file', 'blank_template', 'low_coverage')
+),
+per_school as (
+  select school,
+    count(distinct year_start) filter (where acc_ok)  as acc_years,
+    max(year_start)            filter (where acc_ok)  as acc_latest,
+    count(distinct year_start) filter (where ed_ok)   as ed_years,
+    max(year_start)            filter (where ed_ok)   as ed_latest,
+    count(distinct year_start) filter (where test_ok) as test_years,
+    max(year_start)            filter (where test_ok) as test_latest,
+    count(distinct year_start) filter (where wl_ok)   as wl_years,
+    max(year_start)            filter (where wl_ok)   as wl_latest
+  from rows group by school
+)
+select
+  count(*) filter (where acc_years >= 3 and acc_latest >= 2023) as eligible_acceptance,
+  count(*) filter (where acc_years >= 4 and acc_latest >= 2023) as m0_go_threshold,
+  count(*) filter (where ed_years >= 3 and ed_latest >= 2023)   as eligible_early_decision,
+  count(*) filter (where test_years >= 3 and test_latest >= 2023) as eligible_test_scores,
+  count(*) filter (where wl_years >= 3 and wl_latest >= 2023)   as eligible_waitlist
+from per_school;
+```
 
-## Open questions for the reviewer
+After M0, point `rows` at the history projection instead of
+`school_browser_rows`.
 
-1. **Year depth:** does `school_browser_rows` contain pre-2024 years for most
-   schools, or mostly the latest? (School pages filter `gte("year_start",
-   2024)` for cards, which suggests the table is deeper, but confirm.) If
-   shallow, is backfilling the projection for historical extracts in scope?
-2. **PRD 028 M4 gate:** M4 said field-level pages wait until VT holds top 3
-   and two more gated-official schools earn clicks. The August memo shows VT
-   at ~3.8 and Haverford, Brown, UCSB, WashU, UW with clicks. Is the gate
-   met, or should this wait for the next GSC export?
-3. **404 vs noindex** for ineligible metric URLs. The author prefers 404
-   (no thin URLs exist at all). Any reason to keep a noindex stub?
-4. **URL shape:** `/schools/{id}/acceptance-rate` vs
-   `/schools/{id}/admissions` with all four sections on one page. One page
-   is less risky for thin content but weaker for query targeting. Which?
-5. **Canonical slug for Virginia Tech.** The Aug 25 crosswalk rows made the
-   long federal slug canonical and `virginia-tech` a redirect. This PRD's
-   pages will inherit that. Should the canonical flip back to
-   `virginia-tech` before stat pages launch, so there is only one URL move?
-6. **Federal comparison rows:** include IPEDS on acceptance and test-score
-   pages in v1, or defer to keep the first version single-source?
+## Open questions
+
+1. **M0 scope:** backfill all of section C for 2018-19 onward, or only the
+   C1 totals the pilot needs? (Author leans C1 + C21 + C2 + C9, since the
+   template mapping work is shared.)
+2. **M1 direction:** which slug is canonical for Virginia Tech? The
+   short slug holds the ranking history and all 14 reports; the long slug has
+   been canonical since 2026-08-25 and is what Google has been following for a
+   month.
+3. **Allowlist size:** 50 URLs, or fewer? The review's position is one
+   template for the named schools only.
