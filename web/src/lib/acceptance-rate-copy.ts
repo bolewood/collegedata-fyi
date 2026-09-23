@@ -138,7 +138,24 @@ export function answerSentence(schoolName: string, history: AcceptanceHistory): 
     return `${base}, ${dir} ${pct(turn.row.rate)} for fall ${fallYear(turn.row.yearStart)}, the ${extreme} in ${yearsShown(series.length)}.`;
   }
   if (first === last || turn) return `${base}.`;
+  if (dominantChange(history)) {
+    // The dominant-year sentence follows and never mentions applications,
+    // so the span of applications rides on the answer.
+    const apps = first.applied === last.applied
+      ? `while applications held at ${count(last.applied)}`
+      : `while applications ${last.applied > first.applied ? "rose" : "fell"} from ${count(first.applied)} to ${count(last.applied)}`;
+    return `${base}, ${comparedWith(last, first)}, ${apps}.`;
+  }
   return `${base}, ${comparedWith(last, first)}.`;
+}
+
+/** After a previous-year low/high folded into the answer, the long-run start. */
+export function firstYearSentence(history: AcceptanceHistory): string | null {
+  const turn = turningPoint(history);
+  if (!turn || !turnIsPrevious(history, turn)) return null;
+  const first = oldestFirst(history)[0];
+  if (first === turn.row) return null;
+  return `It was ${pct(first.rate)} for fall ${fallYear(first.yearStart)}.`;
 }
 
 export function turningSentence(history: AcceptanceHistory): string | null {
@@ -192,10 +209,7 @@ export function dominantSentence(history: AcceptanceHistory): string | null {
   const admits = to.admitted === from.admitted
     ? `admits held at ${count(to.admitted)}`
     : `admits ${to.admitted < from.admitted ? "fell" : "rose"} from ${count(from.admitted)} to ${count(to.admitted)}`;
-  const apps = to.applied === from.applied
-    ? `applications held at ${count(to.applied)}`
-    : `applications ${to.applied > from.applied ? "rose" : "fell"} ${change(from.applied, to.applied)}`;
-  return `Most of the ${drop ? "drop" : "rise"} came in one year, ${step}: ${admits}, while ${apps}.`;
+  return `Most of the ${drop ? "drop" : "rise"} came in one year, ${step}, when ${admits}.`;
 }
 
 /** Most recent interior year whose applications are above (peak) or below (low) both ends. */
@@ -216,20 +230,22 @@ function applicationsExtreme(series: AcceptanceYear[]): { kind: "peak" | "low"; 
 }
 
 /**
- * Four or more years: a peak or low in applications when there is one
- * (the true max or min of the years shown), else the span; plus the latest
- * change. Fewer: just the latest change.
+ * Every percent change names its base-year count: "fell 12.5% for fall
+ * 2025, to 42,774 from 48,904". Four or more years: the latest change plus
+ * a true peak or low of the years shown when there is one, else the span.
+ * Fewer: just the latest change. Skipped when the dominant-year sentence
+ * runs (the answer carries the span).
  */
 export function applicationsSentence(history: AcceptanceHistory): string | null {
   const series = oldestFirst(history);
-  if (series.length < 2) return null;
+  if (series.length < 2 || dominantChange(history)) return null;
   const first = series[0];
   const last = series[series.length - 1];
   const prev = series[series.length - 2];
   const consecutive = prev.yearStart === last.yearStart - 1;
   const latestChange =
     consecutive && prev.applied !== last.applied
-      ? `${last.applied > prev.applied ? "rose" : "fell"} ${change(prev.applied, last.applied)} for fall ${fallYear(last.yearStart)}, to ${count(last.applied)}`
+      ? `${last.applied > prev.applied ? "rose" : "fell"} ${change(prev.applied, last.applied)} for fall ${fallYear(last.yearStart)}, to ${count(last.applied)} from ${count(prev.applied)}`
       : null;
 
   if (series.length < 4) {
@@ -241,13 +257,10 @@ export function applicationsSentence(history: AcceptanceHistory): string | null 
     if (extreme.row === prev && latestChange) return `Applications ${latestChange}.`;
     const shown = history.gaps.length > 0 ? " in the years shown" : "";
     const where = `${count(extreme.row.applied)} for fall ${fallYear(extreme.row.yearStart)}${shown}`;
-    const head = extreme.kind === "peak" ? `Applications peaked at ${where}` : `Applications were lowest at ${where}`;
-    const awayFromExtreme = extreme.kind === "peak" ? last.applied < prev.applied : last.applied > prev.applied;
-    if (latestChange && awayFromExtreme) return `${head} and ${latestChange}.`;
-    const tail = latestChange
-      ? `, ${last.applied > prev.applied ? "up" : "down"} ${change(prev.applied, last.applied)} from fall ${fallYear(prev.yearStart)}`
-      : "";
-    return `${head} and were ${count(last.applied)} for fall ${fallYear(last.yearStart)}${tail}.`;
+    const clause = extreme.kind === "peak" ? `peaked at ${where}` : `were lowest at ${where}`;
+    return latestChange
+      ? `Applications ${latestChange}; they ${clause}.`
+      : `Applications ${clause} and were ${count(last.applied)} for fall ${fallYear(last.yearStart)}.`;
   }
 
   if (first.applied === last.applied) {
@@ -273,9 +286,10 @@ export function gapSentence(history: AcceptanceHistory): string | null {
 export function leadSentences(schoolName: string, history: AcceptanceHistory): string[] {
   return [
     answerSentence(schoolName, history),
+    firstYearSentence(history),
     turningSentence(history),
-    dominantSentence(history),
     applicationsSentence(history),
+    dominantSentence(history),
     gapSentence(history),
   ].filter((sentence): sentence is string => Boolean(sentence));
 }

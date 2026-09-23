@@ -2971,6 +2971,20 @@
   white-space: nowrap;
 }
 .acc-table th:first-child { padding-left: 0; }
+.acc-col--year { width: 18%; }
+.acc-col--rate { width: 20%; }
+.acc-col--applied, .acc-col--admitted, .acc-col--enrolled { width: 13%; }
+.acc-col--yield { width: 11%; }
+.acc-col--source { width: 12%; }
+.acc-th-short { display: none; }
+.acc-table .acc-table__gap-label {
+  text-align: left;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--ink-3);
+  white-space: normal;
+}
+.acc-table-frame { position: relative; }
 .acc-table .acc-table__file { text-align: right; }
 .acc-table tbody tr:last-child th,
 .acc-table tbody tr:last-child td { border-bottom: 0; }
@@ -3013,7 +3027,7 @@
 }
 .acc-table__rate { color: var(--ink); font-weight: 600; }
 .acc-table__file { font-size: 13px; }
-.acc-table .acc-table__merged { text-align: left; padding-left: 28px; color: var(--ink-3); }
+.acc-table .acc-table__merged { color: var(--ink-3); }
 .acc-table__gap-note {
   display: none;
   margin-top: 4px;
@@ -3049,7 +3063,20 @@
   .acc-chart__year { font-size: 12px; }
   .acc-table { font-size: 14px; }
   .acc-table th,
-  .acc-table td { padding: 10px 0 10px 10px; }
+  .acc-table td { padding: 10px 12px 10px 0; }
+  /* Year, Rate, and Applied fill the visible width exactly (38/28/34 of
+     it), so the scroll cut lands on the Admitted column's edge. The table
+     is 2.1 viewports wide; 32px is the page gutter. */
+  .acc-table { width: calc((100vw - 32px) * 2.1); min-width: 0; }
+  .acc-col--year { width: 18.1%; }
+  .acc-col--rate { width: 13.3%; }
+  .acc-col--applied { width: 16.2%; }
+  .acc-col--admitted, .acc-col--enrolled { width: 14%; }
+  .acc-col--yield { width: 11%; }
+  .acc-col--source { width: 13.4%; }
+  .acc-th-long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .acc-th-short { display: inline; }
+  .acc-table .acc-table__gap-label { visibility: hidden; }
   .acc-table thead th { white-space: normal; line-height: 1.35; }
   .acc-table__gap-note { display: block; }
   .acc-table .acc-table__merged { visibility: hidden; }

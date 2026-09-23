@@ -55,6 +55,7 @@ export function AcceptanceRateTable({
       <p className="acc-table-hint" aria-hidden="true">
         Scroll for enrolled, yield, and source →
       </p>
+      <div className="acc-table-frame">
       <div
         className="acc-table-scroll"
         role="region"
@@ -67,18 +68,21 @@ export function AcceptanceRateTable({
             entering class, newest first.
           </caption>
           <colgroup>
-            <col style={{ width: "24%" }} />
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "13%" }} />
-            <col style={{ width: "13%" }} />
-            <col style={{ width: "13%" }} />
-            <col style={{ width: "11%" }} />
-            <col style={{ width: "12%" }} />
+            <col className="acc-col acc-col--year" />
+            <col className="acc-col acc-col--rate" />
+            <col className="acc-col acc-col--applied" />
+            <col className="acc-col acc-col--admitted" />
+            <col className="acc-col acc-col--enrolled" />
+            <col className="acc-col acc-col--yield" />
+            <col className="acc-col acc-col--source" />
           </colgroup>
           <thead>
             <tr>
               <th scope="col">Year</th>
-              <th scope="col" className="acc-num">Acceptance rate</th>
+              <th scope="col" className="acc-num">
+                <span className="acc-th-long">Acceptance rate</span>
+                <span className="acc-th-short" aria-hidden="true">Rate</span>
+              </th>
               <th scope="col" className="acc-num">Applied</th>
               <th scope="col" className="acc-num">Admitted</th>
               <th scope="col" className="acc-num">Enrolled</th>
@@ -102,10 +106,10 @@ export function AcceptanceRateTable({
                         {gapLabel(item.hasReport)}
                       </span>
                     </th>
-                    <td colSpan={5} className="acc-num acc-table__merged">
-                      —
+                    <td className="acc-num acc-table__merged">—</td>
+                    <td colSpan={5} className="acc-table__gap-label">
+                      {gapLabel(item.hasReport)}
                     </td>
-                    <td className="acc-table__file">{gapLabel(item.hasReport)}</td>
                   </tr>
                 );
               }
@@ -144,6 +148,7 @@ export function AcceptanceRateTable({
             })}
           </tbody>
         </table>
+      </div>
       </div>
     </>
   );

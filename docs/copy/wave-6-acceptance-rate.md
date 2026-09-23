@@ -1,7 +1,7 @@
 # Wave 6 copy deck — per-school acceptance-rate pages (PRD 031 M2)
 
 Read this as a parent, then as a counselor, then as IR. **Not signed yet.**
-Revision 3 (after the round 2 editorial review).
+Revision 4 (after the round 3 editorial review).
 
 Route: `/schools/{id}/acceptance-rate`. Pilot only: 20 allowlisted schools,
 `noindex`, not in the sitemap until the M1 slug decision
@@ -46,36 +46,38 @@ files."; the answer alone; the answer without counts.
 admissions · **H1:** {school} *acceptance rate*. No date strip on the plate
 (the section heading carries the span).
 
-**Lead** (deterministic; `acceptance-rate-copy.ts`):
+**Lead** (deterministic; `acceptance-rate-copy.ts`). Rule for every
+sentence: **each percent change names its base-year count** ("fell 12.5%
+for fall 2025, to 42,774 from 48,904"); tested across all 20 pilot schools,
+arithmetic checked to one decimal.
 
 1. **Answer.** "{school} admitted {rate} of first-year applicants for fall
    {latest} ({admitted} of {applied})"
    - no turning point: ", down from / up from / the same as {first rate}
-     for fall {first}."
+     for fall {first}." When the dominant-year sentence runs, the
+     applications span rides here: "…, while applications rose from {a} to
+     {b}."
    - turning point in the year just before the latest: ", up from {rate}
-     for fall {year}, the lowest in the {n} years shown." (or "down from …
-     the highest …").
-2. **Turning point** (interior year below both ends = low, above both =
-   high, compared at one decimal; if both, the one farther from the latest
-   rate): "That is up from a low of {rate} for fall {year} and down from
-   {first rate} for fall {first}." Adds "(the lowest in the years shown)"
-   when the history has gaps.
-3. **Dominant year** (four or more years, no turning point, one
-   consecutive-year step ≥ 60% of the span's rate change, same direction):
+     for fall {year}, the lowest in the {n} years shown." followed by "It
+     was {first rate} for fall {first}."
+2. **Turning point** (interior low/high beyond both ends at one decimal):
+   "That is up from a low of {rate} for fall {year} and down from {first
+   rate} for fall {first}." + "(the lowest in the years shown)" with gaps.
+3. **Applications** (skipped when the dominant-year sentence runs).
+   Latest change first, with its base: "Applications fell {x}% for fall
+   {latest}, to {n} from {prev}" + "; they peaked at {n} for fall {year}[
+   in the years shown]." when an interior year is the true max (or "were
+   lowest at" for the true min) and isn't the base year. No peak/low: "…
+   rose from {first} to {latest} over that span[, but fell {x}% for fall
+   {latest}, to {n} from {prev}]." Fewer than four years: the latest change
+   only.
+4. **Dominant year** (four or more years, no turning point, one
+   consecutive-year step ≥ 60% of the span's rate change): the last
+   narrative sentence, never mentions applications, temporal not causal:
    "Most of the drop came in one year, from {rate} for fall {a} to {rate}
-   for fall {b}: admits fell from {x} to {y}, while applications rose {z}%."
-   Factual only; never "because", "after", "as a result".
-4. **Applications.** Four or more years: if an interior year is the true
-   maximum (peak) or minimum (low) above/below both ends, the most recent
-   such year: "Applications peaked at {n} for fall {year}[ in the years
-   shown] and fell {x}% for fall {latest}, to {n}." When the latest change
-   moves back toward the peak/low: "…and were {n} for fall {latest}, up {x}%
-   from fall {prev}." When the peak/low is the previous year, only the
-   latest change: "Applications fell {x}% for fall {latest}, to {n}." No
-   peak/low: "Applications rose from {first} to {latest} over that span."
-   Fewer than four years: only the latest change.
-5. **Missing years:** "Usable figures for fall {year}[, …, and fall
-   {year}] are not in our archive."
+   for fall {b}, when admits fell from {x} to {y}."
+5. **Missing years** (always last): "Usable figures for fall {year}[, …,
+   and fall {year}] are not in our archive."
 
 **Section heading:** four or more years: "{school}’s acceptance rate, fall
 {first}–{latest}"; fewer (no chart): "{school} first-year admissions, fall
@@ -83,15 +85,19 @@ admissions · **H1:** {school} *acceptance rate*. No date strip on the plate
 
 **Chart** (four or more years): full width, 180px, one ink colour, bars
 from zero, 13px values. Caption: "Share of first-year applicants admitted,
-by fall entering class." + " — = not available." when a year is missing.
+by fall entering class." + " — = not reported or not usable." when a year
+is missing (same wording as the note).
 
-**Table:** Year 24% · Acceptance rate 14% · Applied 13% · Admitted 13% ·
-Enrolled 13% · Yield 11% · Source 12% (right-aligned). Figures in the sans
-with tabular lining numerals (JetBrains Mono's zero has an inner mark that
-`"zero" 0` cannot remove; scoped to this page). Gap rows: one dash across
-the data columns; the source cell reads "Report on file; counts not usable"
-or "No report in our archive". Below 640px the label sits under the year
-and the dash is hidden.
+**Table:** `table-layout: fixed; width: 100%`. Desktop: Year 18% ·
+Acceptance rate 20% · Applied 13% · Admitted 13% · Enrolled 13% · Yield 11%
+· Source 12% (right-aligned). Gap rows: "—" in the rate column and one
+left-aligned cell spanning Applied→Source (14px sans, muted, wraps) with
+"Report on file; counts not usable" or "No report in our archive". Below
+640px: header "Rate"; Year/Rate/Applied fill the screen exactly (38/28/34%)
+so the scroll cut lands on a column edge; gap labels move under the year.
+Figures in the sans with tabular lining numerals (the mono zero is marked).
+Layout guard: `web/tests/acceptance-rate-layout.spec.ts` fails if any
+pilot table is wider than its column at 1440 or 1024px.
 
 **Note**, **related links** (stacked on mobile), **hub link**: as in
 revision 2.
@@ -104,27 +110,35 @@ revision 2.
 5.2% for Fall 2024*
 
 > Northeastern University admitted 5.2% of first-year applicants for fall
-> 2024 (5,133 of 98,425), down from 20.5% for fall 2020. Most of the drop
-> came in one year, from 18.4% for fall 2021 to 6.8% for fall 2022: admits
-> fell from 13,829 to 6,191, while applications rose 20.9%. Applications
-> rose from 64,459 to 98,425 over that span.
+> 2024 (5,133 of 98,425), down from 20.5% for fall 2020, while applications
+> rose from 64,459 to 98,425. Most of the drop came in one year, from 18.4%
+> for fall 2021 to 6.8% for fall 2022, when admits fell from 13,829 to
+> 6,191.
 
 **Brown University** — *Brown University Acceptance Rate: 6.3% for Fall 2025*
 
 > Brown University admitted 6.3% of first-year applicants for fall 2025
 > (2,710 of 42,774). That is up from a low of 5.1% for fall 2022 and down
-> from 7.7% for fall 2018. Applications peaked at 51,316 for fall 2023 and
-> fell 12.5% for fall 2025, to 42,774.
+> from 7.7% for fall 2018. Applications fell 12.5% for fall 2025, to 42,774
+> from 48,904; they peaked at 51,316 for fall 2023.
 
 Meta: "Brown University admitted 6.3% of first-year applicants for fall 2025
 (2,710 of 42,774). Figures for each year since fall 2018, with source
-files." (146 characters)
+files."
 
 **Haverford College**
 
 > Haverford College admitted 13.3% of first-year applicants for fall 2025
 > (896 of 6,730), up from 12.4% for fall 2024, the lowest in the eight years
-> shown. Applications fell 8.3% for fall 2025, to 6,730.
+> shown. It was 18.8% for fall 2018. Applications fell 8.3% for fall 2025,
+> to 6,730 from 7,341.
+
+**Georgetown University**
+
+> Georgetown University admitted 13.5% of first-year applicants for fall
+> 2025 (3,618 of 26,822). That is down from a high of 16.8% for fall 2020
+> and down from 14.5% for fall 2018. Applications rose 2.6% for fall 2025,
+> to 26,822 from 26,131; they peaked at 27,506 for fall 2021.
 
 **Duke University**
 
@@ -138,7 +152,7 @@ fall 2023–2025", no chart)
 
 > Virginia Tech admitted 54.6% of first-year applicants for fall 2025
 > (31,515 of 57,755), down from 57.0% for fall 2023. Applications rose 10.4%
-> for fall 2025, to 57,755.
+> for fall 2025, to 57,755 from 52,296.
 
 ## Checked, no footnote
 

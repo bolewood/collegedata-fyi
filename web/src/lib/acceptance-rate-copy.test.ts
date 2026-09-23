@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import fixture from "./__fixtures__/acceptance-2024-plus.json";
+import pilotFixture from "./__fixtures__/acceptance-pilot-histories.json";
 import { buildAcceptanceHistory, readAcceptanceYear, type HistoryDocument } from "./acceptance-history";
 import {
   TITLE_MAX,
@@ -106,29 +107,29 @@ describe("lead: answer first, then history", () => {
     expect(leadSentences("Brown University", brown)).toEqual([
       "Brown University admitted 6.3% of first-year applicants for fall 2025 (2,710 of 42,774).",
       "That is up from a low of 5.1% for fall 2022 and down from 7.7% for fall 2018.",
-      "Applications peaked at 51,316 for fall 2023 and fell 12.5% for fall 2025, to 42,774.",
+      "Applications fell 12.5% for fall 2025, to 42,774 from 48,904; they peaked at 51,316 for fall 2023.",
     ]);
   });
 
   it("Virginia Tech (3 years): answer plus the plain year-over-year change", () => {
     expect(leadSentences("Virginia Tech", vt)).toEqual([
       "Virginia Tech admitted 54.6% of first-year applicants for fall 2025 (31,515 of 57,755), down from 57.0% for fall 2023.",
-      "Applications rose 10.4% for fall 2025, to 57,755.",
+      "Applications rose 10.4% for fall 2025, to 57,755 from 52,296.",
     ]);
   });
 
   it("Northeastern: names the one year that made most of the drop", () => {
     expect(leadSentences("Northeastern University", northeastern)).toEqual([
-      "Northeastern University admitted 5.2% of first-year applicants for fall 2024 (5,133 of 98,425), down from 20.5% for fall 2020.",
-      "Most of the drop came in one year, from 18.4% for fall 2021 to 6.8% for fall 2022: admits fell from 13,829 to 6,191, while applications rose 20.9%.",
-      "Applications rose from 64,459 to 98,425 over that span.",
+      "Northeastern University admitted 5.2% of first-year applicants for fall 2024 (5,133 of 98,425), down from 20.5% for fall 2020, while applications rose from 64,459 to 98,425.",
+      "Most of the drop came in one year, from 18.4% for fall 2021 to 6.8% for fall 2022, when admits fell from 13,829 to 6,191.",
     ]);
   });
 
   it("Haverford: a low in the previous year reads as part of the answer", () => {
     expect(leadSentences("Haverford College", haverford)).toEqual([
       "Haverford College admitted 13.3% of first-year applicants for fall 2025 (896 of 6,730), up from 12.4% for fall 2024, the lowest in the eight years shown.",
-      "Applications fell 8.3% for fall 2025, to 6,730.",
+      "It was 18.8% for fall 2018.",
+      "Applications fell 8.3% for fall 2025, to 6,730 from 7,341.",
     ]);
   });
 
@@ -194,9 +195,11 @@ describe("dominant single-year change", () => {
 
   it("phrases a rise the same way", () => {
     const h = history([[2025, 1000, 400], [2024, 1000, 380], [2023, 1000, 150], [2022, 1000, 140]]);
-    expect(leadSentences("X College", h)[1]).toBe(
-      "Most of the rise came in one year, from 15.0% for fall 2023 to 38.0% for fall 2024: admits rose from 150 to 380, while applications held at 1,000.",
+    const lead = leadSentences("X College", h);
+    expect(lead[lead.length - 1]).toBe(
+      "Most of the rise came in one year, from 15.0% for fall 2023 to 38.0% for fall 2024, when admits rose from 150 to 380.",
     );
+    expect(lead[lead.length - 1]).not.toContain("applications");
   });
 });
 
@@ -204,7 +207,7 @@ describe("peaks and lows are true extremes of the years shown", () => {
   it("says 'in the years shown' when the history has gaps", () => {
     const h = history([[2025, 900, 90], [2024, 1000, 90], [2023, 1200, 90], [2021, 800, 90], [2020, 700, 90]]);
     expect(applicationsSentence(h)).toBe(
-      "Applications peaked at 1,200 for fall 2023 in the years shown and fell 10.0% for fall 2025, to 900.",
+      "Applications fell 10.0% for fall 2025, to 900 from 1,000; they peaked at 1,200 for fall 2023 in the years shown.",
     );
     const low = history([[2025, 100, 30], [2024, 100, 20], [2022, 100, 5], [2021, 100, 25]]);
     expect(leadSentences("X College", low)[1]).toBe(
@@ -212,17 +215,65 @@ describe("peaks and lows are true extremes of the years shown", () => {
     );
   });
 
-  it("says 'were N, up x%' when the latest change moves back toward the peak", () => {
+  it("names the base year when the latest change moves back toward the peak", () => {
     // Georgetown: peak 27,506 (fall 2021), 26,131 -> 26,822 for fall 2025.
     const h = history([[2025, 26822, 3618], [2024, 26131, 3374], [2023, 25485, 3334], [2022, 26638, 3257], [2021, 27506, 3301], [2020, 21190, 3561]]);
     expect(applicationsSentence(h)).toBe(
-      "Applications peaked at 27,506 for fall 2021 and were 26,822 for fall 2025, up 2.6% from fall 2024.",
+      "Applications rose 2.6% for fall 2025, to 26,822 from 26,131; they peaked at 27,506 for fall 2021.",
     );
   });
 
   it("never names a peak that is not the maximum", () => {
-    const h = history([[2025, 2000, 90], [2024, 1500, 90], [2023, 1800, 90], [2022, 1000, 90]]);
+    const h = history([[2025, 2000, 200], [2024, 1500, 150], [2023, 1800, 180], [2022, 1000, 100]]);
     expect(applicationsSentence(h)).toBe("Applications rose from 1,000 to 2,000 over that span.");
+  });
+});
+
+describe("all 20 pilot schools", () => {
+  const schools = pilotFixture.map((school) => ({
+    ...school,
+    history: history(school.years.map(([start, applied, admitted]) => [start, applied, admitted] as [number, number, number])),
+  }));
+
+  it("names the base-year count for every percent change, with matching arithmetic", () => {
+    const change = /\b(rose|fell) (\d+\.\d)%/g;
+    const based = /\b(rose|fell) (\d+\.\d)% for fall (\d{4}), to ([\d,]+) from ([\d,]+)/;
+    let checked = 0;
+    for (const school of schools) {
+      for (const sentence of leadSentences(school.name, school.history)) {
+        for (const match of sentence.matchAll(change)) {
+          const rest = sentence.slice(match.index);
+          const full = based.exec(rest);
+          expect(full, `${school.school}: ${sentence}`).not.toBeNull();
+          if (!full) continue;
+          const to = Number(full[4].replace(/,/g, ""));
+          const from = Number(full[5].replace(/,/g, ""));
+          expect(((Math.abs(to - from) / from) * 100).toFixed(1)).toBe(full[2]);
+          expect(full[1]).toBe(to > from ? "rose" : "fell");
+          const years = school.years.map(([start, applied]) => ({ start, applied }));
+          expect(years.find((y) => y.start === Number(full[3]))?.applied).toBe(to);
+          expect(years.find((y) => y.start === Number(full[3]) - 1)?.applied).toBe(from);
+          checked += 1;
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(10);
+  });
+
+  it("puts the dominant-year sentence after the history, without applications", () => {
+    for (const school of schools) {
+      const lead = leadSentences(school.name, school.history);
+      const at = lead.findIndex((sentence) => sentence.startsWith("Most of the"));
+      if (at < 0) continue;
+      expect(lead[at]).not.toMatch(/application/i);
+      expect(lead.slice(at + 1).every((sentence) => sentence.startsWith("Usable figures"))).toBe(true);
+    }
+  });
+
+  it("keeps every description within 155 characters", () => {
+    for (const school of schools) {
+      expect(acceptanceDescription(school.name, school.history).length).toBeLessThanOrEqual(DESCRIPTION_MAX);
+    }
   });
 });
 
