@@ -105,7 +105,7 @@ const jhu = fromFixture("johns-hopkins");
 describe("lead: answer first, then history", () => {
   it("Duke: latest year is a record low; long-run start in its own sentence", () => {
     expect(leadSentences("Duke University", duke)).toEqual([
-      "Duke University admitted 5.7% of first-year applicants for fall 2024 (2,957 of 51,795), the lowest in the five years shown, down from 6.8% for fall 2023.",
+      "Duke University admitted 5.7% of first-year applicants for fall 2024 (2,957 of 51,795), the lowest in the five years with figures, down from 6.8% for fall 2023.",
       "It was 8.9% for fall 2018.",
       "Applications rose from 35,767 to 51,795 over that span.",
       "Usable figures for fall 2021 and fall 2022 are not in our archive.",
@@ -116,28 +116,28 @@ describe("lead: answer first, then history", () => {
     expect(leadSentences("Brown University", brown)).toEqual([
       "Brown University admitted 6.3% of first-year applicants for fall 2025 (2,710 of 42,774), up from 5.4% for fall 2024 and from a low of 5.1% for fall 2022.",
       "It was 7.7% for fall 2018.",
-      "Applications fell 12.5% for fall 2025, to 42,774 from 48,904; they peaked at 51,316 for fall 2023.",
+      "Applications fell 12.5% for fall 2025, to 42,774 from 48,904; the most in the years shown was 51,316, for fall 2023.",
     ]);
   });
 
   it("Georgetown: the recent low, not the one-year 2020 spike", () => {
     expect(leadSentences("Georgetown University", georgetown)).toEqual([
-      "Georgetown University admitted 13.5% of first-year applicants for fall 2025 (3,618 of 26,822), up from 12.9% for fall 2024 and from a low of 12.0% for fall 2021.",
+      "Georgetown University admitted 13.5% of first-year applicants for fall 2025 (3,618 of 26,822), up from 12.9% for fall 2024 and from a low of 12.0% for fall 2021, but below a high of 16.8% for fall 2020.",
       "It was 14.5% for fall 2018.",
-      "Applications rose 2.6% for fall 2025, to 26,822 from 26,131; they peaked at 27,506 for fall 2021.",
+      "Applications rose 2.6% for fall 2025, to 26,822 from 26,131; the most in the years shown was 27,506, for fall 2021.",
     ]);
   });
 
   it("Virginia Tech (3 years, monotone): answer plus the plain year-over-year change", () => {
     expect(leadSentences("Virginia Tech", vt)).toEqual([
-      "Virginia Tech admitted 54.6% of first-year applicants for fall 2025 (31,515 of 57,755), down from 57.0% for fall 2023.",
+      "Virginia Tech admitted 54.6% of first-year applicants for fall 2025 (31,515 of 57,755), the lowest in the three years shown, down from 57.0% for fall 2023.",
       "Applications rose 10.4% for fall 2025, to 57,755 from 52,296.",
     ]);
   });
 
   it("Northeastern: monotone, with the dominant year last and both counts", () => {
     expect(leadSentences("Northeastern University", northeastern)).toEqual([
-      "Northeastern University admitted 5.2% of first-year applicants for fall 2024 (5,133 of 98,425), down from 20.5% for fall 2020, while applications rose from 64,459 to 98,425.",
+      "Northeastern University admitted 5.2% of first-year applicants for fall 2024 (5,133 of 98,425), the lowest in the five years shown, down from 20.5% for fall 2020, while applications rose from 64,459 to 98,425.",
       "Most of the drop came in one year, from 18.4% for fall 2021 to 6.8% for fall 2022, when applications rose from 75,244 to 91,000 and admits fell from 13,829 to 6,191.",
     ]);
   });
@@ -205,7 +205,7 @@ describe("rate shape: the most recent extreme the series moved away from", () =>
     );
     const two = history([[2025, 100, 35], [2024, 100, 25], [2023, 100, 20], [2022, 100, 40], [2021, 100, 10]]);
     expect(leadSentences("X College", two)[0]).toBe(
-      "X College admitted 35.0% of first-year applicants for fall 2025 (35 of 100), up from 25.0% for fall 2024 and from 20.0% for fall 2023, the lowest since fall 2022.",
+      "X College admitted 35.0% of first-year applicants for fall 2025 (35 of 100), up from 25.0% for fall 2024 and from 20.0% for fall 2023, the lowest since fall 2021 (10.0%), but below a high of 40.0% for fall 2022.",
     );
   });
 
@@ -215,10 +215,10 @@ describe("rate shape: the most recent extreme the series moved away from", () =>
     expect(rateShape(h)).toMatchObject({ kind: "turn", row: { yearStart: 2023 } });
   });
 
-  it("flat latest change compares with the first year", () => {
+  it("a latest year that prints the same says unchanged", () => {
     const h = history([[2025, 10000, 1001], [2024, 10000, 1000], [2023, 10000, 1200], [2022, 10000, 900]]);
     expect(rateShape(h)).toEqual({ kind: "flat" });
-    expect(leadSentences("X College", h)[0]).toContain("up from 9.0% for fall 2022");
+    expect(leadSentences("X College", h)[0]).toContain("unchanged from 10.0% for fall 2024");
   });
 });
 
@@ -252,11 +252,11 @@ describe("peaks and lows are true extremes of the years shown", () => {
   it("says 'in the years shown' when the history has gaps", () => {
     const h = history([[2025, 900, 90], [2024, 1000, 90], [2023, 1200, 90], [2021, 800, 90], [2020, 700, 90]]);
     expect(applicationsSentence(h)).toBe(
-      "Applications fell 10.0% for fall 2025, to 900 from 1,000; they peaked at 1,200 for fall 2023 in the years shown.",
+      "Applications fell 10.0% for fall 2025, to 900 from 1,000; the most in the years with figures was 1,200, for fall 2023.",
     );
     const low = history([[2025, 100, 30], [2024, 100, 20], [2022, 100, 5], [2021, 100, 25]]);
     expect(leadSentences("X College", low)[0]).toBe(
-      "X College admitted 30.0% of first-year applicants for fall 2025 (30 of 100), the highest in the four years shown, up from 20.0% for fall 2024.",
+      "X College admitted 30.0% of first-year applicants for fall 2025 (30 of 100), the highest in the four years with figures, up from 20.0% for fall 2024.",
     );
   });
 
@@ -264,7 +264,7 @@ describe("peaks and lows are true extremes of the years shown", () => {
     // Georgetown: peak 27,506 (fall 2021), 26,131 -> 26,822 for fall 2025.
     const h = history([[2025, 26822, 3618], [2024, 26131, 3374], [2023, 25485, 3334], [2022, 26638, 3257], [2021, 27506, 3301], [2020, 21190, 3561]]);
     expect(applicationsSentence(h)).toBe(
-      "Applications rose 2.6% for fall 2025, to 26,822 from 26,131; they peaked at 27,506 for fall 2021.",
+      "Applications rose 2.6% for fall 2025, to 26,822 from 26,131; the most in the years shown was 27,506, for fall 2021.",
     );
   });
 

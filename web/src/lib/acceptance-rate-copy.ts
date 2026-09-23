@@ -63,7 +63,7 @@ function oldestFirst(history: AcceptanceHistory): AcceptanceYear[] {
 
 function comparedWith(latest: AcceptanceYear, earlier: AcceptanceYear): string {
   const where = `${pct(earlier.rate)} for fall ${fallYear(earlier.yearStart)}`;
-  if (same(latest.rate, earlier.rate)) return `the same as ${where}`;
+  if (same(latest.rate, earlier.rate)) return `unchanged from ${where}`;
   return latest.rate < earlier.rate ? `down from ${where}` : `up from ${where}`;
 }
 
@@ -78,8 +78,29 @@ function tenths(rate: number): number {
 
 const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
 
-function yearsShown(n: number): string {
-  return `the ${NUMBER_WORDS[n] ?? String(n)} years shown`;
+/** "the six years shown" for an unbroken series; "the six years with figures" when some are missing. */
+export function yearsPhrase(history: AcceptanceHistory): string {
+  const n = history.years.length;
+  return `the ${NUMBER_WORDS[n] ?? String(n)} years ${history.gaps.length > 0 ? "with figures" : "shown"}`;
+}
+
+/** "the years shown" / "the years with figures", without a count. */
+function yearsNoun(history: AcceptanceHistory): string {
+  return history.gaps.length > 0 ? "the years with figures" : "the years shown";
+}
+
+/** Years whose rate prints the same as `row`, most recent first. */
+function tiedAtDisplay(series: AcceptanceYear[], row: AcceptanceYear): AcceptanceYear[] {
+  return series.filter((r) => tenths(r.rate) === tenths(row.rate)).sort((a, b) => b.yearStart - a.yearStart);
+}
+
+function falls(rows: AcceptanceYear[]): string {
+  return joinAnd(rows.map((r) => `fall ${fallYear(r.yearStart)}`));
+}
+
+/** True when no year prints below (low) / above (high) `row`. */
+function extremeAtDisplay(series: AcceptanceYear[], row: AcceptanceYear, kind: "low" | "high"): boolean {
+  return series.every((r) => (kind === "low" ? tenths(r.rate) >= tenths(row.rate) : tenths(r.rate) <= tenths(row.rate)));
 }
 
 function answerBase(schoolName: string, last: AcceptanceYear): string {
@@ -136,53 +157,120 @@ export function rateShape(history: AcceptanceHistory): RateShape {
   return { kind: "turn", extreme: rising ? "low" : "high", row: series[best], global, since: series[ref] };
 }
 
-/** Answer first: the latest year with exact counts, then where it stands. */
-export function answerSentence(schoolName: string, history: AcceptanceHistory): string | null {
+type AnswerParts = { sentence: string; named: Set<AcceptanceYear> };
+
+/**
+ * The answer and which years it already named (so "It was …" never
+ * repeats one). Rules, all at display precision (one decimal):
+ * - Record: nothing prints below (above) the latest → "the lowest in the N
+ *   years shown/with figures"; ties are named ("tied with fall X").
+ *   Monotone series compare with the first year, others with the previous.
+ * - Otherwise compare with the previous year ("unchanged" when it prints
+ *   the same), then the recent turn (rateShape): in the previous year it
+ *   is folded in, with every tied year named if it is the lowest/highest;
+ *   older, it is "a low of" when global, else "the lowest since fall Z (v%)"
+ *   where Z is the most recent earlier year that printed lower.
+ * - Far extreme: moving down but not the series low → "but above a low of
+ *   …" (mirror for up), unless the first year ties it (the "It was"
+ *   sentence then carries it) or it was already named.
+ */
+function answerParts(schoolName: string, history: AcceptanceHistory): AnswerParts | null {
   const series = oldestFirst(history);
   const last = series[series.length - 1];
   if (!last) return null;
   const first = series[0];
   const prev = series[series.length - 2];
   const base = answerBase(schoolName, last);
-  if (first === last) return `${base}.`;
+  const named = new Set<AcceptanceYear>([last]);
+  if (first === last) return { sentence: `${base}.`, named };
   const shape = rateShape(history);
+  const allSame = series.every((r) => tenths(r.rate) === tenths(last.rate));
 
-  if (shape.kind === "record") {
-    const extreme = shape.extreme === "low" ? "lowest" : "highest";
-    return `${base}, the ${extreme} in ${yearsShown(series.length)}, ${comparedWith(last, prev)}.`;
-  }
-  if (shape.kind === "turn") {
-    const { row } = shape;
-    if (row === prev) {
-      const note = shape.global ? `, the ${shape.extreme === "low" ? "lowest" : "highest"} in ${yearsShown(series.length)}` : "";
-      return `${base}, ${comparedWith(last, prev)}${note}.`;
+  const recordKind = allSame
+    ? null
+    : extremeAtDisplay(series, last, "low")
+      ? "low"
+      : extremeAtDisplay(series, last, "high")
+        ? "high"
+        : null;
+  if (recordKind) {
+    const others = tiedAtDisplay(series, last).filter((r) => r !== last);
+    const tie = others.length > 0 ? `, tied with ${falls(others)}` : "";
+    others.forEach((r) => named.add(r));
+    const against = shape.kind === "monotone" ? first : prev;
+    named.add(against);
+    let tail = "";
+    if (shape.kind === "monotone" && dominantChange(history)) {
+      tail = first.applied === last.applied
+        ? `, while applications held at ${count(last.applied)}`
+        : `, while applications ${last.applied > first.applied ? "rose" : "fell"} from ${count(first.applied)} to ${count(last.applied)}`;
     }
-    const word = shape.extreme === "low" ? "low" : "high";
-    const extreme = shape.global
-      ? `from a ${word} of ${pct(row.rate)} for fall ${fallYear(row.yearStart)}`
-      : `from ${pct(row.rate)} for fall ${fallYear(row.yearStart)}, the ${shape.extreme === "low" ? "lowest" : "highest"} since fall ${fallYear(shape.since.yearStart)}`;
-    return `${base}, ${comparedWith(last, prev)} and ${extreme}.`;
+    return {
+      sentence: `${base}, the ${recordKind === "low" ? "lowest" : "highest"} in ${yearsPhrase(history)}${tie}, ${comparedWith(last, against)}${tail}.`,
+      named,
+    };
   }
-  if (dominantChange(history)) {
-    // Applications sentence is skipped when the dominant year runs; the
-    // span rides on the answer.
-    const apps = first.applied === last.applied
-      ? `while applications held at ${count(last.applied)}`
-      : `while applications ${last.applied > first.applied ? "rose" : "fell"} from ${count(first.applied)} to ${count(last.applied)}`;
-    return `${base}, ${comparedWith(last, first)}, ${apps}.`;
+
+  named.add(prev);
+  let head = comparedWith(last, prev);
+  const clauses: string[] = [];
+  if (shape.kind === "turn") {
+    const { row, extreme } = shape;
+    const global = extremeAtDisplay(series, row, extreme);
+    const word = extreme === "low" ? "lowest" : "highest";
+    if (row === prev) {
+      if (global) {
+        const tied = tiedAtDisplay(series, row);
+        tied.forEach((r) => named.add(r));
+        head = `${head.split(" from ")[0]} from ${pct(row.rate)} for ${falls(tied)}, the ${word} in ${yearsPhrase(history)}`;
+      }
+    } else if (global) {
+      const tied = tiedAtDisplay(series, row);
+      tied.forEach((r) => named.add(r));
+      clauses.push(` and from a ${extreme} of ${pct(row.rate)} for ${falls(tied)}`);
+    } else {
+      named.add(row);
+      const beyond = [...series]
+        .filter((r) => r.yearStart < row.yearStart)
+        .reverse()
+        .find((r) => (extreme === "low" ? tenths(r.rate) < tenths(row.rate) : tenths(r.rate) > tenths(row.rate)));
+      if (beyond) {
+        named.add(beyond);
+        clauses.push(` and from ${pct(row.rate)} for fall ${fallYear(row.yearStart)}, the ${word} since fall ${fallYear(beyond.yearStart)} (${pct(beyond.rate)})`);
+      }
+    }
   }
-  return `${base}, ${comparedWith(last, first)}.`;
+
+  const direction = Math.sign(tenths(last.rate) - tenths(prev.rate));
+  if (direction !== 0) {
+    const kind = direction < 0 ? "low" : "high";
+    const extremeRow = [...series].sort((a, b) => (kind === "low" ? a.rate - b.rate : b.rate - a.rate))[0];
+    const group = tiedAtDisplay(series, extremeRow);
+    const covered = group.some((r) => named.has(r) || r === first);
+    if (!covered) {
+      group.forEach((r) => named.add(r));
+      clauses.push(`, but ${kind === "low" ? "above a low" : "below a high"} of ${pct(extremeRow.rate)} for ${falls(group)}`);
+    }
+  }
+  return { sentence: `${base}, ${head}${clauses.join("")}.`, named };
 }
 
-/** The long-run start, in its own sentence, when the answer compared with a later year. */
+/** Answer first: the latest year with exact counts, then where it stands. */
+export function answerSentence(schoolName: string, history: AcceptanceHistory): string | null {
+  return answerParts(schoolName, history)?.sentence ?? null;
+}
+
+/**
+ * The long-run start, in its own sentence, only when it adds something:
+ * dropped for monotone series (the answer already compares with it) and
+ * whenever the answer already named the first year.
+ */
 export function firstYearSentence(history: AcceptanceHistory): string | null {
   const series = oldestFirst(history);
   if (series.length < 3) return null;
-  const shape = rateShape(history);
-  if (shape.kind !== "record" && shape.kind !== "turn") return null;
+  const parts = answerParts("", history);
   const first = series[0];
-  const prev = series[series.length - 2];
-  if (first === prev || (shape.kind === "turn" && first === shape.row)) return null;
+  if (!parts || parts.named.has(first)) return null;
   return `It was ${pct(first.rate)} for fall ${fallYear(first.yearStart)}.`;
 }
 
@@ -190,9 +278,10 @@ export const DOMINANT_SHARE = 0.6;
 
 /**
  * The one consecutive-year change that makes up at least DOMINANT_SHARE of
- * the whole span's rate change, in the same direction. Only for four or
- * more years whose rate has no interior turn (monotone, or the latest
- * year is a record), so "most of the drop" is literally true.
+ * the whole span's rate change, in the same direction, and no more than
+ * all of it. Only for four or more years whose rate has no interior turn
+ * (monotone, or the latest year is a record), so "most of the drop" is
+ * literally true; skipped when it would repeat the answer's comparison.
  */
 export function dominantChange(
   history: AcceptanceHistory,
@@ -213,6 +302,11 @@ export function dominantChange(
     if (!best || Math.abs(delta) > Math.abs(best.delta)) best = { from, to, delta };
   }
   if (!best || Math.abs(best.delta) < DOMINANT_SHARE * Math.abs(total)) return null;
+  // A step larger than the whole change means the series went the other
+  // way first; "most of the drop" would mislead.
+  if (Math.abs(best.delta) > Math.abs(total)) return null;
+  // The answer already compares a non-monotone latest year with the one before.
+  if (shape.kind !== "monotone" && best.to === series[series.length - 1]) return null;
   return { from: best.from, to: best.to };
 }
 
@@ -281,12 +375,19 @@ export function applicationsSentence(history: AcceptanceHistory): string | null 
   const extreme = applicationsExtreme(series);
   if (extreme) {
     if (extreme.row === prev && latestChange) return `Applications ${latestChange}.`;
-    const shown = history.gaps.length > 0 ? " in the years shown" : "";
-    const where = `${count(extreme.row.applied)} for fall ${fallYear(extreme.row.yearStart)}${shown}`;
-    const clause = extreme.kind === "peak" ? `peaked at ${where}` : `were lowest at ${where}`;
+    const tied = series.filter((r) => r.applied === extreme.row.applied).sort((x, y) => y.yearStart - x.yearStart);
+    const when = falls(tied);
+    if (extreme.kind === "peak") {
+      const most = `the most in ${yearsNoun(history)} was ${count(extreme.row.applied)}, for ${when}`;
+      return latestChange
+        ? `Applications ${latestChange}; ${most}.`
+        : `Applications were ${count(last.applied)} for fall ${fallYear(last.yearStart)}; ${most}.`;
+    }
+    const low = `a low of ${count(extreme.row.applied)} for ${when}`;
+    if (latestChange && last.applied > prev.applied) return `Applications ${latestChange}, up from ${low}.`;
     return latestChange
-      ? `Applications ${latestChange}; they ${clause}.`
-      : `Applications ${clause} and were ${count(last.applied)} for fall ${fallYear(last.yearStart)}.`;
+      ? `Applications ${latestChange}; the fewest in ${yearsNoun(history)} was ${count(extreme.row.applied)}, for ${when}.`
+      : `Applications were ${count(last.applied)} for fall ${fallYear(last.yearStart)}, up from ${low}.`;
   }
 
   if (first.applied === last.applied) {

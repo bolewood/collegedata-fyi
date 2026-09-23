@@ -2879,6 +2879,11 @@
    zero-baseline column chart in one ink colour. */
 .school-record .cd-school-header[data-accent="paper"] h1 span { color: var(--paper); }
 .acc-title { text-wrap: balance; }
+/* Keep the school name on one line when the plate is wide enough; the
+   italic "acceptance rate" wraps instead. Phones may still break names. */
+@media (min-width: 641px) {
+  .acc-title__name { white-space: nowrap; }
+}
 .acc-lead p { font-size: 16px; }
 .acc-section {
   margin-top: 40px;

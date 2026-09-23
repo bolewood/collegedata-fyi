@@ -12,9 +12,20 @@ from public storage and compares C1 lines).
 For a canonical school id: `fetchSchoolDocuments` rows that are extracted,
 whole-institution, canonical academic year, **2018-19 or later**, and not
 `wrong_file` / `blank_template` / `low_coverage`. Each row's extract goes
-through `readC1Totals`. From 2024-25 on, a sane `school_browser_rows` row
-for the same document wins field by field (so the stat page never disagrees
-with the hub sentence); the extract fills fields the projection left empty.
+through `readC1Totals`. **The school's printed C1 counts (the validated
+extract reading) are the source of truth.** From 2024-25 on, a sane
+`school_browser_rows` row is used only when the extract can't be read, and
+fills an enrolled count the extract lacks.
+
+### Extract vs projection disagreements (all 20 pilot schools, 2024-25+)
+
+| School-year | Printed (shown) | Projection | Note |
+|---|---:|---:|---|
+| Amherst 2024-25 applicants | 13,743 | 13,742 | The file prints a 13,743 total; its sex rows add to 13,742. The page shows the printed total; the hub sentence (projection) still says 13,742. |
+
+No other applied, admitted, or enrolled value differs across the 20
+schools. (Outside the pilot: Stanford, UCLA, UW-Madison, and Wake Forest
+2024-25 also differ; see the fixture test.)
 
 A year is usable when applied > 0, 0 < admitted ≤ applied, and enrolled
 (if shown) ≤ admitted. Enrolled that fails its own checks is shown as "—"
@@ -133,6 +144,13 @@ with ≥ 5 (raw slugs, aliases not folded). The final rules need each
 document's markdown, which the survey did not pull, so the real count is
 lower. Re-run `ACCEPTANCE_MEASURE=survey` against a markdown-aware survey
 before the M0 go/no-go (threshold: 150 schools with ≥ 4).
+
+## Johns Hopkins before 2021-22
+
+The hub serves five Johns Hopkins reports (2021-22 to 2025-26); earlier
+years are not in the archive, so this is a discovery gap, not unusable
+counts. (Withdrawn/removed manifest rows were not queried.) Worth a finder
+pass before the page is indexed.
 
 ## Not done here
 

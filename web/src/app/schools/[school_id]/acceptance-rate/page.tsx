@@ -127,7 +127,8 @@ export default async function AcceptanceRatePage({ params }: { params: Promise<P
               lineHeight: 1.02,
             }}
           >
-            {schoolName} <span style={{ fontStyle: "italic" }}>acceptance rate</span>
+            <span className="acc-title__name">{schoolName}</span>{" "}
+            <span style={{ fontStyle: "italic" }}>acceptance rate</span>
           </h1>
           <div className="cd-archive-lead acc-lead">
             {lead ? <p>{lead}</p> : null}

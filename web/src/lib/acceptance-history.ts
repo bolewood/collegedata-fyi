@@ -136,10 +136,11 @@ function saneBrowserCounts(browser: BrowserCounts | null | undefined): browser i
 }
 
 /**
- * Read one document's C1 counts and apply the sanity checks. From 2024-25
- * on, a sane projected row for the same document wins field by field, so
- * this page never disagrees with the hub's sentence; the extract reading
- * fills fields the projection left empty.
+ * Read one document's C1 counts and apply the sanity checks. The
+ * extract's reading of the school's printed C1 table wins; from 2024-25 on,
+ * a sane projected row is the fallback when the extract can't be read, and
+ * fills an enrolled count the extract lacks. Disagreements are listed in
+ * docs/prd/assets/031/m0-lite-validation.md.
  */
 export function readAcceptanceYear(
   doc: HistoryDocument,
@@ -154,15 +155,22 @@ export function readAcceptanceYear(
   const reading = readExtract(extract, yearStart);
   let counts: Counts;
   let source: AcceptanceYear["source"];
-  if (yearStart >= BROWSER_FACTS_MIN_YEAR_START && saneBrowserCounts(browser)) {
-    const enrolled = browser.enrolled != null && browser.enrolled > 0
-      ? browser.enrolled
-      : reading.ok ? reading.counts.enrolled : null;
-    counts = { applied: browser.applied, admitted: browser.admitted, enrolled };
-    source = "projection";
-  } else if (reading.ok) {
-    counts = reading.counts;
+  if (reading.ok) {
+    // The school's printed C1 counts (validated extract) are the source of
+    // truth; the projection only fills an enrolled count the extract lacks.
+    const enrolled = reading.counts.enrolled ??
+      (yearStart >= BROWSER_FACTS_MIN_YEAR_START && saneBrowserCounts(browser) && browser.enrolled != null && browser.enrolled > 0
+        ? browser.enrolled
+        : null);
+    counts = { ...reading.counts, enrolled };
     source = reading.template;
+  } else if (yearStart >= BROWSER_FACTS_MIN_YEAR_START && saneBrowserCounts(browser)) {
+    counts = {
+      applied: browser.applied,
+      admitted: browser.admitted,
+      enrolled: browser.enrolled != null && browser.enrolled > 0 ? browser.enrolled : null,
+    };
+    source = "projection";
   } else {
     return reading;
   }

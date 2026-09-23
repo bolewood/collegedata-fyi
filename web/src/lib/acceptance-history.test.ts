@@ -188,13 +188,22 @@ describe("acceptance history", () => {
     expect(good.ok && good.row.yieldRate).toBe(0.4);
   });
 
-  it("prefers the projected row from 2024-25 on so it matches the hub sentence", () => {
+  it("shows the school's printed total when it disagrees with the projection (Amherst 2024-25)", () => {
     const reading = readAcceptanceYear(
       doc("2024-25"),
-      { values: vals({ "C.117": 13743, "C.118": 1238 }), schemaVersion: "2024-25", producer: "tier4_docling" },
-      { applied: 13742, admitted: 1238, enrolled: null },
+      { values: vals({ "C.117": 13743, "C.118": 1238, "C.119": 480 }), schemaVersion: "2024-25", producer: "tier4_docling" },
+      { applied: 13742, admitted: 1238, enrolled: 480 },
     );
-    expect(reading.ok && reading.row.applied).toBe(13742);
+    expect(reading.ok && reading.row.applied).toBe(13743);
+    expect(reading.ok && reading.row.source).toBe("2024-25");
+  });
+
+  it("uses the projection only when the extract can't be read", () => {
+    const reading = readAcceptanceYear(
+      doc("2024-25"),
+      { values: {}, schemaVersion: "2024-25", producer: "tier4_docling" },
+      { applied: 1000, admitted: 100, enrolled: 40 },
+    );
     expect(reading.ok && reading.row.source).toBe("projection");
   });
 
