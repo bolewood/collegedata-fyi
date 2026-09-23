@@ -145,74 +145,100 @@ document's markdown, which the survey did not pull, so the real count is
 lower. Re-run `ACCEPTANCE_MEASURE=survey` against a markdown-aware survey
 before the M0 go/no-go (threshold: 150 schools with ≥ 4).
 
-### One number everywhere (site-wide resolver)
+### One number everywhere, gated for non-pilot hubs
 
-The hub summary and meta description, the year page summary, and the
-year page's key stats now read the latest year's C1 counts through the same
-printed-total resolver as the acceptance-rate page (`withPrintedTotals` in
-`web/src/lib/acceptance-history-data.ts`; cached, at most one extra
-artifact read per hub render). `web/tests/acceptance-rate-consistency.spec.ts`
-checks all 20 pilot schools: applied, admitted, and rate match on the hub
-summary, hub meta, year page, and stat page. (Rice's hub picks its 2025-26
-report, which has no usable counts, so the hub states no acceptance figure;
-the stat page ends at 2024-25.)
+Hub summary and meta, year-page summary and key stats, and the stat page
+read one decision per school-year (`gatedYearFacts` →
+`web/src/lib/c1-hub-gate.ts`). Pilot schools take the printed totals.
+Elsewhere a changed number must be corroborated before it replaces what
+production showed:
 
-Corpus-wide estimate: of 469 schools' latest projected rows, 47
-hub summaries change (17 of them had no projected counts at all). This is a
-lower bound: the survey lacks the markdown the reader uses to confirm
-sums. Only the pilot rows are source-checked; non-pilot readings where
-applied equals admitted (Lake Superior State, Front Range CC) deserve a
-look before indexing anything built on them.
+- Sanity (all): applied ≥ 50, 0 < admitted ≤ applied, enrolled ≤ admitted;
+  applied = admitted only with IPEDS open admission.
+- Tiny change (both counts within max(5, 0.1%)): accept.
+- IPEDS for the same fall (ADM2024 = fall 2024 = 2024-25 reports): both
+  counts within ±10%. IPEDS one fall older (2025-26 reports): rate within
+  ±10 points and applied within ±35%. If both values pass, keep the one
+  closer to IPEDS applicants (so a hub never moves away from the federal
+  count it matched — Arkansas). Resolver fails, projection passes: keep the
+  projection. Neither: suppress.
+- No IPEDS: accept only if the projection is missing or broken (admitted >
+  applied, or applied < 25% of the resolver's); keep a projection within
+  2%; otherwise suppress. A sane projection is never replaced by a value
+  more than 2% lower without IPEDS.
+- IPEDS administrative units (system / central offices; checked-in list
+  `web/src/data/ipeds-administrative-units.json` from the HD2024 snapshot,
+  plus sector / degree-granting facts): no C1 figures on hub, year page,
+  or stat page. University of Houston System Administration (229407) was
+  showing UH's report.
 
-| School | Year | Projection (applied / admitted) | Printed |
-|---|---|---:|---:|
-| southern-connecticut-state-university | 2025-26 | 8,120 / 7,224 | 9,958 / 8,701 |
-| front-range-community-college | 2024-25 | — / 6,820 | 6,506 / 6,506 |
-| wichita-state-university | 2025-26 | 4,784 / 3,361 | 8,736 / 6,311 |
-| university-of-houston | 2025-26 | 28,115 / 21,788 | 34,728 / 26,312 |
-| saint-marys-college-of-california | 2024-25 | 4,309 / 3,816 | 4,310 / 3,816 |
-| university-of-wisconsin-green-bay | 2025-26 | 7,755 / 5,914 | 8,984 / 6,716 |
-| brigham-young-university | 2025-26 | 751 / 8,331 | 12,141 / 8,331 |
-| university-of-south-dakota | 2024-25 | — / — | 5,965 / 5,892 |
-| university-of-arkansas | 2024-25 | 30,549 / 22,701 | 28,873 / 22,701 |
-| pratt-institute-main | 2025-26 | 1,890 / 1,375 | 7,579 / 6,547 |
-| the-evergreen-state-college | 2024-25 | — / — | 1,300 / 1,253 |
-| west-virginia-university | 2024-25 | — / — | 20,150 / 15,570 |
-| louisiana-tech-university | 2025-26 | 2,343 / 1,292 | 6,299 / 4,496 |
-| augustana-university | 2025-26 | 776 / 719 | 3,294 / 2,401 |
-| loyola-university-chicago | 2025-26 | 362 / 33,009 | 43,954 / 33,009 |
-| pacific-university | 2025-26 | 1,028 / 932 | 2,909 / 2,614 |
-| samford-university | 2024-25 | 159 / 39 | 7,842 / 6,696 |
-| lake-superior-state-university | 2024-25 | 2,146 / 2,106 | 2,106 / 2,106 |
-| trinity-college | 2024-25 | — / — | 6,396 / 2,144 |
-| rhodes-college | 2025-26 | 936 / 637 | 5,682 / 2,927 |
-| university-of-rochester | 2024-25 | 21,384 / 8,569 | 21,384 / 8,570 |
-| central-connecticut-state-university | 2025-26 | 8,577 / 7,164 | 10,176 / 8,070 |
-| baldwin-wallace-university | 2025-26 | 23 / 7 | 4,406 / 3,410 |
-| washington-university-in-st-louis | 2025-26 | 7,830 / 575 | 35,316 / 4,359 |
-| hobart-william-smith-colleges | 2024-25 | — / — | 5,904 / 3,778 |
-| university-at-buffalo | 2024-25 | 40,856 / 30,308 | 40,855 / 30,307 |
-| mount-holyoke-college | 2024-25 | — / — | 5,226 / 1,883 |
-| franklin-and-marshall-college | 2024-25 | 9,881 / 2,789 | 9,881 / 2,785 |
-| millersville-university-of-pennsylvania | 2024-25 | — / — | 7,662 / 6,604 |
-| missouri-university-of-science-and-technology | 2025-26 | 2,966 / 2,585 | 8,330 / 6,550 |
-| university-of-north-carolina-at-charlotte | 2025-26 | 18,398 / 15,202 | 27,218 / 21,170 |
-| texas-state-university | 2024-25 | — / — | 33,907 / 30,498 |
-| saginaw-valley-state-university | 2025-26 | 9,532 / 7,650 | 11,586 / 9,087 |
-| washington-college | 2024-25 | — / — | 4,048 / 2,303 |
-| gettysburg-college | 2024-25 | — / — | 8,366 / 3,254 |
-| southwestern-university | 2024-25 | — / — | 6,313 / 2,718 |
-| rose-hulman-institute-of-technology | 2024-25 | — / — | 955 / 658 |
-| allegheny-college | 2025-26 | 1,435 / 1,184 | 6,151 / 3,615 |
-| rollins-college | 2024-25 | 8,860 / 4,212 | 8,860 / 4,213 |
-| troy-university | 2024-25 | — / — | 9,474 / 9,099 |
-| university-of-houston-system-administration | 2025-26 | 28,115 / 21,788 | 34,728 / 26,312 |
-| amherst | 2024-25 | 13,742 / 1,238 | 13,743 / 1,238 |
-| florida-international-university | 2024-25 | — / — | 32,855 / 17,957 |
-| scripps-college | 2024-25 | — / — | 3,199 / 1,225 |
-| fitchburg-state-university | 2024-25 | 4,582 / 3,983 | 3,831 / 3,404 |
-| virginia-commonwealth-university | 2024-25 | — / — | 24,804 / 20,769 |
-| north-carolina-central-university | 2024-25 | 18,363 / 15,971 | 18,368 / 15,972 |
+Audit (463 non-pilot hubs, latest projected row; survey extract values, so
+approximate; per-school report `scratch/prd-031/round-8/hub-gate-report.json`):
+
+| Outcome | Hubs |
+|---|---:|
+| Keep the value production shows | 375 |
+| New value, corroborated (or tiny change) | 32 |
+| Suppressed, production showed a figure | 7 |
+| Suppressed, production showed none already | 49 |
+
+| Reason code | Hubs |
+|---|---:|
+| `unchanged` | 355 |
+| `no_resolver_suppress` | 45 |
+| `ipeds_accept_resolver` | 26 |
+| `no_resolver_keep_projection` | 17 |
+| `ipeds_suppress` | 9 |
+| `tiny_adjustment` | 6 |
+| `ipeds_keep_projection_closer` | 2 |
+| `no_ipeds_suppress` | 1 |
+| `administrative_unit` | 1 |
+| `ipeds_keep_projection` | 1 |
+
+Suppressed where production showed a figure (all fail IPEDS or identity):
+
+| School | Year | Production (applied / admitted) | Reason | IPEDS fall: applied / admitted |
+|---|---|---:|---|---|
+| wichita-state-university | 2025-26 | 4,784 / 3,361 | ipeds_suppress | 2024: 9,916 / 9,316 |
+| university-of-wisconsin-green-bay | 2025-26 | 7,755 / 5,914 | ipeds_suppress | 2024: 5,899 / 5,226 |
+| pratt-institute-main | 2025-26 | 1,890 / 1,375 | ipeds_suppress | 2024: 8,457 / 6,195 |
+| louisiana-tech-university | 2025-26 | 2,343 / 1,292 | ipeds_suppress | 2024: 8,491 / 7,336 |
+| samford-university | 2024-25 | 159 / 39 | ipeds_suppress | 2024: 4,559 / 3,755 |
+| lake-superior-state-university | 2024-25 | 2,146 / 2,106 | ipeds_suppress | 2023: 2,473 / 1,682 |
+| university-of-houston-system-administration | 2025-26 | 28,115 / 21,788 | administrative_unit | —: — / — |
+
+Tests: `c1-hub-gate.test.ts` (Lake Superior State suppressed, WashU
+repaired, Fitchburg keeps its IPEDS-matching projection, Arkansas keeps the
+projection closer to IPEDS, UH System Administration shows nothing);
+`tests/acceptance-rate-consistency.spec.ts` (20 pilots across hub, meta,
+year page, stat page; 7 gated non-pilot hubs against their year pages).
+
+### Schools mirroring another school's counts (report only)
+
+Same applied and admitted for the same year under different slugs. Alias
+pairs awaiting M1 are expected; branch campuses and unrelated pairs need an
+identity decision (not changed here):
+
+- 2024-25: worcester-polytechnic-institute, whitman-college (7,243 / 2,763)
+- 2024-25: barnard, bard-college (11,836 / 1,046)
+- 2024-25: california-institute-of-technology, caltech (13,856 / 356)
+- 2024-25: fairleigh-dickinson-university-metropolitan-campus, fairleigh-dickinson-university-florham-campus (11,478 / 10,665)
+- 2025-26: old-dominion-university, eastern-virginia-medical-school (15,024 / 13,725)
+- 2025-26: georgia-institute-of-technology-main-campus, georgia-tech (66,881 / 8,921)
+- 2025-26: university-of-washington-bothell-campus, uw, university-of-washington-tacoma-campus (72,933 / 30,446)
+- 2024-25: tulane-university-of-louisiana, tulane-university (32,609 / 4,559)
+- 2024-25: university-of-south-carolina-columbia, university-of-south-carolina-aiken (52,703 / 31,701)
+- 2024-25: miami-university-oxford, miami-university-middletown, miami-university-hamilton (39,580 / 29,843)
+- 2024-25: springfield-college, springfield-college-regional-online-and-continuing-education (3,284 / 2,361)
+- 2024-25: uchicago, university-of-chicago (43,612 / 1,955)
+- 2024-25: virginia-polytechnic-institute-and-state-university, virginia-tech (52,296 / 28,758)
+- 2024-25: georgia-tech, georgia-institute-of-technology-main-campus (59,789 / 8,413)
+- 2024-25: uw, university-of-washington-bothell-campus (69,166 / 27,076)
+- 2025-26: tulane-university, tulane-university-of-louisiana (32,942 / 4,763)
+- 2024-25: northeastern, northeastern-university-professional-programs (98,425 / 5,133)
+- 2024-25: university-of-washington-tacoma-campus, university-of-washington-seattle-campus (4,068 / 3,357)
+- 2025-26: texas-a-and-m-university-college-station, texas-am (62,967 / 32,531)
+- 2025-26: university-of-houston, university-of-houston-system-administration (28,115 / 21,788)
 
 ## Johns Hopkins before 2021-22
 

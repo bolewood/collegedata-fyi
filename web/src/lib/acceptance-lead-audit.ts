@@ -162,8 +162,8 @@ export function auditLead(lead: string, rows: AuditRow[], reportYears?: Readonly
   // Missing years named exactly.
   const missing: number[] = [];
   for (let y = series[0].yearStart + 1; y < last.yearStart; y++) if (!byYear.has(y)) missing.push(y);
-  const absent = /No reports? for (.*?) (?:is|are) in our archive/.exec(lead);
-  const unusable = /[Uu]sable figures for (.*?) are not/.exec(lead);
+  const absent = /No reports? for (.*?) (?:is|are) in our archive/.exec(lead) ?? /Our archive has no report for (.*?) and no usable/.exec(lead);
+  const unusable = /[Uu]sable figures for (.*?) are not/.exec(lead) ?? /no usable figures for (.*?)\./.exec(lead);
   const absentYears = absent ? years(absent[1]) : [];
   const unusableYears = unusable ? years(unusable[1]) : [];
   if (!sameSet([...absentYears, ...unusableYears], missing)) fail(`missing years should be ${missing.join(", ") || "none"}`);

@@ -2,6 +2,7 @@ import { cache } from "react";
 import type { MetadataRoute } from "next";
 import { fetchExtract, fetchSchoolDocuments, fetchSchoolYearFacts } from "./queries";
 import type { SchoolYearFacts } from "./school-summary";
+import { gateC1Counts, ipedsAdmissions, type GateReason } from "./c1-hub-gate";
 import {
   buildAcceptanceHistory,
   isHistoryCandidate,
@@ -17,7 +18,7 @@ import {
   acceptanceSitemapEntries,
   isAcceptancePilotSchool,
 } from "./acceptance-pilot";
-import type { ArtifactNotes, ManifestRow } from "./types";
+import type { ArtifactNotes, ManifestRow, SchoolFactUnifiedRow } from "./types";
 
 const fetchHistoryExtract = cache(async function fetchHistoryExtract(
   documentId: string,
@@ -109,35 +110,39 @@ const printedCountsForDocument = cache(async function printedCountsForDocument(
 });
 
 /**
- * The projected facts row with its C1 counts replaced by the school's
- * printed totals when those differ. Used by the hub summary and meta, the
- * year page summary, and (through readAcceptanceYear) the acceptance-rate
- * page, so all of them show the same applied, admitted, and rate.
+ * The facts row a hub, meta description, or year page shows for one year:
+ * the projected row, with its C1 counts replaced, kept, or withheld by the
+ * gate (c1-hub-gate): pilot schools take the printed totals; elsewhere a
+ * changed number must be corroborated by IPEDS. Administrative units show
+ * none. Costs at most one cached artifact read.
  */
-export async function withPrintedTotals(
+export async function gatedYearFacts(
   row: SchoolYearFacts | null,
   documents: Pick<ManifestRow, "document_id" | "extraction_status">[],
-): Promise<SchoolYearFacts | null> {
-  if (!row?.document_id) return row;
-  const doc = documents.find((d) => d.document_id === row.document_id);
-  if (!doc || doc.extraction_status !== "extracted") return row;
-  const printed = await printedCountsForDocument(
-    row.document_id,
-    row.canonical_year,
-    row.applied,
-    row.admitted,
-    row.enrolledFirstYear,
-  );
-  if (!printed) return row;
-  if (printed.applied === row.applied && printed.admitted === row.admitted && printed.enrolled === row.enrolledFirstYear) {
-    return row;
-  }
+  context: { schoolId: string; ipedsId: string | null; federalFacts: SchoolFactUnifiedRow[] },
+): Promise<(SchoolYearFacts & { c1Reason: GateReason }) | null> {
+  if (!row) return null;
+  const ipeds = ipedsAdmissions(context.federalFacts, context.ipedsId ?? row.ipeds_id);
+  const doc = row.document_id ? documents.find((d) => d.document_id === row.document_id) : undefined;
+  const resolver = doc && doc.extraction_status === "extracted" && row.document_id
+    ? await printedCountsForDocument(row.document_id, row.canonical_year, row.applied, row.admitted, row.enrolledFirstYear)
+    : null;
+  const decision = gateC1Counts({
+    pilot: isAcceptancePilotSchool(context.schoolId),
+    yearStart: row.yearStart ?? Number(row.canonical_year.slice(0, 4)),
+    projection: { applied: row.applied, admitted: row.admitted, enrolled: row.enrolledFirstYear },
+    resolver,
+    ipeds,
+  });
+  const counts = decision.counts;
   return {
     ...row,
-    applied: printed.applied,
-    admitted: printed.admitted,
-    enrolledFirstYear: printed.enrolled,
+    applied: counts?.applied ?? null,
+    admitted: counts?.admitted ?? null,
+    enrolledFirstYear: counts?.enrolled ?? null,
+    // The rate is always recomputed from the gated counts, never a stored value.
     acceptanceRate: null,
+    c1Reason: decision.reason,
   };
 }
 

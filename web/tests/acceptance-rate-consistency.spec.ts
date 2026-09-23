@@ -12,6 +12,58 @@ function rateMatches(printed: string, applied: number, admitted: number): boolea
   return ((admitted / applied) * 100).toFixed(decimals) === printed;
 }
 
+// Non-pilot hubs go through the IPEDS gate (c1-hub-gate). Whatever the hub
+// shows — a corrected value, the old value, or nothing — its year page
+// shows the same. Sample covers each gate outcome.
+// [school, the year the hub's latest projected row covers when the hub
+// states no figure (suppressed); otherwise read from the hub sentence].
+const GATED_SAMPLE: [string, string | null][] = [
+  ["washington-university-in-st-louis", null], // repaired, corroborated by IPEDS
+  ["fitchburg-state-university", null], // keeps the projection (matches IPEDS)
+  ["university-of-arkansas", null], // keeps the projection (closer to IPEDS)
+  ["lake-superior-state-university", "2024-25"], // suppressed
+  ["university-of-houston", null], // repaired
+  ["university-of-houston-system-administration", "2025-26"], // administrative unit: no figures
+  ["cornell", null], // unchanged
+];
+
+test.describe("non-pilot hubs and year pages agree", () => {
+  test.skip(({ isMobile }) => isMobile, "desktop only");
+
+  for (const [schoolId, suppressedYear] of GATED_SAMPLE) {
+    test(schoolId, async ({ page }) => {
+      await page.goto(`/schools/${schoolId}`);
+      const hubText = await page.locator(".cd-archive-lead").first().innerText();
+      const hub = /In its (\d{4}-\d{2}) report, .*? says ([\d,]+) first-year students applied and ([\d,]+) were admitted/.exec(hubText);
+      if (suppressedYear) expect(hub, hubText).toBeNull();
+      else expect(hub, hubText).not.toBeNull();
+      const year = hub?.[1] ?? suppressedYear!;
+
+      await page.goto(`/schools/${schoolId}/${year}`);
+      const stats = await page.evaluate(() => {
+        const out: Record<string, string> = {};
+        for (const label of Array.from(document.querySelectorAll("p"))) {
+          const value = label.nextElementSibling;
+          if (value && ["Acceptance Rate", "Applications", "Admitted"].includes(label.textContent ?? "")) {
+            out[label.textContent!] = value.textContent ?? "";
+          }
+        }
+        return out;
+      });
+      const yearText = await page.locator(".cd-archive-lead").first().innerText();
+      if (hub) {
+        expect(num(stats.Applications ?? "")).toBe(num(hub[2]));
+        expect(num(stats.Admitted ?? "")).toBe(num(hub[3]));
+        expect(yearText).toContain(`says ${hub[2]} first-year students applied and ${hub[3]} were admitted`);
+      } else {
+        expect(stats.Applications, `${schoolId} year page shows applications the hub withheld`).toBeUndefined();
+        expect(stats["Acceptance Rate"]).toBeUndefined();
+        expect(yearText).not.toMatch(/acceptance rate of/);
+      }
+    });
+  }
+});
+
 test.describe("acceptance counts agree across pages", () => {
   test.skip(({ isMobile }) => isMobile, "desktop only");
 

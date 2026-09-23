@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import pilotFixture from "./__fixtures__/acceptance-pilot-histories.json";
 import { buildAcceptanceHistory, type HistoryDocument } from "./acceptance-history";
-import { LEDE_MAX_SENTENCES, LEDE_MAX_WORDS, leadSentences } from "./acceptance-rate-copy";
+import { LEDE_MAX_SENTENCES, LEDE_MAX_TOTAL_WORDS, LEDE_MAX_WORDS, leadSentences } from "./acceptance-rate-copy";
 import { auditLead, type AuditRow } from "./acceptance-lead-audit";
 import type { FieldValue } from "./types";
 
@@ -55,7 +55,7 @@ describe("lead audit", () => {
     expect(auditLead(text, school.rows, onFile), text).toEqual([]);
   });
 
-  it("keeps every pilot lead to at most five sentences of at most 35 words", () => {
+  it("keeps every pilot lead to five sentences, 35 words each, 75 words total", () => {
     for (const school of pilots) {
       const history = buildAcceptanceHistory(
         [...school.rows].sort((a, b) => b.yearStart - a.yearStart).map((row) => ({
@@ -73,6 +73,7 @@ describe("lead audit", () => {
       for (const sentence of sentences) {
         expect(sentence.split(/\s+/).length, sentence).toBeLessThanOrEqual(LEDE_MAX_WORDS);
       }
+      expect(sentences.join(" ").split(/\s+/).length, school.school).toBeLessThanOrEqual(LEDE_MAX_TOTAL_WORDS);
     }
   });
 

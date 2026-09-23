@@ -134,6 +134,64 @@ describe.skipIf(MODE !== "hubs")("hub summaries changed by the printed-total res
     }
     mkdirSync(OUT_DIR, { recursive: true });
     writeFileSync(resolve(OUT_DIR, "hub-changes.json"), JSON.stringify({ schools: latest.size, compared, changed }, null, 1));
+
+    // Gate every non-pilot hub (ACCEPTANCE_MEASURE=hubs also writes hub-gate.json).
+    const { gateC1Counts, ipedsAdmissions } = await import("./c1-hub-gate");
+    const { isAcceptancePilotSchool } = await import("./acceptance-pilot");
+    const factRows: { school_id: string; ipeds_id: string; field_key: string; value_numeric: number | null; value_label: string | null; data_year: number }[] = [];
+    for (let start = 0; ; start += 1000) {
+      const { data, error } = await (supabase as unknown as { from: (t: string) => any })
+        .from("school_facts_unified")
+        .select("school_id,ipeds_id,field_key,value_numeric,value_label,data_year")
+        .in("field_key", ["applicants_total", "admissions_total", "open_admissions_policy", "sector", "degree_granting_status"])
+        .in("school_id", Array.from(latest.keys()))
+        .range(start, start + 999);
+      if (error) throw error;
+      factRows.push(...data);
+      if (data.length < 1000) break;
+    }
+    const { data: manifestIpeds } = await (supabase as unknown as { from: (t: string) => any })
+      .from("cds_manifest").select("document_id,ipeds_id").in("document_id", Array.from(latest.values()).map((r) => r.document_id));
+    const ipedsByDoc = new Map((manifestIpeds as { document_id: string; ipeds_id: string | null }[]).map((r) => [r.document_id, r.ipeds_id]));
+    const report = [];
+    const sane = (a: number | null, b: number | null) => a != null && b != null && a >= 50 && b > 0 && b <= a;
+    for (const row of latest.values()) {
+      if (isAcceptancePilotSchool(row.school_id)) continue;
+      const a = survey.artifacts[row.document_id]?.canonical;
+      let resolver = null;
+      if (a) {
+        const values: Record<string, FieldValue> = {};
+        for (let i = 101; i <= 130; i++) if (a[`c${i}`] != null && a[`c${i}`] !== "") values[`C.${i}`] = { value: String(a[`c${i}`]) };
+        const reading = readAcceptanceYear(
+          { document_id: row.document_id, canonical_year: row.canonical_year, extraction_status: "extracted", data_quality_flag: null, sub_institutional: null, source_storage_path: null, source_format: null },
+          { values, schemaVersion: a.sv, producer: a.producer, markdown: a.producer === "tier4_docling" ? "| survey |" : null },
+          { applied: row.applied, admitted: row.admitted, enrolled: row.enrolled_first_year },
+        );
+        if (reading.ok && reading.row.source !== "projection") resolver = { applied: reading.row.applied, admitted: reading.row.admitted, enrolled: reading.row.enrolled };
+      }
+      const ipeds = ipedsAdmissions(factRows.filter((f) => f.school_id === row.school_id) as never, ipedsByDoc.get(row.document_id) ?? null);
+      const projection = { applied: row.applied, admitted: row.admitted, enrolled: row.enrolled_first_year };
+      const result = gateC1Counts({ pilot: false, yearStart: row.year_start, projection, resolver, ipeds });
+      const shown = result.counts;
+      const productionShown = sane(row.applied, row.admitted);
+      const outcome = !shown
+        ? productionShown ? "suppress_was_shown" : "suppress_was_hidden"
+        : shown.applied === row.applied && shown.admitted === row.admitted
+          ? "keep_old"
+          : "accept_new";
+      report.push({ school: row.school_id, year: row.canonical_year, reason: result.reason, outcome, projection, resolver, shown, ipeds });
+    }
+    // Schools whose counts mirror another school's for the same year.
+    const byCounts = new Map<string, string[]>();
+    for (const row of rows) {
+      if (!row.applied || !row.admitted) continue;
+      const key = `${row.canonical_year}|${row.applied}|${row.admitted}`;
+      byCounts.set(key, [...(byCounts.get(key) ?? []), row.school_id]);
+    }
+    const mirrors = Array.from(byCounts.entries())
+      .filter(([, ids]) => new Set(ids).size > 1)
+      .map(([key, ids]) => ({ key, schools: Array.from(new Set(ids)) }));
+    writeFileSync(resolve(OUT_DIR, "hub-gate.json"), JSON.stringify({ report, mirrors }, null, 1));
   }, 300_000);
 });
 

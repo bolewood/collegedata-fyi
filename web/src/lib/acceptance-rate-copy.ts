@@ -425,11 +425,12 @@ export function gapSentence(history: AcceptanceHistory, reportYears?: ReadonlySe
     : null;
   if (noReport && unusable.length === 0) return `${noReport}.`;
   if (!noReport) return `Usable figures for ${joinAnd(unusable.map(label))} are not in our archive.`;
-  return `${noReport}, and usable figures for ${joinAnd(unusable.map(label))} are not.`;
+  return `Our archive has no report for ${joinAnd(absent.map(label))} and no usable figures for ${joinAnd(unusable.map(label))}.`;
 }
 
 export const LEDE_MAX_WORDS = 35;
 export const LEDE_MAX_SENTENCES = 5;
+export const LEDE_MAX_TOTAL_WORDS = 75;
 
 export function leadSentences(
   schoolName: string,
@@ -440,7 +441,9 @@ export function leadSentences(
     answerSentence(schoolName, history),
     contrastSentence(history),
     firstYearSentence(history),
-    applicationsSentence(history),
+    // With a dominant year, its sentence carries the application change;
+    // keep only a plain span ("rose from … over that span").
+    dominantChange(history) && /%/.test(applicationsSentence(history) ?? "") ? null : applicationsSentence(history),
     dominantSentence(history),
     gapSentence(history, reportYears),
   ].filter((sentence): sentence is string => Boolean(sentence));

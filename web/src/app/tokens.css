@@ -2983,9 +2983,8 @@
    so the rate sits close to its year. */
 .acc-col--year { width: 12%; }
 .acc-col--rate { width: 13%; }
-.acc-col--applied, .acc-col--admitted, .acc-col--enrolled { width: 15%; }
-.acc-col--yield { width: 12%; }
-.acc-col--source { width: 18%; }
+.acc-col--applied, .acc-col--admitted, .acc-col--enrolled, .acc-col--yield { width: 14%; }
+.acc-col--source { width: 19%; }
 .acc-th-short { display: none; }
 .acc-table .acc-table__gap-label {
   text-align: left;

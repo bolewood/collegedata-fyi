@@ -1,7 +1,7 @@
 # Wave 6 copy deck — per-school acceptance-rate pages (PRD 031 M2)
 
 Read this as a parent, then as a counselor, then as IR. **Not signed yet.**
-Revision 7 (after the round 6 editorial review).
+Revision 8 (after the round 7 editorial review).
 
 Route: `/schools/{id}/acceptance-rate`. Pilot only: 20 allowlisted schools,
 `noindex`, not in the sitemap until the M1 slug decision
@@ -47,7 +47,10 @@ admissions · **H1:** {school} *acceptance rate*. No date strip on the plate
 (the section heading carries the span).
 
 **Lead** (deterministic; `acceptance-rate-copy.ts`). At most five
-sentences, none over 35 words (tested). Every claim is re-derived from the table by an independent audit
+sentences, none over 35 words, 75 words in all (tested). When the
+dominant-year sentence runs, a percent-change applications sentence is
+dropped (the dominant sentence carries the applications that matter); a
+plain span sentence stays. Every claim is re-derived from the table by an independent audit
 (`acceptance-lead-audit.ts`) over all 20 pilot schools and synthetic
 series; it fails on the round-5 Bates, Amherst, and Northwestern leads.
 
@@ -84,8 +87,8 @@ with gaps, "the N years with figures".
    {x} to {y} and admits fell/went from {p} to {q}."
 5. **Missing years** (always last), in the table's terms: "No report for
    fall {year} is in our archive." / "Usable figures for fall {year} are not
-   in our archive." / both: "No report for fall 2022 is in our archive, and
-   usable figures for fall 2021 are not."
+   in our archive." / both: "Our archive has no report for fall 2022 and no
+   usable figures for fall 2021."
 
 **Section heading:** four or more years: "{school}’s acceptance rate, fall
 {first}–{latest}"; fewer (no chart): "{school} first-year admissions, fall
@@ -118,11 +121,11 @@ revision 2.
 - Haverford College admitted 13.3% of first-year applicants for fall 2025 (896 of 6,730), up from 12.4% for fall 2024, the lowest in the eight years shown. It was 18.8% for fall 2018. Applications fell 8.3% for fall 2025, to 6,730 from 7,341.
 - Brown University admitted 6.3% of first-year applicants for fall 2025 (2,710 of 42,774), up from 5.4% for fall 2024 and from a low of 5.1% for fall 2022. It was 7.7% for fall 2018. Applications fell 12.5% for fall 2025, to 42,774 from 48,904; the most in the years shown was 51,316, for fall 2023.
 - Northeastern University admitted 5.2% of first-year applicants for fall 2024 (5,133 of 98,425), the lowest in the five years shown, down from 20.5% for fall 2020. Applications rose from 64,459 to 98,425 over that span. Most of the drop came in one year, from 18.4% for fall 2021 to 6.8% for fall 2022, when applications rose from 75,244 to 91,000 and admits fell from 13,829 to 6,191.
-- Duke University admitted 5.7% of first-year applicants for fall 2024 (2,957 of 51,795), the lowest in the five years with figures, down from 6.8% for fall 2023. It was 8.9% for fall 2018. Applications rose from 35,767 to 51,795 over that span. No report for fall 2022 is in our archive, and usable figures for fall 2021 are not.
+- Duke University admitted 5.7% of first-year applicants for fall 2024 (2,957 of 51,795), the lowest in the five years with figures, down from 6.8% for fall 2023. It was 8.9% for fall 2018. Applications rose from 35,767 to 51,795 over that span. Our archive has no report for fall 2022 and no usable figures for fall 2021.
 - University of Pennsylvania admitted 5.4% of first-year applicants for fall 2024 (3,523 of 65,236), the lowest in the seven years shown, down from 5.9% for fall 2023. It was 8.4% for fall 2018. Applications rose 9.7% for fall 2024, to 65,236 from 59,465; the fewest in the years shown was 42,205, for fall 2020.
 - Harvard University admitted 4.2% of first-year applicants for fall 2025 (2,003 of 47,893), up from 3.6% for fall 2024 and from a low of 3.2% for fall 2022. It was 4.7% for fall 2018. Applications fell 11.3% for fall 2025, to 47,893 from 54,008; the most in the years with figures was 61,221, for fall 2022. Usable figures for fall 2020 are not in our archive.
 - Princeton University admitted 4.4% of first-year applicants for fall 2025 (1,868 of 42,303), the lowest in the five years with figures, down from 4.6% for fall 2024. It was 5.5% for fall 2018. Applications rose from 35,370 to 42,303 over that span. Usable figures for fall 2019, fall 2020, and fall 2021 are not in our archive.
-- Johns Hopkins University admitted 6.1% of first-year applicants for fall 2025 (3,072 of 50,259), the lowest in the five years shown, down from 6.4% for fall 2024. It was 7.5% for fall 2021. Applications rose 9.5% for fall 2025, to 50,259 from 45,895; the fewest in the years shown was 37,826, for fall 2022. Most of the drop came in one year, from 7.5% for fall 2023 to 6.4% for fall 2024, when applications rose from 38,893 to 45,895 and admits went from 2,923 to 2,954.
+- Johns Hopkins University admitted 6.1% of first-year applicants for fall 2025 (3,072 of 50,259), the lowest in the five years shown, down from 6.4% for fall 2024. It was 7.5% for fall 2021. Most of the drop came in one year, from 7.5% for fall 2023 to 6.4% for fall 2024, when applications rose from 38,893 to 45,895 and admits went from 2,923 to 2,954.
 - Northwestern University admitted 7.7% of first-year applicants for fall 2024 (3,806 of 49,474), up from 7.2% for fall 2023 and fall 2022, the lowest in the six years with figures. The high was 9.3%, for fall 2020. It was 8.5% for fall 2018. Applications fell 4.4% for fall 2024, to 49,474 from 51,769. Usable figures for fall 2021 are not in our archive.
 - Emory University admitted 10.3% of first-year applicants for fall 2024 (3,562 of 34,614), the lowest in the six years with figures, down from 18.5% for fall 2018. Applications rose from 27,559 to 34,614 over that span. Usable figures for fall 2020 are not in our archive.
 - Rice University admitted 8.0% of first-year applicants for fall 2024 (2,597 of 32,473), up from 7.9% for fall 2023, the lowest in the six years with figures. It was 11.1% for fall 2018. Applications rose from 20,923 to 32,473 over that span. Usable figures for fall 2020 are not in our archive.
