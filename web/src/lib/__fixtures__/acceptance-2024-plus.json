@@ -1,6 +1,6 @@
 [
  {
-  "school": "virginia-polytechnic-institute-and-state-university",
+  "school": "virginia-tech",
   "year": "2025-26",
   "producer": "tier1_xlsx",
   "schemaVersion": "2025-26",
@@ -41,7 +41,7 @@
   "match": true
  },
  {
-  "school": "virginia-polytechnic-institute-and-state-university",
+  "school": "virginia-tech",
   "year": "2024-25",
   "producer": "tier1_xlsx",
   "schemaVersion": "2024-25",

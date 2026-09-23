@@ -29,6 +29,18 @@ CURATED: dict[str, dict[str, str]] = {
         "ipeds_id": "233921",
         "also_school_ids": "virginia-polytechnic-institute-and-state-university",
     },
+    "caltech": {
+        "url": "https://finance.caltech.edu/Resources/cds",
+        "access": "unknown",
+        "ipeds_id": "110404",
+        "also_school_ids": "california-institute-of-technology",
+    },
+    "tulane-university": {
+        "url": "https://oair.tulane.edu/common-data-set",
+        "access": "unknown",
+        "ipeds_id": "160755",
+        "also_school_ids": "tulane-university-of-louisiana",
+    },
     "harvey-mudd": {
         "url": "https://www.hmc.edu/institutional-research/institutional-statistics/common-data-set/",
         "access": "public",

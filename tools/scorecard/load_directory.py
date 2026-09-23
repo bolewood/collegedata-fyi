@@ -11,10 +11,12 @@ with an ``exclusion_reason``.
 
 The loader also writes the slug crosswalk: every (ipeds_id, alias) →
 school_id mapping needed to resolve search and prior-slug redirects.
-Existing ``tools/finder/schools.yaml`` slugs are preserved when the
-IPEDS ID matches; new Scorecard-only rows get a deterministic slug
-from INSTNM with collision resolution (``-state`` → ``-city`` →
-``-ipeds_id``).
+Existing ``tools/finder/schools.yaml`` slugs are the public URL. When a
+legal federal name and the name people search differ, yaml ``id`` is the
+searchable slug (``virginia-tech``, not the INSTNM auto-slug). The
+auto-slug stays a non-primary alias. New Scorecard-only rows get a
+deterministic slug from INSTNM with collision resolution (``-state`` →
+``-city`` → ``-ipeds_id``).
 
 Usage:
     # Dry run — parse, compute slugs, print summary, write nothing.
@@ -451,12 +453,12 @@ def build_crosswalk_rows(
     search_nicknames: Optional[dict[str, list[str]]] = None,
 ) -> list[dict[str, Any]]:
     """One row per known alias. Each ipeds_id always has at least one
-    primary row (its school_id). When a schools.yaml ID and the
-    Scorecard auto-slug differ, both end up in the table — schools.yaml
-    as primary, the auto-generated as a non-primary alias for redirect
-    resolution. When schools.yaml self-collides (same slug claimed by
-    multiple IPEDS), the loser IPEDS still get the schools.yaml slug
-    as a non-primary alias so legacy URLs keep resolving."""
+    primary row (its school_id). schools.yaml is the searchable public
+    URL; when that differs from the Scorecard INSTNM auto-slug, yaml is
+    primary and the auto-generated legal-name slug is a live non-primary
+    alias for redirects and document merge. When schools.yaml self-collides
+    (same slug claimed by multiple IPEDS), the loser IPEDS still get the
+    schools.yaml slug as a non-primary alias so legacy URLs keep resolving."""
     out: list[dict[str, Any]] = []
     retired_aliases_by_ipeds = retired_aliases_by_ipeds or {}
     search_nicknames = search_nicknames or {}

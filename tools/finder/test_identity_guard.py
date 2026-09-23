@@ -15,10 +15,12 @@ import yaml
 from tools.finder.identity_guard import (
     DEFAULT_SCHOOLS_YAML,
     DEFAULT_SNAPSHOT,
+    audit_public_slugs,
     audit_school_identities,
     build_identity_snapshot,
     domains_related,
     load_identity_snapshot,
+    load_public_slugs,
     load_school_claims,
     main as identity_guard_main,
     normalize_domain,
@@ -390,6 +392,29 @@ class RepositoryIdentityRegressionTests(unittest.TestCase):
         canonical_slugs = validated_unique_school_claim_slug_map()
         self.assertEqual(canonical_slugs["168148"], "tufts")
         self.assertNotIn("167987", canonical_slugs)
+        self.assertEqual(canonical_slugs["233921"], "virginia-tech")
+        self.assertEqual(canonical_slugs["110404"], "caltech")
+        self.assertEqual(canonical_slugs["160755"], "tulane-university")
+        self.assertEqual(by_slug["virginia-tech"]["ipeds_id"], "233921")
+        self.assertNotIn(
+            "virginia-polytechnic-institute-and-state-university", by_slug
+        )
+
+    def test_searchable_public_slugs_match_yaml(self):
+        claims = load_school_claims(DEFAULT_SCHOOLS_YAML)
+        public_slugs = load_public_slugs()
+        self.assertEqual(public_slugs["233921"], "virginia-tech")
+        self.assertEqual(audit_public_slugs(claims, public_slugs), [])
+
+    def test_public_slug_mismatch_is_an_error(self):
+        errors = audit_public_slugs(
+            [claim(school_id="virginia-polytechnic-institute-and-state-university", ipeds_id="233921")],
+            {"233921": "virginia-tech"},
+        )
+        self.assertEqual(
+            [issue["kind"] for issue in errors],
+            ["public_slug_mismatch"],
+        )
 
     def test_tufts_operational_inputs_use_the_canonical_slug(self):
         from tools.finder.playwright_collect import STARTING_URLS
@@ -401,6 +426,16 @@ class RepositoryIdentityRegressionTests(unittest.TestCase):
         self.assertNotIn("tufts-university", manual["schools"])
         self.assertIn("tufts", STARTING_URLS)
         self.assertNotIn("tufts-university", STARTING_URLS)
+        self.assertIn("virginia-tech", STARTING_URLS)
+        self.assertIn("caltech", STARTING_URLS)
+        self.assertIn("tulane-university", STARTING_URLS)
+        self.assertIn("virginia-tech", manual["schools"])
+        self.assertIn("caltech", manual["schools"])
+        self.assertNotIn(
+            "virginia-polytechnic-institute-and-state-university",
+            manual["schools"],
+        )
+        self.assertNotIn("california-institute-of-technology", manual["schools"])
 
 
 if __name__ == "__main__":

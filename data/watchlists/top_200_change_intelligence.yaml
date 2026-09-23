@@ -32,7 +32,7 @@ schools:
   segment: high_selectivity_private
 - school_id: upenn
   segment: high_selectivity_private
-- school_id: california-institute-of-technology
+- school_id: caltech
   segment: high_selectivity_private
 - school_id: rice
   segment: high_selectivity_private
@@ -154,7 +154,7 @@ schools:
   segment: application_volume
 - school_id: university-of-miami
   segment: application_volume
-- school_id: virginia-polytechnic-institute-and-state-university
+- school_id: virginia-tech
   segment: application_volume
 - school_id: university-of-california-riverside
   segment: application_volume
@@ -212,7 +212,7 @@ schools:
   segment: application_volume
 - school_id: university-of-mississippi
   segment: flagship_public
-- school_id: tulane-university-of-louisiana
+- school_id: tulane-university
   segment: application_volume
 - school_id: university-of-arkansas
   segment: flagship_public

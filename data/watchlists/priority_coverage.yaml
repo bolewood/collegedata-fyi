@@ -15,7 +15,7 @@ schools:
 - school_id: johns-hopkins
 - school_id: northwestern
 - school_id: upenn
-- school_id: california-institute-of-technology
+- school_id: caltech
 - school_id: cornell
 - school_id: brown
 - school_id: dartmouth

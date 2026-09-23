@@ -374,6 +374,26 @@ class BuildCrosswalkRowsTests(unittest.TestCase):
             ],
         )
 
+    def test_searchable_yaml_slug_is_primary_over_legal_name(self):
+        rows = [
+            {
+                "ipeds_id": "233921",
+                "school_id": "virginia-tech",
+                "school_name": "Virginia Polytechnic Institute and State University",
+            },
+        ]
+        cw = build_crosswalk_rows(rows, {"233921": "virginia-tech"})
+        by_alias = {row["alias"]: row for row in cw}
+        self.assertTrue(by_alias["virginia-tech"]["is_primary"])
+        self.assertEqual(by_alias["virginia-tech"]["source"], "schools_yaml")
+        self.assertFalse(
+            by_alias["virginia-polytechnic-institute-and-state-university"]["is_primary"]
+        )
+        self.assertEqual(
+            by_alias["virginia-polytechnic-institute-and-state-university"]["source"],
+            "scorecard",
+        )
+
     def test_yaml_slug_matching_auto_emits_only_one_alias(self):
         # When the yaml slug equals what the loader would auto-generate,
         # don't double-write the same alias row.

@@ -1,6 +1,6 @@
 # PRD 031: Per-school stat pages (acceptance rate first)
 
-**Status:** Rev 2 (2026-09-23), after red-team review. **Not approved to build.** Blocked on M0 (history backfill) and M1 (canonical slug freeze).
+**Status:** Rev 2 (2026-09-23), after red-team review. M1 is decided: public URLs use the name people search (`/schools/virginia-tech`). Acceptance-rate pages are indexable.
 **Author:** Anthony Showalter (with Claude)
 **Related:** [PRD 028](028-organic-search-cds-queries.md), [GSC CDS memo](028-gsc-cds-queries-2026-08.md), [PRD 014](014-cross-year-canonical-schema.md) (cross-year schema; M0 dependency), [PRD 019](019-cds-change-intelligence.md), [`web/VOICE.md`](../../web/VOICE.md), [`web/DESIGN_SYSTEM.md`](../../web/DESIGN_SYSTEM.md), copy deck [wave 5](../copy/wave-5-school-page-numbers.md)
 
@@ -22,9 +22,8 @@ story is not in the data yet. Rev 2:
   which is page one but not top 3, and M4 described a field-level year URL
   that this PRD rejects. This pilot stands on its own evidence and a sitemap
   cap. It does not cite M4.
-- **Freezes the canonical slug first** (M1). `/schools/virginia-tech`
-  already 308s to the long federal slug; minting stat URLs on either slug
-  before that decision risks a second move on the site's only ranking term.
+- **Freezes the canonical slug first** (M1). Decided: `/schools/virginia-tech`
+  is the public URL; the legal-name slug stays a live alias and 308s here.
 - **Drops** the 3× human-review gate, Dataset JSON-LD, the IPEDS comparison
   row, and all "odds" wording.
 - **Fixes the eligibility query** (per-metric latest year, ACT counted,
@@ -297,9 +296,7 @@ After M0, point `rows` at the history projection instead of
 1. **M0 scope:** backfill all of section C for 2018-19 onward, or only the
    C1 totals the pilot needs? (Author leans C1 + C21 + C2 + C9, since the
    template mapping work is shared.)
-2. **M1 direction:** which slug is canonical for Virginia Tech? The
-   short slug holds the ranking history and all 14 reports; the long slug has
-   been canonical since 2026-08-25 and is what Google has been following for a
-   month.
+2. **M1 direction:** decided — searchable public slug (`virginia-tech`,
+   `caltech`, `tulane-university`). The legal-name slug remains a live alias.
 3. **Allowlist size:** 50 URLs, or fewer? The review's position is one
    template for the named schools only.

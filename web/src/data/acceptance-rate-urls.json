@@ -1,4 +1,25 @@
 {
-  "submitted": [],
+  "submitted": [
+    "/schools/virginia-tech/acceptance-rate",
+    "/schools/haverford-college/acceptance-rate",
+    "/schools/brown/acceptance-rate",
+    "/schools/northeastern/acceptance-rate",
+    "/schools/duke/acceptance-rate",
+    "/schools/upenn/acceptance-rate",
+    "/schools/harvard/acceptance-rate",
+    "/schools/princeton/acceptance-rate",
+    "/schools/johns-hopkins/acceptance-rate",
+    "/schools/northwestern/acceptance-rate",
+    "/schools/emory/acceptance-rate",
+    "/schools/rice/acceptance-rate",
+    "/schools/university-of-notre-dame/acceptance-rate",
+    "/schools/georgetown/acceptance-rate",
+    "/schools/nyu/acceptance-rate",
+    "/schools/bowdoin/acceptance-rate",
+    "/schools/amherst/acceptance-rate",
+    "/schools/hamilton/acceptance-rate",
+    "/schools/university-of-richmond/acceptance-rate",
+    "/schools/bates/acceptance-rate"
+  ],
   "gone": []
 }

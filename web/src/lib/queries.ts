@@ -788,15 +788,19 @@ export const fetchInstitutionCoverage = cache(
 
 // Brand hexes are source values only. Plates are derived at render.
 // Missing columns (pre-migration) or a null row both mean house inks.
+// Resolve the canonical directory id first so an alias URL still gets
+// colors after a searchable-slug flip (colors live on the IPEDS row).
 export const fetchSchoolBrandColors = cache(
   async function fetchSchoolBrandColors(
     schoolId: string,
   ): Promise<string[] | null> {
     try {
+      const canonicalSchoolId =
+        (await fetchCanonicalSchoolId(schoolId)) ?? schoolId;
       const { data, error } = await (supabase as unknown as UntypedSupabase)
         .from("institution_directory")
         .select("brand_colors")
-        .eq("school_id", schoolId)
+        .eq("school_id", canonicalSchoolId)
         .maybeSingle();
       if (error || !data) return null;
       const colors = (data as { brand_colors: string[] | null }).brand_colors;
@@ -956,7 +960,7 @@ export const fetchCoverageRows = cache(async function fetchCoverageRows(): Promi
 });
 
 // Live crosswalk aliases of a canonical slug that still own manifest rows
-// (e.g. `virginia-tech` for `virginia-polytechnic-institute-and-state-university`).
+// (e.g. the legal-name slug for `virginia-tech`).
 // The alias URL redirects to the canonical page, so the canonical page must
 // serve the alias-only years or they 404.
 // Throws on lookup errors: a silent empty result would render alias-only

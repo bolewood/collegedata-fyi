@@ -575,7 +575,7 @@ overrides:
         2026-05-06 live check, and search did not surface an official
         2025-26 CDS. Existing 2024-25 source is archived from Google Drive.
 
-  - school_id: california-institute-of-technology
+  - school_id: caltech
     browse_url: https://finance.caltech.edu/Resources/cds
     hosting_override:
       file_storage: same_origin

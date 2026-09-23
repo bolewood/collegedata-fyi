@@ -1,7 +1,6 @@
 // PRD 031 M2 pilot: which schools get /schools/{id}/acceptance-rate, and
-// whether search engines may index it. The canonical-slug decision (M1) is
-// still open, so pages are noindex and stay out of the sitemap until
-// ACCEPTANCE_PILOT_INDEXABLE flips in a reviewed change.
+// whether search engines may index it. Public URLs use the name people
+// search (`virginia-tech`), not the legal federal slug.
 
 import type { MetadataRoute } from "next";
 import { acceptanceEligibility, type AcceptanceHistory } from "./acceptance-history";
@@ -9,18 +8,15 @@ import urls from "../data/acceptance-rate-urls.json";
 import { SITE_URL } from "./sitemap-static";
 import { contrast, type DerivedInks } from "./derive-inks";
 
-export const ACCEPTANCE_PILOT_INDEXABLE: boolean = false;
+export const ACCEPTANCE_PILOT_INDEXABLE: boolean = true;
 
 /**
- * Canonical school ids. Expansion is a reviewed code change (PRD 031 M2);
- * each school's years are checked against its original files in
- * docs/prd/assets/031/m0-lite-validation.md. Split-slug pairs still waiting
- * on the M1 decision (Georgia Tech, Tulane, UChicago, Caltech, Rutgers,
- * Texas A&M, UVA, UW) are left out, except Virginia Tech, which PRD 031
- * names.
+ * Searchable public school ids. Expansion is a reviewed code change
+ * (PRD 031 M2); each school's years are checked against its original files
+ * in docs/prd/assets/031/m0-lite-validation.md.
  */
 export const ACCEPTANCE_PILOT_SCHOOLS: readonly string[] = [
-  "virginia-polytechnic-institute-and-state-university",
+  "virginia-tech",
   "haverford-college",
   "brown",
   "northeastern",
@@ -51,8 +47,17 @@ export function acceptanceRatePath(schoolId: string): string {
   return `/schools/${schoolId}/acceptance-rate`;
 }
 
+/** Legal-name slugs that still resolve to a searchable pilot URL. */
+const ACCEPTANCE_PILOT_LIVE_ALIASES: Record<string, string> = {
+  "virginia-polytechnic-institute-and-state-university": "virginia-tech",
+};
+
+export function publicAcceptanceSchoolId(schoolId: string): string {
+  return ACCEPTANCE_PILOT_LIVE_ALIASES[schoolId] ?? schoolId;
+}
+
 export function isAcceptancePilotSchool(schoolId: string): boolean {
-  return ACCEPTANCE_PILOT_SCHOOLS.includes(schoolId);
+  return ACCEPTANCE_PILOT_SCHOOLS.includes(publicAcceptanceSchoolId(schoolId));
 }
 
 export function isAcceptanceRateGone(pathname: string): boolean {
@@ -103,7 +108,8 @@ export function acceptanceSitemapEntries(
   if (!indexable) return [];
   return servedSchoolIds
     .filter((id) => isAcceptancePilotSchool(id))
-    .map((id) => acceptanceRatePath(id))
+    .map((id) => acceptanceRatePath(publicAcceptanceSchoolId(id)))
+    .filter((path, index, paths) => paths.indexOf(path) === index)
     .filter((path) => !isAcceptanceRateGone(path))
     .map((path) => ({
       url: `${SITE_URL}${path}`,
