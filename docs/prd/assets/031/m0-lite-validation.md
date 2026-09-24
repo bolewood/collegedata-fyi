@@ -254,3 +254,33 @@ pass before the page is indexed.
   Python projection below 2024-25 (PRD 031 M0 proper). This TypeScript
   layer is the read-side stopgap.
 - Years before 2018-19 are not shown; their templates were not checked.
+
+## Wave 2 (#191) — 2026-09-24
+
+Live measurement (`ACCEPTANCE_MEASURE=live ACCEPTANCE_ONLY_EXTRA=1`) against
+production. Bar unchanged: ≥ 3 usable C1 years, latest 2023-24 or newer.
+
+Shipped (searchable ids): `uw-madison`, `uf`, `uc-santa-barbara`,
+`stanford`, `ucla`, `unc`, `usc`, plus backups `ut-austin`,
+`wellesley-college`, `lafayette-college`.
+
+Dropped (fewer than 3 usable years): WashU (`washington-university-in-st-louis`,
+2), UW (`uw`, 2), UMich (`umich`, 2). UW also still mirrors
+Bothell/Tacoma counts in some years (identity follow-up, not this page).
+
+Stanford, UW-Madison, UCLA, UT Austin, Wellesley, and Lafayette were in the
+M0-lite 168-year source check (Stanford/UCLA 2024-25 extract-vs-projection
+disagreements remain as documented above). UF, UCSB, UNC, and USC years
+were checked against the public source files (pdftotext of the archived
+PDF). Applicant and admit counts match the printed total or the exact sum
+of the sex rows, except:
+
+- UCSB 2021-22 prints degree-seeking totals 105,647 / 30,823 and
+  men+women rows 45,516 / 57,658 applied and 11,709 / 18,330 admitted
+  (103,174 / 30,039). The page shows the sex-row sum, same as the year
+  page — the third-category rows are missing from the extract.
+- UCLA 2024-25 has no text layer and no AcroForm fields; applied /
+  admitted match `school_browser_rows` (146,276 / 13,114). Enrolled is
+  the documented extract-vs-projection disagreement.
+
+

@@ -104,13 +104,14 @@ const haverford = history([
   [2021, 5332, 951], [2020, 4530, 826], [2019, 4963, 810], [2018, 4672, 878],
 ]);
 
-// Hub display names of the 20 pilot schools (newest report's name).
+// Hub display names that fit the short title pattern (newest report's name).
 const PILOT_NAMES = [
   "Virginia Tech", "Haverford College", "Brown University", "Northeastern University", "Duke University",
   "University of Pennsylvania", "Harvard University", "Princeton University", "Johns Hopkins University",
   "Northwestern University", "Emory University", "Rice University", "University of Notre Dame",
   "Georgetown University", "New York University", "Bowdoin College", "Amherst College", "Hamilton College",
   "University of Richmond", "Bates College",
+  "University of Florida", "Stanford University", "Wellesley College", "Lafayette College",
 ];
 
 const EXTRA_BANNED = ["odds", "chance", "selective", "best ", "top ", "easy to get", "hard to get", "parsed", "projection", "because", "due to", "driven by", "after ", "as a result", "led to", "thanks to"];
@@ -342,7 +343,7 @@ describe("peaks and lows are true extremes of the years shown", () => {
   });
 });
 
-describe("all 20 pilot schools", () => {
+describe("all pilot schools", () => {
   const schools = pilotFixture.map((school) => ({
     ...school,
     history: history(school.years.map(([start, applied, admitted]) => [start, applied, admitted] as [number, number, number])),

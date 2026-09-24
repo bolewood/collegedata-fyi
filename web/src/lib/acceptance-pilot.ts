@@ -36,6 +36,17 @@ export const ACCEPTANCE_PILOT_SCHOOLS: readonly string[] = [
   "hamilton",
   "university-of-richmond",
   "bates",
+  // Wave 2 (#191): year-page demand, plus backups for ineligible schools.
+  "uw-madison",
+  "uf",
+  "uc-santa-barbara",
+  "stanford",
+  "ucla",
+  "unc",
+  "usc",
+  "ut-austin",
+  "wellesley-college",
+  "lafayette-college",
 ];
 
 /** URLs ever listed in a sitemap. They must keep returning 200 or an explicit 410. */
@@ -50,6 +61,14 @@ export function acceptanceRatePath(schoolId: string): string {
 /** Legal-name slugs that still resolve to a searchable pilot URL. */
 const ACCEPTANCE_PILOT_LIVE_ALIASES: Record<string, string> = {
   "virginia-polytechnic-institute-and-state-university": "virginia-tech",
+  "university-of-wisconsin-madison": "uw-madison",
+  "university-of-florida": "uf",
+  "university-of-california-santa-barbara": "uc-santa-barbara",
+  "stanford-university": "stanford",
+  "university-of-california-los-angeles": "ucla",
+  "university-of-north-carolina-at-chapel-hill": "unc",
+  "university-of-southern-california": "usc",
+  "the-university-of-texas-at-austin": "ut-austin",
 };
 
 export function publicAcceptanceSchoolId(schoolId: string): string {

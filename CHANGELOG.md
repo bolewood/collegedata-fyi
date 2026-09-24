@@ -6,6 +6,15 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.10.0] - 2026-09-24
+
+### Added
+
+- Ten more schools now have an acceptance-rate page: Wisconsin–Madison,
+  Florida, UCSB, Stanford, UCLA, UNC, USC, UT Austin, Wellesley, and
+  Lafayette. WashU, UW, and Michigan did not yet have three usable years.
+
+
 ## [0.6.9.0] - 2026-09-24
 
 ### Added
