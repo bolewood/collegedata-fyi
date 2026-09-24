@@ -145,8 +145,8 @@ export default async function AcceptanceRatePage({ params }: { params: Promise<P
           {sectionHeading(schoolName, history)}
         </h2>
         <AcceptanceRateChart schoolName={schoolName} rows={rows} />
-        <AcceptanceRateTable schoolId={school_id} schoolName={schoolName} rows={rows} />
-        <p className="acc-note">{sourceNote(schoolName)}</p>
+        <AcceptanceRateTable schoolId={school_id} schoolName={schoolName} rows={rows} history={history} />
+        <p className="acc-note">{sourceNote(schoolName, history)}</p>
       </section>
 
       <nav aria-label={`More on ${schoolName}`} className="acc-related">

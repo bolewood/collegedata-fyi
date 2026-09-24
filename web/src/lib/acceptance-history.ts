@@ -5,6 +5,7 @@
 // counts pass the sanity checks below; nothing is estimated.
 
 import { readC1Totals, type C1Template } from "./c1-headline-totals";
+import { readC21Counts, saneEdCounts, type C21Counts } from "./c21-ed-counts";
 import type { FieldValue, ManifestRow } from "./types";
 
 export const ACCEPTANCE_MIN_USABLE_YEARS = 3;
@@ -45,6 +46,8 @@ export type AcceptanceYear = {
   enrolled: number | null;
   rate: number;
   yieldRate: number | null;
+  /** C21 early-decision counts when the year reports a usable plan. Null for EA/REA-only years — CDS has no EA counts. */
+  ed: C21Counts | null;
 };
 
 export type ExcludedYear = {
@@ -119,6 +122,8 @@ export type BrowserCounts = {
   applied: number | null;
   admitted: number | null;
   enrolled: number | null;
+  edApplicants?: number | null;
+  edAdmitted?: number | null;
 };
 
 function saneBrowserCounts(browser: BrowserCounts | null | undefined): browser is BrowserCounts & {
@@ -181,6 +186,15 @@ export function readAcceptanceYear(
     return { ok: false, reason: "enrolled exceeds admitted" };
   }
 
+  const edFromExtract = extract
+    ? readC21Counts({ ...extract, yearStart })
+    : null;
+  const ed =
+    saneEdCounts(edFromExtract?.applied, edFromExtract?.admitted, admitted) ??
+    (yearStart >= BROWSER_FACTS_MIN_YEAR_START
+      ? saneEdCounts(browser?.edApplicants, browser?.edAdmitted, admitted)
+      : null);
+
   return {
     ok: true,
     row: {
@@ -195,8 +209,13 @@ export function readAcceptanceYear(
       enrolled,
       rate: admitted / applied,
       yieldRate: enrolled != null ? enrolled / admitted : null,
+      ed,
     },
   };
+}
+
+export function hasEarlyDecision(history: AcceptanceHistory): boolean {
+  return history.years.some((row) => row.ed != null);
 }
 
 /**

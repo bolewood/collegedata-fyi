@@ -47,12 +47,17 @@ admissions · **H1:** {school} *acceptance rate*. No date strip on the plate
 (the section heading carries the span).
 
 **Lead** (deterministic; `acceptance-rate-copy.ts`). At most five
-sentences, none over 35 words, 75 words in all (tested). When the
-dominant-year sentence runs, a percent-change applications sentence is
-dropped (the dominant sentence carries the applications that matter); a
-plain span sentence stays. Every claim is re-derived from the table by an independent audit
-(`acceptance-lead-audit.ts`) over all 20 pilot schools and synthetic
-series; it fails on the round-5 Bates, Amherst, and Northwestern leads.
+sentences, none over 35 words, 75 words in all (tested). After the answer,
+a C21 year adds "Early decision admitted {rate} for fall {year} ({admitted}
+of {applied})." Never "early action" — CDS has no EA counts. If that
+sentence would overflow the cap, drop applications, then the first-year
+sentence, then the far-extreme sentence, then the dominant-year sentence.
+When the dominant-year sentence runs, a percent-change applications
+sentence is dropped (the dominant sentence carries the applications that
+matter); a plain span sentence stays. Every claim is re-derived from the
+table by an independent audit (`acceptance-lead-audit.ts`) over all 20
+pilot schools and synthetic series; it fails on the round-5 Bates,
+Amherst, and Northwestern leads.
 
 Display precision rules (one decimal): directions compare printed values
 ("unchanged from X%" when equal); "lowest/highest" claims must hold at full
@@ -94,14 +99,24 @@ with gaps, "the N years with figures".
 {first}–{latest}"; fewer (no chart): "{school} first-year admissions, fall
 {first}–{latest}".
 
-**Chart** (four or more years): full width, 180px, one ink colour, bars
-from zero, 13px values. Caption: "Share of first-year applicants admitted,
-by fall entering class." + " — = not reported or not usable." when a year
-is missing (same wording as the note).
+**Chart** (four or more years): full width, 180px, bars from zero, 13px
+values. One ink colour by default. When any year reports C21 early-decision
+counts, a forest (`--chart-accent`) bar sits beside that year's overall
+rate; years without C21 keep a dash in the ED slot. Scale to the highest
+rate shown (overall or ED). Caption: "Share of first-year applicants
+admitted, by fall entering class." With ED: "Dark bars show first-year
+admission. Olive bars show early decision." + " — = not reported
+or not usable." when a year is missing.
+
+CDS C22 is offered / restrictive / dates only — there are no early-action
+applicant or admit counts in any schema in this repo, so the second series
+is early decision. Harvard/Princeton REA years get no second bar.
 
 **Table:** `table-layout: fixed; width: 100%`. Desktop: Year 18% ·
 Acceptance rate 20% · Applied 13% · Admitted 13% · Enrolled 13% · Yield 11%
-· Source 12% (right-aligned). Gap rows: "—" in the rate column and one
+· Source 12% (right-aligned). When any year has C21 counts, the Rate cell
+is two lines (overall, then `{rate} ED` or `—`) — no extra column, so the
+1024/1440 fit tests still pass. Gap rows: "—" in the rate column and one
 left-aligned cell spanning Applied→Source (14px sans, muted, wraps) with
 "Report on file; counts not usable" or "No report in our archive". Below
 640px: header "Rate"; Year/Rate/Applied fill the screen exactly (38/28/34%)

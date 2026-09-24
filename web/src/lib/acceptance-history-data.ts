@@ -60,6 +60,8 @@ export const fetchAcceptanceHistory = cache(async function fetchAcceptanceHistor
       applied: row.applied,
       admitted: row.admitted,
       enrolled: row.enrolledFirstYear,
+      edApplicants: row.edApplicants,
+      edAdmitted: row.edAdmitted,
     });
   }
   return {

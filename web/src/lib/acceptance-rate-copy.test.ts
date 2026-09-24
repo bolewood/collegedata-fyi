@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import fixture from "./__fixtures__/acceptance-2024-plus.json";
 import pilotFixture from "./__fixtures__/acceptance-pilot-histories.json";
 import { buildAcceptanceHistory, readAcceptanceYear, type HistoryDocument } from "./acceptance-history";
+import { auditLead } from "./acceptance-lead-audit";
 import {
   TITLE_MAX,
   KICKER,
@@ -62,6 +63,25 @@ function history(rows: [number, number | null, number | null][]) {
         doc: doc(label(start)),
         extract: applied == null || admitted == null ? null : extract(applied, admitted),
       })),
+  );
+}
+
+function historyWithEd(rows: [number, number, number, number | null, number | null][]) {
+  return buildAcceptanceHistory(
+    [...rows]
+      .sort((a, b) => b[0] - a[0])
+      .map(([start, applied, admitted, edApplied, edAdmitted]) => {
+        const values: Record<string, FieldValue> = {
+          "C.117": { value: String(applied) },
+          "C.118": { value: String(admitted) },
+        };
+        if (edApplied != null) values["C.2106"] = { value: String(edApplied) };
+        if (edAdmitted != null) values["C.2107"] = { value: String(edAdmitted) };
+        return {
+          doc: doc(label(start)),
+          extract: { values, schemaVersion: "2024-25", producer: "tier4_docling" },
+        };
+      }),
   );
 }
 
@@ -165,6 +185,52 @@ describe("lead: answer first, then history", () => {
     expect(text).toContain("20.5%");
     expect(text).not.toMatch(/\b\d{2}%/);
     expect(pct(0.2)).toBe("20.0%");
+  });
+});
+
+describe("early decision in the lead", () => {
+  it("names the latest ED rate after the overall answer", () => {
+    const h = historyWithEd([
+      [2025, 10000, 800, 900, 180],
+      [2024, 9000, 810, 850, 170],
+      [2023, 8000, 900, null, null],
+    ]);
+    const lead = leadSentences("Duke University", h);
+    expect(lead[0]).toContain("Duke University admitted 8.0%");
+    expect(lead[1]).toBe("Early decision admitted 20.0% for fall 2025 (180 of 900).");
+    expect(lead.join(" ").toLowerCase()).not.toContain("early action");
+  });
+
+  it("drops the applications sentence when adding ED would overflow the lede cap", () => {
+    const lead = leadSentences(
+      "Northwestern University",
+      historyWithEd(
+        fromFixture("northwestern").years.map((row) => [
+          row.yearStart,
+          row.applied,
+          row.admitted,
+          row.yearStart === 2024 ? 2500 : null,
+          row.yearStart === 2024 ? 500 : null,
+        ]),
+      ),
+    );
+    expect(lead[1]).toBe("Early decision admitted 20.0% for fall 2024 (500 of 2,500).");
+    expect(lead.length).toBeLessThanOrEqual(5);
+    expect(lead.join(" ").split(/\s+/).length).toBeLessThanOrEqual(75);
+    expect(lead.some((s) => s.startsWith("Applications "))).toBe(false);
+  });
+
+  it("re-derives the ED sentence from C21 counts", () => {
+    const rows = [
+      { yearStart: 2025, applied: 10000, admitted: 800, edApplied: 900, edAdmitted: 180 },
+      { yearStart: 2024, applied: 9000, admitted: 810 },
+      { yearStart: 2023, applied: 8000, admitted: 900 },
+    ];
+    const text = leadSentences(
+      "Duke University",
+      historyWithEd(rows.map((r) => [r.yearStart, r.applied, r.admitted, r.edApplied ?? null, r.edAdmitted ?? null])),
+    ).join(" ");
+    expect(auditLead(text, rows)).toEqual([]);
   });
 });
 
@@ -421,6 +487,18 @@ describe("labels, title, and metadata", () => {
     ].join(" ");
     expect(leadContainsBannedCopy(copy)).toBe(false);
     for (const word of EXTRA_BANNED) expect(copy.toLowerCase()).not.toContain(word);
+  });
+
+  it("adds a C21 clause to the source note only when a year has early decision", () => {
+    const withEd = historyWithEd([
+      [2025, 10000, 800, 900, 180],
+      [2024, 9000, 810, null, null],
+      [2023, 8000, 900, null, null],
+    ]);
+    expect(sourceNote("Duke University")).not.toContain("C21");
+    expect(sourceNote("Duke University", duke)).not.toContain("C21");
+    expect(sourceNote("Duke University", withEd)).toContain("section C21");
+    expect(sourceNote("Duke University", withEd).toLowerCase()).not.toContain("early action");
   });
 });
 

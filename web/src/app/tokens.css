@@ -2921,6 +2921,23 @@
   gap: 6px;
   border-bottom: 1px solid var(--chart-axis);
 }
+.acc-chart__track--pair {
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  padding: 0 3px;
+}
+.acc-chart__series {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+}
 .acc-chart__value {
   font-family: var(--sans);
   font-feature-settings: "tnum" 1, "lnum" 1;
@@ -2929,10 +2946,22 @@
   color: var(--ink);
   white-space: nowrap;
 }
+.acc-chart__value--ed {
+  color: var(--forest-ink);
+  font-size: 11px;
+}
 .acc-chart__bar {
   display: block;
   width: min(100%, 64px);
   background: var(--chart-ink);
+}
+.acc-chart__bar--ed {
+  background: var(--chart-accent);
+  width: min(100%, 48px);
+}
+.acc-chart__bar--empty {
+  background: transparent;
+  width: min(100%, 48px);
 }
 .acc-chart__col--gap .acc-chart__value { color: var(--ink-3); }
 .acc-chart__year {
@@ -3035,6 +3064,14 @@
   margin-top: 2px;
 }
 .acc-table__rate { color: var(--ink); font-weight: 600; }
+.acc-table__rate span { display: block; }
+.acc-table__ed {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--forest-ink);
+}
 .acc-table__file { font-size: 13px; }
 .acc-table .acc-table__merged { color: var(--ink-3); }
 .acc-table__gap-note {
@@ -3068,7 +3105,9 @@
 @media (max-width: 640px) {
   .acc-section__title { font-size: 24px; }
   .acc-chart__track { padding: 0 2px; }
+  .acc-chart__track--pair { gap: 2px; padding: 0 1px; }
   .acc-chart__value { font-size: 11px; }
+  .acc-chart__value--ed { font-size: 10px; }
   .acc-chart__year { font-size: 12px; }
   .acc-table { font-size: 14px; }
   .acc-table th,

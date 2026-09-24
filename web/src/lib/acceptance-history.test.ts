@@ -3,6 +3,7 @@ import {
   ACCEPTANCE_HISTORY_MIN_YEAR_START,
   acceptanceEligibility,
   buildAcceptanceHistory,
+  hasEarlyDecision,
   isHistoryCandidate,
   readAcceptanceYear,
   type HistoryDocument,
@@ -244,5 +245,78 @@ describe("acceptance history", () => {
     expect(acceptanceEligibility(years([2025, 2024, 2023])).eligible).toBe(true);
     expect(acceptanceEligibility(years([2025, 2024])).eligible).toBe(false);
     expect(acceptanceEligibility(years([2022, 2021, 2020, 2019])).eligible).toBe(false);
+  });
+
+  it("attaches C21 early-decision counts from the extract, re-checked against overall admits", () => {
+    const reading = readAcceptanceYear(
+      doc("2024-25"),
+      {
+        values: vals({ "C.117": 10000, "C.118": 1200, "C.119": 400, "C.2106": 800, "C.2107": 200 }),
+        schemaVersion: "2024-25",
+        producer: "tier4_docling",
+      },
+    );
+    expect(reading.ok && reading.row.ed).toEqual({ applied: 800, admitted: 200, rate: 0.25 });
+  });
+
+  it("drops extract ED admits that exceed overall admits, then uses a sane 2024+ projection", () => {
+    const reading = readAcceptanceYear(
+      doc("2024-25"),
+      {
+        values: vals({ "C.117": 1000, "C.118": 100, "C.119": 40, "C.2106": 200, "C.2107": 150 }),
+        schemaVersion: "2024-25",
+        producer: "tier4_docling",
+      },
+      { applied: 1000, admitted: 100, enrolled: 40, edApplicants: 180, edAdmitted: 40 },
+    );
+    expect(reading.ok && reading.row.ed).toEqual({ applied: 180, admitted: 40, rate: 40 / 180 });
+  });
+
+  it("does not use projected ED counts before 2024-25", () => {
+    const reading = readAcceptanceYear(
+      doc("2023-24"),
+      {
+        values: vals({ "C.117": 1000, "C.118": 100, "C.119": 40 }),
+        schemaVersion: "2023-24",
+        producer: "tier4_docling",
+      },
+      { applied: 1000, admitted: 100, enrolled: 40, edApplicants: 180, edAdmitted: 40 },
+    );
+    expect(reading.ok && reading.row.ed).toBeNull();
+  });
+
+  it("uses 2024+ projected ED when the extract has C1 but no C21 counts", () => {
+    const reading = readAcceptanceYear(
+      doc("2024-25"),
+      {
+        values: vals({ "C.117": 1000, "C.118": 100, "C.119": 40 }),
+        schemaVersion: "2024-25",
+        producer: "tier4_docling",
+      },
+      { applied: 1000, admitted: 100, enrolled: 40, edApplicants: 180, edAdmitted: 40 },
+    );
+    expect(reading.ok && reading.row.ed).toEqual({ applied: 180, admitted: 40, rate: 40 / 180 });
+  });
+
+  it("hasEarlyDecision is true only when a usable C21 year is attached", () => {
+    const withEd = buildAcceptanceHistory([
+      {
+        doc: doc("2024-25"),
+        extract: {
+          values: vals({ "C.117": 1000, "C.118": 100, "C.119": 40, "C.2106": 80, "C.2107": 20 }),
+          schemaVersion: "2024-25",
+          producer: "tier4_docling",
+        },
+      },
+      { doc: doc("2023-24"), extract: { values: vals({ "C.117": 900, "C.118": 110, "C.119": 40 }), schemaVersion: "2023-24", producer: "tier4_docling" } },
+      { doc: doc("2022-23"), extract: legacy({ "C.116": 800, "C.117": 120 }, "| x |") },
+    ]);
+    expect(hasEarlyDecision(withEd)).toBe(true);
+    const none = buildAcceptanceHistory([
+      { doc: doc("2024-25"), extract: { values: vals({ "C.117": 1000, "C.118": 100, "C.119": 40 }), schemaVersion: "2024-25", producer: "tier4_docling" } },
+      { doc: doc("2023-24"), extract: { values: vals({ "C.117": 900, "C.118": 110, "C.119": 40 }), schemaVersion: "2023-24", producer: "tier4_docling" } },
+      { doc: doc("2022-23"), extract: legacy({ "C.116": 800, "C.117": 120 }, "| x |") },
+    ]);
+    expect(hasEarlyDecision(none)).toBe(false);
   });
 });
