@@ -166,7 +166,12 @@ describe("pilot gating", () => {
     expect(ACCEPTANCE_PILOT_SCHOOLS).not.toContain(
       "virginia-polytechnic-institute-and-state-university",
     );
-    expect(ACCEPTANCE_PILOT_SCHOOLS.length).toBeLessThanOrEqual(20);
+    expect(ACCEPTANCE_PILOT_SCHOOLS).toContain("uf");
+    expect(ACCEPTANCE_PILOT_SCHOOLS).toContain("stanford");
+    expect(ACCEPTANCE_PILOT_SCHOOLS).not.toContain("washington-university-in-st-louis");
+    expect(ACCEPTANCE_PILOT_SCHOOLS).not.toContain("uw");
+    expect(ACCEPTANCE_PILOT_SCHOOLS).not.toContain("umich");
+    expect(ACCEPTANCE_PILOT_SCHOOLS.length).toBeLessThanOrEqual(50);
   });
 
   it("treats the legal-name slug as the same pilot school", () => {
@@ -174,6 +179,10 @@ describe("pilot gating", () => {
     expect(
       isAcceptancePilotSchool("virginia-polytechnic-institute-and-state-university"),
     ).toBe(true);
+    expect(isAcceptancePilotSchool("uf")).toBe(true);
+    expect(isAcceptancePilotSchool("university-of-florida")).toBe(true);
+    expect(isAcceptancePilotSchool("stanford-university")).toBe(true);
+    expect(isAcceptancePilotSchool("the-university-of-texas-at-austin")).toBe(true);
   });
 
   it("lists served pilot pages in the sitemap", () => {

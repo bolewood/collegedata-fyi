@@ -19,7 +19,17 @@
     "/schools/amherst/acceptance-rate",
     "/schools/hamilton/acceptance-rate",
     "/schools/university-of-richmond/acceptance-rate",
-    "/schools/bates/acceptance-rate"
+    "/schools/bates/acceptance-rate",
+    "/schools/uw-madison/acceptance-rate",
+    "/schools/uf/acceptance-rate",
+    "/schools/uc-santa-barbara/acceptance-rate",
+    "/schools/stanford/acceptance-rate",
+    "/schools/ucla/acceptance-rate",
+    "/schools/unc/acceptance-rate",
+    "/schools/usc/acceptance-rate",
+    "/schools/ut-austin/acceptance-rate",
+    "/schools/wellesley-college/acceptance-rate",
+    "/schools/lafayette-college/acceptance-rate"
   ],
   "gone": []
 }

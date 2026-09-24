@@ -3,9 +3,9 @@
 Read this as a parent, then as a counselor, then as IR. **Not signed yet.**
 Revision 8 (after the round 7 editorial review).
 
-Route: `/schools/{id}/acceptance-rate`. Pilot only: 20 allowlisted schools,
-`noindex`, not in the sitemap until the M1 slug decision
-(`ACCEPTANCE_PILOT_INDEXABLE` in `web/src/lib/acceptance-pilot.ts`).
+Route: `/schools/{id}/acceptance-rate`. Allowlist = sitemap (30 schools
+after wave 2). Indexed (`ACCEPTANCE_PILOT_INDEXABLE` in
+`web/src/lib/acceptance-pilot.ts`).
 
 **Persona.** Primary: parents and students who searched
 `{school} acceptance rate`. Secondary: counselors who want the trend in one
@@ -55,8 +55,8 @@ sentence, then the far-extreme sentence, then the dominant-year sentence.
 When the dominant-year sentence runs, a percent-change applications
 sentence is dropped (the dominant sentence carries the applications that
 matter); a plain span sentence stays. Every claim is re-derived from the
-table by an independent audit (`acceptance-lead-audit.ts`) over all 20
-pilot schools and synthetic series; it fails on the round-5 Bates,
+table by an independent audit (`acceptance-lead-audit.ts`) over all
+allowlisted schools and synthetic series; it fails on the round-5 Bates,
 Amherst, and Northwestern leads.
 
 Display precision rules (one decimal): directions compare printed values
@@ -130,7 +130,7 @@ revision 2.
 
 ---
 
-## Filled examples — all 20 pilot schools (production data, 2026-09-23)
+## Filled examples — all allowlisted schools (production data, 2026-09-24)
 
 - Virginia Tech admitted 54.6% of first-year applicants for fall 2025 (31,515 of 57,755), the lowest in the three years shown, down from 57.0% for fall 2023. Applications rose 10.4% for fall 2025, to 57,755 from 52,296.
 - Haverford College admitted 13.3% of first-year applicants for fall 2025 (896 of 6,730), up from 12.4% for fall 2024, the lowest in the eight years shown. It was 18.8% for fall 2018. Applications fell 8.3% for fall 2025, to 6,730 from 7,341.
@@ -152,6 +152,16 @@ revision 2.
 - Hamilton College admitted 13.6% of first-year applicants for fall 2024 (1,162 of 8,531), up from 11.8% for fall 2023 and fall 2022, the lowest in the six years shown. The high was 18.4%, for fall 2020. It was 16.4% for fall 2019. Applications fell 11.5% for fall 2024, to 8,531 from 9,643; the most in the years shown was 9,899, for fall 2022.
 - University of Richmond admitted 22.2% of first-year applicants for fall 2024 (3,585 of 16,152), the lowest in the seven years shown, down from 23.3% for fall 2023. It was 30.2% for fall 2018. Applications rose from 11,882 to 16,152 over that span.
 - Bates College admitted 14.8% of first-year applicants for fall 2025 (1,433 of 9,660), up from 13.3% for fall 2024 and from 13.0% for fall 2023, the lowest since fall 2019 (12.1%). It was 17.8% for fall 2018. Applications fell 3.7% for fall 2025, to 9,660 from 10,027.
+- University of Wisconsin-Madison admitted 40.8% of first-year applicants for fall 2025 (30,167 of 73,912), the lowest in the five years with figures, down from 43.3% for fall 2023. Most of the drop came in one year, from 60.3% for fall 2021 to 49.0% for fall 2022, when applications rose from 53,829 to 60,260 and admits fell from 32,466 to 29,546. Usable figures for fall 2024 are not in our archive.
+- University of Florida admitted 20.3% of first-year applicants for fall 2025 (18,403 of 90,523), the lowest in the six years shown, down from 24.2% for fall 2024. It was 31.1% for fall 2020. Applications rose from 48,193 to 90,523 over that span. Most of the drop came in one year, from 30.1% for fall 2021 to 23.3% for fall 2022, when applications rose from 51,207 to 64,473 and admits fell from 15,431 to 15,054.
+- University of California, Santa Barbara admitted 38.2% of first-year applicants for fall 2025 (42,093 of 110,187), the highest in the five years shown, up from 33.0% for fall 2024. It was 29.1% for fall 2021. Applications fell 0.1% for fall 2025, to 110,187 from 110,266; the most in the years shown was 111,006, for fall 2022.
+- Stanford University admitted 3.8% of first-year applicants for fall 2025 (2,302 of 60,646), up from 3.6% for fall 2024, the lowest in the four years with figures. It was 4.4% for fall 2018. Applications rose from 47,452 to 60,646 over that span. Usable figures for fall 2020, fall 2021, fall 2022, and fall 2023 are not in our archive.
+- University of California, Los Angeles admitted 9.4% of first-year applicants for fall 2025 (13,659 of 145,086), up from 9.0% for fall 2024 and from a low of 8.6% for fall 2022. It was 14.3% for fall 2020. Applications fell 0.8% for fall 2025, to 145,086 from 146,276; the most in the years with figures was 149,815, for fall 2022. Usable figures for fall 2023 are not in our archive.
+- University of North Carolina at Chapel Hill admitted 16.7% of first-year applicants for fall 2025 (12,751 of 76,247), the lowest in the three years with figures, down from 21.9% for fall 2018. Usable figures for fall 2019, fall 2020, fall 2021, fall 2022, and fall 2024 are not in our archive.
+- University of Southern California admitted 11.2% of first-year applicants for fall 2025 (9,345 of 83,488), up from 9.8% for fall 2024, the lowest in the four years with figures. It was 13.0% for fall 2018. Applications rose from 64,352 to 83,488 over that span. Usable figures for fall 2019, fall 2020, fall 2021, and fall 2023 are not in our archive.
+- University of Texas at Austin admitted 26.6% of first-year applicants for fall 2024 (19,417 of 72,885), the lowest in the four years with figures, down from 29.1% for fall 2023. It was 32.0% for fall 2020. Applications rose from 57,241 to 72,885 over that span. Usable figures for fall 2022 are not in our archive.
+- Wellesley College admitted 14.8% of first-year applicants for fall 2025 (1,258 of 8,506), the highest in the three years shown, up from 13.9% for fall 2023. Applications fell 2.4% for fall 2025, to 8,506 from 8,714.
+- Lafayette College admitted 31.2% of first-year applicants for fall 2025 (3,289 of 10,556), down from 31.4% for fall 2024 and from a high of 40.7% for fall 2021. It was 29.4% for fall 2018. Applications rose 3.5% for fall 2025, to 10,556 from 10,195; the fewest in the years shown was 8,215, for fall 2020.
 
 ## Checked, no footnote
 
