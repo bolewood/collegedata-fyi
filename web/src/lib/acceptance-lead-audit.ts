@@ -3,7 +3,13 @@
 // generator's logic. Used by tests over all pilot schools and synthetic
 // series; returns a list of problems (empty = every claim checks out).
 
-export type AuditRow = { yearStart: number; applied: number; admitted: number };
+export type AuditRow = {
+  yearStart: number;
+  applied: number;
+  admitted: number;
+  edApplied?: number | null;
+  edAdmitted?: number | null;
+};
 
 const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
 
@@ -176,6 +182,26 @@ export function auditLead(lead: string, rows: AuditRow[], reportYears?: Readonly
   for (const sentence of lead.split(/(?<=\.)\s+(?=[A-Z])/)) {
     const words = sentence.trim().split(/\s+/).length;
     if (words > 35) fail(`sentence of ${words} words: "${sentence.slice(0, 60)}…"`);
+  }
+
+  // Early decision: latest C21 year, counts match, never inferred from missing C21.
+  const edClaim = /Early decision admitted (\d+\.\d)% for fall (\d{4}) \(([\d,]+) of ([\d,]+)\)/.exec(lead);
+  const edYears = series.filter((r) => r.edApplied != null && r.edAdmitted != null && r.edApplied > 0 && r.edAdmitted > 0);
+  if (edClaim) {
+    const y = Number(edClaim[2]);
+    const row = series.find((r) => r.yearStart === y && r.edApplied != null && r.edAdmitted != null);
+    if (!row) fail(`"${edClaim[0]}": no C21 counts for fall ${y}`);
+    else {
+      if (num(edClaim[4]) !== row.edApplied || num(edClaim[3]) !== row.edAdmitted) {
+        fail(`"${edClaim[0]}": ED counts do not match`);
+      }
+      const printed = (Math.round((row.edAdmitted! / row.edApplied!) * 1000) / 10).toFixed(1);
+      if (edClaim[1] !== printed) fail(`"${edClaim[0]}": ED rate does not match`);
+    }
+    const latestEd = [...edYears].sort((a, b) => b.yearStart - a.yearStart)[0];
+    if (latestEd && latestEd.yearStart !== y) fail("ED sentence is not the latest C21 year");
+  } else if (edYears.length > 0) {
+    fail("C21 counts are present but the lead has no early-decision sentence");
   }
 
   return problems;

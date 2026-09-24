@@ -5,7 +5,7 @@
 // This page uses one decimal for every rate (5.7%, 20.5%). Hub and year
 // pages keep the site style (school-summary `share`).
 
-import type { AcceptanceHistory, AcceptanceYear } from "./acceptance-history";
+import { hasEarlyDecision, type AcceptanceHistory, type AcceptanceYear } from "./acceptance-history";
 
 export const TITLE_MAX = 65;
 
@@ -432,21 +432,67 @@ export const LEDE_MAX_WORDS = 35;
 export const LEDE_MAX_SENTENCES = 5;
 export const LEDE_MAX_TOTAL_WORDS = 75;
 
+/**
+ * Latest usable early-decision rate, named after the overall answer.
+ * CDS C21 has no early-action counts, so this never says "early action."
+ */
+export function earlyDecisionSentence(history: AcceptanceHistory): string | null {
+  const row = history.years.find((year) => year.ed != null);
+  if (!row?.ed) return null;
+  return `Early decision admitted ${pct(row.ed.rate)} for fall ${fallYear(row.yearStart)} (${count(row.ed.admitted)} of ${count(row.ed.applied)}).`;
+}
+
+function wordCount(sentence: string): number {
+  return sentence.trim().split(/\s+/).length;
+}
+
+/** Keep the overall answer, ED, and gap; drop the rest, in this order, if the lede would overflow. */
+function fitLead(sentences: string[]): string[] {
+  const keep = sentences.filter(Boolean);
+  const rank = (s: string) =>
+    s.startsWith("Applications ")
+      ? 1
+      : s.startsWith("It was ")
+        ? 2
+        : s.startsWith("The low was ") || s.startsWith("The high was ")
+          ? 3
+          : s.startsWith("Most of the ")
+            ? 4
+            : 0;
+  const within = (list: string[]) =>
+    list.length <= LEDE_MAX_SENTENCES &&
+    list.every((s) => wordCount(s) <= LEDE_MAX_WORDS) &&
+    wordCount(list.join(" ")) <= LEDE_MAX_TOTAL_WORDS;
+  if (within(keep)) return keep;
+  const trimmed = [...keep];
+  for (const extra of [...keep].sort((a, b) => rank(a) - rank(b))) {
+    if (!rank(extra)) continue;
+    const at = trimmed.indexOf(extra);
+    if (at < 0) continue;
+    trimmed.splice(at, 1);
+    if (within(trimmed)) return trimmed;
+  }
+  return trimmed;
+}
+
 export function leadSentences(
   schoolName: string,
   history: AcceptanceHistory,
   reportYears?: ReadonlySet<string>,
 ): string[] {
-  return [
-    answerSentence(schoolName, history),
-    contrastSentence(history),
-    firstYearSentence(history),
-    // With a dominant year, its sentence carries the application change;
-    // keep only a plain span ("rose from … over that span").
-    dominantChange(history) && /%/.test(applicationsSentence(history) ?? "") ? null : applicationsSentence(history),
-    dominantSentence(history),
-    gapSentence(history, reportYears),
-  ].filter((sentence): sentence is string => Boolean(sentence));
+  return fitLead(
+    [
+      answerSentence(schoolName, history),
+      earlyDecisionSentence(history),
+      contrastSentence(history),
+      firstYearSentence(history),
+      // With a dominant year, its sentence carries the application change;
+      // keep only a plain span ("rose from … over that span").
+      dominantChange(history) && /%/.test(applicationsSentence(history) ?? "") ? null : applicationsSentence(history),
+      dominantSentence(history),
+      gapSentence(history, reportYears),
+    ].filter((sentence): sentence is string => Boolean(sentence)),
+  );
 }
 
 function span(history: AcceptanceHistory): { first: AcceptanceYear; last: AcceptanceYear } | null {
@@ -508,8 +554,11 @@ export function sectionHeading(schoolName: string, history: AcceptanceHistory): 
 
 export const KICKER = "First-year admissions";
 
-export function sourceNote(schoolName: string): string {
-  return `Source: Common Data Set reports published by ${schoolName}, section C1 (first-time, first-year, degree-seeking students). Note: Acceptance rate is admitted ÷ applied; yield is enrolled ÷ admitted. Each year is the class entering that fall; the 2024–25 report covers fall 2024. — = not reported or not usable.`;
+export function sourceNote(schoolName: string, history?: AcceptanceHistory): string {
+  const ed = history && hasEarlyDecision(history)
+    ? " Early-decision figures are section C21 (applications received and admitted under the early decision plan)."
+    : "";
+  return `Source: Common Data Set reports published by ${schoolName}, section C1 (first-time, first-year, degree-seeking students). Note: Acceptance rate is admitted ÷ applied; yield is enrolled ÷ admitted.${ed} Each year is the class entering that fall; the 2024–25 report covers fall 2024. — = not reported or not usable.`;
 }
 
 /** Gap-row source cell. "On file" is checked against the archive's documents. */

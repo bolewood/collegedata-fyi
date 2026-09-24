@@ -7,9 +7,10 @@ export const CHART_MIN_YEARS = 4;
 
 /**
  * Column chart of acceptance rate by entering class, oldest on the left.
- * One ink colour; bars start at zero, scaled to the highest rate shown.
- * Missing years keep their slot so gaps stay visible. The accessible name
- * lists every value; the table below carries the same numbers.
+ * One ink colour by default. When a school reports C21 early-decision
+ * counts, a forest bar sits beside each year's overall rate. Bars start at
+ * zero, scaled to the highest rate shown (overall or ED). Missing years
+ * keep their slot. The table below carries the same numbers.
  */
 export function AcceptanceRateChart({
   schoolName,
@@ -19,16 +20,18 @@ export function AcceptanceRateChart({
   rows: AcceptanceTableRow[];
 }) {
   const slots = [...rows].reverse();
-  const rates = slots.flatMap((slot) => (slot.kind === "year" ? [slot.row.rate] : []));
-  if (rates.length < CHART_MIN_YEARS) return null;
-  const max = Math.max(...rates);
+  const overall = slots.flatMap((slot) => (slot.kind === "year" ? [slot.row.rate] : []));
+  if (overall.length < CHART_MIN_YEARS) return null;
+  const showEd = slots.some((slot) => slot.kind === "year" && slot.row.ed != null);
+  const edRates = slots.flatMap((slot) => (slot.kind === "year" && slot.row.ed ? [slot.row.ed.rate] : []));
+  const max = Math.max(...overall, ...edRates);
   const hasGap = slots.some((slot) => slot.kind === "gap");
   const label = `${schoolName} acceptance rate by entering class, oldest first: ${slots
-    .map((slot) =>
-      slot.kind === "year"
-        ? `fall ${slot.row.yearStart}, ${pct(slot.row.rate)}`
-        : `fall ${slot.yearStart}, not available`,
-    )
+    .map((slot) => {
+      if (slot.kind !== "year") return `fall ${slot.yearStart}, not available`;
+      const ed = slot.row.ed ? `, early decision ${pct(slot.row.ed.rate)}` : "";
+      return `fall ${slot.row.yearStart}, ${pct(slot.row.rate)}${ed}`;
+    })
     .join("; ")}.`;
 
   return (
@@ -37,16 +40,32 @@ export function AcceptanceRateChart({
         {slots.map((slot) => {
           const yearStart = slot.kind === "year" ? slot.row.yearStart : slot.yearStart;
           const gap = slot.kind === "gap";
-          const height = gap ? 0 : Math.max(2, Math.round((slot.row.rate / max) * BAR_MAX_PX));
+          const overallHeight =
+            slot.kind === "year" ? Math.max(2, Math.round((slot.row.rate / max) * BAR_MAX_PX)) : 0;
+          const ed = slot.kind === "year" ? slot.row.ed : null;
+          const edHeight = ed ? Math.max(2, Math.round((ed.rate / max) * BAR_MAX_PX)) : 0;
           return (
             <div
               key={yearStart}
               className={gap ? "acc-chart__col acc-chart__col--gap" : "acc-chart__col"}
               aria-hidden="true"
             >
-              <div className="acc-chart__track">
-                <span className="acc-chart__value">{gap ? "—" : pct(slot.row.rate)}</span>
-                <span className="acc-chart__bar" style={{ height }} />
+              <div className={showEd ? "acc-chart__track acc-chart__track--pair" : "acc-chart__track"}>
+                <div className="acc-chart__series">
+                  <span className="acc-chart__value">{slot.kind === "year" ? pct(slot.row.rate) : "—"}</span>
+                  <span className="acc-chart__bar" style={{ height: overallHeight }} />
+                </div>
+                {showEd ? (
+                  <div className="acc-chart__series">
+                    <span className="acc-chart__value acc-chart__value--ed">
+                      {gap || !ed ? "—" : pct(ed.rate)}
+                    </span>
+                    <span
+                      className={ed ? "acc-chart__bar acc-chart__bar--ed" : "acc-chart__bar acc-chart__bar--empty"}
+                      style={{ height: edHeight }}
+                    />
+                  </div>
+                ) : null}
               </div>
               <span className="acc-chart__year">{shortFall(yearStart)}</span>
             </div>
@@ -54,7 +73,9 @@ export function AcceptanceRateChart({
         })}
       </div>
       <figcaption className="acc-chart__caption">
-        Share of first-year applicants admitted, by fall entering class.
+        {showEd
+          ? "Dark bars show first-year admission. Olive bars show early decision."
+          : "Share of first-year applicants admitted, by fall entering class."}
         {hasGap ? " — = not reported or not usable." : ""}
       </figcaption>
     </figure>

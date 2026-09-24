@@ -6,6 +6,16 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.9.0] - 2026-09-24
+
+### Added
+
+- Acceptance-rate pages now show early decision beside the first-year
+  rate when the school’s Common Data Set includes C21 counts: a second
+  bar on the chart, a second line in the Rate cell, and a sentence in
+  the lead. Years without those counts stay a dash. Early action is not
+  shown — the CDS does not print EA applicant or admit counts.
+
 ## [0.6.8.0] - 2026-09-23
 
 ### Changed

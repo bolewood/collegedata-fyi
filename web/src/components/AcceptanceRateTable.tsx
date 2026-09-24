@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { AcceptanceHistory, AcceptanceYear } from "@/lib/acceptance-history";
+import { hasEarlyDecision, type AcceptanceHistory, type AcceptanceYear } from "@/lib/acceptance-history";
 import type { ManifestRow } from "@/lib/types";
 import { fallLabel, gapLabel, pct, reportLabel } from "@/lib/acceptance-rate-copy";
 import { storageUrl } from "@/lib/format";
@@ -45,11 +45,14 @@ export function AcceptanceRateTable({
   schoolId,
   schoolName,
   rows,
+  history,
 }: {
   schoolId: string;
   schoolName: string;
   rows: AcceptanceTableRow[];
+  history?: AcceptanceHistory;
 }) {
+  const showEd = history ? hasEarlyDecision(history) : rows.some((item) => item.kind === "year" && item.row.ed != null);
   return (
     <>
       <p className="acc-table-hint" aria-hidden="true">
@@ -66,6 +69,7 @@ export function AcceptanceRateTable({
           <caption className="sr-only">
             {schoolName} first-year acceptance rate, applicants, admits, enrolled, and yield by
             entering class, newest first.
+            {showEd ? " Early-decision rate is shown under the first-year rate when the report includes C21 counts." : ""}
           </caption>
           <colgroup>
             <col className="acc-col acc-col--year" />
@@ -124,7 +128,12 @@ export function AcceptanceRateTable({
                       {reportLabel(row.year)}
                     </Link>
                   </th>
-                  <td className="acc-num acc-table__rate">{pct(row.rate)}</td>
+                  <td className="acc-num acc-table__rate">
+                    <span>{pct(row.rate)}</span>
+                    {showEd ? (
+                      <span className="acc-table__ed">{row.ed ? `${pct(row.ed.rate)} ED` : "—"}</span>
+                    ) : null}
+                  </td>
                   <td className="acc-num">{count(row.applied)}</td>
                   <td className="acc-num">{count(row.admitted)}</td>
                   <td className="acc-num">{count(row.enrolled)}</td>
