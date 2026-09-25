@@ -113,6 +113,8 @@ const PILOT_NAMES = [
   "University of Richmond", "Bates College",
   "University of Florida", "Stanford University", "Wellesley College", "Lafayette College",
   "University of Chicago", "Rutgers University", "Texas A&M University", "Yale University",
+  "Davidson College", "Skidmore College", "Boston College", "The University of Alabama",
+  "Howard University",
 ];
 
 const EXTRA_BANNED = ["odds", "chance", "selective", "best ", "top ", "easy to get", "hard to get", "parsed", "projection", "because", "due to", "driven by", "after ", "as a result", "led to", "thanks to"];

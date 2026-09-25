@@ -175,6 +175,13 @@ describe("pilot gating", () => {
     expect(ACCEPTANCE_PILOT_SCHOOLS).toContain("yale");
     expect(ACCEPTANCE_PILOT_SCHOOLS).not.toContain("uva");
     expect(ACCEPTANCE_PILOT_SCHOOLS).not.toContain("cornell");
+    expect(ACCEPTANCE_PILOT_SCHOOLS).toContain("davidson-college");
+    expect(ACCEPTANCE_PILOT_SCHOOLS).toContain("howard-university");
+    expect(ACCEPTANCE_PILOT_SCHOOLS).not.toContain("elon-university");
+    expect(ACCEPTANCE_PILOT_SCHOOLS).not.toContain("barnard");
+    expect(ACCEPTANCE_PILOT_SCHOOLS).not.toContain("penn-state");
+    expect(ACCEPTANCE_PILOT_SCHOOLS).not.toContain("colorado");
+    expect(ACCEPTANCE_PILOT_SCHOOLS).not.toContain("stony-brook-university");
     expect(ACCEPTANCE_PILOT_SCHOOLS.length).toBeLessThanOrEqual(50);
   });
 

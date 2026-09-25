@@ -3,8 +3,8 @@
 Read this as a parent, then as a counselor, then as IR. **Not signed yet.**
 Revision 8 (after the round 7 editorial review).
 
-Route: `/schools/{id}/acceptance-rate`. Allowlist = sitemap (36 schools
-after wave 3). Indexed (`ACCEPTANCE_PILOT_INDEXABLE` in
+Route: `/schools/{id}/acceptance-rate`. Allowlist = sitemap (41 schools
+after wave 4). Indexed (`ACCEPTANCE_PILOT_INDEXABLE` in
 `web/src/lib/acceptance-pilot.ts`).
 
 **Persona.** Primary: parents and students who searched
@@ -168,6 +168,11 @@ revision 2.
 - Rutgers University admitted 62.3% of first-year applicants for fall 2023 (18,053 of 28,992), the highest in the three years with figures, up from 60.1% for fall 2018. Usable figures for fall 2020, fall 2021, and fall 2022 are not in our archive.
 - Texas A&M University admitted 51.7% of first-year applicants for fall 2025 (32,531 of 62,967), the lowest in the five years with figures, down from 57.3% for fall 2024. It was 63.0% for fall 2020. Applications rose from 43,307 to 62,967 over that span. Usable figures for fall 2023 are not in our archive.
 - Yale University admitted 4.7% of first-year applicants for fall 2025 (2,387 of 50,264), up from 3.9% for fall 2024, the lowest in the six years with figures. It was 6.1% for fall 2019. Applications fell 12.6% for fall 2025, to 50,264 from 57,517. Usable figures for fall 2020 are not in our archive.
+- Davidson College admitted 12.6% of first-year applicants for fall 2025 (1,127 of 8,933), the lowest in the five years with figures, down from 18.1% for fall 2019. Applications rose from 5,982 to 8,933 over that span. Usable figures for fall 2020 and fall 2021 are not in our archive.
+- Skidmore College admitted 23.8% of first-year applicants for fall 2025 (2,917 of 12,273), up from 21.1% for fall 2024, the lowest in the seven years shown. The high was 32.2%, for fall 2020. It was 30.0% for fall 2019. Applications rose 3.2% for fall 2025, to 12,273 from 11,889; the most in the years shown was 13,183, for fall 2022.
+- Boston College admitted 16.2% of first-year applicants for fall 2024 (5,632 of 34,779), up from 15.7% for fall 2023, the lowest in the four years with figures. It was 27.9% for fall 2018. Applications fell 3.6% for fall 2024, to 34,779 from 36,069; the most in the years with figures was 39,846, for fall 2021. Usable figures for fall 2019, fall 2020, and fall 2022 are not in our archive.
+- The University of Alabama admitted 71.2% of first-year applicants for fall 2025 (44,124 of 61,994), down from 76.6% for fall 2024 and from a high of 82.7% for fall 2019. It was 59.1% for fall 2018. Applications rose from 37,302 to 61,994 over that span.
+- Howard University admitted 42.2% of first-year applicants for fall 2025 (15,724 of 37,270), the highest in the four years with figures, up from 31.6% for fall 2018. Applications rose from 20,946 to 37,270 over that span. Usable figures for fall 2019, fall 2021, fall 2022, and fall 2023 are not in our archive.
 
 ## Checked, no footnote
 

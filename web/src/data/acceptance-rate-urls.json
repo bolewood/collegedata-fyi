@@ -35,7 +35,12 @@
     "/schools/uchicago/acceptance-rate",
     "/schools/rutgers/acceptance-rate",
     "/schools/texas-am/acceptance-rate",
-    "/schools/yale/acceptance-rate"
+    "/schools/yale/acceptance-rate",
+    "/schools/davidson-college/acceptance-rate",
+    "/schools/skidmore-college/acceptance-rate",
+    "/schools/boston-college/acceptance-rate",
+    "/schools/the-university-of-alabama/acceptance-rate",
+    "/schools/howard-university/acceptance-rate"
   ],
   "gone": []
 }
