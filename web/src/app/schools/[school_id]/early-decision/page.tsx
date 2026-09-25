@@ -10,6 +10,7 @@ import {
   earlyDecisionRobots,
   isEarlyDecisionSchool,
 } from "@/lib/early-decision-pilot";
+import { gpaPageDecision, gpaPath } from "@/lib/gpa-pilot";
 import { headerAccentReadable } from "@/lib/acceptance-pilot";
 import { acceptanceRatePath } from "@/lib/acceptance-pilot";
 import {
@@ -37,10 +38,10 @@ const SITE = "https://www.collegedata.fyi";
 
 async function loadServedPage(schoolId: string) {
   if (!isEarlyDecisionSchool(schoolId)) return null;
-  const { schoolName, documents, history } = await fetchAcceptanceHistory(schoolId);
+  const { schoolName, documents, history, gpa } = await fetchAcceptanceHistory(schoolId);
   const decision = earlyDecisionPageDecision(schoolId, history);
   if (decision.kind === "not-found" || !schoolName) return null;
-  return { schoolName, documents, history, decision };
+  return { schoolName, documents, history, gpa, decision };
 }
 
 export async function generateMetadata({
@@ -77,7 +78,7 @@ export default async function EarlyDecisionPage({ params }: { params: Promise<Pa
   ]);
   if (!page) notFound();
 
-  const { schoolName, history, documents, decision } = page;
+  const { schoolName, history, gpa, documents, decision } = page;
   const series = asEdSeries(history);
   const rows = acceptanceTableRows(series, documents);
   const reportYears = new Set(
@@ -164,6 +165,9 @@ export default async function EarlyDecisionPage({ params }: { params: Promise<Pa
       <nav aria-label={`More on ${schoolName}`} className="acc-related">
         <Link href={hubPath}>{related.hub}</Link>
         <Link href={acceptanceRatePath(school_id)}>{possessive(schoolName)} acceptance rate</Link>
+        {gpaPageDecision(school_id, gpa).kind !== "not-found" ? (
+          <Link href={gpaPath(school_id)}>{possessive(schoolName)} enrolled first-year GPA</Link>
+        ) : null}
         {latest && related.latest ? (
           <Link href={`/schools/${school_id}/${latest.year}`}>{related.latest}</Link>
         ) : null}

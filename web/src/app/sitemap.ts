@@ -3,7 +3,7 @@ import { fetchManifest, aggregateSchools, fetchSchoolSlugResolver } from "@/lib/
 import { SITE_URL, staticSitemapEntries } from "@/lib/sitemap-static";
 import { canonicalizeSchoolRows } from "@/lib/school-alias";
 import type { ManifestRow } from "@/lib/types";
-import { acceptanceRateSitemap, earlyDecisionSitemap } from "@/lib/acceptance-history-data";
+import { acceptanceRateSitemap, earlyDecisionSitemap, gpaSitemap } from "@/lib/acceptance-history-data";
 
 function isAcademicYear(value: string | null | undefined): value is string {
   if (!value) return false;
@@ -65,8 +65,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // PRD 031 pilot: empty until ACCEPTANCE_PILOT_INDEXABLE flips.
   const acceptancePages = await acceptanceRateSitemap();
   const earlyDecisionPages = await earlyDecisionSitemap();
+  const gpaPages = await gpaSitemap();
 
-  return [...staticPages, ...schoolPages, ...yearPages, ...acceptancePages, ...earlyDecisionPages].filter((entry, index, entries) =>
+  return [...staticPages, ...schoolPages, ...yearPages, ...acceptancePages, ...earlyDecisionPages, ...gpaPages].filter((entry, index, entries) =>
     entries.findIndex((candidate) => candidate.url === entry.url) === index
   );
 }

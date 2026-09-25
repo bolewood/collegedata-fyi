@@ -25,6 +25,14 @@ import {
   earlyDecisionSitemapEntries,
   isEarlyDecisionSchool,
 } from "./early-decision-pilot";
+import {
+  GPA_INDEXABLE,
+  GPA_SCHOOLS,
+  gpaPageDecision,
+  gpaSitemapEntries,
+  isGpaSchool,
+} from "./gpa-pilot";
+import { buildGpaHistory, type GpaHistory } from "./c11-gpa";
 import type { ArtifactNotes, ManifestRow, SchoolFactUnifiedRow } from "./types";
 
 const fetchHistoryExtract = cache(async function fetchHistoryExtract(
@@ -46,6 +54,7 @@ export type SchoolAcceptanceHistory = {
   schoolName: string | null;
   documents: ManifestRow[];
   history: AcceptanceHistory;
+  gpa: GpaHistory;
 };
 
 /** Alias-aware (via fetchSchoolDocuments); one extract read per candidate year, in parallel. */
@@ -71,13 +80,12 @@ export const fetchAcceptanceHistory = cache(async function fetchAcceptanceHistor
       edAdmitted: row.edAdmitted,
     });
   }
+  const pairs = candidates.map((doc, i) => ({ doc, extract: extracts[i] }));
   return {
     schoolName: documents[0]?.school_name ?? null,
     documents,
-    history: buildAcceptanceHistory(
-      candidates.map((doc, i) => ({ doc, extract: extracts[i] })),
-      browserByDocument,
-    ),
+    history: buildAcceptanceHistory(pairs, browserByDocument),
+    gpa: buildGpaHistory(pairs),
   };
 });
 
@@ -204,6 +212,33 @@ export async function earlyDecisionSitemap(
     EARLY_DECISION_SCHOOLS.map(async (id) => ((await fetchEarlyDecisionPageServed(id)) ? id : null)),
   );
   return earlyDecisionSitemapEntries(
+    served.filter((id): id is string => id != null),
+    indexable,
+  );
+}
+
+/** True when /schools/{id}/gpa renders. Never throws; the hub calls it. */
+export const fetchGpaPageServed = cache(async function fetchGpaPageServed(
+  schoolId: string,
+): Promise<boolean> {
+  if (!isGpaSchool(schoolId)) return false;
+  try {
+    const { gpa } = await fetchAcceptanceHistory(schoolId);
+    return gpaPageDecision(schoolId, gpa).kind !== "not-found";
+  } catch (error) {
+    console.warn(`fetchGpaPageServed: ${String(error)}`);
+    return false;
+  }
+});
+
+export async function gpaSitemap(
+  indexable: boolean = GPA_INDEXABLE,
+): Promise<MetadataRoute.Sitemap> {
+  if (!indexable) return [];
+  const served = await Promise.all(
+    GPA_SCHOOLS.map(async (id) => ((await fetchGpaPageServed(id)) ? id : null)),
+  );
+  return gpaSitemapEntries(
     served.filter((id): id is string => id != null),
     indexable,
   );

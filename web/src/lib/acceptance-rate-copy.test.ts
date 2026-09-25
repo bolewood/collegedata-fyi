@@ -532,6 +532,18 @@ describe("hub summary link", () => {
     expect(links).toEqual([{ type: "link", href: "/schools/duke/acceptance-rate", text: "acceptance rate" }]);
     expect(plain.paragraphs.flat().some((part) => part.type === "link" && part.href.includes("acceptance-rate"))).toBe(false);
   });
+
+  it("links the first 'GPA' only when the page is served", () => {
+    const facts = {
+      ...base,
+      summary: [...base.summary, "GPA among enrolled first-years who reported one is published with the file."],
+    };
+    const linked = archiveLead({ ...facts, gpaHref: "/schools/harvard/gpa" })!;
+    const plain = archiveLead({ ...facts, gpaHref: null })!;
+    expect(leadPlainText(linked)).toBe(leadPlainText(plain));
+    const links = linked.paragraphs.flat().filter((part) => part.type === "link" && part.href.includes("/gpa"));
+    expect(links).toEqual([{ type: "link", href: "/schools/harvard/gpa", text: "GPA" }]);
+  });
 });
 
 describe("2024-25+ extract reading vs school_browser_rows", () => {

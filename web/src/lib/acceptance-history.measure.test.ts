@@ -260,6 +260,90 @@ describe.skipIf(MODE !== "live")("acceptance history live measurement", () => {
   }, 300_000);
 });
 
+describe.skipIf(MODE !== "gpa")("gpa live measurement", () => {
+  it("reports C11 years for distinctive-name candidates", async () => {
+    loadEnv();
+    const { fetchAcceptanceHistory } = await import("./acceptance-history-data");
+    const { buildGpaHistory, gpaEligibility } = await import("./c11-gpa");
+    const { fetchSchoolDocuments, fetchExtract } = await import("./queries");
+    const { isHistoryCandidate } = await import("./acceptance-history");
+    const extra = (process.env.ACCEPTANCE_EXTRA ?? "").split(",").filter(Boolean);
+    const only = process.env.ACCEPTANCE_ONLY_EXTRA === "1";
+    const { ACCEPTANCE_PILOT_SCHOOLS } = await import("./acceptance-pilot");
+    const distinctive = [
+      "harvard",
+      "princeton",
+      "yale",
+      "stanford",
+      "dartmouth",
+      "vanderbilt",
+      "cornell",
+      "duke",
+      "brown",
+      "northwestern",
+      "uchicago",
+      "caltech",
+      "mit",
+      "columbia",
+      "upenn",
+      "johns-hopkins",
+      "georgetown",
+      "notre-dame",
+      "university-of-notre-dame",
+      "rice",
+      "bowdoin",
+      "amherst",
+      "williams",
+    ];
+    const schools = [
+      ...new Set(only ? extra : [...distinctive, ...ACCEPTANCE_PILOT_SCHOOLS, ...extra]),
+    ];
+    const report = [];
+    for (const school of schools) {
+      const docs = await fetchSchoolDocuments(school);
+      const candidates = docs.filter(isHistoryCandidate);
+      const extracts = await Promise.all(
+        candidates.map(async (doc) => {
+          const { canonical, mergedValues } = await fetchExtract(doc.document_id as string);
+          const notes = canonical?.notes as { schema_version?: string; markdown?: string } | null;
+          return canonical
+            ? {
+                values: mergedValues,
+                schemaVersion: notes?.schema_version ?? null,
+                producer: canonical.producer ?? null,
+                markdown: notes?.markdown ?? null,
+              }
+            : null;
+        }),
+      );
+      const history = buildGpaHistory(candidates.map((doc, i) => ({ doc, extract: extracts[i] })));
+      const eligibility = gpaEligibility(history);
+      const { schoolName } = await fetchAcceptanceHistory(school);
+      report.push({
+        school,
+        schoolName,
+        eligible: eligibility.eligible,
+        reason: eligibility.eligible ? null : eligibility.reason,
+        years: history.years.map((y) => ({
+          year: y.year,
+          column: y.bands.column,
+          gpa4: Number(y.bands.percents.gpa4.toFixed(1)),
+          average: y.average,
+          submitted: y.submittedPct,
+        })),
+        excluded: history.excluded,
+      });
+      console.warn(
+        school,
+        eligibility.eligible ? "yes" : eligibility.reason,
+        history.years.map((y) => `${y.year}${y.average != null ? `@${y.average}` : ""}`).join(" "),
+      );
+    }
+    mkdirSync(OUT_DIR, { recursive: true });
+    writeFileSync(resolve(OUT_DIR, "gpa-allowlist.json"), JSON.stringify(report, null, 1));
+  }, 300_000);
+});
+
 describe.skipIf(MODE !== "ed")("early-decision live measurement", () => {
   it("reports C21 years and notes for distinctive-name candidates", async () => {
     loadEnv();

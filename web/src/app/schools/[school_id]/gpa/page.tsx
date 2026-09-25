@@ -3,30 +3,24 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { fetchCanonicalSchoolId, fetchSchoolBrandColors } from "@/lib/queries";
 import { fetchAcceptanceHistory } from "@/lib/acceptance-history-data";
-import {
-  acceptancePageDecision,
-  acceptanceRatePath,
-  acceptanceRobots,
-  headerAccentReadable,
-  isAcceptancePilotSchool,
-} from "@/lib/acceptance-pilot";
 import { earlyDecisionPageDecision, earlyDecisionPath } from "@/lib/early-decision-pilot";
-import { gpaPageDecision, gpaPath } from "@/lib/gpa-pilot";
+import { gpaPageDecision, gpaPath, gpaRobots, isGpaSchool } from "@/lib/gpa-pilot";
+import { headerAccentReadable } from "@/lib/acceptance-pilot";
+import { acceptanceRatePath } from "@/lib/acceptance-pilot";
 import {
-  KICKER,
-  acceptanceDescription,
-  acceptanceTitle,
-  degradedNote,
-  leadSentences,
+  GPA_KICKER,
+  gpaDescription,
+  gpaHeading,
+  gpaLeadSentences,
+  gpaSourceNote,
+  gpaTitle,
   possessive,
-  relatedLinks,
-  sectionHeading,
-  sourceNote,
-} from "@/lib/acceptance-rate-copy";
+} from "@/lib/gpa-copy";
+import { degradedNote, relatedLinks } from "@/lib/acceptance-rate-copy";
 import { deriveInks } from "@/lib/derive-inks";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
-import { AcceptanceRateTable, acceptanceTableRows } from "@/components/AcceptanceRateTable";
-import { AcceptanceRateChart } from "@/components/AcceptanceRateChart";
+import { GpaChart } from "@/components/GpaChart";
+import { GpaTable, gpaTableRows } from "@/components/GpaTable";
 
 export const revalidate = 3600;
 
@@ -35,9 +29,9 @@ type Params = { school_id: string };
 const SITE = "https://www.collegedata.fyi";
 
 async function loadServedPage(schoolId: string) {
-  if (!isAcceptancePilotSchool(schoolId)) return null;
+  if (!isGpaSchool(schoolId)) return null;
   const { schoolName, documents, history, gpa } = await fetchAcceptanceHistory(schoolId);
-  const decision = acceptancePageDecision(schoolId, history);
+  const decision = gpaPageDecision(schoolId, gpa);
   if (decision.kind === "not-found" || !schoolName) return null;
   return { schoolName, documents, history, gpa, decision };
 }
@@ -52,39 +46,39 @@ export async function generateMetadata({
   const page = await loadServedPage(schoolId);
   if (!page) return { title: "Page not found", robots: { index: false, follow: true } };
 
-  const path = acceptanceRatePath(schoolId);
-  const title = acceptanceTitle(page.schoolName, page.history);
-  const description = acceptanceDescription(page.schoolName, page.history);
+  const path = gpaPath(schoolId);
+  const title = gpaTitle(page.schoolName, page.gpa);
+  const description = gpaDescription(page.schoolName, page.gpa);
   return {
     title,
     description,
     alternates: { canonical: path },
-    robots: acceptanceRobots(),
+    robots: gpaRobots(),
     openGraph: { url: path, title, description },
   };
 }
 
-export default async function AcceptanceRatePage({ params }: { params: Promise<Params> }) {
+export default async function GpaPage({ params }: { params: Promise<Params> }) {
   const { school_id } = await params;
   const canonicalSchoolId = await fetchCanonicalSchoolId(school_id);
   if (canonicalSchoolId && canonicalSchoolId !== school_id) {
-    permanentRedirect(acceptanceRatePath(canonicalSchoolId));
+    permanentRedirect(gpaPath(canonicalSchoolId));
   }
   const [page, brandColors] = await Promise.all([
     loadServedPage(school_id),
-    isAcceptancePilotSchool(school_id) ? fetchSchoolBrandColors(school_id) : null,
+    isGpaSchool(school_id) ? fetchSchoolBrandColors(school_id) : null,
   ]);
   if (!page) notFound();
 
-  const { schoolName, history, gpa, documents, decision } = page;
-  const rows = acceptanceTableRows(history, documents);
+  const { schoolName, gpa, history, documents, decision } = page;
+  const rows = gpaTableRows(gpa, documents);
   const reportYears = new Set(
     documents.filter((doc) => doc.sub_institutional == null).map((doc) => doc.canonical_year ?? ""),
   );
-  const lead = leadSentences(schoolName, history, reportYears).join(" ");
-  const latest = history.years[0];
+  const lead = gpaLeadSentences(schoolName, gpa, reportYears).join(" ");
+  const latest = gpa.years[0];
   const hubPath = `/schools/${school_id}`;
-  const pageUrl = `${SITE}${acceptanceRatePath(school_id)}`;
+  const pageUrl = `${SITE}${gpaPath(school_id)}`;
   const related = relatedLinks(schoolName, latest?.year ?? null);
   const accentReadable = headerAccentReadable(deriveInks(brandColors));
 
@@ -94,7 +88,7 @@ export default async function AcceptanceRatePage({ params }: { params: Promise<P
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Schools", item: `${SITE}/schools` },
       { "@type": "ListItem", position: 2, name: schoolName, item: `${SITE}${hubPath}` },
-      { "@type": "ListItem", position: 3, name: "Acceptance rate", item: pageUrl },
+      { "@type": "ListItem", position: 3, name: "GPA", item: pageUrl },
     ],
   };
 
@@ -118,10 +112,10 @@ export default async function AcceptanceRatePage({ params }: { params: Promise<P
               <Link href={hubPath}>{schoolName}</Link>
             </span>
             {" / "}
-            <span aria-current="page">Acceptance rate</span>
+            <span aria-current="page">GPA</span>
           </nav>
           <div className="meta" style={{ marginBottom: 12 }}>
-            {KICKER}
+            {GPA_KICKER}
           </div>
           <h1
             className="serif acc-title"
@@ -134,7 +128,7 @@ export default async function AcceptanceRatePage({ params }: { params: Promise<P
             }}
           >
             <span className="acc-title__name">{schoolName}</span>{" "}
-            <span style={{ fontStyle: "italic" }}>acceptance rate</span>
+            <span style={{ fontStyle: "italic" }}>enrolled first-year GPA</span>
           </h1>
           <div className="cd-archive-lead acc-lead">
             {lead ? <p>{lead}</p> : null}
@@ -143,22 +137,20 @@ export default async function AcceptanceRatePage({ params }: { params: Promise<P
         </div>
       </header>
 
-      <section aria-labelledby="acceptance-by-year" className="acc-section">
-        <h2 id="acceptance-by-year" className="serif acc-section__title">
-          {sectionHeading(schoolName, history)}
+      <section aria-labelledby="gpa-by-year" className="acc-section">
+        <h2 id="gpa-by-year" className="serif acc-section__title">
+          {gpaHeading(schoolName, gpa)}
         </h2>
-        <AcceptanceRateChart schoolName={schoolName} rows={rows} />
-        <AcceptanceRateTable schoolId={school_id} schoolName={schoolName} rows={rows} history={history} />
-        <p className="acc-note">{sourceNote(schoolName, history)}</p>
+        <GpaChart schoolName={schoolName} history={gpa} rows={rows} />
+        <GpaTable schoolId={school_id} schoolName={schoolName} rows={rows} />
+        <p className="acc-note">{gpaSourceNote(schoolName)}</p>
       </section>
 
       <nav aria-label={`More on ${schoolName}`} className="acc-related">
         <Link href={hubPath}>{related.hub}</Link>
+        <Link href={acceptanceRatePath(school_id)}>{possessive(schoolName)} acceptance rate</Link>
         {earlyDecisionPageDecision(school_id, history).kind !== "not-found" ? (
           <Link href={earlyDecisionPath(school_id)}>{possessive(schoolName)} early decision rate</Link>
-        ) : null}
-        {gpaPageDecision(school_id, gpa).kind !== "not-found" ? (
-          <Link href={gpaPath(school_id)}>{possessive(schoolName)} enrolled first-year GPA</Link>
         ) : null}
         {latest && related.latest ? (
           <Link href={`/schools/${school_id}/${latest.year}`}>{related.latest}</Link>
