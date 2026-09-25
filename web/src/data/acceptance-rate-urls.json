@@ -29,7 +29,14 @@
     "/schools/usc/acceptance-rate",
     "/schools/ut-austin/acceptance-rate",
     "/schools/wellesley-college/acceptance-rate",
-    "/schools/lafayette-college/acceptance-rate"
+    "/schools/lafayette-college/acceptance-rate",
+    "/schools/georgia-tech/acceptance-rate",
+    "/schools/caltech/acceptance-rate",
+    "/schools/tulane-university/acceptance-rate",
+    "/schools/uchicago/acceptance-rate",
+    "/schools/rutgers/acceptance-rate",
+    "/schools/texas-am/acceptance-rate",
+    "/schools/yale/acceptance-rate"
   ],
   "gone": []
 }
