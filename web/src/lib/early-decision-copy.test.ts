@@ -37,16 +37,14 @@ function year(
 ): { doc: HistoryDocument; extract: HistoryExtract } {
   const start = Number(label.slice(0, 4));
   const schema = start >= 2025 ? "2025-26" : start >= 2024 ? "2024-25" : "2023-24";
-  const c1 =
+  const values: Record<string, number | string> =
     start >= 2025
-      ? { "C.116": applied, "C.117": admitted }
-      : { "C.117": applied, "C.118": admitted, "C.119": 200 };
-  const c21 =
-    start >= 2025 ? { "C.2110": edApplied, "C.2111": edAdmitted } : { "C.2106": edApplied, "C.2107": edAdmitted };
+      ? { "C.116": applied, "C.117": admitted, "C.2110": edApplied, "C.2111": edAdmitted }
+      : { "C.117": applied, "C.118": admitted, "C.119": 200, "C.2106": edApplied, "C.2107": edAdmitted };
   return {
     doc: doc(label),
     extract: {
-      values: vals({ ...c1, ...c21 }),
+      values: vals(values),
       schemaVersion: schema,
       producer: "tier4_docling",
       markdown: `Please provide significant details about your early decision plan:
