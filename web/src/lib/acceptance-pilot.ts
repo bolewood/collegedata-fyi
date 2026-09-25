@@ -50,7 +50,6 @@ export const ACCEPTANCE_PILOT_SCHOOLS: readonly string[] = [
   // Wave 3 (#189): M1-unblocked searchable slugs, plus Yale.
   "georgia-tech",
   "caltech",
-  "tulane-university",
   "uchicago",
   "rutgers",
   "texas-am",
@@ -79,7 +78,6 @@ const ACCEPTANCE_PILOT_LIVE_ALIASES: Record<string, string> = {
   "the-university-of-texas-at-austin": "ut-austin",
   "georgia-institute-of-technology-main-campus": "georgia-tech",
   "california-institute-of-technology": "caltech",
-  "tulane-university-of-louisiana": "tulane-university",
   "university-of-chicago": "uchicago",
   "rutgers-university-new-brunswick": "rutgers",
   "texas-a-and-m-university-college-station": "texas-am",

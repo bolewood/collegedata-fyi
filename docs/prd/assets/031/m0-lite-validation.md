@@ -288,12 +288,15 @@ of the sex rows, except:
 Live measurement against production. Same bar: ≥ 3 usable C1 years,
 latest 2023-24 or newer.
 
-Shipped: `georgia-tech`, `caltech`, `tulane-university`, `uchicago`,
+Shipped: `georgia-tech`, `caltech`, `uchicago`,
 `rutgers`, `texas-am`, plus leftover `yale`.
 
 Dropped: UVA (`uva`, 2 years). Cornell, Columbia, and Vanderbilt also had
 only 2 usable years; MIT had 3 (latest 2023-24) but the issue asked for
-one leftover, and Yale was first in the preference order.
+one leftover, and Yale was first in the preference order. Tulane has eight
+usable extract years, but the hub still leads with 2024-25 (no
+`school_browser_rows` for 2025-26), so it stays off until hub and stat
+page agree.
 
 Georgia Tech, Caltech, Tulane, UChicago, Rutgers, and Texas A&M were in
 the M0-lite split-slug set waiting on M1. Latest-year applicant and admit

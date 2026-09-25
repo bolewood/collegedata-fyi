@@ -10,9 +10,10 @@ This project uses four-part semantic versioning.
 
 ### Added
 
-- Seven more schools now have an acceptance-rate page: Georgia Tech,
-  Caltech, Tulane, UChicago, Rutgers, Texas A&M, and Yale. UVA did not
-  yet have three usable years.
+- Six more schools now have an acceptance-rate page: Georgia Tech,
+  Caltech, UChicago, Rutgers, Texas A&M, and Yale. UVA did not yet have
+  three usable years. Tulane waits until the hub and the stat page
+  name the same latest year.
 
 
 ## [0.6.10.0] - 2026-09-24

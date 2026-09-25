@@ -3,7 +3,7 @@
 Read this as a parent, then as a counselor, then as IR. **Not signed yet.**
 Revision 8 (after the round 7 editorial review).
 
-Route: `/schools/{id}/acceptance-rate`. Allowlist = sitemap (37 schools
+Route: `/schools/{id}/acceptance-rate`. Allowlist = sitemap (36 schools
 after wave 3). Indexed (`ACCEPTANCE_PILOT_INDEXABLE` in
 `web/src/lib/acceptance-pilot.ts`).
 
@@ -164,7 +164,6 @@ revision 2.
 - Lafayette College admitted 31.2% of first-year applicants for fall 2025 (3,289 of 10,556), down from 31.4% for fall 2024 and from a high of 40.7% for fall 2021. It was 29.4% for fall 2018. Applications rose 3.5% for fall 2025, to 10,556 from 10,195; the fewest in the years shown was 8,215, for fall 2020.
 - Georgia Institute of Technology admitted 13.3% of first-year applicants for fall 2025 (8,921 of 66,881), the lowest in the eight years shown, down from 14.1% for fall 2024. It was 22.6% for fall 2018. Applications rose from 35,612 to 66,881 over that span.
 - California Institute of Technology admitted 2.6% of first-year applicants for fall 2024 (356 of 13,856), the lowest in the seven years shown, down from 3.1% for fall 2023. It was 6.6% for fall 2018. Most of the drop came in one year, from 6.7% for fall 2020 to 3.9% for fall 2021, when applications rose from 8,007 to 13,026 and admits fell from 536 to 510.
-- Tulane University of Louisiana admitted 14.5% of first-year applicants for fall 2025 (4,763 of 32,942), up from 14.0% for fall 2024. It was 17.3% for fall 2018. Applications rose 1.0% for fall 2025, to 32,942 from 32,609; the fewest in the years shown was 27,936, for fall 2023.
 - University of Chicago admitted 4.5% of first-year applicants for fall 2025 (2,039 of 45,533), the lowest in the five years shown, tied with fall 2024, down from 6.5% for fall 2021. Applications rose 4.4% for fall 2025, to 45,533 from 43,612; the fewest in the years shown was 37,500, for fall 2022.
 - Rutgers University admitted 62.3% of first-year applicants for fall 2023 (18,053 of 28,992), the highest in the three years with figures, up from 60.1% for fall 2018. Usable figures for fall 2020, fall 2021, and fall 2022 are not in our archive.
 - Texas A&M University admitted 51.7% of first-year applicants for fall 2025 (32,531 of 62,967), the lowest in the five years with figures, down from 57.3% for fall 2024. It was 63.0% for fall 2020. Applications rose from 43,307 to 62,967 over that span. Usable figures for fall 2023 are not in our archive.
