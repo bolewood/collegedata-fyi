@@ -6,6 +6,16 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.12.0] - 2026-09-24
+
+### Added
+
+- Five more schools now have an acceptance-rate page: Davidson,
+  Skidmore, Boston College, Alabama, and Howard. Elon, CU Boulder, and
+  Stony Brook did not yet have three usable years. Barnard's 2022-23
+  extract doubles the printed count. Penn State's file is not
+  University Park.
+
 ## [0.6.11.0] - 2026-09-24
 
 ### Added

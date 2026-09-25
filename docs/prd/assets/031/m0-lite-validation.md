@@ -304,5 +304,34 @@ counts were checked against the public source files. Caltech 2024-25,
 UChicago 2025-26, and Yale 2025-26 match as the sum of the sex rows
 (no printed all-students total in the text layer).
 
+## Wave 4 (#190) — 2026-09-24
+
+Live measurement against production. Same bar: ≥ 3 usable C1 years,
+latest 2023-24 or newer. Sitemap seats remaining after wave 3: 14
+(36 → cap 50).
+
+Shipped: `davidson-college`, `skidmore-college`, `boston-college`,
+`the-university-of-alabama`, `howard-university`. Public ids follow
+`schools.yaml` (`alabama` and `cu-boulder` are not live slugs).
+
+Dropped:
+
+- Elon (`elon-university`, 1 usable year; older files are XLSX read
+  with the 2025-26 cell map)
+- CU Boulder (`colorado`, 2)
+- Stony Brook (`stony-brook-university`, 1; same XLSX map)
+- Barnard (`barnard`): 2022-23 file prints 12,009 applied / 1,056
+  admitted; the extract doubles applicants to 24,018 (women row plus
+  the total row). Do not ship that year.
+- Penn State (`penn-state`): five usable years, but the file is a
+  ~1,933-applicant / 97% admit CDS, not University Park. Identity
+  follow-up, not this page.
+- Harvey Mudd skipped as a go/no-go.
+
+Latest-year applicant and admit counts match the printed C1 totals
+(Davidson 8,933 / 1,127; Skidmore 12,273 / 2,917; Boston College
+34,779 / 5,632; Alabama 61,994 / 44,124; Howard 37,270 / 15,724).
+Hub latest years agree with the stat page.
+
 
 

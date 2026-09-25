@@ -54,6 +54,14 @@ export const ACCEPTANCE_PILOT_SCHOOLS: readonly string[] = [
   "rutgers",
   "texas-am",
   "yale",
+  // Wave 4 (#190): GSC remainder. Elon, CU Boulder, and Stony Brook
+  // lacked three usable years. Barnard's 2022-23 extract doubles the
+  // printed count. Penn State's CDS is a ~2,000-applicant file.
+  "davidson-college",
+  "skidmore-college",
+  "boston-college",
+  "the-university-of-alabama",
+  "howard-university",
 ];
 
 /** URLs ever listed in a sitemap. They must keep returning 200 or an explicit 410. */
