@@ -171,6 +171,10 @@ describe("pilot gating", () => {
     expect(ACCEPTANCE_PILOT_SCHOOLS).not.toContain("washington-university-in-st-louis");
     expect(ACCEPTANCE_PILOT_SCHOOLS).not.toContain("uw");
     expect(ACCEPTANCE_PILOT_SCHOOLS).not.toContain("umich");
+    expect(ACCEPTANCE_PILOT_SCHOOLS).toContain("georgia-tech");
+    expect(ACCEPTANCE_PILOT_SCHOOLS).toContain("yale");
+    expect(ACCEPTANCE_PILOT_SCHOOLS).not.toContain("uva");
+    expect(ACCEPTANCE_PILOT_SCHOOLS).not.toContain("cornell");
     expect(ACCEPTANCE_PILOT_SCHOOLS.length).toBeLessThanOrEqual(50);
   });
 
@@ -183,6 +187,9 @@ describe("pilot gating", () => {
     expect(isAcceptancePilotSchool("university-of-florida")).toBe(true);
     expect(isAcceptancePilotSchool("stanford-university")).toBe(true);
     expect(isAcceptancePilotSchool("the-university-of-texas-at-austin")).toBe(true);
+    expect(isAcceptancePilotSchool("georgia-tech")).toBe(true);
+    expect(isAcceptancePilotSchool("georgia-institute-of-technology-main-campus")).toBe(true);
+    expect(isAcceptancePilotSchool("yale-university")).toBe(true);
   });
 
   it("lists served pilot pages in the sitemap", () => {

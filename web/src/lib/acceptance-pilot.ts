@@ -47,6 +47,13 @@ export const ACCEPTANCE_PILOT_SCHOOLS: readonly string[] = [
   "ut-austin",
   "wellesley-college",
   "lafayette-college",
+  // Wave 3 (#189): M1-unblocked searchable slugs, plus Yale.
+  "georgia-tech",
+  "caltech",
+  "uchicago",
+  "rutgers",
+  "texas-am",
+  "yale",
 ];
 
 /** URLs ever listed in a sitemap. They must keep returning 200 or an explicit 410. */
@@ -69,6 +76,12 @@ const ACCEPTANCE_PILOT_LIVE_ALIASES: Record<string, string> = {
   "university-of-north-carolina-at-chapel-hill": "unc",
   "university-of-southern-california": "usc",
   "the-university-of-texas-at-austin": "ut-austin",
+  "georgia-institute-of-technology-main-campus": "georgia-tech",
+  "california-institute-of-technology": "caltech",
+  "university-of-chicago": "uchicago",
+  "rutgers-university-new-brunswick": "rutgers",
+  "texas-a-and-m-university-college-station": "texas-am",
+  "yale-university": "yale",
 };
 
 export function publicAcceptanceSchoolId(schoolId: string): string {
