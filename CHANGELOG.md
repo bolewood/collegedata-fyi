@@ -6,6 +6,16 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.14.0] - 2026-09-25
+
+### Added
+
+- Harvard, Princeton, and Stanford now have a GPA page at
+  `/schools/{id}/gpa` from CDS C11 (enrolled first-years who reported a
+  GPA) and C12 (average, when printed). Yale left C11 blank. Dartmouth,
+  Vanderbilt, Cornell, Duke, and Brown do not yet have three usable
+  years.
+
 ## [0.6.13.0] - 2026-09-24
 
 ### Added

@@ -28,6 +28,8 @@ export type ArchiveLeadFacts = {
   acceptanceRateHref?: string | null;
   /** When the early-decision page is served, the summary's "Early decision" links to it. */
   earlyDecisionHref?: string | null;
+  /** When the GPA page is served, the summary's "GPA" links to it. */
+  gpaHref?: string | null;
 };
 
 export type YearArchiveLeadFacts = {
@@ -187,6 +189,8 @@ export function archiveLead(facts: ArchiveLeadFacts): ArchiveLead | null {
         part.type === "text"
           ? linkFirstPhrase(part.text, "Early decision", facts.earlyDecisionHref)
           : [part],
+      ).flatMap((part) =>
+        part.type === "text" ? linkFirstPhrase(part.text, "GPA", facts.gpaHref) : [part],
       ),
     );
   }

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { buildApiUsageEvent, recordApiUsageEvent } from "@/lib/api-usage";
 import { isAcceptanceRateGone } from "@/lib/acceptance-pilot";
 import { isEarlyDecisionGone } from "@/lib/early-decision-pilot";
+import { isGpaGone } from "@/lib/gpa-pilot";
 
 export function proxy(request: NextRequest, event: NextFetchEvent) {
   const { pathname } = request.nextUrl;
@@ -15,6 +16,11 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
   }
   if (pathname.endsWith("/early-decision")) {
     return isEarlyDecisionGone(pathname)
+      ? new NextResponse(null, { status: 410 })
+      : NextResponse.next();
+  }
+  if (pathname.endsWith("/gpa")) {
+    return isGpaGone(pathname)
       ? new NextResponse(null, { status: 410 })
       : NextResponse.next();
   }
@@ -31,5 +37,6 @@ export const config = {
     "/api/snapshots",
     "/schools/:school_id/acceptance-rate",
     "/schools/:school_id/early-decision",
+    "/schools/:school_id/gpa",
   ],
 };
