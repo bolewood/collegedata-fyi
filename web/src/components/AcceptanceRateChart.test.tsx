@@ -24,6 +24,7 @@ function year(
     rate,
     yieldRate: 40 / admitted,
     ed: ed ?? null,
+    edNote: null,
   };
 }
 
@@ -58,6 +59,20 @@ describe("AcceptanceRateChart", () => {
     // 40% ED is the scale max; 8% overall is a fifth of that height.
     expect(html).toMatch(/height:27px/);
     expect(html).toMatch(/height:136px/);
+  });
+
+  it("draws a single early-decision series when asked, without pairing overall", () => {
+    const rows: AcceptanceTableRow[] = [2022, 2023, 2024, 2025].map((start) => ({
+      kind: "year",
+      row: year(start, 0.15),
+    }));
+    const html = renderToStaticMarkup(
+      <AcceptanceRateChart schoolName="Bowdoin College" rows={rows} series="early-decision" />,
+    );
+    expect(html).toContain("acc-chart__bar");
+    expect(html).not.toContain("acc-chart__track--pair");
+    expect(html).toContain("Share of early-decision applicants admitted");
+    expect(html).not.toContain("first-year applicants");
   });
 });
 

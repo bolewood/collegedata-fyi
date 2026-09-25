@@ -15,22 +15,25 @@ export const CHART_MIN_YEARS = 4;
 export function AcceptanceRateChart({
   schoolName,
   rows,
+  series = "acceptance",
 }: {
   schoolName: string;
   rows: AcceptanceTableRow[];
+  series?: "acceptance" | "early-decision";
 }) {
   const slots = [...rows].reverse();
   const overall = slots.flatMap((slot) => (slot.kind === "year" ? [slot.row.rate] : []));
   if (overall.length < CHART_MIN_YEARS) return null;
-  const showEd = slots.some((slot) => slot.kind === "year" && slot.row.ed != null);
+  const showEd = series === "acceptance" && slots.some((slot) => slot.kind === "year" && slot.row.ed != null);
   const edRates = slots.flatMap((slot) => (slot.kind === "year" && slot.row.ed ? [slot.row.ed.rate] : []));
   const max = Math.max(...overall, ...edRates);
   const hasGap = slots.some((slot) => slot.kind === "gap");
-  const label = `${schoolName} acceptance rate by entering class, oldest first: ${slots
+  const rateNoun = series === "early-decision" ? "early decision" : "acceptance rate";
+  const label = `${schoolName} ${rateNoun} by entering class, oldest first: ${slots
     .map((slot) => {
       if (slot.kind !== "year") return `fall ${slot.yearStart}, not available`;
       const ed = slot.row.ed ? `, early decision ${pct(slot.row.ed.rate)}` : "";
-      return `fall ${slot.row.yearStart}, ${pct(slot.row.rate)}${ed}`;
+      return `fall ${slot.row.yearStart}, ${pct(slot.row.rate)}${showEd ? ed : ""}`;
     })
     .join("; ")}.`;
 
@@ -73,9 +76,11 @@ export function AcceptanceRateChart({
         })}
       </div>
       <figcaption className="acc-chart__caption">
-        {showEd
-          ? "Dark bars show first-year admission. Olive bars show early decision."
-          : "Share of first-year applicants admitted, by fall entering class."}
+        {series === "early-decision"
+          ? "Share of early-decision applicants admitted, by fall entering class."
+          : showEd
+            ? "Dark bars show first-year admission. Olive bars show early decision."
+            : "Share of first-year applicants admitted, by fall entering class."}
         {hasGap ? " — = not reported or not usable." : ""}
       </figcaption>
     </figure>

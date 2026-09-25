@@ -38,9 +38,10 @@ import { SubmissionForm } from "@/components/SubmissionForm";
 import { FederalBaselineTable } from "@/components/FederalBaselineTable";
 import { isCanonicalCdsYear, storageUrl, yearRange } from "@/lib/format";
 import { archiveLead, directoryOnlyLead } from "@/lib/archive-lead";
-import { fetchAcceptancePageServed, gatedYearFacts } from "@/lib/acceptance-history-data";
+import { fetchAcceptancePageServed, fetchEarlyDecisionPageServed, gatedYearFacts } from "@/lib/acceptance-history-data";
 import { ipedsAdmissions } from "@/lib/c1-hub-gate";
 import { acceptanceRatePath } from "@/lib/acceptance-pilot";
+import { earlyDecisionPath } from "@/lib/early-decision-pilot";
 import { ArchiveLead } from "@/components/ArchiveLead";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
 import type { ManifestRow, InstitutionCoverage } from "@/lib/types";
@@ -211,6 +212,7 @@ export default async function SchoolDetailPage({ params }: {
     nonpayment,
     yearFacts,
     acceptancePageServed,
+    earlyDecisionPageServed,
   ] = await Promise.all([
     fetchScorecardByIpedsId(ipedsId),
     fetchBrowserRowBySchoolId(school_id),
@@ -224,6 +226,7 @@ export default async function SchoolDetailPage({ params }: {
     fetchFsaNonpaymentBySchoolId(school_id),
     fetchSchoolYearFacts(school_id),
     fetchAcceptancePageServed(school_id),
+    fetchEarlyDecisionPageServed(school_id),
   ]);
   const administrativeUnit = ipedsAdmissions(federalFacts, ipedsId).administrativeUnit;
   const projectedPositioning = browserRow && !administrativeUnit
@@ -349,6 +352,7 @@ export default async function SchoolDetailPage({ params }: {
     documents: docs,
     summary,
     acceptanceRateHref: acceptancePageServed ? acceptanceRatePath(school_id) : null,
+    earlyDecisionHref: earlyDecisionPageServed ? earlyDecisionPath(school_id) : null,
   });
   const carnegieCode = scorecard?.carnegie_basic;
   const positioningSourceDoc = positioningSchool

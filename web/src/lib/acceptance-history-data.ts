@@ -18,6 +18,13 @@ import {
   acceptanceSitemapEntries,
   isAcceptancePilotSchool,
 } from "./acceptance-pilot";
+import {
+  EARLY_DECISION_INDEXABLE,
+  EARLY_DECISION_SCHOOLS,
+  earlyDecisionPageDecision,
+  earlyDecisionSitemapEntries,
+  isEarlyDecisionSchool,
+} from "./early-decision-pilot";
 import type { ArtifactNotes, ManifestRow, SchoolFactUnifiedRow } from "./types";
 
 const fetchHistoryExtract = cache(async function fetchHistoryExtract(
@@ -170,6 +177,33 @@ export async function acceptanceRateSitemap(
     ACCEPTANCE_PILOT_SCHOOLS.map(async (id) => ((await fetchAcceptancePageServed(id)) ? id : null)),
   );
   return acceptanceSitemapEntries(
+    served.filter((id): id is string => id != null),
+    indexable,
+  );
+}
+
+/** True when /schools/{id}/early-decision renders. Never throws; the hub calls it. */
+export const fetchEarlyDecisionPageServed = cache(async function fetchEarlyDecisionPageServed(
+  schoolId: string,
+): Promise<boolean> {
+  if (!isEarlyDecisionSchool(schoolId)) return false;
+  try {
+    const { history } = await fetchAcceptanceHistory(schoolId);
+    return earlyDecisionPageDecision(schoolId, history).kind !== "not-found";
+  } catch (error) {
+    console.warn(`fetchEarlyDecisionPageServed: ${String(error)}`);
+    return false;
+  }
+});
+
+export async function earlyDecisionSitemap(
+  indexable: boolean = EARLY_DECISION_INDEXABLE,
+): Promise<MetadataRoute.Sitemap> {
+  if (!indexable) return [];
+  const served = await Promise.all(
+    EARLY_DECISION_SCHOOLS.map(async (id) => ((await fetchEarlyDecisionPageServed(id)) ? id : null)),
+  );
+  return earlyDecisionSitemapEntries(
     served.filter((id): id is string => id != null),
     indexable,
   );

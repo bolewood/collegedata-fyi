@@ -3,29 +3,31 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { fetchCanonicalSchoolId, fetchSchoolBrandColors } from "@/lib/queries";
 import { fetchAcceptanceHistory } from "@/lib/acceptance-history-data";
+import { asEdSeries, latestOwnEdNote } from "@/lib/acceptance-history";
 import {
-  acceptancePageDecision,
-  acceptanceRatePath,
-  acceptanceRobots,
-  headerAccentReadable,
-  isAcceptancePilotSchool,
-} from "@/lib/acceptance-pilot";
-import { earlyDecisionPageDecision, earlyDecisionPath } from "@/lib/early-decision-pilot";
+  earlyDecisionPageDecision,
+  earlyDecisionPath,
+  earlyDecisionRobots,
+  isEarlyDecisionSchool,
+} from "@/lib/early-decision-pilot";
+import { headerAccentReadable } from "@/lib/acceptance-pilot";
+import { acceptanceRatePath } from "@/lib/acceptance-pilot";
 import {
-  KICKER,
-  acceptanceDescription,
-  acceptanceTitle,
-  degradedNote,
-  leadSentences,
+  ED_KICKER,
+  earlyDecisionDescription,
+  earlyDecisionHeading,
+  earlyDecisionNoteAttribution,
+  earlyDecisionSourceNote,
+  earlyDecisionTitle,
+  edLeadSentences,
   possessive,
-  relatedLinks,
-  sectionHeading,
-  sourceNote,
-} from "@/lib/acceptance-rate-copy";
+} from "@/lib/early-decision-copy";
+import { degradedNote, relatedLinks } from "@/lib/acceptance-rate-copy";
 import { deriveInks } from "@/lib/derive-inks";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
-import { AcceptanceRateTable, acceptanceTableRows } from "@/components/AcceptanceRateTable";
 import { AcceptanceRateChart } from "@/components/AcceptanceRateChart";
+import { acceptanceTableRows } from "@/components/AcceptanceRateTable";
+import { EarlyDecisionTable } from "@/components/EarlyDecisionTable";
 
 export const revalidate = 3600;
 
@@ -34,9 +36,9 @@ type Params = { school_id: string };
 const SITE = "https://www.collegedata.fyi";
 
 async function loadServedPage(schoolId: string) {
-  if (!isAcceptancePilotSchool(schoolId)) return null;
+  if (!isEarlyDecisionSchool(schoolId)) return null;
   const { schoolName, documents, history } = await fetchAcceptanceHistory(schoolId);
-  const decision = acceptancePageDecision(schoolId, history);
+  const decision = earlyDecisionPageDecision(schoolId, history);
   if (decision.kind === "not-found" || !schoolName) return null;
   return { schoolName, documents, history, decision };
 }
@@ -51,40 +53,42 @@ export async function generateMetadata({
   const page = await loadServedPage(schoolId);
   if (!page) return { title: "Page not found", robots: { index: false, follow: true } };
 
-  const path = acceptanceRatePath(schoolId);
-  const title = acceptanceTitle(page.schoolName, page.history);
-  const description = acceptanceDescription(page.schoolName, page.history);
+  const path = earlyDecisionPath(schoolId);
+  const title = earlyDecisionTitle(page.schoolName, page.history);
+  const description = earlyDecisionDescription(page.schoolName, page.history);
   return {
     title,
     description,
     alternates: { canonical: path },
-    robots: acceptanceRobots(),
+    robots: earlyDecisionRobots(),
     openGraph: { url: path, title, description },
   };
 }
 
-export default async function AcceptanceRatePage({ params }: { params: Promise<Params> }) {
+export default async function EarlyDecisionPage({ params }: { params: Promise<Params> }) {
   const { school_id } = await params;
   const canonicalSchoolId = await fetchCanonicalSchoolId(school_id);
   if (canonicalSchoolId && canonicalSchoolId !== school_id) {
-    permanentRedirect(acceptanceRatePath(canonicalSchoolId));
+    permanentRedirect(earlyDecisionPath(canonicalSchoolId));
   }
   const [page, brandColors] = await Promise.all([
     loadServedPage(school_id),
-    isAcceptancePilotSchool(school_id) ? fetchSchoolBrandColors(school_id) : null,
+    isEarlyDecisionSchool(school_id) ? fetchSchoolBrandColors(school_id) : null,
   ]);
   if (!page) notFound();
 
   const { schoolName, history, documents, decision } = page;
-  const rows = acceptanceTableRows(history, documents);
+  const series = asEdSeries(history);
+  const rows = acceptanceTableRows(series, documents);
   const reportYears = new Set(
     documents.filter((doc) => doc.sub_institutional == null).map((doc) => doc.canonical_year ?? ""),
   );
-  const lead = leadSentences(schoolName, history, reportYears).join(" ");
-  const latest = history.years[0];
+  const lead = edLeadSentences(schoolName, history, reportYears).join(" ");
+  const latest = series.years[0];
   const hubPath = `/schools/${school_id}`;
-  const pageUrl = `${SITE}${acceptanceRatePath(school_id)}`;
+  const pageUrl = `${SITE}${earlyDecisionPath(school_id)}`;
   const related = relatedLinks(schoolName, latest?.year ?? null);
+  const ownNote = latestOwnEdNote(history);
   const accentReadable = headerAccentReadable(deriveInks(brandColors));
 
   const jsonLd = {
@@ -93,7 +97,7 @@ export default async function AcceptanceRatePage({ params }: { params: Promise<P
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Schools", item: `${SITE}/schools` },
       { "@type": "ListItem", position: 2, name: schoolName, item: `${SITE}${hubPath}` },
-      { "@type": "ListItem", position: 3, name: "Acceptance rate", item: pageUrl },
+      { "@type": "ListItem", position: 3, name: "Early decision", item: pageUrl },
     ],
   };
 
@@ -117,10 +121,10 @@ export default async function AcceptanceRatePage({ params }: { params: Promise<P
               <Link href={hubPath}>{schoolName}</Link>
             </span>
             {" / "}
-            <span aria-current="page">Acceptance rate</span>
+            <span aria-current="page">Early decision</span>
           </nav>
           <div className="meta" style={{ marginBottom: 12 }}>
-            {KICKER}
+            {ED_KICKER}
           </div>
           <h1
             className="serif acc-title"
@@ -133,7 +137,7 @@ export default async function AcceptanceRatePage({ params }: { params: Promise<P
             }}
           >
             <span className="acc-title__name">{schoolName}</span>{" "}
-            <span style={{ fontStyle: "italic" }}>acceptance rate</span>
+            <span style={{ fontStyle: "italic" }}>early decision acceptance rate</span>
           </h1>
           <div className="cd-archive-lead acc-lead">
             {lead ? <p>{lead}</p> : null}
@@ -142,20 +146,24 @@ export default async function AcceptanceRatePage({ params }: { params: Promise<P
         </div>
       </header>
 
-      <section aria-labelledby="acceptance-by-year" className="acc-section">
-        <h2 id="acceptance-by-year" className="serif acc-section__title">
-          {sectionHeading(schoolName, history)}
+      <section aria-labelledby="early-decision-by-year" className="acc-section">
+        <h2 id="early-decision-by-year" className="serif acc-section__title">
+          {earlyDecisionHeading(schoolName, history)}
         </h2>
-        <AcceptanceRateChart schoolName={schoolName} rows={rows} />
-        <AcceptanceRateTable schoolId={school_id} schoolName={schoolName} rows={rows} history={history} />
-        <p className="acc-note">{sourceNote(schoolName, history)}</p>
+        <AcceptanceRateChart schoolName={schoolName} rows={rows} series="early-decision" />
+        <EarlyDecisionTable schoolId={school_id} schoolName={schoolName} rows={rows} />
+        {ownNote ? (
+          <aside className="acc-ed-note">
+            <p className="acc-ed-note__from">{earlyDecisionNoteAttribution(ownNote.year)}</p>
+            <p>{ownNote.note}</p>
+          </aside>
+        ) : null}
+        <p className="acc-note">{earlyDecisionSourceNote(schoolName)}</p>
       </section>
 
       <nav aria-label={`More on ${schoolName}`} className="acc-related">
         <Link href={hubPath}>{related.hub}</Link>
-        {earlyDecisionPageDecision(school_id, history).kind !== "not-found" ? (
-          <Link href={earlyDecisionPath(school_id)}>{possessive(schoolName)} early decision rate</Link>
-        ) : null}
+        <Link href={acceptanceRatePath(school_id)}>{possessive(schoolName)} acceptance rate</Link>
         {latest && related.latest ? (
           <Link href={`/schools/${school_id}/${latest.year}`}>{related.latest}</Link>
         ) : null}

@@ -26,6 +26,8 @@ export type ArchiveLeadFacts = {
   summary?: string[];
   /** When the acceptance-rate page is served, the summary's first "acceptance rate" links to it. */
   acceptanceRateHref?: string | null;
+  /** When the early-decision page is served, the summary's "Early decision" links to it. */
+  earlyDecisionHref?: string | null;
 };
 
 export type YearArchiveLeadFacts = {
@@ -178,8 +180,14 @@ export function archiveLead(facts: ArchiveLeadFacts): ArchiveLead | null {
   paragraphs.push(first);
 
   if (facts.summary && facts.summary.length > 0) {
+    const joined = facts.summary.join(" ");
+    const withAcceptance = linkFirstPhrase(joined, "acceptance rate", facts.acceptanceRateHref);
     paragraphs.push(
-      linkFirstPhrase(facts.summary.join(" "), "acceptance rate", facts.acceptanceRateHref),
+      withAcceptance.flatMap((part) =>
+        part.type === "text"
+          ? linkFirstPhrase(part.text, "Early decision", facts.earlyDecisionHref)
+          : [part],
+      ),
     );
   }
 
