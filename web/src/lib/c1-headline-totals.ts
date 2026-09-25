@@ -106,6 +106,16 @@ export function fieldNumber(
   return Number.isNaN(n) ? null : n;
 }
 
+/** Trimmed text from an extract cell, or null when empty. */
+export function fieldText(values: Record<string, FieldValue>, id: string): string | null {
+  const field = values[id];
+  if (!field) return null;
+  const raw = field.value_decoded ?? field.value;
+  if (raw == null) return null;
+  const text = String(raw).replace(/\s+/g, " ").trim();
+  return text || null;
+}
+
 function sumPresent(
   values: Record<string, FieldValue>,
   ids: string[],

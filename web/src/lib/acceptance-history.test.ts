@@ -285,6 +285,24 @@ describe("acceptance history", () => {
     expect(reading.ok && reading.row.ed).toBeNull();
   });
 
+  it("recovers C21 counts from markdown on older extracts", () => {
+    const reading = readAcceptanceYear(
+      doc("2022-23"),
+      legacy(
+        { "C.116": 10000, "C.117": 800 },
+        `Number of early decision applications received by your institution: 1,009
+Number of applicants admitted under early decision plan: 267
+Please provide significant details about your early decision plan:
+Applicants must state in writing that they will enroll if admitted.
+## C22. Early action
+No
+`,
+      ),
+    );
+    expect(reading.ok && reading.row.ed).toEqual({ applied: 1009, admitted: 267, rate: 267 / 1009 });
+    expect(reading.ok && reading.row.edNote).toMatch(/^Applicants must state in writing/);
+  });
+
   it("uses 2024+ projected ED when the extract has C1 but no C21 counts", () => {
     const reading = readAcceptanceYear(
       doc("2024-25"),

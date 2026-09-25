@@ -6,6 +6,7 @@
 
 import { readC1Totals, type C1Template } from "./c1-headline-totals";
 import { readC21Counts, saneEdCounts, type C21Counts } from "./c21-ed-counts";
+import { isOwnEdNote, readC21Note } from "./c21-ed-note";
 import type { FieldValue, ManifestRow } from "./types";
 
 export const ACCEPTANCE_MIN_USABLE_YEARS = 3;
@@ -48,6 +49,8 @@ export type AcceptanceYear = {
   yieldRate: number | null;
   /** C21 early-decision counts when the year reports a usable plan. Null for EA/REA-only years — CDS has no EA counts. */
   ed: C21Counts | null;
+  /** School-written C21 "significant details" note, when present. */
+  edNote: string | null;
 };
 
 export type ExcludedYear = {
@@ -194,6 +197,7 @@ export function readAcceptanceYear(
     (yearStart >= BROWSER_FACTS_MIN_YEAR_START
       ? saneEdCounts(browser?.edApplicants, browser?.edAdmitted, admitted)
       : null);
+  const edNote = extract ? readC21Note({ ...extract, yearStart }) : null;
 
   return {
     ok: true,
@@ -210,12 +214,72 @@ export function readAcceptanceYear(
       rate: admitted / applied,
       yieldRate: enrolled != null ? enrolled / admitted : null,
       ed,
+      edNote,
     },
   };
 }
 
 export function hasEarlyDecision(history: AcceptanceHistory): boolean {
   return history.years.some((row) => row.ed != null);
+}
+
+/** Usable C21 years, newest first, with gaps between the first and last ED year. */
+export function buildEdHistory(history: AcceptanceHistory): AcceptanceHistory {
+  const years = history.years.filter((row) => row.ed != null);
+  const gaps: string[] = [];
+  if (years.length > 1) {
+    const have = new Set(years.map((row) => row.yearStart));
+    for (let start = years[0].yearStart - 1; start > years[years.length - 1].yearStart; start--) {
+      if (!have.has(start)) gaps.push(academicYearLabel(start));
+    }
+  }
+  return { years, gaps, excluded: history.excluded };
+}
+
+/** Newest school-written C21 details note, from any year in the window. */
+export function latestOwnEdNote(
+  history: AcceptanceHistory,
+): { year: string; note: string } | null {
+  for (const row of history.years) {
+    if (isOwnEdNote(row.edNote)) return { year: row.year, note: row.edNote };
+  }
+  return null;
+}
+
+/**
+ * C21 years with the ED counts in the headline slots, so copy and the
+ * standalone chart can reuse the acceptance-rate helpers. `ed` is cleared
+ * so the chart does not draw a second series of the same numbers.
+ */
+export function asEdSeries(history: AcceptanceHistory): AcceptanceHistory {
+  const ed = buildEdHistory(history);
+  return {
+    years: ed.years.map((row) => ({
+      ...row,
+      applied: row.ed!.applied,
+      admitted: row.ed!.admitted,
+      enrolled: null,
+      rate: row.ed!.rate,
+      yieldRate: null,
+      ed: null,
+    })),
+    gaps: ed.gaps,
+    excluded: ed.excluded,
+  };
+}
+
+export function edEligibility(history: AcceptanceHistory): Eligibility {
+  const ed = buildEdHistory(history);
+  if (ed.years.length < ACCEPTANCE_MIN_USABLE_YEARS) {
+    return { eligible: false, reason: `fewer than ${ACCEPTANCE_MIN_USABLE_YEARS} usable early-decision years` };
+  }
+  if (ed.years[0].yearStart < ACCEPTANCE_LATEST_MIN_YEAR_START) {
+    return { eligible: false, reason: "latest usable early-decision year is older than 2023-24" };
+  }
+  if (!latestOwnEdNote(history)) {
+    return { eligible: false, reason: "no school-written C21 details note" };
+  }
+  return { eligible: true };
 }
 
 /**

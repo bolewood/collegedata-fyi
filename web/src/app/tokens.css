@@ -3092,6 +3092,29 @@
   line-height: 1.6;
   color: var(--ink-2);
 }
+.acc-ed-note {
+  max-width: 44rem;
+  margin: 24px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--rule);
+}
+.acc-ed-note__from {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.acc-ed-note p:last-child {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+}
+.acc-table--ed .acc-col--year { width: 24%; }
+.acc-table--ed .acc-col--rate { width: 22%; }
+.acc-table--ed .acc-col--applied { width: 18%; }
+.acc-table--ed .acc-col--admitted { width: 18%; }
+.acc-table--ed .acc-col--source { width: 18%; }
 .acc-related {
   display: flex;
   flex-wrap: wrap;
@@ -3122,6 +3145,12 @@
   .acc-col--admitted, .acc-col--enrolled { width: 14%; }
   .acc-col--yield { width: 11%; }
   .acc-col--source { width: 13.4%; }
+  .acc-table--ed { width: calc((100vw - 32px) * 1.55); }
+  .acc-table--ed .acc-col--year { width: 24.5%; }
+  .acc-table--ed .acc-col--rate { width: 18%; }
+  .acc-table--ed .acc-col--applied { width: 22%; }
+  .acc-table--ed .acc-col--admitted { width: 18%; }
+  .acc-table--ed .acc-col--source { width: 17.5%; }
   .acc-th-long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .acc-th-short { display: inline; }
   .acc-table .acc-table__gap-label { visibility: hidden; }

@@ -259,3 +259,49 @@ describe.skipIf(MODE !== "live")("acceptance history live measurement", () => {
     writeFileSync(resolve(OUT_DIR, "live-allowlist.json"), JSON.stringify(report, null, 1));
   }, 300_000);
 });
+
+describe.skipIf(MODE !== "ed")("early-decision live measurement", () => {
+  it("reports C21 years and notes for distinctive-name candidates", async () => {
+    loadEnv();
+    const { fetchAcceptanceHistory } = await import("./acceptance-history-data");
+    const { isOwnEdNote } = await import("./c21-ed-note");
+    const extra = (process.env.ACCEPTANCE_EXTRA ?? "").split(",").filter(Boolean);
+    const only = process.env.ACCEPTANCE_ONLY_EXTRA === "1";
+    const { ACCEPTANCE_PILOT_SCHOOLS } = await import("./acceptance-pilot");
+    const { edEligibility } = await import("./acceptance-history");
+    const schools = [...new Set(only ? extra : [...ACCEPTANCE_PILOT_SCHOOLS, ...extra])];
+    const report = [];
+    for (const school of schools) {
+      const { schoolName, history } = await fetchAcceptanceHistory(school);
+      const edYears = history.years.filter((y) => y.ed);
+      const notes = history.years
+        .filter((y) => y.edNote)
+        .map((y) => ({
+          year: y.year,
+          own: isOwnEdNote(y.edNote),
+          preview: y.edNote ? y.edNote.slice(0, 180) : null,
+        }));
+      const latestOwn = notes.find((n) => n.own);
+      const eligibility = edEligibility(history);
+      report.push({
+        school,
+        schoolName,
+        eligible: eligibility.eligible,
+        reason: eligibility.eligible ? null : eligibility.reason,
+        edYears: edYears.length,
+        latestEd: edYears[0]?.year ?? null,
+        years: edYears.map((y) => ({
+          year: y.year,
+          applied: y.ed!.applied,
+          admitted: y.ed!.admitted,
+          rate: Number((y.ed!.rate * 100).toFixed(2)),
+        })),
+        notes,
+        hasOwnNote: notes.some((n) => n.own),
+        latestOwnYear: latestOwn?.year ?? null,
+      });
+    }
+    mkdirSync(OUT_DIR, { recursive: true });
+    writeFileSync(resolve(OUT_DIR, "ed-allowlist.json"), JSON.stringify(report, null, 1));
+  }, 300_000);
+});

@@ -6,6 +6,16 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.13.0] - 2026-09-24
+
+### Added
+
+- Bowdoin, Rice, and Lafayette now have an early-decision page at
+  `/schools/{id}/early-decision`. Dartmouth, Vanderbilt, and Cornell
+  do not yet have three usable C21 years plus a school-written details
+  note. Harvard, Princeton, Yale, and Stanford are REA/SCEA and are
+  not on this list.
+
 ## [0.6.12.0] - 2026-09-24
 
 ### Added

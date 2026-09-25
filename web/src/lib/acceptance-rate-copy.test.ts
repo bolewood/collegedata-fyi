@@ -75,8 +75,15 @@ function historyWithEd(rows: [number, number, number, number | null, number | nu
           "C.117": { value: String(applied) },
           "C.118": { value: String(admitted) },
         };
-        if (edApplied != null) values["C.2106"] = { value: String(edApplied) };
-        if (edAdmitted != null) values["C.2107"] = { value: String(edAdmitted) };
+        if (edApplied != null) {
+          if (start >= 2025) {
+            values["C.2110"] = { value: String(edApplied) };
+            values["C.2111"] = { value: String(edAdmitted) };
+          } else {
+            values["C.2106"] = { value: String(edApplied) };
+            values["C.2107"] = { value: String(edAdmitted) };
+          }
+        }
         return {
           doc: doc(label(start)),
           extract: { values, schemaVersion: "2024-25", producer: "tier4_docling" },
