@@ -45,6 +45,7 @@ REGISTRY_STATIONS = (
     "scorecard_load",
     "directory_enqueue",
     "mirror_ingest",
+    "api_usage_ingest",
 )
 
 

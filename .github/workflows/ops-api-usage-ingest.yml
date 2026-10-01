@@ -1,0 +1,182 @@
+name: API usage ingest
+
+# PRD 032. Reads Supabase gateway logs (Management API, 90-day retention)
+# and writes hourly aggregates to api_gateway_* tables. This repository is
+# public: logs, the step summary, and artifacts carry counts only. Never
+# print raw log rows, IPs, user agents, client hashes, or school ids here.
+
+on:
+  schedule:
+    - cron: "20 * * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "hourly catches up from the last good window; backfill reprocesses N days."
+        type: choice
+        options: [hourly, backfill]
+        default: hourly
+      days:
+        description: "Backfill length in days (1-89). Ignored for hourly."
+        required: false
+        default: "7"
+      dry_run:
+        description: "Query and aggregate without writing."
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: api-usage-ingest
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
+jobs:
+  ingest:
+    name: Ingest gateway logs
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.mode == 'backfill' && 300 || 30 }}
+    env:
+      INPUT_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'hourly' }}
+      INPUT_DAYS: ${{ github.event_name == 'workflow_dispatch' && inputs.days || '7' }}
+      INPUT_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
+      PIPELINE_TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'dispatch' }}
+      PIPELINE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_LOGS_TOKEN: ${{ secrets.SUPABASE_LOGS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Heartbeat api_usage_ingest start
+        run: |
+          python tools/ops/record_heartbeat.py \
+            --station api_usage_ingest \
+            --status running \
+            --trigger "${PIPELINE_TRIGGER}" \
+            --run-url "${PIPELINE_RUN_URL}"
+
+      - id: ingest
+        name: Ingest gateway logs
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${SUPABASE_LOGS_TOKEN}" ]]; then
+            echo "SUPABASE_LOGS_TOKEN secret is required." >&2
+            exit 2
+          fi
+          if [[ "${INPUT_DRY_RUN}" != "true" && ( -z "${SUPABASE_URL}" || -z "${SUPABASE_SERVICE_ROLE_KEY}" ) ]]; then
+            echo "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY secrets are required." >&2
+            exit 2
+          fi
+          if ! [[ "${INPUT_DAYS}" =~ ^[0-9]+$ ]]; then
+            echo "days must be an integer" >&2
+            exit 2
+          fi
+          mkdir -p api-usage
+          args=(
+            --mode "${INPUT_MODE}"
+            --days "${INPUT_DAYS}"
+            --out-json api-usage/report.json
+            --heartbeat-json api-usage/heartbeat.json
+          )
+          if [[ "${INPUT_DRY_RUN}" == "true" ]]; then
+            args+=(--dry-run)
+          fi
+          python tools/api_usage/ingest_gateway_logs.py "${args[@]}"
+
+      - name: Heartbeat api_usage_ingest ok
+        if: success()
+        run: |
+          python tools/ops/record_heartbeat.py \
+            --station api_usage_ingest \
+            --status ok \
+            --trigger "${PIPELINE_TRIGGER}" \
+            --summary-json api-usage/heartbeat.json \
+            --run-url "${PIPELINE_RUN_URL}"
+
+      - name: Heartbeat api_usage_ingest error
+        if: failure()
+        run: |
+          python tools/ops/record_heartbeat.py \
+            --station api_usage_ingest \
+            --status error \
+            --trigger "${PIPELINE_TRIGGER}" \
+            --error-code job_failed \
+            --run-url "${PIPELINE_RUN_URL}"
+
+      - name: Add run summary
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f api-usage/report.json ]]; then
+            {
+              echo "## API usage ingest"
+              echo
+              jq -r '"Mode: \(.mode)  Dry run: \(.dry_run)\nWindows: \(.windows)  Requests: \(.requests)  Third-party: \(.third_party_requests)\nRows written: \(.rows_written)  Reconciled: \(.reconciled)  Queries: \(.queries_made)"' api-usage/report.json
+              echo
+              echo "### Requests by classification"
+              jq -r '.summary.by_classification // {} | to_entries[] | "- \(.key): \(.value)"' api-usage/report.json
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No report.json was produced." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Open issue when log retention shrinks
+        if: failure() && hashFiles('api-usage/report.json') != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$(jq -r '.retention_ok' api-usage/report.json)" != "false" ]]; then
+            exit 0
+          fi
+          python tools/ops/upsert_pipeline_alert_issue.py \
+            --repo "${REPO}" \
+            --component api_usage_retention \
+            --title "Pipeline alert: Supabase gateway log retention under 7 days" \
+            --run-url "${PIPELINE_RUN_URL}" \
+            --body "The API usage ingest found no gateway logs from seven days ago. Supabase retention appears to have dropped (plan change or platform change).
+
+          The hourly job still runs, but after an outage longer than the new retention, the gap cannot be backfilled. Check the project plan and the logs endpoint.
+
+          Run: ${PIPELINE_RUN_URL}
+          "
+
+      - name: Open issue after six straight scheduled failures
+        if: failure() && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          failed=$(gh run list --repo "${REPO}" --workflow ops-api-usage-ingest.yml --event schedule \
+            --status completed --limit 5 --json conclusion \
+            --jq 'map(select(.conclusion == "failure")) | length')
+          if [[ "${failed}" -lt 5 ]]; then
+            echo "Only ${failed} of the previous 5 scheduled runs failed; not alerting yet."
+            exit 0
+          fi
+          python tools/ops/upsert_pipeline_alert_issue.py \
+            --repo "${REPO}" \
+            --component api_usage_ingest \
+            --title "Pipeline alert: API usage ingest failing for 6+ hours" \
+            --run-url "${PIPELINE_RUN_URL}" \
+            --body "The hourly gateway-log ingest (PRD 032) has failed six scheduled runs in a row.
+
+          The job catches up from its last good window on the next success, but Supabase keeps gateway logs for 90 days only, so a long outage loses data for good.
+
+          Check the SUPABASE_LOGS_TOKEN secret (expires 2027-10-01) and the run log.
+
+          Run: ${PIPELINE_RUN_URL}
+          "

@@ -24,10 +24,9 @@ The attribution layer covers the friendly Next.js API routes:
 - `/api/fields`
 - `/api/snapshots`
 
-It does not cover raw PostgREST requests to `https://api.collegedata.fyi/rest/v1`
-or Supabase Storage requests. Those bypass the Vercel app and are visible only
-through Supabase/API-gateway observability unless a proxy or log-drain layer is
-added later.
+Raw PostgREST requests to `https://api.collegedata.fyi/rest/v1` and Supabase
+Storage requests bypass the Vercel app. PRD 032 covers them separately from
+Supabase gateway logs; see [Gateway usage (PRD 032)](#gateway-usage-prd-032).
 
 ## What gets logged
 
@@ -270,6 +269,100 @@ marker change. It cannot prove that an unmarked script is or is not an AI agent.
 For unmarked traffic, `client_family` is only a coarse inference from the
 user-agent family.
 
-Raw Supabase REST and Storage traffic are outside this layer. To attribute those
-surfaces, add a proxy/log-drain plan rather than expanding this table into a
-general analytics product.
+Raw Supabase REST and Storage traffic are outside this table; the gateway
+aggregates below cover them.
+
+## Gateway usage (PRD 032)
+
+`.github/workflows/ops-api-usage-ingest.yml` runs hourly at minute 20. It reads
+Supabase gateway logs (`edge_logs` and `function_edge_logs`) through the
+Management API logs endpoint with the scoped `SUPABASE_LOGS_TOKEN` (Logs: Read,
+this project only, expires 2027-10-01) and replaces whole UTC hours in:
+
+- `api_gateway_rollups_hourly`: every request, by host, surface, route,
+  classification, client family, and status class.
+- `api_gateway_clients_hourly`: non-browser third-party clients, keyed by a
+  salted daily hash. Kept 400 days.
+- `api_gateway_schools_hourly`: archive-file requests per school (all callers)
+  and third-party `school_id=eq.` lookups.
+- `api_usage_ingest_runs`: one row per processed window.
+- Views: `api_usage_daily` (gateway plus `api_usage_events`) and
+  `api_usage_top_clients_7d`.
+
+All of these are service-role only. Nothing stores an IP, a full user agent, a
+query string, or a request body. `client_hash` is
+`HMAC-SHA256(daily salt, ip|ua|ja4)` truncated to 16 hex characters; the salt in
+`api_usage_hash_salts` is deleted two days after its UTC day, so hashes do not
+link across days.
+
+### Classification
+
+`tools/api_usage/classify.py`, first match wins:
+
+1. `internal_pipeline`: service-role JWT, `sb_secret_` key, a
+   `collegedata-pipeline` user agent, or an internal Edge Function
+   (archive, discover, directory, coverage).
+2. `friendly_api_upstream`: `X-Client-Info: collegedata-friendly-api/<sha>`.
+3. `first_party_site`: `X-Client-Info: collegedata-web/<sha>`, or a
+   `collegedata.fyi` referer (archive PDF links keep the origin-only referer).
+4. Hours up to the tagged-build deploy (`SITE_TAGGING_T0`) use inference,
+   flagged `inferred = true`: anon `supabase-js-node` from AWS and anon
+   `supabase-js-web` count as the site; browser downloads from Storage count as
+   `browser_unattributed`.
+5. `browser_unattributed`: a browser-shaped user agent with no marker.
+6. `third_party`: everything else.
+
+The gateway logs `X-Client-Info` but not custom headers, which is why first-party
+code sets that header (`web/src/lib/client-info.ts`) and Python tools send
+`User-Agent: collegedata-pipeline/<tool>`.
+
+### Operations
+
+```bash
+# Counts-only dry run of the last three hours (needs SUPABASE_LOGS_TOKEN).
+python tools/api_usage/ingest_gateway_logs.py --dry-run --out-json scratch/api-usage/dry.json
+
+# Backfill: dispatch the workflow with mode=backfill, days=1..89.
+gh workflow run ops-api-usage-ingest.yml -f mode=backfill -f days=89
+```
+
+The logs endpoint allows 10 queries per minute, so the client paces calls 7
+seconds apart and waits 5 minutes on a 429. Results truncate at 1,000 rows, so
+every query pages with `LIMIT`/`OFFSET`. Each window checks that rollup totals
+match the raw `count()`; the run summary shows `reconciled`.
+
+Alerts: six straight failed scheduled runs, or no logs from seven days ago
+(retention shrank), open a pipeline alert issue. The heartbeat station is
+`api_usage_ingest` (off the public board).
+
+The repository is public. Workflow logs and summaries carry counts only; keep
+it that way.
+
+### Common gateway queries
+
+Daily traffic by who sent it:
+
+```sql
+select day, classification, sum(requests) as requests
+from public.api_usage_daily
+where source = 'gateway' and day >= current_date - 14
+group by 1, 2
+order by 1 desc, requests desc;
+```
+
+Top third-party clients this week:
+
+```sql
+select * from public.api_usage_top_clients_7d limit 25;
+```
+
+Most-downloaded archive files by school, last 30 days:
+
+```sql
+select school_id, sum(downloads) as downloads, sum(requests) as requests
+from public.api_gateway_schools_hourly
+where surface = 'storage' and hour >= now() - interval '30 days'
+group by 1
+order by downloads desc
+limit 50;
+```

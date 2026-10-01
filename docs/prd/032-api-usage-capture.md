@@ -1,6 +1,6 @@
 # PRD 032: Capture all public API usage, not just the friendly routes
 
-**Status:** Rev 2 (2026-10-01), after an independent red-team review. M0 endpoint spike done; ready to build M1.
+**Status:** Rev 3 (2026-10-01). M0–M4 implemented; see "Implementation notes" for where the build differs from rev 2.
 **Author:** Anthony Showalter (with Claude)
 **Related:** [PRD 013](013-analytics-and-abuse-signal.md) (analytics and abuse signal), [`docs/api-usage-attribution.md`](../api-usage-attribution.md), migration `supabase/migrations/20260625120000_api_usage_events.sql`, `web/src/lib/api-usage.ts`
 
@@ -198,7 +198,7 @@ api.collegedata.fyi / raw host ─▶ Supabase gateway ─▶ edge_logs, functio
                                     classify · hash (non-browser only) · extract
                         ┌─────────────────────┬─────────────────────┴──────┐
                         ▼                     ▼                            ▼
-          api_gateway_rollups_hourly  api_gateway_clients_hourly  api_gateway_schools_daily
+          api_gateway_rollups_hourly  api_gateway_clients_hourly  api_gateway_schools_hourly
                 (all traffic)        (non-browser third parties)   (per-school counts)
                         └───────────── view: api_usage_daily ◀── api_usage_events
 ```
@@ -210,11 +210,11 @@ counting and would not be fine for rate limiting.
 
 | Path | Change |
 |---|---|
-| `web/src/lib/supabase.ts` (site client, server and browser) | `global.headers: { "X-Client-Info": "collegedata-web/<version> supabase-js/<version>" }`. The exact `X-Client-Info` key replaces supabase-js's default instead of merging with it. |
-| `web/src/lib/queries.ts` raw `fetch` | Same `X-Client-Info`. Server-side calls also send `User-Agent: collegedata-web/<version> (+https://collegedata.fyi)`. |
+| `web/src/lib/supabase.ts` (site client, server and browser) | `global.headers: { "X-Client-Info": "collegedata-web/<sha>" }` from `web/src/lib/client-info.ts`. The exact `X-Client-Info` key replaces supabase-js's default instead of merging with it. |
+| `web/src/lib/queries.ts` raw `fetch` | Same `X-Client-Info`. No User-Agent change: `X-Client-Info` alone classifies these. |
 | `web/src/lib/browser-search.ts` raw `fetch` | Same `X-Client-Info`. The function's CORS already allows it. Function logs don't record it, so this is for consistency only. |
 | Friendly API route handlers | A second client, from a small factory in `supabase.ts`, tagged `collegedata-friendly-api/<version>`. These requests are already counted at the route in `api_usage_events`, and the tag keeps them out of the third-party numbers. `public-data.ts` currently imports the shared site client, so this needs a small refactor. |
-| PDF links (`DocumentCard.tsx` and siblings) | `rel="noopener"` with `referrerPolicy="strict-origin-when-cross-origin"`, so Storage sees `Referer: https://www.collegedata.fyi/`. The Referer header does not affect the Storage or CDN cache key. |
+| PDF links (`DocumentCard.tsx` and siblings) | `rel={externalLinkRel(href)}`: `noopener` for archive files, so the browser default policy (`strict-origin-when-cross-origin`) sends `Referer: https://www.collegedata.fyi/`; other external links keep `noreferrer`. The Referer header does not affect the Storage or CDN cache key. |
 | Python tools that call `api.collegedata.fyi` with the anon key (`tools/scorecard/build_alignment_gap_recipe.py`, `tools/ipeds/build_pricing_power_recipe.py`, `tools/ipeds/build_endowment_draw_rate_recipe.py`, `tools/ipeds/probe_releases.py`, `tools/discovery/cds_card_coverage.py`, and any others `rg api.collegedata.fyi tools` finds) | `User-Agent: collegedata-pipeline/<tool>` |
 
 Rules match on **token contains**, not prefix. The cutover time T0 is a fixed
@@ -274,9 +274,10 @@ day. Kept indefinitely.
 `response_bytes`. Size is a few hundred rows an hour. Kept 400 days; a nightly
 delete enforces this.
 
-**`api_gateway_schools_daily`** holds per-school counts. Key: `(day,
-school_id, surface, classification, client_family)`. Values: `requests`,
-`downloads`. It has no client hash, so school interest can't be joined back to
+**`api_gateway_schools_hourly`** holds per-school counts: archive-file requests
+from every caller, plus `school_id=eq.` lookups from third parties and
+unattributed browsers. Key: `(hour, school_id, surface, classification)`.
+Values: `requests`, `downloads`. It has no client hash, so school interest can't be joined back to
 a client. `school_id` comes from `school_id=eq.<id>` in the query string or the
 Storage folder. Nothing else from the query string is kept.
 
@@ -373,6 +374,40 @@ The repo is public, so workflow logs and artifacts are public.
 
 Weekly digests and alerts (a big new client, a jump in Storage egress) are
 PRD 013's job. This PRD supplies the data.
+
+## Implementation notes (rev 3)
+
+Where the build differs from rev 2, and why:
+
+- **Paging instead of window halving.** The endpoint accepts `LIMIT`/`OFFSET`.
+  Every query orders by all of its group keys, so pages are deterministic; a
+  live check paged 4,675 groups and the page totals matched the raw `count()`
+  exactly.
+- **Classification in Python over grouped dimensions.** SQL groups by the raw
+  classification inputs (role, key prefix, `X-Client-Info`, referer host, user
+  agent or browser flags, AWS flag, path segments). The busiest hour measured
+  had 81 groups. Four grouped queries plus two `count()` checks per window:
+  rollups (no IP), schools (no IP), clients (IP, User-Agent and JA4 only for
+  rows a SQL prefilter can't rule out as first-party or browser), and
+  `function_edge_logs`.
+- **Atomic writes.** `api_usage_replace_window()` deletes and inserts a whole
+  window in one transaction and rejects rows outside it. The function-log pass
+  never touches client or school rows.
+- **Schools table is hourly** and drops `client_family`, so whole-hour
+  replacement works and per-school rows can't carry a client signature.
+- **AI agents are never browsers.** User agents like `ChatGPT-User` and the
+  Claude desktop app start with `Mozilla/`; anything that names a bot or AI
+  agent is `ai_agent` or `declared_bot` and is hashed like other third parties.
+  First-party rows use `client_family = 'first_party'`.
+- **Salts are pruned by `api_usage_prune()`** at the end of every run
+  (`day < today − 2`), which also enforces the 400-day client retention.
+- **Workflow inputs** are `mode` (`hourly` or `backfill`), `days` and
+  `dry_run`. Backfill uses 24-hour slices: about 10 queries a day, so 89 days
+  takes about two hours. Hourly runs catch up from the last good window end.
+- **Alerts:** six straight failed scheduled runs, or no logs from seven days
+  ago (checked once a day at 03:00 UTC), open a pipeline alert issue.
+- **T0** is `SITE_TAGGING_T0` in `tools/api_usage/classify.py`. The hour that
+  contains T0 still uses inference.
 
 ## Relationship to PRD 013
 
