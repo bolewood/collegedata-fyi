@@ -56,6 +56,7 @@ jobs:
           python-version: "3.12"
 
       - name: Heartbeat api_usage_ingest start
+        if: env.INPUT_DRY_RUN != 'true'
         run: |
           python tools/ops/record_heartbeat.py \
             --station api_usage_ingest \
@@ -93,7 +94,7 @@ jobs:
           python tools/api_usage/ingest_gateway_logs.py "${args[@]}"
 
       - name: Heartbeat api_usage_ingest ok
-        if: success()
+        if: success() && env.INPUT_DRY_RUN != 'true'
         run: |
           python tools/ops/record_heartbeat.py \
             --station api_usage_ingest \
@@ -103,13 +104,14 @@ jobs:
             --run-url "${PIPELINE_RUN_URL}"
 
       - name: Heartbeat api_usage_ingest error
-        if: failure()
+        if: (failure() || cancelled()) && env.INPUT_DRY_RUN != 'true'
         run: |
           python tools/ops/record_heartbeat.py \
             --station api_usage_ingest \
             --status error \
             --trigger "${PIPELINE_TRIGGER}" \
             --error-code job_failed \
+            --summary '{"windows": 0, "reconciled": false}' \
             --run-url "${PIPELINE_RUN_URL}"
 
       - name: Add run summary

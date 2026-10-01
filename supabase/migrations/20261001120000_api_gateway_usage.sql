@@ -158,6 +158,7 @@ grant all on table
   public.api_usage_hash_salts,
   public.api_usage_ingest_runs
 to service_role;
+revoke all on sequence public.api_usage_ingest_runs_id_seq from anon, authenticated;
 grant usage, select on sequence public.api_usage_ingest_runs_id_seq to service_role;
 
 -- Replace whole hours atomically. A null payload leaves that table alone,
@@ -358,12 +359,36 @@ insert into public.pipeline_stations (
   'gha',
   false,
   220,
-  array['windows', 'requests', 'third_party_requests'],
-  array[
-    'windows', 'requests', 'third_party_requests', 'mode', 'rows_written',
-    'lag_hours', 'reconciled', 'dry_run', 'run_url'
-  ]
+  -- pipeline_station_facts() is public, so no traffic counts here.
+  array['windows', 'reconciled'],
+  array['windows', 'reconciled', 'mode', 'rows_written', 'lag_hours', 'dry_run', 'run_url']
 );
 
 insert into public.pipeline_heartbeats (station_id)
 values ('api_usage_ingest');
+
+do $$
+declare
+  rel text;
+begin
+  foreach rel in array array[
+    'public.api_gateway_rollups_hourly',
+    'public.api_gateway_clients_hourly',
+    'public.api_gateway_schools_hourly',
+    'public.api_usage_hash_salts',
+    'public.api_usage_ingest_runs',
+    'public.api_usage_daily',
+    'public.api_usage_top_clients_7d'
+  ]
+  loop
+    if has_table_privilege('anon', rel, 'select')
+       or has_table_privilege('authenticated', rel, 'select') then
+      raise exception 'PRD 032: % is readable by anon or authenticated', rel;
+    end if;
+  end loop;
+  if has_function_privilege('anon', 'public.api_usage_replace_window(text, timestamptz, timestamptz, jsonb, jsonb, jsonb)', 'execute')
+     or has_function_privilege('anon', 'public.api_usage_prune(integer)', 'execute') then
+    raise exception 'PRD 032: usage functions are executable by anon';
+  end if;
+end;
+$$;

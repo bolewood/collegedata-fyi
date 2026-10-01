@@ -9,8 +9,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from tools.api_usage import aggregate, queries
+from tools.api_usage import classify as c
 from tools.api_usage import ingest_gateway_logs as ingest
-from tools.api_usage.logs_api import LogsApiError, LogsClient, redact
+from tools.api_usage.logs_api import LogsApiError, LogsClient, TooManyPages, redact
 
 NOW = datetime(2026, 10, 2, 12, 20, tzinfo=timezone.utc)
 H = int(datetime(2026, 10, 2, 10, tzinfo=timezone.utc).timestamp())
@@ -98,6 +99,7 @@ class FakeDb(ingest.Db):
         self.updates = []
         self.salts = {}
         self.last_end = last_end
+        self.run_queries = []
 
     def rpc(self, name, payload):
         self.rpcs.append((name, payload))
@@ -108,6 +110,7 @@ class FakeDb(ingest.Db):
             day = query.split("day=eq.")[1]
             return [{"salt": self.salts[day]}] if day in self.salts else []
         if table == "api_usage_ingest_runs":
+            self.run_queries.append(query)
             return [{"window_end": self.last_end.isoformat()}] if self.last_end else []
         return []
 
@@ -227,6 +230,57 @@ class RunTest(unittest.TestCase):
         self.assertTrue(report["retention_ok"])
 
 
+    def test_watermark_ignores_backfill_runs(self):
+        db = FakeDb(last_end=datetime(2026, 10, 1, 20, tzinfo=timezone.utc))
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            report = ingest.run(args(), now=NOW, logs=FakeLogs(), db=db)
+        self.assertIn("mode=eq.hourly", db.run_queries[0])
+        self.assertEqual(report["window_start"], "2026-10-01T20:00:00+00:00")
+        self.assertEqual(report["windows"], 1)
+
+    def test_unreconciled_window_writes_nothing_and_fails(self):
+        class Drifted(FakeLogs):
+            def query(self, sql, start, end):
+                rows = super().query(sql, start, end)
+                return [{"n": rows[0]["n"] + 500}]
+
+        db = FakeDb()
+        with self.assertRaises(ingest.IngestError), contextlib.redirect_stderr(io.StringIO()):
+            ingest.run(args(), now=NOW, logs=Drifted(), db=db)
+        self.assertEqual([name for name, _ in db.rpcs], ["api_usage_prune"])
+        self.assertEqual(db.updates[-1][2]["error_code"], "unreconciled")
+
+    def test_client_page_overflow_splits_to_hours_then_skips_clients(self):
+        class Flood(FakeLogs):
+            def query_all(self, sql, start, end):
+                if "cf_connecting_ip" in sql:
+                    raise TooManyPages("more than 60 pages")
+                return super().query_all(sql, start, end)
+
+        db = FakeDb()
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+            report = ingest.run(args(), now=NOW, logs=Flood(), db=db)
+        edge_calls = [p for name, p in db.rpcs if name == "api_usage_replace_window" and p["p_log_source"] == "edge_logs"]
+        self.assertEqual(len(edge_calls), 3)
+        self.assertTrue(all(call["p_clients"] == [] for call in edge_calls))
+        self.assertEqual(report["clients_overflow_hours"], 3)
+        self.assertEqual(db.updates[-1][2]["status"], "ok")
+
+    def test_database_errors_hide_row_details(self):
+        body = json.dumps({"code": "23514", "details": f"Failing row contains (x, {IPV4})"}).encode()
+
+        def opener(request, timeout):
+            raise urllib.error.HTTPError(request.full_url, 400, "Bad", {}, io.BytesIO(body))
+
+        db = ingest.Db("https://example.supabase.co", "key", opener=opener)
+        with self.assertRaises(ingest.IngestError) as ctx:
+            db.rpc("api_usage_replace_window", {})
+        self.assertIn("(23514)", str(ctx.exception))
+        self.assertNotIn("Failing", str(ctx.exception))
+        self.assertNotIn(IPV4, str(ctx.exception))
+
+
 class PlanTest(unittest.TestCase):
     def test_hourly_minimum_and_catch_up(self):
         self.assertEqual(
@@ -328,6 +382,31 @@ class QueryTest(unittest.TestCase):
             self.assertNotIn("ja4", sql)
         self.assertIn("cf_connecting_ip", queries.edge_clients_sql(None))
 
+    def test_head_requests_are_not_downloads_or_bytes(self):
+        sql = queries.edge_rollup_sql()
+        self.assertIn("= 'GET')", sql.split(" as downloads")[0])
+        self.assertIn("!= 'HEAD'", sql.split(" as bytes")[0])
+
+    def test_school_id_match_is_anchored(self):
+        self.assertIn("(?:^|[?&])school_id=eq", queries.edge_schools_sql(None))
+
+    def test_prefilter_clauses_never_hide_third_parties(self):
+        sql = queries.not_third_party_condition(None)
+        cases = [
+            ("'service_role'", c.Signals(role="service_role", ua_browser=True)),
+            ("'sb_secret_'", c.Signals(key_prefix="sb_secret_abc")),
+            ("collegedata-pipeline", c.Signals(ua_internal=True)),
+            ("'collegedata-web'", c.Signals(client_info="collegedata-web/abc", before_t0=False)),
+            ("'collegedata-friendly-api'", c.Signals(client_info="collegedata-friendly-api/abc", before_t0=False)),
+            ("'www.collegedata.fyi'", c.Signals(referer_host="www.collegedata.fyi", ua_browser=True, before_t0=False)),
+            ("'supabase-js-node'", c.Signals(role="anon", client_info="supabase-js-node/2", aws=True, before_t0=True)),
+            ("'supabase-js-web'", c.Signals(role="anon", client_info="supabase-js-web/2", ua_browser=True, before_t0=True)),
+        ]
+        for literal, signals in cases:
+            with self.subTest(literal=literal):
+                self.assertIn(literal, sql)
+                self.assertNotIn(c.classify(signals)[0], (c.THIRD_PARTY, c.BROWSER))
+
     def test_t0_cutoff_rendered_in_utc(self):
         sql = queries.edge_clients_sql(datetime(2026, 10, 2, 14, 25, tzinfo=timezone.utc))
         self.assertIn("toDateTime('2026-10-02 14:00:00', 'UTC')", sql)
@@ -343,6 +422,7 @@ class MainTest(unittest.TestCase):
             ingest.run = lambda a: {
                 "mode": "hourly", "dry_run": False, "windows": 1, "requests": 9, "third_party_requests": 2,
                 "rows_written": 3, "reconciled": True, "retention_ok": None, "queries_made": 6, "lag_hours": None,
+                "clients_overflow_hours": 0,
             }
             try:
                 with contextlib.redirect_stdout(io.StringIO()):
@@ -352,7 +432,7 @@ class MainTest(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertEqual(
                 set(json.loads(hb.read_text())),
-                {"windows", "requests", "third_party_requests", "mode", "rows_written", "reconciled", "dry_run"},
+                {"windows", "mode", "rows_written", "reconciled", "dry_run"},
             )
 
     def test_main_hides_unexpected_exception_text(self):

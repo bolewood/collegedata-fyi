@@ -8,6 +8,7 @@ and pages with LIMIT/OFFSET. Errors never echo response rows.
 from __future__ import annotations
 
 import json
+import os
 import re
 import time
 import urllib.error
@@ -31,6 +32,10 @@ def redact(text: str) -> str:
 
 class LogsApiError(RuntimeError):
     pass
+
+
+class TooManyPages(LogsApiError):
+    """A grouped query exceeded max_pages; the caller should shorten the window."""
 
 
 def iso(dt: datetime) -> str:
@@ -107,8 +112,14 @@ class LogsClient:
                 raise LogsApiError(f"logs API unreachable: {type(exc).__name__}") from None
             error = body.get("error") if isinstance(body, dict) else "malformed response"
             if error:
-                message = error if isinstance(error, str) else json.dumps(error)[:300]
-                raise LogsApiError(f"logs API query error: {redact(message)[:300]}")
+                # The message can quote values from the query or rows; keep it
+                # out of public logs.
+                code = error.get("code") if isinstance(error, dict) else None
+                suffix = f" ({code})" if isinstance(code, (int, str)) else ""
+                if os.environ.get("API_USAGE_DEBUG") == "1":
+                    detail = error if isinstance(error, str) else json.dumps(error)
+                    suffix += f": {redact(detail)[:300]}"
+                raise LogsApiError(f"logs API query error{suffix}")
             result = body.get("result")
             if not isinstance(result, list):
                 raise LogsApiError("logs API returned no result list")
@@ -122,4 +133,4 @@ class LogsClient:
             rows.extend(batch)
             if len(batch) < PAGE_SIZE:
                 return rows
-        raise LogsApiError(f"more than {self._max_pages} pages; shorten the window")
+        raise TooManyPages(f"more than {self._max_pages} pages")

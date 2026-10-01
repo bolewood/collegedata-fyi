@@ -407,7 +407,32 @@ Where the build differs from rev 2, and why:
 - **Alerts:** six straight failed scheduled runs, or no logs from seven days
   ago (checked once a day at 03:00 UTC), open a pipeline alert issue.
 - **T0** is `SITE_TAGGING_T0` in `tools/api_usage/classify.py`. The hour that
-  contains T0 still uses inference.
+  contains T0 still uses inference. Until it is set, every run warns.
+- **Post-review hardening** (independent review on 2026-10-01):
+  - A window whose rollup total misses the raw `count()` by more than 0.1%
+    writes nothing, marks its run `error` (`unreconciled`), and fails the job,
+    so the hour is retried.
+  - The hourly watermark reads `mode = 'hourly'` runs only; a backfill can't
+    paper over an hourly gap.
+  - If a query passes 60 pages, the window halves down to one hour. At one
+    hour the per-client query is skipped and counted in
+    `clients_overflow_hours`.
+  - `HEAD` requests are not downloads and add no bytes.
+  - Bot and AI words count only when they end a product token, so phone
+    models like "CUBOT X30" stay browsers.
+  - Database and logs-API errors print status and error code only.
+  - The heartbeat summary carries no traffic counts, because
+    `pipeline_station_facts()` is public.
+  - `tools/ops/automation_health.py` flags the workflow when its latest run is
+    more than 3 hours old.
+- **Known limitations:**
+  - Friendly API routes reuse some site query helpers (`queries.ts`), so part
+    of their upstream traffic is tagged `collegedata-web` and lands in
+    `first_party_site` rather than `friendly_api_upstream`. Both are
+    first-party, so third-party numbers are unaffected, and the friendly API
+    is counted exactly in `api_usage_events`.
+  - If a day's salt has been pruned and that day is processed again, the job
+    creates a new salt, so one client can have two hashes for that day.
 
 ## Relationship to PRD 013
 

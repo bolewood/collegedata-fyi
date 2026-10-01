@@ -329,11 +329,21 @@ gh workflow run ops-api-usage-ingest.yml -f mode=backfill -f days=89
 The logs endpoint allows 10 queries per minute, so the client paces calls 7
 seconds apart and waits 5 minutes on a 429. Results truncate at 1,000 rows, so
 every query pages with `LIMIT`/`OFFSET`. Each window checks that rollup totals
-match the raw `count()`; the run summary shows `reconciled`.
+match the raw `count()`. A window that misses by more than 0.1% writes nothing
+and fails the run, so the next hourly run retries it.
 
 Alerts: six straight failed scheduled runs, or no logs from seven days ago
-(retention shrank), open a pipeline alert issue. The heartbeat station is
-`api_usage_ingest` (off the public board).
+(retention shrank), open a pipeline alert issue. `tools/ops/automation_health.py`
+also flags the workflow when its latest run is more than 3 hours old. The
+heartbeat station is `api_usage_ingest` (off the public board, and its summary
+carries no traffic counts).
+
+After the tagged web build deploys, set `SITE_TAGGING_T0` in
+`tools/api_usage/classify.py` to the deploy time. Until then every hour uses the
+pre-tagging inference rules and the job logs a warning.
+
+Debugging a broken query locally: `API_USAGE_DEBUG=1` adds the (IP-redacted)
+logs-API error message. Never set it in CI.
 
 The repository is public. Workflow logs and summaries carry counts only; keep
 it that way.

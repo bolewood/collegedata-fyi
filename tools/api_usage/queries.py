@@ -22,9 +22,13 @@ from tools.api_usage.classify import (
 PAGE_SIZE = 1000
 
 _PATH = "log_attributes['request.path']"
-_UA = "log_attributes['request.headers.user_agent']"
+_UA_RAW = "log_attributes['request.headers.user_agent']"
+# Python classifies on this same 300-character prefix.
+_UA = f"substring({_UA_RAW}, 1, 300)"
 _STATUS = "toString(log_attributes['response.status_code'])"
 _BYTES = "toUInt64OrZero(log_attributes['response.headers.content_length'])"
+_GET = "upper(log_attributes['request.method']) = 'GET'"
+_NOT_HEAD = "upper(log_attributes['request.method']) != 'HEAD'"
 
 _HOUR = "toUnixTimestamp(toStartOfHour(timestamp))"
 _IS_ARCHIVE = f"startsWith({_PATH}, '{ARCHIVE_PREFIX}')"
@@ -39,7 +43,7 @@ _UA_INTERNAL = "(" + " or ".join(
 ) + ")"
 _SCHOOL_RAW = (
     f"if({_IS_ARCHIVE}, splitByChar('/', {_PATH})[7], "
-    "extract(log_attributes['request.search'], 'school_id=eq\\\\.([^&]+)'))"
+    "extract(log_attributes['request.search'], '(?:^|[?&])school_id=eq\\\\.([^&]+)'))"
 )
 
 _EDGE_DIMS = [
@@ -103,14 +107,14 @@ def edge_rollup_sql() -> str:
     dims = _EDGE_DIMS + [
         ("host", "lower(log_attributes['request.host'])"),
         ("status", _STATUS),
-        ("ua", f"substring({_UA}, 1, 300)"),
+        ("ua", _UA),
     ]
     metrics = [
         ("n", "count()"),
-        ("downloads", f"countIf({_STATUS} = '200' and {_IS_ARCHIVE})"),
+        ("downloads", f"countIf({_STATUS} = '200' and {_IS_ARCHIVE} and {_GET})"),
         ("ranges", f"countIf({_STATUS} = '206')"),
         ("hits", "countIf(log_attributes['response.headers.cf_cache_status'] = 'HIT')"),
-        ("bytes", f"sum({_BYTES})"),
+        ("bytes", f"sumIf({_BYTES}, {_NOT_HEAD})"),
     ]
     return _build(dims, metrics, "source = 'edge_logs'")
 
@@ -123,7 +127,7 @@ def edge_schools_sql(t0: datetime | None) -> str:
     ]
     metrics = [
         ("n", "count()"),
-        ("downloads", f"countIf({_STATUS} = '200' and {_IS_ARCHIVE})"),
+        ("downloads", f"countIf({_STATUS} = '200' and {_IS_ARCHIVE} and {_GET})"),
     ]
     where = (
         "source = 'edge_logs' and ("
@@ -138,7 +142,7 @@ def edge_schools_sql(t0: datetime | None) -> str:
 def edge_clients_sql(t0: datetime | None) -> str:
     dims = _EDGE_DIMS + [
         ("ip", "log_attributes['request.headers.cf_connecting_ip']"),
-        ("ua", f"substring({_UA}, 1, 300)"),
+        ("ua", _UA),
         ("ja4", "log_attributes['request.cf.botManagement.ja4']"),
         ("org", "substring(log_attributes['request.cf.asOrganization'], 1, 120)"),
         ("country", "substring(log_attributes['request.cf.country'], 1, 2)"),
@@ -148,7 +152,7 @@ def edge_clients_sql(t0: datetime | None) -> str:
         ("schools", f"uniqExactIf({_SCHOOL_RAW}, {_SCHOOL_RAW} != '')"),
         ("s4", f"countIf(startsWith({_STATUS}, '4'))"),
         ("s5", f"countIf(startsWith({_STATUS}, '5'))"),
-        ("bytes", f"sum({_BYTES})"),
+        ("bytes", f"sumIf({_BYTES}, {_NOT_HEAD})"),
     ]
     where = (
         "source = 'edge_logs'"
@@ -166,11 +170,11 @@ def function_rollup_sql() -> str:
         ("role", "log_attributes['request.sb.jwt.authorization.payload.role']"),
         ("aws", _AWS),
         ("status", _STATUS),
-        ("ua", f"substring({_UA}, 1, 300)"),
+        ("ua", _UA),
     ]
     metrics = [
         ("n", "count()"),
-        ("bytes", f"sum({_BYTES})"),
+        ("bytes", f"sumIf({_BYTES}, {_NOT_HEAD})"),
     ]
     return _build(dims, metrics, "source = 'function_edge_logs'")
 

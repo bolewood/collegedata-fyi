@@ -32,12 +32,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from tools.api_usage import aggregate  # noqa: E402
 from tools.api_usage import classify  # noqa: E402
 from tools.api_usage import queries  # noqa: E402
-from tools.api_usage.logs_api import LogsApiError, LogsClient, redact  # noqa: E402
+from tools.api_usage.logs_api import LogsApiError, LogsClient, TooManyPages, redact  # noqa: E402
 
 DEFAULT_PROJECT_REF = "isduwmygvmdozhpvzaix"
 HOURLY_MIN_HOURS = 3
 MAX_LOOKBACK = timedelta(days=89)
-RETENTION_PROBE_HOUR_UTC = 3
 
 
 class IngestError(RuntimeError):
@@ -83,8 +82,16 @@ class Db:
             with self._opener(request, timeout=120) as response:
                 raw = response.read()
         except urllib.error.HTTPError as exc:
-            detail = exc.read()[:300].decode("utf-8", "replace")
-            raise IngestError(f"database {method} {path.split('?')[0]} HTTP {exc.code}: {redact(detail)}") from None
+            # PostgREST error details can quote the failing row; print the
+            # Postgres error code only.
+            try:
+                code = json.loads(exc.read() or b"{}").get("code")
+            except (ValueError, AttributeError):
+                code = None
+            suffix = f" ({code})" if isinstance(code, str) and len(code) <= 10 else ""
+            raise IngestError(f"database {method} {path.split('?')[0]} HTTP {exc.code}{suffix}") from None
+        except (urllib.error.URLError, TimeoutError) as exc:
+            raise IngestError(f"database {method} {path.split('?')[0]} unreachable: {type(exc).__name__}") from None
         return json.loads(raw) if raw else None
 
     def rpc(self, name: str, payload: dict) -> object:
@@ -155,10 +162,13 @@ def process_window(
     start: datetime,
     end: datetime,
     t0: datetime | None,
+    include_clients: bool = True,
 ) -> dict:
     edge_raw, edge_dropped = in_window(logs.query_all(queries.edge_rollup_sql(), start, end), start, end)
     school_raw, _ = in_window(logs.query_all(queries.edge_schools_sql(t0), start, end), start, end)
-    client_raw, _ = in_window(logs.query_all(queries.edge_clients_sql(t0), start, end), start, end)
+    client_raw: list[dict] = []
+    if include_clients:
+        client_raw, _ = in_window(logs.query_all(queries.edge_clients_sql(t0), start, end), start, end)
     fn_raw, fn_dropped = in_window(logs.query_all(queries.function_rollup_sql(), start, end), start, end)
     edge_count = int(logs.query(queries.raw_count_sql("edge_logs"), start, end)[0]["n"])
     fn_count = int(logs.query(queries.raw_count_sql("function_edge_logs"), start, end)[0]["n"])
@@ -170,8 +180,9 @@ def process_window(
 
     edge_total = sum(row["requests"] for row in rollups)
     fn_total = sum(row["requests"] for row in fn_rollups)
+    reconciled = _reconciled(edge_count, edge_total + edge_dropped) and _reconciled(fn_count, fn_total + fn_dropped)
     written = 0
-    if db is not None:
+    if db is not None and reconciled:
         common = {"p_start": start.isoformat(), "p_end": end.isoformat()}
         db.rpc("api_usage_replace_window", {
             **common,
@@ -194,8 +205,8 @@ def process_window(
         "rows_written": written,
         "raw_requests": edge_count + fn_count,
         "rollup_requests": edge_total + fn_total,
-        "reconciled": _reconciled(edge_count, edge_total + edge_dropped)
-        and _reconciled(fn_count, fn_total + fn_dropped),
+        "reconciled": reconciled,
+        "clients_overflow": not include_clients,
         "rollup_rows": len(rollups) + len(fn_rollups),
         "client_rows": len(clients),
         "school_rows": len(schools),
@@ -203,10 +214,48 @@ def process_window(
     }
 
 
+def process_span(
+    logs: LogsClient,
+    db: Db | None,
+    salts: Callable[[str], str],
+    start: datetime,
+    end: datetime,
+    t0: datetime | None,
+) -> list[dict]:
+    """Process [start, end), halving on page overflow down to one hour.
+
+    At one hour the per-client query is the only one that can realistically
+    overflow (a scraper rotating IPs), so it is skipped and flagged.
+    """
+    try:
+        return [process_window(logs, db, salts, start, end, t0)]
+    except TooManyPages:
+        hours = int((end - start).total_seconds() // 3600)
+        if hours > 1:
+            mid = start + timedelta(hours=hours // 2)
+            return process_span(logs, db, salts, start, mid, t0) + process_span(logs, db, salts, mid, end, t0)
+        return [process_window(logs, db, salts, start, end, t0, include_clients=False)]
+
+
+def combine(parts: list[dict]) -> dict:
+    out = {
+        "window_start": parts[0]["window_start"],
+        "window_end": parts[-1]["window_end"],
+        "reconciled": all(part["reconciled"] for part in parts),
+        "clients_overflow_hours": sum(1 for part in parts if part["clients_overflow"]),
+        "summary": merge_summaries([part["summary"] for part in parts]),
+    }
+    for key in ("rows_read", "rows_written", "raw_requests", "rollup_requests",
+                "rollup_rows", "client_rows", "school_rows"):
+        out[key] = sum(part[key] for part in parts)
+    return out
+
+
 def last_good_end(db: Db) -> datetime | None:
+    """End of the latest successful hourly window; backfills don't move it."""
     rows = db.select(
         "api_usage_ingest_runs",
-        "select=window_end&status=eq.ok&order=window_end.desc&limit=1",
+        "select=window_end&mode=eq.hourly&status=eq.ok&order=window_end.desc&limit=1",
     )
     if not rows:
         return None
@@ -242,10 +291,20 @@ def merge_summaries(parts: list[dict]) -> dict:
     return {section: dict(sorted(counts.items())) for section, counts in out.items()}
 
 
+def _finish_run(db: Db | None, run_id: object, fields: dict) -> None:
+    if db is not None and run_id is not None:
+        db.update("api_usage_ingest_runs", f"id=eq.{run_id}", {
+            "finished_at": datetime.now(timezone.utc).isoformat(),
+            **fields,
+        })
+
+
 def run(args: argparse.Namespace, *, now: datetime | None = None,
         logs: LogsClient | None = None, db: Db | None = None) -> dict:
     now = now or datetime.now(timezone.utc)
     t0 = classify.SITE_TAGGING_T0
+    if t0 is None:
+        print("::warning::SITE_TAGGING_T0 is unset; every hour uses pre-tagging inference", file=sys.stderr)
     if logs is None:
         logs = LogsClient(
             os.environ.get("SUPABASE_LOGS_TOKEN", ""),
@@ -271,72 +330,72 @@ def run(args: argparse.Namespace, *, now: datetime | None = None,
         "third_party_requests": 0,
         "rows_written": 0,
         "reconciled": True,
+        "clients_overflow_hours": 0,
         "retention_ok": None,
         "windows_detail": [],
     }
 
-    if args.mode == "hourly" and end.hour == RETENTION_PROBE_HOUR_UTC:
-        report["retention_ok"] = retention_ok(logs, now)
+    try:
+        if args.mode == "hourly":
+            report["retention_ok"] = retention_ok(logs, now)
 
-    summaries = []
-    for window_start, window_end in slices(start, end, args.slice_hours):
-        run_id = None
-        if db is not None:
-            created = db.insert(
-                "api_usage_ingest_runs",
-                {
-                    "mode": args.mode,
-                    "window_start": window_start.isoformat(),
-                    "window_end": window_end.isoformat(),
-                    "run_url": run_url,
-                },
-                "return=representation",
+        summaries = []
+        for window_start, window_end in slices(start, end, args.slice_hours):
+            run_id = None
+            if db is not None:
+                created = db.insert(
+                    "api_usage_ingest_runs",
+                    {
+                        "mode": args.mode,
+                        "window_start": window_start.isoformat(),
+                        "window_end": window_end.isoformat(),
+                        "run_url": run_url,
+                    },
+                    "return=representation",
+                )
+                run_id = created[0]["id"] if isinstance(created, list) and created else None
+            try:
+                stats = combine(process_span(logs, db, salts, window_start, window_end, t0))
+            except Exception as exc:
+                _finish_run(db, run_id, {"status": "error", "error_code": type(exc).__name__})
+                raise
+            counts = {key: stats[key] for key in ("rows_read", "rows_written", "raw_requests", "rollup_requests")}
+            if not stats["reconciled"]:
+                _finish_run(db, run_id, {"status": "error", "error_code": "unreconciled", **counts})
+                raise IngestError(
+                    f"window {stats['window_start']} .. {stats['window_end']} did not reconcile "
+                    f"(rollups {stats['rollup_requests']}, raw {stats['raw_requests']}); nothing written"
+                )
+            _finish_run(db, run_id, {"status": "ok", **counts})
+            summaries.append(stats.pop("summary"))
+            report["windows"] += 1
+            report["requests"] += stats["rollup_requests"]
+            report["rows_written"] += stats["rows_written"]
+            report["clients_overflow_hours"] += stats["clients_overflow_hours"]
+            report["windows_detail"].append(stats)
+            print(
+                f"window {stats['window_start']} .. {stats['window_end']}: "
+                f"requests={stats['rollup_requests']} raw={stats['raw_requests']} "
+                f"rollup_rows={stats['rollup_rows']} client_rows={stats['client_rows']} "
+                f"school_rows={stats['school_rows']} clients_overflow_hours={stats['clients_overflow_hours']}",
+                flush=True,
             )
-            run_id = created[0]["id"] if isinstance(created, list) and created else None
-        try:
-            stats = process_window(logs, db, salts, window_start, window_end, t0)
-        except Exception as exc:
-            if db is not None and run_id is not None:
-                db.update("api_usage_ingest_runs", f"id=eq.{run_id}", {
-                    "status": "error",
-                    "finished_at": datetime.now(timezone.utc).isoformat(),
-                    "error_code": type(exc).__name__,
-                })
-            raise
-        if db is not None and run_id is not None:
-            db.update("api_usage_ingest_runs", f"id=eq.{run_id}", {
-                "status": "ok",
-                "finished_at": datetime.now(timezone.utc).isoformat(),
-                "rows_read": stats["rows_read"],
-                "rows_written": stats["rows_written"],
-                "raw_requests": stats["raw_requests"],
-                "rollup_requests": stats["rollup_requests"],
-            })
-        summaries.append(stats.pop("summary"))
-        report["windows"] += 1
-        report["requests"] += stats["rollup_requests"]
-        report["rows_written"] += stats["rows_written"]
-        report["reconciled"] = report["reconciled"] and stats["reconciled"]
-        report["windows_detail"].append(stats)
-        print(
-            f"window {stats['window_start']} .. {stats['window_end']}: "
-            f"requests={stats['rollup_requests']} raw={stats['raw_requests']} "
-            f"rollup_rows={stats['rollup_rows']} client_rows={stats['client_rows']} "
-            f"school_rows={stats['school_rows']} reconciled={stats['reconciled']}",
-            flush=True,
-        )
+    finally:
+        if db is not None:
+            try:
+                db.rpc("api_usage_prune", {})
+            except IngestError as exc:
+                print(f"::warning::api_usage_prune failed: {exc}", file=sys.stderr)
 
     report["summary"] = merge_summaries(summaries)
     report["third_party_requests"] = report["summary"].get("by_classification", {}).get(classify.THIRD_PARTY, 0)
     report["queries_made"] = logs.queries_made
-    if db is not None:
-        db.rpc("api_usage_prune", {})
     return report
 
 
 def heartbeat_summary(report: dict) -> dict:
-    keys = ("windows", "requests", "third_party_requests", "mode", "rows_written",
-            "lag_hours", "reconciled", "dry_run")
+    """Station summaries are readable through a public RPC: no traffic counts."""
+    keys = ("windows", "reconciled", "mode", "rows_written", "lag_hours", "dry_run")
     return {key: report[key] for key in keys if report.get(key) is not None}
 
 
@@ -369,14 +428,16 @@ def main(argv: list[str] | None = None) -> int:
         args.heartbeat_json.write_text(json.dumps(heartbeat_summary(report)) + "\n", encoding="utf-8")
     print(json.dumps({key: report[key] for key in (
         "mode", "dry_run", "windows", "requests", "third_party_requests",
-        "rows_written", "reconciled", "retention_ok", "queries_made",
+        "rows_written", "clients_overflow_hours", "retention_ok", "queries_made",
     )}), flush=True)
 
+    if report["clients_overflow_hours"]:
+        print(f"::warning::{report['clients_overflow_hours']} hour(s) exceeded the client query page limit; "
+              "client rows skipped for those hours", file=sys.stderr)
     if report["retention_ok"] is False:
-        print("::error::gateway log retention is under 7 days; the hourly job cannot catch up after an outage", file=sys.stderr)
+        print("::error::gateway log retention is under 7 days; the hourly job cannot catch up after an outage",
+              file=sys.stderr)
         return 3
-    if not report["reconciled"]:
-        print("::warning::rollup totals differ from raw log counts by more than 0.1%", file=sys.stderr)
     return 0
 
 

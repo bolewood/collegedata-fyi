@@ -46,8 +46,12 @@ ARCHIVE_PREFIX = "/storage/v1/object/public/sources/"
 # the database-side browser flag and the Python check agree.
 _BOT_WORDS = "bot|crawler|spider|crawl|slurp|indexer|fetcher|scraper|archiver|externalagent|externalhit"
 _AI_WORDS = "claude|anthropic|chatgpt|openai|perplexity|copilot"
-BOT_PATTERN = f"({_BOT_WORDS})"
-NON_BROWSER_PATTERN = f"({_BOT_WORDS}|{_AI_WORDS})"
+# Matched against the lowercased user agent. A marker word must end a product
+# token (followed by '/', ';', ')' or the end), so phone models such as
+# "CUBOT X30" stay browsers while "GPTBot/1.2" and "(FendodoRubricBot)" match.
+_TOKEN_END = "[a-z0-9_.-]*([/;)]|$)"
+BOT_PATTERN = f"({_BOT_WORDS}){_TOKEN_END}"
+NON_BROWSER_PATTERN = f"({_BOT_WORDS}|{_AI_WORDS}){_TOKEN_END}"
 _BOT_RE = re.compile(BOT_PATTERN)
 _NON_BROWSER_RE = re.compile(NON_BROWSER_PATTERN)
 _URL_RE = re.compile(r"\+?https?://\S+|\+?[\w.-]+@[\w.-]+")
