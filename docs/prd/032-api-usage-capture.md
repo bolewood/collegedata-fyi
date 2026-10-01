@@ -31,11 +31,23 @@
   `docs/api-usage-attribution.md`. Rev 2 adds sibling tables and a union view.
 - **Edge Functions come from `function_edge_logs`.** Function calls do not
   appear in `edge_logs` at all.
-- **Endpoint spike first.** Retention, row limits and SQL dialect were
-  observed through Supabase's MCP log tool, not the token-based endpoint the
-  job will call. M0 verifies them before anything is built.
+- **Endpoint spike first.** Retention and row limits were observed through
+  Supabase's MCP log tool, not the token-based endpoint the job will call. M0
+  verifies them before anything is built.
 - **Public-CI hygiene and token scope.** The repo is public, so Actions logs
   and artifacts are public. Raw log rows must never reach them.
+
+Follow-up the same day, from the Supabase docs:
+
+- **`logs.all` is gone.** It returns `410 Gone`. The job uses
+  `GET /v1/projects/{ref}/analytics/endpoints/logs`, which takes the same
+  ClickHouse SQL as the MCP probe, so the dialect question is settled.
+- **Scoped token instead of a bot account.** The org's Read-Only role is
+  Team-plan only, so a bot account on Pro would need the broader Developer
+  role. A scoped personal access token (public alpha) limited to this project
+  with only **Logs: Read** is narrower.
+- **The 06:00 UTC Azure client is not ours.** Anthony confirmed he runs
+  nothing on Microsoft's cloud.
 
 ## Problem
 
@@ -146,8 +158,8 @@ owner, country and IP, but not `X-Client-Info` or `Referer`. In the probe day,
 The single biggest non-site PostgREST caller made 2,156 `school_merit_profile`
 and 2,152 `school_facts_unified` requests in one burst at 06:00 UTC, one call per
 school per view. It sends User-Agent `node`, no client marker, and comes from
-one Microsoft network IP. No workflow in this repo runs at that hour. This is
-the kind of client the friendly-API table can never see.
+one Microsoft network IP. It is confirmed not ours. This is the kind of client
+the friendly-API table can never see.
 
 Of PDF downloads, 1,862 came from browser-like user agents, 1,582 from
 self-declared bots (Meta's indexer, `CollegeConnect-DataBot`, `RosterRoomBot`,
@@ -311,11 +323,13 @@ The repo is public, so workflow logs and artifacts are public.
 
 ### Step 7: credentials
 
-- **`SUPABASE_ACCESS_TOKEN`:** a Management API personal access token belonging
-  to a dedicated bot account. The account is a member of this org only, with
-  the lowest role that can read logs (M0 confirms which). A personal token
-  carries every permission of its owner, so it must not be a person's main
-  account.
+- **`SUPABASE_LOGS_TOKEN`:** a **scoped** personal access token, limited to
+  project `isduwmygvmdozhpvzaix` with only the **Logs: Read** permission. A
+  classic token carries every permission on every org and project its owner
+  can reach, so a classic token must never be used here. If scoped tokens
+  aren't enabled for the account (they're in public alpha), request access
+  through Supabase support rather than falling back to a classic token. The
+  token is rotated yearly.
 - **`SUPABASE_URL`** and **`SUPABASE_SERVICE_ROLE_KEY`:** the existing ops
   secrets.
 - No hash secret: salts live in the database and are deleted on schedule.
@@ -357,11 +371,12 @@ should be updated to point here when this merges.
 
 ## Milestones
 
-- **M0, endpoint spike (gate, about one day).** Create the bot account and its
-  token. Through `GET /v1/projects/{ref}/analytics/endpoints/logs.all`, confirm
-  the SQL dialect (ClickHouse unified `logs` or BigQuery-style `edge_logs` with
-  `unnest`), retention, row cap, rate limit, typical log arrival delay, and
-  that `function_edge_logs` is reachable. Record the results in this PRD.
+- **M0, endpoint spike (gate, about one day).** Create the scoped token. Then,
+  through `GET /v1/projects/{ref}/analytics/endpoints/logs` (ClickHouse SQL),
+  confirm retention, row cap, rate limit, typical log arrival delay, and that
+  `function_edge_logs` is reachable. Also confirm whether log queries count
+  against a usage quota: the endpoint documents a `402 Usage exceeded`
+  response. Record the results in this PRD.
 - **M1, schema, ingest and aggregate backfill.**
   - One additive migration: the three tables, the salts table, the runs table
     and the station row.
@@ -396,14 +411,16 @@ should be updated to point here when this merges.
 
 ## Open questions
 
-1. **Dialect, retention and row cap on the token endpoint.** Answered by M0.
-   Until then, the 90-day figure and the ClickHouse field names are
-   MCP-channel observations only.
-2. **Who is the 06:00 UTC Azure walker?** No workflow in this repo runs then.
-   Anthony should confirm it isn't one of his other projects, such as a
-   GitHub Action in another repo, before it is treated as a third party.
-3. **Which token role is lowest?** M0 checks whether a read-only or developer
-   org role can read logs through the Management API.
+1. **Retention, row cap and quota on the token endpoint.** Answered by M0.
+   The dialect is settled (ClickHouse, the same SQL as the probe), but the
+   90-day figure is still an MCP-channel observation.
+2. **Should the 06:00 UTC Azure walker be contacted?** It is confirmed not
+   ours. It sends no User-Agent identity, so there is no way to reach it.
+   Once the API page asks for a descriptive User-Agent, watch whether it
+   starts sending one.
+3. **Scoped-token availability.** Scoped tokens are in public alpha. If the
+   permission picker doesn't appear when creating a token, request access
+   through Supabase support.
 4. **`browser-search` attribution.** Function logs carry no `X-Client-Info` or
    `Referer`, so first-party and third-party `browser-search` calls can't be
    separated. With about one call a day, it is classified by User-Agent only.
