@@ -1,5 +1,5 @@
 import { fetchCoverageRows, fetchManifest } from "./queries";
-import { supabase } from "./supabase";
+import { friendlyApiSupabase as supabase } from "./supabase-friendly-api";
 import { FRIENDLY_FACT_FIELDS, publicFieldDefinitions } from "./public-data";
 
 type UntypedSupabase = {

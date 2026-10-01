@@ -1,4 +1,5 @@
 import type { ChangeEventRow, ChangeEventSeverity, ChangeEventType } from "@/lib/types";
+import { externalLinkRel } from "@/lib/client-info";
 
 type WhatChangedCardProps = {
   events: ChangeEventRow[];
@@ -97,12 +98,12 @@ export function WhatChangedCard({ events }: WhatChangedCardProps) {
                 {values && <div className="what-changed-event__values mono">{values}</div>}
                 <div className="what-changed-event__sources mono">
                   {event.fromArchiveUrl ? (
-                    <a href={event.fromArchiveUrl} target="_blank" rel="noopener noreferrer">
+                    <a href={event.fromArchiveUrl} target="_blank" rel={externalLinkRel(event.fromArchiveUrl)}>
                       PRIOR SOURCE →
                     </a>
                   ) : null}
                   {event.toArchiveUrl ? (
-                    <a href={event.toArchiveUrl} target="_blank" rel="noopener noreferrer">
+                    <a href={event.toArchiveUrl} target="_blank" rel={externalLinkRel(event.toArchiveUrl)}>
                       LATEST SOURCE →
                     </a>
                   ) : null}

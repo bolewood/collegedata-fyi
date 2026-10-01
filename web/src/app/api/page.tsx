@@ -304,6 +304,22 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         the published views below.
       </p>
       <CodeBlock>{ANON_KEY}</CodeBlock>
+      <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
+        Custom headers like{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
+          X-CollegeData-Client
+        </code>{" "}
+        don&apos;t reach our logs on raw PostgREST and file downloads. To
+        identify your app there, set a descriptive{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
+          User-Agent
+        </code>{" "}
+        such as{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
+          my-app-name/1.0 (+https://example.org)
+        </code>
+        . We count requests by app and never store IP addresses.
+      </p>
 
       <h2 className="serif mt-10 text-2xl">
         Resources

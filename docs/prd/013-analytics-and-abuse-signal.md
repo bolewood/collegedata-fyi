@@ -1,6 +1,11 @@
 # PRD 013: Analytics, abuse signal, and commercial-tier readiness
 
 **Status:** Draft — measurement required before alerting thresholds set
+**Measurement source:** API measurement now comes from [PRD 032](032-api-usage-capture.md)
+(hourly Supabase gateway-log aggregates). Enforcement and alert thresholds stay
+here. The `X-Internal-Traffic` header proposed below would never reach the
+gateway logs; first-party traffic is marked with `X-Client-Info` and
+`User-Agent` instead.
 **Created:** 2026-04-28
 **Author:** Claude + Anthony
 **Related:** [PRD 001](001-collegedata-fyi-v1.md), [PRD 010](010-queryable-data-browser.md), [PRD 012](012-browser-field-expansion-after-v03.md)

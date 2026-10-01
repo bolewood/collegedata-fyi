@@ -24,6 +24,9 @@ CRON_JOBS = (
     "refresh-coverage-hourly",
     "refresh-public-serving-caches-hourly",
 )
+# Hourly at :20 (PRD 032); logs keep 90 days, so a quiet stall loses data.
+API_USAGE_WORKFLOW = "API usage ingest"
+API_USAGE_MAX_AGE_HOURS = 3
 # TODO: read public.pipeline_heartbeats (via service role) and drop GitHub
 # Actions scraping once PRD 030 M0 has been live long enough to trust the
 # clocks. This script stays operator-only.
@@ -344,6 +347,11 @@ def evaluate(report: dict[str, Any], now: datetime) -> list[str]:
         ]
         if failed:
             issues.append(f"{len(failed)} GitHub Actions runs failed in window")
+        usage = gha.get("latest_by_workflow", {}).get(API_USAGE_WORKFLOW)
+        usage_age = hours_since(usage.get("createdAt"), now) if usage else None
+        if usage_age is None or usage_age > API_USAGE_MAX_AGE_HOURS:
+            age = f"{usage_age:.1f} hours" if usage_age is not None else "no run in window"
+            issues.append(f"API usage ingest stale: {age}")
     else:
         issues.append(f"GitHub Actions unavailable: {gha.get('error')}")
 

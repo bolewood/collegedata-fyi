@@ -6,6 +6,22 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.15.0] - 2026-10-01
+
+### Added
+
+- Hourly API usage capture for all gateway traffic (PRD 032): PostgREST,
+  archive-file downloads, and Edge Functions, not just the friendly API.
+  A GitHub Actions job reads Supabase gateway logs and writes private
+  hourly aggregates by surface, route, and who sent the request (our
+  pipeline, our site, the friendly API, unattributed browsers, or third
+  parties). No IP addresses, full user agents, or query strings are
+  stored; third-party clients get a hash that changes daily.
+- The site and friendly API now identify themselves to Supabase with
+  `X-Client-Info`, and pipeline tools send a `collegedata-pipeline`
+  User-Agent. The API page asks bulk users to send a descriptive
+  User-Agent.
+
 ## [0.6.14.0] - 2026-09-25
 
 ### Added

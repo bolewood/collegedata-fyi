@@ -79,10 +79,16 @@ class AutomationHealthTests(unittest.TestCase):
             "github_actions": {
                 "available": True,
                 "recent_runs": [],
+                "latest_by_workflow": {
+                    "API usage ingest": {"createdAt": "2026-05-07T18:20:00Z"},
+                },
             },
         }
 
         self.assertEqual(health.evaluate(report, now), [])
+
+        report["github_actions"]["latest_by_workflow"]["API usage ingest"]["createdAt"] = "2026-05-07T14:20:00Z"
+        self.assertEqual(health.evaluate(report, now), ["API usage ingest stale: 4.7 hours"])
 
 
 if __name__ == "__main__":

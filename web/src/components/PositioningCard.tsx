@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PositioningCardProfile } from "./PositioningCardProfile";
 import type { SchoolAcademicProfile } from "@/lib/positioning";
+import { externalLinkRel } from "@/lib/client-info";
 
 type PositioningCardProps = {
   school: SchoolAcademicProfile;
@@ -131,7 +132,7 @@ export function PositioningCard({ school, sourceHref }: PositioningCardProps) {
           <span>§ SOURCE: COMMON DATA SET {school.cdsYear} · §C.7 §C.9 §C.11 §C.12</span>
           {sourceHref ? (
             <span>
-              <a href={sourceHref} target="_blank" rel="noopener noreferrer">
+              <a href={sourceHref} target="_blank" rel={externalLinkRel(sourceHref)}>
                 ARCHIVED SOURCE →
               </a>
             </span>

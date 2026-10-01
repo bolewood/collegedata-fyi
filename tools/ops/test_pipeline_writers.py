@@ -11,20 +11,22 @@ FINDER = ROOT / ".github/workflows/ops-finder-probe.yml"
 EXTRACTION = ROOT / ".github/workflows/ops-extraction-worker.yml"
 HEADLESS = ROOT / ".github/workflows/ops-headless-archive.yml"
 IPEDS = ROOT / ".github/workflows/ipeds-release-probe.yml"
+API_USAGE = ROOT / ".github/workflows/ops-api-usage-ingest.yml"
 STATION_RE = re.compile(r"--station\s+(\S+)")
 
 
 class PipelineWriterLintTests(unittest.TestCase):
     def test_workflow_station_ids_are_in_the_registry(self) -> None:
         stations: set[str] = set()
-        for path in (FINDER, EXTRACTION, HEADLESS, IPEDS):
+        for path in (FINDER, EXTRACTION, HEADLESS, IPEDS, API_USAGE):
             stations.update(STATION_RE.findall(path.read_text(encoding="utf-8")))
         self.assertTrue(stations)
         self.assertTrue(stations <= set(REGISTRY_STATIONS), stations - set(REGISTRY_STATIONS))
         self.assertIn("headless_archive", stations)
+        self.assertIn("api_usage_ingest", stations)
 
     def test_scheduled_workflows_keep_on_schedule(self) -> None:
-        for path in (FINDER, EXTRACTION, HEADLESS, IPEDS):
+        for path in (FINDER, EXTRACTION, HEADLESS, IPEDS, API_USAGE):
             text = path.read_text(encoding="utf-8")
             self.assertRegex(text, r"(?m)^  schedule:\s*$", msg=f"{path.name} lost on.schedule")
             self.assertRegex(text, r"- cron:")
@@ -45,6 +47,14 @@ class PipelineWriterLintTests(unittest.TestCase):
         self.assertIn("if: always() && env.INPUT_APPLY_LANDING_HINTS == 'true'", text)
         brave_finish = text.split("Heartbeat finder_brave finish", 1)[1]
         self.assertNotIn("INPUT_MODE == 'stuck-pdf'", brave_finish.split("- name:", 1)[0])
+
+    def test_api_usage_ingest_is_hourly_and_never_echoes_rows(self) -> None:
+        text = API_USAGE.read_text(encoding="utf-8")
+        self.assertIn('- cron: "20 * * * *"', text)
+        self.assertIn("group: api-usage-ingest", text)
+        self.assertIn("--summary-json api-usage/heartbeat.json", text)
+        self.assertNotIn("upload-artifact", text)
+        self.assertNotIn("set -x", text)
 
     def test_ipeds_noop_heartbeat_maps_available_count_to_new_release(self) -> None:
         text = IPEDS.read_text(encoding="utf-8")

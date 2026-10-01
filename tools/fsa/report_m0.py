@@ -68,6 +68,7 @@ def fetch_directory(url: str, anon_key: str) -> list[dict[str, Any]]:
             headers={
                 "apikey": anon_key,
                 "Authorization": f"Bearer {anon_key}",
+                "User-Agent": "collegedata-pipeline/fsa-report-m0",
                 "Prefer": "count=exact",
             },
         )

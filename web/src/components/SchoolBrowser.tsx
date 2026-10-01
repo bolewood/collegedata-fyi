@@ -14,6 +14,7 @@ import {
 import { trackDownload, trackEvent, trackSourceOpened } from "@/lib/analytics";
 import { formatBadgeLabel, formatCurrency, formatPercent } from "@/lib/format";
 import { SchoolGlyph } from "./SchoolGlyph";
+import { externalLinkRel } from "@/lib/client-info";
 
 type FilterState = {
   undergradMin: string;
@@ -441,7 +442,7 @@ export function SchoolBrowser({
                   <a
                     href={row.archive_url}
                     target="_blank"
-                    rel="noopener noreferrer"
+                    rel={externalLinkRel(row.archive_url)}
                     className="cd-chip"
                     data-testid="browser-source-link"
                     onClick={() =>
@@ -606,7 +607,7 @@ function BrowserResultCard({
         <a
           href={row.archive_url}
           target="_blank"
-          rel="noopener noreferrer"
+          rel={externalLinkRel(row.archive_url)}
           className="cd-chip"
           data-testid="browser-source-link"
           onClick={() =>

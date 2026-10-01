@@ -7,6 +7,7 @@ import {
   type AdmissionStrategySchool,
 } from "@/lib/admission-strategy";
 import { formatCount, formatCurrency } from "@/lib/format";
+import { externalLinkRel } from "@/lib/client-info";
 
 type AdmissionStrategyCardProps = {
   school: AdmissionStrategySchool;
@@ -345,7 +346,7 @@ function WaitListView({
         {anomalous && sourceHref ? (
           <>
             {" "}
-            <a href={sourceHref} target="_blank" rel="noopener noreferrer">
+            <a href={sourceHref} target="_blank" rel={externalLinkRel(sourceHref)}>
               Check the source.
             </a>
           </>
@@ -629,7 +630,7 @@ export function AdmissionStrategyCard({
           </span>
           {sourceHref ? (
             <span>
-              <a href={sourceHref} target="_blank" rel="noopener noreferrer">
+              <a href={sourceHref} target="_blank" rel={externalLinkRel(sourceHref)}>
                 ARCHIVED SOURCE →
               </a>
             </span>

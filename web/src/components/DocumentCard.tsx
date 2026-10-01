@@ -10,6 +10,7 @@ import {
 } from "@/lib/format";
 import { trackSourceOpened, trackEvent } from "@/lib/analytics";
 import type { ManifestRow } from "@/lib/types";
+import { externalLinkRel } from "@/lib/client-info";
 
 // Map an extraction status to a chip variant. Only the success state gets
 // the forest pill; failures use brick (the alarm color in tokens.css);
@@ -116,7 +117,7 @@ export function DocumentCard({
           <a
             href={sourceDownloadUrl}
             target="_blank"
-            rel="noopener noreferrer"
+            rel={externalLinkRel(sourceDownloadUrl)}
             onClick={() =>
               trackSourceOpened({
                 surface: "school_documents",

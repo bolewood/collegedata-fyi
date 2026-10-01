@@ -71,7 +71,10 @@ def main():
         url = (f"{API}/cds_fields?select=school_id,field_id"
                f"&canonical_year=eq.{args.year}&field_id=in.({ids})"
                f"&limit=1000&offset={offset}")
-        req = urllib.request.Request(url, headers={"apikey": key})
+        req = urllib.request.Request(
+            url,
+            headers={"apikey": key, "User-Agent": "collegedata-pipeline/cds-card-coverage"},
+        )
         batch = json.load(urllib.request.urlopen(req))
         rows.extend(batch)
         if len(batch) < 1000:

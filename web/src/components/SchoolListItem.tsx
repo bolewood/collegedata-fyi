@@ -5,6 +5,7 @@ import { SchoolGlyph } from "./SchoolGlyph";
 import { trackEvent, trackSourceOpened } from "@/lib/analytics";
 import { academicFitLabel, admissionsOutlookLabel, type Caveat } from "@/lib/positioning";
 import type { RankedMatchSchool } from "@/lib/list-builder";
+import { externalLinkRel } from "@/lib/client-info";
 
 function formatPercent(value: number | null): string {
   if (value == null) return "n/a";
@@ -114,7 +115,7 @@ export function SchoolListItem({
           <a
             href={school.archiveUrl}
             target="_blank"
-            rel="noopener noreferrer"
+            rel={externalLinkRel(school.archiveUrl)}
             className="match-source-link mono"
             onClick={() =>
               trackSourceOpened({

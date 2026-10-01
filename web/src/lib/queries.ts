@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { createHash } from "crypto";
 import { supabase } from "./supabase";
+import { clientInfoHeaders } from "./client-info";
 import type {
   ManifestRow,
   ArtifactRow,
@@ -144,6 +145,7 @@ async function fetchManifestForStaticBuild(): Promise<ManifestRow[]> {
         headers: {
           apikey: supabaseAnonKey,
           Authorization: `Bearer ${supabaseAnonKey}`,
+          ...clientInfoHeaders(),
         },
         signal: AbortSignal.timeout(STATIC_BUILD_QUERY_TIMEOUT_MS),
       });
@@ -190,6 +192,7 @@ async function fetchCoverageRowsForStaticBuild(): Promise<InstitutionCoverage[]>
         headers: {
           apikey: supabaseAnonKey,
           Authorization: `Bearer ${supabaseAnonKey}`,
+          ...clientInfoHeaders(),
         },
         signal: AbortSignal.timeout(STATIC_BUILD_QUERY_TIMEOUT_MS),
       });
@@ -260,6 +263,7 @@ async function staticExactCount(
       headers: {
         apikey: config.supabaseAnonKey,
         Authorization: `Bearer ${config.supabaseAnonKey}`,
+        ...clientInfoHeaders(),
         Prefer: "count=exact",
       },
       signal: AbortSignal.timeout(STATIC_BUILD_QUERY_TIMEOUT_MS),
@@ -299,6 +303,7 @@ async function staticRows<T>(
       headers: {
         apikey: config.supabaseAnonKey,
         Authorization: `Bearer ${config.supabaseAnonKey}`,
+        ...clientInfoHeaders(),
       },
       signal: AbortSignal.timeout(STATIC_BUILD_QUERY_TIMEOUT_MS),
     });

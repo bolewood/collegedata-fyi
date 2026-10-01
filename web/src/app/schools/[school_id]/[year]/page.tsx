@@ -40,6 +40,7 @@ import { SpreadsheetDownloadLinks } from "@/components/SpreadsheetDownloadLinks"
 import { ArchiveLead } from "@/components/ArchiveLead";
 import { yearArchiveLead } from "@/lib/archive-lead";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
+import { externalLinkRel } from "@/lib/client-info";
 
 export const revalidate = 3600;
 
@@ -321,7 +322,7 @@ async function DocumentVariant({
           <a
             href={sourceDownloadUrl}
             target="_blank"
-            rel="noopener noreferrer"
+            rel={externalLinkRel(sourceDownloadUrl)}
             className="mono"
             style={{ fontSize: 13 }}
           >

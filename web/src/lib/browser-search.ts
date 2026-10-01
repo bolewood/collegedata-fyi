@@ -1,3 +1,5 @@
+import { clientInfoHeaders } from "./client-info";
+
 export type BrowserMode = "latest_per_school" | "all_school_years";
 export type VariantScope = "primary_only" | "include_variants";
 export type BrowserOperator =
@@ -202,6 +204,7 @@ export async function searchBrowserRows(
       "content-type": "application/json",
       apikey: anonKey,
       authorization: `Bearer ${anonKey}`,
+      ...clientInfoHeaders(),
     },
     body: JSON.stringify(body),
   });
@@ -228,6 +231,7 @@ async function searchBrowserRowsWithoutFederalColumns(
       "content-type": "application/json",
       apikey: anonKey,
       authorization: `Bearer ${anonKey}`,
+      ...clientInfoHeaders(),
     },
     body: JSON.stringify({
       columns: LEGACY_BROWSER_COLUMNS,
