@@ -338,9 +338,11 @@ also flags the workflow when its latest run is more than 3 hours old. The
 heartbeat station is `api_usage_ingest` (off the public board, and its summary
 carries no traffic counts).
 
-After the tagged web build deploys, set `SITE_TAGGING_T0` in
-`tools/api_usage/classify.py` to the deploy time. Until then every hour uses the
-pre-tagging inference rules and the job logs a warning.
+`SITE_TAGGING_T0` in `tools/api_usage/classify.py` is the production deploy of
+the tagged web build (2026-10-01 19:16 UTC). Hours through 19:00 that day use
+the pre-tagging inference rules and are flagged `inferred`; strict attribution
+starts at 20:00 UTC. Preview builds sent tagged traffic from 18:51 UTC; the
+tag makes it first-party regardless of T0.
 
 Debugging a broken query locally: `API_USAGE_DEBUG=1` adds the (IP-redacted)
 logs-API error message. Never set it in CI.
