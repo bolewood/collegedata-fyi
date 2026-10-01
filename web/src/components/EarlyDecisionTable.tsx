@@ -3,6 +3,7 @@ import type { AcceptanceYear } from "@/lib/acceptance-history";
 import { fallLabel, gapLabel, pct, reportLabel } from "@/lib/acceptance-rate-copy";
 import { storageUrl } from "@/lib/format";
 import { type AcceptanceTableRow } from "./AcceptanceRateTable";
+import { externalLinkRel } from "@/lib/client-info";
 
 function count(n: number | null): string {
   return n == null ? "—" : n.toLocaleString("en-US");
@@ -111,7 +112,7 @@ export function EarlyDecisionTable({
                         <a
                           href={href}
                           target="_blank"
-                          rel="noopener noreferrer"
+                          rel={externalLinkRel(href)}
                           aria-label={`${schoolName} ${reportLabel(row.year)}, original ${label} file`}
                         >
                           {label}

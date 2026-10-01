@@ -3,6 +3,7 @@ import { hasEarlyDecision, type AcceptanceHistory, type AcceptanceYear } from "@
 import type { ManifestRow } from "@/lib/types";
 import { fallLabel, gapLabel, pct, reportLabel } from "@/lib/acceptance-rate-copy";
 import { storageUrl } from "@/lib/format";
+import { externalLinkRel } from "@/lib/client-info";
 
 export type AcceptanceTableRow =
   | { kind: "year"; row: AcceptanceYear }
@@ -143,7 +144,7 @@ export function AcceptanceRateTable({
                       <a
                         href={href}
                         target="_blank"
-                        rel="noopener noreferrer"
+                        rel={externalLinkRel(href)}
                         aria-label={`${schoolName} ${reportLabel(row.year)}, original ${label} file`}
                       >
                         {label}

@@ -58,7 +58,11 @@ def postgrest_get_all(
         url = f"{base_url.rstrip('/')}/rest/v1/{table}?{query}"
         request = urllib.request.Request(
             url,
-            headers={"apikey": api_key, "Authorization": f"Bearer {api_key}"},
+            headers={
+                "apikey": api_key,
+                "Authorization": f"Bearer {api_key}",
+                "User-Agent": "collegedata-pipeline/alignment-gap-recipe",
+            },
         )
         try:
             with urllib.request.urlopen(request, timeout=60) as response:

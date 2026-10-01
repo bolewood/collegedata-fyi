@@ -1,4 +1,4 @@
-import { supabase, STORAGE_BASE_URL } from "./supabase";
+import { friendlyApiSupabase as supabase, STORAGE_BASE_URL } from "./supabase";
 import {
   fetchInstitutionCoverage,
   fetchSchoolBrandColors,

@@ -125,7 +125,10 @@ def fetch_years_by_school(
     api_url: str,
     anon_key: str | None,
 ) -> dict[str, list[str]]:
-    headers = {"Accept": "application/json"}
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "collegedata-pipeline/stuck-pdf-seeds",
+    }
     if anon_key:
         headers["apikey"] = anon_key
         headers["Authorization"] = f"Bearer {anon_key}"

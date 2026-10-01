@@ -247,7 +247,11 @@ def postgrest_get_all(
         page_params.update({"limit": str(page_size), "offset": str(offset)})
         request = urllib.request.Request(
             rest_url(base_url, table, page_params),
-            headers={"apikey": api_key, "Authorization": f"Bearer {api_key}"},
+            headers={
+                "apikey": api_key,
+                "Authorization": f"Bearer {api_key}",
+                "User-Agent": "collegedata-pipeline/ipeds-recipes",
+            },
         )
         try:
             with opener(request, timeout=60) as response:

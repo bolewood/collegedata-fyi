@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { MeritProfileRow } from "@/lib/types";
 import { formatCount, formatCurrency, formatPercent } from "@/lib/format";
+import { externalLinkRel } from "@/lib/client-info";
 
 type MeritProfileCardProps = {
   profile: MeritProfileRow;
@@ -195,7 +196,7 @@ export function MeritProfileCard({ profile, sourceHref }: MeritProfileCardProps)
           </span>
           {sourceHref ? (
             <span>
-              <a href={sourceHref} target="_blank" rel="noopener noreferrer">
+              <a href={sourceHref} target="_blank" rel={externalLinkRel(sourceHref)}>
                 ARCHIVED SOURCE →
               </a>
             </span>
