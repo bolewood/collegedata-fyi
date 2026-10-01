@@ -1,6 +1,6 @@
 # PRD 032: Capture all public API usage, not just the friendly routes
 
-**Status:** Rev 2 (2026-10-01), after an independent red-team review. Feasibility probe done; an endpoint spike (M0) gates the build.
+**Status:** Rev 2 (2026-10-01), after an independent red-team review. M0 endpoint spike done; ready to build M1.
 **Author:** Anthony Showalter (with Claude)
 **Related:** [PRD 013](013-analytics-and-abuse-signal.md) (analytics and abuse signal), [`docs/api-usage-attribution.md`](../api-usage-attribution.md), migration `supabase/migrations/20260625120000_api_usage_events.sql`, `web/src/lib/api-usage.ts`
 
@@ -135,16 +135,36 @@ owner, country and IP, but not `X-Client-Info` or `Referer`. In the probe day,
 2,733 of 2,758 function calls were our own `archive-process` cron. The public
 `browser-search` function saw one `OPTIONS` request.
 
-### Retention and limits (MCP channel; M0 re-checks via the token endpoint)
+### Retention and limits (verified in M0 on the token endpoint)
 
-- **About 90 days was observed.** On October 1, July 4 was queryable and
-  July 2 returned nothing. That is more than Supabase documents for Pro, and
-  the token endpoint may enforce the documented window, so nothing depends on
-  90 days.
-- **One query covers at most 24 hours.**
-- **Row caps are unverified.** Because the design returns aggregates, a typical
-  hour comes back as a few hundred rows. The job detects truncation and splits
-  the window.
+These were measured on 2026-10-01 through
+`GET /v1/projects/{ref}/analytics/endpoints/logs` with the scoped token.
+
+- **Retention is a rolling 90 days.** At 17:38 UTC on October 1, the oldest
+  row was July 3 at 17:31 UTC, and July 2 was empty. That is more than
+  Supabase documents for Pro, so the job still alerts if retention shrinks.
+- **Results are silently truncated at 1,000 rows.** Asking for `limit 5000`,
+  or for no limit, returned exactly 1,000 rows with no error or flag. The job
+  treats any result of exactly 1,000 rows as truncated, then splits the
+  window and retries.
+- **The rate limit is 10 queries a minute per token.** It is reported in
+  `x-ratelimit-*` headers. After the budget ran out, requests kept getting
+  `429` for one to four minutes, longer than the advertised 60-second reset.
+  The job paces queries at least 7 seconds apart, and on a `429` waits five
+  minutes before retrying.
+- **Logs arrive within about a minute.** The newest row was about 40 seconds
+  behind query time. Re-reading the same completed minutes four minutes later
+  returned identical counts. Only the minute still in progress changed.
+- **The 24-hour window cap is documented but wasn't enforced.** A 25-hour
+  window returned data with no error, possibly clamped. The job never asks
+  for more than 24 hours.
+- **The query shape the job needs fits easily.** Grouping non-browser third
+  parties by hour, IP, User-Agent, JA4 fingerprint and route gave 23 groups
+  for the busiest hour (06:00 UTC on October 1, 4,331 requests) and 370
+  groups for a full day.
+- **`function_edge_logs` is reachable** with the same token.
+- **No usage charge was seen.** About 20 queries returned no `402`, and nothing
+  in the responses suggests metering.
 
 ### One day of traffic (Sep 30 12:00 to Oct 1 12:00 UTC)
 
@@ -289,12 +309,17 @@ existing queries in `docs/api-usage-attribution.md` keep their current meaning.
 - **Queries:** one per log source per window, aggregated in SQL by hour, IP,
   User-Agent, JA4, surface, route, status and `school_id`. Hashing happens in
   Python, so raw IPs exist only in job memory. The SQL lives in one module, so
-  a dialect change is a one-file edit. If a result hits the row cap, the job
-  halves the window and retries.
+  a dialect change is a one-file edit. Any result of exactly 1,000 rows is
+  treated as truncated, and the job halves the window and retries.
+- **Pacing:** queries run at least 7 seconds apart, under the 10-a-minute
+  limit. On a `429` the job waits five minutes, then retries.
 - **Windows:** each hourly run re-processes the last three **whole** hours,
-  `[floor(now) − 3h, floor(now))`, and replaces them. That absorbs logs
-  arriving up to about three hours late. An hour is final once it falls out
-  of that range. The watermark is the last final hour.
+  `[floor(now) − 3h, floor(now))`, and replaces them. M0 measured log arrival
+  at about a minute, so three hours is a wide margin. An hour is final once
+  it falls out of that range. The watermark is the last final hour.
+- **Budget:** an hourly run uses about six queries. A 90-day backfill in
+  6-hour slices, two sources and two grains, is about 1,400 queries, or about
+  three hours at the paced rate. That fits in one workflow run.
 - **Schedule:** `ops-api-usage-ingest.yml`, hourly at minute 20, plus a
   `workflow_dispatch` backfill input (`--backfill-from`). Both share one
   `concurrency:` group, so a backfill and an hourly run never race. Backfill
@@ -371,12 +396,10 @@ should be updated to point here when this merges.
 
 ## Milestones
 
-- **M0, endpoint spike (gate, about one day).** Create the scoped token. Then,
-  through `GET /v1/projects/{ref}/analytics/endpoints/logs` (ClickHouse SQL),
-  confirm retention, row cap, rate limit, typical log arrival delay, and that
-  `function_edge_logs` is reachable. Also confirm whether log queries count
-  against a usage quota: the endpoint documents a `402 Usage exceeded`
-  response. Record the results in this PRD.
+- **M0, endpoint spike. Done 2026-10-01.** The scoped token
+  (`SUPABASE_LOGS_TOKEN`, Logs: Read on this project only, expiring
+  2027-10-01) is stored as a GitHub Actions secret. Results are under
+  "Retention and limits."
 - **M1, schema, ingest and aggregate backfill.**
   - One additive migration: the three tables, the salts table, the runs table
     and the station row.
@@ -411,9 +434,9 @@ should be updated to point here when this merges.
 
 ## Open questions
 
-1. **Retention, row cap and quota on the token endpoint.** Answered by M0.
-   The dialect is settled (ClickHouse, the same SQL as the probe), but the
-   90-day figure is still an MCP-channel observation.
+1. **Is log querying metered?** M0 saw no `402` and no usage signal across
+   about 20 queries, but the endpoint documents a `402 Usage exceeded`
+   response. Check the org usage page a week after M3 ships.
 2. **Should the 06:00 UTC Azure walker be contacted?** It is confirmed not
    ours. It sends no User-Agent identity, so there is no way to reach it.
    Once the API page asks for a descriptive User-Agent, watch whether it
