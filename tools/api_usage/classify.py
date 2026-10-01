@@ -25,7 +25,7 @@ CLASSIFICATIONS = (INTERNAL, FRIENDLY, FIRST_PARTY, BROWSER, THIRD_PARTY)
 # (web/src/lib/client-info.ts). Hours that start before this use the
 # pre-tagging inference rules and are flagged inferred. None means the
 # tagged build has not shipped yet, so every hour is pre-tagging.
-SITE_TAGGING_T0: datetime | None = None
+SITE_TAGGING_T0: datetime | None = datetime(2026, 10, 1, 19, 16, tzinfo=timezone.utc)
 
 SITE_CLIENT_INFO_PREFIX = "collegedata-web"
 FRIENDLY_CLIENT_INFO_PREFIX = "collegedata-friendly-api"

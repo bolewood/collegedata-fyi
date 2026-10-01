@@ -6,6 +6,14 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.15.1] - 2026-10-01
+
+### Changed
+
+- API usage capture now uses strict attribution from 2026-10-01 20:00 UTC,
+  the first full hour after the site started tagging its own requests.
+  Earlier hours keep the pre-tagging inference rules.
+
 ## [0.6.15.0] - 2026-10-01
 
 ### Added
