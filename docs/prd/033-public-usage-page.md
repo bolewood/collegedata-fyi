@@ -1,6 +1,6 @@
 # PRD 033: Public usage page
 
-**Status:** Rev 2 (2026-10-01), after red-team review. Decisions locked; M0 next.
+**Status:** Rev 3 (2026-10-02). M0 shipped in v0.6.16.0 and backfilled (2026-07-06 to 2026-10-01); M1 next.
 **Author:** Anthony Showalter (with Claude)
 **URL (planned):** `https://www.collegedata.fyi/usage` and `/usage.json`
 **Related:** [PRD 032](032-api-usage-capture.md) (gateway usage capture, the data source), [PRD 030](030-pipeline-observation.md) (public pipeline board, the serving pattern), [PRD 013](013-analytics-and-abuse-signal.md), [`docs/api-usage-attribution.md`](../api-usage-attribution.md), [privacy page](../../web/src/app/privacy/page.tsx), [design system](../../web/DESIGN_SYSTEM.md), [voice](../../web/VOICE.md)
@@ -57,19 +57,38 @@ and how demand is spread across schools.
 
 ## What the data says today
 
-From the PRD 032 backfill. Almost all of it predates site tagging, and none
-of it has repeats collapsed or our own tools removed, so treat it as an
-upper bound.
+From `api_usage_downloads_daily` after the M0 backfill (method version 1),
+for the 30 days from 2026-09-02 to 2026-10-01. Repeats are collapsed, bots
+are split out, and the heavy-client rule is applied.
 
 - **Raw requests are dominated by our own site.** About 82% of the 11.6M
-  requests in the 89-day backfill were the site's own server rendering.
-- **Archive downloads by others, last 30 days:** about 72K raw. Self-declared
-  bots and crawlers 32.8K, browsers 18.3K, integrations 11.5K, scripts 4.9K,
-  AI clients 4.9K (training crawlers and user agents mixed).
-- **Per school, monthly works; daily doesn't.** In 30 days, 798 schools had
-  archive downloads and 733 had at least 10, but that includes bots (about
-  45% of downloads). Per school per day the median is 3. M0 recomputes these
-  after repeats and robots are removed, and the floor is confirmed then.
+  requests in the 89-day PRD 032 backfill were the site's own server
+  rendering, which is why the headline counts downloads, not requests.
+- **Unique downloads, 30 days:**
+
+  | Access method | Unique | Raw fetches |
+  |---|---|---|
+  | Browser | 8,729 | 9,472 |
+  | Machine | 26,383 | 27,883 |
+  | Self-declared bots and crawlers | 36,267 | 36,684 |
+
+  Collapsing repeats removes only about 4%; the big correction is splitting
+  out bots (half of all downloads) and machines.
+- **Machine is mostly integrations and scripts:** integrations 11.1K,
+  scripts 8.2K, heavy browser keys 3.8K, AI agents fetching for a person
+  3.3K. Bots split into declared bots 29.5K and AI crawlers 6.8K.
+- **The heavy-client rule matters.** Browser keys over 30 files a day moved
+  3.8K downloads (30% of browser-shaped downloads) to Machine. Day-level
+  histograms show real browser keys rarely pass 10 files, so 30 stays.
+- **Our school pages drive about 9% of browser downloads** (764 with a
+  collegedata.fyi referer).
+- **Per school, monthly works; daily doesn't.** Counting browser and machine
+  together, 760 schools had downloads, 596 had at least 10 and 71 had at
+  least 100. The median school had 29 in the month (max 682). Per school per
+  day the median is 2. The floor of 10 hides about a fifth of schools with
+  any downloads.
+- **Our pipeline shows up as zero.** No archive downloads in the window were
+  `excluded`; pipeline tools read Storage through authenticated paths.
 - **Per-school API reads are too thin to publish.** 3,014 schools were
   queried by `school_id`, but only 548 reached 10 in a month.
 
@@ -196,7 +215,12 @@ page.
 
 ## Architecture
 
-### M0: fix capture, freeze rules, backfill once (start now)
+### M0: fix capture, freeze rules, backfill once (done, v0.6.16.0)
+
+Shipped as planned, plus: a `daily` workflow mode, a `from_site` column for
+clicks from our pages, hourly runs that recount any of the last 7 days
+without a successful count, and user-agent bucketing for days too large to
+page. Details in `docs/api-usage-attribution.md`.
 
 Capture fixes that also correct PRD 032 data:
 
@@ -288,8 +312,12 @@ New daily capture:
 
 ## Remaining open questions
 
-1. **Heavy-client threshold.** Proposed 30 distinct files per client per
-   day; confirm against the M0 distribution.
-2. **Does the "Machine" headline line need a split** between AI on a user's
+1. **Does the "Machine" headline line need a split** between AI on a user's
    behalf and scripts, or is that only in the "by kind" section? Proposed:
-   only in "by kind," to keep the headline simple.
+   only in "by kind," to keep the headline simple. M0 data: AI agents are
+   about 13% of Machine.
+2. **Integrations are the largest Machine group (11.1K a month).** Check
+   whether one client dominates before M1, and annotate it if so.
+
+Resolved in M0: the heavy-client threshold stays at 30 distinct files per
+client key per day (see "What the data says").
