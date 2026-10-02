@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { fetchManifest, aggregateSchools, fetchSchoolSlugResolver } from "@/lib/queries";
 import { SITE_URL, staticSitemapEntries } from "@/lib/sitemap-static";
 import { canonicalizeSchoolRows } from "@/lib/school-alias";
+import { isUsageLaunched } from "@/lib/usage";
 import type { ManifestRow } from "@/lib/types";
 import { acceptanceRateSitemap, earlyDecisionSitemap, gpaSitemap } from "@/lib/acceptance-history-data";
 
@@ -45,6 +46,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   const staticPages = staticSitemapEntries();
+  if (isUsageLaunched()) {
+    staticPages.push({ url: `${SITE_URL}/usage`, changeFrequency: "daily", priority: 0.6 });
+  }
 
   const schoolPages: MetadataRoute.Sitemap = schools.map((s) => ({
     url: `${SITE_URL}/schools/${s.school_id}`,

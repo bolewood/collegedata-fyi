@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { isUsageLaunched } from "@/lib/usage";
 
 export const metadata: Metadata = {
   title: "About",
@@ -103,6 +104,12 @@ export default function AboutPage() {
           </a>
           . <Link href="/api">API</Link>. Developers who want extractors and
           known issues start there, not on this page.
+          {isUsageLaunched() ? (
+            <>
+              {" "}
+              How much the archive is used: <Link href="/usage">usage</Link>.
+            </>
+          ) : null}
         </p>
 
         <h2>Credits</h2>

@@ -379,6 +379,71 @@ rather than being counted partially.
 `excluded` means "identified as our pipeline". The pipeline user agent is
 public, so anyone running these tools against production also lands there.
 
+### Public usage tables (PRD 033)
+
+After each non-dry run, `tools/api_usage/publish.py` calls
+`api_usage_publish_pending()` and then `usage_public_violations()`. The
+publish functions are service-role only and copy publishable rows into three
+anon-readable tables behind `/usage` and `/usage.json`:
+
+- **`usage_public_daily`** (day, metric, access_method, client_kind, value).
+  A day is published once it has a successful `daily` run and every hour is
+  covered by an `ok` hourly or backfill window. It is republished when a later
+  run touching the day finishes (`api_usage_publish_days.source_finished_at`)
+  or the method version changes. Metrics:
+  - `unique_downloads` by access method and client kind. Browser keys moved to
+    machine by the heavy-client rule publish as `heavy_browser`.
+  - `site_downloads`: browser downloads with `from_site`.
+  - `api_requests`: `third_party` PostgREST and Edge Function requests from
+    the hourly rollups, without Storage or `options_preflight`.
+  - `friendly_api_requests`: rows in `api_usage_events` (Next.js `/api`
+    routes and the MCP server), which are calls by others, without `OPTIONS`.
+  - `serving_requests`: `first_party_site` plus `friendly_api_upstream`
+    PostgREST and Edge Function requests, our own serving load. Storage is
+    left out because PDF downloads from our pages are browser downloads.
+  Client families outside the fixed public list publish as `unknown`, so a
+  new family never puts a name on the page. No client names are published.
+- **`usage_public_school_months`** (month, school_id, school_name,
+  unique_downloads). One browser-plus-machine number per school per calendar
+  month, written only when every day of the month (from the first published
+  day) is published. Only schools with 10 or more are listed, rounded to the
+  nearest 10 in the table. Schools under 10 have no row, so the daily totals
+  can't be used to recover them by subtraction. The name comes from
+  `institution_directory`, then the newest `cds_documents` row. A storage
+  folder maps to the
+  school that owns its artifacts (`cds_artifacts.storage_path` →
+  `cds_documents.school_id`, when exactly one school owns it), then through
+  `institution_slug_crosswalk` with the web's canonical-id rule. This merges
+  older folder slugs such as `university-of-michigan` into `umich`.
+- **`usage_public_months`** (month, schools_with_downloads,
+  schools_under_floor). For each complete month, how many schools had any
+  browser or machine download and how many of those had fewer than 10.
+
+Each run checks every closed day since the first successful daily count and
+reports days published, months rebuilt, and unready days: `waiting` (yesterday
+and the day before), `stuck` (3 to 80 days ago, including days that never got
+a daily count; opens an `api_usage_publish_stuck` issue, once while it stays
+open), and `expired` (older than 80 days, past log retention for a recount).
+An expired day blocks its month's school numbers for good; the daily totals for
+the rest of the month still publish. To unblock the month, accept the gap by
+inserting a row for that day into `api_usage_publish_days` by hand and noting
+it in the method changelog.
+
+`usage_public_violations()` scans everything published and returns counts for
+`school_cells_off_rule` (under 10 or not a multiple of 10),
+`school_months_incomplete`, `school_months_without_summary`,
+`summary_count_mismatch` (listed schools must equal schools with downloads
+minus schools under 10),
+`days_without_publish_record`, `unexpected_columns`, and
+`private_tables_readable_by_anon` (every private usage table, including
+`api_usage_events` and `api_usage_publish_days`). Any nonzero count fails the
+step and opens an `api_usage_publish` alert issue; the ingest heartbeat is
+unaffected.
+
+To withdraw bad public rows: delete them from the public table, fix the cause,
+then delete the matching days from `api_usage_publish_days` so the next run
+republishes those days and rebuilds their months.
+
 ### Operations
 
 ```bash
@@ -392,6 +457,9 @@ gh workflow run ops-api-usage-ingest.yml -f mode=backfill -f days=89
 
 # Recount unique downloads only (after a method_version change).
 gh workflow run ops-api-usage-ingest.yml -f mode=daily -f days=89
+
+# Publish pending days and months, then run the privacy scan (service role).
+python tools/api_usage/publish.py --out-json scratch/api-usage/publish.json
 ```
 
 The logs endpoint allows 10 queries per minute, so the client paces calls 7
