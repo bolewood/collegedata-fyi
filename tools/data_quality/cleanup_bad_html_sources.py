@@ -84,7 +84,11 @@ def fetch_preview(base_url: str, row: dict[str, Any]) -> tuple[str, int | None]:
     path = row.get("source_storage_path")
     if not path:
         return row.get("source_url") or "", None
-    response = requests.get(storage_url(base_url, path), timeout=15)
+    response = requests.get(
+        storage_url(base_url, path),
+        headers={"User-Agent": "collegedata-pipeline/cleanup-bad-html-sources"},
+        timeout=15,
+    )
     text = response.content[:MAX_PREVIEW_BYTES].decode("utf-8", errors="ignore")
     return text, response.status_code
 

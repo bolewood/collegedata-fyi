@@ -75,7 +75,13 @@ def fetch_head(base_url: str, row: Mapping[str, Any]) -> dict[str, Any]:
     url = object_url(base_url, str(row["storage_path"]))
     requested_end = HEAD_BYTES - 1
     for attempt in range(5):
-        request = urllib.request.Request(url, headers={"Range": f"bytes=0-{requested_end}"})
+        request = urllib.request.Request(
+            url,
+            headers={
+                "Range": f"bytes=0-{requested_end}",
+                "User-Agent": "collegedata-pipeline/probe-source-corpus",
+            },
+        )
         try:
             with urllib.request.urlopen(request, timeout=30) as response:
                 data = response.read(HEAD_BYTES + 1)

@@ -312,9 +312,11 @@ def fetch_harvey_mudd_tier2(definitions: dict[str, Any], env_path: Path) -> dict
     if not url or not key:
         return None
 
-    from supabase import create_client  # noqa: WPS433
+    from supabase import ClientOptions, create_client  # noqa: WPS433
 
-    client = create_client(url, key)
+    client = create_client(
+        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/prd014-validation"})
+    )
     docs = (
         client.table("cds_documents")
         .select("id,school_id,cds_year,source_format")

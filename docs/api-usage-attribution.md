@@ -117,9 +117,14 @@ Client family precedence:
 2. `client_name` containing `cli` -> `cli`
 3. any other `client_name` -> `integration`
 4. browser-like user agent -> `browser`
-5. known AI-agent user agent -> `ai_agent`
+5. AI user agent -> `ai_user` (fetching because a person asked, such as
+   `ChatGPT-User` or `Claude-User`) or `ai_crawler` (indexing or training,
+   such as `GPTBot` or `ClaudeBot`)
 6. curl, Python, Node fetch, or other script-like user agent -> `script`
 7. otherwise -> `unknown`
+
+`aiFamily()` mirrors `ai_family()` in `tools/api_usage/classify.py`; keep the
+token lists in sync.
 
 The user-agent classification stores only the family bucket, not the raw header.
 
@@ -287,7 +292,10 @@ this project only, expires 2027-10-01) and replaces whole UTC hours in:
   salted daily hash. Kept 400 days.
 - `api_gateway_schools_hourly`: archive-file requests per school (all callers)
   and third-party `school_id=eq.` lookups.
-- `api_usage_ingest_runs`: one row per processed window.
+- `api_usage_downloads_daily`: unique archive downloads per UTC day, by
+  school, access method, and client family (see Unique downloads below).
+- `api_usage_ingest_runs`: one row per processed window (`mode = 'daily'` for
+  unique-download days).
 - Views: `api_usage_daily` (gateway plus `api_usage_events`) and
   `api_usage_top_clients_7d`.
 
@@ -317,6 +325,59 @@ link across days.
 The gateway logs `X-Client-Info` but not custom headers, which is why first-party
 code sets that header (`web/src/lib/client-info.ts`) and Python tools send
 `User-Agent: collegedata-pipeline/<tool>`.
+`tools/api_usage/test_pipeline_identity.py` fails CI when a tool under `tools/`
+fetches public Storage or uses the anon key without that user agent.
+
+Third-party rows also get a `client_family`, first match wins:
+
+1. `ai_user` or `ai_crawler`: AI vendor tokens (lists in `classify.py`).
+2. `declared_bot`: a bot word ending a product token (`bot`, `crawler`,
+   `spider`, `fetcher`, and similar), or a crawler without one taken from
+   [COUNTER-Robots](https://github.com/atmire/COUNTER-Robots) and seen in our
+   traffic (`GoogleOther`, `Google-InspectionTool`, `SkypeUriPreview`, ...).
+   General tools (`python`, `curl`, `wget`, `java`) are never bots.
+3. `browser`: `Mozilla/` with a platform section in parentheses and no bot,
+   AI, or automation token. A bare `Mozilla/5.0`, `HeadlessChrome`, and
+   `Google-Apps-Script` are `script`.
+4. `integration`: a non-generic product token or a `supabase-*` client info.
+5. `script` or `unknown`.
+
+### Unique downloads (PRD 033)
+
+Each hourly run also counts unique downloads, into
+`api_usage_downloads_daily`, for any of the last 7 closed UTC days that has
+no successful count. A day counts as closed 3 hours after midnight UTC, so
+late log rows have landed. A failed day is retried by the next run; gaps
+older than a week need a `daily` or `backfill` run.
+
+- **Unique download:** one client key (IP address + user agent) x one archive
+  file x one UTC day, counting GETs that return 200 or 206. Range requests
+  from PDF viewers collapse into one.
+- **Access method:** `browser`; `machine` (scripts, integrations, `ai_user`,
+  unknown clients, and browser keys that fetch more than
+  `HEAVY_CLIENT_FILES` = 30 distinct files that day); `bots_crawlers`
+  (`declared_bot`, `ai_crawler`); `excluded` (service role, secret key,
+  friendly API, pipeline user agent).
+- `from_site` marks fetches with a `collegedata.fyi` referer;
+  `raw_downloads` counts every fetch.
+- `method_version` (`DOWNLOADS_METHOD_VERSION` in `classify.py`) changes with
+  any rule that changes these counts. A day is replaced per
+  (day, method_version).
+
+This is the only query that uses IP addresses to count. The client key is
+built and used inside the ClickHouse query (`queries.daily_downloads_sql`),
+which returns counts grouped by school, user agent, and flags; Python
+classifies the user agent and drops it. Each day checks that its fetch total
+matches a raw `count()` the same way hourly windows do.
+
+A day costs about 3 logs queries. If a day passes 60 result pages (a scraper
+rotating user agents across many schools), it is re-queried in 4, then 16,
+buckets of user-agent hash. The heavy-client window partitions by IP and
+user agent, so bucketing never changes a count. A day still too large fails
+rather than being counted partially.
+
+`excluded` means "identified as our pipeline". The pipeline user agent is
+public, so anyone running these tools against production also lands there.
 
 ### Operations
 
@@ -324,8 +385,13 @@ code sets that header (`web/src/lib/client-info.ts`) and Python tools send
 # Counts-only dry run of the last three hours (needs SUPABASE_LOGS_TOKEN).
 python tools/api_usage/ingest_gateway_logs.py --dry-run --out-json scratch/api-usage/dry.json
 
-# Backfill: dispatch the workflow with mode=backfill, days=1..89.
+# Backfill: dispatch the workflow with mode=backfill, days=1..89. This
+# reprocesses the hourly tables and recounts unique downloads for each closed
+# day in the span.
 gh workflow run ops-api-usage-ingest.yml -f mode=backfill -f days=89
+
+# Recount unique downloads only (after a method_version change).
+gh workflow run ops-api-usage-ingest.yml -f mode=daily -f days=89
 ```
 
 The logs endpoint allows 10 queries per minute, so the client paces calls 7
@@ -370,7 +436,17 @@ Top third-party clients this week:
 select * from public.api_usage_top_clients_7d limit 25;
 ```
 
-Most-downloaded archive files by school, last 30 days:
+Unique downloads per day by access method:
+
+```sql
+select day, access_method, sum(unique_downloads) as unique_downloads, sum(raw_downloads) as fetches
+from public.api_usage_downloads_daily
+where method_version = 1 and day >= current_date - 30
+group by 1, 2
+order by 1 desc, 2;
+```
+
+Most-downloaded archive files by school, last 30 days (raw requests):
 
 ```sql
 select school_id, sum(downloads) as downloads, sum(requests) as requests

@@ -397,11 +397,13 @@ Where the build differs from rev 2, and why:
   replacement works and per-school rows can't carry a client signature.
 - **AI agents are never browsers.** User agents like `ChatGPT-User` and the
   Claude desktop app start with `Mozilla/`; anything that names a bot or AI
-  agent is `ai_agent` or `declared_bot` and is hashed like other third parties.
+  agent is `ai_user`, `ai_crawler`, or `declared_bot` (`ai_agent` before PRD
+  033 M0) and is hashed like other third parties.
   First-party rows use `client_family = 'first_party'`.
 - **Salts are pruned by `api_usage_prune()`** at the end of every run
   (`day < today − 2`), which also enforces the 400-day client retention.
-- **Workflow inputs** are `mode` (`hourly` or `backfill`), `days` and
+- **Workflow inputs** are `mode` (`hourly`, `backfill`, or `daily` for unique
+  downloads only, added in PRD 033), `days` and
   `dry_run`. Backfill uses 24-hour slices: about 10 queries a day, so 89 days
   takes about two hours. Hourly runs catch up from the last good window end.
 - **Alerts:** six straight failed scheduled runs, or no logs from seven days
@@ -434,6 +436,24 @@ Where the build differs from rev 2, and why:
     is counted exactly in `api_usage_events`.
   - If a day's salt has been pruned and that day is processed again, the job
     creates a new salt, so one client can have two hashes for that day.
+- **PRD 033 M0 changes** (2026-10-02):
+  - `ai_agent` is split into `ai_user` (fetching for a person: `ChatGPT-User`,
+    `Claude-User`, `Perplexity-User`, ...) and `ai_crawler` (`GPTBot`,
+    `ClaudeBot`, `OAI-SearchBot`, `CCBot`, ...). Before this, `GPTBot` and
+    `ClaudeBot` were counted as AI agents rather than crawlers.
+  - Bot detection adds crawlers from COUNTER-Robots that were in our traffic
+    without a bot word (`GoogleOther`, `Google-InspectionTool`,
+    `SkypeUriPreview`, ...). `HeadlessChrome`, `Google-Apps-Script`, and a
+    bare `Mozilla/5.0` are scripts, not browsers.
+  - Every tool under `tools/` that fetches public Storage or uses the anon
+    key sends a `collegedata-pipeline/<tool>` user agent, enforced by
+    `test_pipeline_identity.py`.
+  - A daily pass counts unique archive downloads into
+    `api_usage_downloads_daily`. It is the first query to use IP addresses for
+    counting: the client key (IP + user agent) lives only inside the logs
+    query, which returns counts. See `docs/api-usage-attribution.md`.
+  - The 89-day backfill after this change reprocesses the hourly tables with
+    the new families, so all retained history uses one rule set.
 
 ## Relationship to PRD 013
 

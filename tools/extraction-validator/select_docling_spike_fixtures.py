@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from supabase import create_client
+from supabase import ClientOptions, create_client
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -156,7 +156,9 @@ def main() -> int:
 
     env = load_env(args.env)
     url, key = supabase_config(env)
-    client = create_client(url, key)
+    client = create_client(
+        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/select-docling-spike-fixtures"})
+    )
 
     print(
         f"Fetching up to {args.candidate_limit} tier4_docling artifacts...",

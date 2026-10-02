@@ -53,15 +53,51 @@ export function userAgentFamily(userAgent: string | null): string {
   return "script";
 }
 
+// Keep in sync with AI_USER_TOKENS / AI_CRAWLER_TOKENS in tools/api_usage/classify.py.
+const AI_USER_TOKENS = [
+  "chatgpt-user", "claude-user", "perplexity-user", "mistralai-user",
+  "meta-externalfetcher", "duckassistbot",
+];
+const AI_CRAWLER_TOKENS = [
+  "gptbot", "oai-searchbot", "claudebot", "claude-searchbot", "anthropic-ai",
+  "perplexitybot", "ccbot", "bytespider", "amazonbot", "applebot-extended",
+  "meta-externalagent", "google-extended", "cohere-ai", "ai2bot", "youbot",
+];
+const CONTACT_RE = /\+?https?:\/\/\S+|\+?[\w.-]+@[\w.-]+/g;
+const BOT_WORD_RE =
+  /(bot|crawler|spider|crawl|slurp|indexer|fetcher|scraper|archiver|externalagent|externalhit)[a-z0-9_.-]*([/;)]|$)/;
+// Keep in sync with _CRAWLER_TOKENS / _AUTOMATION_TOKENS in classify.py.
+const CRAWLER_RE =
+  /googleother|google-inspectiontool|mediapartners-google|adsbot-google|feedfetcher-google|storebot-google|google-safety|skypeuripreview/;
+const AUTOMATION_RE = /headlesschrome|google-apps-script|phantomjs/;
+
+function isBot(ua: string): boolean {
+  return BOT_WORD_RE.test(ua) || CRAWLER_RE.test(ua);
+}
+
+function isBrowser(userAgent: string): boolean {
+  return userAgent.startsWith("Mozilla/") && userAgent.includes("(") && !AUTOMATION_RE.test(userAgent.toLowerCase());
+}
+
+export function aiFamily(userAgent: string | null): "ai_user" | "ai_crawler" | null {
+  const ua = userAgent?.toLowerCase() ?? "";
+  if (AI_USER_TOKENS.some((token) => ua.includes(token))) return "ai_user";
+  if (AI_CRAWLER_TOKENS.some((token) => ua.includes(token))) return "ai_crawler";
+  if (userAgentFamily(userAgent) !== "ai_agent") return null;
+  return BOT_WORD_RE.test(ua.replace(CONTACT_RE, " ")) ? "ai_crawler" : "ai_user";
+}
+
 export function clientFamily(clientName: string | null, userAgent: string | null): string {
   const marker = clientName?.toLowerCase() ?? "";
   if (marker.includes("mcp")) return "mcp";
   if (marker.includes("cli")) return "cli";
   if (marker) return "integration";
 
+  const ai = aiFamily(userAgent);
+  if (ai) return ai;
+  if (isBot(userAgent?.toLowerCase() ?? "")) return "declared_bot";
   const uaFamily = userAgentFamily(userAgent);
-  if (uaFamily === "browser") return "browser";
-  if (uaFamily === "ai_agent") return "ai_agent";
+  if (uaFamily === "browser") return isBrowser(userAgent ?? "") ? "browser" : "script";
   if (["curl", "python", "node_fetch", "script"].includes(uaFamily)) return "script";
   return "unknown";
 }

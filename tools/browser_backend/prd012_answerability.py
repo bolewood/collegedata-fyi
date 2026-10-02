@@ -87,6 +87,7 @@ class RestClient:
                     "apikey": self.key,
                     "authorization": f"Bearer {self.key}",
                     "Range": f"{start}-{start + page_size - 1}",
+                    "User-Agent": "collegedata-pipeline/prd012-answerability",
                 },
             )
             with urllib.request.urlopen(req, timeout=60) as response:

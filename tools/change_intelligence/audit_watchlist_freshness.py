@@ -28,7 +28,7 @@ try:
 except ImportError:  # pragma: no cover - operator venvs include PyYAML.
     yaml = None
 
-from supabase import Client, create_client
+from supabase import Client, ClientOptions, create_client
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -112,7 +112,9 @@ def create_supabase_client(env: dict[str, str]) -> Client:
     key = env.get("SUPABASE_SERVICE_ROLE_KEY") or env.get("SUPABASE_ANON_KEY")
     if not url or not key:
         raise SystemExit("Missing SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY/ANON key")
-    return create_client(url, key)
+    return create_client(
+        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/audit-watchlist-freshness"})
+    )
 
 
 def chunks(values: list[str], size: int = 80) -> list[list[str]]:

@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from supabase import create_client
+from supabase import ClientOptions, create_client
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -335,7 +335,9 @@ def main() -> int:
     url, key = supabase_config(load_env(args.env))
     if args.mode in {"requeue", "rollback"} and not is_service_role_key(key):
         raise SystemExit("mutating modes require a Supabase service_role key")
-    client = create_client(url, key)
+    client = create_client(
+        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/prd014-m5-drain"})
+    )
 
     if args.mode in {"plan", "requeue"}:
         candidates = select_candidates(client, args)

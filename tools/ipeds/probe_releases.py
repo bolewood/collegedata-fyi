@@ -59,7 +59,7 @@ def main() -> int:
 
 def fetch_loaded_releases() -> list[dict[str, Any]]:
     try:
-        from supabase import create_client
+        from supabase import ClientOptions, create_client
     except ImportError as exc:
         raise SystemExit("supabase package is required to read loaded IPEDS releases") from exc
 
@@ -72,7 +72,11 @@ def fetch_loaded_releases() -> list[dict[str, Any]]:
     if not supabase_url or not key:
         raise SystemExit("SUPABASE_URL and a Supabase API key are required")
 
-    client = create_client(supabase_url, key)
+    client = create_client(
+        supabase_url,
+        key,
+        options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/ipeds-release-probe"}),
+    )
     response = (
         client.table("ipeds_releases")
         .select("collection_year,data_year,release_type,release_date,metadata_url,access_url,notes")

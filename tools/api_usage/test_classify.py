@@ -67,17 +67,40 @@ class ClassifyTest(unittest.TestCase):
 class UserAgentTest(unittest.TestCase):
     CASES = [
         ("Mozilla/5.0 (Macintosh) AppleWebKit/605 Safari/605", True, "browser", None),
-        ("Mozilla/5.0 (compatible; GPTBot/1.2; +https://openai.com/gptbot)", False, "ai_agent", "GPTBot"),
+        ("Mozilla/5.0 (compatible; GPTBot/1.2; +https://openai.com/gptbot)", False, "ai_crawler", "GPTBot"),
         ("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
-         False, "ai_agent", "ChatGPT-User"),
+         False, "ai_user", "ChatGPT-User"),
         ("Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Claude/2.16 Chrome/152 Safari/537.36",
-         False, "ai_agent", "Claude"),
-        ("Claude-User (claude-code/2.1.284; +https://support.anthropic.com/)", False, "ai_agent", "Claude-User"),
+         False, "ai_user", "Claude"),
+        ("Claude-User (claude-code/2.1.284; +https://support.anthropic.com/)", False, "ai_user", "Claude-User"),
+        ("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; ClaudeBot/1.0; +claudebot@anthropic.com)",
+         False, "ai_crawler", "ClaudeBot"),
+        ("Mozilla/5.0 (compatible; OAI-SearchBot/1.0; +https://openai.com/searchbot)", False, "ai_crawler",
+         "OAI-SearchBot"),
+        ("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Perplexity-User/1.0; "
+         "+https://perplexity.ai/perplexity-user)", False, "ai_user", "Perplexity-User"),
+        ("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; "
+         "+https://perplexity.ai/perplexitybot)", False, "ai_crawler", "PerplexityBot"),
+        ("CCBot/2.0 (https://commoncrawl.org/faq/)", False, "ai_crawler", "CCBot"),
+        ("Mozilla/5.0 (Macintosh) AppleWebKit/600.2.5 (KHTML, like Gecko) Version/8.0.2 Safari/600.2.5 "
+         "(Amazonbot/0.1; +https://developer.amazon.com/support/amazonbot)", False, "ai_crawler", "Amazonbot"),
+        ("meta-externalfetcher/1.1 (+https://developers.facebook.com/docs/sharing/webmasters/crawler)",
+         False, "ai_user", "meta-externalfetcher"),
         ("Mozilla/5.0 (Linux; Android 5.0) Mobile Safari/537.36 (compatible; Bytespider; spider-feedback@bytedance.com)",
-         False, "declared_bot", "Bytespider"),
+         False, "ai_crawler", "Bytespider"),
         ("Mozilla/5.0 (X11) Chrome/145 Safari/537.36 (compatible; meta-externalagent/1.1 "
          "(+https://developers.facebook.com/docs/sharing/webmasters/crawler))",
-         False, "declared_bot", "meta-externalagent"),
+         False, "ai_crawler", "meta-externalagent"),
+        ("Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)", False, "declared_bot", "Googlebot"),
+        ("Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) "
+         "Chrome/141 Mobile Safari/537.36 (compatible; GoogleOther)", False, "declared_bot", "GoogleOther"),
+        ("Mozilla/5.0 (Windows NT 6.1; WOW64) SkypeUriPreview Preview/0.5", False, "declared_bot", "SkypeUriPreview"),
+        ("Mozilla/5.0 (compatible; Google-Apps-Script; beanserver; +https://script.google.com; id: x)",
+         False, "script", None),
+        ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141 Safari/537.36",
+         False, "script", None),
+        ("Mozilla/5.0", False, "script", None),
+        ("Mozilla/5.0 Chrome/124", False, "script", None),
         ("CollegeConnect-DataBot/1.0", False, "declared_bot", "CollegeConnect-DataBot"),
         ("Mozilla/5.0 (FendodoRubricBot)", False, "declared_bot", "FendodoRubricBot"),
         ("Mozilla/5.0 (Linux; Android 10; CUBOT X30) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145 Mobile Safari/537.36",
@@ -139,6 +162,41 @@ class RouteTest(unittest.TestCase):
         self.assertRegex(first, r"^[0-9a-f]{16}$")
         self.assertEqual(first, c.client_hash(salt_a, "203.0.113.7", "curl/8", "t13d"))
         self.assertNotEqual(first, c.client_hash(salt_b, "203.0.113.7", "curl/8", "t13d"))
+
+
+class AiTokenTest(unittest.TestCase):
+    def test_ai_tokens_are_never_browsers(self):
+        for token in c.AI_USER_TOKENS + c.AI_CRAWLER_TOKENS:
+            with self.subTest(token=token):
+                self.assertRegex(token, r"^[a-z0-9-]+$")
+                ua = f"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/141.0 {token}/1.0 extra"
+                self.assertFalse(c.ua_is_browser(ua))
+                self.assertIn(c.client_family(ua), c.AI_FAMILIES)
+
+
+class AccessMethodTest(unittest.TestCase):
+    def method(self, ua, internal=False, heavy=False):
+        return c.access_method(ua, c.client_family(ua), internal, heavy)
+
+    def test_methods(self):
+        browser = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36"
+        cases = [
+            (browser, False, False, "browser"),
+            (browser, False, True, "machine"),
+            (browser, True, False, "excluded"),
+            ("python-httpx/0.27 collegedata-pipeline/archive", False, False, "excluded"),
+            ("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; ChatGPT-User/1.0; +https://openai.com/bot)",
+             False, False, "machine"),
+            ("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; GPTBot/1.2; +https://openai.com/gptbot)",
+             False, False, "bots_crawlers"),
+            ("Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)", False, False, "bots_crawlers"),
+            ("curl/8.7.1", False, False, "machine"),
+            ("", False, False, "machine"),
+        ]
+        for ua, internal, heavy, expected in cases:
+            with self.subTest(ua=ua, internal=internal, heavy=heavy):
+                self.assertEqual(self.method(ua, internal, heavy), expected)
+                self.assertIn(expected, c.ACCESS_METHODS)
 
 
 if __name__ == "__main__":

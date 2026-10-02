@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
-from supabase import create_client
+from supabase import ClientOptions, create_client
 
 
 C1_KEYS = {"C.101", "C.102", "C.105", "C.106", "C.117", "C.118", "C.119"}
@@ -235,6 +235,7 @@ def main() -> int:
     client = create_client(
         os.environ["SUPABASE_URL"],
         os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ["SUPABASE_ANON_KEY"],
+        options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/audit-visual-ocr-candidates"}),
     )
 
     docs = fetch_all(

@@ -69,6 +69,24 @@ FN_ROWS = [
 ]
 
 
+def daily_row(school, ua, uniq, raw, fp=0, internal=0, heavy=0):
+    return {"school_raw": school, "ua": ua, "fp": fp, "internal": internal, "heavy": heavy,
+            "uniq": uniq, "raw": raw}
+
+
+PIPELINE_UA = "python-httpx/0.27 collegedata-pipeline/archive"
+DAILY_ROWS = [
+    daily_row("harvard-university", BROWSER_UA, 5, 7),
+    daily_row("harvard-university", BROWSER_UA, 2, 2, fp=1),
+    daily_row("harvard-university", BROWSER_UA, 40, 40, heavy=1),
+    daily_row("yale-university", BOT_UA, 3, 3),
+    daily_row("yale-university", SCRIPT_UA, 4, 6),
+    daily_row("yale-university", PIPELINE_UA, 9, 9),
+    daily_row("mit", SCRIPT_UA, 1, 1, internal=1),
+    daily_row("Bad%20Slug", SCRIPT_UA, 1, 1),
+]
+
+
 class FakeLogs:
     def __init__(self):
         self.queries_made = 0
@@ -77,6 +95,8 @@ class FakeLogs:
     def query_all(self, sql, start, end):
         self.queries_made += 1
         self.calls.append((sql, start, end))
+        if "over (partition by ip, ua)" in sql:
+            return [dict(row) for row in DAILY_ROWS]
         if "school_raw" in sql:
             return [dict(row) for row in SCHOOL_ROWS]
         if "cf_connecting_ip" in sql:
@@ -87,18 +107,24 @@ class FakeLogs:
 
     def query(self, sql, start, end):
         self.queries_made += 1
+        if "'206'" in sql:
+            return [{"n": sum(row["raw"] for row in DAILY_ROWS)}]
         if "function_edge_logs" in sql:
             return [{"n": sum(row["n"] for row in FN_ROWS)}]
         return [{"n": sum(row["n"] for row in EDGE_ROWS)}]
 
 
+WEEK_BEFORE_NOW = [f"2026-09-{d}T00:00:00+00:00" for d in range(25, 31)]
+
+
 class FakeDb(ingest.Db):
-    def __init__(self, last_end=None):
+    def __init__(self, last_end=None, counted=WEEK_BEFORE_NOW):
         self.rpcs = []
         self.inserts = []
         self.updates = []
         self.salts = {}
         self.last_end = last_end
+        self.counted = counted
         self.run_queries = []
 
     def rpc(self, name, payload):
@@ -111,6 +137,8 @@ class FakeDb(ingest.Db):
             return [{"salt": self.salts[day]}] if day in self.salts else []
         if table == "api_usage_ingest_runs":
             self.run_queries.append(query)
+            if "mode=eq.daily" in query:
+                return [{"window_start": day} for day in self.counted]
             return [{"window_end": self.last_end.isoformat()}] if self.last_end else []
         return []
 
@@ -161,6 +189,25 @@ class AggregateTest(unittest.TestCase):
         self.assertTrue(all(len(r["client_hash"]) == 16 for r in rows))
         self.assertEqual(len({r["client_hash"] for r in rows if r["user_agent_family"] == "python"}), 1)
 
+    def test_downloads_daily_methods(self):
+        rows, dropped = aggregate.downloads_daily(DAILY_ROWS, datetime(2026, 10, 1).date())
+        got = {(r["school_id"], r["access_method"], r["client_family"], r["from_site"]):
+               (r["unique_downloads"], r["raw_downloads"]) for r in rows}
+        self.assertEqual(got, {
+            ("harvard-university", "browser", "browser", False): (5, 7),
+            ("harvard-university", "browser", "browser", True): (2, 2),
+            ("harvard-university", "machine", "browser", False): (40, 40),
+            ("yale-university", "bots_crawlers", "declared_bot", False): (3, 3),
+            ("yale-university", "machine", "script", False): (4, 6),
+            ("yale-university", "excluded", "first_party", False): (9, 9),
+            ("mit", "excluded", "first_party", False): (1, 1),
+        })
+        self.assertEqual(dropped, 1)
+        self.assertTrue(all(r["day"] == "2026-10-01" and r["method_version"] == c.DOWNLOADS_METHOD_VERSION
+                            for r in rows))
+        self.assertEqual(aggregate.summarize_downloads(rows),
+                         {"bots_crawlers": 3, "browser": 7, "excluded": 10, "machine": 44})
+
     def test_function_rollups(self):
         rows = aggregate.function_rollups(FN_ROWS)
         self.assertEqual(
@@ -175,8 +222,10 @@ class RunTest(unittest.TestCase):
         out = io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
             report = ingest.run(args(), now=NOW, logs=logs, db=db)
+        self.assertIn("api_usage_replace_downloads_day", [name for name, _ in db.rpcs])
         blob = json.dumps([db.rpcs, db.inserts, db.updates, report]) + out.getvalue()
-        for secret in (IPV4, IPV6, "198.51.100.9", SCRIPT_UA, BROWSER_UA, BOT_UA, "t13d1516h2_8daaf6152771"):
+        for secret in (IPV4, IPV6, "198.51.100.9", SCRIPT_UA, BROWSER_UA, BOT_UA, PIPELINE_UA,
+                       "t13d1516h2_8daaf6152771"):
             self.assertNotIn(secret, blob)
         public = json.dumps(report) + out.getvalue()
         for private in ("harvard-university", "yale-university", "client_hash"):
@@ -189,7 +238,11 @@ class RunTest(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()):
             report = ingest.run(args(), now=NOW, logs=logs, db=db)
         names = [name for name, _ in db.rpcs]
-        self.assertEqual(names, ["api_usage_replace_window", "api_usage_replace_window", "api_usage_prune"])
+        self.assertEqual(names, ["api_usage_replace_window", "api_usage_replace_window",
+                                 "api_usage_replace_downloads_day", "api_usage_prune"])
+        self.assertEqual(db.rpcs[2][1]["p_day"], "2026-10-01")
+        self.assertEqual(report["days"], 1)
+        self.assertEqual(report["unique_downloads"]["browser"], 7)
         edge = db.rpcs[0][1]
         self.assertEqual((edge["p_start"], edge["p_end"]), ("2026-10-02T09:00:00+00:00", "2026-10-02T12:00:00+00:00"))
         self.assertNotIn("p_clients", db.rpcs[1][1])
@@ -253,7 +306,7 @@ class RunTest(unittest.TestCase):
     def test_client_page_overflow_splits_to_hours_then_skips_clients(self):
         class Flood(FakeLogs):
             def query_all(self, sql, start, end):
-                if "cf_connecting_ip" in sql:
+                if "cf_connecting_ip" in sql and "partition by" not in sql:
                     raise TooManyPages("more than 60 pages")
                 return super().query_all(sql, start, end)
 
@@ -266,6 +319,63 @@ class RunTest(unittest.TestCase):
         self.assertTrue(all(call["p_clients"] == [] for call in edge_calls))
         self.assertEqual(report["clients_overflow_hours"], 3)
         self.assertEqual(db.updates[-1][2]["status"], "ok")
+
+    def test_daily_mode_counts_downloads_only(self):
+        logs, db = FakeLogs(), FakeDb()
+        with contextlib.redirect_stdout(io.StringIO()):
+            report = ingest.run(args(mode="daily", days=3), now=NOW, logs=logs, db=db)
+        names = [name for name, _ in db.rpcs]
+        self.assertEqual(names, ["api_usage_replace_downloads_day"] * 3 + ["api_usage_prune"])
+        self.assertEqual([p["p_day"] for _, p in db.rpcs[:3]], ["2026-09-29", "2026-09-30", "2026-10-01"])
+        self.assertEqual(report["windows"], 0)
+        self.assertEqual((report["window_start"], report["window_end"]),
+                         ("2026-09-29T00:00:00+00:00", "2026-10-02T00:00:00+00:00"))
+        self.assertEqual({row["mode"] for table, row in db.inserts if table == "api_usage_ingest_runs"}, {"daily"})
+        self.assertEqual(db.updates[-1][2]["status"], "ok")
+
+    def test_hourly_counts_only_missing_days_in_the_last_week(self):
+        db = FakeDb(counted=WEEK_BEFORE_NOW + ["2026-10-01T00:00:00Z"])
+        with contextlib.redirect_stdout(io.StringIO()):
+            report = ingest.run(args(), now=NOW, logs=FakeLogs(), db=db)
+        self.assertIn("mode=eq.daily", db.run_queries[1])
+        self.assertIn("window_start=gte.2026-09-25T00:00:00Z", db.run_queries[1])
+        self.assertEqual(report["days"], 0)
+
+        gap = FakeDb(counted=[day for day in WEEK_BEFORE_NOW if not day.startswith("2026-09-27")])
+        with contextlib.redirect_stdout(io.StringIO()):
+            ingest.run(args(), now=NOW, logs=FakeLogs(), db=gap)
+        days = [p["p_day"] for name, p in gap.rpcs if name == "api_usage_replace_downloads_day"]
+        self.assertEqual(days, ["2026-09-27", "2026-10-01"])
+
+    def test_oversized_day_splits_by_user_agent(self):
+        class Big(FakeLogs):
+            buckets = 0
+
+            def query_all(self, sql, start, end):
+                self.buckets += "cityHash64" in sql
+                if "partition by" in sql and "cityHash64" not in sql:
+                    raise TooManyPages("more than 60 pages")
+                if "cityHash64" in sql and not sql.split("cityHash64(ua) % 4 = ")[1].startswith("0 "):
+                    return []
+                return super().query_all(sql, start, end)
+
+        logs = Big()
+        stats = ingest.process_day(logs, None, datetime(2026, 10, 1, tzinfo=timezone.utc))
+        self.assertEqual(stats["parts"], 4)
+        self.assertTrue(stats["reconciled"])
+        self.assertEqual(logs.buckets, 4)
+
+    def test_unreconciled_day_writes_nothing_and_fails(self):
+        class Drifted(FakeLogs):
+            def query(self, sql, start, end):
+                rows = super().query(sql, start, end)
+                return [{"n": rows[0]["n"] + 50}] if "'206'" in sql else rows
+
+        db = FakeDb()
+        with self.assertRaises(ingest.IngestError), contextlib.redirect_stderr(io.StringIO()):
+            ingest.run(args(mode="daily", days=2), now=NOW, logs=Drifted(), db=db)
+        self.assertEqual([name for name, _ in db.rpcs], ["api_usage_prune"])
+        self.assertEqual(db.updates[-1][2]["error_code"], "unreconciled")
 
     def test_database_errors_hide_row_details(self):
         body = json.dumps({"code": "23514", "details": f"Failing row contains (x, {IPV4})"}).encode()
@@ -297,6 +407,22 @@ class PlanTest(unittest.TestCase):
         self.assertEqual(end - start, timedelta(days=3))
         with self.assertRaises(ingest.IngestError):
             ingest.plan_windows("backfill", NOW, 90, None)
+
+    def test_days_wait_for_close_and_respect_retention(self):
+        day = lambda m, d: datetime(2026, m, d, tzinfo=timezone.utc)  # noqa: E731
+        self.assertEqual(ingest.plan_days("hourly", NOW, 7, None), [day(10, 1)])
+        week = ingest.plan_days("hourly", NOW, 7, set())
+        self.assertEqual((len(week), week[0], week[-1]), (7, day(9, 25), day(10, 1)))
+        self.assertEqual(ingest.plan_days("hourly", NOW, 7, {"2026-10-01"})[-1], day(9, 30))
+        settling = datetime(2026, 10, 2, 2, 50, tzinfo=timezone.utc)
+        self.assertEqual(ingest.plan_days("hourly", settling, 7, None), [day(9, 30)])
+        self.assertEqual(ingest.plan_days("daily", NOW, 1, None), [day(10, 1)])
+        self.assertEqual(ingest.plan_days("daily", NOW, 3, {"2026-10-01"}), [day(9, 29), day(9, 30), day(10, 1)])
+        backfill = ingest.plan_days("backfill", NOW, 89, None)
+        self.assertEqual((len(backfill), backfill[-1]), (88, day(10, 1)))
+        self.assertGreaterEqual(backfill[0], ingest.floor_hour(NOW) - ingest.MAX_LOOKBACK)
+        with self.assertRaises(ingest.IngestError):
+            ingest.plan_days("daily", NOW, 0, None)
 
     def test_slices(self):
         start = datetime(2026, 10, 1, tzinfo=timezone.utc)
@@ -382,6 +508,23 @@ class QueryTest(unittest.TestCase):
             self.assertNotIn("ja4", sql)
         self.assertIn("cf_connecting_ip", queries.edge_clients_sql(None))
 
+    def test_daily_query_keeps_the_client_key_inside(self):
+        start = datetime(2026, 10, 1, tzinfo=timezone.utc)
+        sql = queries.daily_downloads_sql(start, start + timedelta(days=1), 30)
+        outer_select = sql.split(" from (")[0]
+        self.assertNotIn("ip", outer_select.replace("school_raw", ""))
+        self.assertNotIn("ja4", sql)
+        group = sql.rsplit(" group by ", 1)[1].split(" order by ")[0]
+        self.assertEqual(group, sql.rsplit(" order by ", 1)[1])
+        self.assertIn("partition by ip, ua) > 30", sql)
+        self.assertIn("in ('200', '206')", sql)
+        self.assertIn("timestamp >= toDateTime('2026-10-01 00:00:00', 'UTC')", sql)
+        self.assertIn("timestamp < toDateTime('2026-10-02 00:00:00', 'UTC')", sql)
+        count = queries.download_count_sql(start, start + timedelta(days=1))
+        self.assertEqual(count.split(" where ")[1], sql.split(" from logs where ")[1].split(" group by ")[0])
+        part = queries.daily_downloads_sql(start, start + timedelta(days=1), 30, (2, 4))
+        self.assertIn(") where cityHash64(ua) % 4 = 2 group by school_raw", part)
+
     def test_head_requests_are_not_downloads_or_bytes(self):
         sql = queries.edge_rollup_sql()
         self.assertIn("= 'GET')", sql.split(" as downloads")[0])
@@ -422,7 +565,7 @@ class MainTest(unittest.TestCase):
             ingest.run = lambda a: {
                 "mode": "hourly", "dry_run": False, "windows": 1, "requests": 9, "third_party_requests": 2,
                 "rows_written": 3, "reconciled": True, "retention_ok": None, "queries_made": 6, "lag_hours": None,
-                "clients_overflow_hours": 0,
+                "clients_overflow_hours": 0, "days": 1, "unique_downloads": {"browser": 4},
             }
             try:
                 with contextlib.redirect_stdout(io.StringIO()):

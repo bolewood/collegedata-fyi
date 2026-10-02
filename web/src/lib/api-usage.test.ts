@@ -51,9 +51,18 @@ describe("api usage attribution", () => {
 
   it("classifies common clients conservatively", () => {
     expect(clientFamily("my-app", "node")).toBe("integration");
-    expect(clientFamily(null, "Mozilla/5.0")).toBe("browser");
+    expect(clientFamily(null, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15")).toBe("browser");
+    expect(clientFamily(null, "Mozilla/5.0")).toBe("script");
+    expect(clientFamily(null, "Mozilla/5.0 (X11; Linux x86_64) HeadlessChrome/124.0")).toBe("script");
+    expect(clientFamily(null, "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)")).toBe(
+      "declared_bot",
+    );
+    expect(clientFamily(null, "Mozilla/5.0 (Linux; Android 10) GoogleOther")).toBe("declared_bot");
     expect(clientFamily(null, "curl/8.0")).toBe("script");
-    expect(clientFamily(null, "ClaudeBot")).toBe("ai_agent");
+    expect(clientFamily(null, "ClaudeBot")).toBe("ai_crawler");
+    expect(clientFamily(null, "Mozilla/5.0 (compatible; GPTBot/1.2; +https://openai.com/gptbot)")).toBe("ai_crawler");
+    expect(clientFamily(null, "Mozilla/5.0 (compatible; ChatGPT-User/1.0; +https://openai.com/bot)")).toBe("ai_user");
+    expect(clientFamily(null, "Claude-User (claude-code/2.1; +https://support.anthropic.com/)")).toBe("ai_user");
     expect(userAgentFamily("python-requests/2.32")).toBe("python");
   });
 

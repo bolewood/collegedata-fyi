@@ -31,7 +31,7 @@ from pathlib import Path
 
 import yaml
 from dotenv import load_dotenv
-from supabase import create_client
+from supabase import ClientOptions, create_client
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCHOOLS_YAML = REPO_ROOT / "tools" / "finder" / "schools.yaml"
@@ -128,7 +128,9 @@ def main() -> int:
     load_dotenv(args.env)
     url = os.environ["SUPABASE_URL"]
     key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ["SUPABASE_ANON_KEY"]
-    sb = create_client(url, key)
+    sb = create_client(
+        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/completeness-report"})
+    )
 
     corpus = load_corpus(policy_filter)
     corpus_size = len(corpus)

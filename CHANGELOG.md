@@ -6,6 +6,30 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.16.0] - 2026-10-02
+
+### Added
+
+- Daily unique archive downloads (PRD 033 M0). The API usage ingest now
+  counts, for each closed UTC day, one download per visitor per file per
+  day, split into browser, machine, bots and crawlers, and our own
+  pipeline. It is stored privately in `api_usage_downloads_daily`. Visitors
+  are matched by IP address and user agent inside the log query; neither is
+  stored. A new `daily` workflow mode recounts downloads without
+  reprocessing the hourly tables.
+
+### Changed
+
+- AI clients are split into AI agents fetching for a person (ChatGPT-User,
+  Claude-User) and AI crawlers (GPTBot, ClaudeBot). Crawlers from the
+  COUNTER-Robots list that appear in our traffic without a "bot" name are
+  now bots, and headless browsers, Google Apps Script, and a bare
+  `Mozilla/5.0` no longer count as browsers.
+- Every tool that reads public Storage or uses the anon key identifies
+  itself as `collegedata-pipeline`, so its traffic is excluded from usage
+  counts. A test enforces it.
+- The privacy page describes the usage counting and its retention.
+
 ## [0.6.15.2] - 2026-10-01
 
 ### Changed

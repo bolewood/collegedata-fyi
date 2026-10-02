@@ -1,14 +1,15 @@
 """Turn grouped log rows into api_gateway_* table rows (PRD 032).
 
 Inputs are rows returned by tools/api_usage/queries.py. Outputs are the JSON
-payloads for api_usage_replace_window(). Raw IPs and user agents go in and
+payloads for api_usage_replace_window() and api_usage_replace_downloads_day().
+Raw IPs and user agents go in and
 never come out: client rows carry a salted hash and a product token only.
 """
 
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import date, datetime
 from typing import Callable, Iterable, Mapping
 
 from tools.api_usage import classify as c
@@ -217,6 +218,50 @@ def edge_clients(
         out["status_5xx"] += _int(row.get("s5"))
         out["response_bytes"] += _int(row.get("bytes"))
     return [merged[key] for key in sorted(merged)]
+
+
+def downloads_daily(rows: Iterable[Mapping[str, object]], day: date) -> tuple[list[dict], int]:
+    """api_usage_downloads_daily rows for one day, plus fetches without a valid school id.
+
+    Input rows come from queries.daily_downloads_sql. The user agent is used
+    to classify and then dropped.
+    """
+    totals: dict[tuple, list[int]] = defaultdict(lambda: [0, 0])
+    dropped = 0
+    for row in rows:
+        school = c.school_id_from(str(row.get("school_raw") or ""))
+        if not school:
+            dropped += _int(row.get("raw"))
+            continue
+        ua = str(row.get("ua") or "")
+        family = c.client_family(ua)
+        method = c.access_method(ua, family, _flag(row.get("internal")), _flag(row.get("heavy")))
+        if method == "excluded":
+            family = "first_party"
+        key = (school, method, family, _flag(row.get("fp")))
+        totals[key][0] += _int(row.get("uniq"))
+        totals[key][1] += _int(row.get("raw"))
+    return [
+        {
+            "day": day.isoformat(),
+            "school_id": school,
+            "access_method": method,
+            "client_family": family,
+            "from_site": from_site,
+            "unique_downloads": acc[0],
+            "raw_downloads": acc[1],
+            "method_version": c.DOWNLOADS_METHOD_VERSION,
+        }
+        for (school, method, family, from_site), acc in sorted(totals.items())
+    ], dropped
+
+
+def summarize_downloads(rows: Iterable[Mapping[str, object]]) -> dict[str, int]:
+    """Unique downloads by access method; counts only, safe for public CI logs."""
+    out: dict[str, int] = defaultdict(int)
+    for row in rows:
+        out[str(row["access_method"])] += int(row["unique_downloads"])
+    return dict(sorted(out.items()))
 
 
 def summarize(rollups: Iterable[Mapping[str, object]]) -> dict[str, dict[str, int]]:

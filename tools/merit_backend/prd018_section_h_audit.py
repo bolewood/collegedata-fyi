@@ -25,7 +25,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from supabase import create_client
+from supabase import ClientOptions, create_client
 
 
 PUBLIC_SUPABASE_URL = "https://isduwmygvmdozhpvzaix.supabase.co"
@@ -180,7 +180,9 @@ def supabase_client(env_path: Path | None):
     key = os.environ.get("SUPABASE_ANON_KEY") or os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
     if not key:
         raise SystemExit("SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY is required")
-    return create_client(url, key)
+    return create_client(
+        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/prd018-section-h-audit"})
+    )
 
 
 def fetch_all(query: Any, page_size: int = 1000) -> list[dict[str, Any]]:

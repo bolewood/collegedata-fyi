@@ -28,7 +28,7 @@ export default function PrivacyPage() {
       <div className="mt-8 space-y-5 text-base leading-relaxed">
         <p>
           <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Effective date:</strong>{" "}
-          May 9, 2026
+          October 2, 2026
         </p>
 
         <p>
@@ -78,6 +78,32 @@ export default function PrivacyPage() {
           database, and security logs. We use those logs to operate the site,
           debug problems, and protect the service from abuse. We do not use
           them to identify students or build marketing profiles.
+        </p>
+
+        <p>
+          We also count how the archive and API are used, from the logs our
+          database host keeps for 90 days. A scheduled job reads those logs
+          and stores only totals: requests per hour by type of client, and
+          unique downloads per school per day. To count a download once per
+          visitor, the job matches IP address and browser user agent inside
+          the log query. It does not store IP addresses or full user agents.
+        </p>
+
+        <p>
+          For automated API clients (scripts and bots, not browsers), we keep
+          a short code made from the IP address and user agent with a random
+          key that changes every day and is deleted two days later, so the
+          code can&apos;t be traced back or linked across days. Next to it we
+          keep the client&apos;s self-declared name, the network it came from
+          (such as a cloud provider), and its country. We keep these hourly
+          client counts for 400 days to spot abuse and heavy users.
+        </p>
+
+        <p>
+          If we publish anything from this data, it will be aggregate counts
+          only, such as total downloads per day and per school per month,
+          with small per-school numbers hidden. We will never publish
+          anything about an individual visitor or client.
         </p>
 
         <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>

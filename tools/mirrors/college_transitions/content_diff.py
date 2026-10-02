@@ -22,7 +22,7 @@ from pathlib import Path
 import requests
 from dotenv import load_dotenv
 from pypdf import PdfReader
-from supabase import create_client
+from supabase import ClientOptions, create_client
 
 
 def drive_download_url(share_url: str) -> str | None:
@@ -117,6 +117,7 @@ def main() -> int:
     sb = create_client(
         os.environ["SUPABASE_URL"],
         os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ["SUPABASE_ANON_KEY"],
+        options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/college-transitions-content-diff"}),
     )
 
     # Fetch our record
