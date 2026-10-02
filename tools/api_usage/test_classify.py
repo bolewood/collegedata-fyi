@@ -164,6 +164,16 @@ class RouteTest(unittest.TestCase):
         self.assertNotEqual(first, c.client_hash(salt_b, "203.0.113.7", "curl/8", "t13d"))
 
 
+class AiTokenTest(unittest.TestCase):
+    def test_ai_tokens_are_never_browsers(self):
+        for token in c.AI_USER_TOKENS + c.AI_CRAWLER_TOKENS:
+            with self.subTest(token=token):
+                self.assertRegex(token, r"^[a-z0-9-]+$")
+                ua = f"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/141.0 {token}/1.0 extra"
+                self.assertFalse(c.ua_is_browser(ua))
+                self.assertIn(c.client_family(ua), c.AI_FAMILIES)
+
+
 class AccessMethodTest(unittest.TestCase):
     def method(self, ua, internal=False, heavy=False):
         return c.access_method(ua, c.client_family(ua), internal, heavy)

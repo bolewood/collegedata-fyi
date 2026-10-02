@@ -198,13 +198,19 @@ def _download_where(start: datetime, end: datetime) -> str:
     )
 
 
-def daily_downloads_sql(start: datetime, end: datetime, heavy_files: int) -> str:
+def daily_downloads_sql(
+    start: datetime, end: datetime, heavy_files: int, part: tuple[int, int] | None = None
+) -> str:
     """Unique downloads for [start, end), normally one UTC day (PRD 033).
 
     The client key (IP + user agent) never leaves ClickHouse: the inner query
     collapses fetches to one row per (client key, file), the window flags
     keys over heavy_files distinct files, and the outer query returns counts
     by school, user agent, and flags.
+
+    part=(i, n) keeps only user agents whose hash falls in bucket i of n, for
+    days too large to page in one pass. The heavy window partitions by
+    (ip, ua), so splitting by user agent never changes a key's flag.
     """
     internal = (
         f"{_ROLE} = 'service_role' or startsWith({_KEY_PREFIX}, 'sb_secret_')"
@@ -222,8 +228,12 @@ def daily_downloads_sql(start: datetime, end: datetime, heavy_files: int) -> str
         f" from ({inner})"
     )
     keys = "school_raw, ua, fp, internal, heavy"
+    bucket = ""
+    if part is not None:
+        index, count = int(part[0]), int(part[1])
+        bucket = f" where cityHash64(ua) % {count} = {index}"
     return (
-        f"select {keys}, count() as uniq, sum(fetches) as raw from ({flagged})"
+        f"select {keys}, count() as uniq, sum(fetches) as raw from ({flagged}){bucket}"
         f" group by {keys} order by {keys}"
     )
 

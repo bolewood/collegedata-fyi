@@ -66,6 +66,18 @@ const AI_CRAWLER_TOKENS = [
 const CONTACT_RE = /\+?https?:\/\/\S+|\+?[\w.-]+@[\w.-]+/g;
 const BOT_WORD_RE =
   /(bot|crawler|spider|crawl|slurp|indexer|fetcher|scraper|archiver|externalagent|externalhit)[a-z0-9_.-]*([/;)]|$)/;
+// Keep in sync with _CRAWLER_TOKENS / _AUTOMATION_TOKENS in classify.py.
+const CRAWLER_RE =
+  /googleother|google-inspectiontool|mediapartners-google|adsbot-google|feedfetcher-google|storebot-google|google-safety|skypeuripreview/;
+const AUTOMATION_RE = /headlesschrome|google-apps-script|phantomjs/;
+
+function isBot(ua: string): boolean {
+  return BOT_WORD_RE.test(ua) || CRAWLER_RE.test(ua);
+}
+
+function isBrowser(userAgent: string): boolean {
+  return userAgent.startsWith("Mozilla/") && userAgent.includes("(") && !AUTOMATION_RE.test(userAgent.toLowerCase());
+}
 
 export function aiFamily(userAgent: string | null): "ai_user" | "ai_crawler" | null {
   const ua = userAgent?.toLowerCase() ?? "";
@@ -83,8 +95,9 @@ export function clientFamily(clientName: string | null, userAgent: string | null
 
   const ai = aiFamily(userAgent);
   if (ai) return ai;
+  if (isBot(userAgent?.toLowerCase() ?? "")) return "declared_bot";
   const uaFamily = userAgentFamily(userAgent);
-  if (uaFamily === "browser") return "browser";
+  if (uaFamily === "browser") return isBrowser(userAgent ?? "") ? "browser" : "script";
   if (["curl", "python", "node_fetch", "script"].includes(uaFamily)) return "script";
   return "unknown";
 }

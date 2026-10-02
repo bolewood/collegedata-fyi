@@ -344,8 +344,11 @@ Third-party rows also get a `client_family`, first match wins:
 
 ### Unique downloads (PRD 033)
 
-Each run also counts unique downloads for every closed UTC day not yet
-counted (one hour after midnight UTC), into `api_usage_downloads_daily`:
+Each hourly run also counts unique downloads, into
+`api_usage_downloads_daily`, for any of the last 7 closed UTC days that has
+no successful count. A day counts as closed 3 hours after midnight UTC, so
+late log rows have landed. A failed day is retried by the next run; gaps
+older than a week need a `daily` or `backfill` run.
 
 - **Unique download:** one client key (IP address + user agent) x one archive
   file x one UTC day, counting GETs that return 200 or 206. Range requests
@@ -367,9 +370,14 @@ which returns counts grouped by school, user agent, and flags; Python
 classifies the user agent and drops it. Each day checks that its fetch total
 matches a raw `count()` the same way hourly windows do.
 
-A day costs about 3 logs queries. If one day ever exceeds 60 result pages
-(a scraper rotating user agents across many schools), that day fails loudly
-instead of being counted partially.
+A day costs about 3 logs queries. If a day passes 60 result pages (a scraper
+rotating user agents across many schools), it is re-queried in 4, then 16,
+buckets of user-agent hash. The heavy-client window partitions by IP and
+user agent, so bucketing never changes a count. A day still too large fails
+rather than being counted partially.
+
+`excluded` means "identified as our pipeline". The pipeline user agent is
+public, so anyone running these tools against production also lands there.
 
 ### Operations
 

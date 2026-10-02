@@ -25,6 +25,12 @@ create table if not exists public.api_usage_downloads_daily (
   constraint api_usage_downloads_method_valid check (
     access_method in ('browser', 'machine', 'bots_crawlers', 'excluded')
   ),
+  constraint api_usage_downloads_family_valid check (
+    client_family in (
+      'browser', 'script', 'integration', 'unknown', 'declared_bot',
+      'ai_user', 'ai_crawler', 'first_party'
+    )
+  ),
   constraint api_usage_downloads_counts_valid check (
     unique_downloads > 0 and raw_downloads >= unique_downloads
   ),

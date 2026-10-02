@@ -114,13 +114,17 @@ class FakeLogs:
         return [{"n": sum(row["n"] for row in EDGE_ROWS)}]
 
 
+WEEK_BEFORE_NOW = [f"2026-09-{d}T00:00:00+00:00" for d in range(25, 31)]
+
+
 class FakeDb(ingest.Db):
-    def __init__(self, last_end=None):
+    def __init__(self, last_end=None, counted=WEEK_BEFORE_NOW):
         self.rpcs = []
         self.inserts = []
         self.updates = []
         self.salts = {}
         self.last_end = last_end
+        self.counted = counted
         self.run_queries = []
 
     def rpc(self, name, payload):
@@ -133,6 +137,8 @@ class FakeDb(ingest.Db):
             return [{"salt": self.salts[day]}] if day in self.salts else []
         if table == "api_usage_ingest_runs":
             self.run_queries.append(query)
+            if "mode=eq.daily" in query:
+                return [{"window_start": day} for day in self.counted]
             return [{"window_end": self.last_end.isoformat()}] if self.last_end else []
         return []
 
@@ -319,18 +325,45 @@ class RunTest(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()):
             report = ingest.run(args(mode="daily", days=3), now=NOW, logs=logs, db=db)
         names = [name for name, _ in db.rpcs]
-        self.assertEqual(names, ["api_usage_replace_downloads_day"] * 2 + ["api_usage_prune"])
-        self.assertEqual([p["p_day"] for _, p in db.rpcs[:2]], ["2026-09-30", "2026-10-01"])
+        self.assertEqual(names, ["api_usage_replace_downloads_day"] * 3 + ["api_usage_prune"])
+        self.assertEqual([p["p_day"] for _, p in db.rpcs[:3]], ["2026-09-29", "2026-09-30", "2026-10-01"])
         self.assertEqual(report["windows"], 0)
+        self.assertEqual((report["window_start"], report["window_end"]),
+                         ("2026-09-29T00:00:00+00:00", "2026-10-02T00:00:00+00:00"))
         self.assertEqual({row["mode"] for table, row in db.inserts if table == "api_usage_ingest_runs"}, {"daily"})
         self.assertEqual(db.updates[-1][2]["status"], "ok")
 
-    def test_hourly_skips_days_already_counted(self):
-        db = FakeDb(last_end=datetime(2026, 10, 2, tzinfo=timezone.utc))
+    def test_hourly_counts_only_missing_days_in_the_last_week(self):
+        db = FakeDb(counted=WEEK_BEFORE_NOW + ["2026-10-01T00:00:00Z"])
         with contextlib.redirect_stdout(io.StringIO()):
             report = ingest.run(args(), now=NOW, logs=FakeLogs(), db=db)
         self.assertIn("mode=eq.daily", db.run_queries[1])
+        self.assertIn("window_start=gte.2026-09-25T00:00:00Z", db.run_queries[1])
         self.assertEqual(report["days"], 0)
+
+        gap = FakeDb(counted=[day for day in WEEK_BEFORE_NOW if not day.startswith("2026-09-27")])
+        with contextlib.redirect_stdout(io.StringIO()):
+            ingest.run(args(), now=NOW, logs=FakeLogs(), db=gap)
+        days = [p["p_day"] for name, p in gap.rpcs if name == "api_usage_replace_downloads_day"]
+        self.assertEqual(days, ["2026-09-27", "2026-10-01"])
+
+    def test_oversized_day_splits_by_user_agent(self):
+        class Big(FakeLogs):
+            buckets = 0
+
+            def query_all(self, sql, start, end):
+                self.buckets += "cityHash64" in sql
+                if "partition by" in sql and "cityHash64" not in sql:
+                    raise TooManyPages("more than 60 pages")
+                if "cityHash64" in sql and not sql.split("cityHash64(ua) % 4 = ")[1].startswith("0 "):
+                    return []
+                return super().query_all(sql, start, end)
+
+        logs = Big()
+        stats = ingest.process_day(logs, None, datetime(2026, 10, 1, tzinfo=timezone.utc))
+        self.assertEqual(stats["parts"], 4)
+        self.assertTrue(stats["reconciled"])
+        self.assertEqual(logs.buckets, 4)
 
     def test_unreconciled_day_writes_nothing_and_fails(self):
         class Drifted(FakeLogs):
@@ -376,18 +409,18 @@ class PlanTest(unittest.TestCase):
             ingest.plan_windows("backfill", NOW, 90, None)
 
     def test_days_wait_for_close_and_respect_retention(self):
-        day = lambda d: datetime(2026, 10, d, tzinfo=timezone.utc)  # noqa: E731
-        self.assertEqual(ingest.plan_days("hourly", NOW, 7, None), [day(1)])
-        self.assertEqual(ingest.plan_days("hourly", NOW, 7, day(2)), [])
-        self.assertEqual(ingest.plan_days("hourly", NOW, 7, day(1)), [day(1)])
-        early = datetime(2026, 10, 2, 0, 50, tzinfo=timezone.utc)
-        self.assertEqual(ingest.plan_days("hourly", early, 7, day(1)), [])
-        self.assertEqual(ingest.plan_days("daily", NOW, 3, None), [datetime(2026, 9, 30, tzinfo=timezone.utc), day(1)])
+        day = lambda m, d: datetime(2026, m, d, tzinfo=timezone.utc)  # noqa: E731
+        self.assertEqual(ingest.plan_days("hourly", NOW, 7, None), [day(10, 1)])
+        week = ingest.plan_days("hourly", NOW, 7, set())
+        self.assertEqual((len(week), week[0], week[-1]), (7, day(9, 25), day(10, 1)))
+        self.assertEqual(ingest.plan_days("hourly", NOW, 7, {"2026-10-01"})[-1], day(9, 30))
+        settling = datetime(2026, 10, 2, 2, 50, tzinfo=timezone.utc)
+        self.assertEqual(ingest.plan_days("hourly", settling, 7, None), [day(9, 30)])
+        self.assertEqual(ingest.plan_days("daily", NOW, 1, None), [day(10, 1)])
+        self.assertEqual(ingest.plan_days("daily", NOW, 3, {"2026-10-01"}), [day(9, 29), day(9, 30), day(10, 1)])
         backfill = ingest.plan_days("backfill", NOW, 89, None)
-        self.assertEqual(len(backfill), 88)
+        self.assertEqual((len(backfill), backfill[-1]), (88, day(10, 1)))
         self.assertGreaterEqual(backfill[0], ingest.floor_hour(NOW) - ingest.MAX_LOOKBACK)
-        ancient = ingest.plan_days("hourly", NOW, 7, NOW - timedelta(days=200))
-        self.assertEqual(ancient, backfill)
         with self.assertRaises(ingest.IngestError):
             ingest.plan_days("daily", NOW, 0, None)
 
@@ -489,6 +522,8 @@ class QueryTest(unittest.TestCase):
         self.assertIn("timestamp < toDateTime('2026-10-02 00:00:00', 'UTC')", sql)
         count = queries.download_count_sql(start, start + timedelta(days=1))
         self.assertEqual(count.split(" where ")[1], sql.split(" from logs where ")[1].split(" group by ")[0])
+        part = queries.daily_downloads_sql(start, start + timedelta(days=1), 30, (2, 4))
+        self.assertIn(") where cityHash64(ua) % 4 = 2 group by school_raw", part)
 
     def test_head_requests_are_not_downloads_or_bytes(self):
         sql = queries.edge_rollup_sql()

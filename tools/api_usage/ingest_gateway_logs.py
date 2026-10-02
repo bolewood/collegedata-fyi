@@ -5,7 +5,8 @@ daily unique downloads into api_usage_downloads_daily (PRD 033).
 Modes:
   hourly    Reprocess whole UTC hours from the last good window end (at least
             the last 3 hours) up to the current hour, then count unique
-            downloads for any closed UTC day not yet counted. Default.
+            downloads for any of the last 7 closed UTC days without a
+            successful count. Default.
   backfill  Reprocess --days whole days ending at the current hour, and
             recount unique downloads for every closed day in that span.
   daily     Recount unique downloads only, for the --days closed days.
@@ -43,7 +44,13 @@ HOURLY_MIN_HOURS = 3
 MAX_LOOKBACK = timedelta(days=89)
 # A UTC day is counted once it has been closed this long, so late log
 # rows have landed.
-DAY_SETTLE = timedelta(hours=1)
+DAY_SETTLE = timedelta(hours=3)
+# Hourly runs count any day missing in this many closed days, so a failed
+# day heals itself; older gaps need a daily or backfill run.
+HOURLY_DAY_LOOKBACK = 7
+# A day too large to page in one pass is split into this many user-agent
+# buckets, trying each size in turn.
+DAILY_PARTS = (1, 4, 16)
 
 
 class IngestError(RuntimeError):
@@ -267,12 +274,27 @@ def combine(parts: list[dict]) -> dict:
     return out
 
 
+def _download_rows(logs: LogsClient, day_start: datetime, day_end: datetime) -> tuple[list[dict], int]:
+    """Daily query rows and the number of user-agent buckets used."""
+    for parts in DAILY_PARTS:
+        try:
+            rows: list[dict] = []
+            for index in range(parts):
+                sql = queries.daily_downloads_sql(
+                    day_start, day_end, classify.HEAVY_CLIENT_FILES, None if parts == 1 else (index, parts)
+                )
+                rows.extend(logs.query_all(sql, day_start, day_end))
+            return rows, parts
+        except TooManyPages:
+            if parts == DAILY_PARTS[-1]:
+                raise
+    raise AssertionError("unreachable")
+
+
 def process_day(logs: LogsClient, db: Db | None, day_start: datetime) -> dict:
     """Count unique downloads for one UTC day and replace that day's rows."""
     day_end = day_start + timedelta(days=1)
-    raw = logs.query_all(
-        queries.daily_downloads_sql(day_start, day_end, classify.HEAVY_CLIENT_FILES), day_start, day_end
-    )
+    raw, parts = _download_rows(logs, day_start, day_end)
     fetches = int(logs.query(queries.download_count_sql(day_start, day_end), day_start, day_end)[0]["n"])
     rows, dropped = aggregate.downloads_daily(raw, day_start.date())
     counted = sum(row["raw_downloads"] for row in rows)
@@ -287,6 +309,7 @@ def process_day(logs: LogsClient, db: Db | None, day_start: datetime) -> dict:
         written = len(rows)
     return {
         "day": day_start.date().isoformat(),
+        "parts": parts,
         "rows_read": len(raw),
         "rows_written": written,
         "raw_requests": fetches,
@@ -296,15 +319,31 @@ def process_day(logs: LogsClient, db: Db | None, day_start: datetime) -> dict:
     }
 
 
-def last_good_end(db: Db, mode: str = "hourly") -> datetime | None:
-    """End of the latest successful window for mode; backfills don't move hourly."""
+def last_good_end(db: Db) -> datetime | None:
+    """End of the latest successful hourly window; backfills don't move it."""
     rows = db.select(
         "api_usage_ingest_runs",
-        f"select=window_end&mode=eq.{mode}&status=eq.ok&order=window_end.desc&limit=1",
+        "select=window_end&mode=eq.hourly&status=eq.ok&order=window_end.desc&limit=1",
     )
     if not rows:
         return None
     return datetime.fromisoformat(rows[0]["window_end"].replace("Z", "+00:00"))
+
+
+def counted_days(db: Db, since: datetime) -> set[str]:
+    """UTC days ('YYYY-MM-DD') from since onward with a successful daily count."""
+    rows = db.select(
+        "api_usage_ingest_runs",
+        f"select=window_start&mode=eq.daily&status=eq.ok&window_start=gte.{iso_z(since)}",
+    )
+    return {
+        datetime.fromisoformat(row["window_start"].replace("Z", "+00:00")).astimezone(timezone.utc).date().isoformat()
+        for row in rows
+    }
+
+
+def iso_z(dt: datetime) -> str:
+    return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _check_days(days: int) -> None:
@@ -324,23 +363,30 @@ def plan_windows(mode: str, now: datetime, days: int, last_end: datetime | None)
     return start, end
 
 
-def plan_days(mode: str, now: datetime, days: int, last_day_end: datetime | None) -> list[datetime]:
-    """Start of each closed UTC day to count, oldest first.
-
-    hourly counts days after the last counted one (only yesterday the first
-    time); backfill and daily recount every closed day in the last --days.
-    """
+def day_span(now: datetime, days: int) -> tuple[datetime, datetime]:
+    """[start, stop) covering the last `days` closed UTC days within retention."""
     stop = floor_day(now - DAY_SETTLE)
     oldest = ceil_day(floor_hour(now) - MAX_LOOKBACK)
+    return max(stop - timedelta(days=days), oldest), stop
+
+
+def plan_days(mode: str, now: datetime, days: int, counted: set[str] | None) -> list[datetime]:
+    """Start of each closed UTC day to count, oldest first.
+
+    hourly counts the days among the last HOURLY_DAY_LOOKBACK that have no
+    successful count (only yesterday when counted is None, as in a dry run);
+    backfill and daily recount every closed day in the last --days.
+    """
     if mode == "hourly":
-        start = stop - timedelta(days=1) if last_day_end is None else max(floor_day(last_day_end), oldest)
+        start, stop = day_span(now, 1 if counted is None else HOURLY_DAY_LOOKBACK)
     else:
         _check_days(days)
-        start = max(ceil_day(floor_hour(now) - timedelta(days=days)), oldest)
+        start, stop = day_span(now, days)
     out = []
     cursor = start
     while cursor < stop:
-        out.append(cursor)
+        if mode != "hourly" or not counted or cursor.date().isoformat() not in counted:
+            out.append(cursor)
         cursor += timedelta(days=1)
     return out
 
@@ -385,9 +431,13 @@ def run(args: argparse.Namespace, *, now: datetime | None = None,
 
     hourly = args.mode == "hourly"
     last_end = last_good_end(db) if (db is not None and hourly) else None
-    last_day_end = last_good_end(db, "daily") if (db is not None and hourly) else None
+    counted = None
+    if db is not None and hourly:
+        counted = counted_days(db, day_span(now, HOURLY_DAY_LOOKBACK)[0])
     start, end = plan_windows(args.mode, now, args.days, last_end)
-    days = plan_days(args.mode, now, args.days, last_day_end)
+    days = plan_days(args.mode, now, args.days, counted)
+    if args.mode == "daily" and days:
+        start, end = days[0], days[-1] + timedelta(days=1)
     lag_hours = int((floor_hour(now) - last_end).total_seconds() // 3600) if last_end else None
     salts = SaltStore(db)
     run_url = os.environ.get("PIPELINE_RUN_URL") or None

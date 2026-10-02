@@ -100,10 +100,10 @@ export default function PrivacyPage() {
         </p>
 
         <p>
-          We publish only aggregate counts from this data, such as total
-          downloads per day and per school per month. Small per-school
-          numbers are hidden. We never publish anything about an individual
-          visitor or client.
+          If we publish anything from this data, it will be aggregate counts
+          only, such as total downloads per day and per school per month,
+          with small per-school numbers hidden. We will never publish
+          anything about an individual visitor or client.
         </p>
 
         <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>

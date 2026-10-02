@@ -42,8 +42,9 @@ INTERNAL_FUNCTIONS = frozenset({
 })
 ARCHIVE_PREFIX = "/storage/v1/object/public/sources/"
 
-# RE2- and Python-compatible; the SQL builder embeds NON_BROWSER_PATTERN so
-# the database-side browser flag and the Python check agree.
+# RE2- and Python-compatible; the SQL builder embeds NON_BROWSER_PATTERN
+# (defined below the AI token lists) so the database-side browser flag and
+# the Python check agree.
 _BOT_WORDS = "bot|crawler|spider|crawl|slurp|indexer|fetcher|scraper|archiver|externalagent|externalhit"
 _AI_WORDS = "claude|anthropic|chatgpt|openai|perplexity|copilot"
 # Matched against the lowercased user agent. A marker word must end a product
@@ -58,9 +59,7 @@ _CRAWLER_TOKENS = (
 )
 _AUTOMATION_TOKENS = "headlesschrome|google-apps-script|phantomjs"
 BOT_PATTERN = f"({_BOT_WORDS}){_TOKEN_END}|{_CRAWLER_TOKENS}"
-NON_BROWSER_PATTERN = f"({_BOT_WORDS}|{_AI_WORDS}){_TOKEN_END}|{_CRAWLER_TOKENS}|{_AUTOMATION_TOKENS}"
 _BOT_RE = re.compile(BOT_PATTERN)
-_NON_BROWSER_RE = re.compile(NON_BROWSER_PATTERN)
 _URL_RE = re.compile(r"\+?https?://\S+|\+?[\w.-]+@[\w.-]+")
 _COMPATIBLE_RE = re.compile(r"compatible;\s*([A-Za-z][\w.-]*)(?:/([\w.+-]+))?", re.IGNORECASE)
 _BOT_TOKEN_RE = re.compile(
@@ -86,6 +85,12 @@ AI_CRAWLER_TOKENS = (
     "meta-externalagent", "google-extended", "cohere-ai", "ai2bot", "youbot",
 )
 AI_FAMILIES = ("ai_user", "ai_crawler")
+# Tokens are [a-z0-9-] only, so they embed in the SQL regex unescaped.
+_AI_TOKENS = "|".join(AI_USER_TOKENS + AI_CRAWLER_TOKENS)
+NON_BROWSER_PATTERN = (
+    f"({_BOT_WORDS}|{_AI_WORDS}){_TOKEN_END}|{_CRAWLER_TOKENS}|{_AUTOMATION_TOKENS}|{_AI_TOKENS}"
+)
+_NON_BROWSER_RE = re.compile(NON_BROWSER_PATTERN)
 
 # Unique downloads (PRD 033): one client key (IP + user agent) x one archive
 # file x one UTC day. Bump DOWNLOADS_METHOD_VERSION whenever a rule here or
