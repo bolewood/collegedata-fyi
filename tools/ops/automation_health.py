@@ -24,9 +24,10 @@ CRON_JOBS = (
     "refresh-coverage-hourly",
     "refresh-public-serving-caches-hourly",
 )
-# Hourly at :20 (PRD 032); logs keep 90 days, so a quiet stall loses data.
+# Scheduled at :20 and :50 (PRD 032); logs keep 90 days, so a quiet stall
+# loses data. GitHub has started this repo's cron runs 4-8 hours late.
 API_USAGE_WORKFLOW = "API usage ingest"
-API_USAGE_MAX_AGE_HOURS = 3
+API_USAGE_MAX_AGE_HOURS = 8
 # TODO: read public.pipeline_heartbeats (via service role) and drop GitHub
 # Actions scraping once PRD 030 M0 has been live long enough to trust the
 # clocks. This script stays operator-only.
@@ -467,7 +468,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--pooler-url", type=Path, default=DEFAULT_POOLER_URL)
     parser.add_argument("--hours", type=float, default=24.0)
     parser.add_argument("--github-repo", default=DEFAULT_REPO)
-    parser.add_argument("--github-limit", type=int, default=50)
+    parser.add_argument("--github-limit", type=int, default=200)
     parser.add_argument("--json-out", type=Path)
     parser.add_argument("--markdown-out", type=Path)
     parser.add_argument("--fail-on-unhealthy", action="store_true")

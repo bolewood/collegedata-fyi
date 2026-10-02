@@ -6,6 +6,16 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.15.2] - 2026-10-01
+
+### Changed
+
+- The API usage ingest is scheduled twice an hour, and the operator health
+  check now flags it after 8 hours without a run instead of 3. GitHub has
+  been starting this repo's scheduled jobs hours late. The health check
+  also reads more recent runs so the busier schedule doesn't push other
+  workflows out of its 24-hour window.
+
 ## [0.6.15.1] - 2026-10-01
 
 ### Changed

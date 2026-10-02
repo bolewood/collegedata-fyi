@@ -50,7 +50,7 @@ class PipelineWriterLintTests(unittest.TestCase):
 
     def test_api_usage_ingest_is_hourly_and_never_echoes_rows(self) -> None:
         text = API_USAGE.read_text(encoding="utf-8")
-        self.assertIn('- cron: "20 * * * *"', text)
+        self.assertIn('- cron: "20,50 * * * *"', text)
         self.assertIn("group: api-usage-ingest", text)
         self.assertIn("--summary-json api-usage/heartbeat.json", text)
         self.assertNotIn("upload-artifact", text)
