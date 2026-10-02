@@ -1,3 +1,4 @@
+import { isUsageLaunched } from "@/lib/usage";
 import { Wordmark } from "./Wordmark";
 
 export function Footer() {
@@ -34,6 +35,7 @@ export function Footer() {
           </a>
           <a href="/coverage">Coverage</a>
           <a href="/pipeline-observation">Pipeline</a>
+          {isUsageLaunched() ? <a href="/usage">Usage</a> : null}
           <a href="/recipes">Recipes</a>
           <a href="/api">API</a>
           <a href="/privacy">Privacy</a>

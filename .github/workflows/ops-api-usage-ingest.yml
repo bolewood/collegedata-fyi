@@ -2,7 +2,9 @@ name: API usage ingest
 
 # PRD 032. Reads Supabase gateway logs (Management API, 90-day retention)
 # and writes hourly aggregates to api_gateway_* tables, plus daily unique
-# archive downloads to api_usage_downloads_daily (PRD 033). This repository is
+# archive downloads to api_usage_downloads_daily (PRD 033). After each run it
+# publishes ready days and complete months to the public usage_public_* tables
+# behind /usage. This repository is
 # public: logs, the step summary, and artifacts carry counts only. Never
 # print raw log rows, IPs, user agents, client hashes, or school ids here.
 
@@ -96,6 +98,11 @@ jobs:
           fi
           python tools/api_usage/ingest_gateway_logs.py "${args[@]}"
 
+      - id: publish
+        name: Publish public usage rows
+        if: env.INPUT_DRY_RUN != 'true'
+        run: python tools/api_usage/publish.py --out-json api-usage/publish.json
+
       - name: Heartbeat api_usage_ingest ok
         if: success() && env.INPUT_DRY_RUN != 'true'
         run: |
@@ -136,6 +143,33 @@ jobs:
           else
             echo "No report.json was produced." >> "$GITHUB_STEP_SUMMARY"
           fi
+          if [[ -f api-usage/publish.json ]]; then
+            {
+              echo
+              echo "### Public usage publish"
+              jq -r '"Days published: \(.days_published)  Months published: \(.months_published)  Days waiting: \(.days_waiting)"' api-usage/publish.json
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Open issue when public usage publish fails
+        if: failure() && steps.publish.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/ops/upsert_pipeline_alert_issue.py \
+            --repo "${REPO}" \
+            --component api_usage_publish \
+            --title "Pipeline alert: public usage publish failed" \
+            --run-url "${PIPELINE_RUN_URL}" \
+            --body "The publish step for /usage (PRD 033) failed. Either a publish function errored, or usage_public_violations() found published rows that break the privacy rules (a school month under 10, an incomplete month, or an unexpected public column).
+
+          Nothing new is published until the step passes. If the scan found violations, delete the offending rows from usage_public_school_months or usage_public_daily first, then fix the cause.
+
+          Run: ${PIPELINE_RUN_URL}
+          "
 
       - name: Open issue when log retention shrinks
         if: failure() && hashFiles('api-usage/report.json') != ''

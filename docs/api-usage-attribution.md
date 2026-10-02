@@ -379,6 +379,45 @@ rather than being counted partially.
 `excluded` means "identified as our pipeline". The pipeline user agent is
 public, so anyone running these tools against production also lands there.
 
+### Public usage tables (PRD 033)
+
+After each non-dry run, `tools/api_usage/publish.py` calls
+`api_usage_publish_pending()` and then `usage_public_violations()`. The
+publish functions are service-role only and copy publishable rows into two
+anon-readable tables behind `/usage` and `/usage.json`:
+
+- **`usage_public_daily`** (day, metric, access_method, client_kind, value).
+  A day is published once it has a successful `daily` run and every hour is
+  covered by an `ok` hourly or backfill window. It is republished when a later
+  run touching the day finishes (`api_usage_publish_days.source_finished_at`)
+  or the method version changes. Metrics:
+  - `unique_downloads` by access method and client kind. Browser keys moved to
+    machine by the heavy-client rule publish as `heavy_browser`.
+  - `site_downloads`: browser downloads with `from_site`.
+  - `api_requests`: `third_party` PostgREST and Edge Function requests from
+    the hourly rollups, without Storage or `options_preflight`.
+  - `friendly_api_requests`: rows in `api_usage_events` (Next.js `/api`
+    routes and the MCP server), which are calls by others.
+  - `serving_requests`: `first_party_site` plus `friendly_api_upstream`, our
+    own serving load.
+  Client families outside the fixed public list publish as `unknown`, so a
+  new family never puts a name on the page. No client names are published.
+- **`usage_public_school_months`** (month, school_id, school_name,
+  unique_downloads). One browser-plus-machine number per school per calendar
+  month, written only when every day of the month (from the first published
+  day) is published. Values under 10 are null. A storage folder maps to the
+  school that owns its artifacts (`cds_artifacts.storage_path` →
+  `cds_documents.school_id`, when exactly one school owns it), then through
+  `institution_slug_crosswalk` with the web's canonical-id rule. This merges
+  older folder slugs such as `university-of-michigan` into `umich`.
+
+`usage_public_violations()` scans everything published: school cells under
+10, school months with a missing day, published days without a publish
+record, any column outside the allowed list, and anon access to the publish
+log. Any nonzero count fails the step and opens a `api_usage_publish` alert
+issue. To withdraw a bad row, delete it from the public table; the next
+publish of that day or month rewrites it.
+
 ### Operations
 
 ```bash
@@ -392,6 +431,9 @@ gh workflow run ops-api-usage-ingest.yml -f mode=backfill -f days=89
 
 # Recount unique downloads only (after a method_version change).
 gh workflow run ops-api-usage-ingest.yml -f mode=daily -f days=89
+
+# Publish pending days and months, then run the privacy scan (service role).
+python tools/api_usage/publish.py --out-json scratch/api-usage/publish.json
 ```
 
 The logs endpoint allows 10 queries per minute, so the client paces calls 7

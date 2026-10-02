@@ -4,6 +4,7 @@ import { fetchSiteStats } from "@/lib/queries";
 import { formatCount, formatShortDate } from "@/lib/format";
 import { CopyButton } from "@/components/CopyButton";
 import { TrackedLink } from "@/components/TrackedLink";
+import { isUsageLaunched } from "@/lib/usage";
 
 export const metadata: Metadata = {
   title: "API",
@@ -165,6 +166,16 @@ compare <- request("https://www.collegedata.fyi/api/compare") |>
         </code>
         . It helps us understand API usage and keep the free public surface
         healthy without requiring API keys.
+        {isUsageLaunched() ? (
+          <>
+            {" "}
+            Aggregate counts are public on the{" "}
+            <Link href="/usage" className={API_LINK_CLASS}>
+              usage page
+            </Link>
+            .
+          </>
+        ) : null}
       </p>
 
       <h2 className="serif mt-10 text-2xl">
