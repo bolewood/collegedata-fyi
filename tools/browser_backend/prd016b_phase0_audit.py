@@ -366,7 +366,7 @@ def write_markdown(path: Path, summary: dict[str, Any]) -> None:
 
 def make_read_client() -> Any:
     try:
-        from supabase import create_client
+        from supabase import ClientOptions, create_client
     except ImportError as exc:
         raise SystemExit("Missing dependency: pip install supabase") from exc
 
@@ -382,7 +382,9 @@ def make_read_client() -> Any:
         or env.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
         or PUBLIC_SUPABASE_ANON_KEY
     )
-    return create_client(url, key)
+    return create_client(
+        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/prd016b-phase0-audit"})
+    )
 
 
 def main() -> int:

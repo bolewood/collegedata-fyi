@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from supabase import create_client
+from supabase import ClientOptions, create_client
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "tools" / "extraction_worker"))
@@ -56,7 +56,9 @@ def supabase_client(env_path: Path | None, require_service_role: bool):
         key = os.environ.get(key_name) or os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
     if not url or not key:
         raise SystemExit(f"{'SUPABASE_URL and ' if not url else ''}{key_name} required")
-    return create_client(url, key)
+    return create_client(
+        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/prd018-h2a-redrain"})
+    )
 
 
 def fetch_latest_artifacts(client: Any, document_ids: list[str]) -> dict[str, dict[str, Any]]:

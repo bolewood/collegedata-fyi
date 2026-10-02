@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Ingest Supabase gateway logs into api_gateway_* aggregates (PRD 032).
+"""Ingest Supabase gateway logs into api_gateway_* aggregates (PRD 032) and
+daily unique downloads into api_usage_downloads_daily (PRD 033).
 
 Modes:
   hourly    Reprocess whole UTC hours from the last good window end (at least
-            the last 3 hours) up to the current hour. Default.
-  backfill  Reprocess --days whole days ending at the current hour.
+            the last 3 hours) up to the current hour, then count unique
+            downloads for any closed UTC day not yet counted. Default.
+  backfill  Reprocess --days whole days ending at the current hour, and
+            recount unique downloads for every closed day in that span.
+  daily     Recount unique downloads only, for the --days closed days.
 
 --dry-run queries and aggregates without touching the database (a throwaway
 in-memory salt stands in for the daily salt).
@@ -37,6 +41,9 @@ from tools.api_usage.logs_api import LogsApiError, LogsClient, TooManyPages, red
 DEFAULT_PROJECT_REF = "isduwmygvmdozhpvzaix"
 HOURLY_MIN_HOURS = 3
 MAX_LOOKBACK = timedelta(days=89)
+# A UTC day is counted once it has been closed this long, so late log
+# rows have landed.
+DAY_SETTLE = timedelta(hours=1)
 
 
 class IngestError(RuntimeError):
@@ -45,6 +52,15 @@ class IngestError(RuntimeError):
 
 def floor_hour(dt: datetime) -> datetime:
     return dt.astimezone(timezone.utc).replace(minute=0, second=0, microsecond=0)
+
+
+def floor_day(dt: datetime) -> datetime:
+    return floor_hour(dt).replace(hour=0)
+
+
+def ceil_day(dt: datetime) -> datetime:
+    day = floor_day(dt)
+    return day if day == dt else day + timedelta(days=1)
 
 
 def slices(start: datetime, end: datetime, hours: int) -> list[tuple[datetime, datetime]]:
@@ -251,28 +267,82 @@ def combine(parts: list[dict]) -> dict:
     return out
 
 
-def last_good_end(db: Db) -> datetime | None:
-    """End of the latest successful hourly window; backfills don't move it."""
+def process_day(logs: LogsClient, db: Db | None, day_start: datetime) -> dict:
+    """Count unique downloads for one UTC day and replace that day's rows."""
+    day_end = day_start + timedelta(days=1)
+    raw = logs.query_all(
+        queries.daily_downloads_sql(day_start, day_end, classify.HEAVY_CLIENT_FILES), day_start, day_end
+    )
+    fetches = int(logs.query(queries.download_count_sql(day_start, day_end), day_start, day_end)[0]["n"])
+    rows, dropped = aggregate.downloads_daily(raw, day_start.date())
+    counted = sum(row["raw_downloads"] for row in rows)
+    reconciled = _reconciled(fetches, counted + dropped)
+    written = 0
+    if db is not None and reconciled:
+        db.rpc("api_usage_replace_downloads_day", {
+            "p_day": day_start.date().isoformat(),
+            "p_method_version": classify.DOWNLOADS_METHOD_VERSION,
+            "p_rows": rows,
+        })
+        written = len(rows)
+    return {
+        "day": day_start.date().isoformat(),
+        "rows_read": len(raw),
+        "rows_written": written,
+        "raw_requests": fetches,
+        "rollup_requests": counted + dropped,
+        "reconciled": reconciled,
+        "summary": aggregate.summarize_downloads(rows),
+    }
+
+
+def last_good_end(db: Db, mode: str = "hourly") -> datetime | None:
+    """End of the latest successful window for mode; backfills don't move hourly."""
     rows = db.select(
         "api_usage_ingest_runs",
-        "select=window_end&mode=eq.hourly&status=eq.ok&order=window_end.desc&limit=1",
+        f"select=window_end&mode=eq.{mode}&status=eq.ok&order=window_end.desc&limit=1",
     )
     if not rows:
         return None
     return datetime.fromisoformat(rows[0]["window_end"].replace("Z", "+00:00"))
 
 
+def _check_days(days: int) -> None:
+    if not 1 <= days <= 89:
+        raise IngestError("--days must be between 1 and 89")
+
+
 def plan_windows(mode: str, now: datetime, days: int, last_end: datetime | None) -> tuple[datetime, datetime]:
     end = floor_hour(now)
     oldest = end - MAX_LOOKBACK
     if mode == "backfill":
-        if not 1 <= days <= 89:
-            raise IngestError("--days must be between 1 and 89")
+        _check_days(days)
         return end - timedelta(days=days), end
     start = end - timedelta(hours=HOURLY_MIN_HOURS)
     if last_end is not None and last_end < start:
         start = max(floor_hour(last_end), oldest)
     return start, end
+
+
+def plan_days(mode: str, now: datetime, days: int, last_day_end: datetime | None) -> list[datetime]:
+    """Start of each closed UTC day to count, oldest first.
+
+    hourly counts days after the last counted one (only yesterday the first
+    time); backfill and daily recount every closed day in the last --days.
+    """
+    stop = floor_day(now - DAY_SETTLE)
+    oldest = ceil_day(floor_hour(now) - MAX_LOOKBACK)
+    if mode == "hourly":
+        start = stop - timedelta(days=1) if last_day_end is None else max(floor_day(last_day_end), oldest)
+    else:
+        _check_days(days)
+        start = max(ceil_day(floor_hour(now) - timedelta(days=days)), oldest)
+    out = []
+    cursor = start
+    while cursor < stop:
+        out.append(cursor)
+        cursor += timedelta(days=1)
+    return out
 
 
 def retention_ok(logs: LogsClient, now: datetime) -> bool:
@@ -313,11 +383,29 @@ def run(args: argparse.Namespace, *, now: datetime | None = None,
     if db is None and not args.dry_run:
         db = Db(os.environ.get("SUPABASE_URL", ""), os.environ.get("SUPABASE_SERVICE_ROLE_KEY", ""))
 
-    last_end = last_good_end(db) if (db is not None and args.mode == "hourly") else None
+    hourly = args.mode == "hourly"
+    last_end = last_good_end(db) if (db is not None and hourly) else None
+    last_day_end = last_good_end(db, "daily") if (db is not None and hourly) else None
     start, end = plan_windows(args.mode, now, args.days, last_end)
+    days = plan_days(args.mode, now, args.days, last_day_end)
     lag_hours = int((floor_hour(now) - last_end).total_seconds() // 3600) if last_end else None
     salts = SaltStore(db)
     run_url = os.environ.get("PIPELINE_RUN_URL") or None
+
+    def start_run(mode: str, window_start: datetime, window_end: datetime) -> object:
+        if db is None:
+            return None
+        created = db.insert(
+            "api_usage_ingest_runs",
+            {
+                "mode": mode,
+                "window_start": window_start.isoformat(),
+                "window_end": window_end.isoformat(),
+                "run_url": run_url,
+            },
+            "return=representation",
+        )
+        return created[0]["id"] if isinstance(created, list) and created else None
 
     report: dict = {
         "mode": args.mode,
@@ -328,32 +416,24 @@ def run(args: argparse.Namespace, *, now: datetime | None = None,
         "windows": 0,
         "requests": 0,
         "third_party_requests": 0,
+        "days": 0,
+        "unique_downloads": {},
         "rows_written": 0,
         "reconciled": True,
         "clients_overflow_hours": 0,
         "retention_ok": None,
         "windows_detail": [],
+        "days_detail": [],
     }
 
     try:
-        if args.mode == "hourly":
+        if hourly:
             report["retention_ok"] = retention_ok(logs, now)
 
         summaries = []
-        for window_start, window_end in slices(start, end, args.slice_hours):
-            run_id = None
-            if db is not None:
-                created = db.insert(
-                    "api_usage_ingest_runs",
-                    {
-                        "mode": args.mode,
-                        "window_start": window_start.isoformat(),
-                        "window_end": window_end.isoformat(),
-                        "run_url": run_url,
-                    },
-                    "return=representation",
-                )
-                run_id = created[0]["id"] if isinstance(created, list) and created else None
+        hour_slices = [] if args.mode == "daily" else slices(start, end, args.slice_hours)
+        for window_start, window_end in hour_slices:
+            run_id = start_run(args.mode, window_start, window_end)
             try:
                 stats = combine(process_span(logs, db, salts, window_start, window_end, t0))
             except Exception as exc:
@@ -380,6 +460,33 @@ def run(args: argparse.Namespace, *, now: datetime | None = None,
                 f"school_rows={stats['school_rows']} clients_overflow_hours={stats['clients_overflow_hours']}",
                 flush=True,
             )
+
+        download_summaries = []
+        for day_start in days:
+            run_id = start_run("daily", day_start, day_start + timedelta(days=1))
+            try:
+                stats = process_day(logs, db, day_start)
+            except Exception as exc:
+                _finish_run(db, run_id, {"status": "error", "error_code": type(exc).__name__})
+                raise
+            counts = {key: stats[key] for key in ("rows_read", "rows_written", "raw_requests", "rollup_requests")}
+            if not stats["reconciled"]:
+                _finish_run(db, run_id, {"status": "error", "error_code": "unreconciled", **counts})
+                raise IngestError(
+                    f"day {stats['day']} did not reconcile "
+                    f"(counted {stats['rollup_requests']}, raw {stats['raw_requests']}); nothing written"
+                )
+            _finish_run(db, run_id, {"status": "ok", **counts})
+            download_summaries.append({"unique_downloads": stats.pop("summary")})
+            report["days"] += 1
+            report["rows_written"] += stats["rows_written"]
+            report["days_detail"].append(stats)
+            print(
+                f"day {stats['day']}: fetches={stats['raw_requests']} rows={stats['rows_read']} "
+                f"rows_written={stats['rows_written']}",
+                flush=True,
+            )
+        report["unique_downloads"] = merge_summaries(download_summaries).get("unique_downloads", {})
     finally:
         if db is not None:
             try:
@@ -401,7 +508,7 @@ def heartbeat_summary(report: dict) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--mode", choices=("hourly", "backfill"), default="hourly")
+    parser.add_argument("--mode", choices=("hourly", "backfill", "daily"), default="hourly")
     parser.add_argument("--days", type=int, default=7, help="backfill length in days (1-89)")
     parser.add_argument("--slice-hours", type=int, default=24)
     parser.add_argument("--dry-run", action="store_true")
@@ -428,7 +535,7 @@ def main(argv: list[str] | None = None) -> int:
         args.heartbeat_json.write_text(json.dumps(heartbeat_summary(report)) + "\n", encoding="utf-8")
     print(json.dumps({key: report[key] for key in (
         "mode", "dry_run", "windows", "requests", "third_party_requests",
-        "rows_written", "clients_overflow_hours", "retention_ok", "queries_made",
+        "days", "unique_downloads", "rows_written", "clients_overflow_hours", "retention_ok", "queries_made",
     )}), flush=True)
 
     if report["clients_overflow_hours"]:

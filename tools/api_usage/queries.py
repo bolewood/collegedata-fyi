@@ -22,6 +22,7 @@ from tools.api_usage.classify import (
 PAGE_SIZE = 1000
 
 _PATH = "log_attributes['request.path']"
+_IP = "log_attributes['request.headers.cf_connecting_ip']"
 _UA_RAW = "log_attributes['request.headers.user_agent']"
 # Python classifies on this same 300-character prefix.
 _UA = f"substring({_UA_RAW}, 1, 300)"
@@ -37,7 +38,10 @@ _KEY_PREFIX = "substring(log_attributes['request.sb.apikey.apikey.prefix'], 1, 1
 _CLIENT_INFO = "substring(log_attributes['request.headers.x_client_info'], 1, 80)"
 _REFERER = "lower(domain(log_attributes['request.headers.referer']))"
 _AWS = "position(lower(log_attributes['request.cf.asOrganization']), 'amazon') > 0"
-_UA_BROWSER = f"(startsWith({_UA}, 'Mozilla/') and not match(lower({_UA}), '{NON_BROWSER_PATTERN}'))"
+_UA_BROWSER = (
+    f"(startsWith({_UA}, 'Mozilla/') and position({_UA}, '(') > 0"
+    f" and not match(lower({_UA}), '{NON_BROWSER_PATTERN}'))"
+)
 _UA_INTERNAL = "(" + " or ".join(
     f"position(lower({_UA}), '{marker}') > 0" for marker in INTERNAL_UA_MARKERS
 ) + ")"
@@ -141,7 +145,7 @@ def edge_schools_sql(t0: datetime | None) -> str:
 
 def edge_clients_sql(t0: datetime | None) -> str:
     dims = _EDGE_DIMS + [
-        ("ip", "log_attributes['request.headers.cf_connecting_ip']"),
+        ("ip", _IP),
         ("ua", _UA),
         ("ja4", "log_attributes['request.cf.botManagement.ja4']"),
         ("org", "substring(log_attributes['request.cf.asOrganization'], 1, 120)"),
@@ -177,6 +181,55 @@ def function_rollup_sql() -> str:
         ("bytes", f"sumIf({_BYTES}, {_NOT_HEAD})"),
     ]
     return _build(dims, metrics, "source = 'function_edge_logs'")
+
+
+def _between(start: datetime, end: datetime) -> str:
+    fmt = "%Y-%m-%d %H:%M:%S"
+    return (
+        f"timestamp >= toDateTime('{start.strftime(fmt)}', 'UTC')"
+        f" and timestamp < toDateTime('{end.strftime(fmt)}', 'UTC')"
+    )
+
+
+def _download_where(start: datetime, end: datetime) -> str:
+    return (
+        f"source = 'edge_logs' and {_IS_ARCHIVE} and {_GET}"
+        f" and {_STATUS} in ('200', '206') and {_between(start, end)}"
+    )
+
+
+def daily_downloads_sql(start: datetime, end: datetime, heavy_files: int) -> str:
+    """Unique downloads for [start, end), normally one UTC day (PRD 033).
+
+    The client key (IP + user agent) never leaves ClickHouse: the inner query
+    collapses fetches to one row per (client key, file), the window flags
+    keys over heavy_files distinct files, and the outer query returns counts
+    by school, user agent, and flags.
+    """
+    internal = (
+        f"{_ROLE} = 'service_role' or startsWith({_KEY_PREFIX}, 'sb_secret_')"
+        f" or startsWith({_CLIENT_INFO}, '{FRIENDLY_CLIENT_INFO_PREFIX}')"
+    )
+    first_party = f"{_REFERER} in ({_sql_list(FIRST_PARTY_REFERER_HOSTS)})"
+    inner = (
+        f"select splitByChar('/', {_PATH})[7] as school_raw, {_PATH} as obj, {_IP} as ip, {_UA} as ua,"
+        f" max({first_party}) as fp, max({internal}) as internal, count() as fetches"
+        f" from logs where {_download_where(start, end)} group by school_raw, obj, ip, ua"
+    )
+    flagged = (
+        "select school_raw, ua, fp, internal, fetches,"
+        f" if(count() over (partition by ip, ua) > {int(heavy_files)}, 1, 0) as heavy"
+        f" from ({inner})"
+    )
+    keys = "school_raw, ua, fp, internal, heavy"
+    return (
+        f"select {keys}, count() as uniq, sum(fetches) as raw from ({flagged})"
+        f" group by {keys} order by {keys}"
+    )
+
+
+def download_count_sql(start: datetime, end: datetime) -> str:
+    return f"select count() as n from logs where {_download_where(start, end)}"
 
 
 def raw_count_sql(source: str) -> str:

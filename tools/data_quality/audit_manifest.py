@@ -19,7 +19,7 @@ import os
 import sys
 
 from dotenv import load_dotenv
-from supabase import create_client
+from supabase import ClientOptions, create_client
 
 LOW_FIELD_THRESHOLD = 5
 
@@ -35,7 +35,9 @@ def main():
     load_dotenv(args.env)
     url = os.environ["SUPABASE_URL"]
     key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ["SUPABASE_ANON_KEY"]
-    sb = create_client(url, key)
+    sb = create_client(
+        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/audit-manifest"})
+    )
 
     # Fetch canonical artifacts in small batches to avoid statement timeout.
     # The notes JSONB is large, so we fetch in pages of 200.

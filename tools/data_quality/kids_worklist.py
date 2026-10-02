@@ -47,7 +47,7 @@ from urllib.parse import urlparse
 
 import yaml
 from dotenv import load_dotenv
-from supabase import create_client
+from supabase import ClientOptions, create_client
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCHOOLS_YAML = REPO_ROOT / "tools" / "finder" / "schools.yaml"
@@ -234,6 +234,7 @@ def main() -> int:
     sb = create_client(
         os.environ["SUPABASE_URL"],
         os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ["SUPABASE_ANON_KEY"],
+        options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/kids-worklist"}),
     )
 
     schools = load_active_schools()

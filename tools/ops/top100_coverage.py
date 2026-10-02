@@ -368,7 +368,7 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("cohort ids missing from schools.yaml: " + ", ".join(missing))
 
     from dotenv import load_dotenv
-    from supabase import create_client
+    from supabase import ClientOptions, create_client
 
     from tools.data_quality.published_years import fetch_year_byte_coverage
 
@@ -381,7 +381,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     if not url or not key:
         raise SystemExit("SUPABASE_URL and a Supabase key are required to score")
-    sb = create_client(url, key)
+    sb = create_client(
+        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/top100-coverage"})
+    )
     byte_coverage = fetch_year_byte_coverage(sb, cohort_ids, years)
     allowlist = load_allowlist(args.allowlist)
     starting_urls = load_starting_urls()

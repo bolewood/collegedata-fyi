@@ -50,19 +50,53 @@ _AI_WORDS = "claude|anthropic|chatgpt|openai|perplexity|copilot"
 # token (followed by '/', ';', ')' or the end), so phone models such as
 # "CUBOT X30" stay browsers while "GPTBot/1.2" and "(FendodoRubricBot)" match.
 _TOKEN_END = "[a-z0-9_.-]*([/;)]|$)"
-BOT_PATTERN = f"({_BOT_WORDS}){_TOKEN_END}"
-NON_BROWSER_PATTERN = f"({_BOT_WORDS}|{_AI_WORDS}){_TOKEN_END}"
+# Crawlers without a bot word, from COUNTER-Robots checked against real
+# traffic (PRD 033 M0), and automation that looks like a browser.
+_CRAWLER_TOKENS = (
+    "googleother|google-inspectiontool|mediapartners-google|adsbot-google|"
+    "feedfetcher-google|storebot-google|google-safety|skypeuripreview"
+)
+_AUTOMATION_TOKENS = "headlesschrome|google-apps-script|phantomjs"
+BOT_PATTERN = f"({_BOT_WORDS}){_TOKEN_END}|{_CRAWLER_TOKENS}"
+NON_BROWSER_PATTERN = f"({_BOT_WORDS}|{_AI_WORDS}){_TOKEN_END}|{_CRAWLER_TOKENS}|{_AUTOMATION_TOKENS}"
 _BOT_RE = re.compile(BOT_PATTERN)
 _NON_BROWSER_RE = re.compile(NON_BROWSER_PATTERN)
 _URL_RE = re.compile(r"\+?https?://\S+|\+?[\w.-]+@[\w.-]+")
 _COMPATIBLE_RE = re.compile(r"compatible;\s*([A-Za-z][\w.-]*)(?:/([\w.+-]+))?", re.IGNORECASE)
-_BOT_TOKEN_RE = re.compile(rf"([A-Za-z][\w.-]*?(?:{_BOT_WORDS})[\w.-]*)(?:/([\w.+-]+))?", re.IGNORECASE)
+_BOT_TOKEN_RE = re.compile(
+    rf"((?:[A-Za-z][\w.-]*?)?(?:{_BOT_WORDS}|{_CRAWLER_TOKENS})[\w.-]*)(?:/([\w.+-]+))?", re.IGNORECASE
+)
 _AI_TOKEN_RE = re.compile(rf"([\w.-]*(?:{_AI_WORDS})[\w.-]*)(?:/([\w.+-]+))?", re.IGNORECASE)
 _PRODUCT_RE = re.compile(r"^\s*([A-Za-z0-9][\w.@+-]*)(?:/([\w.+-]+))?")
 _ROUTE_NAME_RE = re.compile(r"[a-z0-9_][a-z0-9_-]{0,63}")
 _SCHOOL_ID_RE = re.compile(r"[a-z0-9][a-z0-9-]{0,99}")
 _TOKEN_CLEAN_RE = re.compile(r"[^a-zA-Z0-9._:/@+-]")
 _ORG_CLEAN_RE = re.compile(r"[^\w .,&()'-]")
+
+# AI clients split by intent (PRD 033). Agents fetch because a person asked;
+# crawlers collect for indexing or training. Tokens are matched as
+# lowercase substrings and take precedence over the vendor-word fallback.
+AI_USER_TOKENS = (
+    "chatgpt-user", "claude-user", "perplexity-user", "mistralai-user",
+    "meta-externalfetcher", "duckassistbot",
+)
+AI_CRAWLER_TOKENS = (
+    "gptbot", "oai-searchbot", "claudebot", "claude-searchbot", "anthropic-ai",
+    "perplexitybot", "ccbot", "bytespider", "amazonbot", "applebot-extended",
+    "meta-externalagent", "google-extended", "cohere-ai", "ai2bot", "youbot",
+)
+AI_FAMILIES = ("ai_user", "ai_crawler")
+
+# Unique downloads (PRD 033): one client key (IP + user agent) x one archive
+# file x one UTC day. Bump DOWNLOADS_METHOD_VERSION whenever a rule here or
+# in queries.daily_downloads_sql changes the counts; the public page marks
+# each version change on its charts.
+DOWNLOADS_METHOD_VERSION = 1
+# A browser key fetching more distinct files than this in a day counts as a
+# machine. Real browser keys rarely pass 10 files a day (Sept 2026 logs).
+HEAVY_CLIENT_FILES = 30
+ACCESS_METHODS = ("browser", "machine", "bots_crawlers", "excluded")
+BOT_FAMILIES = ("declared_bot", "ai_crawler")
 
 GENERIC_PRODUCTS = frozenset({
     "mozilla", "curl", "wget", "python-requests", "python-urllib", "python-httpx",
@@ -104,8 +138,12 @@ def ua_is_bot(ua: str) -> bool:
 
 
 def ua_is_browser(ua: str) -> bool:
-    """Browser-shaped and not a self-declared bot or AI agent."""
-    return ua.startswith("Mozilla/") and not _NON_BROWSER_RE.search(ua.lower())
+    """Browser-shaped and not a self-declared bot or AI agent.
+
+    Real browsers always carry a platform section, so a bare "Mozilla/5.0"
+    (a common scraper default) is not a browser.
+    """
+    return ua.startswith("Mozilla/") and "(" in ua and not _NON_BROWSER_RE.search(ua.lower())
 
 
 def ua_is_internal(ua: str) -> bool:
@@ -249,14 +287,29 @@ def product_token(ua: str) -> tuple[str | None, str | None]:
     return match.group(1), match.group(2)
 
 
+def ai_family(ua: str) -> str | None:
+    """ai_user, ai_crawler, or None when the user agent is not an AI client."""
+    low = (ua or "").lower()
+    if any(token in low for token in AI_USER_TOKENS):
+        return "ai_user"
+    if any(token in low for token in AI_CRAWLER_TOKENS):
+        return "ai_crawler"
+    if user_agent_family(ua) != "ai_agent":
+        return None
+    # Contact URLs such as "+https://openai.com/bot" must not make an agent
+    # look like a crawler.
+    return "ai_crawler" if ua_is_bot(_URL_RE.sub(" ", low)) else "ai_user"
+
+
 def client_family(ua: str, client_info: str = "") -> str:
     family = user_agent_family(ua)
-    if family == "ai_agent":
-        return "ai_agent"
+    ai = ai_family(ua)
+    if ai:
+        return ai
     if ua_is_bot(ua or ""):
         return "declared_bot"
     if family == "browser":
-        return "browser"
+        return "browser" if ua_is_browser(ua) else "script"
     if client_info.startswith("supabase-"):
         return "integration"
     product, _ = product_token(ua)
@@ -271,10 +324,10 @@ def client_name_version(ua: str, family: str, client_info: str = "") -> tuple[st
     """Self-declared product name and version. Never the full user agent."""
     name: str | None = None
     version: str | None = None
-    if family in ("declared_bot", "ai_agent"):
+    if family in ("declared_bot", *AI_FAMILIES):
         text = _URL_RE.sub(" ", ua or "")
-        token_re = _AI_TOKEN_RE if family == "ai_agent" else _BOT_TOKEN_RE
-        for regex in (_COMPATIBLE_RE, token_re):
+        token_res = (_BOT_TOKEN_RE,) if family == "declared_bot" else (_AI_TOKEN_RE, _BOT_TOKEN_RE)
+        for regex in (_COMPATIBLE_RE, *token_res):
             match = regex.search(text)
             if match:
                 name, version = match.group(1), match.group(2)
@@ -288,6 +341,21 @@ def client_name_version(ua: str, family: str, client_info: str = "") -> tuple[st
         if (not name or name.lower() in GENERIC_PRODUCTS) and client_info:
             name, version = product_token(client_info)
     return clean_token(name), clean_token(version, 20)
+
+
+def access_method(ua: str, family: str, internal: bool, heavy: bool) -> str:
+    """Access method for one unique download (PRD 033).
+
+    internal means a service-role or secret key or the friendly API's
+    client info; heavy means the client key passed HEAVY_CLIENT_FILES.
+    """
+    if internal or ua_is_internal(ua):
+        return "excluded"
+    if family in BOT_FAMILIES:
+        return "bots_crawlers"
+    if family == "browser" and not heavy:
+        return "browser"
+    return "machine"
 
 
 def rollup_family(classification: str, ua: str, client_info: str) -> str:

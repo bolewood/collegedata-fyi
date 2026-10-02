@@ -1,7 +1,8 @@
 name: API usage ingest
 
 # PRD 032. Reads Supabase gateway logs (Management API, 90-day retention)
-# and writes hourly aggregates to api_gateway_* tables. This repository is
+# and writes hourly aggregates to api_gateway_* tables, plus daily unique
+# archive downloads to api_usage_downloads_daily (PRD 033). This repository is
 # public: logs, the step summary, and artifacts carry counts only. Never
 # print raw log rows, IPs, user agents, client hashes, or school ids here.
 
@@ -13,12 +14,12 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "hourly catches up from the last good window; backfill reprocesses N days."
+        description: "hourly catches up from the last good window; backfill reprocesses N days; daily recounts unique downloads for N days."
         type: choice
-        options: [hourly, backfill]
+        options: [hourly, backfill, daily]
         default: hourly
       days:
-        description: "Backfill length in days (1-89). Ignored for hourly."
+        description: "Backfill or daily length in days (1-89). Ignored for hourly."
         required: false
         default: "7"
       dry_run:
@@ -40,7 +41,7 @@ jobs:
   ingest:
     name: Ingest gateway logs
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ inputs.mode == 'backfill' && 300 || 30 }}
+    timeout-minutes: ${{ (inputs.mode == 'backfill' || inputs.mode == 'daily') && 300 || 30 }}
     env:
       INPUT_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'hourly' }}
       INPUT_DAYS: ${{ github.event_name == 'workflow_dispatch' && inputs.days || '7' }}
@@ -128,6 +129,9 @@ jobs:
               echo
               echo "### Requests by classification"
               jq -r '.summary.by_classification // {} | to_entries[] | "- \(.key): \(.value)"' api-usage/report.json
+              echo
+              echo "### Unique downloads by access method ($(jq -r '.days' api-usage/report.json) day(s))"
+              jq -r '.unique_downloads // {} | to_entries[] | "- \(.key): \(.value)"' api-usage/report.json
             } >> "$GITHUB_STEP_SUMMARY"
           else
             echo "No report.json was produced." >> "$GITHUB_STEP_SUMMARY"

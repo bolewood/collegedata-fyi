@@ -25,7 +25,7 @@ from pathlib import Path
 
 import yaml
 from dotenv import load_dotenv
-from supabase import create_client
+from supabase import ClientOptions, create_client
 
 try:
     from tools.data_quality.published_years import fetch_published_years
@@ -59,6 +59,7 @@ def main() -> int:
     sb = create_client(
         os.environ["SUPABASE_URL"],
         os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ["SUPABASE_ANON_KEY"],
+        options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/active-schools-missing-recent"}),
     )
 
     schools = load_active_schools()
