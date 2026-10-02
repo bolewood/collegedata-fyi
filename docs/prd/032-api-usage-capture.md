@@ -321,7 +321,7 @@ existing queries in `docs/api-usage-attribution.md` keep their current meaning.
 - **Budget:** an hourly run uses about six queries. A 90-day backfill in
   6-hour slices, two sources and two grains, is about 1,400 queries, or about
   three hours at the paced rate. That fits in one workflow run.
-- **Schedule:** `ops-api-usage-ingest.yml`, hourly at minute 20, plus a
+- **Schedule:** `ops-api-usage-ingest.yml`, at minutes 20 and 50, plus a
   `workflow_dispatch` backfill input (`--backfill-from`). Both share one
   `concurrency:` group, so a backfill and an hourly run never race. Backfill
   progress is tracked apart from the forward watermark in
@@ -424,7 +424,8 @@ Where the build differs from rev 2, and why:
   - The heartbeat summary carries no traffic counts, because
     `pipeline_station_facts()` is public.
   - `tools/ops/automation_health.py` flags the workflow when its latest run is
-    more than 3 hours old.
+    more than 8 hours old. The cron fires at :20 and :50 because GitHub
+    started this repo's scheduled runs 4-8 hours late in the first week.
 - **Known limitations:**
   - Friendly API routes reuse some site query helpers (`queries.ts`), so part
     of their upstream traffic is tagged `collegedata-web` and lands in
@@ -485,7 +486,7 @@ should be updated to point here when this merges.
   pre-T0 browser share. The remainder is links shared outside the site.
 - For any final hour, rollup totals match a direct count of `edge_logs` and
   `function_edge_logs` for the same hour to within 1%.
-- The ingest heartbeat is never more than 3 hours stale outside a declared
+- The ingest heartbeat is never more than 8 hours stale outside a declared
   outage, and a missed run self-heals on the next run.
 - No raw IP, full User-Agent, non-`school_id` query parameter, or salt older
   than day plus 2 exists anywhere. This is enforced by the no-IP test and a

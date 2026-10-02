@@ -274,7 +274,9 @@ aggregates below cover them.
 
 ## Gateway usage (PRD 032)
 
-`.github/workflows/ops-api-usage-ingest.yml` runs hourly at minute 20. It reads
+`.github/workflows/ops-api-usage-ingest.yml` is scheduled at minutes 20 and 50.
+GitHub often starts scheduled runs hours late or skips them; each run catches
+up from the last good window, so a late run only delays freshness. It reads
 Supabase gateway logs (`edge_logs` and `function_edge_logs`) through the
 Management API logs endpoint with the scoped `SUPABASE_LOGS_TOKEN` (Logs: Read,
 this project only, expires 2027-10-01) and replaces whole UTC hours in:
@@ -334,7 +336,7 @@ and fails the run, so the next hourly run retries it.
 
 Alerts: six straight failed scheduled runs, or no logs from seven days ago
 (retention shrank), open a pipeline alert issue. `tools/ops/automation_health.py`
-also flags the workflow when its latest run is more than 3 hours old. The
+also flags the workflow when its latest run is more than 8 hours old. The
 heartbeat station is `api_usage_ingest` (off the public board, and its summary
 carries no traffic counts).
 

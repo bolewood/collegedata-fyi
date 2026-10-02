@@ -7,7 +7,9 @@ name: API usage ingest
 
 on:
   schedule:
-    - cron: "20 * * * *"
+    # Twice an hour because GitHub starts scheduled runs late or drops them.
+    # Each run catches up from the last good window, so extras are cheap.
+    - cron: "20,50 * * * *"
   workflow_dispatch:
     inputs:
       mode:
