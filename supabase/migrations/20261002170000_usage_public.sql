@@ -7,11 +7,19 @@
 --
 --   usage_public_daily          whole-archive totals per closed UTC day
 --   usage_public_school_months  one combined number per school per complete
---                               calendar month, null under 10
+--                               calendar month, rounded to 10; schools under
+--                               10 are not listed
+--   usage_public_months         per complete month, how many schools had
+--                               downloads and how many were under 10
 --
 -- The public tables hold only publishable columns, so a query bug cannot
 -- leak a private one. Nothing here names a client, holds a hash, a network,
 -- a country, or a user agent.
+--
+-- Daily totals sum every school's downloads, so unlisted schools' combined
+-- count is the month total minus the listed ones. Listing only rounded
+-- values, and never which schools are under 10, keeps that difference from
+-- pinning any school.
 --
 -- Apply from main after merge; do not push from a branch.
 
@@ -50,18 +58,34 @@ create table if not exists public.usage_public_school_months (
   month date not null,
   school_id text not null,
   school_name text not null,
-  unique_downloads bigint,
+  unique_downloads bigint not null,
   method_version smallint not null,
   published_at timestamptz not null default now(),
   primary key (month, school_id),
   constraint usage_public_school_months_month_whole check (date_trunc('month', month)::date = month),
   constraint usage_public_school_months_school_shape check (school_id ~ '^[a-z0-9][a-z0-9-]{0,99}$'),
-  constraint usage_public_school_months_floor check (unique_downloads is null or unique_downloads >= 10),
+  constraint usage_public_school_months_floor check (unique_downloads >= 10 and unique_downloads % 10 = 0),
   constraint usage_public_school_months_version_valid check (method_version >= 1)
 );
 
 comment on table public.usage_public_school_months is
-  'PRD 033. Browser plus machine unique downloads of each school''s archive files per complete calendar month. Null means 1 to 9. Storage folders are mapped to the school that owns them, then through institution_slug_crosswalk. CC0.';
+  'PRD 033. Browser plus machine unique downloads of each school''s archive files per complete calendar month, rounded to the nearest 10. Schools with fewer than 10 are not listed. Storage folders are mapped to the school that owns them, then through institution_slug_crosswalk. CC0.';
+
+create table if not exists public.usage_public_months (
+  month date primary key,
+  schools_with_downloads integer not null,
+  schools_under_floor integer not null,
+  method_version smallint not null,
+  published_at timestamptz not null default now(),
+  constraint usage_public_months_month_whole check (date_trunc('month', month)::date = month),
+  constraint usage_public_months_counts_valid check (
+    schools_under_floor >= 0 and schools_with_downloads >= schools_under_floor
+  ),
+  constraint usage_public_months_version_valid check (method_version >= 1)
+);
+
+comment on table public.usage_public_months is
+  'PRD 033. Per complete calendar month: schools whose archive files had any browser or machine download, and how many of them had fewer than 10 (not listed in usage_public_school_months). CC0.';
 
 create table if not exists public.api_usage_publish_days (
   day date primary key,
@@ -75,6 +99,7 @@ comment on table public.api_usage_publish_days is
 
 alter table public.usage_public_daily enable row level security;
 alter table public.usage_public_school_months enable row level security;
+alter table public.usage_public_months enable row level security;
 alter table public.api_usage_publish_days enable row level security;
 
 drop policy if exists usage_public_daily_read on public.usage_public_daily;
@@ -83,19 +108,35 @@ create policy usage_public_daily_read on public.usage_public_daily
 drop policy if exists usage_public_school_months_read on public.usage_public_school_months;
 create policy usage_public_school_months_read on public.usage_public_school_months
   for select to anon, authenticated using (true);
+drop policy if exists usage_public_months_read on public.usage_public_months;
+create policy usage_public_months_read on public.usage_public_months
+  for select to anon, authenticated using (true);
 
 revoke all on table
   public.usage_public_daily,
   public.usage_public_school_months,
+  public.usage_public_months,
   public.api_usage_publish_days
 from anon, authenticated;
-grant select on table public.usage_public_daily, public.usage_public_school_months
-  to anon, authenticated;
+grant select on table
+  public.usage_public_daily,
+  public.usage_public_school_months,
+  public.usage_public_months
+to anon, authenticated;
 grant all on table
   public.usage_public_daily,
   public.usage_public_school_months,
+  public.usage_public_months,
   public.api_usage_publish_days
 to service_role;
+
+-- Written with the service role only; RLS already hides its rows, and this
+-- drops the default table grant as well.
+revoke all on table public.api_usage_events from anon, authenticated;
+
+create index if not exists api_usage_ingest_runs_ok_window_idx
+  on public.api_usage_ingest_runs (window_start, window_end)
+  where status = 'ok';
 
 -- Latest finish time of the ingest runs behind a day, or null until the day
 -- is ready: a successful daily count and every hour covered by a successful
@@ -141,6 +182,7 @@ create or replace function public.api_usage_public_kind(p_family text)
 returns text
 language sql
 immutable
+set search_path = public
 as $$
   select case when p_family in (
     'browser', 'script', 'integration', 'unknown', 'ai_user', 'ai_agent',
@@ -224,13 +266,17 @@ begin
   select p_day, 'friendly_api_requests', '', public.api_usage_public_kind(e.client_family), count(*), p_method_version
   from public.api_usage_events e
   where e.occurred_at >= v_lo and e.occurred_at < v_hi
+    and e.http_method <> 'OPTIONS'
   group by 3, 4;
 
+  -- Storage is left out: archive GETs with a collegedata.fyi referer are
+  -- people's downloads, already counted as browser downloads.
   insert into public.usage_public_daily (day, metric, access_method, client_kind, value, method_version)
   select p_day, 'serving_requests', '', '', sum(r.requests), p_method_version
   from public.api_gateway_rollups_hourly r
   where r.hour >= v_lo and r.hour < v_hi
     and r.classification in ('first_party_site', 'friendly_api_upstream')
+    and r.surface in ('postgrest', 'edge_function')
     and r.route_kind <> 'options_preflight'
   having sum(r.requests) > 0;
 
@@ -304,21 +350,38 @@ begin
     select coalesce(public.api_usage_canonical_school(owner), owner) as school_id, sum(n) as n
     from owned
     group by 1
+  ),
+  schools as (
+    select school_id, n from totals
+    where n > 0 and school_id ~ '^[a-z0-9][a-z0-9-]{0,99}$'
+  ),
+  listed as (
+    insert into public.usage_public_school_months (month, school_id, school_name, unique_downloads, method_version)
+    select p_month, s.school_id,
+           coalesce(
+             (select dir.school_name from public.institution_directory dir
+              where dir.school_id = s.school_id and dir.school_name is not null limit 1),
+             (select doc.school_name from public.cds_documents doc
+              where doc.school_id = s.school_id and doc.school_name is not null
+              order by doc.cds_year desc nulls last, doc.updated_at desc nulls last limit 1),
+             s.school_id
+           ),
+           (round(s.n / 10.0) * 10)::bigint,
+           p_method_version
+    from schools s
+    where s.n >= 10
+    returning 1
   )
-  insert into public.usage_public_school_months (month, school_id, school_name, unique_downloads, method_version)
-  select p_month, t.school_id,
-         coalesce(
-           (select doc.school_name from public.cds_documents doc
-            where doc.school_id = t.school_id and doc.school_name is not null
-            order by doc.school_name limit 1),
-           (select dir.school_name from public.institution_directory dir
-            where dir.school_id = t.school_id limit 1),
-           t.school_id
-         ),
-         case when t.n >= 10 then t.n end,
-         p_method_version
-  from totals t;
-  get diagnostics n_rows = row_count;
+  insert into public.usage_public_months (month, schools_with_downloads, schools_under_floor, method_version, published_at)
+  select p_month, count(*), count(*) filter (where n < 10), p_method_version, now()
+  from schools
+  on conflict (month) do update
+    set schools_with_downloads = excluded.schools_with_downloads,
+        schools_under_floor = excluded.schools_under_floor,
+        method_version = excluded.method_version,
+        published_at = excluded.published_at;
+
+  select count(*) into n_rows from public.usage_public_school_months where month = p_month;
   return n_rows;
 end;
 $$;
@@ -326,6 +389,11 @@ $$;
 -- Publish up to p_limit ready days that are new, rewritten since they were
 -- published, or published under another method version, then rebuild the
 -- months they fall in. Call again while days_published = p_limit.
+--
+-- Days that cannot be published yet are counted by age: days_waiting closed
+-- in the last 2 days (normal), days_stuck are 2 to 80 days old and block
+-- their month until a backfill or daily run fixes them, and days_expired are
+-- older than the 90-day log retention allows fixing.
 create or replace function public.api_usage_publish_pending(
   p_method_version integer,
   p_limit integer default 31
@@ -337,12 +405,17 @@ as $$
 declare
   d date;
   m date;
+  v_latest timestamptz;
   v_source timestamptz;
+  v_ready boolean;
   months date[] := '{}';
   n_days integer := 0;
   n_waiting integer := 0;
+  n_stuck integer := 0;
+  n_expired integer := 0;
   n_months integer := 0;
   n_month_rows integer;
+  v_today date := (now() at time zone 'utc')::date;
 begin
   if p_method_version is null or p_limit is null or p_limit < 1 then
     raise exception 'api_usage_publish_pending: method version and a positive limit are required';
@@ -353,23 +426,36 @@ begin
     where r.mode = 'daily' and r.status = 'ok'
     order by 1
   loop
-    v_source := public.api_usage_day_source(d);
-    if v_source is null then
-      n_waiting := n_waiting + 1;
-      continue;
-    end if;
+    select max(r.finished_at) into v_latest
+    from public.api_usage_ingest_runs r
+    where r.status = 'ok'
+      and r.window_start < ((d + 1)::timestamp at time zone 'utc')
+      and r.window_end > (d::timestamp at time zone 'utc');
     continue when exists (
       select 1 from public.api_usage_publish_days p
-      where p.day = d and p.method_version = p_method_version and p.source_finished_at >= v_source
+      where p.day = d and p.method_version = p_method_version and p.source_finished_at >= v_latest
     );
+    v_source := public.api_usage_day_source(d);
+    v_ready := v_source is not null and exists (
+      select 1 from public.api_usage_downloads_daily
+      where day = d and method_version = p_method_version
+    );
+    if not v_ready then
+      if d >= v_today - 2 then
+        n_waiting := n_waiting + 1;
+      elsif d >= v_today - 80 then
+        n_stuck := n_stuck + 1;
+      else
+        n_expired := n_expired + 1;
+      end if;
+      continue;
+    end if;
     exit when n_days >= p_limit;
     if public.api_usage_publish_day(d, p_method_version) then
       n_days := n_days + 1;
       if not date_trunc('month', d)::date = any(months) then
         months := months || date_trunc('month', d)::date;
       end if;
-    else
-      n_waiting := n_waiting + 1;
     end if;
   end loop;
 
@@ -383,6 +469,8 @@ begin
   return jsonb_build_object(
     'days_published', n_days,
     'days_waiting', n_waiting,
+    'days_stuck', n_stuck,
+    'days_expired', n_expired,
     'months_published', n_months
   );
 end;
@@ -396,10 +484,14 @@ stable
 set search_path = public
 as $$
   select jsonb_build_object(
-    'school_cells_under_floor',
-      (select count(*) from public.usage_public_school_months where unique_downloads < 10),
+    'school_cells_off_rule',
+      (select count(*) from public.usage_public_school_months
+       where unique_downloads is null or unique_downloads < 10 or unique_downloads % 10 <> 0),
     'school_months_incomplete',
-      (select count(*) from public.usage_public_school_months s
+      (select count(*) from (
+         select month from public.usage_public_school_months
+         union select month from public.usage_public_months
+       ) s
        where exists (
          select 1 from generate_series(
            greatest(s.month, (select min(day) from public.api_usage_publish_days)),
@@ -407,6 +499,9 @@ as $$
            interval '1 day') as g(d)
          where not exists (select 1 from public.api_usage_publish_days p where p.day = g.d::date)
        )),
+    'school_months_without_summary',
+      (select count(distinct s.month) from public.usage_public_school_months s
+       where not exists (select 1 from public.usage_public_months m where m.month = s.month)),
     'days_without_publish_record',
       (select count(distinct u.day) from public.usage_public_daily u
        where not exists (select 1 from public.api_usage_publish_days p where p.day = u.day)),
@@ -422,11 +517,25 @@ as $$
            ('usage_public_school_months', 'school_name'),
            ('usage_public_school_months', 'unique_downloads'),
            ('usage_public_school_months', 'method_version'),
-           ('usage_public_school_months', 'published_at')
+           ('usage_public_school_months', 'published_at'),
+           ('usage_public_months', 'month'),
+           ('usage_public_months', 'schools_with_downloads'),
+           ('usage_public_months', 'schools_under_floor'),
+           ('usage_public_months', 'method_version'),
+           ('usage_public_months', 'published_at')
          )
-         and c.table_name in ('usage_public_daily', 'usage_public_school_months')),
-    'public_tables_with_private_grants',
-      (select count(*) from (values ('public.api_usage_publish_days')) as t(rel)
+         and c.table_name in ('usage_public_daily', 'usage_public_school_months', 'usage_public_months')),
+    'private_tables_readable_by_anon',
+      (select count(*) from (values
+         ('public.api_usage_publish_days'),
+         ('public.api_usage_events'),
+         ('public.api_usage_downloads_daily'),
+         ('public.api_gateway_rollups_hourly'),
+         ('public.api_gateway_clients_hourly'),
+         ('public.api_gateway_schools_hourly'),
+         ('public.api_usage_hash_salts'),
+         ('public.api_usage_ingest_runs')
+       ) as t(rel)
        where has_table_privilege('anon', t.rel, 'select')
           or has_table_privilege('authenticated', t.rel, 'select'))
   );
@@ -450,12 +559,15 @@ grant execute on function public.usage_public_violations() to service_role;
 do $$
 begin
   if not has_table_privilege('anon', 'public.usage_public_daily', 'select')
-     or not has_table_privilege('anon', 'public.usage_public_school_months', 'select') then
+     or not has_table_privilege('anon', 'public.usage_public_school_months', 'select')
+     or not has_table_privilege('anon', 'public.usage_public_months', 'select') then
     raise exception 'PRD 033: public usage tables are not readable by anon';
   end if;
   if has_table_privilege('anon', 'public.usage_public_daily', 'insert')
      or has_table_privilege('anon', 'public.usage_public_school_months', 'insert')
-     or has_table_privilege('anon', 'public.api_usage_publish_days', 'select') then
+     or has_table_privilege('anon', 'public.usage_public_months', 'insert')
+     or has_table_privilege('anon', 'public.api_usage_publish_days', 'select')
+     or has_table_privilege('anon', 'public.api_usage_events', 'select') then
     raise exception 'PRD 033: anon can write public usage tables or read the publish log';
   end if;
   if has_function_privilege('anon', 'public.api_usage_publish_pending(integer, integer)', 'execute')

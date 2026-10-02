@@ -11,7 +11,8 @@ export function UsageSchoolSearch({
   sinceLabel,
 }: {
   schools: SchoolLookupRow[];
-  periodLabel: string;
+  /** null while the headline period is not a complete month. */
+  periodLabel: string | null;
   sinceLabel: string;
 }) {
   const [query, setQuery] = useState("");
@@ -39,20 +40,27 @@ export function UsageSchoolSearch({
             <li key={school.school_id}>
               <span className="usage-nm">{school.school_name}</span>
               <span className="usage-ct">
-                {schoolCountLabel(school.month)} in {periodLabel}
-                <br />
-                {schoolCountLabel(school.total)} since {sinceLabel}
+                {periodLabel ? (
+                  <>
+                    {schoolCountLabel(school.month)} in {periodLabel}
+                    <br />
+                  </>
+                ) : null}
+                {schoolCountLabel(school.total)} since {sinceLabel}, in months with 10 or more
               </span>
             </li>
           ))
         ) : (
-          <li className="usage-empty">No school by that name had downloads since {sinceLabel}.</li>
+          <li className="usage-empty">
+            No school by that name reached 10 downloads in a month since {sinceLabel}.
+          </li>
         )}
       </ul>
       <p className="usage-search-note">
-        Rounded to the nearest 10. A month with fewer than 10 downloads shows
-        &ldquo;fewer than 10&rdquo; and is left out of the total. Counts include
-        browser and machine downloads, not bots.
+        Rounded to the nearest 10. Schools are listed for complete months with
+        10 or more downloads; other months show &ldquo;fewer than 10&rdquo; (which
+        includes none) and are left out of the total. Counts include browser and
+        machine downloads, not bots.
       </p>
     </div>
   );

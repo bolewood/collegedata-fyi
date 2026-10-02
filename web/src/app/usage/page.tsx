@@ -22,7 +22,7 @@ export function generateMetadata(): Metadata {
   return {
     title: "Usage — collegedata.fyi",
     description:
-      "How often people and programs download the Common Data Set reports in this archive, counted the way libraries count use, with bots kept out of the total.",
+      "How often the Common Data Set reports in this archive are downloaded, by web browsers and by programs, with bots and crawlers kept out of the total.",
     alternates: { canonical: "/usage" },
     robots: launched ? undefined : { index: false, follow: false },
   };
@@ -57,7 +57,7 @@ function KindBars({ rows, total, muted, max }: { rows: KindRow[]; total: number;
 
 export default async function UsagePage() {
   const rows = await fetchUsageRows();
-  const model = buildUsageModel(rows.daily, rows.schoolMonths);
+  const model = buildUsageModel(rows.daily, rows.schoolMonths, rows.months);
 
   if (!model) {
     return (
@@ -82,6 +82,11 @@ export default async function UsagePage() {
   const counted = headline.browser + headline.machine;
   const kindMax = Math.max(...kinds.counted.map((k) => k.value), ...kinds.bots.map((k) => k.value));
   const histMax = spread ? Math.max(1, ...spread.buckets.map((b) => b.schools)) : 1;
+  const histLabel = spread
+    ? `Schools by downloads in ${period.label}: ${spread.buckets
+        .map((b) => `${formatCount(b.schools)} with ${b.label}`)
+        .join(", ")}.`
+    : "";
   const markers = METHOD_CHANGELOG.filter((entry) => entry.from > model.firstDay).map((entry) => ({
     day: entry.from,
     label: `Rules v${entry.version}`,
@@ -96,9 +101,9 @@ export default async function UsagePage() {
           Who uses <em>the archive.</em>
         </h1>
         <p className="usage-lede">
-          How often people and programs download the reports in this archive.
-          Counted the same way libraries count use, with bots kept out of the
-          total.
+          How often the reports in this archive are downloaded, by web browsers
+          and by programs. We count unique downloads in the spirit of the COUNTER
+          rules libraries use, and keep bots and crawlers out of the total.
         </p>
       </header>
 
@@ -107,14 +112,14 @@ export default async function UsagePage() {
           <span className="meta">Browser downloads · {period.label}</span>
           <strong>{formatCount(headline.browser)}</strong>
           <small>
-            People opening reports in a web browser. {formatCount(headline.browserSinceStart)} since {sinceShort}.
+            Downloads from web browsers. {formatCount(headline.browserSinceStart)} since {sinceShort}.
           </small>
         </div>
         <div>
           <span className="meta">Machine downloads · {period.label}</span>
           <strong>{formatCount(headline.machine)}</strong>
           <small>
-            Scripts, integrations, and AI assistants fetching for a person.{" "}
+            Scripts, integrations, AI assistants, busy browsers, and unidentified clients.{" "}
             {formatCount(headline.machineSinceStart)} since {sinceShort}.
           </small>
         </div>
@@ -125,7 +130,7 @@ export default async function UsagePage() {
         </div>
       </div>
       <p className="usage-bots-line">
-        Search engines and AI crawlers fetched another <b>{formatCount(headline.bots)}</b> files in{" "}
+        Self-declared bots and AI crawlers downloaded another <b>{formatCount(headline.bots)}</b> files in{" "}
         {period.label}. They keep the archive findable, but we don&rsquo;t count them as use.
       </p>
 
@@ -133,7 +138,8 @@ export default async function UsagePage() {
         <div className="meta">§ 1 · Downloads over time</div>
         <h2 id="usage-over-time">Every day since {sinceShort}</h2>
         <p className="usage-copy">
-          A download counts once per person or program, per file, per day.
+          A download counts once per browser or program (IP address plus user
+          agent), per file, per day.
           Reopening the same report on the same day does not add to the count.
           {headline.siteShare !== null
             ? ` In ${period.label}, ${pct(headline.siteShare, 1)} of browser downloads started from a link on this site.`
@@ -166,7 +172,7 @@ export default async function UsagePage() {
             </p>
           ) : null}
           <details className="usage-data">
-            <summary>Show the numbers by week</summary>
+            <summary>Show the numbers by week, including API requests</summary>
             <div className="usage-tbl-wrap">
               <table className="usage-table">
                 <thead>
@@ -175,6 +181,7 @@ export default async function UsagePage() {
                     <th scope="col">Browser</th>
                     <th scope="col">Machine</th>
                     <th scope="col">Bots and crawlers</th>
+                    <th scope="col">API requests</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -187,6 +194,7 @@ export default async function UsagePage() {
                       <td>{formatCount(week.browser)}</td>
                       <td>{formatCount(week.machine)}</td>
                       <td>{formatCount(week.bots)}</td>
+                      <td>{formatCount(week.api)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -207,7 +215,7 @@ export default async function UsagePage() {
         <div className="usage-kinds">
           <div className="usage-kinds-sub">Counted · {formatCount(counted)} downloads</div>
           <KindBars rows={kinds.counted} total={counted} muted={false} max={kindMax} />
-          <div className="usage-kinds-sub">Not counted · {formatCount(headline.bots)} fetches</div>
+          <div className="usage-kinds-sub">Not counted · {formatCount(headline.bots)} downloads</div>
           <KindBars rows={kinds.bots} total={0} muted max={kindMax} />
         </div>
       </section>
@@ -243,11 +251,11 @@ export default async function UsagePage() {
 
       <section className="usage-band" aria-labelledby="usage-schools">
         <div className="meta">§ 4 · Across schools · {period.label}</div>
-        <h2 id="usage-schools">Demand is spread wide</h2>
+        <h2 id="usage-schools">How downloads spread across schools</h2>
         {spread ? (
           <>
             <p className="usage-copy">
-              Downloads are not concentrated on a few famous names. In {period.label}{" "}
+              In {period.label}{" "}
               {spread.median !== null
                 ? `the typical school's reports were downloaded about ${formatCount(spread.median)} times, and `
                 : ""}
@@ -275,7 +283,7 @@ export default async function UsagePage() {
                 <small>{pct(spread.atLeast100, spread.schools)} of schools</small>
               </div>
             </div>
-            <div className="usage-hist" role="img" aria-label="Number of schools by downloads in the month">
+            <div className="usage-hist" role="img" aria-label={histLabel}>
               {spread.buckets.map((bucket, i) => (
                 <div className="usage-hist__col" key={bucket.label}>
                   <span className="usage-hist__val">{formatCount(bucket.schools)}</span>
@@ -292,14 +300,15 @@ export default async function UsagePage() {
               ))}
             </div>
             <p className="usage-chart-note">
-              Schools by browser and machine downloads in {period.label}. We
-              don&rsquo;t publish a ranked list of schools.
+              Schools by browser and machine downloads in {period.label}. School
+              counts of 10 or more are rounded to the nearest 10. We don&rsquo;t
+              publish a ranked list of schools.
             </p>
           </>
         ) : (
           <p className="usage-copy">School numbers appear after the first full month is counted.</p>
         )}
-        <UsageSchoolSearch schools={model.schools} periodLabel={period.label} sinceLabel={since} />
+        <UsageSchoolSearch schools={model.schools} periodLabel={period.complete ? period.label : null} sinceLabel={since} />
       </section>
 
       <section className="usage-band" aria-labelledby="usage-how" id="how-we-count">
@@ -325,7 +334,7 @@ export default async function UsagePage() {
           </li>
           <li>
             <div>
-              The user agent reads as an ordinary browser, and that visitor opened fewer than{" "}
+              The user agent reads as an ordinary browser, and that visitor opened no more than{" "}
               {HEAVY_CLIENT_FILES_PER_DAY} files that day, so it counts as a <b>browser</b> download.
             </div>
           </li>
@@ -345,8 +354,9 @@ export default async function UsagePage() {
         <p className="usage-copy">
           Requests from our own pipeline and from this website&rsquo;s servers are left out
           entirely. A day appears here once every hour of it has been counted. School numbers
-          are published once a month is complete, and a month with fewer than 10 downloads is
-          hidden. The counting rules are versioned; when they change, we note the date and the
+          are published once a month is complete. A school is listed for a month only if it had
+          10 or more downloads, rounded to the nearest 10; for the rest we publish only how many
+          schools there were. The counting rules are versioned; when they change, we note the date and the
           change below. Read the <Link href="/privacy">privacy page</Link> for what we keep.
         </p>
       </section>
@@ -363,7 +373,8 @@ export default async function UsagePage() {
         <h2 id="usage-open-data">Take the numbers with you</h2>
         <p className="usage-copy">
           Every number on this page is in a public file, free to reuse under CC0. It holds the
-          daily totals, the monthly school counts, and the history of the counting rules.
+          daily totals, the monthly school counts, the monthly count of schools under 10, and
+          the history of the counting rules.
         </p>
         <div className="usage-open-data">
           <a className="cd-btn" href="/usage.json">

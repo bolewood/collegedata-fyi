@@ -13,16 +13,24 @@ This project uses four-part semantic versioning.
 - Public usage page at `/usage` and open data at `/usage.json` (PRD 033 M1
   and M2). It shows daily unique downloads split into browser, machine, and
   bots and crawlers; downloads by kind; use of the open API by others; how
-  demand is spread across schools, with a school lookup rounded to the
-  nearest 10; our own serving load; and a worked example of how one request
-  is counted. Until November 1, 2026 the page is `noindex` and not linked
-  from the site.
+  demand is spread across schools, with a school lookup; our own serving
+  load; and a worked example of how one request is counted. Every chart has
+  a table alternative. Until November 1, 2026 the page is `noindex` and not
+  linked from the site.
 - A publish step in the API usage ingest workflow. It copies ready days and
-  complete months into two public tables, `usage_public_daily` and
-  `usage_public_school_months`, applying the privacy rules in Postgres: one
-  number per school per month, hidden under 10, no client names or
-  per-client rows. A scan of everything published runs after each publish
-  and opens an alert issue if any rule is broken.
+  complete months into three public tables, `usage_public_daily`,
+  `usage_public_school_months`, and `usage_public_months`, applying the
+  privacy rules in Postgres: one number per school per month, rounded to the
+  nearest 10, schools under 10 not listed (only counted in the monthly
+  summary), no client names or per-client rows. A scan of everything
+  published runs after each publish and opens an alert issue if any rule is
+  broken, and days that stay unpublishable open their own alert.
+
+### Security
+
+- Revoked the anon and authenticated grants on `api_usage_events`. Row-level
+  security already blocked reads; the table is written only with the service
+  role.
 
 ## [0.6.16.0] - 2026-10-02
 

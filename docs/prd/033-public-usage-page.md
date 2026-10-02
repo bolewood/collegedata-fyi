@@ -22,6 +22,11 @@ M1 and M2 are built. Differences from the rev 3 plan:
   `purdue-university`) only through the school that owns their files.
 - **The API section counts both surfaces:** third-party PostgREST and Edge
   Function requests, plus calls to the simple `/api` routes and MCP server.
+- **School cells are rounded in the table and small schools are left out.**
+  Review found that exact values with null rows under 10 could be recovered
+  by subtracting listed schools from the daily totals. The school table now
+  holds only schools at 10 or more, rounded to the nearest 10, and
+  `usage_public_months` publishes just the count of schools under 10.
   Self-declared bots and AI crawlers are left out of the API headline.
 - **Spikes** are days with at least 2,000 machine downloads and four times
   the median machine day.
@@ -120,7 +125,7 @@ are split out, and the heavy-client rule is applied.
 |---|---|
 | Bot and crawler downloads | A separate muted line, "self-declared bots and crawlers," never in the headline |
 | Per-school demand | No top-schools list. `/usage` shows the spread across schools plus a school search; each school page shows its own number |
-| Per-school precision | One combined number per school per calendar month; hidden under 10; rounded to the nearest 10 on school pages |
+| Per-school precision | One combined number per school per calendar month, rounded to the nearest 10; schools under 10 not listed, only counted |
 | PDF clicks from our school pages | Count as browser downloads |
 | Client names | Major public products and generic libraries only, from an allowlist |
 | Human bucket label | "Browser downloads" |
@@ -197,11 +202,15 @@ page.
 
 - **Daily whole-archive totals only, published after the day closes.**
   Nothing hourly.
-- **Per school: one combined number per calendar month.** No per-method
-  rows, so a hidden cell can't be recovered by subtraction. Totals "since
-  July 2026" are sums of completed months, so publishing them doesn't
-  reveal anything finer than a month. A month under 10 is hidden, and a
-  school page shows the total rounded to the nearest 10.
+- **Per school: one combined number per calendar month, rounded to the
+  nearest 10 in the table itself.** A school is listed for a month only at
+  10 or more; schools under 10 have no row at all, and a separate monthly
+  summary publishes only how many there were. The daily totals sum every
+  school, so a hidden-but-listed row (or an exact value) would let anyone
+  recover small schools by subtracting the listed ones; rounding and
+  leaving them out entirely closes that. No per-method rows. Totals "since
+  July 2026" are sums of listed months, so they don't reveal anything finer
+  than a month.
 - **Never published:** client hashes, network organizations, countries, IP
   ranges, user-agent versions, query strings, or any per-client row.
 - **IP addresses stay inside the logs query.** The daily query uses IP plus
@@ -284,11 +293,13 @@ New daily capture:
 ### M1: publish layer (built, v0.6.17.0)
 
 - Public tables `usage_public_daily` (day, metric, access_method,
-  client_kind, value, method_version) and `usage_public_school_months`
-  (month, school_id, school_name, unique_downloads or null under 10,
-  method_version). They contain only publishable rows, so a view bug can't
-  leak a private column. Anon gets `select` on these two only. Metric
-  definitions are in `docs/api-usage-attribution.md`.
+  client_kind, value, method_version), `usage_public_school_months`
+  (month, school_id, school_name, unique_downloads, method_version; only
+  schools at 10 or more, rounded to the nearest 10), and
+  `usage_public_months` (month, schools_with_downloads,
+  schools_under_floor, method_version). They contain only publishable rows,
+  so a view bug can't leak a private column. Anon gets `select` on these
+  three only. Metric definitions are in `docs/api-usage-attribution.md`.
 - `api_usage_publish_pending(p_method_version, p_limit)`, service-role
   only, publishes ready days through `api_usage_publish_day()` and rebuilds
   their months through `api_usage_publish_month()`.
@@ -296,11 +307,15 @@ New daily capture:
 - **Timing:** a day is published only when the daily query has run and all
   24 hours are covered by successful windows. A day is republished when a
   later run touching it finishes. Publish is its own workflow step with its
-  own alert issue. GitHub's late cron only delays publishing.
+  own alert issue, run after the ingest heartbeat. A day still unready two
+  days after it closes counts as stuck and opens a separate alert issue;
+  past 80 days it can no longer be recounted from the logs. GitHub's late
+  cron only delays publishing.
 - **Checks:** `usage_public_violations()` runs after every publish and fails
-  the step on a school cell under 10, an incomplete month, a published day
-  without a publish record, an unexpected public column, or anon access to
-  the publish log. A throwaway-Postgres harness covered the migration before
+  the step on a school cell under 10 or not a multiple of 10, an incomplete
+  month, a school month without a summary, a published day without a
+  publish record, an unexpected public column, or anon access to any
+  private usage table. A throwaway-Postgres harness covered the migration before
   merge (alias merging, the floor, incomplete months, republishing, grants).
 - Retired and older school ids in storage paths resolve through artifact
   ownership and `institution_slug_crosswalk` (which carries the identity

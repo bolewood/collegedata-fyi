@@ -98,11 +98,6 @@ jobs:
           fi
           python tools/api_usage/ingest_gateway_logs.py "${args[@]}"
 
-      - id: publish
-        name: Publish public usage rows
-        if: env.INPUT_DRY_RUN != 'true'
-        run: python tools/api_usage/publish.py --out-json api-usage/publish.json
-
       - name: Heartbeat api_usage_ingest ok
         if: success() && env.INPUT_DRY_RUN != 'true'
         run: |
@@ -123,6 +118,13 @@ jobs:
             --error-code job_failed \
             --summary '{"windows": 0, "reconciled": false}' \
             --run-url "${PIPELINE_RUN_URL}"
+
+      # After the heartbeats, so a publish failure is not reported as an
+      # ingest failure.
+      - id: publish
+        name: Publish public usage rows
+        if: success() && env.INPUT_DRY_RUN != 'true'
+        run: python tools/api_usage/publish.py --out-json api-usage/publish.json
 
       - name: Add run summary
         if: always()
@@ -147,9 +149,39 @@ jobs:
             {
               echo
               echo "### Public usage publish"
-              jq -r '"Days published: \(.days_published)  Months published: \(.months_published)  Days waiting: \(.days_waiting)"' api-usage/publish.json
+              jq -r '"Days published: \(.days_published)  Months published: \(.months_published)\nDays waiting: \(.days_waiting)  Stuck: \(.days_stuck)  Past retention: \(.days_expired)"' api-usage/publish.json
+              jq -r '.violations // {} | to_entries[] | select(.value > 0) | "- Privacy rule broken: \(.key) (\(.value))"' api-usage/publish.json
             } >> "$GITHUB_STEP_SUMMARY"
           fi
+
+      - name: Open issue when days are stuck unpublished
+        if: always() && hashFiles('api-usage/publish.json') != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          stuck="$(jq -r '.days_stuck' api-usage/publish.json)"
+          if [[ "${stuck}" == "0" ]]; then
+            exit 0
+          fi
+          open="$(gh issue list --repo "${REPO}" --state open --label component:api_usage_publish_stuck --json number --jq length)"
+          if [[ "${open}" != "0" ]]; then
+            echo "A stuck-days issue is already open."
+            exit 0
+          fi
+          python tools/ops/upsert_pipeline_alert_issue.py \
+            --repo "${REPO}" \
+            --component api_usage_publish_stuck \
+            --title "Pipeline alert: usage days stuck unpublished" \
+            --run-url "${PIPELINE_RUN_URL}" \
+            --body "${stuck} day(s) between 2 and 80 days old have a daily download count but cannot be published on /usage: either an hour of the day has no successful ingest window, or the day has no download rows at the current method version. Each one blocks its month's school numbers.
+
+          Fix it while the gateway logs still exist (90-day retention): dispatch this workflow with mode=backfill (or mode=daily) for enough days to cover them. The next run publishes them.
+
+          Run: ${PIPELINE_RUN_URL}
+          "
 
       - name: Open issue when public usage publish fails
         if: failure() && steps.publish.outcome == 'failure'
@@ -166,7 +198,7 @@ jobs:
             --run-url "${PIPELINE_RUN_URL}" \
             --body "The publish step for /usage (PRD 033) failed. Either a publish function errored, or usage_public_violations() found published rows that break the privacy rules (a school month under 10, an incomplete month, or an unexpected public column).
 
-          Nothing new is published until the step passes. If the scan found violations, delete the offending rows from usage_public_school_months or usage_public_daily first, then fix the cause.
+          The step summary lists which rule broke. Delete the offending rows from the public table, fix the cause, then delete the matching days from api_usage_publish_days so the next run republishes those days and rebuilds their months.
 
           Run: ${PIPELINE_RUN_URL}
           "
@@ -195,7 +227,7 @@ jobs:
           "
 
       - name: Open issue after six straight scheduled failures
-        if: failure() && github.event_name == 'schedule'
+        if: failure() && github.event_name == 'schedule' && steps.ingest.outcome == 'failure'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}

@@ -146,7 +146,7 @@ export function ApiBars({
     <svg
       viewBox={`0 0 ${W} ${H}`}
       role="img"
-      aria-label="API requests by others per day. Darker bars are the month in the headline."
+      aria-label="API requests by others per day. Darker bars are the headline period. The weekly table above has the numbers."
     >
       {daily.map((d, i) => {
         const h = Math.max(1, (d.value / max) * (H - 16));

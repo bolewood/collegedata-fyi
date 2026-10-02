@@ -383,7 +383,7 @@ public, so anyone running these tools against production also lands there.
 
 After each non-dry run, `tools/api_usage/publish.py` calls
 `api_usage_publish_pending()` and then `usage_public_violations()`. The
-publish functions are service-role only and copy publishable rows into two
+publish functions are service-role only and copy publishable rows into three
 anon-readable tables behind `/usage` and `/usage.json`:
 
 - **`usage_public_daily`** (day, metric, access_method, client_kind, value).
@@ -397,26 +397,45 @@ anon-readable tables behind `/usage` and `/usage.json`:
   - `api_requests`: `third_party` PostgREST and Edge Function requests from
     the hourly rollups, without Storage or `options_preflight`.
   - `friendly_api_requests`: rows in `api_usage_events` (Next.js `/api`
-    routes and the MCP server), which are calls by others.
-  - `serving_requests`: `first_party_site` plus `friendly_api_upstream`, our
-    own serving load.
+    routes and the MCP server), which are calls by others, without `OPTIONS`.
+  - `serving_requests`: `first_party_site` plus `friendly_api_upstream`
+    PostgREST and Edge Function requests, our own serving load. Storage is
+    left out because PDF downloads from our pages are browser downloads.
   Client families outside the fixed public list publish as `unknown`, so a
   new family never puts a name on the page. No client names are published.
 - **`usage_public_school_months`** (month, school_id, school_name,
   unique_downloads). One browser-plus-machine number per school per calendar
   month, written only when every day of the month (from the first published
-  day) is published. Values under 10 are null. A storage folder maps to the
+  day) is published. Only schools with 10 or more are listed, rounded to the
+  nearest 10 in the table. Schools under 10 have no row, so the daily totals
+  can't be used to recover them by subtraction. The name comes from
+  `institution_directory`, then the newest `cds_documents` row. A storage
+  folder maps to the
   school that owns its artifacts (`cds_artifacts.storage_path` →
   `cds_documents.school_id`, when exactly one school owns it), then through
   `institution_slug_crosswalk` with the web's canonical-id rule. This merges
   older folder slugs such as `university-of-michigan` into `umich`.
+- **`usage_public_months`** (month, schools_with_downloads,
+  schools_under_floor). For each complete month, how many schools had any
+  browser or machine download and how many of those had fewer than 10.
 
-`usage_public_violations()` scans everything published: school cells under
-10, school months with a missing day, published days without a publish
-record, any column outside the allowed list, and anon access to the publish
-log. Any nonzero count fails the step and opens a `api_usage_publish` alert
-issue. To withdraw a bad row, delete it from the public table; the next
-publish of that day or month rewrites it.
+Each run reports days published, months rebuilt, and unready days: `waiting`
+(closed in the last 2 days), `stuck` (2 to 80 days old; opens an
+`api_usage_publish_stuck` issue, once while it stays open), and `expired`
+(older than 80 days, past log retention for a recount).
+
+`usage_public_violations()` scans everything published and returns counts for
+`school_cells_off_rule` (under 10 or not a multiple of 10),
+`school_months_incomplete`, `school_months_without_summary`,
+`days_without_publish_record`, `unexpected_columns`, and
+`private_tables_readable_by_anon` (every private usage table, including
+`api_usage_events` and `api_usage_publish_days`). Any nonzero count fails the
+step and opens an `api_usage_publish` alert issue; the ingest heartbeat is
+unaffected.
+
+To withdraw bad public rows: delete them from the public table, fix the cause,
+then delete the matching days from `api_usage_publish_days` so the next run
+republishes those days and rebuilds their months.
 
 ### Operations
 

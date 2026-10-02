@@ -8,7 +8,9 @@ Then scans everything published with usage_public_violations() and fails
 if any rule is broken.
 
 A day is ready once its unique downloads are counted and every hour has a
-reconciled window. Days rewritten by a later run are republished.
+reconciled window. Days rewritten by a later run are republished. Days that
+stay unready for more than 2 days are reported as stuck: they block their
+month until a backfill or daily run fixes them.
 
 The repository is public, so logs and --out-json carry counts only.
 """
@@ -37,8 +39,9 @@ class PublishError(RuntimeError):
 
 
 def run(db: Db, method_version: int = classify.DOWNLOADS_METHOD_VERSION) -> dict:
+    """Publish and scan. Returns a counts-only report; check broken_rules()."""
     report = {"method_version": method_version, "days_published": 0, "months_published": 0,
-              "days_waiting": 0, "calls": 0}
+              "days_waiting": 0, "days_stuck": 0, "days_expired": 0, "calls": 0}
     for _ in range(MAX_CALLS):
         result = db.rpc("api_usage_publish_pending", {
             "p_method_version": method_version,
@@ -49,7 +52,9 @@ def run(db: Db, method_version: int = classify.DOWNLOADS_METHOD_VERSION) -> dict
         report["calls"] += 1
         report["days_published"] += int(result.get("days_published") or 0)
         report["months_published"] += int(result.get("months_published") or 0)
-        report["days_waiting"] = int(result.get("days_waiting") or 0)
+        # Only the last, short call sees every unready day.
+        for key in ("days_waiting", "days_stuck", "days_expired"):
+            report[key] = int(result.get(key) or 0)
         if int(result.get("days_published") or 0) < BATCH_DAYS:
             break
     else:
@@ -59,10 +64,18 @@ def run(db: Db, method_version: int = classify.DOWNLOADS_METHOD_VERSION) -> dict
     if not isinstance(violations, dict):
         raise PublishError("usage_public_violations returned no summary")
     report["violations"] = {key: int(value or 0) for key, value in sorted(violations.items())}
-    broken = [key for key, value in report["violations"].items() if value]
-    if broken:
-        raise PublishError("published usage breaks privacy rules: " + ", ".join(broken))
     return report
+
+
+def broken_rules(report: dict) -> list[str]:
+    return [key for key, value in report.get("violations", {}).items() if value]
+
+
+def write_report(report: dict, out_json: Path | None) -> None:
+    if out_json:
+        out_json.parent.mkdir(parents=True, exist_ok=True)
+        out_json.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(json.dumps(report, sort_keys=True), flush=True)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -80,10 +93,13 @@ def main(argv: list[str] | None = None) -> int:
         print(f"::error::usage publish failed: {type(exc).__name__}", file=sys.stderr)
         return 1
 
-    if args.out_json:
-        args.out_json.parent.mkdir(parents=True, exist_ok=True)
-        args.out_json.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(json.dumps(report, sort_keys=True), flush=True)
+    write_report(report, args.out_json)
+    broken = broken_rules(report)
+    if broken:
+        print("::error::published usage breaks privacy rules: " + ", ".join(broken), file=sys.stderr)
+        return 1
+    if report["days_stuck"]:
+        print(f"::warning::{report['days_stuck']} day(s) are stuck unpublished and block their month", file=sys.stderr)
     return 0
 
 

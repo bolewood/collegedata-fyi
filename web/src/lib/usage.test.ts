@@ -8,6 +8,7 @@ import {
   schoolCountLabel,
   toUsageJson,
   type UsageDailyRow,
+  type UsageMonthRow,
   type UsageSchoolMonthRow,
 } from "./usage";
 
@@ -45,25 +46,30 @@ function dailyRows(): UsageDailyRow[] {
   return rows;
 }
 
+// Published shape: only schools at 10 or more, already rounded to the nearest 10.
 const SCHOOLS: UsageSchoolMonthRow[] = [
-  { month: "2026-07-01", school_id: "alpha", school_name: "Alpha College", unique_downloads: 25, method_version: 1 },
-  { month: "2026-08-01", school_id: "alpha", school_name: "Alpha College", unique_downloads: 144, method_version: 1 },
-  { month: "2026-08-01", school_id: "beta", school_name: "Beta University", unique_downloads: null, method_version: 1 },
-  { month: "2026-08-01", school_id: "gamma", school_name: "Gamma Institute", unique_downloads: 12, method_version: 1 },
-  { month: "2026-07-01", school_id: "delta", school_name: "Delta State", unique_downloads: null, method_version: 1 },
+  { month: "2026-07-01", school_id: "alpha", school_name: "Alpha College", unique_downloads: 30, method_version: 1 },
+  { month: "2026-08-01", school_id: "alpha", school_name: "Alpha College", unique_downloads: 140, method_version: 1 },
+  { month: "2026-08-01", school_id: "gamma", school_name: "Gamma Institute", unique_downloads: 10, method_version: 1 },
+  { month: "2026-07-01", school_id: "delta", school_name: "Delta State", unique_downloads: 20, method_version: 1 },
   { month: "2026-08-01", school_id: "epsilon", school_name: "Epsilon College", unique_downloads: 310, method_version: 1 },
+];
+
+const MONTHS: UsageMonthRow[] = [
+  { month: "2026-07-01", schools_with_downloads: 3, schools_under_floor: 1, method_version: 1 },
+  { month: "2026-08-01", schools_with_downloads: 4, schools_under_floor: 1, method_version: 1 },
 ];
 
 describe("usage model", () => {
   it("returns null with nothing published", () => {
-    expect(buildUsageModel([], [])).toBeNull();
+    expect(buildUsageModel([], [], [])).toBeNull();
   });
 
   it("picks the latest complete month, starting from the first day", () => {
-    expect(pickPeriod(DAYS)).toMatchObject({ start: "2026-08-01", end: "2026-08-31", label: "August", complete: true });
+    expect(pickPeriod(DAYS)).toMatchObject({ start: "2026-08-01", end: "2026-08-31", label: "August 2026", complete: true });
     const july = pickPeriod(range("2026-07-06", "2026-08-10"));
     expect(july).toMatchObject({ start: "2026-07-06", end: "2026-07-31", complete: true });
-    expect(july.label).toBe("Jul 6–Jul 31");
+    expect(july.label).toBe("Jul 6–Jul 31, 2026");
     const gap = range("2026-07-06", "2026-08-31").filter((d) => d !== "2026-08-15");
     expect(pickPeriod(gap).start).toBe("2026-07-06");
     expect(pickPeriod(range("2026-07-06", "2026-07-20"))).toMatchObject({ complete: false, end: "2026-07-20" });
@@ -71,7 +77,7 @@ describe("usage model", () => {
 
   it("totals the headline for the period and since the start", () => {
     const model = buildUsageModel(dailyRows(), SCHOOLS)!;
-    expect(model.period.label).toBe("August");
+    expect(model.period.label).toBe("August 2026");
     expect(model.headline.browser).toBe(3100);
     expect(model.headline.machine).toBe(78 * 31);
     expect(model.headline.bots).toBe(250 * 31);
@@ -101,10 +107,10 @@ describe("usage model", () => {
   });
 
   it("summarizes the spread across schools for the period month only", () => {
-    const model = buildUsageModel(dailyRows(), SCHOOLS)!;
+    const model = buildUsageModel(dailyRows(), SCHOOLS, MONTHS)!;
     expect(model.spread).toEqual({
       schools: 4,
-      median: 12,
+      median: 10,
       atLeast10: 3,
       atLeast100: 2,
       buckets: [
@@ -118,29 +124,41 @@ describe("usage model", () => {
   });
 
   it("reports a hidden median when most schools are under the floor", () => {
-    const rows: UsageSchoolMonthRow[] = ["a", "b", "c"].map((id, i) => ({
-      month: "2026-08-01",
-      school_id: id,
-      school_name: id,
-      unique_downloads: i === 2 ? 50 : null,
-      method_version: 1,
-    }));
-    expect(buildUsageModel(dailyRows(), rows)!.spread!.median).toBeNull();
+    const rows: UsageSchoolMonthRow[] = [
+      { month: "2026-08-01", school_id: "c", school_name: "c", unique_downloads: 50, method_version: 1 },
+    ];
+    const months: UsageMonthRow[] = [
+      { month: "2026-08-01", schools_with_downloads: 3, schools_under_floor: 2, method_version: 1 },
+    ];
+    const spread = buildUsageModel(dailyRows(), rows, months)!.spread!;
+    expect(spread.median).toBeNull();
+    expect(spread.buckets[0]).toEqual({ label: "1–9", schools: 2 });
   });
 
-  it("builds the school lookup from published months only", () => {
-    const model = buildUsageModel(dailyRows(), SCHOOLS)!;
+  it("has no spread without a summary for the period month", () => {
+    expect(buildUsageModel(dailyRows(), SCHOOLS, MONTHS.slice(0, 1))!.spread).toBeNull();
+  });
+
+  it("builds the school lookup from listed months only", () => {
+    const model = buildUsageModel(dailyRows(), SCHOOLS, MONTHS)!;
     const alpha = model.schools.find((s) => s.school_id === "alpha")!;
-    expect(alpha).toMatchObject({ month: 144, total: 169 });
+    expect(alpha).toMatchObject({ month: 140, total: 170 });
     const delta = model.schools.find((s) => s.school_id === "delta")!;
-    expect(delta).toMatchObject({ month: null, total: null });
+    expect(delta).toMatchObject({ month: null, total: 20 });
     expect(model.schools.map((s) => s.school_name)).toEqual([
       "Alpha College",
-      "Beta University",
       "Delta State",
       "Epsilon College",
       "Gamma Institute",
     ]);
+  });
+
+  it("uses the newest name a school was listed under", () => {
+    const renamed: UsageSchoolMonthRow[] = [
+      { month: "2026-08-01", school_id: "x", school_name: "New Name", unique_downloads: 10, method_version: 1 },
+      { month: "2026-07-01", school_id: "x", school_name: "Old Name", unique_downloads: 10, method_version: 1 },
+    ];
+    expect(buildUsageModel(dailyRows(), renamed, MONTHS)!.schools[0].school_name).toBe("New Name");
   });
 
   it("rounds school counts and hides the floor", () => {
@@ -163,7 +181,7 @@ describe("usage model", () => {
 
   it("splits weeks from the first day and marks partial weeks", () => {
     const model = buildUsageModel(dailyRows(), SCHOOLS)!;
-    expect(model.weeks[0]).toMatchObject({ start: "2026-07-06", days: 7, browser: 700 });
+    expect(model.weeks[0]).toMatchObject({ start: "2026-07-06", days: 7, browser: 700, api: 330 * 7 });
     expect(model.weeks.at(-1)!.days).toBe(DAYS.length % 7 || 7);
   });
 
@@ -174,13 +192,17 @@ describe("usage model", () => {
 
   it("writes only published columns to usage.json", () => {
     const extra = { ...dailyRows()[0], published_at: "x" } as UsageDailyRow;
-    const json = toUsageJson([extra], SCHOOLS.slice(0, 1), new Date("2026-10-02T00:00:00Z"));
+    const month = { ...MONTHS[0], published_at: "x" } as UsageMonthRow;
+    const json = toUsageJson([extra], SCHOOLS.slice(0, 1), [month], new Date("2026-10-02T00:00:00Z"));
     expect(json.license).toBe("CC0-1.0");
     expect(Object.keys(json.daily[0]).sort()).toEqual(
       ["access_method", "client_kind", "day", "method_version", "metric", "value"],
     );
     expect(Object.keys(json.school_months[0]).sort()).toEqual(
       ["method_version", "month", "school_id", "school_name", "unique_downloads"],
+    );
+    expect(Object.keys(json.months[0]).sort()).toEqual(
+      ["method_version", "month", "schools_under_floor", "schools_with_downloads"],
     );
     expect(json.method_changelog[0].version).toBe(1);
   });

@@ -39,24 +39,34 @@ export type UsageDailyRow = {
   method_version: number;
 };
 
+/** Listed only at 10 or more, rounded to the nearest 10 when published. */
 export type UsageSchoolMonthRow = {
   month: string;
   school_id: string;
   school_name: string;
-  unique_downloads: number | null;
+  unique_downloads: number;
+  method_version: number;
+};
+
+export type UsageMonthRow = {
+  month: string;
+  schools_with_downloads: number;
+  schools_under_floor: number;
   method_version: number;
 };
 
 export type DayPoint = { day: string; browser: number; machine: number; bots: number };
 export type KindRow = { key: string; label: string; detail: string; value: number };
 export type Spike = { day: string; machine: number };
-export type WeekRow = { start: string; days: number; browser: number; machine: number; bots: number };
+export type WeekRow = { start: string; days: number; browser: number; machine: number; bots: number; api: number };
 export type Bucket = { label: string; schools: number };
 export type SchoolLookupRow = {
   school_id: string;
   school_name: string;
+  /** null: fewer than 10 (or none) in the period month. */
   month: number | null;
-  total: number | null;
+  /** Sum of the months that reached 10. */
+  total: number;
 };
 
 export type UsageModel = {
@@ -155,13 +165,14 @@ export function pickPeriod(days: string[]): UsageModel["period"] {
     let complete = end <= last;
     for (let d = start; complete && d <= end; d = addDays(d, 1)) complete = have.has(d);
     if (complete) {
-      const label = start === `${month}-01` ? formatMonth(month).split(" ")[0] : `${formatDay(start)}–${formatDay(end)}`;
+      const label =
+        start === `${month}-01` ? formatMonth(month) : `${formatDay(start)}–${formatDay(end, { year: true })}`;
       return { start, end, label, complete: true };
     }
     const [y, m] = month.split("-").map(Number);
     month = m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, "0")}`;
   }
-  return { start: first, end: last, label: `${formatDay(first)}–${formatDay(last)}`, complete: false };
+  return { start: first, end: last, label: `${formatDay(first)}–${formatDay(last, { year: true })}`, complete: false };
 }
 
 function trailingAverage(points: DayPoint[], window = 7): DayPoint[] {
@@ -194,23 +205,23 @@ const SPREAD_BUCKETS: { label: string; min: number; max: number }[] = [
   { label: "300+", min: 300, max: Number.POSITIVE_INFINITY },
 ];
 
-function spreadFor(rows: UsageSchoolMonthRow[]): UsageModel["spread"] {
-  if (!rows.length) return null;
-  const values = rows.map((r) => r.unique_downloads);
-  // Hidden cells are 1 to 9, so they sort below every published value.
-  const ordered = values.map((v) => v ?? 0).sort((a, b) => a - b);
+function spreadFor(summary: UsageMonthRow | undefined, rows: UsageSchoolMonthRow[]): UsageModel["spread"] {
+  if (!summary || summary.schools_with_downloads === 0) return null;
+  const listed = rows.map((r) => r.unique_downloads);
+  const hidden = summary.schools_under_floor;
+  // Unlisted schools had 1 to 9, so they sort below every listed value.
+  const ordered = [...Array<number>(hidden).fill(0), ...listed].sort((a, b) => a - b);
   const mid = ordered[Math.floor((ordered.length - 1) / 2)];
-  const hidden = values.filter((v) => v === null).length;
   return {
-    schools: rows.length,
+    schools: summary.schools_with_downloads,
     median: mid >= SCHOOL_FLOOR ? mid : null,
-    atLeast10: rows.length - hidden,
-    atLeast100: values.filter((v) => v !== null && v >= 100).length,
+    atLeast10: listed.length,
+    atLeast100: listed.filter((v) => v >= 100).length,
     buckets: [
       { label: "1–9", schools: hidden },
       ...SPREAD_BUCKETS.map((b) => ({
         label: b.label,
-        schools: values.filter((v) => v !== null && v >= b.min && v <= b.max).length,
+        schools: listed.filter((v) => v >= b.min && v <= b.max).length,
       })),
     ],
   };
@@ -233,9 +244,14 @@ function kindsFor(rows: UsageDailyRow[]): UsageModel["kinds"] {
   const get = (key: string) => byKey.get(key) ?? 0;
   return {
     counted: [
-      { key: "browser", label: "Browser", detail: "People in a web browser", value: get("browser") },
+      {
+        key: "browser",
+        label: "Browsers",
+        detail: `Web browsers opening up to ${HEAVY_CLIENT_FILES_PER_DAY} files a day`,
+        value: get("browser"),
+      },
       { key: "integration", label: "Integrations", detail: "Apps and services built on the archive", value: get("integration") },
-      { key: "script", label: "Scripts", detail: "Code that fetches files directly", value: get("script") },
+      { key: "script", label: "Scripts and others", detail: "Code that fetches files directly, and unidentified clients", value: get("script") },
       {
         key: "heavy_browser",
         label: "Busy browsers",
@@ -245,13 +261,18 @@ function kindsFor(rows: UsageDailyRow[]): UsageModel["kinds"] {
       { key: "ai_user", label: "AI assistants", detail: "Fetching for a person who asked", value: get("ai_user") },
     ],
     bots: [
-      { key: "declared_bot", label: "Search and other bots", detail: "Programs that name themselves as bots", value: get("declared_bot") },
-      { key: "ai_crawler", label: "AI crawlers", detail: "Collecting pages for model training", value: get("ai_crawler") },
+      {
+        key: "declared_bot",
+        label: "Self-declared bots",
+        detail: "Search engines, link checkers, and other programs that call themselves bots",
+        value: get("declared_bot"),
+      },
+      { key: "ai_crawler", label: "AI crawlers", detail: "AI companies' crawlers, for training and search", value: get("ai_crawler") },
     ],
   };
 }
 
-function weeksFor(points: DayPoint[]): WeekRow[] {
+function weeksFor(points: DayPoint[], api: Map<string, number>): WeekRow[] {
   const weeks: WeekRow[] = [];
   for (let i = 0; i < points.length; i += 7) {
     const slice = points.slice(i, i + 7);
@@ -261,6 +282,7 @@ function weeksFor(points: DayPoint[]): WeekRow[] {
       browser: sum(slice.map((p) => p.browser)),
       machine: sum(slice.map((p) => p.machine)),
       bots: sum(slice.map((p) => p.bots)),
+      api: sum(slice.map((p) => api.get(p.day) ?? 0)),
     });
   }
   return weeks;
@@ -268,18 +290,16 @@ function weeksFor(points: DayPoint[]): WeekRow[] {
 
 function schoolsFor(rows: UsageSchoolMonthRow[], periodMonth: string | null): SchoolLookupRow[] {
   const bySchool = new Map<string, SchoolLookupRow>();
-  for (const row of rows) {
+  for (const row of [...rows].sort((a, b) => a.month.localeCompare(b.month))) {
     const current = bySchool.get(row.school_id) ?? {
       school_id: row.school_id,
       school_name: row.school_name,
       month: null,
-      total: null,
+      total: 0,
     };
-    if (row.unique_downloads !== null) current.total = (current.total ?? 0) + row.unique_downloads;
-    if (periodMonth && row.month.slice(0, 7) === periodMonth) {
-      current.month = row.unique_downloads;
-      current.school_name = row.school_name;
-    }
+    current.total += row.unique_downloads;
+    current.school_name = row.school_name;
+    if (periodMonth && row.month.slice(0, 7) === periodMonth) current.month = row.unique_downloads;
     bySchool.set(row.school_id, current);
   }
   return [...bySchool.values()].sort((a, b) => a.school_name.localeCompare(b.school_name));
@@ -288,6 +308,7 @@ function schoolsFor(rows: UsageSchoolMonthRow[], periodMonth: string | null): Sc
 export function buildUsageModel(
   dailyRows: UsageDailyRow[],
   schoolRows: UsageSchoolMonthRow[],
+  monthRows: UsageMonthRow[] = [],
 ): UsageModel | null {
   const downloadRows = dailyRows.filter((r) => r.metric === "unique_downloads");
   const days = [...new Set(downloadRows.map((r) => r.day))].sort();
@@ -330,7 +351,8 @@ export function buildUsageModel(
   const topThree = [...apiPeriod].sort((a, b) => b - a).slice(0, 3);
 
   const periodMonth = period.complete ? period.start.slice(0, 7) : null;
-  const monthRows = periodMonth ? schoolRows.filter((r) => r.month.slice(0, 7) === periodMonth) : [];
+  const periodSchools = periodMonth ? schoolRows.filter((r) => r.month.slice(0, 7) === periodMonth) : [];
+  const periodSummary = periodMonth ? monthRows.find((r) => r.month.slice(0, 7) === periodMonth) : undefined;
 
   return {
     firstDay: days[0],
@@ -358,8 +380,8 @@ export function buildUsageModel(
     },
     serving: sum(periodRows.filter((r) => r.metric === "serving_requests").map((r) => r.value)),
     spikes: findSpikes(daily),
-    weeks: weeksFor(daily),
-    spread: spreadFor(monthRows),
+    weeks: weeksFor(daily, apiByDay),
+    spread: spreadFor(periodSummary, periodSchools),
     schools: schoolsFor(schoolRows, periodMonth),
     methodVersion: Math.max(...downloadRows.map((r) => r.method_version)),
   };
@@ -375,11 +397,13 @@ export type UsageJson = {
   method_changelog: typeof METHOD_CHANGELOG;
   daily: UsageDailyRow[];
   school_months: UsageSchoolMonthRow[];
+  months: UsageMonthRow[];
 };
 
 export function toUsageJson(
   dailyRows: UsageDailyRow[],
   schoolRows: UsageSchoolMonthRow[],
+  monthRows: UsageMonthRow[],
   now: Date = new Date(),
 ): UsageJson {
   return {
@@ -403,6 +427,12 @@ export function toUsageJson(
       school_id,
       school_name,
       unique_downloads,
+      method_version,
+    })),
+    months: monthRows.map(({ month, schools_with_downloads, schools_under_floor, method_version }) => ({
+      month,
+      schools_with_downloads,
+      schools_under_floor,
       method_version,
     })),
   };
