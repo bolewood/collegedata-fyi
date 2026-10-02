@@ -123,7 +123,7 @@ jobs:
       # ingest failure.
       - id: publish
         name: Publish public usage rows
-        if: success() && env.INPUT_DRY_RUN != 'true'
+        if: ${{ !cancelled() && steps.ingest.outcome == 'success' && env.INPUT_DRY_RUN != 'true' }}
         run: python tools/api_usage/publish.py --out-json api-usage/publish.json
 
       - name: Add run summary
@@ -166,7 +166,8 @@ jobs:
           if [[ "${stuck}" == "0" ]]; then
             exit 0
           fi
-          open="$(gh issue list --repo "${REPO}" --state open --label component:api_usage_publish_stuck --json number --jq length)"
+          title="Pipeline alert: usage days stuck unpublished"
+          open="$(gh issue list --repo "${REPO}" --state open --search "in:title \"${title}\"" --json number --jq length)"
           if [[ "${open}" != "0" ]]; then
             echo "A stuck-days issue is already open."
             exit 0
@@ -174,9 +175,9 @@ jobs:
           python tools/ops/upsert_pipeline_alert_issue.py \
             --repo "${REPO}" \
             --component api_usage_publish_stuck \
-            --title "Pipeline alert: usage days stuck unpublished" \
+            --title "${title}" \
             --run-url "${PIPELINE_RUN_URL}" \
-            --body "${stuck} day(s) between 2 and 80 days old have a daily download count but cannot be published on /usage: either an hour of the day has no successful ingest window, or the day has no download rows at the current method version. Each one blocks its month's school numbers.
+            --body "${stuck} day(s) from 3 to 80 days ago cannot be published on /usage: the day has no successful daily download count, an hour of it has no successful ingest window, or it has no download rows at the current method version. Each one blocks its month's school numbers.
 
           Fix it while the gateway logs still exist (90-day retention): dispatch this workflow with mode=backfill (or mode=daily) for enough days to cover them. The next run publishes them.
 

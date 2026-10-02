@@ -198,10 +198,11 @@ export function findSpikes(points: DayPoint[]): Spike[] {
   return points.filter((p) => p.machine >= threshold).map((p) => ({ day: p.day, machine: p.machine }));
 }
 
+// Labels name the published values, which are already rounded to the nearest 10.
 const SPREAD_BUCKETS: { label: string; min: number; max: number }[] = [
-  { label: "10–29", min: 10, max: 29 },
-  { label: "30–99", min: 30, max: 99 },
-  { label: "100–299", min: 100, max: 299 },
+  { label: "10–20", min: 10, max: 29 },
+  { label: "30–90", min: 30, max: 99 },
+  { label: "100–290", min: 100, max: 299 },
   { label: "300+", min: 300, max: Number.POSITIVE_INFINITY },
 ];
 

@@ -227,7 +227,7 @@ export default async function UsagePage() {
           <div>
             <strong>{formatCount(api.total)}</strong>
             <small>
-              requests to the public API by people and programs other than this
+              requests to the public API by programs and browsers other than this
               site, in {period.label}: {formatCount(api.postgrest)} to the full
               API and {formatCount(api.simple)} to the simple API and MCP server.
             </small>
@@ -278,7 +278,7 @@ export default async function UsagePage() {
                 <small>{pct(spread.atLeast10, spread.schools)} of schools</small>
               </div>
               <div>
-                <span>100 or more</span>
+                <span>About 100 or more</span>
                 <strong>{formatCount(spread.atLeast100)}</strong>
                 <small>{pct(spread.atLeast100, spread.schools)} of schools</small>
               </div>

@@ -419,14 +419,21 @@ anon-readable tables behind `/usage` and `/usage.json`:
   schools_under_floor). For each complete month, how many schools had any
   browser or machine download and how many of those had fewer than 10.
 
-Each run reports days published, months rebuilt, and unready days: `waiting`
-(closed in the last 2 days), `stuck` (2 to 80 days old; opens an
-`api_usage_publish_stuck` issue, once while it stays open), and `expired`
-(older than 80 days, past log retention for a recount).
+Each run checks every closed day since the first successful daily count and
+reports days published, months rebuilt, and unready days: `waiting` (yesterday
+and the day before), `stuck` (3 to 80 days ago, including days that never got
+a daily count; opens an `api_usage_publish_stuck` issue, once while it stays
+open), and `expired` (older than 80 days, past log retention for a recount).
+An expired day blocks its month's school numbers for good; the daily totals for
+the rest of the month still publish. To unblock the month, accept the gap by
+inserting a row for that day into `api_usage_publish_days` by hand and noting
+it in the method changelog.
 
 `usage_public_violations()` scans everything published and returns counts for
 `school_cells_off_rule` (under 10 or not a multiple of 10),
 `school_months_incomplete`, `school_months_without_summary`,
+`summary_count_mismatch` (listed schools must equal schools with downloads
+minus schools under 10),
 `days_without_publish_record`, `unexpected_columns`, and
 `private_tables_readable_by_anon` (every private usage table, including
 `api_usage_events` and `api_usage_publish_days`). Any nonzero count fails the

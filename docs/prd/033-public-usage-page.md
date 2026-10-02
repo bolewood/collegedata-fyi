@@ -22,12 +22,12 @@ M1 and M2 are built. Differences from the rev 3 plan:
   `purdue-university`) only through the school that owns their files.
 - **The API section counts both surfaces:** third-party PostgREST and Edge
   Function requests, plus calls to the simple `/api` routes and MCP server.
+  Self-declared bots and AI crawlers are left out of the API headline.
 - **School cells are rounded in the table and small schools are left out.**
   Review found that exact values with null rows under 10 could be recovered
   by subtracting listed schools from the daily totals. The school table now
   holds only schools at 10 or more, rounded to the nearest 10, and
   `usage_public_months` publishes just the count of schools under 10.
-  Self-declared bots and AI crawlers are left out of the API headline.
 - **Spikes** are days with at least 2,000 machine downloads and four times
   the median machine day.
 - **Launch gate.** The page and JSON ship now but carry `noindex` and have

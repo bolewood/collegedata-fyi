@@ -12,6 +12,7 @@ CLEAN = {
     "school_cells_off_rule": 0,
     "school_months_incomplete": 0,
     "school_months_without_summary": 0,
+    "summary_count_mismatch": 0,
     "days_without_publish_record": 0,
     "unexpected_columns": 0,
     "private_tables_readable_by_anon": 0,

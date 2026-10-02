@@ -115,9 +115,9 @@ describe("usage model", () => {
       atLeast100: 2,
       buckets: [
         { label: "1–9", schools: 1 },
-        { label: "10–29", schools: 1 },
-        { label: "30–99", schools: 0 },
-        { label: "100–299", schools: 1 },
+        { label: "10–20", schools: 1 },
+        { label: "30–90", schools: 0 },
+        { label: "100–290", schools: 1 },
         { label: "300+", schools: 1 },
       ],
     });

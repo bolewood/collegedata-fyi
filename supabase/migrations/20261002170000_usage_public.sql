@@ -390,10 +390,12 @@ $$;
 -- published, or published under another method version, then rebuild the
 -- months they fall in. Call again while days_published = p_limit.
 --
--- Days that cannot be published yet are counted by age: days_waiting closed
--- in the last 2 days (normal), days_stuck are 2 to 80 days old and block
--- their month until a backfill or daily run fixes them, and days_expired are
--- older than the 90-day log retention allows fixing.
+-- Every closed day since the first successful daily count is checked, so a
+-- later day that never got one is still reported. Days that cannot be
+-- published yet are counted by age: days_waiting are yesterday and the day
+-- before (normal), days_stuck are 3 to 80 days ago and block their month
+-- until a backfill or daily run fixes them, and days_expired are older than
+-- the 90-day log retention allows fixing.
 create or replace function public.api_usage_publish_pending(
   p_method_version integer,
   p_limit integer default 31
@@ -421,10 +423,12 @@ begin
     raise exception 'api_usage_publish_pending: method version and a positive limit are required';
   end if;
   for d in
-    select distinct (r.window_start at time zone 'utc')::date
-    from public.api_usage_ingest_runs r
-    where r.mode = 'daily' and r.status = 'ok'
-    order by 1
+    select g::date
+    from generate_series(
+      (select min((r.window_start at time zone 'utc')::date)
+       from public.api_usage_ingest_runs r where r.mode = 'daily' and r.status = 'ok'),
+      v_today - 1,
+      interval '1 day') as g
   loop
     select max(r.finished_at) into v_latest
     from public.api_usage_ingest_runs r
@@ -502,6 +506,10 @@ as $$
     'school_months_without_summary',
       (select count(distinct s.month) from public.usage_public_school_months s
        where not exists (select 1 from public.usage_public_months m where m.month = s.month)),
+    'summary_count_mismatch',
+      (select count(*) from public.usage_public_months m
+       where m.schools_with_downloads - m.schools_under_floor
+             <> (select count(*) from public.usage_public_school_months s where s.month = m.month)),
     'days_without_publish_record',
       (select count(distinct u.day) from public.usage_public_daily u
        where not exists (select 1 from public.api_usage_publish_days p where p.day = u.day)),
