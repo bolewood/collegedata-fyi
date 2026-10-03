@@ -185,9 +185,9 @@ describe("usage model", () => {
     expect(model.weeks.at(-1)!.days).toBe(DAYS.length % 7 || 7);
   });
 
-  it("gates launch on Nov 1, 2026 UTC", () => {
-    expect(isUsageLaunched(new Date("2026-10-31T23:59:59Z"))).toBe(false);
-    expect(isUsageLaunched(new Date("2026-11-01T00:00:00Z"))).toBe(true);
+  it("gates launch on Oct 3, 2026 UTC", () => {
+    expect(isUsageLaunched(new Date("2026-10-02T23:59:59Z"))).toBe(false);
+    expect(isUsageLaunched(new Date("2026-10-03T00:00:00Z"))).toBe(true);
   });
 
   it("writes only published columns to usage.json", () => {
