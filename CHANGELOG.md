@@ -6,6 +6,19 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.17.1] - 2026-10-03
+
+### Changed
+
+- Launched the public usage page at `/usage`: it is now indexed and linked
+  from the footer, sitemap, `/api`, and `/about`. Launched ahead of the
+  planned November 1 date, leading with September 2026.
+
+### Fixed
+
+- The usage publish step now works in 7-day batches so each call stays under
+  the database's 8-second statement timeout.
+
 ## [0.6.17.0] - 2026-10-02
 
 ### Added

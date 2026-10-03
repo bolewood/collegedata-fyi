@@ -1,6 +1,6 @@
 # PRD 033: Public usage page
 
-**Status:** Rev 4 (2026-10-02). M0 shipped in v0.6.16.0 and backfilled (2026-07-06 to 2026-10-01). M1 and M2 built in v0.6.17.0; `/usage` stays noindex and unlinked until 2026-11-01.
+**Status:** Rev 4 (2026-10-02). M0 shipped in v0.6.16.0 and backfilled (2026-07-06 to 2026-10-01). M1 and M2 built in v0.6.17.0; `/usage` launched 2026-10-03 (v0.6.17.1).
 **Author:** Anthony Showalter (with Claude)
 **URL (planned):** `https://www.collegedata.fyi/usage` and `/usage.json`
 **Related:** [PRD 032](032-api-usage-capture.md) (gateway usage capture, the data source), [PRD 030](030-pipeline-observation.md) (public pipeline board, the serving pattern), [PRD 013](013-analytics-and-abuse-signal.md), [`docs/api-usage-attribution.md`](../api-usage-attribution.md), [privacy page](../../web/src/app/privacy/page.tsx), [design system](../../web/DESIGN_SYSTEM.md), [voice](../../web/VOICE.md)
@@ -30,9 +30,11 @@ M1 and M2 are built. Differences from the rev 3 plan:
   `usage_public_months` publishes just the count of schools under 10.
 - **Spikes** are days with at least 2,000 machine downloads and four times
   the median machine day.
-- **Launch gate.** The page and JSON ship now but carry `noindex` and have
-  no links until `USAGE_LAUNCH_DATE` (2026-11-01). Footer, sitemap, `/api`,
-  and `/about` links appear on the first build after that date.
+- **Launch gate.** The page and JSON shipped with `noindex` and no links
+  until `USAGE_LAUNCH_DATE`. Planned for 2026-11-01; moved up to 2026-10-03,
+  leading with September 2026, whose API attribution is inferred (the API
+  section says so). Footer, sitemap, `/api`, and `/about` links appear on
+  the first build on or after that date.
 
 ## What changed from rev 1
 
@@ -332,9 +334,11 @@ New daily capture:
 - `/usage.json`: the published rows plus the method-version changelog and
   the T0 timestamp, CC0, like `/pipeline-observation.json`.
 - Link from `/api`, `/about`, and the footer.
-- **Launch gate:** at least 30 days of tagged data after the M0 backfill, so
-  no earlier than 2026-11-01. Until then the page and JSON are `noindex`
-  and unlinked (`isUsageLaunched()` in `web/src/lib/usage.ts`).
+- **Launch gate:** planned as at least 30 days of tagged data after the M0
+  backfill (2026-11-01). Launched early on 2026-10-03 once all 89 days were
+  published; download counts don't depend on site tagging, and the API
+  section notes the inferred attribution before 2026-10-01
+  (`isUsageLaunched()` in `web/src/lib/usage.ts`).
 
 ### M3: per-school demand
 

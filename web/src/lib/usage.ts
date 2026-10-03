@@ -2,7 +2,7 @@
 // usage_public_daily and usage_public_school_months; the privacy rules are
 // applied when those rows are published, not here.
 
-export const USAGE_LAUNCH_DATE = "2026-11-01";
+export const USAGE_LAUNCH_DATE = "2026-10-03";
 
 /** Site requests are tagged from the hour after this deploy; earlier hours are inferred. */
 export const SITE_TAGGING_T0 = "2026-10-01T19:16:00Z";
