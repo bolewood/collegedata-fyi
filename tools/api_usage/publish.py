@@ -28,10 +28,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from tools.api_usage import classify  # noqa: E402
 from tools.api_usage.ingest_gateway_logs import Db, IngestError  # noqa: E402
 
-# Days per RPC call, so one call stays well under the statement timeout.
-BATCH_DAYS = 31
-# Stop after this many calls; 90 days of retention need at most 3.
-MAX_CALLS = 12
+# Days per RPC call. PostgREST's role has an 8s statement timeout; a day costs
+# about 0.3s cold and a month rebuild about 1s, so 7 days leaves ~2x headroom.
+BATCH_DAYS = 7
+# Stop after this many calls; a full 90-day republish needs 13.
+MAX_CALLS = 20
 
 
 class PublishError(RuntimeError):

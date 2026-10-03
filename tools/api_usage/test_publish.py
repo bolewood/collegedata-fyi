@@ -50,10 +50,10 @@ class PublishTest(unittest.TestCase):
         self.assertEqual(db.calls[-1][0], "usage_public_violations")
 
     def test_loops_until_a_short_batch(self):
-        db = FakeDb([batch(publish.BATCH_DAYS, 1, stuck=9), batch(publish.BATCH_DAYS, 2), batch(26, 1, 1, stuck=2, expired=4)])
+        db = FakeDb([batch(publish.BATCH_DAYS, 1, stuck=9), batch(publish.BATCH_DAYS, 2), batch(publish.BATCH_DAYS - 1, 1, 1, stuck=2, expired=4)])
         report = publish.run(db, method_version=1)
         self.assertEqual(report["calls"], 3)
-        self.assertEqual(report["days_published"], 2 * publish.BATCH_DAYS + 26)
+        self.assertEqual(report["days_published"], 3 * publish.BATCH_DAYS - 1)
         self.assertEqual(report["months_published"], 4)
         self.assertEqual((report["days_waiting"], report["days_stuck"], report["days_expired"]), (1, 2, 4))
 
