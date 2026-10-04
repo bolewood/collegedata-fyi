@@ -6,6 +6,20 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.18.0] - 2026-10-04
+
+### Changed
+
+- Overhauled the Alignment Gap recipe (/recipes/alignment-gap) per PRD 034:
+  sharpened narrative lede, demystified the metric, added base shelf for
+  below-median burden schools to expand vertical resolution by 2.2x, smoothed
+  the parity diagonal boundary, and synchronized cross-chart school selection.
+
+### Added
+
+- Interactive worked examples table with synchronized chart highlight and standardized
+  6-column metrics across both merit-aid groups.
+
 ## [0.6.17.1] - 2026-10-03
 
 ### Changed
