@@ -6,9 +6,11 @@ H2A, and IPEDS are joined?
 
 Open [`/recipes/alignment-gap`](https://www.collegedata.fyi/recipes/alignment-gap)
 for two interactive scatters. Panel A plots the alignment gap (Scorecard)
-against estimated non-need merit aid per first-year student (CDS H2A),
-colored by endowment per undergraduate (IPEDS). Schools that award no
-non-need merit aid sit on a dedicated `$0` rail, off the log scale. Panel B
+against estimated non-need merit aid per first-year student (CDS H2A).
+Schools that award no non-need merit aid sit on a dedicated `$0` rail on the left,
+while schools with debt burden at or below median sit on a dedicated base shelf.
+The diagonal boundary partitions schools where merit spend exceeds the annual gap
+(forest green) from those where the debt gap exceeds merit aid (ochre). Panel B
 keeps a broader endowment comparison so schools without a usable H2A row —
 including Bard and Grinnell — stay on the page. Both panels measure the gap
 against the same 375-school median burden. Hover any dot for the school name.

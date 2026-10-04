@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AlignmentGapChart } from "@/components/AlignmentGapChart";
 import { AlignmentGapMeritChart } from "@/components/AlignmentGapMeritChart";
+import { AlignmentGapExamplesTable } from "@/components/AlignmentGapExamplesTable";
 import { TrackedLink } from "@/components/TrackedLink";
 import { formatRecipeShare } from "@/lib/format";
 import {
@@ -88,7 +89,7 @@ const REGIONS = [
     num: "A",
     head: "Merit aid is larger than the gap",
     count: ALIGNMENT_GAP_MERIT_META.regions.covers,
-    body: `Among the ${ALIGNMENT_GAP_MERIT_META.positiveGap} schools in this view with above-median debt burden, ${ALIGNMENT_GAP_MERIT_META.regions.covers} report average non-need merit aid per first-year student that is larger than their annual alignment gap. Quincy University is an especially visible example. It reports non-need merit aid for every full-time first-year student, averaging ${formatUsd(quincy.avgMeritGrant)}, compared with an average net price of ${formatUsd(quincy.avgNetPrice)} and an alignment gap of ${formatUsd(quincy.gap)} per year. That does not mean Quincy could simply move ${formatUsd(quincy.gap)} from one budget line to another. It does show that the scale of its existing merit discount is large relative to the debt adjustment represented by the gap.`,
+    body: `Among the ${ALIGNMENT_GAP_MERIT_META.positiveGap} schools in this view with above-median debt burden, ${ALIGNMENT_GAP_MERIT_META.regions.covers} (61%) report average non-need merit aid per first-year student that is larger than their annual alignment gap. Quincy University is an especially visible example. It reports non-need merit aid for every full-time first-year student, averaging ${formatUsd(quincy.avgMeritGrant)}, compared with an average net price of ${formatUsd(quincy.avgNetPrice)} and an alignment gap of ${formatUsd(quincy.gap)} per year. That does not mean Quincy could simply move ${formatUsd(quincy.gap)} from one budget line to another. It does show that the scale of its existing merit discount is large relative to the debt adjustment represented by the gap.`,
   },
   {
     num: "B",
@@ -204,21 +205,29 @@ export default function AlignmentGapPage() {
           College affordability data lives in several different places.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          At many colleges, graduating seniors leave with heavy student debt.
+          At the same time, many of those same colleges hand out thousands of
+          dollars in non-need &ldquo;merit&rdquo; scholarships to recruit freshmen
+          who do not have financial need. What if colleges used that merit
+          discount to lower debt for everyone instead?
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
           The College Scorecard tells us about student debt, loan payments,
           earnings, and net price. The Common Data Set tells us how colleges
           use non-need merit aid. IPEDS tells us about institutional finances,
-          including endowment and instructional spending.
-        </p>
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          This page joins those sources to look at them together.
+          including endowment and instructional spending. This page joins those
+          sources to look at them together.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
           The starting point is <strong>debt burden</strong>: the share of
           median earnings that would go toward federal student-loan payments
           each year. We then calculate an <strong>alignment gap</strong> for
-          each school: roughly how much less debt its graduates would need to
-          carry, expressed per year of college, to reach the median debt burden
-          in this group of schools.
+          each school: roughly how much less debt its completers would need to
+          carry, expressed per year of college, to reach the {corpusMedianBurden}{" "}
+          median debt burden in this group of schools.
+        </p>
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
+          The core finding: <strong>at {ALIGNMENT_GAP_MERIT_META.regions.covers} of {ALIGNMENT_GAP_MERIT_META.positiveGap} colleges (61%) with above-median debt burden, the freshman merit aid budget alone is larger than the entire annual alignment gap.</strong>
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
           The gap is not a recommended tuition price or a claim that lowering
@@ -298,59 +307,15 @@ export default function AlignmentGapPage() {
         ))}
       </section>
 
-      <section style={{ marginTop: 36, overflowX: "auto" }}>
-        <div className="meta" style={{ marginBottom: 10 }}>
-          Worked examples · merit aid larger than the gap
-        </div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-          <thead>
-            <tr className="meta" style={{ textAlign: "left", color: "var(--ink-3)" }}>
-              <th style={{ padding: "8px 12px 8px 0" }}>School</th>
-              <th style={{ padding: "8px 12px" }}>Gap/yr</th>
-              <th style={{ padding: "8px 12px" }}>Merit spend / first-year</th>
-              <th style={{ padding: "8px 12px" }}>Merit share</th>
-              <th style={{ padding: "8px 12px" }}>Avg merit grant</th>
-              <th style={{ padding: "8px 12px" }}>Net price</th>
-            </tr>
-          </thead>
-          <tbody>
-            {COVERS_EXAMPLES.map((row) => (
-              <tr key={row.schoolId} style={{ borderTop: "1px solid var(--rule)" }}>
-                <td style={{ padding: "8px 12px 8px 0" }}>{row.schoolName.replace("-Main", "")}</td>
-                <td style={{ padding: "8px 12px" }}>{formatUsd(row.gap)}</td>
-                <td style={{ padding: "8px 12px", fontWeight: 600 }}>{formatUsd(row.meritPerFirstYear)}</td>
-                <td style={{ padding: "8px 12px" }}>{formatRecipeShare(row.meritShare, 0)}</td>
-                <td style={{ padding: "8px 12px" }}>{formatUsd(row.avgMeritGrant)}</td>
-                <td style={{ padding: "8px 12px" }}>{formatUsd(row.avgNetPrice)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+      <AlignmentGapExamplesTable
+        title="Worked examples · merit aid larger than the gap"
+        rows={COVERS_EXAMPLES}
+      />
 
-      <section style={{ marginTop: 28, overflowX: "auto" }}>
-        <div className="meta" style={{ marginBottom: 10 }}>
-          Worked examples · merit aid smaller than the gap
-        </div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-          <thead>
-            <tr className="meta" style={{ textAlign: "left", color: "var(--ink-3)" }}>
-              <th style={{ padding: "8px 12px 8px 0" }}>School</th>
-              <th style={{ padding: "8px 12px" }}>Gap/yr</th>
-              <th style={{ padding: "8px 12px" }}>Merit spend / first-year</th>
-            </tr>
-          </thead>
-          <tbody>
-            {TRAPPED_EXAMPLES.map((row) => (
-              <tr key={row.schoolId} style={{ borderTop: "1px solid var(--rule)" }}>
-                <td style={{ padding: "8px 12px 8px 0" }}>{row.schoolName}</td>
-                <td style={{ padding: "8px 12px" }}>{formatUsd(row.gap)}</td>
-                <td style={{ padding: "8px 12px" }}>{formatUsd(row.meritPerFirstYear)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+      <AlignmentGapExamplesTable
+        title="Worked examples · merit aid smaller than the gap"
+        rows={TRAPPED_EXAMPLES}
+      />
 
       <section style={{ marginTop: 48, maxWidth: 760 }}>
         <h2 className="serif" style={{ fontSize: 28, margin: "0 0 12px", letterSpacing: "-0.015em" }}>
@@ -587,7 +552,7 @@ export default function AlignmentGapPage() {
           Federal student debt has limits as a measure of affordability as
           well. Median debt in this {ALIGNMENT_GAP_META.schoolCount}-school
           sample ranges from {formatUsd(ALIGNMENT_GAP_META.debtMin)} to{" "}
-          {formatUsd(ALIGNMENT_GAP_META.debtMax)}, and           {formatUsd(ALIGNMENT_GAP_META.debtMode)}—the
+          {formatUsd(ALIGNMENT_GAP_META.debtMax)}, and {formatUsd(ALIGNMENT_GAP_META.debtMode)}—the
           federal aggregate borrowing limit for many dependent undergraduates—is
           the most common value in the sample. Families may
           pay college costs with income, savings, parent borrowing, private

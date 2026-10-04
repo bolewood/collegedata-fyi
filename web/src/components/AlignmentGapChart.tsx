@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { ChartHoverTooltip } from "@/components/ChartHoverTooltip";
 import { formatRecipeShare } from "@/lib/format";
 import {
@@ -38,14 +38,14 @@ const LABEL_IDS = new Set([
 ]);
 
 const W = 920;
-const H = 560;
+const H = 580;
 const M = { l: 72, r: 28, t: 36, b: 56 };
 const IW = W - M.l - M.r;
 const IH = H - M.t - M.b;
 const EPS_MIN = 2000;
 const EPS_MAX = 8_000_000;
-const GAP_MIN = -8000;
-const GAP_MAX = 4000;
+const GAP_MIN = -5000;
+const GAP_MAX = 3600;
 
 function logX(eps: number): number {
   const clamped = Math.min(EPS_MAX, Math.max(EPS_MIN, eps));
@@ -56,7 +56,8 @@ function logX(eps: number): number {
 }
 
 function yGap(gap: number): number {
-  const t = (gap - GAP_MIN) / (GAP_MAX - GAP_MIN);
+  const clamped = Math.max(GAP_MIN, Math.min(GAP_MAX, gap));
+  const t = (clamped - GAP_MIN) / (GAP_MAX - GAP_MIN);
   return M.t + (1 - t) * IH;
 }
 
@@ -112,20 +113,28 @@ function nearestPoint(
   x: number,
   y: number,
   maxDist: number,
+  currentId: string | null,
 ): Point | null {
   let best: Point | null = null;
   let bestDist = maxDist;
   for (const pt of pts) {
     const dist = Math.hypot(pt.cx - x, pt.cy - y);
-    if (dist < bestDist) {
+    const effectiveDist = pt.schoolId === currentId ? dist - 4 : dist;
+    if (effectiveDist < bestDist) {
       best = pt;
-      bestDist = dist;
+      bestDist = effectiveDist;
     }
   }
   return best;
 }
 
-export function AlignmentGapChart() {
+export function AlignmentGapChart({
+  selectedSchoolId,
+  onSelectSchool,
+}: {
+  selectedSchoolId?: string | null;
+  onSelectSchool?: (schoolId: string | null) => void;
+} = {}) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [hoverId, setHoverId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -148,7 +157,33 @@ export function AlignmentGapChart() {
           pt.schoolId.includes(match.replace(/\s+/g, "-")),
       ) ?? null
     : null;
-  const hover = searched ?? (hoverId ? pts.find((pt) => pt.schoolId === hoverId) ?? null : null);
+
+  // Sync external selection
+  useEffect(() => {
+    if (selectedSchoolId) {
+      const found = pts.find((pt) => pt.schoolId === selectedSchoolId);
+      if (found && query !== found.schoolName) {
+        setQuery(found.schoolName);
+      }
+    }
+  }, [selectedSchoolId, pts, query]);
+
+  useEffect(() => {
+    const handleSelect = (event: Event) => {
+      const custom = event as CustomEvent<string | null>;
+      const id = custom.detail;
+      setHoverId(id);
+      if (id) {
+        const found = pts.find((pt) => pt.schoolId === id);
+        if (found && query !== found.schoolName) setQuery(found.schoolName);
+      }
+    };
+    window.addEventListener("collegedata:select-school", handleSelect);
+    return () => window.removeEventListener("collegedata:select-school", handleSelect);
+  }, [pts, query]);
+
+  const activeId = selectedSchoolId ?? searched?.schoolId ?? hoverId;
+  const hover = activeId ? pts.find((pt) => pt.schoolId === activeId) ?? null : null;
 
   const medianX = logX(ALIGNMENT_GAP_META.medianEndowmentPerStudent);
   const zeroY = yGap(0);
@@ -163,8 +198,21 @@ export function AlignmentGapChart() {
       loc.x,
       loc.y,
       hitRadiusInSvg(event.currentTarget),
+      hoverId,
     );
     setHoverId(next?.schoolId ?? null);
+  };
+
+  const handleCircleClick = (schoolId: string) => {
+    const nextId = activeId === schoolId ? null : schoolId;
+    if (onSelectSchool) {
+      onSelectSchool(nextId);
+    }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("collegedata:select-school", { detail: nextId }),
+      );
+    }
   };
 
   return (
@@ -209,21 +257,65 @@ export function AlignmentGapChart() {
         </div>
         <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: "var(--ink-3)" }}>
           Find a school
-          <input
-            list="alignment-gap-schools"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Hollins, Stanford…"
-            aria-label="Find a school in the endowment join"
-            style={{
-              border: "1px solid var(--rule-strong)",
-              background: "var(--paper)",
-              color: "var(--ink)",
-              padding: "6px 10px",
-              fontSize: 13,
-              minWidth: 220,
-            }}
-          />
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <input
+              list="alignment-gap-schools"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                const typed = event.target.value.trim().toLowerCase();
+                const found = pts.find(
+                  (pt) =>
+                    pt.schoolName.toLowerCase() === typed ||
+                    pt.schoolId === typed.replace(/\s+/g, "-"),
+                );
+                if (found) {
+                  if (onSelectSchool) onSelectSchool(found.schoolId);
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(
+                      new CustomEvent("collegedata:select-school", { detail: found.schoolId }),
+                    );
+                  }
+                }
+              }}
+              placeholder="Hollins, Stanford…"
+              aria-label="Find a school in the endowment join"
+              style={{
+                border: "1px solid var(--rule-strong)",
+                background: "var(--paper)",
+                color: "var(--ink)",
+                padding: "6px 10px",
+                fontSize: 13,
+                minWidth: 220,
+              }}
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  setHoverId(null);
+                  if (onSelectSchool) onSelectSchool(null);
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(
+                      new CustomEvent("collegedata:select-school", { detail: null }),
+                    );
+                  }
+                }}
+                style={{
+                  border: "1px solid var(--rule)",
+                  background: "transparent",
+                  color: "var(--ink-3)",
+                  padding: "6px 8px",
+                  fontSize: 12,
+                  cursor: "pointer",
+                }}
+                title="Clear selection"
+              >
+                ✕
+              </button>
+            )}
+          </div>
           <datalist id="alignment-gap-schools">
             {ALIGNMENT_GAP_SCHOOLS.map((row) => (
               <option key={row.schoolId} value={row.schoolName} />
@@ -233,194 +325,257 @@ export function AlignmentGapChart() {
       </div>
 
       <div ref={wrapRef} style={{ position: "relative" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ display: "block", margin: "0 auto", maxWidth: "100%", height: "auto" }}
-        role="img"
-        aria-label="Scatter plot of alignment gap against endowment per undergraduate"
-        onMouseMove={pickFromPointer}
-        onPointerMove={pickFromPointer}
-        onMouseLeave={() => setHoverId(null)}
-        onPointerLeave={() => setHoverId(null)}
-      >
-        <line x1={M.l} x2={W - M.r} y1={zeroY} y2={zeroY} stroke="var(--brick)" strokeWidth={1.25} />
-        <line x1={medianX} x2={medianX} y1={M.t} y2={H - M.b} stroke="var(--rule-strong)" />
-        {[-6000, -3000, 0, 3000].map((tick) => (
-          <g key={`y${tick}`}>
-            <text
-              x={M.l - 10}
-              y={yGap(tick) + 4}
-              textAnchor="end"
-              fontFamily="var(--mono)"
-              fontSize="11"
-              fill="var(--chart-axis)"
-            >
-              {tick === 0 ? "$0" : formatGapUsd(tick)}
-            </text>
-          </g>
-        ))}
-        {[2000, 10_000, 50_000, 250_000, 1_000_000, 5_000_000].map((tick) => (
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ display: "block", margin: "0 auto", maxWidth: "100%", height: "auto" }}
+          role="img"
+          aria-label="Scatter plot of alignment gap against endowment per undergraduate"
+          onMouseMove={pickFromPointer}
+          onPointerMove={pickFromPointer}
+          onMouseLeave={() => setHoverId(null)}
+          onPointerLeave={() => setHoverId(null)}
+        >
+          {/* Subtle Quadrant Background Tints */}
+          <rect x={M.l} y={M.t} width={medianX - M.l} height={zeroY - M.t} fill="var(--paper-2)" fillOpacity={0.25} />
+          <rect x={medianX} y={zeroY} width={W - M.r - medianX} height={H - M.b - zeroY} fill="var(--paper-2)" fillOpacity={0.25} />
+
+          {/* Dividing Axes */}
+          <line x1={M.l} x2={W - M.r} y1={zeroY} y2={zeroY} stroke="var(--brick)" strokeWidth={1.5} />
+          <line x1={medianX} x2={medianX} y1={M.t} y2={H - M.b} stroke="var(--rule-strong)" strokeWidth={1.25} />
+
+          {/* Y Ticks */}
+          {[-4000, -2000, 0, 2000].map((tick) => (
+            <g key={`y${tick}`}>
+              <line
+                x1={M.l - 4}
+                x2={M.l}
+                y1={yGap(tick)}
+                y2={yGap(tick)}
+                stroke="var(--chart-axis)"
+              />
+              <text
+                x={M.l - 10}
+                y={yGap(tick) + 4}
+                textAnchor="end"
+                fontFamily="var(--mono)"
+                fontSize="11"
+                fill="var(--chart-axis)"
+              >
+                {tick === 0 ? "$0" : formatGapUsd(tick)}
+              </text>
+            </g>
+          ))}
+
+          {/* X Ticks */}
+          {[2000, 10_000, 50_000, 250_000, 1_000_000, 5_000_000].map((tick) => (
+            <g key={`x${tick}`}>
+              <line
+                x1={logX(tick)}
+                x2={logX(tick)}
+                y1={H - M.b}
+                y2={H - M.b + 5}
+                stroke="var(--chart-axis)"
+              />
+              <text
+                x={logX(tick)}
+                y={H - M.b + 20}
+                textAnchor="middle"
+                fontFamily="var(--mono)"
+                fontSize="11"
+                fill="var(--chart-axis)"
+              >
+                {formatEndowmentPerStudent(tick)}
+              </text>
+            </g>
+          ))}
+
+          {/* Quadrant Headers */}
+          <text x={M.l + 8} y={M.t + 18} fontFamily="var(--mono)" fontSize="10" fill="var(--ink-3)" letterSpacing="0.06em">
+            II · HIGHER BURDEN, LOWER ENDOWMENT · {ALIGNMENT_GAP_META.quadrants.constrained}
+          </text>
           <text
-            key={`x${tick}`}
-            x={logX(tick)}
-            y={H - M.b + 20}
+            x={W - M.r - 8}
+            y={M.t + 18}
+            textAnchor="end"
+            fontFamily="var(--mono)"
+            fontSize="10"
+            fill="var(--ink-3)"
+            letterSpacing="0.06em"
+          >
+            I · HIGHER BURDEN, HIGHER ENDOWMENT · {ALIGNMENT_GAP_META.quadrants.capacity}
+          </text>
+          <text x={M.l + 8} y={H - M.b - 8} fontFamily="var(--mono)" fontSize="10" fill="var(--ink-3)" letterSpacing="0.06em">
+            IV · LOWER BURDEN, LOWER ENDOWMENT · {ALIGNMENT_GAP_META.quadrants.earnings}
+          </text>
+          <text
+            x={W - M.r - 8}
+            y={H - M.b - 8}
+            textAnchor="end"
+            fontFamily="var(--mono)"
+            fontSize="10"
+            fill="var(--ink-3)"
+            letterSpacing="0.06em"
+          >
+            III · LOWER BURDEN, HIGHER ENDOWMENT · {ALIGNMENT_GAP_META.quadrants.absorbs}
+          </text>
+          <text
+            x={W - M.r}
+            y={zeroY - 6}
+            textAnchor="end"
+            fontFamily="var(--mono)"
+            fontSize="10"
+            fill="var(--brick)"
+          >
+            median burden {formatRecipeShare(ALIGNMENT_GAP_META.medianBurden, 2)}
+          </text>
+
+          {/* Dots */}
+          {pts.map((pt) => {
+            const active = hover?.schoolId === pt.schoolId;
+            const mark = shareMark(pt.instructionShare);
+            const isBard = pt.schoolId === "bard-college";
+            const isGrinnell = pt.schoolId === "grinnell-college";
+
+            return (
+              <g
+                key={pt.schoolId}
+                style={{ cursor: "pointer" }}
+                onClick={() => handleCircleClick(pt.schoolId)}
+              >
+                {/* Hit target */}
+                <circle
+                  data-school-id={pt.schoolId}
+                  cx={pt.cx}
+                  cy={pt.cy}
+                  r={12}
+                  fill="transparent"
+                  onMouseEnter={() => setHoverId(pt.schoolId)}
+                  onPointerEnter={() => setHoverId(pt.schoolId)}
+                />
+                {/* Halo when active or featured case study */}
+                {(active || isBard || isGrinnell) && (
+                  <circle
+                    cx={pt.cx}
+                    cy={pt.cy}
+                    r={active ? 9 : 7.5}
+                    fill="none"
+                    stroke={active ? "var(--ink)" : "var(--brick)"}
+                    strokeWidth={active ? 2 : 1.5}
+                    strokeDasharray={isBard || isGrinnell ? "2 2" : undefined}
+                    pointerEvents="none"
+                  />
+                )}
+                {/* Core dot */}
+                <circle
+                  cx={pt.cx}
+                  cy={pt.cy}
+                  r={active ? 6 : 4}
+                  {...bandCircleStyle(mark, active)}
+                  pointerEvents="none"
+                />
+              </g>
+            );
+          })}
+
+          {/* Labels */}
+          {pts
+            .filter((pt) => LABEL_IDS.has(pt.schoolId))
+            .map((pt) => (
+              <text
+                key={`label-${pt.schoolId}`}
+                x={pt.cx + 8}
+                y={pt.cy - 6}
+                fontFamily="var(--sans)"
+                fontSize="11"
+                fill="var(--ink-2)"
+                pointerEvents="none"
+                style={{ textShadow: "0 0 3px var(--paper), 0 0 5px var(--paper)" }}
+              >
+                {shortName(pt.schoolName)}
+              </text>
+            ))}
+
+          {/* Axis Labels */}
+          <text
+            transform={`translate(18 ${M.t + IH / 2}) rotate(-90)`}
             textAnchor="middle"
             fontFamily="var(--mono)"
-            fontSize="11"
+            fontSize="10"
             fill="var(--chart-axis)"
+            letterSpacing="0.08em"
           >
-            {formatEndowmentPerStudent(tick)}
+            ALIGNMENT GAP · $ PER YEAR
           </text>
-        ))}
-        <text x={M.l} y={22} fontFamily="var(--mono)" fontSize="10" fill="var(--ink-3)" letterSpacing="0.06em">
-          II · HIGHER BURDEN, LOWER ENDOWMENT · {ALIGNMENT_GAP_META.quadrants.constrained}
-        </text>
-        <text
-          x={W - M.r}
-          y={22}
-          textAnchor="end"
-          fontFamily="var(--mono)"
-          fontSize="10"
-          fill="var(--ink-3)"
-          letterSpacing="0.06em"
-        >
-          I · HIGHER BURDEN, HIGHER ENDOWMENT · {ALIGNMENT_GAP_META.quadrants.capacity}
-        </text>
-        <text x={M.l} y={H - 8} fontFamily="var(--mono)" fontSize="10" fill="var(--ink-3)" letterSpacing="0.06em">
-          IV · LOWER BURDEN, LOWER ENDOWMENT · {ALIGNMENT_GAP_META.quadrants.earnings}
-        </text>
-        <text
-          x={W - M.r}
-          y={H - 8}
-          textAnchor="end"
-          fontFamily="var(--mono)"
-          fontSize="10"
-          fill="var(--ink-3)"
-          letterSpacing="0.06em"
-        >
-          III · LOWER BURDEN, HIGHER ENDOWMENT · {ALIGNMENT_GAP_META.quadrants.absorbs}
-        </text>
-        <text
-          x={W - M.r}
-          y={zeroY - 6}
-          textAnchor="end"
-          fontFamily="var(--mono)"
-          fontSize="10"
-          fill="var(--brick)"
-        >
-          median burden {formatRecipeShare(ALIGNMENT_GAP_META.medianBurden, 2)}
-        </text>
-        {pts.map((pt) => {
-          const active = hover?.schoolId === pt.schoolId;
-          const mark = shareMark(pt.instructionShare);
-          return (
-            <g key={pt.schoolId}>
-              <circle
-                data-school-id={pt.schoolId}
-                cx={pt.cx}
-                cy={pt.cy}
-                r={10}
-                fill="transparent"
-                onMouseEnter={() => setHoverId(pt.schoolId)}
-                onPointerEnter={() => setHoverId(pt.schoolId)}
-              />
-              <circle
-                cx={pt.cx}
-                cy={pt.cy}
-                r={active ? 6.5 : 4}
-                {...bandCircleStyle(mark, active)}
-                pointerEvents="none"
-              />
-            </g>
-          );
-        })}
-        {pts
-          .filter((pt) => LABEL_IDS.has(pt.schoolId))
-          .map((pt) => (
-            <text
-              key={`label-${pt.schoolId}`}
-              x={pt.cx + 8}
-              y={pt.cy - 6}
-              fontFamily="var(--sans)"
-              fontSize="11"
-              fill="var(--ink-2)"
-              pointerEvents="none"
-            >
-              {shortName(pt.schoolName)}
-            </text>
-          ))}
-        <text
-          transform={`translate(18 ${M.t + IH / 2}) rotate(-90)`}
-          textAnchor="middle"
-          fontFamily="var(--mono)"
-          fontSize="10"
-          fill="var(--chart-axis)"
-          letterSpacing="0.08em"
-        >
-          ALIGNMENT GAP · $ PER YEAR
-        </text>
-        <text
-          x={M.l + IW / 2}
-          y={H - 2}
-          textAnchor="middle"
-          fontFamily="var(--mono)"
-          fontSize="10"
-          fill="var(--chart-axis)"
-          letterSpacing="0.08em"
-        >
-          ENDOWMENT PER UNDERGRADUATE · LOG SCALE
-        </text>
-      </svg>
+          <text
+            x={M.l + IW / 2}
+            y={H - 8}
+            textAnchor="middle"
+            fontFamily="var(--mono)"
+            fontSize="10"
+            fill="var(--chart-axis)"
+            letterSpacing="0.08em"
+          >
+            ENDOWMENT PER UNDERGRADUATE · LOG SCALE
+          </text>
+        </svg>
 
-      {hover && (
-        <ChartHoverTooltip
-          wrapRef={wrapRef}
-          viewW={W}
-          viewH={H}
-          cx={hover.cx}
-          cy={hover.cy}
-          placementKey={hover.schoolId}
-          testId="alignment-gap-tooltip"
-        >
-          <div className="serif" style={{ fontSize: 16 }}>
-            {hover.schoolName}
-          </div>
-          <div style={{ color: "var(--paper-3)", marginTop: 2 }}>
-            CDS {hover.cdsYear} ·{" "}
-            {QUADRANT_LABEL[
-              quadrantFor(
-                hover.gap,
-                hover.endowmentPerStudent,
-                ALIGNMENT_GAP_META.medianEndowmentPerStudent,
-              )
-            ]}
-          </div>
-          <div style={{ marginTop: 6 }}>Gap {formatGapUsd(hover.gap)}/yr</div>
-          <div>Endowment {formatEndowmentPerStudent(hover.endowmentPerStudent)}/student</div>
-          <div>Instruction {formatInstructionShare(hover.instructionShare)}</div>
-          <div>Burden {formatRecipeShare(hover.burden, 1)}</div>
-        </ChartHoverTooltip>
-      )}
+        {hover && (
+          <ChartHoverTooltip
+            wrapRef={wrapRef}
+            viewW={W}
+            viewH={H}
+            cx={hover.cx}
+            cy={hover.cy}
+            placementKey={hover.schoolId}
+            testId="alignment-gap-tooltip"
+          >
+            <div className="serif" style={{ fontSize: 16 }}>
+              {hover.schoolName}
+            </div>
+            <div style={{ color: "var(--paper-3)", marginTop: 2 }}>
+              CDS {hover.cdsYear} ·{" "}
+              {QUADRANT_LABEL[
+                quadrantFor(
+                  hover.gap,
+                  hover.endowmentPerStudent,
+                  ALIGNMENT_GAP_META.medianEndowmentPerStudent,
+                )
+              ]}
+            </div>
+            <div style={{ marginTop: 6, fontWeight: 600 }}>Gap {formatGapUsd(hover.gap)}/yr</div>
+            <div>Endowment {formatEndowmentPerStudent(hover.endowmentPerStudent)}/student</div>
+            <div>Instruction {formatInstructionShare(hover.instructionShare)}</div>
+            <div>Burden {formatRecipeShare(hover.burden, 1)}</div>
+          </ChartHoverTooltip>
+        )}
       </div>
 
+      {/* Legend */}
       <div
         style={{
           display: "flex",
           flexWrap: "wrap",
           gap: 16,
-          marginTop: 10,
+          marginTop: 12,
           fontSize: 11,
           color: "var(--ink-3)",
           fontFamily: "var(--mono)",
           letterSpacing: "0.04em",
+          alignItems: "center",
         }}
       >
         <span>INSTRUCTION / NET PRICE</span>
-        <span style={{ color: "var(--ochre)" }}>■ under 55%</span>
-        <span style={{ color: "var(--forest)" }}>■ 55–90%</span>
-        <span style={{ color: "var(--ink)" }}>○ 90% and over</span>
+        <span style={{ color: "var(--ochre)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+          ■ under 55%
+        </span>
+        <span style={{ color: "var(--forest)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+          ■ 55–90%
+        </span>
+        <span style={{ color: "var(--ink)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+          ○ 90% and over
+        </span>
         <span style={{ color: "var(--brick)" }}>— median burden</span>
       </div>
     </div>
