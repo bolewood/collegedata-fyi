@@ -472,7 +472,7 @@ Data infrastructure runs on **Supabase** (single vendor per ADR 0001). The front
 | Component | Platform | Notes |
 |---|---|---|
 | Schema migrations | Supabase | `supabase/migrations/` + `supabase db push` |
-| Discovery edge functions | Supabase | `supabase/functions/` + `supabase functions deploy` |
+| Discovery edge functions | Supabase | `supabase/functions/`; deployed automatically on merge to `main` by `.github/workflows/deploy-edge-functions.yml` (tests, type-check, then deploys every function) |
 | Postgres tables, views, RLS | Supabase | Managed by migrations |
 | Storage bucket | Supabase | Created by initial migration via `storage.buckets` insert |
 | Cron schedule | Supabase | `pg_cron` + `net.http_post` |

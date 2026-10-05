@@ -80,6 +80,15 @@ which would always fail in a clean CI database. The actual drift
 between prod and `main` isn't detectable from CI without prod
 credentials anyway; it's a policy safeguard.
 
+## Edge Functions
+
+The `Deploy Edge Functions` workflow deploys every function in
+`supabase/functions/` to production when function code or
+`supabase/config.toml` changes on `main`. Don't run
+`supabase functions deploy` from a feature branch or worktree: the next merge
+overwrites it, and an unmerged deploy leaves production ahead of `main`.
+To redeploy without a code change, dispatch the workflow.
+
 ## IPEDS federal baseline operations
 
 PRD 021 adds official NCES/IPEDS baseline facts. CDS remains the

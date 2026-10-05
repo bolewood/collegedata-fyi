@@ -1,0 +1,80 @@
+name: Deploy Edge Functions
+
+# Deploys supabase/functions to production whenever function code lands on
+# main, so the deployed archiver never lags the merged code. Deploys every
+# function each time: shared modules make per-function change detection
+# fragile, and a full deploy also heals drift from earlier manual deploys.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/**"
+      - "supabase/config.toml"
+      - ".github/workflows/deploy-edge-functions.yml"
+  workflow_dispatch:
+    inputs:
+      functions:
+        description: "Space-separated function names to deploy. Leave empty to deploy all."
+        required: false
+        default: ""
+
+concurrency:
+  group: deploy-edge-functions
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  SUPABASE_PROJECT_REF: isduwmygvmdozhpvzaix
+
+jobs:
+  deploy:
+    name: Test and deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Run Deno tests
+        run: deno test --allow-env --allow-read supabase/functions/_shared/*.test.ts supabase/functions/archive-enqueue/*.test.ts supabase/functions/archive-process/*.test.ts supabase/functions/browser-search/*.test.ts supabase/functions/directory-enqueue/*.test.ts
+
+      - name: Type-check function entrypoints
+        run: |
+          for entry in supabase/functions/*/index.ts; do
+            dir=$(dirname "$entry")
+            (cd "$dir" && deno check --no-lock index.ts)
+          done
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.109.1
+
+      - name: Deploy
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          FUNCTIONS: ${{ inputs.functions }}
+        run: |
+          if [[ -z "$SUPABASE_ACCESS_TOKEN" ]]; then
+            echo "::error::SUPABASE_ACCESS_TOKEN secret is not set"
+            exit 1
+          fi
+          # Unquoted on purpose: an empty list deploys every function.
+          # shellcheck disable=SC2086
+          supabase functions deploy $FUNCTIONS --project-ref "$SUPABASE_PROJECT_REF" --use-api
+
+      - name: Report deployed versions
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          {
+            echo "### Edge Functions deployed from ${GITHUB_SHA::7}"
+            echo '```'
+            supabase functions list --project-ref "$SUPABASE_PROJECT_REF"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
