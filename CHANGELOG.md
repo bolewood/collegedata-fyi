@@ -6,6 +6,17 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.18.1] - 2026-10-05
+
+### Fixed
+
+- The archiver no longer re-extracts multi-PDF (section package) CDS
+  documents every night. A package now counts as unchanged when the school
+  serves the same section files in the same order, even if the merged
+  bundle's bytes differ. Previously, a stale `archive-process` deploy wrote
+  build timestamps into every bundle, so documents like Samford 2024-25
+  were refreshed, stored again, and re-queued for extraction on each run.
+
 ## [0.6.18.0] - 2026-10-04
 
 ### Changed
