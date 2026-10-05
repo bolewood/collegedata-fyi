@@ -31,6 +31,7 @@ export interface CdsArtifactRow {
   schema_version: string | null;
   storage_path: string;
   sha256: string | null;
+  notes?: Record<string, unknown> | null;
   created_at: string;
 }
 

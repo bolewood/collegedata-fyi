@@ -595,6 +595,24 @@ function packageSourceNotes(
   };
 }
 
+// A section package is unchanged when the school serves the same part bytes
+// in the same order. The merged bundle's bytes are not a stable identity:
+// they depend on the PDF library version and its metadata defaults.
+export function sectionPartsMatchSourceNotes(
+  notes: Record<string, unknown> | null | undefined,
+  parts: Pick<DownloadedSectionPart, "sha256">[],
+): boolean {
+  const pkg = notes?.source_package as { parts?: unknown } | undefined;
+  if (!Array.isArray(pkg?.parts)) return false;
+  const prior = (pkg.parts as { sort_order?: unknown; sha256?: unknown }[])
+    .slice()
+    .sort((a, b) => Number(a?.sort_order) - Number(b?.sort_order));
+  if (prior.length === 0 || prior.length !== parts.length) return false;
+  return prior.every((p, i) =>
+    typeof p?.sha256 === "string" && p.sha256 === parts[i].sha256
+  );
+}
+
 async function insertSourcePartArtifacts(
   supabase: SupabaseClient,
   documentId: string,
@@ -697,7 +715,6 @@ async function archiveSectionPackage(
     bundleSha256,
     "pdf",
   );
-  await ensureObjectUploaded(supabase, bundleStoragePath, bundleBytes, "pdf");
 
   const sourceUrl = parts[0]?.final_url ?? pkg.url;
   const sourceNotes = packageSourceNotes(pkg, parts, bundleSha256);
@@ -708,6 +725,7 @@ async function archiveSectionPackage(
   );
 
   if (!existing) {
+    await ensureObjectUploaded(supabase, bundleStoragePath, bundleBytes, "pdf");
     const docId = await insertFreshDocument(supabase, {
       school_id: school.school_id,
       school_name: school.school_name,
@@ -763,6 +781,23 @@ async function archiveSectionPackage(
     };
   }
 
+  if (
+    latestArtifact?.sha256 &&
+    sectionPartsMatchSourceNotes(latestArtifact.notes, parts) &&
+    await objectExists(supabase, latestArtifact.storage_path)
+  ) {
+    await bumpVerified(supabase, existing.id, sourceUrl);
+    return {
+      action: "unchanged_verified",
+      document_id: existing.id,
+      cds_year: pkg.cds_year,
+      source_sha256: latestArtifact.sha256,
+      resolved_url: sourceUrl,
+      storage_path: latestArtifact.storage_path,
+    };
+  }
+
+  await ensureObjectUploaded(supabase, bundleStoragePath, bundleBytes, "pdf");
   await refreshDocumentWithNewSha(supabase, {
     document_id: existing.id,
     source_url: sourceUrl,
