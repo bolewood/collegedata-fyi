@@ -381,10 +381,15 @@ touching the database or Storage.
    supabase db push
    ```
 
-2. Deploy all five edge functions:
+2. Deploy the edge functions. After setup, the `Deploy Edge Functions`
+   workflow (`.github/workflows/deploy-edge-functions.yml`) redeploys every
+   function whenever `supabase/functions/**` or `supabase/config.toml`
+   changes on `main`; it needs the `SUPABASE_ACCESS_TOKEN` repo secret. Use
+   its manual dispatch to redeploy without a code change. Never deploy from
+   an unmerged branch: the next merge to `main` overwrites it.
 
    ```bash
-   supabase functions deploy discover archive-process archive-enqueue directory-enqueue refresh-coverage
+   supabase functions deploy --use-api
    ```
 
    `directory-enqueue` is operator-triggered only — no pg_cron entry.

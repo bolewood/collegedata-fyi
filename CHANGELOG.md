@@ -6,6 +6,16 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.18.2] - 2026-10-05
+
+### Added
+
+- A `Deploy Edge Functions` GitHub workflow deploys every Supabase Edge
+  Function after its tests and type-check pass, whenever function code lands
+  on `main`. It can also be run by hand. Deployed functions had drifted up
+  to two months behind `main`, which is how the section-package churn fixed
+  in 0.6.18.1 went unnoticed.
+
 ## [0.6.18.1] - 2026-10-05
 
 ### Fixed
