@@ -48,7 +48,7 @@ jobs:
         run: |
           for entry in supabase/functions/*/index.ts; do
             dir=$(dirname "$entry")
-            (cd "$dir" && deno check index.ts)
+            (cd "$dir" && deno check --no-lock index.ts)
           done
 
       - uses: supabase/setup-cli@v1
