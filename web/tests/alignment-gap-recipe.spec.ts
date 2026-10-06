@@ -10,7 +10,7 @@ test("alignment-gap merit panel names the school on every dot", async ({ page })
     /college affordability data lives in several different places/i,
   );
   await expect(page.getByText(/compare the debt gap with merit aid/i)).toBeVisible();
-  await expect(page.getByText(/merit spend = annual gap/i)).toBeVisible();
+  await expect(page.getByText(/merit spend = annual gap/i).first()).toBeVisible();
 
   const meritChart = page.getByTestId("alignment-gap-merit-chart");
   const unlabeled = meritChart.locator("circle[data-school-id]:not([data-school-id='quincy-university'])").first();
