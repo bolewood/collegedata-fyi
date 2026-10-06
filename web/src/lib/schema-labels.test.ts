@@ -37,6 +37,26 @@ describe("schema-aware field labels", () => {
     expect(getFieldValueType("C.2107", field, "2024-25")).toBe("Number");
   });
 
+  it("distinguishes C1 residency rows from the C1 totals", () => {
+    const field = { value: "911" };
+
+    expect(getFieldDisplayLabel("C.116", field, "2025-26")).toBe(
+      "Total first-time, first-year students who applied",
+    );
+    expect(getFieldDisplayLabel("C.119", field, "2025-26")).toBe(
+      "In-state first-time, first-year who applied",
+    );
+    expect(getFieldDisplayLabel("C.127", field, "2025-26")).toBe(
+      "Nonresident first-time, first-year who enrolled",
+    );
+    expect(getFieldDisplayLabel("C.120", field, "2024-25")).toBe(
+      "In-state first-time, first-year who applied",
+    );
+    expect(getFieldDisplayLabel("C.131", field, "2024-25")).toBe(
+      "Unknown-residency first-time, first-year who enrolled",
+    );
+  });
+
   it("resolves 2024-25 subsections from the 2024-25 schema map", () => {
     expect(getFieldSubsectionName("A.008", { value: "Durham" }, "2024-25")).toBe(
       "Respondent Information",
