@@ -6,6 +6,21 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.18.3] - 2026-10-06
+
+### Fixed
+
+- Admissions headlines are corrected for 26 spreadsheet-sourced CDS
+  documents, including Wabash College 2025-26 (issue #159). Their stored
+  extractions predated the 0.2.3 XLSX extractor fix and still used the
+  in-state row as the total. Wabash showed 911 applicants instead of 2,496,
+  and Vanderbilt showed 2,885 instead of 48,196. The documents were
+  re-extracted and their browser rows refreshed.
+- The year page's field list now labels the C1 residency rows (in-state,
+  out-of-state, nonresident, unknown) instead of repeating "Total
+  first-time, first-year who applied" for each one, which made the in-state
+  count read as a second total.
+
 ## [0.6.18.2] - 2026-10-05
 
 ### Added
