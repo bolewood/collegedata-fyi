@@ -1,0 +1,78 @@
+name: Ops Discord notify
+
+# Routes operational events to the Bolewood Discord server.
+# Secrets: DISCORD_ALERTS_WEBHOOK_URL, DISCORD_DEPLOYS_WEBHOOK_URL.
+# Missing secrets skip the post and do not fail the job. See docs/ops-discord.md.
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+      - Deploy Edge Functions
+      - IPEDS release probe
+      - Ops finder probe
+      - API usage ingest
+      - Ops extraction worker
+      - Ops archive seed catchup
+      - Ops headless archive
+    types:
+      - completed
+  deployment_status:
+  schedule:
+    # Hourly read of the public pipeline board plus API-usage cron freshness.
+    # GitHub cron can run late; the script posts only on first miss / recovery.
+    - cron: "13 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ops-discord-notify-${{ github.event_name }}-${{ github.event.workflow_run.id || github.event.deployment.id || github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: read
+  deployments: read
+
+jobs:
+  notify:
+    name: Route Discord notifications
+    if: >
+      github.event_name != 'deployment_status'
+      || github.event.deployment.production_environment == true
+      || github.event.deployment_status.environment == 'Production'
+      || github.event.deployment.environment == 'Production'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Restore notify state
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        uses: actions/cache@v4
+        with:
+          path: .discord-notify-state.json
+          key: discord-notify-state-${{ github.run_id }}
+          restore-keys: |
+            discord-notify-state-
+
+      - name: Ensure notify state file
+        run: |
+          if [[ ! -f .discord-notify-state.json ]]; then
+            printf '{"stations":{}}\n' > .discord-notify-state.json
+          fi
+
+      - name: Notify Discord
+        env:
+          DISCORD_ALERTS_WEBHOOK_URL: ${{ secrets.DISCORD_ALERTS_WEBHOOK_URL }}
+          DISCORD_DEPLOYS_WEBHOOK_URL: ${{ secrets.DISCORD_DEPLOYS_WEBHOOK_URL }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python tools/ops/notify_discord.py \
+            --event-name "${{ github.event_name }}" \
+            --event-path "${{ github.event_path }}" \
+            --repo "${{ github.repository }}" \
+            --state-path .discord-notify-state.json
