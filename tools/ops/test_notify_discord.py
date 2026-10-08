@@ -251,6 +251,8 @@ class NotifyDiscordTests(unittest.TestCase):
 
     def test_pipeline_observation_baselines_without_spamming(self) -> None:
         snapshot = {
+            "as_of": NOW.isoformat().replace("+00:00", "Z"),
+            "activity_load_error": False,
             "strip": {"lamp": "down"},
             "stations": [
                 {
@@ -267,8 +269,100 @@ class NotifyDiscordTests(unittest.TestCase):
         self.assertEqual(nd.pipeline_observation_messages(snapshot, state, NOW), [])
         self.assertEqual(state["stations"]["archive_process"], "down")
 
+    def test_stale_seed_does_not_baseline_or_alert_stations(self) -> None:
+        snapshot = {
+            "as_of": "2026-10-06T16:24:30.330Z",
+            "activity_load_error": True,
+            "strip": {"lamp": "down", "text": "10 stations overdue · Finder no heartbeat"},
+            "stations": [
+                {
+                    "station_id": "archive_process",
+                    "label": "Process",
+                    "lamp": "down",
+                    "last_scheduled_status": "never",
+                    "last_scheduled_finished_at": None,
+                }
+            ],
+        }
+        state: dict = {"stations": {}}
+        self.assertEqual(nd.pipeline_observation_messages(snapshot, state, NOW), [])
+        self.assertNotIn("archive_process", state["stations"])
+        self.assertEqual(state["board_unhealthy_streak"], 1)
+        self.assertNotEqual(state.get("board"), "down")
+
+    def test_board_health_alerts_on_second_unhealthy_poll_and_recovers(self) -> None:
+        stale = {
+            "as_of": "2026-10-06T16:24:30.330Z",
+            "activity_load_error": True,
+            "stations": [],
+        }
+        state: dict = {"stations": {}}
+        self.assertEqual(nd.pipeline_observation_messages(stale, state, NOW), [])
+        second = nd.pipeline_observation_messages(stale, state, NOW)
+        self.assertEqual(len(second), 1)
+        self.assertEqual(second[0][1]["title"], "Pipeline observation board is stale")
+        self.assertEqual(second[0][1]["color"], nd.COLOR_FAILURE)
+        self.assertEqual(state["board"], "down")
+        self.assertEqual(nd.pipeline_observation_messages(stale, state, NOW), [])
+        fresh = {
+            "as_of": NOW.isoformat().replace("+00:00", "Z"),
+            "activity_load_error": False,
+            "stations": [],
+        }
+        recovered = nd.pipeline_observation_messages(fresh, state, NOW)
+        self.assertEqual(recovered[0][1]["title"], "Pipeline observation board recovered")
+        self.assertEqual(state["board"], "ok")
+        self.assertEqual(state["board_unhealthy_streak"], 0)
+
+    def test_retry_then_fresh_does_not_alert(self) -> None:
+        stale = {
+            "as_of": "2026-10-06T16:24:30.330Z",
+            "activity_load_error": True,
+            "stations": [
+                {
+                    "station_id": "archive_process",
+                    "label": "Process",
+                    "lamp": "down",
+                    "last_scheduled_status": "never",
+                }
+            ],
+        }
+        fresh = {
+            "as_of": NOW.isoformat().replace("+00:00", "Z"),
+            "activity_load_error": False,
+            "stations": [
+                {
+                    "station_id": "archive_process",
+                    "label": "Process",
+                    "lamp": "ok",
+                    "last_scheduled_status": "ok",
+                    "last_scheduled_finished_at": "2026-10-08T15:50:00Z",
+                }
+            ],
+        }
+        fetches = [stale, fresh]
+        slept: list[float] = []
+
+        def fetch(_url: str) -> dict:
+            return fetches.pop(0)
+
+        snapshot = nd.load_pipeline_snapshot(
+            nd.PIPELINE_JSON_URL,
+            now=NOW,
+            fetch_snapshot=fetch,
+            sleeper=slept.append,
+        )
+        self.assertEqual(slept, [nd.BOARD_RETRY_SLEEP_SEC])
+        self.assertEqual(snapshot["as_of"], fresh["as_of"])
+        state: dict = {"stations": {}}
+        self.assertEqual(nd.pipeline_observation_messages(snapshot, state, NOW), [])
+        self.assertEqual(state["stations"]["archive_process"], "ok")
+        self.assertEqual(state.get("board_unhealthy_streak", 0), 0)
+
     def test_pipeline_observation_posts_first_down_and_skips_repeat(self) -> None:
         snapshot = {
+            "as_of": NOW.isoformat().replace("+00:00", "Z"),
+            "activity_load_error": False,
             "strip": {"lamp": "down"},
             "stations": [
                 {

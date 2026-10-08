@@ -12,6 +12,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
@@ -60,6 +61,18 @@ STATION_SLA: dict[str, tuple[str, int]] = {
 API_USAGE_WORKFLOW = "API usage ingest"
 API_USAGE_MAX_AGE_HOURS = 8
 PRODUCTION_ENV_NAMES = frozenset({"production", "prod"})
+# Longer than hourly poll + Vercel SWR (60s + 300s). Shorter than a
+# build-time seed that sat in cache for days.
+BOARD_STALE_SECONDS = 2 * 3600
+BOARD_RETRY_SLEEP_SEC = 12
+BOARD_UNHEALTHY_STREAK_TO_ALERT = 2
+FETCH_FAILED_SNAPSHOT: dict[str, Any] = {
+    "load_error": True,
+    "activity_load_error": True,
+    "as_of": None,
+    "stations": [],
+    "strip": {"lamp": "down"},
+}
 
 
 class DiscordPostError(RuntimeError):
@@ -153,10 +166,21 @@ def load_state(path: Path) -> dict[str, Any]:
     if not isinstance(stations, dict):
         stations = {}
     out: dict[str, Any] = {
-        "stations": {str(key): str(value) for key, value in stations.items()},
+        "stations": {
+            str(key): str(value)
+            for key, value in stations.items()
+            if not str(key).startswith("_")
+        },
     }
     if "api_usage_ingest" in data and data.get("api_usage_ingest"):
         out["api_usage_ingest"] = str(data["api_usage_ingest"])
+    if "board" in data and data.get("board"):
+        out["board"] = str(data["board"])
+    if "board_unhealthy_streak" in data:
+        try:
+            out["board_unhealthy_streak"] = int(data["board_unhealthy_streak"])
+        except (TypeError, ValueError):
+            out["board_unhealthy_streak"] = 0
     return out
 
 
@@ -509,33 +533,97 @@ def station_alert_fields(station: dict[str, Any], now: datetime) -> list[tuple[s
     return fields
 
 
+def as_of_is_fresh(snapshot: dict[str, Any], now: datetime) -> bool:
+    as_of = parse_time(str(snapshot.get("as_of") or "") or None)
+    if as_of is None:
+        return False
+    return (now - as_of).total_seconds() <= BOARD_STALE_SECONDS
+
+
+def board_unhealthy_reason(snapshot: dict[str, Any], now: datetime) -> str | None:
+    if snapshot.get("load_error"):
+        return "fetch failed"
+    if snapshot.get("activity_load_error"):
+        return "activity_load_error"
+    as_of = parse_time(str(snapshot.get("as_of") or "") or None)
+    if as_of is None:
+        return "as_of missing"
+    age = (now - as_of).total_seconds()
+    if age > BOARD_STALE_SECONDS:
+        return f"as_of {age_label(str(snapshot.get('as_of')), now)} old"
+    return None
+
+
+def try_fetch_snapshot(
+    url: str,
+    fetch_snapshot: Callable[[str], dict[str, Any]],
+) -> dict[str, Any]:
+    try:
+        snapshot = fetch_snapshot(url)
+    except Exception as exc:  # noqa: BLE001 — never fail the job
+        print(f"::warning::pipeline observation fetch failed: {type(exc).__name__}", file=sys.stderr)
+        return dict(FETCH_FAILED_SNAPSHOT)
+    if not isinstance(snapshot, dict):
+        return dict(FETCH_FAILED_SNAPSHOT)
+    return snapshot
+
+
+def load_pipeline_snapshot(
+    url: str,
+    *,
+    now: datetime,
+    fetch_snapshot: Callable[[str], dict[str, Any]],
+    sleeper: Callable[[float], None] = time.sleep,
+) -> dict[str, Any]:
+    """Fetch the public board JSON, retrying once if the first copy looks stale.
+
+    Vercel ISR + stale-while-revalidate can return the build-time seed
+    (`x-vercel-cache: STALE`) while a fresh copy generates. A query-string
+    cache-bust does not change that cache key; waiting and fetching again
+    does. After #226 (force-dynamic / no-store) the first fetch is already
+    live and the retry is a no-op.
+    """
+    snapshot = try_fetch_snapshot(url, fetch_snapshot)
+    if board_unhealthy_reason(snapshot, now) is None:
+        return snapshot
+    sleeper(BOARD_RETRY_SLEEP_SEC)
+    return try_fetch_snapshot(url, fetch_snapshot)
+
+
+def board_health_fields(snapshot: dict[str, Any], reason: str, now: datetime) -> list[tuple[str, str]]:
+    as_of = str(snapshot.get("as_of") or "")
+    return [
+        ("Reason", reason),
+        ("as_of", age_label(as_of, now) if as_of else "missing"),
+        ("activity_load_error", "true" if snapshot.get("activity_load_error") else "false"),
+    ]
+
+
 def pipeline_observation_messages(
     snapshot: dict[str, Any],
     state: dict[str, Any],
     now: datetime,
 ) -> list[tuple[str, dict[str, Any]]]:
     messages: list[tuple[str, dict[str, Any]]] = []
-    stations_state: dict[str, str] = state.setdefault("stations", {})
-    strip = snapshot.get("strip") or {}
-    if snapshot.get("load_error") or strip.get("lamp") == "down" and not snapshot.get("stations"):
-        previous = stations_state.get("_board")
-        if previous is None:
-            stations_state["_board"] = "down"
-        elif previous != "down":
+    reason = board_unhealthy_reason(snapshot, now)
+    if reason:
+        streak = int(state.get("board_unhealthy_streak") or 0) + 1
+        state["board_unhealthy_streak"] = streak
+        if streak >= BOARD_UNHEALTHY_STREAK_TO_ALERT and state.get("board") != "down":
             messages.append(
                 (
                     "alerts",
                     embed(
-                        title="Pipeline observation board failed to load",
+                        title="Pipeline observation board is stale",
                         color=COLOR_FAILURE,
                         url=PIPELINE_BOARD_URL,
-                        fields=[("Board", PIPELINE_BOARD_URL)],
+                        fields=board_health_fields(snapshot, reason, now),
                     ),
                 )
             )
-        stations_state["_board"] = "down"
+            state["board"] = "down"
     else:
-        if stations_state.get("_board") == "down":
+        if state.get("board") == "down":
             messages.append(
                 (
                     "alerts",
@@ -543,12 +631,17 @@ def pipeline_observation_messages(
                         title="Pipeline observation board recovered",
                         color=COLOR_SUCCESS,
                         url=PIPELINE_BOARD_URL,
-                        fields=[("Board", PIPELINE_BOARD_URL)],
+                        fields=board_health_fields(snapshot, "ok", now),
                     ),
                 )
             )
-        stations_state["_board"] = "ok"
+        state["board"] = "ok"
+        state["board_unhealthy_streak"] = 0
 
+    if not as_of_is_fresh(snapshot, now):
+        return messages
+
+    stations_state: dict[str, str] = state.setdefault("stations", {})
     for station in snapshot.get("stations") or []:
         station_id = str(station.get("station_id") or "")
         if not station_id:
@@ -684,6 +777,7 @@ def main(
     fetch_snapshot: Callable[[str], dict[str, Any]] = fetch_json,
     runner: Callable[..., subprocess.CompletedProcess[str]] = run_gh,
     now: datetime | None = None,
+    sleeper: Callable[[float], None] = time.sleep,
 ) -> int:
     args = parse_args(argv if argv is not None else sys.argv[1:])
     alerts_url = (os.environ.get("DISCORD_ALERTS_WEBHOOK_URL") or "").strip()
@@ -704,14 +798,12 @@ def main(
             messages = deployment_status_messages(event)
         elif args.event_name in {"schedule", "workflow_dispatch"}:
             state = load_state(args.state_path)
-            try:
-                snapshot = fetch_snapshot(args.pipeline_url)
-            except Exception as exc:  # noqa: BLE001 — never fail the job
-                print(
-                    f"::warning::pipeline observation fetch failed: {type(exc).__name__}",
-                    file=sys.stderr,
-                )
-                snapshot = {"load_error": True, "strip": {"lamp": "down"}, "stations": []}
+            snapshot = load_pipeline_snapshot(
+                args.pipeline_url,
+                now=clock,
+                fetch_snapshot=fetch_snapshot,
+                sleeper=sleeper,
+            )
             messages.extend(pipeline_observation_messages(snapshot, state, clock))
             latest = latest_scheduled_run(
                 repo=args.repo,

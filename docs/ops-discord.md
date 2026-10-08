@@ -23,9 +23,10 @@ Failures and recoveries only. Repeat posts of the same ongoing failure are suppr
 - Recoveries of those same runs (the next successful run after a failure)
 - Failed Vercel **production** GitHub `deployment_status` events (Preview deploys are ignored)
 - Public pipeline-board lamps that go `down` (hourly poll of [`/pipeline-observation.json`](https://www.collegedata.fyi/pipeline-observation.json)): missed or errored heartbeats for enqueue, archive-process, coverage, serving caches, finder, headless archive, extraction, IPEDS probe, and the yearly schema/scorecard stations if they actually go down
+- Board-health: `as_of` older than 2 hours, `activity_load_error: true`, or a failed JSON fetch. The poller waits 12s and re-fetches before deciding (Vercel SWR can return the build-time seed as `STALE`; a query-string cache-bust does not bypass that). It posts only after two consecutive unhealthy polls, then once on recovery
 - API usage ingest scheduled-run staleness (no scheduled run newer than 8 hours), matching `tools/ops/automation_health.py`
 
-The hourly poller records the current board and API-usage freshness on its first run (and after a cache miss) without posting, so a deploy does not dump every station that is already red. After that baseline it posts only transitions.
+The hourly poller records current station lamps on first *fresh* snapshot without posting, so a deploy does not dump every station that is already red. Stale or seed responses (`as_of` older than 2 hours) never baseline or alert individual stations. After a fresh baseline it posts only transitions.
 
 Not posted: pull-request CI, feature-branch workflow_dispatch, cancelled/skipped runs, `late`/`capped` board lamps, or successful scheduled ops jobs.
 
