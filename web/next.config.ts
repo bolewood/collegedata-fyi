@@ -1,10 +1,17 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
 import retiredSchoolAliases from "./src/data/school-redirects.json";
 import { APEX_TO_WWW_REDIRECTS } from "./src/lib/apex-redirect";
 import { PIPELINE_OBSERVATION_REDIRECTS } from "./src/lib/pipeline-redirect";
 import { buildRetiredSchoolRedirects } from "./src/lib/school-alias";
+import {
+  SENTRY_ORG,
+  SENTRY_PROJECT,
+  sentryRelease,
+  sentrySourceMapsEnabled,
+} from "./src/lib/sentry";
 
-const nextConfig: NextConfig = {
+export const nextConfig: NextConfig = {
   trailingSlash: false,
   async redirects() {
     return [
@@ -60,4 +67,25 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN;
+const uploadSourceMaps = sentrySourceMapsEnabled(sentryAuthToken);
+
+export default withSentryConfig(nextConfig, {
+  org: SENTRY_ORG,
+  project: SENTRY_PROJECT,
+  authToken: sentryAuthToken,
+  silent: !process.env.CI,
+  widenClientFileUpload: uploadSourceMaps,
+  sourcemaps: {
+    disable: !uploadSourceMaps,
+  },
+  release: {
+    name: sentryRelease(),
+    create: uploadSourceMaps,
+    finalize: uploadSourceMaps,
+  },
+  tunnelRoute: "/sentry-tunnel",
+  errorHandler(error) {
+    console.warn("[sentry] build step skipped:", error.message);
+  },
+});
