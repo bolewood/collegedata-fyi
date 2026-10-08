@@ -196,7 +196,9 @@ Live unfinished count from the facts function:
 - Live unfinished = 0 AND no cron heartbeat in **2 hours** → `down`
 - Else `last_scheduled_status=ok` → `ok`; `error` → `down`
 
-This route uses **`revalidate = 60`**. `/coverage` stays **900**
+This route is **`force-dynamic`** with `Cache-Control: no-store`. ISR plus
+stale-while-revalidate served the build-time seed as a stale CDN hit.
+`/coverage` stays **900**
 (`web/src/app/coverage/page.tsx`). Do not copy `fetchCoverageRows`:
 it **throws** on error and has an `isStaticBuild()` branch
 (`web/src/lib/queries.ts`). The pipeline loader needs its **own**
@@ -555,7 +557,7 @@ subsection.
 
 ## Public JSON (M0)
 
-`GET /pipeline-observation.json` (`revalidate = 60`):
+`GET /pipeline-observation.json` (`force-dynamic`, `Cache-Control: no-store`):
 
 ```
 {

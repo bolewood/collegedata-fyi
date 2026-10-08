@@ -37,6 +37,25 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        // Operator clocks. ISR + SWR served the build-time seed as STALE.
+        source: "/pipeline-observation",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, no-cache, max-age=0, must-revalidate",
+          },
+        ],
+      },
+      {
+        source: "/pipeline-observation.json",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, no-cache, max-age=0, must-revalidate",
+          },
+        ],
+      },
     ];
   },
 };

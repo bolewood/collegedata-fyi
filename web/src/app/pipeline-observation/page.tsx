@@ -5,7 +5,9 @@ import type { ExtractionActivityItem } from "@/lib/pipeline-observation";
 import type { Lamp } from "@/lib/pipeline-lamps";
 import "./pipeline-observation.css";
 
-export const revalidate = 60;
+// Live clocks: ISR + stale-while-revalidate served the build-time seed
+// (all stations `never`, activity_load_error) as x-vercel-cache: STALE.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Pipeline observation — collegedata.fyi",
