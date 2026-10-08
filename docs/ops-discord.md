@@ -25,6 +25,8 @@ Failures and recoveries only. Repeat posts of the same ongoing failure are suppr
 - Public pipeline-board lamps that go `down` (hourly poll of [`/pipeline-observation.json`](https://www.collegedata.fyi/pipeline-observation.json)): missed or errored heartbeats for enqueue, archive-process, coverage, serving caches, finder, headless archive, extraction, IPEDS probe, and the yearly schema/scorecard stations if they actually go down
 - API usage ingest scheduled-run staleness (no scheduled run newer than 8 hours), matching `tools/ops/automation_health.py`
 
+The hourly poller records the current board and API-usage freshness on its first run (and after a cache miss) without posting, so a deploy does not dump every station that is already red. After that baseline it posts only transitions.
+
 Not posted: pull-request CI, feature-branch workflow_dispatch, cancelled/skipped runs, `late`/`capped` board lamps, or successful scheduled ops jobs.
 
 ## `#deploys`

@@ -247,6 +247,24 @@ class NotifyDiscordTests(unittest.TestCase):
         self.assertEqual(messages[0][1]["title"], "Vercel production deploy failed")
         self.assertEqual(messages[0][1]["color"], nd.COLOR_FAILURE)
 
+    def test_pipeline_observation_baselines_without_spamming(self) -> None:
+        snapshot = {
+            "strip": {"lamp": "down"},
+            "stations": [
+                {
+                    "station_id": "archive_process",
+                    "label": "Process",
+                    "lamp": "down",
+                    "last_scheduled_finished_at": "2026-10-08T10:00:00Z",
+                    "last_scheduled_status": "error",
+                    "error_code": "job_failed",
+                }
+            ],
+        }
+        state: dict = {"stations": {}}
+        self.assertEqual(nd.pipeline_observation_messages(snapshot, state, NOW), [])
+        self.assertEqual(state["stations"]["archive_process"], "down")
+
     def test_pipeline_observation_posts_first_down_and_skips_repeat(self) -> None:
         snapshot = {
             "strip": {"lamp": "down"},
@@ -261,7 +279,7 @@ class NotifyDiscordTests(unittest.TestCase):
                 }
             ],
         }
-        state: dict = {"stations": {}, "api_usage_ingest": "ok"}
+        state: dict = {"stations": {"archive_process": "ok", "_board": "ok"}}
         first = nd.pipeline_observation_messages(snapshot, state, NOW)
         self.assertEqual(len(first), 1)
         self.assertEqual(first[0][1]["title"], "Scheduled pipeline heartbeat missed")
@@ -274,6 +292,16 @@ class NotifyDiscordTests(unittest.TestCase):
         recovered = nd.pipeline_observation_messages(snapshot, state, NOW)
         self.assertEqual(recovered[0][1]["title"], "Scheduled pipeline heartbeat recovered")
         self.assertEqual(recovered[0][1]["color"], nd.COLOR_SUCCESS)
+
+    def test_api_usage_staleness_baselines_without_posting(self) -> None:
+        state: dict = {"stations": {}}
+        stale_run = {
+            "createdAt": (NOW - timedelta(hours=10)).isoformat().replace("+00:00", "Z"),
+            "url": "https://github.com/bolewood/collegedata-fyi/actions/runs/1",
+            "headSha": "fff1111",
+        }
+        self.assertEqual(nd.api_usage_staleness_messages(stale_run, state, NOW), [])
+        self.assertEqual(state["api_usage_ingest"], "down")
 
     def test_api_usage_staleness_first_miss_and_recovery(self) -> None:
         state: dict = {"stations": {}, "api_usage_ingest": "ok"}

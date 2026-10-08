@@ -140,21 +140,24 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def load_state(path: Path) -> dict[str, Any]:
+    empty: dict[str, Any] = {"stations": {}}
     if not path.exists():
-        return {"stations": {}, "api_usage_ingest": "ok"}
+        return empty
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
-        return {"stations": {}, "api_usage_ingest": "ok"}
+        return empty
     if not isinstance(data, dict):
-        return {"stations": {}, "api_usage_ingest": "ok"}
+        return empty
     stations = data.get("stations")
     if not isinstance(stations, dict):
         stations = {}
-    return {
+    out: dict[str, Any] = {
         "stations": {str(key): str(value) for key, value in stations.items()},
-        "api_usage_ingest": str(data.get("api_usage_ingest") or "ok"),
     }
+    if "api_usage_ingest" in data and data.get("api_usage_ingest"):
+        out["api_usage_ingest"] = str(data["api_usage_ingest"])
+    return out
 
 
 def save_state(path: Path, state: dict[str, Any]) -> None:
@@ -516,7 +519,9 @@ def pipeline_observation_messages(
     strip = snapshot.get("strip") or {}
     if snapshot.get("load_error") or strip.get("lamp") == "down" and not snapshot.get("stations"):
         previous = stations_state.get("_board")
-        if previous != "down":
+        if previous is None:
+            stations_state["_board"] = "down"
+        elif previous != "down":
             messages.append(
                 (
                     "alerts",
@@ -551,6 +556,9 @@ def pipeline_observation_messages(
         lamp = str(station.get("lamp") or "")
         previous = stations_state.get(station_id)
         current = "down" if lamp in ALERT_LAMPS else "ok"
+        if previous is None:
+            stations_state[station_id] = current
+            continue
         if current == "down" and previous != "down":
             messages.append(
                 (
@@ -587,8 +595,11 @@ def api_usage_staleness_messages(
     created = parse_time(str((run or {}).get("createdAt") or ""))
     age_hours = None if created is None else (now - created).total_seconds() / 3600
     stale = age_hours is None or age_hours > API_USAGE_MAX_AGE_HOURS
-    previous = state.get("api_usage_ingest") or "ok"
     current = "down" if stale else "ok"
+    previous = state.get("api_usage_ingest")
+    if previous is None:
+        state["api_usage_ingest"] = current
+        return []
     state["api_usage_ingest"] = current
     if current == previous:
         return []

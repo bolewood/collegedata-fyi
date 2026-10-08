@@ -56,7 +56,7 @@ jobs:
       - name: Ensure notify state file
         run: |
           if [[ ! -f .discord-notify-state.json ]]; then
-            printf '{"api_usage_ingest":"ok","stations":{}}\n' > .discord-notify-state.json
+            printf '{"stations":{}}\n' > .discord-notify-state.json
           fi
 
       - name: Notify Discord
