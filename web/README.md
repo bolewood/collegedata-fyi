@@ -41,6 +41,19 @@ NEXT_PUBLIC_SUPABASE_URL=https://isduwmygvmdozhpvzaix.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
 ```
 
+Sentry error monitoring (optional overrides; the public DSN is also the SDK default):
+
+```bash
+NEXT_PUBLIC_SENTRY_DSN=<public DSN>
+SENTRY_ORG=bolewood
+SENTRY_PROJECT=collegedata-fyi
+SENTRY_AUTH_TOKEN=<org token with org:read + project:releases>
+```
+
+`SENTRY_AUTH_TOKEN` is build-time only. When it is unset, `next build` skips
+source-map upload and still succeeds. Vercel already supplies `VERCEL_ENV` and
+`VERCEL_GIT_COMMIT_SHA` for `environment` and `release`.
+
 Optional source-submission form:
 
 ```bash

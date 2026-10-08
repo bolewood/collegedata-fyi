@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import nextConfig from "../../next.config";
+import sentryWrappedConfig, { nextConfig } from "../../next.config";
 import { LAMP_HEX } from "./pipeline-lamps";
 import { PIPELINE_OBSERVATION_REDIRECTS } from "./pipeline-redirect";
 import {
@@ -393,6 +393,23 @@ describe("pipeline redirects", () => {
 
   it("leaves trailingSlash unset/false so /pipeline-observation/ 308s to the canonical path", () => {
     expect(nextConfig.trailingSlash).not.toBe(true);
+  });
+
+  it("keeps pipeline observation no-store headers after withSentryConfig", async () => {
+    const headers = await sentryWrappedConfig.headers?.();
+    expect(headers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: "/pipeline-observation",
+          headers: expect.arrayContaining([
+            expect.objectContaining({
+              key: "Cache-Control",
+              value: "private, no-store, no-cache, max-age=0, must-revalidate",
+            }),
+          ]),
+        }),
+      ]),
+    );
   });
 });
 
