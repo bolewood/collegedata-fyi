@@ -395,3 +395,47 @@ describe("pipeline redirects", () => {
     expect(nextConfig.trailingSlash).not.toBe(true);
   });
 });
+
+describe("pipeline observation freshness", () => {
+  const page = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "../app/pipeline-observation/page.tsx"),
+    "utf8",
+  );
+  const jsonRoute = readFileSync(
+    join(
+      dirname(fileURLToPath(import.meta.url)),
+      "../app/pipeline-observation.json/route.ts",
+    ),
+    "utf8",
+  );
+
+  it("renders the HTML and JSON routes dynamically with no-store", () => {
+    expect(page).toMatch(/export const dynamic = "force-dynamic"/);
+    expect(page).not.toMatch(/export const revalidate/);
+    expect(jsonRoute).toMatch(/export const dynamic = "force-dynamic"/);
+    expect(jsonRoute).toMatch(/no-store/);
+    expect(jsonRoute).not.toMatch(/stale-while-revalidate/);
+    expect(jsonRoute).not.toMatch(/export const revalidate/);
+  });
+
+  it("pins no-store Cache-Control on only the pipeline observation paths", async () => {
+    const headers = (await nextConfig.headers?.()) ?? [];
+    const pipeline = headers.filter((entry) =>
+      entry.source === "/pipeline-observation" ||
+      entry.source === "/pipeline-observation.json",
+    );
+    expect(pipeline).toHaveLength(2);
+    for (const entry of pipeline) {
+      expect(entry.headers).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            key: "Cache-Control",
+            value: expect.stringContaining("no-store"),
+          }),
+        ]),
+      );
+      expect(entry.headers.some((header) => header.value.includes("stale-while-revalidate"))).toBe(false);
+    }
+    expect(headers.some((entry) => entry.source === "/coverage")).toBe(false);
+  });
+});
