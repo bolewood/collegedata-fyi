@@ -1,9 +1,14 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   SENTRY_DSN,
+  SENTRY_IGNORE_ERRORS,
   SENTRY_ORG,
   SENTRY_PRODUCTION_TRACES_SAMPLE_RATE,
   SENTRY_PROJECT,
+  isJsonLdContextExtensionNoise,
   isSentryVerifyAllowed,
   sentryEnvironment,
   sentryInitOptions,
@@ -42,6 +47,17 @@ describe("sentryEnvironment", () => {
       }),
     ).toBe("production");
     expect(sentryEnvironment({ NODE_ENV: "development" })).toBe("development");
+  });
+
+  it("reads process.env on the no-arg path used by client/server/edge init", () => {
+    process.env.NEXT_PUBLIC_VERCEL_ENV = "production";
+    process.env.VERCEL_ENV = "production";
+    expect(sentryEnvironment()).toBe("production");
+    expect(sentryInitOptions().environment).toBe("production");
+
+    process.env.NEXT_PUBLIC_VERCEL_ENV = "preview";
+    process.env.VERCEL_ENV = "preview";
+    expect(sentryEnvironment()).toBe("preview");
   });
 });
 
@@ -96,5 +112,33 @@ describe("sentryInitOptions", () => {
     expect(options.tracesSampleRate).toBe(0.2);
     expect(options.dsn).toBe(SENTRY_DSN);
     expect(options.debug).toBe(false);
+    expect(options.ignoreErrors).toBe(SENTRY_IGNORE_ERRORS);
+  });
+});
+
+describe("client env inlining", () => {
+  it("reads Vercel env via static process.env members the bundler can replace", () => {
+    const source = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "sentry.ts"),
+      "utf8",
+    );
+    expect(source).toContain("process.env.NEXT_PUBLIC_VERCEL_ENV");
+    expect(source).toContain("process.env.VERCEL_ENV");
+    expect(source).toContain("process.env.NODE_ENV");
+    expect(source).toContain("process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA");
+  });
+});
+
+describe("isJsonLdContextExtensionNoise", () => {
+  it("matches the Safari @context scraper TypeError and ignores first-party errors", () => {
+    expect(
+      isJsonLdContextExtensionNoise(
+        "undefined is not an object (evaluating 'r[\"@context\"].toLowerCase')",
+      ),
+    ).toBe(true);
+    expect(
+      isJsonLdContextExtensionNoise("TypeError: Cannot read properties of undefined"),
+    ).toBe(false);
+    expect(isJsonLdContextExtensionNoise(undefined)).toBe(false);
   });
 });
