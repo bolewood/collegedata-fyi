@@ -104,6 +104,7 @@ collegedata.fyi sits between official higher-education data systems and the docu
 ## Docs and decisions
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — twelve-pipeline map of the whole system (schema, corpus, discovery, mirror, extraction, scorecard, institution directory + coverage, IPEDS federal baseline, FSA institutional nonpayment, change intelligence, consumer API, frontend)
+- [`docs/ops-discord.md`](docs/ops-discord.md) — Bolewood Discord `#alerts` / `#deploys` routing and the `DISCORD_ALERTS_WEBHOOK_URL` / `DISCORD_DEPLOYS_WEBHOOK_URL` GitHub secrets
 - [`docs/data-extraction-pipeline.md`](docs/data-extraction-pipeline.md) — operational diagram of the discovery/archive/extraction/projection flow, including cadence, storage, and known issues
 - [`docs/extraction-quality.md`](docs/extraction-quality.md) — current accuracy by tier, per-section corpus-wide coverage, and reproducible scoring commands
 - [`docs/api-usage-attribution.md`](docs/api-usage-attribution.md) — low-PII friendly API usage attribution for MCP, CLI, and cooperative external integrations
