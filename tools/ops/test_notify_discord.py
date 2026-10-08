@@ -88,6 +88,8 @@ class NotifyDiscordTests(unittest.TestCase):
         self.assertIn("secrets.DISCORD_ALERTS_WEBHOOK_URL", notify)
         self.assertIn("secrets.DISCORD_DEPLOYS_WEBHOOK_URL", notify)
         self.assertNotIn("echo \"$DISCORD_", notify)
+        self.assertIn("github.event_name != 'deployment_status'", notify)
+        self.assertIn("production_environment == true", notify)
         for display, filename in nd.WATCHED_WORKFLOWS.items():
             self.assertEqual(names[filename], display, filename)
             self.assertTrue((workflows / filename).is_file())
