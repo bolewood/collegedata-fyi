@@ -537,6 +537,7 @@ async function fetchPagedTableRows<T>(
   table: string,
   select: string,
   build?: (query: any) => any,
+  options?: { onError?: "throw" | "empty" },
 ): Promise<T[]> {
   const PAGE = 1000;
   const HARD_CAP = 50_000;
@@ -547,7 +548,14 @@ async function fetchPagedTableRows<T>(
     const base = raw.from(table).select(select).range(start, start + PAGE - 1);
     const query = build ? build(base) : base;
     const { data, error } = await query;
-    if (error) throw new Error(`Failed to fetch ${table}: ${error.message}`);
+    if (error) {
+      const message = `Failed to fetch ${table}: ${error.message}`;
+      if (options?.onError === "empty") {
+        console.warn(message);
+        return [];
+      }
+      throw new Error(message);
+    }
     const page = (data as T[]) ?? [];
     out.push(...page);
     if (page.length < PAGE) break;
@@ -1263,6 +1271,16 @@ export const fetchBrowserRowBySchoolId = cache(
 
 export const fetchMatchBuilderSchools = cache(
   async function fetchMatchBuilderSchools(): Promise<MatchBuilderSchool[]> {
+    try {
+      return await loadMatchBuilderSchools();
+    } catch (error) {
+      console.warn(`fetchMatchBuilderSchools: ${errorText(error)}`);
+      return [];
+    }
+  },
+);
+
+async function loadMatchBuilderSchools(): Promise<MatchBuilderSchool[]> {
     type BrowserRow = {
       document_id: string | null;
       school_id: string | null;
@@ -1332,6 +1350,7 @@ export const fetchMatchBuilderSchools = cache(
         "institution_directory",
         "school_id, state, control",
         (query) => query.in("school_id", schoolIds),
+        { onError: "empty" },
       ),
       ipedsIds.length === 0
         ? Promise.resolve([] as ScorecardContextRow[])
@@ -1339,7 +1358,11 @@ export const fetchMatchBuilderSchools = cache(
             "scorecard_summary",
             "ipeds_id, carnegie_basic",
             (query) => query.in("ipeds_id", ipedsIds),
+            { onError: "empty" },
           ),
+      // Two GPA fields across the 2024+ corpus are a few hundred rows.
+      // A 500-slug school_id IN list made a 12KB PostgREST filter on a
+      // 338k-row table and timed out under concurrent /match load.
       fetchPagedTableRows<GpaContextRow>(
         "cds_fields",
         "school_id, field_id, value_num, value_text, year_start",
@@ -1347,10 +1370,10 @@ export const fetchMatchBuilderSchools = cache(
           query
             .gte("year_start", 2024)
             .is("sub_institutional", null)
-            .in("school_id", schoolIds)
             .in("field_id", ["C.1201", "C.1202"])
             .order("school_id", { ascending: true })
             .order("year_start", { ascending: false }),
+        { onError: "empty" },
       ),
     ]);
 
@@ -1425,8 +1448,7 @@ export const fetchMatchBuilderSchools = cache(
         };
       })
       .sort((a, b) => a.schoolName.localeCompare(b.schoolName));
-  },
-);
+}
 
 export const fetchAdmissionStrategyBySchoolId = cache(
   async function fetchAdmissionStrategyBySchoolId(

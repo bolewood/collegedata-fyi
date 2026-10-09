@@ -14,7 +14,7 @@ import {
   type SchoolControl,
   type TestPolicySignal,
 } from "@/lib/list-builder";
-import { decodeProfileCode, encodeProfileCode } from "@/lib/savecode";
+import { decodeProfileCode, encodeProfileCode, resolveMatchShareCode } from "@/lib/savecode";
 import {
   academicFitLabel,
   academicFitSubtitle,
@@ -84,8 +84,9 @@ export function MatchListBuilder({
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (initialCode) {
-      const decoded = decodeProfileCode(initialCode);
+    const shareCode = resolveMatchShareCode(initialCode, window.location.search);
+    if (shareCode) {
+      const decoded = decodeProfileCode(shareCode);
       if (decoded) {
         const next = { ...decoded, savedAt: new Date().toISOString() };
         setProfile(next);

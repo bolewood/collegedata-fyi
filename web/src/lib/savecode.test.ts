@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodeProfileCode, encodeProfileCode } from "./savecode";
+import { decodeProfileCode, encodeProfileCode, resolveMatchShareCode } from "./savecode";
 import type { StudentProfile } from "./positioning";
 
 describe("save-game profile codes", () => {
@@ -24,6 +24,14 @@ describe("save-game profile codes", () => {
   it("rejects malformed codes", () => {
     expect(decodeProfileCode("TOO-LONG")).toBeNull();
     expect(decodeProfileCode("III-OOO")).toBeNull();
+  });
+
+  it("prefers an explicit share code over the query string", () => {
+    expect(resolveMatchShareCode("ABC-DEF", "?code=ZZZ-YYY")).toBe("ABC-DEF");
+    expect(resolveMatchShareCode(null, "?code=ABC-DEF")).toBe("ABC-DEF");
+    expect(resolveMatchShareCode(undefined, "code=ABC-DEF&utm=1")).toBe("ABC-DEF");
+    expect(resolveMatchShareCode(undefined, new URLSearchParams("code=ABC-DEF"))).toBe("ABC-DEF");
+    expect(resolveMatchShareCode(undefined, "?other=1")).toBeUndefined();
   });
 
   it("round-trips randomized valid profile payloads", () => {

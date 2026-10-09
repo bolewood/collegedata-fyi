@@ -98,3 +98,15 @@ export function decodeProfileCode(code: string): StudentProfile | null {
 
   return profile;
 }
+
+export function resolveMatchShareCode(
+  initialCode?: string | null,
+  search: string | URLSearchParams | { get(name: string): string | null } = "",
+): string | undefined {
+  if (initialCode) return initialCode;
+  const params =
+    typeof search === "string"
+      ? new URLSearchParams(search.startsWith("?") ? search.slice(1) : search)
+      : search;
+  return params.get("code") || undefined;
+}
