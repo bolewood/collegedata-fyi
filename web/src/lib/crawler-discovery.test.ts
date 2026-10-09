@@ -90,6 +90,8 @@ describe("school-page API discovery", () => {
     expect(note).toContain("Building something with this data?");
     expect(note).toContain('href="/api"');
     expect(note).toContain("Use the free API");
+    expect(note).toContain('className="mx-auto max-w-5xl px-4 sm:px-6"');
+    expect(note).not.toMatch(/className="mx-auto[^"]*"[\s\S]*style=\{\{[\s\S]*margin:\s*0/);
     expect(layout).toContain("<SchoolApiNote />");
   });
 
