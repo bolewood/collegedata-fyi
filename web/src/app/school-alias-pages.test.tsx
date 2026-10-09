@@ -140,11 +140,17 @@ describe("retired alias pages and Open Graph images", () => {
     );
     expect(schoolMetadata.alternates).toEqual({
       canonical: "/schools/tufts",
-      types: { "application/rss+xml": "/schools/tufts/feed.xml" },
+      types: {
+        "application/rss+xml": "/schools/tufts/feed.xml",
+        "application/json": "/api/schools/tufts/facts",
+      },
     });
     expect(yearMetadata.alternates).toEqual({
       canonical: "/schools/tufts/2024-25",
-      types: { "application/rss+xml": "/schools/tufts/feed.xml" },
+      types: {
+        "application/rss+xml": "/schools/tufts/feed.xml",
+        "application/json": "/api/schools/tufts/facts",
+      },
     });
   });
 
@@ -194,19 +200,31 @@ describe("retired alias pages and Open Graph images", () => {
 
     expect(vtHub.alternates).toEqual({
       canonical: "/schools/virginia-tech",
-      types: { "application/rss+xml": "/schools/virginia-tech/feed.xml" },
+      types: {
+        "application/rss+xml": "/schools/virginia-tech/feed.xml",
+        "application/json": "/api/schools/virginia-tech/facts",
+      },
     });
     expect(vtYear.alternates).toEqual({
       canonical: "/schools/virginia-tech/2025-26",
-      types: { "application/rss+xml": "/schools/virginia-tech/feed.xml" },
+      types: {
+        "application/rss+xml": "/schools/virginia-tech/feed.xml",
+        "application/json": "/api/schools/virginia-tech/facts",
+      },
     });
     expect(hmcHub.alternates).toEqual({
       canonical: "/schools/harvey-mudd",
-      types: { "application/rss+xml": "/schools/harvey-mudd/feed.xml" },
+      types: {
+        "application/rss+xml": "/schools/harvey-mudd/feed.xml",
+        "application/json": "/api/schools/harvey-mudd/facts",
+      },
     });
     expect(hmcYear.alternates).toEqual({
       canonical: "/schools/harvey-mudd/2025-26",
-      types: { "application/rss+xml": "/schools/harvey-mudd/feed.xml" },
+      types: {
+        "application/rss+xml": "/schools/harvey-mudd/feed.xml",
+        "application/json": "/api/schools/harvey-mudd/facts",
+      },
     });
     expect(vtHub.alternates).not.toEqual({ canonical: "/" });
     expect(vtYear.alternates).not.toEqual({ canonical: "/" });

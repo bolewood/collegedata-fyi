@@ -396,7 +396,7 @@ a personalized award estimate.
 - **Sitemap:** `sitemap.ts` generates URLs for all indexable static pages, all
   school pages, and all extracted year detail pages. Noindex routes
   (`/discover`, `/changes`) are omitted.
-- **Robots:** `robots.ts` allows all crawlers and points to the sitemap.
+- **Robots:** `/robots.txt` allows all crawlers, points to the sitemap, and comments point automated clients at `/api` and `/llms.txt`.
 - **Schema.org:** School pages include `CollegeOrUniversity` + archive
   `Dataset` JSON-LD. Year detail pages include `Dataset` + `BreadcrumbList`
   JSON-LD with required `description`, `creator`, and `license` fields.

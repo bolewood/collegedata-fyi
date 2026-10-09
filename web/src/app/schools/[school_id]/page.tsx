@@ -69,7 +69,12 @@ export async function generateMetadata({
       return {
         title,
         description,
-        alternates: { canonical: path },
+        alternates: {
+          canonical: path,
+          types: {
+            "application/json": `/api/schools/${resolvedSchoolId}/facts`,
+          },
+        },
         robots: { index: false, follow: true },
         openGraph: {
           url: path,
@@ -114,6 +119,7 @@ export async function generateMetadata({
       canonical: path,
       types: {
         "application/rss+xml": `/schools/${resolvedSchoolId}/feed.xml`,
+        "application/json": `/api/schools/${resolvedSchoolId}/facts`,
       },
     },
     openGraph: { url: path, title, description },
