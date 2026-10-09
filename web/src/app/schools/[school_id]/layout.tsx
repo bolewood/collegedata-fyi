@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { SchoolApiNote } from "@/components/SchoolApiNote";
 import { cachedSchoolInks, schoolInkWrapperProps } from "@/lib/school-inks";
 
 export default async function SchoolRecordLayout({
@@ -10,5 +11,10 @@ export default async function SchoolRecordLayout({
 }) {
   const { school_id } = await params;
   const inks = await cachedSchoolInks(school_id);
-  return <div {...schoolInkWrapperProps(inks)}>{children}</div>;
+  return (
+    <div {...schoolInkWrapperProps(inks)}>
+      {children}
+      <SchoolApiNote />
+    </div>
+  );
 }

@@ -100,6 +100,7 @@ export async function generateMetadata({
       canonical: path,
       types: {
         "application/rss+xml": `/schools/${resolvedSchoolId}/feed.xml`,
+        "application/json": `/api/schools/${resolvedSchoolId}/facts`,
       },
     },
     openGraph: { url: path, title, description },
