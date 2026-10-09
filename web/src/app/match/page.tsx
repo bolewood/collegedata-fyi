@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { MatchListBuilder } from "@/components/MatchListBuilder";
 import { fetchMatchBuilderSchools, fetchBrandColorIndex } from "@/lib/queries";
 
+// Hourly ISR. Do not read searchParams here — that opts /match out of
+// static generation and re-runs the school query on every share-link hit.
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
@@ -11,13 +13,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/match" },
 };
 
-export default async function MatchPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ code?: string }>;
-}) {
-  const [{ code }, schools, brandColors] = await Promise.all([
-    searchParams,
+export default async function MatchPage() {
+  const [schools, brandColors] = await Promise.all([
     fetchMatchBuilderSchools(),
     fetchBrandColorIndex(),
   ]);
@@ -39,7 +36,7 @@ export default async function MatchPage({
         </p>
       </header>
 
-      <MatchListBuilder schools={schools} initialCode={code} brandColors={brandColors} />
+      <MatchListBuilder schools={schools} brandColors={brandColors} />
     </div>
   );
 }
