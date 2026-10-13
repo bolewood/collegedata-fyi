@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  SENTRY_DENY_URLS,
   SENTRY_DSN,
   SENTRY_IGNORE_ERRORS,
   SENTRY_ORG,
@@ -10,6 +11,8 @@ import {
   SENTRY_PROJECT,
   isJsonLdContextExtensionNoise,
   isSentryVerifyAllowed,
+  sentryBeforeSend,
+  sentryEnabled,
   sentryEnvironment,
   sentryInitOptions,
   sentryRelease,
@@ -113,6 +116,15 @@ describe("sentryInitOptions", () => {
     expect(options.dsn).toBe(SENTRY_DSN);
     expect(options.debug).toBe(false);
     expect(options.ignoreErrors).toBe(SENTRY_IGNORE_ERRORS);
+    expect(options.denyUrls).toBe(SENTRY_DENY_URLS);
+    expect(options.enabled).toBe(true);
+    expect(options.beforeSend).toBe(sentryBeforeSend);
+    expect(SENTRY_IGNORE_ERRORS).toContain("Object Not Found Matching Id");
+    expect(SENTRY_DENY_URLS.some((p) => p.test("/49d0ab2abf43d524/script.js"))).toBe(true);
+    expect(SENTRY_DENY_URLS.some((p) => p.test("/_vercel/insights/view"))).toBe(true);
+    expect(sentryEnabled({ CI: "true", NODE_ENV: "production" })).toBe(false);
+    expect(sentryEnabled({ NODE_ENV: "ci" })).toBe(false);
+    expect(sentryBeforeSend({ request: { url: "http://localhost:3000/" } })).toBeNull();
   });
 });
 
@@ -126,6 +138,7 @@ describe("client env inlining", () => {
     expect(source).toContain("process.env.VERCEL_ENV");
     expect(source).toContain("process.env.NODE_ENV");
     expect(source).toContain("process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA");
+    expect(source).toContain("process.env.CI");
   });
 });
 

@@ -26,7 +26,17 @@ export const SENTRY_PRODUCTION_TRACES_SAMPLE_RATE = 0.2;
  * and call `obj["@context"].toLowerCase()`. Our pages emit `@context` as
  * inert `application/ld+json` data and never execute that access.
  */
-export const SENTRY_IGNORE_ERRORS = [/\["@context"\]\.toLowerCase/];
+export const SENTRY_JSONLD_CONTEXT_NOISE = /\["@context"\]\.toLowerCase/;
+
+export const SENTRY_IGNORE_ERRORS = [
+  SENTRY_JSONLD_CONTEXT_NOISE,
+  "Object Not Found Matching Id",
+];
+
+export const SENTRY_DENY_URLS = [
+  /\/49d0ab2abf43d524\/script\.js/,
+  /\/_vercel\/insights\//,
+];
 
 type EnvLookup = Record<string, string | undefined>;
 
@@ -77,7 +87,22 @@ export function isSentryVerifyAllowed(
 export function isJsonLdContextExtensionNoise(
   message: string | undefined,
 ): boolean {
-  return Boolean(message && SENTRY_IGNORE_ERRORS[0].test(message));
+  return Boolean(message && SENTRY_JSONLD_CONTEXT_NOISE.test(message));
+}
+
+export function sentryEnabled(override?: EnvLookup): boolean {
+  const ci = override ? override.CI : process.env.CI;
+  return !ci && sentryEnvironment(override) !== "ci";
+}
+
+export function sentryBeforeSend<E extends { request?: { url?: string } }>(
+  event: E,
+): E | null {
+  const url = event.request?.url;
+  if (typeof url === "string" && url.startsWith("http://localhost")) {
+    return null;
+  }
+  return event;
 }
 
 export function sentryInitOptions(override?: EnvLookup) {
@@ -85,8 +110,11 @@ export function sentryInitOptions(override?: EnvLookup) {
   return {
     dsn: override?.NEXT_PUBLIC_SENTRY_DSN ?? SENTRY_DSN,
     environment: sentryEnvironment(override),
+    enabled: sentryEnabled(override),
     tracesSampleRate: sentryTracesSampleRate(override?.NODE_ENV),
     ignoreErrors: SENTRY_IGNORE_ERRORS,
+    denyUrls: SENTRY_DENY_URLS,
+    beforeSend: sentryBeforeSend,
     ...(release ? { release } : {}),
     debug: (override?.SENTRY_DEBUG ?? process.env.SENTRY_DEBUG) === "true",
   };
