@@ -1033,23 +1033,24 @@ export const fetchSchoolSlugResolver = cache(async function fetchSchoolSlugResol
 ): Promise<SchoolSlugResolver> {
   const retired = new Set(retiredSchoolAliases.map((entry) => entry.alias));
   const rowsByAlias = new Map<string, SchoolAliasRow[]>();
-  const unique = Array.from(new Set(schoolIds.filter(Boolean)));
+  const wanted = new Set(schoolIds.filter(Boolean));
+  // Page the whole crosswalk. A single .in('alias', thousands) GET exceeds
+  // URL limits (build-time fetch failed); per-alias .eq is the FYI-7 N+1.
   try {
-    if (unique.length > 0) {
+    if (wanted.size > 0) {
       const PAGE = 1000;
       const client = supabase as unknown as UntypedSupabase;
       for (let start = 0; start < 50_000; start += PAGE) {
         const { data, error } = await client
           .from("institution_slug_crosswalk")
           .select("school_id, alias, is_primary")
-          .in("alias", unique)
           .order("alias")
           .order("school_id")
           .range(start, start + PAGE - 1);
         if (error) throw new Error(error.message);
         const page = (data as SchoolAliasRow[] | null) ?? [];
         for (const row of page) {
-          if (!row.alias) continue;
+          if (!row.alias || !wanted.has(row.alias)) continue;
           const list = rowsByAlias.get(row.alias) ?? [];
           list.push(row);
           rowsByAlias.set(row.alias, list);

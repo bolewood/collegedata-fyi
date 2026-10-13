@@ -31,6 +31,13 @@ function inQuery(result: unknown) {
   return query;
 }
 
+function pageQuery(result: unknown) {
+  const query = { order: vi.fn(), range: vi.fn().mockResolvedValue(result) };
+  query.order.mockReturnValue(query);
+  supabaseMocks.from.mockReturnValue({ select: vi.fn(() => query) });
+  return query;
+}
+
 describe("fetchCanonicalSchoolId", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -83,21 +90,18 @@ describe("fetchSchoolSlugResolver", () => {
     vi.clearAllMocks();
   });
 
-  it("resolves every alias in one institution_slug_crosswalk query", async () => {
-    const query = inQuery({
+  it("resolves aliases from a paged crosswalk read, not one request per alias", async () => {
+    const query = pageQuery({
       data: [
         { school_id: "amherst", alias: "amherst-college", is_primary: false },
         { school_id: "bowdoin", alias: "bowdoin-college", is_primary: false },
       ],
       error: null,
     });
-    const resolve = await fetchSchoolSlugResolver([
-      "amherst-college",
-      "bowdoin-college",
-      "amherst-college",
-    ]);
+    const resolve = await fetchSchoolSlugResolver(["amherst-college", "bowdoin-college"]);
     expect(supabaseMocks.from).toHaveBeenCalledTimes(1);
-    expect(query.in).toHaveBeenCalledWith("alias", ["amherst-college", "bowdoin-college"]);
+    expect(supabaseMocks.from).toHaveBeenCalledWith("institution_slug_crosswalk");
+    expect(query.range).toHaveBeenCalledTimes(1);
     expect(resolve("amherst-college")).toBe("amherst");
     expect(resolve("bowdoin-college")).toBe("bowdoin");
   });
