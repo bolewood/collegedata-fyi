@@ -9,7 +9,11 @@ vi.mock("./supabase", () => ({
   STORAGE_BASE_URL: "https://example.test/storage/v1/object/public/sources",
 }));
 
-import { fetchCanonicalSchoolId } from "./queries";
+import {
+  fetchCanonicalSchoolId,
+  fetchSchoolFederalBaselineIndex,
+  fetchSchoolSlugResolver,
+} from "./queries";
 
 function aliasQueryResult(result: unknown) {
   const order = vi.fn().mockResolvedValue(result);
@@ -17,6 +21,21 @@ function aliasQueryResult(result: unknown) {
   const select = vi.fn(() => ({ eq }));
   supabaseMocks.from.mockReturnValue({ select });
   return { select, eq, order };
+}
+
+function inQuery(result: unknown) {
+  const query = { in: vi.fn(), order: vi.fn(), range: vi.fn().mockResolvedValue(result) };
+  query.in.mockReturnValue(query);
+  query.order.mockReturnValue(query);
+  supabaseMocks.from.mockReturnValue({ select: vi.fn(() => query) });
+  return query;
+}
+
+function pageQuery(result: unknown) {
+  const query = { order: vi.fn(), range: vi.fn().mockResolvedValue(result) };
+  query.order.mockReturnValue(query);
+  supabaseMocks.from.mockReturnValue({ select: vi.fn(() => query) });
+  return query;
 }
 
 describe("fetchCanonicalSchoolId", () => {
@@ -63,5 +82,49 @@ describe("fetchCanonicalSchoolId", () => {
       throw new Error("network failure");
     });
     await expect(fetchCanonicalSchoolId("throwing-alias")).resolves.toBeNull();
+  });
+});
+
+describe("fetchSchoolSlugResolver", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("resolves aliases from a paged crosswalk read, not one request per alias", async () => {
+    const query = pageQuery({
+      data: [
+        { school_id: "amherst", alias: "amherst-college", is_primary: false },
+        { school_id: "bowdoin", alias: "bowdoin-college", is_primary: false },
+      ],
+      error: null,
+    });
+    const resolve = await fetchSchoolSlugResolver(["amherst-college", "bowdoin-college"]);
+    expect(supabaseMocks.from).toHaveBeenCalledTimes(1);
+    expect(supabaseMocks.from).toHaveBeenCalledWith("institution_slug_crosswalk");
+    expect(query.range).toHaveBeenCalledTimes(1);
+    expect(resolve("amherst-college")).toBe("amherst");
+    expect(resolve("bowdoin-college")).toBe("bowdoin");
+  });
+});
+
+describe("fetchSchoolFederalBaselineIndex", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("loads every school in one school_facts_unified query", async () => {
+    const query = inQuery({
+      data: [
+        { school_id: "mit", ipeds_id: "166683" },
+        { school_id: "stanford", ipeds_id: "243744" },
+      ],
+      error: null,
+    });
+    const index = await fetchSchoolFederalBaselineIndex(["stanford", "mit", "stanford"]);
+    expect(supabaseMocks.from).toHaveBeenCalledWith("school_facts_unified");
+    expect(query.in).toHaveBeenCalledTimes(1);
+    expect(query.in).toHaveBeenCalledWith("school_id", ["stanford", "mit"]);
+    expect(index.get("mit")).toEqual({ ipeds_id: "166683" });
+    expect(index.get("stanford")).toEqual({ ipeds_id: "243744" });
   });
 });

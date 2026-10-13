@@ -4,6 +4,7 @@ import {
   fetchInstitutionCoverage,
   fetchSchoolBrandColors,
   fetchSchoolDocuments,
+  fetchSchoolFederalBaselineIndex,
   fetchSchoolFederalFacts,
   fetchScorecardByIpedsId,
   fetchFsaNonpaymentBySchoolId,
@@ -830,24 +831,26 @@ export async function searchSchools(query: string, limit = 10) {
     brand_colors?: string[] | null;
   }>;
 
-  const rpcResults = await Promise.all(
-    rows.map(async (row) => {
-      const facts = await fetchSchoolFederalFacts(row.school_id);
-      return {
-        school_id: row.school_id,
-        school_name: row.school_name,
-        aliases: [],
-        city: row.city,
-        state: row.state,
-        ipeds_id: facts[0]?.ipeds_id ?? null,
-        coverage_status: row.coverage_status,
-        has_cds: row.latest_available_cds_year != null,
-        has_federal_baseline: facts.length > 0,
-        school_url: `${SITE_URL}/schools/${row.school_id}`,
-        ...glyphSearchFields(row.brand_colors),
-      };
-    }),
-  );
+  const baselines = await fetchSchoolFederalBaselineIndex([
+    ...rows.map((row) => row.school_id),
+    ...(exactCoverage ? [exactCoverage.school_id] : []),
+  ]);
+  const rpcResults = rows.map((row) => {
+    const facts = baselines.get(row.school_id);
+    return {
+      school_id: row.school_id,
+      school_name: row.school_name,
+      aliases: [],
+      city: row.city,
+      state: row.state,
+      ipeds_id: facts?.ipeds_id ?? null,
+      coverage_status: row.coverage_status,
+      has_cds: row.latest_available_cds_year != null,
+      has_federal_baseline: facts != null,
+      school_url: `${SITE_URL}/schools/${row.school_id}`,
+      ...glyphSearchFields(row.brand_colors),
+    };
+  });
   const exactResult =
     exactCoverage && !rpcResults.some((row) => row.school_id === exactCoverage.school_id)
       ? [
@@ -860,7 +863,7 @@ export async function searchSchools(query: string, limit = 10) {
             ipeds_id: exactCoverage.ipeds_id,
             coverage_status: exactCoverage.coverage_status,
             has_cds: exactCoverage.latest_available_cds_year != null,
-            has_federal_baseline: (await fetchSchoolFederalFacts(exactCoverage.school_id)).length > 0,
+            has_federal_baseline: baselines.has(exactCoverage.school_id),
             school_url: `${SITE_URL}/schools/${exactCoverage.school_id}`,
             ...glyphSearchFields(await fetchSchoolBrandColors(exactCoverage.school_id)),
           },

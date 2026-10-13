@@ -1033,27 +1033,29 @@ export const fetchSchoolSlugResolver = cache(async function fetchSchoolSlugResol
 ): Promise<SchoolSlugResolver> {
   const retired = new Set(retiredSchoolAliases.map((entry) => entry.alias));
   const rowsByAlias = new Map<string, SchoolAliasRow[]>();
-  const unique = Array.from(new Set(schoolIds.filter(Boolean)));
-  const CHUNK = 100;
-  const chunks: string[][] = [];
-  for (let i = 0; i < unique.length; i += CHUNK) chunks.push(unique.slice(i, i + CHUNK));
+  const wanted = new Set(schoolIds.filter(Boolean));
+  // Page the whole crosswalk. A single .in('alias', thousands) GET exceeds
+  // URL limits (build-time fetch failed); per-alias .eq is the FYI-7 N+1.
   try {
-    const pages = await Promise.all(
-      chunks.map(async (chunk) => {
-        const { data, error } = await (supabase as unknown as UntypedSupabase)
+    if (wanted.size > 0) {
+      const PAGE = 1000;
+      const client = supabase as unknown as UntypedSupabase;
+      for (let start = 0; start < 50_000; start += PAGE) {
+        const { data, error } = await client
           .from("institution_slug_crosswalk")
           .select("school_id, alias, is_primary")
-          .in("alias", chunk);
+          .order("alias")
+          .order("school_id")
+          .range(start, start + PAGE - 1);
         if (error) throw new Error(error.message);
-        return (data as SchoolAliasRow[] | null) ?? [];
-      }),
-    );
-    for (const page of pages) {
-      for (const row of page) {
-        if (!row.alias) continue;
-        const list = rowsByAlias.get(row.alias) ?? [];
-        list.push(row);
-        rowsByAlias.set(row.alias, list);
+        const page = (data as SchoolAliasRow[] | null) ?? [];
+        for (const row of page) {
+          if (!row.alias || !wanted.has(row.alias)) continue;
+          const list = rowsByAlias.get(row.alias) ?? [];
+          list.push(row);
+          rowsByAlias.set(row.alias, list);
+        }
+        if (page.length < PAGE) break;
       }
     }
   } catch (error) {
@@ -1117,6 +1119,46 @@ export const fetchSchoolDirectPublishEvents = cache(
 // This intentionally tolerates missing-table/view errors so the web build can
 // ship before the production migration is applied from main. The UI simply
 // omits the federal baseline table until data exists.
+export type SchoolFederalBaselineIndex = Map<string, { ipeds_id: string | null }>;
+
+export const fetchSchoolFederalBaselineIndex = cache(
+  async function fetchSchoolFederalBaselineIndex(
+    schoolIds: string[],
+  ): Promise<SchoolFederalBaselineIndex> {
+    const unique = Array.from(new Set(schoolIds.filter(Boolean)));
+    const out: SchoolFederalBaselineIndex = new Map();
+    if (unique.length === 0) return out;
+    try {
+      const PAGE = 1000;
+      const client = supabase as unknown as UntypedSupabase;
+      for (let start = 0; start < 50_000; start += PAGE) {
+        const { data, error } = await client
+          .from("school_facts_unified")
+          .select("school_id, ipeds_id")
+          .in("school_id", unique)
+          .order("display_group", { ascending: true })
+          .order("field_label", { ascending: true })
+          .range(start, start + PAGE - 1);
+        if (error) {
+          console.warn(`fetchSchoolFederalBaselineIndex: ${error.message}`);
+          return new Map();
+        }
+        const page =
+          (data as Array<{ school_id: string | null; ipeds_id: string | null }>) ?? [];
+        for (const row of page) {
+          if (!row.school_id || out.has(row.school_id)) continue;
+          out.set(row.school_id, { ipeds_id: row.ipeds_id ?? null });
+        }
+        if (page.length < PAGE) break;
+      }
+      return out;
+    } catch (error) {
+      console.warn(`fetchSchoolFederalBaselineIndex: ${String(error)}`);
+      return new Map();
+    }
+  },
+);
+
 export const fetchSchoolFederalFacts = cache(
   async function fetchSchoolFederalFacts(
     schoolId: string,
