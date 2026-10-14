@@ -1,4 +1,4 @@
-import { c1HeadlineTotals } from "./c1-headline-totals";
+import { c1HeadlineTotals, fieldNumber } from "./c1-headline-totals";
 import { formatFieldValue } from "./format";
 import { isSchema2024_25 } from "./schema-labels";
 import type { FieldValue } from "./types";
@@ -637,9 +637,26 @@ function buildD2Tables(
     return [];
   }
 
-  return isSchema2024_25(schemaVersion)
+  return isSchema2024_25(schemaVersion) && isD22024Layout(values)
     ? [d2Table2024(values)]
     : [d2Table2025(values)];
+}
+
+/**
+ * 2024-25 Tier 4 extracts often carry D2 in the 2025-26 numbering, where
+ * D.205 / D.210 are admitted / enrolled men rather than applied / admitted
+ * totals. D.213–D.215 only exist in the 2024-25 numbering.
+ */
+function isD22024Layout(values: Record<string, FieldValue>): boolean {
+  if (["D.213", "D.214", "D.215"].some((id) => id in values)) return true;
+  for (const [men, total] of [["D.201", "D.205"], ["D.206", "D.210"]]) {
+    const menCount = fieldNumber(values, men);
+    const totalCount = fieldNumber(values, total);
+    if (menCount != null && totalCount != null && menCount !== totalCount) {
+      return totalCount > menCount;
+    }
+  }
+  return true;
 }
 
 function d2Table2025(values: Record<string, FieldValue>): ReconstructedTable {
@@ -664,11 +681,11 @@ function d2Table2024(values: Record<string, FieldValue>): ReconstructedTable {
     title: "D2 transfer admissions",
     caption:
       "Transfer applicants, admits, and enrolled students by reported gender or status.",
-    columns: ["Men", "Women", "Unknown", "Total"],
+    columns: ["Men", "Women", "Another gender", "Unknown", "Total"],
     rows: [
-      ["applied", "Applied", ["D.201", "D.202", "D.203", "D.204"]],
-      ["admitted", "Admitted", ["D.205", "D.206", "D.207", "D.208"]],
-      ["enrolled", "Enrolled", ["D.209", "D.210", "D.211", "D.212"]],
+      ["applied", "Applied", ["D.201", "D.202", "D.203", "D.204", "D.205"]],
+      ["admitted", "Admitted", ["D.206", "D.207", "D.208", "D.209", "D.210"]],
+      ["enrolled", "Enrolled", ["D.211", "D.212", "D.213", "D.214", "D.215"]],
     ],
     values,
   });

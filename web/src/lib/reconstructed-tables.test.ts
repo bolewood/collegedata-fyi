@@ -389,27 +389,55 @@ describe("buildReconstructedTables", () => {
       {
         "D.201": { value: "120" },
         "D.202": { value: "150" },
-        "D.204": { value: "270" },
-        "D.205": { value: "12" },
-        "D.206": { value: "18" },
-        "D.208": { value: "30" },
+        "D.203": { value: "3" },
+        "D.205": { value: "273" },
+        "D.206": { value: "12" },
+        "D.207": { value: "18" },
+        "D.210": { value: "30" },
+        "D.215": { value: "9" },
       },
       "2024-25",
     );
 
     const d2 = tables.find((table) => table.key === "d2-transfer-admissions");
-    expect(d2?.columns).toEqual(["Men", "Women", "Unknown", "Total"]);
+    expect(d2?.columns).toEqual(["Men", "Women", "Another gender", "Unknown", "Total"]);
     expect(d2?.rows[0].cells.map((cell) => cell.display)).toEqual([
       "120",
       "150",
+      "3",
       "Not reported",
-      "270",
+      "273",
     ]);
     expect(d2?.rows[1].cells.map((cell) => cell.display)).toEqual([
       "12",
       "18",
       "Not reported",
+      "Not reported",
       "30",
+    ]);
+    expect(d2?.rows[2].cells.at(-1)?.display).toBe("9");
+  });
+
+  it("keeps 2025-26 D2 numbering on 2024-25 extracts that use it", () => {
+    const tables = buildReconstructedTables(
+      {
+        "D.201": { value: "120" },
+        "D.202": { value: "150" },
+        "D.204": { value: "270" },
+        "D.205": { value: "60" },
+        "D.206": { value: "80" },
+        "D.208": { value: "140" },
+      },
+      "2024-25",
+    );
+
+    const d2 = tables.find((table) => table.key === "d2-transfer-admissions");
+    expect(d2?.rows[0].cells.at(-1)?.display).toBe("270");
+    expect(d2?.rows[1].cells.map((cell) => cell.display)).toEqual([
+      "60",
+      "80",
+      "Not reported",
+      "140",
     ]);
   });
 

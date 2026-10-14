@@ -6,6 +6,24 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.18.4] - 2026-10-07
+
+### Fixed
+
+- The D2 transfer admissions table on 2024-25 year pages now reads the
+  2024-25 layout's five cells per row (men, women, another gender, unknown,
+  total). It read four, so from the second row on every cell came from the
+  wrong row: "Admitted men" showed the applicant total. Tier 4 extracts that
+  still store D2 in the 2025-26 numbering keep the old table.
+
+### Added
+
+- The official 2021-22 and 2022-23 CDS templates (fillable PDF and XLSX),
+  recovered from the Internet Archive, are archived in `schemas/templates/`
+  with source URLs, Wayback snapshots, and SHA-256 hashes. A synthesized
+  canonical schema for those years was evaluated and not adopted: it matched
+  IPEDS admissions counts less often than the current 2025-26 fallback.
+
 ## [0.6.18.3] - 2026-10-06
 
 ### Fixed
