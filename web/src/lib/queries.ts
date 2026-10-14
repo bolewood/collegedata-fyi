@@ -1836,3 +1836,22 @@ export const fetchScorecardByIpedsId = cache(async function fetchScorecardByIped
   if (error) throw new Error(`fetchScorecardByIpedsId: ${error.message}`);
   return data ?? null;
 });
+
+// Compare (and any other multi-school path) must not fan out to
+// scorecard_summary?ipeds_id=eq.* — Sentry COLLEGEDATA-FYI-G.
+export const fetchScorecardByIpedsIds = cache(async function fetchScorecardByIpedsIds(
+  ipedsIds: Array<string | null | undefined>,
+): Promise<Map<string, ScorecardSummary>> {
+  const unique = Array.from(new Set(ipedsIds.filter((id): id is string => Boolean(id))));
+  const out = new Map<string, ScorecardSummary>();
+  if (unique.length === 0) return out;
+  const { data, error } = await supabase
+    .from("scorecard_summary")
+    .select("*")
+    .in("ipeds_id", unique);
+  if (error) throw new Error(`fetchScorecardByIpedsIds: ${error.message}`);
+  for (const row of data ?? []) {
+    if (row.ipeds_id) out.set(row.ipeds_id, row);
+  }
+  return out;
+});

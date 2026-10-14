@@ -7,6 +7,7 @@ import {
   fetchSchoolFederalBaselineIndex,
   fetchSchoolFederalFacts,
   fetchScorecardByIpedsId,
+  fetchScorecardByIpedsIds,
   fetchFsaNonpaymentBySchoolId,
 } from "./queries";
 import { glyphSearchFields } from "./derive-inks";
@@ -722,7 +723,19 @@ async function fetchMeritFactsRow(schoolId: string): Promise<MeritRow | null> {
   return data ?? null;
 }
 
-async function buildSchoolContext(schoolId: string): Promise<PublicSchoolContext | null> {
+async function resolveIpedsId(schoolId: string): Promise<string | null> {
+  const [docs, coverage, federalFacts] = await Promise.all([
+    fetchSchoolDocuments(schoolId),
+    fetchInstitutionCoverage(schoolId),
+    fetchSchoolFederalFacts(schoolId),
+  ]);
+  return coverage?.ipeds_id ?? docs.find((doc) => doc.ipeds_id)?.ipeds_id ?? federalFacts[0]?.ipeds_id ?? null;
+}
+
+async function buildSchoolContext(
+  schoolId: string,
+  scorecardByIpedsId?: Map<string, NonNullable<PublicSchoolContext["scorecard"]>>,
+): Promise<PublicSchoolContext | null> {
   const [docs, coverage, browserRow, meritRow, federalFacts, nonpayment] = await Promise.all([
     fetchSchoolDocuments(schoolId),
     fetchInstitutionCoverage(schoolId),
@@ -736,7 +749,9 @@ async function buildSchoolContext(schoolId: string): Promise<PublicSchoolContext
 
   const ipedsId =
     coverage?.ipeds_id ?? docs.find((doc) => doc.ipeds_id)?.ipeds_id ?? federalFacts[0]?.ipeds_id ?? null;
-  const scorecard = await fetchScorecardByIpedsId(ipedsId);
+  const scorecard = scorecardByIpedsId
+    ? (ipedsId ? (scorecardByIpedsId.get(ipedsId) ?? null) : null)
+    : await fetchScorecardByIpedsId(ipedsId);
   const schoolName =
     coverage?.school_name ?? docs[0]?.school_name ?? browserRow?.school_name ?? federalFacts[0]?.school_name ?? schoolId;
 
@@ -877,8 +892,9 @@ export async function searchSchools(query: string, limit = 10) {
 export async function getSchoolFacts(
   schoolId: string,
   options: { categories?: PublicFactCategory[]; fields?: string[] } = {},
+  scorecardByIpedsId?: Map<string, NonNullable<PublicSchoolContext["scorecard"]>>,
 ) {
-  const context = await buildSchoolContext(schoolId);
+  const context = await buildSchoolContext(schoolId, scorecardByIpedsId);
   if (!context) return null;
 
   const categories = options.categories?.length ? new Set(options.categories) : null;
@@ -978,8 +994,12 @@ export async function compareSchools(
       ? fieldsForCategories(options.categories)
       : fieldsForCategories(["admissions", "cost", "aid", "outcomes"]);
   const uniqueSchoolIds = Array.from(new Set(schoolIds.map((id) => id.trim()).filter(Boolean))).slice(0, 25);
+  const ipedsIds = await Promise.all(uniqueSchoolIds.map((id) => resolveIpedsId(id)));
+  const scorecards = await fetchScorecardByIpedsIds(ipedsIds);
   const payloads = await Promise.all(
-    uniqueSchoolIds.map((id) => getSchoolFacts(id, { fields: fieldKeys }).then((payload) => [id, payload] as const)),
+    uniqueSchoolIds.map((id) =>
+      getSchoolFacts(id, { fields: fieldKeys }, scorecards).then((payload) => [id, payload] as const),
+    ),
   );
   const columns = fieldKeys.map((key) => {
     const definition = FIELD_BY_KEY.get(key)!;

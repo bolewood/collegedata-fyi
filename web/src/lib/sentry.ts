@@ -28,8 +28,12 @@ export const SENTRY_PRODUCTION_TRACES_SAMPLE_RATE = 0.2;
  */
 export const SENTRY_JSONLD_CONTEXT_NOISE = /\["@context"\]\.toLowerCase/;
 
+/** Headless “reader.self” bots (Sentry FYI-E / FYI-A). */
+export const SENTRY_READER_SELF_NOISE = /reader\.self/;
+
 export const SENTRY_IGNORE_ERRORS = [
   SENTRY_JSONLD_CONTEXT_NOISE,
+  SENTRY_READER_SELF_NOISE,
   "Object Not Found Matching Id",
 ];
 
@@ -95,14 +99,35 @@ export function sentryEnabled(override?: EnvLookup): boolean {
   return !ci && sentryEnvironment(override) !== "ci";
 }
 
-export function sentryBeforeSend<E extends { request?: { url?: string } }>(
-  event: E,
-): E | null {
-  const url = event.request?.url;
-  if (typeof url === "string" && url.startsWith("http://localhost")) {
+type SentryEventLike = {
+  message?: string;
+  request?: { url?: string };
+  exception?: {
+    values?: Array<{
+      value?: string;
+      stacktrace?: { frames?: Array<{ function?: string; filename?: string; abs_path?: string }> };
+    }>;
+  };
+};
+
+export function isHeadlessReaderNoise(event: SentryEventLike): boolean {
+  const message = event.exception?.values?.[0]?.value ?? event.message;
+  if (typeof message === "string" && SENTRY_READER_SELF_NOISE.test(message)) return true;
+  return (event.exception?.values ?? []).some((value) =>
+    (value.stacktrace?.frames ?? []).some(
+      (frame) =>
+        frame.function === "magicRPC" ||
+        frame.filename?.includes("reader.self") ||
+        frame.abs_path?.includes("reader.self"),
+    ),
+  );
+}
+
+export function sentryBeforeSend<E extends SentryEventLike>(event: E): E | null {
+  if (typeof event.request?.url === "string" && event.request.url.startsWith("http://localhost")) {
     return null;
   }
-  return event;
+  return isHeadlessReaderNoise(event) ? null : event;
 }
 
 export function sentryInitOptions(override?: EnvLookup) {
