@@ -9,6 +9,8 @@ import {
   SENTRY_ORG,
   SENTRY_PRODUCTION_TRACES_SAMPLE_RATE,
   SENTRY_PROJECT,
+  SENTRY_READER_SELF_NOISE,
+  isHeadlessReaderNoise,
   isJsonLdContextExtensionNoise,
   isSentryVerifyAllowed,
   sentryBeforeSend,
@@ -120,6 +122,8 @@ describe("sentryInitOptions", () => {
     expect(options.enabled).toBe(true);
     expect(options.beforeSend).toBe(sentryBeforeSend);
     expect(SENTRY_IGNORE_ERRORS).toContain("Object Not Found Matching Id");
+    expect(SENTRY_IGNORE_ERRORS).toContain(SENTRY_READER_SELF_NOISE);
+    expect(SENTRY_READER_SELF_NOISE.test("TypeError: Failed to fetch via reader.self")).toBe(true);
     expect(SENTRY_DENY_URLS.some((p) => p.test("/49d0ab2abf43d524/script.js"))).toBe(true);
     expect(SENTRY_DENY_URLS.some((p) => p.test("/_vercel/insights/view"))).toBe(true);
     expect(sentryEnabled({ CI: "true", NODE_ENV: "production" })).toBe(false);
@@ -153,5 +157,23 @@ describe("isJsonLdContextExtensionNoise", () => {
       isJsonLdContextExtensionNoise("TypeError: Cannot read properties of undefined"),
     ).toBe(false);
     expect(isJsonLdContextExtensionNoise(undefined)).toBe(false);
+  });
+});
+
+describe("isHeadlessReaderNoise", () => {
+  it("drops reader.self messages and magicRPC frames, but keeps first-party fetch errors", () => {
+    expect(isHeadlessReaderNoise({ exception: { values: [{ value: "Failed to fetch via reader.self" }] } })).toBe(
+      true,
+    );
+    expect(
+      sentryBeforeSend({
+        exception: { values: [{ value: "Failed to fetch", stacktrace: { frames: [{ function: "magicRPC" }] } }] },
+      }),
+    ).toBeNull();
+    expect(
+      sentryBeforeSend({
+        exception: { values: [{ value: "Failed to fetch", stacktrace: { frames: [{ function: "loadSchoolFacts" }] } }] },
+      }),
+    ).not.toBeNull();
   });
 });

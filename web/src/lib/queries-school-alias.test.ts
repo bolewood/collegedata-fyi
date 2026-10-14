@@ -13,6 +13,7 @@ import {
   fetchCanonicalSchoolId,
   fetchSchoolFederalBaselineIndex,
   fetchSchoolSlugResolver,
+  fetchScorecardByIpedsIds,
 } from "./queries";
 
 function aliasQueryResult(result: unknown) {
@@ -126,5 +127,33 @@ describe("fetchSchoolFederalBaselineIndex", () => {
     expect(query.in).toHaveBeenCalledWith("school_id", ["stanford", "mit"]);
     expect(index.get("mit")).toEqual({ ipeds_id: "166683" });
     expect(index.get("stanford")).toEqual({ ipeds_id: "243744" });
+  });
+});
+
+describe("fetchScorecardByIpedsIds", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("loads every IPEDS id in one scorecard_summary query", async () => {
+    const query = { in: vi.fn().mockResolvedValue({
+      data: [
+        { ipeds_id: "166683", avg_net_price: 19000 },
+        { ipeds_id: "243744", avg_net_price: 21000 },
+      ],
+      error: null,
+    }) };
+    supabaseMocks.from.mockReturnValue({ select: vi.fn(() => query) });
+
+    const index = await fetchScorecardByIpedsIds(["243744", "166683", "243744", null]);
+    expect(supabaseMocks.from).toHaveBeenCalledTimes(1);
+    expect(supabaseMocks.from).toHaveBeenCalledWith("scorecard_summary");
+    expect(query.in).toHaveBeenCalledWith("ipeds_id", ["243744", "166683"]);
+    expect(index.get("166683")).toEqual({ ipeds_id: "166683", avg_net_price: 19000 });
+  });
+
+  it("skips the network when no IPEDS ids are present", async () => {
+    await expect(fetchScorecardByIpedsIds([null, undefined, ""])).resolves.toEqual(new Map());
+    expect(supabaseMocks.from).not.toHaveBeenCalled();
   });
 });
