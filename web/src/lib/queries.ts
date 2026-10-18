@@ -41,10 +41,14 @@ import {
 } from "./school-alias";
 import retiredSchoolAliases from "../data/school-redirects.json";
 import { isCanonicalCdsYear } from "./format";
+import { excludeHiddenQualityDocuments } from "./public-documents";
 
 // Documents with these participation_status values are excluded from every
 // public-facing manifest query. 'withdrawn' = takedown per ADR 0008.
 // 'verified_absent' = school is publicly known not to publish CDS.
+// blank_template rows are hidden separately via excludeHiddenQualityDocuments
+// (school, year, and manifest listings). To hide a row from PostgREST as
+// well, set removed_at from main after merge — see public-documents.ts.
 // Consumers who need the full manifest (audit, transparency log reconciliation)
 // can query cds_documents directly via PostgREST.
 const PUBLIC_EXCLUDED_STATUSES = ["withdrawn", "verified_absent"];
@@ -154,7 +158,7 @@ async function fetchManifestForStaticBuild(): Promise<ManifestRow[]> {
         throw new Error(`HTTP ${response.status}: ${body.slice(0, 200)}`);
       }
       const page = (await response.json()) as ManifestRow[];
-      allRows.push(...page);
+      allRows.push(...excludeHiddenQualityDocuments(page));
       if (page.length < PAGE_SIZE) break;
     } catch (error) {
       console.warn(
@@ -604,7 +608,7 @@ export const fetchManifest = cache(async function fetchManifest(): Promise<Manif
     }
     if (!data || data.length === 0) break;
 
-    allRows.push(...data);
+    allRows.push(...excludeHiddenQualityDocuments(data));
     if (data.length < PAGE_SIZE) break;
     from += PAGE_SIZE;
   }
@@ -1082,7 +1086,9 @@ export const fetchSchoolDocuments = cache(async function fetchSchoolDocuments(
 
   if (error)
     throw new Error(`Failed to fetch school documents: ${error.message}`);
-  return mergeAliasDocuments(schoolId, data ?? [], ipedsId);
+  return excludeHiddenQualityDocuments(
+    mergeAliasDocuments(schoolId, data ?? [], ipedsId),
+  );
 });
 
 export const fetchSchoolDirectPublishEvents = cache(
@@ -1736,7 +1742,9 @@ export const fetchDocumentsBySchoolAndYear = cache(async function fetchDocuments
   if (error) {
     throw new Error(`Failed to fetch documents: ${error.message}`);
   }
-  return mergeAliasDocuments(schoolId, data ?? [], ipedsId);
+  return excludeHiddenQualityDocuments(
+    mergeAliasDocuments(schoolId, data ?? [], ipedsId),
+  );
 });
 
 export async function fetchCanonicalArtifact(
