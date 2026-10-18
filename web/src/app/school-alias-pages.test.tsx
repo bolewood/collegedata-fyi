@@ -65,6 +65,11 @@ describe("retired alias pages and Open Graph images", () => {
     mocks.fetchCanonicalSchoolId.mockResolvedValue("tufts");
     mocks.fetchSchoolBrandColors.mockResolvedValue(null);
     mocks.fetchSchoolYearFacts.mockResolvedValue([]);
+    mocks.fetchExtract.mockResolvedValue({
+      canonical: null,
+      fallback: null,
+      mergedValues: {},
+    });
     mocks.permanentRedirect.mockImplementation(() => {
       throw redirectSentinel;
     });
