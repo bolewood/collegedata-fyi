@@ -139,6 +139,9 @@ export interface ArtifactNotes {
   producer?: string;
   producer_version?: string;
   schema_version?: string;
+  schema_fallback_used?: boolean;
+  schema_fallback_reason?: string;
+  schema_year_proxy_for?: string;
   base_artifact_id?: string;
   base_producer?: string;
   base_producer_version?: string;

@@ -234,7 +234,16 @@ PRD 014 M6.
 
 ## Year detection (ADR 0007)
 
-`worker.py` runs `detect_year_from_pdf_bytes()` on every archived PDF and writes the result to `cds_documents.detected_year`. This is the authoritative year per [ADR 0007](../../docs/decisions/0007-year-authority-moves-to-extraction.md) — the content-derived year wins over the URL-derived guess that the resolver makes. Strict prefix-anchored regex ladder, `y2 = y1 + 1` span validation, collect-all-unique across pages 1-10. Recall ~80% on PDFs; the rest remain `detected_year IS NULL` and consumers fall back to `cds_year` via `cds_manifest.canonical_year`.
+`worker.py` runs `detect_year_from_pdf_bytes()` on every archived PDF and writes the result to `cds_documents.detected_year`. This is the authoritative year per [ADR 0007](../../docs/decisions/0007-year-authority-moves-to-extraction.md) — the content-derived year wins over the URL-derived guess that the resolver makes. Strict prefix-anchored regex ladder, `y2 = y1 + 1` span validation, collect-all-unique across pages 1-10. Adjacent `Common Data Set YYYY-YYYY` / `CDS YYYY-YY` titles match, and so do section-package layouts that print `Common Data Set`, a `Section …` heading, then the year on the following lines. A bare year in the body still does not count. Recall ~80% on PDFs; the rest remain `detected_year IS NULL` and consumers fall back to `cds_year` via `cds_manifest.canonical_year`.
+
+To backfill `detected_year` after a detector change (read-only first):
+
+```
+python tools/extraction_worker/worker.py --detect-year-only --school university-of-kansas
+python tools/extraction_worker/worker.py --detect-year-only --school university-of-kansas --write
+```
+
+`--write` updates `cds_documents.detected_year` only. It does not re-extract.
 
 ## See also
 

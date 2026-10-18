@@ -38,7 +38,9 @@ import { ScorecardVintageNote } from "@/components/ScorecardVintageNote";
 import { AdmissionStrategyCard } from "@/components/AdmissionStrategyCard";
 import { SpreadsheetDownloadLinks } from "@/components/SpreadsheetDownloadLinks";
 import { ArchiveLead } from "@/components/ArchiveLead";
+import { SchemaFallbackNote } from "@/components/SchemaFallbackNote";
 import { yearArchiveLead } from "@/lib/archive-lead";
+import { schemaFallbackNoteFromArtifact } from "@/lib/schema-fallback";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
 import { externalLinkRel } from "@/lib/client-info";
 
@@ -275,6 +277,7 @@ async function DocumentVariant({
   let totalFields: number | undefined;
   let markdown: string | undefined;
   let schemaVersion: string | undefined;
+  let schemaFallbackCopy: string | null = null;
   let c1: C1HeadlineTotals | undefined;
 
   if (isExtracted && doc.document_id) {
@@ -284,6 +287,10 @@ async function DocumentVariant({
     totalFields = notes?.stats?.total_fields;
     markdown = notes?.markdown ?? undefined;
     schemaVersion = notes?.schema_version ?? doc.cds_year ?? undefined;
+    schemaFallbackCopy = schemaFallbackNoteFromArtifact(
+      notes,
+      doc.canonical_year,
+    );
     const reading = readC1Totals({
       values,
       schemaVersion: notes?.schema_version ?? null,
@@ -337,6 +344,8 @@ async function DocumentVariant({
           />
         )}
       </div>
+
+      {schemaFallbackCopy ? <SchemaFallbackNote note={schemaFallbackCopy} /> : null}
 
       {hasValues && (
         <div style={{ marginTop: 16 }}>

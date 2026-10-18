@@ -752,6 +752,21 @@ def download_source(client: Client, storage_path: str) -> bytes:
 # glyph; non-breaking hyphen in particular shows up in CDS templates
 # that don't want the year to line-break.
 _DASH_CLASS = r"[-\u2010\u2011\u2012\u2013\u2014\u2212/]"
+# Title-line layouts (CDS Initiative template):
+#   Common Data Set 2025-2026
+#   CDS 2025-26
+#
+# Section-package layouts (Factbook PDFs that print the CDS title, a
+# section heading, then the year on the following lines):
+#   Common Data Set
+#   Section A1. General Information
+#   2026-2027
+#
+# The section-title pattern stays prefix-anchored on "Common Data Set"
+# and only allows a short heading (plus one optional extra line, e.g. a
+# school name) between the title and the year. A bare 2006-07 in
+# section J still cannot match. Zero hits or multiple distinct valid
+# spans still return None (ADR 0007: miss, don't corrupt).
 _YEAR_PATTERNS = [
     re.compile(
         r"Common\s+Data\s+Set\s*[,:]?\s*(20\d{2})\s*" + _DASH_CLASS + r"\s*(20\d{2}|\d{2})",
@@ -759,6 +774,14 @@ _YEAR_PATTERNS = [
     ),
     re.compile(
         r"\bCDS\s*[,:]?\s*(20\d{2})\s*" + _DASH_CLASS + r"\s*(20\d{2}|\d{2})\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"Common\s+Data\s+Set\s+"
+        r"Section\s+[A-J]\d{0,2}\.?\s+"
+        r"[A-Za-z][A-Za-z0-9 ,.&'()/-]{0,80}"
+        r"(?:\s+[A-Za-z][A-Za-z0-9 ,.&'()/-]{2,60})?"
+        r"\s+(20\d{2})\s*" + _DASH_CLASS + r"\s*(20\d{2}|\d{2})",
         re.IGNORECASE,
     ),
 ]
@@ -776,6 +799,35 @@ def _normalize_year_span(y1_raw: str, y2_raw: str) -> Optional[str]:
     if y1 > 2035:
         return None
     return f"{y1}-{y2:02d}"
+
+
+def collect_year_spans_from_text(text: str) -> set[str]:
+    """Collect valid CDS year spans from already-extracted plain text.
+
+    Shared by PDF page text and DOCX tag-stripped XML so the regex
+    ladder stays in one place. Uniqueness is the caller's job.
+    """
+    spans: set[str] = set()
+    if not text:
+        return spans
+    for pattern in _YEAR_PATTERNS:
+        for m in pattern.finditer(text):
+            span = _normalize_year_span(m.group(1), m.group(2))
+            if span:
+                spans.add(span)
+    return spans
+
+
+def unique_detected_year(spans: set[str]) -> Optional[str]:
+    """ADR 0007: one unique valid span is a year; zero or many is None."""
+    if len(spans) == 1:
+        return next(iter(spans))
+    return None
+
+
+def detect_year_from_text(text: str) -> Optional[str]:
+    """Detect a CDS year from plain text. Tests should use this, not PDFs."""
+    return unique_detected_year(collect_year_spans_from_text(text))
 
 
 def detect_year_from_pdf_bytes(data: bytes, max_pages: int = 10) -> Optional[str]:
@@ -850,17 +902,11 @@ def detect_year_from_pdf_bytes(data: bytes, max_pages: int = 10) -> Optional[str
                 flush=True,
             )
             continue
-        for pattern in _YEAR_PATTERNS:
-            for m in pattern.finditer(text):
-                span = _normalize_year_span(m.group(1), m.group(2))
-                if span:
-                    spans.add(span)
-    if len(spans) == 1:
-        return next(iter(spans))
+        spans |= collect_year_spans_from_text(text)
     # Zero hits → undetected. Multiple distinct hits → ambiguous →
     # treat as undetected per the strict invariant. Both cases return
     # None; they're bucketed identically in the harness summary.
-    return None
+    return unique_detected_year(spans)
 
 
 _DOCX_TAG_STRIPPER = re.compile(r"<[^>]+>")
@@ -876,13 +922,7 @@ def _docx_collect_year_spans(xml: str) -> set[str]:
     all). Caller is expected to feed each XML part separately or as a
     concatenation."""
     text = _DOCX_TAG_STRIPPER.sub(" ", xml)
-    spans: set[str] = set()
-    for pattern in _YEAR_PATTERNS:
-        for m in pattern.finditer(text):
-            span = _normalize_year_span(m.group(1), m.group(2))
-            if span:
-                spans.add(span)
-    return spans
+    return collect_year_spans_from_text(text)
 
 
 def detect_year_from_docx_bytes(data: bytes) -> Optional[str]:
@@ -927,9 +967,7 @@ def detect_year_from_docx_bytes(data: bytes) -> Optional[str]:
             continue
         spans |= _docx_collect_year_spans(xml)
 
-    if len(spans) == 1:
-        return next(iter(spans))
-    return None
+    return unique_detected_year(spans)
 
 
 def detect_year_from_bytes(data: bytes) -> Optional[str]:

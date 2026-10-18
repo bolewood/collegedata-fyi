@@ -15,6 +15,7 @@ import {
   fetchCanonicalSchoolId,
   fetchSchoolBrandColors,
   fetchSchoolYearFacts,
+  fetchExtract,
 } from "@/lib/queries";
 import {
   factsForYear,
@@ -44,8 +45,10 @@ import { acceptanceRatePath } from "@/lib/acceptance-pilot";
 import { earlyDecisionPath } from "@/lib/early-decision-pilot";
 import { gpaPath } from "@/lib/gpa-pilot";
 import { ArchiveLead } from "@/components/ArchiveLead";
+import { SchemaFallbackNote } from "@/components/SchemaFallbackNote";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
-import type { ManifestRow, InstitutionCoverage } from "@/lib/types";
+import { schemaFallbackNoteFromArtifact } from "@/lib/schema-fallback";
+import type { ArtifactNotes, ManifestRow, InstitutionCoverage } from "@/lib/types";
 
 export const revalidate = 3600;
 
@@ -206,6 +209,9 @@ export default async function SchoolDetailPage({ params }: {
   // only need the first one. Scorecard data is per-school-per-vintage, not
   // per-document, so one query returns everything.
   const ipedsId = docs.find((d) => d.ipeds_id)?.ipeds_id ?? null;
+  const latestExtractedDoc = docs.find(
+    (doc) => doc.extraction_status === "extracted" && doc.document_id,
+  );
   const [
     scorecard,
     browserRow,
@@ -221,6 +227,7 @@ export default async function SchoolDetailPage({ params }: {
     acceptancePageServed,
     earlyDecisionPageServed,
     gpaPageServed,
+    latestExtract,
   ] = await Promise.all([
     fetchScorecardByIpedsId(ipedsId),
     fetchBrowserRowBySchoolId(school_id),
@@ -236,7 +243,14 @@ export default async function SchoolDetailPage({ params }: {
     fetchAcceptancePageServed(school_id),
     fetchEarlyDecisionPageServed(school_id),
     fetchGpaPageServed(school_id),
+    latestExtractedDoc?.document_id
+      ? fetchExtract(latestExtractedDoc.document_id)
+      : Promise.resolve(null),
   ]);
+  const schemaFallbackCopy = schemaFallbackNoteFromArtifact(
+    (latestExtract?.canonical?.notes as ArtifactNotes | null) ?? null,
+    latestExtractedDoc?.canonical_year,
+  );
   const administrativeUnit = ipedsAdmissions(federalFacts, ipedsId).administrativeUnit;
   const projectedPositioning = browserRow && !administrativeUnit
     ? { ...browserRow, ...gpaProfile }
@@ -440,6 +454,7 @@ export default async function SchoolDetailPage({ params }: {
             )}
           </h1>
           {schoolLead ? <ArchiveLead lead={schoolLead} showHeading={false} /> : null}
+          {schemaFallbackCopy ? <SchemaFallbackNote note={schemaFallbackCopy} /> : null}
           <div
             style={{
               display: "flex",
