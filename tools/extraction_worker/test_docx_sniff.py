@@ -135,6 +135,18 @@ class DetectYearFromDocxBytesTest(unittest.TestCase):
 </w:document>"""
         self.assertEqual(detect_year_from_docx_bytes(_minimal_docx(body)), "2024-25")
 
+    def test_section_title_then_year_on_following_lines(self):
+        # Invented Factbook-style DOCX: title, section heading, year.
+        body = b"""<?xml version='1.0'?>
+<w:document xmlns:w='http://schemas.openxmlformats.org/wordprocessingml/2006/main'>
+<w:body>
+  <w:p><w:r><w:t>Common Data Set</w:t></w:r></w:p>
+  <w:p><w:r><w:t>Section A1. General Information</w:t></w:r></w:p>
+  <w:p><w:r><w:t>2026-2027</w:t></w:r></w:p>
+</w:body>
+</w:document>"""
+        self.assertEqual(detect_year_from_docx_bytes(_minimal_docx(body)), "2026-27")
+
     def test_year_only_in_header_xml(self):
         # JMU 2024-25 case: title lives in word/header*.xml, not the
         # body. Detector must read header parts.
