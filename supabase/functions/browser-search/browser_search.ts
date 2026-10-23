@@ -303,15 +303,57 @@ export function filterMatches(row: BrowserRow, filter: BrowserFilter): boolean {
   }
 }
 
+export function sanitizeBrowserRowC1(row: BrowserRow): BrowserRow {
+  const app = row.applied;
+  const adm = row.admitted;
+  const enr = row.enrolled_first_year;
+  const acc = row.acceptance_rate != null && row.acceptance_rate !== "" ? Number(row.acceptance_rate) : null;
+  const yld = row.yield_rate != null && row.yield_rate !== "" ? Number(row.yield_rate) : null;
+
+  const invalidFunnel =
+    (app != null && adm != null && adm > app) ||
+    (adm != null && enr != null && enr > adm);
+
+  const validAccept =
+    !invalidFunnel &&
+    acc != null &&
+    acc > 0 &&
+    acc <= 1 &&
+    (adm == null || adm > 0) &&
+    (app == null || app > 0);
+
+  const validYield =
+    !invalidFunnel &&
+    yld != null &&
+    yld > 0 &&
+    yld <= 1 &&
+    (adm == null || adm > 0) &&
+    (enr == null || enr > 0);
+
+  if (validAccept && validYield && (adm == null || adm > 0) && (enr == null || enr > 0)) {
+    return row;
+  }
+
+  return {
+    ...row,
+    admitted: adm != null && adm <= 0 ? null : row.admitted,
+    enrolled_first_year: enr != null && enr <= 0 ? null : row.enrolled_first_year,
+    acceptance_rate: validAccept ? row.acceptance_rate : null,
+    yield_rate: validYield ? row.yield_rate : null,
+  };
+}
+
 export function searchBrowserRows(rows: BrowserRow[], input: BrowserSearchRequest): BrowserSearchResponse {
   const request = normalizeRequest(input);
   const filters = request.filters ?? [];
   const required = requiredFields(filters);
-  const candidates = rows.filter((row) => {
-    if (row.year_start < request.min_year_start!) return false;
-    if (request.variant_scope === "primary_only" && row.sub_institutional !== null) return false;
-    return true;
-  });
+  const candidates = rows
+    .filter((row) => {
+      if (row.year_start < request.min_year_start!) return false;
+      if (request.variant_scope === "primary_only" && row.sub_institutional !== null) return false;
+      return true;
+    })
+    .map(sanitizeBrowserRowC1);
 
   const evaluated = request.mode === "latest_per_school"
     ? pickLatestRows(candidates, required, request.variant_scope!)

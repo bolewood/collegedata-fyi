@@ -1235,11 +1235,25 @@ def build_browser_row(
     enrolled = int_from_decimal(metric_values.get("first_year_enrolled"))
 
     acceptance_rate = None
-    if applied and admitted is not None and applied > 0:
+    if (
+        applied is not None
+        and admitted is not None
+        and applied > 0
+        and admitted > 0
+        and admitted <= applied
+        and (enrolled is None or enrolled <= admitted)
+    ):
         acceptance_rate = quantize_fractional_rate(Decimal(admitted) / Decimal(applied))
 
     yield_rate = None
-    if admitted and enrolled is not None and admitted > 0:
+    if (
+        admitted is not None
+        and enrolled is not None
+        and admitted > 0
+        and enrolled > 0
+        and enrolled <= admitted
+        and (applied is None or admitted <= applied)
+    ):
         yield_rate = quantize_fractional_rate(Decimal(enrolled) / Decimal(admitted))
 
     admission_strategy = admission_strategy_values(

@@ -247,6 +247,21 @@ class BrowserProjectionTests(unittest.TestCase):
         self.assertIsNone(browser["acceptance_rate"])
         self.assertIsNone(browser["yield_rate"])
 
+    def test_zero_admitted_or_enrolled_omits_derived_rates(self):
+        _fields, browser = build_projection_rows(
+            doc(),
+            [
+                artifact(values={
+                    "C.116": {"value": "2477"},
+                    "C.117": {"value": "0"},
+                    "C.118": {"value": "836"},
+                })
+            ],
+            defs(),
+        )
+        self.assertIsNone(browser["acceptance_rate"])
+        self.assertIsNone(browser["yield_rate"])
+
     def test_2025_admissions_metrics_fall_back_to_gender_split_components(self):
         _fields, browser = build_projection_rows(
             doc(canonical_year="2025-26"),

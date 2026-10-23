@@ -259,13 +259,48 @@ function canRetryWithoutFederalColumns(
   return !federalFilter && !federalSort;
 }
 
+function sanitizeBrowserRow(row: BrowserRow): BrowserRow {
+  const app = row.applied;
+  const adm = row.admitted;
+  const enr = row.enrolled_first_year;
+  const acc = row.acceptance_rate != null ? Number(row.acceptance_rate) : null;
+  const yld = row.yield_rate != null ? Number(row.yield_rate) : null;
+
+  const invalidFunnel =
+    (app != null && adm != null && adm > app) ||
+    (adm != null && enr != null && enr > adm);
+
+  const validAccept =
+    !invalidFunnel &&
+    acc != null &&
+    acc > 0 &&
+    acc <= 1 &&
+    (adm == null || adm > 0) &&
+    (app == null || app > 0);
+
+  const validYield =
+    !invalidFunnel &&
+    yld != null &&
+    yld > 0 &&
+    yld <= 1 &&
+    (adm == null || adm > 0) &&
+    (enr == null || enr > 0);
+
+  return {
+    ...row,
+    applied: app != null && app <= 0 ? null : app,
+    admitted: adm != null && adm <= 0 ? null : adm,
+    enrolled_first_year: enr != null && enr <= 0 ? null : enr,
+    acceptance_rate: validAccept ? acc : null,
+    yield_rate: validYield ? yld : null,
+    federal_baseline_available: row.federal_baseline_available ?? false,
+    federal_source_mode: row.federal_source_mode ?? "cds_only",
+  };
+}
+
 function withFederalDefaults(response: BrowserSearchResponse): BrowserSearchResponse {
   return {
     ...response,
-    rows: response.rows.map((row) => ({
-      ...row,
-      federal_baseline_available: row.federal_baseline_available ?? false,
-      federal_source_mode: row.federal_source_mode ?? "cds_only",
-    })),
+    rows: response.rows.map(sanitizeBrowserRow),
   };
 }

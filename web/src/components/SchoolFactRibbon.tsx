@@ -127,7 +127,14 @@ export function buildYearPageRibbonBands({
 
   const admissionsCells: FactRibbonCell[] = [];
 
-  if (applied && admitted != null && applied > 0 && admitted >= 0 && admitted <= applied) {
+  if (
+    applied &&
+    admitted != null &&
+    applied > 0 &&
+    admitted > 0 &&
+    admitted <= applied &&
+    (enrolled == null || enrolled <= admitted)
+  ) {
     const rate01 = admitted / applied;
     const priorRate01 = isConsecutivePrior ? acceptanceRateOf(priorFacts!) : null;
     admissionsCells.push({
