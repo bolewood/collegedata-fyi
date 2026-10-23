@@ -132,7 +132,7 @@ export function buildYearPageRibbonBands({
     const priorRate01 = isConsecutivePrior ? acceptanceRateOf(priorFacts!) : null;
     admissionsCells.push({
       key: "acceptance-rate",
-      label: "Acceptance rate",
+      label: "Accept rate",
       value: `${(rate01 * 100).toFixed(1)}%`,
       sourceLabel: "§C1",
       sourceHref: "#sec-c1",
@@ -241,7 +241,7 @@ export function buildYearPageRibbonBands({
   if (sat25 != null && sat75 != null && sat25 <= sat75) {
     testingCells.push({
       key: "sat-composite",
-      label: "SAT composite",
+      label: "SAT 25–75",
       value: `${sat25}–${sat75}`,
       sourceLabel: "§C9",
       sourceHref: "#testing",
@@ -257,7 +257,7 @@ export function buildYearPageRibbonBands({
   } else if (sat25 != null) {
     testingCells.push({
       key: "sat-composite-25",
-      label: "SAT composite 25th",
+      label: "SAT 25th",
       value: sat25.toLocaleString("en-US"),
       sourceLabel: "§C9",
       sourceHref: "#testing",
@@ -319,7 +319,7 @@ export function buildYearPageRibbonBands({
   if (act25 != null && act75 != null && act25 <= act75) {
     testingCells.push({
       key: "act-composite",
-      label: "ACT composite",
+      label: "ACT 25–75",
       value: `${act25}–${act75}`,
       sourceLabel: "§C9",
       sourceHref: "#testing",
@@ -389,9 +389,9 @@ export function buildHubRibbonCells({
     const priorAccept = priorFacts ? acceptanceRateOf(priorFacts) : null;
     cells.push({
       key: "hub-acceptance",
-      label: "Acceptance rate",
-      value: `${(acceptRate * 100).toFixed(acceptRate < 0.1 ? 1 : 1)}%`,
-      sourceLabel: latestYear ? `${latestYear} · §C1` : "§C1",
+      label: "Accept rate",
+      value: `${(acceptRate * 100).toFixed(1)}%`,
+      sourceLabel: "§C1",
       sourceHref: yearBaseHref ? `${yearBaseHref}#sec-c1` : null,
       deltaText:
         priorAccept != null ? formatPointDelta(acceptRate, priorAccept) : null,
@@ -440,7 +440,7 @@ export function buildHubRibbonCells({
       key: "hub-yield",
       label: "Yield",
       value: `${(yieldRate * 100).toFixed(1)}%`,
-      sourceLabel: latestYear ? `${latestYear} · §C1` : "§C1",
+      sourceLabel: "§C1",
       sourceHref: yearBaseHref ? `${yearBaseHref}#sec-c1` : null,
       subCaption: `${latestFacts.enrolledFirstYear.toLocaleString("en-US")} enrolled`,
       sparkline:
@@ -465,9 +465,9 @@ export function buildHubRibbonCells({
   if (sat25 != null && sat75 != null && sat25 <= sat75) {
     cells.push({
       key: "hub-sat",
-      label: "SAT 25th–75th",
+      label: "SAT 25–75",
       value: `${sat25}–${sat75}`,
-      sourceLabel: latestYear ? `${latestYear} · §C9` : "§C9",
+      sourceLabel: "§C9",
       sourceHref: yearBaseHref ? `${yearBaseHref}#testing` : null,
       subCaption: formatSubmitSubCaption(
         satSubRate != null ? satSubRate * 100 : null,
@@ -495,9 +495,9 @@ export function buildHubRibbonCells({
   if (act25 != null && act75 != null && act25 <= act75) {
     cells.push({
       key: "hub-act",
-      label: "ACT 25th–75th",
+      label: "ACT 25–75",
       value: `${act25}–${act75}`,
-      sourceLabel: latestYear ? `${latestYear} · §C9` : "§C9",
+      sourceLabel: "§C9",
       sourceHref: yearBaseHref ? `${yearBaseHref}#testing` : null,
       subCaption: formatSubmitSubCaption(
         actSubRate != null ? actSubRate * 100 : null,
@@ -562,13 +562,13 @@ export function buildHubRibbonCells({
   if (scorecard?.avg_net_price != null && scorecard.avg_net_price > 0) {
     cells.push({
       key: "hub-net-price",
-      label: "Avg net price",
+      label: "Net price",
       value: formatCurrency(scorecard.avg_net_price),
       sourceLabel: "SCORECARD",
       sourceHref: "#outcomes",
       subCaption: scorecard.scorecard_data_year
-        ? `Sticker minus grants · ${scorecard.scorecard_data_year}`
-        : "Sticker minus grants",
+        ? `After grants · ${scorecard.scorecard_data_year}`
+        : "After grants",
     });
   }
 
@@ -612,7 +612,9 @@ function RibbonCellView({ cell }: { cell: FactRibbonCell }) {
   return (
     <div className="cd-ribbon__cell" data-testid={`ribbon-cell-${cell.key}`}>
       <div className="cd-ribbon__cell-head">
-        <span className="meta cd-ribbon__label">{cell.label}</span>
+        <span className="meta cd-ribbon__label" title={cell.label}>
+          {cell.label}
+        </span>
         {cell.sourceHref ? (
           <Link href={cell.sourceHref} className="mono cd-ribbon__source">
             {cell.sourceLabel}
@@ -635,7 +637,7 @@ function RibbonCellView({ cell }: { cell: FactRibbonCell }) {
           >
             <Sparkline
               data={cell.sparkline.data}
-              w={44}
+              w={40}
               h={14}
               color="var(--forest)"
             />
@@ -650,8 +652,9 @@ function RibbonCellView({ cell }: { cell: FactRibbonCell }) {
           {cell.deltaText && (
             <span className="cd-ribbon__delta">{cell.deltaText}</span>
           )}
-          {cell.deltaText && cell.subCaption ? " · " : ""}
-          {cell.subCaption && <span>{cell.subCaption}</span>}
+          {cell.subCaption && (
+            <span className="cd-ribbon__sub-text">{cell.subCaption}</span>
+          )}
         </div>
       )}
     </div>
