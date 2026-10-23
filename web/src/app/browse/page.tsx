@@ -20,7 +20,7 @@ export default async function BrowsePage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-6xl" style={{ padding: "52px 24px 72px" }}>
+    <div className="mx-auto max-w-7xl" style={{ padding: "52px 24px 72px" }}>
       <section
         style={{
           display: "grid",

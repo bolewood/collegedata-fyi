@@ -29,7 +29,6 @@ import { isAcceptancePilotSchool } from "@/lib/acceptance-pilot";
 import { readC1Totals, type C1HeadlineTotals } from "@/lib/c1-headline-totals";
 import { academicYearStart } from "@/lib/acceptance-history";
 import { storageUrl, formatBadgeLabel, sourceDownloadLabel } from "@/lib/format";
-import { Badge } from "@/components/Badge";
 import { KeyStats } from "@/components/KeyStats";
 import { FieldsView } from "@/components/FieldsView";
 import { MarkdownView } from "@/components/MarkdownView";
@@ -238,6 +237,7 @@ export default async function SchoolYearPage({ params }: {
           nonpayment={nonpayment}
           showSpreadsheetLinks={i === 0}
           gate={gate}
+          priorFacts={!doc.sub_institutional ? priorFacts : null}
           gatedC1={
             administrativeUnit
               ? { applied: null, admitted: null, enrolled: null }
@@ -259,6 +259,7 @@ async function DocumentVariant({
   showSpreadsheetLinks,
   gatedC1,
   gate,
+  priorFacts,
 }: {
   doc: Awaited<ReturnType<typeof fetchDocumentsBySchoolAndYear>>[number];
   schoolId: string;
@@ -269,9 +270,11 @@ async function DocumentVariant({
   gatedC1?: C1HeadlineTotals;
   /** Gate for documents with no projected row (older years). */
   gate: { pilot: boolean; ipeds: IpedsAdmissions };
+  priorFacts?: SchoolYearFacts | null;
 }) {
   const sourceDownloadUrl = storageUrl(doc.source_storage_path);
   const isExtracted = doc.extraction_status === "extracted";
+  const yearStart = academicYearStart(doc.canonical_year);
 
   let values: Record<string, FieldValue> = {};
   let totalFields: number | undefined;
@@ -295,10 +298,9 @@ async function DocumentVariant({
       values,
       schemaVersion: notes?.schema_version ?? null,
       producer: canonical?.producer ?? null,
-      yearStart: academicYearStart(doc.canonical_year),
+      yearStart,
       markdown: notes?.markdown ?? null,
     });
-    const yearStart = academicYearStart(doc.canonical_year);
     c1 = gatedC1 ??
       (reading.totals && yearStart != null
         ? gateC1Counts({ pilot: gate.pilot, yearStart, projection: null, resolver: reading.totals, ipeds: gate.ipeds }).counts
@@ -321,10 +323,9 @@ async function DocumentVariant({
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         {doc.source_format && (
-          <Badge
-            label={formatBadgeLabel(doc.source_format)}
-            className="bg-gray-100 text-gray-700"
-          />
+          <span className="cd-chip">
+            {formatBadgeLabel(doc.source_format)}
+          </span>
         )}
         {sourceDownloadUrl && (
           <a
@@ -349,7 +350,13 @@ async function DocumentVariant({
 
       {hasValues && (
         <div style={{ marginTop: 16 }}>
-          <KeyStats schemaVersion={schemaVersion ?? doc.cds_year ?? undefined} values={values} c1={c1} />
+          <KeyStats
+            schemaVersion={schemaVersion ?? doc.cds_year ?? undefined}
+            values={values}
+            c1={c1}
+            priorFacts={priorFacts}
+            currentYearStart={yearStart}
+          />
         </div>
       )}
 

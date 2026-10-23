@@ -34,6 +34,10 @@ import { WhatChangedCard } from "@/components/WhatChangedCard";
 import { SchoolDocumentsLedger } from "@/components/SchoolDocumentsLedger";
 import { ScorecardVintageNote } from "@/components/ScorecardVintageNote";
 import { Sparkline } from "@/components/Sparkline";
+import {
+  buildHubRibbonCells,
+  SchoolFactRibbon,
+} from "@/components/SchoolFactRibbon";
 import { CoverageBadge } from "@/components/CoverageBadge";
 import { SubmissionForm } from "@/components/SubmissionForm";
 import { FederalBaselineTable } from "@/components/FederalBaselineTable";
@@ -519,6 +523,42 @@ export default async function SchoolDetailPage({ params }: {
           )}
         </div>
       </header>
+
+      {(() => {
+        const hubCells = buildHubRibbonCells({
+          schoolId: school_id,
+          latestFacts: administrativeUnit ? null : latestFacts,
+          shownFacts: administrativeUnit ? [] : shownFacts,
+          positioningSchool,
+          scorecard,
+          federalFacts,
+        });
+        if (hubCells.length === 0) return null;
+        const latestCdsYear =
+          (!administrativeUnit && latestFacts?.canonical_year) ||
+          positioningSchool?.cdsYear ||
+          null;
+        return (
+          <div style={{ marginTop: 22, marginBottom: 8 }}>
+            <SchoolFactRibbon
+              ariaLabel={`${name} headline statistics`}
+              bands={[
+                {
+                  key: "hub-summary",
+                  heading: latestCdsYear
+                    ? `Headline profile · ${latestCdsYear} CDS & federal baseline`
+                    : "Headline profile · federal baseline",
+                  sectionCode: latestCdsYear ? `§ ${latestCdsYear} REPORT` : "§ SUMMARY",
+                  sectionHref: latestCdsYear
+                    ? `/schools/${school_id}/${latestCdsYear}`
+                    : "#outcomes",
+                  cells: hubCells,
+                },
+              ]}
+            />
+          </div>
+        );
+      })()}
 
       <SchoolDocumentsLedger groups={groups} />
       {uniqueYears.length > 3 && (

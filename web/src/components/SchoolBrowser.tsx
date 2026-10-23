@@ -24,6 +24,9 @@ type FilterState = {
   retentionMin: string;
 };
 
+export type ColumnPreset = "overview" | "testing" | "cost" | "all";
+export type RowDensity = "compact" | "standard";
+
 const PAGE_SIZE = 50;
 
 const DEFAULT_FILTERS: FilterState = {
@@ -38,8 +41,19 @@ const SORT_OPTIONS: { label: string; sort: BrowserSort }[] = [
   { label: "School name", sort: { field: "school_name", direction: "asc" } },
   { label: "Lowest acceptance rate", sort: { field: "acceptance_rate", direction: "asc" } },
   { label: "Highest yield", sort: { field: "yield_rate", direction: "desc" } },
+  { label: "Highest retention", sort: { field: "retention_rate", direction: "desc" } },
+  { label: "Highest SAT (75th)", sort: { field: "sat_composite_p75", direction: "desc" } },
+  { label: "Highest ACT (75th)", sort: { field: "act_composite_p75", direction: "desc" } },
   { label: "Largest enrollment", sort: { field: "undergrad_enrollment_scorecard", direction: "desc" } },
   { label: "Lowest net price", sort: { field: "avg_net_price", direction: "asc" } },
+  { label: "Highest Pell share", sort: { field: "pell_rate", direction: "desc" } },
+];
+
+const COLUMN_PRESETS: { id: ColumnPreset; label: string }[] = [
+  { id: "overview", label: "Overview" },
+  { id: "testing", label: "Testing & Academic" },
+  { id: "cost", label: "Cost & Aid" },
+  { id: "all", label: "All Columns" },
 ];
 
 function percentInputToFraction(value: string): number | null {
@@ -109,6 +123,16 @@ function metricLabel(field: string): string {
   }
 }
 
+function formatScoreRange(p25: number | null, p75: number | null): string | null {
+  if (p25 == null || p75 == null) return null;
+  return `${Math.round(p25)}–${Math.round(p75)}`;
+}
+
+function formatSubmitTag(rate: number | null): string {
+  if (rate == null) return "sub n/a";
+  return `${Math.round(rate * 100)}% sub`;
+}
+
 function csvEscape(value: unknown): string {
   if (value == null) return "";
   const text = String(value);
@@ -169,15 +193,34 @@ export function SchoolBrowser({
 }) {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [sortIndex, setSortIndex] = useState(1);
+  const [preset, setPreset] = useState<ColumnPreset>("overview");
+  const [density, setDensity] = useState<RowDensity>("compact");
+  const [inspectedDocId, setInspectedDocId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [rows, setRows] = useState<BrowserRow[]>([]);
   const [metadata, setMetadata] = useState<BrowserSearchMetadata | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null as string | null);
 
   const requestFilters = useMemo(() => buildFilters(filters), [filters]);
   const requiredLabels = metadata?.required_fields.map(metricLabel).join(", ") || "none";
+  const activeSortField = SORT_OPTIONS[sortIndex]?.sort.field;
+
+  const inspectedRow = useMemo(
+    () => rows.find((r) => r.document_id === inspectedDocId) ?? null,
+    [rows, inspectedDocId],
+  );
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && inspectedDocId) {
+        setInspectedDocId(null);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [inspectedDocId]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -220,6 +263,18 @@ export function SchoolBrowser({
     setFilters((current) => ({ ...current, [key]: value }));
   }
 
+  function selectSortByField(field: BrowserField) {
+    const idx = SORT_OPTIONS.findIndex((o) => o.sort.field === field);
+    if (idx >= 0) {
+      setPage(1);
+      setSortIndex(idx);
+      trackEvent("browser_sort_changed", {
+        sort: SORT_OPTIONS[idx]?.sort.field,
+        direction: SORT_OPTIONS[idx]?.sort.direction,
+      });
+    }
+  }
+
   async function handleExport() {
     setExporting(true);
     setError(null);
@@ -251,6 +306,20 @@ export function SchoolBrowser({
   const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE));
   const visibleStart = totalRows === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const visibleEnd = Math.min(page * PAGE_SIZE, totalRows);
+
+  const isCompact = density === "compact";
+  const cellPad = isCompact ? "7px 10px" : "12px 10px";
+
+  const showEnroll = preset === "overview" || preset === "cost" || preset === "all";
+  const showRawCounts = preset === "all";
+  const showAccept = true;
+  const showYield = preset === "overview" || preset === "cost" || preset === "all";
+  const showRetention = true;
+  const showSatComp = preset === "overview" || preset === "testing" || preset === "all";
+  const showSatSplit = preset === "testing";
+  const showActComp = preset === "testing" || preset === "all";
+  const showNetPrice = preset === "overview" || preset === "cost" || preset === "all";
+  const showPell = preset === "cost" || preset === "all";
 
   return (
     <div>
@@ -307,27 +376,77 @@ export function SchoolBrowser({
             flexWrap: "wrap",
           }}
         >
-          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span className="meta">Sort</span>
-            <select
-              value={sortIndex}
-              onChange={(e) => {
-                setPage(1);
-                setSortIndex(Number(e.target.value));
-                trackEvent("browser_sort_changed", {
-                  sort: SORT_OPTIONS[Number(e.target.value)]?.sort.field,
-                  direction: SORT_OPTIONS[Number(e.target.value)]?.sort.direction,
-                });
-              }}
-              style={inputStyle(220)}
+          <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span className="meta">Sort</span>
+              <select
+                value={sortIndex}
+                onChange={(e) => {
+                  setPage(1);
+                  setSortIndex(Number(e.target.value));
+                  trackEvent("browser_sort_changed", {
+                    sort: SORT_OPTIONS[Number(e.target.value)]?.sort.field,
+                    direction: SORT_OPTIONS[Number(e.target.value)]?.sort.direction,
+                  });
+                }}
+                style={inputStyle(220)}
+              >
+                {SORT_OPTIONS.map((option, index) => (
+                  <option key={option.label} value={index}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div
+              role="group"
+              aria-label="Column view preset"
+              className="cd-segmented"
             >
-              {SORT_OPTIONS.map((option, index) => (
-                <option key={option.label} value={index}>
-                  {option.label}
-                </option>
+              {COLUMN_PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className="cd-segmented__btn"
+                  data-active={preset === p.id ? "true" : "false"}
+                  aria-pressed={preset === p.id}
+                  onClick={() => {
+                    setPreset(p.id);
+                    trackEvent("browser_preset_changed", { preset: p.id });
+                  }}
+                >
+                  {p.label}
+                </button>
               ))}
-            </select>
-          </label>
+            </div>
+
+            <div
+              role="group"
+              aria-label="Row density"
+              className="cd-segmented browser-density-toggle"
+            >
+              <button
+                type="button"
+                className="cd-segmented__btn"
+                data-active={density === "compact" ? "true" : "false"}
+                aria-pressed={density === "compact"}
+                onClick={() => setDensity("compact")}
+              >
+                Compact
+              </button>
+              <button
+                type="button"
+                className="cd-segmented__btn"
+                data-active={density === "standard" ? "true" : "false"}
+                aria-pressed={density === "standard"}
+                onClick={() => setDensity("standard")}
+              >
+                Standard
+              </button>
+            </div>
+          </div>
+
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button
               type="button"
@@ -378,88 +497,404 @@ export function SchoolBrowser({
 
       <div className="browser-mobile-results" style={{ opacity: loading ? 0.62 : 1 }}>
         {rows.map((row) => (
-          <BrowserResultCard key={row.document_id} row={row} brandColors={brandColors?.[row.school_id]} />
+          <BrowserResultCard
+            key={row.document_id}
+            row={row}
+            brandColors={brandColors?.[row.school_id]}
+            onInspect={() =>
+              setInspectedDocId((cur) => (cur === row.document_id ? null : row.document_id))
+            }
+          />
         ))}
       </div>
 
-      <div className="browser-table-wrap" style={{ overflowX: "auto", opacity: loading ? 0.62 : 1 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 940, fontSize: 14 }}>
+      <div
+        className="browser-table-wrap"
+        tabIndex={0}
+        role="region"
+        aria-labelledby="browser-table-caption"
+        style={{ overflowX: "auto", opacity: loading ? 0.62 : 1 }}
+      >
+        <table
+          className="browser-table"
+          data-density={density}
+          style={{
+            width: "100%",
+            borderCollapse: "separate",
+            borderSpacing: 0,
+            minWidth: preset === "all" ? 1180 : 920,
+            fontSize: isCompact ? 13.5 : 14,
+          }}
+        >
+          <caption id="browser-table-caption" className="sr-only">
+            Common Data Set school comparison table ({preset} view)
+          </caption>
           <thead>
-            <tr className="meta" style={{ textAlign: "left", borderBottom: "1px solid var(--rule-strong)" }}>
-              <th style={{ padding: "9px 10px 9px 0", width: 240 }}>School</th>
-              <th style={{ padding: "9px 10px" }}>Year</th>
-              <th style={{ padding: "9px 10px", textAlign: "right" }}>Enroll</th>
-              <th style={{ padding: "9px 10px", textAlign: "right" }}>Applied</th>
-              <th style={{ padding: "9px 10px", textAlign: "right" }}>Admitted</th>
-              <th style={{ padding: "9px 10px", textAlign: "right" }}>First-years</th>
-              <th style={{ padding: "9px 10px", textAlign: "right" }}>Accept</th>
-              <th style={{ padding: "9px 10px", textAlign: "right" }}>Yield</th>
-              <th style={{ padding: "9px 10px", textAlign: "right" }}>Net price</th>
-              <th style={{ padding: "9px 0 9px 10px" }}>Source</th>
+            <tr className="meta">
+              <SortableTh
+                label="School"
+                field="school_name"
+                activeField={activeSortField}
+                align="left"
+                stickyLeft
+                onSelect={selectSortByField}
+                style={{ padding: "9px 10px 9px 0", minWidth: 230, maxWidth: 280 }}
+              />
+              <th style={{ padding: "9px 10px", borderBottom: "1px solid var(--rule-strong)" }}>Year</th>
+              {showEnroll && (
+                <SortableTh
+                  label="Enroll"
+                  field="undergrad_enrollment_scorecard"
+                  activeField={activeSortField}
+                  onSelect={selectSortByField}
+                />
+              )}
+              {showRawCounts && (
+                <>
+                  <th style={{ padding: "9px 10px", textAlign: "right", borderBottom: "1px solid var(--rule-strong)" }}>Applied</th>
+                  <th style={{ padding: "9px 10px", textAlign: "right", borderBottom: "1px solid var(--rule-strong)" }}>Admitted</th>
+                  <th style={{ padding: "9px 10px", textAlign: "right", borderBottom: "1px solid var(--rule-strong)" }}>First-yrs</th>
+                </>
+              )}
+              {showAccept && (
+                <SortableTh
+                  label="Accept"
+                  field="acceptance_rate"
+                  activeField={activeSortField}
+                  onSelect={selectSortByField}
+                />
+              )}
+              {showYield && (
+                <SortableTh
+                  label="Yield"
+                  field="yield_rate"
+                  activeField={activeSortField}
+                  onSelect={selectSortByField}
+                />
+              )}
+              {showRetention && (
+                <SortableTh
+                  label="Retain"
+                  field="retention_rate"
+                  activeField={activeSortField}
+                  onSelect={selectSortByField}
+                />
+              )}
+              {showSatComp && (
+                <SortableTh
+                  label="SAT 25–75"
+                  field="sat_composite_p75"
+                  activeField={activeSortField}
+                  onSelect={selectSortByField}
+                />
+              )}
+              {showSatSplit && (
+                <>
+                  <th style={{ padding: "9px 10px", textAlign: "right", borderBottom: "1px solid var(--rule-strong)" }}>SAT EBRW</th>
+                  <th style={{ padding: "9px 10px", textAlign: "right", borderBottom: "1px solid var(--rule-strong)" }}>SAT Math</th>
+                </>
+              )}
+              {showActComp && (
+                <SortableTh
+                  label="ACT 25–75"
+                  field="act_composite_p75"
+                  activeField={activeSortField}
+                  onSelect={selectSortByField}
+                />
+              )}
+              {showNetPrice && (
+                <SortableTh
+                  label="Net price"
+                  field="avg_net_price"
+                  activeField={activeSortField}
+                  onSelect={selectSortByField}
+                />
+              )}
+              {showPell && (
+                <SortableTh
+                  label="Pell"
+                  field="pell_rate"
+                  activeField={activeSortField}
+                  onSelect={selectSortByField}
+                />
+              )}
+              <th style={{ padding: "9px 0 9px 10px", borderBottom: "1px solid var(--rule-strong)" }}>Source</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.document_id} className="rule">
-                <td style={{ padding: "12px 10px 12px 0" }}>
-                  <Link
-                    href={`/schools/${row.school_id}`}
-                    className="school-name-with-glyph"
-                    style={{ fontFamily: "var(--serif)", fontSize: 18 }}
-                    onClick={() =>
-                      trackEvent("browser_school_opened", {
-                        surface: "table",
-                        school_id: row.school_id,
-                        cds_year: row.canonical_year,
-                      })
-                    }
+            {rows.map((row) => {
+              const isInspected = inspectedDocId === row.document_id;
+              const satRange = formatScoreRange(row.sat_composite_p25, row.sat_composite_p75);
+              const actRange = formatScoreRange(row.act_composite_p25, row.act_composite_p75);
+              const ebrwRange = formatScoreRange(row.sat_ebrw_p25, row.sat_ebrw_p75);
+              const mathRange = formatScoreRange(row.sat_math_p25, row.sat_math_p75);
+
+              return (
+                <tr
+                  key={row.document_id}
+                  className="browser-row"
+                  data-inspected={isInspected ? "true" : "false"}
+                >
+                  <th
+                    scope="row"
+                    className="browser-row__school"
+                    style={{
+                      padding: isCompact ? "7px 12px 7px 0" : "12px 12px 12px 0",
+                      textAlign: "left",
+                      fontWeight: 400,
+                    }}
                   >
-                    <SchoolGlyph size="sm" brandColors={brandColors?.[row.school_id]} />
-                    {row.school_name}
-                  </Link>
-                  {row.sub_institutional && (
-                    <div className="meta" style={{ marginTop: 3 }}>{row.sub_institutional}</div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "baseline",
+                        gap: 8,
+                        flexWrap: isCompact ? "nowrap" : "wrap",
+                      }}
+                    >
+                      <Link
+                        href={`/schools/${row.school_id}`}
+                        className="school-name-with-glyph"
+                        style={{
+                          fontFamily: "var(--serif)",
+                          fontSize: isCompact ? 15.5 : 18,
+                          lineHeight: 1.2,
+                          whiteSpace: isCompact ? "nowrap" : "normal",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          maxWidth: isCompact ? 230 : undefined,
+                        }}
+                        title={row.school_name}
+                        onClick={() =>
+                          trackEvent("browser_school_opened", {
+                            surface: "table",
+                            school_id: row.school_id,
+                            cds_year: row.canonical_year,
+                          })
+                        }
+                      >
+                        <SchoolGlyph size="sm" brandColors={brandColors?.[row.school_id]} />
+                        {row.school_name}
+                      </Link>
+                      {isCompact && row.sub_institutional && (
+                        <span
+                          className="meta"
+                          title={row.sub_institutional}
+                          style={{
+                            fontSize: 9.5,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            maxWidth: 90,
+                          }}
+                        >
+                          · {row.sub_institutional}
+                        </span>
+                      )}
+                      {isCompact && row.data_quality_flag && (
+                        <span
+                          className="cd-chip"
+                          title={`Quality note: ${row.data_quality_flag.replaceAll("_", " ")}`}
+                          style={{ padding: "0 4px", fontSize: 9 }}
+                        >
+                          !
+                        </span>
+                      )}
+                    </div>
+                    {!isCompact && row.sub_institutional && (
+                      <div className="meta" style={{ marginTop: 3 }}>{row.sub_institutional}</div>
+                    )}
+                    {!isCompact && row.data_quality_flag && (
+                      <div className="cd-chip" style={{ marginTop: 7 }}>{row.data_quality_flag.replaceAll("_", " ")}</div>
+                    )}
+                  </th>
+
+                  <td className="nums" style={{ padding: cellPad, color: "var(--ink-2)", whiteSpace: "nowrap" }}>
+                    {row.canonical_year}
+                  </td>
+
+                  {showEnroll && (
+                    <NumberCell
+                      value={row.undergrad_enrollment_scorecard}
+                      padding={cellPad}
+                      sorted={activeSortField === "undergrad_enrollment_scorecard"}
+                    />
                   )}
-                  {row.data_quality_flag && (
-                    <div className="cd-chip" style={{ marginTop: 7 }}>{row.data_quality_flag.replaceAll("_", " ")}</div>
+
+                  {showRawCounts && (
+                    <>
+                      <NumberCell value={row.applied} padding={cellPad} />
+                      <NumberCell value={row.admitted} padding={cellPad} />
+                      <NumberCell value={row.enrolled_first_year} padding={cellPad} />
+                    </>
                   )}
-                </td>
-                <td className="nums" style={{ padding: "12px 10px", color: "var(--ink-2)" }}>{row.canonical_year}</td>
-                <NumberCell value={row.undergrad_enrollment_scorecard} />
-                <NumberCell value={row.applied} />
-                <NumberCell value={row.admitted} />
-                <NumberCell value={row.enrolled_first_year} />
-                <td className="nums" style={{ padding: "12px 10px", textAlign: "right" }}>
-                  {formatPercent(row.acceptance_rate, 1) || "-"}
-                </td>
-                <td className="nums" style={{ padding: "12px 10px", textAlign: "right" }}>
-                  {formatPercent(row.yield_rate, 1) || "-"}
-                </td>
-                <td className="nums" style={{ padding: "12px 10px", textAlign: "right" }}>
-                  {formatCurrency(row.avg_net_price) || "-"}
-                </td>
-                <td style={{ padding: "12px 0 12px 10px" }}>
-                  <a
-                    href={row.archive_url}
-                    target="_blank"
-                    rel={externalLinkRel(row.archive_url)}
-                    className="cd-chip"
-                    data-testid="browser-source-link"
-                    onClick={() =>
-                      trackSourceOpened({
-                        surface: "school_browser_table",
-                        schoolId: row.school_id,
-                        cdsYear: row.canonical_year,
-                        sourceFormat: row.source_format,
-                        action: "open_archive",
-                      })
-                    }
-                  >
-                    {formatBadgeLabel(row.source_format)}
-                  </a>
-                </td>
-              </tr>
-            ))}
+
+                  {showAccept && (
+                    <td
+                      className="nums"
+                      data-sorted={activeSortField === "acceptance_rate" ? "true" : undefined}
+                      style={{ padding: cellPad, textAlign: "right", whiteSpace: "nowrap" }}
+                    >
+                      <div>{formatPercent(row.acceptance_rate, 1) || "-"}</div>
+                      {!isCompact && row.applied != null && row.admitted != null && (
+                        <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)", marginTop: 2 }}>
+                          {Math.round(row.admitted).toLocaleString()}/{Math.round(row.applied).toLocaleString()}
+                        </div>
+                      )}
+                    </td>
+                  )}
+
+                  {showYield && (
+                    <td
+                      className="nums"
+                      data-sorted={activeSortField === "yield_rate" ? "true" : undefined}
+                      style={{ padding: cellPad, textAlign: "right", whiteSpace: "nowrap" }}
+                    >
+                      {formatPercent(row.yield_rate, 1) || "-"}
+                    </td>
+                  )}
+
+                  {showRetention && (
+                    <td
+                      className="nums"
+                      data-sorted={activeSortField === "retention_rate" ? "true" : undefined}
+                      style={{ padding: cellPad, textAlign: "right", whiteSpace: "nowrap" }}
+                    >
+                      {formatPercent(row.retention_rate, 0) || "-"}
+                    </td>
+                  )}
+
+                  {showSatComp && (
+                    <td
+                      className="nums"
+                      data-sorted={activeSortField === "sat_composite_p75" ? "true" : undefined}
+                      style={{ padding: cellPad, textAlign: "right", whiteSpace: "nowrap" }}
+                    >
+                      {satRange ? (
+                        <div>
+                          <span>{satRange}</span>
+                          <span
+                            className="mono"
+                            style={{
+                              marginLeft: 6,
+                              fontSize: 10,
+                              color:
+                                row.sat_submit_rate != null && row.sat_submit_rate < 0.35
+                                  ? "var(--ochre)"
+                                  : "var(--ink-3)",
+                            }}
+                            title="Share of enrolled first-years who submitted SAT scores (§C9)"
+                          >
+                            {formatSubmitTag(row.sat_submit_rate)}
+                          </span>
+                        </div>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                  )}
+
+                  {showSatSplit && (
+                    <>
+                      <td className="nums" style={{ padding: cellPad, textAlign: "right", whiteSpace: "nowrap" }}>
+                        {ebrwRange || "-"}
+                      </td>
+                      <td className="nums" style={{ padding: cellPad, textAlign: "right", whiteSpace: "nowrap" }}>
+                        {mathRange || "-"}
+                      </td>
+                    </>
+                  )}
+
+                  {showActComp && (
+                    <td
+                      className="nums"
+                      data-sorted={activeSortField === "act_composite_p75" ? "true" : undefined}
+                      style={{ padding: cellPad, textAlign: "right", whiteSpace: "nowrap" }}
+                    >
+                      {actRange ? (
+                        <div>
+                          <span>{actRange}</span>
+                          <span
+                            className="mono"
+                            style={{
+                              marginLeft: 6,
+                              fontSize: 10,
+                              color:
+                                row.act_submit_rate != null && row.act_submit_rate < 0.35
+                                  ? "var(--ochre)"
+                                  : "var(--ink-3)",
+                            }}
+                            title="Share of enrolled first-years who submitted ACT scores (§C9)"
+                          >
+                            {formatSubmitTag(row.act_submit_rate)}
+                          </span>
+                        </div>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                  )}
+
+                  {showNetPrice && (
+                    <td
+                      className="nums"
+                      data-sorted={activeSortField === "avg_net_price" ? "true" : undefined}
+                      style={{ padding: cellPad, textAlign: "right", whiteSpace: "nowrap" }}
+                    >
+                      {formatCurrency(row.avg_net_price) || "-"}
+                    </td>
+                  )}
+
+                  {showPell && (
+                    <td
+                      className="nums"
+                      data-sorted={activeSortField === "pell_rate" ? "true" : undefined}
+                      style={{ padding: cellPad, textAlign: "right", whiteSpace: "nowrap" }}
+                    >
+                      {formatPercent(row.pell_rate, 0) || "-"}
+                    </td>
+                  )}
+
+                  <td style={{ padding: isCompact ? "7px 0 7px 10px" : "12px 0 12px 10px", whiteSpace: "nowrap" }}>
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <a
+                        href={row.archive_url}
+                        target="_blank"
+                        rel={externalLinkRel(row.archive_url)}
+                        className="cd-chip"
+                        data-testid="browser-source-link"
+                        onClick={() =>
+                          trackSourceOpened({
+                            surface: "school_browser_table",
+                            schoolId: row.school_id,
+                            cdsYear: row.canonical_year,
+                            sourceFormat: row.source_format,
+                            action: "open_archive",
+                          })
+                        }
+                      >
+                        {formatBadgeLabel(row.source_format)}
+                      </a>
+                      <button
+                        type="button"
+                        className="cd-chip browser-inspect-btn"
+                        aria-label={`Inspect ${row.school_name}`}
+                        aria-expanded={isInspected}
+                        data-testid="browser-inspect-btn"
+                        onClick={() =>
+                          setInspectedDocId((cur) =>
+                            cur === row.document_id ? null : row.document_id,
+                          )
+                        }
+                        title="Open non-modal inspection drawer"
+                      >
+                        §
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -519,6 +954,14 @@ export function SchoolBrowser({
         </div>
       </div>
 
+      {inspectedRow && (
+        <BrowserInspectionDrawer
+          row={inspectedRow}
+          brandColors={brandColors?.[inspectedRow.school_id]}
+          onClose={() => setInspectedDocId(null)}
+        />
+      )}
+
       <style>{`
         .cd-theme button:disabled {
           cursor: not-allowed;
@@ -538,8 +981,9 @@ export function SchoolBrowser({
           .browser-meta-grid {
             grid-template-columns: 1fr !important;
           }
-          .browser-table-wrap {
-            display: none;
+          .browser-table-wrap,
+          .browser-density-toggle {
+            display: none !important;
           }
           .browser-mobile-results {
             display: grid;
@@ -551,13 +995,223 @@ export function SchoolBrowser({
   );
 }
 
-function BrowserResultCard({
+function SortableTh({
+  label,
+  field,
+  activeField,
+  align = "right",
+  stickyLeft = false,
+  onSelect,
+  style,
+}: {
+  label: string;
+  field: BrowserField;
+  activeField?: BrowserField;
+  align?: "left" | "right";
+  stickyLeft?: boolean;
+  onSelect: (field: BrowserField) => void;
+  style?: CSSProperties;
+}) {
+  const isSorted = activeField === field;
+  return (
+    <th
+      scope="col"
+      className={stickyLeft ? "browser-th--sticky" : undefined}
+      data-sorted={isSorted ? "true" : undefined}
+      style={{
+        padding: "9px 10px",
+        textAlign: align,
+        borderBottom: "1px solid var(--rule-strong)",
+        whiteSpace: "nowrap",
+        ...style,
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => onSelect(field)}
+        className="cd-th-sort"
+        style={{
+          background: "none",
+          border: 0,
+          padding: 0,
+          font: "inherit",
+          letterSpacing: "inherit",
+          textTransform: "inherit",
+          color: isSorted ? "var(--forest-ink)" : "inherit",
+          fontWeight: isSorted ? 600 : 400,
+          cursor: "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 4,
+        }}
+      >
+        <span>{label}</span>
+        {isSorted && <span aria-hidden="true">↓</span>}
+      </button>
+    </th>
+  );
+}
+
+function BrowserInspectionDrawer({
   row,
   brandColors,
+  onClose,
 }: {
   row: BrowserRow;
   brandColors?: string[] | null;
+  onClose: () => void;
 }) {
+  const satRange = formatScoreRange(row.sat_composite_p25, row.sat_composite_p75);
+  const actRange = formatScoreRange(row.act_composite_p25, row.act_composite_p75);
+  const ebrwRange = formatScoreRange(row.sat_ebrw_p25, row.sat_ebrw_p75);
+  const mathRange = formatScoreRange(row.sat_math_p25, row.sat_math_p75);
+
+  return (
+    <aside
+      aria-label={`Inspect ${row.school_name}`}
+      data-testid="browser-inspection-drawer"
+      className="cd-browser-drawer cd-card"
+    >
+      <div className="cd-browser-drawer__head">
+        <div style={{ minWidth: 0 }}>
+          <div className="meta" style={{ marginBottom: 4 }}>
+            § Quick inspect · {row.canonical_year} CDS
+          </div>
+          <Link
+            href={`/schools/${row.school_id}`}
+            className="school-name-with-glyph serif"
+            style={{ fontSize: 22, lineHeight: 1.15, textDecoration: "none" }}
+          >
+            <SchoolGlyph brandColors={brandColors} />
+            <span>{row.school_name}</span>
+          </Link>
+          {row.sub_institutional && (
+            <div className="meta" style={{ marginTop: 4 }}>{row.sub_institutional}</div>
+          )}
+        </div>
+        <button
+          type="button"
+          className="cd-chip"
+          onClick={onClose}
+          aria-label="Close inspection drawer"
+          style={{ cursor: "pointer" }}
+        >
+          ESC ×
+        </button>
+      </div>
+
+      <div className="cd-browser-drawer__section rule-2">
+        <div className="meta" style={{ marginBottom: 8 }}>§C1 · First-year admissions funnel</div>
+        <div className="cd-browser-drawer__grid">
+          <DrawerStat label="Accept rate" value={formatPercent(row.acceptance_rate, 1) || "—"} />
+          <DrawerStat label="Yield" value={formatPercent(row.yield_rate, 1) || "—"} />
+          <DrawerStat label="Applied" value={row.applied != null ? Math.round(row.applied).toLocaleString() : "—"} />
+          <DrawerStat label="Admitted" value={row.admitted != null ? Math.round(row.admitted).toLocaleString() : "—"} />
+          <DrawerStat label="Enrolled 1st-yr" value={row.enrolled_first_year != null ? Math.round(row.enrolled_first_year).toLocaleString() : "—"} />
+          <DrawerStat label="Retention" value={formatPercent(row.retention_rate, 0) || "—"} />
+        </div>
+      </div>
+
+      <div className="cd-browser-drawer__section rule-d">
+        <div className="meta" style={{ marginBottom: 8 }}>§C9 · Enrolled score bands (25th–75th)</div>
+        <div className="cd-browser-drawer__grid">
+          <DrawerStat
+            label="SAT composite"
+            value={satRange || "—"}
+            sub={
+              row.sat_composite_p50 != null
+                ? `${formatSubmitTag(row.sat_submit_rate)} · med ${Math.round(row.sat_composite_p50)}`
+                : formatSubmitTag(row.sat_submit_rate)
+            }
+          />
+          <DrawerStat
+            label="ACT composite"
+            value={actRange || "—"}
+            sub={
+              row.act_composite_p50 != null
+                ? `${formatSubmitTag(row.act_submit_rate)} · med ${Math.round(row.act_composite_p50)}`
+                : formatSubmitTag(row.act_submit_rate)
+            }
+          />
+          <DrawerStat label="SAT EBRW" value={ebrwRange || "—"} />
+          <DrawerStat label="SAT Math" value={mathRange || "—"} />
+        </div>
+      </div>
+
+      <div className="cd-browser-drawer__section rule-d">
+        <div className="meta" style={{ marginBottom: 8 }}>§ Federal context (Scorecard / IPEDS)</div>
+        <div className="cd-browser-drawer__grid">
+          <DrawerStat label="Avg net price" value={formatCurrency(row.avg_net_price) || "—"} />
+          <DrawerStat label="Pell share" value={formatPercent(row.pell_rate, 0) || "—"} />
+          <DrawerStat
+            label="Undergrad enroll"
+            value={
+              row.undergrad_enrollment_scorecard != null
+                ? Math.round(row.undergrad_enrollment_scorecard).toLocaleString()
+                : "—"
+            }
+          />
+        </div>
+      </div>
+
+      <div className="cd-browser-drawer__actions rule-2">
+        <Link href={`/schools/${row.school_id}`} className="cd-btn">
+          School hub →
+        </Link>
+        <Link
+          href={`/schools/${row.school_id}/${row.canonical_year}`}
+          className="cd-btn cd-btn--ghost"
+        >
+          {row.canonical_year} report →
+        </Link>
+        <a
+          href={row.archive_url}
+          target="_blank"
+          rel={externalLinkRel(row.archive_url)}
+          className="cd-chip"
+          style={{ marginLeft: "auto" }}
+        >
+          {formatBadgeLabel(row.source_format)} source ↗
+        </a>
+      </div>
+    </aside>
+  );
+}
+
+function DrawerStat({
+  label,
+  value,
+  sub,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+}) {
+  return (
+    <div>
+      <div className="meta" style={{ fontSize: 10, marginBottom: 2 }}>{label}</div>
+      <div className="nums" style={{ fontFamily: "var(--mono)", fontSize: 15, fontWeight: 500 }}>
+        {value}
+      </div>
+      {sub && (
+        <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)", marginTop: 2 }}>
+          {sub.toUpperCase()}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BrowserResultCard({
+  row,
+  brandColors,
+  onInspect,
+}: {
+  row: BrowserRow;
+  brandColors?: string[] | null;
+  onInspect: () => void;
+}) {
+  const satRange = formatScoreRange(row.sat_composite_p25, row.sat_composite_p75);
   return (
     <article className="cd-card" style={{ padding: 14 }}>
       <div style={{ display: "flex", gap: 10, alignItems: "flex-start", justifyContent: "space-between" }}>
@@ -599,11 +1253,11 @@ function BrowserResultCard({
         <CardMetric label="Enrollment" value={row.undergrad_enrollment_scorecard == null ? "-" : Math.round(row.undergrad_enrollment_scorecard).toLocaleString()} />
         <CardMetric label="Accept" value={formatPercent(row.acceptance_rate, 1) || "-"} />
         <CardMetric label="Yield" value={formatPercent(row.yield_rate, 1) || "-"} />
+        <CardMetric label="Retention" value={formatPercent(row.retention_rate, 0) || "-"} />
+        <CardMetric label="SAT 25–75" value={satRange || "-"} />
         <CardMetric label="Net price" value={formatCurrency(row.avg_net_price) || "-"} />
-        <CardMetric label="Applied" value={row.applied == null ? "-" : Math.round(row.applied).toLocaleString()} />
-        <CardMetric label="Admitted" value={row.admitted == null ? "-" : Math.round(row.admitted).toLocaleString()} />
       </div>
-      <div className="rule" style={{ marginTop: 12, paddingTop: 10 }}>
+      <div className="rule" style={{ marginTop: 12, paddingTop: 10, display: "flex", gap: 8, alignItems: "center" }}>
         <a
           href={row.archive_url}
           target="_blank"
@@ -622,6 +1276,14 @@ function BrowserResultCard({
         >
           {formatBadgeLabel(row.source_format)} source
         </a>
+        <button
+          type="button"
+          className="cd-chip"
+          onClick={onInspect}
+          style={{ cursor: "pointer" }}
+        >
+          § Inspect
+        </button>
       </div>
     </article>
   );
@@ -631,7 +1293,7 @@ function CardMetric({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ borderTop: "1px solid var(--rule)", paddingTop: 7 }}>
       <div className="meta" style={{ marginBottom: 4 }}>{label}</div>
-      <div className="nums" style={{ fontFamily: "var(--serif)", fontSize: 22, lineHeight: 1 }}>{value}</div>
+      <div className="nums" style={{ fontFamily: "var(--serif)", fontSize: 20, lineHeight: 1 }}>{value}</div>
     </div>
   );
 }
@@ -675,9 +1337,21 @@ function MetaStat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function NumberCell({ value }: { value: number | null }) {
+function NumberCell({
+  value,
+  padding = "12px 10px",
+  sorted = false,
+}: {
+  value: number | null;
+  padding?: string;
+  sorted?: boolean;
+}) {
   return (
-    <td className="nums" style={{ padding: "12px 10px", textAlign: "right" }}>
+    <td
+      className="nums"
+      data-sorted={sorted ? "true" : undefined}
+      style={{ padding, textAlign: "right", whiteSpace: "nowrap" }}
+    >
       {value == null ? "-" : Math.round(value).toLocaleString()}
     </td>
   );

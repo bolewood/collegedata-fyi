@@ -80,7 +80,7 @@ export function OutcomesSection({
 
   return (
     <>
-      <section style={{ marginTop: 56 }}>
+      <section id="outcomes" style={{ marginTop: 56, scrollMarginTop: 24 }}>
         <div
           style={{
             display: "flex",

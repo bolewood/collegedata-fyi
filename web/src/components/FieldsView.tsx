@@ -87,6 +87,11 @@ const SECTION_FRAGMENTS: Record<string, string> = {
 const SUBSECTION_FRAGMENTS: Record<string, string> = {
   "Wait List": "waitlist",
   "Entrance Exams": "testing",
+  "First-Time, First-Year Profile": "testing",
+};
+const CODE_FRAGMENTS: Record<string, string> = {
+  C2: "waitlist",
+  C9: "testing",
 };
 
 function SectionBlock({ sec }: { sec: ReturnType<typeof groupBySection>[number] }) {
@@ -182,7 +187,10 @@ function SubsectionBlock({
   sub: SubsectionGroup;
 }) {
   const fallbackFields = sub.fields.filter(({ id }) => !hiddenFieldIds.has(id));
-  const fragment = SUBSECTION_FRAGMENTS[sub.name];
+  const fragment =
+    SUBSECTION_FRAGMENTS[sub.name] ??
+    (sub.code ? CODE_FRAGMENTS[sub.code.toUpperCase()] : undefined);
+  const codeAnchorId = sub.code ? `sec-${sub.code.toLowerCase()}` : undefined;
   const heading = (
     <>
       {sub.code ? `${sub.code} · ` : ""}
@@ -195,6 +203,9 @@ function SubsectionBlock({
       id={`sub-${sub.slug}`}
       style={{ marginBottom: 24, scrollMarginTop: 24 }}
     >
+      {codeAnchorId && (
+        <span id={codeAnchorId} style={{ display: "block", scrollMarginTop: 24 }} />
+      )}
       {fragment ? (
         <h3
           id={fragment}
@@ -230,8 +241,10 @@ function ReconstructedTableView({ table }: { table: ReconstructedTable }) {
 
   return (
     <div
+      id={`table-${table.key}`}
       className="cd-reconstructed"
       style={{
+        scrollMarginTop: 24,
         marginBottom: 14,
         border: "1px solid var(--rule)",
         borderRadius: 8,
@@ -360,7 +373,10 @@ function ReconstructedTableView({ table }: { table: ReconstructedTable }) {
                 {row.cells.map((cell, i) => (
                   <td
                     key={`${row.key}-${cell.fieldId ?? i}`}
+                    id={cell.fieldId ?? undefined}
+                    data-field-id={cell.fieldId ?? undefined}
                     style={{
+                      scrollMarginTop: 24,
                       textAlign: "right",
                       padding: "9px 12px",
                       color: cell.missing ? "var(--ink-3)" : "var(--ink)",
@@ -402,7 +418,10 @@ function KVRows({
         return (
           <div
             key={id}
+            id={id}
+            data-field-id={id}
             style={{
+              scrollMarginTop: 24,
               display: "grid",
               gridTemplateColumns: "minmax(0, 1.6fr) minmax(0, 1fr)",
               gap: 16,

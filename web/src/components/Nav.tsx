@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { HeaderSchoolSearch } from "./HeaderSchoolSearch";
+import { CmdKCatalog } from "./CmdKCatalog";
 import { Wordmark } from "./Wordmark";
 
 const PRIMARY_NAV_LINKS = [
@@ -47,6 +48,7 @@ export function Nav() {
         </Link>
         <HeaderSchoolSearch />
         <div className="cd-nav-links">
+          <CmdKCatalog />
           {PRIMARY_NAV_LINKS.map((l) => {
             const active = isActive(pathname, l.href);
             return (
