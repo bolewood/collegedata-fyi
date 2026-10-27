@@ -138,7 +138,8 @@ jobs:
 
   web:
     name: Next.js build
-    runs-on: ubuntu-latest
+    # Playwright 1.59 does not ship chromium for ubuntu-26.04 (current ubuntu-latest).
+    runs-on: ubuntu-24.04
     env:
       NEXT_PUBLIC_SUPABASE_URL: "https://api.collegedata.fyi"
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzZHV3bXlndm1kb3pocHZ6YWl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDk3NTksImV4cCI6MjA5MTY4NTc1OX0.fYZOIHyrOWzidgc-CVxWCY5Fe9pQk12-6YjDIS6y9qs"

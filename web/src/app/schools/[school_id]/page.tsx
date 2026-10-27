@@ -54,6 +54,7 @@ import { SchoolGlyph } from "@/components/SchoolGlyph";
 import { schemaFallbackNoteFromArtifact } from "@/lib/schema-fallback";
 import type { ArtifactNotes, ManifestRow, InstitutionCoverage } from "@/lib/types";
 
+export const dynamic = "force-static";
 export const revalidate = 3600;
 
 export async function generateMetadata({

@@ -43,6 +43,7 @@ import { schemaFallbackNoteFromArtifact } from "@/lib/schema-fallback";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
 import { externalLinkRel } from "@/lib/client-info";
 
+export const dynamic = "force-static";
 export const revalidate = 3600;
 
 type Params = { school_id: string; year: string };

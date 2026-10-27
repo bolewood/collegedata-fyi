@@ -28,6 +28,7 @@ import { SchoolGlyph } from "@/components/SchoolGlyph";
 import { AcceptanceRateTable, acceptanceTableRows } from "@/components/AcceptanceRateTable";
 import { AcceptanceRateChart } from "@/components/AcceptanceRateChart";
 
+export const dynamic = "force-static";
 export const revalidate = 3600;
 
 type Params = { school_id: string };

@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { createHash } from "crypto";
+import { unstable_cache } from "next/cache";
 import { supabase } from "./supabase";
 import { clientInfoHeaders } from "./client-info";
 import type {
@@ -53,6 +54,99 @@ import { excludeHiddenQualityDocuments } from "./public-documents";
 // can query cds_documents directly via PostgREST.
 const PUBLIC_EXCLUDED_STATUSES = ["withdrawn", "verified_absent"];
 const STATIC_BUILD_QUERY_TIMEOUT_MS = 8_000;
+const SCHOOL_DATA_REVALIDATE_SECONDS = 3600;
+const SCHOOL_DATA_CACHE_TAGS = ["school-data"] as const;
+
+function cachedSchoolQuery<T>(key: string[], fn: () => Promise<T>): Promise<T> {
+  return unstable_cache(fn, key, {
+    revalidate: SCHOOL_DATA_REVALIDATE_SECONDS,
+    tags: [...SCHOOL_DATA_CACHE_TAGS],
+  })();
+}
+
+function throwIfPostgrestError(
+  error: { message: string } | null | undefined,
+  context: string,
+): void {
+  if (error) throw new Error(`${context}: ${error.message}`);
+}
+
+// Compact tuples stay well under Next's 2 MB Data Cache cap.
+// [alias, school_id, ipeds_id, is_primary]
+type CrosswalkTuple = [string, string, string | null, 0 | 1];
+
+type CrosswalkIndex = {
+  byAlias: Map<string, SchoolAliasRow[]>;
+  bySchoolId: Map<string, Array<SchoolAliasRow & { ipeds_id: string | null }>>;
+};
+
+let crosswalkInflight: Promise<CrosswalkIndex> | null = null;
+
+export function resetSchoolQueryCachesForTests(): void {
+  crosswalkInflight = null;
+}
+
+async function loadCrosswalkTuples(): Promise<CrosswalkTuple[]> {
+  const PAGE = 1000;
+  const HARD_CAP = 50_000;
+  const client = supabase as unknown as UntypedSupabase;
+  const out: CrosswalkTuple[] = [];
+  for (let start = 0; start < HARD_CAP; start += PAGE) {
+    const { data, error } = await client
+      .from("institution_slug_crosswalk")
+      .select("school_id, alias, is_primary, ipeds_id")
+      .order("alias")
+      .order("ipeds_id")
+      .range(start, start + PAGE - 1);
+    throwIfPostgrestError(error, "Failed to fetch school aliases");
+    const page =
+      (data as Array<{
+        school_id: string | null;
+        alias: string | null;
+        is_primary: boolean | null;
+        ipeds_id: string | null;
+      }> | null) ?? [];
+    for (const row of page) {
+      if (!row.alias || !row.school_id) continue;
+      out.push([row.alias, row.school_id, row.ipeds_id, row.is_primary ? 1 : 0]);
+    }
+    if (page.length < PAGE) return out;
+  }
+  throw new Error("Failed to fetch school aliases: crosswalk exceeded pagination cap");
+}
+
+function indexCrosswalk(rows: CrosswalkTuple[]): CrosswalkIndex {
+  const byAlias = new Map<string, SchoolAliasRow[]>();
+  const bySchoolId = new Map<string, Array<SchoolAliasRow & { ipeds_id: string | null }>>();
+  for (const [alias, schoolId, ipedsId, isPrimary] of rows) {
+    const row: SchoolAliasRow & { ipeds_id: string | null } = {
+      alias,
+      school_id: schoolId,
+      is_primary: isPrimary === 1,
+      ipeds_id: ipedsId,
+    };
+    const aliasRows = byAlias.get(alias) ?? [];
+    aliasRows.push(row);
+    byAlias.set(alias, aliasRows);
+    const schoolRows = bySchoolId.get(schoolId) ?? [];
+    schoolRows.push(row);
+    bySchoolId.set(schoolId, schoolRows);
+  }
+  return { byAlias, bySchoolId };
+}
+
+async function getCrosswalkIndex(): Promise<CrosswalkIndex> {
+  if (crosswalkInflight) return crosswalkInflight;
+  crosswalkInflight = cachedSchoolQuery(
+    ["institution-slug-crosswalk-v1"],
+    loadCrosswalkTuples,
+  )
+    .then(indexCrosswalk)
+    .finally(() => {
+      crosswalkInflight = null;
+    });
+  return crosswalkInflight;
+}
 
 type UntypedSupabase = {
   // Generated DB types can lag migrations. Keep dynamic stats queries isolated
@@ -73,6 +167,8 @@ export type BrowserAdmissionStrategyRow = AdmissionStrategySchool & {
 
 const ADMISSION_STRATEGY_SELECT =
   "document_id, school_id, school_name, canonical_year, year_start, archive_url, data_quality_flag, applied, admitted, enrolled_first_year, acceptance_rate, yield_rate, ed_offered, ed_applicants, ed_admitted, ed_has_second_deadline, ea_offered, ea_restrictive, wait_list_policy, wait_list_offered, wait_list_accepted, wait_list_admitted, c711_first_gen_factor, c712_legacy_factor, c713_geography_factor, c714_state_residency_factor, c718_demonstrated_interest_factor, app_fee_amount, app_fee_waiver_offered, admission_strategy_card_quality";
+
+const SCHOOL_BROWSER_HUB_SELECT = `${ADMISSION_STRATEGY_SELECT}, ipeds_id, sub_institutional, sat_submit_rate, act_submit_rate, sat_composite_p25, sat_composite_p50, sat_composite_p75, act_composite_p25, act_composite_p50, act_composite_p75`;
 
 type DirectoryContextRow = {
   school_id: string | null;
@@ -786,7 +882,7 @@ export const fetchInstitutionCoverage = cache(
   async function fetchInstitutionCoverage(
     schoolId: string,
   ): Promise<InstitutionCoverage | null> {
-    try {
+    return cachedSchoolQuery(["fetchInstitutionCoverage", schoolId], async () => {
       const { data, error } = await (supabase as unknown as UntypedSupabase)
         .from("institution_cds_coverage")
         .select(
@@ -795,11 +891,9 @@ export const fetchInstitutionCoverage = cache(
         .eq("school_id", schoolId)
         .maybeSingle();
 
-      if (error) return null;
+      throwIfPostgrestError(error, "Failed to fetch institution coverage");
       return (data as InstitutionCoverage | null) ?? null;
-    } catch {
-      return null;
-    }
+    });
   },
 );
 
@@ -811,20 +905,19 @@ export const fetchSchoolBrandColors = cache(
   async function fetchSchoolBrandColors(
     schoolId: string,
   ): Promise<string[] | null> {
-    try {
-      const canonicalSchoolId =
-        (await fetchCanonicalSchoolId(schoolId)) ?? schoolId;
+    const canonicalSchoolId =
+      (await fetchCanonicalSchoolId(schoolId)) ?? schoolId;
+    return cachedSchoolQuery(["fetchSchoolBrandColors", canonicalSchoolId], async () => {
       const { data, error } = await (supabase as unknown as UntypedSupabase)
         .from("institution_directory")
         .select("brand_colors")
         .eq("school_id", canonicalSchoolId)
         .maybeSingle();
-      if (error || !data) return null;
+      throwIfPostgrestError(error, "Failed to fetch school brand colors");
+      if (!data) return null;
       const colors = (data as { brand_colors: string[] | null }).brand_colors;
       return Array.isArray(colors) && colors.length > 0 ? colors : null;
-    } catch {
-      return null;
-    }
+    });
   },
 );
 
@@ -919,21 +1012,11 @@ export const fetchCanonicalSchoolId = cache(
     );
     if (reviewedSchoolId) return reviewedSchoolId;
 
-    try {
-      const { data, error } = await (supabase as unknown as UntypedSupabase)
-        .from("institution_slug_crosswalk")
-        .select("school_id, alias, is_primary")
-        .eq("alias", requestedSchoolId)
-        .order("is_primary", { ascending: false });
-
-      if (error) return null;
-      return resolveCanonicalSchoolId(
-        requestedSchoolId,
-        (data as SchoolAliasRow[] | null) ?? [],
-      );
-    } catch {
-      return null;
-    }
+    const index = await getCrosswalkIndex();
+    return resolveCanonicalSchoolId(
+      requestedSchoolId,
+      index.byAlias.get(requestedSchoolId) ?? [],
+    );
   },
 );
 
@@ -987,15 +1070,8 @@ export type LiveAliasContext = { aliases: string[]; ipedsId: string | null };
 export const fetchLiveAliasContext = cache(async function fetchLiveAliasContext(
   canonicalSchoolId: string,
 ): Promise<LiveAliasContext> {
-  const client = supabase as unknown as UntypedSupabase;
-  const { data: owned, error: ownedError } = await client
-    .from("institution_slug_crosswalk")
-    .select("school_id, alias, is_primary, ipeds_id")
-    .eq("school_id", canonicalSchoolId);
-  if (ownedError) {
-    throw new Error(`Failed to fetch school aliases: ${ownedError.message}`);
-  }
-  const ownedRows = (owned as (SchoolAliasRow & { ipeds_id: string | null })[] | null) ?? [];
+  const index = await getCrosswalkIndex();
+  const ownedRows = index.bySchoolId.get(canonicalSchoolId) ?? [];
   const ipedsId =
     ownedRows.find((row) => row.is_primary && row.ipeds_id)?.ipeds_id ??
     ownedRows.find((row) => row.ipeds_id)?.ipeds_id ??
@@ -1010,19 +1086,9 @@ export const fetchLiveAliasContext = cache(async function fetchLiveAliasContext(
   );
   if (candidates.length === 0) return { aliases: [], ipedsId };
 
-  const { data: rows, error } = await client
-    .from("institution_slug_crosswalk")
-    .select("school_id, alias, is_primary")
-    .in("alias", candidates);
-  if (error) {
-    throw new Error(`Failed to fetch school aliases: ${error.message}`);
-  }
+  const rows = candidates.flatMap((alias) => index.byAlias.get(alias) ?? []);
   return {
-    aliases: liveAliasSlugsFor(
-      canonicalSchoolId,
-      (rows as SchoolAliasRow[] | null) ?? [],
-      retiredSchoolAliases,
-    ),
+    aliases: liveAliasSlugsFor(canonicalSchoolId, rows, retiredSchoolAliases),
     ipedsId,
   };
 });
@@ -1036,59 +1102,39 @@ export const fetchSchoolSlugResolver = cache(async function fetchSchoolSlugResol
   schoolIds: string[],
 ): Promise<SchoolSlugResolver> {
   const retired = new Set(retiredSchoolAliases.map((entry) => entry.alias));
-  const rowsByAlias = new Map<string, SchoolAliasRow[]>();
-  const wanted = new Set(schoolIds.filter(Boolean));
-  // Page the whole crosswalk. A single .in('alias', thousands) GET exceeds
-  // URL limits (build-time fetch failed); per-alias .eq is the FYI-7 N+1.
   try {
-    if (wanted.size > 0) {
-      const PAGE = 1000;
-      const client = supabase as unknown as UntypedSupabase;
-      for (let start = 0; start < 50_000; start += PAGE) {
-        const { data, error } = await client
-          .from("institution_slug_crosswalk")
-          .select("school_id, alias, is_primary")
-          .order("alias")
-          .order("school_id")
-          .range(start, start + PAGE - 1);
-        if (error) throw new Error(error.message);
-        const page = (data as SchoolAliasRow[] | null) ?? [];
-        for (const row of page) {
-          if (!row.alias || !wanted.has(row.alias)) continue;
-          const list = rowsByAlias.get(row.alias) ?? [];
-          list.push(row);
-          rowsByAlias.set(row.alias, list);
-        }
-        if (page.length < PAGE) break;
-      }
+    if (schoolIds.filter(Boolean).length === 0) {
+      return (schoolId: string) => (retired.has(schoolId) ? null : schoolId);
     }
+    const index = await getCrosswalkIndex();
+    return (schoolId: string) => {
+      if (retired.has(schoolId)) return null;
+      return resolveCanonicalSchoolId(schoolId, index.byAlias.get(schoolId) ?? []) ?? schoolId;
+    };
   } catch (error) {
     console.warn(`fetchSchoolSlugResolver: ${errorText(error)}`);
-    rowsByAlias.clear();
+    return (schoolId: string) => (retired.has(schoolId) ? null : schoolId);
   }
-  return (schoolId: string) => {
-    if (retired.has(schoolId)) return null;
-    return resolveCanonicalSchoolId(schoolId, rowsByAlias.get(schoolId) ?? []) ?? schoolId;
-  };
 });
 
 export const fetchSchoolDocuments = cache(async function fetchSchoolDocuments(
   schoolId: string
 ): Promise<ManifestRow[]> {
   const { aliases, ipedsId } = await fetchLiveAliasContext(schoolId);
-  const { data, error } = await supabase
-    .from("cds_manifest")
-    .select("*")
-    .in("school_id", [schoolId, ...aliases])
-    .not("participation_status", "in", `(${PUBLIC_EXCLUDED_STATUSES.join(",")})`)
-    .is("removed_at", null)
-    .order("canonical_year", { ascending: false });
+  return cachedSchoolQuery(["fetchSchoolDocuments", schoolId], async () => {
+    const { data, error } = await supabase
+      .from("cds_manifest")
+      .select("*")
+      .in("school_id", [schoolId, ...aliases])
+      .not("participation_status", "in", `(${PUBLIC_EXCLUDED_STATUSES.join(",")})`)
+      .is("removed_at", null)
+      .order("canonical_year", { ascending: false });
 
-  if (error)
-    throw new Error(`Failed to fetch school documents: ${error.message}`);
-  return excludeHiddenQualityDocuments(
-    mergeAliasDocuments(schoolId, data ?? [], ipedsId),
-  );
+    throwIfPostgrestError(error, "Failed to fetch school documents");
+    return excludeHiddenQualityDocuments(
+      mergeAliasDocuments(schoolId, data ?? [], ipedsId),
+    );
+  });
 });
 
 export const fetchSchoolDirectPublishEvents = cache(
@@ -1096,27 +1142,30 @@ export const fetchSchoolDirectPublishEvents = cache(
     schoolId: string,
     limit = 20,
   ): Promise<SchoolFeedEvent[]> {
-    const { data, error } = await supabase
-      .from("cds_publish_events")
-      .select("id, school_id, cds_year, event_type, occurred_at")
-      .eq("school_id", schoolId)
-      .eq("source_provenance", "school_direct")
-      .in("event_type", ["inserted", "refreshed"])
-      .order("occurred_at", { ascending: false })
-      .limit(limit);
+    return cachedSchoolQuery(
+      ["fetchSchoolDirectPublishEvents", schoolId, String(limit)],
+      async () => {
+        const { data, error } = await supabase
+          .from("cds_publish_events")
+          .select("id, school_id, cds_year, event_type, occurred_at")
+          .eq("school_id", schoolId)
+          .eq("source_provenance", "school_direct")
+          .in("event_type", ["inserted", "refreshed"])
+          .order("occurred_at", { ascending: false })
+          .limit(limit);
 
-    if (error) {
-      throw new Error(`Failed to fetch publish events: ${error.message}`);
-    }
+        throwIfPostgrestError(error, "Failed to fetch publish events");
 
-    return (data ?? []).map((row) => ({
-      id: row.id,
-      school_id: row.school_id,
-      school_name: "",
-      cds_year: row.cds_year,
-      event_type: row.event_type as "inserted" | "refreshed",
-      occurred_at: row.occurred_at,
-    }));
+        return (data ?? []).map((row) => ({
+          id: row.id,
+          school_id: row.school_id,
+          school_name: "",
+          cds_year: row.cds_year,
+          event_type: row.event_type as "inserted" | "refreshed",
+          occurred_at: row.occurred_at,
+        }));
+      },
+    );
   },
 );
 
@@ -1169,7 +1218,7 @@ export const fetchSchoolFederalFacts = cache(
   async function fetchSchoolFederalFacts(
     schoolId: string,
   ): Promise<SchoolFactUnifiedRow[]> {
-    try {
+    return cachedSchoolQuery(["fetchSchoolFederalFacts", schoolId], async () => {
       const { data, error } = await (supabase as unknown as UntypedSupabase)
         .from("school_facts_unified")
         .select(
@@ -1179,15 +1228,9 @@ export const fetchSchoolFederalFacts = cache(
         .order("display_group", { ascending: true })
         .order("field_label", { ascending: true });
 
-      if (error) {
-        console.warn(`fetchSchoolFederalFacts: ${error.message}`);
-        return [];
-      }
+      throwIfPostgrestError(error, "fetchSchoolFederalFacts");
       return (data as SchoolFactUnifiedRow[]) ?? [];
-    } catch (error) {
-      console.warn(`fetchSchoolFederalFacts: ${String(error)}`);
-      return [];
-    }
+    });
   },
 );
 
@@ -1195,7 +1238,7 @@ export const fetchFsaNonpaymentBySchoolId = cache(
   async function fetchFsaNonpaymentBySchoolId(
     schoolId: string,
   ): Promise<FsaNonpaymentCurrent | null> {
-    try {
+    return cachedSchoolQuery(["fetchFsaNonpaymentBySchoolId", schoolId], async () => {
       const { data, error } = await (supabase as unknown as UntypedSupabase)
         .from("fsa_nonpayment_current")
         .select(
@@ -1203,20 +1246,101 @@ export const fetchFsaNonpaymentBySchoolId = cache(
         )
         .eq("school_id", schoolId)
         .maybeSingle();
-      if (error) {
-        console.warn(`fetchFsaNonpaymentBySchoolId: ${error.message}`);
-        return null;
-      }
+      throwIfPostgrestError(error, "fetchFsaNonpaymentBySchoolId");
       return (data as FsaNonpaymentCurrent) ?? null;
-    } catch (error) {
-      console.warn(`fetchFsaNonpaymentBySchoolId: ${String(error)}`);
-      return null;
-    }
+    });
   },
 );
 
-const SCHOOL_YEAR_FACTS_SELECT =
-  "document_id, school_id, ipeds_id, canonical_year, year_start, sub_institutional, data_quality_flag, applied, admitted, enrolled_first_year, acceptance_rate, sat_composite_p25, sat_composite_p75, act_composite_p25, act_composite_p75, ed_applicants, ed_admitted, wait_list_offered, wait_list_accepted, wait_list_admitted";
+type SchoolBrowserHubRow = {
+  document_id: string | null;
+  school_id: string | null;
+  school_name: string | null;
+  ipeds_id: string | null;
+  canonical_year: string | null;
+  year_start: unknown;
+  sub_institutional: string | null;
+  archive_url: string | null;
+  data_quality_flag: string | null;
+  applied: unknown;
+  admitted: unknown;
+  enrolled_first_year: unknown;
+  acceptance_rate: unknown;
+  yield_rate: unknown;
+  sat_submit_rate: unknown;
+  act_submit_rate: unknown;
+  sat_composite_p25: unknown;
+  sat_composite_p50: unknown;
+  sat_composite_p75: unknown;
+  act_composite_p25: unknown;
+  act_composite_p50: unknown;
+  act_composite_p75: unknown;
+  ed_offered: unknown;
+  ed_applicants: unknown;
+  ed_admitted: unknown;
+  ed_has_second_deadline: unknown;
+  ea_offered: unknown;
+  ea_restrictive: unknown;
+  wait_list_policy: unknown;
+  wait_list_offered: unknown;
+  wait_list_accepted: unknown;
+  wait_list_admitted: unknown;
+  c711_first_gen_factor: unknown;
+  c712_legacy_factor: unknown;
+  c713_geography_factor: unknown;
+  c714_state_residency_factor: unknown;
+  c718_demonstrated_interest_factor: unknown;
+  app_fee_amount: unknown;
+  app_fee_waiver_offered: unknown;
+  admission_strategy_card_quality: unknown;
+};
+
+const fetchSchoolBrowserHubRows = cache(async function fetchSchoolBrowserHubRows(
+  schoolId: string,
+): Promise<SchoolBrowserHubRow[]> {
+  const { aliases, ipedsId } = await fetchLiveAliasContext(schoolId);
+  return cachedSchoolQuery(["fetchSchoolBrowserHubRows", schoolId], async () => {
+    const { data, error } = await (supabase as unknown as UntypedSupabase)
+      .from("school_browser_rows")
+      .select(SCHOOL_BROWSER_HUB_SELECT)
+      .in("school_id", [schoolId, ...aliases])
+      .is("sub_institutional", null)
+      .order("year_start", { ascending: false });
+    throwIfPostgrestError(error, "Failed to fetch school browser rows");
+    const rows = ((data as SchoolBrowserHubRow[] | null) ?? []).map((row) => ({
+      ...row,
+      sub_institutional: null,
+    }));
+    return mergeAliasDocuments(schoolId, rows, ipedsId);
+  });
+});
+
+function latestHubRowFrom2024(rows: SchoolBrowserHubRow[]): SchoolBrowserHubRow | null {
+  return rows.find((row) => (numberOrNull(row.year_start) ?? 0) >= 2024) ?? null;
+}
+
+function mapAcademicProfileRow(data: SchoolBrowserHubRow): BrowserAcademicProfileRow {
+  return {
+    documentId: String(data.document_id),
+    schoolId: String(data.school_id),
+    schoolName: String(data.school_name),
+    cdsYear: String(data.canonical_year),
+    yearStart: numberOrNull(data.year_start),
+    acceptanceRate: normalizeRate(data.acceptance_rate),
+    satSubmitRate: normalizeRate(data.sat_submit_rate),
+    actSubmitRate: normalizeRate(data.act_submit_rate),
+    satCompositeP25: numberOrNull(data.sat_composite_p25),
+    satCompositeP50: numberOrNull(data.sat_composite_p50),
+    satCompositeP75: numberOrNull(data.sat_composite_p75),
+    actCompositeP25: numberOrNull(data.act_composite_p25),
+    actCompositeP50: numberOrNull(data.act_composite_p50),
+    actCompositeP75: numberOrNull(data.act_composite_p75),
+    avgHsGpa: null,
+    hsGpaSubmitRate: null,
+    dataQualityFlag: data.data_quality_flag ?? null,
+    archiveUrl: data.archive_url ?? null,
+  };
+}
 
 // Every whole-institution browser row for a school (and its live aliases),
 // newest first. Powers the plain-English summary and the year-over-year line
@@ -1224,96 +1348,37 @@ const SCHOOL_YEAR_FACTS_SELECT =
 export const fetchSchoolYearFacts = cache(async function fetchSchoolYearFacts(
   schoolId: string,
 ): Promise<SchoolYearFacts[]> {
-  try {
-    const { aliases, ipedsId } = await fetchLiveAliasContext(schoolId);
-    const { data, error } = await (supabase as unknown as UntypedSupabase)
-      .from("school_browser_rows")
-      .select(SCHOOL_YEAR_FACTS_SELECT)
-      .in("school_id", [schoolId, ...aliases])
-      .is("sub_institutional", null)
-      .order("year_start", { ascending: false });
-    if (error || !data) {
-      if (error) console.warn(`fetchSchoolYearFacts: ${error.message}`);
-      return [];
-    }
-    return mergeAliasDocuments(
-      schoolId,
-      (data as Record<string, unknown>[]).map((row) => ({
-        document_id: row.document_id == null ? null : String(row.document_id),
-        school_id: row.school_id == null ? null : String(row.school_id),
-        ipeds_id: row.ipeds_id == null ? null : String(row.ipeds_id),
-        canonical_year: String(row.canonical_year),
-        sub_institutional: null,
-        yearStart: numberOrNull(row.year_start),
-        dataQualityFlag: row.data_quality_flag == null ? null : String(row.data_quality_flag),
-        applied: numberOrNull(row.applied),
-        admitted: numberOrNull(row.admitted),
-        enrolledFirstYear: numberOrNull(row.enrolled_first_year),
-        acceptanceRate: normalizeRate(row.acceptance_rate),
-        satCompositeP25: numberOrNull(row.sat_composite_p25),
-        satCompositeP75: numberOrNull(row.sat_composite_p75),
-        actCompositeP25: numberOrNull(row.act_composite_p25),
-        actCompositeP75: numberOrNull(row.act_composite_p75),
-        edApplicants: numberOrNull(row.ed_applicants),
-        edAdmitted: numberOrNull(row.ed_admitted),
-        waitListOffered: numberOrNull(row.wait_list_offered),
-        waitListAccepted: numberOrNull(row.wait_list_accepted),
-        waitListAdmitted: numberOrNull(row.wait_list_admitted),
-      })),
-      ipedsId,
-    );
-  } catch (error) {
-    console.warn(`fetchSchoolYearFacts: ${errorText(error)}`);
-    return [];
-  }
+  const rows = await fetchSchoolBrowserHubRows(schoolId);
+  return rows.map((row) => ({
+    document_id: row.document_id == null ? null : String(row.document_id),
+    school_id: row.school_id == null ? null : String(row.school_id),
+    ipeds_id: row.ipeds_id == null ? null : String(row.ipeds_id),
+    canonical_year: String(row.canonical_year),
+    sub_institutional: null,
+    yearStart: numberOrNull(row.year_start),
+    dataQualityFlag: row.data_quality_flag == null ? null : String(row.data_quality_flag),
+    applied: numberOrNull(row.applied),
+    admitted: numberOrNull(row.admitted),
+    enrolledFirstYear: numberOrNull(row.enrolled_first_year),
+    acceptanceRate: normalizeRate(row.acceptance_rate),
+    satCompositeP25: numberOrNull(row.sat_composite_p25),
+    satCompositeP75: numberOrNull(row.sat_composite_p75),
+    actCompositeP25: numberOrNull(row.act_composite_p25),
+    actCompositeP75: numberOrNull(row.act_composite_p75),
+    edApplicants: numberOrNull(row.ed_applicants),
+    edAdmitted: numberOrNull(row.ed_admitted),
+    waitListOffered: numberOrNull(row.wait_list_offered),
+    waitListAccepted: numberOrNull(row.wait_list_accepted),
+    waitListAdmitted: numberOrNull(row.wait_list_admitted),
+  }));
 });
 
 export const fetchBrowserRowBySchoolId = cache(
   async function fetchBrowserRowBySchoolId(
     schoolId: string,
   ): Promise<BrowserAcademicProfileRow | null> {
-    try {
-      const { data, error } = await (supabase as unknown as UntypedSupabase)
-        .from("school_browser_rows")
-        .select(
-          "document_id, school_id, school_name, canonical_year, year_start, acceptance_rate, sat_submit_rate, act_submit_rate, sat_composite_p25, sat_composite_p50, sat_composite_p75, act_composite_p25, act_composite_p50, act_composite_p75, data_quality_flag, archive_url",
-        )
-        .eq("school_id", schoolId)
-        .gte("year_start", 2024)
-        .is("sub_institutional", null)
-        .order("year_start", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (error || !data) {
-        if (error) console.warn(`fetchBrowserRowBySchoolId: ${error.message}`);
-        return null;
-      }
-
-      return {
-        documentId: String(data.document_id),
-        schoolId: String(data.school_id),
-        schoolName: String(data.school_name),
-        cdsYear: String(data.canonical_year),
-        yearStart: numberOrNull(data.year_start),
-        acceptanceRate: normalizeRate(data.acceptance_rate),
-        satSubmitRate: normalizeRate(data.sat_submit_rate),
-        actSubmitRate: normalizeRate(data.act_submit_rate),
-        satCompositeP25: numberOrNull(data.sat_composite_p25),
-        satCompositeP50: numberOrNull(data.sat_composite_p50),
-        satCompositeP75: numberOrNull(data.sat_composite_p75),
-        actCompositeP25: numberOrNull(data.act_composite_p25),
-        actCompositeP50: numberOrNull(data.act_composite_p50),
-        actCompositeP75: numberOrNull(data.act_composite_p75),
-        avgHsGpa: null,
-        hsGpaSubmitRate: null,
-        dataQualityFlag: data.data_quality_flag ?? null,
-        archiveUrl: data.archive_url ?? null,
-      };
-    } catch (error) {
-      console.warn(`fetchBrowserRowBySchoolId: ${String(error)}`);
-      return null;
-    }
+    const latest = latestHubRowFrom2024(await fetchSchoolBrowserHubRows(schoolId));
+    return latest ? mapAcademicProfileRow(latest) : null;
   },
 );
 
@@ -1502,27 +1567,8 @@ export const fetchAdmissionStrategyBySchoolId = cache(
   async function fetchAdmissionStrategyBySchoolId(
     schoolId: string,
   ): Promise<BrowserAdmissionStrategyRow | null> {
-    try {
-      const { data, error } = await (supabase as unknown as UntypedSupabase)
-        .from("school_browser_rows")
-        .select(ADMISSION_STRATEGY_SELECT)
-        .eq("school_id", schoolId)
-        .gte("year_start", 2024)
-        .is("sub_institutional", null)
-        .order("year_start", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (error || !data) {
-        if (error) console.warn(`fetchAdmissionStrategyBySchoolId: ${error.message}`);
-        return null;
-      }
-
-      return mapAdmissionStrategyRow(data);
-    } catch (error) {
-      console.warn(`fetchAdmissionStrategyBySchoolId: ${String(error)}`);
-      return null;
-    }
+    const latest = latestHubRowFrom2024(await fetchSchoolBrowserHubRows(schoolId));
+    return latest ? mapAdmissionStrategyRow(latest) : null;
   },
 );
 
@@ -1530,23 +1576,19 @@ export const fetchAdmissionStrategyByDocumentId = cache(
   async function fetchAdmissionStrategyByDocumentId(
     documentId: string,
   ): Promise<BrowserAdmissionStrategyRow | null> {
-    try {
-      const { data, error } = await (supabase as unknown as UntypedSupabase)
-        .from("school_browser_rows")
-        .select(ADMISSION_STRATEGY_SELECT)
-        .eq("document_id", documentId)
-        .maybeSingle();
+    return cachedSchoolQuery(
+      ["fetchAdmissionStrategyByDocumentId", documentId],
+      async () => {
+        const { data, error } = await (supabase as unknown as UntypedSupabase)
+          .from("school_browser_rows")
+          .select(ADMISSION_STRATEGY_SELECT)
+          .eq("document_id", documentId)
+          .maybeSingle();
 
-      if (error || !data) {
-        if (error) console.warn(`fetchAdmissionStrategyByDocumentId: ${error.message}`);
-        return null;
-      }
-
-      return mapAdmissionStrategyRow(data);
-    } catch (error) {
-      console.warn(`fetchAdmissionStrategyByDocumentId: ${String(error)}`);
-      return null;
-    }
+        throwIfPostgrestError(error, "fetchAdmissionStrategyByDocumentId");
+        return data ? mapAdmissionStrategyRow(data) : null;
+      },
+    );
   },
 );
 
@@ -1554,7 +1596,7 @@ export const fetchAvgGpaBySchoolId = cache(
   async function fetchAvgGpaBySchoolId(
     schoolId: string,
   ): Promise<Pick<SchoolAcademicProfile, "avgHsGpa" | "hsGpaSubmitRate">> {
-    try {
+    return cachedSchoolQuery(["fetchAvgGpaBySchoolId", schoolId], async () => {
       const { data, error } = await (supabase as unknown as UntypedSupabase)
         .from("cds_fields")
         .select("field_id, value_num, value_text, year_start")
@@ -1564,8 +1606,8 @@ export const fetchAvgGpaBySchoolId = cache(
         .in("field_id", ["C.1201", "C.1202"])
         .order("year_start", { ascending: false });
 
-      if (error || !data) {
-        if (error) console.warn(`fetchAvgGpaBySchoolId: ${error.message}`);
+      throwIfPostgrestError(error, "fetchAvgGpaBySchoolId");
+      if (!data || data.length === 0) {
         return { avgHsGpa: null, hsGpaSubmitRate: null };
       }
 
@@ -1584,10 +1626,7 @@ export const fetchAvgGpaBySchoolId = cache(
         avgHsGpa: numberOrNull(avg?.value_num ?? avg?.value_text),
         hsGpaSubmitRate: normalizeRate(submit?.value_num ?? submit?.value_text),
       };
-    } catch (error) {
-      console.warn(`fetchAvgGpaBySchoolId: ${String(error)}`);
-      return { avgHsGpa: null, hsGpaSubmitRate: null };
-    }
+    });
   },
 );
 
@@ -1595,7 +1634,7 @@ export const fetchMeritProfileBySchoolId = cache(
   async function fetchMeritProfileBySchoolId(
     schoolId: string,
   ): Promise<MeritProfileRow | null> {
-    try {
+    return cachedSchoolQuery(["fetchMeritProfileBySchoolId", schoolId], async () => {
       const { data, error } = await (supabase as unknown as UntypedSupabase)
         .from("school_merit_profile")
         .select(
@@ -1605,10 +1644,8 @@ export const fetchMeritProfileBySchoolId = cache(
         .limit(1)
         .maybeSingle();
 
-      if (error || !data) {
-        if (error) console.warn(`fetchMeritProfileBySchoolId: ${error.message}`);
-        return null;
-      }
+      throwIfPostgrestError(error, "fetchMeritProfileBySchoolId");
+      if (!data) return null;
 
       return {
         documentId: String(data.document_id),
@@ -1668,10 +1705,7 @@ export const fetchMeritProfileBySchoolId = cache(
         federalLoanRate: normalizeRate(data.federal_loan_rate),
         retentionRateFt: normalizeRate(data.retention_rate_ft),
       };
-    } catch (error) {
-      console.warn(`fetchMeritProfileBySchoolId: ${String(error)}`);
-      return null;
-    }
+    });
   },
 );
 
@@ -1679,7 +1713,7 @@ export const fetchChangeEventsBySchoolId = cache(
   async function fetchChangeEventsBySchoolId(
     schoolId: string,
   ): Promise<ChangeEventRow[]> {
-    try {
+    return cachedSchoolQuery(["fetchChangeEventsBySchoolId", schoolId], async () => {
       const { data, error } = await (supabase as unknown as UntypedSupabase)
         .from("cds_field_change_events")
         .select(
@@ -1692,10 +1726,8 @@ export const fetchChangeEventsBySchoolId = cache(
         .order("severity", { ascending: true })
         .limit(5);
 
-      if (error || !data) {
-        if (error) console.warn(`fetchChangeEventsBySchoolId: ${error.message}`);
-        return [];
-      }
+      throwIfPostgrestError(error, "fetchChangeEventsBySchoolId");
+      if (!data) return [];
 
       return data.map((row: any) => ({
         id: String(row.id),
@@ -1718,10 +1750,7 @@ export const fetchChangeEventsBySchoolId = cache(
         toArchiveUrl: row.to_archive_url ?? null,
         verificationStatus: row.verification_status as ChangeEventVerificationStatus,
       }));
-    } catch (error) {
-      console.warn(`fetchChangeEventsBySchoolId: ${String(error)}`);
-      return [];
-    }
+    });
   },
 );
 
@@ -1730,21 +1759,21 @@ export const fetchDocumentsBySchoolAndYear = cache(async function fetchDocuments
   year: string
 ): Promise<ManifestRow[]> {
   const { aliases, ipedsId } = await fetchLiveAliasContext(schoolId);
-  const { data, error } = await supabase
-    .from("cds_manifest")
-    .select("*")
-    .in("school_id", [schoolId, ...aliases])
-    .eq("canonical_year", year)
-    .not("participation_status", "in", `(${PUBLIC_EXCLUDED_STATUSES.join(",")})`)
-    .is("removed_at", null)
-    .order("sub_institutional", { ascending: true, nullsFirst: true });
+  return cachedSchoolQuery(["fetchDocumentsBySchoolAndYear", schoolId, year], async () => {
+    const { data, error } = await supabase
+      .from("cds_manifest")
+      .select("*")
+      .in("school_id", [schoolId, ...aliases])
+      .eq("canonical_year", year)
+      .not("participation_status", "in", `(${PUBLIC_EXCLUDED_STATUSES.join(",")})`)
+      .is("removed_at", null)
+      .order("sub_institutional", { ascending: true, nullsFirst: true });
 
-  if (error) {
-    throw new Error(`Failed to fetch documents: ${error.message}`);
-  }
-  return excludeHiddenQualityDocuments(
-    mergeAliasDocuments(schoolId, data ?? [], ipedsId),
-  );
+    throwIfPostgrestError(error, "Failed to fetch documents");
+    return excludeHiddenQualityDocuments(
+      mergeAliasDocuments(schoolId, data ?? [], ipedsId),
+    );
+  });
 });
 
 export async function fetchCanonicalArtifact(
@@ -1774,58 +1803,56 @@ export async function fetchCanonicalArtifact(
  * Callers that need the raw canonical (markdown, stats) still get it back
  * via `canonical`. The `mergedValues` field is the shape to render to users.
  */
-export async function fetchExtract(documentId: string): Promise<{
+export const fetchExtract = cache(async function fetchExtract(documentId: string): Promise<{
   canonical: ArtifactRow | null;
   fallback: ArtifactRow | null;
   mergedValues: Record<string, FieldValue>;
 }> {
-  const [canonicalRes, fallbackRes] = await Promise.all([
-    supabase
-      .from("cds_artifacts")
-      .select("*")
-      .eq("document_id", documentId)
-      .eq("kind", "canonical")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("cds_artifacts")
-      .select("*")
-      .eq("document_id", documentId)
-      .eq("producer", "tier4_llm_fallback")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  ]);
+  return cachedSchoolQuery(["fetchExtract", documentId], async () => {
+    const [canonicalRes, fallbackRes] = await Promise.all([
+      supabase
+        .from("cds_artifacts")
+        .select("*")
+        .eq("document_id", documentId)
+        .eq("kind", "canonical")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("cds_artifacts")
+        .select("*")
+        .eq("document_id", documentId)
+        .eq("producer", "tier4_llm_fallback")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
 
-  if (canonicalRes.error) {
-    throw new Error(`Failed to fetch canonical artifact: ${canonicalRes.error.message}`);
-  }
-  if (fallbackRes.error) {
-    throw new Error(`Failed to fetch fallback artifact: ${fallbackRes.error.message}`);
-  }
+    throwIfPostgrestError(canonicalRes.error, "Failed to fetch canonical artifact");
+    throwIfPostgrestError(fallbackRes.error, "Failed to fetch fallback artifact");
 
-  const canonicalValues =
-    ((canonicalRes.data?.notes as ArtifactNotes | null)?.values ?? {}) as Record<string, FieldValue>;
-  const compatibleFallback = fallbackMatchesCanonical(canonicalRes.data ?? null, fallbackRes.data ?? null)
-    ? fallbackRes.data
-    : null;
-  const fallbackValues =
-    ((compatibleFallback?.notes as ArtifactNotes | null)?.values ?? {}) as Record<string, FieldValue>;
+    const canonicalValues =
+      ((canonicalRes.data?.notes as ArtifactNotes | null)?.values ?? {}) as Record<string, FieldValue>;
+    const compatibleFallback = fallbackMatchesCanonical(canonicalRes.data ?? null, fallbackRes.data ?? null)
+      ? fallbackRes.data
+      : null;
+    const fallbackValues =
+      ((compatibleFallback?.notes as ArtifactNotes | null)?.values ?? {}) as Record<string, FieldValue>;
 
-  // Mode B merge: fallback is the base, canonical overlays on top so the
-  // deterministic cleaner's values always win on collision.
-  const mergedValues: Record<string, FieldValue> = {
-    ...fallbackValues,
-    ...canonicalValues,
-  };
+    // Mode B merge: fallback is the base, canonical overlays on top so the
+    // deterministic cleaner's values always win on collision.
+    const mergedValues: Record<string, FieldValue> = {
+      ...fallbackValues,
+      ...canonicalValues,
+    };
 
-  return {
-    canonical: canonicalRes.data ?? null,
-    fallback: compatibleFallback,
-    mergedValues,
-  };
-}
+    return {
+      canonical: canonicalRes.data ?? null,
+      fallback: compatibleFallback,
+      mergedValues,
+    };
+  });
+});
 
 // One-row lookup into scorecard_summary. Hitting the table directly (not the
 // cds_scorecard view) avoids the per-document row replication — Scorecard
@@ -1836,13 +1863,15 @@ export const fetchScorecardByIpedsId = cache(async function fetchScorecardByIped
   ipedsId: string | null | undefined,
 ): Promise<ScorecardSummary | null> {
   if (!ipedsId) return null;
-  const { data, error } = await supabase
-    .from("scorecard_summary")
-    .select("*")
-    .eq("ipeds_id", ipedsId)
-    .maybeSingle();
-  if (error) throw new Error(`fetchScorecardByIpedsId: ${error.message}`);
-  return data ?? null;
+  return cachedSchoolQuery(["fetchScorecardByIpedsId", ipedsId], async () => {
+    const { data, error } = await supabase
+      .from("scorecard_summary")
+      .select("*")
+      .eq("ipeds_id", ipedsId)
+      .maybeSingle();
+    throwIfPostgrestError(error, "fetchScorecardByIpedsId");
+    return data ?? null;
+  });
 });
 
 // Compare (and any other multi-school path) must not fan out to

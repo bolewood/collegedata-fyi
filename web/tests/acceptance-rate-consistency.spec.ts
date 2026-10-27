@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { ACCEPTANCE_PILOT_SCHOOLS, acceptanceRatePath } from "../src/lib/acceptance-pilot";
 
 // One fact, one number: the latest year's applicants, admits, and rate
@@ -6,6 +6,27 @@ import { ACCEPTANCE_PILOT_SCHOOLS, acceptanceRatePath } from "../src/lib/accepta
 // description), and the year page's key stats. Rates are compared against
 // admitted ÷ applied at each surface's own display precision.
 const num = (text: string) => Number(text.replace(/,/g, ""));
+
+// PR 035 (SchoolFactRibbon) moved year-page C1 stats out of `<p>` labels
+// into `data-testid="ribbon-cell-*"` cells. The numeric contract is unchanged.
+async function yearPageAdmissionsStats(page: Page): Promise<Record<string, string>> {
+  return page.evaluate(() => {
+    const valueOf = (testId: string) => {
+      const text = document
+        .querySelector(`[data-testid="${testId}"] .cd-ribbon__value`)
+        ?.textContent?.trim();
+      return text || undefined;
+    };
+    const out: Record<string, string> = {};
+    const applications = valueOf("ribbon-cell-applications");
+    const admitted = valueOf("ribbon-cell-admitted");
+    const rate = valueOf("ribbon-cell-acceptance-rate");
+    if (applications) out.Applications = applications;
+    if (admitted) out.Admitted = admitted;
+    if (rate) out["Acceptance Rate"] = rate;
+    return out;
+  });
+}
 
 function rateMatches(printed: string, applied: number, admitted: number): boolean {
   const decimals = printed.includes(".") ? printed.split(".")[1].length : 0;
@@ -40,16 +61,7 @@ test.describe("non-pilot hubs and year pages agree", () => {
       const year = hub?.[1] ?? suppressedYear!;
 
       await page.goto(`/schools/${schoolId}/${year}`);
-      const stats = await page.evaluate(() => {
-        const out: Record<string, string> = {};
-        for (const label of Array.from(document.querySelectorAll("p"))) {
-          const value = label.nextElementSibling;
-          if (value && ["Acceptance Rate", "Applications", "Admitted"].includes(label.textContent ?? "")) {
-            out[label.textContent!] = value.textContent ?? "";
-          }
-        }
-        return out;
-      });
+      const stats = await yearPageAdmissionsStats(page);
       const yearText = await page.locator(".cd-archive-lead").first().innerText();
       if (hub) {
         expect(num(stats.Applications ?? "")).toBe(num(hub[2]));
@@ -103,16 +115,7 @@ test.describe("acceptance counts agree across pages", () => {
       }
 
       await page.goto(`/schools/${schoolId}/${year}`);
-      const stats = await page.evaluate(() => {
-        const out: Record<string, string> = {};
-        for (const label of Array.from(document.querySelectorAll("p"))) {
-          const value = label.nextElementSibling;
-          if (value && ["Acceptance Rate", "Applications", "Admitted"].includes(label.textContent ?? "")) {
-            out[label.textContent!] = value.textContent ?? "";
-          }
-        }
-        return out;
-      });
+      const stats = await yearPageAdmissionsStats(page);
       expect(num(stats.Applications ?? "")).toBe(applied);
       expect(num(stats.Admitted ?? "")).toBe(admitted);
       expect(rateMatches((stats["Acceptance Rate"] ?? "").replace("%", ""), applied, admitted)).toBe(true);
