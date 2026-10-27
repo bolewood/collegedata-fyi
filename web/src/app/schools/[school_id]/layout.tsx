@@ -2,6 +2,9 @@ import type { ReactNode } from "react";
 import { SchoolApiNote } from "@/components/SchoolApiNote";
 import { cachedSchoolInks, schoolInkWrapperProps } from "@/lib/school-inks";
 
+export const dynamic = "force-static";
+export const revalidate = 3600;
+
 export default async function SchoolRecordLayout({
   children,
   params,

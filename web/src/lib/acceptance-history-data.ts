@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import type { MetadataRoute } from "next";
 import { fetchExtract, fetchSchoolDocuments, fetchSchoolYearFacts } from "./queries";
 import type { SchoolYearFacts } from "./school-summary";
@@ -61,32 +62,38 @@ export type SchoolAcceptanceHistory = {
 export const fetchAcceptanceHistory = cache(async function fetchAcceptanceHistory(
   schoolId: string,
 ): Promise<SchoolAcceptanceHistory> {
-  const [documents, facts] = await Promise.all([
-    fetchSchoolDocuments(schoolId),
-    fetchSchoolYearFacts(schoolId),
-  ]);
-  const candidates = documents.filter(isHistoryCandidate);
-  const extracts = await Promise.all(
-    candidates.map((doc) => fetchHistoryExtract(doc.document_id as string)),
-  );
-  const browserByDocument = new Map<string, BrowserCounts>();
-  for (const row of facts) {
-    if (!row.document_id) continue;
-    browserByDocument.set(row.document_id, {
-      applied: row.applied,
-      admitted: row.admitted,
-      enrolled: row.enrolledFirstYear,
-      edApplicants: row.edApplicants,
-      edAdmitted: row.edAdmitted,
-    });
-  }
-  const pairs = candidates.map((doc, i) => ({ doc, extract: extracts[i] }));
-  return {
-    schoolName: documents[0]?.school_name ?? null,
-    documents,
-    history: buildAcceptanceHistory(pairs, browserByDocument),
-    gpa: buildGpaHistory(pairs),
-  };
+  return unstable_cache(
+    async () => {
+      const [documents, facts] = await Promise.all([
+        fetchSchoolDocuments(schoolId),
+        fetchSchoolYearFacts(schoolId),
+      ]);
+      const candidates = documents.filter(isHistoryCandidate);
+      const extracts = await Promise.all(
+        candidates.map((doc) => fetchHistoryExtract(doc.document_id as string)),
+      );
+      const browserByDocument = new Map<string, BrowserCounts>();
+      for (const row of facts) {
+        if (!row.document_id) continue;
+        browserByDocument.set(row.document_id, {
+          applied: row.applied,
+          admitted: row.admitted,
+          enrolled: row.enrolledFirstYear,
+          edApplicants: row.edApplicants,
+          edAdmitted: row.edAdmitted,
+        });
+      }
+      const pairs = candidates.map((doc, i) => ({ doc, extract: extracts[i] }));
+      return {
+        schoolName: documents[0]?.school_name ?? null,
+        documents,
+        history: buildAcceptanceHistory(pairs, browserByDocument),
+        gpa: buildGpaHistory(pairs),
+      };
+    },
+    ["fetchAcceptanceHistory", schoolId],
+    { revalidate: 3600, tags: ["school-data"] },
+  )();
 });
 
 /**

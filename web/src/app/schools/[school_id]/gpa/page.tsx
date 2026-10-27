@@ -22,6 +22,7 @@ import { SchoolGlyph } from "@/components/SchoolGlyph";
 import { GpaChart } from "@/components/GpaChart";
 import { GpaTable, gpaTableRows } from "@/components/GpaTable";
 
+export const dynamic = "force-static";
 export const revalidate = 3600;
 
 type Params = { school_id: string };
