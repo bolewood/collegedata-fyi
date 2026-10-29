@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { ListLink } from "./ListLink";
 import { SchoolGlyph } from "./SchoolGlyph";
 import { trackEvent, trackSourceOpened } from "@/lib/analytics";
 import { academicFitLabel, admissionsOutlookLabel, type Caveat } from "@/lib/positioning";
@@ -57,7 +57,7 @@ export function SchoolListItem({
     <article className="match-school-row rule">
       <div className="match-school-row__identity">
         <div className="match-school-row__name">
-          <Link
+          <ListLink
             href={school.schoolUrl}
             className="school-name-with-glyph"
             onClick={() =>
@@ -71,7 +71,7 @@ export function SchoolListItem({
           >
             <SchoolGlyph brandColors={brandColors} />
             {school.schoolName}
-          </Link>
+          </ListLink>
         </div>
         <div className="match-school-row__meta mono">
           {school.state ?? "state n/a"} · {school.cdsYear} CDS · admit {formatPercent(school.acceptanceRate)}

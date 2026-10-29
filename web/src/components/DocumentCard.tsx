@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { ListLink } from "./ListLink";
 import {
   formatBadgeLabel,
   formatExtractionStatus,
@@ -100,7 +100,7 @@ export function DocumentCard({
 
       <div className="document-card-row__actions">
         {canLink && (
-          <Link
+          <ListLink
             href={`/schools/${doc.school_id}/${doc.canonical_year}`}
             onClick={() =>
               trackEvent("school_document_fields_opened", {
@@ -111,7 +111,7 @@ export function DocumentCard({
             }
           >
             View fields →
-          </Link>
+          </ListLink>
         )}
         {sourceDownloadUrl ? (
           <a

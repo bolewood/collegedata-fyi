@@ -18,7 +18,7 @@
 
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { ListLink } from "./ListLink";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { CoverageStatus, InstitutionCoverage } from "@/lib/types";
 import { CoverageBadge } from "./CoverageBadge";
@@ -432,7 +432,7 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
                     }}
                     role="row"
                   >
-                    <Link
+                    <ListLink
                       href={`/schools/${r.school_id}`}
                       className="school-name-with-glyph"
                       style={{
@@ -445,7 +445,7 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
                     >
                       <SchoolGlyph size="sm" brandColors={r.brand_colors} />
                       {r.school_name}
-                    </Link>
+                    </ListLink>
                     <span className="mono" style={{ fontSize: 12, color: "var(--ink-2)" }}>
                       {r.state ?? "—"}
                     </span>
@@ -464,21 +464,21 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
                       {formatChecked(r.last_checked_at)}
                     </span>
                     {r.can_submit_source ? (
-                      <Link
+                      <ListLink
                         href={`/schools/${r.school_id}#submit`}
                         className="mono"
                         style={{ fontSize: 12 }}
                       >
                         Send the link
-                      </Link>
+                      </ListLink>
                     ) : (
-                      <Link
+                      <ListLink
                         href={`/schools/${r.school_id}`}
                         className="mono"
                         style={{ fontSize: 12, color: "var(--ink-3)" }}
                       >
                         Open
-                      </Link>
+                      </ListLink>
                     )}
                   </div>
                 );

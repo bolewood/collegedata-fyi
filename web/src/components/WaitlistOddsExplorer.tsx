@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { ListLink } from "./ListLink";
 import { useMemo, useState } from "react";
 import { trackEvent, trackSourceOpened } from "@/lib/analytics";
 import {
@@ -356,9 +356,9 @@ function CaseStudy({ row }: { row: WaitlistRecipeRow }) {
     <article className="cd-card cd-card--cut" style={{ padding: 18 }}>
       <div className="meta">{row.year} · {row.selectivity}</div>
       <h3 className="serif" style={{ fontSize: 22, margin: "8px 0 0" }}>
-        <Link href={row.schoolUrl} style={{ textDecoration: "none" }}>
+        <ListLink href={row.schoolUrl} style={{ textDecoration: "none" }}>
           {row.schoolName}
-        </Link>
+        </ListLink>
       </h3>
       <div
         className="nums"
@@ -717,7 +717,7 @@ export function WaitlistOddsExplorer() {
                 {WAITLIST_REPORTED_ANOMALY_ROWS.map((row) => (
                   <tr key={row.documentId}>
                     <td style={{ padding: "10px 0", borderBottom: "1px dashed var(--rule)" }}>
-                      <Link href={row.schoolUrl}>{row.schoolName}</Link>
+                      <ListLink href={row.schoolUrl}>{row.schoolName}</ListLink>
                     </td>
                     <td className="nums" style={{ textAlign: "right", padding: "10px 0", borderBottom: "1px dashed var(--rule)" }}>
                       {row.year}
@@ -845,7 +845,7 @@ export function WaitlistOddsExplorer() {
               {rankedRows.map((row) => (
                 <tr key={row.documentId}>
                   <td style={{ padding: "12px 14px", borderBottom: "1px dashed var(--rule)" }}>
-                    <Link href={row.schoolUrl}>{row.schoolName}</Link>
+                    <ListLink href={row.schoolUrl}>{row.schoolName}</ListLink>
                     <div className="mono" style={{ color: "var(--ink-3)", fontSize: 10.5, marginTop: 2 }}>
                       {row.selectivity}
                     </div>

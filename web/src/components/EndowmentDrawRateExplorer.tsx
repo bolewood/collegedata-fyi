@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { ListLink } from "./ListLink";
 import { useMemo, useState } from "react";
 import {
   ENDOWMENT_DRAW_RATE_META,
@@ -324,7 +324,7 @@ function ThresholdTable() {
                   <div className="endowment-bucket-row__school">
                     <div className="endowment-bucket-row__identity">
                       {hasSchoolLink ? (
-                        <Link href={`/schools/${member.schoolId}`}>{member.schoolName}</Link>
+                        <ListLink href={`/schools/${member.schoolId}`}>{member.schoolName}</ListLink>
                       ) : (
                         <span>{member.schoolName}</span>
                       )}
@@ -562,9 +562,9 @@ function SchoolDetail({ school }: { school: EndowmentDrawRateSchool }) {
           </p>
         </div>
         {school.hasCurrentSchoolPage && school.schoolId ? (
-          <Link href={`/schools/${school.schoolId}`} className="cd-btn cd-btn--ghost">
+          <ListLink href={`/schools/${school.schoolId}`} className="cd-btn cd-btn--ghost">
             Open school page →
-          </Link>
+          </ListLink>
         ) : (
           <span className="cd-chip">Historical/raw API only</span>
         )}

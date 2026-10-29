@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ListLink } from "./ListLink";
 import type { AcceptanceYear } from "@/lib/acceptance-history";
 import { fallLabel, gapLabel, pct, reportLabel } from "@/lib/acceptance-rate-copy";
 import { storageUrl } from "@/lib/format";
@@ -78,9 +78,9 @@ export function EarlyDecisionTable({
                       <th scope="row">
                         <span className="acc-table__fall">Fall {item.yearStart}</span>
                         {item.hasReport ? (
-                          <Link href={`/schools/${schoolId}/${item.year}`} className="acc-table__report">
+                          <ListLink href={`/schools/${schoolId}/${item.year}`} className="acc-table__report">
                             {reportLabel(item.year)}
-                          </Link>
+                          </ListLink>
                         ) : null}
                         <span className="acc-table__gap-note" aria-hidden="true">
                           {gapLabel(item.hasReport)}
@@ -100,9 +100,9 @@ export function EarlyDecisionTable({
                   <tr key={row.year}>
                     <th scope="row">
                       <span className="acc-table__fall">{fallLabel(row)}</span>
-                      <Link href={`/schools/${schoolId}/${row.year}`} className="acc-table__report">
+                      <ListLink href={`/schools/${schoolId}/${row.year}`} className="acc-table__report">
                         {reportLabel(row.year)}
-                      </Link>
+                      </ListLink>
                     </th>
                     <td className="acc-num acc-table__rate">{pct(row.rate)}</td>
                     <td className="acc-num">{count(row.applied)}</td>
