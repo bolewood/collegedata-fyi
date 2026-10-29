@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
+import { ListLink } from "./ListLink";
 import {
   searchBrowserRows,
   type BrowserField,
@@ -652,7 +653,7 @@ export function SchoolBrowser({
                         flexWrap: isCompact ? "nowrap" : "wrap",
                       }}
                     >
-                      <Link
+                      <ListLink
                         href={`/schools/${row.school_id}`}
                         className="school-name-with-glyph"
                         style={{
@@ -675,7 +676,7 @@ export function SchoolBrowser({
                       >
                         <SchoolGlyph size="sm" brandColors={brandColors?.[row.school_id]} />
                         {row.school_name}
-                      </Link>
+                      </ListLink>
                       {isCompact && row.sub_institutional && (
                         <span
                           className="meta"
@@ -1077,14 +1078,14 @@ function BrowserInspectionDrawer({
           <div className="meta" style={{ marginBottom: 4 }}>
             § Quick inspect · {row.canonical_year} CDS
           </div>
-          <Link
+          <ListLink
             href={`/schools/${row.school_id}`}
             className="school-name-with-glyph serif"
             style={{ fontSize: 22, lineHeight: 1.15, textDecoration: "none" }}
           >
             <SchoolGlyph brandColors={brandColors} />
             <span>{row.school_name}</span>
-          </Link>
+          </ListLink>
           {row.sub_institutional && (
             <div className="meta" style={{ marginTop: 4 }}>{row.sub_institutional}</div>
           )}
@@ -1155,15 +1156,15 @@ function BrowserInspectionDrawer({
       </div>
 
       <div className="cd-browser-drawer__actions rule-2">
-        <Link href={`/schools/${row.school_id}`} className="cd-btn">
+        <ListLink href={`/schools/${row.school_id}`} className="cd-btn">
           School hub →
-        </Link>
-        <Link
+        </ListLink>
+        <ListLink
           href={`/schools/${row.school_id}/${row.canonical_year}`}
           className="cd-btn cd-btn--ghost"
         >
           {row.canonical_year} report →
-        </Link>
+        </ListLink>
         <a
           href={row.archive_url}
           target="_blank"
@@ -1216,7 +1217,7 @@ function BrowserResultCard({
     <article className="cd-card" style={{ padding: 14 }}>
       <div style={{ display: "flex", gap: 10, alignItems: "flex-start", justifyContent: "space-between" }}>
         <div style={{ minWidth: 0 }}>
-          <Link
+          <ListLink
             href={`/schools/${row.school_id}`}
             className="school-name-with-glyph"
             style={{ fontFamily: "var(--serif)", fontSize: 19, lineHeight: 1.15 }}
@@ -1230,7 +1231,7 @@ function BrowserResultCard({
           >
             <SchoolGlyph brandColors={brandColors} />
             {row.school_name}
-          </Link>
+          </ListLink>
           {row.sub_institutional && (
             <div className="meta" style={{ marginTop: 4 }}>{row.sub_institutional}</div>
           )}

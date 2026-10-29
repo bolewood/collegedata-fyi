@@ -1,4 +1,40 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type Request } from "@playwright/test";
+
+function isSchoolPagePrefetch(req: Request): boolean {
+  let url: URL;
+  try {
+    url = new URL(req.url());
+  } catch {
+    return false;
+  }
+  if (!/^\/schools\/.+/.test(url.pathname)) return false;
+  if (req.resourceType() === "document") return false;
+  const headers = req.headers();
+  return (
+    headers["next-router-prefetch"] === "1" ||
+    headers["rsc"] === "1" ||
+    url.searchParams.has("_rsc")
+  );
+}
+
+async function schoolPrefetchesDuring(
+  page: Page,
+  run: () => Promise<void>,
+): Promise<string[]> {
+  const paths: string[] = [];
+  const onRequest = (req: Request) => {
+    if (isSchoolPagePrefetch(req)) {
+      paths.push(new URL(req.url()).pathname);
+    }
+  };
+  page.on("request", onRequest);
+  try {
+    await run();
+  } finally {
+    page.off("request", onRequest);
+  }
+  return paths;
+}
 
 async function expectNoBodyOverflow(page: Page) {
   const overflow = await page.evaluate(() => {
@@ -216,6 +252,35 @@ test("school-year page renders reconstructed CDS tables", async ({ page }) => {
   await expect(j).toBeVisible();
   await expect(j.getByRole("columnheader", { name: "Bachelor's" })).toBeVisible();
   await expect(j.getByRole("rowheader", { name: "Computer and information sciences" })).toBeVisible();
+});
+
+test("scrolling /schools does not viewport-prefetch school pages", async ({ page }) => {
+  const paths = await schoolPrefetchesDuring(page, async () => {
+    await page.goto("/schools");
+    await expect(page.getByRole("heading", { name: "Schools", exact: true })).toBeVisible();
+    await expect(page.locator("table a").first()).toBeVisible();
+    for (let i = 0; i < 20; i++) {
+      await page.evaluate(() => window.scrollBy(0, 800));
+      await page.waitForTimeout(80);
+    }
+    await page.waitForTimeout(400);
+  });
+  expect(paths, `unexpected school prefetches: ${[...new Set(paths)].slice(0, 8).join(", ")}`).toEqual([]);
+});
+
+test("opening a school hub does not prefetch every year page", async ({ page }) => {
+  const paths = await schoolPrefetchesDuring(page, async () => {
+    await page.goto("/schools/carnegie-mellon");
+    await expect(page.getByRole("heading", { name: /Carnegie Mellon/ })).toBeVisible();
+    await page.waitForTimeout(800);
+  });
+  const uniqueYears = [
+    ...new Set(paths.filter((path) => /\/schools\/carnegie-mellon\/\d{4}-\d{2}$/.test(path))),
+  ];
+  // Latest-year ribbon links may still prefetch once. The WAF failure was
+  // every archived year (1999-00 through 2012-13) at once.
+  expect(uniqueYears.length, `year prefetches: ${uniqueYears.join(", ")}`).toBeLessThanOrEqual(2);
+  expect(uniqueYears.some((path) => /\/19\d{2}-\d{2}$/.test(path))).toBe(false);
 });
 
 test("mobile launch surfaces do not overflow", async ({ page, isMobile }) => {

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
 import type { SchoolSummary } from "@/lib/types";
 import { Badge } from "./Badge";
+import { ListLink } from "./ListLink";
 import { SchoolGlyph } from "./SchoolGlyph";
 import { formatBadgeLabel, formatColor } from "@/lib/format";
 
@@ -105,14 +105,14 @@ export function SchoolTable({ schools }: { schools: SchoolSummary[] }) {
             {filtered.map((school) => (
               <tr key={school.school_id} className="rule">
                 <td style={{ padding: "12px 16px 12px 0" }}>
-                  <Link
+                  <ListLink
                     href={`/schools/${school.school_id}`}
                     className="school-name-with-glyph"
                     style={{ fontFamily: "var(--serif)", fontSize: 18 }}
                   >
                     <SchoolGlyph size="sm" brandColors={school.brand_colors} />
                     {school.school_name}
-                  </Link>
+                  </ListLink>
                 </td>
                 <td className="nums" style={{ padding: "12px 16px", textAlign: "right" }}>
                   {school.doc_count}

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { ListLink } from "@/components/ListLink";
 import { notFound } from "next/navigation";
 import { fetchOperatorChangeDigest } from "@/lib/change-intelligence-admin";
 import type { ChangeEventRow } from "@/lib/types";
@@ -44,7 +44,7 @@ function eventRows(events: ChangeEventRow[]) {
           {events.map((event) => (
             <tr key={event.id}>
               <td>
-                <Link href={`/schools/${event.schoolId}`}>{event.schoolName}</Link>
+                <ListLink href={`/schools/${event.schoolId}`}>{event.schoolName}</ListLink>
                 <span>{event.fromYear} to {event.toYear}</span>
               </td>
               <td>{event.fieldLabel}</td>

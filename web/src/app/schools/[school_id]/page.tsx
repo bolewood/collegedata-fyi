@@ -41,6 +41,7 @@ import {
 import { CoverageBadge } from "@/components/CoverageBadge";
 import { SubmissionForm } from "@/components/SubmissionForm";
 import { FederalBaselineTable } from "@/components/FederalBaselineTable";
+import { ListLink } from "@/components/ListLink";
 import { isCanonicalCdsYear, storageUrl, yearRange } from "@/lib/format";
 import { archiveLead, directoryOnlyLead } from "@/lib/archive-lead";
 import { fetchAcceptancePageServed, fetchEarlyDecisionPageServed, fetchGpaPageServed, gatedYearFacts } from "@/lib/acceptance-history-data";
@@ -572,7 +573,7 @@ export default async function SchoolDetailPage({ params }: {
           {[...uniqueYears].reverse().map((year, i) => (
             <span key={year}>
               {i > 0 ? " · " : ""}
-              <Link href={`/schools/${school_id}/${year}`}>{year}</Link>
+              <ListLink href={`/schools/${school_id}/${year}`}>{year}</ListLink>
             </span>
           ))}
         </nav>

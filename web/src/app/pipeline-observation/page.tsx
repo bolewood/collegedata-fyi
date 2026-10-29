@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { ListLink } from "@/components/ListLink";
 import { fetchPipelineObservation } from "@/lib/pipeline-observation";
 import type { ExtractionActivityItem } from "@/lib/pipeline-observation";
 import type { Lamp } from "@/lib/pipeline-lamps";
@@ -157,9 +157,9 @@ export default async function PipelineObservationPage() {
                   {item.ago_label} ago
                 </time>
                 <div className="po-ledger-school">
-                  <Link href={`/schools/${item.school_id}`}>
+                  <ListLink href={`/schools/${item.school_id}`}>
                     {item.school_name}
-                  </Link>
+                  </ListLink>
                   <span>{item.canonical_year}</span>
                 </div>
                 <div className="po-ledger-method">

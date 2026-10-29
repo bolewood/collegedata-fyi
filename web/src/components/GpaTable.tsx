@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ListLink } from "./ListLink";
 import type { GpaHistory, GpaYear } from "@/lib/c11-gpa";
 import type { ManifestRow } from "@/lib/types";
 import { bandShare, gpa } from "@/lib/gpa-copy";
@@ -107,9 +107,9 @@ export function GpaTable({
                       <th scope="row">
                         <span className="acc-table__fall">Fall {item.yearStart}</span>
                         {item.hasReport ? (
-                          <Link href={`/schools/${schoolId}/${item.year}`} className="acc-table__report">
+                          <ListLink href={`/schools/${schoolId}/${item.year}`} className="acc-table__report">
                             {reportLabel(item.year)}
-                          </Link>
+                          </ListLink>
                         ) : null}
                         <span className="acc-table__gap-note" aria-hidden="true">
                           {gapLabel(item.hasReport)}
@@ -129,9 +129,9 @@ export function GpaTable({
                   <tr key={row.year}>
                     <th scope="row">
                       <span className="acc-table__fall">{fallLabel(row)}</span>
-                      <Link href={`/schools/${schoolId}/${row.year}`} className="acc-table__report">
+                      <ListLink href={`/schools/${schoolId}/${row.year}`} className="acc-table__report">
                         {reportLabel(row.year)}
-                      </Link>
+                      </ListLink>
                     </th>
                     <td className="acc-num acc-table__rate">{row.average != null ? gpa(row.average) : "—"}</td>
                     <td className="acc-num">{bandShare(row.bands.percents.gpa4)}</td>
