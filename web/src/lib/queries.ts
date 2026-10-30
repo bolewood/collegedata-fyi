@@ -71,6 +71,14 @@ function throwIfPostgrestError(
   if (error) throw new Error(`${context}: ${error.message}`);
 }
 
+function isStatementTimeoutError(
+  error: { message: string } | null | undefined,
+): boolean {
+  return Boolean(
+    error?.message && /statement timeout|canceling statement/i.test(error.message),
+  );
+}
+
 // Compact tuples stay well under Next's 2 MB Data Cache cap.
 // [alias, school_id, ipeds_id, is_primary]
 type CrosswalkTuple = [string, string, string | null, 0 | 1];
@@ -873,24 +881,30 @@ export const fetchSiteStats = cache(async function fetchSiteStats(): Promise<Sit
 // in a pre-migration environment), in which case the page genuinely
 // 404s.
 //
-// Tolerant of all errors: this is a defensive stub fetch whose only
-// failure mode should be "render a 404." Throwing would surface a
-// 500 to the user for a slug that simply has no coverage row, which
-// is strictly worse UX than showing the not-found page. RLS already
-// hides out_of_scope rows from anon.
+// Throws on PostgREST errors so Next's data cache cannot store a
+// timeout as a 404 (PR #236). One retry is allowed for statement
+// timeouts so a transient lock does not 500 the sources route.
+// RLS already hides out_of_scope rows from anon.
+const INSTITUTION_COVERAGE_SELECT =
+  "ipeds_id, school_id, school_name, city, state, website_url, undergraduate_enrollment, coverage_status, coverage_label, coverage_summary, latest_available_cds_year, last_checked_at, can_submit_source";
+
 export const fetchInstitutionCoverage = cache(
   async function fetchInstitutionCoverage(
     schoolId: string,
   ): Promise<InstitutionCoverage | null> {
     return cachedSchoolQuery(["fetchInstitutionCoverage", schoolId], async () => {
-      const { data, error } = await (supabase as unknown as UntypedSupabase)
-        .from("institution_cds_coverage")
-        .select(
-          "ipeds_id, school_id, school_name, city, state, website_url, undergraduate_enrollment, coverage_status, coverage_label, coverage_summary, latest_available_cds_year, last_checked_at, can_submit_source",
-        )
-        .eq("school_id", schoolId)
-        .maybeSingle();
+      const client = supabase as unknown as UntypedSupabase;
+      const queryCoverage = () =>
+        client
+          .from("institution_cds_coverage")
+          .select(INSTITUTION_COVERAGE_SELECT)
+          .eq("school_id", schoolId)
+          .maybeSingle();
 
+      let { data, error } = await queryCoverage();
+      if (isStatementTimeoutError(error)) {
+        ({ data, error } = await queryCoverage());
+      }
       throwIfPostgrestError(error, "Failed to fetch institution coverage");
       return (data as InstitutionCoverage | null) ?? null;
     });

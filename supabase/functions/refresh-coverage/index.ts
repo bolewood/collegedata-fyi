@@ -1,11 +1,11 @@
 // refresh-coverage — operator + cron entry point for the M3 coverage
 // table refresh.
 //
-// PRD 015 M3. Calls refresh_institution_cds_coverage() (which does the
-// atomic TRUNCATE+INSERT inside its own transaction) and returns the
-// row count and duration. Operators can request a coverage_status histogram
-// with {"include_histogram": true}; cron omits it to avoid a second full-table
-// read after every refresh.
+// PRD 015 M3. Calls refresh_institution_cds_coverage() (temp-table
+// rebuild, then DELETE+INSERT so concurrent SELECT is not blocked) and
+// returns the row count and duration. Operators can request a
+// coverage_status histogram with {"include_histogram": true}; cron omits
+// it to avoid a second full-table read after every refresh.
 //
 // pg_cron hits this hourly (refresh_coverage_cron migrations);
 // operators can also curl it for debugging or after a manual archive
