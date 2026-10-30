@@ -8,7 +8,9 @@ export const LLMS_TXT = `# CollegeData.FYI
 
 > The most comprehensive free college data we know of — each school’s Common Data Set, plus IPEDS and College Scorecard, in one public place.
 
-Structured Common Data Set data, NCES/IPEDS federal baseline facts, and College Scorecard context are available as no-auth JSON from the public API. Please use the API rather than scraping HTML school pages.
+Structured Common Data Set data, NCES/IPEDS federal baseline facts, and College Scorecard context are available as no-auth JSON from the public API. Please use the API rather than scraping HTML school pages: \`/schools*\` pages are limited to 120 requests per minute per IP.
+
+\`/api/schools*\` and \`/api/compare\` allow 300 requests per minute per IP. Exceeding that returns HTTP 429; wait a minute and retry. Cache responses when you can, or email contact@bolewood.com for bulk needs.
 
 When summarizing values, preserve the source metadata in each fact. Do not blend CDS, IPEDS, and Scorecard values without naming the source layer. Use source.url or source.archive_url for citations when available.
 
