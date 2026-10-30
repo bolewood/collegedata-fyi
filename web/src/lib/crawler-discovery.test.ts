@@ -71,9 +71,18 @@ describe("llms.txt", () => {
   });
 
   it("asks agents to use the API and states the existing license", () => {
-    expect(LLMS_TXT).toContain("Please use the API rather than scraping HTML school pages.");
+    expect(LLMS_TXT).toContain("Please use the API rather than scraping HTML school pages");
     expect(LLMS_TXT).toContain("The dataset is MIT-licensed.");
     expect(LLMS_TXT).toContain("owned by their respective institutions");
+  });
+
+  it("documents the school-page and friendly-API rate limits", () => {
+    expect(LLMS_TXT).toContain("`/schools*` pages are limited to 120 requests per minute per IP");
+    expect(LLMS_TXT).toContain("`/api/schools*` and `/api/compare` allow 300 requests per minute per IP");
+    expect(LLMS_TXT).toContain("HTTP 429");
+    expect(LLMS_TXT).toContain("wait a minute and retry");
+    expect(LLMS_TXT).toContain("contact@bolewood.com");
+    expect(LLMS_TXT).not.toMatch(/Retry-After/i);
   });
 
   it("serves the same body from /llms.txt", async () => {

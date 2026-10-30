@@ -177,6 +177,26 @@ compare <- request("https://www.collegedata.fyi/api/compare") |>
           </>
         ) : null}
       </p>
+      <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
+        School search, facts, sources, and compare (
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
+          /api/schools*
+        </code>{" "}
+        and{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
+          /api/compare
+        </code>
+        ) allow 300 requests per minute per IP. Exceeding that returns{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
+          429
+        </code>
+        . Wait a minute, then retry. Cache what you fetch; for bulk work, use
+        the snapshots below or email{" "}
+        <a className={API_LINK_CLASS} href="mailto:contact@bolewood.com">
+          contact@bolewood.com
+        </a>
+        .
+      </p>
 
       <h2 className="serif mt-10 text-2xl">
         Start here

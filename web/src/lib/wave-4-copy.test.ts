@@ -91,5 +91,12 @@ describe("Wave 4 methodology and API copy", () => {
     expect(page).not.toMatch(/website browser/);
     expect(page).not.toMatch(/text-gray-900/);
     expect(page).not.toMatch(/projected value/);
+    expect(page).toContain("300 requests per minute per IP");
+    expect(page).toContain("/api/schools*");
+    expect(page).toContain("/api/compare");
+    expect(page).toContain("429");
+    expect(page).toContain("Wait a minute, then retry");
+    expect(page).toContain("mailto:contact@bolewood.com");
+    expect(page).not.toMatch(/Retry-After/i);
   });
 });
