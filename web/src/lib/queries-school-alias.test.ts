@@ -36,8 +36,11 @@ function inQuery(result: unknown) {
   return query;
 }
 
-function coverageQuery(result: unknown) {
-  const maybeSingle = vi.fn().mockResolvedValue(result);
+function coverageQuery(...results: unknown[]) {
+  const maybeSingle = vi.fn();
+  for (const result of results) {
+    maybeSingle.mockResolvedValueOnce(result);
+  }
   const eq = vi.fn(() => ({ maybeSingle }));
   const select = vi.fn(() => ({ eq }));
   supabaseMocks.from.mockReturnValue({ select });
@@ -126,6 +129,7 @@ describe("crosswalk pagination", () => {
 describe("fetchInstitutionCoverage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetSchoolQueryCachesForTests();
   });
 
   it("returns null only for a successful empty result", async () => {
@@ -133,7 +137,36 @@ describe("fetchInstitutionCoverage", () => {
     await expect(fetchInstitutionCoverage("missing-school")).resolves.toBeNull();
   });
 
-  it("throws on PostgREST timeout so directory-only schools are not cached as 404s", async () => {
+  it("retries a statement timeout once and returns the row", async () => {
+    coverageQuery(
+      { data: null, error: { message: "canceling statement due to statement timeout" } },
+      {
+        data: {
+          ipeds_id: "199032",
+          school_id: "bard-college",
+          school_name: "Bard College",
+        },
+        error: null,
+      },
+    );
+    await expect(fetchInstitutionCoverage("bard-college")).resolves.toMatchObject({
+      school_id: "bard-college",
+    });
+    expect(supabaseMocks.from).toHaveBeenCalledTimes(2);
+  });
+
+  it("throws after a repeated timeout so directory-only schools are not cached as 404s", async () => {
+    coverageQuery(
+      { data: null, error: { message: "canceling statement due to statement timeout" } },
+      { data: null, error: { message: "canceling statement due to statement timeout" } },
+    );
+    await expect(fetchInstitutionCoverage("bard-college")).rejects.toThrow(
+      "Failed to fetch institution coverage",
+    );
+    expect(supabaseMocks.from).toHaveBeenCalledTimes(2);
+  });
+
+  it("throws on a non-timeout PostgREST error without retrying", async () => {
     coverageQuery({
       data: null,
       error: { message: "TimeoutError: The operation was aborted" },
@@ -141,6 +174,7 @@ describe("fetchInstitutionCoverage", () => {
     await expect(fetchInstitutionCoverage("bard-college")).rejects.toThrow(
       "Failed to fetch institution coverage",
     );
+    expect(supabaseMocks.from).toHaveBeenCalledTimes(1);
   });
 });
 
