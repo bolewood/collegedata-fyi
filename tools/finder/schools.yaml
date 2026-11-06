@@ -5987,14 +5987,13 @@ schools:
   name: Cornell College
   domain: cornellcollege.edu
   ipeds_id: '153162'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-11-02T23:26:41Z'
-    last_result: found
+    last_result: not_found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.cornellcollege.edu/institutional-research/institutional-profile/common-data-sets.shtml
 - id: cornerstone-university
   name: Cornerstone University
   domain: cornerstone.edu
@@ -24891,14 +24890,13 @@ schools:
   name: University of Wisconsin-Stevens Point
   domain: uwsp.edu
   ipeds_id: '240480'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-11-03T01:06:42Z'
-    last_result: found
+    last_result: not_found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.uwsp.edu/office-of-institutional-research-and-effectiveness/compliance-and-external-reporting/
 - id: university-of-wisconsin-stout
   name: University of Wisconsin-Stout
   domain: uwstout.edu
