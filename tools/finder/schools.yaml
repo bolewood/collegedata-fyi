@@ -11667,14 +11667,13 @@ schools:
   name: Long Island University
   domain: liu.edu
   ipeds_id: '192448'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-11-02T23:57:43Z'
-    last_result: found
+    last_result: not_found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.liu.edu/~/media/Files/About/Accreditation/MiddleStates/UC_Accred_MS_Appendix112StrategicAgendaNewStaff_A.ashx
 - id: longwood-university
   name: Longwood University
   domain: longwood.edu
@@ -16191,14 +16190,13 @@ schools:
   name: Pennsylvania State University-Penn State Berks
   domain: berks.psu.edu
   ipeds_id: '214704'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-11-03T00:23:31Z'
-    last_result: found
+    last_result: not_found
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://berks.psu.edu/penn-state/planning-research-assessment/pra-reports
 - id: pennsylvania-state-university-penn-state-brandywine
   name: Pennsylvania State University-Penn State Brandywine
   domain: brandywine.psu.edu
