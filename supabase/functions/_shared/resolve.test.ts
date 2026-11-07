@@ -447,6 +447,16 @@ Deno.test("extractSubpageDocuments: BookStack attachment link becomes the year's
   assertEquals(docs[0].year, "2025-26");
 });
 
+Deno.test("extractSubpageDocuments: a real PDF beats a same-year download-endpoint link", () => {
+  const docs = extractSubpageDocuments(
+    `<a href="/ir/cds-downloads/2024">Common Data Set 2024-25 downloads</a>
+     <a href="/files/cds-2024-25.pdf">Common Data Set 2024-25</a>`,
+    "https://example.edu/ir/cds/",
+    { year: null, year_source: "unknown" },
+  );
+  assertEquals(docs.map((d) => d.url), ["https://example.edu/files/cds-2024-25.pdf"]);
+});
+
 Deno.test("extractCdsAnchors: page-export endpoints are not CDS anchors", () => {
   const anchors = extractCdsAnchors(
     `<a href="/books/common-data-set/export/pdf">PDF File</a>

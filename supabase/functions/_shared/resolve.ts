@@ -712,20 +712,29 @@ export function extractSubpageDocuments(
   finalUrl: string,
   parent: Pick<CdsAnchor, "year" | "year_source">,
 ): CdsAnchor[] {
-  const out: CdsAnchor[] = [];
-  for (const a of extractCdsAnchors(html, finalUrl)) {
-    // CDS-labelled links to extension-less download endpoints
-    // (BookStack "/attachments/2113" titled "View the latest CDS (25-26)")
-    // are documents. downloadWithCaps validates the bytes before archiving.
-    const isDownloadEndpoint = a.kind === "subpage" &&
-      DOWNLOAD_URL_RE.test(decodeURIComponent(new URL(a.url).pathname));
-    if (a.kind !== "document" && !isDownloadEndpoint) continue;
-    out.push({
-      ...a,
-      kind: "document",
-      year: a.year ?? parent.year,
-      year_source: a.year ? a.year_source : parent.year_source,
-    });
+  const anchors = extractCdsAnchors(html, finalUrl);
+  const withParentYear = (a: CdsAnchor): CdsAnchor => ({
+    ...a,
+    kind: "document",
+    year: a.year ?? parent.year,
+    year_source: a.year ? a.year_source : parent.year_source,
+  });
+
+  const out = anchors.filter((a) => a.kind === "document").map(withParentYear);
+
+  // Only when the child links no real file: CDS-labelled links to
+  // extension-less download endpoints (BookStack "/attachments/2113"
+  // titled "View the latest CDS (25-26)") are the documents.
+  // downloadWithCaps validates the bytes before archiving.
+  if (out.length === 0) {
+    for (const a of anchors) {
+      if (
+        a.kind === "subpage" &&
+        DOWNLOAD_URL_RE.test(decodeURIComponent(new URL(a.url).pathname))
+      ) {
+        out.push(withParentYear(a));
+      }
+    }
   }
 
   // Fallback for Digital Commons / Bepress / DSpace item pages where
