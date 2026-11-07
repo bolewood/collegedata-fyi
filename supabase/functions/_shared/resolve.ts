@@ -47,9 +47,15 @@ const SHAREPOINT_FILE_PATH_RE = /^\/:[xbw]:\//i;
 // Cover both explicit `section_C` filenames and section-only publisher
 // layouts such as KU's `/CDS/2025-2026/C.pdf` and Oxy's
 // `CDS_C_2526_0.pdf`.
+//
+// `cds` is left-guarded with `(?<![a-z])`, not `\b`: `_` is a word
+// character, so `\bcds` never matched Regent's `Regent_CDS_A_2012-2013.pdf`.
+// The end year may be two or four digits (`2013-14` or `2013-2014`).
+// Missing either shape archived Section A alone as if it were the full CDS.
 const EXPLICIT_SECTION_MARKER_RE = /(?:^|[-_ .])section[-_ ]?([a-j])(?:[-_ .]|$)/i;
-const CDS_YEAR_SECTION_FILENAME_RE = /\bcds[-_ ]?\d{4}(?:[-_ ]?\d{2})?[-_ ]?([a-j])(?:[-_ .]|$)/i;
-const CDS_SECTION_FILENAME_RE = /\bcds[-_ ]?([a-j])(?:[-_ .]|\d|$)/i;
+const CDS_YEAR_SECTION_FILENAME_RE =
+  /(?<![a-z])cds[-_ ]?\d{4}(?:[-_ ]?(?:\d{4}|\d{2}))?[-_ ]?([a-j])(?:[-_ .]|$)/i;
+const CDS_SECTION_FILENAME_RE = /(?<![a-z])cds[-_ ]?([a-j])(?:[-_ .]|\d|$)/i;
 const SINGLE_SECTION_FILENAME_RE = /^([a-j])\d*\.pdf$/i;
 
 // Reference/supporting artifacts from school CDS pages. These often carry
@@ -71,6 +77,17 @@ function sectionLetterFromFilename(filename: string): string | null {
   if (single) return single[1].toUpperCase();
 
   return null;
+}
+
+// True when the only section signal is a letter trailing the year
+// (`CDS_2013-2014_A.pdf`, `CDS_2022-2023a.pdf`). That shape is ambiguous:
+// section-split publishers use it, but so do full-CDS revisions and
+// "F"inal copies. pickCandidates trusts it only alongside lettered siblings.
+function hasOnlyTrailingYearLetter(filename: string): boolean {
+  return CDS_YEAR_SECTION_FILENAME_RE.test(filename) &&
+    !EXPLICIT_SECTION_MARKER_RE.test(filename) &&
+    !CDS_SECTION_FILENAME_RE.test(filename) &&
+    !SINGLE_SECTION_FILENAME_RE.test(filename);
 }
 
 function isSectionFile(filename: string): boolean {
@@ -515,6 +532,8 @@ export function extractCdsAnchors(html: string, baseUrl: string): CdsAnchor[] {
     // reference documents (blank template, Summary of Changes, etc).
     // See EXCLUDED_DOCUMENT_HOSTS comment above.
     if (isExcludedDocumentHost(parsed.hostname)) continue;
+    // A rendered copy of a CDS *page* is not a CDS document.
+    if (PAGE_EXPORT_PATH_RE.test(parsed.pathname)) continue;
 
     const pathSegments = parsed.pathname.split("/").filter(Boolean);
     const filename = decodeURIComponent(
@@ -598,8 +617,23 @@ export function extractCdsAnchors(html: string, baseUrl: string): CdsAnchor[] {
 // failed_permanent rows).
 const DOWNLOAD_TEXT_RE =
   /\b(download|full[\s-]?text|view[\s-]?pdf|open[\s-]?access|pdf)\b/i;
+// `attachments?`: BookStack serves uploaded files at /attachments/<id>.
 const DOWNLOAD_URL_RE =
-  /\b(viewcontent|bitstream|download|getfile|attachment|fulltext)\b/i;
+  /\b(viewcontent|bitstream|download|getfile|attachments?|fulltext)\b/i;
+
+// Wiki/CMS "export this page" endpoints (BookStack /export/pdf, …) render
+// the HTML page itself. They are never a school's CDS file. Arkansas State
+// 2024-25 and 2025-26 were archived as one-line "View the latest CDS >>"
+// PDFs this way while the real files sat at /attachments/<id>.
+const PAGE_EXPORT_PATH_RE = /\/export\/(?:pdf|html|plaintext|markdown|zip)\/?$/i;
+
+export function isPageExportUrl(url: string): boolean {
+  try {
+    return PAGE_EXPORT_PATH_RE.test(new URL(url).pathname);
+  } catch {
+    return false;
+  }
+}
 
 // Scans a subpage HTML for anchors that look like document download links
 // even when they don't carry a file extension or CDS keyword. Used only as
@@ -639,6 +673,7 @@ export function findDownloadLinks(html: string, baseUrl: string): CdsAnchor[] {
 
     const parsed = new URL(absoluteUrl);
     if (isExcludedDocumentHost(parsed.hostname)) continue;
+    if (PAGE_EXPORT_PATH_RE.test(parsed.pathname)) continue;
 
     const fullPath = decodeURIComponent(parsed.pathname + parsed.search);
     const matchesText = DOWNLOAD_TEXT_RE.test(linkText);
@@ -666,6 +701,43 @@ export function findDownloadLinks(html: string, baseUrl: string): CdsAnchor[] {
     });
   }
 
+  return out;
+}
+
+// Document candidates on one child page of the two-hop walk. `parent` is
+// the landing-page anchor that led here; its year fills in when the
+// child anchor has none.
+export function extractSubpageDocuments(
+  html: string,
+  finalUrl: string,
+  parent: Pick<CdsAnchor, "year" | "year_source">,
+): CdsAnchor[] {
+  const out: CdsAnchor[] = [];
+  for (const a of extractCdsAnchors(html, finalUrl)) {
+    // CDS-labelled links to extension-less download endpoints
+    // (BookStack "/attachments/2113" titled "View the latest CDS (25-26)")
+    // are documents. downloadWithCaps validates the bytes before archiving.
+    const isDownloadEndpoint = a.kind === "subpage" &&
+      DOWNLOAD_URL_RE.test(decodeURIComponent(new URL(a.url).pathname));
+    if (a.kind !== "document" && !isDownloadEndpoint) continue;
+    out.push({
+      ...a,
+      kind: "document",
+      year: a.year ?? parent.year,
+      year_source: a.year ? a.year_source : parent.year_source,
+    });
+  }
+
+  // Fallback for Digital Commons / Bepress / DSpace item pages where
+  // the real PDF download link has no file extension and no CDS
+  // keyword. The CDS context was established on the parent subpage,
+  // so we trust any download-pattern anchor on the child and let
+  // downloadWithCaps validate the content-type before archiving.
+  if (out.length === 0) {
+    for (const a of findDownloadLinks(html, finalUrl)) {
+      out.push({ ...a, year: parent.year, year_source: parent.year_source });
+    }
+  }
   return out;
 }
 
@@ -776,12 +848,23 @@ export function pickCandidates(
         chosen.push(sectionPackageFromAnchors(sectionParts, discoveredVia));
       } else {
         const sectionC = group.find((d) => sectionLetterFromFilename(d.filename) === "C");
-        if (sectionC) chosen.push(anchorToResolvedDocument(sectionC, discoveredVia));
+        if (sectionC) {
+          chosen.push(anchorToResolvedDocument(sectionC, discoveredVia));
+        } else if (
+          group.length === 1 && !group[0].is_test_artifact &&
+          hasOnlyTrailingYearLetter(group[0].filename)
+        ) {
+          // Lone `CDS_2020-2021F.pdf`-style file: no siblings to make it a
+          // section, so it is the year's CDS (Fitchburg, Ferrum).
+          chosen.push({ ...anchorToResolvedDocument(group[0], discoveredVia), is_section_file: false });
+        }
       }
     }
   } else if (unique.length === 1) {
     // Single year-less candidate — sentinel is safe, no collision.
-    chosen.push(anchorToResolvedDocument(unique[0], discoveredVia));
+    const only = anchorToResolvedDocument(unique[0], discoveredVia);
+    if (hasOnlyTrailingYearLetter(unique[0].filename)) only.is_section_file = false;
+    chosen.push(only);
   } else if (withoutYear.length > 1) {
     // Multiple year-less candidates. Out of Stage B scope.
     return null;
@@ -1235,33 +1318,7 @@ export async function resolveCdsForSchool(
           is_test_artifact: TEST_ARTIFACT_RE.test(filename),
         }];
       }
-      const subAnchors = extractCdsAnchors(resp.text, resp.finalUrl);
-      const out: CdsAnchor[] = [];
-      for (const a of subAnchors) {
-        if (a.kind !== "document") continue;
-        out.push({
-          ...a,
-          year: a.year ?? sub.year,
-        });
-      }
-
-      // Fallback for Digital Commons / Bepress / DSpace item pages where
-      // the real PDF download link has no file extension and no CDS
-      // keyword. The CDS context was established on the parent subpage,
-      // so we trust any download-pattern anchor on the child and let
-      // downloadWithCaps validate the content-type before archiving.
-      if (out.length === 0) {
-        const downloadAnchors = findDownloadLinks(resp.text, resp.finalUrl);
-        for (const a of downloadAnchors) {
-          out.push({
-            ...a,
-            year: sub.year,
-            year_source: sub.year_source,
-          });
-        }
-      }
-
-      return out;
+      return extractSubpageDocuments(resp.text, resp.finalUrl, sub);
     }),
   );
 
