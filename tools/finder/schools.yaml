@@ -24670,7 +24670,7 @@ schools:
   domain: utah.edu
   ipeds_id: '230764'
   scrape_policy: active
-  discovery_seed_url: https://budget.utah.edu/wp-content/uploads/sites/10/2022/12/CDS_2022-2023-D.pdf
+  discovery_seed_url: https://budget.utah.edu/data-dashboard/common-data-set/
 - id: university-of-valley-forge
   name: University of Valley Forge
   domain: valleyforge.edu

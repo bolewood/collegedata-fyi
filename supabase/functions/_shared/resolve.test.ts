@@ -3,6 +3,7 @@ import {
   pickCandidates,
   UNKNOWN_YEAR_SENTINEL,
   extractCdsAnchors,
+  extractSubpageDocuments,
   findBestSourceAnchor,
   findDownloadLinks,
   rewriteGoogleDriveUrl,
@@ -92,6 +93,102 @@ Deno.test("extractCdsAnchors: section marker detected", () => {
   const anchors = extractCdsAnchors(html, BASE);
   assertEquals(anchors.length, 4);
   assertEquals(anchors.every((a) => a.is_section_file), true);
+});
+
+Deno.test("extractCdsAnchors: Regent-style section filenames (underscore-prefixed CDS, four-digit end year)", () => {
+  // Regent publishes one PDF per section. The resolver archived only
+  // Section A for 2012-13..2020-21 because `\bcds` has no word boundary
+  // after `_` and the year-section pattern only allowed a 2-digit end
+  // year, so these were treated as full CDS documents.
+  const cases: Array<[string, string]> = [
+    ["/ir/cds/08-09/CDS_A_Regent_2008_09.pdf", "A"],
+    ["/ir/cds/12-13/Regent_CDS_A_2012-2013.pdf", "A"],
+    ["/ir/cds/12-13/Regent_CDS_J_2012-2013.pdf", "J"],
+    ["/ir/cds/13-14/Regent_CDS_2013-2014_A.pdf", "A"],
+    ["/ir/cds/15-16/Regent%20CDS_2015-2016_C.pdf", "C"],
+    ["/uploads/2021/01/Regent-IR-CDS-2020-2021-A.pdf", "A"],
+  ];
+  for (const [href, section] of cases) {
+    const anchors = extractCdsAnchors(`<a href="${href}">Common Data Set</a>`, BASE);
+    assertEquals(anchors.length, 1, href);
+    assertEquals(anchors[0].is_section_file, true, `${href} should be section ${section}`);
+  }
+});
+
+Deno.test("extractCdsAnchors: full-CDS filenames with four-digit end years stay full documents", () => {
+  const fullDocs = [
+    "/uploads/2023/02/Regent_CDS_2022-2023.pdf",
+    "/uploads/2025/08/Regent-University-Common-Data-Set-2024-2025.pdf",
+    "/files/CDS_2024-2025_Final.pdf",
+    "/files/CDS-2024-2025-Draft.pdf",
+    "/files/University_CDS_2023-2024_FINAL.pdf",
+    "/files/cds2024-25.pdf",
+    "/files/CDS2025-2026.pdf",
+    "/files/Lafayette_CDS_Data_2024.pdf",
+  ];
+  for (const href of fullDocs) {
+    const anchors = extractCdsAnchors(`<a href="${href}">Common Data Set</a>`, BASE);
+    assertEquals(anchors.length, 1, href);
+    assertEquals(anchors[0].is_section_file, false, `${href} is a full CDS`);
+  }
+});
+
+Deno.test("pickCandidates: Regent-style section-only year becomes a package, not Section A alone", () => {
+  const html = "ABCDEFGHIJ".split("").map((s) =>
+    `<a href="/ir/cds/15-16/Regent%20CDS_2015-2016_${s}.pdf">Section ${s}</a>`
+  ).join("\n");
+  const anchors = extractCdsAnchors(html, "https://www.regent.edu/academics/academic_affairs/ir/cds/");
+  const result = pickCandidates(anchors, "landing");
+  assertExists(result);
+  assertEquals(result.length, 1);
+  assertEquals(result[0].candidate_kind, "section_package");
+  if (result[0].candidate_kind === "section_package") {
+    assertEquals(result[0].parts.map((p) => p.section).join(""), "ABCDEFGHIJ");
+  }
+});
+
+Deno.test("pickCandidates: William & Mary year prefers the full workbook over digit-suffixed sections", () => {
+  // Live wm.edu listing, 2025-26. Before the fix, `_a1` etc. were not
+  // section files, so they counted as full CDS docs and a1 won on order.
+  const files = [
+    "cds_2025-26_a1.pdf", "cds_2025-26_b3.pdf", "cds_2025-26_c1.pdf", "cds_2025-26_d.pdf",
+    "cds_2025-26_e1.pdf", "cds_2025-26_f.pdf", "cds_2025-26_g.pdf", "cds_2025-26_h.pdf",
+    "cds_2025-26_i4.pdf", "cds_2025-26_j.pdf", "wm-2025-2026-cds1.xlsx",
+  ];
+  const html = files.map((f) => `<a href="/offices/ir/${f}">Common Data Set 2025-26</a>`).join("\n");
+  const anchors = extractCdsAnchors(html, "https://www.wm.edu/offices/ir/university_data/cds/");
+  assertEquals(anchors.filter((a) => a.is_section_file).length, 10);
+  const result = pickCandidates(anchors, "landing");
+  assertExists(result);
+  assertEquals(result.length, 1);
+  assertEquals(result[0].filename, "wm-2025-2026-cds1.xlsx");
+});
+
+Deno.test("pickCandidates: a lone year file with a trailing letter suffix is kept as the year's CDS", () => {
+  // A trailing letter after the year is ambiguous: Regent uses it for
+  // sections, but Fitchburg's IRP-CDS20252026-A.pdf (493 fields) and
+  // Ferrum's CDS_2020-2021F.pdf are the whole CDS. With no lettered
+  // siblings in the same year, keep the file instead of dropping the year.
+  for (const href of [
+    "/documents/2026-05/IRP-CDS20252026-A.pdf",
+    "/institutionalresearch/CDS_2020-2021F.pdf",
+    "/getattachment/x/CDS_2022-2023a.pdf",
+  ]) {
+    const anchors = extractCdsAnchors(`<a href="${href}">Common Data Set</a>`, BASE);
+    const result = pickCandidates(anchors, "landing");
+    assertExists(result, href);
+    assertEquals(result.length, 1, href);
+    assertEquals(result[0].candidate_kind, "single_document", href);
+    assertEquals(result[0].is_section_file, false, href);
+  }
+});
+
+Deno.test("pickCandidates: a lone explicit section file still does not stand in for the year", () => {
+  const anchors = extractCdsAnchors(
+    `<a href="/files/cds-section-d-2024-25.pdf">Common Data Set Section D 2024-25</a>`,
+    BASE,
+  );
+  assertEquals(pickCandidates(anchors, "landing"), []);
 });
 
 Deno.test("extractCdsAnchors: HTML subpage categorized", () => {
@@ -328,6 +425,62 @@ Deno.test("findDownloadLinks: Digital Commons item page (Fairfield regression)",
   const viewContentAnchor = anchors.find((a) => a.url.includes("viewcontent.cgi"));
   assertExists(viewContentAnchor);
   assertEquals(viewContentAnchor.kind, "document");
+});
+
+// Trimmed from https://kb.astate.edu/books/common-data-set/page/latest-cds
+// (BookStack). The real CDS is an extension-less attachment linked from
+// the page body; the export menu renders the wiki page itself to PDF.
+const BOOKSTACK_LATEST_CDS_HTML = `
+  <div class="page-content">
+    <p><a href="https://kb.astate.edu/attachments/2113">View the latest CDS (25-26) &gt;&gt;</a></p>
+  </div>
+  <div id="page-attachments">
+    <a href="https://kb.astate.edu/attachments/2113" class="icon-item"><span>Download</span></a>
+  </div>
+  <ul class="export-menu">
+    <li><a href="https://kb.astate.edu/books/common-data-set/page/latest-cds/export/html">Contained Web File .html</a></li>
+    <li><a href="https://kb.astate.edu/books/common-data-set/page/latest-cds/export/pdf">PDF File .pdf</a></li>
+    <li><a href="https://kb.astate.edu/books/common-data-set/page/latest-cds/export/plaintext">Plain Text File .txt</a></li>
+  </ul>
+`;
+
+Deno.test("findDownloadLinks: never returns page-export renders (BookStack /export/pdf)", () => {
+  const anchors = findDownloadLinks(
+    BOOKSTACK_LATEST_CDS_HTML,
+    "https://kb.astate.edu/books/common-data-set/page/latest-cds",
+  );
+  assertEquals(anchors.some((a) => /\/export\//.test(a.url)), false);
+  assertEquals(anchors.some((a) => a.url === "https://kb.astate.edu/attachments/2113"), true);
+});
+
+Deno.test("extractSubpageDocuments: BookStack attachment link becomes the year's document", () => {
+  const docs = extractSubpageDocuments(
+    BOOKSTACK_LATEST_CDS_HTML,
+    "https://kb.astate.edu/books/common-data-set/page/latest-cds",
+    { year: null, year_source: "unknown" },
+  );
+  assertEquals(docs.map((d) => d.url), ["https://kb.astate.edu/attachments/2113"]);
+  assertEquals(docs[0].kind, "document");
+  assertEquals(docs[0].year, "2025-26");
+});
+
+Deno.test("extractSubpageDocuments: a real PDF beats a same-year download-endpoint link", () => {
+  const docs = extractSubpageDocuments(
+    `<a href="/ir/cds-downloads/2024">Common Data Set 2024-25 downloads</a>
+     <a href="/files/cds-2024-25.pdf">Common Data Set 2024-25</a>`,
+    "https://example.edu/ir/cds/",
+    { year: null, year_source: "unknown" },
+  );
+  assertEquals(docs.map((d) => d.url), ["https://example.edu/files/cds-2024-25.pdf"]);
+});
+
+Deno.test("extractCdsAnchors: page-export endpoints are not CDS anchors", () => {
+  const anchors = extractCdsAnchors(
+    `<a href="/books/common-data-set/export/pdf">PDF File</a>
+     <a href="/books/common-data-set/page/latest-cds">Latest CDS</a>`,
+    "https://kb.astate.edu/books/common-data-set",
+  );
+  assertEquals(anchors.map((a) => a.url), ["https://kb.astate.edu/books/common-data-set/page/latest-cds"]);
 });
 
 Deno.test("findDownloadLinks: skips anchors without download-pattern markers", () => {

@@ -23,6 +23,7 @@ import re
 import sys
 import urllib.error
 import urllib.request
+from urllib.parse import unquote, urlparse
 from collections import defaultdict
 from datetime import date
 from pathlib import Path
@@ -51,6 +52,28 @@ def is_direct_doc_seed(url: str | None) -> bool:
     if not url:
         return False
     return bool(DOCUMENT_EXT_RE.search(url))
+
+
+# Mirrors the section-file patterns in supabase/functions/_shared/resolve.ts
+# (sectionLetterFromFilename), minus the bare single-letter filename shape,
+# which is too ambiguous for a seed URL on its own.
+SECTION_SEED_RES = (
+    re.compile(r"(?:^|[-_ .])section[-_ ]?([a-j])(?:[-_ .]|$)", re.I),
+    re.compile(r"(?<![a-z])cds[-_ ]?\d{4}(?:[-_ ]?(?:\d{4}|\d{2}))?[-_ ]?([a-j])(?:[-_ .]|\d|$)", re.I),
+    re.compile(r"(?<![a-z])cds[-_ ]?([a-j])(?:[-_ .]|\d|$)", re.I),
+)
+
+
+def is_section_seed(url: str | None) -> bool:
+    """True when the seed is one CDS section file (Section D, CDS_2022-2023-D.pdf).
+
+    Archive refresh re-verifies the seed itself, so a section seed can only
+    ever yield that one section, however many other years are archived.
+    """
+    if not is_direct_doc_seed(url):
+        return False
+    filename = unquote(urlparse(url or "").path.rsplit("/", 1)[-1])
+    return any(rx.search(filename) for rx in SECTION_SEED_RES)
 
 
 SATELLITE_MARKERS = (
@@ -105,11 +128,16 @@ def classify_school(
     unique_years = sorted({y for y in years if y})
     latest = unique_years[-1] if unique_years else None
     n_years = len(unique_years)
-    if n_years > max_years:
-        return None
-    if latest and latest >= min_fresh_year:
-        return None
+    if is_section_seed(seed):
+        reason = "section_seed"
+    else:
+        if n_years > max_years:
+            return None
+        if latest and latest >= min_fresh_year:
+            return None
+        reason = "stale_single_document"
     return {
+        "reason": reason,
         "id": school.get("id"),
         "name": school.get("name"),
         "domain": school.get("domain"),
@@ -191,18 +219,19 @@ def render_markdown(stuck: list[dict], shared: list[dict], min_fresh_year: str) 
     lines = [
         f"# Stuck PDF discovery seeds",
         "",
-        f"Freshness floor: `{min_fresh_year}`. Direct-document seed, "
-        f"≤2 archived years, latest older than the floor (or none).",
+        f"Freshness floor: `{min_fresh_year}`. `stale_single_document`: "
+        f"direct-document seed, ≤2 archived years, latest older than the floor "
+        f"(or none). `section_seed`: the seed is one CDS section file.",
         "",
         f"Stuck schools: **{len(stuck)}**",
         "",
-        "| school_id | latest | years | seed |",
-        "|---|---|---|---|",
+        "| school_id | reason | latest | years | seed |",
+        "|---|---|---|---|---|",
     ]
     for row in stuck:
         seed = (row.get("seed") or "").replace("|", "\\|")
         lines.append(
-            f"| `{row['id']}` | {row.get('latest') or 'none'} | "
+            f"| `{row['id']}` | {row.get('reason', '')} | {row.get('latest') or 'none'} | "
             f"{row.get('n_years', 0)} | `{seed}` |"
         )
     if shared:
