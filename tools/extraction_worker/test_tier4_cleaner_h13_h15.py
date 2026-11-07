@@ -215,6 +215,45 @@ class TrimH15SpillTest(unittest.TestCase):
         text = "SUNY will now match in state tuition for students coming from specific states."
         self.assertEqual(trim_h15_spill(text), text)
 
+    def test_footer_words_inside_an_answer_are_kept(self):
+        for text in (
+            "Our net price guarantee is explained in full. See page 12 of our aid guide for details",
+            "These figures match what we report in the Common Data Set for each year since 2019",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(trim_h15_spill(text), text)
+
+    def test_answer_between_footers_is_kept(self):
+        # Hendrix 2020-21: the answer sits between two page footers.
+        raw = (
+            "CDS-A Page 29 Common Data Set 2020-2021 tuition reset for new students entering "
+            "2021 Are these policies related to the COVID-19 pandemic? Yes X No CDS-A Page 30 "
+            "Common Data Set 2020-2021"
+        )
+        self.assertIn("tuition reset for new students entering 2021", trim_h15_spill(raw))
+
+    def test_footer_only_values_drop_to_empty(self):
+        for raw in (
+            "CDS-H Page 25 Common Data Set 2009-10",
+            "Are these policies related to the COVID-19 pandemic? Yes No",
+            "N:\\SURVEYS\\CDS\\2019-20\\CDS 2019-20 FINAL.xlsx Page 27 The University of "
+            "Alabama: Common Data Set 2019-20",
+        ):
+            with self.subTest(raw=raw):
+                self.assertEqual(trim_h15_spill(raw), "")
+
+    def test_footer_after_answer_is_removed(self):
+        raw = (
+            "These programs are last-dollar financial aid awards. Rutgers University - New "
+            "Brunswick - July 2023 Page 26 Common Data Set 2022-2023 RUTGERS UNIVERSITY – NEW "
+            "BRUNSWICK"
+        )
+        self.assertEqual(
+            trim_h15_spill(raw),
+            "These programs are last-dollar financial aid awards. Rutgers University - New "
+            "Brunswick - July 2023",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -3455,6 +3455,7 @@ _H15_FOOTER_RE = re.compile(
     re.IGNORECASE,
 )
 _H15_FOOTER_TAIL_MAX = 160
+_LOWER_WORD_RE = re.compile(r"(?:^|\s)[a-z]+[,.;:]?(?=\s|$)")
 _H15_STRIP_CHARS = " _-‐–"
 
 
@@ -3474,8 +3475,14 @@ def trim_h15_spill(text: str) -> str:
         before = text
         text = _H15_TRAILING_LABEL_RE.sub("", text).rstrip(_H15_STRIP_CHARS)
         footers = list(_H15_FOOTER_RE.finditer(text))
-        if footers and len(text) - footers[-1].start() <= _H15_FOOTER_TAIL_MAX:
-            text = text[: footers[-1].start()].rstrip(_H15_STRIP_CHARS)
+        if footers:
+            tail = text[footers[-1].end():]
+            # Page furniture is short and title-cased ("Page 26 Common Data
+            # Set 2022-2023 RUTGERS UNIVERSITY"). Prose after the marker
+            # ("...Common Data Set 2020-2021 tuition reset for new
+            # students", "See page 12 of our aid guide") is the answer.
+            if len(tail) <= _H15_FOOTER_TAIL_MAX and len(_LOWER_WORD_RE.findall(tail)) < 3:
+                text = text[: footers[-1].start()].rstrip(_H15_STRIP_CHARS)
         if text == before:
             break
     if len(re.findall(r"[A-Za-z]", text)) < 10:
