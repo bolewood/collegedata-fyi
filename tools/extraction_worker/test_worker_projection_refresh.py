@@ -8,6 +8,7 @@ from worker import (
     artifact_already_extracted,
     attach_source_metadata,
     extraction_quality_flag,
+    is_single_section_source,
     extraction_no_project,
     extraction_run_exit_code,
     extraction_success,
@@ -84,9 +85,12 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
         canonical = {
             "stats": {"schema_fields_populated": 43},
             "markdown": "C9. Percent and number\nSubmitting SAT Scores\nSubmitting ACT Scores",
-            "values": {"A.501": {"value": "X"}},
+            # C.1101 keeps this off the single-section rule so the C9
+            # anchor check is what fires.
+            "values": {"A.501": {"value": "X"}, "C.1101": {"value": "X"}},
         }
 
+        self.assertFalse(is_single_section_source(canonical["values"], 43))
         self.assertEqual(extraction_quality_flag(canonical), "low_coverage")
 
     def test_extraction_quality_flags_sparse_long_documents(self):
@@ -106,9 +110,12 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
                 "H.1501": {
                     "value": "x" * 5001 + " I.INSTRUCTIONALFACULTYANDCLASSSIZE",
                 },
+                "B.101": {"value": "1"},
+                "C.101": {"value": "1"},
             },
         }
 
+        self.assertFalse(is_single_section_source(canonical["values"], 43))
         self.assertEqual(extraction_quality_flag(canonical), "low_coverage")
 
     @staticmethod
