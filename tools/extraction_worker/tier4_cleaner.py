@@ -3416,6 +3416,80 @@ _C8G_OPTIONS = [
 ]
 
 
+def _spaced(word: str) -> str:
+    """Regex for ``word`` tolerating PDF letter-spacing (``INST RUCT IONAL``)."""
+    return r"\s*".join(re.escape(ch) for ch in word)
+
+
+# Headings that mean an H15 free-text answer ran into the next section.
+# PDF text layers break these words apart ("I.IN STRUCTIONAL",
+# "FACU LTY", "INSTRUCTIONALF ACUL TY"), so a literal match misses them and
+# the whole of Sections I-J (up to ~44k chars) lands in H.1501.
+H15_SPILL_RE = re.compile(
+    "|".join([
+        _spaced("instructionalfacultyandclasssize"),
+        _spaced("instructional") + r"\s*I\s*\.\s*" + _spaced("faculty"),
+        _spaced("disciplinaryareasofdegreesconferred"),
+        r"\bJ\s*\.\s*" + _spaced("degreesconferred"),
+        _spaced("commondatasetdefinitions"),
+    ]),
+    re.IGNORECASE,
+)
+_H15_COVID_FOLLOWUP_RE = re.compile(
+    _spaced("arethesepoliciesrelatedtothecovid"), re.IGNORECASE,
+)
+_H15_TRAILING_LABEL_RE = re.compile(
+    r"(?:^|\s)(?:Section\s*)?[IJ]\s*[.:]?\s*(?:1\s*\.)?\s*$", re.IGNORECASE,
+)
+# Page furniture that sits between the end of H15 and the next heading.
+_H15_FOOTER_RE = re.compile(
+    "|".join([
+        _spaced("commondataset"),
+        r"&RPPRQ",  # "Common Data Set" in a shifted-font text layer
+        r"CDS\s*[_-]?\s*20\d\d",
+        r"\bCDS\s*[-‐]\s*H\b",
+        _spaced("endofsection") + r"\s*H\b",
+        r"\bPage\s*\d+(?:\s*of\s*\d+)?",
+        r"\b[A-Z]:\\",
+    ]),
+    re.IGNORECASE,
+)
+_H15_FOOTER_TAIL_MAX = 160
+_LOWER_WORD_RE = re.compile(r"(?:^|\s)[a-z]+[,.;:]?(?=\s|$)")
+_H15_STRIP_CHARS = " _-‐–"
+
+
+def trim_h15_spill(text: str) -> str:
+    """Cut an H15 answer where the next CDS section or page footer begins.
+
+    Returns "" when nothing but headings, footers, and the COVID follow-up
+    question is left, which is the common case: most swallowed values had no
+    H15 answer at all.
+    """
+    if match := H15_SPILL_RE.search(text):
+        text = text[: match.start()]
+    if match := _H15_COVID_FOLLOWUP_RE.search(text):
+        text = text[: match.start()]
+    text = re.sub(r"\s+", " ", text).strip()
+    while True:
+        before = text
+        text = _H15_TRAILING_LABEL_RE.sub("", text).rstrip(_H15_STRIP_CHARS)
+        footers = list(_H15_FOOTER_RE.finditer(text))
+        if footers:
+            tail = text[footers[-1].end():]
+            # Page furniture is short and title-cased ("Page 26 Common Data
+            # Set 2022-2023 RUTGERS UNIVERSITY"). Prose after the marker
+            # ("...Common Data Set 2020-2021 tuition reset for new
+            # students", "See page 12 of our aid guide") is the answer.
+            if len(tail) <= _H15_FOOTER_TAIL_MAX and len(_LOWER_WORD_RE.findall(tail)) < 3:
+                text = text[: footers[-1].start()].rstrip(_H15_STRIP_CHARS)
+        if text == before:
+            break
+    if len(re.findall(r"[A-Za-z]", text)) < 10:
+        return ""
+    return text
+
+
 def _section_between(markdown: str, start: str, end: str | None = None) -> str:
     start_match = re.search(start, markdown, re.IGNORECASE)
     if not start_match:
@@ -5582,6 +5656,7 @@ def resolve_h_financial_aid(
                 maxsplit=1,
                 flags=re.IGNORECASE,
             )[0].strip()
+            text = trim_h15_spill(text)
             if (
                 re.fullmatch(r"Common Data Set\s+20\d{2}-\s*20\d{2}", text, re.IGNORECASE)
                 or "Non-Need Based" in text

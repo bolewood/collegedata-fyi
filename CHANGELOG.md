@@ -6,6 +6,21 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.19.1] - 2026-11-07
+
+### Fixed
+
+- Full CDS documents are no longer hidden because one free-text answer
+  ran long. When the H15 financial-aid policy answer ran into Sections I
+  and J (up to ~44k characters), the document was marked low coverage even
+  with 500-600 good fields, which hid Penn State and Pitt 2025-26 among
+  others. That check now hides a document only below 300 fields.
+- The H15 answer now stops where Section I begins even when the PDF breaks
+  the heading apart (`INST RUCT IONAL FACULT Y`, `Section I:`, `FACU LTY`),
+  and drops page footers and the COVID follow-up question. Of 140 polluted
+  answers in production, 107 were all spill and become empty; 33 keep the
+  school's real answer. Tier 4 producer version is now 0.3.15.
+
 ## [0.6.19.0] - 2026-11-07
 
 ### Fixed
