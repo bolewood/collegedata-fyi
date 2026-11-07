@@ -59,7 +59,7 @@ def is_direct_doc_seed(url: str | None) -> bool:
 # which is too ambiguous for a seed URL on its own.
 SECTION_SEED_RES = (
     re.compile(r"(?:^|[-_ .])section[-_ ]?([a-j])(?:[-_ .]|$)", re.I),
-    re.compile(r"(?<![a-z])cds[-_ ]?\d{4}(?:[-_ ]?(?:\d{4}|\d{2}))?[-_ ]?([a-j])(?:[-_ .]|$)", re.I),
+    re.compile(r"(?<![a-z])cds[-_ ]?\d{4}(?:[-_ ]?(?:\d{4}|\d{2}))?[-_ ]?([a-j])(?:[-_ .]|\d|$)", re.I),
     re.compile(r"(?<![a-z])cds[-_ ]?([a-j])(?:[-_ .]|\d|$)", re.I),
 )
 

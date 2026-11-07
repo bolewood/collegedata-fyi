@@ -50,11 +50,12 @@ const SHAREPOINT_FILE_PATH_RE = /^\/:[xbw]:\//i;
 //
 // `cds` is left-guarded with `(?<![a-z])`, not `\b`: `_` is a word
 // character, so `\bcds` never matched Regent's `Regent_CDS_A_2012-2013.pdf`.
-// The end year may be two or four digits (`2013-14` or `2013-2014`).
-// Missing either shape archived Section A alone as if it were the full CDS.
+// The end year may be two or four digits (`2013-14` or `2013-2014`), and
+// the letter may carry a revision digit (William & Mary `cds_2025-26_a1.pdf`).
+// Missing any of these archived Section A alone as if it were the full CDS.
 const EXPLICIT_SECTION_MARKER_RE = /(?:^|[-_ .])section[-_ ]?([a-j])(?:[-_ .]|$)/i;
 const CDS_YEAR_SECTION_FILENAME_RE =
-  /(?<![a-z])cds[-_ ]?\d{4}(?:[-_ ]?(?:\d{4}|\d{2}))?[-_ ]?([a-j])(?:[-_ .]|$)/i;
+  /(?<![a-z])cds[-_ ]?\d{4}(?:[-_ ]?(?:\d{4}|\d{2}))?[-_ ]?([a-j])(?:[-_ .]|\d|$)/i;
 const CDS_SECTION_FILENAME_RE = /(?<![a-z])cds[-_ ]?([a-j])(?:[-_ .]|\d|$)/i;
 const SINGLE_SECTION_FILENAME_RE = /^([a-j])\d*\.pdf$/i;
 

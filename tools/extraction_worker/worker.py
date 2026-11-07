@@ -337,6 +337,19 @@ def low_field_quality_flag(fields: int, threshold: int = MIN_TIER4_FIELDS) -> st
     return "blank_template" if fields == 0 else "low_coverage"
 
 
+def is_single_section_source(values: dict, fields: int) -> bool:
+    """One CDS section archived as the whole document.
+
+    Regent 2020-21 Section A, Utah 2022-23 Section A, Randolph-Macon 2023-24
+    Section F. Section C is exempt: C-only is the resolver's intentional
+    admissions fallback and still serves real data.
+    """
+    if fields >= 150:
+        return False
+    sections = {str(key).split(".", 1)[0].upper() for key in values}
+    return bool(sections) and "C" not in sections and len(sections) <= 2
+
+
 def extraction_quality_flag(canonical: dict, threshold: int = MIN_TIER4_FIELDS) -> str | None:
     """Return a recoverable extraction quality flag for weak canonical artifacts."""
     stats = canonical.get("stats") or {}
@@ -349,6 +362,8 @@ def extraction_quality_flag(canonical: dict, threshold: int = MIN_TIER4_FIELDS) 
         return "low_coverage"
 
     values = canonical.get("values") or {}
+    if is_single_section_source(values, fields):
+        return "low_coverage"
     markdown = str(canonical.get("markdown") or "")
     markdown_lower = markdown.lower()
     if fields < 150:
@@ -1237,13 +1252,17 @@ def _run_tier1(
             mark_extraction_status(client, document_id, "failed", source_format)
         return extraction_no_project(f"tier1_low_fields ({fields} fields)")
 
+    # Tier 1 used to clear the flag unconditionally, so 5-24 field XLSX
+    # extractions were served unflagged.
+    quality_flag = extraction_quality_flag(canonical)
+
     if not dry_run:
         if not force_reextract and artifact_already_extracted(
             client, document_id, producer, producer_version,
             resolution.schema_version, canonical.get("source_sha256"),
         ):
             mark_extraction_status(client, document_id, "extracted", source_format)
-            clear_recoverable_quality_flag(client, document_id)
+            apply_extraction_quality_flag(client, document_id, quality_flag)
             return extraction_no_project("already_extracted")
 
         try:
@@ -1253,7 +1272,7 @@ def _run_tier1(
             return extraction_no_project(f"artifact_insert_error: {e}")
 
         mark_extraction_status(client, document_id, "extracted", source_format)
-        clear_recoverable_quality_flag(client, document_id)
+        apply_extraction_quality_flag(client, document_id, quality_flag)
 
     return extraction_success(f"tier1_extracted ({fields} fields)")
 
@@ -1460,6 +1479,18 @@ def mark_document_quality_flag(
     ).eq("id", document_id).execute()
 
 
+def apply_extraction_quality_flag(
+    client: Client,
+    document_id: str,
+    quality_flag: str | None,
+) -> None:
+    """Set the recoverable flag for this extraction, or clear a stale one."""
+    if quality_flag:
+        mark_document_quality_flag(client, document_id, quality_flag)
+    else:
+        clear_recoverable_quality_flag(client, document_id)
+
+
 def clear_recoverable_quality_flag(client: Client, document_id: str) -> None:
     client.table("cds_documents").update(
         {"data_quality_flag": None},
@@ -1552,7 +1583,9 @@ def reconcile_pending_documents(
         if dry_run:
             continue
         mark_extraction_status(client, document_id, "extracted")
-        clear_recoverable_quality_flag(client, document_id)
+        # No extraction ran here, so quality state stays as the extraction
+        # that produced the canonical left it. Clearing here unflagged
+        # low-field docs during the 2026-06-01 reconcile.
         if projection_enabled and projection_definitions is not None:
             try:
                 refresh_browser_projection(client, document_id, projection_definitions)
@@ -1894,6 +1927,9 @@ def extract_one(
 
     producer = canonical["producer"]
     producer_version = canonical["producer_version"]
+    # Tier 2 never evaluated quality before; a fillable PDF of one section
+    # was served as a full CDS.
+    quality_flag = extraction_quality_flag(canonical)
 
     if not dry_run:
         if not force_reextract and artifact_already_extracted(
@@ -1904,6 +1940,7 @@ def extract_one(
             # producer version at some earlier point. Mark extracted and
             # move on without writing a duplicate.
             mark_extraction_status(client, document_id, "extracted", source_format)
+            apply_extraction_quality_flag(client, document_id, quality_flag)
             return extraction_no_project("already_extracted")
 
         try:
@@ -1913,6 +1950,7 @@ def extract_one(
             return extraction_no_project(f"artifact_insert_error: {e}")
 
         mark_extraction_status(client, document_id, "extracted", source_format)
+        apply_extraction_quality_flag(client, document_id, quality_flag)
 
     # Log a few headline stats from the canonical output for visibility.
     stats = canonical.get("stats") or {}

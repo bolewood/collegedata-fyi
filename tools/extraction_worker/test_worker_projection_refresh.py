@@ -111,6 +111,38 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
 
         self.assertEqual(extraction_quality_flag(canonical), "low_coverage")
 
+    @staticmethod
+    def _canonical_with_keys(keys):
+        return {
+            "stats": {"schema_fields_populated": len(keys)},
+            "markdown": "",
+            "values": {k: {"value": "1"} for k in keys},
+        }
+
+    def test_extraction_quality_flags_single_section_source(self):
+        # Regent 2020-21 / Utah 2022-23: one CDS section archived as the
+        # whole document. 30 Section A fields clears the 25-field floor.
+        canonical = self._canonical_with_keys([f"A.{100 + i}" for i in range(30)])
+        self.assertEqual(extraction_quality_flag(canonical), "low_coverage")
+
+        f_only = self._canonical_with_keys([f"F.{100 + i}" for i in range(34)])
+        self.assertEqual(extraction_quality_flag(f_only), "low_coverage")
+
+    def test_extraction_quality_keeps_section_c_sources_visible(self):
+        # Section C alone is the resolver's intentional admissions fallback;
+        # B+C partial extractions still carry admissions data.
+        c_only = self._canonical_with_keys([f"C.{100 + i}" for i in range(60)])
+        self.assertIsNone(extraction_quality_flag(c_only))
+
+        b_and_c = self._canonical_with_keys(
+            [f"B.{100 + i}" for i in range(20)] + [f"C.{100 + i}" for i in range(20)]
+        )
+        self.assertIsNone(extraction_quality_flag(b_and_c))
+
+    def test_extraction_quality_ignores_section_span_for_large_documents(self):
+        many = self._canonical_with_keys([f"B.{100 + i}" for i in range(160)])
+        self.assertIsNone(extraction_quality_flag(many))
+
     def test_attach_source_metadata_records_latest_source(self):
         canonical = {}
 

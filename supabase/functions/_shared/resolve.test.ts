@@ -147,6 +147,23 @@ Deno.test("pickCandidates: Regent-style section-only year becomes a package, not
   }
 });
 
+Deno.test("pickCandidates: William & Mary year prefers the full workbook over digit-suffixed sections", () => {
+  // Live wm.edu listing, 2025-26. Before the fix, `_a1` etc. were not
+  // section files, so they counted as full CDS docs and a1 won on order.
+  const files = [
+    "cds_2025-26_a1.pdf", "cds_2025-26_b3.pdf", "cds_2025-26_c1.pdf", "cds_2025-26_d.pdf",
+    "cds_2025-26_e1.pdf", "cds_2025-26_f.pdf", "cds_2025-26_g.pdf", "cds_2025-26_h.pdf",
+    "cds_2025-26_i4.pdf", "cds_2025-26_j.pdf", "wm-2025-2026-cds1.xlsx",
+  ];
+  const html = files.map((f) => `<a href="/offices/ir/${f}">Common Data Set 2025-26</a>`).join("\n");
+  const anchors = extractCdsAnchors(html, "https://www.wm.edu/offices/ir/university_data/cds/");
+  assertEquals(anchors.filter((a) => a.is_section_file).length, 10);
+  const result = pickCandidates(anchors, "landing");
+  assertExists(result);
+  assertEquals(result.length, 1);
+  assertEquals(result[0].filename, "wm-2025-2026-cds1.xlsx");
+});
+
 Deno.test("pickCandidates: a lone year file with a trailing letter suffix is kept as the year's CDS", () => {
   // A trailing letter after the year is ambiguous: Regent uses it for
   // sections, but Fitchburg's IRP-CDS20252026-A.pdf (493 fields) and
