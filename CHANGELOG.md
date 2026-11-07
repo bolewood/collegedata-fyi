@@ -6,6 +6,35 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.19.0] - 2026-11-07
+
+### Fixed
+
+- Schools that publish their CDS one section per file get the whole CDS,
+  not Section A alone. Filenames like `Regent_CDS_A_2012-2013.pdf`,
+  `Regent CDS_2015-2016_A.pdf`, and William & Mary's
+  `cds_2025-26_a1.pdf` were not recognized as section files, so the
+  archive kept one section and called it the year's CDS. A lone
+  letter-suffixed file with no sibling sections (Ferrum's
+  `CDS_2020-2021F.pdf`) is still kept as the full document.
+- Wiki "export this page" links (BookStack `/export/pdf`) are no longer
+  archived as CDS files. Arkansas State's 2024-25 and 2025-26 entries were
+  one-line PDFs of the wiki page. The resolver now follows the page's
+  attachment links instead, which finds 17 years of Arkansas State CDS
+  files.
+- XLSX and fillable-PDF extractions now get the same low-coverage checks
+  as flat PDFs, and the pending-extraction repair pass no longer clears
+  those flags. A document drawn from a single CDS section without
+  Section C is flagged low coverage. Section C alone stays visible.
+
+### Added
+
+- The monthly stuck-seed report also lists schools whose discovery seed
+  is a single section PDF, so the finder looks for their real CDS page.
+- `tools/extraction_worker/backfill_quality_flags.py` adds missing
+  low-field and single-section flags to existing documents. It only
+  adds flags, never clears them, and dry-runs by default.
+
 ## [0.6.18.5] - 2026-11-07
 
 ### Fixed
