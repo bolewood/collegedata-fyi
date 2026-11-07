@@ -6,6 +6,17 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.18.5] - 2026-11-07
+
+### Fixed
+
+- The hourly coverage refresh runs again. Since 2026-10-30 every run had
+  failed with "DELETE requires a WHERE clause": the non-blocking rebuild
+  emptied the coverage table with a bare DELETE, which Supabase's
+  safeupdate guard rejects when the call comes through the API. The
+  coverage ledger stayed frozen at its 2026-10-30 snapshot. The DELETE
+  now carries `where true`; nothing else changes.
+
 ## [0.6.18.4] - 2026-10-07
 
 ### Fixed
