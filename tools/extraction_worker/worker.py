@@ -117,6 +117,12 @@ TEMPLATE_DIR = SCHEMA_DIR / "templates"
 MIN_TIER1_FIELDS = 5
 MIN_TIER4_FIELDS = 25
 MAX_FIELDS_FOR_SWALLOW_FLAG = 300
+# A Tier 4 re-extraction of the same source PDF that keeps less than this
+# share of the previous artifact's fields is held back, not written. Docling
+# drift (Sacramento State 2023-24: 274 -> 108 fields on an older Docling)
+# should never silently replace a good artifact.
+MIN_FIELDS_FOR_REGRESSION_GUARD = 100
+MIN_REEXTRACT_FIELD_RATIO = 0.6
 MIN_TIER2_LABEL_FALLBACK_ACROFORM_FIELDS = 50
 PIPELINE_RUN_URL_RE = re.compile(
     r"^https://github\.com/bolewood/collegedata-fyi/actions/runs/[0-9]+$",
@@ -162,7 +168,46 @@ def is_failure_action(action: str) -> bool:
         return True
     if "_error" in action or action_name.endswith("_no_tables"):
         return True
+    if action_name.endswith("_field_regression"):
+        return True
     return False
+
+
+def is_field_regression(previous_fields: Optional[int], new_fields: int) -> bool:
+    if not previous_fields or previous_fields < MIN_FIELDS_FOR_REGRESSION_GUARD:
+        return False
+    return new_fields < previous_fields * MIN_REEXTRACT_FIELD_RATIO
+
+
+def previous_canonical_field_count(
+    client: Client,
+    document_id: str,
+    source_sha256: Optional[str],
+) -> Optional[int]:
+    """Field count of the newest canonical artifact built from the same
+    source PDF, or None when there is none (or the source is unknown)."""
+    if not source_sha256:
+        return None
+    rows = (
+        client.table("cds_artifacts")
+        .select("notes->stats->schema_fields_populated,notes->source_sha256,notes->source_artifact->sha256")
+        .eq("document_id", document_id)
+        .eq("kind", "canonical")
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+        .data
+        or []
+    )
+    if not rows:
+        return None
+    row = rows[0]
+    if source_sha256 not in (row.get("source_sha256"), row.get("sha256")):
+        return None
+    try:
+        return int(row.get("schema_fields_populated") or 0)
+    except (TypeError, ValueError):
+        return None
 
 
 def normalized_ledger_source_format(value: Any) -> str:
@@ -1439,6 +1484,17 @@ def _run_tier4(
             else:
                 clear_recoverable_quality_flag(client, document_id)
             return extraction_no_project("already_extracted")
+
+        previous_fields = previous_canonical_field_count(
+            client, document_id, canonical.get("source_sha256"),
+        )
+        if is_field_regression(previous_fields, fields):
+            # Keep the existing artifact (and its flag) current; the
+            # document is still extracted, just not by this run.
+            mark_extraction_status(client, document_id, "extracted", source_format)
+            return extraction_no_project(
+                f"tier4_field_regression ({fields} < {previous_fields} fields)"
+            )
 
         try:
             insert_canonical_artifact(client, document_id, canonical)

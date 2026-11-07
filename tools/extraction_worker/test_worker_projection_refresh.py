@@ -13,10 +13,12 @@ from worker import (
     extraction_run_exit_code,
     extraction_success,
     is_failure_action,
+    is_field_regression,
     low_field_quality_flag,
     mean_or_none,
     parsed_field_count,
     pending_doc_priority_key,
+    previous_canonical_field_count,
     should_fallback_tier2_to_tier4,
 )
 
@@ -32,6 +34,9 @@ class _FakeArtifactQuery:
         return self
 
     def limit(self, _count):
+        return self
+
+    def order(self, _column, desc=False):
         return self
 
     def execute(self):
@@ -67,6 +72,23 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
         self.assertTrue(is_failure_action("no_source_artifact"))
         self.assertTrue(is_failure_action("html_no_tables (0 fields)"))
         self.assertTrue(is_failure_action("tier1_no_cell_map schema_version=2025-26"))
+
+    def test_field_regression_guard(self):
+        # Sacramento State 2023-24: 274 -> 108 fields on an older Docling.
+        self.assertTrue(is_field_regression(274, 108))
+        self.assertTrue(is_failure_action("tier4_field_regression (108 < 274 fields)"))
+        # Small drops and small documents are normal re-extraction noise.
+        self.assertFalse(is_field_regression(441, 418))
+        self.assertFalse(is_field_regression(80, 10))
+        self.assertFalse(is_field_regression(None, 10))
+
+    def test_previous_field_count_requires_same_source(self):
+        client = _FakeClient([{"schema_fields_populated": 274, "source_sha256": "abc"}])
+        self.assertEqual(previous_canonical_field_count(client, "doc", "abc"), 274)
+        self.assertIsNone(previous_canonical_field_count(client, "doc", "new-pdf"))
+        self.assertIsNone(previous_canonical_field_count(client, "doc", None))
+        legacy = _FakeClient([{"schema_fields_populated": 300, "sha256": "abc"}])
+        self.assertEqual(previous_canonical_field_count(legacy, "doc", "abc"), 300)
 
     def test_extraction_run_fails_when_any_document_failed(self):
         self.assertEqual(extraction_run_exit_code(0), 0)

@@ -6,6 +6,26 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.19.2] - 2026-11-07
+
+### Fixed
+
+- Tier 4 extraction now runs one known Docling build everywhere. The
+  requirements said `docling>=2.0`, so the daily CI job pulled the newest
+  release (2.148.0) while a local operator venv sat on 2.69.1; re-extracting
+  Sacramento State 2023-24 locally dropped it from 274 to 108 fields.
+  Docling and its three companion packages are now pinned exactly, and the
+  Tier 4 producer version is 0.3.16.
+- A Tier 4 re-extraction of the same source PDF that keeps under 60% of
+  the previous artifact's fields (when it had 100 or more) is now held back
+  and reported as `tier4_field_regression` instead of replacing the good
+  artifact.
+
+### Added
+
+- Every Tier 4 artifact records the installed Docling package versions in
+  `docling_config.package_versions`.
+
 ## [0.6.19.1] - 2026-11-07
 
 ### Fixed

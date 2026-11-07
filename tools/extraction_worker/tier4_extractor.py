@@ -30,11 +30,26 @@ from pathlib import Path
 
 
 PRODUCER_NAME = "tier4_docling"
-PRODUCER_VERSION = "0.3.15"
+PRODUCER_VERSION = "0.3.16"
 DOCLING_CONFIG_NAME = "production-fast-no-orphan-clusters"
 DOCLING_NATIVE_TABLES_VERSION = "docling_table_cells_compact_v1"
 SCANNED_ADMISSIONS_OCR_MAX_PAGE = 35
 VISUAL_OCR_TOOLS = ("pdftoppm", "tesseract")
+DOCLING_PACKAGES = ("docling", "docling-core", "docling-parse", "docling-ibm-models")
+
+
+def docling_package_versions() -> dict[str, str | None]:
+    """Installed Docling package versions, recorded on every artifact so a
+    field-count change can be traced to the Docling build that caused it."""
+    from importlib.metadata import PackageNotFoundError, version
+
+    versions: dict[str, str | None] = {}
+    for name in DOCLING_PACKAGES:
+        try:
+            versions[name] = version(name)
+        except PackageNotFoundError:
+            versions[name] = None
+    return versions
 
 
 def _missing_visual_ocr_tools() -> list[str]:
@@ -278,6 +293,7 @@ def extract(
             "do_cell_matching": pipeline.table_structure_options.do_cell_matching,
             "layout_create_orphan_clusters": pipeline.layout_options.create_orphan_clusters,
             "native_tables_version": DOCLING_NATIVE_TABLES_VERSION,
+            "package_versions": docling_package_versions(),
         },
         "source_pdf": pdf_path.name,
         "extracted_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
