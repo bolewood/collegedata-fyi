@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from tier4_cleaner import clean
+from tier4_cleaner import clean, trim_h15_spill
 
 
 class Tier4CleanerH13H15Test(unittest.TestCase):
@@ -124,6 +124,96 @@ J.DisciplinaryareasofDEGREESCONFERRED
         values = clean(markdown)
 
         self.assertNotIn("H.1501", values)
+
+    def test_h15_letter_spaced_section_i_does_not_swallow(self):
+        # Penn State 2025-26 shape: the literal "INSTRUCTIONAL FACULTY"
+        # cutoff misses the letter-spaced heading, and Sections I-J used to
+        # land in H.1501.
+        markdown = (
+            "H. FINANCIAL AID\n"
+            "H15. If your institution has recently implemented any major financial aid policy, "
+            "program, or initiative to make your institution more affordable to incoming students "
+            "such as replacing loans with grants, or waiving costs for families below a certain "
+            "income level please provide details below:\n"
+            "Our Promise grant covers tuition for families earning under $75,000.\n"
+            "END OF SECT ION H CDS 2025-2026 I. INST RUCT IONAL FACULT Y AND CLASS SIZE I- 1 . "
+            + _SECTION_I_BODY
+        )
+
+        values = clean(markdown)
+
+        self.assertEqual(
+            values["H.1501"]["value"],
+            "Our Promise grant covers tuition for families earning under $75,000.",
+        )
+
+
+# Real Section I opening text, repeated to the length of a swallowed value.
+_SECTION_I_BODY = (
+    "Please report the number of instructional faculty members in each category for "
+    "Fall 2025. Include faculty who are on your institution's payroll on the census date "
+    "your institution uses for IPEDS/AAUP. "
+) * 40
+
+
+class TrimH15SpillTest(unittest.TestCase):
+    """Real H.1501 values from prod artifacts (whitespace collapsed)."""
+
+    def test_spill_only_values_drop_to_empty(self):
+        cases = {
+            "umass-lowell": "Are these policies related to the COVID-19 pandemic? Yes No "
+            "I.IN STRUCTIONAL FACULTY AND CLASS SIZE I-1. ",
+            "penn-state": "END OF SECT ION H CDS 2025-2026 I. INST RUCT IONAL FACULT Y AND "
+            "CLASS SIZE I- 1 . ",
+            "upitt": "I. INSTRUCTIONAL FACU LTY AND CLASS SIZE I1. ",
+            "west-chester": " Are these policies related to the COVID-19 pandemic? "
+            "Section I: INSTRUCTIONAL FACULTY AND CLASS SIZE I1. ",
+            "texas-am": "&RPPRQ\x03'DWD\x036HW\x03 I. INSTRUCTIONAL FACULTY AND CLASS SIZE I-1. ",
+            "uva": "Are these policies related to the COVID-19 pandemic? Yes No "
+            "INSTRUCTIONAL I. FACULTY AND CLASS SIZE I-1. ",
+            "rice": "CDS-H Rice University Common Data Set 2015‐16 J. DEGREES CONFERRED J1 ",
+            "harvard": "CDS_2015-2016_Final.xlsx CDS_2015-2016_Final.xlsx I. INSTRUCTIONAL "
+            "FACULTY AND CLASS SIZE ",
+            "uic": "N/A " + "_" * 80 + " Common Data Set 2019-2020 " + "_" * 22
+            + " Common Data Set Definitions i All definitions related to the financial aid ",
+        }
+        for school, head in cases.items():
+            with self.subTest(school=school):
+                self.assertEqual(trim_h15_spill(head + _SECTION_I_BODY), "")
+
+    def test_real_answers_survive_with_footer_removed(self):
+        cases = {
+            "gonzaga": (
+                "Gonzaga provides grant and scholarship aid to cover the cost of tuition for "
+                "first-year students. Are these policies related to the COVID-19 pandemic? "
+                "տ Yes տտ ✔No &RPPRQ\x03'DWD\x036HW\x03 I. INSTRUCTIONAL "
+                "FACULTY AND CLASS SIZE I-1. ",
+                "Gonzaga provides grant and scholarship aid to cover the cost of tuition for "
+                "first-year students.",
+            ),
+            "ferris": (
+                "Ferris Launch covers cost of tuition for students with zero EFC and GPA of 3.0 "
+                "or higher. &RPPRQ\x03'DWD\x036HW\x03 I. INST RUCTIONAL FACULT Y AND CLASS "
+                "SIZEI.INST RUCTIONALFACULT YANDCLASSSIZE I-1. ",
+                "Ferris Launch covers cost of tuition for students with zero EFC and GPA of 3.0 "
+                "or higher.",
+            ),
+            "weber": (
+                "Beginning fall semester 2014, the Dream Weber program provides free tuition and "
+                "general student fees to students whose annual household income is $40,000 or "
+                "less. I: Instructional Faculty and Class Size I1 ",
+                "Beginning fall semester 2014, the Dream Weber program provides free tuition and "
+                "general student fees to students whose annual household income is $40,000 or "
+                "less.",
+            ),
+        }
+        for school, (raw, expected) in cases.items():
+            with self.subTest(school=school):
+                self.assertEqual(trim_h15_spill(raw + _SECTION_I_BODY), expected)
+
+    def test_clean_answer_is_unchanged(self):
+        text = "SUNY will now match in state tuition for students coming from specific states."
+        self.assertEqual(trim_h15_spill(text), text)
 
 
 if __name__ == "__main__":
