@@ -118,6 +118,21 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
         self.assertFalse(is_single_section_source(canonical["values"], 43))
         self.assertEqual(extraction_quality_flag(canonical), "low_coverage")
 
+    def test_section_swallow_does_not_hide_full_documents(self):
+        # UMass Lowell 2023-24: 617 good fields, Sections I-J swallowed into
+        # H.1501. One polluted free-text answer must not hide the document.
+        keys = [f"B.{100 + i}" for i in range(300)] + [f"C.{100 + i}" for i in range(317)]
+        canonical = self._canonical_with_keys(keys)
+        canonical["values"]["H.1501"] = {
+            "value": "x" * 5001 + " I.INSTRUCTIONALFACULTYANDCLASSSIZE",
+        }
+        canonical["stats"]["schema_fields_populated"] = 617
+
+        self.assertIsNone(extraction_quality_flag(canonical))
+
+        canonical["stats"]["schema_fields_populated"] = 299
+        self.assertEqual(extraction_quality_flag(canonical), "low_coverage")
+
     @staticmethod
     def _canonical_with_keys(keys):
         return {

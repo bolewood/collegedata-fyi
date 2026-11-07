@@ -116,6 +116,7 @@ SCHEMA_DIR = _TOOLS_ROOT.parent / "schemas"
 TEMPLATE_DIR = SCHEMA_DIR / "templates"
 MIN_TIER1_FIELDS = 5
 MIN_TIER4_FIELDS = 25
+MAX_FIELDS_FOR_SWALLOW_FLAG = 300
 MIN_TIER2_LABEL_FALLBACK_ACROFORM_FIELDS = 50
 PIPELINE_RUN_URL_RE = re.compile(
     r"^https://github\.com/bolewood/collegedata-fyi/actions/runs/[0-9]+$",
@@ -383,7 +384,12 @@ def extraction_quality_flag(canonical: dict, threshold: int = MIN_TIER4_FIELDS) 
         ):
             return "low_coverage"
 
+    # A swallowed H15 answer only hides a document that is also thin. A
+    # 600-field CDS with one polluted free-text answer stays visible;
+    # tier4_cleaner.trim_h15_spill strips the spill at extraction.
     for qn in ("H.1501",):
+        if fields >= MAX_FIELDS_FOR_SWALLOW_FLAG:
+            break
         rec = values.get(qn) or {}
         text = str(rec.get("value") or "")
         compact = re.sub(r"\s+", "", text).lower()
