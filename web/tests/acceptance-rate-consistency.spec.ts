@@ -42,7 +42,10 @@ const GATED_SAMPLE: [string, string | null][] = [
   ["washington-university-in-st-louis", null], // repaired, corroborated by IPEDS
   ["fitchburg-state-university", null], // keeps the projection (matches IPEDS)
   ["university-of-arkansas", null], // keeps the projection (closer to IPEDS)
-  ["lake-superior-state-university", "2024-25"], // suppressed
+  // IPEDS open admission. The 2024-25 PDF reports 2,106 applied and 2,106
+  // admitted; it was suppressed only while an old extraction misread the
+  // "another gender" applicants as 41 (2,146 applied).
+  ["lake-superior-state-university", null],
   ["university-of-houston", null], // repaired
   ["university-of-houston-system-administration", "2025-26"], // administrative unit: no figures
   ["cornell", null], // unchanged
