@@ -6,6 +6,26 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.19.3] - 2026-11-08
+
+### Fixed
+
+- The extraction worker now refuses to run on an environment that doesn't
+  match its lock. `tools/extraction_worker/requirements.lock` pins all 149
+  packages (Docling, torch, EasyOCR, pypdf, parsers and their dependencies)
+  for Python 3.12, and `.python-version` pins the interpreter. The worker
+  checks both at startup and exits on drift unless given
+  `--allow-dependency-drift`. A stale local venv (Python 3.9, Docling 2.69.1)
+  is what dropped Sacramento State 2023-24 from 274 to 108 fields.
+- The daily extraction job installs from the lock and reads the Python
+  version from `.python-version`.
+
+### Changed
+
+- The extraction worker README says to run large re-extractions in CI rather
+  than on a laptop, since the same pins can still produce slightly different
+  model output on macOS.
+
 ## [0.6.19.2] - 2026-11-07
 
 ### Fixed

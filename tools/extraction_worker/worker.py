@@ -2294,6 +2294,11 @@ def main() -> int:
     )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
+        "--allow-dependency-drift",
+        action="store_true",
+        help="Run even when installed packages or Python differ from requirements.lock",
+    )
+    parser.add_argument(
         "--force-reextract",
         action="store_true",
         help=(
@@ -2364,6 +2369,24 @@ def main() -> int:
         ),
     )
     args = parser.parse_args()
+
+    from dependency_check import check_environment
+
+    drift = check_environment()
+    if drift:
+        print(
+            "environment does not match tools/extraction_worker/requirements.lock: "
+            + "; ".join(drift[:12])
+            + (f" (+{len(drift) - 12} more)" if len(drift) > 12 else ""),
+            file=sys.stderr,
+        )
+        if not args.allow_dependency_drift:
+            print(
+                "rebuild: python3.12 -m venv .venv && .venv/bin/pip install -r "
+                "requirements.lock (or pass --allow-dependency-drift)",
+                file=sys.stderr,
+            )
+            return 2
 
     env = load_env(Path(args.env))
     url = env.get("SUPABASE_URL")
