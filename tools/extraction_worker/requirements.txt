@@ -1,6 +1,14 @@
 pypdf>=6.0
 supabase>=2.9
-docling>=2.0
+# Docling is pinned exactly. Its layout and table models change between
+# releases, and the same PDF can lose or gain hundreds of fields. Upgrade
+# on purpose: bump all four together, bump tier4_extractor.PRODUCER_VERSION,
+# and compare field counts on a re-extraction sample before merging.
+# Requires Python >= 3.10 (CI uses 3.12).
+docling==2.148.0
+docling-core==2.106.0
+docling-parse==7.24.2
+docling-ibm-models==4.0.4
 openpyxl>=3.1
 easyocr>=1.7
 beautifulsoup4>=4.12

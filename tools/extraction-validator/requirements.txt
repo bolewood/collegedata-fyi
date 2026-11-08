@@ -1,2 +1,2 @@
-docling>=2.0
+docling==2.148.0  # keep in step with tools/extraction_worker/requirements.txt
 pyyaml>=6.0
