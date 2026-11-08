@@ -1,10 +1,15 @@
 pypdf>=6.0
 supabase>=2.9
+# Top-level dependencies. Install from requirements.lock, not this file:
+#   python3.12 -m venv .venv && .venv/bin/pip install -r requirements.lock
+# After editing this file, regenerate the lock:
+#   uv pip compile requirements.txt --universal --python-version 3.12 --no-header -o requirements.lock
+# worker.py refuses to run when the venv drifts from the lock.
+#
 # Docling is pinned exactly. Its layout and table models change between
 # releases, and the same PDF can lose or gain hundreds of fields. Upgrade
 # on purpose: bump all four together, bump tier4_extractor.PRODUCER_VERSION,
 # and compare field counts on a re-extraction sample before merging.
-# Requires Python >= 3.10 (CI uses 3.12).
 docling==2.148.0
 docling-core==2.106.0
 docling-parse==7.24.2

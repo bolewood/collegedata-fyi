@@ -89,15 +89,15 @@ jobs:
 
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version-file: .python-version
           cache: pip
-          cache-dependency-path: tools/extraction_worker/requirements.txt
+          cache-dependency-path: tools/extraction_worker/requirements.lock
 
       - name: Install extraction worker dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends poppler-utils tesseract-ocr
-          python -m pip install -r tools/extraction_worker/requirements.txt
+          python -m pip install -r tools/extraction_worker/requirements.lock
 
       - name: Verify visual OCR tooling
         run: |

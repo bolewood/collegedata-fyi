@@ -20,17 +20,33 @@ This is the M2 half of the pipeline. M1 (discovery) archives the source bytes; M
 | `tier4_llm_fallback.py` | PRD 006 Phase 0. Prompt builder, deterministic validator (type/evidence/sanity/row-merge), and merge policy for the LLM fallback. No DB writes. |
 | `llm_fallback_bench.py` | PRD 006 Phase 0. Standalone benchmark CLI. Reads existing `tier4_docling` artifacts, runs section-scoped LLM prompts, validates responses, writes JSON report to disk. No DB writes. |
 | `watch_resolver_drain.py` | Operator monitor. Polls the archive queue + cds_documents tables and prints a live dashboard of drain progress. Useful during a full-corpus archive run. |
-| `requirements.txt` | Pinned deps: `supabase`, `pypdf`, `docling`, `openpyxl`, `easyocr`. `anthropic` is required for the LLM fallback (PRD 006 Phase 0) — install separately. `python-docx` is required once Tier 3 ships (PRD 007). |
+| `requirements.txt` / `requirements.lock` | Top-level deps (Docling pinned exactly) and the full Python 3.12 lock generated from them. Install from the lock; `worker.py` exits when the venv drifts from it (`dependency_check.py`). `anthropic` is required for the LLM fallback (PRD 006 Phase 0) — install separately. `python-docx` is required once Tier 3 ships (PRD 007). |
+
+## Reproducible extraction
+
+Extraction output depends on the exact Docling, torch, OCR and parser builds,
+so the worker runs only on an environment that matches `requirements.lock`
+and `/.python-version`. It exits at startup otherwise; `--allow-dependency-drift`
+overrides that for experiments. To change a dependency, edit `requirements.txt`,
+regenerate the lock (command at the top of `requirements.txt`), bump
+`tier4_extractor.PRODUCER_VERSION` when extraction output can change, and
+compare field counts on a re-extraction sample before merging.
+
+Large re-extractions (more than a few dozen documents) should run in CI through
+the `ops-extraction-worker` workflow (`workflow_dispatch`), not on a laptop.
+Even with identical pins, Docling's models can produce slightly different
+output on macOS than on CI's Linux runners. Local runs are for debugging
+and small batches.
 
 ## Usage
 
 ```bash
 cd tools/extraction_worker
 
-# One-time setup
-python3 -m venv .venv
+# One-time setup (Python 3.12, see /.python-version)
+python3.12 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements.lock
 
 # Run the worker (polls and extracts until the pending queue drains)
 python worker.py
