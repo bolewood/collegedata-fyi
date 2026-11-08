@@ -167,8 +167,10 @@ flowchart TD
   --report .context/reports/change-events.md \
   --summary-json .context/reports/change-events-summary.json
 
-# Targeted extraction redrain after a cleaner/version bump.
-/Users/santhonys/docling-eval/bin/python \
+# Targeted extraction redrain after a cleaner/version bump. Use the venv
+# built from tools/extraction_worker/requirements.lock; the worker exits on
+# any other environment.
+tools/extraction_worker/.venv/bin/python \
   tools/extraction_worker/worker.py \
   --env /path/to/.env \
   --requeue-document-ids <uuid>,<uuid> \

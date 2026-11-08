@@ -73,9 +73,10 @@ python worker.py --limit 25 --deadline-minutes 25 --summary-json ../../scratch/e
 # writing the current canonical artifact.
 python worker.py --reconcile-pending --limit 100 --summary-json ../../scratch/reconcile-summary.json
 
-# Targeted managed Docling re-drain on an operator laptop.
-# This requeues the documents, processes only those IDs, and refreshes
-# cds_fields/school_browser_rows as each document finishes.
+# Targeted managed Docling re-drain on an operator laptop (small batches;
+# large ones belong in CI, see above). Requeued documents are processed in
+# place: each keeps its status and served data until its own re-extraction
+# finishes, then cds_fields/school_browser_rows refresh for it.
 python worker.py \
     --env /Users/santhonys/Projects/Owen/colleges/collegedata-fyi/.env \
     --requeue-document-ids <uuid>,<uuid> \

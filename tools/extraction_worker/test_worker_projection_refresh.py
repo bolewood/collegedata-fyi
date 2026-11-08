@@ -18,6 +18,8 @@ from worker import (
     mean_or_none,
     parsed_field_count,
     pending_doc_priority_key,
+    select_drain_docs,
+    drain_extraction_statuses,
     previous_canonical_field_count,
     should_fallback_tier2_to_tier4,
 )
@@ -93,6 +95,20 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
     def test_extraction_run_fails_when_any_document_failed(self):
         self.assertEqual(extraction_run_exit_code(0), 0)
         self.assertEqual(extraction_run_exit_code(1), 1)
+
+    def test_requeued_docs_drain_whatever_their_status(self):
+        # A requeue must not flip served documents to pending (which hides
+        # their admissions figures on the site) just to get them selected.
+        rows = [
+            {"id": "served", "extraction_status": "extracted"},
+            {"id": "pending", "extraction_status": "extraction_pending"},
+            {"id": "failed", "extraction_status": "failed"},
+            {"id": "other-served", "extraction_status": "extracted"},
+        ]
+        picked = select_drain_docs(rows, drain_extraction_statuses(False), ["served", "failed"])
+        self.assertEqual([r["id"] for r in picked], ["served", "pending", "failed"])
+        picked = select_drain_docs(rows, drain_extraction_statuses(True), [])
+        self.assertEqual([r["id"] for r in picked], ["pending", "failed"])
 
     def test_summary_mean_rounding(self):
         self.assertEqual(mean_or_none([1, 2, 4]), 2.33)

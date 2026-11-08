@@ -6,6 +6,23 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.19.4] - 2026-11-08
+
+### Fixed
+
+- Re-extracting documents no longer blanks their pages while the run works
+  through the list. `--requeue-document-ids` used to flip every listed
+  document to `extraction_pending` up front, and the site hides admissions
+  figures for pending documents, so a 538-document re-extraction would have
+  blanked 509 year pages for hours. Requeued documents are now selected by
+  id whatever their status; each keeps its status and served data until its
+  own re-extraction finishes, and a run stopped partway leaves the rest as
+  they were.
+- The pending-status repair pass only considers documents that are actually
+  pending.
+- The extraction pipeline doc now runs redrains with the locked worker venv
+  instead of a separate `docling-eval` environment.
+
 ## [0.6.19.3] - 2026-11-08
 
 ### Fixed

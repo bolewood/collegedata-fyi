@@ -16,7 +16,7 @@ on:
         required: false
         default: ""
       requeue_document_ids:
-        description: "Optional comma-separated cds_documents.id values to mark extraction_pending before draining."
+        description: "Optional comma-separated cds_documents.id values to re-extract in place (status unchanged until each finishes)."
         required: false
         default: ""
       include_failed:

@@ -173,6 +173,24 @@ def is_failure_action(action: str) -> bool:
     return False
 
 
+def drain_extraction_statuses(include_failed: bool) -> list[str]:
+    return ["extraction_pending", "failed"] if include_failed else ["extraction_pending"]
+
+
+def select_drain_docs(
+    rows: list[dict[str, Any]],
+    drain_statuses: list[str],
+    requeue_document_ids: list[str],
+) -> list[dict[str, Any]]:
+    """Rows to drain: every requeued document whatever its status, plus any
+    other row whose status is drainable."""
+    requeued = set(requeue_document_ids)
+    return [
+        row for row in rows
+        if str(row["id"]) in requeued or row.get("extraction_status") in drain_statuses
+    ]
+
+
 def is_field_regression(previous_fields: Optional[int], new_fields: int) -> bool:
     if not previous_fields or previous_fields < MIN_FIELDS_FOR_REGRESSION_GUARD:
         return False
@@ -2269,10 +2287,11 @@ def main() -> int:
         "--requeue-document-ids",
         default=None,
         help=(
-            "Comma-separated cds_documents.id values to mark extraction_pending "
-            "before processing. If --document-ids is omitted, these IDs also "
-            "become the processing filter. Intended for local managed Docling "
-            "redrains."
+            "Comma-separated cds_documents.id values to process whatever their "
+            "extraction_status. Their status is left alone until each one is "
+            "re-extracted, so already-served data stays visible while the run "
+            "works through the list. If --document-ids is omitted, these IDs "
+            "also become the processing filter."
         ),
     )
     parser.add_argument(
@@ -2458,20 +2477,15 @@ def main() -> int:
     ]
     if requeue_document_ids and not document_ids:
         document_ids = requeue_document_ids
-    if requeue_document_ids and not args.dry_run:
-        changed = 0
-        for document_id in requeue_document_ids:
-            result = (
-                client.table("cds_documents")
-                .update({"extraction_status": "extraction_pending"})
-                .eq("id", document_id)
-                .execute()
-            )
-            changed += len(result.data or [])
-        print(f"Requeued {changed} document(s).", flush=True)
-    elif requeue_document_ids:
+    if requeue_document_ids:
+        # Requeued documents are selected by id, not flipped to
+        # extraction_pending up front: the site hides admissions figures for
+        # pending documents, so a 500-document requeue used to blank those
+        # pages for hours. Each document's status changes only when its own
+        # extraction finishes.
         print(
-            f"Would requeue {len(requeue_document_ids)} document(s) (dry run).",
+            f"Requeued {len(requeue_document_ids)} document(s) for in-place "
+            "re-extraction.",
             flush=True,
         )
 
@@ -2479,10 +2493,9 @@ def main() -> int:
         "id, school_id, school_name, ipeds_id, cds_year, detected_year, "
         "source_format, extraction_status, discovered_at, source_sha256",
     )
-    if args.include_failed:
-        query = query.in_("extraction_status", ["extraction_pending", "failed"])
-    else:
-        query = query.eq("extraction_status", "extraction_pending")
+    drain_statuses = drain_extraction_statuses(args.include_failed)
+    if not requeue_document_ids:
+        query = query.in_("extraction_status", drain_statuses)
     if args.school:
         query = query.eq("school_id", args.school)
     if document_ids:
@@ -2493,7 +2506,9 @@ def main() -> int:
 
     run_id = str(uuid.uuid4())
     started_at = utc_now_iso()
-    docs = query.execute().data or []
+    docs = select_drain_docs(
+        query.execute().data or [], drain_statuses, requeue_document_ids,
+    )
     if args.min_year_start is not None:
         docs = [
             doc for doc in docs
@@ -2528,7 +2543,11 @@ def main() -> int:
     ledger_items: list[dict[str, Any]] = []
     if args.reconcile_pending and not args.force_reextract:
         reconciled_ids, reconcile_counts = reconcile_pending_documents(
-            client, docs, projection_definitions, projection_enabled, args.dry_run,
+            client,
+            [d for d in docs if d.get("extraction_status") == "extraction_pending"],
+            projection_definitions,
+            projection_enabled,
+            args.dry_run,
         )
         if reconciled_ids:
             verb = "Would reconcile" if args.dry_run else "Reconciled"
