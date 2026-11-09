@@ -6,6 +6,18 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.19.8] - 2026-11-09
+
+### Fixed
+
+- Builds no longer fail when Google Fonts is slow or unreachable. The site's
+  three typefaces (Newsreader, Geist, JetBrains Mono) were loaded with
+  `next/font/google`, which downloads them on every build, and a failed
+  download failed the whole Vercel build (`next/font/google ... Turbopack
+  build failed`), several times recently. The variable-weight Latin files are
+  now committed under `web/src/app/fonts/` with their SIL Open Font License
+  texts and loaded with `next/font/local`, using the same CSS variables, so
+  pages render the same and the build makes no font requests.
 ## [0.6.19.7] - 2026-11-08
 
 ### Fixed
