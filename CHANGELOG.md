@@ -6,6 +6,29 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.19.5] - 2026-11-08
+
+### Fixed
+
+- Tier 4 no longer drops whole tables from PDFs that print every filled-in
+  value twice. Some flattened-form PDFs keep each typed value as page text
+  and as a form appearance, so Docling read cells as "113 113" and the
+  cleaner rejected them. When doubled numeric cells outnumber single ones
+  across a document, each doubled cell is collapsed to one value before
+  parsing. This restores B2, B4, C9, H and J tables for TCU 2022-23, RIT
+  2025-26 and Houston Christian 2025-26, and puts RIT and HCU's C1
+  residency rows back in the right columns. Only these three documents in
+  the corpus have the pattern.
+- 2025-26 C1 "total first-years enrolled" by sex (C.107-C.109) no longer
+  takes the full-time count. The 2025-26 schema tags the full-time rows
+  (C.110) with the same unit load as the totals, so the full-time count was
+  landing in the total. When a file prints only full-time and part-time
+  rows, the total is now their sum, as the compact-table path already did
+  (Alabama: 3,344 rather than 3,318). A replay over all 532 current
+  2024-26 Tier 4 documents changed only these fields outside the three
+  doubled-text files, and every change was a correction.
+- Tier 4 producer version 0.3.17.
+
 ## [0.6.19.4] - 2026-11-08
 
 ### Fixed
