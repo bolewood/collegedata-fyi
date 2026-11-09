@@ -57,7 +57,7 @@ import { schemaFallbackNoteFromArtifact } from "@/lib/schema-fallback";
 import type { ArtifactNotes, ManifestRow, InstitutionCoverage } from "@/lib/types";
 
 export const dynamic = "force-static";
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export async function generateMetadata({
   params,
@@ -251,7 +251,7 @@ export default async function SchoolDetailPage({ params }: {
     fetchEarlyDecisionPageServed(school_id),
     fetchGpaPageServed(school_id),
     latestExtractedDoc?.document_id
-      ? fetchExtract(latestExtractedDoc.document_id)
+      ? fetchExtract(latestExtractedDoc.document_id, school_id)
       : Promise.resolve(null),
   ]);
   const schemaFallbackCopy = schemaFallbackNoteFromArtifact(

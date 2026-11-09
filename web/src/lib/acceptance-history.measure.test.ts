@@ -213,7 +213,7 @@ describe.skipIf(MODE !== "live")("acceptance history live measurement", () => {
       ]);
       const candidates = docs.filter(isHistoryCandidate);
       const extracts = await Promise.all(candidates.map(async (doc) => {
-        const { canonical, mergedValues } = await fetchExtract(doc.document_id as string);
+        const { canonical, mergedValues } = await fetchExtract(doc.document_id as string, doc.school_id ?? "");
         const notes = canonical?.notes as { schema_version?: string; markdown?: string } | null;
         return canonical
           ? {
@@ -304,7 +304,7 @@ describe.skipIf(MODE !== "gpa")("gpa live measurement", () => {
       const candidates = docs.filter(isHistoryCandidate);
       const extracts = await Promise.all(
         candidates.map(async (doc) => {
-          const { canonical, mergedValues } = await fetchExtract(doc.document_id as string);
+          const { canonical, mergedValues } = await fetchExtract(doc.document_id as string, doc.school_id ?? "");
           const notes = canonical?.notes as { schema_version?: string; markdown?: string } | null;
           return canonical
             ? {

@@ -1,6 +1,11 @@
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import type { MetadataRoute } from "next";
+import {
+  SCHOOL_DATA_REVALIDATE_SECONDS,
+  SCHOOL_DATA_TAG,
+  schoolCacheTag,
+} from "./school-cache-tags";
 import { fetchExtract, fetchSchoolDocuments, fetchSchoolYearFacts } from "./queries";
 import type { SchoolYearFacts } from "./school-summary";
 import { gateC1Counts, ipedsAdmissions, type GateReason } from "./c1-hub-gate";
@@ -38,8 +43,9 @@ import type { ArtifactNotes, ManifestRow, SchoolFactUnifiedRow } from "./types";
 
 const fetchHistoryExtract = cache(async function fetchHistoryExtract(
   documentId: string,
+  schoolId: string,
 ): Promise<HistoryExtract | null> {
-  const { canonical, mergedValues } = await fetchExtract(documentId);
+  const { canonical, mergedValues } = await fetchExtract(documentId, schoolId);
   if (!canonical) return null;
   const notes = canonical.notes as ArtifactNotes | null;
   return {
@@ -70,7 +76,7 @@ export const fetchAcceptanceHistory = cache(async function fetchAcceptanceHistor
       ]);
       const candidates = documents.filter(isHistoryCandidate);
       const extracts = await Promise.all(
-        candidates.map((doc) => fetchHistoryExtract(doc.document_id as string)),
+        candidates.map((doc) => fetchHistoryExtract(doc.document_id as string, schoolId)),
       );
       const browserByDocument = new Map<string, BrowserCounts>();
       for (const row of facts) {
@@ -92,7 +98,10 @@ export const fetchAcceptanceHistory = cache(async function fetchAcceptanceHistor
       };
     },
     ["fetchAcceptanceHistory", schoolId],
-    { revalidate: 3600, tags: ["school-data"] },
+    {
+      revalidate: SCHOOL_DATA_REVALIDATE_SECONDS,
+      tags: [SCHOOL_DATA_TAG, schoolCacheTag(schoolId)],
+    },
   )();
 });
 
@@ -104,6 +113,7 @@ export const fetchAcceptanceHistory = cache(async function fetchAcceptanceHistor
  * has no usable reading; callers then keep the projected row.
  */
 const printedCountsForDocument = cache(async function printedCountsForDocument(
+  schoolId: string,
   documentId: string,
   canonicalYear: string,
   applied: number | null,
@@ -111,7 +121,7 @@ const printedCountsForDocument = cache(async function printedCountsForDocument(
   enrolled: number | null,
 ): Promise<BrowserCounts | null> {
   try {
-    const extract = await fetchHistoryExtract(documentId);
+    const extract = await fetchHistoryExtract(documentId, schoolId);
     const reading = readAcceptanceYear(
       {
         document_id: documentId,
@@ -149,7 +159,7 @@ export async function gatedYearFacts(
   const ipeds = ipedsAdmissions(context.federalFacts, context.ipedsId ?? row.ipeds_id);
   const doc = row.document_id ? documents.find((d) => d.document_id === row.document_id) : undefined;
   const resolver = doc && doc.extraction_status === "extracted" && row.document_id
-    ? await printedCountsForDocument(row.document_id, row.canonical_year, row.applied, row.admitted, row.enrolledFirstYear)
+    ? await printedCountsForDocument(context.schoolId, row.document_id, row.canonical_year, row.applied, row.admitted, row.enrolledFirstYear)
     : null;
   const decision = gateC1Counts({
     pilot: isAcceptancePilotSchool(context.schoolId),

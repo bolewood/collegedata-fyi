@@ -45,7 +45,7 @@ import { SchoolGlyph } from "@/components/SchoolGlyph";
 import { externalLinkRel } from "@/lib/client-info";
 
 export const dynamic = "force-static";
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 type Params = { school_id: string; year: string };
 
@@ -291,7 +291,7 @@ async function DocumentVariant({
   let c1: C1HeadlineTotals | undefined;
 
   if (isExtracted && doc.document_id) {
-    const { canonical, mergedValues } = await fetchExtract(doc.document_id);
+    const { canonical, mergedValues } = await fetchExtract(doc.document_id, doc.school_id ?? "");
     const notes = canonical?.notes as ArtifactNotes | null;
     values = mergedValues;
     totalFields = notes?.stats?.total_fields;
@@ -317,7 +317,7 @@ async function DocumentVariant({
 
   const hasValues = Object.keys(values).length > 0;
   const admissionStrategy = doc.document_id
-    ? await fetchAdmissionStrategyByDocumentId(doc.document_id)
+    ? await fetchAdmissionStrategyByDocumentId(doc.document_id, doc.school_id ?? "")
     : null;
 
   return (

@@ -31,7 +31,7 @@ import { acceptanceTableRows } from "@/components/AcceptanceRateTable";
 import { EarlyDecisionTable } from "@/components/EarlyDecisionTable";
 
 export const dynamic = "force-static";
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 type Params = { school_id: string };
 

@@ -42,6 +42,11 @@ import {
 } from "./school-alias";
 import retiredSchoolAliases from "../data/school-redirects.json";
 import { isCanonicalCdsYear } from "./format";
+import {
+  SCHOOL_DATA_REVALIDATE_SECONDS,
+  SCHOOL_DATA_TAG,
+  schoolCacheTag,
+} from "./school-cache-tags";
 import { excludeHiddenQualityDocuments } from "./public-documents";
 
 // Documents with these participation_status values are excluded from every
@@ -54,14 +59,34 @@ import { excludeHiddenQualityDocuments } from "./public-documents";
 // can query cds_documents directly via PostgREST.
 const PUBLIC_EXCLUDED_STATUSES = ["withdrawn", "verified_absent"];
 const STATIC_BUILD_QUERY_TIMEOUT_MS = 8_000;
-const SCHOOL_DATA_REVALIDATE_SECONDS = 3600;
-const SCHOOL_DATA_CACHE_TAGS = ["school-data"] as const;
+// Daily safety net. School data changes at most once a day (extraction worker),
+// and the worker calls /api/revalidate for the schools it touched, so hourly
+// regeneration only added Supabase load (crawler sweeps of stale pages).
 
-function cachedSchoolQuery<T>(key: string[], fn: () => Promise<T>): Promise<T> {
+/**
+ * Cache a school-scoped query under the global "school-data" tag plus a
+ * `school:<id>` tag per owning school, so /api/revalidate can expire one school
+ * without touching the rest. Pass the school id(s) the entry belongs to.
+ */
+function cachedSchoolQuery<T>(
+  key: string[],
+  fn: () => Promise<T>,
+  schoolIds: Array<string | null | undefined> = [],
+): Promise<T> {
+  const tags = [SCHOOL_DATA_TAG];
+  for (const id of schoolIds) if (id) tags.push(schoolCacheTag(id));
   return unstable_cache(fn, key, {
     revalidate: SCHOOL_DATA_REVALIDATE_SECONDS,
-    tags: [...SCHOOL_DATA_CACHE_TAGS],
+    tags,
   })();
+}
+
+function cachedSchoolScopedQuery<T>(
+  schoolId: string | null | undefined,
+  key: string[],
+  fn: () => Promise<T>,
+): Promise<T> {
+  return cachedSchoolQuery(key, fn, [schoolId]);
 }
 
 function throwIfPostgrestError(
@@ -892,7 +917,7 @@ export const fetchInstitutionCoverage = cache(
   async function fetchInstitutionCoverage(
     schoolId: string,
   ): Promise<InstitutionCoverage | null> {
-    return cachedSchoolQuery(["fetchInstitutionCoverage", schoolId], async () => {
+    return cachedSchoolScopedQuery(schoolId, ["fetchInstitutionCoverage", schoolId], async () => {
       const client = supabase as unknown as UntypedSupabase;
       const queryCoverage = () =>
         client
@@ -921,7 +946,7 @@ export const fetchSchoolBrandColors = cache(
   ): Promise<string[] | null> {
     const canonicalSchoolId =
       (await fetchCanonicalSchoolId(schoolId)) ?? schoolId;
-    return cachedSchoolQuery(["fetchSchoolBrandColors", canonicalSchoolId], async () => {
+    return cachedSchoolScopedQuery(canonicalSchoolId, ["fetchSchoolBrandColors", canonicalSchoolId], async () => {
       const { data, error } = await (supabase as unknown as UntypedSupabase)
         .from("institution_directory")
         .select("brand_colors")
@@ -1135,7 +1160,7 @@ export const fetchSchoolDocuments = cache(async function fetchSchoolDocuments(
   schoolId: string
 ): Promise<ManifestRow[]> {
   const { aliases, ipedsId } = await fetchLiveAliasContext(schoolId);
-  return cachedSchoolQuery(["fetchSchoolDocuments", schoolId], async () => {
+  return cachedSchoolScopedQuery(schoolId, ["fetchSchoolDocuments", schoolId], async () => {
     const { data, error } = await supabase
       .from("cds_manifest")
       .select("*")
@@ -1156,7 +1181,8 @@ export const fetchSchoolDirectPublishEvents = cache(
     schoolId: string,
     limit = 20,
   ): Promise<SchoolFeedEvent[]> {
-    return cachedSchoolQuery(
+    return cachedSchoolScopedQuery(
+      schoolId,
       ["fetchSchoolDirectPublishEvents", schoolId, String(limit)],
       async () => {
         const { data, error } = await supabase
@@ -1232,7 +1258,7 @@ export const fetchSchoolFederalFacts = cache(
   async function fetchSchoolFederalFacts(
     schoolId: string,
   ): Promise<SchoolFactUnifiedRow[]> {
-    return cachedSchoolQuery(["fetchSchoolFederalFacts", schoolId], async () => {
+    return cachedSchoolScopedQuery(schoolId, ["fetchSchoolFederalFacts", schoolId], async () => {
       const { data, error } = await (supabase as unknown as UntypedSupabase)
         .from("school_facts_unified")
         .select(
@@ -1252,7 +1278,7 @@ export const fetchFsaNonpaymentBySchoolId = cache(
   async function fetchFsaNonpaymentBySchoolId(
     schoolId: string,
   ): Promise<FsaNonpaymentCurrent | null> {
-    return cachedSchoolQuery(["fetchFsaNonpaymentBySchoolId", schoolId], async () => {
+    return cachedSchoolScopedQuery(schoolId, ["fetchFsaNonpaymentBySchoolId", schoolId], async () => {
       const { data, error } = await (supabase as unknown as UntypedSupabase)
         .from("fsa_nonpayment_current")
         .select(
@@ -1313,7 +1339,7 @@ const fetchSchoolBrowserHubRows = cache(async function fetchSchoolBrowserHubRows
   schoolId: string,
 ): Promise<SchoolBrowserHubRow[]> {
   const { aliases, ipedsId } = await fetchLiveAliasContext(schoolId);
-  return cachedSchoolQuery(["fetchSchoolBrowserHubRows", schoolId], async () => {
+  return cachedSchoolScopedQuery(schoolId, ["fetchSchoolBrowserHubRows", schoolId], async () => {
     const { data, error } = await (supabase as unknown as UntypedSupabase)
       .from("school_browser_rows")
       .select(SCHOOL_BROWSER_HUB_SELECT)
@@ -1589,8 +1615,10 @@ export const fetchAdmissionStrategyBySchoolId = cache(
 export const fetchAdmissionStrategyByDocumentId = cache(
   async function fetchAdmissionStrategyByDocumentId(
     documentId: string,
+    schoolId: string,
   ): Promise<BrowserAdmissionStrategyRow | null> {
-    return cachedSchoolQuery(
+    return cachedSchoolScopedQuery(
+      schoolId,
       ["fetchAdmissionStrategyByDocumentId", documentId],
       async () => {
         const { data, error } = await (supabase as unknown as UntypedSupabase)
@@ -1610,7 +1638,7 @@ export const fetchAvgGpaBySchoolId = cache(
   async function fetchAvgGpaBySchoolId(
     schoolId: string,
   ): Promise<Pick<SchoolAcademicProfile, "avgHsGpa" | "hsGpaSubmitRate">> {
-    return cachedSchoolQuery(["fetchAvgGpaBySchoolId", schoolId], async () => {
+    return cachedSchoolScopedQuery(schoolId, ["fetchAvgGpaBySchoolId", schoolId], async () => {
       const { data, error } = await (supabase as unknown as UntypedSupabase)
         .from("cds_fields")
         .select("field_id, value_num, value_text, year_start")
@@ -1648,7 +1676,7 @@ export const fetchMeritProfileBySchoolId = cache(
   async function fetchMeritProfileBySchoolId(
     schoolId: string,
   ): Promise<MeritProfileRow | null> {
-    return cachedSchoolQuery(["fetchMeritProfileBySchoolId", schoolId], async () => {
+    return cachedSchoolScopedQuery(schoolId, ["fetchMeritProfileBySchoolId", schoolId], async () => {
       const { data, error } = await (supabase as unknown as UntypedSupabase)
         .from("school_merit_profile")
         .select(
@@ -1729,7 +1757,7 @@ export const fetchChangeEventsBySchoolId = cache(
   async function fetchChangeEventsBySchoolId(
     schoolId: string,
   ): Promise<ChangeEventRow[]> {
-    return cachedSchoolQuery(["fetchChangeEventsBySchoolId", schoolId], async () => {
+    return cachedSchoolScopedQuery(schoolId, ["fetchChangeEventsBySchoolId", schoolId], async () => {
       const { data, error } = await (supabase as unknown as UntypedSupabase)
         .from("cds_field_change_events")
         .select(
@@ -1775,7 +1803,7 @@ export const fetchDocumentsBySchoolAndYear = cache(async function fetchDocuments
   year: string
 ): Promise<ManifestRow[]> {
   const { aliases, ipedsId } = await fetchLiveAliasContext(schoolId);
-  return cachedSchoolQuery(["fetchDocumentsBySchoolAndYear", schoolId, year], async () => {
+  return cachedSchoolScopedQuery(schoolId, ["fetchDocumentsBySchoolAndYear", schoolId, year], async () => {
     const { data, error } = await supabase
       .from("cds_manifest")
       .select("*")
@@ -1819,12 +1847,15 @@ export async function fetchCanonicalArtifact(
  * Callers that need the raw canonical (markdown, stats) still get it back
  * via `canonical`. The `mergedValues` field is the shape to render to users.
  */
-export const fetchExtract = cache(async function fetchExtract(documentId: string): Promise<{
+export const fetchExtract = cache(async function fetchExtract(
+  documentId: string,
+  schoolId: string,
+): Promise<{
   canonical: ArtifactRow | null;
   fallback: ArtifactRow | null;
   mergedValues: Record<string, FieldValue>;
 }> {
-  return cachedSchoolQuery(["fetchExtract", documentId], async () => {
+  return cachedSchoolScopedQuery(schoolId, ["fetchExtract", documentId], async () => {
     const [canonicalRes, fallbackRes] = await Promise.all([
       supabase
         .from("cds_artifacts")

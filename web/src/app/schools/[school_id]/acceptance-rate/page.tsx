@@ -29,7 +29,7 @@ import { AcceptanceRateTable, acceptanceTableRows } from "@/components/Acceptanc
 import { AcceptanceRateChart } from "@/components/AcceptanceRateChart";
 
 export const dynamic = "force-static";
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 type Params = { school_id: string };
 

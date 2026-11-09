@@ -12,7 +12,7 @@ export const alt = "Common Data Set year detail";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const dynamic = "force-static";
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 type Params = { school_id: string; year: string };
 
@@ -62,7 +62,7 @@ export default async function Image({
 
   const doc = docs[0];
   if (doc.extraction_status === "extracted" && doc.document_id) {
-    const { mergedValues: values } = await fetchExtract(doc.document_id);
+    const { mergedValues: values } = await fetchExtract(doc.document_id, doc.school_id ?? "");
     const schemaVersion = doc.canonical_year ?? doc.cds_year;
     const { applied: totalApplied, admitted: totalAdmitted } = c1HeadlineTotals(
       values,
