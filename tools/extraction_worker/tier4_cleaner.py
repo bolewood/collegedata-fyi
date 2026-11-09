@@ -191,6 +191,57 @@ _NO_WRAP_EMPTY_LABELS = {
 }
 
 
+_C1_ENROLLED_BY_SEX_TOTAL_QNS = {"C.107", "C.108"}
+_NUMERIC_CELL_RE = re.compile(r"-?\$?\d[\d,]*(?:\.\d+)?%?")
+_DOUBLED_CELLS_MIN = 10
+
+
+def _doubled_cell_half(cell: str) -> str | None:
+    """Return one half of a cell whose text is the same tokens twice."""
+    tokens = cell.split()
+    n = len(tokens)
+    if n < 2 or n % 2 or tokens[: n // 2] != tokens[n // 2 :]:
+        return None
+    return " ".join(tokens[: n // 2])
+
+
+def _collapse_doubled_cells(markdown: str) -> str:
+    """Undo text layers that print every filled-in value twice.
+
+    Some flattened-form PDFs keep each typed value both as page text and as
+    a widget appearance, so Docling reads cells as "113 113" or "1 year
+    1 year". The numeric parsers reject those and whole tables vanish
+    (TCU 2022-23 lost B2 and B4). Collapse only when doubled numeric cells
+    outnumber single ones across the document, so a lone legitimate
+    "10 10" in an ordinary file is left alone.
+    """
+    table_lines = [ln for ln in markdown.split("\n") if ln.lstrip().startswith("|")]
+    doubled = single = 0
+    for line in table_lines:
+        for cell in line.strip().split("|")[1:-1]:
+            cell = cell.strip()
+            if _NUMERIC_CELL_RE.fullmatch(cell):
+                single += 1
+            else:
+                half = _doubled_cell_half(cell)
+                if half is not None and _NUMERIC_CELL_RE.fullmatch(half):
+                    doubled += 1
+    if doubled < _DOUBLED_CELLS_MIN or doubled <= single:
+        return markdown
+
+    def _collapse_line(line: str) -> str:
+        if not line.lstrip().startswith("|"):
+            return line
+        parts = line.split("|")
+        for k in range(1, len(parts) - 1):
+            half = _doubled_cell_half(parts[k])
+            if half is not None:
+                parts[k] = f" {half} "
+        return "|".join(parts)
+
+    return "\n".join(_collapse_line(line) for line in markdown.split("\n"))
+
+
 def _parse_markdown_tables(markdown: str) -> list[dict]:
     """Extract every markdown table as a list of {section, rows} dicts.
 
@@ -2552,6 +2603,20 @@ def resolve_c1_applications(
 
     def _lookup(gender: str, residency: str, action: str,
                 unit_load: str = "All") -> str | None:
+        # The 2025-26 schema tags the full-time enrolled rows (C.110/C.112)
+        # unit_load "All", the same as the plain enrolled totals
+        # (C.107/C.108), so match on the question wording first.
+        if action == "enrolled" and unit_load in {"All", "FT"}:
+            for f in c1_fields:
+                if not _gender_matches(str(f["gender"]), gender):
+                    continue
+                if f["residency"] != residency:
+                    continue
+                q_norm = str(f["_q_norm"])
+                if action not in q_norm or "part time" in q_norm:
+                    continue
+                if ("full time" in q_norm) == (unit_load == "FT"):
+                    return f["question_number"]
         unit_loads = [unit_load]
         if action == "enrolled" and unit_load == "FT":
             unit_loads.append("All")
@@ -6641,6 +6706,7 @@ def clean(
     resolver stage. Pass a pre-built SchemaIndex to share it across many
     clean() calls (e.g. batch survey runs).
     """
+    markdown = _collapse_doubled_cells(markdown)
     tables = _parse_markdown_tables(markdown)
     values: dict[str, dict] = {}
     idx = schema if schema is not None else _get_schema(canonical_year)
@@ -6688,6 +6754,14 @@ def clean(
                 ):
                     continue
                 if substr not in label_norm:
+                    continue
+                # "first-year men who enrolled" is also a substring of the
+                # full-time/part-time rows below it. When the plain row's
+                # text is garbled (RIT/HCU 2025-26 print "enrolled" in a
+                # shifted font), the full-time count would land in the total.
+                if qnum in _C1_ENROLLED_BY_SEX_TOTAL_QNS and (
+                    "full time" in label_norm or "part time" in label_norm
+                ):
                     continue
 
                 # Determine which column to read.
@@ -6840,7 +6914,39 @@ def clean(
                 values[qn] = rec
 
     apply_h2a_range_guards(values)
+    if idx.schema_version == "2025-26":
+        _fill_c1_enrolled_by_sex_totals(values)
     return values
+
+
+# 2025-26 C1: total enrolled by sex = full-time + part-time rows.
+_C1_2025_ENROLLED_PARTS = {
+    "C.107": ("C.110", "C.111"),
+    "C.108": ("C.112", "C.113"),
+    "C.109": ("C.114", "C.115"),
+}
+
+
+def _fill_c1_enrolled_by_sex_totals(values: dict[str, dict]) -> None:
+    """Fill a missing enrolled-by-sex total from its full/part-time rows.
+
+    Many 2025-26 files print only the full-time and part-time enrolled
+    rows. The total is their sum by definition (the compact-table path in
+    resolve_c1_applications already derives it the same way); without this
+    the full-time count used to be mislabeled as the total.
+    """
+    for total_qn, (ft_qn, pt_qn) in _C1_2025_ENROLLED_PARTS.items():
+        if total_qn in values:
+            continue
+        ft = _extract_number(values.get(ft_qn, {}).get("value", ""))
+        pt = _extract_number(values.get(pt_qn, {}).get("value", ""))
+        if ft is None or pt is None:
+            continue
+        total = float(ft) + float(pt)
+        values[total_qn] = {
+            "value": str(int(total)) if total.is_integer() else str(total),
+            "source": "tier4_cleaner",
+        }
 
 
 def main():
