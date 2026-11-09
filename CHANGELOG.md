@@ -6,6 +6,19 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.19.7] - 2026-11-08
+
+### Fixed
+
+- The extraction workflow's `requeue_document_ids` input now re-extracts in
+  place, as #246 made the worker do. The workflow still flipped every listed
+  document to `extraction_pending` up front, which hides their admissions
+  figures on the site until each finishes, and it never passed
+  `--requeue-document-ids` or `--force-reextract` to the worker. A document
+  whose producer version and source had not changed would therefore be
+  reconciled straight back to `extracted` without a new extraction. The
+  workflow now passes both flags and leaves status alone.
+
 ## [0.6.19.6] - 2026-11-08
 
 ### Fixed
