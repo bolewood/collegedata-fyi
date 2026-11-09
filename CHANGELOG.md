@@ -6,6 +6,26 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.19.15] - 2026-11-09
+
+### Changed
+
+- School pages (hub, year, acceptance-rate, early-decision, gpa, layout, OG
+  images) and school-scoped cached queries now revalidate every 24 h instead of
+  hourly. Hourly regeneration let crawler sweeps of stale pages trigger hundreds
+  of concurrent ISR re-renders that saturated PostgREST and tripped the 4 s
+  query timeout (Sentry COLLEGEDATA-FYI-1A/1E/19). Cached school queries now
+  carry a `school:<school_id>` tag in addition to `school-data`.
+
+### Added
+
+- `POST /api/revalidate` (bearer `REVALIDATE_SECRET`; 503 if unset) expires
+  per-school tags and pages for `{"school_ids": [...]}` (max 100) or everything
+  for `{"all": true}`.
+- The extraction worker notifies it for schools whose data changed when
+  `COLLEGEDATA_REVALIDATE_URL` and `REVALIDATE_SECRET` are set (best effort,
+  never fails the run); `ops-extraction-worker.yml` passes both through.
+
 ## [0.6.19.14] - 2026-11-09
 
 ### Fixed

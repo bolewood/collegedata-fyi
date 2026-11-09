@@ -37,7 +37,7 @@ describe("school page ISR contract", () => {
     ]) {
       const source = read(rel);
       expect(source).toContain('export const dynamic = "force-static"');
-      expect(source).toContain("export const revalidate = 3600");
+      expect(source).toContain("export const revalidate = 86400");
     }
   });
 
@@ -45,5 +45,12 @@ describe("school page ISR contract", () => {
     for (const rel of [files.feed, files.facts, files.sources, files.compare, files.csv, files.xlsx]) {
       expect(read(rel)).not.toMatch(/export const dynamic = ["']force-static["']/);
     }
+  });
+});
+
+describe("school data cache contract", () => {
+  it("keeps the literal route revalidate in sync with the query cache window", async () => {
+    const { SCHOOL_DATA_REVALIDATE_SECONDS } = await import("./school-cache-tags");
+    expect(SCHOOL_DATA_REVALIDATE_SECONDS).toBe(86400);
   });
 });

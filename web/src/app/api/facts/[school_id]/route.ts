@@ -78,7 +78,7 @@ export async function GET(
     );
   }
 
-  const { mergedValues } = await fetchExtract(extracted.document_id);
+  const { mergedValues } = await fetchExtract(extracted.document_id, school_id);
 
   // CDS canonical question numbers for the "most-queried" fields.
   //   C.116 = total first-time, first-year applicants

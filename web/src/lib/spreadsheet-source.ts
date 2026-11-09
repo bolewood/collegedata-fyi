@@ -19,7 +19,7 @@ export async function fetchSpreadsheetInput(
     docs
       .filter((doc) => doc.extraction_status === "extracted" && doc.document_id)
       .map(async (doc) => {
-        const { canonical, mergedValues } = await fetchExtract(doc.document_id!);
+        const { canonical, mergedValues } = await fetchExtract(doc.document_id!, schoolId);
         const notes = canonical?.notes as ArtifactNotes | null;
         return {
           variant: doc.sub_institutional,

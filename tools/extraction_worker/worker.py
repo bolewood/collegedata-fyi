@@ -111,6 +111,7 @@ from tier2_extractor.extract import extract as tier2_extract  # noqa: E402
 from tier2_extractor.extract import load_schema  # noqa: E402
 from html_to_markdown import html_to_markdown  # noqa: E402 (PRD 008 Tier 6)
 from pdf_text import PdfPageTexts  # noqa: E402
+from revalidate_notify import notify_school_revalidation  # noqa: E402
 
 
 SCHEMA_DIR = _TOOLS_ROOT.parent / "schemas"
@@ -563,6 +564,27 @@ def replay_extraction_ledger(client: Client, path: Path) -> bool:
     if not recorded:
         raise RuntimeError("ledger replay failed after 3 attempts") from error
     return True
+
+
+def notify_web_of_changed_schools(school_ids: set[str], dry_run: bool) -> None:
+    """Best-effort ISR revalidation for schools whose data just changed.
+
+    No-op unless COLLEGEDATA_REVALIDATE_URL and REVALIDATE_SECRET are set;
+    never raises, so it cannot change the run's exit code.
+    """
+    if dry_run or not school_ids:
+        return
+    try:
+        notify = notify_school_revalidation(school_ids)
+    except Exception as e:  # noqa: BLE001
+        print(f"revalidate_notify_error: {type(e).__name__}", file=sys.stderr, flush=True)
+        return
+    if notify["enabled"]:
+        print(
+            f"revalidate: notified web of {notify['sent']}/{len(school_ids)} "
+            f"school(s), errors={notify['errors']}",
+            flush=True,
+        )
 
 
 def finalize_extraction_run(
@@ -2874,6 +2896,7 @@ def main() -> int:
     # nibbling at it 25 rows a day. --force-reextract opts out: the operator
     # explicitly wants the bytes re-extracted, not short-circuited.
     reconcile_counts: Counter = Counter()
+    changed_school_ids: set[str] = set()
     ledger_items: list[dict[str, Any]] = []
     if args.reconcile_pending and not args.force_reextract:
         reconciled_ids, reconcile_counts = reconcile_pending_documents(
@@ -2883,6 +2906,12 @@ def main() -> int:
             projection_enabled,
             args.dry_run,
         )
+        if reconciled_ids and not args.dry_run:
+            changed_school_ids.update(
+                str(d["school_id"])
+                for d in docs
+                if str(d["id"]) in reconciled_ids and d.get("school_id")
+            )
         if reconciled_ids:
             verb = "Would reconcile" if args.dry_run else "Reconciled"
             print(
@@ -2945,6 +2974,7 @@ def main() -> int:
             processed_count=0,
             pending_remaining=pending_remaining,
         ), extracted=0, failed=0, pending_remaining=pending_remaining)
+        notify_web_of_changed_schools(changed_school_ids, args.dry_run)
         ledger_ok = finalize_extraction_run(
             client,
             run_id=run_id,
@@ -3032,6 +3062,13 @@ def main() -> int:
                 })
         failed = is_failure_action(outcome.action)
         failure_count += int(failed)
+        if (
+            not args.dry_run
+            and not failed
+            and outcome.refresh_projection
+            and doc.get("school_id")
+        ):
+            changed_school_ids.add(str(doc["school_id"]))
         doc_needs_review = bool(outcome.needs_review or doc.get("needs_review"))
         if doc_needs_review:
             review_docs.append({
@@ -3145,6 +3182,7 @@ def main() -> int:
         processed_count=processed_count,
         pending_remaining=pending_remaining,
     ), extracted=extracted, failed=failure_count, pending_remaining=pending_remaining)
+    notify_web_of_changed_schools(changed_school_ids, args.dry_run)
     ledger_ok = finalize_extraction_run(
         client,
         run_id=run_id,

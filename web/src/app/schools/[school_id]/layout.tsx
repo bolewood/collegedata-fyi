@@ -3,7 +3,7 @@ import { SchoolApiNote } from "@/components/SchoolApiNote";
 import { cachedSchoolInks, schoolInkWrapperProps } from "@/lib/school-inks";
 
 export const dynamic = "force-static";
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export default async function SchoolRecordLayout({
   children,
