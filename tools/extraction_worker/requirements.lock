@@ -304,7 +304,9 @@ pylatexenc==2.11
 pypdf==7.0.0
     # via -r requirements.txt
 pypdfium2==5.15.1
-    # via docling-slim
+    # via
+    #   -r requirements.txt
+    #   docling-slim
 python-bidi==0.6.12
     # via easyocr
 python-dateutil==4.0.0

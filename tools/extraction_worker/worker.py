@@ -110,6 +110,7 @@ from tier1_extractor.extract import build_cell_map, extract_from_bytes as tier1_
 from tier2_extractor.extract import extract as tier2_extract  # noqa: E402
 from tier2_extractor.extract import load_schema  # noqa: E402
 from html_to_markdown import html_to_markdown  # noqa: E402 (PRD 008 Tier 6)
+from pdf_text import PdfPageTexts  # noqa: E402
 
 
 SCHEMA_DIR = _TOOLS_ROOT.parent / "schemas"
@@ -976,12 +977,12 @@ def detect_year_from_pdf_bytes(data: bytes, max_pages: int = 10) -> Optional[str
         )
         return None
     spans: set[str] = set()
+    pages = PdfPageTexts(data)
     for page_idx in range(page_count):
-        try:
-            text = reader.pages[page_idx].extract_text() or ""
-        except Exception as e:
+        text = pages.text(page_idx)
+        if text is None:
             print(
-                f"    pdf_error: page {page_idx} extract_text failed: {type(e).__name__}: {e}",
+                f"    pdf_error: page {page_idx} text unreadable by pypdf and pdfium",
                 file=sys.stderr,
                 flush=True,
             )
@@ -1109,18 +1110,23 @@ def sniff_format_from_bytes(data: bytes) -> str:
     (pdf_fillable / pdf_flat / pdf_scanned / xlsx / docx / other)."""
     if len(data) >= 4 and data[:4] == b"%PDF":
         try:
-            reader = pypdf.PdfReader(BytesIO(data))
-            fields = reader.get_fields()
+            pages = PdfPageTexts(data)
+            fields = pages.reader.get_fields()
             if fields:
                 return "pdf_fillable"
-            # no fields → text-sniff first few pages
+            # no fields → text-sniff first few pages. A page pypdf cannot
+            # parse falls back to pdfium; a page neither can read is unknown,
+            # not empty, so an unreadable sample never forces full OCR.
             total = 0
-            for i in range(min(3, len(reader.pages))):
-                try:
-                    total += len(reader.pages[i].extract_text() or "")
-                except Exception:
-                    pass
-            return "pdf_flat" if total >= 100 else "pdf_scanned"
+            readable = 0
+            for i in range(min(3, len(pages))):
+                text = pages.text(i)
+                if text is not None:
+                    readable += 1
+                    total += len(text)
+            if total >= 100:
+                return "pdf_flat"
+            return "pdf_scanned" if readable else "other"
         except Exception:
             return "other"
     if len(data) >= 4 and data[:4] == b"PK\x03\x04":

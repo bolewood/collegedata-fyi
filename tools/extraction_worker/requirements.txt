@@ -1,4 +1,7 @@
 pypdf>=6.0
+# Fallback page-text reader when pypdf cannot parse a page's fonts
+# (pdf_text.py). Also pulled in by Docling; pinned to the locked version.
+pypdfium2==5.15.1
 supabase>=2.9
 # Top-level dependencies. Install from requirements.lock, not this file:
 #   python3.12 -m venv .venv && .venv/bin/pip install -r requirements.lock
