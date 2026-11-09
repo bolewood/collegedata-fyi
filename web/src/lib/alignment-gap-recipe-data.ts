@@ -4418,7 +4418,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionShare": 0.7009
   },
   {
-    "schoolId": "tulane-university-of-louisiana",
+    "schoolId": "tulane-university",
     "schoolName": "Tulane University of Louisiana",
     "cdsYear": "2025-26",
     "satCompositeP50": 1460,
@@ -8916,7 +8916,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentPerStudent": 15332.42
   },
   {
-    "schoolId": "tulane-university-of-louisiana",
+    "schoolId": "tulane-university",
     "schoolName": "Tulane University of Louisiana",
     "cdsYear": "2025-26",
     "meritShare": 0.278794,
@@ -9936,7 +9936,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentPerStudent": 139050.11
   },
   {
-    "schoolId": "virginia-polytechnic-institute-and-state-university",
+    "schoolId": "virginia-tech",
     "schoolName": "Virginia Polytechnic Institute and State University",
     "cdsYear": "2024-25",
     "meritShare": 0.111699,

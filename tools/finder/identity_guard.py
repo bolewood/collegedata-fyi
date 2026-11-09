@@ -71,6 +71,11 @@ def normalize_name(value: Any) -> str:
     return " ".join(re.findall(r"[a-z0-9]+", text))
 
 
+def federal_name_slug(value: Any) -> str:
+    """Return the deterministic hyphenated slug for an institution name."""
+    return "-".join(normalize_name(value).split())
+
+
 def normalize_domain(value: Any) -> str:
     """Return a lowercase host without scheme, credentials, port, path, or www."""
     text = str(value or "").strip().casefold()
@@ -256,6 +261,168 @@ def validated_unique_school_claim_slug_map(
             f"{len(audit['errors'])} IPEDS identity claim(s) failed validation"
         )
     return unique_school_claim_slug_map(claims)
+
+
+def canonical_alias_slug_map(
+    claims: Iterable[dict[str, Any]],
+    official_records: dict[str, dict[str, str]] | None = None,
+    public_slugs: dict[str, str] | None = None,
+) -> dict[str, str]:
+    """Return unambiguous alias_slug -> canonical_school_id mappings.
+
+    Combines curated ``retired_aliases`` with the federal INSTNM / claimed-name
+    auto-slugs for pinned ``public_slugs.yaml`` schools (and unambiguous
+    curated claims) so generators and mirror ingests can canonicalize rows even
+    when an upstream table or catalog still carries the pre-rename slug.
+    """
+    claim_rows = list(claims)
+    canonical_by_ipeds = dict(unique_school_claim_slug_map(claim_rows))
+    for ipeds_id, slug in (public_slugs or {}).items():
+        normalized = normalize_ipeds(ipeds_id)
+        if normalized and slug:
+            canonical_by_ipeds[normalized] = str(slug).strip()
+
+    canonical_slugs = set(canonical_by_ipeds.values()) | {
+        str(claim.get("school_id") or "").strip()
+        for claim in claim_rows
+        if str(claim.get("school_id") or "").strip()
+    }
+    official_by_ipeds = official_records or {}
+
+    candidates: dict[str, set[str]] = {}
+
+    def _record_alias(alias: str, target: str) -> None:
+        cleaned_alias = str(alias or "").strip()
+        cleaned_target = str(target or "").strip()
+        if (
+            not cleaned_alias
+            or not cleaned_target
+            or cleaned_alias == cleaned_target
+            or cleaned_alias in canonical_slugs
+        ):
+            return
+        candidates.setdefault(cleaned_alias, set()).add(cleaned_target)
+
+    for claim in claim_rows:
+        ipeds_id = normalize_ipeds(claim.get("ipeds_id"))
+        if not ipeds_id:
+            continue
+        target = canonical_by_ipeds.get(ipeds_id)
+        if not target:
+            continue
+        for alias in claim.get("retired_aliases", ()) or ():
+            _record_alias(str(alias), target)
+        for raw_name in (
+            claim.get("claimed_name"),
+            (official_by_ipeds.get(ipeds_id) or {}).get("official_name"),
+        ):
+            if not raw_name:
+                continue
+            _record_alias(federal_name_slug(raw_name), target)
+            if "&" in str(raw_name):
+                _record_alias(
+                    federal_name_slug(str(raw_name).replace("&", " ")),
+                    target,
+                )
+
+    for ipeds_id, target in sorted((public_slugs or {}).items()):
+        normalized = normalize_ipeds(ipeds_id)
+        if not normalized:
+            continue
+        official_name = (official_by_ipeds.get(normalized) or {}).get("official_name")
+        if official_name:
+            _record_alias(federal_name_slug(official_name), target)
+            if "&" in official_name:
+                _record_alias(
+                    federal_name_slug(official_name.replace("&", " ")),
+                    target,
+                )
+
+    return {
+        alias: next(iter(targets))
+        for alias, targets in sorted(candidates.items())
+        if len(targets) == 1
+    }
+
+
+def validated_canonical_alias_slug_map(
+    schools_path: Path = DEFAULT_SCHOOLS_YAML,
+    snapshot_path: Path = DEFAULT_SNAPSHOT,
+    exceptions_path: Path = DEFAULT_EXCEPTIONS,
+    public_slugs_path: Path = DEFAULT_PUBLIC_SLUGS,
+) -> dict[str, str]:
+    """Load unambiguous alias_slug -> canonical_school_id after audit passes."""
+    claims = load_school_claims(schools_path)
+    _, official_records = load_identity_snapshot(snapshot_path)
+    public_slugs = load_public_slugs(public_slugs_path)
+    audit = audit_school_identities(
+        claims,
+        official_records,
+        load_identity_exceptions(exceptions_path),
+    )
+    audit["errors"].extend(audit_public_slugs(claims, public_slugs))
+    if audit["errors"]:
+        raise ValueError(
+            "Refusing canonical school alias map: "
+            f"{len(audit['errors'])} IPEDS identity claim(s) failed validation"
+        )
+    return canonical_alias_slug_map(claims, official_records, public_slugs)
+
+
+def resolve_canonical_school_id(
+    school_id: Any = None,
+    *,
+    ipeds_id: Any = None,
+    canonical_by_ipeds: dict[str, str] | None = None,
+    canonical_by_alias: dict[str, str] | None = None,
+) -> str:
+    """Resolve a school row to its canonical public slug.
+
+    Prefers the validated IPEDS UNITID mapping from ``public_slugs.yaml`` /
+    ``schools.yaml`` when ``ipeds_id`` is available, then falls back to the
+    alias-to-canonical slug map when only a ``school_id`` slug is present.
+    """
+    normalized_ipeds = normalize_ipeds(ipeds_id)
+    if normalized_ipeds and canonical_by_ipeds:
+        mapped = canonical_by_ipeds.get(normalized_ipeds)
+        if mapped:
+            return mapped
+    raw_slug = str(school_id or "").strip()
+    if raw_slug and canonical_by_alias:
+        return canonical_by_alias.get(raw_slug, raw_slug)
+    return raw_slug
+
+
+_SCHOOL_URL_RE = re.compile(
+    r"^(?P<prefix>(?:https?://(?:www\.)?collegedata\.fyi)?/schools/)"
+    r"(?P<slug>[^/?#]+)"
+    r"(?P<suffix>(?:[/?#].*)?)$"
+)
+
+
+def canonicalize_school_url(
+    url: Any,
+    *,
+    canonical_school_id: str | None = None,
+    canonical_by_alias: dict[str, str] | None = None,
+) -> str:
+    """Rewrite a /schools/<slug> path or collegedata.fyi URL to a canonical slug."""
+    raw_url = str(url or "").strip()
+    if not raw_url:
+        return ""
+    match = _SCHOOL_URL_RE.match(raw_url)
+    if not match:
+        return raw_url
+    current_slug = match.group("slug")
+    target_slug = (
+        str(canonical_school_id).strip()
+        if canonical_school_id
+        else (canonical_by_alias or {}).get(current_slug, current_slug)
+    )
+    if not target_slug:
+        target_slug = current_slug
+    return f"{match.group('prefix')}{target_slug}{match.group('suffix') or ''}"
+
 
 
 def load_identity_snapshot(

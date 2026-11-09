@@ -25,6 +25,15 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Mapping
 
+if __package__ is None or __package__ == "":
+    sys.path.append(str(Path(__file__).resolve().parents[2]))
+
+from tools.finder.identity_guard import (
+    resolve_canonical_school_id,
+    validated_canonical_alias_slug_map,
+    validated_unique_school_claim_slug_map,
+)
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUTPUT = REPO_ROOT / "web/src/lib/alignment-gap-recipe-data.ts"
 SOURCE_API_URL = "https://api.collegedata.fyi"
@@ -82,6 +91,12 @@ def postgrest_get_all(
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument(
+        "--schools-yaml",
+        type=Path,
+        default=REPO_ROOT / "tools/finder/schools.yaml",
+        help="Identity-guarded canonical school slugs keyed by IPEDS UNITID",
+    )
     parser.add_argument("--generated-at", default=date.today().isoformat())
     args = parser.parse_args()
     try:
@@ -100,7 +115,19 @@ def main() -> int:
         return 2
 
     try:
-        artifact = build_artifact(supabase_url, api_key, generated_at=args.generated_at)
+        canonical_school_ids = validated_unique_school_claim_slug_map(
+            schools_path=args.schools_yaml
+        )
+        alias_school_ids = validated_canonical_alias_slug_map(
+            schools_path=args.schools_yaml
+        )
+        artifact = build_artifact(
+            supabase_url,
+            api_key,
+            generated_at=args.generated_at,
+            canonical_school_ids=canonical_school_ids,
+            alias_school_ids=alias_school_ids,
+        )
     except (OSError, ValueError) as exc:
         print(f"error: alignment-gap build failed: {exc}", file=sys.stderr)
         return 2
@@ -123,14 +150,29 @@ def _float(value: Any) -> float | None:
     return number
 
 
-def build_artifact(base_url: str, api_key: str, *, generated_at: str) -> dict[str, Any]:
-    endowment = build_endowment_panel(base_url, api_key, generated_at=generated_at)
+def build_artifact(
+    base_url: str,
+    api_key: str,
+    *,
+    generated_at: str,
+    canonical_school_ids: Mapping[str, str] | None = None,
+    alias_school_ids: Mapping[str, str] | None = None,
+) -> dict[str, Any]:
+    endowment = build_endowment_panel(
+        base_url,
+        api_key,
+        generated_at=generated_at,
+        canonical_school_ids=canonical_school_ids,
+        alias_school_ids=alias_school_ids,
+    )
     merit = build_merit_panel(
         base_url,
         api_key,
         generated_at=generated_at,
         canonical_median_burden=float(endowment["meta"]["medianBurden"]),
         canonical_median_endowment=float(endowment["meta"]["medianEndowmentPerStudent"]),
+        canonical_school_ids=canonical_school_ids,
+        alias_school_ids=alias_school_ids,
     )
     return {
         "meta": endowment["meta"],
@@ -140,7 +182,24 @@ def build_artifact(base_url: str, api_key: str, *, generated_at: str) -> dict[st
     }
 
 
-def build_endowment_panel(base_url: str, api_key: str, *, generated_at: str) -> dict[str, Any]:
+def build_endowment_panel(
+    base_url: str,
+    api_key: str,
+    *,
+    generated_at: str,
+    canonical_school_ids: Mapping[str, str] | None = None,
+    alias_school_ids: Mapping[str, str] | None = None,
+) -> dict[str, Any]:
+    canonical_by_ipeds = (
+        dict(canonical_school_ids)
+        if canonical_school_ids is not None
+        else validated_unique_school_claim_slug_map()
+    )
+    canonical_by_alias = (
+        dict(alias_school_ids)
+        if alias_school_ids is not None
+        else validated_canonical_alias_slug_map()
+    )
     scorecard_rows = postgrest_get_all(
         base_url,
         api_key,
@@ -186,16 +245,30 @@ def build_endowment_panel(base_url: str, api_key: str, *, generated_at: str) -> 
         },
     )
 
-    by_ipeds = {
-        row["ipeds_id"]: row
-        for row in directory_rows
-        if isinstance(row.get("ipeds_id"), str) and row["ipeds_id"]
-    }
+    by_ipeds: dict[str, dict[str, Any]] = {}
+    for row in directory_rows:
+        ipeds_id = row.get("ipeds_id")
+        if not isinstance(ipeds_id, str) or not ipeds_id:
+            continue
+        canonical_id = resolve_canonical_school_id(
+            row.get("school_id"),
+            ipeds_id=ipeds_id,
+            canonical_by_ipeds=canonical_by_ipeds,
+            canonical_by_alias=canonical_by_alias,
+        )
+        by_ipeds[ipeds_id] = {**row, "school_id": canonical_id}
     sat_by_school: dict[str, dict[str, Any]] = {}
     for row in browser_rows:
         if row.get("sub_institutional") or not row.get("school_id"):
             continue
-        sat_by_school.setdefault(row["school_id"], row)
+        canonical_id = resolve_canonical_school_id(
+            row.get("school_id"),
+            ipeds_id=row.get("ipeds_id"),
+            canonical_by_ipeds=canonical_by_ipeds,
+            canonical_by_alias=canonical_by_alias,
+        )
+        if canonical_id:
+            sat_by_school.setdefault(canonical_id, row)
 
     joined: list[dict[str, Any]] = []
     for score in scorecard_rows:
@@ -322,7 +395,19 @@ def build_merit_panel(
     generated_at: str,
     canonical_median_burden: float,
     canonical_median_endowment: float,
+    canonical_school_ids: Mapping[str, str] | None = None,
+    alias_school_ids: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
+    canonical_by_ipeds = (
+        dict(canonical_school_ids)
+        if canonical_school_ids is not None
+        else validated_unique_school_claim_slug_map()
+    )
+    canonical_by_alias = (
+        dict(alias_school_ids)
+        if alias_school_ids is not None
+        else validated_canonical_alias_slug_map()
+    )
     merit_rows = postgrest_get_all(
         base_url,
         api_key,
@@ -373,7 +458,14 @@ def build_merit_panel(
     for row in browser_rows:
         if row.get("sub_institutional") or not row.get("school_id"):
             continue
-        enroll_by_school.setdefault(row["school_id"], row.get("undergrad_enrollment_scorecard"))
+        canonical_id = resolve_canonical_school_id(
+            row.get("school_id"),
+            ipeds_id=row.get("ipeds_id"),
+            canonical_by_ipeds=canonical_by_ipeds,
+            canonical_by_alias=canonical_by_alias,
+        )
+        if canonical_id:
+            enroll_by_school.setdefault(canonical_id, row.get("undergrad_enrollment_scorecard"))
 
     exclusions = {
         "universe": len(merit_rows),
@@ -418,9 +510,15 @@ def build_merit_panel(
         if min(earnings, monthly, completers, net_price) <= 0:
             exclusions["missingScorecard"] += 1
             continue
+        canonical_school_id = resolve_canonical_school_id(
+            row.get("school_id"),
+            ipeds_id=row.get("ipeds_id"),
+            canonical_by_ipeds=canonical_by_ipeds,
+            canonical_by_alias=canonical_by_alias,
+        )
         score = score_by_ipeds.get(row.get("ipeds_id"))
         endowment = _float(score.get("endowment_end")) if score else None
-        undergrad = _float(enroll_by_school.get(row.get("school_id"))) or (
+        undergrad = _float(enroll_by_school.get(canonical_school_id)) or (
             _float(score.get("enrollment")) if score else None
         )
         if not endowment or not undergrad or min(endowment, undergrad) <= 0:
@@ -429,7 +527,7 @@ def build_merit_panel(
         burden = (monthly * 12) / earnings
         joined.append(
             {
-                "schoolId": row["school_id"],
+                "schoolId": canonical_school_id,
                 "schoolName": row["school_name"],
                 "cdsYear": row.get("canonical_year"),
                 "meritShare": share,

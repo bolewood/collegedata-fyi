@@ -417,19 +417,48 @@ class PricingPowerRecipeBuilderTests(unittest.TestCase):
                 admitted=200,
                 enrolled=100,
             )
+            + adm_rows(
+                "233921",
+                school_id="virginia-polytechnic-institute-and-state-university",
+                name="Virginia Polytechnic Institute and State University",
+                applied=52365,
+                admitted=28895,
+                enrolled=7036,
+            )
             + syracuse_facts(),
             directory_rows=[
                 directory_row("168148", "tufts-university", "Tufts University"),
                 directory_row(SYRACUSE_IPEDS_ID, SYRACUSE_SCHOOL_ID, "Syracuse University"),
             ],
-            scorecard_rows=[scorecard_row("168148"), scorecard_row(SYRACUSE_IPEDS_ID)],
-            browser_rows=[],
+            scorecard_rows=[
+                scorecard_row("168148"),
+                scorecard_row("233921"),
+                scorecard_row(SYRACUSE_IPEDS_ID),
+            ],
+            browser_rows=[
+                {
+                    "school_id": "virginia-polytechnic-institute-and-state-university",
+                    "ipeds_id": "",
+                    "canonical_year": "2024-25",
+                    "sub_institutional": None,
+                    "acceptance_rate": 0.5518,
+                    "yield_rate": 0.2435,
+                    "updated_at": "2026-05-25T00:00:00+00:00",
+                }
+            ],
             generated_at="2026-08-31",
-            canonical_school_ids={"168148": "tufts"},
+            canonical_school_ids={"168148": "tufts", "233921": "virginia-tech"},
+            alias_school_ids={
+                "virginia-polytechnic-institute-and-state-university": "virginia-tech",
+            },
             validate=False,
         )
         tufts = next(row for row in artifact["schools"] if row["ipedsId"] == "168148")
         self.assertEqual(tufts["schoolId"], "tufts")
+        vt = next(row for row in artifact["schools"] if row["ipedsId"] == "233921")
+        self.assertEqual(vt["schoolId"], "virginia-tech")
+        self.assertEqual(vt["cdsAcceptanceRate"], 0.5518)
+        self.assertEqual(vt["cdsYieldRate"], 0.2435)
 
     def test_refuses_integer_rounded_rate_fields_in_the_plotted_series(self) -> None:
         rows = syracuse_facts() + [

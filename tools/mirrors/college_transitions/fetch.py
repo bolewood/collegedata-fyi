@@ -36,6 +36,15 @@ SOURCE_URL = "https://www.collegetransitions.com/dataverse/common-data-set-repos
 PROVENANCE_TAG = "mirror_college_transitions"
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from tools.finder.identity_guard import (  # noqa: E402
+    resolve_canonical_school_id,
+    validated_canonical_alias_slug_map,
+    validated_unique_school_claim_slug_map,
+)
+
 SCHOOLS_YAML = REPO_ROOT / "tools" / "finder" / "schools.yaml"
 DEFAULT_OUT = Path(__file__).resolve().parent / "catalog.json"
 
@@ -126,7 +135,23 @@ def build_matcher():
     return match
 
 
-def build_catalog(rows: list[dict], match) -> dict:
+def build_catalog(
+    rows: list[dict],
+    match,
+    *,
+    canonical_by_ipeds: dict[str, str] | None = None,
+    canonical_by_alias: dict[str, str] | None = None,
+) -> dict:
+    by_ipeds = (
+        dict(canonical_by_ipeds)
+        if canonical_by_ipeds is not None
+        else validated_unique_school_claim_slug_map()
+    )
+    by_alias = (
+        dict(canonical_by_alias)
+        if canonical_by_alias is not None
+        else validated_canonical_alias_slug_map()
+    )
     matched, unmatched = [], []
     for row in rows:
         s, score = match(row["school"])
@@ -136,7 +161,12 @@ def build_catalog(rows: list[dict], match) -> dict:
             "years": row["years"],
         }
         if s:
-            record["school_id"] = s["id"]
+            record["school_id"] = resolve_canonical_school_id(
+                s.get("id"),
+                ipeds_id=s.get("ipeds_id"),
+                canonical_by_ipeds=by_ipeds,
+                canonical_by_alias=by_alias,
+            )
             record["school_name"] = s["name"]
             matched.append(record)
         else:
