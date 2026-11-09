@@ -1,7 +1,7 @@
 {
   "source_schema_version": "2024-25",
   "target_schema_version": "2025-26",
-  "generated_at": "2026-04-28T19:05:29Z",
+  "generated_at": "2026-11-09T23:25:59Z",
   "summary": {
     "source_fields": 1083,
     "target_fields": 1105,
@@ -14,8 +14,8 @@
       "preserved-only": 239,
       "unmapped": 30
     },
-    "target_only_fields": 293,
-    "source_schema_pdf_tags_written": 219
+    "target_only_fields": 291,
+    "source_schema_pdf_tags_written": 2
   },
   "academic_profile_fields": {
     "C.901": "direct",
@@ -6332,10 +6332,10 @@
     {
       "field_id": "F.307",
       "question": "Name of Cooperating Institution",
-      "canonical_field_id": "F.302",
+      "canonical_field_id": "F.305",
       "target_question": "Name of Cooperating Institution",
       "equivalence_kind": "direct",
-      "pdf_tag": "ROTC_ARMY_TEXT",
+      "pdf_tag": "ROTC_NAVY_TEXT",
       "schema_version": "2024-25"
     },
     {
@@ -6359,10 +6359,10 @@
     {
       "field_id": "F.310",
       "question": "Name of Cooperating Institution",
-      "canonical_field_id": "F.302",
+      "canonical_field_id": "F.307",
       "target_question": "Name of Cooperating Institution",
       "equivalence_kind": "direct",
-      "pdf_tag": "ROTC_ARMY_TEXT",
+      "pdf_tag": "ROTC_AF_TEXT",
       "schema_version": "2024-25"
     },
     {
@@ -11267,20 +11267,8 @@
       "schema_version": "2025-26"
     },
     {
-      "field_id": "F.305",
-      "question": "Name of Cooperating Institution",
-      "equivalence_kind": "unmapped",
-      "schema_version": "2025-26"
-    },
-    {
       "field_id": "F.306",
       "question": "Air Force ROTC is offered:",
-      "equivalence_kind": "unmapped",
-      "schema_version": "2025-26"
-    },
-    {
-      "field_id": "F.307",
-      "question": "Name of Cooperating Institution",
       "equivalence_kind": "unmapped",
       "schema_version": "2025-26"
     },
