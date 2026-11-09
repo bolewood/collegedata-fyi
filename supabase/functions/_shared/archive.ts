@@ -35,6 +35,7 @@ import {
   isTruncatedWaybackPdf,
   MAX_SOURCE_BYTES,
   objectExists,
+  SOURCES_BUCKET,
   uploadSource,
 } from "./storage.ts";
 import {
@@ -547,6 +548,81 @@ async function sha256Hex(bytes: Uint8Array): Promise<string> {
     .join("");
 }
 
+// --- Shrinking-refresh guard ---
+//
+// A refresh replaces a document's current source with new bytes. When the
+// new PDF is a fraction of a substantial current PDF it is almost always a
+// section file, not a new edition: Utah's seed pointed at
+// CDS_2022-2023-D.pdf, and refreshes swapped a complete 29-page 2022-23 CDS
+// for 2-page Section A and D files (552 -> 26 fields). Hold those refreshes
+// and keep the current source; an operator can still replace it on purpose.
+export const SHRINK_GUARD_MIN_CURRENT_PAGES = 10;
+export const SHRINK_GUARD_MIN_PAGE_RATIO = 0.4;
+
+export function isShrinkingRefresh(
+  currentPages: number | null,
+  newPages: number | null,
+): boolean {
+  if (currentPages == null || newPages == null) return false;
+  return currentPages >= SHRINK_GUARD_MIN_CURRENT_PAGES &&
+    newPages < currentPages * SHRINK_GUARD_MIN_PAGE_RATIO;
+}
+
+export async function pdfPageCount(bytes: Uint8Array): Promise<number | null> {
+  try {
+    const pdf = await PDFDocument.load(bytes, {
+      ignoreEncryption: true,
+      updateMetadata: false,
+    });
+    return pdf.getPageCount();
+  } catch {
+    return null;
+  }
+}
+
+async function storedPdfPageCount(
+  supabase: SupabaseClient,
+  storagePath: string,
+): Promise<number | null> {
+  if (!storagePath.toLowerCase().endsWith(".pdf")) return null;
+  const { data, error } = await supabase.storage.from(SOURCES_BUCKET).download(storagePath);
+  if (error || !data) return null;
+  return await pdfPageCount(new Uint8Array(await data.arrayBuffer()));
+}
+
+// Returns the page counts when the refresh should be held, else null.
+async function shrinkingRefreshHold(
+  supabase: SupabaseClient,
+  currentStoragePath: string | null | undefined,
+  newBytes: Uint8Array,
+): Promise<{ current_pages: number; new_pages: number } | null> {
+  if (!currentStoragePath) return null;
+  const newPages = await pdfPageCount(newBytes);
+  if (newPages == null) return null;
+  const currentPages = await storedPdfPageCount(supabase, currentStoragePath);
+  if (!isShrinkingRefresh(currentPages, newPages)) return null;
+  return { current_pages: currentPages as number, new_pages: newPages };
+}
+
+function logRefreshHeld(
+  schoolId: string,
+  documentId: string,
+  cdsYear: string | null,
+  sourceUrl: string,
+  hold: { current_pages: number; new_pages: number },
+): void {
+  console.log(JSON.stringify({
+    ts: new Date().toISOString(),
+    fn: "archive.ts",
+    event: "refresh_held_shrinking",
+    school_id: schoolId,
+    document_id: documentId,
+    cds_year: cdsYear,
+    candidate_url: sourceUrl,
+    ...hold,
+  }));
+}
+
 export async function buildPdfBundle(
   parts: Pick<DownloadedSectionPart, "section" | "final_url" | "bytes">[],
 ): Promise<Uint8Array> {
@@ -797,6 +873,21 @@ async function archiveSectionPackage(
     };
   }
 
+  if (latestArtifact) {
+    const hold = await shrinkingRefreshHold(supabase, latestArtifact.storage_path, bundleBytes);
+    if (hold) {
+      logRefreshHeld(school.school_id, existing.id, pkg.cds_year, sourceUrl, hold);
+      return {
+        action: "unchanged_verified",
+        document_id: existing.id,
+        cds_year: pkg.cds_year,
+        source_sha256: latestArtifact.sha256,
+        resolved_url: sourceUrl,
+        storage_path: latestArtifact.storage_path,
+      };
+    }
+  }
+
   await ensureObjectUploaded(supabase, bundleStoragePath, bundleBytes, "pdf");
   await refreshDocumentWithNewSha(supabase, {
     document_id: existing.id,
@@ -983,6 +1074,23 @@ async function archiveOneCandidate(
   // wrote the artifact first could leave cds_documents stale forever
   // because the next run would see "same sha" and take the unchanged
   // branch.
+  if (ext === "pdf" && latestArtifact) {
+    const hold = await shrinkingRefreshHold(supabase, latestArtifact.storage_path, bytes);
+    if (hold) {
+      logRefreshHeld(school.school_id, existing.id, resolved.cds_year, sourceUrl, hold);
+      // The document and its current source are untouched (no
+      // bumpVerified: that would repoint source_url at the section file).
+      return {
+        action: "unchanged_verified",
+        document_id: existing.id,
+        cds_year: resolved.cds_year,
+        source_sha256: latestArtifact.sha256,
+        resolved_url: sourceUrl,
+        storage_path: latestArtifact.storage_path,
+      };
+    }
+  }
+
   await ensureObjectUploaded(supabase, storagePath, bytes, ext);
   await refreshDocumentWithNewSha(supabase, {
     document_id: existing.id,
