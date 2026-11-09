@@ -32,7 +32,6 @@ WATCHED_WORKFLOWS = {
     "IPEDS release probe": "ipeds-release-probe.yml",
     "Ops finder probe": "ops-finder-probe.yml",
     "API usage ingest": "ops-api-usage-ingest.yml",
-    "Community feedback notifications": "ops-community-feedback.yml",
     "Ops extraction worker": "ops-extraction-worker.yml",
     "Ops archive seed catchup": "ops-archive-seed-catchup.yml",
     "Ops headless archive": "ops-headless-archive.yml",
@@ -816,8 +815,6 @@ def main(
                 runner=runner,
             )
             messages.extend(api_usage_staleness_messages(latest, state, clock))
-            community = latest_scheduled_run(repo=args.repo, workflow="Community feedback notifications", token=token, runner=runner, success_only=True)
-            messages.extend(api_usage_staleness_messages(community, state, clock, workflow="Community feedback notifications", state_key="community_feedback"))
             save_state(args.state_path, state)
         else:
             print(f"discord notify skipped: unsupported event {args.event_name}")

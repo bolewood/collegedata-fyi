@@ -71,9 +71,8 @@ export default function PrivacyPage() {
 
         <h2 id="feedback" className="serif mt-10 text-2xl">Private feedback</h2>
         <p>The feedback form collects your message and the optional fields you choose to submit. Email is optional unless you ask to discuss being featured. We use reply details only for that conversation, never for a mailing list or marketing.</p>
-        <p>Messages are private, accessible to the maintainer and necessary service providers. They are not sold or included in public exports. A transactional email service sends the maintainer only a count and a private inbox link; your message and contact details stay out of those notifications. We do not automatically email you.</p>
-        <p>Raw messages and reply details expire within 180 days; spam within 30 days. Final publication permission records are kept separately while a story is live and removed within 90 days of withdrawal. Only a separately approved final write-up and credit may be published. Interest in being featured is not permission to publish.</p>
-        <p>Rate protection briefly uses a daily-changing network code, retained for at most 48 hours. Ordinary hosting and security logs are covered below. Feedback traffic is excluded from public college-data API counts.</p>
+        <p>Messages are sent through Formspree to the maintainer and are not sold or included in public college-data exports. Only a separately approved final write-up and credit may be published; interest in being featured is not permission to publish.</p>
+        <p>Final publication permission records are kept separately while a story is live and removed within 90 days of withdrawal. Ordinary hosting and security logs are covered below. Feedback traffic is excluded from public college-data API counts.</p>
         <p>For feedback, privacy questions, or removal requests, email <a href="mailto:contact@bolewood.com">contact@bolewood.com</a>. GitHub is optional and public.</p>
 
         <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>

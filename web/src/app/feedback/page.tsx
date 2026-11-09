@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { FeedbackForm } from "@/components/FeedbackForm";
 import { TrackedLink } from "@/components/TrackedLink";
 import { safeKind, safeSource, FEEDBACK_EMAIL } from "@/lib/community-feedback";
-import { feedbackWritesEnabled } from "@/lib/community-feedback-server";
 import { fetchCanonicalSchoolId, fetchSchoolDocuments } from "@/lib/queries";
 export const metadata: Metadata = {
   title: "Feedback",
@@ -11,7 +10,7 @@ export const metadata: Metadata = {
     "Tell us what helped, what needs fixing, or how you use collegedata.fyi. No account required. Email is optional unless you'd like to discuss being featured.",
   alternates: { canonical: "/feedback" },
   openGraph: { url: "/feedback" },
-  referrer: "no-referrer",
+  referrer: "strict-origin-when-cross-origin",
 };
 export default async function FeedbackPage({
   searchParams,
@@ -56,7 +55,10 @@ export default async function FeedbackPage({
         the data. A sentence is enough. No account needed.
       </p>
       <FeedbackForm
-        enabled={feedbackWritesEnabled()}
+        endpoint={
+          process.env.NEXT_PUBLIC_FEEDBACK_FORMSPREE_ENDPOINT ||
+          process.env.NEXT_PUBLIC_FORMSPREE_ENDPOINT
+        }
         kind={kind}
         from={from}
         school={school}
