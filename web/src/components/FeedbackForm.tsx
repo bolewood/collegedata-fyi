@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   emptyFeedback,
   fieldLimits,
-  submissionIdentity,
+  toFormspreeData,
   validateFeedback,
   type FeedbackPayload,
   type FeedbackKind,
@@ -30,18 +30,22 @@ const modeCopy = {
   ],
 };
 export function FeedbackForm({
-  enabled,
+  endpoint,
   kind,
   from,
   school = "",
   year = "",
 }: {
-  enabled: boolean;
+  endpoint?: string;
   kind: FeedbackKind;
   from: FeedbackSource;
   school?: string;
   year?: string;
 }) {
+  const formspreeEndpoint =
+    endpoint ??
+    process.env.NEXT_PUBLIC_FEEDBACK_FORMSPREE_ENDPOINT ??
+    process.env.NEXT_PUBLIC_FORMSPREE_ENDPOINT;
   const [draft, setDraft] = useState({
     ...emptyFeedback(kind, from),
     school,
@@ -51,11 +55,8 @@ export function FeedbackForm({
   const [sending, setSending] = useState(false);
   const [errors, setErrors] = useState<FeedbackErrors>({});
   const [notice, setNotice] = useState("");
-  const [receipt, setReceipt] = useState("");
+  const [submitted, setSubmitted] = useState(false);
   const [savedInterest, setSavedInterest] = useState(false);
-  const identity = useRef<
-    { serialized: string; requestId: string } | undefined
-  >(undefined);
   const started = useRef(false);
   const inFlight = useRef(false);
   const summary = useRef<HTMLDivElement>(null);
@@ -72,6 +73,12 @@ export function FeedbackForm({
       trackEvent("community_form_started", { kind: draft.kind, from });
     }
     setDraft((d) => ({ ...d, [key]: value }));
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   }
   const inputClass =
     "block w-full mt-2 border border-[var(--rule-strong)] rounded-sm bg-[var(--paper)] px-3 py-2 text-base";
@@ -81,11 +88,13 @@ export function FeedbackForm({
     type = "text",
     help?: string,
   ) {
+    const isIdentifier = type === "email" || type === "url";
     return (
       <div className="my-5">
         <label htmlFor={`feedback-${key}`}>{label}</label>
         <input
           id={`feedback-${key}`}
+          name={key}
           className={inputClass}
           type={type}
           disabled={sending}
@@ -97,6 +106,9 @@ export function FeedbackForm({
           autoComplete={
             key === "email" ? "email" : key === "name" ? "name" : "off"
           }
+          autoCorrect={isIdentifier ? "off" : undefined}
+          autoCapitalize={isIdentifier ? "off" : undefined}
+          spellCheck={isIdentifier ? false : undefined}
           onChange={(e) => edit(key, e.target.value)}
           aria-invalid={!!errors[key]}
           aria-describedby={help || errors[key] ? `${key}-help` : undefined}
@@ -111,7 +123,7 @@ export function FeedbackForm({
   }
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (inFlight.current) return;
+    if (!formspreeEndpoint || inFlight.current) return;
     const payload: FeedbackPayload = {
       ...draft,
       projectUrl: draft.kind === "story" ? draft.projectUrl : "",
@@ -120,9 +132,7 @@ export function FeedbackForm({
         ? { school: "", year: "", field: "", expected: "", sourceUrl: "" }
         : {}),
     };
-    identity.current = submissionIdentity(payload, identity.current);
-    const body = { ...payload, requestId: identity.current.requestId };
-    const checked = validateFeedback(body);
+    const checked = validateFeedback(payload);
     if (!checked.value) {
       setErrors(checked.errors);
       setNotice("Please check the fields below. Your message is still here.");
@@ -136,38 +146,24 @@ export function FeedbackForm({
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 12000);
     try {
-      const response = await fetch("/api/feedback", {
+      const response = await fetch(formspreeEndpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        headers: { Accept: "application/json" },
+        body: toFormspreeData(checked.value),
         signal: controller.signal,
-        referrerPolicy: "no-referrer",
       });
-      const result = await response.json();
-      if (response.ok && typeof result.receipt === "string") {
-        setReceipt(result.receipt);
-        setSavedInterest(payload.featureInterest);
+      if (response.ok) {
+        setSubmitted(true);
+        setSavedInterest(checked.value.featureInterest);
         trackEvent("community_form_saved", { kind: draft.kind, from });
       } else {
-        const category =
-          response.status === 429
-            ? "limited"
-            : response.status === 400
-              ? "invalid"
-              : response.status === 409
-                ? "conflict"
-                : "unavailable";
+        const category = response.status === 429 ? "limited" : "unavailable";
         trackEvent("community_form_error", { category });
-        if (response.status === 400) setErrors(result.fields ?? {});
         // Fixed local copy only; never render upstream/provider error text.
         setNotice(
           category === "limited"
-            ? `You've sent several messages recently. Please try again in ${Math.max(1, Math.ceil(Number(response.headers.get("Retry-After") ?? 600) / 60))} minutes, or email contact@bolewood.com.`
-            : category === "invalid"
-              ? "Please check the fields below. Your message is still here."
-              : category === "conflict"
-                ? "This version couldn't be sent. Your message is still here. Edit it and try again, or email contact@bolewood.com."
-                : "We couldn't send your message right now. It's still here. Please try again, or email contact@bolewood.com.",
+            ? "You've sent several messages recently. Please wait a few minutes and try again, or email contact@bolewood.com."
+            : "We couldn't send your message right now. It's still here. Please try again, or email contact@bolewood.com.",
         );
       }
     } catch {
@@ -181,14 +177,14 @@ export function FeedbackForm({
       inFlight.current = false;
     }
   }
-  if (!enabled)
+  if (!formspreeEndpoint)
     return (
       <p role="status" className="my-6">
         The website form is unavailable right now. You can still send a note to
         contact@bolewood.com.
       </p>
     );
-  if (receipt)
+  if (submitted)
     return (
       <section
         role="status"
@@ -197,8 +193,7 @@ export function FeedbackForm({
       >
         <h2 className="serif text-3xl">Thanks. Your message reached us.</h2>
         <p className="my-4 break-words">
-          Your reference is <span className="mono">{receipt}</span>. If you
-          included an email, we may reply there. We read messages, but
+          If you included an email, we may reply there. We read messages, but
           can&apos;t promise a reply to every one.
         </p>
         {savedInterest && (
@@ -211,139 +206,139 @@ export function FeedbackForm({
       </section>
     );
   return (
-    <>
-      {!enabled && (
-        <p role="status" className="my-6">
-          The website form is unavailable right now. You can still send a note
-          to contact@bolewood.com.
-        </p>
-      )}
-      <form onSubmit={submit} noValidate className="my-8">
-        <div
-          ref={summary}
-          tabIndex={-1}
-          role={notice ? "alert" : undefined}
-          className="mb-5 focus:outline-2 focus:outline-[var(--forest)]"
-        >
-          {notice}
-          <ul>
-            {Object.entries(errors).map(([key, error]) => (
-              <li key={key}>
-                <a href={`#feedback-${key}`}>{error}</a>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <fieldset disabled={sending}>
-          <legend className="font-medium">What would you like to share?</legend>
-          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-3">
-            {(Object.keys(modeCopy) as FeedbackKind[]).map((k) => (
-              <label key={k} className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  className="accent-[var(--forest)]"
-                  name="kind"
-                  value={k}
-                  checked={draft.kind === k}
-                  onChange={() => edit("kind", k)}
-                />
-                {modeCopy[k][0]}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        <div className="my-6">
-          <label htmlFor="feedback-message">{modeCopy[draft.kind][1]}</label>
-          <p id="message-help" className="mt-2 text-sm">
-            {modeCopy[draft.kind][2]}
-          </p>
-          <textarea
-            id="feedback-message"
-            className={inputClass}
-            rows={6}
-            disabled={sending}
-            required
-            maxLength={4000}
-            value={draft.message}
-            onChange={(e) => edit("message", e.target.value)}
-            aria-invalid={!!errors.message}
-            aria-describedby={`message-help${errors.message ? " message-error" : ""}`}
-          />
-          {errors.message && <p id="message-error">{errors.message}</p>}
-        </div>
-        {field(
-          "email",
-          draft.kind === "story" && draft.featureInterest
-            ? "Email"
-            : "Email (optional)",
-          "email",
-          draft.kind === "story" && draft.featureInterest
-            ? "Add an email so we can discuss the story with you."
-            : "Add your email if you'd like a reply. We'll use it only for this conversation.",
-        )}
-        {draft.kind === "story" && (
-          <>
-            {field(
-              "projectUrl",
-              "Project or publication link (optional)",
-              "url",
-            )}
-            <label className="flex items-start gap-3">
+    <form
+      onSubmit={submit}
+      method="POST"
+      action={formspreeEndpoint}
+      noValidate
+      className="my-8"
+    >
+      <div
+        ref={summary}
+        tabIndex={-1}
+        role={notice ? "alert" : undefined}
+        className="mb-5 focus:outline-2 focus:outline-[var(--forest)]"
+      >
+        {notice}
+        <ul>
+          {Object.entries(errors).map(([key, error]) => (
+            <li key={key}>
+              <a href={`#feedback-${key}`}>{error}</a>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <fieldset disabled={sending}>
+        <legend className="font-medium">What would you like to share?</legend>
+        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-3">
+          {(Object.keys(modeCopy) as FeedbackKind[]).map((k) => (
+            <label key={k} className="flex items-center gap-2">
               <input
-                className="mt-1 accent-[var(--forest)]"
-                type="checkbox"
-                disabled={sending}
-                checked={draft.featureInterest}
-                onChange={(e) => edit("featureInterest", e.target.checked)}
+                type="radio"
+                className="accent-[var(--forest)]"
+                name="kind"
+                value={k}
+                checked={draft.kind === k}
+                onChange={() => edit("kind", k)}
               />
-              I&apos;m interested in being featured on the site.
+              {modeCopy[k][0]}
             </label>
-            <p className="mt-2 text-sm">
-              We&apos;ll ask you to approve the write-up and how you&apos;re
-              credited before anything is published.
-            </p>
-          </>
-        )}
-        {draft.kind === "data_issue" && (
-          <>
-            {field("school", "School (optional)")}
-            {field("year", "Report year (optional)")}
-            {field("field", "Field or section (optional)")}
-            {field("expected", "What you expected (optional)")}
-            {field("sourceUrl", "Source link (optional)", "url")}
-          </>
-        )}
-        <details className="my-6">
-          <summary>Optional details</summary>
-          {field("name", "Name or organization (optional)")}
-        </details>
-        <p className="my-4 text-sm">
-          Your message is private. Please leave out student names, grades, test
-          scores, financial details, and other sensitive information.{" "}
-          <a href="/privacy#feedback">How we handle feedback</a>.
+          ))}
+        </div>
+      </fieldset>
+      <div className="my-6">
+        <label htmlFor="feedback-message">{modeCopy[draft.kind][1]}</label>
+        <p id="message-help" className="mt-2 text-sm">
+          {modeCopy[draft.kind][2]}
         </p>
-        <p className="my-4 text-sm">
-          We keep messages and reply contact details for up to 180 days.
-          Approved publication permissions are kept separately while a story is
-          featured. See the privacy page for details.
-        </p>
-        <button
-          className="cd-btn"
-          disabled={!ready || !enabled || sending}
-          type="submit"
-        >
-          {sending ? "Sending your message…" : "Send message"}
-        </button>
-        <span role="status" aria-live="polite" className="ml-3">
-          {sending ? "Sending your message…" : ""}
-        </span>
-        <noscript>
-          <p className="my-4">
-            The website form needs JavaScript. Please use the email link below
-            to send your note.
+        <textarea
+          id="feedback-message"
+          name="message"
+          className={inputClass}
+          rows={6}
+          disabled={sending}
+          required
+          maxLength={4000}
+          value={draft.message}
+          onChange={(e) => edit("message", e.target.value)}
+          aria-invalid={!!errors.message}
+          aria-describedby={`message-help${errors.message ? " message-error" : ""}`}
+        />
+        {errors.message && <p id="message-error">{errors.message}</p>}
+      </div>
+      {field(
+        "email",
+        draft.kind === "story" && draft.featureInterest
+          ? "Email"
+          : "Email (optional)",
+        "email",
+        draft.kind === "story" && draft.featureInterest
+          ? "Add an email so we can discuss the story with you."
+          : "Add your email if you'd like a reply. We'll use it only for this conversation.",
+      )}
+      {draft.kind === "story" && (
+        <>
+          {field(
+            "projectUrl",
+            "Project or publication link (optional)",
+            "url",
+          )}
+          <label className="flex items-start gap-3">
+            <input
+              id="feedback-featureInterest"
+              name="feature_interest"
+              className="mt-1 accent-[var(--forest)]"
+              type="checkbox"
+              disabled={sending}
+              checked={draft.featureInterest}
+              onChange={(e) => edit("featureInterest", e.target.checked)}
+            />
+            I&apos;m interested in being featured on the site.
+          </label>
+          <p className="mt-2 text-sm">
+            We&apos;ll ask you to approve the write-up and how you&apos;re
+            credited before anything is published.
           </p>
-        </noscript>
-      </form>
-    </>
+        </>
+      )}
+      {draft.kind === "data_issue" && (
+        <>
+          {field("school", "School (optional)")}
+          {field("year", "Report year (optional)")}
+          {field("field", "Field or section (optional)")}
+          {field("expected", "What you expected (optional)")}
+          {field("sourceUrl", "Source link (optional)", "url")}
+        </>
+      )}
+      <details className="my-6">
+        <summary>Optional details</summary>
+        {field("name", "Name or organization (optional)")}
+      </details>
+      <p className="my-4 text-sm">
+        Your message is private. Please leave out student names, grades, test
+        scores, financial details, and other sensitive information.{" "}
+        <a href="/privacy#feedback">How we handle feedback</a>.
+      </p>
+      <p className="my-4 text-sm">
+        Approved publication permissions are kept separately while a story is
+        featured. See the privacy page for details.
+      </p>
+      <button
+        className="cd-btn"
+        disabled={!ready || sending}
+        type="submit"
+      >
+        {sending ? "Sending your message…" : "Send message"}
+      </button>
+      <span role="status" aria-live="polite" className="ml-3">
+        {sending ? "Sending your message…" : ""}
+      </span>
+      <noscript>
+        <p className="my-4">
+          The website form needs JavaScript. Please use the email link below
+          to send your note.
+        </p>
+      </noscript>
+    </form>
   );
 }

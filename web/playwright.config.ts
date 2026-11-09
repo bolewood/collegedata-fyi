@@ -30,6 +30,9 @@ export default defineConfig({
         timeout: 120_000,
         env: {
           PORT: String(port),
+          NEXT_PUBLIC_FEEDBACK_FORMSPREE_ENDPOINT:
+            process.env.NEXT_PUBLIC_FEEDBACK_FORMSPREE_ENDPOINT ??
+            "https://formspree.io/f/testform",
         },
       },
   projects: [

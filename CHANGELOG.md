@@ -6,6 +6,16 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.19.12] - 2026-11-09
+
+### Fixed
+
+- `/feedback` now submits `FormData` directly from the browser to Formspree
+  (reading `NEXT_PUBLIC_FEEDBACK_FORMSPREE_ENDPOINT` with fallback to
+  `NEXT_PUBLIC_FORMSPREE_ENDPOINT`), matching `SubmissionForm.tsx`. Removed the
+  server-side `/api/feedback` route, database queue tests, and hourly
+  `notify_feedback.py` cron workflow.
+
 ## [0.6.19.11] - 2026-11-09
 
 ### Fixed

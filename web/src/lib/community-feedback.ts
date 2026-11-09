@@ -30,8 +30,7 @@ export type FeedbackPayload = {
   expected: string;
   sourceUrl: string;
 };
-export type FeedbackRequest = FeedbackPayload & { requestId: string };
-export type FeedbackErrors = Partial<Record<keyof FeedbackRequest, string>>;
+export type FeedbackErrors = Partial<Record<keyof FeedbackPayload, string>>;
 export const fieldLimits = {
   message: 4000,
   email: 254,
@@ -64,7 +63,7 @@ export function safeHttpUrl(value: string): boolean {
   }
 }
 export function validateFeedback(input: unknown): {
-  value?: FeedbackRequest;
+  value?: FeedbackPayload;
   errors: FeedbackErrors;
 } {
   const errors: FeedbackErrors = {};
@@ -76,7 +75,6 @@ export function validateFeedback(input: unknown): {
     };
   const data = input as Record<string, unknown>;
   const keys = [
-    "requestId",
     "kind",
     "from",
     "featureInterest",
@@ -88,18 +86,11 @@ export function validateFeedback(input: unknown): {
   for (const [key, limit] of Object.entries(fieldLimits)) {
     const v = data[key];
     if (typeof v !== "string" || v.trim().length > limit || /\u0000/.test(v))
-      errors[key as keyof FeedbackRequest] = `Use at most ${limit} characters.`;
+      errors[key as keyof FeedbackPayload] = `Use at most ${limit} characters.`;
     else cleaned[key] = v.trim();
   }
   if (!cleaned.message && !errors.message)
     errors.message = "Add a message. A sentence is enough.";
-  if (
-    typeof data.requestId !== "string" ||
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      data.requestId,
-    )
-  )
-    errors.requestId = "Please reload the form and try again.";
   if (!feedbackKinds.includes(data.kind as FeedbackKind))
     errors.kind = "Choose a message type.";
   if (!feedbackSources.includes(data.from as FeedbackSource))
@@ -130,11 +121,10 @@ export function validateFeedback(input: unknown): {
   return {
     value: {
       ...cleaned,
-      requestId: data.requestId,
       kind: data.kind,
       from: data.from,
       featureInterest: data.featureInterest,
-    } as FeedbackRequest,
+    } as FeedbackPayload,
     errors,
   };
 }
@@ -157,14 +147,34 @@ export function emptyFeedback(
     sourceUrl: "",
   };
 }
-/** The payload, not a UI edit count, defines retry identity. Kept only in memory. */
-export function submissionIdentity(
-  payload: FeedbackPayload,
-  previous?: { serialized: string; requestId: string },
-  uuid = () => crypto.randomUUID(),
-) {
-  const serialized = JSON.stringify(payload);
-  return previous?.serialized === serialized
-    ? previous
-    : { serialized, requestId: uuid() };
+export function feedbackSubject(payload: FeedbackPayload): string {
+  if (payload.kind === "story") return "[Story] collegedata.fyi";
+  if (payload.kind === "data_issue") {
+    const target = payload.school || "collegedata.fyi";
+    return payload.year
+      ? `[Data issue] ${target} (${payload.year})`
+      : `[Data issue] ${target}`;
+  }
+  return "[Feedback] collegedata.fyi";
+}
+export function toFormspreeData(payload: FeedbackPayload): FormData {
+  const formData = new FormData();
+  formData.set("_subject", feedbackSubject(payload));
+  formData.set("kind", payload.kind);
+  formData.set("from", payload.from);
+  formData.set("message", payload.message);
+  if (payload.email) formData.set("email", payload.email);
+  if (payload.name) formData.set("name", payload.name);
+  if (payload.kind === "story") {
+    formData.set("feature_interest", payload.featureInterest ? "yes" : "no");
+    if (payload.projectUrl) formData.set("project_url", payload.projectUrl);
+  }
+  if (payload.kind === "data_issue") {
+    if (payload.school) formData.set("school", payload.school);
+    if (payload.year) formData.set("year", payload.year);
+    if (payload.field) formData.set("field", payload.field);
+    if (payload.expected) formData.set("expected", payload.expected);
+    if (payload.sourceUrl) formData.set("source_url", payload.sourceUrl);
+  }
+  return formData;
 }
