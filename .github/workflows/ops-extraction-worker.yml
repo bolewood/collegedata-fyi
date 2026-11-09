@@ -151,32 +151,6 @@ jobs:
           } > .env.ops
           chmod 600 .env.ops
 
-          if [[ -n "${INPUT_REQUEUE_DOCUMENT_IDS}" ]]; then
-          python - <<'PY'
-          import os
-          from supabase import create_client
-
-          url = os.environ["SUPABASE_URL"]
-          key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
-          document_ids = [
-              value.strip()
-              for value in os.environ["INPUT_REQUEUE_DOCUMENT_IDS"].split(",")
-              if value.strip()
-          ]
-          client = create_client(url, key)
-          changed = 0
-          for document_id in document_ids:
-              result = (
-                  client.table("cds_documents")
-                  .update({"extraction_status": "extraction_pending"})
-                  .eq("id", document_id)
-                  .execute()
-              )
-              changed += len(result.data or [])
-          print(f"Requeued {changed} document(s).")
-          PY
-          fi
-
           args=(
             --env .env.ops
             --limit "${INPUT_LIMIT}"
@@ -200,6 +174,11 @@ jobs:
           fi
           if [[ -n "${INPUT_DOCUMENT_IDS}" ]]; then
             args+=(--document-ids "${INPUT_DOCUMENT_IDS}")
+          fi
+          if [[ -n "${INPUT_REQUEUE_DOCUMENT_IDS}" ]]; then
+            # Re-extract in place: the worker selects these ids whatever
+            # their status and leaves served data alone until each finishes.
+            args+=(--requeue-document-ids "${INPUT_REQUEUE_DOCUMENT_IDS}" --force-reextract)
           fi
           if [[ -n "${INPUT_MIN_YEAR_START}" ]]; then
             args+=(--min-year-start "${INPUT_MIN_YEAR_START}")
