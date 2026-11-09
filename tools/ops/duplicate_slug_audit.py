@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """Read-only audit for active cds_documents filed under non-canonical alias slugs.
 
-Queries institution_slug_crosswalk and active cds_documents (removed_at IS NULL),
-lists any active document whose school_id is an alias that maps to a different
-canonical school_id, and classifies whether the canonical school_id already has
-an active document for the same year and/or with the same source_sha256.
+Queries institution_slug_crosswalk, institution_directory, and active
+cds_documents (removed_at IS NULL), resolves canonical school_id by joining
+institution_slug_crosswalk.ipeds_id -> institution_directory.school_id, lists
+any active document whose school_id matches a crosswalk alias that differs from
+its canonical institution_directory.school_id, and classifies whether the
+canonical school_id already has an active document for the same year and/or
+with the same source_sha256.
 
 Exits 0 when no alias-filed active documents exist, 1 when any are found, and 2
-on configuration or transport errors.
+on configuration, HTTP, or query errors.
 """
 
 from __future__ import annotations
@@ -44,6 +47,25 @@ def load_env(path: Path) -> None:
         os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
+def _worktree_main_repo_env(repo_root: Path) -> Path | None:
+    git_entry = repo_root / ".git"
+    if not git_entry.is_file():
+        return None
+    try:
+        raw = git_entry.read_text(encoding="utf-8").strip()
+    except OSError:
+        return None
+    if not raw.startswith("gitdir:"):
+        return None
+    gitdir_str = raw.split(":", 1)[1].strip()
+    gitdir_path = Path(gitdir_str)
+    if not gitdir_path.is_absolute():
+        gitdir_path = (repo_root / gitdir_path).resolve()
+    if gitdir_path.parent.name == "worktrees" and gitdir_path.parent.parent.name == ".git":
+        return gitdir_path.parent.parent.parent / ".env"
+    return None
+
+
 def fetch_all_rows(
     client: SupabaseClient,
     table: str,
@@ -71,8 +93,19 @@ def fetch_slug_crosswalk(client: SupabaseClient) -> list[dict[str, Any]]:
         client,
         "institution_slug_crosswalk",
         {
-            "select": "alias,school_id,ipeds_id,is_primary,alias_type",
-            "order": "alias.asc,school_id.asc",
+            "select": "ipeds_id,alias,source",
+            "order": "alias.asc,ipeds_id.asc",
+        },
+    )
+
+
+def fetch_institution_directory(client: SupabaseClient) -> list[dict[str, Any]]:
+    return fetch_all_rows(
+        client,
+        "institution_directory",
+        {
+            "select": "ipeds_id,school_id,aliases",
+            "order": "ipeds_id.asc",
         },
     )
 
@@ -95,45 +128,32 @@ def fetch_active_documents(client: SupabaseClient) -> list[dict[str, Any]]:
 
 def build_alias_to_canonical_map(
     crosswalk_rows: Iterable[Mapping[str, Any]],
+    directory_rows: Iterable[Mapping[str, Any]],
 ) -> dict[str, str]:
-    """Return alias -> canonical school_id for non-canonical crosswalk aliases."""
-    rows = list(crosswalk_rows)
-    canonical_school_ids = {
-        str(row.get("school_id") or "").strip()
-        for row in rows
-        if str(row.get("school_id") or "").strip()
-    }
-    by_alias: dict[str, list[Mapping[str, Any]]] = {}
-    for row in rows:
-        alias = str(row.get("alias") or "").strip()
+    """Return alias -> canonical school_id by joining crosswalk.ipeds_id -> institution_directory.school_id."""
+    canonical_by_ipeds: dict[str, str] = {}
+    for row in directory_rows:
+        ipeds_id = str(row.get("ipeds_id") or "").strip()
         school_id = str(row.get("school_id") or "").strip()
-        if not alias or not school_id:
+        if ipeds_id and school_id:
+            canonical_by_ipeds[ipeds_id] = school_id
+
+    canonical_school_ids = set(canonical_by_ipeds.values())
+    targets_by_alias: dict[str, set[str]] = {}
+    for row in crosswalk_rows:
+        alias = str(row.get("alias") or "").strip()
+        ipeds_id = str(row.get("ipeds_id") or "").strip()
+        canonical_school_id = canonical_by_ipeds.get(ipeds_id, "")
+        if not alias or not canonical_school_id:
             continue
-        by_alias.setdefault(alias, []).append(row)
+        if alias == canonical_school_id or alias in canonical_school_ids:
+            continue
+        targets_by_alias.setdefault(alias, set()).add(canonical_school_id)
 
     alias_map: dict[str, str] = {}
-    for alias, matches in sorted(by_alias.items()):
-        if alias in canonical_school_ids:
-            continue
-        primary_targets = {
-            str(row.get("school_id") or "").strip()
-            for row in matches
-            if row.get("is_primary") is True and str(row.get("school_id") or "").strip()
-        }
-        if len(primary_targets) == 1:
-            target = next(iter(primary_targets))
-            if target != alias:
-                alias_map[alias] = target
-            continue
-        if len(primary_targets) > 1:
-            continue
-        distinct_targets = {
-            str(row.get("school_id") or "").strip()
-            for row in matches
-            if str(row.get("school_id") or "").strip()
-        }
-        if len(distinct_targets) == 1:
-            target = next(iter(distinct_targets))
+    for alias, targets in sorted(targets_by_alias.items()):
+        if len(targets) == 1:
+            target = next(iter(targets))
             if target != alias:
                 alias_map[alias] = target
     return alias_map
@@ -155,6 +175,7 @@ def _sub_institutional_key(doc: Mapping[str, Any]) -> str:
 def classify_alias_documents(
     documents: Iterable[Mapping[str, Any]],
     crosswalk_rows: Iterable[Mapping[str, Any]],
+    directory_rows: Iterable[Mapping[str, Any]],
 ) -> dict[str, Any]:
     """Identify and classify active cds_documents filed under alias slugs."""
     active_docs = [
@@ -162,7 +183,7 @@ def classify_alias_documents(
         for doc in documents
         if doc.get("removed_at") is None and str(doc.get("school_id") or "").strip()
     ]
-    alias_to_canonical = build_alias_to_canonical_map(crosswalk_rows)
+    alias_to_canonical = build_alias_to_canonical_map(crosswalk_rows, directory_rows)
 
     docs_by_school: dict[str, list[dict[str, Any]]] = {}
     for doc in active_docs:
@@ -305,6 +326,9 @@ def main(argv: list[str] | None = None) -> int:
     load_env(args.env)
     if args.env == REPO_ROOT / ".env":
         load_env(REPO_ROOT.parent / ".env")
+        worktree_env = _worktree_main_repo_env(REPO_ROOT)
+        if worktree_env is not None:
+            load_env(worktree_env)
 
     supabase_url = os.environ.get("SUPABASE_URL", "").strip()
     service_role_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
@@ -318,12 +342,17 @@ def main(argv: list[str] | None = None) -> int:
     client = SupabaseClient(supabase_url, service_role_key)
     try:
         crosswalk_rows = fetch_slug_crosswalk(client)
+        directory_rows = fetch_institution_directory(client)
         documents = fetch_active_documents(client)
-    except OpsError as exc:
+        if not crosswalk_rows:
+            raise OpsError("institution_slug_crosswalk query returned 0 rows")
+        if not directory_rows:
+            raise OpsError("institution_directory query returned 0 rows")
+    except (OpsError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
-    report = classify_alias_documents(documents, crosswalk_rows)
+    report = classify_alias_documents(documents, crosswalk_rows, directory_rows)
     if args.json:
         print(json.dumps(report, indent=2, sort_keys=True))
     else:

@@ -6,105 +6,83 @@ import io
 import json
 import os
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from unittest.mock import patch
 
 from tools.ops import duplicate_slug_audit as audit
 
 
+DIRECTORY_FIXTURE = [
+    {"ipeds_id": "233921", "school_id": "virginia-tech", "aliases": []},
+    {"ipeds_id": "110404", "school_id": "caltech", "aliases": []},
+    {"ipeds_id": "160755", "school_id": "tulane-university", "aliases": []},
+    {"ipeds_id": "144050", "school_id": "uchicago", "aliases": []},
+    {"ipeds_id": "100001", "school_id": "school-a", "aliases": []},
+    {"ipeds_id": "100002", "school_id": "school-b", "aliases": []},
+]
+
+# Real schema: institution_slug_crosswalk(ipeds_id, alias, source), PK (ipeds_id, alias).
 CROSSWALK_FIXTURE = [
+    # Canonical slugs may appear as their own alias; they must never be flagged.
+    {"ipeds_id": "233921", "alias": "virginia-tech", "source": "directory"},
     {
-        "alias": "virginia-tech",
-        "school_id": "virginia-tech",
         "ipeds_id": "233921",
-        "is_primary": True,
-        "alias_type": "canonical",
-    },
-    {
         "alias": "virginia-polytechnic-institute-and-state-university",
-        "school_id": "virginia-tech",
-        "ipeds_id": "233921",
-        "is_primary": False,
-        "alias_type": "retired_slug",
+        "source": "retired_alias",
     },
+    {"ipeds_id": "110404", "alias": "caltech", "source": "directory"},
     {
-        "alias": "caltech",
-        "school_id": "caltech",
         "ipeds_id": "110404",
-        "is_primary": True,
-        "alias_type": "canonical",
-    },
-    {
         "alias": "california-institute-of-technology",
-        "school_id": "caltech",
-        "ipeds_id": "110404",
-        "is_primary": False,
-        "alias_type": "retired_slug",
+        "source": "retired_alias",
     },
+    {"ipeds_id": "160755", "alias": "tulane-university", "source": "directory"},
     {
-        "alias": "tulane-university",
-        "school_id": "tulane-university",
         "ipeds_id": "160755",
-        "is_primary": True,
-        "alias_type": "canonical",
-    },
-    {
         "alias": "tulane-university-of-louisiana",
-        "school_id": "tulane-university",
-        "ipeds_id": "160755",
-        "is_primary": False,
-        "alias_type": "retired_slug",
+        "source": "retired_alias",
     },
-    {
-        "alias": "uchicago",
-        "school_id": "uchicago",
-        "ipeds_id": "144050",
-        "is_primary": True,
-        "alias_type": "canonical",
-    },
-    {
-        "alias": "university-of-chicago",
-        "school_id": "uchicago",
-        "ipeds_id": "144050",
-        "is_primary": False,
-        "alias_type": "retired_slug",
-    },
-    # Shared nickname collision with no unique primary should not guess
-    {
-        "alias": "ambiguous-alias",
-        "school_id": "school-a",
-        "ipeds_id": "100001",
-        "is_primary": False,
-        "alias_type": "nickname",
-    },
-    {
-        "alias": "ambiguous-alias",
-        "school_id": "school-b",
-        "ipeds_id": "100002",
-        "is_primary": False,
-        "alias_type": "nickname",
-    },
+    {"ipeds_id": "144050", "alias": "uchicago", "source": "directory"},
+    {"ipeds_id": "144050", "alias": "university-of-chicago", "source": "retired_alias"},
+    # Same alias claimed by two institutions must not be guessed.
+    {"ipeds_id": "100001", "alias": "ambiguous-alias", "source": "nickname"},
+    {"ipeds_id": "100002", "alias": "ambiguous-alias", "source": "nickname"},
+    # Alias whose ipeds_id has no directory row cannot be resolved.
+    {"ipeds_id": "999999", "alias": "orphan-alias", "source": "nickname"},
 ]
 
 
 class FakeClient:
-    def __init__(self, crosswalk_rows, document_rows) -> None:
+    def __init__(self, crosswalk_rows, document_rows, directory_rows=None) -> None:
         self.crosswalk_rows = list(crosswalk_rows)
         self.document_rows = list(document_rows)
+        self.directory_rows = list(
+            DIRECTORY_FIXTURE if directory_rows is None else directory_rows
+        )
         self.calls = []
 
     def rest_get(self, table: str, params: dict[str, str], *, page=None):
         self.calls.append((table, params, page))
         if table == "institution_slug_crosswalk":
             return self.crosswalk_rows
+        if table == "institution_directory":
+            return self.directory_rows
         if table == "cds_documents":
             return self.document_rows
         raise AssertionError(f"Unexpected table {table}")
 
 
+class RaisingClient:
+    def rest_get(self, table: str, params: dict[str, str], *, page=None):
+        raise audit.OpsError(
+            "GET /rest/v1/institution_slug_crosswalk failed with HTTP 400: "
+            "column institution_slug_crosswalk.alias_type does not exist"
+        )
+
+
 class DuplicateSlugAuditTests(unittest.TestCase):
     def test_build_alias_to_canonical_map_excludes_canonicals_and_ambiguous_aliases(self) -> None:
-        alias_map = audit.build_alias_to_canonical_map(CROSSWALK_FIXTURE)
+        alias_map = audit.build_alias_to_canonical_map(CROSSWALK_FIXTURE, DIRECTORY_FIXTURE)
         self.assertEqual(
             alias_map,
             {
@@ -196,7 +174,9 @@ class DuplicateSlugAuditTests(unittest.TestCase):
             },
         ]
 
-        report = audit.classify_alias_documents(documents, CROSSWALK_FIXTURE)
+        report = audit.classify_alias_documents(
+            documents, CROSSWALK_FIXTURE, DIRECTORY_FIXTURE
+        )
         self.assertEqual(report["duplicate_count"], 4)
         self.assertEqual(
             report["by_classification"],
@@ -290,6 +270,41 @@ class DuplicateSlugAuditTests(unittest.TestCase):
         ):
             self.assertEqual(audit.main(["--json"]), 1)
         self.assertEqual(json.loads(dirty_out.getvalue())["duplicate_count"], 1)
+
+    def test_main_exits_two_on_http_or_query_errors(self) -> None:
+        env = {
+            "SUPABASE_URL": "https://project.supabase.co",
+            "SUPABASE_SERVICE_ROLE_KEY": "service-role-key",
+        }
+        with (
+            patch.dict(os.environ, env, clear=False),
+            patch(
+                "tools.ops.duplicate_slug_audit.SupabaseClient",
+                return_value=RaisingClient(),
+            ),
+            redirect_stdout(io.StringIO()) as out,
+            redirect_stderr(io.StringIO()) as err,
+        ):
+            self.assertEqual(audit.main(["--json"]), 2)
+        self.assertEqual(out.getvalue(), "")
+        self.assertIn("alias_type", err.getvalue())
+
+    def test_main_exits_two_when_directory_or_crosswalk_is_empty(self) -> None:
+        env = {
+            "SUPABASE_URL": "https://project.supabase.co",
+            "SUPABASE_SERVICE_ROLE_KEY": "service-role-key",
+        }
+        for crosswalk, directory in (([], DIRECTORY_FIXTURE), (CROSSWALK_FIXTURE, [])):
+            with (
+                patch.dict(os.environ, env, clear=False),
+                patch(
+                    "tools.ops.duplicate_slug_audit.SupabaseClient",
+                    return_value=FakeClient(crosswalk, [], directory),
+                ),
+                redirect_stdout(io.StringIO()),
+                redirect_stderr(io.StringIO()),
+            ):
+                self.assertEqual(audit.main(["--json"]), 2)
 
 
 if __name__ == "__main__":
