@@ -31,7 +31,9 @@ Supabase gateway logs; see [Gateway usage (PRD 032)](#gateway-usage-prd-032).
 
 ## What gets logged
 
-Requests are recorded in `public.api_usage_events`.
+Requests are recorded in `public.api_usage_events`. Rows are kept 400 days;
+the hourly gateway ingest calls `api_usage_prune()`, which deletes older rows
+(migration `20261109120000_api_usage_events_prune.sql`).
 
 The table stores only coarse metadata:
 
