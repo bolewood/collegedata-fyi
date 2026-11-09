@@ -268,7 +268,7 @@ It does not cover the schools' own pages, PDFs, trademarks or quoted excerpts; t
 - **API (`scholarship_directory` view):** every row carries `license` (`CC-BY-SA-4.0`) and `attribution` columns, so a client that copies rows copies the credit. The API docs page shows the string and asks API users to display it.
 - **Each record's own page section / card:** a footer line, "Data CC BY-SA 4.0 · collegedata.fyi · how to cite", linking to the methodology page.
 - **`/methodology/scholarships`:** a "Reuse and credit" section with the string, the share-alike explanation in plain language, and a citation block (APA/BibTeX).
-- **`CITATION.cff`** at the repo root, extended to cite the scholarship dataset, so GitHub's "Cite this repository" shows it.
+- **`CITATION.cff`** (new) at the repo root, citing the archive and the scholarship dataset, so GitHub's "Cite this repository" shows it.
 
 **Watching for reuse.** No technical enforcement such as rate limits or watermarks: that would conflict with keeping the data open. Instead:
 - The JSON download carries a per-version `dataset_id`.
