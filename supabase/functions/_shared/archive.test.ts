@@ -2,6 +2,8 @@ import { assertEquals, assertFalse, assertRejects } from "jsr:@std/assert";
 import { PDFDocument } from "npm:pdf-lib@1.17.1";
 import {
   buildPdfBundle,
+  isShrinkingRefresh,
+  pdfPageCount,
   PermanentError,
   sectionPartsMatchSourceNotes,
 } from "./archive.ts";
@@ -140,4 +142,25 @@ Deno.test("invalid section input maps to wrong_content_type", async () => {
   );
 
   assertEquals(error.category, "wrong_content_type");
+});
+
+Deno.test("isShrinkingRefresh holds a section file replacing a full CDS", () => {
+  // Utah 2022-23: complete 29-page CDS vs 2-page Section A / D files.
+  assertEquals(isShrinkingRefresh(29, 2), true);
+  assertEquals(isShrinkingRefresh(29, 11), true);
+});
+
+Deno.test("isShrinkingRefresh allows normal re-publications", () => {
+  assertEquals(isShrinkingRefresh(29, 28), false); // minor edit
+  assertEquals(isShrinkingRefresh(29, 12), false); // at the 40% line
+  assertEquals(isShrinkingRefresh(29, 45), false); // grew
+  assertEquals(isShrinkingRefresh(6, 1), false); // current file too small to judge
+  assertEquals(isShrinkingRefresh(null, 2), false); // unknown current pages
+  assertEquals(isShrinkingRefresh(29, null), false); // new file not a readable PDF
+});
+
+Deno.test("pdfPageCount counts pages and returns null for non-PDF bytes", async () => {
+  const sizes: [number, number][] = [[100, 100], [100, 100], [100, 100]];
+  assertEquals(await pdfPageCount(await pdfWithPageSizes(sizes)), 3);
+  assertEquals(await pdfPageCount(new TextEncoder().encode("<html></html>")), null);
 });

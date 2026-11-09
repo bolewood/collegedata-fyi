@@ -6,6 +6,18 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.19.11] - 2026-11-09
+
+### Fixed
+
+- The archiver no longer lets a section file replace a complete CDS. A
+  refresh now holds back (and logs `refresh_held_shrinking`) when the new
+  PDF has under 40% of the pages of a current PDF that has 10 or more pages.
+  Utah's discovery seed pointed at `CDS_2022-2023-D.pdf`, and refreshes
+  swapped a complete 29-page 2022-23 CDS for 2-page Section A and D files,
+  dropping that year from 552 to 26 fields. Held refreshes leave the
+  document and its `source_url` untouched. Operator uploads through
+  `archive-upload` still replace on purpose.
 ## [0.6.19.10] - 2026-11-09
 
 ### Fixed
