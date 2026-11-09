@@ -10,6 +10,29 @@ This project uses four-part semantic versioning.
 
 ### Fixed
 
+- Schools that republish a fillable AcroForm CDS PDF as a flattened copy no
+  longer drop from exact Tier 2 extraction to Tier 4 Docling when the data is
+  unchanged. Before routing a fieldless PDF, the extraction worker checks prior
+  `cds_artifacts(kind='source')` rows for the document; when an earlier source
+  is a fillable PDF with at least 50 filled fields and a page count within
+  ±10%, it compares the fillable's numeric form values (4+ digits, normalizing
+  `$` and commas) against the newest file's page text (`PdfPageTexts`):
+  - `>= 90%` present (`flattened_reprint_same_data`): extracts with Tier 2 from
+    the fillable source (Valparaiso 2025-26: 86/87 = 98.85% match, keeps 621
+    Tier 2 fields instead of falling to 313 in Tier 4).
+  - Substantial text layer (`>= 100` chars) and `<= 10%` present
+    (`print_to_pdf_values_missing_from_text`): extracts with Tier 2 from the
+    fillable source and marks the result for operator review via
+    `notes.quality_warnings`, `extracted_needs_review`, and `review_docs` in
+    the run summary (University of Miami 2025-26 "Microsoft: Print To PDF"
+    reprint draws form values as vector paths: 2/204 = 0.98% in text, keeps
+    758 Tier 2 fields instead of 137–156 in Tier 4).
+  - Meaningful disagreement between 10% and 90% (`edition_values_changed`):
+    keeps the new flattened file so revised editions are not overwritten by
+    stale fillable values (Barnard 2025-26: 79/97 = 81.44% match).
+  - Every evaluated decision is recorded in `notes.source_selection` on the
+    canonical artifact (`chosen_sha256`, `candidate_sha256`, `latest_sha256`,
+    `match_ratio`, `matched_values`, `total_values`, `reason`, `needs_review`).
 - `/feedback` now submits `FormData` directly from the browser to Formspree
   (reading `NEXT_PUBLIC_FEEDBACK_FORMSPREE_ENDPOINT` with fallback to
   `NEXT_PUBLIC_FORMSPREE_ENDPOINT`), matching `SubmissionForm.tsx`. Removed the
