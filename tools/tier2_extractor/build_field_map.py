@@ -251,9 +251,14 @@ _CTRL = re.compile(r"[\x00-\x1f\x7f]")
 _WS = re.compile(r"\s+")
 
 
-def _ink_mask(page: "pdfium.PdfPage") -> np.ndarray:
+def _ink_mask(page: "pdfium.PdfPage", dpi: float = MASK_DPI, annots: bool = False) -> np.ndarray:
+    """Static-ink mask of one page (ink = gray < INK_THRESHOLD).
+
+    With the defaults this is exactly what the committed masks use. `dpi` and
+    `annots` let template overlay extraction render target pages the same way.
+    """
     bitmap = page.render(
-        scale=MASK_DPI / 72.0, draw_annots=False, may_draw_forms=False, rev_byteorder=True
+        scale=dpi / 72.0, draw_annots=annots, may_draw_forms=annots, rev_byteorder=True
     )
     rgb = bitmap.to_numpy()[..., :3].astype(np.uint32)
     # ITU-R 601 luma with PIL's fixed-point weights, so no Pillow dependency
