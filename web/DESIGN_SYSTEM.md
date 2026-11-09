@@ -56,7 +56,9 @@ Card tint for index-card–style panels: `#faf6ec` (pale cream, slightly lighter
 
 ## Typography
 
-Production stack, wired through Next/font in [`web/src/app/layout.tsx`](src/app/layout.tsx):
+Production stack, self-hosted from [`src/app/fonts/`](src/app/fonts/README.md) and wired through `next/font/local` in [`web/src/app/layout.tsx`](src/app/layout.tsx):
+
+> **Never load fonts from Google.** No `next/font/google` and no Google Fonts `<link>`/`@import`. It downloads on every build, and a failed download fails the Vercel build. To add or update a face, commit the woff2 file to `src/app/fonts/` (steps in its README). `src/lib/no-remote-fonts.test.ts` enforces this in CI.
 
 | Family | Via `--font-*` var | Role |
 |---|---|---|

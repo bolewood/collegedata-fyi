@@ -6,6 +6,16 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.19.9] - 2026-11-09
+
+### Added
+
+- A test fails CI if anything loads fonts from Google again: a
+  `next/font/google` import or a `fonts.googleapis.com` / `fonts.gstatic.com`
+  reference in `web/src` or `next.config.ts`. `web/DESIGN_SYSTEM.md` and
+  `web/AGENTS.md` now say fonts are self-hosted in `src/app/fonts/` and point
+  to its README for adding a face.
+
 ## [0.6.19.8] - 2026-11-09
 
 ### Fixed

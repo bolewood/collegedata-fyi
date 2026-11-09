@@ -10,4 +10,6 @@ Before touching any component, page, or CSS, read [`DESIGN_SYSTEM.md`](DESIGN_SY
 
 Palette rules you will get wrong otherwise: **no blue anywhere** (forest `#3f5b3a` is the sole accent); card backgrounds use `#faf6ec` via `.cd-card`, not Tailwind `bg-white`; numbers are always tabular (`font-variant-numeric: tabular-nums`) and mono.
 
+Fonts are self-hosted in [`src/app/fonts/`](src/app/fonts/README.md) and loaded with `next/font/local`. **Never use `next/font/google` or a Google Fonts link**: it fetches on every build and a failed fetch fails the deploy. A test (`src/lib/no-remote-fonts.test.ts`) fails CI if one appears.
+
 If you find a conflict between the Markdown doc, the reference page, and `tokens.css` — `tokens.css` wins. Update the doc to match.
