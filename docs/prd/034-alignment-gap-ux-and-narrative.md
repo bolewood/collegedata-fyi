@@ -1,6 +1,6 @@
 # PRD 034: Alignment Gap UX and Narrative Overhaul
 
-**Status:** Approved / In Implementation (2026-10-04)  
+**Status:** Shipped (v0.6.18.0, 2026-10-04); originally Approved / In Implementation  
 **Author:** Anthony Showalter (with Gemini)  
 **URL:** `/recipes/alignment-gap`  
 **Related:** [`docs/recipes/alignment-gap.md`](../recipes/alignment-gap.md), [`web/src/app/recipes/alignment-gap/page.tsx`](../../web/src/app/recipes/alignment-gap/page.tsx), [`web/src/components/AlignmentGapMeritChart.tsx`](../../web/src/components/AlignmentGapMeritChart.tsx), [`web/src/components/AlignmentGapChart.tsx`](../../web/src/components/AlignmentGapChart.tsx), [`web/src/lib/alignment-gap-recipe-analysis.ts`](../../web/src/lib/alignment-gap-recipe-analysis.ts)

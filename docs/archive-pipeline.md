@@ -11,7 +11,7 @@ source file to the `sources` Storage bucket. The extraction worker then polls
 `cds_documents WHERE extraction_status = 'extraction_pending'` and does
 the structured extraction.
 
-As of May 5, 2026, this document covers the full operating chain:
+This document covers the full operating chain. The operating chain below was written on May 5, 2026; work since then is summarized in [Changes since May 2026](#changes-since-may-2026).
 
 1. **Discovery / archive** in Supabase Edge Functions.
 2. **Structured extraction** in the Python worker across shipped Tiers 1, 2, 4, 5, and 6.
@@ -340,8 +340,10 @@ cross-Storage/Postgres transactions. Details in the code comments on
 
 ## Auth model
 
-Both edge functions (`archive-process`, `archive-enqueue`) are configured
-with `verify_jwt = true` in `supabase/config.toml`. The Supabase gateway
+All write-capable edge functions (`archive-process`, `archive-enqueue`,
+`archive-upload`, `directory-enqueue`, `refresh-coverage`) are configured
+with `verify_jwt = true` in `supabase/config.toml`; `discover` is too, and does
+no writes. The Supabase gateway
 validates that every incoming request carries a valid project JWT before
 the function handler runs.
 
@@ -941,21 +943,56 @@ basic regression coverage for the `NULLS NOT DISTINCT` constraint.
 
 ## Production verification summary
 
-### Current status (as of 2026-05-03)
+### Current status
 
-- Archive and extraction have produced `3,950` archived CDS documents and
-  `3,792` extracted documents across the public corpus.
-- Shipped extraction tiers are active for XLSX, fillable PDF, flattened PDF,
-  scanned PDF, and HTML. DOCX remains a designed-but-unbuilt Tier 3.
-- Tier 4 v0.3 layout-overlay extraction, PRD 016B admission-strategy cleanup,
-  and PRD 018 H1/H2/H2A merit-profile cleanup have been drained into
-  production and projected into public serving tables.
-- The worker now prioritizes fresh CDS rows first; manual 2025-26 drain status:
-  101 extracted, 16 failed, 1 not applicable, 0 pending.
-- Public serving tables:
-  - `200,957` `cds_fields` rows.
-  - `475` `school_browser_rows` rows.
-  - `383` `school_merit_profile` rows.
+Live counts go stale quickly, so this section no longer quotes them. Use
+[`/coverage`](https://collegedata.fyi/coverage) for how many schools and
+years are archived and extracted, and
+[`/pipeline-observation`](https://collegedata.fyi/pipeline-observation) for
+whether each job is running. Dated snapshots: the May 3, 2026 state is in
+[`extraction-quality.md`](extraction-quality.md) and the August 6, 2026
+integrity audit is in [`docs/plans/audit-2026-08-06-final/`](plans/audit-2026-08-06-final/README.md).
+
+Shipped extraction tiers are active for XLSX, fillable PDF, flattened PDF,
+scanned PDF, and HTML. DOCX remains a designed-but-unbuilt Tier 3. The worker
+prioritizes fresh CDS rows first and refreshes the browser projections after
+successful writes.
+
+### Changes since May 2026
+
+Archive-side changes, from merged PRs:
+
+- **Weekly cadence.** Discovery runs year-round with a 7-day cooldown for
+  successful schools, and the enqueuer reads history through
+  `latest_archive_terminal_rows()` (#111).
+- **Attempt ledger.** One `archive_queue_attempts` row per claim, with
+  timed-out lease recovery (#112).
+- **Sectionized and wiki-hosted CDS.** Schools that publish one section per
+  file are assembled into one logical source and keep each original as
+  `source_part`; filenames such as `Regent_CDS_A_2012-2013.pdf` are recognized
+  as section files, and wiki/CMS page-export endpoints are never treated as CDS
+  sources (#91, #242). A refresh that would replace a full CDS with a lone
+  section file is held (#257). A multi-PDF package counts as unchanged when the
+  school serves the same section files in the same order (0.6.18.1).
+- **Wayback bytes.** Toolbar Archive.org URLs are rewritten to `id_` and
+  truncated 1 MB captures are rejected (#164).
+- **Headless archive.** `ops-headless-archive.yml` runs Playwright against
+  WAF/JS landings daily; a private ops repo handles the one captcha-gated
+  host (#162, #163, #182).
+- **Operator upload.** `archive-upload` and `tools/upload/` ingest files that
+  cannot be fetched by URL.
+- **Quarantine.** Bad archived HTML (login walls, bot challenges, landing pages
+  without table markup) is rejected or quarantined (#94).
+- **Flattened reprints.** When a school republishes a fillable PDF as a
+  flattened copy, the extraction worker keeps the Tier 2 source if the values
+  are unchanged (#258). That decision happens at extraction, not at archive.
+- **Seed catch-up.** `ops-archive-seed-catchup.yml` queues a forced recheck for
+  schools whose `schools.yaml` seed changed (#139, #140).
+- **Publish events.** `cds_publish_events` records every inserted or refreshed
+  document for the per-school RSS feed (#129).
+
+Extraction-side changes are in
+[`extraction-quality.md`](extraction-quality.md#june-to-november-2026-repairs).
 
 ### Historical archive launch check (2026-04-14)
 
@@ -963,7 +1000,7 @@ The original archive-only production check remains useful as provenance for the
 queue and Storage path design:
 
 - Both migrations applied cleanly via `supabase db push`.
-- All three edge functions deployed successfully.
+- All three edge functions that existed on that date deployed successfully (the project now has seven).
 - Resolver dry-run returned correct results for yale (resolved 2024-25),
   mit (correctly classified `no_cds_found` — not falsely marked removed),
   and harvey-mudd (resolved 2025-26).
@@ -994,12 +1031,6 @@ queue and Storage path design:
 that can match landing-page anchors against each `sub_institutions[i].label` for
 multi-CDS schools.
 
-**Projection freshness.** Extraction writes canonical artifacts, but
-`project_browser_data.py` is still operator-run. After a new extraction drain,
-`cds_fields` and `school_browser_rows` are stale until the projection worker is
-run. The backlog tracks wiring the projection into the extraction pipeline or a
-scheduled incremental refresh.
-
 **Tier 4 fallback artifact freshness.** Some `tier4_llm_fallback` artifacts were
 generated against older Tier 4 markdown hashes. The selected-result projection
 now excludes stale fallbacks unless they match the selected base artifact by
@@ -1016,7 +1047,7 @@ fully launch-certified.
 **Documentation divergence for stable path.** Earlier docs referenced
 `sources/{school}/{year}/source.pdf` as the canonical path. The pipeline
 now uses SHA-addressed paths instead; `docs/ARCHITECTURE.md` and
-`docs/v1-plan.md` have been updated to reflect this. Any external
+`docs/plans/v1-plan.md` have been updated to reflect this. Any external
 documentation or client code that assumes the old convention will need
 updating — prefer `cds_manifest.source_storage_path` as the canonical
 accessor.
@@ -1071,8 +1102,8 @@ service role key already substituted in.
   immutable" guarantee is now backed by SHA-addressed Storage paths,
   which is a stronger implementation of the same promise.
 - [ADR 0007](decisions/0007-year-authority-moves-to-extraction.md)
-  (Year authority moves to extraction) — Stages A + B + C shipped
-  2026-04-15. Stage A (7c86e37) added content detection as an
+  (Year authority moves to extraction) — Stages A + B shipped
+  2026-04-15; Stage C shipped as docs only. Stage A (7c86e37) added content detection as an
   observation-only side channel. Stage B (6ea67a8) made detection
   write-authoritative via the new `cds_documents.detected_year`
   column, removed the resolver's URL year requirement, and landed

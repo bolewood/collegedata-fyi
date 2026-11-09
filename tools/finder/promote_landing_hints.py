@@ -26,7 +26,7 @@ Usage:
     tools/extraction_worker/.venv/bin/python \\
         tools/finder/promote_landing_hints.py
 
-    # Review: docs/schools_hint_rewrite_proposal.md
+    # Review: docs/plans/schools_hint_rewrite_proposal.md
 
     # Two: apply proposal (edits schools.yaml in place, preserving comments)
     tools/extraction_worker/.venv/bin/python \\
@@ -443,7 +443,7 @@ def main() -> int:
     ap.add_argument("--manual-urls", type=Path,
                     default=Path("tools/finder/manual_urls.yaml"))
     ap.add_argument("--report", type=Path,
-                    default=Path("docs/schools_hint_rewrite_proposal.md"))
+                    default=Path("docs/plans/schools_hint_rewrite_proposal.md"))
     ap.add_argument("--env", type=Path, default=Path(".env"))
     ap.add_argument("--apply", action="store_true",
                     help="Rewrite schools.yaml in-place using the proposals "

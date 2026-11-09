@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 This project uses four-part semantic versioning.
 
+History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is not summarized here; it is in git (`git log`) and the merged pull requests.
+
 ## [Unreleased]
 
 ## [0.6.19.15] - 2026-11-09

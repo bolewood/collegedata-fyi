@@ -21,7 +21,7 @@ same reshape during /autoplan review:
 - **ADR 0008 is cheap, durable insurance.** 30 min pure-docs work, zero
   maintenance cost, solves a real low-frequency / high-stakes problem
   (first takedown request). Ship it.
-- **Preservation re-check is premature.** `docs/v1-plan.md` describes the
+- **Preservation re-check is premature.** `docs/plans/v1-plan.md` describes the
   archive as "an open data library first and an incidental archive
   second." Informal probe found removals "well under 10%." Cron is
   defensible only if the archive narrative is being actively leaned into

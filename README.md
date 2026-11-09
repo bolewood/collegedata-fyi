@@ -6,7 +6,7 @@ Open-source Common Data Set API, searchable college admissions dataset, federal 
 
 An open, reproducible library of US college data. We find each school's Common Data Set document, extract it into a canonical schema, and publish both the raw source file and the structured extract alongside a queryable manifest. For schools without a public CDS, we now publish a curated NCES/IPEDS federal baseline keyed by `ipeds_id` (zero-padded UNITID) and labeled as federal data. No hand-cleaned numbers, no unlabeled source blending: CDS remains the school-authored source, IPEDS and Scorecard remain federal context.
 
-> **Status: V1 live at [collegedata.fyi](https://collegedata.fyi).** The August 6, 2026 integrity audit counted 6,322 institutions in the federal directory, 4,071 archived CDS documents, 262,537 public `cds_fields` rows, and 558 `school_browser_rows`. Five of six extraction tiers shipped: filled XLSX, fillable PDF, flattened PDF, image-only scan, and structured HTML. DOCX is the only remaining tier and is scoped in [PRD 007](docs/prd/007-tier3-docx-extraction.md). The live product now includes institution coverage transparency, source-labeled NCES/IPEDS baseline facts, academic positioning, admission strategy, match-list building, merit profile data, Scorecard outcomes, and a PRD 019 change-intelligence alpha for source-linked year-over-year CDS deltas. Public change events are explicitly review-gated. See the [August 2026 data-integrity audit](docs/plans/audit-2026-08-06-final/README.md), [`docs/extraction-quality.md`](docs/extraction-quality.md) for the last extraction-accuracy benchmark, and [`tools/ipeds/README.md`](tools/ipeds/README.md) for the IPEDS release pipeline.
+> **Status: V1 live at [collegedata.fyi](https://collegedata.fyi).** Current coverage is at [`/coverage`](https://collegedata.fyi/coverage) and pipeline health at [`/pipeline-observation`](https://collegedata.fyi/pipeline-observation). A dated snapshot: the August 6, 2026 integrity audit counted 6,322 institutions in the federal directory, 4,071 archived CDS documents, 262,537 public `cds_fields` rows, and 558 `school_browser_rows`. Five of six extraction tiers shipped: filled XLSX, fillable PDF, flattened PDF, image-only scan, and structured HTML. DOCX is the only remaining tier and is scoped in [PRD 007](docs/prd/007-tier3-docx-extraction.md). The live product now includes institution coverage transparency, source-labeled NCES/IPEDS baseline facts, academic positioning, admission strategy, match-list building, merit profile data, Scorecard outcomes, and a PRD 019 change-intelligence alpha for source-linked year-over-year CDS deltas. Public change events are explicitly review-gated. See the [August 2026 data-integrity audit](docs/plans/audit-2026-08-06-final/README.md), [`docs/extraction-quality.md`](docs/extraction-quality.md) for the May 2026 extraction-accuracy benchmark and the June to November 2026 repairs, and [`tools/ipeds/README.md`](tools/ipeds/README.md) for the IPEDS release pipeline.
 
 ## Why this exists
 
@@ -31,6 +31,10 @@ We also archive source files on discovery, because some schools do occasionally 
 - **Fit-data products on top of the raw CDS** — academic positioning ([PRD 016](docs/prd/016-academic-positioning-card.md)), admission strategy ([PRD 016B](docs/prd/016B-admission-strategy-card.md)), match-list building ([PRD 017](docs/prd/017-match-list-builder.md)), and merit profile data ([PRD 018](docs/prd/018-open-college-fit-data.md))
 - **Change intelligence alpha** ([PRD 019](docs/prd/019-cds-change-intelligence.md)) — deterministic year-over-year events for material deltas, newly missing/reported fields, producer or quality changes, and an operator review workflow before anything becomes public or reportable
 - **A public API** at `https://api.collegedata.fyi` that tracks discovery status, last-verified dates, participation status, per-document provenance, per-institution coverage state, browser-ready admissions/profile rows, source-labeled IPEDS baseline facts, Scorecard joins, FSA institutional nonpayment (`fsa_nonpayment_current`), and merit-aid profiles
+- **Per-school stat pages** ([PRD 031](docs/prd/031-school-stat-pages.md)): plain-English acceptance-rate, early-decision, and GPA pages at `/schools/{id}/acceptance-rate`, `/early-decision`, and `/gpa`, with a per-school RSS feed of new CDS publications at `/schools/{id}/feed.xml` ([PRD 029](docs/prd/029-discovery-freshness-and-publish-alerts.md)) and school pages themed with each school's brand colors
+- **Recipes**: worked analyses with live charts at [`/recipes`](https://collegedata.fyi/recipes): College Pricing Power, Alignment Gap, Endowment Draw Rate, Waitlist Odds, and a test-optional tracker. Written-up methods live in [`docs/recipes/`](docs/recipes/)
+- **Guided discovery** ([PRD 026](docs/prd/026-guided-college-discovery.md)): `/discover`, a soft-launched card-sort and six-school-rounds flow that runs in the browser (noindex, unlinked from navigation)
+- **Public operations pages**: [`/usage`](https://collegedata.fyi/usage) shows how often the archive is downloaded and used (PRDs 032, 033) and [`/pipeline-observation`](https://collegedata.fyi/pipeline-observation) is a live board of the discovery, extraction, and refresh jobs (PRD 030)
 - **An extensible artifact model** so community cleanup tools can publish their own extracts alongside the primary ones without replacing them
 
 ## Quick look
@@ -74,6 +78,14 @@ curl 'https://api.collegedata.fyi/rest/v1/ipeds_facts?ipeds_id=eq.110635&field_k
   -H "Authorization: Bearer $ANON_KEY"
 ```
 
+## For agents
+
+- **Hosted MCP:** `https://www.collegedata.fyi/api/mcp` (Streamable HTTP, no auth). A stdio server is published as `@collegedata-fyi/mcp-server` ([`packages/mcp-server`](packages/mcp-server/)) for local clients such as Claude Desktop and Claude Code.
+- **CLI:** `@collegedata-fyi/cli` ([`packages/cli`](packages/cli/)) installs the `collegedata` command, a thin wrapper over the JSON API.
+- **Machine-readable docs:** [`/llms.txt`](https://collegedata.fyi/llms.txt), [`/openapi.json`](https://collegedata.fyi/openapi.json), and the human-readable [`/api`](https://collegedata.fyi/api) reference. Per-school facts are also at `/api/facts/{school_id}`.
+- **Open-data files:** `/snapshots/latest/manifest.json` lists `schools.jsonl`, `school_facts.jsonl`, `sources.jsonl`, and `field_dictionary.json`. They are regenerated from live data, so a dated URL is not a frozen copy yet.
+- **Rate limits and etiquette:** school search, facts, sources, and compare allow 300 requests per minute per IP; over that you get `429`. Send an `X-CollegeData-Client` header naming your tool, follow `308` redirects (alias school slugs redirect to the canonical slug), and use the snapshots for bulk work. Usage is counted without storing IPs; see [`docs/api-usage-attribution.md`](docs/api-usage-attribution.md).
+
 ## How it works
 
 1. Supabase Edge Functions run on cron, discover new or changed CDS documents at each school's Institutional Research URL, and record them in Postgres. Source bytes are archived in Storage on first discovery so we still have them if the school later removes the original. Schools that publish one CDS year as separate A-J section PDFs are assembled into one logical extraction source while preserving each original section file as provenance.
@@ -103,24 +115,30 @@ collegedata.fyi sits between official higher-education data systems and the docu
 
 ## Docs and decisions
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — twelve-pipeline map of the whole system (schema, corpus, discovery, mirror, extraction, scorecard, institution directory + coverage, IPEDS federal baseline, FSA institutional nonpayment, change intelligence, consumer API, frontend)
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — twelve-pipeline map of the whole system (schema, corpus, discovery, mirror, extraction, scorecard, institution directory + coverage, IPEDS federal baseline, FSA institutional nonpayment, change intelligence, consumer API, frontend), plus the cross-cutting ops and public surfaces (API usage, pipeline observation, RSS, brand colors, snapshots, Sentry, revalidation)
+- [`web/VOICE.md`](web/VOICE.md) and [`web/DESIGN_SYSTEM.md`](web/DESIGN_SYSTEM.md): public copy rules and the visual system; read before changing the UI
+- [`docs/frontend.md`](docs/frontend.md): route inventory, caching, and component map for the Next.js app
+- [`docs/community-feedback.md`](docs/community-feedback.md): how `/feedback` works and how stories are approved before publication
+- [`docs/queryable-browser-backend.md`](docs/queryable-browser-backend.md): the field substrate and browser-search design
+- [`docs/prd/`](docs/prd/): product requirement docs, numbered 001 onward; each carries a status line
 - [`docs/ops-discord.md`](docs/ops-discord.md) — Bolewood Discord `#alerts` / `#deploys` routing and the `DISCORD_ALERTS_WEBHOOK_URL` / `DISCORD_DEPLOYS_WEBHOOK_URL` GitHub secrets
 - [`docs/data-extraction-pipeline.md`](docs/data-extraction-pipeline.md) — operational diagram of the discovery/archive/extraction/projection flow, including cadence, storage, and known issues
-- [`docs/extraction-quality.md`](docs/extraction-quality.md) — current accuracy by tier, per-section corpus-wide coverage, and reproducible scoring commands
+- [`docs/extraction-quality.md`](docs/extraction-quality.md) — accuracy by tier as of May 2026, the June to November 2026 repair log, and reproducible scoring commands
 - [`docs/api-usage-attribution.md`](docs/api-usage-attribution.md) — low-PII friendly API usage attribution for MCP, CLI, and cooperative external integrations
 - [`docs/recipes/`](docs/recipes/) — worked examples with real data: interactive visualizations, XLSX starters, and API queries. Start with [College Pricing Power](docs/recipes/acceptance-vs-yield.md)
 - [`docs/plans/prd-019-spike-and-qa.md`](docs/plans/prd-019-spike-and-qa.md) — PRD 019 spike and QA summary, including the first calibration-run numbers and review gates
 - [`docs/plans/audit-2026-08-06-final/`](docs/plans/audit-2026-08-06-final/README.md) — reproducible 24-check data-integrity audit, evidence manifest, findings, limitations, and recommended rerun cadence
-- [`docs/v1-plan.md`](docs/v1-plan.md) — living project plan for V1
+- [`docs/plans/`](docs/plans/) — internal plans and findings, including the original [V1 plan](docs/plans/v1-plan.md)
 - [`docs/prd/002-frontend.md`](docs/prd/002-frontend.md) — frontend PRD (reviewed via /autoplan: CEO + Design + Eng review)
 - [`docs/prd/003-ai-driven-data-quality.md`](docs/prd/003-ai-driven-data-quality.md) — AI-driven data-quality spike PRD (M1 only, approved via /autoplan)
 - [`docs/archive-pipeline.md`](docs/archive-pipeline.md) — deep dive on the discovery/archive queue
+- [`tools/discovery/`](tools/discovery/): offline tooling for the guided-discovery content layer ([`data/discovery/`](data/discovery/README.md))
 - [`tools/finder/README.md`](tools/finder/README.md) — school-corpus runbook, including the NCES identity audit and snapshot refresh workflow
 - [`tools/scorecard/README.md`](tools/scorecard/README.md) — College Scorecard pipeline runbook (`/rest/v1/cds_scorecard` returns CDS docs joined with federal earnings, debt, net price by income, completion)
 - [`tools/ipeds/README.md`](tools/ipeds/README.md) — NCES/IPEDS release loader and scheduled release-probe runbook
 - [`tools/fsa/README.md`](tools/fsa/README.md) — FSA institutional nonpayment loader (`fsa_nonpayment_current`)
 - [`docs/research/cds-vs-college-scorecard.md`](docs/research/cds-vs-college-scorecard.md) — CDS vs College Scorecard schema comparison
-- [`docs/decisions/`](docs/decisions/) — Architectural Decision Records
+- [`docs/decisions/`](docs/decisions/) — Architectural Decision Records (0001 to 0008)
 - [`docs/known-issues/`](docs/known-issues/) — per-school extraction quality notes
 
 ## Contributing
@@ -129,7 +147,7 @@ This project is designed around community contribution from day one. Two especia
 
 **Add a school to the discovery scraper.** If `collegedata.fyi` doesn't know about a school's CDS, it's usually because the school's website doesn't match our default URL patterns. PR a new entry to `schools.yaml` with a known-good URL or search pattern.
 
-**Write a cleanup tool.** Our in-tree cleaner handles the high-value 2024-25/2025-26 browser and school-page surfaces well, including admissions, SAT/ACT, Section H aid, and several large enrollment grids, but Docling markdown still has a long tail of format variants we don't cover (see [`docs/known-issues/`](docs/known-issues/), [`docs/extraction-quality.md`](docs/extraction-quality.md), and the corpus survey). Raw Docling markdown lives at `cds_artifacts.notes.markdown` on every Tier 4 artifact, keyed by document. A cleanup tool reads the markdown, normalizes its target fields, and publishes the result as a new artifact with its own `producer` tag. Register your tool in `cleaners.yaml` and the CI will run it against the corpus. Per [ADR 0002](docs/decisions/0002-publish-raw-over-clean.md), we don't pick a winner — every contributor's artifact is published alongside the primary ones.
+**Write a cleanup tool.** Our in-tree cleaner handles the high-value 2024-25/2025-26 browser and school-page surfaces well, including admissions, SAT/ACT, Section H aid, and several large enrollment grids, but Docling markdown still has a long tail of format variants we don't cover (see [`docs/known-issues/`](docs/known-issues/), [`docs/extraction-quality.md`](docs/extraction-quality.md), and the corpus survey). Raw Docling markdown lives at `cds_artifacts.notes.markdown` on every Tier 4 artifact, keyed by document. A cleanup tool reads the markdown, normalizes its target fields, and publishes the result as a new artifact with its own `producer` tag. Register your tool in `cleaners.yaml`; the CI workflow that will run registered cleaners against the corpus is coming soon (tracked in M4), so for now registration only records it. Per [ADR 0002](docs/decisions/0002-publish-raw-over-clean.md), we don't pick a winner — every contributor's artifact is published alongside the primary ones.
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full contributor guide, including how to add a school, fix your own school's data, write a cleaner, and become a co-maintainer.
 

@@ -1,12 +1,12 @@
 # PRD 037: Feedback, stories, and GitHub stars
 
-> Implementation note (2026-11-08): the approved planning text below is preserved.
-> M0 isolated proof and M1/M2 implementation are prepared in this branch; production
-> writes remain off and launch checks are outstanding. See
-> [implementation and operations](../community-feedback.md) for verified behavior,
-> setup dependencies and M3's deliberate deferral. No submitted story is published.
+> Implementation note (2026-11-08, superseded by the status line below): the approved
+> planning text is preserved. The first implementation used a database queue; PR #255
+> replaced it with a direct browser-to-Formspree post. See
+> [implementation and operations](../community-feedback.md) for verified behavior and
+> M3's deliberate deferral. No submitted story is published automatically.
 
-**Status:** Draft for review; planning only. No product changes have shipped.
+**Status:** Partly shipped (2026-11-09). `/feedback` is live and posts from the browser to Formspree (PRs #252 and #255); the database-queue path from the first implementation was removed. Story publication is manual after written approval, and the M3 prompt experiment is deliberately deferred. See [`docs/community-feedback.md`](../community-feedback.md). The planning text below is preserved as written.
 
 **Created:** 2026-11-08
 
