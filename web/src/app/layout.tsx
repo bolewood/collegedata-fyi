@@ -1,28 +1,33 @@
 import type { Metadata } from "next";
-import { Newsreader, Geist, JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { PrivateAnalytics } from "@/components/PrivateAnalytics";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import "./globals.css";
 
-const newsreader = Newsreader({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  style: ["normal", "italic"],
+// Self-hosted (see ./fonts/README.md): next/font/google fetched these from
+// Google on every build, and a failed fetch failed the whole Vercel build.
+const newsreader = localFont({
+  src: [
+    { path: "./fonts/newsreader-latin-wght-normal.woff2", weight: "200 800", style: "normal" },
+    { path: "./fonts/newsreader-latin-wght-italic.woff2", weight: "200 800", style: "italic" },
+  ],
   variable: "--font-newsreader",
   display: "swap",
 });
 
-const geist = Geist({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+const geist = localFont({
+  src: "./fonts/geist-latin-wght-normal.woff2",
+  weight: "100 900",
+  style: "normal",
   variable: "--font-geist",
   display: "swap",
 });
 
-const jetbrains = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
+const jetbrains = localFont({
+  src: "./fonts/jetbrains-mono-latin-wght-normal.woff2",
+  weight: "100 800",
+  style: "normal",
   variable: "--font-jetbrains",
   display: "swap",
 });
