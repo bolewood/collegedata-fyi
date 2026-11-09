@@ -6,8 +6,17 @@ type UntypedSupabase = {
   from: (table: string) => any;
 };
 
-const SNAPSHOT_DATE = "2026-05-09";
-const SNAPSHOT_BASE = `https://www.collegedata.fyi/snapshots/v1/${SNAPSHOT_DATE}`;
+export const SNAPSHOT_NOTE =
+  "These files are generated from the live database and usually regenerated within the hour; check generated_at. The dated URL path is an alias for the same current data, not a frozen copy; to keep a reproducible copy, download the files and store them.";
+
+/** UTC date the files were generated. Dated paths currently serve live data. */
+export function snapshotDate(now: Date = new Date()): string {
+  return now.toISOString().slice(0, 10);
+}
+
+export function snapshotBase(date: string = snapshotDate()): string {
+  return `https://www.collegedata.fyi/snapshots/v1/${date}`;
+}
 
 async function fetchPagedRows<T>(
   table: string,
@@ -35,21 +44,18 @@ function jsonl(rows: unknown[]): string {
 }
 
 export async function snapshotManifest() {
+  const SNAPSHOT_DATE = snapshotDate();
+  const SNAPSHOT_BASE = snapshotBase(SNAPSHOT_DATE);
   return {
     schema_version: "v1",
     generated_at: new Date().toISOString(),
     snapshot_date: SNAPSHOT_DATE,
+    note: SNAPSHOT_NOTE,
     files: [
       { name: "schools.jsonl", format: "jsonl", url: `${SNAPSHOT_BASE}/schools.jsonl` },
       { name: "school_facts.jsonl", format: "jsonl", url: `${SNAPSHOT_BASE}/school_facts.jsonl` },
       { name: "sources.jsonl", format: "jsonl", url: `${SNAPSHOT_BASE}/sources.jsonl` },
       { name: "field_dictionary.json", format: "json", url: `${SNAPSHOT_BASE}/field_dictionary.json` },
-      {
-        name: "collegedata.duckdb",
-        format: "duckdb",
-        url: `${SNAPSHOT_BASE}/collegedata.duckdb`,
-        status: "generator_skips_when_duckdb_cli_is_unavailable",
-      },
     ],
     latest_alias: "https://www.collegedata.fyi/snapshots/latest/manifest.json",
   };

@@ -51,7 +51,7 @@ describe("Wave 4 methodology and API copy", () => {
     const page = src("app/methodology/merit-profile/page.tsx");
     expect(page).toContain('title: "Merit and need aid methodology"');
     expect(page).toContain("federal College Scorecard");
-    expect(page).toContain("335 of 488");
+    expect(page).not.toMatch(/\d+ of \d+ schools/);
     expect(page).toContain("H.2A02");
     expect(page).not.toMatch(/Tier 4/);
     expect(page).not.toMatch(/redrain/);

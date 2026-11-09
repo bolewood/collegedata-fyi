@@ -83,8 +83,8 @@ export default function PositioningMethodologyPage() {
             SAT of 1500 is therefore inside the published middle 50%, not a prediction of
             admission.
           </FieldUse>
-          <FieldUse field="C.11" title="High-school class rank">
-            C.11 can describe class-rank distribution where schools publish it. This card
+          <FieldUse field="C.10" title="High-school class rank">
+            C.10 can describe class-rank distribution where schools publish it. This card
             does not score rank because many schools omit rank or receive it from too small a subset
             of applicants to compare responsibly across institutions.
           </FieldUse>
@@ -94,8 +94,8 @@ export default function PositioningMethodologyPage() {
             contributes to academic fit because weighted and unweighted scales are not
             consistently documented.
           </FieldUse>
-          <FieldUse field="C.1 / C.2" title="Applicant, admitted, and enrolled counts">
-            C.1 and C.2 supply applicant and admit counts. The serving layer derives admit
+          <FieldUse field="C.1" title="Applicant, admitted, and enrolled counts">
+            C.1 supplies applicant, admit, and enrolled counts. The serving layer derives admit
             rate as admitted divided by applied, then stores that rate as a fraction from
             0 to 1 in <code>school_browser_rows</code>.
           </FieldUse>
