@@ -23,6 +23,7 @@ CRON_JOBS = (
     "archive-process-every-30s",
     "refresh-coverage-hourly",
     "refresh-public-serving-caches-hourly",
+    "community-feedback-retention",
 )
 # Scheduled at :20 and :50 (PRD 032); logs keep 90 days, so a quiet stall
 # loses data. GitHub has started this repo's cron runs 4-8 hours late.

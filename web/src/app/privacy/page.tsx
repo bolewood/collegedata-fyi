@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Privacy",
   description:
-    "Privacy policy for collegedata.fyi: no accounts, no student profiles, and only anonymous aggregate analytics.",
+    "Privacy policy for collegedata.fyi: no accounts, no student profiles, private optional feedback, and aggregate analytics.",
   alternates: { canonical: "/privacy" },
   openGraph: { url: "/privacy" },
 };
@@ -28,7 +28,7 @@ export default function PrivacyPage() {
       <div className="mt-8 space-y-5 text-base leading-relaxed">
         <p>
           <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Effective date:</strong>{" "}
-          October 2, 2026
+          November 8, 2026
         </p>
 
         <p>
@@ -65,9 +65,16 @@ export default function PrivacyPage() {
         <ul className="ml-6 list-disc space-y-2 marker:text-gray-400">
           <li>No account information, because there are no accounts.</li>
           <li>No student profile database.</li>
-          <li>No application lists, grades, test scores, essays, or financial details.</li>
+          <li>We do not ask for application lists, grades, test scores, essays, or financial details. Please leave them out of feedback.</li>
           <li>No sale of personal data to schools, lenders, advertisers, or data brokers.</li>
         </ul>
+
+        <h2 id="feedback" className="serif mt-10 text-2xl">Private feedback</h2>
+        <p>The feedback form collects your message and the optional fields you choose to submit. Email is optional unless you ask to discuss being featured. We use reply details only for that conversation, never for a mailing list or marketing.</p>
+        <p>Messages are private, accessible to the maintainer and necessary service providers. They are not sold or included in public exports. A transactional email service sends the maintainer only a count and a private inbox link; your message and contact details stay out of those notifications. We do not automatically email you.</p>
+        <p>Raw messages and reply details expire within 180 days; spam within 30 days. Final publication permission records are kept separately while a story is live and removed within 90 days of withdrawal. Only a separately approved final write-up and credit may be published. Interest in being featured is not permission to publish.</p>
+        <p>Rate protection briefly uses a daily-changing network code, retained for at most 48 hours. Ordinary hosting and security logs are covered below. Feedback traffic is excluded from public college-data API counts.</p>
+        <p>For feedback, privacy questions, or removal requests, email <a href="mailto:contact@bolewood.com">contact@bolewood.com</a>. GitHub is optional and public.</p>
 
         <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
           Public API and server logs
@@ -111,17 +118,7 @@ export default function PrivacyPage() {
         </h2>
 
         <p>
-          This project is open source. If you have a privacy question or want
-          to report an issue, please open an issue on the{" "}
-          <a
-            style={{ textDecorationColor: "var(--rule-strong)", textUnderlineOffset: 3 }}
-            href="https://github.com/bolewood/collegedata-fyi"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            GitHub repository
-          </a>
-          .
+          For privacy questions or removal requests, email <a href="mailto:contact@bolewood.com">contact@bolewood.com</a>. This project is open source; GitHub issues are another public, optional way to report a problem.
         </p>
       </div>
     </div>

@@ -61,6 +61,8 @@ def edge_rollups(rows: Iterable[Mapping[str, object]], t0: datetime | None) -> l
     for row in rows:
         ua = str(row.get("ua") or "")
         surface, route = _route(row)
+        if route.removeprefix("rpc:").startswith("community_"):
+            continue
         signals = _edge_signals(row, surface, route, t0, c.ua_is_browser(ua), c.ua_is_internal(ua))
         classification, inferred = c.classify(signals)
         key = (
@@ -136,7 +138,7 @@ def edge_schools(rows: Iterable[Mapping[str, object]], t0: datetime | None) -> l
     totals: dict[tuple, list[int]] = defaultdict(lambda: [0, 0])
     for row in rows:
         surface, route = _route(row)
-        if route == "options_preflight":
+        if route == "options_preflight" or route.removeprefix("rpc:").startswith("community_"):
             continue
         school = c.school_id_from(str(row.get("school_raw") or ""))
         if not school:
@@ -179,6 +181,8 @@ def edge_clients(
     for row in rows:
         ua = str(row.get("ua") or "")
         surface, route = _route(row)
+        if route.removeprefix("rpc:").startswith("community_"):
+            continue
         signals = _edge_signals(row, surface, route, t0, c.ua_is_browser(ua), c.ua_is_internal(ua))
         classification, _ = c.classify(signals)
         if classification != c.THIRD_PARTY:

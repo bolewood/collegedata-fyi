@@ -12,6 +12,7 @@ on:
       - IPEDS release probe
       - Ops finder probe
       - API usage ingest
+      - Community feedback notifications
       - Ops extraction worker
       - Ops archive seed catchup
       - Ops headless archive

@@ -14,6 +14,8 @@ import {
 import { ApiBars, DownloadsChart } from "./UsageCharts";
 import { UsageSchoolSearch } from "./UsageSchoolSearch";
 import "./usage.css";
+import { CommunityInvitation } from "@/components/CommunityInvitation";
+import { CommunityProjects } from "@/components/CommunityProjects";
 
 export const revalidate = 3600;
 
@@ -72,6 +74,8 @@ export default async function UsagePage() {
           Usage numbers have not been published yet. They appear here once the
           first full day of downloads is counted.
         </p>
+        <CommunityInvitation surface="usage" />
+        <CommunityProjects />
       </div>
     );
   }
@@ -134,6 +138,7 @@ export default async function UsagePage() {
         {period.label}. They keep the archive findable, but we don&rsquo;t count them as use.
       </p>
 
+      <CommunityInvitation surface="usage" />
       <section className="usage-band" aria-labelledby="usage-over-time">
         <div className="meta">§ 1 · Downloads over time</div>
         <h2 id="usage-over-time">Every day since {sinceShort}</h2>
@@ -311,6 +316,7 @@ export default async function UsagePage() {
         <UsageSchoolSearch schools={model.schools} periodLabel={period.complete ? period.label : null} sinceLabel={since} />
       </section>
 
+      <CommunityProjects />
       <section className="usage-band" aria-labelledby="usage-how" id="how-we-count">
         <div className="meta">§ 5 · How we count</div>
         <h2 id="usage-how">One request, start to finish</h2>

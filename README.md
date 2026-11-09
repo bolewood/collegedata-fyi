@@ -146,3 +146,11 @@ One exception: the curated discovery content under [`data/discovery/`](data/disc
 definitions) is licensed [CC BY-SA 4.0](data/discovery/LICENSE) — publicly inspectable,
 attribution and share-alike required. Contributions to that directory require a
 contribution agreement; see [`data/discovery/README.md`](data/discovery/README.md).
+
+## Using the data?
+
+Tell us what you're building, researching, or using in your work.
+A link and a sentence are plenty: https://www.collegedata.fyi/feedback.
+You can also [open an issue](https://github.com/bolewood/collegedata-fyi/issues)
+or [star this repository](https://github.com/bolewood/collegedata-fyi).
+No account or response is required to use the data.

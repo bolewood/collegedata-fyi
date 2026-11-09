@@ -10,4 +10,13 @@ export async function register() {
   }
 }
 
-export const onRequestError = Sentry.captureRequestError;
+export const onRequestError: typeof Sentry.captureRequestError = (...args) => {
+  let path: string;
+  try {
+    path = decodeURIComponent(args[1].path);
+  } catch {
+    return;
+  }
+  if (/^\/(?:api\/)?feedback(?:[/?#]|$)/.test(path)) return;
+  return Sentry.captureRequestError(...args);
+};

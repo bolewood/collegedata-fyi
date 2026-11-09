@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { fetchSiteStats } from "@/lib/queries";
 import { formatCount, formatShortDate } from "@/lib/format";
+import { CommunityInvitation } from "@/components/CommunityInvitation";
 import { CopyButton } from "@/components/CopyButton";
 import { TrackedLink } from "@/components/TrackedLink";
 import { isUsageLaunched } from "@/lib/usage";
@@ -105,6 +106,7 @@ curl 'https://www.collegedata.fyi/api/compare?schools=mit,yale,university-of-chi
 curl 'https://www.collegedata.fyi/api/fields'
 
 curl 'https://www.collegedata.fyi/openapi.json'`}</CodeBlock>
+      <CommunityInvitation surface="api" />
       <p className="mt-4 text-sm leading-relaxed text-[var(--ink-2)]">
         The same simple endpoints from R, with no API key.{" "}
         <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">httr2</code>{" "}

@@ -32,6 +32,7 @@ WATCHED_WORKFLOWS = {
     "IPEDS release probe": "ipeds-release-probe.yml",
     "Ops finder probe": "ops-finder-probe.yml",
     "API usage ingest": "ops-api-usage-ingest.yml",
+    "Community feedback notifications": "ops-community-feedback.yml",
     "Ops extraction worker": "ops-extraction-worker.yml",
     "Ops archive seed catchup": "ops-archive-seed-catchup.yml",
     "Ops headless archive": "ops-headless-archive.yml",
@@ -329,6 +330,7 @@ def latest_scheduled_run(
     repo: str,
     workflow: str,
     token: str | None,
+    success_only: bool = False,
     runner: Callable[..., subprocess.CompletedProcess[str]] = run_gh,
 ) -> dict[str, Any] | None:
     listed = runner(
@@ -341,6 +343,7 @@ def latest_scheduled_run(
             workflow,
             "--event",
             "schedule",
+            *(["--status", "success"] if success_only else []),
             "--limit",
             "1",
             "--json",
@@ -349,7 +352,7 @@ def latest_scheduled_run(
         token,
     )
     if listed.returncode != 0:
-        print("::warning::could not list API usage ingest runs", file=sys.stderr)
+        print("::warning::could not list scheduled workflow runs", file=sys.stderr)
         return None
     try:
         rows = json.loads(listed.stdout or "[]")
@@ -684,23 +687,24 @@ def api_usage_staleness_messages(
     run: dict[str, Any] | None,
     state: dict[str, Any],
     now: datetime,
+    *, workflow: str = API_USAGE_WORKFLOW, state_key: str = "api_usage_ingest",
 ) -> list[tuple[str, dict[str, Any]]]:
     created = parse_time(str((run or {}).get("createdAt") or ""))
     age_hours = None if created is None else (now - created).total_seconds() / 3600
     stale = age_hours is None or age_hours > API_USAGE_MAX_AGE_HOURS
     current = "down" if stale else "ok"
-    previous = state.get("api_usage_ingest")
+    previous = state.get(state_key, "ok" if state_key == "community_feedback" else None)
     if previous is None:
-        state["api_usage_ingest"] = current
+        state[state_key] = current
         return []
-    state["api_usage_ingest"] = current
+    state[state_key] = current
     if current == previous:
         return []
     last = "never" if created is None else age_label(str(run.get("createdAt")), now)
     url = str((run or {}).get("url") or PIPELINE_BOARD_URL)
     sha = short_sha(str((run or {}).get("headSha") or ""))
     fields = [
-        ("Workflow", API_USAGE_WORKFLOW),
+        ("Workflow", workflow),
         ("Last run", last),
         ("Age vs limit", f"{last} / {API_USAGE_MAX_AGE_HOURS}h"),
         ("Commit", f"`{sha}`"),
@@ -812,6 +816,8 @@ def main(
                 runner=runner,
             )
             messages.extend(api_usage_staleness_messages(latest, state, clock))
+            community = latest_scheduled_run(repo=args.repo, workflow="Community feedback notifications", token=token, runner=runner, success_only=True)
+            messages.extend(api_usage_staleness_messages(community, state, clock, workflow="Community feedback notifications", state_key="community_feedback"))
             save_state(args.state_path, state)
         else:
             print(f"discord notify skipped: unsupported event {args.event_name}")

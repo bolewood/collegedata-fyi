@@ -1,3 +1,4 @@
+import { CommunityLink } from "@/components/CommunityInvitation";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
@@ -620,6 +621,11 @@ export default async function SchoolDetailPage({ params }: {
         </p>
       ) : null}
 
+      <p className="mt-8 text-sm">
+        <CommunityLink surface="school" kind="data_issue" school={school_id}>
+          Found a problem? Send feedback
+        </CommunityLink>
+      </p>
       {scorecard && (
         <div style={{ marginTop: 24 }}>
           <ScorecardVintageNote scorecard={scorecard} />
@@ -822,6 +828,11 @@ async function DirectoryOnlySchoolPage({
         federal student aid. Federal data above comes from NCES/IPEDS and
         College Scorecard when we have it.{" "}
         <Link href="/about">Read the method</Link>.
+      </p>
+      <p className="mt-8 text-sm">
+        <CommunityLink surface="school" kind="data_issue" school={school_id}>
+          Found a problem? Send feedback
+        </CommunityLink>
       </p>
     </div>
   );
