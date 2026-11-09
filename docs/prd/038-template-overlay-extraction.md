@@ -1,6 +1,6 @@
 # PRD 038: Template overlay extraction for flattened official CDS PDFs
 
-**Status:** Approved for M0–M3 (revised after adversarial review; decisions recorded 2026-11-09)
+**Status:** Approved for M0–M3 (revised after adversarial review; decisions recorded 2026-11-09; amended the same day after a second review — see [Amendments](#amendments-2026-11-09-second-review), which override §5, §6 and Decisions 1–4 where they conflict)
 **Created:** 2026-11-09
 **Author:** Antigravity; revised by Claude
 **Related:** [ADR 0006 — Tiered extraction strategy](../decisions/0006-tiered-extraction-strategy.md), [ADR 0007 — Year authority moves to extraction](../decisions/0007-year-authority-moves-to-extraction.md), [PRD 005 — Full schema extraction](005-full-schema-extraction.md), [PRD 006 — LLM fallback](006-llm-fallback.md), [PRD 0111A — Docling improvement spike](0111A-docling-improvement-spike.md), PR #258 (flattened reprint source guard, merged as v0.6.19.13)
@@ -17,7 +17,7 @@ The page layout of a flattened official template is still the template's layout.
 - by OCR of the rendered crop, when the values were drawn as vector paths;
 - by ink density, for checkboxes.
 
-It writes a new canonical producer.
+It writes a new producer, `tier2_template_overlay`, as a `kind='cleaned'` supplement artifact (Amendment A1).
 
 All numbers below were measured on 2026-11-09 against production (read-only) and source PDFs from the `sources` bucket. See [How measured](#how-measured).
 
@@ -61,13 +61,13 @@ The ink threshold matters. A stricter threshold (< 160) missed Georgia Gwinnett,
 | Year | Tier 4 PDFs scanned | Template match (≥30 pages) | Median Tier 4 fields of matched docs | Matched, < 50 readable text-layer values (needs OCR) | Matched, text-layer values |
 |---|---:|---:|---:|---:|---:|
 | 2025-26 | 166 of 179 (all with a resolvable source) | **37** (36 in 48–55 p, 1 at 40 p) | 270 | 13 | 24 |
-| 2024-25 | 134 (all 38–70 p docs with a resolvable source; 68 of the 84 in 48–55 p) | **60** (54 in 48–55 p, 6 at 40–47 p) | 313.5 | 24 | 36 |
+| 2024-25 | 134 (all 38–70 p docs with a resolvable source; 68 of the 84 in 48–55 p) | **58** (52 in 48–55 p, 6 at 40–47 p) | 313.5 | 24 | 34 |
 
 The split between the last two columns uses the `source_producer` family as a proxy: Print To PDF counts as needing OCR, plus Arkansas State, whose text layer is garbled. The yield table below covers the 92 docs that matched at the stricter first threshold.
 
-**The addressable set is 97 documents (2024-25 + 2025-26), not 126.** They are listed in [`assets/038/template-cohort-2026-11-09.csv`](assets/038/template-cohort-2026-11-09.csv).
+**The addressable set is 95 documents (2024-25 + 2025-26), not 126.** The first version of the cohort list had 97 rows because Caltech 2024-25 and Texas A&M 2024-25 were each listed twice; the review's "300 PDFs scanned" likewise counts those two twice (298 distinct). They are listed in [`assets/038/template-cohort-2026-11-09.csv`](assets/038/template-cohort-2026-11-09.csv).
 
-- Distiller files are part of it: 44 of the 97 were produced by Acrobat Distiller 25/26, and 36 by Print To PDF.
+- Distiller files are part of it: 42 of the 95 were produced by Acrobat Distiller 25/26, and 36 by Print To PDF.
 - The five 2025-26 cohort docs that still do not match are Word or custom layouts: Duke, Chico, UTEP, Kutztown and UMass Amherst. Tier 4 already extracts more fields from them than from the template prints, and they stay on Tier 4.
 - 2023-24 was not measured (59 docs in 48–55 p) and is out of scope until it is.
 - None of the first 92 has a `tier2_acroform` artifact. 12 have more than one source sha, so PR #258 can only affect a handful.
@@ -100,7 +100,7 @@ The three benchmark schools in the first draft (Valparaiso, Barnard and Miami 20
 ### Alignment
 
 - Every matched doc in the sample is 612×792 pt with no rotation. One doc has a single 816×1056 page.
-- Page-index offsets seen are 0, ±1, ±2, −3 and −4. 8 of the 97 docs mix two offsets (dropped or inserted pages mid-packet).
+- Page-index offsets seen are 0, ±1, ±2, −3 and −4. 8 of the cohort docs mix two offsets (dropped or inserted pages mid-packet).
 - Within a matched page, widget positions do not drift: Valparaiso, Miami and Caltech read at offset (0, 0).
 
 **Text anchors do not work as the page matcher.** Acrobat Distiller 26.0 garbles text beyond bold headings: regular-weight prompts and some digits come through as Caesar-shifted bytes. A word-position matcher found 30 or more pages on only 2 of 17 Distiller docs. The raster matcher found 16 of them.
@@ -142,7 +142,7 @@ The three benchmark schools in the first draft (Valparaiso, Barnard and Miami 20
 
 ## Goals
 
-1. On the 97 matched documents, emit template-overlay values that meet the Decision 3 bar: ≥ 99% exact on a hand-audited sample and zero numeric values that differ from the printed page.
+1. On the 95 matched documents, emit template-overlay values that meet the Decision 3 bar: ≥ 99% exact on a hand-audited sample and zero numeric values that differ from the printed page.
 2. Raise the median field count of the text-layer docs to ≥ 550, and of the vector-path docs to ≥ 450.
    - Today the text-layer docs sit at a median 291 (2025-26) and 406.5 (2024-25), measured on the 92-doc subset.
    - The vector-path docs sit at Tier 4's level, a median of 136–139 for Print To PDF.
@@ -154,7 +154,7 @@ The three benchmark schools in the first draft (Valparaiso, Barnard and Miami 20
 - Excel-, Word- or custom-layout PDFs. They fail the raster gate and stay on Tier 4.
 - 2023-24 and older years until the cohort is measured for them.
 - Text that overflowed a fixed widget box. The flattened file does not contain it.
-- Skewed or low-resolution scans of printed paper. No such case was seen among the 97.
+- Skewed or low-resolution scans of printed paper. No such case was seen in the cohort.
 - OCR of free-text fields (`Text`, `URL`, `Email Address`). On Miami these were the main source of wrong values.
 
 ## Design
@@ -265,7 +265,7 @@ The first draft also proposed per-field confidence buckets. Nothing downstream r
   - `BASE_PRODUCER_RANK` and the Tier-4-only fallback logic in `tools/browser_backend/project_browser_data.py`;
   - `PRODUCER_FAMILY` in `tools/change_intelligence/project_change_events.py`, where an unknown producer currently falls back to the `tier2` family by prefix;
   - `extraction_ledger_tier` in `worker.py`, which is Python, not SQL;
-  - `web/src/lib/queries.ts:600` and `web/src/lib/c1-headline-totals.ts:220`, which special-case `tier4_docling`.
+  - `fallbackMatchesCanonical` and `fetchExtract` in `web/src/lib/queries.ts` and `web/src/lib/c1-headline-totals.ts:220`, which special-case `tier4_docling`.
 - **Regression guard.**
   - `previous_canonical_field_count` reads the newest canonical artifact of *any* producer for the source sha.
   - Once an overlay artifact (~550 fields) exists, a later Tier 4 re-extraction (~290) would be blocked as a regression.
@@ -293,8 +293,8 @@ Either way it is a separate, later migration, and rollback is the reverse migrat
 - The 2024-25 map agrees between the two donors.
 
 **M1 — Stage 1 and Lanes 1 and 3.**
-- On the 300 PDFs scanned in the review, Stage 1 matches the 97 listed in [`assets/038/template-cohort-2026-11-09.csv`](assets/038/template-cohort-2026-11-09.csv) and rejects the other 203. Any difference is explained in the PR.
-- It chooses the correct year for all 97, or returns `template_year_ambiguous` only where `detected_year` is missing.
+- On the 298 distinct PDFs scanned in the review, Stage 1 matches the 95 listed in [`assets/038/template-cohort-2026-11-09.csv`](assets/038/template-cohort-2026-11-09.csv) and rejects the other 203. Any difference is explained in the PR.
+- It chooses the correct year for all 95, or returns `template_year_ambiguous` only where `detected_year` is missing.
 - Valparaiso flattened recovers ≥ 614 / 624 of its Tier 2 values with the blank-template map and the §3 read method.
 - Lanes 1+3 emit no value where Tier 2 is blank, other than values actually printed on the page.
 - Miami recovers 152 / 152 `/Btn` values, with 0 emissions on its 72 blank checkbox fields.
@@ -307,8 +307,8 @@ Either way it is a separate, later migration, and rollback is the reverse migrat
 
 **M3 — Shadow drain and audit.**
 - Code: projection, web and change-intelligence consumers learn the producer, but nothing serves it yet.
-- Run the overlay on the 97 docs.
-- Hand-audit a random sample of at least 200 emitted values across at least 20 docs, at least 10 of them vector-path, against the rendered page.
+- Run the overlay on the 95 docs.
+- Hand-audit a random sample of at least 300 emitted values across at least 20 docs, at least 10 of them vector-path, against the rendered page (Amendment A6).
 - Report precision and the per-doc field-count change, with 0 regressions.
 - If precision meets the Decision 3 bar, the serving migration lands (§6), together with the Decision 1 selection-precedence change.
 
@@ -328,13 +328,75 @@ Recorded 2026-11-09 by Anthony:
 4. **Producer: `tier2_template_overlay`, Tier 2 family** for change intelligence, listed explicitly in `PRODUCER_FAMILY` rather than relying on the prefix fallback. Under the supplement model it is never a base candidate, so it gets no base rank.
 5. **2023-24: deferred.** Ship 2024-25 and 2025-26 first. Measure the 59-document 2023-24 cohort's geometry before including it.
 
+## Amendments (2026-11-09, second review)
+
+A second review checked the design against the serving code and production (read-only). These amendments override §5, §6 and Decisions 1–4 where they conflict. Each lists what was measured.
+
+### A1. The overlay artifact is `kind='cleaned'`, not `kind='canonical'`
+
+Several readers take the newest `kind='canonical'` artifact for a document with no producer filter. A canonical overlay artifact written after Tier 4 would be served immediately, with only overlay values and no markdown, so shadow mode would not hold:
+
+- `fetchExtract` and `fetchCanonicalArtifact` in `web/src/lib/queries.ts` (the school page);
+- `latest_canonical_artifact_id` in the `cds_manifest` view, and the documented public API call `cds_artifacts?kind=eq.canonical`;
+- `has_canonical_for_current_bytes` in `worker.py` (the reconcile pass), which could mark a document `extracted` on the strength of an overlay artifact alone;
+- `previous_canonical_field_count` in `worker.py` (the regression guard §5 patches);
+- newest-canonical audits in `tools/data_quality/` (`audit_manifest.py`, `completeness_report.py`, `audit_reclean_candidates.py`, `audit_visual_ocr_candidates.py`).
+
+The overlay is written as `kind='cleaned'`, `producer='tier2_template_overlay'`, like `tier4_llm_fallback`. None of the readers above then see it, and the §5 regression-guard change is no longer needed. The `kind` CHECK constraint already allows `cleaned`.
+
+### A2. Three selectors, one parity test
+
+"The selected result" is computed in three places, and they already disagree:
+
+| Selector | Order | Feeds |
+|---|---|---|
+| `cds_selected_extraction_result` (SQL view) | producer rank, then recency | public API (granted to `anon`), `run_data_integrity_audit.py`, `audit_schema_alignment.py` |
+| `select_extraction_result` in `project_browser_data.py` | schema version, schema fallback, unusable AcroForm, producer rank, recency | `school_browser_rows`, `cds_fields`, and so the browser, match, merit and change intelligence |
+| `fetchExtract` in `web/src/lib/queries.ts` | newest canonical | the school page field viewer |
+
+Measured: 8 documents have a newest-canonical producer different from the view's pick. Barnard 2025-26 is one: the school page serves a Tier 4 artifact written 2026-11-09 while the view picks June's Tier 2. So the statement in "Sizing the cohort" that the benchmark schools are served from Tier 2 is true of the view and the projection, not of every surface.
+
+Decision 2 stands (the view merges), but the view is not what most users see. The overlay merge is therefore implemented in all three selectors, and M3 adds a shared fixture (a document with Tier 4, a matching overlay, a stale overlay from another source sha, and a Tier 2 artifact) that each selector must resolve identically. Consolidating the three selectors is out of scope.
+
+### A3. Decision 1 needs a rule for artifacts with no source sha
+
+Measured: 3,417 of 5,342 view-selected base artifacts (64%) record no source sha in `notes`. Only 4 selected artifacts record a sha that differs from the document's current source.
+
+Rule: an artifact is excluded from selection only when it records a source sha **and** that sha differs from the current source. An artifact with no recorded sha counts as built from the current source. This is deliberately the opposite of `artifact_already_extracted`, which treats a missing sha as stale for idempotency; that function is not changed. The Decision 1 before/after diff should therefore show a handful of documents.
+
+The overlay join is stricter: an overlay artifact merges only when its `source_sha256` is present and equals the base's recorded sha. If the Tier 4 base has no recorded sha, the overlay does not merge until Tier 4 is re-extracted.
+
+### A4. Change intelligence must see that an overlay was applied
+
+The projection writes `producer = selected.base_producer` into `school_browser_rows`, and `project_change_events.py` gates comparability on producer family and `producer_version`. Under the supplement model an overlay-merged row still reads `tier4_docling` at the same version, so Decision 4's family assignment has no effect, and values the overlay recovers would be reported as `newly_reported` or as school-side deltas.
+
+When an overlay is merged, the projection writes `producer_version` as `<tier4 version>+overlay.<overlay version>`. The existing version gate then treats a Tier-4-only year and a Tier-4-plus-overlay year as not comparable. The implementer confirms that nothing parses `producer_version` structurally; if something does, add an explicit `overlay_producer_version` column and extend the gate instead. `tier2_template_overlay` is still listed in `PRODUCER_FAMILY` so a lookup never falls through to the prefix rule.
+
+### A5. Worker flow
+
+- The overlay has its own entry point and its own idempotency check keyed on (document, producer, producer version, field-map version, source sha). It is not a hook after the Tier 4 insert: `_run_tier4` returns early on `already_extracted` and on `tier4_field_regression`, which is the state of every existing cohort document.
+- A scoped CLI mode runs the overlay alone over given document ids, for the M3 shadow drain.
+- The Stage 1 pre-filter keys on the PDF having no usable AcroForm values and 30–70 pages, not on `source_format` alone, so documents that reach Tier 4 through the Tier 2 label-AcroForm fallback (`source_format='pdf_fillable'`) are considered too.
+- An overlay failure of any kind is logged and never changes the document's status or the Tier 4 outcome.
+
+### A6. Goals and audit, restated
+
+- **Goal 2** is measured on the merged result (Tier 4 values plus overlay values), which is what is served: median ≥ 550 for text-layer docs and ≥ 450 for vector-path docs.
+- **Conflicts.** "Overlay wins" is not yet measured. The M3 shadow report gives, per document, the count of fields both producers populate and the share that disagree, and the audit sample draws at least 100 of its values from those disagreements. The 5% hold threshold in Decision 3 is confirmed or reset from that distribution before serving.
+- **Sample size.** 200 clean values only bound the error rate at about 1.5% (95% confidence). The audit uses at least 300 values, and the bar is zero wrong numeric values *in the sample* and ≥ 99% exact.
+- **LLM fallback.** Measured: 231 Tier-4-selected documents have a `tier4_llm_fallback` artifact and the view merges none of them (no `base_artifact_id`; hashes and cleaner versions no longer match). The fallback leg of the three-way merge is inert today. Repairing it is outside this PRD; the merge order is unchanged so it works if the fallback is re-run.
+
+### A7. Execution gates
+
+Code for M0–M3 lands by PR. Three steps need the owner's explicit go-ahead and are run from `main` after merge, never from the feature branch: the production shadow drain, the Decision 1 selection migration, and the serving migration. The hand audit is done by a person.
+
 ## Risks
 
 | Risk | Mitigation |
 |---|---|
 | Wrong-year map gives plausible but wrong values (most pages look identical across years) | Score every year; when the margin is under 3 pages require `detected_year` agreement (§2.3); type and identity validation |
 | Garbled CMaps put shifted glyphs in the text layer | Reject reads with control characters; OCR that page (§3) |
-| Non-template PDF passes the gate | Raster gate at ≥ 30 pages separated 97 matches from 203 non-matches (best non-match 19 pages, worst match 33); M1 re-checks this |
+| Non-template PDF passes the gate | Raster gate at ≥ 30 pages separated 95 matches from 203 non-matches (best non-match 19 pages, worst match 33); M1 re-checks this |
 | Light-gray or faded print misses the gate | Ink threshold < 225; a < 160 threshold missed 5 real template prints. The doc stays on Tier 4, so the failure costs nothing extra |
 | OCR misreads a digit and the value passes type checks | Numbers only, identity checks reject the whole identity, shadow-mode audit before serving |
 | Display rounding (`77.2` printed as `77`) | The overlay records what the school printed; not treated as an error |
