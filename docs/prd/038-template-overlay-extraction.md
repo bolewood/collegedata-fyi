@@ -47,22 +47,30 @@ The first draft sized the cohort as Tier 4 PDFs with 48–55 pages. That gives 4
 - The banner also appears in 24 2025-26 Tier 4 docs outside 48–55 pages. Those are Word or Excel template exports that reuse the intro text.
 - Some 48–55 page docs are Word-template or custom layouts (Duke, Chico, UTEP, Kutztown, UMass Amherst, Columbia, Northwestern, Williams, …).
 
-The review re-measured the cohort with a raster page match. Each page of the Tier 4 PDF is rendered at 36 DPI. A page matches template page *p* when at least 85% of *p*'s static ink is present within 3 px. A document matches when 30 or more of the 50 template pages are found. The gate has clear separation in this sample:
+The review re-measured the cohort with a raster page match.
 
-- the worst true match found 30 pages;
-- the best non-match found 14.
+- Each page of the Tier 4 PDF is rendered at 36 DPI, and pixels with gray level < 225 count as ink.
+- A page matches template page *p* when at least 85% of *p*'s static ink is present within 3 px.
+- A document matches when 30 or more of the 50 template pages are found.
+
+The ink threshold matters. A stricter threshold (< 160) missed Georgia Gwinnett, FAU, UW–Green Bay, American and Valdosta: their template prints render gray. A spot render confirmed they are unscaled template prints. The gate has clear separation in this sample:
+
+- the worst true match found 33 pages;
+- the best non-match found 19.
 
 | Year | Tier 4 PDFs scanned | Template match (≥30 pages) | Median Tier 4 fields of matched docs | Matched, < 50 readable text-layer values (needs OCR) | Matched, text-layer values |
 |---|---:|---:|---:|---:|---:|
-| 2025-26 | 166 of 179 (all with a resolvable source) | **35** (all within 48–55 p) | 270 | 11 (10 `Microsoft: Print To PDF` + Arkansas State's garbled text layer) | 24 |
-| 2024-25 | 134 (all 38–70 p docs with a resolvable source; 68 of the 84 in 48–55 p) | **57** (52 in 48–55 p, 5 at 40–47 p) | 307 | 23 | 34 |
+| 2025-26 | 166 of 179 (all with a resolvable source) | **37** (36 in 48–55 p, 1 at 40 p) | 270 | 13 | 24 |
+| 2024-25 | 134 (all 38–70 p docs with a resolvable source; 68 of the 84 in 48–55 p) | **60** (54 in 48–55 p, 6 at 40–47 p) | 313.5 | 24 | 36 |
 
-**The addressable set is 92 documents (2024-25 + 2025-26), not 126.**
+The split between the last two columns uses the `source_producer` family as a proxy: Print To PDF counts as needing OCR, plus Arkansas State, whose text layer is garbled. The yield table below covers the 92 docs that matched at the stricter first threshold.
 
-- Distiller files are part of it. Of the 92, 41 were produced by Acrobat Distiller 25/26.
-- The six 2025-26 cohort docs that did not match are Word or custom layouts. Tier 4 already does well on them (median 561.5 fields), and they stay on Tier 4.
+**The addressable set is 97 documents (2024-25 + 2025-26), not 126.** They are listed in [`assets/038/template-cohort-2026-11-09.csv`](assets/038/template-cohort-2026-11-09.csv).
+
+- Distiller files are part of it: 44 of the 97 were produced by Acrobat Distiller 25/26, and 36 by Print To PDF.
+- The five 2025-26 cohort docs that still do not match are Word or custom layouts: Duke, Chico, UTEP, Kutztown and UMass Amherst. Tier 4 already extracts more fields from them than from the template prints, and they stay on Tier 4.
 - 2023-24 was not measured (59 docs in 48–55 p) and is out of scope until it is.
-- None of the 92 has a `tier2_acroform` artifact. 12 have more than one source sha, so PR #258 can only affect a handful.
+- None of the first 92 has a `tier2_acroform` artifact. 12 have more than one source sha, so PR #258 can only affect a handful.
 
 The three benchmark schools in the first draft (Valparaiso, Barnard and Miami 2025-26) are **not** in this cohort. Each still has an older `tier2_acroform` artifact. `cds_selected_extraction_result` ranks by producer before recency, so those Tier 2 artifacts are what we serve today. They remain useful as ground truth, because each has a fillable and a flattened copy, but they are not production losses.
 
@@ -92,7 +100,7 @@ The three benchmark schools in the first draft (Valparaiso, Barnard and Miami 20
 ### Alignment
 
 - Every matched doc in the sample is 612×792 pt with no rotation. One doc has a single 816×1056 page.
-- Page-index offsets seen are 0, ±1, ±2, −3 and −4. 7 of the 92 docs mix two offsets (dropped or inserted pages mid-packet).
+- Page-index offsets seen are 0, ±1, ±2, −3 and −4. 8 of the 97 docs mix two offsets (dropped or inserted pages mid-packet).
 - Within a matched page, widget positions do not drift: Valparaiso, Miami and Caltech read at offset (0, 0).
 
 **Text anchors do not work as the page matcher.** Acrobat Distiller 26.0 garbles text beyond bold headings: regular-weight prompts and some digits come through as Caesar-shifted bytes. A word-position matcher found 30 or more pages on only 2 of 17 Distiller docs. The raster matcher found 16 of them.
@@ -103,15 +111,21 @@ The three benchmark schools in the first draft (Valparaiso, Barnard and Miami 20
 
 - With the blank-template map, Lanes 1+3 match 611 of 621 directly extracted values, plus 3 of 3 derived B1 totals. That is **614 / 624**.
 - This needs a 35% checkbox inset and stripping adjacent `(` / `)`. At the first draft's 25% inset it is 608 / 624: three radio dots score 0.109–0.110 against a 0.12 threshold.
+- That 614 was measured with ±1 pt padding plus paren stripping, not the center-in-rect read specified in §3. M1 re-measures it with the specified method.
 - The 10 misses:
   - 5 multi-line text fields clipped at the widget edge;
   - 2 display-rounded decimals (`77.2` printed as `77`);
   - 2 hidden C9 checker zeros;
   - 1 real correction between editions (`STATE_CODE` IL→IN).
+- **False positives:** across the 468 fields Tier 2 left blank, there were 4 emissions.
+  - 2 are URLs printed on the page with no `/V`.
+  - 1 is a stray label character (`g`), which type validation rejects.
+  - 1 is `C.207`, a static box printed under the widget: raw ink 0.138, 0 after subtracting the blank template's ink.
 
 **Miami 2025-26** (Print-To-PDF `eaed9690`, values drawn as vector paths, +2 page offset):
 
 - **Checkboxes:** 152 / 152 at a 35% inset; 149 / 152 at 25%.
+  - Of the 72 checkbox fields Tier 2 left blank, 1 emits without baseline subtraction: `C.207` again, at 0.152 raw and 0.015 after subtraction.
 - **300-DPI per-widget Tesseract OCR, full document:** 541 / 562 populated `/Tx` values match. 3 of 227 blank cells produced a value. The 5 pages in the first draft were 169 / 169.
 - **The 21 misses:**
   - 8 single-digit values dropped by the ink-ratio gate;
@@ -128,8 +142,11 @@ The three benchmark schools in the first draft (Valparaiso, Barnard and Miami 20
 
 ## Goals
 
-1. On the 92 matched documents, emit template-overlay values whose precision is at least the bar the owner sets (see Decisions). The target is ≥ 99% on a hand-audited sample.
-2. Raise the median field count of the 24 + 34 text-layer docs from 291 / 406.5 to ≥ 550, and of the 34 vector-path docs from Tier 4's level to ≥ 450.
+1. On the 97 matched documents, emit template-overlay values whose precision is at least the bar the owner sets (see Decisions). The target is ≥ 99% on a hand-audited sample.
+2. Raise the median field count of the text-layer docs to ≥ 550, and of the vector-path docs to ≥ 450.
+   - Today the text-layer docs sit at a median 291 (2025-26) and 406.5 (2024-25), measured on the 92-doc subset.
+   - The vector-path docs sit at Tier 4's level, a median of 136–139 for Print To PDF.
+   - Both targets are set from the yield and Miami measurements; M3 confirms them.
 3. No regression on any document. A non-template PDF never yields overlay values.
 
 ## Non-goals
@@ -137,7 +154,7 @@ The three benchmark schools in the first draft (Valparaiso, Barnard and Miami 20
 - Excel-, Word- or custom-layout PDFs. They fail the raster gate and stay on Tier 4.
 - 2023-24 and older years until the cohort is measured for them.
 - Text that overflowed a fixed widget box. The flattened file does not contain it.
-- Skewed or low-resolution scans of printed paper. No such case was seen among the 92.
+- Skewed or low-resolution scans of printed paper. No such case was seen among the 97.
 - OCR of free-text fields (`Text`, `URL`, `Email Address`). On Miami these were the main source of wrong values.
 
 ## Design
@@ -166,10 +183,16 @@ A build CLI, `tools/tier2_extractor/build_field_map.py`, harvests each map once.
 1. **Pre-filter.** Run only on a single `kind='source'` PDF whose selected `source_format` is `pdf_flat` or `pdf_scanned`, with 30–70 pages.
 2. **Raster match.** Match each target page against every template page of every year with a map. This took 0.3–0.5 s per document (max 1.2 s) in the review.
 3. **Year selection.**
-   - The wrong year's template also clears the 30-page gate: 35 / 35 of the 2025-26 docs matched the 2024-25 template, and 56 / 57 the other way round.
-   - Same-year matches lead by only about 4 pages.
-   - So choose the year with the most matched pages, and require a lead of at least 3 pages over the next year. On a tie, the year must agree with `detected_year`.
-   - Read fields only from target pages whose best match is a page of the chosen year. Otherwise return `template_year_ambiguous`.
+   - The wrong year's template also clears the 30-page gate. At the < 160 ink threshold, 35 / 35 of the 2025-26 docs matched the 2024-25 template, and 56 / 57 the other way round.
+   - Per document, the correct year always matched more pages, but sometimes only just:
+     - the minimum lead was 3 pages in 2025-26 and 1 page in 2024-25;
+     - 23 of 55 2024-25 docs led by fewer than 3 pages.
+   - Rule:
+     - choose the year with the most matched pages;
+     - when the lead is under 3 pages, require that year to agree with `detected_year`, else return `template_year_ambiguous`;
+     - a tie is always ambiguous.
+   - Most pages are identical across years, but only 738 of 1,082 shared tags keep their rectangle, so a wrong year is not harmless.
+   - M1 re-measures these margins with the final matcher.
 4. **Gate.** At least 30 template pages matched; otherwise `not_official_pdf_template`.
 5. **Page alignment.**
    - The page mapping is the monotonic assignment of target pages to template pages, which handles mid-packet drops.
@@ -230,9 +253,15 @@ The first draft also proposed per-field confidence buckets. Nothing downstream r
 - **The worker runs Tier 4 as it does today, and also runs the overlay on docs that pass Stage 1.** The overlay never replaces the Tier 4 run:
   - Tier 4 values are still needed for fields the overlay does not emit;
   - any overlay failure leaves the document exactly where it is now.
-- **Merge.** The overlay artifact holds only its own values. `cds_selected_extraction_result` merges it over the Tier 4 base the same way it merges `tier4_llm_fallback`: matched on source sha, with overlay values winning. That keeps per-field provenance and needs no merge code in the worker.
+- **Merge (recommended "supplement" model; Decision 2).**
+  - The overlay artifact holds only its own values. It is never a base candidate, so it never enters the view's `producer IN (…)` list or rank `CASE`.
+  - `cds_selected_extraction_result` adds a second lateral join, next to the `tier4_llm_fallback` join. It picks the newest overlay artifact for the same document whose `source_sha256` equals the Tier 4 base's.
+  - Merge order is `fallback || tier4 base || overlay`: overlay wins, then deterministic Tier 4, then the LLM fallback.
+  - `project_browser_data.py` and `web/src/lib/queries.ts` need the same three-way merge.
+  - This keeps per-field provenance and needs no merge code in the worker.
+  - The alternative "base" model: the worker writes one combined overlay+Tier 4 artifact, and the overlay enters the `IN` list ranked above `tier4_docling`.
 - **Existing producer-name consumers that must change** (the first draft listed only a migration):
-  - `cds_selected_extraction_result`: the `producer IN (…)` filter, the rank `CASE`, the fallback join, and the view comment;
+  - `cds_selected_extraction_result`: the new overlay join and merge, and the view comment (base model: the `IN` filter and rank `CASE` instead);
   - `BASE_PRODUCER_RANK` and the Tier-4-only fallback logic in `tools/browser_backend/project_browser_data.py`;
   - `PRODUCER_FAMILY` in `tools/change_intelligence/project_change_events.py`, where an unknown producer currently falls back to the `tier2` family by prefix;
   - `extraction_ledger_tier` in `worker.py`, which is Python, not SQL;
@@ -248,7 +277,12 @@ The first draft also proposed per-field confidence buckets. Nothing downstream r
 
 ### 6. Shadow mode and rollback
 
-Overlay artifacts are written but kept out of the view until the precision audit passes. That means adding the producer to the view's `IN` list in a separate, later migration. Rollback is the reverse migration. Per the migration rules, both are applied from `main` after merge. Bumping `producer_version` and re-running the drain replaces bad artifacts without touching Tier 4.
+Overlay artifacts are written but not served until the precision audit passes.
+
+- **Supplement model:** the switch is the overlay join in the view (plus the matching projection and web merge).
+- **Base model:** the switch is the `IN` list.
+
+Either way it is a separate, later migration, and rollback is the reverse migration. Per the migration rules, both are applied from `main` after merge. Bumping `producer_version` and re-running the drain replaces bad artifacts without touching Tier 4.
 
 ## Milestones
 
@@ -259,10 +293,11 @@ Overlay artifacts are written but kept out of the view until the precision audit
 - The 2024-25 map agrees between the two donors.
 
 **M1 — Stage 1 and Lanes 1 and 3.**
-- On the 300 PDFs scanned in the review, Stage 1 matches exactly the 92 listed in `scratch/prd038/review/matched_ids.txt`.
-- It chooses the correct year for all 92 and rejects every other PDF.
-- Valparaiso flattened recovers ≥ 614 / 624 of its Tier 2 values using the blank-template map.
-- Miami recovers 152 / 152 `/Btn` values.
+- On the 300 PDFs scanned in the review, Stage 1 matches the 97 listed in [`assets/038/template-cohort-2026-11-09.csv`](assets/038/template-cohort-2026-11-09.csv) and rejects the other 203. Any difference is explained in the PR.
+- It chooses the correct year for all 97, or returns `template_year_ambiguous` only where `detected_year` is missing.
+- Valparaiso flattened recovers ≥ 614 / 624 of its Tier 2 values with the blank-template map and the §3 read method.
+- Lanes 1+3 emit no value where Tier 2 is blank, other than values actually printed on the page.
+- Miami recovers 152 / 152 `/Btn` values, with 0 emissions on its 72 blank checkbox fields.
 
 **M2 — Lane 2.**
 - Miami flattened recovers ≥ 541 / 562 populated `/Tx` values. Every remaining mismatch is either a field excluded from OCR or a documented edition difference.
@@ -271,11 +306,11 @@ Overlay artifacts are written but kept out of the view until the precision audit
 - The 44 `/Ch` fields are measured and reported.
 
 **M3 — Shadow drain and audit.**
-- Migration: the overlay producer goes into the view's rank and merge, but stays out of the `IN` list. Projection and change-intelligence code is updated.
-- Run the overlay on the 92 docs.
+- Code: projection, web and change-intelligence consumers learn the producer, but nothing serves it yet.
+- Run the overlay on the 97 docs.
 - Hand-audit a random sample of at least 200 emitted values across at least 20 docs, at least 10 of them vector-path, against the rendered page.
 - Report precision and the per-doc field-count change, with 0 regressions.
-- If precision meets the owner's bar, a second migration adds the producer to the `IN` list.
+- If precision meets the owner's bar, the serving migration lands (§6).
 
 ## Decisions needed
 
@@ -289,9 +324,10 @@ Overlay artifacts are written but kept out of the view until the precision audit
 
 | Risk | Mitigation |
 |---|---|
-| Wrong-year map gives plausible but wrong values (most pages look identical across years) | Score every year, require a margin, use only pages unique to the chosen year (§2.3), apply type and identity validation |
+| Wrong-year map gives plausible but wrong values (most pages look identical across years) | Score every year; when the margin is under 3 pages require `detected_year` agreement (§2.3); type and identity validation |
 | Garbled CMaps put shifted glyphs in the text layer | Reject reads with control characters; OCR that page (§3) |
-| Non-template PDF passes the gate | Raster gate at ≥ 30 pages separated 92 matches from 208 non-matches (best non-match 14 pages); M1 re-checks this |
+| Non-template PDF passes the gate | Raster gate at ≥ 30 pages separated 97 matches from 203 non-matches (best non-match 19 pages, worst match 33); M1 re-checks this |
+| Light-gray or faded print misses the gate | Ink threshold < 225; a < 160 threshold missed 5 real template prints. The doc stays on Tier 4, so the failure costs nothing extra |
 | OCR misreads a digit and the value passes type checks | Numbers only, identity checks reject the whole identity, shadow-mode audit before serving |
 | Display rounding (`77.2` printed as `77`) | The overlay records what the school printed; not treated as an error |
 | Clipped free text | Lane 1 emits the visible prefix only for text-layer docs; Tier 4 text is kept by the merge where the overlay has none |
@@ -306,7 +342,9 @@ Scripts and outputs are in `scratch/prd038/review/` (gitignored). Each one was r
 | `fmap.py` | Map harvest |
 | `overlay.py`, `overlay2.py` | Valparaiso and Miami Lanes 1+3 |
 | `miami.py`, output in `miami_full.txt` | Miami Lane 2 |
-| `rastermatch.py`, outputs in `ras*.jsonl` and `cross_*.jsonl` | Stage 1 gate and cross-year test |
+| `rastermatch.py`, outputs in `ras*.jsonl` and `cross_*.jsonl` | Stage 1 gate and cross-year test at ink < 160 |
+| `rastermatch2.py` with `INK=225`, outputs in `ras*_ink225.jsonl` | Final gate and the cohort CSV |
+| `fp.py` | False-positive counts |
 | `geomatch.py`, output in `geo*.jsonl` | Text-anchor comparison |
 | `yield.py`, `lane1scan.py` | Lane 1 yield and control-character scan |
 | `../miami_crop_ocr.py` | The original author's 5-page Miami spike |
