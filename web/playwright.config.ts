@@ -13,6 +13,7 @@ export default defineConfig({
   reporter: process.env.CI ? [["github"], ["list"]] : "list",
   use: {
     baseURL,
+    channel: process.env.PLAYWRIGHT_BROWSER_CHANNEL,
     trace: "retain-on-failure",
     // Deterministic rendering for axe contrast scans: button color
     // transitions (120ms) can otherwise be caught mid-blend right after a

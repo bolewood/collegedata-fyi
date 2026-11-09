@@ -46,3 +46,11 @@ Tools (same five as the hosted endpoint):
 The server does not use a service-role key and exposes no write tools.
 `api.collegedata.fyi` is PostgREST, not MCP — do not paste that host as a
 connector URL.
+
+## Using the data?
+
+Tell us what you're building, researching, or using in your work.
+A link and a sentence are plenty: https://www.collegedata.fyi/feedback.
+You can also [open an issue](https://github.com/bolewood/collegedata-fyi/issues)
+or [star this repository](https://github.com/bolewood/collegedata-fyi).
+No account or response is required to use the data.

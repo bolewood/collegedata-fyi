@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Newsreader, Geist, JetBrains_Mono } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
+import { PrivateAnalytics } from "@/components/PrivateAnalytics";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import "./globals.css";
@@ -63,7 +63,7 @@ export default function RootLayout({
         <Nav />
         <main className="flex-1">{children}</main>
         <Footer />
-        <Analytics />
+        <PrivateAnalytics />
       </body>
     </html>
   );

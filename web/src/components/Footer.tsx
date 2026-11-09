@@ -1,4 +1,5 @@
 import { isUsageLaunched } from "@/lib/usage";
+import { CommunityLink } from "./CommunityInvitation";
 import { Wordmark } from "./Wordmark";
 
 export function Footer() {
@@ -26,13 +27,14 @@ export function Footer() {
           <div style={{ marginTop: 10, maxWidth: 520, lineHeight: 1.55 }}>
             Open-source college data with source-linked school publications,
             NCES/IPEDS baselines, College Scorecard context, and public APIs.
-            MIT License.
+            Code: MIT License.
           </div>
         </div>
         <div className="cd-footer-links" style={{ display: "flex", gap: 24, alignSelf: "end", flexWrap: "wrap" }}>
           <a href="https://github.com/bolewood/collegedata-fyi" target="_blank" rel="noopener noreferrer">
             GitHub
           </a>
+          <CommunityLink surface="footer">Feedback</CommunityLink>
           <a href="/coverage">Coverage</a>
           <a href="/pipeline-observation">Pipeline</a>
           {isUsageLaunched() ? <a href="/usage">Usage</a> : null}

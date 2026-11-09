@@ -1,3 +1,4 @@
+import { CommunityLink } from "@/components/CommunityInvitation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -248,6 +249,11 @@ export default async function SchoolYearPage({ params }: {
           }
         />
       ))}
+      <p className="mt-8 text-sm">
+        <CommunityLink surface="school_year" kind="data_issue" school={school_id} year={year}>
+          Found a problem? Send feedback
+        </CommunityLink>
+      </p>
     </div>
   );
 }

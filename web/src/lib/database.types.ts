@@ -39,6 +39,117 @@ export type Database = {
   }
   public: {
     Tables: {
+      community_submissions: {
+        Row: {
+          id: string
+          request_id: string | null
+          payload_digest: string | null
+          created_at: string
+          payload: Json | null
+          privacy_version: string
+          review_status: string
+          reviewed_at: string | null
+          synthetic: boolean
+          publication_status: string
+          publication_permission: Json | null
+          withdrawn_at: string | null
+          batch_id: string | null
+          notified_at: string | null
+        }
+        Insert: {
+          id?: string
+          request_id?: string | null
+          payload_digest?: string | null
+          created_at?: string
+          payload?: Json | null
+          privacy_version?: string
+          review_status?: string
+          reviewed_at?: string | null
+          synthetic?: boolean
+          publication_status?: string
+          publication_permission?: Json | null
+          withdrawn_at?: string | null
+          batch_id?: string | null
+          notified_at?: string | null
+        }
+        Update: {
+          id?: string
+          request_id?: string | null
+          payload_digest?: string | null
+          created_at?: string
+          payload?: Json | null
+          privacy_version?: string
+          review_status?: string
+          reviewed_at?: string | null
+          synthetic?: boolean
+          publication_status?: string
+          publication_permission?: Json | null
+          withdrawn_at?: string | null
+          batch_id?: string | null
+          notified_at?: string | null
+        }
+        Relationships: []
+      }
+
+      community_rate_limits: {
+        Row: {
+          bucket: string
+          admitted_at: string[]
+          expires_at: string
+        }
+        Insert: {
+          bucket: string
+          admitted_at?: string[]
+          expires_at?: string
+        }
+        Update: {
+          bucket?: string
+          admitted_at?: string[]
+          expires_at?: string
+        }
+        Relationships: []
+      }
+
+      community_notification_batches: {
+        Row: {
+          id: string
+          created_at: string
+          payload: Json
+          message_count: number
+          lease_token: string | null
+          lease_until: string | null
+          attempts: number
+          next_retry_at: string
+          error_class: string | null
+          sent_at: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          payload: Json
+          message_count: number
+          lease_token?: string | null
+          lease_until?: string | null
+          attempts?: number
+          next_retry_at?: string
+          error_class?: string | null
+          sent_at?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          payload?: Json
+          message_count?: number
+          lease_token?: string | null
+          lease_until?: string | null
+          attempts?: number
+          next_retry_at?: string
+          error_class?: string | null
+          sent_at?: string | null
+        }
+        Relationships: []
+      }
+
       archive_queue: {
         Row: {
           attempts: number
@@ -703,6 +814,15 @@ export type Database = {
       }
     }
     Functions: {
+      community_submit: {
+        Args: { p_request_id: string; p_digest: string; p_payload: Json; p_bucket: string; p_previous_bucket: string }
+        Returns: Json
+      }
+      community_claim_notification: { Args: { p_sender: string; p_inbox_url: string }; Returns: Json }
+      community_finish_notification: { Args: { p_id: string; p_token: string; p_error?: string | null }; Returns: boolean }
+      community_notification_health: { Args: never; Returns: Json }
+      community_expire: { Args: never; Returns: undefined }
+
       claim_archive_queue_row: {
         Args: never
         Returns: {

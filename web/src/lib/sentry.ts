@@ -1,3 +1,4 @@
+import { isPrivateFeedback, communityBreadcrumb } from "./community-privacy";
 /**
  * Single source of truth for Sentry project identity and runtime options.
  *
@@ -124,6 +125,7 @@ export function isHeadlessReaderNoise(event: SentryEventLike): boolean {
 }
 
 export function sentryBeforeSend<E extends SentryEventLike>(event: E): E | null {
+  if (isPrivateFeedback(event)) return null;
   if (typeof event.request?.url === "string" && event.request.url.startsWith("http://localhost")) {
     return null;
   }
@@ -137,9 +139,19 @@ export function sentryInitOptions(override?: EnvLookup) {
     environment: sentryEnvironment(override),
     enabled: sentryEnabled(override),
     tracesSampleRate: sentryTracesSampleRate(override?.NODE_ENV),
+    // SDK 11 defaults to streamed spans, which ignore beforeSendTransaction.
+    // Static traces let the same private-route filter drop the entire trace.
+    traceLifecycle: "static" as const,
+    tracesSampler: (context: { inheritOrSampleWith: (rate: number) => number }) =>
+      isPrivateFeedback(context)
+        ? 0
+        : context.inheritOrSampleWith(sentryTracesSampleRate(override?.NODE_ENV)),
     ignoreErrors: SENTRY_IGNORE_ERRORS,
     denyUrls: SENTRY_DENY_URLS,
     beforeSend: sentryBeforeSend,
+    beforeBreadcrumb: communityBreadcrumb,
+    beforeSendTransaction: <T,>(event: T) => isPrivateFeedback(event) ? null : event,
+    sendDefaultPii: false,
     ...(release ? { release } : {}),
     debug: (override?.SENTRY_DEBUG ?? process.env.SENTRY_DEBUG) === "true",
   };
