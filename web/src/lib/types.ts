@@ -90,7 +90,12 @@ export interface MeritProfileRow {
   institutionalNeedAidNonresident: boolean | null;
   institutionalNonNeedAidNonresident: boolean | null;
   avgInternationalAid: number | null;
+  /** Deprecated: H.1401 OR H.1411. Use meritCriteriaAcademics / needCriteriaAcademics. */
   institutionalAidAcademics: boolean | null;
+  /** H.1401: academics is a criterion for institutional non-need (merit) aid. */
+  meritCriteriaAcademics: boolean | null;
+  /** H.1411: academics is a criterion for institutional need-based aid. */
+  needCriteriaAcademics: boolean | null;
   cdsMeritCoreCount: number;
   cdsMeritFieldCount: number;
   meritProfileQuality: MeritProfileQuality;

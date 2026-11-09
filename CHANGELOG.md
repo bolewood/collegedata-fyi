@@ -6,6 +6,19 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.19.6] - 2026-11-08
+
+### Fixed
+
+- The school-page merit profile no longer says "Academic merit aid checked"
+  when a school only uses academics for need-based aid.
+  `school_merit_profile.institutional_aid_academics` combined CDS H.1401
+  (academics as a criterion for non-need aid) with H.1411 (academics for
+  need-based aid). The view now also serves `merit_criteria_academics`
+  (H.1401) and `need_criteria_academics` (H.1411), the card uses the
+  non-need flag, and the methodology page describes H14 correctly. The old
+  column keeps its meaning for API compatibility and is marked deprecated.
+  2 of 518 schools change.
 ## [0.6.19.5] - 2026-11-08
 
 ### Fixed

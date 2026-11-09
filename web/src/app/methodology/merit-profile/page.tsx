@@ -84,9 +84,12 @@ export default function MeritProfileMethodologyPage() {
             and the average aid package for those students when the school reports it.
           </FieldUse>
           <FieldUse field="H.14" title="Institutional merit-aid categories">
-            H.14 is a checkbox list of non-need scholarship and grant bases. We
-            surface academics when the school checks it for either full-time
-            first-year students or all undergraduates.
+            H.14 is a checkbox list of the criteria a school uses to award its
+            own scholarships and grants, asked separately for non-need-based aid
+            (H.1401 to H.1410) and need-based aid (H.1411 to H.1419). We show
+            &ldquo;Academic merit aid checked&rdquo; only when the school checks
+            academics for non-need aid (H.1401). Academics as a criterion for
+            need-based aid (H.1411) is served separately in the API.
           </FieldUse>
           <FieldUse field="College Scorecard" title="Net price, outcomes, and debt">
             Scorecard fields provide federal context: average net price, net price
