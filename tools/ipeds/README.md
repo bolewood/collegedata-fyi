@@ -310,14 +310,13 @@ reporting-entity denominator.
 
 ## Recipe generators
 
-Three scripts regenerate the checked-in data behind public recipes. They read
-only public PostgREST resources and write into `web/`:
+Three scripts regenerate the checked-in data behind public recipes and write into `web/`. The two dataset builders read only public PostgREST resources; the XLSX builder reads the checked-in TypeScript dataset:
 
 | Script | Output |
 |---|---|
 | `build_pricing_power_recipe.py` (`--out`) | `web/src/lib/pricing-power-recipe-data.ts` for `/recipes/acceptance-vs-yield` |
 | `build_pricing_power_starter_xlsx.py` (`--data`, `--out`) | `web/public/recipes/acceptance-vs-yield-starter.xlsx`, built from the TypeScript dataset above (run it second) |
-| `build_endowment_draw_rate_recipe.py` (`--min-year`, `--max-year`, `--out`) | `web/src/lib/endowment-draw-rate-recipe-data.ts` for `/recipes/endowment-draw-rate` |
+| `build_endowment_draw_rate_recipe.py` (`--min-year`, `--max-year`, `--generated-at`, `--out`) | `web/src/lib/endowment-draw-rate-recipe-data.ts` for `/recipes/endowment-draw-rate` |
 
 ## Source discipline
 

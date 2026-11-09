@@ -105,8 +105,8 @@ python worker.py --min-year-start 2025 --include-failed --limit 25
 # Ledger and run-origin flags (used by the ops workflow; operators rarely
 # need them): --trigger {schedule,dispatch,operator}, --run-url <actions url>,
 # --replay-ledger-json <file> to replay a failed run's extraction-run ledger
-# without reprocessing documents, --schema <path> to force one schema, and
-# --dry-run.
+# without reprocessing documents, --schema <path> (debug override: forces one schema for every
+# document and disables year-aware dispatch), and --dry-run.
 
 # Content-based year detection only, no extraction writes
 python worker.py --detect-year-only                 # report

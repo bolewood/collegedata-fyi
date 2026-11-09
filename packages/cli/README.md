@@ -29,7 +29,7 @@ node packages/cli/bin/collegedata.js compare mit yale university-of-chicago --fo
 node packages/cli/bin/collegedata.js export schools > schools.jsonl
 ```
 
-Set `COLLEGEDATA_API_BASE` (default `https://www.collegedata.fyi`) to point at a preview or local server. Requests carry `cd_client=cli`, the CLI version and the command name so usage can be attributed (see `docs/api-usage-attribution.md`); nothing else is sent.
+Set `COLLEGEDATA_API_BASE` (default `https://www.collegedata.fyi`) to point at a preview or local server. Requests carry `cd_client=cli`, the CLI version and the command name so usage can be attributed (see `docs/api-usage-attribution.md`).
 
 ## Using the data?
 

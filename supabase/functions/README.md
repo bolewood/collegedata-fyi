@@ -4,7 +4,7 @@ Seven Supabase Edge Functions (Deno/TypeScript) plus shared modules in `_shared/
 
 **Deploying:** never run `supabase functions deploy` from a feature branch or worktree. The `Deploy Edge Functions` workflow (`.github/workflows/deploy-edge-functions.yml`) deploys every function here when function code or `supabase/config.toml` changes on `main`. To redeploy without a code change, dispatch that workflow. See "Edge Functions" in the root `CLAUDE.md`.
 
-**Auth:** all functions except `browser-search` use `verify_jwt = true` in `supabase/config.toml` and additionally require the bearer token to equal `SUPABASE_SERVICE_ROLE_KEY` in the handler. They are called by `pg_cron` or by an operator with `curl`; they are not public APIs. `browser-search` is the exception: it is called by the web app with the anon key.
+**Auth:** `archive-enqueue`, `archive-process`, `archive-upload`, `directory-enqueue` and `refresh-coverage` set `verify_jwt = true` in `supabase/config.toml` and additionally require the bearer token to equal `SUPABASE_SERVICE_ROLE_KEY` in the handler. They are called by `pg_cron` or by an operator with `curl`; they are not public APIs. `discover` sets `verify_jwt = true` but deliberately has no service-role gate (it is a read-only dry run that never writes). `browser-search` has no `config.toml` entry, is deployed with the default settings, and is called by the web app with the anon key.
 
 | Function | Trigger | What it does | Related |
 |---|---|---|---|

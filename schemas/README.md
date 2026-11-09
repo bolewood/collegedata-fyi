@@ -60,6 +60,6 @@ Official templates needed to reproduce canonical schemas live in `schemas/templa
 
 ## Next steps
 
-- The database equivalence layer exists (`cds_canonical_field_equivalence`, migration `20260428190000_canonical_field_equivalence.sql`, populated by `tools/browser_backend/project_browser_data.py`; internal, not a supported public API). Keep it in step when a new template year lands (PRD 014).
+- The database equivalence layer exists (`cds_canonical_field_equivalence`, migration `20260428190000_canonical_field_equivalence.sql`, populated by `tools/browser_backend/project_browser_data.py` from the `schemas/*-to-*.diff.json` files; internal, not a supported public API). Keep it in step when a new template year lands (PRD 014).
 - Expand historical overlays beyond C1/C7/C9 only when a product slice needs those sections; each expansion should keep unmapped rows explicit for QA.
 - Consider whether 2022-23 has enough PDF/form continuity to justify the same synthesized-canonical treatment as 2023-24.

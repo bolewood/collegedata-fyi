@@ -13,6 +13,6 @@ It downloads `schools.jsonl`, `school_facts.jsonl`, `sources.jsonl` and `field_d
 
 ## What the site serves today
 
-The routes under `web/src/app/snapshots/` and `web/src/app/api/snapshots/route.ts` generate the files on request from the live data and cache them for an hour (`/snapshots/latest/<file>`). The dated URL `/snapshots/v1/<date>/<file>` currently serves the same live data, not a frozen copy, and the DuckDB file is not served. Output from this script is a local build artifact; it is not published anywhere automatically. Truly frozen, dated snapshots would need a separate design.
+The routes under `web/src/app/snapshots/` and `web/src/app/api/snapshots/route.ts` generate the files on request from the live data and cache them for an hour (`/snapshots/latest/<file>`). The dated URL `/snapshots/v1/<date>/<file>` currently serves the same live data, not a frozen copy, and the DuckDB file is not served. Output from this script is a local build artifact; it is not published anywhere automatically, and the output directory is not gitignored, so do not commit it (files under `public/` would be served as static snapshots that contradict the live-data behavior above). Truly frozen, dated snapshots would need a separate design.
 
 Related: `web/src/lib/snapshot-data.ts`, the `/api` page, and `llms.txt`.
