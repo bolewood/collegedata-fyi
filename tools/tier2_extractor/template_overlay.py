@@ -246,6 +246,28 @@ def _align_page(page: "pdfium.PdfPage", tpl_page: "pdfium.PdfPage") -> dict:
             "recall": round(recall, 4)}
 
 
+def select_year(counts: dict[str, int], detected_year: str | None) -> tuple[str, str | None, str | None, int, str | None]:
+    """PRD §2.3 year rule. Returns (status, year, reason, lead, runner_up_year).
+
+    The year with the most matched pages wins and needs >= GATE_PAGES. A lead
+    under YEAR_LEAD_MIN pages additionally requires that year to equal
+    `detected_year`; otherwise the result is template_year_ambiguous. A tie is
+    always ambiguous.
+    """
+    ranked = sorted(counts, key=lambda y: (-counts[y], y))
+    best = ranked[0]
+    second = ranked[1] if len(ranked) > 1 else None
+    lead = counts[best] - (counts[second] if second else 0)
+    if counts[best] < GATE_PAGES:
+        return STATUS_NOT_TEMPLATE, None, "fewer_than_30_template_pages", lead, second
+    if lead == 0:
+        return STATUS_AMBIGUOUS, None, "tie_between_years", lead, second
+    if lead < YEAR_LEAD_MIN and detected_year != best:
+        why = "lead_under_3_and_detected_year_missing" if not detected_year else "lead_under_3_and_detected_year_disagrees"
+        return STATUS_AMBIGUOUS, None, why, lead, second
+    return STATUS_MATCHED, best, None, lead, second
+
+
 def match_template(
     pdf: bytes | str | Path | "pdfium.PdfDocument",
     maps: dict[str, YearMaps] | None = None,
@@ -286,21 +308,10 @@ def match_template(
     counts = {y: len(assign[y]) for y in years}
     res.pages_matched = counts
 
-    ranked = sorted(years, key=lambda y: (-counts[y], y))
-    best, second = ranked[0], ranked[1] if len(ranked) > 1 else None
-    res.lead = counts[best] - (counts[second] if second else 0)
-    res.runner_up_year = second
-    if counts[best] < GATE_PAGES:
-        res.reason = "fewer_than_30_template_pages"
-        return res
-
-    if res.lead == 0:
-        res.status, res.reason = STATUS_AMBIGUOUS, "tie_between_years"
-        res.year = None
-        return res
-    if res.lead < YEAR_LEAD_MIN and detected_year != best:
-        res.status = STATUS_AMBIGUOUS
-        res.reason = "lead_under_3_and_detected_year_missing" if not detected_year else "lead_under_3_and_detected_year_disagrees"
+    status, best, reason, lead, second = select_year(counts, detected_year)
+    res.lead, res.runner_up_year = lead, second
+    if status != STATUS_MATCHED:
+        res.status, res.reason = status, reason
         return res
 
     res.status, res.year = STATUS_MATCHED, best
