@@ -1,4 +1,5 @@
 {
+"coordinates":{"mask":"row 0 is the top of the page; each pixel covers 2x2 pt: row = (page_height_pt - y) / 2, column = x / 2","origin":"bottom-left of the page; y increases upward","page_index_base":0,"rect":"[x0, y0, x1, y1], normalized so x0 < x1 and y0 < y1","static_text_inclusion":"characters whose box center lies inside the rect","units":"PDF points (1/72 in)"},
 "fields":{
 "ACADS_NB":{"ft":"/Btn","question_number":"H.1411","value_type":"x","widgets":[{"on_state":"/X","rect":[307.58,417.739,318.053,428.211],"static_text":"☐","template_page":36}]},
 "ACADS_NN":{"ft":"/Btn","question_number":"H.1401","value_type":"x","widgets":[{"on_state":"/X","rect":[217.664,417.313,228.137,427.785],"static_text":"☐","template_page":36}]},

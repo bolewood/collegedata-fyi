@@ -1,4 +1,5 @@
 {
+"coordinates":{"mask":"row 0 is the top of the page; each pixel covers 2x2 pt: row = (page_height_pt - y) / 2, column = x / 2","origin":"bottom-left of the page; y increases upward","page_index_base":0,"rect":"[x0, y0, x1, y1], normalized so x0 < x1 and y0 < y1","static_text_inclusion":"characters whose box center lies inside the rect","units":"PDF points (1/72 in)"},
 "fields":{
 "ACADS_NB":{"ft":"/Btn","question_number":"H.1411","value_type":"x","widgets":[{"on_state":"/X","rect":[306.957,418.322,318.222,427.211],"static_text":"☐","template_page":36}]},
 "ACADS_NN":{"ft":"/Btn","question_number":"H.1401","value_type":"x","widgets":[{"on_state":"/X","rect":[217.664,417.313,228.137,427.785],"static_text":"☐","template_page":36}]},
@@ -900,11 +901,11 @@
 "RM_ONLY_1ST_D":{"ft":"/Tx","question_number":"G.113","value_type":"Nearest $1","widgets":[{"rect":[338.388,142.479,447.065,160.632],"static_text":"","template_page":28}]},
 "RM_ONLY_D":{"ft":"/Tx","question_number":"G.117","value_type":"Nearest $1","widgets":[{"rect":[448.352,142.479,557.464,160.632],"static_text":"","template_page":28}]},
 "ROTC_AF":{"ft":"/Btn","question_number":null,"value_type":null,"widgets":[{"on_state":"/B","rect":[106.333,196.696,113.98,203.879],"static_text":"☐","template_page":27},{"on_state":"/C","rect":[104.697,181.972,113.998,191.136],"static_text":"☐","template_page":27}]},
-"ROTC_AF_TEXT":{"ft":"/Tx","question_number":null,"value_type":null,"widgets":[{"rect":[266.181,181.294,461.345,193.834],"static_text":"","template_page":27}]},
+"ROTC_AF_TEXT":{"ft":"/Tx","question_number":"F.310","value_type":"Text","widgets":[{"rect":[266.181,181.294,461.345,193.834],"static_text":"","template_page":27}]},
 "ROTC_ARMY":{"ft":"/Btn","question_number":null,"value_type":null,"widgets":[{"on_state":"/B","rect":[105.084,305.517,114.713,315.473],"static_text":"☐","template_page":27},{"on_state":"/C","rect":[105.034,292.585,114.335,302.145],"static_text":"☐","template_page":27}]},
 "ROTC_ARMY_TEXT":{"ft":"/Tx","question_number":"F.303","value_type":"Text","widgets":[{"rect":[268.969,292.856,464.133,305.397],"static_text":"","template_page":27}]},
 "ROTC_NAVY":{"ft":"/Btn","question_number":null,"value_type":null,"widgets":[{"on_state":"/NEW56","rect":[103.956,257.706,114.377,266.87],"static_text":"☐","template_page":27},{"on_state":"/B","rect":[104.515,243.15,115.331,252.71],"static_text":"☐","template_page":27},{"on_state":"/C","rect":[104.697,230.118,114.395,239.282],"static_text":"☐","template_page":27}]},
-"ROTC_NAVY_TEXT":{"ft":"/Tx","question_number":null,"value_type":null,"widgets":[{"rect":[268.236,229.094,463.4,241.634],"static_text":"","template_page":27}]},
+"ROTC_NAVY_TEXT":{"ft":"/Tx","question_number":"F.307","value_type":"Text","widgets":[{"rect":[268.236,229.094,463.4,241.634],"static_text":"","template_page":27}]},
 "ROTC_NN":{"ft":"/Btn","question_number":"H.1406","value_type":"x","widgets":[{"on_state":"/X","rect":[217.425,324.844,228.294,334.524],"static_text":"☐","template_page":36}]},
 "SAT1_COMP_1000_P":{"ft":"/Tx","question_number":"C.948","value_type":"Whole Number or Round to Nearest Tenths","widgets":[{"rect":[163.283,442.231,248.462,456.533],"static_text":"","template_page":19}]},
 "SAT1_COMP_1200_P":{"ft":"/Tx","question_number":"C.947","value_type":"Whole Number or Round to Nearest Tenths","widgets":[{"rect":[163.319,456.922,248.498,471.224],"static_text":"","template_page":19}]},
@@ -1143,6 +1144,6 @@
 "raster":{"dpi":36,"encoding":"rle-varint-base64: row-major bits (1 = ink), run lengths alternate starting with a white run (may be 0), LEB128 varints, base64","engine":"pypdfium2 5.15.1","ink_gray_lt":225,"layer":"page content only (annotations and form widgets not drawn)"},
 "schema_file":"cds_schema_2023_24.json",
 "source":{"files":[{"path":"schemas/templates/cds_2023-24_template.pdf","sha256":"2adbe3d16d6ff3144fb9675da67d6d6c9ff9c942a3b597121d50a0084f61c65f"}],"kind":"blank_template"},
-"stats":{"fields":1086,"fields_by_ft":{"/Btn":226,"/Ch":76,"/Tx":784},"inverted_rects_normalized":0,"pages":50,"static_text_widgets":277,"tags_not_in_schema":278,"widgets":1228,"widgets_by_ft":{"/Btn":368,"/Ch":76,"/Tx":784}},
+"stats":{"fields":1086,"fields_by_ft":{"/Btn":226,"/Ch":76,"/Tx":784},"inverted_rects_normalized":0,"pages":50,"static_text_widgets":277,"tags_not_in_schema":276,"widgets":1228,"widgets_by_ft":{"/Btn":368,"/Ch":76,"/Tx":784}},
 "template_year":"2023-24"
 }

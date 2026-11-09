@@ -2,9 +2,10 @@
 
 Run: python -m pytest tools/tier2_extractor -q
 
-The 2024-25 map has no blank PDF in the repo. Its rebuild test needs donor
-PDFs (school documents, never committed): set CDS_2024_25_DONORS to two or
-more PDF paths separated by os.pathsep, otherwise that test is skipped.
+Every map rebuilds byte-for-byte from its blank template in schemas/templates/.
+The optional 2024-25 donor cross-check needs donor PDFs (school documents,
+never committed): set CDS_2024_25_DONORS to two or more PDF paths separated by
+os.pathsep, otherwise that test is skipped.
 """
 
 from __future__ import annotations
@@ -95,8 +96,8 @@ def test_btn_on_states_present(maps):
 def test_schema_join(maps):
     # question_number comes from the year's own schema; tags it does not know stay null.
     assert maps["2025-26"]["stats"]["tags_not_in_schema"] == 2
-    assert maps["2024-25"]["stats"]["tags_not_in_schema"] == 304
-    assert maps["2023-24"]["stats"]["tags_not_in_schema"] == 278
+    assert maps["2024-25"]["stats"]["tags_not_in_schema"] == 302
+    assert maps["2023-24"]["stats"]["tags_not_in_schema"] == 276
     for year, m in maps.items():
         idx = bfm.load_schema_index(year)
         for tag, f in m["fields"].items():
@@ -152,7 +153,7 @@ def _compare_to_rebuild(year, rebuilt):
         assert (ma ^ mb).sum() <= MAX_MASK_DRIFT * max(ma.sum(), 1)
 
 
-@pytest.mark.parametrize("year", ["2025-26", "2023-24"])
+@pytest.mark.parametrize("year", sorted(EXPECTED))
 def test_committed_map_equals_fresh_rebuild(year):
     template = bfm.template_path_for(year)
     assert template.exists(), f"{template} must be committed"
@@ -161,24 +162,62 @@ def test_committed_map_equals_fresh_rebuild(year):
     _compare_to_rebuild(year, rebuilt)
 
 
-def test_2024_25_committed_map_records_donor_consensus(maps):
-    m = maps["2024-25"]
-    assert m["source"]["kind"] == "donor_consensus"
-    assert len(m["source"]["files"]) >= bfm.MIN_DONORS == 2
-    assert m["stats"]["donors"] >= 2
-    assert m["stats"]["rect_tolerance_pt"] <= 0.5
-    assert m["stats"]["text_disagreements"] == 0
+@pytest.mark.parametrize("year", sorted(EXPECTED))
+def test_maps_are_built_from_blank_templates(maps, year):
+    m = maps[year]
+    assert m["source"]["kind"] == "blank_template"
+    assert m["source"]["files"][0]["path"] == f"schemas/templates/cds_{year}_template.pdf"
+    assert "donors" not in m["stats"]
 
 
-def test_2024_25_donors_agree_and_rebuild():
+def test_template_shas_match_sources_md():
+    sources = (bfm.TEMPLATE_DIR / "SOURCES.md").read_text()
+    for year in EXPECTED:
+        sha = bfm.sha256_of(bfm.template_path_for(year))
+        assert f"`cds_{year}_template.pdf`" in sources and sha in sources, year
+
+
+@pytest.mark.parametrize("year", sorted(EXPECTED))
+def test_coordinate_convention_recorded(maps, year):
+    c = maps[year]["coordinates"]
+    assert c["page_index_base"] == 0 and "bottom-left" in c["origin"] and "points" in c["units"]
+    assert all(0 <= w["template_page"] < 50 for f in maps[year]["fields"].values() for w in f["widgets"])
+
+
+def test_rotc_text_tags_join_distinct_questions(maps):
+    expected = {"ROTC_ARMY_TEXT": "F.303", "ROTC_NAVY_TEXT": "F.307", "ROTC_AF_TEXT": "F.310"}
+    for year in ("2023-24", "2024-25"):
+        for tag, qn in expected.items():
+            assert maps[year]["fields"][tag]["question_number"] == qn, (year, tag)
+    assert maps["2025-26"]["fields"]["ROTC_NAVY_TEXT"]["question_number"] == "F.305"
+
+
+def test_duplicate_pdf_tag_in_schema_raises(tmp_path, monkeypatch):
+    schema = {"fields": [
+        {"question_number": "A.1", "pdf_tag": "DUP", "value_type": "Text"},
+        {"question_number": "A.2", "pdf_tag": "DUP", "value_type": "Text"},
+    ]}
+    path = tmp_path / "s.json"
+    path.write_text(json.dumps(schema))
+    monkeypatch.setattr(bfm, "schema_path_for", lambda year: path)
+    with pytest.raises(ValueError, match="DUP.*A.1.*A.2"):
+        bfm.load_schema_index("2025-26")
+
+
+@pytest.mark.parametrize("year", sorted(EXPECTED))
+def test_real_schemas_have_unique_pdf_tags(year):
+    bfm.load_schema_index(year)  # raises on duplicates
+
+
+def test_2024_25_donors_agree_and_match_blank_map():
+    """Optional cross-check: donor consensus reproduces the blank-derived map."""
     raw = os.environ.get("CDS_2024_25_DONORS", "")
     donors = [Path(p) for p in raw.split(os.pathsep) if p]
     if len(donors) < 2:
-        pytest.skip("set CDS_2024_25_DONORS to >= 2 donor PDFs to rebuild the 2024-25 map")
+        pytest.skip("set CDS_2024_25_DONORS to >= 2 donor PDFs for the donor cross-check")
     committed = bfm.load_field_map("2024-25")
     rebuilt = bfm.build_field_map("2024-25", donors, kind="donor_consensus")  # raises on disagreement
-    # field geometry/types are identical; rects may differ by < 0.005 pt when the
-    # donor set differs (mean of sub-point float noise), so compare with tolerance.
+    assert rebuilt["stats"]["text_disagreements"] == 0
     assert set(rebuilt["fields"]) == set(committed["fields"])
     for tag, f in committed["fields"].items():
         g = rebuilt["fields"][tag]
@@ -188,6 +227,10 @@ def test_2024_25_donors_agree_and_rebuild():
             assert w["template_page"] == v["template_page"] and w.get("on_state") == v.get("on_state")
             assert w["static_text"] == v["static_text"]
             assert max(abs(p - q) for p, q in zip(w["rect"], v["rect"])) < 0.005
+    for a, b in zip(committed["pages"], rebuilt["pages"]):
+        ma = bfm.decode_mask(a["mask"]["rle"], a["mask"]["width"], a["mask"]["height"])
+        mb = bfm.decode_mask(b["mask"]["rle"], b["mask"]["width"], b["mask"]["height"])
+        assert (ma ^ mb).sum() <= MAX_MASK_DRIFT * max(ma.sum(), 1)
 
 
 # ---- consensus rules, exercised without donor PDFs --------------------------

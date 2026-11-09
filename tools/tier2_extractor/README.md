@@ -99,33 +99,46 @@ Each page also carries a 36-DPI static-ink mask (gray < 225). Maps live in
 not depend on the zlib build). `decode_mask()` and `load_field_map()` are the
 read seams for template matching.
 
+**Coordinates** (also written to every map under `coordinates`): rects are PDF
+user space in points (1/72 in), origin bottom-left, y increasing upward,
+`[x0, y0, x1, y1]` with x0 < x1 and y0 < y1; page indexes are 0-based. Mask row 0
+is the top of the page and each pixel covers 2x2 pt: `row = (page_height_pt - y) / 2`,
+`column = x / 2`. Static text is the characters whose box center lies inside the rect.
+
 ```bash
-python tools/tier2_extractor/build_field_map.py --year 2025-26 [--check]
-python tools/tier2_extractor/build_field_map.py --year 2023-24 [--check]
-python tools/tier2_extractor/build_field_map.py --year 2024-25 \
-    --donor scratch/donors/a.pdf --donor scratch/donors/b.pdf   # >= 2 distinct Tier 2 PDFs
+python tools/tier2_extractor/build_field_map.py --year 2025-26 [--check]   # also 2024-25, 2023-24
 python -m pytest tools/tier2_extractor -q
-# 2024-25 rebuild test: CDS_2024_25_DONORS=a.pdf:b.pdf python -m pytest tools/tier2_extractor -q
+# optional 2024-25 donor cross-check (filled Tier 2 PDFs, never committed):
+CDS_2024_25_DONORS=a.pdf:b.pdf python -m pytest tools/tier2_extractor -q
+python tools/tier2_extractor/build_field_map.py --year 2024-25 --donor a.pdf --donor b.pdf \
+    --out scratch/prd038/donor_check.json
 ```
 
-2025-26 and 2023-24 build from the blank PDFs in `schemas/templates/`. 2024-25
-builds from donor consensus: every widget must agree within 0.5 pt across
-donors, and the build fails otherwise. Donors are filled forms, but field
-values live in widget annotations, not the page content, so the static ink and
-static text are read from page content only (annotations and form widgets are
-not drawn). The ink mask is a strict-majority vote across donors (AND when there
-are two). Weaker than a blank template: the static layer can only be rebuilt while donor
-PDFs are at hand, and the committed donor set is not reproducible from the repo.
-Checked once against the official 2024-25 blank (Wayback capture listed in
-`schemas/templates/SOURCES.md`, not committed): identical field set, `/Opt`,
-on-states, static text and ink masks (0 differing pixels), and rects within
-0.002 pt. Never commit donor PDFs. Rect coordinates are the mean
-across donors, rounded to 3 decimals, so changing the donor set can move them by
-~0.002 pt. `tags_not_in_schema` in each map's `stats` counts AcroForm tags the
-year's schema has no `pdf_tag` for (2025-26: 2, 2024-25: 304, 2023-24: 278);
-their `question_number` is null, matching what Tier 2 drops today. Needs
-`numpy` and `pypdfium2` (rendering differs slightly across pdfium builds, so the
-rebuild test allows 1% mask drift when the engine version differs).
+All three years build from the official blank PDFs in `schemas/templates/`
+(`*.pdf` is gitignored; new templates need `git add -f`), and the tests demand a
+byte-exact rebuild when the recorded pypdfium2 version matches (the repo pins
+5.15.1). With a different pdfium build the masks may differ by ~0.3% of ink, so
+the test allows 1% there; everything else is still compared exactly.
+
+**Donor consensus (cross-check only).** For 2024-25 the builder can also merge two
+or more filled donors; every widget must agree within 0.5 pt or the build fails.
+Donors draw their static layer from page content with annotations and form
+widgets not drawn, because filled values normally live in widget annotations.
+That assumption is not guaranteed: UW-Madison's 2024-25 PDF has typed text and
+edits in its page content stream (about 460 px over pages 14, 21 and 24). So
+the ink mask is a strict-majority vote across donors (a pixelwise AND for two),
+and static text takes the most common string across donors. A tie (even donor
+count only) is broken by the lexicographically smallest string; disagreements
+are counted in `stats.text_disagreements` and the cross-check test requires 0.
+With four donors the consensus matches the official blank: same fields, `/Opt`,
+on-states and static text, 0 differing mask pixels, rects within 0.002 pt.
+
+**Schema join.** Duplicate `pdf_tag`s in a year's schema make the build raise
+(Tier 2's `extract.py` keeps the last duplicate silently; the schema fix below
+removes the only known case). `tags_not_in_schema` in each map's `stats` counts
+AcroForm tags the year's schema has no `pdf_tag` for (2025-26: 2, 2024-25: 302,
+2023-24: 276); their `question_number` is null, matching what Tier 2 drops
+today. Deciding how to join them is separate work. Needs `numpy` and `pypdfium2`.
 
 ## Tested against
 

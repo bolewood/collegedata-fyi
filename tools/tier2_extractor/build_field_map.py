@@ -7,16 +7,28 @@ blank template. Template overlay extraction (PRD 038 M1+) uses it to read a
 flattened copy of the official PDF at known coordinates.
 
 Sources:
-  * 2025-26, 2023-24: the blank official template PDF in schemas/templates/.
-  * 2024-25: no blank PDF exists. The map is a consensus of two or more
-    filled (Tier 2) donor PDFs. Every widget must agree within --tolerance pt.
+  * every year builds from its official blank template PDF in
+    schemas/templates/ (cds_YYYY-YY_template.pdf).
+  * 2024-25 can also be built as a consensus of two or more filled Tier 2 donor
+    PDFs (--donor, school documents, never committed). That is a cross-check of
+    the committed blank-derived map, not the source of record. Every widget must
+    agree within --tolerance pt.
 
-Why donors can supply the static layer: a fillable form keeps field values in
-the widget annotations (/V and /AP), never in the page content stream. The
-static ink raster and static text are therefore taken from the page content
-alone (annotations and form widgets are not drawn), and the raster is a strict-majority
-vote across donors (a pixelwise AND for two), so a mark that only a minority of
-donors carry is dropped.
+Donor static layer: a fillable form normally keeps field values in widget
+annotations (/V and /AP), so the static ink raster and static text are read from
+page content only (annotations and form widgets are not drawn). This is not
+guaranteed: one donor (UW-Madison) has typed text and edits in its page content
+stream. The raster is therefore a strict-majority vote across donors (a pixelwise
+AND for two), and static text takes the most common value across donors; a tie
+(only possible with an even donor count) is broken by the lexicographically
+smallest string, and the number of disagreements is recorded in
+stats.text_disagreements. Blank-template builds have none of this ambiguity.
+
+Coordinates: widget rects are PDF user space, in points (1/72 in), origin at the
+bottom-left of the page, y increasing upward, normalized so x0<x1 and y0<y1.
+Page indexes are 0-based. Mask row 0 is the top of the page; each pixel covers
+2x2 pt, so row = (page_height_pt - y) / 2 and column = x / 2. The same
+convention is written to every map under "coordinates".
 
 Output (schemas/field_maps/cds_pdf_field_map_YYYY_YY.json) is deterministic:
 sorted keys, no timestamps, rects rounded to 3 decimals, and the ink masks are
@@ -26,8 +38,8 @@ not depend on the zlib build.
 Usage:
     python tools/tier2_extractor/build_field_map.py --year 2025-26
     python tools/tier2_extractor/build_field_map.py --year 2023-24
-    python tools/tier2_extractor/build_field_map.py --year 2024-25 \\
-        --donor scratch/donors/a.pdf --donor scratch/donors/b.pdf
+    python tools/tier2_extractor/build_field_map.py --year 2024-25 --donor a.pdf \\
+        --donor b.pdf --out scratch/prd038/donor_check.json   # cross-check only
     python tools/tier2_extractor/build_field_map.py --year 2025-26 --check
 """
 
@@ -59,6 +71,16 @@ INK_THRESHOLD = 225  # gray level < this counts as ink
 DEFAULT_TOLERANCE_PT = 0.5
 MIN_DONORS = 2
 YEARS = ("2023-24", "2024-25", "2025-26")
+
+COORDINATES = {
+    "units": "PDF points (1/72 in)",
+    "origin": "bottom-left of the page; y increases upward",
+    "page_index_base": 0,
+    "rect": "[x0, y0, x1, y1], normalized so x0 < x1 and y0 < y1",
+    "mask": "row 0 is the top of the page; each pixel covers 2x2 pt: "
+            "row = (page_height_pt - y) / 2, column = x / 2",
+    "static_text_inclusion": "characters whose box center lies inside the rect",
+}
 
 MASK_ENCODING = (
     "rle-varint-base64: row-major bits (1 = ink), run lengths alternate "
@@ -296,8 +318,14 @@ def load_schema_index(year: str) -> dict[str, dict]:
     index: dict[str, dict] = {}
     for field in schema["fields"]:
         tag = field.get("pdf_tag")
-        if tag and tag not in index:  # first wins; ROTC_ARMY_TEXT repeats in 2023-24/2024-25
-            index[tag] = field
+        if not tag:
+            continue
+        if tag in index:
+            raise ValueError(
+                f"{schema_path_for(year).name}: pdf_tag {tag!r} is assigned to both "
+                f"{index[tag]['question_number']} and {field['question_number']}"
+            )
+        index[tag] = field
     return index
 
 
@@ -479,7 +507,7 @@ def build_field_map(
     widget_total = sum(len(f["widgets"]) for f in out_fields.values())
     by_ft_fields = Counter(f["ft"] for f in out_fields.values())
     by_ft_widgets = Counter(f["ft"] for f in out_fields.values() for _ in f["widgets"])
-    inverted = sum(h["inverted"] for h in harvests[:1])
+    inverted = max(h["inverted"] for h in harvests)
 
     pages = []
     for p in range(n_pages):
@@ -529,6 +557,7 @@ def build_field_map(
             "engine": f"pypdfium2 {pdfium.version.PYPDFIUM_INFO.version if hasattr(pdfium.version.PYPDFIUM_INFO, 'version') else pdfium.version.PYPDFIUM_INFO}",
             "encoding": MASK_ENCODING,
         },
+        "coordinates": COORDINATES,
         "stats": stats,
         "fields": out_fields,
         "pages": pages,
@@ -580,15 +609,10 @@ def load_field_map(year: str) -> dict:
 # --------------------------------------------------------------------------
 
 def _build_for_cli(year: str, donors: list[Path], tolerance: float) -> dict:
-    if year == "2024-25":
-        if len(donors) < MIN_DONORS:
-            raise SystemExit(
-                f"2024-25 has no blank PDF; pass at least {MIN_DONORS} --donor PDFs "
-                "(distinct Tier 2 documents)"
-            )
-        return build_field_map(year, donors, kind="donor_consensus", tolerance=tolerance)
     if donors:
-        raise SystemExit(f"--donor applies only to 2024-25; {year} builds from its blank template")
+        if year != "2024-25":
+            raise SystemExit("--donor is a 2024-25 cross-check; other years build from their blank template")
+        return build_field_map(year, donors, kind="donor_consensus", tolerance=tolerance)
     template = template_path_for(year)
     if not template.exists():
         raise SystemExit(f"missing template {template}")
@@ -599,7 +623,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--year", required=True, choices=YEARS)
     ap.add_argument("--donor", action="append", default=[], type=Path,
-                    help="2024-25 only: a filled Tier 2 donor PDF (repeat, at least 2)")
+                    help="2024-25 cross-check only: a filled Tier 2 donor PDF (repeat, at least 2); "
+                         "write with --out, do not overwrite the committed map")
     ap.add_argument("--out", type=Path, help="output path (default: schemas/field_maps/...)")
     ap.add_argument("--tolerance", type=float, default=DEFAULT_TOLERANCE_PT,
                     help="max donor disagreement per rect coordinate, in pt (default 0.5)")

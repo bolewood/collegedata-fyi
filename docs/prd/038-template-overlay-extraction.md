@@ -92,7 +92,7 @@ The three benchmark schools in the first draft (Valparaiso, Barnard and Miami 20
 | Year | Source | Pages | Fields | Widgets (`/Tx` / `/Ch` / `/Btn`) | Inverted `/Rect` |
 |---|---|---:|---:|---|---:|
 | 2025-26 | Blank template (`scratch/CDS-PDF-2025-2026_PDF_Template.pdf`, **not in repo**) | 50 | 1,089 | 1,263 (789 / 76 / 398) | 114 |
-| 2024-25 | No blank PDF; Vaughn and UW Tier 2 sources agree on 1,116 / 1,116 fields within 0.5 pt | 50 | 1,116 | 1,257 (817 / 76 / 364) | 0 |
+| 2024-25 | Official blank (`schemas/templates/cds_2024-25_template.pdf`); Vaughn and UW Tier 2 donors agree with it within 0.002 pt | 50 | 1,116 | 1,257 (817 / 76 / 364) | 0 |
 | 2023-24 | `schemas/templates/cds_2023-24_template.pdf` | 50 | 1,086 | 1,228 (784 / 76 / 368) | 0 |
 
 **Maps are year-specific.** 2024-25 and 2025-26 share 1,082 tags, but only 738 of them keep the same page and rectangle (within 0.5 pt) across years. Inverted rects are a 2025-26 quirk. The build normalizes every rect regardless.
@@ -165,7 +165,7 @@ A build CLI, `tools/tier2_extractor/build_field_map.py`, harvests each map once.
 
 **Sources:**
 - 2025-26: commit the blank PDF to `schemas/templates/cds_2025-26_template.pdf`, next to the 2023-24 one.
-- 2024-25: build by consensus of at least 2 Tier 2 donor PDFs. Every widget must agree within 0.5 pt.
+- 2024-25: build from the official blank (`schemas/templates/cds_2024-25_template.pdf`, archived from the Wayback capture listed in `SOURCES.md`), like the other years. A consensus of Tier 2 donor PDFs (every widget within 0.5 pt) reproduces it and is kept as an optional cross-check.
 
 **Per field:**
 - `question_number`, joined via `pdf_tag` to `schemas/cds_schema_YYYY_YY.json`;
@@ -290,7 +290,7 @@ Either way it is a separate, later migration, and rollback is the reverse migrat
 - Commit the 2025-26 blank template and three maps.
 - Tests assert the counts in the table: 1,089 / 1,263; 1,116 / 1,257; 1,086 / 1,228.
 - No inverted rects remain after normalization.
-- The 2024-25 map agrees between the two donors.
+- The 2024-25 map rebuilds byte-exact from the official blank, and the donor consensus agrees with it.
 
 **M1 — Stage 1 and Lanes 1 and 3.**
 - On the 298 distinct PDFs scanned in the review, Stage 1 matches the 95 listed in [`assets/038/template-cohort-2026-11-09.csv`](assets/038/template-cohort-2026-11-09.csv) and rejects the other 203. Any difference is explained in the PR.
