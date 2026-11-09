@@ -451,7 +451,7 @@ except Exception:  # pragma: no cover
 # "Numbers" is the schema's type for digit identifiers (ZIP, phone, area code,
 # extension): kept as typed and checked for digits and phone punctuation only.
 IDENTIFIER_NUMBER_TYPE = "Numbers"
-_IDENT_RE = re.compile(r"^[0-9][0-9\-\s().+x]*$")
+_IDENT_RE = re.compile(r"^[0-9(+][0-9\-\s().+x]*$")
 NUMERIC_TYPES = {
     "Number", "Nearest $1", "Nearest 1%", "Carnegie units",
     "Whole Number or Round to Nearest Tenth", "Whole Number or Round to Nearest Tenths",
@@ -469,14 +469,18 @@ class PageChar:
 
 
 def _page_chars(page: "pdfium.PdfPage") -> list[PageChar]:
-    """Text-layer characters with their box centres; pdfium-generated ones dropped."""
+    """Text-layer characters with their box centres.
+
+    Characters pdfium generated (hyphen markers, line breaks) are dropped, except
+    generated whitespace: Distiller prints spaces as gaps, so pdfium's generated
+    space (a zero-width box at the gap) is the only thing separating words.
+    """
     tp = page.get_textpage()
     out = []
     for i in range(tp.count_chars()):
-        if _pdfium_c is not None and _pdfium_c.FPDFText_IsGenerated(tp.raw, i):
-            continue
+        generated = _pdfium_c is not None and _pdfium_c.FPDFText_IsGenerated(tp.raw, i)
         ch = tp.get_text_range(i, 1)
-        if not ch:
+        if not ch or (generated and ch not in " \r\n\t"):
             continue
         left, bottom, right, top = tp.get_charbox(i)
         out.append(PageChar(ch, (left + right) / 2.0, (bottom + top) / 2.0))
@@ -488,12 +492,24 @@ def _template_chars(year: str, page: int) -> tuple[PageChar, ...]:
     return tuple(_page_chars(_template_doc(year)[page]))
 
 
+_IGNORABLE = {"\ufffe", "\uffff"}   # pdfium's hyphenation / non-printing markers (not glyphs)
+_REPLACEMENT = "\ufffd"
+
+
+def _ignorable_char(ch: str) -> bool:
+    return ch in _IGNORABLE or unicodedata.category(ch[0]) == "Cf"   # soft hyphen, zero-width
+
+
 def _bad_char(ch: str) -> bool:
-    """Control, private-use, surrogate, unassigned or replacement code points."""
-    if ch in "\t\n\r":
+    """Control, private-use, surrogate, unassigned or replacement code points.
+
+    pdfium's U+FFFE/U+FFFF markers and format characters (soft hyphen, zero-width)
+    are not glyphs and are ignored, not treated as garbling.
+    """
+    if ch in "\t\n\r" or _ignorable_char(ch):
         return False
     cat = unicodedata.category(ch[0])
-    return cat in ("Cc", "Co", "Cs", "Cn") or ch == "�"
+    return cat in ("Cc", "Co", "Cs", "Cn") or ch == _REPLACEMENT
 
 
 def read_widget_text(
@@ -524,9 +540,14 @@ def read_widget_text(
                 if not hit:
                     kept.append(c)
             inside = kept
-    raw = "".join(c.ch for c in inside)
+    raw = "".join(c.ch for c in inside if not _ignorable_char(c.ch))
     bad = any(_bad_char(c.ch) for c in inside)
     return re.sub(r"\s+", " ", raw).strip(), bad
+
+
+# Schema value_type corrections (the schema types these numeric; the questions
+# take text). AD_TFER_GRADE asks for the lowest transferable letter grade.
+VALUE_TYPE_OVERRIDES = {"AD_TFER_GRADE": "Text"}
 
 
 def normalise_text_value(raw: str, value_type: str | None) -> tuple[str | None, str | None]:
@@ -548,16 +569,33 @@ def normalise_text_value(raw: str, value_type: str | None) -> tuple[str | None, 
 
 
 def choice_to_export(raw: str, opt: list[list[str]] | None) -> str | None:
-    """Map a /Ch display string to its export value through /Opt."""
+    """Map a /Ch display string to its export value through /Opt.
+
+    Matching ignores case and all whitespace (flattened dropdowns often lose
+    word gaps). A read that is cut off at the widget edge ("per semester h") maps
+    only when it is a prefix of exactly one display string.
+    """
     if not opt:
         return None
-    key = re.sub(r"\s+", " ", raw).strip().lower()
+
+    def k(x: str) -> str:
+        return re.sub(r"\s+", "", x).lower()
+
+    key = k(raw)
     for export, display in opt:
-        if re.sub(r"\s+", " ", display).strip().lower() == key:
+        if k(display) == key:
             return export
     for export, _display in opt:
-        if re.sub(r"\s+", " ", export).strip().lower() == key:
+        if k(export) == key:
             return export
+    if key.isdigit():  # editable MM/DD combos: "08" is the option "8"
+        for export, display in opt:
+            if k(display).isdigit() and int(k(display)) == int(key):
+                return export
+    if len(key) >= 4:
+        hits = [export for export, display in opt if k(display).startswith(key)]
+        if len(hits) == 1:
+            return hits[0]
     return None
 
 
@@ -782,7 +820,7 @@ def extract_overlay(
                 rejected.append({"pdf_tag": tag, "reason": "choice_not_in_opt", "read": raw, "page": q})
                 continue
             raw = exp
-        val, why = normalise_text_value(raw, f["value_type"])
+        val, why = normalise_text_value(raw, VALUE_TYPE_OVERRIDES.get(tag, f["value_type"]))
         if why:
             rejected.append({"pdf_tag": tag, "reason": why, "read": raw, "page": q,
                              **({} if strict_types else {"kept": True})})
