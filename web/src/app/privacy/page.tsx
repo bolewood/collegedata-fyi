@@ -28,7 +28,7 @@ export default function PrivacyPage() {
       <div className="mt-8 space-y-5 text-base leading-relaxed">
         <p>
           <strong style={{ fontWeight: 600, color: "var(--ink)" }}>Effective date:</strong>{" "}
-          November 8, 2026
+          November 9, 2026
         </p>
 
         <p>
@@ -97,8 +97,9 @@ export default function PrivacyPage() {
 
         <p>
           For automated API clients (scripts and bots, not browsers), we keep
-          a short code made from the IP address and user agent with a random
-          key that changes every day and is deleted two days later, so the
+          a short code made from the IP address, user agent, and TLS
+          fingerprint (a technical signature of how the client opens a secure
+          connection) with a random key that changes every day and is deleted two days later, so the
           code can&apos;t be traced back or linked across days. Next to it we
           keep the client&apos;s self-declared name, the network it came from
           (such as a cloud provider), and its country. We keep these hourly
@@ -106,10 +107,35 @@ export default function PrivacyPage() {
         </p>
 
         <p>
+          Separately, requests to the friendly API (<code>/api/schools*</code>,{" "}
+          <code>/api/compare</code>, <code>/api/facts</code>, and the other
+          simple endpoints) are also recorded one row per request, with the
+          route, the client name your app sends in the{" "}
+          <code>X-CollegeData-Client</code> header, the referring site&apos;s
+          hostname, your country, and the school asked about. These rows hold
+          no IP address and no full user agent. We keep them for 400 days, then
+          delete them.
+        </p>
+
+        <p>
           If we publish anything from this data, it will be aggregate counts
           only, such as total downloads per day and per school per month,
           with small per-school numbers hidden. We will never publish
           anything about an individual visitor or client.
+        </p>
+
+        <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>
+          Error monitoring
+        </h2>
+
+        <p>
+          We use Sentry to find and fix errors. When a page or API request
+          fails, Sentry receives the error report and the technical context
+          around it, such as the URL path, browser type, and stack trace. In
+          production we also send performance traces for a sample of requests
+          (about one in five) to see where the site is slow. We do not turn on
+          session replay, and we leave Sentry's default personal-data
+          collection turned off.
         </p>
 
         <h2 style={{ fontFamily: "var(--serif)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)", marginTop: 40 }}>

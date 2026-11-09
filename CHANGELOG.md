@@ -6,6 +6,26 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.19.16] - 2026-11-09
+
+### Changed
+
+- Privacy page now discloses Sentry error reports and sampled performance
+  traces, per-request friendly-API usage rows (kept 400 days), and the TLS
+  fingerprint used in the hashed client code.
+- Snapshot copy and `/api/snapshots` no longer present dated URLs as frozen:
+  they serve live data regenerated hourly. The manifest carries the generation
+  date and a note, and the unavailable `collegedata.duckdb` link is gone.
+- Methodology: class rank is C.10 and GPA is C.11; C.1 alone supplies applicant
+  and admit counts. The merit-profile page no longer hard-codes a school count.
+- `/api` documents `GET /api/facts/{school_id}`, 308 canonical-slug redirects,
+  400/404 errors, the 25-school compare cap, all six CLI subcommands, the
+  directory, coverage, change-event, and FSA views, and the
+  `canonical_field_id`, `equivalence_kind`, and `source_producer` columns.
+- `openapi.json` (now 0.2.0) adds `/api/facts/{school_id}`, error and redirect
+  responses, and the `X-CollegeData-Client` header. `llms.txt` lists the missing
+  endpoints and pages.
+
 ## [0.6.19.15] - 2026-11-09
 
 ### Changed

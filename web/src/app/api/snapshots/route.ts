@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
+import { SNAPSHOT_NOTE, snapshotBase, snapshotDate } from "@/lib/snapshot-data";
 
 export const revalidate = 3600;
 
-const SNAPSHOT_DATE = "2026-05-09";
-
 export async function GET() {
-  const base = `https://www.collegedata.fyi/snapshots/v1/${SNAPSHOT_DATE}`;
+  const date = snapshotDate();
+  const base = snapshotBase(date);
   return NextResponse.json(
     {
       generated_at: new Date().toISOString(),
       schema_version: "v1",
+      snapshot_date: date,
+      note: SNAPSHOT_NOTE,
       current: `${base}/manifest.json`,
       latest: "https://www.collegedata.fyi/snapshots/latest/manifest.json",
       files: [
@@ -17,7 +19,6 @@ export async function GET() {
         `${base}/school_facts.jsonl`,
         `${base}/sources.jsonl`,
         `${base}/field_dictionary.json`,
-        `${base}/collegedata.duckdb`,
       ],
     },
     {
@@ -27,4 +28,3 @@ export async function GET() {
     },
   );
 }
-
