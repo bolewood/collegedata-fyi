@@ -1,1 +1,4 @@
 pypdf>=6.0
+# build_field_map.py (PRD 038): static-ink rasters of the template pages
+numpy>=1.26
+pypdfium2==5.15.1

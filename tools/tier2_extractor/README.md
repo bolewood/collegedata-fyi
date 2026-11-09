@@ -86,6 +86,44 @@ Only populated fields are emitted. Downstream consumers who want a full-coverage
 
 The `values` dict is keyed by canonical `question_number`, which is the stable cross-school join key. A consumer asking "what did every school report for C.101?" iterates `values["C.101"]` across every school's Tier 2 output.
 
+## Field maps (PRD 038)
+
+`build_field_map.py` harvests a per-year *field map* of the official fillable
+template: for every AcroForm field, its `question_number` (joined by `pdf_tag`
+to that year's `schemas/cds_schema_YYYY_YY.json`), schema `value_type`, `ft`,
+widgets (`template_page`, normalized `rect`, `on_state` for buttons,
+`static_text` printed inside the rect), and `/Opt` `[export, display]` pairs.
+Each page also carries a 36-DPI static-ink mask (gray < 225). Maps live in
+`schemas/field_maps/cds_pdf_field_map_YYYY_YY.json`; output is deterministic
+(sorted keys, one line per field/page, masks as a hand-written RLE so it does
+not depend on the zlib build). `decode_mask()` and `load_field_map()` are the
+read seams for template matching.
+
+```bash
+python tools/tier2_extractor/build_field_map.py --year 2025-26 [--check]
+python tools/tier2_extractor/build_field_map.py --year 2023-24 [--check]
+python tools/tier2_extractor/build_field_map.py --year 2024-25 \
+    --donor scratch/donors/a.pdf --donor scratch/donors/b.pdf   # >= 2 distinct Tier 2 PDFs
+python -m pytest tools/tier2_extractor -q
+# 2024-25 rebuild test: CDS_2024_25_DONORS=a.pdf:b.pdf python -m pytest tools/tier2_extractor -q
+```
+
+2025-26 and 2023-24 build from the blank PDFs in `schemas/templates/`. 2024-25
+builds from donor consensus: every widget must agree within 0.5 pt across
+donors, and the build fails otherwise. Donors are filled forms, but field
+values live in widget annotations, not the page content, so the static ink and
+static text are read from page content only (annotations and form widgets are
+not drawn). The ink mask is a strict-majority vote across donors (AND when there
+are two). Weaker than a blank template: no official reference to check the
+donors' page content against, and the static layer can only be rebuilt while
+donor PDFs are at hand. Never commit donor PDFs. Rect coordinates are the mean
+across donors, rounded to 3 decimals, so changing the donor set can move them by
+~0.002 pt. `tags_not_in_schema` in each map's `stats` counts AcroForm tags the
+year's schema has no `pdf_tag` for (2025-26: 2, 2024-25: 304, 2023-24: 278);
+their `question_number` is null, matching what Tier 2 drops today. Needs
+`numpy` and `pypdfium2` (rendering differs slightly across pdfium builds, so the
+rebuild test allows 1% mask drift when the engine version differs).
+
 ## Tested against
 
 | PDF | AcroForm populated | Result |
