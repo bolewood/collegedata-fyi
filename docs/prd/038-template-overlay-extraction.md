@@ -1,9 +1,9 @@
 # PRD 038: Template overlay extraction for flattened official CDS PDFs
 
-**Status:** Draft (revised after adversarial review, 2026-11-09)
+**Status:** Approved for M0–M3 (revised after adversarial review; decisions recorded 2026-11-09)
 **Created:** 2026-11-09
 **Author:** Antigravity; revised by Claude
-**Related:** [ADR 0006 — Tiered extraction strategy](../decisions/0006-tiered-extraction-strategy.md), [ADR 0007 — Year authority moves to extraction](../decisions/0007-year-authority-moves-to-extraction.md), [PRD 005 — Full schema extraction](005-full-schema-extraction.md), [PRD 006 — LLM fallback](006-llm-fallback.md), [PRD 0111A — Docling improvement spike](0111A-docling-improvement-spike.md), PR #258 (flattened reprint source guard, open)
+**Related:** [ADR 0006 — Tiered extraction strategy](../decisions/0006-tiered-extraction-strategy.md), [ADR 0007 — Year authority moves to extraction](../decisions/0007-year-authority-moves-to-extraction.md), [PRD 005 — Full schema extraction](005-full-schema-extraction.md), [PRD 006 — LLM fallback](006-llm-fallback.md), [PRD 0111A — Docling improvement spike](0111A-docling-improvement-spike.md), PR #258 (flattened reprint source guard, merged as v0.6.19.13)
 
 ---
 
@@ -142,7 +142,7 @@ The three benchmark schools in the first draft (Valparaiso, Barnard and Miami 20
 
 ## Goals
 
-1. On the 97 matched documents, emit template-overlay values whose precision is at least the bar the owner sets (see Decisions). The target is ≥ 99% on a hand-audited sample.
+1. On the 97 matched documents, emit template-overlay values that meet the Decision 3 bar: ≥ 99% exact on a hand-audited sample and zero numeric values that differ from the printed page.
 2. Raise the median field count of the text-layer docs to ≥ 550, and of the vector-path docs to ≥ 450.
    - Today the text-layer docs sit at a median 291 (2025-26) and 406.5 (2024-25), measured on the 92-doc subset.
    - The vector-path docs sit at Tier 4's level, a median of 136–139 for Print To PDF.
@@ -244,7 +244,7 @@ The first draft also proposed per-field confidence buckets. Nothing downstream r
 
 ### 5. Producer, selection and merge
 
-- **Artifact.** The producer is `tier2_template_overlay` (name to confirm; see Decisions). It writes `cds_artifacts.notes`, not `metadata` (no such column exists):
+- **Artifact.** The producer is `tier2_template_overlay` (Decision 4). It writes `cds_artifacts.notes`, not `metadata` (no such column exists):
   - `producer_version`, `field_map_version` and `template_year`;
   - `matched_template_pages` and the page map;
   - `lane_counts` and `rejected_fields`;
@@ -253,7 +253,7 @@ The first draft also proposed per-field confidence buckets. Nothing downstream r
 - **The worker runs Tier 4 as it does today, and also runs the overlay on docs that pass Stage 1.** The overlay never replaces the Tier 4 run:
   - Tier 4 values are still needed for fields the overlay does not emit;
   - any overlay failure leaves the document exactly where it is now.
-- **Merge (recommended "supplement" model; Decision 2).**
+- **Merge ("supplement" model; Decision 2).**
   - The overlay artifact holds only its own values. It is never a base candidate, so it never enters the view's `producer IN (…)` list or rank `CASE`.
   - `cds_selected_extraction_result` adds a second lateral join, next to the `tier4_llm_fallback` join. It picks the newest overlay artifact for the same document whose `source_sha256` equals the Tier 4 base's.
   - Merge order is `fallback || tier4 base || overlay`: overlay wins, then deterministic Tier 4, then the LLM fallback.
@@ -310,15 +310,23 @@ Either way it is a separate, later migration, and rollback is the reverse migrat
 - Run the overlay on the 97 docs.
 - Hand-audit a random sample of at least 200 emitted values across at least 20 docs, at least 10 of them vector-path, against the rendered page.
 - Report precision and the per-doc field-count change, with 0 regressions.
-- If precision meets the owner's bar, the serving migration lands (§6).
+- If precision meets the Decision 3 bar, the serving migration lands (§6), together with the Decision 1 selection-precedence change.
 
-## Decisions needed
+## Decisions
 
-1. **Selection precedence.** Today a stale `tier2_acroform` artifact from an earlier edition outranks any newer artifact. Should selection prefer artifacts built from the document's current selected source before producer rank? This is needed for `edition_values_changed`, and it changes behaviour for existing documents.
-2. **Merge location.** Merge in the view (recommended), or in a worker-built combined artifact.
-3. **Precision bar** for M3, and the Tier 4 disagreement level that holds a document.
-4. **Producer name and family.** `tier2_template_overlay` places the overlay in the Tier 2 family for change intelligence by prefix. Decide whether it should have its own family.
-5. **2023-24 scope.** Measure that cohort (template already in repo) before including it.
+Recorded 2026-11-09 by Anthony:
+
+1. **Selection precedence: the current source wins over producer rank.** Selection first keeps only artifacts built from the document's current source, then applies producer rank among them. The current source is the source the newest extraction selected: `notes.source_selection.chosen_sha256` when PR #258 chose a source, else the newest `kind='source'` sha. A `tier2_acroform` artifact from an earlier edition no longer outranks a newer edition's results.
+   - This changes behaviour for existing documents. The migration ships with a before/after diff of the selected producer per document, reviewed before merge.
+   - Documents where PR #258 deliberately selected an older fillable source keep that source's Tier 2 artifact.
+2. **Merge location: in the view** (the supplement model in §5). Projection and web mirror the same three-way merge.
+3. **Precision bar for M3.**
+   - At least 99% exact on the hand-audited sample.
+   - Zero emitted numeric values that differ from the printed page.
+   - A document is held for review when Tier 4 and the overlay disagree on more than 5% of the fields both populate.
+   - Values that fail the §4 cross-field checks are not emitted.
+4. **Producer: `tier2_template_overlay`, Tier 2 family** for change intelligence, listed explicitly in `PRODUCER_FAMILY` rather than relying on the prefix fallback. Under the supplement model it is never a base candidate, so it gets no base rank.
+5. **2023-24: deferred.** Ship 2024-25 and 2025-26 first. Measure the 59-document 2023-24 cohort's geometry before including it.
 
 ## Risks
 
