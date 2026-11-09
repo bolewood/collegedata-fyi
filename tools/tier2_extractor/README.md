@@ -114,9 +114,12 @@ donors, and the build fails otherwise. Donors are filled forms, but field
 values live in widget annotations, not the page content, so the static ink and
 static text are read from page content only (annotations and form widgets are
 not drawn). The ink mask is a strict-majority vote across donors (AND when there
-are two). Weaker than a blank template: no official reference to check the
-donors' page content against, and the static layer can only be rebuilt while
-donor PDFs are at hand. Never commit donor PDFs. Rect coordinates are the mean
+are two). Weaker than a blank template: the static layer can only be rebuilt while donor
+PDFs are at hand, and the committed donor set is not reproducible from the repo.
+Checked once against the official 2024-25 blank (Wayback capture listed in
+`schemas/templates/SOURCES.md`, not committed): identical field set, `/Opt`,
+on-states, static text and ink masks (0 differing pixels), and rects within
+0.002 pt. Never commit donor PDFs. Rect coordinates are the mean
 across donors, rounded to 3 decimals, so changing the donor set can move them by
 ~0.002 pt. `tags_not_in_schema` in each map's `stats` counts AcroForm tags the
 year's schema has no `pdf_tag` for (2025-26: 2, 2024-25: 304, 2023-24: 278);

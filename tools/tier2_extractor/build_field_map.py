@@ -381,6 +381,24 @@ def _r3(v: float) -> float:
     return round(float(v) + 0.0, 3)
 
 
+ROW_TOLERANCE_PT = 1.0
+
+
+def _canonical_widget_order(widgets: list[dict]) -> list[dict]:
+    ordered: list[dict] = []
+    for page in sorted({w["page"] for w in widgets}):
+        group = sorted((w for w in widgets if w["page"] == page), key=lambda w: -w["rect"][3])
+        rows: list[list[dict]] = []
+        for w in group:
+            if rows and rows[-1][-1]["rect"][3] - w["rect"][3] <= ROW_TOLERANCE_PT:
+                rows[-1].append(w)
+            else:
+                rows.append([w])
+        for row in rows:
+            ordered.extend(sorted(row, key=lambda w: (w["rect"][0], -w["rect"][2])))
+    return ordered
+
+
 def build_field_map(
     year: str,
     sources: list[Path],
@@ -410,9 +428,11 @@ def build_field_map(
     n_pages = page_counts.pop()
     fields = _consensus_fields(harvests, tolerance)
 
-    # canonical widget order per field: page, top-to-bottom, left-to-right
+    # canonical widget order per field: page, then rows top-to-bottom, then left-to-right.
+    # Rows are clustered (tops within ROW_TOLERANCE_PT chain together) because the
+    # tops of same-row widgets differ by float noise that must not decide the order.
     for entry in fields.values():
-        entry["widgets"].sort(key=lambda w: (w["page"], -w["rect"][3], w["rect"][0], -w["rect"][2]))
+        entry["widgets"] = _canonical_widget_order(entry["widgets"])
 
     rects_by_page: dict[int, list[list[float]]] = {}
     index_of: dict[tuple[str, int], tuple[int, int]] = {}
