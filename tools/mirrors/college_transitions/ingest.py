@@ -27,34 +27,196 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+from typing import Any, Iterable, Mapping
+from urllib.parse import urlparse
 
-import requests
-from dotenv import load_dotenv
-from supabase import create_client
+try:
+    import requests
+except ImportError:  # pragma: no cover - optional in pure unit-test environments
+    requests = None  # type: ignore[assignment]
+
+try:
+    from dotenv import load_dotenv
+except ImportError:  # pragma: no cover
+    load_dotenv = None  # type: ignore[assignment]
+
+try:
+    from supabase import create_client
+except ImportError:  # pragma: no cover
+    create_client = None  # type: ignore[assignment]
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from tools.finder.identity_guard import (  # noqa: E402
+    resolve_canonical_school_id,
+    validated_canonical_alias_slug_map,
+    validated_unique_school_claim_slug_map,
+)
+
 DEFAULT_CATALOG = Path(__file__).resolve().parent / "catalog.json"
 DEFAULT_LOG = Path(__file__).resolve().parent / "ingest-log.jsonl"
 PROVENANCE_TAG = "mirror_college_transitions"
 
 
-def fetch_existing_years(sb, school_ids: list[str]) -> dict[str, set[str]]:
-    """Return {school_id: {years_we_have}} across ALL provenance values.
+def canonicalize_catalog_entries(
+    entries: Iterable[Mapping[str, Any]],
+    *,
+    canonical_by_ipeds: Mapping[str, str] | None = None,
+    canonical_by_alias: Mapping[str, str] | None = None,
+) -> list[dict[str, Any]]:
+    """Resolve every catalog entry's school_id to its canonical public slug."""
+    by_ipeds = (
+        dict(canonical_by_ipeds)
+        if canonical_by_ipeds is not None
+        else validated_unique_school_claim_slug_map()
+    )
+    by_alias = (
+        dict(canonical_by_alias)
+        if canonical_by_alias is not None
+        else validated_canonical_alias_slug_map()
+    )
+    merged: dict[str, dict[str, Any]] = {}
+    for raw in entries:
+        entry = dict(raw)
+        canonical_id = resolve_canonical_school_id(
+            entry.get("school_id"),
+            ipeds_id=entry.get("ipeds_id"),
+            canonical_by_ipeds=by_ipeds,
+            canonical_by_alias=by_alias,
+        )
+        entry["school_id"] = canonical_id
+        existing = merged.get(canonical_id)
+        if existing is None:
+            entry["years"] = dict(entry.get("years") or {})
+            merged[canonical_id] = entry
+        else:
+            combined_years = dict(existing.get("years") or {})
+            for year, url in (entry.get("years") or {}).items():
+                combined_years.setdefault(year, url)
+            existing["years"] = combined_years
+    return [merged[key] for key in sorted(merged)]
+
+
+def valid_url(url: str) -> bool:
+    try:
+        parsed = urlparse(url)
+        return (
+            parsed.scheme in ("http", "https")
+            and bool(parsed.hostname)
+            and "." in parsed.hostname
+        )
+    except Exception:
+        return False
+
+
+def build_ingest_tasks(
+    entries: Iterable[Mapping[str, Any]],
+    existing_years: Mapping[str, set[str]],
+    *,
+    canonical_by_ipeds: Mapping[str, str] | None = None,
+    canonical_by_alias: Mapping[str, str] | None = None,
+) -> tuple[list[dict[str, Any]], dict[str, int]]:
+    """Build gap tasks after resolving every entry and existing row to canonical slugs."""
+    by_ipeds = (
+        dict(canonical_by_ipeds)
+        if canonical_by_ipeds is not None
+        else validated_unique_school_claim_slug_map()
+    )
+    by_alias = (
+        dict(canonical_by_alias)
+        if canonical_by_alias is not None
+        else validated_canonical_alias_slug_map()
+    )
+    canonical_entries = canonicalize_catalog_entries(
+        entries,
+        canonical_by_ipeds=by_ipeds,
+        canonical_by_alias=by_alias,
+    )
+    canonical_have: dict[str, set[str]] = {}
+    for raw_sid, years in existing_years.items():
+        canonical_sid = resolve_canonical_school_id(
+            raw_sid,
+            canonical_by_ipeds=by_ipeds,
+            canonical_by_alias=by_alias,
+        )
+        canonical_have.setdefault(canonical_sid, set()).update(years)
+
+    tasks: list[dict[str, Any]] = []
+    total_ct_pairs = 0
+    skipped_have = 0
+    skipped_malformed = 0
+    for entry in canonical_entries:
+        sid = entry["school_id"]
+        for year, drive_url in (entry.get("years") or {}).items():
+            total_ct_pairs += 1
+            if year in canonical_have.get(sid, set()):
+                skipped_have += 1
+                continue
+            if not valid_url(drive_url):
+                skipped_malformed += 1
+                continue
+            tasks.append(
+                {
+                    "school_id": sid,
+                    "school_name": entry["school_name"],
+                    "year": year,
+                    "drive_url": drive_url,
+                }
+            )
+    return tasks, {
+        "total_ct_pairs": total_ct_pairs,
+        "skipped_have": skipped_have,
+        "skipped_malformed": skipped_malformed,
+    }
+
+
+def fetch_existing_years(
+    sb,
+    school_ids: list[str],
+    *,
+    canonical_by_alias: Mapping[str, str] | None = None,
+) -> dict[str, set[str]]:
+    """Return {canonical_school_id: {years_we_have}} across ALL provenance values.
 
     Mirror ingest never overwrites — if a row exists with any provenance
     (school_direct, another mirror, operator_manual), skip.
     """
-    have: dict[str, set[str]] = {sid: set() for sid in school_ids}
+    by_alias = (
+        dict(canonical_by_alias)
+        if canonical_by_alias is not None
+        else validated_canonical_alias_slug_map()
+    )
+    canonical_ids = [
+        resolve_canonical_school_id(sid, canonical_by_alias=by_alias)
+        for sid in school_ids
+    ]
+    have: dict[str, set[str]] = {sid: set() for sid in canonical_ids}
+    query_ids = sorted(
+        set(canonical_ids)
+        | {
+            alias
+            for alias, target in by_alias.items()
+            if target in have
+        }
+    )
+    if not query_ids:
+        return have
     page_size = 1000
     offset = 0
     while True:
         batch = sb.table("cds_documents").select(
             "school_id, cds_year, detected_year"
-        ).in_("school_id", school_ids).range(
+        ).in_("school_id", query_ids).is_("removed_at", "null").range(
             offset, offset + page_size - 1
         ).execute().data or []
         for row in batch:
-            sid = row["school_id"]
+            sid = resolve_canonical_school_id(
+                row["school_id"],
+                canonical_by_alias=by_alias,
+            )
+            have.setdefault(sid, set())
             # Count both cds_year and detected_year to avoid re-archiving
             # the same file under a slightly different year label.
             if row.get("cds_year"):
@@ -74,7 +236,25 @@ def post_force_urls(
     school_name: str,
     items: list[dict],
     timeout: int,
+    *,
+    canonical_by_ipeds: Mapping[str, str] | None = None,
+    canonical_by_alias: Mapping[str, str] | None = None,
 ) -> dict:
+    by_ipeds = (
+        dict(canonical_by_ipeds)
+        if canonical_by_ipeds is not None
+        else validated_unique_school_claim_slug_map()
+    )
+    by_alias = (
+        dict(canonical_by_alias)
+        if canonical_by_alias is not None
+        else validated_canonical_alias_slug_map()
+    )
+    school_id = resolve_canonical_school_id(
+        school_id,
+        canonical_by_ipeds=by_ipeds,
+        canonical_by_alias=by_alias,
+    )
     started = time.monotonic()
     try:
         resp = requests.post(
@@ -133,57 +313,48 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
+    canonical_by_ipeds = validated_unique_school_claim_slug_map()
+    canonical_by_alias = validated_canonical_alias_slug_map()
     catalog = json.loads(Path(args.catalog).read_text())
-    entries = catalog["entries"]
+    entries = canonicalize_catalog_entries(
+        catalog["entries"],
+        canonical_by_ipeds=canonical_by_ipeds,
+        canonical_by_alias=canonical_by_alias,
+    )
     if args.school:
-        entries = [e for e in entries if e["school_id"] == args.school]
+        target_school = resolve_canonical_school_id(
+            args.school,
+            canonical_by_ipeds=canonical_by_ipeds,
+            canonical_by_alias=canonical_by_alias,
+        )
+        entries = [e for e in entries if e["school_id"] == target_school]
     print(f"CT catalog: {catalog['school_count_matched']} matched schools, "
           f"{catalog['file_count']} files")
     print(f"Filtered to: {len(entries)} schools")
 
-    load_dotenv(args.env)
+    if load_dotenv is not None:
+        load_dotenv(args.env)
     base_url = os.environ["SUPABASE_URL"]
     key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
     sb = create_client(base_url, key)
 
-    have = fetch_existing_years(sb, [e["school_id"] for e in entries])
+    have = fetch_existing_years(
+        sb,
+        [e["school_id"] for e in entries],
+        canonical_by_alias=canonical_by_alias,
+    )
     have_count = sum(len(v) for v in have.values())
     print(f"Existing cds_documents rows across these schools: {have_count}")
 
-    # URL-shape sanity: CT's table occasionally has malformed entries
-    # (e.g., 'http://v/' seen on Bennington 2019-20). Drop these before
-    # POST so the edge function doesn't waste a call on DNS errors.
-    from urllib.parse import urlparse
-    def valid_url(u: str) -> bool:
-        try:
-            p = urlparse(u)
-            return p.scheme in ("http", "https") and bool(p.hostname) and "." in p.hostname
-        except Exception:
-            return False
-
-    # Build gap list: (school, year, drive_url) we don't have
-    tasks: list[dict] = []
-    total_ct_pairs = 0
-    skipped_have = 0
-    skipped_malformed = 0
-    for e in entries:
-        for year, drive_url in e["years"].items():
-            total_ct_pairs += 1
-            if year in have.get(e["school_id"], set()):
-                skipped_have += 1
-                continue
-            if not valid_url(drive_url):
-                skipped_malformed += 1
-                continue
-            tasks.append({
-                "school_id": e["school_id"],
-                "school_name": e["school_name"],
-                "year": year,
-                "drive_url": drive_url,
-            })
-    print(f"CT (school, year) pairs: {total_ct_pairs}")
-    print(f"  Already in our archive (skip): {skipped_have}")
-    print(f"  Malformed URL on CT side (skip): {skipped_malformed}")
+    tasks, stats = build_ingest_tasks(
+        entries,
+        have,
+        canonical_by_ipeds=canonical_by_ipeds,
+        canonical_by_alias=canonical_by_alias,
+    )
+    print(f"CT (school, year) pairs: {stats['total_ct_pairs']}")
+    print(f"  Already in our archive (skip): {stats['skipped_have']}")
+    print(f"  Malformed URL on CT side (skip): {stats['skipped_malformed']}")
     print(f"  Gaps to ingest: {len(tasks)}")
 
     if args.limit:

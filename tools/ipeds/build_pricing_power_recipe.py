@@ -24,7 +24,11 @@ from typing import Any, Iterable, Mapping
 if __package__ is None or __package__ == "":
     sys.path.append(str(Path(__file__).resolve().parents[2]))
 
-from tools.finder.identity_guard import validated_unique_school_claim_slug_map
+from tools.finder.identity_guard import (
+    resolve_canonical_school_id,
+    validated_canonical_alias_slug_map,
+    validated_unique_school_claim_slug_map,
+)
 from tools.ipeds.load_release import load_env
 from tools.ipeds.reconcile_endowment_scorecard import postgrest_get_all
 
@@ -124,6 +128,12 @@ def main() -> int:
 
     try:
         inputs = fetch_recipe_inputs(supabase_url, api_key)
+        canonical_school_ids = validated_unique_school_claim_slug_map(
+            schools_path=args.schools_yaml
+        )
+        alias_school_ids = validated_canonical_alias_slug_map(
+            schools_path=args.schools_yaml
+        )
         artifact = build_recipe_artifact(
             fact_rows=inputs["fact_rows"],
             current_fact_rows=inputs["current_fact_rows"],
@@ -131,9 +141,8 @@ def main() -> int:
             scorecard_rows=inputs["scorecard_rows"],
             browser_rows=inputs["browser_rows"],
             generated_at=args.generated_at,
-            canonical_school_ids=validated_unique_school_claim_slug_map(
-                schools_path=args.schools_yaml
-            ),
+            canonical_school_ids=canonical_school_ids,
+            alias_school_ids=alias_school_ids,
             validate=True,
         )
     except (OSError, ValueError) as exc:
@@ -344,9 +353,13 @@ def _normalize_ipeds(value: Any) -> str:
 
 def index_adm_counts(
     rows: Iterable[Mapping[str, Any]],
+    canonical_school_ids: Mapping[str, str] | None = None,
+    alias_school_ids: Mapping[str, str] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Pivot long-format ADM count rows by ipeds_id."""
     indexed: dict[str, dict[str, Any]] = {}
+    by_ipeds = dict(canonical_school_ids or {})
+    by_alias = dict(alias_school_ids or {})
     for row in rows:
         field_key = str(row.get("field_key") or "")
         if field_key in ROUNDED_RATE_FIELDS:
@@ -361,18 +374,27 @@ def index_adm_counts(
         ipeds_id = _normalize_ipeds(row.get("ipeds_id"))
         if not ipeds_id:
             continue
+        resolved_school_id = (
+            resolve_canonical_school_id(
+                row.get("school_id"),
+                ipeds_id=ipeds_id,
+                canonical_by_ipeds=by_ipeds,
+                canonical_by_alias=by_alias,
+            )
+            or None
+        )
         school = indexed.setdefault(
             ipeds_id,
             {
                 "ipedsId": ipeds_id,
-                "schoolId": str(row.get("school_id") or "") or None,
+                "schoolId": resolved_school_id,
                 "schoolName": str(row.get("school_name") or "") or None,
                 "inScope": row.get("in_scope"),
                 "counts": {},
             },
         )
-        if row.get("school_id") and not school["schoolId"]:
-            school["schoolId"] = str(row["school_id"])
+        if resolved_school_id and not school["schoolId"]:
+            school["schoolId"] = resolved_school_id
         if row.get("school_name") and not school["schoolName"]:
             school["schoolName"] = str(row["school_name"])
         if school["inScope"] is None and row.get("in_scope") is not None:
@@ -388,16 +410,23 @@ def index_adm_counts(
 def index_directory(
     rows: Iterable[Mapping[str, Any]],
     canonical_school_ids: Mapping[str, str],
+    alias_school_ids: Mapping[str, str] | None = None,
 ) -> dict[str, dict[str, Any]]:
     directory: dict[str, dict[str, Any]] = {}
+    by_ipeds = dict(canonical_school_ids)
+    by_alias = dict(alias_school_ids or {})
     for row in rows:
         ipeds_id = _normalize_ipeds(row.get("ipeds_id"))
         if not ipeds_id:
             continue
         directory[ipeds_id] = {
             "schoolId": (
-                canonical_school_ids.get(ipeds_id)
-                or str(row.get("school_id") or "")
+                resolve_canonical_school_id(
+                    row.get("school_id"),
+                    ipeds_id=ipeds_id,
+                    canonical_by_ipeds=by_ipeds,
+                    canonical_by_alias=by_alias,
+                )
                 or None
             ),
             "schoolName": str(row.get("school_name") or "") or None,
@@ -420,11 +449,15 @@ def index_scorecard(
 
 def index_cds_crosscheck(
     rows: Iterable[Mapping[str, Any]],
+    canonical_school_ids: Mapping[str, str] | None = None,
+    alias_school_ids: Mapping[str, str] | None = None,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]], int]:
     """Return (by_ipeds, by_school_id, unique_school_count) after latest-row wins."""
     by_ipeds: dict[str, dict[str, Any]] = {}
     by_school: dict[str, dict[str, Any]] = {}
     unique_schools: set[str] = set()
+    canonical_by_ipeds = dict(canonical_school_ids or {})
+    canonical_by_alias = dict(alias_school_ids or {})
     ordered = sorted(
         rows,
         key=lambda row: str(row.get("updated_at") or ""),
@@ -444,8 +477,13 @@ def index_cds_crosscheck(
             "cdsYieldRate": rate_json(yield_value),
             "cdsYear": CDS_YEAR,
         }
-        school_id = str(row.get("school_id") or "")
         ipeds_id = _normalize_ipeds(row.get("ipeds_id"))
+        school_id = resolve_canonical_school_id(
+            row.get("school_id"),
+            ipeds_id=ipeds_id,
+            canonical_by_ipeds=canonical_by_ipeds,
+            canonical_by_alias=canonical_by_alias,
+        )
         if school_id:
             unique_schools.add(school_id)
             by_school.setdefault(school_id, parsed)
@@ -473,14 +511,32 @@ def build_recipe_artifact(
     generated_at: str,
     current_fact_rows: Iterable[Mapping[str, Any]] | None = None,
     canonical_school_ids: Mapping[str, str] | None = None,
+    alias_school_ids: Mapping[str, str] | None = None,
     validate: bool = True,
 ) -> dict[str, Any]:
     canonical_school_ids = canonical_school_ids or {}
-    unified = index_adm_counts(fact_rows)
-    current = index_adm_counts(current_fact_rows or [])
-    directory = index_directory(directory_rows, canonical_school_ids)
+    alias_school_ids = alias_school_ids or {}
+    unified = index_adm_counts(
+        fact_rows,
+        canonical_school_ids=canonical_school_ids,
+        alias_school_ids=alias_school_ids,
+    )
+    current = index_adm_counts(
+        current_fact_rows or [],
+        canonical_school_ids=canonical_school_ids,
+        alias_school_ids=alias_school_ids,
+    )
+    directory = index_directory(
+        directory_rows,
+        canonical_school_ids,
+        alias_school_ids=alias_school_ids,
+    )
     scorecard = index_scorecard(scorecard_rows)
-    cds_by_ipeds, cds_by_school, cds_unique = index_cds_crosscheck(browser_rows)
+    cds_by_ipeds, cds_by_school, cds_unique = index_cds_crosscheck(
+        browser_rows,
+        canonical_school_ids=canonical_school_ids,
+        alias_school_ids=alias_school_ids,
+    )
 
     exclusions = {
         "missingZeroCounts": 0,
@@ -544,10 +600,15 @@ def build_recipe_artifact(
         if enrolled < MIN_ENTERING_CLASS:
             exclusions["smallEnteringClass"] += 1
             continue
-        school_id = (
+        raw_school_id = (
             (directory_row or {}).get("schoolId")
-            or canonical_school_ids.get(ipeds_id)
             or school.get("schoolId")
+        )
+        school_id = resolve_canonical_school_id(
+            raw_school_id,
+            ipeds_id=ipeds_id,
+            canonical_by_ipeds=dict(canonical_school_ids),
+            canonical_by_alias=dict(alias_school_ids),
         )
         school_name = (
             school.get("schoolName")

@@ -419,7 +419,7 @@
     },
     {
       "school_name_ct": "California Institute of Technology",
-      "school_id": "california-institute-of-technology",
+      "school_id": "caltech",
       "school_name": "California Institute of Technology",
       "match_score": 1.0,
       "years": {
@@ -3865,7 +3865,7 @@
     },
     {
       "school_name_ct": "Virginia Polytechnic Institute and State University",
-      "school_id": "virginia-polytechnic-institute-and-state-university",
+      "school_id": "virginia-tech",
       "school_name": "Virginia Polytechnic Institute and State University",
       "match_score": 1.0,
       "years": {

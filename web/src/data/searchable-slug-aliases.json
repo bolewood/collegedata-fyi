@@ -1,0 +1,47 @@
+[
+  {
+    "alias": "california-institute-of-technology",
+    "ipeds_id": "110404",
+    "school_id": "caltech"
+  },
+  {
+    "alias": "georgia-institute-of-technology-main-campus",
+    "ipeds_id": "139755",
+    "school_id": "georgia-tech"
+  },
+  {
+    "alias": "rutgers-university-new-brunswick",
+    "ipeds_id": "186380",
+    "school_id": "rutgers"
+  },
+  {
+    "alias": "texas-a-and-m-university-college-station",
+    "ipeds_id": "228723",
+    "school_id": "texas-am"
+  },
+  {
+    "alias": "tulane-university-of-louisiana",
+    "ipeds_id": "160755",
+    "school_id": "tulane-university"
+  },
+  {
+    "alias": "university-of-chicago",
+    "ipeds_id": "144050",
+    "school_id": "uchicago"
+  },
+  {
+    "alias": "university-of-virginia-main-campus",
+    "ipeds_id": "234076",
+    "school_id": "uva"
+  },
+  {
+    "alias": "university-of-washington-seattle-campus",
+    "ipeds_id": "236948",
+    "school_id": "uw"
+  },
+  {
+    "alias": "virginia-polytechnic-institute-and-state-university",
+    "ipeds_id": "233921",
+    "school_id": "virginia-tech"
+  }
+]

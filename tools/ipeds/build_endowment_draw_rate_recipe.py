@@ -26,7 +26,11 @@ if __package__ is None or __package__ == "":
 
 from tools.ipeds.load_release import load_env
 from tools.ipeds.reconcile_endowment_scorecard import postgrest_get_all
-from tools.finder.identity_guard import validated_unique_school_claim_slug_map
+from tools.finder.identity_guard import (
+    resolve_canonical_school_id,
+    validated_canonical_alias_slug_map,
+    validated_unique_school_claim_slug_map,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUTPUT = REPO_ROOT / "web/src/lib/endowment-draw-rate-recipe-data.ts"
@@ -101,6 +105,12 @@ def main() -> int:
             min_year=args.min_year,
             max_year=args.max_year,
         )
+        canonical_school_ids = validated_unique_school_claim_slug_map(
+            schools_path=args.schools_yaml
+        )
+        alias_school_ids = validated_canonical_alias_slug_map(
+            schools_path=args.schools_yaml
+        )
         artifact = build_recipe_artifact(
             finance_rows=inputs["finance_rows"],
             identity_rows=inputs["identity_rows"],
@@ -109,9 +119,8 @@ def main() -> int:
             min_year=args.min_year,
             max_year=args.max_year,
             generated_at=args.generated_at,
-            canonical_school_ids=validated_unique_school_claim_slug_map(
-                schools_path=args.schools_yaml
-            ),
+            canonical_school_ids=canonical_school_ids,
+            alias_school_ids=alias_school_ids,
         )
     except (OSError, ValueError) as exc:
         print(f"error: recipe dataset build failed: {exc}", file=sys.stderr)
@@ -349,15 +358,21 @@ def build_recipe_artifact(
     max_year: int,
     generated_at: str,
     canonical_school_ids: Mapping[str, str] | None = None,
+    alias_school_ids: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
     finance = index_finance_rows(finance_rows)
     identity = index_identity_rows(identity_rows)
-    canonical_school_ids = canonical_school_ids or {}
+    canonical_by_ipeds = dict(canonical_school_ids or {})
+    canonical_by_alias = dict(alias_school_ids or {})
     directory = {
         str(row.get("ipeds_id") or ""): {
             "schoolId": (
-                canonical_school_ids.get(str(row.get("ipeds_id") or ""))
-                or str(row.get("school_id") or "")
+                resolve_canonical_school_id(
+                    row.get("school_id"),
+                    ipeds_id=row.get("ipeds_id"),
+                    canonical_by_ipeds=canonical_by_ipeds,
+                    canonical_by_alias=canonical_by_alias,
+                )
                 or None
             ),
             "inScope": row.get("in_scope") is True,
@@ -365,6 +380,9 @@ def build_recipe_artifact(
         for row in directory_rows
         if str(row.get("ipeds_id") or "")
     }
+    for ipeds_id, canonical_slug in canonical_by_ipeds.items():
+        if ipeds_id not in directory:
+            directory[ipeds_id] = {"schoolId": canonical_slug, "inScope": False}
 
     latest_names: dict[str, str] = {}
     latest_states: dict[str, str] = {}

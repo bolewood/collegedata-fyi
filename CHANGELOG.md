@@ -6,6 +6,36 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.19.14] - 2026-11-09
+
+### Fixed
+
+- Checked-in recipe datasets (`waitlist-recipe-data.ts`,
+  `pricing-power-recipe-data.ts`, `alignment-gap-recipe-data.ts`, and
+  `endowment-draw-rate-recipe-data.ts`) and the College Transitions mirror
+  (`tools/mirrors/college_transitions/`) now use the searchable canonical slugs
+  introduced in PR #187 (`caltech`, `georgia-tech`, `tulane-university`, `uw`,
+  `rutgers`, `virginia-tech`, `texas-am`, `uchicago`, `uva`) instead of their
+  308-redirecting federal alias slugs. Recipe generators
+  (`tools/ipeds/build_pricing_power_recipe.py`,
+  `tools/scorecard/build_alignment_gap_recipe.py`,
+  `tools/ipeds/build_endowment_draw_rate_recipe.py`) and mirror catalog/ingest
+  scripts resolve every school through shared helpers in
+  `tools/finder/identity_guard.py` (`resolve_canonical_school_id`,
+  `validated_canonical_alias_slug_map`, `canonicalize_school_url`).
+
+### Added
+
+- `tools/ops/duplicate_slug_audit.py` (read-only) audits active `cds_documents`
+  against `institution_slug_crosswalk`, classifying any document filed under a
+  non-canonical alias slug by whether the canonical `school_id` already has an
+  active document for the same year and/or the same `source_sha256`, and exits
+  non-zero when any are found.
+- `web/src/lib/no-alias-school-links.test.ts` and
+  `web/src/data/searchable-slug-aliases.json` fail Vitest and `identity_guard`
+  if any `web/src` file links to `/schools/<alias-slug>` or emits an alias
+  `schoolId` for the nine renamed schools.
+
 ## [0.6.19.13] - 2026-11-09
 
 ### Fixed

@@ -18,15 +18,20 @@ from tools.finder.identity_guard import (
     audit_public_slugs,
     audit_school_identities,
     build_identity_snapshot,
+    canonical_alias_slug_map,
+    canonicalize_school_url,
     domains_related,
+    federal_name_slug,
     load_identity_snapshot,
     load_public_slugs,
     load_school_claims,
     main as identity_guard_main,
     normalize_domain,
     normalize_name,
+    resolve_canonical_school_id,
     school_claims_from_entries,
     unique_school_claim_slug_map,
+    validated_canonical_alias_slug_map,
     validated_unique_school_claim_slug_map,
 )
 
@@ -436,6 +441,83 @@ class RepositoryIdentityRegressionTests(unittest.TestCase):
             manual["schools"],
         )
         self.assertNotIn("california-institute-of-technology", manual["schools"])
+
+    def test_canonical_alias_map_resolves_all_nine_renamed_federal_slugs(self):
+        canonical_by_ipeds = validated_unique_school_claim_slug_map()
+        canonical_by_alias = validated_canonical_alias_slug_map()
+        expected = {
+            "california-institute-of-technology": ("110404", "caltech"),
+            "georgia-institute-of-technology-main-campus": ("139755", "georgia-tech"),
+            "tulane-university-of-louisiana": ("160755", "tulane-university"),
+            "university-of-washington-seattle-campus": ("236948", "uw"),
+            "rutgers-university-new-brunswick": ("186380", "rutgers"),
+            "virginia-polytechnic-institute-and-state-university": ("233921", "virginia-tech"),
+            "texas-a-and-m-university-college-station": ("228723", "texas-am"),
+            "university-of-chicago": ("144050", "uchicago"),
+            "university-of-virginia-main-campus": ("234076", "uva"),
+        }
+        for alias_slug, (ipeds_id, canonical_slug) in expected.items():
+            with self.subTest(alias_slug=alias_slug):
+                self.assertEqual(canonical_by_alias.get(alias_slug), canonical_slug)
+                self.assertEqual(
+                    resolve_canonical_school_id(
+                        alias_slug,
+                        ipeds_id=ipeds_id,
+                        canonical_by_ipeds=canonical_by_ipeds,
+                        canonical_by_alias=canonical_by_alias,
+                    ),
+                    canonical_slug,
+                )
+                self.assertEqual(
+                    resolve_canonical_school_id(
+                        alias_slug,
+                        canonical_by_alias=canonical_by_alias,
+                    ),
+                    canonical_slug,
+                )
+
+        manifest_path = (
+            DEFAULT_SCHOOLS_YAML.parents[2]
+            / "web"
+            / "src"
+            / "data"
+            / "searchable-slug-aliases.json"
+        )
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(
+            {
+                entry["alias"]: (entry["ipeds_id"], entry["school_id"])
+                for entry in manifest
+            },
+            expected,
+        )
+
+    def test_canonicalize_school_url_rewrites_internal_and_archive_urls(self):
+        canonical_by_alias = {
+            "virginia-polytechnic-institute-and-state-university": "virginia-tech",
+            "university-of-virginia-main-campus": "uva",
+        }
+        self.assertEqual(
+            canonicalize_school_url(
+                "/schools/virginia-polytechnic-institute-and-state-university/2024-25",
+                canonical_by_alias=canonical_by_alias,
+            ),
+            "/schools/virginia-tech/2024-25",
+        )
+        self.assertEqual(
+            canonicalize_school_url(
+                "https://www.collegedata.fyi/schools/university-of-virginia-main-campus/2025-03",
+                canonical_school_id="uva",
+            ),
+            "https://www.collegedata.fyi/schools/uva/2025-03",
+        )
+        self.assertEqual(
+            canonicalize_school_url(
+                "https://ir.aa.ufl.edu/media/iraaufledu/common-data-set/cds-2024-25.pdf",
+                canonical_school_id="uf",
+            ),
+            "https://ir.aa.ufl.edu/media/iraaufledu/common-data-set/cds-2024-25.pdf",
+        )
 
 
 if __name__ == "__main__":
