@@ -102,12 +102,12 @@ schema. The XLSX above is archived for structural rebuilds; the fillable PDF is
 archived because its AcroForm keys provide the exact 2023-24 PDF tags used by
 Tier 2 extraction.
 
-## 2025-26 PDF and field maps (PRD 038)
+## Field maps (PRD 038)
 
-`cds_2025-26_template.pdf` is committed (SHA-256 in the table above; the file
-matches the Wayback capture byte for byte). It is the blank source for
-`schemas/field_maps/cds_pdf_field_map_2025_26.json`, rebuilt with
-`tools/tier2_extractor/build_field_map.py`. The 2023-24 PDF feeds the 2023-24
-map the same way. The 2024-25 map is a consensus of filled Tier 2 donor PDFs
-(school documents, not committed); see `tools/tier2_extractor/README.md`.
-`*.pdf` is gitignored, so new template PDFs need `git add -f`.
+`cds_2023-24_template.pdf`, `cds_2024-25_template.pdf` and
+`cds_2025-26_template.pdf` are the blank sources for
+`schemas/field_maps/cds_pdf_field_map_YYYY_YY.json`, rebuilt with
+`tools/tier2_extractor/build_field_map.py` (see `tools/tier2_extractor/README.md`).
+The 2024-25 and 2025-26 PDFs match the SHA-256 values above byte for byte
+against their Wayback captures (fetched with the `id_` URL form). `*.pdf` is
+gitignored, so new template PDFs need `git add -f`.
