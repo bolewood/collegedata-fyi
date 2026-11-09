@@ -110,9 +110,13 @@ export default function PrivacyPage() {
           Separately, requests to the friendly API (<code>/api/schools*</code>,{" "}
           <code>/api/compare</code>, <code>/api/facts</code>, and the other
           simple endpoints) are also recorded one row per request, with the
-          route, the client name your app sends in the{" "}
-          <code>X-CollegeData-Client</code> header, the referring site&apos;s
-          hostname, your country, and the school asked about. These rows hold
+          route and HTTP method, the client name your app sends in the{" "}
+          <code>X-CollegeData-Client</code> header, its version and the tool
+          or command name if it sends them, a coarse client type (such as
+          browser, script, or AI agent), the referring site&apos;s hostname,
+          your country, the school asked about, and for comparisons how many
+          schools were requested. Calls through the MCP connector are
+          recorded the same way. These rows hold
           no IP address and no full user agent. We keep them for 400 days, then
           delete them.
         </p>
@@ -130,11 +134,13 @@ export default function PrivacyPage() {
 
         <p>
           We use Sentry to find and fix errors. When a page or API request
-          fails, Sentry receives the error report and the technical context
-          around it, such as the URL path, browser type, and stack trace. In
+          fails, Sentry receives the error report: the page URL with share codes
+          and search text removed, your browser type, recent navigation and
+          network breadcrumbs, and the stack trace. Sentry keeps error reports
+          for up to 90 days. In
           production we also send performance traces for a sample of requests
           (about one in five) to see where the site is slow. We do not turn on
-          session replay, and we leave Sentry's default personal-data
+          session replay, and we leave Sentry&apos;s default personal-data
           collection turned off.
         </p>
 

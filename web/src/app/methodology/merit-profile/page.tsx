@@ -121,8 +121,7 @@ export default function MeritProfileMethodologyPage() {
           Missing CDS fields stay missing. We do not impute merit awards from peer
           schools, marketing copy, or third-party scholarship pages. The average
           no-need grant (H.2A02) is reported for most schools in the merit view,
-          not all of them. Where it is blank, it stays blank; we do not fill it in. Coverage by school is on the{" "}
-          <Link href="/coverage" className="underline">coverage page</Link>.
+          not all of them.
         </p>
       </section>
 

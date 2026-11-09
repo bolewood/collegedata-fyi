@@ -103,28 +103,23 @@ curl 'https://www.collegedata.fyi/api/schools/mit/sources'
 
 curl 'https://www.collegedata.fyi/api/compare?schools=mit,yale,university-of-chicago&categories=admissions,cost,outcomes'
 
-curl 'https://www.collegedata.fyi/api/facts/mit'
-
 curl 'https://www.collegedata.fyi/api/fields'
 
 curl 'https://www.collegedata.fyi/openapi.json'`}</CodeBlock>
       <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
-        <code>GET /api/facts/{"{school_id}"}</code> is a flat, quick-citation
-        view for one school&apos;s most recent filing: <code>applied</code>,{" "}
-        <code>admitted</code>, <code>enrolled</code>,{" "}
-        <code>acceptance_rate_pct</code>, <code>yield_rate_pct</code>, the
-        source and archive URLs, and a <code>raw</code> object with the
-        underlying values for C.116, C.117, C.120, B.101, and B.126. It reads
-        the school&apos;s own Common Data Set only. For federal baseline facts,
-        source labels, and other categories, use{" "}
-        <code>/api/schools/{"{school_id}"}/facts</code>. It returns{" "}
-        <code>404</code> when the school has no extracted filing.
+        <code>GET /api/facts/{"{school_id}"}</code> is deprecated. It is an
+        older flat summary of one school&apos;s latest filing, and some of its
+        values are read from fixed question numbers that do not line up for
+        every school and year. Use{" "}
+        <code>/api/schools/{"{school_id}"}/facts</code> instead, which labels
+        the source of each value.
       </p>
       <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
         Errors are JSON with an <code>error</code> code and a{" "}
         <code>message</code>. A missing <code>q</code> or <code>schools</code>{" "}
         parameter, or an unusable <code>categories</code> filter, returns{" "}
-        <code>400</code>. An unknown school returns <code>404</code>.{" "}
+        <code>400</code>. An unknown school returns <code>404</code> on the per-school endpoints;{" "}
+        <code>/api/compare</code> returns a row of blanks for it.{" "}
         <code>/api/compare</code> reads at most 25 schools per request and
         ignores the rest.
       </p>
@@ -339,14 +334,14 @@ COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegeda
           <p className="mt-1">
             Four bulk files for notebooks and local analysis:{" "}
             <code>schools.jsonl</code>, <code>school_facts.jsonl</code> (the
-            latest primary filing per school, limited to the fields in the
+            latest primary filing per school, for schools with a 2024-25 or
+            newer filing, limited to the fields in the
             friendly dictionary that come from the comparison table),{" "}
             <code>sources.jsonl</code>, and <code>field_dictionary.json</code>.
-            The files are regenerated from the live database about once an
-            hour. The dated URL (<code>/snapshots/v1/YYYY-MM-DD/</code>) is an
+            The files are usually regenerated from the live database within
+            the hour; check <code>generated_at</code> in the manifest. The dated URL (<code>/snapshots/v1/YYYY-MM-DD/</code>) is an
             alias for the same current data, not a frozen copy, so download and
-            store a file if you need it to stay fixed. The manifest records when
-            it was generated.
+            store a file if you need it to stay fixed.
           </p>
           <CodeBlock>{`curl 'https://www.collegedata.fyi/snapshots/latest/manifest.json'
 curl 'https://www.collegedata.fyi/snapshots/latest/schools.jsonl'

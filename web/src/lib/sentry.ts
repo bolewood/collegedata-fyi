@@ -124,12 +124,74 @@ export function isHeadlessReaderNoise(event: SentryEventLike): boolean {
   );
 }
 
+const FILTERED = "[Filtered]";
+const SENSITIVE_PARAMS = new Set(["code", "q"]);
+const SENSITIVE_QUERY_RE = /(^|[?&;])(code|q)=[^&#\s"'<>]*/gi;
+
+/** Replace the value of `code` (Match share codes) and `q` (search text) query params. */
+export function scrubSensitiveUrl(value: string): string {
+  return value.replace(SENSITIVE_QUERY_RE, (_m, sep: string, key: string) => `${sep}${key}=${FILTERED}`);
+}
+
+function scrubDeep(value: unknown, depth = 0): unknown {
+  if (depth > 8) return value;
+  if (typeof value === "string") return scrubSensitiveUrl(value);
+  if (Array.isArray(value)) {
+    // Handles Sentry's [["code", "value"]] query_string shape.
+    if (
+      value.length === 2 &&
+      typeof value[0] === "string" &&
+      SENSITIVE_PARAMS.has(value[0].toLowerCase())
+    ) {
+      return [value[0], FILTERED];
+    }
+    return value.map((v) => scrubDeep(v, depth + 1));
+  }
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      out[k] = SENSITIVE_PARAMS.has(k.toLowerCase()) && typeof v === "string"
+        ? FILTERED
+        : scrubDeep(v, depth + 1);
+    }
+    return out;
+  }
+  return value;
+}
+
+/** Remove share codes and search text from URLs on an error or transaction event. */
+export function scrubSentryEvent<E>(event: E): E {
+  const e = event as Record<string, unknown>;
+  for (const key of ["request", "breadcrumbs", "transaction", "spans", "contexts", "extra", "tags"]) {
+    if (e[key] !== undefined) e[key] = scrubDeep(e[key]);
+  }
+  return event;
+}
+
+/** Same scrub for a single breadcrumb (url, to, from, message, data). */
+export function scrubSentryBreadcrumb<B>(breadcrumb: B): B {
+  const b = breadcrumb as Record<string, unknown>;
+  for (const key of ["message", "data"]) {
+    if (b[key] !== undefined) b[key] = scrubDeep(b[key]);
+  }
+  return breadcrumb;
+}
+
 export function sentryBeforeSend<E extends SentryEventLike>(event: E): E | null {
   if (isPrivateFeedback(event)) return null;
   if (typeof event.request?.url === "string" && event.request.url.startsWith("http://localhost")) {
     return null;
   }
-  return isHeadlessReaderNoise(event) ? null : event;
+  return isHeadlessReaderNoise(event) ? null : scrubSentryEvent(event);
+}
+
+export function sentryBeforeSendTransaction<T>(event: T): T | null {
+  return isPrivateFeedback(event) ? null : scrubSentryEvent(event);
+}
+
+export function sentryBeforeBreadcrumb<B>(breadcrumb: B): B | null {
+  const kept = communityBreadcrumb(breadcrumb);
+  return kept === null ? null : scrubSentryBreadcrumb(kept);
 }
 
 export function sentryInitOptions(override?: EnvLookup) {
@@ -149,8 +211,8 @@ export function sentryInitOptions(override?: EnvLookup) {
     ignoreErrors: SENTRY_IGNORE_ERRORS,
     denyUrls: SENTRY_DENY_URLS,
     beforeSend: sentryBeforeSend,
-    beforeBreadcrumb: communityBreadcrumb,
-    beforeSendTransaction: <T,>(event: T) => isPrivateFeedback(event) ? null : event,
+    beforeBreadcrumb: sentryBeforeBreadcrumb,
+    beforeSendTransaction: sentryBeforeSendTransaction,
     sendDefaultPii: false,
     ...(release ? { release } : {}),
     debug: (override?.SENTRY_DEBUG ?? process.env.SENTRY_DEBUG) === "true",

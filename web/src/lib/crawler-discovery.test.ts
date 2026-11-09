@@ -67,7 +67,7 @@ describe("llms.txt", () => {
     expect(LLMS_TXT).toContain(`${SITE_URL}/api/fields`);
     expect(LLMS_TXT).toContain(`${SITE_URL}/api/snapshots`);
     expect(LLMS_TXT).toContain(`${SITE_URL}/openapi.json`);
-    expect(LLMS_TXT).toContain(`${SITE_URL}/api/facts/mit`);
+    expect(LLMS_TXT).not.toContain("/api/facts/");
     expect(LLMS_TXT).not.toContain("/rest/v1/");
   });
 

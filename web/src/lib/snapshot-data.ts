@@ -7,7 +7,7 @@ type UntypedSupabase = {
 };
 
 export const SNAPSHOT_NOTE =
-  "These files are generated from the live database about once an hour. The dated URL path is an alias for the same current data, not a frozen copy; to keep a reproducible copy, download the files and store them.";
+  "These files are generated from the live database and usually regenerated within the hour; check generated_at. The dated URL path is an alias for the same current data, not a frozen copy; to keep a reproducible copy, download the files and store them.";
 
 /** UTC date the files were generated. Dated paths currently serve live data. */
 export function snapshotDate(now: Date = new Date()): string {

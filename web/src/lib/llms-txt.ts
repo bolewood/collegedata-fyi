@@ -25,13 +25,12 @@ Endowment health (IPEDS Finance Part H, fiscal years 2020+): request categories=
 - [Search schools](${SITE_URL}/api/schools/search?q=mit): Find a school by name or alias
 - [School facts](${SITE_URL}/api/schools/mit/facts): Source-labeled facts for one school
 - [School facts by category](${SITE_URL}/api/schools/mit/facts?categories=finance): categories: identity, admissions, enrollment, cost, aid, finance, outcomes, sources
-- [Quick facts](${SITE_URL}/api/facts/mit): Flat JSON for one school's latest CDS: applied, admitted, enrolled, acceptance and yield
 - [School sources](${SITE_URL}/api/schools/mit/sources): Source ledger for one school
 - [Compare schools](${SITE_URL}/api/compare?schools=mit,yale,university-of-chicago): Sparse comparison matrix
 - [Field dictionary](${SITE_URL}/api/fields): V1 friendly field definitions
-- [Snapshots](${SITE_URL}/api/snapshots): Bulk files (schools, school_facts, sources, field dictionary), regenerated hourly from live data
+- [Snapshots](${SITE_URL}/api/snapshots): Bulk files (schools, school_facts, sources, field dictionary), usually regenerated within the hour from live data; check generated_at
 - [Latest snapshot manifest](${SITE_URL}/snapshots/latest/manifest.json): Links to the JSONL and JSON files
-- [PostgREST archive](https://api.collegedata.fyi): Full read-only database API (needs the public anon key; see the API docs)
+- [PostgREST archive docs](${SITE_URL}/api): The full read-only database API at api.collegedata.fyi (needs the public anon key; see the API docs)
 - [OpenAPI](${SITE_URL}/openapi.json): Machine-readable spec for the friendly endpoints
 
 ## Optional

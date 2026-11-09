@@ -95,7 +95,7 @@ export default function PositioningMethodologyPage() {
             consistently documented.
           </FieldUse>
           <FieldUse field="C.1" title="Applicant, admitted, and enrolled counts">
-            C.1 supplies applicant and admit counts. The serving layer derives admit
+            C.1 supplies applicant, admit, and enrolled counts. The serving layer derives admit
             rate as admitted divided by applied, then stores that rate as a fraction from
             0 to 1 in <code>school_browser_rows</code>.
           </FieldUse>

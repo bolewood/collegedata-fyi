@@ -72,7 +72,7 @@ export async function GET(
         error: "school_not_found_or_not_extracted",
         school_id,
         message:
-          "No extracted Common Data Set document available for this school. Try /api/facts/{school_id} with a canonical school_id from /rest/v1/cds_manifest?select=school_id.",
+          "No extracted Common Data Set document available for this school. Find a canonical school_id with /api/schools/search?q=, or use /api/schools/{school_id}/facts.",
       },
       { status: 404 },
     );
