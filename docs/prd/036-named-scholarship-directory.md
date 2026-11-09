@@ -1,6 +1,6 @@
 # PRD 036: Named Scholarship Directory
 
-**Status:** Draft
+**Status:** Draft. Decisions recorded 2026-11-08: CC BY-SA 4.0 with attribution built in, agent verification with owner spot-checks, foundation-administered programs included.
 **Created:** 2026-11-08
 **Author:** Anthony + Claude (research: two GPT-6.1-Sol Orca workers)
 **Related:** [PRD 018](018-open-college-fit-data.md) (merit profile from CDS H2A/H14), [PRD 026](026-guided-college-discovery.md) (CC BY-SA content layer), [PRD 035](035-calibrated-information-density.md)
@@ -181,7 +181,8 @@ The research proposes an expression tree for eligibility logic. It is deferred u
 - **Loader** `tools/scholarships/load.py`:
   - Reads the validated YAML and upserts by `program_id` and `entry_year` (idempotent), then refreshes the cache.
   - It runs from `main` after merge (`.github/workflows/scholarships-load.yml`), following the migrations-from-main rule.
-- **Download:** `web/public/data/scholarships-v<N>.json`, a versioned snapshot with license and attribution metadata, built by the loader.
+- **Downloads:** `web/public/data/scholarships-v<N>.json` and a zipped CSV, versioned snapshots carrying the license and attribution metadata described under "Licensing and attribution", built by the loader.
+- **Attribution in the API:** `scholarship_directory` rows include `license` and `attribution` columns.
 - **API docs** in `web/src/app/api/page.tsx`: a `scholarship_directory` table entry and curl examples (one school's programs; National Merit packages with housing), copying the `school_merit_profile` entries.
 
 ### M3: Web pages
@@ -244,6 +245,38 @@ The research proposes an expression tree for eligibility logic. It is deferred u
 
   Coverage targets include HBCUs and regional publics, not just selective privates.
 
+### Licensing and attribution
+
+The data is **open**: free to read, query and download, with no API key and no account. It is **licensed CC BY-SA 4.0**. Attribution is the price of using it, and the project builds attribution into every surface where the data leaves the site, so honoring it is the easy path.
+
+**What the license covers.** It covers what collegedata.fyi authors:
+- the selection and arrangement of the directory;
+- the structured record format and normalized values;
+- the descriptions and summaries we write.
+
+It does not cover the schools' own pages, PDFs, trademarks or quoted excerpts; those remain the schools'. US copyright does not protect bare facts such as a deadline or a dollar amount, so the license binds our compilation and our writing, not each individual fact. The LICENSE says this plainly rather than overclaiming. The same split is used for `data/discovery/` and was reviewed in the research.
+
+**Attribution string** (one canonical form, used everywhere):
+
+> Scholarship program data from collegedata.fyi (https://collegedata.fyi/scholarships), CC BY-SA 4.0. Terms as published by each school; see the source link on each record.
+
+**Where attribution travels with the data:**
+- **`data/scholarships/LICENSE`:** CC BY-SA 4.0, adapted from `data/discovery/LICENSE`, with the canonical string and the list of exclusions.
+- **`data/scholarships/README.md`:** a "How to credit this data" section with the string, a link form, and an example for apps, articles and spreadsheets.
+- **JSON download (`scholarships-v<N>.json`):** a top-level `meta` block with `license`, `license_url`, `attribution`, `version`, `generated_at` and `source_repository`, ahead of the records.
+- **CSV download (`scholarships-v<N>.csv`):** shipped as a zip with `LICENSE.txt` and `ATTRIBUTION.txt`. The first line of the CSV is a `#` comment with the attribution string.
+- **API (`scholarship_directory` view):** every row carries `license` (`CC-BY-SA-4.0`) and `attribution` columns, so a client that copies rows copies the credit. The API docs page shows the string and asks API users to display it.
+- **Each record's own page section / card:** a footer line, "Data CC BY-SA 4.0 · collegedata.fyi · how to cite", linking to the methodology page.
+- **`/methodology/scholarships`:** a "Reuse and credit" section with the string, the share-alike explanation in plain language, and a citation block (APA/BibTeX).
+- **`CITATION.cff`** at the repo root, extended to cite the scholarship dataset, so GitHub's "Cite this repository" shows it.
+
+**Watching for reuse.** No technical enforcement such as rate limits or watermarks: that would conflict with keeping the data open. Instead:
+- The JSON download carries a per-version `dataset_id`.
+- A yearly check searches for the canonical string and distinctive record IDs to see where the data shows up.
+- Uncredited reuse gets a polite request to add the attribution, citing the license.
+
+**Contributions.** Outside contributions to `data/scholarships/` require the same contribution agreement as `data/discovery/`, so the maintainer keeps the right to relicense.
+
 ### ARCHITECTURE.md
 
 Add a "Scholarship directory" pipeline, numbered 13 so the existing pipelines keep their numbers. Add `scholarship_directory` to the Consumer API's list of served views.
@@ -286,7 +319,7 @@ Each comes from an official page:
 |---|---|---|
 | M0 | H14 flag fix plus research docs | ~1 day / ~1 hr |
 | M1 | Record format, LICENSE/README, validator, 20 canary programs | ~2 wks / ~1–2 days plus an owner spot-check |
-| M2 | Migration, loader, cache and view, JSON download, API docs | ~1 wk / ~0.5 day |
+| M2 | Migration, loader, cache and view, JSON/CSV downloads with attribution metadata, API docs | ~1 wk / ~0.5 day |
 | M3 | Card, `/scholarships`, methodology, corrections template, copy review | ~1.5 wks / ~1 day plus copy review |
 | M4 | polite_fetch, monitor, workflows, annual review runbook | ~1 wk / ~0.5 day |
 | M5 | Expand to 75–100 verified programs | ~3 wks / ~2–3 days plus owner spot-checks (about 1 hour per batch) |
@@ -305,12 +338,19 @@ M1 through M3 can ship with the 20 canaries before M5 adds the rest. The monitor
 - After the load from `main`: `scholarship_directory` returns the canaries, `freshness_status` is computed correctly for a past-cycle fixture, and an anon-key curl works.
 - Web: the card renders for a school with programs and shows the honest empty state for one without; the index filters work; a Playwright check of `/schools/tulsa` and `/scholarships`.
 - Monitor: a dry run against canary URLs; a fixture that changes an amount opens a `needs_review` issue; robots disallow and an unreachable robots file both block fetching.
-- M0: the API returns separate academic merit and academic need flags; the merit card shows the corrected copy.
+- M0: the API returns separate academic merit and academic need flags; the merit card shows the corrected copy. (Shipped separately as PR #249.)
+- Attribution: every row from `scholarship_directory` carries `license` and `attribution`; the JSON `meta` block and the CSV zip's `LICENSE.txt`/`ATTRIBUTION.txt` match the canonical string; a test fails if any of them drift.
+
+## Decisions
+
+Recorded 2026-11-08 by Anthony:
+1. **License: CC BY-SA 4.0, open, with attribution required and built in** (see "Licensing and attribution").
+2. **Verification: agent verification with owner spot-checks** (see M5).
+3. **Foundation-administered, school-tied programs are included** (Jefferson/Walentas, Morehead-Cain, Robertson), with `awarding_authority: affiliated_foundation` and the foundation's official page as the source. The validator's domain allowlist covers these foundations.
 
 ## Open decisions (recommendations included)
 
-1. **Foundation-administered, school-tied programs** (Jefferson/Walentas, Morehead-Cain, Robertson). Recommend **include**, with `awarding_authority: affiliated_foundation`, because families think of them as the school's program.
-2. **Automatic award tiers.** Recommend **named National Merit packages and named flagship tiers only** in v1; defer full grids.
-3. **Contribution gate.** Recommend the **same agreement as `data/discovery/`**, so the maintainer keeps the right to relicense.
-4. **Posse and similar nomination-based consortium awards.** Recommend **phase 2**, tagged `program_family: consortium`, because eligibility depends on a recruitment city rather than the school's admissions process.
-5. **Open Scholarships (CC BY 4.0, Nevada)** as an import. Recommend **later**: it's out of scope (state and private aid) and would need attribution handling.
+1. **Automatic award tiers.** Recommend **named National Merit packages and named flagship tiers only** in v1; defer full grids.
+2. **Contribution gate.** Recommend the **same agreement as `data/discovery/`**, so the maintainer keeps the right to relicense.
+3. **Posse and similar nomination-based consortium awards.** Recommend **phase 2**, tagged `program_family: consortium`, because eligibility depends on a recruitment city rather than the school's admissions process.
+4. **Open Scholarships (CC BY 4.0, Nevada)** as an import. Recommend **later**: it's out of scope (state and private aid) and would need attribution handling.
