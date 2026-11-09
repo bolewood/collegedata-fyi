@@ -125,6 +125,16 @@ MAX_FIELDS_FOR_SWALLOW_FLAG = 300
 MIN_FIELDS_FOR_REGRESSION_GUARD = 100
 MIN_REEXTRACT_FIELD_RATIO = 0.6
 MIN_TIER2_LABEL_FALLBACK_ACROFORM_FIELDS = 50
+# Flattened reprint guard: when a school republishes its fillable CDS PDF as a
+# flattened copy with no form fields, compare the earlier fillable PDF's
+# >=4-digit numeric field values against the new file's page text.
+MIN_FILLABLE_REPRINT_FIELDS = 50
+MAX_REPRINT_PAGE_COUNT_DIFF_RATIO = 0.10
+MIN_REPRINT_NUMERIC_DIGITS = 4
+MIN_REPRINT_SAME_DATA_MATCH_RATIO = 0.90
+MAX_REPRINT_MISSING_VALUES_MATCH_RATIO = 0.10
+MIN_REPRINT_TEXT_CHARS = 100
+MAX_PRIOR_SOURCE_CANDIDATES = 5
 PIPELINE_RUN_URL_RE = re.compile(
     r"^https://github\.com/bolewood/collegedata-fyi/actions/runs/[0-9]+$",
 )
@@ -134,6 +144,15 @@ PIPELINE_RUN_URL_RE = re.compile(
 class ExtractionOutcome:
     action: str
     refresh_projection: bool = False
+    needs_review: bool = False
+
+
+@dataclass(frozen=True)
+class SourceSelectionResult:
+    source_artifact: dict[str, Any]
+    source_bytes: bytes
+    selection_note: Optional[dict[str, Any]] = None
+    needs_review: bool = False
 
 
 @dataclass(frozen=True)
@@ -662,12 +681,12 @@ def with_heartbeat_fields(
     return out
 
 
-def extraction_success(action: str) -> ExtractionOutcome:
-    return ExtractionOutcome(action, refresh_projection=True)
+def extraction_success(action: str, *, needs_review: bool = False) -> ExtractionOutcome:
+    return ExtractionOutcome(action, refresh_projection=True, needs_review=needs_review)
 
 
-def extraction_no_project(action: str) -> ExtractionOutcome:
-    return ExtractionOutcome(action, refresh_projection=False)
+def extraction_no_project(action: str, *, needs_review: bool = False) -> ExtractionOutcome:
+    return ExtractionOutcome(action, refresh_projection=False, needs_review=needs_review)
 
 
 def load_env(env_path: Path) -> dict[str, str]:
@@ -806,6 +825,228 @@ def fetch_latest_source_path(client: Client, document_id: str) -> Optional[str]:
 
 def download_source(client: Client, storage_path: str) -> bytes:
     return client.storage.from_("sources").download(storage_path)
+
+
+def fetch_prior_source_artifacts(
+    client: Client,
+    document_id: str,
+    latest_sha256: Optional[str],
+    limit: int = MAX_PRIOR_SOURCE_CANDIDATES,
+) -> list[dict]:
+    """Return distinct prior `kind='source'` rows for `document_id`, newest first."""
+    try:
+        rows = (
+            client.table("cds_artifacts")
+            .select("storage_path,sha256,created_at")
+            .eq("document_id", document_id)
+            .eq("kind", "source")
+            .order("created_at", desc=True)
+            .limit(25)
+            .execute()
+            .data
+            or []
+        )
+    except Exception:
+        return []
+    if not isinstance(rows, list):
+        return []
+    seen_shas: set[str] = {latest_sha256} if latest_sha256 else set()
+    prior: list[dict] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        storage_path = row.get("storage_path")
+        sha = row.get("sha256")
+        if not storage_path:
+            continue
+        if sha and sha in seen_shas:
+            continue
+        if sha:
+            seen_shas.add(sha)
+        prior.append(row)
+        if len(prior) >= limit:
+            break
+    return prior
+
+
+def normalize_reprint_numeric_value(raw: str) -> Optional[str]:
+    """Normalize a form field value (strip $ and commas) when it is numeric with
+    at least MIN_REPRINT_NUMERIC_DIGITS digits."""
+    cleaned = raw.replace("$", "").replace(",", "").strip()
+    if not cleaned:
+        return None
+    if not re.fullmatch(r"[\d.%]+", cleaned):
+        return None
+    if sum(ch.isdigit() for ch in cleaned) < MIN_REPRINT_NUMERIC_DIGITS:
+        return None
+    return cleaned
+
+
+def _extract_fillable_reprint_values(
+    pdf_bytes: bytes,
+) -> Optional[tuple[int, int, list[str]]]:
+    """Return (page_count, filled_field_count, numeric_values) for a fillable PDF,
+    or None if the bytes are not a PDF with AcroForm fields."""
+    if len(pdf_bytes) < 4 or pdf_bytes[:4] != b"%PDF":
+        return None
+    try:
+        reader = pypdf.PdfReader(BytesIO(pdf_bytes))
+        fields = reader.get_fields()
+        page_count = len(reader.pages)
+    except Exception:
+        return None
+    if not fields or page_count <= 0:
+        return None
+    filled_count = 0
+    numeric_values: list[str] = []
+    for field in fields.values():
+        val = field.get("/V") if isinstance(field, dict) else None
+        if val is None or val in ("", "/Off", "/"):
+            continue
+        s = str(val).strip()
+        if not s or s in ("/", "/Off"):
+            continue
+        filled_count += 1
+        norm = normalize_reprint_numeric_value(s)
+        if norm is not None:
+            numeric_values.append(norm)
+    return page_count, filled_count, numeric_values
+
+
+def compare_fillable_reprint_candidate(
+    latest_bytes: bytes,
+    latest_artifact: dict[str, Any],
+    candidate_bytes: bytes,
+    candidate_artifact: dict[str, Any],
+) -> Optional[SourceSelectionResult]:
+    """Compare a newest flat PDF against an earlier fillable PDF candidate.
+
+    Returns None when the newest file is not a fieldless PDF or when the
+    candidate does not meet the fillable field-count and page-count gates.
+    Otherwise returns the selected source artifact/bytes and an auditable
+    `selection_note` dict for `notes.source_selection`.
+    """
+    if len(latest_bytes) < 4 or latest_bytes[:4] != b"%PDF":
+        return None
+    try:
+        latest_pages = PdfPageTexts(latest_bytes)
+        if latest_pages.reader.get_fields():
+            return None
+        latest_page_count = len(latest_pages)
+    except Exception:
+        return None
+    if latest_page_count <= 0:
+        return None
+
+    fillable_info = _extract_fillable_reprint_values(candidate_bytes)
+    if fillable_info is None:
+        return None
+    fillable_page_count, filled_count, numeric_values = fillable_info
+    if filled_count < MIN_FILLABLE_REPRINT_FIELDS:
+        return None
+    page_diff_ratio = abs(latest_page_count - fillable_page_count) / fillable_page_count
+    if page_diff_ratio > MAX_REPRINT_PAGE_COUNT_DIFF_RATIO + 1e-9:
+        return None
+    if not numeric_values:
+        return None
+
+    page_texts = [latest_pages.text(i) or "" for i in range(latest_page_count)]
+    full_text = "\n".join(page_texts)
+    normalized_text = full_text.replace("$", "").replace(",", "")
+    text_chars = len(full_text.strip())
+
+    total_values = len(numeric_values)
+    matched_values = sum(
+        1
+        for val in numeric_values
+        if val in normalized_text or val.rstrip("%") in normalized_text
+    )
+    raw_ratio = matched_values / total_values
+    match_ratio = round(raw_ratio, 4)
+
+    latest_sha = latest_artifact.get("sha256")
+    candidate_sha = candidate_artifact.get("sha256")
+
+    if raw_ratio >= MIN_REPRINT_SAME_DATA_MATCH_RATIO:
+        chosen_artifact = candidate_artifact
+        chosen_bytes = candidate_bytes
+        chosen_sha = candidate_sha
+        reason = "flattened_reprint_same_data"
+        needs_review = False
+    elif (
+        text_chars >= MIN_REPRINT_TEXT_CHARS
+        and raw_ratio <= MAX_REPRINT_MISSING_VALUES_MATCH_RATIO
+    ):
+        chosen_artifact = candidate_artifact
+        chosen_bytes = candidate_bytes
+        chosen_sha = candidate_sha
+        reason = "print_to_pdf_values_missing_from_text"
+        needs_review = True
+    else:
+        chosen_artifact = latest_artifact
+        chosen_bytes = latest_bytes
+        chosen_sha = latest_sha
+        reason = "edition_values_changed"
+        needs_review = False
+
+    selection_note = {
+        "chosen_sha256": chosen_sha,
+        "candidate_sha256": candidate_sha,
+        "latest_sha256": latest_sha,
+        "match_ratio": match_ratio,
+        "matched_values": matched_values,
+        "total_values": total_values,
+        "reason": reason,
+        "needs_review": needs_review,
+    }
+    return SourceSelectionResult(
+        source_artifact=chosen_artifact,
+        source_bytes=chosen_bytes,
+        selection_note=selection_note,
+        needs_review=needs_review,
+    )
+
+
+def select_source_for_extraction(
+    client: Client,
+    document_id: str,
+    latest_artifact: dict[str, Any],
+    latest_bytes: bytes,
+) -> SourceSelectionResult:
+    """Choose the source artifact to extract before format routing.
+
+    When the newest source is a PDF with no form fields and an earlier source
+    artifact for the same document is a fillable PDF with >=50 filled fields
+    and a page count within ±10%, compare >=4-digit numeric form values against
+    the newest PDF's page text.
+    """
+    if len(latest_bytes) < 4 or latest_bytes[:4] != b"%PDF":
+        return SourceSelectionResult(latest_artifact, latest_bytes)
+    try:
+        latest_pages = PdfPageTexts(latest_bytes)
+        if latest_pages.reader.get_fields() or len(latest_pages) <= 0:
+            return SourceSelectionResult(latest_artifact, latest_bytes)
+    except Exception:
+        return SourceSelectionResult(latest_artifact, latest_bytes)
+
+    prior_artifacts = fetch_prior_source_artifacts(
+        client, document_id, latest_artifact.get("sha256"),
+    )
+    for candidate_artifact in prior_artifacts:
+        storage_path = candidate_artifact.get("storage_path")
+        if not storage_path:
+            continue
+        try:
+            candidate_bytes = download_source(client, storage_path)
+        except Exception:
+            continue
+        decision = compare_fillable_reprint_candidate(
+            latest_bytes, latest_artifact, candidate_bytes, candidate_artifact,
+        )
+        if decision is not None:
+            return decision
+
+    return SourceSelectionResult(latest_artifact, latest_bytes)
 
 
 # Year detection on archived PDFs. The canonical CDS template prints
@@ -1169,6 +1410,7 @@ def artifact_already_extracted(
     producer_version: str,
     schema_version: Optional[str] = None,
     source_sha256: Optional[str] = None,
+    latest_source_sha256: Optional[str] = None,
 ) -> bool:
     """Idempotency: if an artifact with the same (document, kind, producer,
     version, schema, source sha) tuple already exists, skip writing a duplicate.
@@ -1176,6 +1418,10 @@ def artifact_already_extracted(
     The source sha check matters when a document row is refreshed in place with
     a corrected or republished PDF. Older canonical artifacts may not carry
     source provenance; those are treated as stale when source_sha256 is known.
+    When `latest_source_sha256` differs from `source_sha256` (a prior fillable
+    source was selected over a newer flattened reprint), require the canonical
+    artifact to record that `source_selection.latest_sha256` so an older
+    pre-reprint Tier 2 artifact does not suppress writing the audited decision.
     """
     query = (
         client.table("cds_artifacts")
@@ -1187,17 +1433,26 @@ def artifact_already_extracted(
     )
     if schema_version:
         query = query.eq("schema_version", schema_version)
-    result = query.limit(10).execute()
+    result = query.order("created_at", desc=True).limit(10).execute()
     rows = result.data or []
     if not source_sha256:
         return bool(rows)
     for row in rows:
         notes = row.get("notes") or {}
-        if notes.get("source_sha256") == source_sha256:
-            return True
-        source_artifact = notes.get("source_artifact")
-        if isinstance(source_artifact, dict) and source_artifact.get("sha256") == source_sha256:
-            return True
+        row_sha = notes.get("source_sha256")
+        if not row_sha:
+            source_artifact = notes.get("source_artifact")
+            if isinstance(source_artifact, dict):
+                row_sha = source_artifact.get("sha256")
+        if row_sha != source_sha256:
+            continue
+        if latest_source_sha256:
+            selection = notes.get("source_selection")
+            if not isinstance(selection, dict):
+                continue
+            if selection.get("latest_sha256") != latest_source_sha256:
+                continue
+        return True
     return False
 
 
@@ -1215,6 +1470,36 @@ def attach_source_metadata(canonical: dict, source_artifact: dict) -> None:
                 "storage_path": source_storage_path,
             }.items() if v
         }
+
+
+def attach_source_selection(
+    canonical: dict,
+    selection_note: Optional[dict[str, Any]],
+) -> None:
+    """Attach `notes.source_selection` and, when flagged for review, a
+    `quality_warnings` entry on the canonical artifact."""
+    if not selection_note:
+        return
+    canonical["source_selection"] = dict(selection_note)
+    if selection_note.get("needs_review"):
+        warnings_list = canonical.setdefault("quality_warnings", [])
+        warnings_list.append({
+            "code": "flattened_reprint_values_missing_from_text",
+            "severity": "warning",
+            "needs_review": True,
+            "chosen_sha256": selection_note.get("chosen_sha256"),
+            "candidate_sha256": selection_note.get("candidate_sha256"),
+            "latest_sha256": selection_note.get("latest_sha256"),
+            "match_ratio": selection_note.get("match_ratio"),
+            "matched_values": selection_note.get("matched_values"),
+            "total_values": selection_note.get("total_values"),
+            "message": (
+                "Newest source PDF has a text layer but almost none of the "
+                "prior fillable PDF's numeric values appear in its text "
+                "(likely print-to-PDF vector paths); extracted from prior "
+                "fillable source and marked for review."
+            ),
+        })
 
 
 def attach_schema_metadata(canonical: dict, resolution: SchemaResolution) -> dict:
@@ -1464,6 +1749,7 @@ def _run_tier4(
     source_artifact: dict,
     dry_run: bool,
     force_reextract: bool = False,
+    source_selection: Optional[dict[str, Any]] = None,
 ) -> ExtractionOutcome:
     """Tier 4 path: Docling baseline → markdown artifact.
 
@@ -1486,6 +1772,7 @@ def _run_tier4(
             if resolution.canonical_year:
                 canonical["schema_year_proxy_for"] = resolution.canonical_year
         attach_source_metadata(canonical, source_artifact)
+        attach_source_selection(canonical, source_selection)
     except Exception as e:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed", source_format)
@@ -1498,9 +1785,15 @@ def _run_tier4(
     quality_flag = extraction_quality_flag(canonical)
 
     if not dry_run:
+        latest_sha256 = (
+            source_selection.get("latest_sha256")
+            if isinstance(source_selection, dict)
+            else None
+        )
         if not force_reextract and artifact_already_extracted(
             client, document_id, producer, producer_version,
             resolution.schema_version, canonical.get("source_sha256"),
+            latest_source_sha256=latest_sha256,
         ):
             mark_extraction_status(client, document_id, "extracted", source_format)
             if quality_flag:
@@ -1834,19 +2127,42 @@ def extract_one(
     document_id = doc["id"]
     school_id = doc["school_id"]
 
-    source_artifact = fetch_latest_source_artifact(client, document_id)
-    if not source_artifact:
+    latest_source_artifact = fetch_latest_source_artifact(client, document_id)
+    if not latest_source_artifact:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed")
         return extraction_no_project("no_source_artifact")
-    storage_path = source_artifact["storage_path"]
+    storage_path = latest_source_artifact["storage_path"]
 
     try:
-        pdf_bytes = download_source(client, storage_path)
+        latest_bytes = download_source(client, storage_path)
     except Exception as e:
         if not dry_run:
             mark_extraction_status(client, document_id, "failed")
         return extraction_no_project(f"download_error: {e}")
+
+    selection = select_source_for_extraction(
+        client, document_id, latest_source_artifact, latest_bytes,
+    )
+    source_artifact = selection.source_artifact
+    pdf_bytes = selection.source_bytes
+    selection_note = selection.selection_note
+    needs_review = selection.needs_review
+    if selection_note:
+        doc["source_selection"] = selection_note
+        if needs_review:
+            doc["needs_review"] = True
+        print(
+            f"    source_selection: school={school_id} document={document_id} "
+            f"chosen={selection_note.get('chosen_sha256')} "
+            f"candidate={selection_note.get('candidate_sha256')} "
+            f"latest={selection_note.get('latest_sha256')} "
+            f"match_ratio={selection_note.get('match_ratio')} "
+            f"reason={selection_note.get('reason')} "
+            f"needs_review={needs_review}",
+            file=sys.stderr if needs_review else sys.stdout,
+            flush=True,
+        )
 
     # Year detection. ADR 0007 Stage B: extraction is write-authoritative
     # for academic year. Writes detected_year when a valid span is found
@@ -1959,7 +2275,7 @@ def extract_one(
         return _run_tier4(
             client, document_id, school_id, pdf_bytes,
             source_format, resolution, schema_index, source_artifact, dry_run,
-            force_reextract,
+            force_reextract, source_selection=selection_note,
         )
 
     if source_format != "pdf_fillable":
@@ -1972,6 +2288,7 @@ def extract_one(
         canonical = run_tier2(pdf_bytes, resolution.schema)
         attach_schema_metadata(canonical, resolution)
         attach_source_metadata(canonical, source_artifact)
+        attach_source_selection(canonical, selection_note)
         unmapped_count = annotate_tier2_unmapped_fields(canonical)
         if unmapped_count:
             sample_tags = [
@@ -2000,11 +2317,12 @@ def extract_one(
             outcome = _run_tier4(
                 client, document_id, school_id, pdf_bytes,
                 source_format, resolution, schema_index, source_artifact, dry_run,
-                force_reextract,
+                force_reextract, source_selection=selection_note,
             )
             return ExtractionOutcome(
                 action=f"tier2_label_acroform_fallback_{outcome.action}",
                 refresh_projection=outcome.refresh_projection,
+                needs_review=outcome.needs_review or needs_review,
             )
     except Exception as e:
         if not dry_run:
@@ -2016,18 +2334,24 @@ def extract_one(
     # Tier 2 never evaluated quality before; a fillable PDF of one section
     # was served as a full CDS.
     quality_flag = extraction_quality_flag(canonical)
+    latest_sha256 = (
+        selection_note.get("latest_sha256")
+        if isinstance(selection_note, dict)
+        else None
+    )
 
     if not dry_run:
         if not force_reextract and artifact_already_extracted(
             client, document_id, producer, producer_version,
             resolution.schema_version, canonical.get("source_sha256"),
+            latest_source_sha256=latest_sha256,
         ):
             # Idempotent re-run: the row was already extracted with this
             # producer version at some earlier point. Mark extracted and
             # move on without writing a duplicate.
             mark_extraction_status(client, document_id, "extracted", source_format)
             apply_extraction_quality_flag(client, document_id, quality_flag)
-            return extraction_no_project("already_extracted")
+            return extraction_no_project("already_extracted", needs_review=needs_review)
 
         try:
             insert_canonical_artifact(client, document_id, canonical)
@@ -2043,7 +2367,11 @@ def extract_one(
     _populated = stats.get("schema_fields_populated", 0)
     _total = stats.get("schema_fields_total", 0)
     _unmapped = stats.get("unmapped_acroform_fields", 0)
-    return extraction_success(f"extracted ({_populated}/{_total} fields, {_unmapped} unmapped)")
+    action_prefix = "extracted_needs_review" if needs_review else "extracted"
+    return extraction_success(
+        f"{action_prefix} ({_populated}/{_total} fields, {_unmapped} unmapped)",
+        needs_review=needs_review,
+    )
 
 
 def run_detect_year_only(
@@ -2604,6 +2932,7 @@ def main() -> int:
             "failure_count": 0,
             "mean_fields": None,
             "low_field_docs": [],
+            "review_docs": [],
             "extraction_counts": {},
             "projection_counts": dict(projection_counts),
             "reconcile_counts": dict(reconcile_counts),
@@ -2643,6 +2972,7 @@ def main() -> int:
     summary_docs: list[dict[str, Any]] = []
     field_counts: list[int] = []
     low_field_docs: list[dict[str, Any]] = []
+    review_docs: list[dict[str, Any]] = []
     failure_count = 0
     stopped_early = False
     for i, doc in enumerate(docs, 1):
@@ -2702,6 +3032,16 @@ def main() -> int:
                 })
         failed = is_failure_action(outcome.action)
         failure_count += int(failed)
+        doc_needs_review = bool(outcome.needs_review or doc.get("needs_review"))
+        if doc_needs_review:
+            review_docs.append({
+                "document_id": str(doc["id"]),
+                "school_id": doc["school_id"],
+                "source_format": doc.get("source_format"),
+                "field_count": fields,
+                "action": outcome.action,
+                "source_selection": doc.get("source_selection"),
+            })
 
         projection_note = ""
         projection_field_count: int | None = None
@@ -2739,7 +3079,7 @@ def main() -> int:
                 force_reextract=args.force_reextract,
             )
         )
-        summary_docs.append({
+        summary_doc: dict[str, Any] = {
             "document_id": str(doc["id"]),
             "school_id": doc["school_id"],
             "canonical_year": doc.get("detected_year") or doc.get("cds_year"),
@@ -2747,9 +3087,13 @@ def main() -> int:
             "action": outcome.action,
             "field_count": fields,
             "failed": failed,
+            "needs_review": doc_needs_review,
             "projection_field_count": projection_field_count,
             "projection_browser_row": projection_browser_row,
-        })
+        }
+        if doc.get("source_selection") is not None:
+            summary_doc["source_selection"] = doc["source_selection"]
+        summary_docs.append(summary_doc)
         print(f"[{i:4d}/{len(docs)}] {doc['school_id']}: {outcome.action}{projection_note}", flush=True)
 
     processed_count = sum(counts.values())
@@ -2788,6 +3132,7 @@ def main() -> int:
         "failure_count": failure_count,
         "mean_fields": mean_or_none(field_counts),
         "low_field_docs": low_field_docs,
+        "review_docs": review_docs,
         "extraction_counts": dict(counts),
         "projection_counts": dict(projection_counts),
         "reconcile_counts": dict(reconcile_counts),
