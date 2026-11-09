@@ -6,7 +6,7 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
-## [0.6.19.12] - 2026-11-09
+## [0.6.19.13] - 2026-11-09
 
 ### Fixed
 
@@ -33,6 +33,11 @@ This project uses four-part semantic versioning.
   - Every evaluated decision is recorded in `notes.source_selection` on the
     canonical artifact (`chosen_sha256`, `candidate_sha256`, `latest_sha256`,
     `match_ratio`, `matched_values`, `total_values`, `reason`, `needs_review`).
+
+## [0.6.19.12] - 2026-11-09
+
+### Fixed
+
 - `/feedback` now submits `FormData` directly from the browser to Formspree
   (reading `NEXT_PUBLIC_FEEDBACK_FORMSPREE_ENDPOINT` with fallback to
   `NEXT_PUBLIC_FORMSPREE_ENDPOINT`), matching `SubmissionForm.tsx`. Removed the
