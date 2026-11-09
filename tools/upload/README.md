@@ -8,7 +8,8 @@ Use this when a school's file is behind an auth wall (Microsoft SSO / intranet),
 
 | File | Purpose |
 |---|---|
-| `upload.py` | The CLI. Wraps the `archive-upload` edge function. |
+| `upload.py` | The CLI. Wraps the `archive-upload` edge function. Also accepts `--school-name`, `--env <path>` and `--timeout <seconds>`. |
+| `upload_batch.py` | Batch wrapper: point it at a folder of PDF/XLSX/DOCX files and it infers `school_id` and `cds_year` from the folder and file names (matching against `tools/finder/schools.yaml`), prints a plan, and uploads with `--yes`. Unmatched files are listed and skipped, never guessed. Flags: `--school <id>` (treat the folder as that school), `--yes`, `--recursive`. |
 
 ## Usage
 
@@ -27,13 +28,20 @@ python tools/upload/upload.py ./grab.pdf some-school 2022-23 \
 
 Reads `.env` for `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. No new deps beyond what the other `tools/` scripts already use (`requests`, `python-dotenv`).
 
+```bash
+# Batch: dry-run plan, then upload
+python tools/upload/upload_batch.py ~/Downloads/cds/
+python tools/upload/upload_batch.py ~/Downloads/cds/ --yes
+python tools/upload/upload_batch.py ~/Downloads/williams/ --school williams --yes
+```
+
 ## Semantics
 
 - **Idempotent.** Upload the same file twice: second call returns `unchanged_verified`.
 - **Refresh-on-new-bytes.** Upload a different file for an existing (school, year): the new file becomes the canonical source and gets marked `extraction_pending`. The old artifact row stays in `cds_artifacts` for audit.
 - **Magic-byte validated.** PDF, XLSX, or DOCX only. If the bytes don't match one of those three, the server rejects with HTTP 400 — no silent half-upload.
 - **Year-format checked locally.** `YYYY-YY` where `YY = YYYY+1`. Rejected client-side before the HTTP call.
-- **Provenance.** Default `operator_manual`. Override with `--source-provenance` if the file genuinely came from somewhere else (e.g., you grabbed it off the College Transitions mirror).
+- **Provenance.** Default `operator_manual`. The function never silently overwrites an existing `school_direct` row's provenance; the caller states provenance explicitly. Override with `--source-provenance` if the file genuinely came from somewhere else (e.g., you grabbed it off the College Transitions mirror).
 
 ## When to use this vs. force_urls
 

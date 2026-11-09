@@ -157,9 +157,9 @@ and ending endowment value, new gifts, investment return, spending distribution,
 and other/residual change. `F2H03` is deliberately not mapped because it is the
 calculated change `(F2H02 - F2H01)`. Component detail begins in fiscal year 2020.
 
-Create the mappings and `analyze_endowment` script before running this spike;
-otherwise `--display-groups Endowment` can vacuously produce zero facts. Download
-the current FY2023 final release, then derive every loader provenance value from
+The `Endowment` group in `mappings.py` and `analyze_endowment.py` are in the
+repo; a dry run that loads zero facts means the mapping did not match the
+release. Download the current FY2023 final release, then derive every loader provenance value from
 the emitted manifest:
 
 ```bash
@@ -218,11 +218,16 @@ metric. The $5 million denominator floor applies only to the future
 
 ### Phase 1 endowment release cycles
 
-After the loader changes have merged and any required production setup is
-applied from `main`, run one complete download, dry-run, review, analysis, and
-apply cycle for each release. Phase 1 has no schema migration. The future Phase
-2 `school_endowment_health` view is a migration and must be applied from `main`
-after merge. Never apply from a feature branch.
+**Status: complete for FY2020 to FY2024** (loaded and reconciled against the
+June 2026 College Scorecard file in August 2026; the
+`/recipes/endowment-draw-rate` page reads the result). The runbook below is kept
+as the repeatable procedure for the next release. Phase 1 has no schema
+migration. A Phase 2 `school_endowment_health` view has not been built; when it
+is, it is a migration and must be applied from `main` after merge. Never apply
+from a feature branch.
+
+For each release: run one complete download, dry-run, review, analysis, and
+apply cycle.
 
 | Fiscal year | Collection | F2 table | Selected release | Download option |
 |---|---|---|---|---|
@@ -302,6 +307,17 @@ member UNITID, OPEID6, value pair, inclusion flag, and matching method is
 listed. The tool never uses fuzzy names, never discards ambiguous residual
 matches, and never promotes a Scorecard branch without direct F2 facts into the
 reporting-entity denominator.
+
+## Recipe generators
+
+Three scripts regenerate the checked-in data behind public recipes. They read
+only public PostgREST resources and write into `web/`:
+
+| Script | Output |
+|---|---|
+| `build_pricing_power_recipe.py` (`--out`) | `web/src/lib/pricing-power-recipe-data.ts` for `/recipes/acceptance-vs-yield` |
+| `build_pricing_power_starter_xlsx.py` (`--data`, `--out`) | `web/public/recipes/acceptance-vs-yield-starter.xlsx`, built from the TypeScript dataset above (run it second) |
+| `build_endowment_draw_rate_recipe.py` (`--min-year`, `--max-year`, `--out`) | `web/src/lib/endowment-draw-rate-recipe-data.ts` for `/recipes/endowment-draw-rate` |
 
 ## Source discipline
 

@@ -7,7 +7,9 @@ custom connector (Settings → Connectors → Add custom connector). Streamable
 HTTP, no API key. That is the URL for web, desktop, mobile, and Cowork.
 
 This stdio file is for local development and Claude Code. One Node file, no
-install. Stdio is newline-delimited JSON-RPC.
+install (the package `@collegedata-fyi/mcp-server`, version 0.2.0, is not published
+to npm; run it from a clone of this repository). Stdio is newline-delimited
+JSON-RPC.
 
 ```bash
 node packages/mcp-server/bin/collegedata-mcp.js
@@ -35,13 +37,15 @@ If Claude reports `spawn node ENOENT`, set `command` to the path that
 defaults to `https://www.collegedata.fyi`. Point it at `http://localhost:3000`
 when developing the friendly API locally.
 
-Tools (same five as the hosted endpoint):
+Tools (same five as the hosted endpoint, `web/src/lib/mcp/tools.ts`):
 
-- `search_schools`
-- `get_school_facts`
-- `compare_schools`
-- `get_source_documents`
-- `get_field_dictionary`
+- `search_schools` (`query`, optional `limit`)
+- `get_school_facts` (`school_id`, optional `categories`)
+- `compare_schools` (`school_ids`, optional `categories`, `fields`)
+- `get_source_documents` (`school_id`)
+- `get_field_dictionary` (optional `category`)
+
+The `finance` category (endowment values and spending) is available through `get_school_facts` and `get_field_dictionary`, not `compare_schools`.
 
 The server does not use a service-role key and exposes no write tools.
 `api.collegedata.fyi` is PostgREST, not MCP — do not paste that host as a

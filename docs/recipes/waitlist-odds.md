@@ -60,7 +60,7 @@ The Berkeley history panel, inspired by a chart idea from [@neetu_arnold](https:
 
 ## How to reproduce
 
-The page is generated from public-facing `school_browser_rows`:
+The checked-in dataset (`web/src/lib/waitlist-recipe-data.ts`, `generatedAt` 2026-05-11) is a one-off snapshot built by hand from public-facing `school_browser_rows`; there is no generator script under `tools/`, so the page does not update on its own and may lag the current corpus. To rebuild it, start from:
 
 ```bash
 curl 'https://api.collegedata.fyi/rest/v1/school_browser_rows?select=document_id,ipeds_id,school_id,school_name,canonical_year,acceptance_rate,wait_list_policy,wait_list_offered,wait_list_accepted,wait_list_admitted&wait_list_offered=not.is.null'

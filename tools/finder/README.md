@@ -12,7 +12,7 @@ This directory turns that problem into a reproducible pipeline. You run one comm
 
 | File | Purpose |
 |---|---|
-| `schools.yaml` | The corpus. 2,434 schools keyed by IPEDS ID, with `discovery_seed_url` (the resolver's seed URL; renamed from `cds_url_hint` in PR 5 of the URL hint refactor), optional `browse_url` (human-friendly URL for contributor tools), `scrape_policy`, `probe_state`. |
+| `schools.yaml` | The corpus: about 2,400 schools keyed by IPEDS ID (live counts: [/coverage](https://www.collegedata.fyi/coverage)), with `discovery_seed_url` (the resolver's seed URL; renamed from `cds_url_hint` in PR 5 of the URL hint refactor), optional `browse_url` (human-friendly URL for contributor tools), `scrape_policy`, `probe_state`. |
 | `school_overrides.yaml` | Operator-supplied per-school overrides keyed by `school_id`. Hand-curated `browse_url`, `direct_archive_urls` (year-tagged for Box/Drive/SharePoint-hosted schools and Archive.org snapshots of taken-down school PDFs; use Wayback `id_` URLs, not toolbar captures), `hosting_override` (CMS/file_storage/auth_required/rendering/waf/notes). Read at edge-function runtime by `_shared/schools.ts`; NOT touched by `build_school_list.py`. |
 | `build_school_list.py` | Rebuilds `schools.yaml` from IPEDS HD data, preserving hand-curated overrides. Run rarely (once per IPEDS release). Includes `assert_no_duplicates()` build-time guard. |
 | `identity_guard.py` | CI and loader guard that checks every `schools.yaml` UNITID against a checked-in official NCES HD identity snapshot. It blocks when neither official name nor website domain agrees; exact reviewed exceptions cannot use wildcards and must remain in use. |
@@ -20,8 +20,19 @@ This directory turns that problem into a reproducible pipeline. You run one comm
 | `ipeds_identity_snapshot.csv` | Offline NCES HD identity snapshot used by CI, including all official UNITIDs, names, domains, active flags, and successor IDs. Refresh deliberately with `identity_guard.py --build-snapshot ...` after reviewing a new HD release. |
 | `probe_urls.py` | Discovers CDS URLs for schools where we don't have one. Run monthly. This is the workhorse. |
 | `dedup_audit.py` | Compares duplicate-name `schools.yaml` entries against authoritative IPEDS HD data, recommends a canonical. Run when the build guard surfaces a duplicate. |
-| `dedup_migrate.py` | Moves Supabase rows (cds_documents, archive_queue, etc.) from a wrong slug to its canonical, then deletes the wrong yaml entry. Run after `dedup_audit.py` chooses the canonical. |
+| `dedup_migrate.py` | Moves Supabase rows (cds_documents, archive_queue, etc.) from a wrong slug to its canonical, then deletes the wrong yaml entry. Run after `dedup_audit.py` chooses the canonical. `--dry-run` / `--apply`; `--rename-lincoln` renames the two Lincoln University slugs to add state suffixes. |
 | `debug_brave.py` | Diagnostic for Brave Search API. Hits 5 hand-verified publishers × 4 query shapes, prints raw results. Used when a Brave run misbehaves. |
+| `stuck_pdf_seeds.py` | Flags schools whose discovery seed is a single PDF/xlsx/docx with few archived years and a stale latest year, so the probe can look for a listing page. Feeds `probe_urls.py --ids-file` in the monthly workflow. |
+| `apply_probe_log.py` | Replays a finder probe log onto `schools.yaml` without a Brave re-run (recovery after a lost seed push). |
+| `merge_schools_yaml.py` | Three-way merge of `schools.yaml` at school-id grain, used by the probe workflow to publish from current `main`. |
+| `promote_landing_hints.py` | Proposes (or applies with a flag) landing-page rewrites for seeds that point at one direct PDF. |
+| `headless_archive.py` | Scheduled Playwright archive worker for WAF/JS-gated CDS landings (`ops-headless-archive.yml`, daily 08:00 UTC). Targets `waf_blocked_urls.yaml` plus queue rows whose last outcome was a bot challenge. Needs `requirements-headless.txt`. |
+| `headless_download.py` | Headless-browser download and archive for WAF-blocked CDS URLs that the Deno downloader in `archive-process` cannot fetch. |
+| `playwright_collect.py` | Collects PDF/XLSX/DOCX links from JS-rendered IR listings into the `manual_urls.yaml` sidecar. |
+| `archive_manual_urls.py` | Batch-archives the URLs in `manual_urls.yaml` through `archive-process` `force_urls`. |
+| `waf_blocked_urls.yaml`, `manual_urls.yaml`, `public_slugs.yaml` | Operator data files for the headless stack (WAF-blocked URLs, Playwright-collected URLs, curated public slugs). |
+| `waf_school_ids.py`, `archive_identity.py`, `academic_year.py` | Shared helpers: canonical school_id aliases for the WAF YAML, slug/UNITID resolution for archive writes, and the `YYYY-YY` year parser. |
+| `ipeds_identity_exceptions.json` | Reviewed, exact identity-guard exceptions (see `identity_guard.py`). |
 | `seed_urls.md` | Hand-curated seed list of elite schools known to publish, plus a known-absent list of schools that refuse (Reed? Not actually. Chicago? Yes — see story below.). |
 
 ## What `probe_urls.py` does
@@ -33,6 +44,8 @@ For every school in `schools.yaml` with `scrape_policy: unknown`, tries to find 
 3. **Bing HTML scraping** and **Google Custom Search** (optional alternatives, not used by default).
 
 When a URL is found, write it as `discovery_seed_url` and flip `scrape_policy` to `active`. On failure, write a `probe_state` with `last_result: not_found` so a 30-day cooldown skips the school on the next run.
+
+Other flags: `--rps`, `--workers`, `--save-every`, `--ids-file`, `--reprobe-pdf-seeds`, `--search-only`, `--bing-fallback`, `--google-fallback`, `--brave-budget`, summary output via `--summary-json`. Run `python probe_urls.py --help` for the full list.
 
 ## Usage
 
@@ -63,7 +76,7 @@ SIGINT during a run triggers a partial save, so Ctrl-C is always safe.
 
 ## The story: how we got from 68 to 840 active-with-hint in one day
 
-This is what the first 48 hours of finder development actually looked like, kept honest because every one of these bugs is a landmine someone else will step on later.
+Historical narrative from the first days of the finder (April 2026). Counts in this section are point-in-time; the field `cds_url_hint` was later renamed `discovery_seed_url`. For current numbers see [/coverage](https://www.collegedata.fyi/coverage) and [/pipeline-observation](https://www.collegedata.fyi/pipeline-observation). This is what the first 48 hours of finder development actually looked like, kept honest because every one of these bugs is a landmine someone else will step on later.
 
 ### Stage 1: the overnight pattern ladder run — 68 hits out of 2,323
 
@@ -109,13 +122,13 @@ Scanned the 1,581 not-founds for any "suspiciously high-quality schools that sho
 
 **Reed College: two entries in `schools.yaml`, one a ghost.** One labeled `id: reed` with IPEDS 209542 and a hand-curated note claiming Reed boycotts CDS (actually they just boycott US News — they do publish CDS sections). A second labeled `id: reed-college` with IPEDS 209922 which Brave had just found a real CDS URL for.
 
-IPEDS 209542, it turns out, **is Oregon State University, not Reed.** Someone hand-curated the known-absent list with the wrong IPEDS ID on the Reed entry. And `build_school_list.py`'s merge logic, processing IPEDS row 209542, found it in the `existing` dict (the hand-curated Reed entry), and overlaid Reed's `name` and `domain` on top of Oregon State's IPEDS row. The flagship Pac-12 R1 was **silently renamed to "Reed College" in place during every build**, and the real OSU disappeared from the 2,434-school corpus entirely. Only OSU-Cascades (a satellite campus, IPEDS 440828) survived.
+IPEDS 209542, it turns out, **is Oregon State University, not Reed.** Someone hand-curated the known-absent list with the wrong IPEDS ID on the Reed entry. And `build_school_list.py`'s merge logic, processing IPEDS row 209542, found it in the `existing` dict (the hand-curated Reed entry), and overlaid Reed's `name` and `domain` on top of Oregon State's IPEDS row. The flagship Pac-12 R1 was **silently renamed to "Reed College" in place during every build**, and the real OSU disappeared from the corpus entirely. Only OSU-Cascades (a satellite campus, IPEDS 440828) survived.
 
 One wrong digit in a hand-curated entry was deleting a major R1 from the discovery pipeline forever. This is the kind of bug that only surfaces when you go looking for it.
 
 Fix: deleted the bad `id: reed` entry, re-added a correct `id: oregon-state-university` entry with IPEDS 209542 + domain `oregonstate.edu`, kept the real `reed-college` entry. The shared identity guard now blocks this failure class in CI and in `load_directory.py` before any database connection or write.
 
-**University of Illinois Urbana-Champaign: real Brave miss, XLSX format.** Illinois's DMI publishes CDS as `.xlsx`, not PDF, at `https://www.dmi.illinois.edu/stuenr/misc/cds_2024_2025.xlsx`. Brave's index turned out to have effectively zero coverage of `www.dmi.illinois.edu` — `site:illinois.edu "Common Data Set"` returns zero results across every query variant we tried. Brave just doesn't crawl that subdomain. Subdomain coverage gaps in the search engine's index are rare but real. Manually set `cds_url_hint` to the XLSX URL and flipped `scrape_policy` to active. Tier 1 extraction path (openpyxl → Answer Sheet) will handle it directly.
+**University of Illinois Urbana-Champaign: real Brave miss, XLSX format.** Illinois's DMI publishes CDS as `.xlsx`, not PDF, at `https://www.dmi.illinois.edu/stuenr/misc/cds_2024_2025.xlsx`. Brave's index turned out to have effectively zero coverage of `www.dmi.illinois.edu` — `site:illinois.edu "Common Data Set"` returns zero results across every query variant we tried. Brave just doesn't crawl that subdomain. Subdomain coverage gaps in the search engine's index are rare but real. Manually set `discovery_seed_url` (then called `cds_url_hint`) to the XLSX URL and flipped `scrape_policy` to active. Tier 1 extraction path (openpyxl → Answer Sheet) will handle it directly.
 
 ### Stage 5: the silent dead-state audit — 71 elite schools marked "active" with no URL
 
@@ -153,20 +166,16 @@ Fix: added a per-school wall-clock budget to `probe_school()`. When `time.monoto
 
 ## Current state
 
-After one day of work:
+Live counts (active publishers, schools with a fetchable seed, coverage by
+year) change with every probe and archive run, so they are not kept here. See
+[/coverage](https://www.collegedata.fyi/coverage) and
+[/pipeline-observation](https://www.collegedata.fyi/pipeline-observation). To
+count `scrape_policy` values locally, load `schools.yaml` and tally them.
 
-| | Count |
-|---|---:|
-| Total corpus | 2,424 |
-| Active (known publishers) | 841 |
-| Active **with clean `discovery_seed_url`** | **829** |
-| Active, hint cleared pending re-probe | 12 |
-| `verified_absent` (known non-publishers) | 2 |
-| Still `unknown` | 1,581 |
-
-**~34.2% of the corpus now has a fetchable CDS URL.** For context, the biggest prior public attempt we're aware of indexed on the order of 80 schools. This is roughly 10× that.
-
-The 1,581 `unknown` tail are Brave-confirmed misses — pattern ladder fails AND Brave returns no CDS-titled result. Candidates: schools that genuinely don't publish CDS, schools that publish under unusual keywords ("Institutional Fact Book"), schools hosting on Box/Drive, and schools whose IR subdomains are thinly indexed. Needs a different discovery strategy and is scoped for a later pass.
+At the end of the first day of work (April 2026) the probe had found a CDS URL
+for roughly a third of the corpus; the remainder were Brave-confirmed misses:
+schools that do not publish, publish under unusual names ("Institutional Fact
+Book"), host on Box/Drive, or sit on thinly indexed IR subdomains.
 
 ## Known blind spots
 
@@ -275,6 +284,8 @@ The monthly Action used to die quietly in two ways:
 
 ## Recommended monthly cron
 
+Related workflows: `ops-headless-archive.yml` (daily, WAF-gated schools), `ops-archive-seed-catchup.yml` (runs on push to `main` when `schools.yaml` changes and enqueues the changed seeds), and `ops-api-usage-ingest.yml` (unrelated to discovery; see `tools/api_usage/`).
+
 GitHub Actions runs this on the 2nd of each month (`ops-finder-probe.yml`). It needs the `BRAVE_API_KEY` repository secret — the finder talks to `api.search.brave.com`, not public brave.com. Manual dispatch:
 
 ```bash
@@ -285,10 +296,11 @@ Operator equivalent, from a laptop that has `BRAVE_API_KEY` in the environment:
 
 ```bash
 cd /path/to/collegedata-fyi && \
-  PYTHONUNBUFFERED=1 python tools/finder/stuck_pdf_seeds.py --out-ids /tmp/stuck-ids.txt && \
+  mkdir -p scratch/finder logs && \
+  PYTHONUNBUFFERED=1 python tools/finder/stuck_pdf_seeds.py --out-ids scratch/finder/stuck-ids.txt && \
   PYTHONUNBUFFERED=1 python tools/finder/probe_urls.py \
     --brave-fallback \
-    --ids-file /tmp/stuck-ids.txt \
+    --ids-file scratch/finder/stuck-ids.txt \
     --brave-budget 1800 \
     2>&1 | tee logs/probe-stuck-$(date +%Y%m%d).log && \
   PYTHONUNBUFFERED=1 python tools/finder/probe_urls.py \

@@ -40,7 +40,7 @@ Older templates do not have an Answer Sheet, so `cds_schema_YYYY_YY.structural.j
 | 2021-22 | — | ✅ | ✅ | commondataset.org/wp-content/uploads/2021/10/CDS_2021-2022.xlsx |
 | 2022-23 | — | ✅ | ✅ | commondataset.org/wp-content/uploads/2022/11/CDS_2022-2023.xlsx |
 | 2023-24 | synthesized | ✅ | ✅ | `schemas/templates/cds_2023-24_template.xlsx` + `schemas/templates/cds_2023-24_template.pdf` |
-| 2024-25 | ✅ | ✅ | n/a | `schemas/templates/cds_2024-25_template.xlsx` |
+| 2024-25 | ✅ | ✅ | n/a | `schemas/templates/cds_2024-25_template.xlsx` (the `.pdf` is listed in `SOURCES.md` but not checked in) |
 | 2025-26 | ✅ | ✅ | n/a | `schemas/templates/cds_2025-26_template.xlsx` |
 
 ## Question-number format
@@ -60,6 +60,6 @@ Official templates needed to reproduce canonical schemas live in `schemas/templa
 
 ## Next steps
 
-- Wire the 2024-25 to 2025-26 semantic diff into the database equivalence layer described in PRD 014.
+- The database equivalence layer exists (`cds_canonical_field_equivalence`, migration `20260428190000_canonical_field_equivalence.sql`, populated by `tools/browser_backend/project_browser_data.py`; internal, not a supported public API). Keep it in step when a new template year lands (PRD 014).
 - Expand historical overlays beyond C1/C7/C9 only when a product slice needs those sections; each expansion should keep unmapped rows explicit for QA.
 - Consider whether 2022-23 has enough PDF/form continuity to justify the same synthesized-canonical treatment as 2023-24.
