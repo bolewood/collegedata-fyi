@@ -133,26 +133,38 @@ export function scrubSensitiveUrl(value: string): string {
   return value.replace(SENSITIVE_QUERY_RE, (_m, sep: string, key: string) => `${sep}${key}=${FILTERED}`);
 }
 
+/** URL-string scrub only. Never filters by key name, so error codes survive. */
 function scrubDeep(value: unknown, depth = 0): unknown {
   if (depth > 8) return value;
   if (typeof value === "string") return scrubSensitiveUrl(value);
-  if (Array.isArray(value)) {
-    // Handles Sentry's [["code", "value"]] query_string shape.
-    if (
-      value.length === 2 &&
-      typeof value[0] === "string" &&
-      SENSITIVE_PARAMS.has(value[0].toLowerCase())
-    ) {
-      return [value[0], FILTERED];
+  if (Array.isArray(value)) return value.map((v) => scrubDeep(v, depth + 1));
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      out[k] = scrubDeep(v, depth + 1);
     }
-    return value.map((v) => scrubDeep(v, depth + 1));
+    return out;
+  }
+  return value;
+}
+
+/**
+ * Key-name filtering, used only for containers that are URL query params:
+ * a query string, [[key, value]] pairs, or a { key: value } params object.
+ */
+function scrubQueryContainer(value: unknown): unknown {
+  if (typeof value === "string") return scrubSensitiveUrl(value);
+  if (Array.isArray(value)) {
+    return value.map((pair) =>
+      Array.isArray(pair) && pair.length === 2 && typeof pair[0] === "string" && SENSITIVE_PARAMS.has(pair[0].toLowerCase())
+        ? [pair[0], FILTERED]
+        : pair,
+    );
   }
   if (value && typeof value === "object") {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-      out[k] = SENSITIVE_PARAMS.has(k.toLowerCase()) && typeof v === "string"
-        ? FILTERED
-        : scrubDeep(v, depth + 1);
+      out[k] = SENSITIVE_PARAMS.has(k.toLowerCase()) ? FILTERED : v;
     }
     return out;
   }
@@ -161,11 +173,25 @@ function scrubDeep(value: unknown, depth = 0): unknown {
 
 /** Remove share codes and search text from URLs on an error or transaction event. */
 export function scrubSentryEvent<E>(event: E): E {
-  const e = event as Record<string, unknown>;
+  const e = event as Record<string, any>;
   for (const key of ["request", "breadcrumbs", "transaction", "spans", "contexts", "extra", "tags"]) {
     if (e[key] !== undefined) e[key] = scrubDeep(e[key]);
   }
+  if (e.request && e.request.query_string !== undefined) {
+    e.request.query_string = scrubQueryContainer(e.request.query_string);
+  }
+  if (Array.isArray(e.breadcrumbs)) {
+    for (const crumb of e.breadcrumbs) scrubBreadcrumbParams(crumb);
+  }
   return event;
+}
+
+function scrubBreadcrumbParams(crumb: any): void {
+  const data = crumb?.data;
+  if (!data || typeof data !== "object") return;
+  for (const key of ["params", "query"]) {
+    if (data[key] !== undefined) data[key] = scrubQueryContainer(data[key]);
+  }
 }
 
 /** Same scrub for a single breadcrumb (url, to, from, message, data). */
@@ -174,6 +200,7 @@ export function scrubSentryBreadcrumb<B>(breadcrumb: B): B {
   for (const key of ["message", "data"]) {
     if (b[key] !== undefined) b[key] = scrubDeep(b[key]);
   }
+  scrubBreadcrumbParams(b);
   return breadcrumb;
 }
 

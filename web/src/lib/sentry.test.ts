@@ -221,3 +221,40 @@ describe("sentry URL scrubbing", () => {
     expect(crumb.data.status_code).toBe(200);
   });
 });
+
+describe("sentry scrub keeps error codes", () => {
+  it("does not filter object keys named code or q in extra, contexts, tags, or spans", () => {
+    const event = sentryBeforeSend({
+      extra: { code: "57014", q: "internal" },
+      contexts: { postgrest: { code: "57014" } },
+      tags: { code: "ECONNRESET" },
+      spans: [{ data: { code: "57014" } }],
+    } as never) as unknown as Record<string, any>;
+    expect(event.extra).toEqual({ code: "57014", q: "internal" });
+    expect(event.contexts).toEqual({ postgrest: { code: "57014" } });
+    expect(event.tags).toEqual({ code: "ECONNRESET" });
+    expect(event.spans[0].data.code).toBe("57014");
+  });
+
+  it("filters request url and query_string in string and pair forms", () => {
+    const a = sentryBeforeSend({
+      request: { url: "https://x.test/s?q=harvard&code=abc", query_string: "q=harvard&x=1" },
+    } as never) as unknown as Record<string, any>;
+    expect(a.request.url).toBe("https://x.test/s?q=[Filtered]&code=[Filtered]");
+    expect(a.request.query_string).toBe("q=[Filtered]&x=1");
+    const b = sentryBeforeSend({
+      request: { query_string: [["code", "abc"], ["x", "1"]] },
+    } as never) as unknown as Record<string, any>;
+    expect(b.request.query_string).toEqual([["code", "[Filtered]"], ["x", "1"]]);
+  });
+
+  it("filters breadcrumb data.url and params but not other keys", () => {
+    const crumb = sentryBeforeBreadcrumb({
+      category: "navigation",
+      data: { url: "/match?code=abc", params: { code: "abc", page: "2" }, code: "57014" },
+    }) as unknown as { data: Record<string, any> };
+    expect(crumb.data.url).toBe("/match?code=[Filtered]");
+    expect(crumb.data.params).toEqual({ code: "[Filtered]", page: "2" });
+    expect(crumb.data.code).toBe("57014");
+  });
+});
