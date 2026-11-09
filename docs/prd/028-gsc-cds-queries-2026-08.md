@@ -1,5 +1,7 @@
 # GSC memo: `[school] Common Data Set` queries (PRD 028)
 
+> **Appendix, not a separate PRD.** This file shares the number 028 with [PRD 028](028-organic-search-cds-queries.md) because it is that PRD's M0 readout. Cite it as "PRD 028 GSC memo".
+
 **Date:** 2026-08-17
 **Property:** Search Console, collegedata.fyi (www canonical)
 **Window:** last 3 months (chart 2026-05-18 → 2026-08-15), Search type = Web

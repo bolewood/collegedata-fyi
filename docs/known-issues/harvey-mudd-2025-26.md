@@ -8,6 +8,8 @@ narrative. These notes stay here for maintainers.
 **Recommended extractor:** `pypdf.get_fields()` (Tier 2) — **not** Docling
 **Last verified:** 2026-04-13
 
+> **Dated note (2026-11-09):** these findings were last verified on 2026-04-13 and have not been re-checked against the extractor changes since (Tier 4 cleaner updates, projection changes, the Docling pin). Treat them as a record of the April 2026 output and re-verify before relying on a specific claim. Later repairs are in [`docs/extraction-quality.md`](../extraction-quality.md#june-to-november-2026-repairs).
+
 > **Update 2026-04-13 — the Docling "data corruption" below is an artifact of tool choice, not a bug at the source.**
 >
 > The original audit ran Docling against this PDF and documented a C1 row-shift pattern that produced wrong applicant/admit numbers. Shortly after, we checked the source with `pypdf.get_fields()` and found every C1/C2 value sitting cleanly in named AcroForm fields:

@@ -6,7 +6,25 @@ SAT/ACT academic-profile fields after the Tier 4 v0.3 projection refresh.
 PRD 016, 016B, 017, and 018 now use the same serving substrate for academic
 positioning, admission strategy, match-list building, and merit profile data.
 
+Status note (2026-11-09): the substrate below is unchanged in shape. Later work
+that touches it: the extraction worker refreshes `cds_fields` and
+`school_browser_rows` after successful writes, `school_merit_profile` gained
+`merit_criteria_academics` and `need_criteria_academics` (H.1401 versus H.1411;
+`institutional_aid_academics` is deprecated), and the per-school stat pages
+(acceptance rate, early decision, GPA) read multi-year history built from the
+same artifacts. The production counts in the tables below are dated snapshots
+from April and May 2026; for current coverage see
+[`/coverage`](https://collegedata.fyi/coverage).
+
 ## Surfaces
+
+Which of these are meant for outside use: `cds_fields`, `school_browser_rows`,
+`school_merit_profile`, `cds_field_definitions`, and `browser-search` are the
+supported surfaces. `cds_metric_aliases`, `cds_canonical_field_equivalence`, and
+`cds_selected_extraction_result` are readable by `anon` because the web app and
+views depend on them, but they are internal and carry no stability promise. The
+full served-view list is in
+[`ARCHITECTURE.md`](ARCHITECTURE.md#served-views).
 
 - `cds_field_definitions`: schema-local field labels and type hints.
 - `cds_metric_aliases`: direct-field aliases only. Browser aliases currently
@@ -45,7 +63,7 @@ The worker also seeds `cds_field_definitions`, `cds_metric_aliases`, and
 `cds_canonical_field_equivalence` from the committed schema/diff artifacts
 unless `--skip-metadata` is passed.
 
-Production projection history:
+Production projection history (snapshots through 2026-05-03; later rebuilds are not recorded here):
 
 | Date | Change | `cds_fields` rows | `school_browser_rows` rows | Documents processed | Notes |
 |---|---|---:|---:|---:|---|
@@ -58,7 +76,7 @@ over launch. Average field rows per processed document moved from about `224.5`
 to `433.2`. The browser row count dropped by three because `--full-rebuild` now
 clears stale `2024+` projection rows before repopulating.
 
-Current `2024+` field rows by selected source format:
+`2024+` field rows by selected source format (as of the 2026-05-03 projection):
 
 | Source format | Field rows |
 |---|---:|
@@ -129,7 +147,7 @@ PRD 018's `school_merit_profile` is a read-only view, not part of
 browser table because merit-aid rows need more copy, caveats, and Scorecard
 context than a flat browser column should carry.
 
-Production PRD 012 answerability, primary clean rows (`sub_institutional IS NULL`
+Production PRD 012 answerability (measured April 2026), primary clean rows (`sub_institutional IS NULL`
 and no `data_quality_flag`), 2024+:
 
 | Metric | Field | Primary clean coverage | pdf_flat coverage | Latest-row coverage |

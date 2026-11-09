@@ -1,6 +1,6 @@
 # PRD 013: Analytics, abuse signal, and commercial-tier readiness
 
-**Status:** Draft — measurement required before alerting thresholds set
+**Status:** Draft — measurement required before alerting thresholds set. **Measurement superseded in practice (2026-11-09):** usage capture shipped as [PRD 032](032-api-usage-capture.md) and the public usage page as [PRD 033](033-public-usage-page.md); enforcement and alert thresholds proposed here remain unbuilt.
 **Measurement source:** API measurement now comes from [PRD 032](032-api-usage-capture.md)
 (hourly Supabase gateway-log aggregates). Enforcement and alert thresholds stay
 here. The `X-Internal-Traffic` header proposed below would never reach the

@@ -4,7 +4,7 @@
 **Last updated:** 2026-05-09
 **Canonical domain:** collegedata.fyi (API at `api.collegedata.fyi`)
 
-> This is a living document. Update it when decisions change rather than freezing it in time. Point-in-time decisions and their rationale are preserved as ADRs in [`docs/decisions/`](decisions/).
+> This is a living document. Update it when decisions change rather than freezing it in time. Point-in-time decisions and their rationale are preserved as ADRs in [`docs/decisions/`](../decisions/).
 
 ## What we're building
 
@@ -24,7 +24,7 @@ Harvey Mudd exposed the real shape of the problem. The C1 applicants/admits tabl
 
 The honest conclusion from this: extraction quality varies dramatically by school, and any V1 that tries to publish "clean" data will either lie or block indefinitely on the long tail. Publishing structured extracts with provenance is a promise we can keep today. The cleanup becomes a separate, versionable, community-contributable layer on top.
 
-> **Postscript (2026-04-13):** The HMC "row-shift corruption" described above turned out to be a tool-choice error, not a layout bug. HMC distributes its CDS as an unflattened fillable PDF, and the correct values were available the whole time via `pypdf.get_fields()` from 1,026 named AcroForm fields. The Docling audit was solving a problem the source document did not have. This discovery led directly to the tiered extraction strategy described under V1b below: fillable PDFs take a deterministic Tier 2 path, and layout extraction (Docling, Reducto, OCR) is reserved for genuinely flat documents. See [`docs/known-issues/harvey-mudd-2025-26.md`](known-issues/harvey-mudd-2025-26.md) for the corrected per-school notes.
+> **Postscript (2026-04-13):** The HMC "row-shift corruption" described above turned out to be a tool-choice error, not a layout bug. HMC distributes its CDS as an unflattened fillable PDF, and the correct values were available the whole time via `pypdf.get_fields()` from 1,026 named AcroForm fields. The Docling audit was solving a problem the source document did not have. This discovery led directly to the tiered extraction strategy described under V1b below: fillable PDFs take a deterministic Tier 2 path, and layout extraction (Docling, Reducto, OCR) is reserved for genuinely flat documents. See [`docs/known-issues/harvey-mudd-2025-26.md`](../known-issues/harvey-mudd-2025-26.md) for the corrected per-school notes.
 
 ## Archival posture
 
@@ -42,19 +42,19 @@ The README leads with the data-library framing, not the preservation framing. Pr
 
 Three independently useful pieces, each shippable on its own.
 
-**V1a — CDS Finder.** A scraper that takes a school and returns the canonical URL of its most recent CDS document. Seed corpus comes from the pbworks College Lists Wiki (see [`tools/finder/seed_urls.md`](../tools/finder/seed_urls.md)), which lists ~80 institutional hosting URLs from circa 2005. Most of those URLs are now dead, but the school names are still right and the URL patterns give the scraper a starting template. For schools not in the wiki, fall back to targeted Google dorks (`site:.edu filetype:pdf "Common Data Set 2025-2026"`) and a ladder of known URL path patterns (`/ir/cds/`, `/institutional-research/common-data-set/`, etc.). Output is a manifest row with the fields described under Data model below. A `schools.yaml` file holds per-school overrides for the long tail where the default probes fail, and contributors PR new entries.
+**V1a — CDS Finder.** A scraper that takes a school and returns the canonical URL of its most recent CDS document. Seed corpus comes from the pbworks College Lists Wiki (see [`tools/finder/seed_urls.md`](../../tools/finder/seed_urls.md)), which lists ~80 institutional hosting URLs from circa 2005. Most of those URLs are now dead, but the school names are still right and the URL patterns give the scraper a starting template. For schools not in the wiki, fall back to targeted Google dorks (`site:.edu filetype:pdf "Common Data Set 2025-2026"`) and a ladder of known URL path patterns (`/ir/cds/`, `/institutional-research/common-data-set/`, etc.). Output is a manifest row with the fields described under Data model below. A `schools.yaml` file holds per-school overrides for the long tail where the default probes fail, and contributors PR new entries.
 
 **V1b — Tiered Extraction Pipeline.** Each source file is routed to the appropriate extractor based on its format. The tier ladder:
 
 | Tier | Input | Extractor | Expected accuracy |
 |---|---|---|---|
 | 1 | Filled XLSX | `openpyxl` → Answer Sheet | ~100% when available, but no schools currently observed to publish this format |
-| 2 | Unflattened fillable PDF | [`tools/tier2_extractor/`](../tools/tier2_extractor/) via `pypdf.get_fields()` | ~100% when AcroForm is populated; HMC 2025-26 confirmed end-to-end |
+| 2 | Unflattened fillable PDF | [`tools/tier2_extractor/`](../../tools/tier2_extractor/) via `pypdf.get_fields()` | ~100% when AcroForm is populated; HMC 2025-26 confirmed end-to-end |
 | 3 | Filled DOCX | `python-docx` → Word tags | ~100% when available; not yet observed |
 | 4 | Flattened PDF | Docling and/or Reducto plus a schema-targeting cleaner | variable, this is the hard path |
 | 5 | Image-only scan | OCR plus cleaner | worst case, may require manual review |
 
-Every extractor targets the same canonical schema ([`schemas/cds_schema_{year}.json`](../schemas/)), so downstream queries work identically regardless of which tier produced the values. The `cds_artifacts.producer` column records which tier did the work, letting consumers filter on extraction provenance.
+Every extractor targets the same canonical schema ([`schemas/cds_schema_{year}.json`](../../schemas/)), so downstream queries work identically regardless of which tier produced the values. The `cds_artifacts.producer` column records which tier did the work, letting consumers filter on extraction provenance.
 
 The scraper probes every incoming document with `pypdf.get_fields()` before routing, so fillable PDFs are detected cheaply and never end up in the expensive Tier 4 pipeline. The scraper also archives the source file to Supabase Storage before any extraction runs, so the raw bytes survive even if the extractor pipeline fails or the school later removes the original.
 
@@ -216,7 +216,7 @@ substrate can compare selected primary CDS rows year over year and generate
 source-linked change events, but public reporting is gated by review. The
 school-page card only shows events that are explicitly marked public after
 verification, and the `/changes` digest is disabled unless operator env vars are
-present. See [`docs/plans/prd-019-spike-and-qa.md`](plans/prd-019-spike-and-qa.md)
+present. See [`docs/plans/prd-019-spike-and-qa.md`](prd-019-spike-and-qa.md)
 for the spike results and launch gates.
 
 PRD 021 is the federal-baseline coverage layer. The first shipped slice loads
@@ -226,7 +226,7 @@ public facts through `school_facts_unified`. School pages use those facts to
 make "No public CDS found" pages useful without pretending IPEDS is a CDS.
 The annual release probe runs monthly and opens operator issues after a
 10-month no-op window from the latest loaded provisional release date. See
-[`tools/ipeds/README.md`](../tools/ipeds/README.md) for the runbook.
+[`tools/ipeds/README.md`](../../tools/ipeds/README.md) for the runbook.
 
 ## Open questions
 

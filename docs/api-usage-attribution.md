@@ -23,6 +23,7 @@ The attribution layer covers the friendly Next.js API routes:
 - `/api/compare`
 - `/api/fields`
 - `/api/snapshots`
+- `/api/mcp` (the hosted MCP endpoint; recorded as `client_family = 'mcp'`, `client_name = 'mcp-http'`, with the tool name in `client_tool`)
 
 Raw PostgREST requests to `https://api.collegedata.fyi/rest/v1` and Supabase
 Storage requests bypass the Vercel app. PRD 032 covers them separately from
@@ -30,7 +31,9 @@ Supabase gateway logs; see [Gateway usage (PRD 032)](#gateway-usage-prd-032).
 
 ## What gets logged
 
-Requests are recorded in `public.api_usage_events`.
+Requests are recorded in `public.api_usage_events`. Rows are kept 400 days;
+the hourly gateway ingest calls `api_usage_prune()`, which deletes older rows
+(migration `20261109120000_api_usage_events_prune.sql`).
 
 The table stores only coarse metadata:
 
@@ -73,14 +76,14 @@ The MCP server sends:
 
 ```http
 X-CollegeData-Client: mcp
-X-CollegeData-Client-Version: 0.1.0
+X-CollegeData-Client-Version: 0.2.0
 X-CollegeData-MCP-Tool: search_schools
 ```
 
 It also appends query markers:
 
 ```text
-cd_client=mcp&cd_client_version=0.1.0&cd_tool=search_schools
+cd_client=mcp&cd_client_version=0.2.0&cd_tool=search_schools
 ```
 
 The CLI sends:
@@ -127,6 +130,8 @@ Client family precedence:
 token lists in sync.
 
 The user-agent classification stores only the family bucket, not the raw header.
+
+The version numbers shown in the marker examples are the current package versions (`@collegedata-fyi/mcp-server` 0.2.0, `@collegedata-fyi/cli` 0.1.0) and change with each release.
 
 ## Required production configuration
 

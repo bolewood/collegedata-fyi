@@ -1,6 +1,6 @@
 # PRD 031: Per-school stat pages (acceptance rate first)
 
-**Status:** Rev 2 (2026-09-23), after red-team review. M1 is decided: public URLs use the name people search (`/schools/virginia-tech`). Acceptance-rate pages are indexable.
+**Status:** Shipped (2026-11-09 note). Rev 2 (2026-09-23), after red-team review; M1 (searchable canonical slugs), the acceptance-rate pilot, the early-decision page, and the GPA page are live (PRs #184 to #203), and pages exist only for schools with enough usable years. M1 is decided: public URLs use the name people search (`/schools/virginia-tech`). Acceptance-rate pages are indexable.
 **Author:** Anthony Showalter (with Claude)
 **Related:** [PRD 028](028-organic-search-cds-queries.md), [GSC CDS memo](028-gsc-cds-queries-2026-08.md), [PRD 014](014-cross-year-canonical-schema.md) (cross-year schema; M0 dependency), [PRD 019](019-cds-change-intelligence.md), [`web/VOICE.md`](../../web/VOICE.md), [`web/DESIGN_SYSTEM.md`](../../web/DESIGN_SYSTEM.md), copy deck [wave 5](../copy/wave-5-school-page-numbers.md)
 

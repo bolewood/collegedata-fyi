@@ -1,6 +1,6 @@
 # PRD 022: MCP and CLI readiness layer
 
-**Status:** Draft
+**Status:** Largely shipped (2026-11-09). The friendly JSON API (`/api/schools/*`, `/api/compare`, `/api/fields`, `/api/snapshots`), `openapi.json`, `llms.txt`, the stdio MCP server (`packages/mcp-server`), the CLI (`packages/cli`), the hosted Streamable HTTP MCP endpoint (`/api/mcp`), usage attribution, and rate limits are live. The experimental `/api/schools/{school_id}/changes` endpoint is not built, and bulk snapshots are not frozen: the snapshot files are currently generated from live data. The body below is the original plan.
 **Created:** 2026-05-09
 **Author:** Anthony + Codex
 **Related:** [PRD 010](010-queryable-data-browser.md), [PRD 015](015-institution-directory-and-cds-coverage.md), [PRD 017](017-match-list-builder.md), [PRD 018](018-open-college-fit-data.md), [PRD 019](019-cds-change-intelligence.md), [PRD 021](021-ipeds-coverage-layer.md), [API docs](../../web/src/app/api/page.tsx), [Architecture](../ARCHITECTURE.md)

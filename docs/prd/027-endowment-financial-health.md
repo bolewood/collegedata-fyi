@@ -1,6 +1,6 @@
 # PRD 027: Endowment health facts (IPEDS Finance Part H)
 
-**Status:** Draft (revised after adversarial review, 2026-08-03)
+**Status:** Shipped (2026-11-09 note; original text revised after adversarial review, 2026-08-03). The Finance Part H loader, the `finance` category of the per-school API, and the `/recipes/endowment-draw-rate` recipe are live (PRs #113 to #120); FY2020 to FY2024 are loaded. Later phases of the endowment plan (the Phase 2 and Phase 3 views) are not built; see `tools/ipeds/README.md`. The body below is the original plan.
 **Created:** 2026-08-03
 **Author:** Anthony Showalter (with Claude)
 **Related:** PRD 021 (IPEDS coverage layer — this extends its open item "Broader IPEDS field-family coverage beyond the MVP mappings", in 021's "Still open from the original PRD" section)
