@@ -22,6 +22,7 @@ import argparse
 import csv
 import json
 import os
+import re
 import sys
 import time
 from collections import Counter, defaultdict
@@ -29,6 +30,8 @@ from multiprocessing import Pool
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import numpy as np  # noqa: E402
+import pypdfium2 as pdfium  # noqa: E402
 import template_overlay as to  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
@@ -177,6 +180,189 @@ def cmd_stage1(args) -> int:
     return 0
 
 
+def _cohort_docs(args) -> list[dict]:
+    exp = {r["source_sha256_prefix"] for r in csv.DictReader(open(args.cohort_csv))}
+    return [e for e in load_eval_set(args) if e["sha"][:12] in exp]
+
+
+def _lane3_job(job):
+    pdf_dir, e, inset = job
+    data = (Path(pdf_dir) / f"{e['sha']}.pdf").read_bytes()
+    doc = pdfium.PdfDocument(data)
+    res = to.match_template(doc, detected_year=e["year"], align=True)
+    if res.status != "matched":
+        return {"sha": e["sha"], "status": res.status}
+    sc = to.button_scores(doc, res, to.load_maps()[res.year].fmap, inset=inset)
+    flat = [(tag, i, s) for tag, row in sc.items() for i, s in enumerate(row) if s is not None]
+    shifts = {f"{a['dx']},{a['dy']}": 0 for a in res.alignment.values()}
+    for a in res.alignment.values():
+        shifts[f"{a['dx']},{a['dy']}"] += 1
+    return {"sha": e["sha"], "status": "matched", "year": res.year, "scores": flat, "shifts": shifts,
+            "rejected_pages": res.rejected_pages}
+
+
+def cmd_lane3_hist(args) -> int:
+    docs = _cohort_docs(args)
+    with Pool(args.jobs) as pool:
+        out = pool.map(_lane3_job, [(args.pdf_dir, e, args.inset) for e in docs], chunksize=1)
+    allv = np.array([s for r in out if "scores" in r for _, _, s in r["scores"]])
+    edges = [-1, -0.05, 0.0, 0.01, 0.02, 0.03, 0.05, 0.08, 0.12, 0.2, 0.3, 0.5, 1.1]
+    hist, _ = np.histogram(allv, bins=edges)
+    print(f"{len(out)} docs, {allv.size} Btn widget scores at inset {args.inset}")
+    for lo, hi, n in zip(edges[:-1], edges[1:], hist):
+        print(f"  [{lo:>6}, {hi:>5}) {n:6d}")
+    shifts = Counter()
+    rej = Counter()
+    for r in out:
+        for k, v in r.get("shifts", {}).items():
+            shifts[k] += v
+        for k, v in r.get("rejected_pages", {}).items():
+            rej[v] += 1
+    print("alignment shifts (dx,dy)->pages:", dict(shifts), "rejected pages:", dict(rej))
+    Path(args.out).write_text(json.dumps(out))
+    return 0
+
+
+# ---- comparison against a document's own Tier 2 (fillable copy) -------------
+
+def _norm_num(s):
+    s = str(s).strip().replace("$", "").replace(",", "").replace("%", "").strip()
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def values_match(expected: str, got: str | None) -> bool:
+    """The review's comparison, unchanged: exact, whitespace/case-insensitive, or numerically equal."""
+    if got is None:
+        return False
+    e, g = str(expected).strip(), str(got).strip()
+    if e == g or re.sub(r"\s+", " ", e).lower() == re.sub(r"\s+", " ", g).lower():
+        return True
+    a, b = _norm_num(e), _norm_num(g)
+    return a is not None and b is not None and abs(a - b) < 1e-6 or e.strip("/ ") == g.strip("/ ")
+
+
+def tier2_truth(fillable: Path, year: str) -> dict:
+    sys.path.insert(0, str(REPO / "tools"))
+    sys.path.insert(0, str(REPO / "tools" / "extraction_worker"))
+    from tier2_extractor.extract import extract, load_schema  # noqa: WPS433
+    import build_field_map as bfm
+    return extract(fillable, load_schema(bfm.schema_path_for(year)))
+
+
+def compare_with_tier2(overlay: dict, t2: dict, fmap: dict) -> dict:
+    """Score overlay values against Tier 2 values of the fillable copy of the same document."""
+    ov = overlay["values"]
+    res = {"Tx": [0, 0], "Ch": [0, 0], "Btn": [0, 0], "derived": [0, 0]}
+    miss, extra = [], []
+    for qn, rec in t2["values"].items():
+        tag = rec.get("pdf_tag")
+        ft = (fmap["fields"][tag]["ft"].strip("/") if tag in fmap["fields"] else None) if tag else "derived"
+        if ft is None:
+            continue
+        got = ov.get(qn, {}).get("value")
+        ok = values_match(rec["value"], got)
+        res[ft][1] += 1
+        res[ft][0] += ok
+        if not ok:
+            miss.append({"qn": qn, "tag": tag, "ft": ft, "expected": str(rec["value"])[:50], "got": None if got is None else str(got)[:50]})
+    for qn, rec in ov.items():
+        if qn not in t2["values"]:
+            extra.append({"qn": qn, "tag": rec.get("pdf_tag"), "lane": rec.get("lane"), "value": str(rec["value"])[:50]})
+    ok = sum(v[0] for v in res.values())
+    tot = sum(v[1] for v in res.values())
+    return {"by_type": res, "ok": ok, "total": tot, "misses": miss, "extras": extra}
+
+
+def cmd_compare(args) -> int:
+    import hashlib  # noqa: F401
+    flat = Path(args.pdf_dir) / args.flat
+    fill = Path(args.pdf_dir) / args.fillable
+    t2 = tier2_truth(fill, args.year)
+    maps = to.load_maps()
+    for label, kw in (("centre-in-rect (spec)", {}), ("review method: +-1pt pad, paren strip", {"lane1_pad": 1.0, "strip_parens": True}),
+                      ("centre-in-rect + paren strip", {"strip_parens": True}),
+                      ("centre-in-rect, value_type check off", {"strict_types": False})):
+        ov = to.extract_overlay(flat.read_bytes(), detected_year=args.year, source_name=flat.name, **kw)
+        c = compare_with_tier2(ov, t2, maps[args.year].fmap)
+        print(f"\n== {args.label}: {label}\n   {c['ok']} / {c['total']}  {c['by_type']}")
+        print(f"   lane_counts {ov['notes']['lane_counts']}  rejected {len(ov['notes']['rejected_fields'])}  "
+              f"unreadable pages {ov['notes']['unreadable_pages']}  ocr-candidate pages {ov['notes']['pages_needing_ocr']}")
+        if args.verbose or not kw:
+            for m in c["misses"]:
+                print("   MISS", m)
+            print(f"   emitted where Tier 2 is blank: {len(c['extras'])}")
+            for x in c["extras"]:
+                print("   EXTRA", x)
+        for r in ov["notes"]["rejected_fields"]:
+            if not kw:
+                print("   REJECT", r)
+    return 0
+
+
+def _extract_job(job):
+    pdf_dir, e, force_year = job
+    data = (Path(pdf_dir) / f"{e['sha']}.pdf").read_bytes()
+    t0 = time.time()
+    ov = to.extract_overlay(data, detected_year=e["year"], source_name=e["sha"][:12], force_year=force_year)
+    n = ov["notes"]
+    return {"sha": e["sha"], "school": e["school"], "year": e["year"], "producer": e["producer"],
+            "tier4_fields": e["tier4_fields"], "status": n["stage1"]["status"],
+            "values": {qn: [r["pdf_tag"], r["value"], r["lane"]] for qn, r in ov["values"].items() if "pdf_tag" in r},
+            "n_values": len(ov["values"]), "lane_counts": n.get("lane_counts", {}),
+            "rejected": n.get("rejected_fields", []), "identity_failures": n.get("identity_failures", []),
+            "unreadable_pages": n.get("unreadable_pages", []), "ocr_pages": n.get("pages_needing_ocr", []),
+            "ambiguous_radios": len(n.get("ambiguous_radios", [])), "skipped_null_qn": n.get("skipped_null_question_number"),
+            "pages_matched": n["stage1"]["pages_matched"], "rejected_pages": n["stage1"]["rejected_pages"],
+            "sec": round(time.time() - t0, 1)}
+
+
+def cmd_cohort(args) -> int:
+    docs = _cohort_docs(args)
+    with Pool(args.jobs) as pool:
+        out = pool.map(_extract_job, [(args.pdf_dir, e, None) for e in docs], chunksize=1)
+    Path(args.out).write_text(json.dumps(out))
+    print(f"{'school':38s} {'yr':7s} {'producer':28s} {'t4':>4s} {'text':>5s} {'chk':>4s} {'rej':>3s} {'idf':>3s} {'unrd':>4s} {'ocrp':>4s}  type")
+    kinds = Counter()
+    for r in sorted(out, key=lambda r: (r["year"], r["school"])):
+        lc = r["lane_counts"]
+        kind = "text-layer" if lc.get("text", 0) >= 50 else "needs-OCR"
+        kinds[(r["year"], kind)] += 1
+        print(f"{r['school'][:38]:38s} {r['year']:7s} {r['producer'][:28]:28s} {r['tier4_fields']:4d} {lc.get('text', 0):5d} "
+              f"{lc.get('checkbox', 0):4d} {len(r['rejected']):3d} {len(r['identity_failures']):3d} {len(r['unreadable_pages']):4d} "
+              f"{len(r['ocr_pages']):4d}  {kind}{'' if r['status'] == 'matched' else ' ' + r['status']}")
+    print(dict(kinds))
+    return 0
+
+
+def cmd_wrong_year(args) -> int:
+    docs = _cohort_docs(args)
+    right = {r["sha"]: r for r in json.loads(Path(args.cohort_json).read_text())}
+    picks = []
+    for yr in ("2024-25", "2025-26"):
+        pool_ = [e for e in docs if e["year"] == yr and right[e["sha"]]["lane_counts"].get("text", 0) >= 200]
+        picks += pool_[: args.n // 2 + (args.n % 2 if yr == "2025-26" else 0)]
+    with Pool(args.jobs) as pool:
+        wrong = pool.map(_extract_job, [(args.pdf_dir, e, "2024-25" if e["year"] == "2025-26" else "2025-26") for e in picks], chunksize=1)
+    for e, w in zip(picks, wrong):
+        r = right[e["sha"]]
+        rv = {v[0]: v[1] for v in r["values"].values()}
+        wv = {v[0]: v[1] for v in w["values"].values()}
+        shared = set(rv) & set(wv)
+        same = sum(1 for t in shared if str(rv[t]).strip("/ ") == str(wv[t]).strip("/ "))
+        print(f"\n{e['school']} true {e['year']}, forced {'2024-25' if e['year'] == '2025-26' else '2025-26'}: "
+              f"stage1 {w['status']} pages {w['pages_matched']}")
+        print(f"  right-year: {r['n_values']} values (rejected {len(r['rejected'])}, identity failures {len(r['identity_failures'])})")
+        print(f"  wrong-year: {w['n_values']} values pass validation (rejected {len(w['rejected'])}, "
+              f"identity failures {len(w['identity_failures'])}); of {len(shared)} tags in both, "
+              f"{same} identical, {len(shared) - same} DIFFERENT; {len(set(wv) - set(rv))} only in wrong-year, {len(set(rv) - set(wv))} only in right-year")
+        diffs = [(t, rv[t], wv[t]) for t in sorted(shared) if str(rv[t]).strip("/ ") != str(wv[t]).strip("/ ")][:4]
+        print("  sample differences (tag, right, wrong):", diffs)
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -189,6 +375,35 @@ def main(argv=None) -> int:
     s1.add_argument("--jobs", type=int, default=4)
     s1.add_argument("--out", default="scratch/prd038/m1/stage1.jsonl")
     s1.set_defaults(fn=cmd_stage1)
+    for name, fn in (("cohort", cmd_cohort), ("wrong-year", cmd_wrong_year)):
+        sp = sub.add_parser(name)
+        for a in ("--pdf-dir", "--t4-docs", "--docmeta"):
+            sp.add_argument(a, required=True)
+        sp.add_argument("--scanned", nargs="+", required=True)
+        sp.add_argument("--cohort-csv", default=str(REPO / "docs/prd/assets/038/template-cohort-2026-11-09.csv"))
+        sp.add_argument("--jobs", type=int, default=4)
+        sp.add_argument("--out", default="scratch/prd038/m1/cohort.json")
+        if name == "wrong-year":
+            sp.add_argument("--cohort-json", default="scratch/prd038/m1/cohort.json")
+            sp.add_argument("--n", type=int, default=5)
+        sp.set_defaults(fn=fn)
+    cp = sub.add_parser("compare")
+    cp.add_argument("--pdf-dir", required=True)
+    cp.add_argument("--flat", required=True, help="flattened PDF filename in --pdf-dir")
+    cp.add_argument("--fillable", required=True, help="fillable copy of the same document")
+    cp.add_argument("--year", required=True)
+    cp.add_argument("--label", default="")
+    cp.add_argument("--verbose", action="store_true")
+    cp.set_defaults(fn=cmd_compare)
+    l3 = sub.add_parser("lane3-hist")
+    for a in ("--pdf-dir", "--t4-docs", "--docmeta"):
+        l3.add_argument(a, required=True)
+    l3.add_argument("--scanned", nargs="+", required=True)
+    l3.add_argument("--cohort-csv", default=str(REPO / "docs/prd/assets/038/template-cohort-2026-11-09.csv"))
+    l3.add_argument("--jobs", type=int, default=4)
+    l3.add_argument("--inset", type=float, default=to.LANE3_INSET)
+    l3.add_argument("--out", default="scratch/prd038/m1/lane3_hist.json")
+    l3.set_defaults(fn=cmd_lane3_hist)
     args = ap.parse_args(argv)
     return args.fn(args)
 
