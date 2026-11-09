@@ -133,7 +133,7 @@ export function MeritProfileCard({ profile, sourceHref }: MeritProfileCardProps)
             )}
             <div className="merit-profile-flags mono">
               <span>{qualityLabel}</span>
-              {profile.institutionalAidAcademics === true && (
+              {profile.meritCriteriaAcademics === true && (
                 <span>Academic merit aid checked</span>
               )}
               {profile.institutionalNonNeedAidNonresident === true && (

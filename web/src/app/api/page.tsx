@@ -836,7 +836,7 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         />
         <Resource
           name="school_merit_profile"
-          description="Latest primary 2024-25+ CDS Section H merit and need-aid facts per school, joined to selected College Scorecard affordability and outcome fields. Used by the school-page merit profile."
+          description="Latest primary 2024-25+ CDS Section H merit and need-aid facts per school, joined to selected College Scorecard affordability and outcome fields. Used by the school-page merit profile. institutional_aid_academics is deprecated (it ORs the non-need and need-based academics criteria); use merit_criteria_academics (H.1401) and need_criteria_academics (H.1411)."
           fields={[
             "school_id",
             "school_name",
@@ -884,6 +884,8 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
             "institutional_non_need_aid_nonresident",
             "avg_international_aid",
             "institutional_aid_academics",
+            "merit_criteria_academics",
+            "need_criteria_academics",
             "cds_merit_core_count",
             "cds_merit_field_count",
             "merit_profile_quality",

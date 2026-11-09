@@ -1652,7 +1652,7 @@ export const fetchMeritProfileBySchoolId = cache(
       const { data, error } = await (supabase as unknown as UntypedSupabase)
         .from("school_merit_profile")
         .select(
-          "document_id, school_id, school_name, sub_institutional, ipeds_id, canonical_year, year_start, schema_version, source_format, producer, producer_version, data_quality_flag, archive_url, first_year_ft_students, all_ft_undergrads, need_grants_total, non_need_grants_total, aid_recipients_first_year_ft, aid_recipients_all_ft, avg_aid_package_first_year_ft, avg_aid_package_all_ft, avg_need_grant_first_year_ft, avg_need_grant_all_ft, avg_need_self_help_first_year_ft, avg_need_self_help_all_ft, non_need_aid_recipients_first_year_ft, avg_non_need_grant_first_year_ft, non_need_aid_recipients_all_ft, avg_non_need_grant_all_ft, non_need_aid_share_first_year_ft, non_need_aid_share_all_ft, institutional_need_aid_nonresident, institutional_non_need_aid_nonresident, avg_international_aid, institutional_aid_academics, cds_merit_core_count, cds_merit_field_count, merit_profile_quality, scorecard_data_year, earnings_6yr_median, earnings_8yr_median, earnings_10yr_median, earnings_10yr_p25, earnings_10yr_p75, median_debt_completers, median_debt_monthly_payment, avg_net_price, net_price_0_30k, net_price_30k_48k, net_price_48k_75k, net_price_75k_110k, net_price_110k_plus, graduation_rate_6yr, pell_grant_rate, federal_loan_rate, retention_rate_ft",
+          "document_id, school_id, school_name, sub_institutional, ipeds_id, canonical_year, year_start, schema_version, source_format, producer, producer_version, data_quality_flag, archive_url, first_year_ft_students, all_ft_undergrads, need_grants_total, non_need_grants_total, aid_recipients_first_year_ft, aid_recipients_all_ft, avg_aid_package_first_year_ft, avg_aid_package_all_ft, avg_need_grant_first_year_ft, avg_need_grant_all_ft, avg_need_self_help_first_year_ft, avg_need_self_help_all_ft, non_need_aid_recipients_first_year_ft, avg_non_need_grant_first_year_ft, non_need_aid_recipients_all_ft, avg_non_need_grant_all_ft, non_need_aid_share_first_year_ft, non_need_aid_share_all_ft, institutional_need_aid_nonresident, institutional_non_need_aid_nonresident, avg_international_aid, institutional_aid_academics, merit_criteria_academics, need_criteria_academics, cds_merit_core_count, cds_merit_field_count, merit_profile_quality, scorecard_data_year, earnings_6yr_median, earnings_8yr_median, earnings_10yr_median, earnings_10yr_p25, earnings_10yr_p75, median_debt_completers, median_debt_monthly_payment, avg_net_price, net_price_0_30k, net_price_30k_48k, net_price_48k_75k, net_price_75k_110k, net_price_110k_plus, graduation_rate_6yr, pell_grant_rate, federal_loan_rate, retention_rate_ft",
         )
         .eq("school_id", schoolId)
         .limit(1)
@@ -1697,6 +1697,8 @@ export const fetchMeritProfileBySchoolId = cache(
         institutionalNonNeedAidNonresident: boolOrNull(data.institutional_non_need_aid_nonresident),
         avgInternationalAid: numberOrNull(data.avg_international_aid),
         institutionalAidAcademics: boolOrNull(data.institutional_aid_academics),
+        meritCriteriaAcademics: boolOrNull(data.merit_criteria_academics),
+        needCriteriaAcademics: boolOrNull(data.need_criteria_academics),
         cdsMeritCoreCount: numberOrNull(data.cds_merit_core_count) ?? 0,
         cdsMeritFieldCount: numberOrNull(data.cds_merit_field_count) ?? 0,
         meritProfileQuality: (data.merit_profile_quality ?? "missing") as MeritProfileQuality,
