@@ -3,7 +3,6 @@ from __future__ import annotations
 import subprocess
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
 from unittest.mock import patch
 
 import tier4_extractor
@@ -36,16 +35,24 @@ class Tier4ExtractorVisualOcrTest(unittest.TestCase):
         )
 
     def test_visual_ocr_candidates_include_neighbor_pages(self):
-        class FakeReader:
-            pages = [
-                SimpleNamespace(extract_text=lambda: "Common Data Set"),
-                SimpleNamespace(extract_text=lambda: "C. FIRST-TIME, FIRST-YEAR ADMISSION"),
-                SimpleNamespace(extract_text=lambda: "Common Data Set"),
-                SimpleNamespace(extract_text=lambda: "Submitting SAT Scores"),
-            ]
+        texts = [
+            "Common Data Set",
+            "C. FIRST-TIME, FIRST-YEAR ADMISSION",
+            "Common Data Set",
+            "Submitting SAT Scores",
+        ]
 
-        fake_pypdf = SimpleNamespace(PdfReader=lambda _path: FakeReader())
-        with patch.dict("sys.modules", {"pypdf": fake_pypdf}):
+        class FakePageTexts:
+            def __init__(self, _path):
+                pass
+
+            def __len__(self):
+                return len(texts)
+
+            def text(self, index, layout=False):
+                return texts[index]
+
+        with patch("pdf_text.PdfPageTexts", FakePageTexts):
             pages = tier4_extractor._visual_ocr_candidate_pages(Path("fake.pdf"))
 
         self.assertEqual(pages, [1, 2, 3, 4])

@@ -30,7 +30,7 @@ from pathlib import Path
 
 
 PRODUCER_NAME = "tier4_docling"
-PRODUCER_VERSION = "0.3.17"
+PRODUCER_VERSION = "0.3.18"
 DOCLING_CONFIG_NAME = "production-fast-no-orphan-clusters"
 DOCLING_NATIVE_TABLES_VERSION = "docling_table_cells_compact_v1"
 SCANNED_ADMISSIONS_OCR_MAX_PAGE = 35
@@ -85,16 +85,10 @@ def _matches_visual_ocr_trigger(text: str) -> bool:
 def _extract_pdf_layout_text(pdf_path: Path) -> str:
     """Best-effort embedded-text layout supplement for Docling blind spots."""
     try:
-        import pypdf
+        from pdf_text import PdfPageTexts
 
-        reader = pypdf.PdfReader(str(pdf_path))
-        chunks = []
-        for page in reader.pages:
-            try:
-                chunks.append(page.extract_text(extraction_mode="layout") or "")
-            except Exception:
-                chunks.append(page.extract_text() or "")
-        return "\n\n".join(chunks)
+        pages = PdfPageTexts(pdf_path)
+        return "\n\n".join(pages.text(i, layout=True) or "" for i in range(len(pages)))
     except Exception:
         return ""
 
@@ -108,16 +102,13 @@ def _visual_ocr_candidate_pages(pdf_path: Path) -> list[int]:
     admissions pages so low-field documents do not trigger a full-corpus OCR tax.
     """
     try:
-        import pypdf
+        from pdf_text import PdfPageTexts
 
-        reader = pypdf.PdfReader(str(pdf_path))
+        page_texts = PdfPageTexts(pdf_path)
         pages: set[int] = set()
-        page_count = len(reader.pages)
-        for idx, page in enumerate(reader.pages, start=1):
-            try:
-                text = page.extract_text() or ""
-            except Exception:
-                text = ""
+        page_count = len(page_texts)
+        for idx in range(1, page_count + 1):
+            text = page_texts.text(idx - 1) or ""
             if _matches_visual_ocr_trigger(text):
                 for page_no in (idx - 1, idx, idx + 1):
                     if 1 <= page_no <= page_count and page_no <= SCANNED_ADMISSIONS_OCR_MAX_PAGE:

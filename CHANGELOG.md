@@ -6,6 +6,24 @@ This project uses four-part semantic versioning.
 
 ## [Unreleased]
 
+## [0.6.19.10] - 2026-11-09
+
+### Fixed
+
+- PDFs with a good text layer are no longer treated as scans when pypdf
+  cannot parse their fonts. pypdf 6.2x and 7.0 raise "More than one
+  /FontFile found" on some font descriptors. The format sniff caught that,
+  counted zero text, labeled the file `pdf_scanned`, and the worker OCR'd
+  every page instead of reading the text layer: Grinnell 2023-24 fell from
+  411 to 122 fields, and the regression guard held it back. Page text now
+  goes through `pdf_text.PdfPageTexts`, which keeps pypdf as the reader and
+  falls back to pdfium for any page pypdf fails on. A sample neither library
+  can read is "unknown", not "scanned". The same fallback covers the
+  layout-text supplement (empty for these PDFs before), the visual-OCR page
+  picker and year detection. Grinnell now extracts 382 fields without OCR.
+- `pypdfium2==5.15.1` is now an explicit requirement (it was already in the
+  lock via Docling) and is installed for CI's Python tests.
+- Tier 4 producer version 0.3.18.
 ## [0.6.19.9] - 2026-11-09
 
 ### Added
