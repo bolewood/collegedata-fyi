@@ -120,7 +120,7 @@ model contains recoverable C9/C11/C12 structure before adding a VLM repair path.
 
 ```bash
 # Select low-coverage Tier 4 PDF fixtures and download the source PDFs.
-/Users/santhonys/docling-eval/bin/python \
+tools/extraction_worker/.venv/bin/python \
   tools/extraction-validator/select_docling_spike_fixtures.py \
   --env .env.local \
   --limit 12 \
@@ -129,13 +129,13 @@ model contains recoverable C9/C11/C12 structure before adding a VLM repair path.
   --download
 
 # Inspect native Docling JSON/tables and run the narrow C9 heuristic.
-/Users/santhonys/docling-eval/bin/python \
+tools/extraction_worker/.venv/bin/python \
   tools/extraction-validator/inspect_docling_native.py \
   --manifest .context/docling-spike/fixtures/manifest.json \
   --config production-fast
 
 # Compare full current Tier 4 cleaner output between two Docling runs.
-/Users/santhonys/docling-eval/bin/python \
+tools/extraction_worker/.venv/bin/python \
   tools/extraction-validator/compare_docling_full_cleaner.py \
   --manifest .context/docling-spike/fixtures/manifest.json \
   --left-label production \
@@ -144,14 +144,14 @@ model contains recoverable C9/C11/C12 structure before adding a VLM repair path.
   --right-dir .context/docling-spike/native-runs-docling-default
 
 # Compare markdown table parsing with native Docling JSON table-cell parsing.
-/Users/santhonys/docling-eval/bin/python \
+tools/extraction_worker/.venv/bin/python \
   tools/extraction-validator/compare_docling_native_tables.py \
   --manifest .context/docling-spike/fixtures/manifest.json \
   --run-dir .context/docling-spike/native-runs-production \
   --table-source json
 ```
 
-Outputs are written under `.context/docling-spike/` by default. They include
+Run these with the extraction worker's lock-built venv (`tools/extraction_worker/.venv`, Python 3.12; see that README) so Docling matches production. Outputs are written under `.context/docling-spike/` by default (the scripts take `--out-dir` if you prefer `scratch/extraction-validator/`). They include
 markdown, Docling JSON, per-table CSV/HTML/markdown exports, package versions,
 table provenance, and `summary.json`.
 

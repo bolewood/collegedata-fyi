@@ -105,7 +105,12 @@ PRD 014 defines the cross-year semantic diff format that classifies fields as `d
 
 For a reduced Answer Sheet year such as 2024-25, run the canonical diff tool
 before checkbox decoding so it can write validated `pdf_tag` values into the
-source schema:
+source schema.
+
+The 2024-25 template PDF (`schemas/templates/cds_2024-25_template.pdf`) is
+listed in `schemas/templates/SOURCES.md` but is not checked in. Download it
+from the URL in that file (or its Wayback snapshot), confirm the SHA-256
+recorded there, and save it at that path before running the commands below:
 
 ```bash
 python tools/schema_builder/canonical_diff.py \

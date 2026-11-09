@@ -13,7 +13,7 @@ Audit watchlist freshness and produce a targeted local redrain queue:
 python tools/change_intelligence/audit_watchlist_freshness.py \
   --env /path/to/.env \
   --watchlist data/watchlists/top_200_change_intelligence.yaml \
-  --out-dir .context/reports/prd019-top200-freshness \
+  --out-dir scratch/change_intelligence/prd019-top200-freshness \
   --redrain-limit 25
 ```
 
@@ -28,9 +28,9 @@ Dry-run the calibration subset:
 python tools/change_intelligence/project_change_events.py \
   --env /path/to/.env \
   --watchlist data/watchlists/change_intelligence_calibration.yaml \
-  --csv .context/reports/prd019-change-events-calibration.csv \
-  --report .context/reports/prd019-change-events-calibration.md \
-  --summary-json .context/reports/prd019-change-events-calibration-summary.json
+  --csv scratch/change_intelligence/prd019-change-events-calibration.csv \
+  --report scratch/change_intelligence/prd019-change-events-calibration.md \
+  --summary-json scratch/change_intelligence/prd019-change-events-calibration-summary.json
 ```
 
 After migration `20260505180000_change_intelligence.sql` is applied, persist

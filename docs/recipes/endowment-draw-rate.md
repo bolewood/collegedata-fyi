@@ -75,7 +75,7 @@ which avoids the timeout risk of asking Postgres to sort the entire finance subs
 python3 -m tools.ipeds.build_endowment_draw_rate_recipe \
   --min-year 2020 \
   --max-year 2024 \
-  --generated-at 2026-08-03
+  --generated-at 2026-08-10
 ```
 
 It reads `SUPABASE_URL` and `SUPABASE_ANON_KEY` (or

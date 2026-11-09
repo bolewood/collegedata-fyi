@@ -65,6 +65,6 @@ git commit -m "mirrors(<mirror_name>): refresh catalog"
        'operator_manual'
      ));
    ```
-3. Add the new value to the allowlist in `supabase/functions/archive-process/index.ts:runForceUrls()` (search for `ALLOWED_PROVENANCE`).
+3. Add the new value to every provenance allowlist (search for `ALLOWED_PROVENANCE`): `supabase/functions/archive-process/index.ts` (`runForceUrls()`), `supabase/functions/archive-upload/index.ts`, and `tools/upload/upload.py`. The CHECK constraint baseline is `20260419100000_source_provenance.sql`.
 4. Write the fetch + ingest scripts.
 5. Document in this README's table.
