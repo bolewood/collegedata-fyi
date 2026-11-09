@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { fetchCanonicalSchoolId } from "@/lib/queries";
 import {
   applyRevalidation,
   isAuthorized,
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const counts = applyRevalidation(parsed.request);
+  const counts = await applyRevalidation(parsed.request, fetchCanonicalSchoolId);
   return NextResponse.json(
     {
       revalidated: true,

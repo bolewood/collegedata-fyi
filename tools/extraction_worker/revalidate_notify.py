@@ -20,8 +20,8 @@ from typing import Iterable, Mapping, Optional
 URL_ENV = "COLLEGEDATA_REVALIDATE_URL"
 SECRET_ENV = "REVALIDATE_SECRET"
 BATCH_SIZE = 100  # must stay <= MAX_SCHOOL_IDS in web/src/lib/revalidate-schools.ts
-TIMEOUT_SECONDS = 10
-MAX_BATCHES = 20  # bound total added runtime (~2,000 schools, <= 200 s worst case)
+TIMEOUT_SECONDS = 5
+MAX_BATCHES = 20  # bound total added runtime (~2,000 schools)
 
 
 def notify_school_revalidation(
@@ -61,13 +61,16 @@ def notify_school_revalidation(
             result["batches"] += 1
         except Exception as e:  # noqa: BLE001 - must never fail the run
             result["errors"] += 1
+            transport_failure = not isinstance(e, RuntimeError)
             print(
                 f"revalidate_notify_error: {type(e).__name__}: "
                 f"{str(e).splitlines()[0][:200] if str(e) else ''}",
                 file=sys.stderr,
                 flush=True,
             )
-    skipped = len(batches) - min(len(batches), MAX_BATCHES)
+            if transport_failure:
+                break  # endpoint unreachable/timing out: don't stall the run
+    skipped = max(0, len(batches) - MAX_BATCHES)
     if skipped:
         print(
             f"revalidate_notify: skipped {skipped} batch(es) over the cap; "

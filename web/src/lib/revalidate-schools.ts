@@ -73,27 +73,60 @@ export function parseRevalidateBody(body: unknown): ParseResult {
 
 export type RevalidateCounts = { schools: number; tags: number; paths: number };
 
+/** Resolves a (possibly alias) school slug to the slug its pages are served under. */
+export type CanonicalResolver = (schoolId: string) => Promise<string | null>;
+
+/**
+ * Pages and cached queries are tagged with the canonical slug, but the worker
+ * sends cds_documents.school_id, which can be a live alias of the same
+ * institution. Revalidate both so alias-owned document changes still land.
+ */
+async function expandWithCanonical(
+  schoolIds: string[],
+  resolve: CanonicalResolver,
+): Promise<string[]> {
+  const out = new Set(schoolIds);
+  await Promise.all(
+    schoolIds.map(async (id) => {
+      try {
+        const canonical = await resolve(id);
+        if (canonical && isValidSchoolSlug(canonical)) out.add(canonical);
+      } catch {
+        // Resolver failure must not block revalidating the raw id.
+      }
+    }),
+  );
+  return [...out];
+}
+
 /**
  * Expire cached data and mark pages stale. Marking is lazy: nothing is
  * re-rendered until the next visit, so this never causes a query burst.
+ *
+ * How it reaches nested pages: unstable_cache tags are collected onto the
+ * page's ISR entry, so expiring `school:<id>` marks every page (hub, year,
+ * gpa, early-decision, acceptance-rate, OG images) that read that school's
+ * data. `revalidatePath(layout)` would NOT help: derived layout tags use the
+ * route pattern (`/schools/[school_id]/layout`), not the literal slug.
  */
-export function applyRevalidation(request: RevalidateRequest): RevalidateCounts {
+export async function applyRevalidation(
+  request: RevalidateRequest,
+  resolve: CanonicalResolver,
+): Promise<RevalidateCounts> {
   if (request.kind === "all") {
     revalidateTag(SCHOOL_DATA_TAG, EXPIRE_NOW);
     revalidatePath("/schools/[school_id]", "layout");
     return { schools: 0, tags: 1, paths: 1 };
   }
+  const ids = await expandWithCanonical(request.schoolIds, resolve);
   let tags = 0;
   let paths = 0;
-  for (const id of request.schoolIds) {
+  for (const id of ids) {
     revalidateTag(schoolCacheTag(id), EXPIRE_NOW);
     tags += 1;
-    // A layout revalidation covers every page nested under the school: hub,
-    // year pages, early-decision, gpa, acceptance-rate, feed and downloads.
-    revalidatePath(`/schools/${id}`, "layout");
     revalidatePath(`/schools/${id}`);
     revalidatePath(`/schools/${id}/opengraph-image`);
-    paths += 3;
+    paths += 2;
   }
-  return { schools: request.schoolIds.length, tags, paths };
+  return { schools: ids.length, tags, paths };
 }

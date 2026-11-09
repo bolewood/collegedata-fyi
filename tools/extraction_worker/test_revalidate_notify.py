@@ -68,6 +68,13 @@ class NotifyTests(unittest.TestCase):
         rn.notify_school_revalidation([], ENV, opener=rec)
         self.assertEqual(rec.calls, [])
 
+    def test_stops_after_transport_failure(self):
+        rec = Recorder(exc=OSError("timeout"))
+        ids = [f"s{i:04d}" for i in range(rn.BATCH_SIZE * 3)]
+        out = rn.notify_school_revalidation(ids, ENV, opener=rec)
+        self.assertEqual(len(rec.calls), 1)
+        self.assertEqual(out["errors"], 1)
+
     def test_errors_never_raise(self):
         out = rn.notify_school_revalidation(["a"], ENV, opener=Recorder(exc=OSError("boom")))
         self.assertEqual(out["errors"], 1)

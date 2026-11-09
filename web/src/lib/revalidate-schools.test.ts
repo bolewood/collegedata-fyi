@@ -6,6 +6,11 @@ const { revalidateTag, revalidatePath } = vi.hoisted(() => ({
 }));
 vi.mock("next/cache", () => ({ revalidateTag, revalidatePath }));
 
+const { fetchCanonicalSchoolId } = vi.hoisted(() => ({
+  fetchCanonicalSchoolId: vi.fn(async (id: string) => (id === "old-alias" ? "canon" : null)),
+}));
+vi.mock("@/lib/queries", () => ({ fetchCanonicalSchoolId }));
+
 import { POST } from "../app/api/revalidate/route";
 import {
   MAX_SCHOOL_IDS,
@@ -86,15 +91,27 @@ describe("POST /api/revalidate", () => {
       revalidated: true,
       schools: 2,
       tags: 2,
-      paths: 6,
+      paths: 4,
       rejected: ["BAD"],
     });
     expect(revalidateTag).toHaveBeenCalledWith(schoolCacheTag("yale"), { expire: 0 });
     expect(revalidateTag).toHaveBeenCalledWith(schoolCacheTag("mit"), { expire: 0 });
-    expect(revalidatePath).toHaveBeenCalledWith("/schools/yale", "layout");
     expect(revalidatePath).toHaveBeenCalledWith("/schools/yale");
     expect(revalidatePath).toHaveBeenCalledWith("/schools/yale/opengraph-image");
-    expect(revalidatePath).toHaveBeenCalledWith("/schools/mit", "layout");
+    expect(revalidatePath).toHaveBeenCalledWith("/schools/mit");
+  });
+
+  it("also revalidates the canonical slug of a live alias, tolerating resolver errors", async () => {
+    fetchCanonicalSchoolId.mockRejectedValueOnce(new Error("db down"));
+    const res = await POST(req({ school_ids: ["old-alias", "yale"] }));
+    expect(res.status).toBe(200);
+    // first call (old-alias) rejects -> raw ids only
+    expect(revalidateTag).toHaveBeenCalledWith(schoolCacheTag("old-alias"), { expire: 0 });
+    vi.clearAllMocks();
+    const res2 = await POST(req({ school_ids: ["old-alias"] }));
+    expect((await res2.json()).schools).toBe(2);
+    expect(revalidateTag).toHaveBeenCalledWith(schoolCacheTag("canon"), { expire: 0 });
+    expect(revalidatePath).toHaveBeenCalledWith("/schools/canon");
   });
 
   it("expires the global tag and all school layouts for all:true", async () => {
