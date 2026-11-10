@@ -39,6 +39,7 @@ import sys
 import unicodedata
 from collections import Counter
 from dataclasses import dataclass, field
+from types import SimpleNamespace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -55,7 +56,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import build_field_map as bfm  # noqa: E402
 
 PRODUCER = "tier2_template_overlay"
-PRODUCER_VERSION = "0.4.0"
+PRODUCER_VERSION = "0.5.0"
 FIELD_MAP_VERSION = bfm.MAP_FORMAT_VERSION
 
 # Only these years may emit values (PRD Decision 5). 2023-24 is recognised so a
@@ -1621,6 +1622,44 @@ def _import_tier2():
 # extraction
 # --------------------------------------------------------------------------
 
+SUBPOINT_ALIGN = True            # Part 0 (M2): refine the applied page shift to one INK_DPI pixel (1/3 pt)
+SUBPOINT_RANGE_PX = 3            # search +-3 px around the whole-point shift
+SUBPOINT_MIN_GAIN = 0.01         # a nonzero refinement must beat (0, 0) by this much recall
+SUBPOINT_POINTS = 4000
+
+
+def refine_subpoint_shift(gray: np.ndarray, tgray: np.ndarray, dx: float, dy: float) -> tuple[float, float]:
+    """Residual page shift below one point, in template points (x right, y up), from the INK_DPI renders.
+
+    The page's static ink (gray < INK_THRESHOLD) against the blank's, at the whole-point shift (dx, dy)
+    plus a residual of up to SUBPOINT_RANGE_PX pixels each way. (0, 0) unless a residual beats it by
+    SUBPOINT_MIN_GAIN of recall, so a page that is already registered is never moved.
+    """
+    k = INK_DPI / 72.0
+    h, w = min(gray.shape[0], tgray.shape[0]), min(gray.shape[1], tgray.shape[1])
+    pg = _dilate(gray[:h, :w] < bfm.INK_THRESHOLD, 1)
+    ty, tx = np.nonzero(tgray[:h, :w] < bfm.INK_THRESHOLD)
+    if ty.size < MIN_TEMPLATE_INK_PX:
+        return 0.0, 0.0
+    ty, tx = _subsample(ty, tx, SUBPOINT_POINTS)
+    bx, by = int(round(dx * k)), int(round(-dy * k))        # page content: col + dx*k, row - dy*k
+    best, best_rc, base = -1.0, (0, 0), 0.0
+    r = SUBPOINT_RANGE_PX
+    for iy in range(-r, r + 1):
+        for ix in range(-r, r + 1):
+            yy, xx = ty + by + iy, tx + bx + ix
+            ok = (yy >= 0) & (yy < h) & (xx >= 0) & (xx < w)
+            rec = float(pg[yy[ok], xx[ok]].sum()) / ty.size
+            if (ix, iy) == (0, 0):
+                base = rec
+            if rec > best:
+                best, best_rc = rec, (ix, iy)
+    if best - base < SUBPOINT_MIN_GAIN:
+        return 0.0, 0.0
+    ix, iy = best_rc
+    return ix / k, -iy / k
+
+
 class _PageCtx:
     """Everything the lanes need about one matched page, built lazily."""
 
@@ -1629,13 +1668,29 @@ class _PageCtx:
         self.q, self.p, self.year = q, p, year
         self.geom = page_geometry(self.page)
         a = res.alignment.get(q) or {"dx": 0.0, "dy": 0.0}
-        self.dx, self.dy = a["dx"], a["dy"]
-        self.applied_px = (int(round(self.dx)), int(round(-self.dy)))   # (cols, rows) at 72 DPI
+        self.dx0, self.dy0 = a["dx"], a["dy"]          # the whole-point page shift Stage 1 applied
+        self._sub = None
+        self.applied_px = (int(round(self.dx0)), int(round(-self.dy0)))   # (cols, rows) at 72 DPI
         self.bands = set(res.band_rejections.get(q, ()))
         self._chars = None
         self._masks = None
         self._gray = None
         self._tgray = None
+
+    @property
+    def sub(self) -> tuple[float, float]:
+        """The sub-point refinement of the page shift (template points), estimated once on the INK_DPI render."""
+        if self._sub is None:
+            self._sub = refine_subpoint_shift(self.gray, self.tgray, self.dx0, self.dy0) if SUBPOINT_ALIGN else (0.0, 0.0)
+        return self._sub
+
+    @property
+    def dx(self) -> float:
+        return self.dx0 + self.sub[0]
+
+    @property
+    def dy(self) -> float:
+        return self.dy0 + self.sub[1]
 
     @property
     def chars(self) -> list[PageChar]:
@@ -1773,8 +1828,12 @@ def extract_overlay(
     lane3_margin: float | None = None,
     lane1_pad: float = 0.0,
     strict_types: bool = True,
+    lane2=None,
 ) -> dict:
-    """Stage 1 + Lane 1 + Lane 3 + validation for one PDF.
+    """Stage 1 + Lane 1 + Lane 3 + validation for one PDF (+ Lane 2 when `lane2` is given).
+
+    `lane2` is a callable taking one namespace (see `_extract`): `lane2_ocr.make_hook(engine)`. It adds
+    numeric OCR values on the pages Lane 1 cannot read, before the identities run over the union.
 
     Returns the Tier 2 `extract()` shape (producer, producer_version,
     schema_version, source_pdf, extracted_at, stats, values, unmapped_fields)
@@ -1784,7 +1843,7 @@ def extract_overlay(
     """
     return _extract(pdf, detected_year=detected_year, source_name=source_name, maps=maps, force_year=None,
                     lane3_threshold=lane3_threshold, lane3_margin=lane3_margin, lane1_pad=lane1_pad,
-                    strict_types=strict_types)
+                    strict_types=strict_types, lane2=lane2)
 
 
 def _diagnostic_extract_forced_year(pdf, force_year: str, **kw) -> dict:
@@ -1796,7 +1855,7 @@ def _diagnostic_extract_forced_year(pdf, force_year: str, **kw) -> dict:
 
 def _extract(
     pdf, *, detected_year, source_name="", maps=None, force_year=None,
-    lane3_threshold=None, lane3_margin=None, lane1_pad=0.0, strict_types=True,
+    lane3_threshold=None, lane3_margin=None, lane1_pad=0.0, strict_types=True, lane2=None,
 ) -> dict:
     lane3_threshold = LANE3_THRESHOLD if lane3_threshold is None else lane3_threshold   # read at call time
     lane3_margin = LANE3_MARGIN if lane3_margin is None else lane3_margin
@@ -1854,7 +1913,7 @@ def _extract(
     def gate(c: _PageCtx, tag: str, wi: int, rect: list[float]) -> str | None:
         return widget_gates(c, tag, wi, rect)
 
-    def record(tag: str, value: str, lane: str, et: str, q: int, eclass: str) -> None:
+    def record(tag: str, value: str, lane, et: str, q: int, eclass: str, extra: dict | None = None) -> None:
         sf = tag_field[tag]
         rec = {"value": value, "pdf_tag": tag, "word_tag": sf.get("word_tag"), "question": sf.get("question"),
                "section": sf.get("section"), "subsection": sf.get("subsection"),
@@ -1862,6 +1921,8 @@ def _extract(
         dec = decode_button_value(value, sf.get("value_options"))
         if dec is not None:
             rec["value_decoded"] = dec
+        if extra:
+            rec.update(extra)
         values[sf["question_number"]] = rec
         lane_of[tag] = lane
         page_of[tag] = q
@@ -2019,6 +2080,18 @@ def _extract(
                 lane_of.pop(t, None)
                 hold(t, "checkbox", "fill_in_one_conflict", page_of.get(t))
 
+    # ---- Lane 2 (optional): numeric OCR on the pages Lane 1 could not read, added BEFORE the identities so
+    #      that Decision 3 runs over the union of lanes and the derived totals are made from that union
+    if lane2 is not None:
+        done0 = {r["pdf_tag"] for r in values.values() if "pdf_tag" in r}
+        text_pages0 = {page_of[t] for t in done0 if lane_of.get(t) == "text" and t in page_of}
+        tx_pages0 = {q for p, q in by_tpage.items() if any(
+            f["ft"] == "/Tx" and f["question_number"] and any(w["template_page"] == p for w in f["widgets"])
+            for f in fmap["fields"].values())}
+        pages0 = unreadable | invisible_pages | {q for q in tx_pages0 if q not in text_pages0 and q not in set(res.rejected_pages)}
+        lane2(SimpleNamespace(doc=doc, res=res, year=year, fmap=fmap, tag_field=tag_field, by_tpage=by_tpage, ctx_for=ctx_for,
+                              ocr_pages=pages0, done=done0, record=record, hold=hold, notes=notes))
+
     # ---- identities reject in every lane (Decision 3)
     ident, id_rejected = reject_identity_failures(values, set(fmap["fields"]))
     rejected.extend(id_rejected)
@@ -2047,7 +2120,7 @@ def _extract(
             if q is not None and (q in unreadable or q in invisible_pages) and (tag, q) not in seen:
                 ocr_widgets.append(_ocr_entry(tag, q, wi, w["rect"], ctx_for(q, w["template_page"]),
                                               "unreadable_page" if q in unreadable else "invisible_text"))
-    lane_counts = Counter(r["lane"] for r in values.values() if "lane" in r)
+    lane_counts = Counter(str(r["lane"]) for r in values.values() if "lane" in r)
     notes.update({
         "lane_counts": dict(lane_counts), "emission_class_counts": dict(Counter(r.get("emission_class") for r in values.values())),
         "rejected_fields": rejected, "identity_failures": ident,
