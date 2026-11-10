@@ -140,6 +140,59 @@ AcroForm tags the year's schema has no `pdf_tag` for (2025-26: 2, 2024-25: 302,
 2023-24: 276); their `question_number` is null, matching what Tier 2 drops
 today. Deciding how to join them is separate work. Needs `numpy` and `pypdfium2`.
 
+## Template overlay extraction (PRD 038 M1)
+
+`template_overlay.py` reads a *flattened* print of an official CDS template at the
+field map's widget coordinates (Stage 1 template match, Lane 1 text layer, Lane 3
+checkboxes and radios, validation). It is a pure library (bytes in, dict out; no
+database, network or worker access). Lane 2 (OCR of vector-drawn pages) and the
+worker/DB wiring are later milestones; pages that need OCR are listed in
+`notes.pages_needing_ocr`.
+
+```bash
+python tools/tier2_extractor/template_overlay.py school.pdf --detected-year 2025-26 > overlay.json
+python tools/tier2_extractor/template_overlay.py school.pdf --match-only      # Stage 1 only
+python -m pytest tools/tier2_extractor -q                                      # synthetic fixtures, no school PDFs
+CDS_M1_PDF_DIR=/path/to/review/pdfs python -m pytest tools/tier2_extractor -q -k real
+```
+
+- **Stage 1.** Each target page is rendered like the committed masks (36 DPI, ink =
+  gray < 225) and scored against every template page of every mapped year: recall of
+  the template's static ink inside the target (two 4-neighbour dilations), clamped by
+  precision (`min(recall, precision + 0.25)`; the clamp is what keeps other layouts
+  out). Pages are assigned monotonically (dropped and inserted pages are fine). The
+  year with the most pages wins and needs >= 30; a lead under 3 pages needs
+  `detected_year` to agree, a tie is always `template_year_ambiguous`. Per matched
+  page a 72-DPI search (+-3 pt) estimates `(dx, dy)`; a nonzero shift is only taken
+  when it raises recall by 0.02, and a shift over 1 pt rejects the page.
+- **Lane 1.** Characters whose box centre lies inside the widget rect, no padding.
+  pdfium-generated characters are dropped except generated whitespace (Distiller
+  prints word gaps, not spaces). Characters that coincide with a blank-template
+  character in the same rect are the label and are dropped. A read that still holds a
+  control, private-use or replacement character is never cleaned: the whole page is
+  `unreadable` and nothing is emitted from it (pdfium's U+FFFE/U+FFFF markers and
+  format characters are ignored). `/Ch` display strings map to exports through `/Opt`
+  (whitespace-insensitive, unique-prefix for clipped text, leading zeros on MM/DD).
+  Number types strip `$ , %`; `Numbers` (ZIP, phone, extension) is kept as typed.
+  `AD_TFER_GRADE` is typed Number in the schema but asks for a letter grade; it is
+  overridden to Text.
+- **Lane 3.** Mean ink density of the widget interior (35% inset, 216 DPI) minus the
+  blank template's density at the same crop. Checked at >= 0.05; in a group the top
+  widget needs a 0.03 margin over the runner-up (else `ambiguous_radios`). The emitted
+  value is the raw export (`/Y`, `/C`, ...) with `value_decoded` from
+  `decode_button_value`.
+- **Validation.** Type per `value_type` (failures go to `notes.rejected_fields`), then
+  B1 (total degree-seeking = rows), C1 (applied >= admitted >= enrolled) and C9
+  (25th <= 50th <= 75th, score ranges) identities. Identity failures on text-layer
+  values are recorded in `notes.identity_failures` and nothing is rejected; the hook
+  that rejects whole identities exists for Lane 2 values. Then
+  `apply_b1_derived_all_totals`. Fields whose map entry has no `question_number` are
+  skipped and counted in `notes.skipped_null_question_number`.
+
+`eval_template_overlay.py` reproduces the M1 acceptance numbers from local PDFs
+(`stage1`, `compare`, `cohort`, `wrong-year`, `lane3-hist`); see its docstring for
+the inputs.
+
 ## Tested against
 
 | PDF | AcroForm populated | Result |
