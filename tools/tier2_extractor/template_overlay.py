@@ -991,6 +991,8 @@ LANE3_MARGIN = 0.03         # radio group: winner must beat the runner-up by thi
 LANE3_BAND_HI = 0.12        # a lone checkbox scoring in [THRESHOLD, BAND_HI) abstains
 FRAME_MIN_RECALL = 0.85     # share of the blank box outline that must be present at the box that would be emitted
 FRAME_MEMBER_MIN = 0.5      # ... and at least this share at every other box of its group
+BORDER_MIN_PX = 8           # a measured interior with fewer dark pixels cannot show a line
+BORDER_LINE_SHARE = 0.6     # two adjacent pixel rows/columns holding this share of the dark ink are a straight stroke
 FRAME_SEARCH_PX = 6         # each box is registered on its own within this many 216-DPI pixels (about 2 pt)
 FRAME_INNER = 0.20          # the outline ring is the rect minus its inner 60%
 RADIO_BAND_RUNNER_UP = 0.01  # a radio winner in the gray band whose runner-up is this close to blank abstains
@@ -1012,15 +1014,38 @@ def _crop_density(gray: np.ndarray, rect: list[float], dx: float, dy: float, dpi
     return float((255.0 - gray[r0:r1, c0:c1].astype(np.float32)).mean() / 255.0)
 
 
+def core_is_border_line(gray: np.ndarray, rect: list[float], dx: float, dy: float) -> bool:
+    """Does the interior measured for a box hold one straight stroke (a box border), not a mark?
+
+    A check or cross is diagonal ink spread over many rows and columns; the border of a
+    box that is bigger or heavier than the template's glyph, or sits a little off, enters
+    the measured interior as a single line along one edge. Such a box scores like a
+    check mark while empty, so it is not read.
+    """
+    x0, y0, x1, y1 = rect
+    ix, iy = (x1 - x0) * LANE3_INSET, (y1 - y0) * LANE3_INSET
+    r0, r1, c0, c1 = template_rect_to_pixels([x0 + ix, y0 + iy, x1 - ix, y1 - iy], dx, dy, INK_DPI)
+    if r0 < 0 or c0 < 0 or r1 > gray.shape[0] or c1 > gray.shape[1] or r1 <= r0 or c1 <= c0:
+        return False
+    dark = gray[r0:r1, c0:c1] < 128
+    total = int(dark.sum())
+    if total < BORDER_MIN_PX:
+        return False
+    def widest(v: np.ndarray) -> int:       # a stroke is a pixel or two wide
+        return int(max(v[i:i + 2].sum() for i in range(max(len(v) - 1, 1))))
+
+    return max(widest(dark.sum(axis=0)), widest(dark.sum(axis=1))) >= BORDER_LINE_SHARE * total
+
+
 def locate_frame(c: "_PageCtx", rect: list[float]) -> tuple[float | None, float, float]:
     """Find a box's outline near the mapped rect: (recall, dx_pt, dy_pt).
 
     The blank template's outline (the rect's border ring) is matched against the
     target within +-FRAME_SEARCH_PX pixels (216 DPI, about +-2 pt) of the applied page
-    transform, which registers each box on its own, so a line that sits 1-2 pt off
-    does not leak its outline into the interior being measured. `recall` is the share
-    of the outline found at the best offset (None: the template has no outline ink
-    there); the offsets are in template points. A box whose outline is not there
+    transform. `recall` is the share of the outline found at the best offset (None: the
+    template has no outline ink there) and the offsets are in template points (not
+    applied to the interior measurement: PDFium-flattened prints draw their own bevelled
+    box about 1 pt from the template's glyph, a systematic offset). A box whose outline is not there
     (typed text reflowed the line, a row shifted) has a low recall and is not read.
     """
     r0, r1, c0, c1 = template_rect_to_pixels(rect, c.dx, c.dy, INK_DPI)
@@ -1426,7 +1451,7 @@ def _extract(
         if tag not in tag_field:
             continue
         row: list[float | None] = []
-        frames: list[float | None] = []
+        frames: list[tuple[float | None, float]] = []
         first_q = None
         missing_page = False
         gate_reason = None
@@ -1435,16 +1460,14 @@ def _extract(
             q = by_tpage.get(p)
             if q is None:
                 row.append(None)
-                frames.append(None)
+                frames.append((None, 0.0))
                 missing_page = True
                 continue
             first_q = first_q if first_q is not None else q
             c = ctx_for(q, p)
             fr, fdx, fdy = locate_frame(c, w["rect"])
-            frames.append(fr)
-            if fr is not None and fr < FRAME_MEMBER_MIN:
-                fdx = fdy = 0.0
-            tgt = _crop_density(c.gray, w["rect"], c.dx + fdx, c.dy + fdy, INK_DPI, LANE3_INSET)
+            frames.append((fr, max(abs(fdx), abs(fdy))))
+            tgt = _crop_density(c.gray, w["rect"], c.dx, c.dy, INK_DPI, LANE3_INSET)
             base = _crop_density(c.tgray, w["rect"], 0.0, 0.0, INK_DPI, LANE3_INSET)
             row.append(None if tgt is None or base is None else tgt - base)
         idx, why = _is_btn_checked(row, lane3_threshold, lane3_margin)
@@ -1454,8 +1477,13 @@ def _extract(
         gate_reason = "page_not_matched" if missing_page else None
         if gate_reason is None and idx is not None:
             win = frames[idx]
-            if (win is not None and win < FRAME_MIN_RECALL) or any(x is not None and x < FRAME_MEMBER_MIN for x in frames):
+            if (win[0] is not None and win[0] < FRAME_MIN_RECALL) or any(x[0] is not None and x[0] < FRAME_MEMBER_MIN for x in frames):
                 gate_reason = "box_outline_missing"
+        if gate_reason is None and idx is not None:
+            wq = by_tpage[f["widgets"][idx]["template_page"]]
+            if core_is_border_line(ctx_for(wq, f["widgets"][idx]["template_page"]).gray, f["widgets"][idx]["rect"],
+                                   ctxs[wq].dx, ctxs[wq].dy):
+                gate_reason = "box_border_in_interior"
         if gate_reason is None:
             for wi, w in enumerate(f["widgets"]):
                 q = by_tpage.get(w["template_page"])
