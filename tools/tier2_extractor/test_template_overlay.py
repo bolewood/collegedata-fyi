@@ -474,6 +474,18 @@ def test_reflowed_yes_no_line_never_emits_the_wrong_radio(flat_2526):
         assert vals.get(tag) in (None, "/Y"), (tag, vals.get(tag))
 
 
+def test_one_shifted_table_row_is_caught_by_the_per_widget_check_alone():
+    """12 pt shift of two table cells: too small for the band test, and 1234 would be read into the next row."""
+    data = fill_and_flatten("2025-26", {"AP_RECD_1ST_MEN_N": "1234"}, {})
+    data = region_shift(data, 12, (440, 355, 80, 40), 0, -12)
+    out = to.extract_overlay(data)
+    vals = _values_by_tag(out)
+    assert not out["notes"]["stage1"]["band_rejections"].get("12") and "12" not in out["notes"]["stage1"]["rejected_pages"]
+    assert vals.get("AP_RECD_1ST_WMN_N") is None                                   # 1234 is not read into the next row
+    assert vals.get("AP_RECD_1ST_MEN_N") in (None, "1234")
+    assert "local_misalignment" in {w["reason"] for w in out["notes"]["withheld"]}
+
+
 def test_row_period_alternatives_do_not_flag_an_aligned_table(base):
     """Rows of a table repeat at one pitch; an aligned page must not abstain because of that."""
     assert base["notes"]["withheld_by_reason"].get("local_misalignment", 0) == 0

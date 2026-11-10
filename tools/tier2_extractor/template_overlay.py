@@ -83,7 +83,7 @@ BAND_GAIN = 0.10                         # a band whose best shift beats the app
 SHIFT_AGREE_PT = 1                       # band estimates must agree with the applied shift within this
 LOCAL_WINDOW_PT = 14
 LOCAL_RANGE_PT = 10
-LOCAL_GAIN = 0.15
+LOCAL_GAIN = 0.10                        # a 12 pt one-row shift of two cells scores 0.143: 0.15 missed it
 LOCAL_MIN_INK = 30
 LOCAL_SELF_EQUIV = 0.75                  # shifts the template itself cannot tell from 0 (table-row periods) are ignored
 

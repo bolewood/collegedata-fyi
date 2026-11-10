@@ -182,7 +182,7 @@ CDS_M1_PDF_DIR=/path/to/review/pdfs python -m pytest tools/tier2_extractor -q -k
   with it within 1 pt; otherwise the page is rejected (`partial_page_shift`) or, with no
   shift, the disagreeing band's widgets abstain (`band_misaligned`). Each widget is also
   checked on its own: its template static ink within 14 pt must not fit a shifted target
-  ≥ 0.15 better in x or y (ignoring shifts the blank itself cannot tell from 0, like one
+  ≥ 0.10 better in x or y (ignoring shifts the blank itself cannot tell from 0, like one
   table-row period): `local_misalignment`.
 - **Lane 1.** Characters whose box centre lies inside the widget rect, no padding;
   characters that coincide with a blank-template character there are the label and are
