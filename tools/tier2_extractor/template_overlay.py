@@ -43,7 +43,7 @@ DILATE_ITERS = 2                         # 4-neighbour dilations (review's "with
 PRECISION_SLACK = 0.25                   # s = min(recall, precision + slack)
 MIN_TEMPLATE_INK_PX = 50                 # template pages with less ink are skipped
 ALIGN_DPI = 72                           # 1 px = 1 pt, so a 1 pt residual is testable
-ALIGN_SEARCH_PT = 3
+ALIGN_SEARCH_PT = 8                      # measured: real shifts of up to 7 pt occur (South Dakota 2024-25)
 ALIGN_MAX_PT = 1.0                       # a shift beyond this rejects the page
 ALIGN_MIN_RECALL = 0.5                   # sanity floor; PDFium-flattened widgets overdraw some ink
 ALIGN_MIN_GAIN = 0.02                    # a nonzero shift must beat (0, 0) by this much recall
@@ -212,8 +212,10 @@ def _align_page(page: "pdfium.PdfPage", tpl_page: "pdfium.PdfPage") -> dict:
     x' = x*sx + dx, y' = y*sy + dy with sx, sy the mediabox ratios, in PDF
     points with a bottom-left origin (dy is therefore the negated image-row
     shift). A nonzero shift is only taken when it raises recall by ALIGN_MIN_GAIN
-    over (0, 0). The page is rejected when |dx| or |dy| exceeds ALIGN_MAX_PT or
-    the best recall is below ALIGN_MIN_RECALL.
+    over (0, 0). Deviation from the PRD: the page is REJECTED when the estimated
+    |dx| or |dy| exceeds ALIGN_MAX_PT (or the best recall is below
+    ALIGN_MIN_RECALL), instead of applying the shift and testing a residual. The
+    cohort has real offsets of 2-7 pt (see README); applying them is untested.
     """
     w, h = page.get_size()
     sx, sy = w / 612.0, h / 792.0
@@ -224,8 +226,8 @@ def _align_page(page: "pdfium.PdfPage", tpl_page: "pdfium.PdfPage") -> dict:
     g, t = g[:hh, :ww], t[:hh, :ww]
     gd = _dilate(g, 1)
     ty, tx = np.nonzero(t)
-    if ty.size > 20000:
-        keep = np.arange(0, ty.size, ty.size // 20000 + 1)
+    if ty.size > 6000:
+        keep = np.arange(0, ty.size, ty.size // 6000 + 1)
         ty, tx = ty[keep], tx[keep]
     best = (-1.0, 0, 0)
     rec0 = None
@@ -326,7 +328,7 @@ def match_template(
             a = _align_page(doc[q], tdoc[p])
             res.alignment[q] = a
             if abs(a["dx"]) > ALIGN_MAX_PT or abs(a["dy"]) > ALIGN_MAX_PT or a["recall"] < ALIGN_MIN_RECALL:
-                res.rejected_pages[q] = "alignment_residual_over_1pt"
+                res.rejected_pages[q] = "alignment_shift_over_1pt"
                 del res.page_map[q]
                 del res.page_scores[q]
     return res

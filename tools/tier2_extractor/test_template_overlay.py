@@ -382,6 +382,10 @@ def test_real_pdfs_valparaiso_and_miami():
     for name, (flat, fill) in cases.items():
         ov = to.extract_overlay((d / flat).read_bytes(), detected_year="2025-26")
         results[name] = ev.compare_with_tier2(ov, ev.tier2_truth(d / fill, "2025-26"), fm)
+    # Arkansas State 2025-26: garbled Distiller glyphs -> Lane 1 emits nothing, flagged pages
+    ark = to.extract_overlay((d / "e69a95f19092cef6d67f5ceea35056bea403815b02ce0ae1f4ce3685c9b46a13.pdf").read_bytes(),
+                             detected_year="2025-26")
+    assert ark["notes"]["lane_counts"].get("text", 0) == 0 and len(ark["notes"]["unreadable_pages"]) >= 30
     assert results["valpo"]["ok"] >= 614 and results["valpo"]["by_type"]["Btn"] == [139, 139]
     assert results["valpo"]["extras"] == []
     assert results["miami"]["by_type"]["Btn"] == [152, 152] and results["miami"]["extras"] == []
