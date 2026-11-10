@@ -1487,7 +1487,9 @@ def stroke_continues(gray: np.ndarray, tgray: np.ndarray, it: Interior, dx: floa
             return None
         tpl = tgray[pr0 - pad:pr1 + pad, pc0 - pad:pc1 + pad] < STROKE_INK
         tpl = _dilate(tpl, pad)[pad:-pad, pad:-pad] if tpl.size else tpl
-        return (gray[r0:r1, c0:c1] < STROKE_INK) & ~tpl[:r1 - r0, :c1 - c0]
+        ink = gray[r0:r1, c0:c1] < STROKE_INK
+        h, w = min(ink.shape[0], tpl.shape[0]), min(ink.shape[1], tpl.shape[1])      # the blank's render can differ by a pixel at other DPIs
+        return ink[:h, :w] & ~tpl[:h, :w]
     # (the row only: above and below a box in a column of boxes lie the neighbouring boxes)
     for r0, r1, c0, c1 in ((it.r0, it.r1, it.c1 + f, it.c1 + f + w), (it.r0, it.r1, it.c0 - f - w, it.c0 - f)):
         m = new_ink(r0, r1, c0, c1)

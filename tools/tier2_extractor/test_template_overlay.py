@@ -26,7 +26,7 @@ import numpy as np
 import pypdf
 import pypdfium2 as pdfium
 import pytest
-from pypdf.generic import (ArrayObject, DecodedStreamObject, DictionaryObject, NameObject, NumberObject,
+from pypdf.generic import (ArrayObject, DecodedStreamObject, DictionaryObject, FloatObject, NameObject, NumberObject,
                            RectangleObject, StreamObject)
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -1457,15 +1457,15 @@ def add_ops(data: bytes, page_index: int, ops: str, *, behind: bool = False, alp
     """Append (or, with `behind`, prepend) raw content-stream operators to one page; `alpha` draws them translucent."""
     w = _writer_from(data)
     page = w.pages[page_index]
-    pre, post = "", ""
+    pre = ""
     if alpha is not None:
         res = page["/Resources"]
         egs = res.get("/ExtGState")
         egs = egs.get_object() if egs is not None else DictionaryObject()
-        egs[NameObject("/FxAlpha")] = DictionaryObject({NameObject("/ca"): NumberObject(alpha) if False else __import__("pypdf").generic.FloatObject(alpha)})
+        egs[NameObject("/FxAlpha")] = DictionaryObject({NameObject("/ca"): FloatObject(alpha)})
         res[NameObject("/ExtGState")] = egs
         pre = "/FxAlpha gs\n"
-    part = _raw(w, f"\nq\n{pre}{ops}\n{post}Q\n".encode())
+    part = _raw(w, f"\nq\n{pre}{ops}\nQ\n".encode())
     parts = _contents_parts(page)
     page[NameObject("/Contents")] = ArrayObject(([part] + parts) if behind else (parts + [part]))
     return _write(w)
@@ -1530,11 +1530,9 @@ def test_boxless_option_and_dropdown_and_derived_total_classes(flat_2526):
     assert to.emission_class_text("Text", "/Ch") == "choice" and to.emission_class_text("Text", "/Tx") == "free_text"
     for et in ("Number", "Dollars", "Percent", "Identifier", "Month", "Day"):
         assert to.emission_class_text(et, "/Tx") == "numeric"
-    derived = {"B.1": {"value": "5", "source": "b1_derive_totals", "derived_from": "b1_ft_pt_sum"}}
     text, _btn = rich_fill("2025-26")
     out = to.extract_overlay(fill_and_flatten("2025-26", text, {}))
     assert out["notes"]["b1_all_totals_derived"] >= 0 and all(r.get("emission_class") for r in out["values"].values())
-    assert derived  # (derived totals are classed numeric in _extract: see the loop after apply_b1)
 
 
 # ---- B. L1: a uniform tint is not ink ---------------------------------------
@@ -1752,17 +1750,25 @@ def _numeric_pdf(blank, tag, runs):
     return to.extract_overlay(data)
 
 
-@pytest.mark.parametrize("name,runs", [
-    ("superscript", [(5, 5, "1234", 10), (27.24, 10, "1", 5)]),
-    ("footnote_low", [(5, 5, "1234", 10), (27.24, 8, "1", 5)]),
-    ("decimal_crosses_edge", [(-1.8, 5, ".", 10), (2, 5, "1234", 10)]),
-    ("decimal_outside", [(-3, 5, ".", 10), (2, 5, "1234", 10)]),
-    ("minus_outside", [(-5, 5, "-", 10), (2, 5, "1234", 10)]),
-])
-def test_codex_numeric_counterexamples_are_withheld(blank_2526, name, runs):
-    out = _numeric_pdf(blank_2526, "AP_RECD_1ST_MEN_N", runs)
-    assert "AP_RECD_1ST_MEN_N" not in _values_by_tag(out), (name, _values_by_tag(out).get("AP_RECD_1ST_MEN_N"))
-    assert _held(out, "AP_RECD_1ST_MEN_N") and _held(out, "AP_RECD_1ST_MEN_N")[0] in ("token_crosses_rect", "mixed_glyph_size")
+def _codex_runs(name: str, size: float, ofs: float):
+    """Codex's numeric counterexamples scaled to a font size: positions in glyph advances, shifted by `ofs` pt."""
+    a = 0.556 * size
+    if name in ("superscript", "footnote_low"):
+        lift = 0.5 * size if name == "superscript" else 0.3 * size
+        return [(5 + ofs, 5, "1234", size), (5 + ofs + 4 * a, 5 + lift, "1", 0.5 * size)]
+    off = {"decimal_crosses_edge": -0.18 * size, "decimal_outside": -0.3 * size, "minus_outside": -0.5 * size}[name]
+    return [(off + ofs, 5, "." if name.startswith("decimal") else "-", size), (0.2 * size + ofs, 5, "1234", size)]
+
+
+@pytest.mark.parametrize("size", [6.0, 10.0, 14.0])
+@pytest.mark.parametrize("ofs", [-0.25, 0.0, 0.3])
+@pytest.mark.parametrize("name", ["superscript", "footnote_low", "decimal_crosses_edge", "decimal_outside", "minus_outside"])
+def test_codex_numeric_counterexamples_are_withheld(blank_2526, name, size, ofs):
+    out = _numeric_pdf(blank_2526, "AP_RECD_1ST_MEN_N", _codex_runs(name, size, ofs))
+    assert "AP_RECD_1ST_MEN_N" not in _values_by_tag(out), (name, size, ofs, _values_by_tag(out).get("AP_RECD_1ST_MEN_N"))
+    held = _held(out, "AP_RECD_1ST_MEN_N")
+    assert held and held[0] in ("token_crosses_rect", "mixed_glyph_size", "glyph_crosses_left_edge", "glyph_past_left_edge",
+                                "glyph_crosses_right_edge", "glyph_past_right_edge"), held     # the older edge test may stop it first at a small size
 
 
 @pytest.mark.parametrize("name,runs,want", [
@@ -1863,8 +1869,6 @@ def test_raster_only_duplicates_compare_ink_and_abstain_when_equality_is_not_est
 def test_weak_other_year_page_is_excluded_and_does_not_hold_the_packet(rich_2425, rich_2526):
     d25, d26 = rich_2425[0], rich_2526[0]
     hb = to._header_boxes()[7]
-    w = _writer_from(d26)
-    _shift_region_of_page_after_flatten = None
     # the 2025-26 page 7 printed with its header 2.3 pt high: its header still reads 2025-26 but weakly
     w = _writer_from(fill_and_flatten("2025-26", {}, {}))
     _shift_region_of_page(w, w.pages[7], (hb[0] - 8, hb[1] - 8, hb[2] - hb[0] + 16, hb[3] - hb[1] + 16), 0, 2.3)
@@ -1955,3 +1959,11 @@ def test_raster_only_duplicates_differing_in_a_3pt_digit_conflict(blank_2526):
     ra, rb = _rasterise(a, q), _rasterise(b, q)
     packet = assemble([(a, i) if i != q else (ra, 0) for i in range(50)] + [(rb, 0)])
     assert to.match_template(packet, align=False).rejected_template_pages == {q: "duplicate_page_conflict"}
+
+
+@pytest.mark.parametrize("dpi", [180, 200, 288])
+def test_stroke_guard_does_not_raise_at_other_render_resolutions(flat_2526, monkeypatch, dpi):
+    """A crash here kills the whole document: the print's and the blank's crops can differ by a pixel (dpi 180 raised a shape error)."""
+    monkeypatch.setattr(to, "INK_DPI", dpi)
+    out = to.extract_overlay(flat_2526)
+    assert out["notes"]["stage1"]["status"] == "matched" and _values_by_tag(out)       # no exception; what is read at 180 DPI is a recall matter, not tested here
