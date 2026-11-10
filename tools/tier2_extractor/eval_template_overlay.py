@@ -260,6 +260,7 @@ def _extract_job(job):
             "status": st["status"], "reason": st["reason"], "header_votes": st["header_votes"],
             "values": {qn: [r["pdf_tag"], r["value"], r["lane"]] for qn, r in ov["values"].items() if "pdf_tag" in r},
             "n_values": len(ov["values"]), "lane_counts": n.get("lane_counts", {}),
+            "class_counts": n.get("emission_class_counts", {}),
             "rejected": n.get("rejected_fields", []), "withheld": n.get("withheld", []),
             "withheld_by_reason": n.get("withheld_by_reason", {}), "identity_failures": n.get("identity_failures", []),
             "unreadable_pages": n.get("unreadable_pages", []), "invisible_pages": n.get("invisible_text_pages", []),
@@ -302,6 +303,19 @@ def cmd_cohort(args) -> int:
         print(f"{r['school'][:36]:36s} {r['year']:7s} {r['tier4_fields']:4d} {lc.get('text', 0):5d} {lc.get('checkbox', 0):4d} "
               f"{len(r['withheld']):4d} {len(r['rejected']):4d} {len(r['rejected_pages']):5d}  {outcome}")
     print("\nTOTALS", dict(tot))
+    cls_tot = Counter()
+    for r in out:
+        cls_tot.update({k: v for k, v in r.get("class_counts", {}).items() if k})
+    served = set(to.SERVE_CLASSES_DEFAULT)
+    matched = [r for r in out if r["status"] == "matched"]
+    med = lambda xs: float(np.median(xs)) if xs else 0.0
+    print("emitted by emission class:", dict(cls_tot.most_common()))
+    print(f"medians over the {len(matched)} matched documents: served classes {med([sum(v for k, v in r.get('class_counts', {}).items() if k in served) for r in matched]):.1f}, "
+          f"all classes {med([r['n_values'] for r in matched]):.1f}, Tier 4 {med([r['tier4_fields'] for r in matched]):.1f}")
+    for yr in sorted({r["year"] for r in matched}):
+        ms = [r for r in matched if r["year"] == yr]
+        print(f"  {yr} ({len(ms)} docs): served {med([sum(v for k, v in r.get('class_counts', {}).items() if k in served) for r in ms]):.1f}, "
+              f"all {med([r['n_values'] for r in ms]):.1f}, Tier 4 {med([r['tier4_fields'] for r in ms]):.1f}")
     print("withheld (abstained) by rule:", dict(wh_reason.most_common()))
     print("rejected_fields by reason:", dict(rej_reason.most_common()))
     print("pages rejected by rule:", dict(pg_reason.most_common()))

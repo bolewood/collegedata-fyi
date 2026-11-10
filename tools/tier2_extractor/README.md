@@ -166,7 +166,8 @@ CDS_M1_PDF_DIR=/path/to/review/pdfs python -m pytest tools/tier2_extractor -q -k
   the plurality of votes (≥ 5) and must agree with the best raster year. The rule is strict:
   one *confident* other-year vote (margin ≥ 0.02 and diff ≤ 0.6 of the ink) holds the whole
   packet (`mixed_year_packet`); weak other-year votes (poorly fitting headers of sub-point
-  shifted prints scored 0.68-0.74) cannot. A page that will be rejected for alignment casts no
+  shifted prints scored 0.68-0.74) cannot hold it, but that page is not read
+  (`weak_other_year_vote`). A page that will be rejected for alignment casts no
   vote. Ties, contradictions and unverifiable headers hold the document
   (`template_year_ambiguous`, nothing emitted); a 2023-24 print is
   `template_year_unsupported`. A matched page whose own raster score in another year beats
@@ -178,8 +179,11 @@ CDS_M1_PDF_DIR=/path/to/review/pdfs python -m pytest tools/tier2_extractor -q -k
   (two 4-neighbour dilations), clamped by precision (`min(recall, precision + 0.25)`).
   Pages are assigned monotonically (dropped and inserted pages are fine), a pair is kept
   only when the template page is within 0.02 of the page's best match (blank pages 8, 38,
-  41 cross-match), and a template page claimed by several target pages with differing
-  answers is rejected (`duplicate_page_conflict`).
+  41 cross-match), and a template page claimed by several target pages is rejected
+  (`duplicate_page_conflict`) unless they agree on every answer: candidates with a native text
+  layer are compared by the text read at each `/Tx` and `/Ch` rect, buttons and raster-only
+  candidates by ink at 216 DPI (any 3 differing pixels, or a rect that cannot be compared,
+  mean equality is not established).
 - **Geometry.** Text boxes, widget rects, static-template characters and rendered crops
   all use one space derived from PDFium's page transform (CropBox ∩ MediaBox origin,
   `/Rotate`, uniform page scale; shifts are in template points and scale with the page).
@@ -209,8 +213,19 @@ CDS_M1_PDF_DIR=/path/to/review/pdfs python -m pytest tools/tier2_extractor -q -k
   within 1 pt outside it, means the rect cuts a longer string (`glyph_crosses_*_edge`,
   `glyph_past_*_edge`); a multi-line Text read with paragraph lines just above or below the rect
   abstains (`multiline_overflow`). Spaces pdfium generated between the read glyphs are kept even
-  when they sit below the rect's centre line. `1.234` on a whole-number field is a thousands
-  separator, not a decimal (`ambiguous_thousands_separator`).
+  when they sit below the rect's centre line. `1.234` on any numeric field is a thousands
+  separator or a misread, not a decimal: no numeric type takes three decimals
+  (`ambiguous_thousands_separator`).
+  **Numeric token gate** (`numeric_token_gate`; numeric class only; defined on boxes with a vertical
+  extent and a text, so Lane 2's OCR word boxes use it unchanged): the token that holds the read
+  grows over every box that overlaps its vertical extent and sits within 0.35 of a median character
+  width (a sign, point, comma, percent or currency mark: 1.25), so a decimal point whose centre is
+  far below the digits' still belongs to them. A token with a box whose centre is outside the rect
+  (the rect holds part of a printed number, or a number crosses the rect's edge) abstains
+  (`token_crosses_rect`), as does a token whose digits differ in height by more than 20% or stand on
+  different baselines (`mixed_glyph_size`: a superscript or footnote marker); a uniformly small
+  font reads. **Free text** has one more rule: a printed line with glyph centres on both sides of the
+  rect's top or bottom edge is cut by the rect (`line_straddles_rect`).
 - **Lane 3.** Each box is measured where the print draws it: the white interior enclosed by
   the box's own frame is found by flood fill from the rect's centre (confined to the rect + 3 pt;
   seeded by every white pixel near the centre so a check mark that splits the box still gives
@@ -222,9 +237,20 @@ CDS_M1_PDF_DIR=/path/to/review/pdfs python -m pytest tools/tier2_extractor -q -k
   subtracting the ink the blank template itself has in that interior; a radio winner needs a 0.03
   margin. Abstentions: the template draws a box and the print's is not found (`box_not_closed`,
   `box_geometry`: not closed, not box-shaped, or not centred within 2.5 pt of the rect), the alignment
-  gates, and two checked boxes in a "fill in one only" group. Options with no box in the template
-  (an N/A) are read from the rect core. The v0.2.0 rules this replaces (gray bands, blank-outline
+  gates, two checked boxes in a "fill in one only" group, two or more options of a group at or above
+  the threshold (`multiple_options_marked`, before any winner margin), and ink in the winner's box
+  that continues as a stroke or a text run beyond it into the row (`stroke_continues_beyond_box`:
+  a strike-through, underline or overflowing word; two strips one box long beside the interior, past
+  the frame, with the blank's own ink removed). Only ink darker than the interior-white level
+  counts, so a uniformly gray paper, scan tone or box background is not a mark. Options with no box
+  in the template (an N/A) are read from the rect core. The v0.2.0 rules this replaces (gray bands, blank-outline
   gate, border-in-interior) are removed, not disabled; PRD A9 lists what each cost.
+- **Emission classes.** Every value carries `emission_class`: `numeric` (typed numerics, derived totals),
+  `choice` (`/Ch`), `checkbox_box` (Lane 3 through a located box interior), `checkbox_boxless` (Lane 3 where
+  the blank draws no box), `free_text`. The shadow artifact keeps every class; `serve_values(values,
+  classes=SERVE_CLASSES_DEFAULT)` filters, and the default serves `numeric`, `choice` and
+  `checkbox_box` only. `checkbox_boxless` and `free_text` are shadow-only until M3 decides per class
+  (PRD A10).
 - **Validation.** Identity failures (B1, C1, C9) reject every value in the identity, in
   every lane. Then `apply_b1_derived_all_totals`. Fields whose map entry has no
   `question_number` are skipped and counted.

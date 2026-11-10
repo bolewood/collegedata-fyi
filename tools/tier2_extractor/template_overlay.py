@@ -15,6 +15,11 @@ Public API:
     load_maps()                      committed field maps with decoded masks
     match_template(pdf, ...)         Stage 1: which official template, which year
     extract_overlay(pdf, ...)        Stage 1 + Lanes 1 and 3 + validation
+    serve_values(values, classes)    the values whose `emission_class` is served (SERVE_CLASSES_DEFAULT)
+Lane 2 seam (reused by M2): PageCtx, widget_gates, GlyphBox, glyph_boxes, edge_continuation,
+    numeric_token_gate, line_straddles_rect, stroke_continues, reject_identity_failures.
+Every emitted value carries `emission_class` (numeric, choice, checkbox_box, checkbox_boxless,
+free_text); the shadow artifact keeps all, serving defaults to numeric, choice and checkbox_box.
 CLI: python tools/tier2_extractor/template_overlay.py file.pdf [--detected-year Y]
 
 The year of a document is decided by the printed page header ("Common Data Set
@@ -50,7 +55,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import build_field_map as bfm  # noqa: E402
 
 PRODUCER = "tier2_template_overlay"
-PRODUCER_VERSION = "0.3.0"
+PRODUCER_VERSION = "0.4.0"
 FIELD_MAP_VERSION = bfm.MAP_FORMAT_VERSION
 
 # Only these years may emit values (PRD Decision 5). 2023-24 is recognised so a
@@ -65,8 +70,11 @@ ARGMAX_WINDOW = 0.02                     # a (target, template) pair must be thi
 DILATE_ITERS = 2                         # 4-neighbour dilations (Manhattan radius 2 at 36 DPI)
 PRECISION_SLACK = 0.25                   # s = min(recall, precision + slack)
 MIN_TEMPLATE_INK_PX = 50                 # template pages with less ink are skipped
-DUPLICATE_DIFF = 0.10                    # share of a widget rect's ink that differs between duplicate pages
+DUPLICATE_DIFF = 0.10                    # share of a widget rect's ink that differs between duplicate pages (no longer used: see DUPLICATE_RASTER_MIN_PX)
 DUPLICATE_MIN_PX = 6
+DUPLICATE_TEXT_COMPARE = True            # B5: duplicate candidates with a native text layer are compared by the text read at each answer rect
+DUPLICATE_RASTER_DPI = 216               # ... and the rest (buttons, raster-only candidates) by ink at this resolution
+DUPLICATE_RASTER_MIN_PX = 3              # any difference this large means equality is not established
 HEADER_DPI = 144
 HEADER_VOTE_MARGIN = 0.01                # a vote: the best year beats the next by this much of the crop
 HEADER_VOTE_MAX_RATIO = 0.85            # ... and fits: diff below this share of the crop's own ink (a blank crop scores 1.0)
@@ -74,6 +82,7 @@ HEADER_DISSENT_MARGIN = 0.02             # a vote that can HOLD the packet (a co
 HEADER_DISSENT_MAX_RATIO = 0.6           # ... and ratio <= this. Cohort votes: median ratio 0.14, p99 0.59, max 0.70; the spurious dissent of sub-point
                                          # shifted prints scored 0.68-0.74 (4 documents held at 0.5 pt before this split)
 HEADER_MIN_VOTES = 5
+WEAK_VOTE_EXCLUDE = True                 # N1: a page whose own header weakly votes another year is not read (it does not hold the packet)
 RASTER_YEAR_VETO = 0.02                  # B2: a matched page whose best score in another year beats the chosen year's by this is not read
 # alignment (72 DPI: 1 px = 1 pt in template space)
 ALIGN_DPI = 72
@@ -237,6 +246,8 @@ class PageChar:
     generated: bool = False
     invisible: bool = False
     left: float | None = None           # left edge of the glyph box; None: mirror `right` about the centre
+    top: float | None = None            # vertical extent of the glyph box (template points, y up); None: unknown
+    bottom: float | None = None
 
     @property
     def box_left(self) -> float:
@@ -264,7 +275,8 @@ def _page_chars_display(page: "pdfium.PdfPage", g: PageGeom) -> list[PageChar]:
                 invisible = int(_pdfium_c.FPDFTextObj_GetTextRenderMode(obj)) in INVISIBLE_MODES
         left, bottom, right, top = tp.get_charbox(i)
         (xa, ya), (xb, yb) = user_to_display(g, left, bottom), user_to_display(g, right, top)
-        out.append(PageChar(ch, (xa + xb) / 2.0, (ya + yb) / 2.0, max(xa, xb), generated, invisible, min(xa, xb)))
+        out.append(PageChar(ch, (xa + xb) / 2.0, (ya + yb) / 2.0, max(xa, xb), generated, invisible, min(xa, xb),
+                            max(ya, yb), min(ya, yb)))
     return out
 
 
@@ -273,7 +285,9 @@ def _chars_to_template(chars: list[PageChar], g: PageGeom, dx: float = 0.0, dy: 
     for c in chars:
         tx, ty = display_to_template(g, c.cx, c.cy, dx, dy)
         out.append(PageChar(c.ch, tx, ty, c.right / g.sx - dx, c.generated, c.invisible,
-                            c.box_left / g.sx - dx))
+                            c.box_left / g.sx - dx,
+                            None if c.top is None else c.top / g.sy - dy,
+                            None if c.bottom is None else c.bottom / g.sy - dy))
     return out
 
 
@@ -404,30 +418,47 @@ def _duplicate_candidates(score: np.ndarray) -> dict[int, list[int]]:
     return {p: qs for p, qs in claims.items() if len(qs) > 1}
 
 
-def _answer_regions_differ(doc, geoms, qs, ymaps: YearMaps, p: int, shape=None) -> bool:
+def _native_text(chars: list[PageChar], tchars: tuple[PageChar, ...]) -> bool:
+    """Does this page carry a usable text layer (at least half the blank page's own visible characters)?"""
+    vis = sum(1 for c in chars if not c.ch.isspace() and not _marker(c))
+    tvis = sum(1 for c in tchars if not c.ch.isspace() and not _marker(c))
+    return vis >= max(1, int(0.5 * tvis))
+
+
+def _answer_regions_differ(doc, geoms, qs, ymaps: YearMaps, p: int, shape=None, year: str | None = None) -> bool:
     """Do the candidate target pages for template page p differ inside any of p's widget rects?
 
-    Compared per widget at 72 DPI (one answer is a few glyphs; a page-wide ratio would
-    drown it in table ink): a rect differs when at least DUPLICATE_MIN_PX pixels differ
-    and they are a DUPLICATE_DIFF share of the rect's ink.
+    Duplicate candidates are the same page printed twice; they must agree on every answer. A
+    candidate with a native text layer is compared by the text read at each /Tx and /Ch rect (a
+    one-digit change at any font size differs; a binary raster at 72 DPI cannot see it). Buttons
+    (ink, not text) and candidates with no native text layer are compared by ink at
+    DUPLICATE_RASTER_DPI: any DUPLICATE_RASTER_MIN_PX pixels that differ, or a rect that cannot
+    be compared, mean equality is not established and the pages conflict.
     """
-    rects = [w["rect"] for f in ymaps.fmap["fields"].values() for w in f["widgets"] if w["template_page"] == p]
-    if not rects:
+    ws = [(f["ft"], w["rect"]) for f in ymaps.fmap["fields"].values() for w in f["widgets"] if w["template_page"] == p]
+    if not ws:
         return False
-    grays = []
     for q in qs:
         if not geoms[q].supported:
             return True
-        grays.append(_render_template_scale(doc[q], geoms[q], ALIGN_DPI) < bfm.INK_THRESHOLD)
-    for x0, y0, x1, y1 in rects:
-        r0, r1, c0, c1 = template_rect_to_pixels([x0, y0, x1, y1], 0.0, 0.0, ALIGN_DPI)
-        crops = [g[max(r0, 0):r1, max(c0, 0):c1] for g in grays]
-        base = crops[0]
-        for other in crops[1:]:
-            if other.shape != base.shape:
+    tchars = _template_chars(year, p) if year else ()
+    chars = [_chars_to_template(_page_chars_display(doc[q], geoms[q]), geoms[q]) for q in qs] if DUPLICATE_TEXT_COMPARE else []
+    native = DUPLICATE_TEXT_COMPARE and all(_native_text(c, tchars) for c in chars)
+    grays = None
+    for ft, rect in ws:
+        if native and ft in ("/Tx", "/Ch"):
+            reads = [read_widget_text(c, rect, tchars, rect)[0] for c in chars]
+            if any(r != reads[0] for r in reads[1:]):
                 return True
-            xor, union = int((base ^ other).sum()), int((base | other).sum())
-            if xor >= DUPLICATE_MIN_PX and union and xor / union > DUPLICATE_DIFF:
+            continue
+        if grays is None:
+            grays = [_render_template_scale(doc[q], geoms[q], DUPLICATE_RASTER_DPI) < bfm.INK_THRESHOLD for q in qs]
+        r0, r1, c0, c1 = template_rect_to_pixels(rect, 0.0, 0.0, DUPLICATE_RASTER_DPI)
+        crops = [g[max(r0, 0):r1, max(c0, 0):c1] for g in grays]
+        for other in crops[1:]:
+            if other.shape != crops[0].shape:
+                return True
+            if int((crops[0] ^ other).sum()) >= DUPLICATE_RASTER_MIN_PX:
                 return True
     return False
 
@@ -796,6 +827,7 @@ def match_template(
     best_raster = sorted(years, key=lambda y: (-counts[y], y))[0]
     votes = {y: 0 for y in years}
     confident = {y: 0 for y in years}
+    page_vote: dict[int, str] = {}           # q -> the year this page's own header votes for (weak or confident)
     est_cache: dict[int, dict] = {}
     if counts[best_raster] >= GATE_PAGES:
         # the decided year must equal the best raster year, so the page shifts are found
@@ -811,6 +843,7 @@ def match_template(
             v, _d0, margin, ratio = header_year_vote(doc[q], geoms[q], p, *dxy, detail=True)
             if v:
                 votes[v] += 1
+                page_vote[q] = v
                 if margin >= HEADER_DISSENT_MARGIN and ratio <= HEADER_DISSENT_MAX_RATIO:
                     confident[v] += 1
     res.header_votes = {y: c for y, c in votes.items() if c}
@@ -825,13 +858,18 @@ def match_template(
     res.status, res.year = STATUS_MATCHED, year
     page_map = dict(assign[year])
     sc = score[year]
-    # (a page whose own header votes another year cannot reach here: any such vote holds the packet)
+    # A confident other-year page holds the packet (decide_year). A WEAK other-year vote (sub-point shift,
+    # veil) is not enough to hold it, but that page is not read through this year's map either.
+    for q, p in list(page_map.items()):
+        if WEAK_VOTE_EXCLUDE and page_vote.get(q, year) != year:
+            res.rejected_pages[q] = "weak_other_year_vote"
+            del page_map[q]
     for q, p in list(page_map.items()):      # B2: a page whose own raster prefers another year is not read through this map
         if any(score[y2][q].max() - sc[q][p] > RASTER_YEAR_VETO for y2 in years if y2 != year):
             res.rejected_pages[q] = "page_raster_prefers_other_year"
             del page_map[q]
     for p, qs in _duplicate_candidates(sc).items():   # one template page, several target pages
-        if p in page_map.values() and _answer_regions_differ(doc, geoms, qs, maps[year], p):
+        if p in page_map.values() and _answer_regions_differ(doc, geoms, qs, maps[year], p, year=year):
             res.rejected_template_pages[p] = "duplicate_page_conflict"
             for q, pp in list(page_map.items()):
                 if pp == p:
@@ -883,6 +921,9 @@ VALUE_TYPE_OVERRIDES = {"AD_TFER_GRADE": "Text"}
 _PERCENTILE_RE = re.compile(r"_(25|50|75)TH_P$")
 # schema value types that are whole numbers: "1.234" there is a thousands separator, not a decimal
 INTEGER_VALUE_TYPES = {"Number", "Nearest $1", "Nearest 1%"}
+# N-f: no numeric type of the schema takes three decimals (tenths and hundredths are the finest), so
+# "1.234" is a thousands separator, or a misread, on every numeric field -- Dollars and Percent included.
+GRAMMAR_ALL_TYPES = True
 _THOUSANDS_DOT_RE = re.compile(r"^\$?\s?[1-9][0-9]{0,2}\.[0-9]{3}\s?%?$", re.ASCII)
 STATIC_MATCH_PT = 1.0
 SPACE_LINE_PT = 4.0            # a generated space belongs to a read line when it sits within this of a glyph's centre height
@@ -993,6 +1034,30 @@ def read_widget_text(
     return WidgetRead(text, bad, any(c.invisible for c in inside), mr, cont)
 
 
+# ---- emission classes (A): what kind of evidence produced a value ----------------
+CLASS_NUMERIC = "numeric"                # typed numerics read from the text layer (Number, Dollars, Percent, Identifier, Month, Day)
+CLASS_CHOICE = "choice"                  # /Ch dropdowns mapped through /Opt
+CLASS_CHECKBOX_BOX = "checkbox_box"      # Lane 3 through a located box interior
+CLASS_CHECKBOX_BOXLESS = "checkbox_boxless"   # Lane 3 where the blank draws no box (read from the rect core)
+CLASS_FREE_TEXT = "free_text"
+# Classes a consumer serves by default; the shadow artifact keeps every class. Free text and the boxless
+# path are shadow-only until M3 decides from shadow data, a held-out perturbation set and the hand audit.
+SERVE_CLASSES_DEFAULT = frozenset({CLASS_NUMERIC, CLASS_CHOICE, CLASS_CHECKBOX_BOX})
+_NUMERIC_EFFECTIVE = {"Number", "Dollars", "Percent", "Identifier", "Month", "Day"}
+
+
+def emission_class_text(et: str, ft: str) -> str:
+    """The class of a Lane 1 value from its effective type and widget type."""
+    if ft == "/Ch":
+        return CLASS_CHOICE
+    return CLASS_NUMERIC if et in _NUMERIC_EFFECTIVE else CLASS_FREE_TEXT
+
+
+def serve_values(values: dict, classes=SERVE_CLASSES_DEFAULT) -> dict:
+    """The values (extract() shape) whose `emission_class` is in `classes`. A record without a class is not served."""
+    return {k: r for k, r in values.items() if r.get("emission_class") in classes}
+
+
 # ---- edge-continuation guard (B3): shared by Lane 1 and the Lane 2 crops ----------
 EDGE_GUARD = True            # glyph boxes crossing / hugging the rect's left or right edge
 MULTILINE_GUARD = True       # a multi-line read whose paragraph runs past the rect's top or bottom
@@ -1003,10 +1068,16 @@ MULTILINE_REACH = 1.5        # lines above/below the rect within this many line 
 
 @dataclass(frozen=True)
 class GlyphBox:
-    """One non-form glyph (or OCR word box) in template points: horizontal extent and line height."""
+    """One non-form glyph (or OCR word box) in template points: horizontal extent, line height and,
+    when known, vertical extent (`top` > `bottom`, y up) and the text it shows (`ch`; a word box
+    carries its whole word, so its character width is width / len(ch)). Nothing here is specific
+    to the PDF text layer: Lane 2's OCR word boxes build the same object."""
     left: float
     right: float
     cy: float
+    top: float | None = None
+    bottom: float | None = None
+    ch: str = ""
 
     @property
     def cx(self) -> float:
@@ -1028,7 +1099,7 @@ def glyph_boxes(chars: list[PageChar], static_chars: tuple[PageChar, ...] | list
             continue
         if any(abs(c.cx - s.cx) <= STATIC_MATCH_PT and abs(c.cy - s.cy) <= STATIC_MATCH_PT and c.ch == s.ch for s in near_static):
             continue
-        out.append(GlyphBox(c.box_left, c.right, c.cy))
+        out.append(GlyphBox(c.box_left, c.right, c.cy, c.top, c.bottom, c.ch))
     return out
 
 
@@ -1077,6 +1148,102 @@ def edge_continuation(glyphs: list[GlyphBox], rect: list[float], *, multiline: b
     return None
 
 
+STRADDLE_GUARD = True        # free text: a line cut by the rect's top or bottom is overflow
+TOKEN_GUARD = True           # numeric reads: the printed number must lie wholly in the rect
+SIZE_GUARD = True            # ... and be set in one size on one baseline
+TOKEN_GAP_RATIO = 0.35       # a gap above this share of the median character width starts a new token (a word space is ~0.5)
+PUNCT_GAP_RATIO = 1.25       # ... except a sign, point, comma, percent or currency mark, which attaches within about one character cell
+                             # (glyph boxes are tight: a point before a "1" sits a full side bearing away from it)
+SIGN_PUNCT = "-+\u2212\u2013\u2014.,$%()"
+SIZE_MIN_RATIO = 0.8         # a digit shorter than this share of the tallest digit of its token is a raised/smaller run
+BASELINE_MAX_SHIFT = 0.25    # digit bottoms of one token differ by at most this share of the digit height
+
+
+def _lines_by_centre(glyphs: list[GlyphBox]) -> list[list[GlyphBox]]:
+    lines: list[list[GlyphBox]] = []
+    for g in sorted(glyphs, key=lambda g: -g.cy):
+        if lines and abs(g.cy - float(np.mean([h.cy for h in lines[-1]]))) <= EDGE_LINE_TOL_PT:
+            lines[-1].append(g)
+        else:
+            lines.append([g])
+    return lines
+
+
+def line_straddles_rect(glyphs: list[GlyphBox], rect: list[float]) -> str | None:
+    """Free text: is a printed line cut by the rect's top or bottom? Reason `line_straddles_rect` or None.
+
+    The glyphs in the rect's horizontal span are grouped into lines. A line with glyph centres on
+    both sides of the rect's top (or bottom) edge is a line the rect cuts in two: reading the
+    centres inside gives the garbled half ("can be used i li f SAT/ACT"). The line is overflow,
+    whatever the text says.
+    """
+    x0, y0, x1, y1 = rect
+    for ln in _lines_by_centre([g for g in glyphs if x0 <= g.cx <= x1]):
+        inside = [g for g in ln if y0 <= g.cy <= y1]
+        if inside and len(inside) < len(ln):
+            return "line_straddles_rect"
+    return None
+
+
+def numeric_token_gate(glyphs: list[GlyphBox], rect: list[float]) -> str | None:
+    """Numeric reads: is the printed number wholly inside the rect, in one size on one baseline?
+
+    `glyphs` are the non-form glyph or OCR word boxes around the rect. The read is the boxes whose
+    centre lies in the rect. Starting from them, the token grows over every box that overlaps the
+    token's vertical extent and sits within TOKEN_GAP_RATIO of the median character width of
+    either end, so a sign, a decimal point or a comma (whose centre sits far below the digits'
+    but whose extent lies within them) belongs to its digits, and so do the digits of a neighbouring
+    cell that the same string continues into. Reasons:
+      token_crosses_rect  a box of the token has its centre outside the rect (the rect holds only
+                          part of a printed token, or a token crosses its edge)
+      mixed_glyph_size    digits of the token differ in height by more than SIZE_MIN_RATIO, or
+                          stand on different baselines (a superscript or footnote marker)
+    """
+    x0, y0, x1, y1 = rect
+    read = [g for g in glyphs if x0 <= g.cx <= x1 and y0 <= g.cy <= y1]
+    if not read:
+        return None
+    ext = [(g.bottom, g.top) for g in read if g.top is not None and g.bottom is not None]
+    widths = [(g.right - g.left) / max(1, len(g.ch)) for g in read if g.ch.strip() and not g.ch.strip() in ",.-+$%()'"]
+    widths = [w for w in widths if w > 0] or [(g.right - g.left) / max(1, len(g.ch)) for g in read]
+    wmed = float(np.median(widths)) if widths else 0.0
+    if wmed <= 0:
+        return None
+    gap_max = TOKEN_GAP_RATIO * wmed
+    punct_max = PUNCT_GAP_RATIO * wmed
+    token = list(read)
+    lo = min(e[0] for e in ext) if ext else min(g.cy for g in read) - EDGE_LINE_TOL_PT
+    hi = max(e[1] for e in ext) if ext else max(g.cy for g in read) + EDGE_LINE_TOL_PT
+
+    def on_line(g: GlyphBox) -> bool:
+        if g.top is not None and g.bottom is not None:
+            return g.bottom < hi and g.top > lo
+        return lo <= g.cy <= hi
+    read_ids = {id(g) for g in read}
+    rest = [g for g in glyphs if id(g) not in read_ids and on_line(g)]
+    grew = True
+    while grew and rest:
+        grew = False
+        tl, tr = min(g.left for g in token), max(g.right for g in token)
+        for g in list(rest):
+            gm = punct_max if g.ch.strip() and all(ch in SIGN_PUNCT for ch in g.ch.strip()) else gap_max
+            if (tl - g.right <= gm and g.left <= tr) or (g.left - tr <= gm and g.right >= tl):
+                token.append(g)
+                rest.remove(g)
+                grew = True
+    if TOKEN_GUARD and any(not (x0 <= g.cx <= x1 and y0 <= g.cy <= y1) for g in token):
+        return "token_crosses_rect"
+    if SIZE_GUARD:
+        digits = [g for g in token if g.ch.isdigit() and g.top is not None and g.bottom is not None]
+        if len(digits) >= 2:
+            hs = [g.top - g.bottom for g in digits]
+            if min(hs) < SIZE_MIN_RATIO * max(hs):
+                return "mixed_glyph_size"
+            if max(g.bottom for g in digits) - min(g.bottom for g in digits) > BASELINE_MAX_SHIFT * max(hs):
+                return "mixed_glyph_size"
+    return None
+
+
 def normalise_text_value(raw: str, value_type: str | None, tag: str = "") -> tuple[str | None, str | None]:
     """Normalise a text read by effective type. Returns (value, reject_reason)."""
     et = effective_type(tag, value_type, "/Tx")
@@ -1086,7 +1253,7 @@ def normalise_text_value(raw: str, value_type: str | None, tag: str = "") -> tup
         m = _NUM_RE.match(raw)
         if not m:
             return None, "not_numeric"
-        if value_type in INTEGER_VALUE_TYPES and _THOUSANDS_DOT_RE.match(raw):
+        if _THOUSANDS_DOT_RE.match(raw) and (GRAMMAR_ALL_TYPES or value_type in INTEGER_VALUE_TYPES):
             return None, "ambiguous_thousands_separator"
         v = m.group("n").replace(",", "")
         if et == "Percent" and not (0 <= float(v) <= 100):
@@ -1152,6 +1319,12 @@ INTERIOR_MAX_OFFSET_PT = 2.5   # the interior's centre must lie this close to th
 INTERIOR_ASPECT = (0.6, 1.7)   # width / height of an interior
 INTERIOR_NEST_RATIO = 1.4      # print interior / template interior (area) above which pinholes are closed
 INTERIOR_MIN_PT = 2.5          # smaller interiors are not boxes
+INK_ONLY_DENSITY = True     # L1: only ink darker than the interior-white level counts (a uniform tint or veil is not a mark)
+MULTI_MARK_GUARD = True     # B4: two or more options of a group at or above the threshold abstain before any winner margin
+STROKE_GUARD = True         # B3: ink in the box that continues as a stroke or a text run beyond it is not a mark
+STROKE_FRAME_PT = 3.0       # the strips start this far from the interior (the frame and its bevel are not "beyond the box")
+STROKE_INK = 160            # gray below this is ink in a strip
+STROKE_COVER = 0.5          # a strip one box long with ink on at least this share of its length continues the stroke
 LANE3_INSET = 0.35          # boxless widgets (no frame to avoid): the central 30% of the rect
 LANE3_THRESHOLD = 0.04      # interior ink density that counts as checked (cohort controls: blank boxes <= 0.012, checks >= 0.085)
 LANE3_MARGIN = 0.03         # radio group: winner must beat the runner-up by this
@@ -1268,7 +1441,7 @@ def interior_density(gray: np.ndarray, it: Interior, inset: float = INTERIOR_INS
     core = gray[it.r0 + ih:it.r1 - ih, it.c0 + iw:it.c1 - iw]
     if core.size == 0:
         return None
-    return float((255.0 - core.astype(np.float32)).mean() / 255.0)
+    return _ink_density(core)
 
 
 def _crop_density(gray: np.ndarray, rect: list[float], dx: float, dy: float, dpi: float, inset: float) -> float | None:
@@ -1278,7 +1451,51 @@ def _crop_density(gray: np.ndarray, rect: list[float], dx: float, dy: float, dpi
     r0, r1, c0, c1 = template_rect_to_pixels([x0 + ix, y0 + iy, x1 - ix, y1 - iy], dx, dy, dpi)
     if r1 <= r0 or c1 <= c0 or r0 < 0 or c0 < 0 or r1 > gray.shape[0] or c1 > gray.shape[1]:
         return None
-    return float((255.0 - gray[r0:r1, c0:c1].astype(np.float32)).mean() / 255.0)
+    return _ink_density(gray[r0:r1, c0:c1])
+
+
+def _ink_density(px: np.ndarray) -> float:
+    """Mean ink of a patch (0 white .. 1 black). With INK_ONLY_DENSITY a pixel counts only by how far it is
+    darker than INTERIOR_WHITE: a uniformly gray paper, scan tone or box background (all at or above the
+    white level the box was found with) adds nothing, where a mean of (255 - gray) would read it as a mark."""
+    if INK_ONLY_DENSITY:
+        w = float(INTERIOR_WHITE)
+        return float(np.clip(w - px.astype(np.float32), 0.0, None).mean() / w)
+    return float((255.0 - px.astype(np.float32)).mean() / 255.0)
+
+
+def stroke_continues(gray: np.ndarray, tgray: np.ndarray, it: Interior, dx: float, dy: float) -> str | None:
+    """Does the ink in a located box continue as a stroke or a text run beyond it? Reason or None.
+
+    A strike-through, an underline or an overflowing word crosses the box and goes on into the row
+    around it; a real mark stays in or near its box. Two strips one box long lie in the box's row,
+    left and right of the interior (past STROKE_FRAME_PT, which holds the frame and its bevel). The ink in a strip is the page's dark pixels
+    that the blank does not have there (the form's own label text is not an answer). A strip
+    with ink along STROKE_COVER of its length means a stroke leaves the box: abstain.
+    """
+    k = INK_DPI / 72.0
+    f = int(round(STROKE_FRAME_PT * k))
+    w = it.c1 - it.c0
+    # the blank's ink at the same place, thickened by the page shift's uncertainty
+    pad = 2
+    def new_ink(r0: int, r1: int, c0: int, c1: int) -> np.ndarray | None:
+        if r0 < pad or c0 < pad or r1 > gray.shape[0] - pad or c1 > gray.shape[1] - pad:
+            return None
+        pr0, pr1 = int(round(r0 + dy * k)), int(round(r1 + dy * k))   # print pixel -> blank pixel (shift undone)
+        pc0, pc1 = int(round(c0 - dx * k)), int(round(c1 - dx * k))
+        if pr0 < pad or pc0 < pad or pr1 > tgray.shape[0] - pad or pc1 > tgray.shape[1] - pad:
+            return None
+        tpl = tgray[pr0 - pad:pr1 + pad, pc0 - pad:pc1 + pad] < STROKE_INK
+        tpl = _dilate(tpl, pad)[pad:-pad, pad:-pad] if tpl.size else tpl
+        return (gray[r0:r1, c0:c1] < STROKE_INK) & ~tpl[:r1 - r0, :c1 - c0]
+    # (the row only: above and below a box in a column of boxes lie the neighbouring boxes)
+    for r0, r1, c0, c1 in ((it.r0, it.r1, it.c1 + f, it.c1 + f + w), (it.r0, it.r1, it.c0 - f - w, it.c0 - f)):
+        m = new_ink(r0, r1, c0, c1)
+        if m is None or m.size == 0:
+            continue
+        if float(m.any(axis=0).mean()) >= STROKE_COVER:
+            return "stroke_continues_beyond_box"
+    return None
 
 
 def _is_btn_checked(scores: list[float | None], threshold: float, margin: float):
@@ -1287,7 +1504,8 @@ def _is_btn_checked(scores: list[float | None], threshold: float, margin: float)
     Returns (index | None, reason | None). A lone widget is checked when its
     score reaches the threshold. In a group the top widget wins when it reaches
     the threshold and beats the runner-up by `margin`; otherwise nothing is
-    emitted and the reason is "ambiguous_radio". Interior scores are bimodal (blank
+    emitted and the reason is "ambiguous_radio"; a group with two or more options at or above the
+    threshold is "multiple_options_marked" (a second mark is not outvoted by a stronger first one). Interior scores are bimodal (blank
     boxes ~0, marks >= 0.06), so no gray band is needed.
     """
     live = [(s, i) for i, s in enumerate(scores) if s is not None]
@@ -1297,6 +1515,8 @@ def _is_btn_checked(scores: list[float | None], threshold: float, margin: float)
     top_s, top_i = live[0]
     if top_s < threshold:
         return None, None
+    if MULTI_MARK_GUARD and len(live) > 1 and live[1][0] >= threshold:
+        return None, "multiple_options_marked"      # two options carry a mark: no winner, whatever their margin
     if len(live) == 1:
         return top_i, None
     if top_s - live[1][0] < margin:
@@ -1489,7 +1709,7 @@ def _ocr_entry(tag: str, q: int, wi: int, rect: list[float], c: _PageCtx, reason
 
 
 def widget_gates(c: _PageCtx, tag: str, wi: int, rect: list[float], *, glyphs: list[GlyphBox] | None = None,
-                 multiline: bool = True) -> str | None:
+                 multiline: bool = True, emission_class: str | None = None) -> str | None:
     """Every per-widget geometry gate a read of `rect` on matched page `c` must pass.
 
     Shared by Lane 1 (text layer), Lane 3 and the Lane 2 crops, which call it before
@@ -1498,6 +1718,8 @@ def widget_gates(c: _PageCtx, tag: str, wi: int, rect: list[float], *, glyphs: l
       local_misalignment  the template ink around the rect fits the page better shifted
       glyph_*, multiline_overflow  (only when `glyphs` is given) the printed answer
                           continues past the rect: pass the page's glyph or OCR word boxes
+      line_straddles_rect (free_text), token_crosses_rect / mixed_glyph_size (numeric): with
+                          `emission_class`, the rules for that class run on the same boxes
     Page-level rejections (B1 residual shift, B2 raster-year veto, duplicate and
     partial-page shifts) are already applied when the page is mapped: a page with a
     context here is one that passed them.
@@ -1510,7 +1732,13 @@ def widget_gates(c: _PageCtx, tag: str, wi: int, rect: list[float], *, glyphs: l
     if verdict == "misaligned":
         return "local_misalignment"
     if glyphs is not None:
-        return edge_continuation(glyphs, rect, multiline=multiline)
+        why = edge_continuation(glyphs, rect, multiline=multiline)
+        if why:
+            return why
+        if emission_class == CLASS_FREE_TEXT and STRADDLE_GUARD:
+            return line_straddles_rect(glyphs, rect)
+        if emission_class == CLASS_NUMERIC:
+            return numeric_token_gate(glyphs, rect)
     return None
 
 
@@ -1624,11 +1852,11 @@ def _extract(
     def gate(c: _PageCtx, tag: str, wi: int, rect: list[float]) -> str | None:
         return widget_gates(c, tag, wi, rect)
 
-    def record(tag: str, value: str, lane: str, et: str, q: int) -> None:
+    def record(tag: str, value: str, lane: str, et: str, q: int, eclass: str) -> None:
         sf = tag_field[tag]
         rec = {"value": value, "pdf_tag": tag, "word_tag": sf.get("word_tag"), "question": sf.get("question"),
                "section": sf.get("section"), "subsection": sf.get("subsection"),
-               "value_type": sf.get("value_type"), "effective_type": et, "lane": lane}
+               "value_type": sf.get("value_type"), "effective_type": et, "lane": lane, "emission_class": eclass}
         dec = decode_button_value(value, sf.get("value_options"))
         if dec is not None:
             rec["value_decoded"] = dec
@@ -1668,7 +1896,7 @@ def _extract(
                 continue
             if rd.text:
                 why = widget_gates(c, tag, wi, w["rect"], glyphs=glyph_boxes(c.chars, _template_chars(year, p), w["rect"]),
-                                    multiline=(et == "Text" and f["ft"] == "/Tx"))
+                                    multiline=(et == "Text" and f["ft"] == "/Tx"), emission_class=emission_class_text(et, f["ft"]))
                 if why:
                     hold(tag, "text", why, q, wi)
                     blocked = True
@@ -1699,7 +1927,7 @@ def _extract(
             if strict_types:
                 continue
             val = raw
-        record(tag, val, "text", et, q)
+        record(tag, val, "text", et, q, emission_class_text(et, f["ft"]))
     # a page found unreadable late must not leave earlier reads from it behind
     for qn, r in list(values.items()):
         if r.get("lane") == "text" and page_of.get(r["pdf_tag"]) in unreadable:
@@ -1721,6 +1949,7 @@ def _extract(
         missing_page = False
         unlocated = None
         gate_reason = None
+        located: dict[int, Interior] = {}      # widget index -> its box interior (absent: read boxless)
         for wi, w in enumerate(f["widgets"]):
             p = w["template_page"]
             q = by_tpage.get(p)
@@ -1734,6 +1963,7 @@ def _extract(
             it, why_box = locate_interior(c.gray, w["rect"], c.dx, c.dy, tit)
             tgt = interior_density(c.gray, it) if it is not None else None
             if tgt is not None:
+                located[wi] = it
                 row.append(tgt - tdens)
             elif c.template_has_box(w["rect"]):
                 unlocated = unlocated or why_box or "box_not_closed"    # the template draws a box here and the print's is not found
@@ -1756,6 +1986,9 @@ def _extract(
                 gate_reason = gate(ctx_for(q, w["template_page"]), tag, wi, w["rect"])
                 if gate_reason:
                     break
+        if gate_reason is None and STROKE_GUARD and idx is not None and idx in located:
+            cw = ctx_for(by_tpage[f["widgets"][idx]["template_page"]], f["widgets"][idx]["template_page"])
+            gate_reason = stroke_continues(cw.gray, cw.tgray, located[idx], cw.dx, cw.dy)   # boxless winners are not gated here
         if gate_reason:
             hold(tag, "checkbox", gate_reason, first_q)
             continue
@@ -1764,10 +1997,13 @@ def _extract(
             hold(tag, "checkbox", why, first_q)
             continue
         exp = f["widgets"][idx]["on_state"]
+        wq = by_tpage[f["widgets"][idx]["template_page"]]
+        boxless_winner = not ctx_for(wq, f["widgets"][idx]["template_page"]).template_has_box(f["widgets"][idx]["rect"])   # the blank draws no box here
         if exp not in {w["on_state"] for w in f["widgets"]}:
             rejected.append({"pdf_tag": tag, "reason": "illegal_button_state", "read": exp})
             continue
-        record(tag, exp, "checkbox", "Button", by_tpage[f["widgets"][idx]["template_page"]])
+        record(tag, exp, "checkbox", "Button", by_tpage[f["widgets"][idx]["template_page"]],
+               CLASS_CHECKBOX_BOXLESS if boxless_winner else CLASS_CHECKBOX_BOX)
     notes["ambiguous_radios"] = ambiguous
 
     # fill-in-one groups: two checked members means a misread
@@ -1785,6 +2021,9 @@ def _extract(
     ident, id_rejected = reject_identity_failures(values, set(fmap["fields"]))
     rejected.extend(id_rejected)
     derived = apply_b1(values, schema_fields=schema.get("fields") or [])
+    for r in values.values():
+        if r.get("derived_from") and "emission_class" not in r:
+            r["emission_class"] = CLASS_NUMERIC       # a total derived from numeric counts
 
     # ---- Lane 2 seam: always the unreadable and invisible pages, pages with no usable text
     #      left after rejection, and the unresolved numeric widgets on unreadable/invisible pages
@@ -1808,7 +2047,8 @@ def _extract(
                                               "unreadable_page" if q in unreadable else "invisible_text"))
     lane_counts = Counter(r["lane"] for r in values.values() if "lane" in r)
     notes.update({
-        "lane_counts": dict(lane_counts), "rejected_fields": rejected, "identity_failures": ident,
+        "lane_counts": dict(lane_counts), "emission_class_counts": dict(Counter(r.get("emission_class") for r in values.values())),
+        "rejected_fields": rejected, "identity_failures": ident,
         "withheld": withheld, "withheld_by_reason": dict(Counter(w["reason"] for w in withheld)),
         "unreadable_pages": sorted(unreadable), "invisible_text_pages": sorted(invisible_pages),
         "pages_needing_ocr": ocr_pages, "ocr_widgets": ocr_widgets,

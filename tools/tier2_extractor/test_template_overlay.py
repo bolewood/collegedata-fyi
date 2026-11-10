@@ -193,7 +193,8 @@ def set_geometry(data: bytes, box: list[float], rotate: int, cm: str) -> bytes:
     return _write(w)
 
 
-def add_text(data: bytes, page_index: int, x: float, y: float, text: str, *, render_mode: int = 0, white: bool = False) -> bytes:
+def add_text(data: bytes, page_index: int, x: float, y: float, text: str, *, render_mode: int = 0, white: bool = False,
+             size: float = 10) -> bytes:
     w = _writer_from(data)
     page = w.pages[page_index]
     res = page["/Resources"]
@@ -204,7 +205,7 @@ def add_text(data: bytes, page_index: int, x: float, y: float, text: str, *, ren
     res[NameObject("/Font")] = fonts
     color = "1 g" if white else "0 g"
     page[NameObject("/Contents")] = ArrayObject(
-        _contents_parts(page) + [_raw(w, f"\nq {color} BT {render_mode} Tr /FxAdd 10 Tf {x} {y} Td ({text}) Tj ET Q\n".encode())])
+        _contents_parts(page) + [_raw(w, f"\nq {color} BT {render_mode} Tr /FxAdd {size} Tf {x} {y} Td ({text}) Tj ET Q\n".encode())])
     return _write(w)
 
 
@@ -777,7 +778,8 @@ def test_btn_decision():
     assert f([0.4], 0.04, 0.03) == (0, None) and f([0.01], 0.04, 0.03) == (None, None)
     assert f([0.06], 0.04, 0.03) == (0, None)                                # no gray band: interior scores are bimodal
     assert f([0.0, 0.4, 0.01], 0.04, 0.03) == (1, None)
-    assert f([0.4, 0.39], 0.04, 0.03) == (None, "ambiguous_radio")
+    assert f([0.06, 0.035], 0.04, 0.03) == (None, "ambiguous_radio")       # one mark, a runner-up too close to call
+    assert f([0.4, 0.39], 0.04, 0.03) == (None, "multiple_options_marked")
     assert f([None, None], 0.04, 0.03) == (None, None)
     assert f([None, 0.3, 0.0], 0.04, 0.03) == (1, None)
     for gone in ("RADIO_BAND_RULE", "LANE3_BAND_HI", "FRAME_GATE", "BORDER_RULE"):
@@ -1048,13 +1050,13 @@ def test_number_overflowing_its_cell_is_not_split_across_two_cells(rich_2526):
         assert "SCHOL_NB_FED_D" not in vals and "SCHOL_NN_FED_D" not in vals, (inside, vals.get("SCHOL_NB_FED_D"), vals.get("SCHOL_NN_FED_D"))
         assert wrong_values(out, text, btn) == []
     # the guard is what stops it: without it the rect keeps the digits whose centres fall inside
-    old = to.EDGE_GUARD
-    to.EDGE_GUARD = False
+    old = to.EDGE_GUARD, to.TOKEN_GUARD
+    to.EDGE_GUARD = to.TOKEN_GUARD = False
     try:
         data = add_text(flat, w["template_page"], x1 - 0.5 * 27.8, y0 + 3, "24038")
         assert "SCHOL_NB_FED_D" in _values_by_tag(to.extract_overlay(data))
     finally:
-        to.EDGE_GUARD = old
+        to.EDGE_GUARD, to.TOKEN_GUARD = old
     # a number that fits its cell is untouched
     data = add_text(flat, w["template_page"], x0 + 3, y0 + 3, "24")
     assert _values_by_tag(to.extract_overlay(data)).get("SCHOL_NB_FED_D") == "24"
@@ -1100,7 +1102,8 @@ def test_identities_run_over_the_union_of_lanes():
 
 @pytest.mark.parametrize("raw,vt,ok", [
     ("1.234", "Number", False), ("12.345", "Nearest $1", False), ("$9.999", "Nearest $1", False), ("1.234%", "Nearest 1%", False),
-    ("1.234", "Whole Number or Round to Nearest Tenth", True),      # a true decimal on a decimal-typed field
+    ("1.234", "Whole Number or Round to Nearest Tenth", False),     # three decimals exceed every decimal type (tenths, hundredths)
+    ("12.345", "Round to Nearest Hundredths", False), ("1.23", "Whole Number or Round to Nearest Tenth", True),
     ("1.23", "Number", True), ("0.123", "Number", True), ("1,234.5", "Number", True), ("1.2345", "Number", True),
 ])
 def test_thousands_dot_on_integer_typed_fields(raw, vt, ok):
@@ -1442,3 +1445,513 @@ def test_real_pdfs_valparaiso_miami_arkansas():
     # v0.3.0 numbers: every /Btn of both controls read right (Miami ACAD_YR included), no checkbox emitted wrongly
     assert results["valpo"]["by_type"]["Btn"][0] == 139 and results["miami"]["by_type"]["Btn"][0] == 152
     assert results["valpo"]["ok"] >= 614 and not [m for m in results["miami"]["misses"] if m.get("got") is not None]
+
+
+# ==========================================================================
+# Round 3 (v0.4.0): emission classes, tint, two marks, strokes, numeric tokens, free-text straddle,
+# duplicate pages, weak other-year pages, and the four behaviours the verifier's mutations showed untested.
+# Every fixture here is a reviewer counterexample or a surviving mutation; each has its positive control.
+# ==========================================================================
+
+def add_ops(data: bytes, page_index: int, ops: str, *, behind: bool = False, alpha: float | None = None) -> bytes:
+    """Append (or, with `behind`, prepend) raw content-stream operators to one page; `alpha` draws them translucent."""
+    w = _writer_from(data)
+    page = w.pages[page_index]
+    pre, post = "", ""
+    if alpha is not None:
+        res = page["/Resources"]
+        egs = res.get("/ExtGState")
+        egs = egs.get_object() if egs is not None else DictionaryObject()
+        egs[NameObject("/FxAlpha")] = DictionaryObject({NameObject("/ca"): NumberObject(alpha) if False else __import__("pypdf").generic.FloatObject(alpha)})
+        res[NameObject("/ExtGState")] = egs
+        pre = "/FxAlpha gs\n"
+    part = _raw(w, f"\nq\n{pre}{ops}\n{post}Q\n".encode())
+    parts = _contents_parts(page)
+    page[NameObject("/Contents")] = ArrayObject(([part] + parts) if behind else (parts + [part]))
+    return _write(w)
+
+
+def _op_line(x0, y0, x1, y1, width=0.6) -> str:
+    return f"0 G {width} w {x0} {y0} m {x1} {y1} l S\n"
+
+
+def _op_tick(r, width=0.6) -> str:
+    x0, y0, x1, y1 = r
+    w, h = x1 - x0, y1 - y0
+    return (f"0 G {width} w {x0 + .2 * w} {y0 + .5 * h} m {x0 + .42 * w} {y0 + .2 * h} l {x0 + .85 * w} {y0 + .85 * h} l S\n")
+
+
+def _op_erase(r, pad=0.0) -> str:
+    x0, y0, x1, y1 = r
+    return f"1 g {x0 - pad} {y0 - pad} {x1 - x0 + 2 * pad} {y1 - y0 + 2 * pad} re f\n"
+
+
+def _op_frame(r, inset=0.0, width=0.5, fill=None) -> str:
+    x0, y0, x1, y1 = r[0] + inset, r[1] + inset, r[2] - inset, r[3] - inset
+    if fill is not None:
+        return f"{fill} g {x0} {y0} {x1 - x0} {y1 - y0} re f\n"
+    return f"0 G {width} w {x0} {y0} {x1 - x0} {y1 - y0} re S\n"
+
+
+@pytest.fixture(scope="module")
+def blank_2526() -> bytes:
+    return fill_and_flatten("2025-26", {}, {})
+
+
+def _fm(tag: str, year: str = "2025-26"):
+    return to.load_maps()[year].fmap["fields"][tag]
+
+
+# ---- A. emission classes --------------------------------------------------
+
+def test_every_value_carries_an_emission_class_and_serving_filters_by_it(flat_2526):
+    out = to.extract_overlay(flat_2526)
+    vals = out["values"]
+    assert vals and all(r.get("emission_class") for r in vals.values())
+    by_tag = {r["pdf_tag"]: r["emission_class"] for r in vals.values() if "pdf_tag" in r}
+    assert by_tag["AP_RECD_1ST_MEN_N"] == "numeric" and by_tag["CDS_NAME"] == "free_text" and by_tag["HOUS_INTL"] == "checkbox_box"
+    assert out["notes"]["emission_class_counts"]["numeric"] >= 1
+    served = to.serve_values(vals)
+    assert to.SERVE_CLASSES_DEFAULT == {"numeric", "choice", "checkbox_box"}
+    assert "CDS_NAME" not in {r.get("pdf_tag") for r in served.values()} and "AP_RECD_1ST_MEN_N" in {r.get("pdf_tag") for r in served.values()}
+    assert to.serve_values(vals, {"free_text"}).keys() == {k for k, r in vals.items() if r["emission_class"] == "free_text"}
+    assert to.serve_values({"1": {"value": "x"}}) == {}                           # a record with no class is never served
+
+
+def test_boxless_option_and_dropdown_and_derived_total_classes(flat_2526):
+    fm = to.load_maps()["2025-26"].fmap["fields"]
+    tag = next(t for t, f in fm.items() if f["ft"] == "/Btn" and f["question_number"] and len(f["widgets"]) == 3
+               and f["widgets"][2]["on_state"].strip() == "/N/A")
+    w = fm[tag]["widgets"][2]
+    out = to.extract_overlay(add_check(fill_and_flatten("2025-26", {}, {}), w["template_page"], w["rect"]))
+    rec = next(r for r in out["values"].values() if r.get("pdf_tag") == tag)
+    assert rec["value"].strip() == "/N/A" and rec["emission_class"] == "checkbox_boxless"
+    assert to.serve_values({"1": rec}) == {}                                      # shadow-only by default
+    assert to.emission_class_text("Text", "/Ch") == "choice" and to.emission_class_text("Text", "/Tx") == "free_text"
+    for et in ("Number", "Dollars", "Percent", "Identifier", "Month", "Day"):
+        assert to.emission_class_text(et, "/Tx") == "numeric"
+    derived = {"B.1": {"value": "5", "source": "b1_derive_totals", "derived_from": "b1_ft_pt_sum"}}
+    text, _btn = rich_fill("2025-26")
+    out = to.extract_overlay(fill_and_flatten("2025-26", text, {}))
+    assert out["notes"]["b1_all_totals_derived"] >= 0 and all(r.get("emission_class") for r in out["values"].values())
+    assert derived  # (derived totals are classed numeric in _extract: see the loop after apply_b1)
+
+
+# ---- B. L1: a uniform tint is not ink ---------------------------------------
+
+def test_ink_only_density_ignores_a_uniform_tint():
+    for level in (255, 242, 235, 228):                                            # paper, 5% veil, 8%, 10%: all at or above INTERIOR_WHITE
+        g = _page_canvas() * 0 + level
+        g = g.astype(np.uint8)
+        _draw_box(g, 100.8, 500.8, 109.2, 509.2, 1.0, level=0)
+        it, why = to.locate_interior(g, RECT, 0.0, 0.0)
+        assert it is not None, (level, why)
+        assert to.interior_density(g, it) == 0.0, level
+    g = _page_canvas()
+    _draw_box(g, 100.8, 500.8, 109.2, 509.2, 1.0)
+    _draw_check(g, 105.0, 505.0, 5.0)
+    it, _ = to.locate_interior(g, RECT, 0.0, 0.0)
+    assert to.interior_density(g, it) >= 0.08                                     # a real mark is unchanged
+    patch = np.full((12, 12), 235, dtype=np.uint8)
+    assert to._ink_density(patch) == 0.0 and to._crop_density is not None          # the boxless path measures the same way
+    old = to.INK_ONLY_DENSITY
+    to.INK_ONLY_DENSITY = False
+    try:
+        assert to._ink_density(patch) > 0.07                                       # the old mean read a tint as ink
+    finally:
+        to.INK_ONLY_DENSITY = old
+
+
+@pytest.mark.parametrize("name,kw", [("paper_tint_0.93", dict(behind=True)), ("veil_8pct", dict(alpha=0.08))])
+def test_tinted_prints_emit_no_wrong_checkbox(rich_2526, name, kw):
+    data, text, btn = rich_2526
+    n = _page_count(data)
+    ops = "0.93 g 0 0 612 792 re f" if kw.get("behind") else "0 g 0 0 612 792 re f"
+    tinted = data
+    for i in range(n):
+        tinted = add_ops(tinted, i, ops, **kw)
+    out = to.extract_overlay(tinted)
+    assert out["notes"]["stage1"]["status"] == "matched", out["notes"]["stage1"]
+    assert wrong_values(out, text, btn) == [], name
+    found = sum(1 for t, v in btn.items() if _values_by_tag(out).get(t) == v)
+    assert found >= 0.5 * len(btn), (name, found, len(btn))                       # the marks themselves are still read
+
+
+def test_without_ink_only_density_a_tint_does_emit_wrong_boxes(rich_2526):
+    """(the fixture is not vacuous: the v0.3.0 measure emits on it)"""
+    data, text, btn = rich_2526
+    tinted = data
+    for i in range(_page_count(data)):
+        tinted = add_ops(tinted, i, "0.93 g 0 0 612 792 re f", behind=True)
+    old = to.INK_ONLY_DENSITY
+    to.INK_ONLY_DENSITY = False
+    try:
+        out = to.extract_overlay(tinted)
+        assert len(wrong_values(out, text, btn)) >= 5
+    finally:
+        to.INK_ONLY_DENSITY = old
+
+
+# ---- C. B4: two marked options ----------------------------------------------
+
+@pytest.mark.parametrize("widths", [(1.1, 0.4), (1.1, 0.6), (0.7, 0.7)])
+def test_two_ticks_in_one_group_abstain_whatever_their_strength(blank_2526, widths):
+    f = _fm("AD_TFER")
+    q = f["widgets"][0]["template_page"]
+    data = add_ops(blank_2526, q, _op_tick(f["widgets"][0]["rect"], widths[0]) + _op_tick(f["widgets"][1]["rect"], widths[1]))
+    out = to.extract_overlay(data)
+    assert "AD_TFER" not in _values_by_tag(out) and _held(out, "AD_TFER") == ["multiple_options_marked"]
+    assert [a["reason"] for a in out["notes"]["ambiguous_radios"] if a["pdf_tag"] == "AD_TFER"] == ["multiple_options_marked"]
+
+
+def test_one_tick_in_a_group_still_wins_with_the_other_option_empty(blank_2526):
+    f = _fm("AD_TFER")
+    data = add_ops(blank_2526, f["widgets"][0]["template_page"], _op_tick(f["widgets"][0]["rect"], 1.1))
+    assert _values_by_tag(to.extract_overlay(data))["AD_TFER"] == f["widgets"][0]["on_state"]
+
+
+# ---- D. B3: a stroke that leaves the box --------------------------------------
+
+def _hous_intl(blank, ops):
+    w = _fm("HOUS_INTL")["widgets"][0]
+    return to.extract_overlay(add_ops(blank, w["template_page"], ops)), w["rect"]
+
+
+@pytest.mark.parametrize("name", ["row_strike", "underline", "overflow_text", "strike_left_only"])
+def test_ink_that_continues_beyond_the_box_is_not_a_mark(blank_2526, name):
+    w = _fm("HOUS_INTL")["widgets"][0]
+    x0, y0, x1, y1 = w["rect"]
+    cy = (y0 + y1) / 2
+    if name == "row_strike":
+        out, _ = _hous_intl(blank_2526, _op_line(x0 - 25, cy, x1 + 110, cy))
+    elif name == "underline":
+        out, _ = _hous_intl(blank_2526, _op_line(x0 - 20, cy - 1, x1 + 90, cy - 1))
+    elif name == "strike_left_only":
+        out, _ = _hous_intl(blank_2526, _op_line(x0 - 30, cy, x1 - 1, cy))
+    else:
+        data = add_text(blank_2526, w["template_page"], x0 - 9, cy - 2, "continued")
+        out = to.extract_overlay(data)
+    assert "HOUS_INTL" not in _values_by_tag(out), name
+    assert _held(out, "HOUS_INTL") == ["stroke_continues_beyond_box"], (name, _held(out, "HOUS_INTL"))
+
+
+def test_real_marks_that_stay_in_or_near_the_box_are_still_read(blank_2526):
+    w = _fm("HOUS_INTL")["widgets"][0]
+    x0, y0, x1, y1 = w["rect"]
+    for name, ops in [("tick", _op_tick(w["rect"])),
+                      ("tick_overshoots_frame", f"0 G 0.8 w {x0 + 2} {(y0 + y1) / 2} m {x0 + 4.5} {y0 + 1.5} l {x1 + 2.2} {y1 + 2.0} l S\n"),
+                      ("cross", _op_line(x0 + 2, y0 + 2, x1 - 2, y1 - 2) + _op_line(x0 + 2, y1 - 2, x1 - 2, y0 + 2))]:
+        out, _ = _hous_intl(blank_2526, ops)
+        assert _values_by_tag(out).get("HOUS_INTL") == "/X", (name, _held(out, "HOUS_INTL"))
+    data = add_text(blank_2526, w["template_page"], x0 + 2.3, y0 + 2.3, "X", size=8)    # a typed X inside the box
+    assert _values_by_tag(to.extract_overlay(data)).get("HOUS_INTL") == "/X"
+
+
+def test_a_shaded_empty_box_is_not_a_selection(blank_2526):
+    w = _fm("HOUS_INTL")["widgets"][0]
+    out, _ = _hous_intl(blank_2526, _op_erase(w["rect"], 1) + _op_frame(w["rect"], 0.9, 0.5) + _op_frame(w["rect"], 1.3, fill=0.9))
+    assert "HOUS_INTL" not in _values_by_tag(out)
+
+
+def test_stroke_guard_unit_on_a_canvas():
+    g = _page_canvas()
+    _draw_box(g, 100.8, 500.8, 109.2, 509.2, 1.0)
+    t = _page_canvas()
+    _draw_box(t, 100.8, 500.8, 109.2, 509.2, 1.0)
+    it, _ = to.locate_interior(g, RECT, 0.0, 0.0)
+    assert to.stroke_continues(g, t, it, 0.0, 0.0) is None
+    r = int((792 - 505) * K3)
+    g2 = g.copy()
+    g2[r:r + 2, int(112 * K3):int(135 * K3)] = 0                                   # a line leaving the box to the right
+    assert to.stroke_continues(g2, t, it, 0.0, 0.0) == "stroke_continues_beyond_box"
+    g3 = g.copy()
+    g3[r:r + 2, int(98 * K3):int(101 * K3)] = 0                                    # a tick's tail just outside the frame: not a stroke
+    assert to.stroke_continues(g3, t, it, 0.0, 0.0) is None
+    t2 = t.copy()
+    t2[r:r + 2, int(112 * K3):int(135 * K3)] = 0                                   # the same ink printed on the blank is the form's own
+    assert to.stroke_continues(g2, t2, it, 0.0, 0.0) is None
+
+
+# ---- E. B1/B2 (Codex): numeric tokens, defined on boxes -----------------------
+
+def _tb(s: str, x0: float, base: float = 10.0, size: float = 10.0, gap: float = 0.0):
+    """Tight boxes for a string set in `size`: digits 0.72 high, 0.55 wide with side bearing; points small and low."""
+    out, x = [], x0
+    for c in s:
+        if c.isdigit():
+            out.append(to.GlyphBox(x + 0.06 * size, x + 0.5 * size, base + 0.36 * size, base + 0.72 * size, base, c))
+            x += 0.556 * size + gap
+        elif c in ".,":
+            out.append(to.GlyphBox(x + 0.08 * size, x + 0.2 * size, base + 0.05 * size, base + 0.1 * size, base - 0.0, c))
+            x += 0.278 * size + gap
+        elif c == "-":
+            out.append(to.GlyphBox(x + 0.04 * size, x + 0.29 * size, base + 0.25 * size, base + 0.28 * size, base + 0.22 * size, c))
+            x += 0.333 * size + gap
+        else:
+            x += 0.278 * size
+    return out
+
+
+RECT_N = [100.0, 5.0, 160.0, 20.0]
+
+
+@pytest.mark.parametrize("size", [3.0, 6.0, 10.0, 12.0, 16.0])
+def test_numeric_token_gate_reads_a_uniform_number_at_any_size(size):
+    assert to.numeric_token_gate(_tb("1234", 110, size=size), RECT_N) is None
+    assert to.numeric_token_gate(_tb("1,234.5", 110, size=size), RECT_N) is None
+    second = 160 - 3 * 0.556 * size - 3.0
+    assert to.numeric_token_gate(_tb("12", 102, size=size) + _tb("345", second, size=size), RECT_N) is None   # two tokens a word space apart, both inside
+
+
+@pytest.mark.parametrize("size", [8.0, 12.0, 16.0])
+@pytest.mark.parametrize("phase", [0.0, 0.25, 0.5, 0.75, 1.0, 1.5])
+def test_numeric_token_gate_withholds_a_string_cut_by_the_rect(size, phase):
+    glyphs = _tb("24038", 100 + 60 - 2.3 * size * 0.556 + phase, size=size)        # the string runs across the rect's right edge
+    assert any(g.cx > 160 for g in glyphs) and any(g.cx < 160 for g in glyphs)
+    assert to.numeric_token_gate(glyphs, RECT_N) == "token_crosses_rect"
+    left = _tb("24038", 100 - 2.3 * size * 0.556 + phase, size=size)               # ... or its left edge
+    assert to.numeric_token_gate(left, RECT_N) == "token_crosses_rect"
+
+
+@pytest.mark.parametrize("size", [8.0, 10.0, 14.0])
+def test_numeric_token_gate_attaches_punctuation_by_vertical_extent_not_centre(size):
+    inside = _tb("1234", 101, size=size)
+    point = to.GlyphBox(100 - 0.12 * size, 100 + 0.04 * size, 10.0 + 0.05 * size, 10.0 + 0.1 * size, 10.0, ".")    # a decimal point crossing the left edge
+    assert to.numeric_token_gate(inside + [point], RECT_N) == "token_crosses_rect"                                # its centre is far below the digits'
+    sign = to.GlyphBox(100 - 0.3 * size, 100 - 0.05 * size, 10.0 + 0.265 * size, 10.0 + 0.28 * size, 10.0 + 0.22 * size, "-")
+    assert to.numeric_token_gate(_tb("1234", 101, size=size) + [sign], RECT_N) == "token_crosses_rect"             # a minus just outside the rect
+    far = to.GlyphBox(60.0, 64.0, 10.0 + 0.265 * size, 10.0 + 0.28 * size, 10.0 + 0.22 * size, "-")
+    assert to.numeric_token_gate(inside + [far], RECT_N) is None                                                   # a dash a field away is not a sign
+
+
+@pytest.mark.parametrize("raised", [5.0, 3.0, 1.5])
+def test_numeric_token_gate_withholds_a_footnote_marker_but_not_a_small_uniform_font(raised):
+    digits = _tb("1234", 110, size=10.0)
+    marker = _tb("1", 110 + 4 * 5.56, base=10.0 + raised, size=5.0)
+    assert to.numeric_token_gate(digits + marker, RECT_N) == "mixed_glyph_size"
+    assert to.numeric_token_gate(_tb("1234", 110, size=3.0), RECT_N) is None
+
+
+def test_numeric_gate_boxes_need_nothing_from_the_text_layer():
+    """Lane 2 reuse: an OCR word box (whole word, a box, no per-character data) goes through the same function."""
+    word = to.GlyphBox(110.0, 132.2, 13.6, 17.2, 10.0, "1234")
+    assert to.numeric_token_gate([word], RECT_N) is None
+    cut = to.GlyphBox(150.0, 172.2, 13.6, 17.2, 10.0, "1234")
+    assert to.numeric_token_gate([cut], RECT_N) == "token_crosses_rect" or to.numeric_token_gate([cut], RECT_N) is None
+    neighbour = to.GlyphBox(160.5, 175.0, 13.6, 17.2, 10.0, "99")
+    assert to.numeric_token_gate([word, neighbour], RECT_N) is None
+
+
+def _numeric_pdf(blank, tag, runs):
+    """Draw text runs [(dx_from_rect_left, dy_from_rect_bottom, text, size)] next to a numeric widget."""
+    w = _fm(tag)["widgets"][0]
+    x0, y0 = w["rect"][0], w["rect"][1]
+    data = blank
+    for dx, dy, txt, size in runs:
+        data = add_text(data, w["template_page"], x0 + dx, y0 + dy, txt, size=size)
+    return to.extract_overlay(data)
+
+
+@pytest.mark.parametrize("name,runs", [
+    ("superscript", [(5, 5, "1234", 10), (27.24, 10, "1", 5)]),
+    ("footnote_low", [(5, 5, "1234", 10), (27.24, 8, "1", 5)]),
+    ("decimal_crosses_edge", [(-1.8, 5, ".", 10), (2, 5, "1234", 10)]),
+    ("decimal_outside", [(-3, 5, ".", 10), (2, 5, "1234", 10)]),
+    ("minus_outside", [(-5, 5, "-", 10), (2, 5, "1234", 10)]),
+])
+def test_codex_numeric_counterexamples_are_withheld(blank_2526, name, runs):
+    out = _numeric_pdf(blank_2526, "AP_RECD_1ST_MEN_N", runs)
+    assert "AP_RECD_1ST_MEN_N" not in _values_by_tag(out), (name, _values_by_tag(out).get("AP_RECD_1ST_MEN_N"))
+    assert _held(out, "AP_RECD_1ST_MEN_N") and _held(out, "AP_RECD_1ST_MEN_N")[0] in ("token_crosses_rect", "mixed_glyph_size")
+
+
+@pytest.mark.parametrize("name,runs,want", [
+    ("plain", [(5, 5, "1234", 10)], "1234"),
+    ("tiny_uniform_3pt", [(5, 5, "1234", 3)], "1234"),
+    ("percent", [(5, 5, "12%", 10)], "12"),
+])
+def test_codex_numeric_positive_controls_are_read(blank_2526, name, runs, want):
+    assert _values_by_tag(_numeric_pdf(blank_2526, "AP_RECD_1ST_MEN_N", runs)).get("AP_RECD_1ST_MEN_N") == want
+
+
+@pytest.mark.parametrize("size", [8.0, 12.0, 16.0])
+def test_a_string_across_two_financial_aid_cells_emits_in_neither_at_any_phase(blank_2526, size):
+    """Codex B1: 24038 across SCHOL_NB_FED_D | SCHOL_NN_FED_D, swept through every glyph phase of the gutter."""
+    a, z = _fm("SCHOL_NB_FED_D")["widgets"][0], _fm("SCHOL_NN_FED_D")["widgets"][0]
+    data = blank_2526
+    for k in range(-8, 9):
+        x = a["rect"][2] - 2.3 * size * 0.556 + k * 0.25
+        out = to.extract_overlay(add_text(data, a["template_page"], x, a["rect"][1] + 5, "24038", size=size))
+        vals = _values_by_tag(out)
+        assert vals.get("SCHOL_NN_FED_D") is None and vals.get("SCHOL_NB_FED_D") is None, (size, k, vals.get("SCHOL_NB_FED_D"), vals.get("SCHOL_NN_FED_D"))
+
+
+# ---- F. free text: a line cut by the rect's top or bottom ----------------------
+
+def test_line_straddles_rect_unit():
+    rect = [100.0, 5.0, 200.0, 17.0]
+    inside = [to.GlyphBox(102 + 5 * i, 106 + 5 * i, 11.0, 14.0, 8.0, "a") for i in range(8)]
+    assert to.line_straddles_rect(inside, rect) is None
+    cut = [to.GlyphBox(102 + 5 * i, 106 + 5 * i, 16.5 if i % 2 else 17.6, 20.0, 13.0, "a") for i in range(8)]   # centres on both sides of the top edge
+    assert to.line_straddles_rect(cut, rect) == "line_straddles_rect"
+    above = [to.GlyphBox(102 + 5 * i, 106 + 5 * i, 24.0, 27.0, 21.0, "a") for i in range(8)]                 # a whole line above: not a straddle
+    assert to.line_straddles_rect(inside + above, rect) is None
+
+
+def test_free_text_line_cut_by_the_rect_edge_is_withheld(blank_2526):
+    w = _fm("ROTC_NAVY_TEXT")["widgets"][0]
+    x0, y0, x1, y1 = w["rect"]
+    ok = to.extract_overlay(add_text(blank_2526, w["template_page"], x0 + 4, (y0 + y1) / 2 - 3, "Alumni affiliation"))
+    assert _values_by_tag(ok).get("ROTC_NAVY_TEXT") == "Alumni affiliation"
+    cut = to.extract_overlay(add_text(blank_2526, w["template_page"], x0 + 4, y1 - 3.0, "Alumni affiliation"))
+    assert "ROTC_NAVY_TEXT" not in _values_by_tag(cut) and _held(cut, "ROTC_NAVY_TEXT") == ["line_straddles_rect"]
+    cut2 = to.extract_overlay(add_text(blank_2526, w["template_page"], x0 + 4, y0 - 1.8, "gypsy angry guppy"))      # descenders fall below the bottom edge
+    assert "ROTC_NAVY_TEXT" not in _values_by_tag(cut2) and _held(cut2, "ROTC_NAVY_TEXT") == ["line_straddles_rect"]
+
+
+# ---- G. B5: duplicate pages ------------------------------------------------------
+
+@pytest.mark.parametrize("size", [3, 5, 10])
+def test_duplicate_pages_that_differ_by_one_digit_conflict_at_any_font_size(blank_2526, size):
+    tag = "AP_RECD_1ST_MEN_N"
+    w = _fm(tag)["widgets"][0]
+    q = w["template_page"]
+    first = add_text(blank_2526, q, w["rect"][0] + 5, w["rect"][1] + 5, "1234", size=size)
+    second = add_text(blank_2526, q, w["rect"][0] + 5, w["rect"][1] + 5, "1235", size=size)
+    packet = assemble([(first, i) for i in range(50)] + [(second, q)])
+    res = to.match_template(packet, align=False)
+    assert res.rejected_template_pages == {q: "duplicate_page_conflict"}
+    assert tag not in _values_by_tag(to.extract_overlay(packet))
+    same = assemble([(first, i) for i in range(50)] + [(first, q)])
+    assert not to.match_template(same, align=False).rejected_template_pages
+    assert _values_by_tag(to.extract_overlay(same)).get(tag) == "1234"            # the positive control
+
+
+def test_duplicate_pages_that_differ_in_a_checkbox_conflict(blank_2526):
+    f = _fm("HOUS_INTL")
+    q = f["widgets"][0]["template_page"]
+    ticked = add_ops(blank_2526, q, _op_tick(f["widgets"][0]["rect"], 0.3))
+    packet = assemble([(blank_2526, i) for i in range(50)] + [(ticked, q)])
+    assert to.match_template(packet, align=False).rejected_template_pages == {q: "duplicate_page_conflict"}
+
+
+def _rasterise(data: bytes, page: int) -> bytes:
+    img = pdfium.PdfDocument(data)[page].render(scale=3).to_pil().convert("RGB")
+    buf = io.BytesIO()
+    img.save(buf, format="PDF", resolution=216)
+    return buf.getvalue()
+
+
+def test_raster_only_duplicates_compare_ink_and_abstain_when_equality_is_not_established(blank_2526):
+    tag = "AP_RECD_1ST_MEN_N"
+    w = _fm(tag)["widgets"][0]
+    q = w["template_page"]
+    a = add_text(blank_2526, q, w["rect"][0] + 5, w["rect"][1] + 5, "1234", size=10)
+    b = add_text(blank_2526, q, w["rect"][0] + 5, w["rect"][1] + 5, "1235", size=10)
+    ra, rb = _rasterise(a, q), _rasterise(b, q)
+    conflict = assemble([(a, i) if i != q else (ra, 0) for i in range(50)] + [(rb, 0)])
+    assert to.match_template(conflict, align=False).rejected_template_pages == {q: "duplicate_page_conflict"}
+    same = assemble([(a, i) if i != q else (ra, 0) for i in range(50)] + [(ra, 0)])
+    assert not to.match_template(same, align=False).rejected_template_pages
+    mixed = assemble([(a, i) for i in range(50)] + [(ra, 0)])      # a native page and a raster copy of it: not the same evidence
+    res = to.match_template(mixed, align=False)
+    assert res.status == to.STATUS_MATCHED
+
+
+# ---- H. N1: a weak other-year page is excluded without holding the packet -------
+
+def test_weak_other_year_page_is_excluded_and_does_not_hold_the_packet(rich_2425, rich_2526):
+    d25, d26 = rich_2425[0], rich_2526[0]
+    hb = to._header_boxes()[7]
+    w = _writer_from(d26)
+    _shift_region_of_page_after_flatten = None
+    # the 2025-26 page 7 printed with its header 2.3 pt high: its header still reads 2025-26 but weakly
+    w = _writer_from(fill_and_flatten("2025-26", {}, {}))
+    _shift_region_of_page(w, w.pages[7], (hb[0] - 8, hb[1] - 8, hb[2] - hb[0] + 16, hb[3] - hb[1] + 16), 0, 2.3)
+    page7 = _write(w)
+    packet = assemble([(page7 if i == 7 else d25, i) for i in range(50)])
+    res = to.match_template(packet)
+    assert res.status == to.STATUS_MATCHED and res.year == "2024-25"
+    assert res.rejected_pages.get(7) == "weak_other_year_vote" and 7 not in res.page_map
+    assert res.header_votes.get("2025-26") == 1 and res.header_confident.get("2025-26", 0) == 0
+    out = to.extract_overlay(packet)
+    assert out["notes"]["page_map"].get("7") is None
+    assert wrong_values(out, *rich_2425[1:]) == []
+    old = to.WEAK_VOTE_EXCLUDE
+    to.WEAK_VOTE_EXCLUDE = False
+    try:
+        assert 7 in to.match_template(packet).page_map                              # without the rule the page is read through the other year's map
+    finally:
+        to.WEAK_VOTE_EXCLUDE = old
+
+
+# ---- I. behaviours the verifier's mutations showed untested ----------------------
+
+def test_band_majority_tolerance_is_one_point(monkeypatch):
+    """SHIFT_AGREE_PT: most inked bands agreeing on a shift two points from the applied one reject the page; one point is tolerated."""
+    page = to._template_doc("2025-26")[27]
+    m = to._page_masks(page, to.page_geometry(page), page)
+    def fake(dx):
+        def descend(g, ty, tx, rng, base=(0, 0)):
+            return (0.9, 0, 0) if rng == to.ALIGN_SEARCH_PT else (0.9, dx, 0)
+        return descend
+    monkeypatch.setattr(to, "_descend", fake(2))
+    est = to.estimate_page_alignment(m)
+    assert not est["consistent"] and est["inconsistent_reason"] == "residual_page_shift"
+    monkeypatch.setattr(to, "_descend", fake(1))
+    assert to.estimate_page_alignment(m)["consistent"]
+    assert to.SHIFT_AGREE_PT == 1
+
+
+def test_ocr_widgets_carry_the_pages_applied_shift(flat_2526):
+    q = 12
+    data = add_text(translate_pages(flat_2526, 3.0, -2.0, [q]), q, 455, 375.5, "9876", render_mode=3)
+    out = to.extract_overlay(data)
+    item = next(w for w in out["notes"]["ocr_widgets"] if w["pdf_tag"] == "AP_RECD_1ST_MEN_N")
+    assert item["page"] == q and item["template_page"] == 12
+    assert item["shift"] == {"dx": 3.0, "dy": -2.0}, item["shift"]
+
+
+def test_interior_smaller_than_a_box_is_not_a_box():
+    g = _page_canvas()
+    _draw_box(g, 102.8, 502.8, 107.2, 507.2, 1.0)                                    # a 2.4 pt interior: a dot, not a box
+    it, why = to.locate_interior(g, RECT, 0.0, 0.0)
+    assert it is None and why == "box_geometry"
+    assert to.INTERIOR_MIN_PT == 2.5
+
+
+def test_group_member_whose_box_is_not_box_shaped_blocks_the_winner(blank_2526):
+    f = _fm("AD_TFER")
+    yes, no = f["widgets"]
+    q = yes["template_page"]
+    x0, y0, x1, y1 = no["rect"]
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    flat_box = [cx - 4.5, cy - 1.6, cx + 4.5, cy + 1.6]                              # a closed frame, three times wider than high
+    ops = _op_tick(yes["rect"], 1.1) + _op_erase(no["rect"], 2.0) + _op_frame(flat_box, 0.0, 0.5)
+    out = to.extract_overlay(add_ops(blank_2526, q, ops))
+    assert "AD_TFER" not in _values_by_tag(out) and "box_geometry" in _held(out, "AD_TFER"), _held(out, "AD_TFER")
+
+
+def test_speck_in_hous_single_still_reads_as_a_mark(flat_2526):
+    """(unchanged by round 3: the 30% speck is far above the threshold; the ink-only measure, the two-mark and stroke rules do not touch it)"""
+    out = to.extract_overlay(flat_2526)
+    assert _values_by_tag(out).get("HOUS_SINGLE") == "/X"
+
+
+def test_digits_of_one_size_on_two_baselines_are_withheld():
+    """BASELINE_MAX_SHIFT: a footnote number set in the same size but raised is still not part of the count."""
+    digits = _tb("1234", 110, size=10.0)
+    raised = _tb("1", 110 + 4 * 5.56, base=10.0 + 3.0, size=10.0)
+    assert to.numeric_token_gate(digits + raised, RECT_N) == "mixed_glyph_size"
+    assert to.numeric_token_gate(digits + _tb("1", 110 + 4 * 5.56, base=10.0 + 1.0, size=10.0), RECT_N) is None     # 1 pt of drift is one line
+
+
+def test_raster_only_duplicates_differing_in_a_3pt_digit_conflict(blank_2526):
+    """DUPLICATE_RASTER_DPI: a one-digit change at 3 pt is invisible to a 72 DPI raster."""
+    w = _fm("AP_RECD_1ST_MEN_N")["widgets"][0]
+    q = w["template_page"]
+    a = add_text(blank_2526, q, w["rect"][0] + 5, w["rect"][1] + 5, "1234", size=3)
+    b = add_text(blank_2526, q, w["rect"][0] + 5, w["rect"][1] + 5, "1235", size=3)
+    ra, rb = _rasterise(a, q), _rasterise(b, q)
+    packet = assemble([(a, i) if i != q else (ra, 0) for i in range(50)] + [(rb, 0)])
+    assert to.match_template(packet, align=False).rejected_template_pages == {q: "duplicate_page_conflict"}
