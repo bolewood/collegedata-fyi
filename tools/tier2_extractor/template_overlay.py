@@ -50,7 +50,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import build_field_map as bfm  # noqa: E402
 
 PRODUCER = "tier2_template_overlay"
-PRODUCER_VERSION = "0.2.0"
+PRODUCER_VERSION = "0.3.0"
 FIELD_MAP_VERSION = bfm.MAP_FORMAT_VERSION
 
 # Only these years may emit values (PRD Decision 5). 2023-24 is recognised so a
@@ -69,8 +69,10 @@ DUPLICATE_DIFF = 0.10                    # share of a widget rect's ink that dif
 DUPLICATE_MIN_PX = 6
 HEADER_DPI = 144
 HEADER_VOTE_MARGIN = 0.01                # diff margin that counts as a header-year vote
+HEADER_VOTE_MAX_RATIO = 0.85            # quality floor: the winning diff must be below this share of the crop's own ink (a blank crop scores 1.0);
+                                         # cohort votes: median 0.14, p99.9 0.62, max 0.70 (4,412 votes)
 HEADER_MIN_VOTES = 5
-HEADER_MAJORITY = 0.9                    # share of voting pages that must agree; the rest are rejected
+RASTER_YEAR_VETO = 0.02                  # B2: a matched page whose best score in another year beats the chosen year's by this is not read
 # alignment (72 DPI: 1 px = 1 pt in template space)
 ALIGN_DPI = 72
 ALIGN_SEARCH_PT = 8
@@ -81,6 +83,7 @@ BAND_RANGE_PT = 16
 BAND_MIN_INK = 200
 BAND_GAIN = 0.10                         # a band whose best shift beats the applied one by this much is flagged
 SHIFT_AGREE_PT = 1                       # band estimates must agree with the applied shift within this
+RESIDUAL_SHIFT_RULES = True              # B1: boundary optimum / band majority disagreement reject the page
 LOCAL_WINDOW_PT = 14
 LOCAL_RANGE_PT = 10
 LOCAL_GAIN = 0.10                        # a 12 pt one-row shift of two cells scores 0.143: 0.15 missed it
@@ -231,6 +234,11 @@ class PageChar:
     right: float = 0.0
     generated: bool = False
     invisible: bool = False
+    left: float | None = None           # left edge of the glyph box; None: mirror `right` about the centre
+
+    @property
+    def box_left(self) -> float:
+        return self.left if self.left is not None else 2.0 * self.cx - self.right
 
 
 def _page_chars_display(page: "pdfium.PdfPage", g: PageGeom) -> list[PageChar]:
@@ -254,7 +262,7 @@ def _page_chars_display(page: "pdfium.PdfPage", g: PageGeom) -> list[PageChar]:
                 invisible = int(_pdfium_c.FPDFTextObj_GetTextRenderMode(obj)) in INVISIBLE_MODES
         left, bottom, right, top = tp.get_charbox(i)
         (xa, ya), (xb, yb) = user_to_display(g, left, bottom), user_to_display(g, right, top)
-        out.append(PageChar(ch, (xa + xb) / 2.0, (ya + yb) / 2.0, max(xa, xb), generated, invisible))
+        out.append(PageChar(ch, (xa + xb) / 2.0, (ya + yb) / 2.0, max(xa, xb), generated, invisible, min(xa, xb)))
     return out
 
 
@@ -262,7 +270,8 @@ def _chars_to_template(chars: list[PageChar], g: PageGeom, dx: float = 0.0, dy: 
     out = []
     for c in chars:
         tx, ty = display_to_template(g, c.cx, c.cy, dx, dy)
-        out.append(PageChar(c.ch, tx, ty, c.right / g.sx - dx, c.generated, c.invisible))
+        out.append(PageChar(c.ch, tx, ty, c.right / g.sx - dx, c.generated, c.invisible,
+                            c.box_left / g.sx - dx))
     return out
 
 
@@ -473,31 +482,44 @@ def _best_shift_diff(c: np.ndarray, t: np.ndarray) -> float:
     return best
 
 
-def header_year_vote(page: "pdfium.PdfPage", g: PageGeom, p: int) -> str | None:
+def header_year_vote(page: "pdfium.PdfPage", g: PageGeom, p: int, dx: float = 0.0, dy: float = 0.0,
+                     *, detail: bool = False):
     """Which year's printed header does this page carry? None when it cannot tell.
 
     Pixel comparison of the year digits against each year's blank page at 144 DPI,
     so it works on vector-drawn prints without OCR. 2023-24 is one of the choices
-    so a 2023-24 document is recognised.
+    so a 2023-24 document is recognised. The crop is taken at the page's applied
+    shift (`dx`, `dy`: template points, y up, as in `Stage1.alignment`) and the
+    +-4 px residual search is kept. A vote needs the best year to beat the next by
+    HEADER_VOTE_MARGIN *and* to explain the crop: its diff must be under
+    HEADER_VOTE_MAX_RATIO of the crop's own ink. A blank, smudged or misplaced header
+    (which would otherwise "vote" for whichever year has the least ink) casts no vote.
+    With detail=True returns (vote, best_diff, margin).
     """
+    none = (None, None, None) if detail else None
     if p not in _header_boxes() or not g.supported:
-        return None
-    crop = _header_crop(_render_gray(page, HEADER_DPI / g.sx), _header_boxes()[p], HEADER_DPI)
+        return none
+    x0, y0, x1, y1 = _header_boxes()[p]
+    crop = _header_crop(_render_gray(page, HEADER_DPI / g.sx), [x0 + dx, y0 + dy, x1 + dx, y1 + dy], HEADER_DPI)
     tcrops = _header_template_crops(p)
     if crop.shape != tcrops[bfm.YEARS[0]].shape:
-        return None
+        return none
     diffs = sorted((_best_shift_diff(crop, t), y) for y, t in tcrops.items())
-    (d0, y0), (d1, _y1) = diffs[0], diffs[1]
-    return y0 if d1 - d0 > HEADER_VOTE_MARGIN else None
+    (d0, y0_), (d1, _y1) = diffs[0], diffs[1]
+    ink = float((255.0 - crop[4:-4, 4:-4]).mean() / 255.0)
+    vote = y0_ if (d1 - d0 > HEADER_VOTE_MARGIN and d0 <= HEADER_VOTE_MAX_RATIO * ink) else None
+    return (vote, d0, d1 - d0) if detail else vote
 
 
 def decide_year(counts: dict[str, int], header_votes: dict[str, int], detected_year: str | None) -> tuple[str, str | None, str | None, int, str | None]:
     """Year decision. Returns (status, year, reason, raster_lead, runner_up_year).
 
     The page header (printed year) is the discriminator: the document year is the
-    header majority and must agree with the best raster year. `detected_year` can
-    only veto. Mixed packets, contradictions, ties and unverifiable headers hold
-    the document (nothing is emitted); 2023-24 is recognised and rejected.
+    header year and must agree with the best raster year. `detected_year` can
+    only veto. The rule is strict: ANY confident other-year page (a page whose
+    header matches another year absolutely and by margin) makes the packet mixed
+    and holds the whole document. Contradictions, ties and unverifiable headers hold
+    it too (nothing is emitted); 2023-24 is recognised and rejected.
     """
     ranked = sorted(counts, key=lambda y: (-counts[y], y))
     best = ranked[0]
@@ -507,12 +529,13 @@ def decide_year(counts: dict[str, int], header_votes: dict[str, int], detected_y
         return STATUS_NOT_TEMPLATE, None, "fewer_than_30_template_pages", lead, second
     if lead == 0:
         return STATUS_AMBIGUOUS, None, "tie_between_years", lead, second
+    voted = [y for y, n in header_votes.items() if n]
+    if len(voted) > 1:
+        return STATUS_AMBIGUOUS, None, "mixed_year_packet", lead, second
     total = sum(header_votes.values())
     if total < HEADER_MIN_VOTES:
         return STATUS_AMBIGUOUS, None, "header_year_unverified", lead, second
-    hdr = max(header_votes, key=lambda y: (header_votes[y], y))
-    if header_votes[hdr] / total < HEADER_MAJORITY:
-        return STATUS_AMBIGUOUS, None, "mixed_year_packet", lead, second
+    hdr = voted[0]
     if hdr != best:
         return STATUS_AMBIGUOUS, None, "header_year_contradicts_raster_year", lead, second
     if detected_year and detected_year != hdr:
@@ -607,7 +630,8 @@ def estimate_page_alignment(m: PageMasks) -> dict:
     best, bx, by = _descend(g, sty, stx, ALIGN_SEARCH_PT)
     if best - rec0 < ALIGN_MIN_GAIN:
         best, bx, by = rec0, 0, 0
-    out = {"dx": float(bx), "dy": float(-by), "recall": round(best, 4), "bands": [], "flagged_bands": [], "consistent": True}
+    out = {"dx": float(bx), "dy": float(-by), "recall": round(best, 4), "bands": [], "flagged_bands": [], "consistent": True,
+           "inconsistent_reason": None}
     hh = g.shape[0]
     for b in range(BAND_COUNT):
         r0, r1 = b * hh // BAND_COUNT, (b + 1) * hh // BAND_COUNT
@@ -623,7 +647,16 @@ def estimate_page_alignment(m: PageMasks) -> dict:
         if differs and bbest - rec_applied >= BAND_GAIN:
             out["flagged_bands"].append(b)
     if (bx, by) != (0, 0) and out["flagged_bands"]:
-        out["consistent"] = False
+        out["consistent"], out["inconsistent_reason"] = False, "partial_page_shift"
+    if RESIDUAL_SHIFT_RULES and out["consistent"]:
+        inked = [bd for bd in out["bands"] if bd]
+        if max(abs(bx), abs(by)) >= ALIGN_SEARCH_PT:
+            # the optimum sits on the edge of the search range: the true shift is probably beyond it
+            out["consistent"], out["inconsistent_reason"] = False, "residual_page_shift"
+        elif inked and 2 * sum(1 for bd in inked if abs(bd["dx"] - bx) > SHIFT_AGREE_PT
+                               or abs(-bd["dy"] - by) > SHIFT_AGREE_PT) > len(inked):
+            # most inked bands agree on another shift (any gain): the applied one is not the page's
+            out["consistent"], out["inconsistent_reason"] = False, "residual_page_shift"
     return out
 
 
@@ -754,11 +787,19 @@ def match_template(
 
     best_raster = sorted(years, key=lambda y: (-counts[y], y))[0]
     votes = {y: 0 for y in years}
-    page_vote: dict[int, str | None] = {}
+    est_cache: dict[int, dict] = {}
     if counts[best_raster] >= GATE_PAGES:
+        # the decided year must equal the best raster year, so the page shifts are found
+        # against it first and the header crops are taken at the applied shift
+        tdoc0 = _template_doc(best_raster)
         for q, p in assign[best_raster].items():
-            v = header_year_vote(doc[q], geoms[q], p)
-            page_vote[q] = v
+            dxy = (0.0, 0.0)
+            if align and geoms[q].supported:
+                est_cache[q] = estimate_page_alignment(_page_masks(doc[q], geoms[q], tdoc0[p]))
+                dxy = (est_cache[q]["dx"], est_cache[q]["dy"])
+                if not est_cache[q]["consistent"] or est_cache[q]["recall"] < ALIGN_MIN_RECALL:
+                    continue            # a page that will be rejected for alignment is not a reliable voter (nor read)
+            v = header_year_vote(doc[q], geoms[q], p, *dxy)
             if v:
                 votes[v] += 1
     res.header_votes = {y: c for y, c in votes.items() if c}
@@ -772,10 +813,10 @@ def match_template(
     res.status, res.year = STATUS_MATCHED, year
     page_map = dict(assign[year])
     sc = score[year]
-    for q in list(page_map):               # pages whose own header votes the other year are not read
-        v = page_vote.get(q)
-        if v and v != year:
-            res.rejected_pages[q] = "header_year_mismatch"
+    # (a page whose own header votes another year cannot reach here: any such vote holds the packet)
+    for q, p in list(page_map.items()):      # B2: a page whose own raster prefers another year is not read through this map
+        if any(score[y2][q].max() - sc[q][p] > RASTER_YEAR_VETO for y2 in years if y2 != year):
+            res.rejected_pages[q] = "page_raster_prefers_other_year"
             del page_map[q]
     for p, qs in _duplicate_candidates(sc).items():   # one template page, several target pages
         if p in page_map.values() and _answer_regions_differ(doc, geoms, qs, maps[year], p):
@@ -795,12 +836,12 @@ def match_template(
             if not geoms[q].supported:
                 res.rejected_pages[q] = geoms[q].reason or "page_geometry_unsupported"
             else:
-                est = estimate_page_alignment(_page_masks(doc[q], geoms[q], tdoc[p]))
+                est = est_cache.get(q) or estimate_page_alignment(_page_masks(doc[q], geoms[q], tdoc[p]))
                 res.alignment[q] = {"dx": est["dx"], "dy": est["dy"], "recall": est["recall"]}
                 if est["recall"] < ALIGN_MIN_RECALL:
                     res.rejected_pages[q] = "alignment_recall_too_low"
                 elif not est["consistent"]:
-                    res.rejected_pages[q] = "partial_page_shift"
+                    res.rejected_pages[q] = est.get("inconsistent_reason") or "partial_page_shift"
                 elif est["flagged_bands"]:
                     res.band_rejections[q] = list(est["flagged_bands"])
             if q in res.rejected_pages:
@@ -828,7 +869,11 @@ NUMERIC_TYPES = {
 # Schema value_type corrections (the schema types these numeric; the questions take text).
 VALUE_TYPE_OVERRIDES = {"AD_TFER_GRADE": "Text"}
 _PERCENTILE_RE = re.compile(r"_(25|50|75)TH_P$")
+# schema value types that are whole numbers: "1.234" there is a thousands separator, not a decimal
+INTEGER_VALUE_TYPES = {"Number", "Nearest $1", "Nearest 1%"}
+_THOUSANDS_DOT_RE = re.compile(r"^\$?\s?[1-9][0-9]{0,2}\.[0-9]{3}\s?%?$", re.ASCII)
 STATIC_MATCH_PT = 1.0
+SPACE_LINE_PT = 4.0            # a generated space belongs to a read line when it sits within this of a glyph's centre height
 MIN_NEW_INK_PX = 6
 INK_DPI = 216
 CLIP_EDGE_PT = 2.0
@@ -900,6 +945,17 @@ def read_widget_text(
     """
     x0, y0, x1, y1 = rect
     inside = [c for c in chars if x0 - pad <= c.cx <= x1 + pad and y0 - pad <= c.cy <= y1 + pad]
+    # a space (pdfium-generated between words) sits at the line's baseline, below the glyph centres:
+    # a tight rect then misses it and the words run together. Keep spaces that sit between the
+    # glyphs already read, on their line.
+    glyphs_in = [c for c in inside if not c.ch.isspace()]
+    if glyphs_in:
+        lo, hi = min(c.cx for c in glyphs_in), max(c.cx for c in glyphs_in)
+        keep = {id(c) for c in inside}
+        for c in chars:
+            if id(c) not in keep and c.ch.isspace() and lo <= c.cx <= hi and any(abs(c.cy - g.cy) <= SPACE_LINE_PT for g in glyphs_in):
+                keep.add(id(c))
+        inside = [c for c in chars if id(c) in keep]
     if static_chars and static_rect is not None:
         sx0, sy0, sx1, sy1 = static_rect
         stat = [c for c in static_chars if sx0 <= c.cx <= sx1 and sy0 <= c.cy <= sy1]
@@ -925,6 +981,90 @@ def read_widget_text(
     return WidgetRead(text, bad, any(c.invisible for c in inside), mr, cont)
 
 
+# ---- edge-continuation guard (B3): shared by Lane 1 and the Lane 2 crops ----------
+EDGE_GUARD = True            # glyph boxes crossing / hugging the rect's left or right edge
+MULTILINE_GUARD = True       # a multi-line read whose paragraph runs past the rect's top or bottom
+EDGE_NEAR_PT = 1.0           # a glyph whose box starts within this of an edge, outside it, is a continuation
+EDGE_LINE_TOL_PT = 2.0       # glyphs within this of a read line's height are on that line
+MULTILINE_REACH = 1.5        # lines above/below the rect within this many line pitches belong to the same paragraph
+
+
+@dataclass(frozen=True)
+class GlyphBox:
+    """One non-form glyph (or OCR word box) in template points: horizontal extent and line height."""
+    left: float
+    right: float
+    cy: float
+
+    @property
+    def cx(self) -> float:
+        return (self.left + self.right) / 2.0
+
+
+def glyph_boxes(chars: list[PageChar], static_chars: tuple[PageChar, ...] | list[PageChar], rect: list[float],
+                reach: float = 40.0) -> list[GlyphBox]:
+    """Visible, non-label glyph boxes near `rect` (template space), for `edge_continuation`.
+
+    `static_chars` are the blank template page's characters; a glyph that coincides with one
+    (position within STATIC_MATCH_PT, same character) is form text, not the school's answer.
+    """
+    x0, y0, x1, y1 = rect
+    near_static = [s for s in static_chars if x0 - reach <= s.cx <= x1 + reach and y0 - reach <= s.cy <= y1 + reach]
+    out = []
+    for c in chars:
+        if c.ch.isspace() or _marker(c) or not (x0 - reach <= c.cx <= x1 + reach and y0 - reach <= c.cy <= y1 + reach):
+            continue
+        if any(abs(c.cx - s.cx) <= STATIC_MATCH_PT and abs(c.cy - s.cy) <= STATIC_MATCH_PT and c.ch == s.ch for s in near_static):
+            continue
+        out.append(GlyphBox(c.box_left, c.right, c.cy))
+    return out
+
+
+def edge_continuation(glyphs: list[GlyphBox], rect: list[float], *, multiline: bool = True) -> str | None:
+    """Does the printed answer continue past the widget rect? A reason means abstain, else None.
+
+    `glyphs` are the non-form glyph boxes (or OCR word boxes) around the rect. The read is the
+    glyphs whose centre lies inside the rect, grouped into lines. For each line, any glyph on
+    the line whose box crosses the rect's left or right edge, or lies outside it with a gap of
+    at most EDGE_NEAR_PT to it, means the rect cuts a longer string ("24" of "24038",
+    "lth" of "Physical Ed & Health"); a multi-line read with more of its paragraph above or
+    below the rect is cut the same way (`multiline`: pass False for numbers and dropdowns,
+    where a second glyph line is a neighbouring table row, not more of the answer). The edge
+    test is used for Number, Text and /Ch alike.
+    """
+    x0, y0, x1, y1 = rect
+    inside = sorted((g for g in glyphs if x0 <= g.cx <= x1 and y0 <= g.cy <= y1), key=lambda g: -g.cy)
+    if not inside:
+        return None
+    lines: list[list[GlyphBox]] = []
+    for g in inside:
+        if lines and abs(g.cy - float(np.mean([h.cy for h in lines[-1]]))) <= EDGE_LINE_TOL_PT:
+            lines[-1].append(g)
+        else:
+            lines.append([g])
+    if EDGE_GUARD:
+        for ln in lines:
+            yc = float(np.mean([h.cy for h in ln]))
+            for g in glyphs:
+                if abs(g.cy - yc) > EDGE_LINE_TOL_PT:
+                    continue
+                if g.left < x0 < g.right:
+                    return "glyph_crosses_left_edge"
+                if g.left < x1 < g.right:
+                    return "glyph_crosses_right_edge"
+                if g.cx > x1 and g.left - x1 <= EDGE_NEAR_PT:
+                    return "glyph_past_right_edge"
+                if g.cx < x0 and x0 - g.right <= EDGE_NEAR_PT:
+                    return "glyph_past_left_edge"
+    if MULTILINE_GUARD and multiline and len(lines) >= 2:
+        ys = [float(np.mean([h.cy for h in ln])) for ln in lines]
+        pitch = float(np.median([a - b for a, b in zip(ys, ys[1:])])) or 10.0
+        for g in glyphs:
+            if x0 <= g.cx <= x1 and ((y1 < g.cy <= y1 + MULTILINE_REACH * pitch) or (y0 - MULTILINE_REACH * pitch <= g.cy < y0)):
+                return "multiline_overflow"
+    return None
+
+
 def normalise_text_value(raw: str, value_type: str | None, tag: str = "") -> tuple[str | None, str | None]:
     """Normalise a text read by effective type. Returns (value, reject_reason)."""
     et = effective_type(tag, value_type, "/Tx")
@@ -934,6 +1074,8 @@ def normalise_text_value(raw: str, value_type: str | None, tag: str = "") -> tup
         m = _NUM_RE.match(raw)
         if not m:
             return None, "not_numeric"
+        if value_type in INTEGER_VALUE_TYPES and _THOUSANDS_DOT_RE.match(raw):
+            return None, "ambiguous_thousands_separator"
         v = m.group("n").replace(",", "")
         if et == "Percent" and not (0 <= float(v) <= 100):
             return None, "percent_out_of_range"
@@ -1260,6 +1402,60 @@ class _PageCtx:
         return int((tgt[:h, :w] & ~tpl[:h, :w]).sum())
 
 
+PageCtx = _PageCtx          # public name for Lane 2
+
+
+def _ocr_entry(tag: str, q: int, wi: int, rect: list[float], c: _PageCtx, reason: str) -> dict:
+    """A Lane 2 work item: enough to crop the rect again (page, widget index, template rect, applied shift)."""
+    return {"pdf_tag": tag, "page": q, "widget": wi, "rect": [round(v, 3) for v in rect],
+            "shift": {"dx": c.dx, "dy": c.dy}, "template_page": c.p, "reason": reason}
+
+
+def widget_gates(c: _PageCtx, tag: str, wi: int, rect: list[float], *, glyphs: list[GlyphBox] | None = None,
+                 multiline: bool = True) -> str | None:
+    """Every per-widget geometry gate a read of `rect` on matched page `c` must pass.
+
+    Shared by Lane 1 (text layer), Lane 3 and the Lane 2 crops, which call it before
+    reading a rect. A reason means abstain, else None:
+      band_misaligned     the rect's horizontal band disagrees with the page shift
+      local_misalignment  the template ink around the rect fits the page better shifted
+      glyph_*, multiline_overflow  (only when `glyphs` is given) the printed answer
+                          continues past the rect: pass the page's glyph or OCR word boxes
+    Page-level rejections (B1 residual shift, B2 raster-year veto, duplicate and
+    partial-page shifts) are already applied when the page is mapped: a page with a
+    context here is one that passed them.
+    """
+    if c.band_of(rect) in c.bands:
+        return "band_misaligned"
+    key = (c.year, c.p, tag, wi)
+    eq = _equivalent_shifts(c.year, c.p, key, rect, c.masks.t)
+    verdict, _gain = local_alignment_check(c.masks, rect, c.applied_px, eq)
+    if verdict == "misaligned":
+        return "local_misalignment"
+    if glyphs is not None:
+        return edge_continuation(glyphs, rect, multiline=multiline)
+    return None
+
+
+def reject_identity_failures(values: dict[str, dict], tags_in_map: set[str]) -> tuple[list[dict], list[dict]]:
+    """Apply PRD 4 identity checks over the union of all lanes' values (mutates `values`).
+
+    `values` is the extract() shape {question_number: record with pdf_tag, value}. Lane 2
+    calls this again after it adds its values. Returns (failures, rejected_field_records).
+    """
+    tag_values = {r["pdf_tag"]: r["value"] for r in values.values() if "pdf_tag" in r}
+    ident = check_identities(tag_values, tags_in_map)
+    rejected = []
+    for fail in ident:
+        fail["action"] = "rejected"
+        for t in fail["tags"]:
+            for qn, r in list(values.items()):
+                if r.get("pdf_tag") == t:
+                    rejected.append({"pdf_tag": t, "reason": f"identity_failed:{fail['identity']}", "read": r["value"]})
+                    del values[qn]
+    return ident, rejected
+
+
 def extract_overlay(
     pdf: bytes | str | Path,
     *,
@@ -1339,7 +1535,6 @@ def _extract(
     lane_of: dict[str, str] = {}
     page_of: dict[str, int] = {}
     values: dict[str, dict] = {}
-    equiv: dict[tuple, frozenset] = {}
 
     def ctx_for(q: int, p: int) -> _PageCtx:
         if q not in ctxs:
@@ -1350,14 +1545,7 @@ def _extract(
         withheld.append({"pdf_tag": tag, "lane": lane, "reason": reason, "page": q, "widget": widget})
 
     def gate(c: _PageCtx, tag: str, wi: int, rect: list[float]) -> str | None:
-        """Band and per-widget local alignment checks; a reason means abstain."""
-        if c.band_of(rect) in c.bands:
-            return "band_misaligned"
-        key = (tag, wi)
-        if key not in equiv:
-            equiv[key] = _equivalent_shifts(year, c.p, key, rect, c.masks.t)
-        verdict, _gain = local_alignment_check(c.masks, rect, c.applied_px, equiv[key])
-        return "local_misalignment" if verdict == "misaligned" else None
+        return widget_gates(c, tag, wi, rect)
 
     def record(tag: str, value: str, lane: str, et: str, q: int) -> None:
         sf = tag_field[tag]
@@ -1397,12 +1585,13 @@ def _extract(
                 continue
             if rd.invisible:
                 invisible_pages.add(q)
-                ocr_widgets.append({"pdf_tag": tag, "page": q, "reason": "invisible_text"})
+                ocr_widgets.append(_ocr_entry(tag, q, wi, w["rect"], c, "invisible_text"))
                 hold(tag, "text", "invisible_text", q, wi)
                 blocked = True
                 continue
             if rd.text:
-                why = gate(c, tag, wi, w["rect"])
+                why = widget_gates(c, tag, wi, w["rect"], glyphs=glyph_boxes(c.chars, _template_chars(year, p), w["rect"]),
+                                    multiline=(et == "Text" and f["ft"] == "/Tx"))
                 if why:
                     hold(tag, "text", why, q, wi)
                     blocked = True
@@ -1516,15 +1705,8 @@ def _extract(
                 hold(t, "checkbox", "fill_in_one_conflict", page_of.get(t))
 
     # ---- identities reject in every lane (Decision 3)
-    tag_values = {r["pdf_tag"]: r["value"] for r in values.values() if "pdf_tag" in r}
-    ident = check_identities(tag_values, set(fmap["fields"]))
-    for fail in ident:
-        fail["action"] = "rejected"
-        for t in fail["tags"]:
-            for qn, r in list(values.items()):
-                if r.get("pdf_tag") == t:
-                    rejected.append({"pdf_tag": t, "reason": f"identity_failed:{fail['identity']}", "read": r["value"]})
-                    del values[qn]
+    ident, id_rejected = reject_identity_failures(values, set(fmap["fields"]))
+    rejected.extend(id_rejected)
     derived = apply_b1(values, schema_fields=schema.get("fields") or [])
 
     # ---- Lane 2 seam: always the unreadable and invisible pages, pages with no usable text
@@ -1542,10 +1724,11 @@ def _extract(
             continue
         if effective_type(tag, f["value_type"], f["ft"]) not in ("Number", "Dollars", "Percent", "Identifier"):
             continue
-        for w in f["widgets"]:
+        for wi, w in enumerate(f["widgets"]):
             q = by_tpage.get(w["template_page"])
             if q is not None and (q in unreadable or q in invisible_pages) and (tag, q) not in seen:
-                ocr_widgets.append({"pdf_tag": tag, "page": q, "reason": "unreadable_page" if q in unreadable else "invisible_text"})
+                ocr_widgets.append(_ocr_entry(tag, q, wi, w["rect"], ctx_for(q, w["template_page"]),
+                                              "unreadable_page" if q in unreadable else "invisible_text"))
     lane_counts = Counter(r["lane"] for r in values.values() if "lane" in r)
     notes.update({
         "lane_counts": dict(lane_counts), "rejected_fields": rejected, "identity_failures": ident,

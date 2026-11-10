@@ -82,14 +82,35 @@ def _write(w: pypdf.PdfWriter) -> bytes:
     return buf.getvalue()
 
 
-def fill_and_flatten(year: str, text: dict[str, str], buttons: dict[str, str], specks: dict[str, float] | None = None) -> bytes:
+def _shift_region_of_page(w: pypdf.PdfWriter, page, region: tuple[float, float, float, float], dx: float, dy: float) -> None:
+    """Redraw the page's STATIC content with everything inside `region` (x, y, w, h) moved by (dx, dy).
+
+    Only meant for the blank template page, before any widget appearance is baked in: the
+    form's own label text inside the region is drawn twice (pdfium reads text through clips),
+    which is harmless for labels (never an answer) and keeps every answer drawn exactly once.
+    """
+    x, y, rw, rh = region
+    orig = _contents_parts(page)
+    parts = ([_raw(w, f"q 0 0 612 792 re {x} {y} {rw} {rh} re W* n\n".encode())] + orig + [_raw(w, b"\nQ\n")]
+             + [_raw(w, f"q {x} {y} {rw} {rh} re W n 1 0 0 1 {dx} {dy} cm\n".encode())] + orig + [_raw(w, b"\nQ\n")])
+    page[NameObject("/Contents")] = ArrayObject(parts)
+
+
+def fill_and_flatten(year: str, text: dict[str, str], buttons: dict[str, str], specks: dict[str, float] | None = None,
+                     offsets: dict[str, tuple[float, float]] | None = None,
+                     static_shift: tuple[int, tuple[float, float, float, float], float, float] | None = None) -> bytes:
     """Fill a blank template, then bake the widget appearances into page content.
 
     Unchecked boxes are drawn with their /Off appearance (the bevelled box a
     PDFium-flattened print shows) and `specks` adds stray ink to chosen boxes, so
-    unchecked widgets do not all score exactly 0.
+    unchecked widgets do not all score exactly 0. `offsets` draws the named widgets' own
+    appearance (text included, exactly once) displaced by (dx, dy) points; `static_shift`
+    = (page, region, dx, dy) displaces the form's static ink inside a region of one page
+    the same way. Together they make a partial-page shift without duplicating any answer.
     """
     w = _writer_from(bfm.template_path_for(year))
+    if static_shift:
+        _shift_region_of_page(w, w.pages[static_shift[0]], *static_shift[1:])
     for page in w.pages:
         w.update_page_form_field_values(page, text, auto_regenerate=False)
     fmap = bfm.load_field_map(year)["fields"]
@@ -100,6 +121,7 @@ def fill_and_flatten(year: str, text: dict[str, str], buttons: dict[str, str], s
             if a.get("/Subtype") != "/Widget" or a.get("/AP") is None or "/N" not in a["/AP"]:
                 continue
             tag = _tag(a)
+            odx, ody = (offsets or {}).get(tag, (0.0, 0.0))
             normal = a["/AP"]["/N"].get_object()
             if not isinstance(normal, StreamObject):          # button: on-state stream, else /Off
                 want = buttons.get(tag)
@@ -108,7 +130,7 @@ def fill_and_flatten(year: str, text: dict[str, str], buttons: dict[str, str], s
                 continue
             bbox = [float(v) for v in normal.get("/BBox", [0, 0, 1, 1])]
             x0, y0, x1, y1 = (float(v) for v in a["/Rect"])
-            x0, x1, y0, y1 = min(x0, x1), max(x0, x1), min(y0, y1), max(y0, y1)
+            x0, x1, y0, y1 = min(x0, x1) + odx, max(x0, x1) + odx, min(y0, y1) + ody, max(y0, y1) + ody
             sx, sy = (x1 - x0) / ((bbox[2] - bbox[0]) or 1), (y1 - y0) / ((bbox[3] - bbox[1]) or 1)
             name = f"/FmFx{n}"
             n += 1
@@ -138,15 +160,23 @@ def fill_and_flatten(year: str, text: dict[str, str], buttons: dict[str, str], s
     return _write(w)
 
 
-def region_shift(data: bytes, page_index: int, region: tuple[float, float, float, float], dx: float, dy: float) -> bytes:
-    """Redraw one page with everything inside `region` (x, y, w, h) moved by (dx, dy)."""
+def translate_pages(data: bytes, dx: float, dy: float, pages: list[int] | None = None) -> bytes:
+    """Whole pages (all, or the listed indices) printed displaced by (dx, dy) points, boxes unchanged."""
+    w = _writer_from(data)
+    for i, page in enumerate(w.pages):
+        if pages is None or i in pages:
+            page[NameObject("/Contents")] = ArrayObject(
+                [_raw(w, f"q 1 0 0 1 {dx} {dy} cm\n".encode())] + _contents_parts(page) + [_raw(w, b"\nQ\n")])
+    return _write(w)
+
+
+def white_out(data: bytes, page_index: int, box: tuple[float, float, float, float], pad: float = 1.5) -> bytes:
+    """Cover a region (x0, y0, x1, y1) with a white rectangle (e.g. to blank a printed header year)."""
     w = _writer_from(data)
     page = w.pages[page_index]
-    x, y, rw, rh = region
-    orig = _contents_parts(page)
-    parts = ([_raw(w, f"q 0 0 612 792 re {x} {y} {rw} {rh} re W* n\n".encode())] + orig + [_raw(w, b"\nQ\n")]
-             + [_raw(w, f"q {x} {y} {rw} {rh} re W n 1 0 0 1 {dx} {dy} cm\n".encode())] + orig + [_raw(w, b"\nQ\n")])
-    page[NameObject("/Contents")] = ArrayObject(parts)
+    x0, y0, x1, y1 = box
+    page[NameObject("/Contents")] = ArrayObject(
+        _contents_parts(page) + [_raw(w, f"\nq 1 g {x0 - pad} {y0 - pad} {x1 - x0 + 2 * pad} {y1 - y0 + 2 * pad} re f Q\n".encode())])
     return _write(w)
 
 
@@ -279,8 +309,12 @@ def test_decide_year_rules():
     assert d(c, {"2025-26": 49}, "2025-26")[1] == "2025-26"
     assert d(c, {"2025-26": 49}, "2024-25")[:3][0] == to.STATUS_AMBIGUOUS              # detected_year can only veto
     assert d(c, {"2025-26": 49}, "2024-25")[2] == "detected_year_contradicts_header_year"
-    assert d(c, {"2024-25": 46, "2025-26": 3}, None)[2] == "header_year_contradicts_raster_year"   # wrong year leads
+    assert d(c, {"2024-25": 46}, None)[2] == "header_year_contradicts_raster_year"   # wrong year leads
+    assert d(c, {"2024-25": 46, "2025-26": 3}, None)[2] == "mixed_year_packet"
     assert d(c, {"2024-25": 25, "2025-26": 24}, None)[2] == "mixed_year_packet"
+    # strict: ONE confident other-year page holds the whole packet (no majority rule)
+    assert d(c, {"2025-26": 48, "2024-25": 1}, None)[:3] == (to.STATUS_AMBIGUOUS, None, "mixed_year_packet")
+    assert d(c, {"2025-26": 48, "2023-24": 1}, None)[2] == "mixed_year_packet"
     assert d(c, {"2024-25": 2}, None)[2] == "header_year_unverified"
     assert d({"2024-25": 50, "2025-26": 50}, {"2025-26": 40}, "2025-26")[2] == "tie_between_years"
     assert d({"2023-24": 50, "2024-25": 30}, {"2023-24": 40}, None)[0] == to.STATUS_UNSUPPORTED_YEAR
@@ -339,7 +373,7 @@ def test_wrong_year_leads_document_is_held(flat_2425, flat_2526):
     hybrid = assemble(pages)
     res = to.match_template(hybrid, detected_year="2024-25", align=False)
     assert res.pages_matched["2025-26"] > res.pages_matched["2024-25"]
-    assert res.status == to.STATUS_AMBIGUOUS and res.reason == "header_year_contradicts_raster_year"
+    assert res.status == to.STATUS_AMBIGUOUS and res.reason == "mixed_year_packet"      # strict: the 2025-26 pages' own headers
     assert to.extract_overlay(hybrid, detected_year="2024-25")["values"] == {}
 
 
@@ -450,10 +484,33 @@ def test_geometry_transforms():
 # local alignment, bands
 # --------------------------------------------------------------------------
 
+def widgets_in(year: str, page: int, region: tuple[float, float, float, float]) -> list[str]:
+    """Tags of the widgets whose rect centre lies in region (x, y, w, h) of a template page."""
+    x, y, rw, rh = region
+    out = []
+    for tag, f in to.load_maps()[year].fmap["fields"].items():
+        for wd in f["widgets"]:
+            cx, cy = (wd["rect"][0] + wd["rect"][2]) / 2, (wd["rect"][1] + wd["rect"][3]) / 2
+            if wd["template_page"] == page and x <= cx <= x + rw and y <= cy <= y + rh:
+                out.append(tag)
+    return out
+
+
+def shifted_fixture(year, text, buttons, page, region, dx, dy):
+    """Answers AND form ink inside `region` of one page printed (dx, dy) away; every answer drawn once."""
+    tags = widgets_in(year, page, region)
+    return fill_and_flatten(year, text, buttons, None, offsets={t: (dx, dy) for t in tags}, static_shift=(page, region, dx, dy))
+
+
+def _assert_alignment_not_grammar(out, tags):
+    """A shifted read must be stopped by an alignment rule, never by the number grammar by accident."""
+    rej = {r["pdf_tag"] for r in out["notes"]["rejected_fields"] if r["reason"] == "not_numeric"}
+    assert not (rej & set(tags)), rej & set(tags)
+
+
 def test_partial_page_shift_withholds_the_shifted_half_only(flat_2526):
     """Lower half of the housing/ROTC page printed 15 pt low (CSU Northridge): nothing there is read."""
-    data = fill_and_flatten("2025-26", FILL_TEXT, {"HOUS_COOP": "/X", "LIFE_CAMPUS": "/Y", "ROTC_ARMY": "/C"}, None)
-    data = region_shift(data, 27, (0, 0, 612, 396), 0, -15)
+    data = shifted_fixture("2025-26", FILL_TEXT, {"HOUS_COOP": "/X", "LIFE_CAMPUS": "/Y", "ROTC_ARMY": "/C"}, 27, (0, 0, 612, 396), 0, -15)
     out = to.extract_overlay(data)
     vals = _values_by_tag(out)
     assert vals.get("LIFE_CAMPUS") == "/Y"                              # the unshifted top half is still read
@@ -466,8 +523,7 @@ def test_partial_page_shift_withholds_the_shifted_half_only(flat_2526):
 
 def test_reflowed_yes_no_line_never_emits_the_wrong_radio(flat_2526):
     """The school typed into the static line and it reflowed by 8.5 pt (Eastern Michigan): 'Yes' is not read as 'No'."""
-    data = fill_and_flatten("2025-26", FILL_TEXT, {"AD_TFER": "/Y", "AD_TFER_CRDT": "/Y"}, None)
-    data = region_shift(data, 23, (150, 600, 400, 80), 8.5, 0)
+    data = shifted_fixture("2025-26", FILL_TEXT, {"AD_TFER": "/Y", "AD_TFER_CRDT": "/Y"}, 23, (150, 600, 400, 80), 8.5, 0)
     out = to.extract_overlay(data)
     vals = _values_by_tag(out)
     for tag in ("AD_TFER", "AD_TFER_CRDT"):
@@ -476,14 +532,17 @@ def test_reflowed_yes_no_line_never_emits_the_wrong_radio(flat_2526):
 
 def test_one_shifted_table_row_is_caught_by_the_per_widget_check_alone():
     """12 pt shift of two table cells: too small for the band test, and 1234 would be read into the next row."""
-    data = fill_and_flatten("2025-26", {"AP_RECD_1ST_MEN_N": "1234"}, {})
-    data = region_shift(data, 12, (440, 355, 80, 40), 0, -12)
+    data = shifted_fixture("2025-26", {"AP_RECD_1ST_MEN_N": "1234"}, {}, 12, (440, 355, 80, 40), 0, -12)
     out = to.extract_overlay(data)
     vals = _values_by_tag(out)
     assert not out["notes"]["stage1"]["band_rejections"].get("12") and "12" not in out["notes"]["stage1"]["rejected_pages"]
     assert vals.get("AP_RECD_1ST_WMN_N") is None                                   # 1234 is not read into the next row
     assert vals.get("AP_RECD_1ST_MEN_N") in (None, "1234")
     assert "local_misalignment" in {w["reason"] for w in out["notes"]["withheld"]}
+    # the cell that would receive the displaced 1234 is stopped by the alignment check, not by the grammar
+    # (the displaced label "TOTAL" falling into the MEN cell is rejected as not_numeric: a fixture side effect)
+    assert [w["reason"] for w in out["notes"]["withheld"] if w["pdf_tag"] == "AP_RECD_1ST_WMN_N"] == ["local_misalignment"]
+    _assert_alignment_not_grammar(out, ["AP_RECD_1ST_WMN_N"])
 
 
 def test_row_period_alternatives_do_not_flag_an_aligned_table(base):
@@ -775,6 +834,256 @@ def test_cli_writes_json(flat_2526, tmp_path):
 # --------------------------------------------------------------------------
 
 REAL = os.environ.get("CDS_M1_PDF_DIR")
+
+
+# --------------------------------------------------------------------------
+# fix round 2: residual page shift (B1), raster-year veto (B2), edge guard (B3),
+# strict header year at the applied shift (N3), thousands dots (N6), Lane 2 seam
+# --------------------------------------------------------------------------
+
+def rich_fill(year: str, skip_tags: tuple[str, ...] = ()) -> tuple[dict[str, str], dict[str, str]]:
+    """Every joined Number field gets a distinct value, every third button its first on-state."""
+    tags = {x["pdf_tag"] for x in to._schema(year)["fields"] if x.get("pdf_tag")}
+    text, btn, i = {}, {}, 0
+    for t, f in to.load_maps()[year].fmap["fields"].items():
+        if not f["question_number"] or t not in tags or t in skip_tags or to._C9_RE.match(t):
+            continue
+        if f["ft"] == "/Tx" and to.effective_type(t, f["value_type"], "/Tx") == "Number":
+            i += 1
+            text[t] = str(100 + 7 * i)
+        elif f["ft"] == "/Btn":
+            i += 1
+            if i % 3 == 0:
+                btn[t] = f["widgets"][0]["on_state"]
+    return text, btn
+
+
+def wrong_values(out: dict, text: dict[str, str], btn: dict[str, str]) -> list[tuple]:
+    """Read values (lanes 1 and 3) that differ from what the fixture printed."""
+    fields = to.load_maps()[out["notes"]["template_year"]].fmap["fields"] if out["notes"]["template_year"] else {}
+    bad = []
+    for r in out["values"].values():
+        t = r.get("pdf_tag")
+        if r.get("lane") not in ("text", "checkbox") or t not in fields:
+            continue
+        want = btn.get(t) if fields[t]["ft"] == "/Btn" else text.get(t)
+        if want is None and r["value"] in ("0", "0.0", "0.00"):
+            continue                                         # the blank template prints 0.00 in its calculated total fields
+        if want is None or str(r["value"]).replace(",", "") != want:
+            bad.append((t, r["value"], want))
+    return bad
+
+
+@pytest.fixture(scope="module")
+def rich_2526():
+    text, btn = rich_fill("2025-26")
+    return fill_and_flatten("2025-26", text, btn, None), text, btn
+
+
+@pytest.fixture(scope="module")
+def rich_2425():
+    text, btn = rich_fill("2024-25")
+    return fill_and_flatten("2024-25", text, btn, None), text, btn
+
+
+def _page_of(year: str, tag: str) -> int:
+    return to.load_maps()[year].fmap["fields"][tag]["widgets"][0]["template_page"]
+
+
+def test_rich_fixture_reads_back_exactly(rich_2526):
+    data, text, btn = rich_2526
+    out = to.extract_overlay(data)
+    assert wrong_values(out, text, btn) == [] and len(out["values"]) > 400
+
+
+@pytest.mark.parametrize("dx", [8.5, 10, 11, 12])
+def test_page_shift_beyond_the_search_range_is_a_residual_shift_not_an_applied_one(rich_2526, dx):
+    """B1: a page printed 8.5-12 pt aside has its optimum on (or inside, with every band disagreeing) the
+    +-8 pt search range. It must be rejected, not read at a 2-4 pt residual (empty boxes read as checked)."""
+    data, text, btn = rich_2526
+    page = _page_of("2025-26", "ROTC_MARINE_OPT")
+    doc = pdfium.PdfDocument(translate_pages(data, dx, 0))
+    est = to.estimate_page_alignment(to._page_masks(doc[page], to.page_geometry(doc[page]), to._template_doc("2025-26")[page]))
+    assert not est["consistent"] and est["inconsistent_reason"] == "residual_page_shift", est
+    # end to end: nothing wrong is emitted (the document is held or the pages are rejected)
+    assert wrong_values(to.extract_overlay(translate_pages(data, dx, 0)), text, btn) == []
+
+
+def test_in_range_whole_page_shift_is_still_applied(rich_2526):
+    data, text, btn = rich_2526
+    for dx, dy in [(6, 0), (3, 0), (0, -5), (2, 3)]:
+        out = to.extract_overlay(translate_pages(data, dx, dy))
+        assert out["notes"]["stage1"]["status"] == "matched" and out["notes"]["stage1"]["header_votes"] == {"2025-26": 49 if dy == 0 else out["notes"]["stage1"]["header_votes"]["2025-26"]}
+        assert wrong_values(out, text, btn) == [] and len(out["values"]) > 500, (dx, dy)
+
+
+def test_local_check_uses_the_applied_page_shift_with_its_sign(rich_2526):
+    """A whole page printed 3 pt low is shifted back by the page alignment; the per-widget check must
+    then agree with that shift (a flipped dy sign makes every widget look 6 pt misaligned)."""
+    data, text, btn = rich_2526
+    base_out = to.extract_overlay(data)
+    for dy in (-3, 3):
+        out = to.extract_overlay(translate_pages(data, 0, dy))
+        dys = [a["dy"] for a in out["notes"]["stage1"]["alignment"].values()]
+        assert sum(1 for d in dys if d == dy) >= 0.8 * len(dys), (dy, sorted(set(dys)))
+        assert len(out["values"]) >= 0.97 * len(base_out["values"]), (dy, len(out["values"]), len(base_out["values"]))
+        assert out["notes"]["withheld_by_reason"].get("local_misalignment", 0) <= 5
+        assert wrong_values(out, text, btn) == []
+
+
+def test_page_that_prefers_the_other_year_is_not_read_through_this_years_map(rich_2425, rich_2526):
+    """B2: one 2025-26 page (header digits blanked, so it casts no vote) inside a 2024-25 packet."""
+    d25, d26 = rich_2425[0], rich_2526[0]
+    hb = to._header_boxes()[4]
+    blank4 = white_out(d26, 4, tuple(hb))
+    packet = assemble([(blank4 if i == 4 else d25, i) for i in range(50)])
+    res = to.match_template(packet)
+    assert res.status == to.STATUS_MATCHED and res.year == "2024-25"
+    assert res.rejected_pages.get(4) == "page_raster_prefers_other_year" and 4 not in res.page_map
+    out = to.extract_overlay(packet)
+    assert out["notes"]["page_map"].get("4") is None
+    assert wrong_values(out, *rich_2425[1:]) == []
+    # the same page with its header left on casts the other year's vote and holds the packet (strict)
+    packet2 = assemble([(d26 if i == 4 else d25, i) for i in range(50)])
+    assert to.match_template(packet2).reason == "mixed_year_packet"
+
+
+def test_one_confident_other_year_page_holds_the_packet(rich_2425, rich_2526):
+    """Strict year rule: no majority. A single page whose printed header says another year holds everything."""
+    packet = assemble([(rich_2526[0] if i == 1 else rich_2425[0], i) for i in range(50)])
+    res = to.match_template(packet)
+    assert res.status == to.STATUS_AMBIGUOUS and res.reason == "mixed_year_packet", (res.status, res.reason, res.header_votes)
+    assert to.extract_overlay(packet)["values"] == {}
+
+
+def test_header_vote_is_cast_at_the_pages_applied_shift(rich_2526):
+    """N3: shifted pages must not vote for the wrong year, and a shifted page must not hold a correct packet."""
+    data, text, btn = rich_2526
+    for name, d in [("doc x+3", translate_pages(data, 3, 0)), ("doc y-5", translate_pages(data, 0, -5)),
+                    ("page 4 y-5", translate_pages(data, 0, -5, [4])), ("page 4 x+7", translate_pages(data, 7, 0, [4]))]:
+        res = to.match_template(d)
+        assert res.status == to.STATUS_MATCHED and set(res.header_votes) == {"2025-26"}, (name, res.status, res.reason, res.header_votes)
+        assert wrong_values(to.extract_overlay(d), text, btn) == [], name
+
+
+def test_header_vote_needs_an_absolute_match():
+    """The best year must also match the header absolutely; a smudged or wrong-position header casts no vote."""
+    year = "2025-26"
+    tdoc = to._template_doc(year)
+    page = tdoc[4]
+    g = to.page_geometry(page)
+    vote, d0, margin = to.header_year_vote(page, g, 4, detail=True)
+    assert vote == year and d0 < 0.01 and margin > to.HEADER_VOTE_MARGIN
+    assert to.header_year_vote(page, g, 4, 40.0, 0.0) is None                      # crop taken 40 pt away from the header
+    assert to.header_year_vote(page, g, 4, 0.0, -10.0) is None                     # a blank crop would "vote" for the lightest year
+    assert to.header_year_vote(page, g, 4, 0.0, 6.0) is None                       # 6 pt off: matches no year well
+    assert to.header_year_vote(page, g, 4, 0.0, 0.0) == year
+
+
+# ---- B3: the printed answer continues past the rect ------------------------
+
+def _gb(s: str, x0: float, y: float = 10.0, step: float = 5.0, w: float = 4.0):
+    return [to.GlyphBox(x0 + i * step, x0 + i * step + w, y) for i, _c in enumerate(s)]
+
+
+def test_edge_continuation_unit():
+    rect = [100.0, 5.0, 130.0, 17.0]
+    assert to.edge_continuation(_gb("12345", 102), rect) is None                          # fits, nothing near
+    assert to.edge_continuation(_gb("1234567", 102), rect) == "glyph_crosses_right_edge"  # 24038 style: box spans the edge
+    assert to.edge_continuation(_gb("1234567", 80, w=6.0), rect) == "glyph_crosses_left_edge"    # the rect cuts the left end
+    assert to.edge_continuation(_gb("12", 102) + [to.GlyphBox(130.6, 134.0, 10.0)], rect) == "glyph_past_right_edge"   # gap <= 1 pt
+    assert to.edge_continuation(_gb("12", 102) + [to.GlyphBox(133.0, 137.0, 10.0)], rect) is None                     # 3 pt away
+    assert to.edge_continuation(_gb("12", 102) + [to.GlyphBox(90.0, 99.4, 10.0)], rect) == "glyph_past_left_edge"
+    assert to.edge_continuation(_gb("12", 102) + [to.GlyphBox(132.0, 138.0, 30.0)], rect) is None                     # another line
+    assert to.edge_continuation(_gb("", 0), rect) is None
+
+
+def test_multiline_overflow_unit():
+    rect = [100.0, 5.0, 160.0, 29.0]
+    lines = _gb("abc", 102, 22.0) + _gb("def", 102, 10.0)
+    assert to.edge_continuation(lines, rect) is None
+    assert to.edge_continuation(lines + _gb("ghi", 102, -2.0), rect) == "multiline_overflow"     # a third line below
+    assert to.edge_continuation(lines + _gb("ghi", 102, 34.0), rect) == "multiline_overflow"     # ... or above
+    assert to.edge_continuation(lines + _gb("ghi", 102, -2.0), rect, multiline=False) is None    # numbers: a table neighbour
+    assert to.edge_continuation(_gb("abc", 102, 10.0) + _gb("ghi", 102, -2.0), rect) is None     # single line: not multi-line
+
+
+def test_number_overflowing_its_cell_is_not_split_across_two_cells(rich_2526):
+    """B3: "24038" printed across SCHOL_NB_FED_D and the empty cell to its right emitted 24 and 038."""
+    year = "2025-26"
+    text, btn = rich_fill(year, skip_tags=("SCHOL_NB_FED_D", "SCHOL_NN_FED_D"))
+    flat = fill_and_flatten(year, text, btn, None)
+    fm = to.load_maps()[year].fmap["fields"]
+    w = fm["SCHOL_NB_FED_D"]["widgets"][0]
+    x0, y0, x1, y1 = w["rect"]
+    assert fm["SCHOL_NN_FED_D"]["widgets"][0]["rect"][0] >= x1 - 1
+    for inside in (0.3, 0.5, 0.7):
+        data = add_text(flat, w["template_page"], x1 - inside * 27.8, y0 + 3, "24038")
+        out = to.extract_overlay(data)
+        vals = _values_by_tag(out)
+        assert "SCHOL_NB_FED_D" not in vals and "SCHOL_NN_FED_D" not in vals, (inside, vals.get("SCHOL_NB_FED_D"), vals.get("SCHOL_NN_FED_D"))
+        assert wrong_values(out, text, btn) == []
+    # the guard is what stops it: without it the rect keeps the digits whose centres fall inside
+    old = to.EDGE_GUARD
+    to.EDGE_GUARD = False
+    try:
+        data = add_text(flat, w["template_page"], x1 - 0.5 * 27.8, y0 + 3, "24038")
+        assert "SCHOL_NB_FED_D" in _values_by_tag(to.extract_overlay(data))
+    finally:
+        to.EDGE_GUARD = old
+    # a number that fits its cell is untouched
+    data = add_text(flat, w["template_page"], x0 + 3, y0 + 3, "24")
+    assert _values_by_tag(to.extract_overlay(data)).get("SCHOL_NB_FED_D") == "24"
+
+
+def test_glyph_boxes_exclude_the_forms_own_label_text():
+    static = tuple(_chars("Name:", 10.0, 10.0))
+    chars = _chars("Name:", 10.0, 10.0) + _chars("Bob", 40.0, 10.0)
+    boxes = to.glyph_boxes(chars, static, [38.0, 5.0, 60.0, 17.0])
+    assert len(boxes) == 3 and all(b.left >= 37.0 for b in boxes)
+
+
+def test_widget_gates_are_public_and_take_glyphs(rich_2526):
+    data, _text, _btn = rich_2526
+    doc = pdfium.PdfDocument(data)
+    res = to.match_template(doc)
+    q = next(q for q, p in res.page_map.items() if p == 12)
+    c = to.PageCtx(doc, q, 12, "2025-26", res)
+    w = to.load_maps()["2025-26"].fmap["fields"]["AP_RECD_1ST_MEN_N"]["widgets"][0]
+    assert to.widget_gates(c, "AP_RECD_1ST_MEN_N", 0, w["rect"]) is None
+    x0, y0, x1, y1 = w["rect"]
+    cut = [to.GlyphBox(x1 - 3, x1 + 3, (y0 + y1) / 2), to.GlyphBox(x1 - 9, x1 - 4, (y0 + y1) / 2)]
+    assert to.widget_gates(c, "AP_RECD_1ST_MEN_N", 0, w["rect"], glyphs=cut) == "glyph_crosses_right_edge"
+
+
+def test_ocr_widgets_carry_index_rect_and_shift(flat_2526):
+    data = add_text(flat_2526, 12, 452, 377.5, "9876", render_mode=3)
+    out = to.extract_overlay(data)
+    item = next(w for w in out["notes"]["ocr_widgets"] if w["pdf_tag"] == "AP_RECD_1ST_MEN_N")
+    w = to.load_maps()["2025-26"].fmap["fields"]["AP_RECD_1ST_MEN_N"]["widgets"][0]
+    assert item["widget"] == 0 and item["rect"] == [round(v, 3) for v in w["rect"]] and item["template_page"] == 12
+    assert item["shift"] == {"dx": 0.0, "dy": 0.0} and item["page"] == 12
+
+
+def test_identities_run_over_the_union_of_lanes():
+    vals = {"1": {"pdf_tag": "AP_RECD_1ST_N", "value": "100", "lane": "text"},
+            "2": {"pdf_tag": "AP_ADMT_1ST_N", "value": "500", "lane": "ocr"},        # a Lane 2 value added later
+            "3": {"pdf_tag": "EN_TOT_1ST_N", "value": "50", "lane": "text"}}
+    tags = {"AP_RECD_1ST_N", "AP_ADMT_1ST_N", "EN_TOT_1ST_N"}
+    ident, rejected = to.reject_identity_failures(vals, tags)
+    assert ident and vals == {} and {r["pdf_tag"] for r in rejected} == tags
+
+
+@pytest.mark.parametrize("raw,vt,ok", [
+    ("1.234", "Number", False), ("12.345", "Nearest $1", False), ("$9.999", "Nearest $1", False), ("1.234%", "Nearest 1%", False),
+    ("1.234", "Whole Number or Round to Nearest Tenth", True),      # a true decimal on a decimal-typed field
+    ("1.23", "Number", True), ("0.123", "Number", True), ("1,234.5", "Number", True), ("1.2345", "Number", True),
+])
+def test_thousands_dot_on_integer_typed_fields(raw, vt, ok):
+    val, why = to.normalise_text_value(raw, vt, "X_N")
+    assert (why is None) == ok, (val, why)
+    if not ok:
+        assert why == "ambiguous_thousands_separator"
 
 
 @pytest.mark.skipif(not REAL, reason="set CDS_M1_PDF_DIR to the review PDF directory")
