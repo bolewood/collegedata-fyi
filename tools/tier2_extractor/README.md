@@ -146,52 +146,68 @@ today. Deciding how to join them is separate work. Needs `numpy` and `pypdfium2`
 field map's widget coordinates (Stage 1 template match, Lane 1 text layer, Lane 3
 checkboxes and radios, validation). It is a pure library (bytes in, dict out; no
 database, network or worker access). Lane 2 (OCR of vector-drawn pages) and the
-worker/DB wiring are later milestones; pages that need OCR are listed in
-`notes.pages_needing_ocr`.
+worker/DB wiring are later milestones; pages and widgets that need OCR are listed in
+`notes.pages_needing_ocr` and `notes.ocr_widgets`. The governing rule: **a missing
+value is acceptable, a wrong emitted value is not**, so every doubtful read abstains and
+is recorded in `notes.withheld` (abstentions) or `notes.rejected_fields` (parse and
+identity failures), each with a named rule.
 
 ```bash
-python tools/tier2_extractor/template_overlay.py school.pdf --detected-year 2025-26 > overlay.json
+python tools/tier2_extractor/template_overlay.py school.pdf [--detected-year 2025-26] > overlay.json
 python tools/tier2_extractor/template_overlay.py school.pdf --match-only      # Stage 1 only
 python -m pytest tools/tier2_extractor -q                                      # synthetic fixtures, no school PDFs
 CDS_M1_PDF_DIR=/path/to/review/pdfs python -m pytest tools/tier2_extractor -q -k real
 ```
 
-- **Stage 1.** Each target page is rendered like the committed masks (36 DPI, ink =
-  gray < 225) and scored against every template page of every mapped year: recall of
-  the template's static ink inside the target (two 4-neighbour dilations), clamped by
-  precision (`min(recall, precision + 0.25)`; the clamp is what keeps other layouts
-  out). Pages are assigned monotonically (dropped and inserted pages are fine). The
-  year with the most pages wins and needs >= 30; a lead under 3 pages needs
-  `detected_year` to agree, a tie is always `template_year_ambiguous`. Per matched
-  page a 72-DPI search (+-3 pt) estimates `(dx, dy)`; a nonzero shift is only taken
-  when it raises recall by 0.02, and a shift over 1 pt rejects the page.
-- **Lane 1.** Characters whose box centre lies inside the widget rect, no padding.
-  pdfium-generated characters are dropped except generated whitespace (Distiller
-  prints word gaps, not spaces). Characters that coincide with a blank-template
-  character in the same rect are the label and are dropped. A read that still holds a
-  control, private-use or replacement character is never cleaned: the whole page is
-  `unreadable` and nothing is emitted from it (pdfium's U+FFFE/U+FFFF markers and
-  format characters are ignored). `/Ch` display strings map to exports through `/Opt`
-  (whitespace-insensitive, unique-prefix for clipped text, leading zeros on MM/DD).
-  Number types strip `$ , %`; `Numbers` (ZIP, phone, extension) is kept as typed.
-  `AD_TFER_GRADE` is typed Number in the schema but asks for a letter grade; it is
-  overridden to Text.
-- **Lane 3.** Mean ink density of the widget interior (35% inset, 216 DPI) minus the
-  blank template's density at the same crop. Checked at >= 0.05; in a group the top
-  widget needs a 0.03 margin over the runner-up (else `ambiguous_radios`). The emitted
-  value is the raw export (`/Y`, `/C`, ...) with `value_decoded` from
-  `decode_button_value`.
-- **Validation.** Type per `value_type` (failures go to `notes.rejected_fields`), then
-  B1 (total degree-seeking = rows), C1 (applied >= admitted >= enrolled) and C9
-  (25th <= 50th <= 75th, score ranges) identities. Identity failures on text-layer
-  values are recorded in `notes.identity_failures` and nothing is rejected; the hook
-  that rejects whole identities exists for Lane 2 values. Then
-  `apply_b1_derived_all_totals`. Fields whose map entry has no `question_number` are
-  skipped and counted in `notes.skipped_null_question_number`.
+- **Year.** The printed page header ("Common Data Set YYYY-YYYY") is compared with each
+  year's blank (2023-24 included) at 144 DPI. The document year is the header majority
+  and must agree with the best raster year; ties, mixed packets, contradictions and
+  unverifiable headers hold the document (`template_year_ambiguous`, nothing emitted), a
+  2023-24 print is `template_year_unsupported`, and a page whose own header votes the
+  other year is not read. `detected_year` can only veto; `cds_year` is never used. A
+  forced-year run exists only as `_diagnostic_extract_forced_year` for the evaluation
+  script.
+- **Pages.** Each target page is rendered like the committed masks (36 DPI, ink gray
+  < 225) and scored against every template page: recall of the template's static ink
+  (two 4-neighbour dilations), clamped by precision (`min(recall, precision + 0.25)`).
+  Pages are assigned monotonically (dropped and inserted pages are fine), a pair is kept
+  only when the template page is within 0.02 of the page's best match (blank pages 8, 38,
+  41 cross-match), and a template page claimed by several target pages with differing
+  answers is rejected (`duplicate_page_conflict`).
+- **Geometry.** Text boxes, widget rects, static-template characters and rendered crops
+  all use one space derived from PDFium's page transform (CropBox ∩ MediaBox origin,
+  `/Rotate`, uniform page scale; shifts are in template points and scale with the page).
+  Pages that cannot be mapped exactly are rejected.
+- **Alignment.** The page shift is applied only when every inked horizontal band agrees
+  with it within 1 pt; otherwise the page is rejected (`partial_page_shift`) or, with no
+  shift, the disagreeing band's widgets abstain (`band_misaligned`). Each widget is also
+  checked on its own: its template static ink within 14 pt must not fit a shifted target
+  ≥ 0.15 better in x or y (ignoring shifts the blank itself cannot tell from 0, like one
+  table-row period): `local_misalignment`.
+- **Lane 1.** Characters whose box centre lies inside the widget rect, no padding;
+  characters that coincide with a blank-template character there are the label and are
+  dropped. Never read: control/private-use/unassigned glyphs (the page is unreadable),
+  noncharacters and format characters PDFium did not mark generated, and any widget with
+  an **invisible** (render mode 3/7) glyph (`invisible_text`, an OCR layer; scheduled for
+  Lane 2). A read also needs rendered ink the blank template lacks (`no_rendered_ink`).
+  Numbers use one token grammar (commas only as `\d{1,3}(,\d{3})+`, no disjoint runs, no
+  signs, ASCII digits), every percentage-typed field is 0-100, and the effective type used
+  is recorded in each value. `/Ch` reads map to exports through `/Opt` (whitespace-
+  insensitive; a clipped read must be the prefix of exactly one option; an exact match
+  that is a proper prefix of another option abstains when it reaches the rect edge).
+- **Lane 3.** Interior ink density (35% inset, 216 DPI) minus the blank's. Checked at
+  >= 0.05; a radio winner needs a 0.03 margin. Abstentions: lone checkbox in [0.05, 0.12)
+  (`lone_checkbox_gray_band`), radio winner in that band with a runner-up <= 0.01
+  (`radio_gray_band`), winner's blank outline not found at the rect (`box_outline_missing`),
+  a single straight stroke in the measured interior (`box_border_in_interior`), and two
+  checked boxes in a "fill in one only" group.
+- **Validation.** Identity failures (B1, C1, C9) reject every value in the identity, in
+  every lane. Then `apply_b1_derived_all_totals`. Fields whose map entry has no
+  `question_number` are skipped and counted.
 
-`eval_template_overlay.py` reproduces the M1 acceptance numbers from local PDFs
-(`stage1`, `compare`, `cohort`, `wrong-year`, `lane3-hist`); see its docstring for
-the inputs.
+`eval_template_overlay.py` reproduces the acceptance numbers from local PDFs (`stage1`,
+`cohort` with the real metadata path or a labelled `--oracle` run, `compare`,
+`wrong-year`, `old-vs-new`); see its docstring for the inputs.
 
 ## Tested against
 

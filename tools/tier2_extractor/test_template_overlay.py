@@ -783,4 +783,5 @@ def test_real_pdfs_valparaiso_miami_arkansas():
         assert results[name]["extras"] == []                      # nothing emitted where Tier 2 is blank
     ark = to.extract_overlay((d / "e69a95f19092cef6d67f5ceea35056bea403815b02ce0ae1f4ce3685c9b46a13.pdf").read_bytes())
     assert ark["notes"]["lane_counts"].get("text", 0) == 0 and len(ark["notes"]["unreadable_pages"]) >= 30
-    assert results["valpo"]["ok"] >= 600 and results["miami"]["by_type"]["Btn"][0] >= 150
+    # v0.2.0 numbers (every loss is named by an abstention rule): Valparaiso 611/624, Miami /Btn 147/152
+    assert results["valpo"]["ok"] >= 611 and results["miami"]["by_type"]["Btn"][0] >= 147

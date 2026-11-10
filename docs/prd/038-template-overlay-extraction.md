@@ -1,6 +1,6 @@
 # PRD 038: Template overlay extraction for flattened official CDS PDFs
 
-**Status:** Approved for M0–M3 (revised after adversarial review; decisions recorded 2026-11-09; amended the same day after a second review — see [Amendments](#amendments-2026-11-09-second-review), which override §5, §6 and Decisions 1–4 where they conflict)
+**Status:** Approved for M0–M3 (revised after adversarial review; decisions recorded 2026-11-09; amended the same day after a second review — see [Amendments](#amendments-2026-11-09-second-review), which override §5, §6 and Decisions 1–4 where they conflict; M1 was reviewed independently and fixed — see [A8](#a8-m1-findings-2026-11-10), which overrides §2, §3 and §4 where they conflict)
 **Created:** 2026-11-09
 **Author:** Antigravity; revised by Claude
 **Related:** [ADR 0006 — Tiered extraction strategy](../decisions/0006-tiered-extraction-strategy.md), [ADR 0007 — Year authority moves to extraction](../decisions/0007-year-authority-moves-to-extraction.md), [PRD 005 — Full schema extraction](005-full-schema-extraction.md), [PRD 006 — LLM fallback](006-llm-fallback.md), [PRD 0111A — Docling improvement spike](0111A-docling-improvement-spike.md), PR #258 (flattened reprint source guard, merged as v0.6.19.13)
@@ -95,13 +95,15 @@ The three benchmark schools in the first draft (Valparaiso, Barnard and Miami 20
 | 2024-25 | Official blank (`schemas/templates/cds_2024-25_template.pdf`); Vaughn and UW Tier 2 donors agree with it within 0.002 pt | 50 | 1,116 | 1,257 (817 / 76 / 364) | 0 |
 | 2023-24 | `schemas/templates/cds_2023-24_template.pdf` | 50 | 1,086 | 1,228 (784 / 76 / 368) | 0 |
 
+**Join cap.** The 2024-25 and 2023-24 schemas give a `pdf_tag` to only 814 and 810 of the maps' 1,116 and 1,086 fields (2025-26: 1,087 of 1,089). Fields without a tag have `question_number: null` and are skipped, so the overlay's yield for 2024-25 is capped at Tier 2 parity until the tags are recovered. That is a separate schema project; see `scratch/prd038/tag-research/REPORT.md` (best join found: 952 and 921 tags).
+
 **Maps are year-specific.** 2024-25 and 2025-26 share 1,082 tags, but only 738 of them keep the same page and rectangle (within 0.5 pt) across years. Inverted rects are a 2025-26 quirk. The build normalizes every rect regardless.
 
 ### Alignment
 
 - Every matched doc in the sample is 612×792 pt with no rotation. One doc has a single 816×1056 page.
 - Page-index offsets seen are 0, ±1, ±2, −3 and −4. 8 of the cohort docs mix two offsets (dropped or inserted pages mid-packet).
-- Within a matched page, widget positions do not drift: Valparaiso, Miami and Caltech read at offset (0, 0).
+- Whole pages are mostly rigid: Valparaiso, Miami and Caltech read at offset (0, 0). Partial-page shifts exist, though (CSU Northridge 2024-25 has a lower half 14–16 pt low; South Dakota has bands that move by 1–8 pt; Eastern Michigan's typed "X" reflowed a Yes/No line by 8–9 pt), and page-level alignment cannot see them. Alignment is therefore checked per band and per widget ([A8](#a8-m1-findings-2026-11-10)).
 
 **Text anchors do not work as the page matcher.** Acrobat Distiller 26.0 garbles text beyond bold headings: regular-weight prompts and some digits come through as Caesar-shifted bytes. A word-position matcher found 30 or more pages on only 2 of 17 Distiller docs. The raster matcher found 16 of them.
 
@@ -152,9 +154,9 @@ The three benchmark schools in the first draft (Valparaiso, Barnard and Miami 20
 ## Non-goals
 
 - Excel-, Word- or custom-layout PDFs. They fail the raster gate and stay on Tier 4.
-- 2023-24 and older years until the cohort is measured for them.
+- 2023-24 and older years until the cohort is measured for them. A 2023-24 print is recognised by its printed header and rejected (`template_year_unsupported`), never read through another year's map.
 - Text that overflowed a fixed widget box. The flattened file does not contain it.
-- Skewed or low-resolution scans of printed paper. No such case was seen in the cohort.
+- Scans of printed paper. One cohort document is one (Akron 2024-25, Adobe Paper Capture, an invisible OCR text layer over the page image), so scans *are* present. Invisible text is never read as Lane 1 (it is not what the page prints); such pages go to Lane 2, which reads rendered pixels.
 - OCR of free-text fields (`Text`, `URL`, `Email Address`). On Miami these were the main source of wrong values.
 
 ## Design
@@ -182,22 +184,19 @@ A build CLI, `tools/tier2_extractor/build_field_map.py`, harvests each map once.
 
 1. **Pre-filter.** Run only on a single `kind='source'` PDF whose selected `source_format` is `pdf_flat` or `pdf_scanned`, with 30–70 pages.
 2. **Raster match.** Match each target page against every template page of every year with a map. This took 0.3–0.5 s per document (max 1.2 s) in the review.
-3. **Year selection.**
-   - The wrong year's template also clears the 30-page gate. At the < 160 ink threshold, 35 / 35 of the 2025-26 docs matched the 2024-25 template, and 56 / 57 the other way round.
-   - Per document, the correct year always matched more pages, but sometimes only just:
-     - the minimum lead was 3 pages in 2025-26 and 1 page in 2024-25;
-     - 23 of 55 2024-25 docs led by fewer than 3 pages.
-   - Rule:
-     - choose the year with the most matched pages;
-     - when the lead is under 3 pages, require that year to agree with `detected_year`, else return `template_year_ambiguous`;
-     - a tie is always ambiguous.
-   - Most pages are identical across years, but only 738 of 1,082 shared tags keep their rectangle, so a wrong year is not harmless.
-   - M1 re-measures these margins with the final matcher.
+3. **Year selection: the printed header decides.**
+   - Every template page prints "Common Data Set YYYY-YYYY" at a fixed position. Each matched page votes for the year whose blank page its header pixels match at 144 DPI (2023-24 is one of the choices), so it works on vector-drawn prints without OCR.
+   - The document year is the header majority (≥ 90% of voting pages, ≥ 5 votes) and must agree with the best raster year. Anything else holds the document and emits nothing: a tie in the raster counts, no verifiable header, a mixed-year packet, a header that contradicts the raster year (a wrong year can lead on raster counts: 4 swapped pages flip a 2024-25 packet to 2025-26), or a known `detected_year` that contradicts the header. `detected_year` and `cds_year` never choose the map (CSU Northridge's `cds_year` is wrong).
+   - A page whose own header votes the other year is not read. Only 2024-25 and 2025-26 may emit; 2023-24 is recognised and rejected.
+   - Measured on the 95 cohort documents: every vote is unanimous for the true year (31–45 voting pages per document), and the raster lead is as low as 2 pages, so the lead is not a usable rule.
 4. **Gate.** At least 30 template pages matched; otherwise `not_official_pdf_template`.
-5. **Page alignment.**
-   - The page mapping is the monotonic assignment of target pages to template pages, which handles mid-packet drops.
-   - Within a page, the transform is `(sx, sy)` from the mediabox ratio plus a `(dx, dy)` shift. Estimate the shift from the raster mask; it is (0, 0) in every sample.
-   - Reject the page if the residual exceeds 1 pt.
+5. **Page assignment.**
+   - The page mapping is the monotonic assignment of target pages to template pages, which handles mid-packet drops. A pair is kept only when the template page is within 0.02 of the target page's best-scoring template page (blank pages 8, 38 and 41 cross-match at 0.85–0.87 and must not be read through each other's map).
+   - When several target pages strongly claim one template page and their answer regions differ, that template page's fields are rejected (`duplicate_page_conflict`).
+6. **Geometry and alignment.**
+   - Text boxes, widget rects, static-template characters and rendered crops share one coordinate space built from PDFium's page transform (CropBox ∩ MediaBox origin, `/Rotate`, page scale; shifts are in template points and scaled with the page). A page that cannot be mapped exactly is rejected, not read.
+   - The page shift is estimated at 72 DPI and applied only when every inked horizontal band agrees with it within 1 pt; with no shift, a band whose own best shift differs is withheld (`band_misaligned`) and a page whose bands disagree with a nonzero shift is rejected (`partial_page_shift`).
+   - Before any lane reads a widget, the template's static ink around it (rect + 14 pt) must fit the target at the applied transform: if shifting x or y alone (±10 pt, ignoring alternatives the blank template itself cannot tell apart, such as one table-row period) explains it ≥ 0.15 better, the widget is withheld (`local_misalignment`).
 
 ### 3. Lanes
 
@@ -207,7 +206,9 @@ A build CLI, `tools/tier2_extractor/build_field_map.py`, harvests each map once.
 - Normalize by schema `value_type`:
   - number types (`Number`, `Numbers`, `Nearest $1`, `Nearest 1%`, `Whole Number or Round to Nearest Tenth`, `…Hundredths`): strip `$`, `,`, `%`;
   - `MM` / `DD`, `Text` and `URL`: keep the string.
-- **A read that contains control or private-use characters is never cleaned. Treat it as unreadable and send that page to Lane 2.** Arkansas State 2025-26 matches the template, but 502 of its 521 non-empty reads are Caesar-shifted glyphs. Stripping `\x00–\x1f` would silently drop digits.
+- **Invisible text is never read.** Each glyph's text render mode is read; a widget read containing any invisible (mode 3 or 7) glyph is not Lane 1 and the widget is scheduled for Lane 2. Every Lane 1 read also needs rendered ink in the rect that the blank template does not have there.
+- Numbers use one token grammar (commas only as `\d{1,3}(,\d{3})+`, no joining of disjoint runs, no signs, ASCII digits); every percentage-typed field (`_P` tags, `Nearest 1%`) is checked against 0–100, and the per-field effective type is recorded in each value. A `/Ch` read that equals an option which is a proper prefix of another ("per semester" vs "per semester hour") abstains when the glyphs reach the rect edge; multi-widget fields must agree.
+- **A read that contains control or private-use characters is never cleaned (a noncharacter or format character is ignored only when PDFium marks it generated). Treat it as unreadable and send that page to Lane 2.** Arkansas State 2025-26 matches the template, but 502 of its 521 non-empty reads are Caesar-shifted glyphs. Stripping `\x00–\x1f` would silently drop digits.
 
 **Lane 2: crop OCR (`/Tx` and `/Ch` on pages where Lane 1 finds no values or unreadable glyphs).**
 - Render the page once at 300 DPI.
@@ -222,6 +223,7 @@ A build CLI, `tools/tier2_extractor/build_field_map.py`, harvests each map once.
 - Subtract the blank template's ink at the same crop, which handles static boxes printed under widgets such as `C.207`.
 - A single checkbox is checked when its baseline-subtracted score clears the threshold.
 - In a radio group, the top widget wins when it clears the threshold and beats the second by a margin.
+- **Abstention band.** A lone checkbox scoring in [0.05, 0.12) abstains (`lone_checkbox_gray_band`), and so does a radio winner in that band whose runner-up is ≤ 0.01 (`radio_gray_band`). The winner's blank-template outline must be present at the mapped rect (≥ 85%, ≥ 50% for its group mates; `box_outline_missing`), its measured interior must not be a single straight stroke (a box border; `box_border_in_interior`), and two checked boxes in a "fill in one only" group (C16, C17) abstain on both.
 - The emitted value is the raw export (`/Y`, `/Public`, `/2024`), decoded with `decode_button_value` from `tools/tier2_extractor/extract.py`, exactly as Tier 2 does.
 
 **Post-processing:** `apply_b1_derived_all_totals` from `tools/extraction_worker/b1_derive_totals.py`, as Tier 2 does.
@@ -235,7 +237,7 @@ Each value is checked before it is written. Values that fail are left out of `va
    - B1 total degree-seeking equals the sum of its rows.
    - C1 applied ≥ admitted ≥ enrolled.
    - C9 25th ≤ 50th ≤ 75th, with scores inside the test's range.
-   - When an identity fails on OCR'd values, every value in that identity is rejected. On text-layer values, the failure is recorded but nothing is rejected, because the school may have published inconsistent numbers.
+   - When an identity fails, every value in that identity is rejected in every lane and listed in `notes.rejected_fields` (Decision 3: values failing cross-field checks are not emitted), even where the school may have published inconsistent numbers.
 3. **Document-level agreement with Tier 4.**
    - Compute exact agreement on fields both producers populate. Tier 4 is not ground truth, so this is a review signal, not a correctness check.
    - Disagreement above a set bar sets `quality_warnings` and holds the doc for review.
@@ -294,10 +296,10 @@ Either way it is a separate, later migration, and rollback is the reverse migrat
 
 **M1 — Stage 1 and Lanes 1 and 3.**
 - On the 298 distinct PDFs scanned in the review, Stage 1 matches the 95 listed in [`assets/038/template-cohort-2026-11-09.csv`](assets/038/template-cohort-2026-11-09.csv) and rejects the other 203. Any difference is explained in the PR.
-- It chooses the correct year for all 95, or returns `template_year_ambiguous` only where `detected_year` is missing.
-- Valparaiso flattened recovers ≥ 614 / 624 of its Tier 2 values with the blank-template map and the §3 read method.
+- It chooses the correct year for all 95 from the printed header, with the real `detected_year` metadata and no ambiguity (A8; the original lead/`detected_year` rule left 29 ambiguous).
+- Valparaiso flattened recovers its Tier 2 values with the blank-template map and the §3 read method; every lost value is named by a rule (A8: 611 / 624, was 614).
 - Lanes 1+3 emit no value where Tier 2 is blank, other than values actually printed on the page.
-- Miami recovers 152 / 152 `/Btn` values, with 0 emissions on its 72 blank checkbox fields.
+- Miami `/Btn`: 0 emissions on its 72 blank checkbox fields; recovery is reported with each loss named (A8: 147 / 152, was 152).
 
 **M2 — Lane 2.**
 - Miami flattened recovers ≥ 541 / 562 populated `/Tx` values. Every remaining mismatch is either a field excluded from OCR or a documented edition difference.
@@ -390,11 +392,25 @@ When an overlay is merged, the projection writes `producer_version` as `<tier4 v
 
 Code for M0–M3 lands by PR. Three steps need the owner's explicit go-ahead and are run from `main` after merge, never from the feature branch: the production shadow drain, the Decision 1 selection migration, and the serving migration. The hand audit is done by a person.
 
+### A8. M1 findings (2026-11-10)
+
+Two independent reviews of the M1 code (Claude Opus, Codex) agreed that Stage 1 matched the right 95 documents but found emitted values that differ from the printed page, clustered in specific failure paths: CSU Northridge 2024-25 (10 false checkboxes on a page whose lower half is printed 14–16 pt low), Eastern Michigan 2025-26 (3 Yes/No radios read as No after typed text reflowed the line), Lone Star 2025-26 (`WAITLIST_INFO_STUD` read as No on empty boxes), and three more false lone checkboxes (John Carroll, McPherson, Arkansas); plus latent paths reproduced on synthetic variants (nonzero box origin, `/Rotate`, invisible OCR text, duplicated or swapped pages, mixed-year packets, a wrong year leading on raster counts, a late unreadable glyph, clipped dropdowns, malformed numbers). A random 100-value audit was 100/100 correct, which shows how clustered the errors are: audits must be stratified by risk signal, not only random. The fixes follow the rule that **a missing value is acceptable, a wrong emitted value is not**, and are written into §2–§4 and Non-goals above:
+
+- **Year:** the printed header decides (§2.3); `detected_year` can only veto; 2023-24 is recognised and rejected; mixed or contradictory packets are held.
+- **Geometry and alignment:** one display space from PDFium's page transform; per-band and per-widget local alignment; a page shift is applied only when the bands agree (§2.6).
+- **Pages:** argmax guard and duplicate-page conflict (§2.5).
+- **Lane 1:** invisible text and ink-free reads are never read; strict number grammar and 0–100 for every percentage-typed field; clipped dropdowns abstain (§3). **Scans are present in the cohort** (Akron 2024-25: an invisible OCR layer; 482 of 482 of its Lane 1 values came from invisible glyphs and no other cohort document has any).
+- **Lane 3:** abstention band, outline and interior checks, "fill in one only" groups (§3).
+- **Validation:** identity failures reject in every lane (§4, Decision 3); OCR-seam output lists unreadable and invisible pages and unresolved numeric widgets.
+- **Cap:** the 2024-25 and 2023-24 maps join only 814 and 810 of their 1,116 and 1,086 tags to a question, so overlay yield for those years is capped at Tier 2 parity until tag recovery (a separate schema project, `scratch/prd038/tag-research/REPORT.md`).
+
+Measured with the real metadata path (no expected year injected): Stage 1 still matches exactly the 95 cohort documents of 298 (worst match 33 pages, best non-match 19) and all 95 resolve to the correct year with none held; none of the 17 distinct reviewed wrong values is emitted (each abstains by a named rule); the cohort emits 37,236 values and abstains on 884 more, and 163 of the 38,089 values emitted before the fixes are now withheld by the alignment checks (a by-eye sample of 20 found 19 correct, so almost all of that cost is recall, not removed errors). Valparaiso falls from 614 to 611 / 624 and Miami `/Btn` from 152 to 147 / 152, every loss named by a rule or a below-threshold score. The wrong-year control (a forced wrong map, reachable only from the evaluation script) still passes validation for hundreds of values with 0–6 silently different per document, which is why the year is decided by the header and not by validation.
+
 ## Risks
 
 | Risk | Mitigation |
 |---|---|
-| Wrong-year map gives plausible but wrong values (most pages look identical across years) | Score every year; when the margin is under 3 pages require `detected_year` agreement (§2.3); type and identity validation |
+| Wrong-year map gives plausible but wrong values (most pages look identical across years) | The printed header year must agree with the best raster year; mixed or contradictory packets are held (§2.3). Type and identity validation do not catch a wrong year (6–34 silently different values per document in the control) |
 | Garbled CMaps put shifted glyphs in the text layer | Reject reads with control characters; OCR that page (§3) |
 | Non-template PDF passes the gate | Raster gate at ≥ 30 pages separated 95 matches from 203 non-matches (best non-match 19 pages, worst match 33); M1 re-checks this |
 | Light-gray or faded print misses the gate | Ink threshold < 225; a < 160 threshold missed 5 real template prints. The doc stays on Tier 4, so the failure costs nothing extra |
