@@ -916,6 +916,19 @@ def test_page_shift_beyond_the_search_range_is_a_residual_shift_not_an_applied_o
     assert wrong_values(to.extract_overlay(translate_pages(data, dx, 0)), text, btn) == []
 
 
+def test_one_page_printed_11pt_aside_is_rejected_inside_a_document_that_still_matches(rich_2526):
+    """B1 end to end: the page shift is beyond the search range, the rest of the packet is fine."""
+    data, text, btn = rich_2526
+    page = _page_of("2025-26", "ROTC_MARINE_OPT")
+    shifted = translate_pages(data, 11, 0, [page])
+    res = to.match_template(shifted)
+    assert res.status == to.STATUS_MATCHED and res.year == "2025-26"
+    assert res.rejected_pages.get(page) == "residual_page_shift" and page not in res.page_map
+    out = to.extract_overlay(shifted)
+    assert wrong_values(out, text, btn) == [] and len(out["values"]) > 400
+    assert not any(r.get("pdf_tag") == "ROTC_MARINE_OPT" for r in out["values"].values())
+
+
 def test_in_range_whole_page_shift_is_still_applied(rich_2526):
     data, text, btn = rich_2526
     for dx, dy in [(6, 0), (3, 0), (0, -5), (2, 3)]:

@@ -163,7 +163,7 @@ CDS_M1_PDF_DIR=/path/to/review/pdfs python -m pytest tools/tier2_extractor -q -k
   year's blank (2023-24 included) at 144 DPI, cropped at the page's applied shift (±4 px
   residual search). A page votes when the best year beats the next by 0.01 and its diff is
   under 0.85 of the crop's own ink (a blank or misplaced crop votes for nothing). The year is
-  the plurality of votes (≥ 3) and must agree with the best raster year. The rule is strict:
+  the plurality of votes (≥ 5) and must agree with the best raster year. The rule is strict:
   one *confident* other-year vote (margin ≥ 0.02 and diff ≤ 0.6 of the ink) holds the whole
   packet (`mixed_year_packet`); weak other-year votes (poorly fitting headers of sub-point
   shifted prints scored 0.68-0.74) cannot. A page that will be rejected for alignment casts no

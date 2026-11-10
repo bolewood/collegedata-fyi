@@ -73,7 +73,7 @@ HEADER_VOTE_MAX_RATIO = 0.85            # ... and fits: diff below this share of
 HEADER_DISSENT_MARGIN = 0.02             # a vote that can HOLD the packet (a confident other-year page) needs more: margin >= this
 HEADER_DISSENT_MAX_RATIO = 0.6           # ... and ratio <= this. Cohort votes: median ratio 0.14, p99 0.59, max 0.70; the spurious dissent of sub-point
                                          # shifted prints scored 0.68-0.74 (4 documents held at 0.5 pt before this split)
-HEADER_MIN_VOTES = 3
+HEADER_MIN_VOTES = 5
 RASTER_YEAR_VETO = 0.02                  # B2: a matched page whose best score in another year beats the chosen year's by this is not read
 # alignment (72 DPI: 1 px = 1 pt in template space)
 ALIGN_DPI = 72
