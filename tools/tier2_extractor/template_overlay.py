@@ -1643,20 +1643,19 @@ def refine_subpoint_shift(gray: np.ndarray, tgray: np.ndarray, dx: float, dy: fl
         return 0.0, 0.0
     ty, tx = _subsample(ty, tx, SUBPOINT_POINTS)
     bx, by = int(round(dx * k)), int(round(-dy * k))        # page content: col + dx*k, row - dy*k
-    best, best_rc, base = -1.0, (0, 0), 0.0
     r = SUBPOINT_RANGE_PX
+    grid = np.zeros((2 * r + 1, 2 * r + 1))
     for iy in range(-r, r + 1):
         for ix in range(-r, r + 1):
             yy, xx = ty + by + iy, tx + bx + ix
             ok = (yy >= 0) & (yy < h) & (xx >= 0) & (xx < w)
-            rec = float(pg[yy[ok], xx[ok]].sum()) / ty.size
-            if (ix, iy) == (0, 0):
-                base = rec
-            if rec > best:
-                best, best_rc = rec, (ix, iy)
+            grid[iy + r, ix + r] = float(pg[yy[ok], xx[ok]].sum()) / ty.size
+    best, base = float(grid.max()), float(grid[r, r])
     if best - base < SUBPOINT_MIN_GAIN:
         return 0.0, 0.0
-    ix, iy = best_rc
+    # the page's ink was dilated by one pixel, so the best recall is a plateau: its centre is the shift
+    iys, ixs = np.nonzero(grid >= best - 1e-9)
+    ix, iy = int(round(ixs.mean())) - r, int(round(iys.mean())) - r
     return ix / k, -iy / k
 
 

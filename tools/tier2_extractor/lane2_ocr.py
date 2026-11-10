@@ -43,6 +43,14 @@ MIN_NEW_INK_PX = 12            # rendered ink (216 DPI pixels) the blank lacks i
 MIN_CONF = 85.0                # Tesseract word confidence floor (a further gate, never the only test)
 LABEL_COVER = 0.5              # an OCR word box covered this much by the blank's own text boxes is label text
 WHITELIST = "0123456789.,$%()+-"
+# rule switches (all on in production; the report's per-rule costs run one off at a time)
+RULE_NEW_INK = True            # the rect holds ink the blank lacks
+RULE_GATES = True              # widget_gates on the OCR word boxes (band, local alignment, edge, token)
+RULE_SECOND_RENDER = True      # the 400 DPI tight read must agree
+RULE_CONTEXT = True            # the context-crop token at the rect must agree
+RULE_CONF = True               # Tesseract confidence floor
+RULE_LABEL_FILTER = True       # the blank's own label words are dropped from the boxes
+RULE_ERASE_TEMPLATE = True     # the blank's own ink is erased from the context crop
 NUMERIC_CLASS_TYPES = ("Number", "Dollars", "Percent", "Identifier", "Month", "Day")
 
 
@@ -133,6 +141,8 @@ class Lane2:
             return None
         g = self.page_gray(c, dpi)
         r0, r1, c0, c1 = to.template_rect_to_pixels(win, c.dx, c.dy, dpi)
+        if x_pad_pt:                                     # the context crop may run off the page's side: it is cut at the page edge
+            c0, c1 = max(c0, 0), min(c1, g.shape[1])
         if r0 < 0 or c0 < 0 or r1 > g.shape[0] or c1 > g.shape[1] or r1 <= r0 or c1 <= c0:
             return None
         img = g[r0:r1, c0:c1].copy()
@@ -184,7 +194,7 @@ class Lane2:
 
     # ---- one widget --------------------------------------------------------
     def read_widget(self, c: "to.PageCtx", tag: str, f: dict, wi: int, rect: list[float], static_chars) -> Lane2Read:
-        if c.new_ink(rect) < MIN_NEW_INK_PX:
+        if RULE_NEW_INK and c.new_ink(rect) < MIN_NEW_INK_PX:
             return Lane2Read(reason="no_rendered_ink")
         reads: dict[str, str] = {}
         confs: list[float] = []
@@ -198,26 +208,30 @@ class Lane2:
             if name == "tight_300":
                 if not reads[name]:
                     return Lane2Read(reason="ocr_empty", reads=reads)
-                if min(confs) < MIN_CONF:       # no need to spend two more reads on a doubtful one
+                if RULE_CONF and min(confs) < MIN_CONF:       # no need to spend two more reads on a doubtful one
                     return Lane2Read(reason="low_confidence", reads=reads, conf=min(confs))
-        ctx = self._crop(c, rect, OCR_DPI, x_pad_pt=CONTEXT_PAD_PT, erase_template=True)
+        ctx = self._crop(c, rect, OCR_DPI, x_pad_pt=CONTEXT_PAD_PT, erase_template=RULE_ERASE_TEMPLATE)
         if ctx is None:
             return Lane2Read(reason="crop_off_page", reads=reads)
         cwords = self.engine.read(ctx[0])
-        boxes = self.drop_label_words(self._to_boxes(c, cwords, ctx[1], OCR_DPI), static_chars)
+        boxes = self._to_boxes(c, cwords, ctx[1], OCR_DPI)
+        if RULE_LABEL_FILTER:
+            boxes = self.drop_label_words(boxes, static_chars)
         x0, y0, x1, y1 = rect
         at_rect = [(b, w) for b, w in zip(self._to_boxes(c, cwords, ctx[1], OCR_DPI), cwords)
                    if x0 <= b.cx <= x1 and y0 <= b.cy <= y1 and any(b is bb or b == bb for bb in boxes)]
         reads["context"] = "".join(w.text for _b, w in sorted(at_rect, key=lambda t: t[0].left))
         confs += [w.conf for _b, w in at_rect]
-        why = to.widget_gates(c, tag, wi, rect, glyphs=boxes, multiline=False, emission_class=to.CLASS_NUMERIC)
+        why = to.widget_gates(c, tag, wi, rect, glyphs=boxes, multiline=False, emission_class=to.CLASS_NUMERIC) if RULE_GATES else None
         if why:
             return Lane2Read(reason=why, reads=reads)
         norm = {k: re.sub(r"\s+", "", v) for k, v in reads.items()}
-        if len(set(norm.values())) != 1:
-            return Lane2Read(reason="unstable_read" if norm["tight_300"] != norm["tight_400"] else "context_disagrees", reads=reads)
+        if RULE_SECOND_RENDER and norm["tight_300"] != norm["tight_400"]:
+            return Lane2Read(reason="unstable_read", reads=reads)
+        if RULE_CONTEXT and norm["context"] != norm["tight_300"]:
+            return Lane2Read(reason="context_disagrees", reads=reads)
         conf = min(confs) if confs else 0.0
-        if conf < MIN_CONF:
+        if RULE_CONF and conf < MIN_CONF:
             return Lane2Read(reason="low_confidence", reads=reads, conf=conf)
         val, why = to.normalise_text_value(norm["tight_300"], f["value_type"], tag)
         if why:
@@ -237,6 +251,7 @@ def make_hook(engine: Engine, stats: dict | None = None):
     def hook(env) -> None:
         t0 = time.time()
         l2 = Lane2(engine, env.year)
+        env.notes["ocr_engine"] = engine.version() if hasattr(engine, "version") else type(engine).__name__
         n_read = n_emit = 0
         for tag, f in env.fmap["fields"].items():
             if f["ft"] != "/Tx" or f["question_number"] is None or tag in env.done or tag not in env.tag_field:

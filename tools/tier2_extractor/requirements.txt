@@ -2,3 +2,5 @@ pypdf>=6.0
 # build_field_map.py (PRD 038): static-ink rasters of the template pages
 numpy>=1.26
 pypdfium2==5.15.1
+# lane2_ocr.py (PRD 038 M2): PNG encoding of the crops handed to the tesseract command line
+Pillow==11.3.0

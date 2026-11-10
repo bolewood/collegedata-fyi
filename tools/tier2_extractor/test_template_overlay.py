@@ -1967,3 +1967,38 @@ def test_stroke_guard_does_not_raise_at_other_render_resolutions(flat_2526, monk
     monkeypatch.setattr(to, "INK_DPI", dpi)
     out = to.extract_overlay(flat_2526)
     assert out["notes"]["stage1"]["status"] == "matched" and _values_by_tag(out)       # no exception; what is read at 180 DPI is a recall matter, not tested here
+
+
+# ---- M2 Part 0: sub-point page registration -----------------------------------
+
+def test_subpoint_refinement_finds_a_pixel_offset_and_leaves_a_registered_page_alone():
+    k = to.INK_DPI / 72.0
+    t = np.full((int(792 * k), int(612 * k)), 255, dtype=np.uint8)
+    for r, c, h, w in [(200, 150, 4, 300), (400, 150, 4, 300), (200, 150, 204, 4), (200, 446, 204, 4), (600, 300, 40, 40)]:
+        t[r:r + h, c:c + w] = 0
+    assert to.refine_subpoint_shift(t, t, 0.0, 0.0) == (0.0, 0.0)                        # registered: not moved
+    moved = np.roll(t, (2, 1), axis=(0, 1))                                              # content one px right, two px down
+    dx, dy = to.refine_subpoint_shift(moved, t, 0.0, 0.0)
+    assert abs(dx - 1 / k) < 1e-9 and abs(dy + 2 / k) < 1e-9                              # x right, y up: down is negative
+    # a whole-point shift already applied is the baseline of the search
+    both = np.roll(t, (-3 * 1 + 2, 6 * 3 + 1), axis=(0, 1))                              # 6 pt right, 1 pt up (applied) plus the same sub-pixel residual
+    dx2, dy2 = to.refine_subpoint_shift(both, t, 6.0, 1.0)
+    assert abs(dx2 - 1 / k) < 1e-9 and abs(dy2 + 2 / k) < 1e-9
+    assert max(abs(v) for v in to.refine_subpoint_shift(np.roll(t, (0, 9), axis=(0, 1)), t, 0.0, 0.0)) <= to.SUBPOINT_RANGE_PX / k + 1e-9   # never beyond its range
+
+
+def test_page_ctx_carries_the_subpoint_shift_into_dx_dy(rich_2526):
+    data, _text, _btn = rich_2526
+    moved = translate_pages(data, 0.67, 0.0)
+    doc = pdfium.PdfDocument(moved)
+    res = to.match_template(doc)
+    q = next(iter(res.page_map))
+    c = to.PageCtx(doc, q, res.page_map[q], "2025-26", res)
+    assert c.dx0 == res.alignment[q]["dx"] and abs(c.dx - c.dx0 - c.sub[0]) < 1e-12
+    assert any(abs(to.PageCtx(doc, qq, pp, "2025-26", res).sub[0]) > 0.2 for qq, pp in list(res.page_map.items())[:6])   # a 0.67 pt print is refined, not left at 0
+    old = to.SUBPOINT_ALIGN
+    to.SUBPOINT_ALIGN = False
+    try:
+        assert to.PageCtx(doc, q, res.page_map[q], "2025-26", res).sub == (0.0, 0.0)
+    finally:
+        to.SUBPOINT_ALIGN = old
