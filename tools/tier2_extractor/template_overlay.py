@@ -68,10 +68,12 @@ MIN_TEMPLATE_INK_PX = 50                 # template pages with less ink are skip
 DUPLICATE_DIFF = 0.10                    # share of a widget rect's ink that differs between duplicate pages
 DUPLICATE_MIN_PX = 6
 HEADER_DPI = 144
-HEADER_VOTE_MARGIN = 0.01                # diff margin that counts as a header-year vote
-HEADER_VOTE_MAX_RATIO = 0.85            # quality floor: the winning diff must be below this share of the crop's own ink (a blank crop scores 1.0);
-                                         # cohort votes: median 0.14, p99.9 0.62, max 0.70 (4,412 votes)
-HEADER_MIN_VOTES = 5
+HEADER_VOTE_MARGIN = 0.01                # a vote: the best year beats the next by this much of the crop
+HEADER_VOTE_MAX_RATIO = 0.85            # ... and fits: diff below this share of the crop's own ink (a blank crop scores 1.0)
+HEADER_DISSENT_MARGIN = 0.02             # a vote that can HOLD the packet (a confident other-year page) needs more: margin >= this
+HEADER_DISSENT_MAX_RATIO = 0.6           # ... and ratio <= this. Cohort votes: median ratio 0.14, p99 0.59, max 0.70; the spurious dissent of sub-point
+                                         # shifted prints scored 0.68-0.74 (4 documents held at 0.5 pt before this split)
+HEADER_MIN_VOTES = 3
 RASTER_YEAR_VETO = 0.02                  # B2: a matched page whose best score in another year beats the chosen year's by this is not read
 # alignment (72 DPI: 1 px = 1 pt in template space)
 ALIGN_DPI = 72
@@ -311,6 +313,7 @@ class MatchResult:
     lead: int | None = None
     runner_up_year: str | None = None
     header_votes: dict[str, int] = field(default_factory=dict)
+    header_confident: dict[str, int] = field(default_factory=dict)   # votes that may hold the packet (margin and fit)
     page_map: dict[int, int] = field(default_factory=dict)        # target page -> template page
     offsets: dict[int, int] = field(default_factory=dict)         # target - template -> count
     alignment: dict[int, dict] = field(default_factory=dict)      # target page -> dx, dy, recall (template pt)
@@ -494,9 +497,9 @@ def header_year_vote(page: "pdfium.PdfPage", g: PageGeom, p: int, dx: float = 0.
     HEADER_VOTE_MARGIN *and* to explain the crop: its diff must be under
     HEADER_VOTE_MAX_RATIO of the crop's own ink. A blank, smudged or misplaced header
     (which would otherwise "vote" for whichever year has the least ink) casts no vote.
-    With detail=True returns (vote, best_diff, margin).
+    With detail=True returns (vote, best_diff, margin, diff / ink).
     """
-    none = (None, None, None) if detail else None
+    none = (None, None, None, None) if detail else None
     if p not in _header_boxes() or not g.supported:
         return none
     x0, y0, x1, y1 = _header_boxes()[p]
@@ -508,10 +511,13 @@ def header_year_vote(page: "pdfium.PdfPage", g: PageGeom, p: int, dx: float = 0.
     (d0, y0_), (d1, _y1) = diffs[0], diffs[1]
     ink = float((255.0 - crop[4:-4, 4:-4]).mean() / 255.0)
     vote = y0_ if (d1 - d0 > HEADER_VOTE_MARGIN and d0 <= HEADER_VOTE_MAX_RATIO * ink) else None
-    return (vote, d0, d1 - d0) if detail else vote
+    if detail:
+        return vote, d0, d1 - d0, (d0 / ink if ink > 0 else 9.0)
+    return vote
 
 
-def decide_year(counts: dict[str, int], header_votes: dict[str, int], detected_year: str | None) -> tuple[str, str | None, str | None, int, str | None]:
+def decide_year(counts: dict[str, int], header_votes: dict[str, int], detected_year: str | None,
+                confident_votes: dict[str, int] | None = None) -> tuple[str, str | None, str | None, int, str | None]:
     """Year decision. Returns (status, year, reason, raster_lead, runner_up_year).
 
     The page header (printed year) is the discriminator: the document year is the
@@ -529,13 +535,15 @@ def decide_year(counts: dict[str, int], header_votes: dict[str, int], detected_y
         return STATUS_NOT_TEMPLATE, None, "fewer_than_30_template_pages", lead, second
     if lead == 0:
         return STATUS_AMBIGUOUS, None, "tie_between_years", lead, second
-    voted = [y for y, n in header_votes.items() if n]
-    if len(voted) > 1:
-        return STATUS_AMBIGUOUS, None, "mixed_year_packet", lead, second
+    conf = header_votes if confident_votes is None else confident_votes
     total = sum(header_votes.values())
     if total < HEADER_MIN_VOTES:
+        if len([y for y, n in conf.items() if n]) > 1:
+            return STATUS_AMBIGUOUS, None, "mixed_year_packet", lead, second
         return STATUS_AMBIGUOUS, None, "header_year_unverified", lead, second
-    hdr = voted[0]
+    hdr = max(header_votes, key=lambda y: (header_votes[y], y))
+    if any(n and y != hdr for y, n in conf.items()):
+        return STATUS_AMBIGUOUS, None, "mixed_year_packet", lead, second      # one confident other-year page holds the packet
     if hdr != best:
         return STATUS_AMBIGUOUS, None, "header_year_contradicts_raster_year", lead, second
     if detected_year and detected_year != hdr:
@@ -787,6 +795,7 @@ def match_template(
 
     best_raster = sorted(years, key=lambda y: (-counts[y], y))[0]
     votes = {y: 0 for y in years}
+    confident = {y: 0 for y in years}
     est_cache: dict[int, dict] = {}
     if counts[best_raster] >= GATE_PAGES:
         # the decided year must equal the best raster year, so the page shifts are found
@@ -799,12 +808,15 @@ def match_template(
                 dxy = (est_cache[q]["dx"], est_cache[q]["dy"])
                 if not est_cache[q]["consistent"] or est_cache[q]["recall"] < ALIGN_MIN_RECALL:
                     continue            # a page that will be rejected for alignment is not a reliable voter (nor read)
-            v = header_year_vote(doc[q], geoms[q], p, *dxy)
+            v, _d0, margin, ratio = header_year_vote(doc[q], geoms[q], p, *dxy, detail=True)
             if v:
                 votes[v] += 1
+                if margin >= HEADER_DISSENT_MARGIN and ratio <= HEADER_DISSENT_MAX_RATIO:
+                    confident[v] += 1
     res.header_votes = {y: c for y, c in votes.items() if c}
+    res.header_confident = {y: c for y, c in confident.items() if c}
 
-    status, year, reason, lead, second = decide_year(counts, votes, detected_year)
+    status, year, reason, lead, second = decide_year(counts, votes, detected_year, confident)
     res.lead, res.runner_up_year = lead, second
     if status != STATUS_MATCHED:
         res.status, res.reason = status, reason
@@ -1127,23 +1139,136 @@ def choice_to_export(raw: str, opt: list[list[str]] | None, *, clipped: bool = F
 # Lane 3: checkboxes and radios (ink density, baseline-subtracted)
 # --------------------------------------------------------------------------
 
-LANE3_INSET = 0.35          # fraction of each side trimmed before measuring
-LANE3_THRESHOLD = 0.05      # baseline-subtracted ink density that counts as checked
+# A box is measured where the print draws it: the white interior enclosed by the box's own frame is
+# found by flood fill from the rect's centre, and the mark is the ink density of the central part of
+# that interior. Frame, bevel and template glyph are therefore never inside the measured area, so the
+# score does not depend on where the print puts the box (sub-point offsets, boxes bigger or heavier
+# than the template's) and an empty box scores ~0 with no baseline to subtract.
+INTERIOR_WHITE = 225        # gray level from which a pixel counts as the box's white interior
+INTERIOR_MARGIN_PT = 3.0    # the flood is confined to the rect plus this margin; leaving it means "no closed box"
+INTERIOR_SEED_PT = 1.6      # seeds: white pixels within this of the rect centre (a check mark may split the interior)
+INTERIOR_INSET = 0.20       # central share of the interior that is measured: the inner 60%
+INTERIOR_MAX_OFFSET_PT = 2.5   # the interior's centre must lie this close to the rect's centre
+INTERIOR_ASPECT = (0.6, 1.7)   # width / height of an interior
+INTERIOR_NEST_RATIO = 1.4      # print interior / template interior (area) above which pinholes are closed
+INTERIOR_MIN_PT = 2.5          # smaller interiors are not boxes
+LANE3_INSET = 0.35          # boxless widgets (no frame to avoid): the central 30% of the rect
+LANE3_THRESHOLD = 0.04      # interior ink density that counts as checked (cohort controls: blank boxes <= 0.012, checks >= 0.085)
 LANE3_MARGIN = 0.03         # radio group: winner must beat the runner-up by this
-LANE3_BAND_HI = 0.12        # a lone checkbox scoring in [THRESHOLD, BAND_HI) abstains
-FRAME_MIN_RECALL = 0.85     # share of the blank box outline that must be present at the box that would be emitted
-FRAME_MEMBER_MIN = 0.5      # ... and at least this share at every other box of its group
-BORDER_MIN_PX = 8           # a measured interior with fewer dark pixels cannot show a line
-BORDER_LINE_SHARE = 0.6     # two adjacent pixel rows/columns holding this share of the dark ink are a straight stroke
-FRAME_SEARCH_PX = 6         # each box is registered on its own within this many 216-DPI pixels (about 2 pt)
-FRAME_INNER = 0.20          # the outline ring is the rect minus its inner 60%
-RADIO_BAND_RUNNER_UP = 0.01  # a radio winner in the gray band whose runner-up is this close to blank abstains
-RADIO_BAND_RULE = True       # measured: the band rule is what removes the Lone Star and Eastern Michigan AP_FEE errors
 # "fill in one only" groups: two checked members mean a misread, so abstain on all
 FILL_ONE_GROUPS = (
     ("AP_NOTF_DL_FRSH_I", "AP_NOTF_DL_FRSH", "AP_NOTF_DL_OTH"),                   # C16
     ("AP_REPLY_DL", "AP_REPLY_DL_NO", "AP_REPLY_DL_MUST", "AP_REPLY_OTH"),         # C17
 )
+
+
+@dataclass
+class Interior:
+    """The white interior of a box as the print draws it (216-DPI pixel rows/cols of the page render)."""
+    r0: int
+    r1: int
+    c0: int
+    c1: int
+    w_pt: float
+    h_pt: float
+    dcx_pt: float
+    dcy_pt: float
+
+
+def _flood_interior(gray: np.ndarray, rect: list[float], dx: float, dy: float, close: bool):
+    """The fill itself. Returns (Interior | None, reason | None, region_area_px)."""
+    x0, y0, x1, y1 = rect
+    r0, r1, c0, c1 = template_rect_to_pixels([x0 - INTERIOR_MARGIN_PT, y0 - INTERIOR_MARGIN_PT,
+                                              x1 + INTERIOR_MARGIN_PT, y1 + INTERIOR_MARGIN_PT], dx, dy, INK_DPI)
+    if r0 < 0 or c0 < 0 or r1 > gray.shape[0] or c1 > gray.shape[1]:
+        return None, "box_off_page", 0
+    white_raw = gray[r0:r1, c0:c1] >= INTERIOR_WHITE
+    white = white_raw.copy()
+    if close:
+        # one-pixel pinholes in an anti-aliased frame must not open it: the fill runs on the white eroded
+        # by one pixel and its result is grown back by one pixel
+        white[1:] &= white_raw[:-1]
+        white[:-1] &= white_raw[1:]
+        white[:, 1:] &= white_raw[:, :-1]
+        white[:, :-1] &= white_raw[:, 1:]
+    H, Wd = white.shape
+    k = INK_DPI / 72.0
+    cy, cx = (H - 1) / 2.0, (Wd - 1) / 2.0
+    yy0, xx0 = np.mgrid[0:H, 0:Wd]
+    dist = np.hypot(yy0 - cy, xx0 - cx)
+    seeds = white & (dist <= INTERIOR_SEED_PT * k)
+    if not seeds.any():
+        # a solid mark (a radio's dot) covers the centre: start from the white nearest to it, inside the box
+        near = white & (dist <= 0.5 * min(x1 - x0, y1 - y0) * k)
+        if not near.any():
+            return None, "box_not_closed", 0
+        seeds = near & (dist <= dist[near].min() + 1.5)
+    sy, sx = np.nonzero(seeds)
+    seen = np.zeros_like(white)
+    stack = [(int(a), int(b)) for a, b in zip(sy, sx)]
+    for y, x in stack:
+        seen[y, x] = True
+    while stack:
+        y, x = stack.pop()
+        for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
+            if not (0 <= ny < H and 0 <= nx < Wd):
+                return None, "box_not_closed", 0
+            if white[ny, nx] and not seen[ny, nx]:
+                seen[ny, nx] = True
+                stack.append((ny, nx))
+    if close:
+        grown = seen.copy()
+        grown[1:] |= seen[:-1]
+        grown[:-1] |= seen[1:]
+        grown[:, 1:] |= seen[:, :-1]
+        grown[:, :-1] |= seen[:, 1:]
+        seen = grown & white_raw
+    yy, xx = np.nonzero(seen)
+    a, b, c, d = int(yy.min()), int(yy.max()) + 1, int(xx.min()), int(xx.max()) + 1
+    w_pt, h_pt = (d - c) / k, (b - a) / k
+    # centre offsets in template points (x right, y up) relative to the rect centre
+    dcx = ((c0 + (c + d) / 2.0) / k - dx) - (x0 + x1) / 2.0
+    dcy = (792.0 - (r0 + (a + b) / 2.0) / k - dy) - (y0 + y1) / 2.0
+    lo, hi = INTERIOR_ASPECT
+    if (abs(dcx) > INTERIOR_MAX_OFFSET_PT or abs(dcy) > INTERIOR_MAX_OFFSET_PT or min(w_pt, h_pt) < INTERIOR_MIN_PT
+            or not lo <= w_pt / h_pt <= hi):
+        return None, "box_geometry", 0
+    return Interior(r0 + a, r0 + b, c0 + c, c0 + d, w_pt, h_pt, dcx, dcy), None, (b - a) * (d - c)
+
+
+def locate_interior(gray: np.ndarray, rect: list[float], dx: float, dy: float,
+                    template_interior: "Interior | None" = None) -> tuple[Interior | None, str | None]:
+    """Find the interior of the box the print draws at `rect` (template space, page shift applied).
+
+    Returns (interior, None) or (None, reason). The interior is the connected white region (4-neighbour,
+    gray >= INTERIOR_WHITE) around the rect's centre, confined to the rect plus INTERIOR_MARGIN_PT:
+    a frame that is not closed leaks out of that window ("box_not_closed"); a region that is not
+    box-shaped or not centred on the rect ("box_geometry") is some other white space (a reflowed line,
+    typed text). All white pixels near the centre seed the fill, so a check mark that splits the
+    interior still yields the whole box.
+
+    `template_interior` is the same measurement on the blank template. A template whose box has a second,
+    inner frame (FORM_DOM_*) has a small interior there; if the print's fill comes out much bigger
+    (INTERIOR_NEST_RATIO) it has run through a pinhole of that inner frame into the ring around it, so the
+    fill is repeated with pinholes closed and, if that finds nothing, the box is not read.
+    """
+    it, why, area = _flood_interior(gray, rect, dx, dy, close=False)
+    if it is None or template_interior is None:
+        return it, why
+    t_area = (template_interior.r1 - template_interior.r0) * (template_interior.c1 - template_interior.c0)
+    if area > INTERIOR_NEST_RATIO * t_area:
+        it2, why2, _a2 = _flood_interior(gray, rect, dx, dy, close=True)
+        return (it2, None) if it2 is not None else (None, why2 or "box_geometry")
+    return it, why
+
+
+def interior_density(gray: np.ndarray, it: Interior, inset: float = INTERIOR_INSET) -> float | None:
+    """Mean ink (0 white .. 1 black) of the central part of a located interior."""
+    ih, iw = int(round((it.r1 - it.r0) * inset)), int(round((it.c1 - it.c0) * inset))
+    core = gray[it.r0 + ih:it.r1 - ih, it.c0 + iw:it.c1 - iw]
+    if core.size == 0:
+        return None
+    return float((255.0 - core.astype(np.float32)).mean() / 255.0)
 
 
 def _crop_density(gray: np.ndarray, rect: list[float], dx: float, dy: float, dpi: float, inset: float) -> float | None:
@@ -1156,82 +1281,14 @@ def _crop_density(gray: np.ndarray, rect: list[float], dx: float, dy: float, dpi
     return float((255.0 - gray[r0:r1, c0:c1].astype(np.float32)).mean() / 255.0)
 
 
-def core_is_border_line(gray: np.ndarray, rect: list[float], dx: float, dy: float) -> bool:
-    """Does the interior measured for a box hold one straight stroke (a box border), not a mark?
-
-    A check or cross is diagonal ink spread over many rows and columns; the border of a
-    box that is bigger or heavier than the template's glyph, or sits a little off, enters
-    the measured interior as a single line along one edge. Such a box scores like a
-    check mark while empty, so it is not read.
-    """
-    x0, y0, x1, y1 = rect
-    ix, iy = (x1 - x0) * LANE3_INSET, (y1 - y0) * LANE3_INSET
-    r0, r1, c0, c1 = template_rect_to_pixels([x0 + ix, y0 + iy, x1 - ix, y1 - iy], dx, dy, INK_DPI)
-    if r0 < 0 or c0 < 0 or r1 > gray.shape[0] or c1 > gray.shape[1] or r1 <= r0 or c1 <= c0:
-        return False
-    dark = gray[r0:r1, c0:c1] < 128
-    total = int(dark.sum())
-    if total < BORDER_MIN_PX:
-        return False
-    def widest(v: np.ndarray) -> int:       # a stroke is a pixel or two wide
-        return int(max(v[i:i + 2].sum() for i in range(max(len(v) - 1, 1))))
-
-    return max(widest(dark.sum(axis=0)), widest(dark.sum(axis=1))) >= BORDER_LINE_SHARE * total
-
-
-def locate_frame(c: "_PageCtx", rect: list[float]) -> tuple[float | None, float, float]:
-    """Find a box's outline near the mapped rect: (recall, dx_pt, dy_pt).
-
-    The blank template's outline (the rect's border ring) is matched against the
-    target within +-FRAME_SEARCH_PX pixels (216 DPI, about +-2 pt) of the applied page
-    transform. `recall` is the share of the outline found at the best offset (None: the
-    template has no outline ink there) and the offsets are in template points (not
-    applied to the interior measurement: PDFium-flattened prints draw their own bevelled
-    box about 1 pt from the template's glyph, a systematic offset). A box whose outline is not there
-    (typed text reflowed the line, a row shifted) has a low recall and is not read.
-    """
-    r0, r1, c0, c1 = template_rect_to_pixels(rect, c.dx, c.dy, INK_DPI)
-    tr0, tr1, tc0, tc1 = template_rect_to_pixels(rect, 0.0, 0.0, INK_DPI)
-    m = FRAME_SEARCH_PX + 1
-    if min(r0 - m, c0 - m, tr0, tc0) < 0 or r1 + m > c.gray.shape[0] or c1 + m > c.gray.shape[1] \
-            or tr1 > c.tgray.shape[0] or tc1 > c.tgray.shape[1]:
-        return 0.0, 0.0, 0.0
-    tpl = c.tgray[tr0:tr1, tc0:tc1] < 200
-    h, w = tpl.shape
-    ring = np.ones((h, w), dtype=bool)
-    ih, iw = int(h * FRAME_INNER), int(w * FRAME_INNER)
-    ring[ih:h - ih, iw:w - iw] = False
-    ring &= tpl
-    n = int(ring.sum())
-    if n < 20:
-        return None, 0.0, 0.0
-    big = _dilate(c.gray[r0 - m:r1 + m, c0 - m:c1 + m] < 200, 1)
-    best, hits = -1.0, []
-    for sy in range(-FRAME_SEARCH_PX, FRAME_SEARCH_PX + 1):
-        for sx in range(-FRAME_SEARCH_PX, FRAME_SEARCH_PX + 1):
-            win = big[m + sy:m + sy + h, m + sx:m + sx + w]
-            if win.shape != tpl.shape:
-                continue
-            rec = float((ring & win).sum()) / n
-            if rec > best + 1e-9:
-                best, hits = rec, [(sx, sy)]
-            elif abs(rec - best) <= 1e-9:
-                hits.append((sx, sy))
-    sx = int(round(float(np.mean([a for a, _ in hits]))))
-    sy = int(round(float(np.mean([b for _, b in hits]))))
-    k = INK_DPI / 72.0
-    return best, sx / k, -sy / k          # dy is up-positive
-
-
 def _is_btn_checked(scores: list[float | None], threshold: float, margin: float):
     """Pick the checked widget of a field from its baseline-subtracted scores.
 
     Returns (index | None, reason | None). A lone widget is checked when its
     score reaches the threshold. In a group the top widget wins when it reaches
     the threshold and beats the runner-up by `margin`; otherwise nothing is
-    emitted and the reason is "ambiguous_radio". A lone widget inside the gray
-    band [threshold, LANE3_BAND_HI) abstains ("lone_checkbox_gray_band"), and so
-    does (when enabled) a radio winner in the band whose runner-up is ~0.
+    emitted and the reason is "ambiguous_radio". Interior scores are bimodal (blank
+    boxes ~0, marks >= 0.06), so no gray band is needed.
     """
     live = [(s, i) for i, s in enumerate(scores) if s is not None]
     if not live:
@@ -1241,13 +1298,9 @@ def _is_btn_checked(scores: list[float | None], threshold: float, margin: float)
     if top_s < threshold:
         return None, None
     if len(live) == 1:
-        if top_s < LANE3_BAND_HI:
-            return None, "lone_checkbox_gray_band"
         return top_i, None
     if top_s - live[1][0] < margin:
         return None, "ambiguous_radio"
-    if RADIO_BAND_RULE and top_s < LANE3_BAND_HI and live[1][0] <= RADIO_BAND_RUNNER_UP:
-        return None, "radio_gray_band"
     return top_i, None
 
 
@@ -1385,6 +1438,30 @@ class _PageCtx:
         if self._tgray is None:
             self._tgray = _render_gray(_template_doc(self.year)[self.p], INK_DPI)
         return self._tgray
+
+    def template_has_box(self, rect: list[float]) -> bool:
+        """Does the blank template draw a box outline at this rect (outer ring of the rect)?"""
+        tr0, tr1, tc0, tc1 = template_rect_to_pixels(rect, 0.0, 0.0, INK_DPI)
+        tpl = self.tgray[tr0:tr1, tc0:tc1] < 200
+        h, w = tpl.shape
+        if h == 0 or w == 0:
+            return False
+        ring = np.ones((h, w), dtype=bool)
+        ih, iw = int(h * 0.2), int(w * 0.2)
+        ring[ih:h - ih, iw:w - iw] = False
+        return int((ring & tpl).sum()) >= 20
+
+    def template_interior(self, key, rect: list[float]) -> "tuple[Interior | None, float]":
+        """The blank template's own box interior at this rect and the ink density inside it (0 if none)."""
+        cache = self.__dict__.setdefault("_tint", {})
+        if key not in cache:
+            it, _why = locate_interior(self.tgray, rect, 0.0, 0.0)
+            d = interior_density(self.tgray, it) if it is not None else None
+            cache[key] = (it, d or 0.0)
+        return cache[key]
+
+    def template_interior_density(self, key, rect: list[float]) -> float:
+        return self.template_interior(key, rect)[1]
 
     def band_of(self, rect: list[float]) -> int:
         cy = 792.0 - (rect[1] + rect[3]) / 2.0
@@ -1640,39 +1717,39 @@ def _extract(
         if tag not in tag_field:
             continue
         row: list[float | None] = []
-        frames: list[tuple[float | None, float]] = []
         first_q = None
         missing_page = False
+        unlocated = None
         gate_reason = None
         for wi, w in enumerate(f["widgets"]):
             p = w["template_page"]
             q = by_tpage.get(p)
             if q is None:
                 row.append(None)
-                frames.append((None, 0.0))
                 missing_page = True
                 continue
             first_q = first_q if first_q is not None else q
             c = ctx_for(q, p)
-            fr, fdx, fdy = locate_frame(c, w["rect"])
-            frames.append((fr, max(abs(fdx), abs(fdy))))
-            tgt = _crop_density(c.gray, w["rect"], c.dx, c.dy, INK_DPI, LANE3_INSET)
-            base = _crop_density(c.tgray, w["rect"], 0.0, 0.0, INK_DPI, LANE3_INSET)
-            row.append(None if tgt is None or base is None else tgt - base)
+            tit, tdens = c.template_interior((tag, wi), w["rect"])
+            it, why_box = locate_interior(c.gray, w["rect"], c.dx, c.dy, tit)
+            tgt = interior_density(c.gray, it) if it is not None else None
+            if tgt is not None:
+                row.append(tgt - tdens)
+            elif c.template_has_box(w["rect"]):
+                unlocated = unlocated or why_box or "box_not_closed"    # the template draws a box here and the print's is not found
+                row.append(None)
+            else:
+                # the template draws no box here (an N/A option): a mark is the only ink, measured in the rect's core
+                tgt = _crop_density(c.gray, w["rect"], c.dx, c.dy, INK_DPI, LANE3_INSET)
+                base = _crop_density(c.tgray, w["rect"], 0.0, 0.0, INK_DPI, LANE3_INSET)
+                row.append(None if tgt is None or base is None else tgt - base)
         idx, why = _is_btn_checked(row, lane3_threshold, lane3_margin)
         if idx is None and not why:
             continue
         # something would be emitted (or is doubtful): only a group that is verifiably in place is read
         gate_reason = "page_not_matched" if missing_page else None
-        if gate_reason is None and idx is not None:
-            win = frames[idx]
-            if (win[0] is not None and win[0] < FRAME_MIN_RECALL) or any(x[0] is not None and x[0] < FRAME_MEMBER_MIN for x in frames):
-                gate_reason = "box_outline_missing"
-        if gate_reason is None and idx is not None:
-            wq = by_tpage[f["widgets"][idx]["template_page"]]
-            if core_is_border_line(ctx_for(wq, f["widgets"][idx]["template_page"]).gray, f["widgets"][idx]["rect"],
-                                   ctxs[wq].dx, ctxs[wq].dy):
-                gate_reason = "box_border_in_interior"
+        if gate_reason is None and unlocated:
+            gate_reason = unlocated            # a member's box was not found: the winner cannot be compared with it
         if gate_reason is None:
             for wi, w in enumerate(f["widgets"]):
                 q = by_tpage.get(w["template_page"])

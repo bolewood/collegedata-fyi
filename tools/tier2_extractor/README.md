@@ -160,13 +160,19 @@ CDS_M1_PDF_DIR=/path/to/review/pdfs python -m pytest tools/tier2_extractor -q -k
 ```
 
 - **Year.** The printed page header ("Common Data Set YYYY-YYYY") is compared with each
-  year's blank (2023-24 included) at 144 DPI. The document year is the header majority
-  and must agree with the best raster year; ties, mixed packets, contradictions and
-  unverifiable headers hold the document (`template_year_ambiguous`, nothing emitted), a
-  2023-24 print is `template_year_unsupported`, and a page whose own header votes the
-  other year is not read. `detected_year` can only veto; `cds_year` is never used. A
-  forced-year run exists only as `_diagnostic_extract_forced_year` for the evaluation
-  script.
+  year's blank (2023-24 included) at 144 DPI, cropped at the page's applied shift (±4 px
+  residual search). A page votes when the best year beats the next by 0.01 and its diff is
+  under 0.85 of the crop's own ink (a blank or misplaced crop votes for nothing). The year is
+  the plurality of votes (≥ 3) and must agree with the best raster year. The rule is strict:
+  one *confident* other-year vote (margin ≥ 0.02 and diff ≤ 0.6 of the ink) holds the whole
+  packet (`mixed_year_packet`); weak other-year votes (poorly fitting headers of sub-point
+  shifted prints scored 0.68-0.74) cannot. A page that will be rejected for alignment casts no
+  vote. Ties, contradictions and unverifiable headers hold the document
+  (`template_year_ambiguous`, nothing emitted); a 2023-24 print is
+  `template_year_unsupported`. A matched page whose own raster score in another year beats
+  the chosen year's by > 0.02 is not read (`page_raster_prefers_other_year`). `detected_year`
+  can only veto; `cds_year` is never used. A forced-year run exists only as
+  `_diagnostic_extract_forced_year` for the evaluation script.
 - **Pages.** Each target page is rendered like the committed masks (36 DPI, ink gray
   < 225) and scored against every template page: recall of the template's static ink
   (two 4-neighbour dilations), clamped by precision (`min(recall, precision + 0.25)`).
@@ -180,7 +186,10 @@ CDS_M1_PDF_DIR=/path/to/review/pdfs python -m pytest tools/tier2_extractor -q -k
   Pages that cannot be mapped exactly are rejected.
 - **Alignment.** The page shift is applied only when every inked horizontal band agrees
   with it within 1 pt; otherwise the page is rejected (`partial_page_shift`) or, with no
-  shift, the disagreeing band's widgets abstain (`band_misaligned`). Each widget is also
+  shift, the disagreeing band's widgets abstain (`band_misaligned`). A page is also rejected
+  (`residual_page_shift`) when its optimum sits on the ±8 pt search boundary, or when most
+  inked bands agree on a shift more than 1 pt from the applied one, whatever the gain (a
+  10-12 pt page shift otherwise leaves a 2-4 pt residual that reads empty boxes as checked). Each widget is also
   checked on its own: its template static ink within 14 pt must not fit a shifted target
   ≥ 0.10 better in x or y (ignoring shifts the blank itself cannot tell from 0, like one
   table-row period): `local_misalignment`.
@@ -195,12 +204,27 @@ CDS_M1_PDF_DIR=/path/to/review/pdfs python -m pytest tools/tier2_extractor -q -k
   is recorded in each value. `/Ch` reads map to exports through `/Opt` (whitespace-
   insensitive; a clipped read must be the prefix of exactly one option; an exact match
   that is a proper prefix of another option abstains when it reaches the rect edge).
-- **Lane 3.** Interior ink density (35% inset, 216 DPI) minus the blank's. Checked at
-  >= 0.05; a radio winner needs a 0.03 margin. Abstentions: lone checkbox in [0.05, 0.12)
-  (`lone_checkbox_gray_band`), radio winner in that band with a runner-up <= 0.01
-  (`radio_gray_band`), winner's blank outline not found at the rect (`box_outline_missing`),
-  a single straight stroke in the measured interior (`box_border_in_interior`), and two
-  checked boxes in a "fill in one only" group.
+  **Edge guard** (Number, Text and /Ch alike; `edge_continuation`, also meant for Lane 2 crops):
+  a non-form glyph on the read's line whose box crosses the rect's left or right edge, or lies
+  within 1 pt outside it, means the rect cuts a longer string (`glyph_crosses_*_edge`,
+  `glyph_past_*_edge`); a multi-line Text read with paragraph lines just above or below the rect
+  abstains (`multiline_overflow`). Spaces pdfium generated between the read glyphs are kept even
+  when they sit below the rect's centre line. `1.234` on a whole-number field is a thousands
+  separator, not a decimal (`ambiguous_thousands_separator`).
+- **Lane 3.** Each box is measured where the print draws it: the white interior enclosed by
+  the box's own frame is found by flood fill from the rect's centre (confined to the rect + 3 pt;
+  seeded by every white pixel near the centre so a check mark that splits the box still gives
+  the whole box; one-pixel pinholes are closed when the fill is much bigger than the blank
+  template's own interior, which is how a nested inner frame is told apart), and the mark is the
+  ink density of its central 60%. The frame, bevel and template glyph are never inside the
+  measured area, so an empty box scores ~0 at any sub-point phase and a mark ≥ 0.06 (cohort: 18,372
+  scores within ±0.005, 27 between 0.001 and 0.03, none in [0.03, 0.04)). Checked at ≥ 0.04 after
+  subtracting the ink the blank template itself has in that interior; a radio winner needs a 0.03
+  margin. Abstentions: the template draws a box and the print's is not found (`box_not_closed`,
+  `box_geometry`: not closed, not box-shaped, or not centred within 2.5 pt of the rect), the alignment
+  gates, and two checked boxes in a "fill in one only" group. Options with no box in the template
+  (an N/A) are read from the rect core. The v0.2.0 rules this replaces (gray bands, blank-outline
+  gate, border-in-interior) are removed, not disabled; PRD A9 lists what each cost.
 - **Validation.** Identity failures (B1, C1, C9) reject every value in the identity, in
   every lane. Then `apply_b1_derived_all_totals`. Fields whose map entry has no
   `question_number` are skipped and counted.

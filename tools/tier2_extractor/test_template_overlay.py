@@ -208,6 +208,17 @@ def add_text(data: bytes, page_index: int, x: float, y: float, text: str, *, ren
     return _write(w)
 
 
+def add_check(data: bytes, page_index: int, rect: list[float]) -> bytes:
+    """Draw a clear check mark across a widget rect (a second tick in a group, or a mark on a box-less option)."""
+    w = _writer_from(data)
+    page = w.pages[page_index]
+    x0, y0, x1, y1 = rect
+    path = (f"\nq 0 G 1.1 w {x0 + 0.2 * (x1 - x0):.3f} {y0 + 0.5 * (y1 - y0):.3f} m {x0 + 0.42 * (x1 - x0):.3f} {y0 + 0.2 * (y1 - y0):.3f} l "
+            f"{x0 + 0.85 * (x1 - x0):.3f} {y0 + 0.85 * (y1 - y0):.3f} l S Q\n").encode()
+    page[NameObject("/Contents")] = ArrayObject(_contents_parts(page) + [_raw(w, path)])
+    return _write(w)
+
+
 def assemble(sources: list[tuple[bytes, int]]) -> bytes:
     """A packet built from (document, page index) pairs, in order."""
     readers: dict[int, pypdf.PdfReader] = {}
@@ -283,19 +294,18 @@ def test_extract_overlay_reads_text_and_checkboxes(base):
 
 def test_unchecked_boxes_with_realistic_ink_are_not_emitted(base):
     vals = _values_by_tag(base)
-    assert "HOUS_DISABLED" not in vals                       # 2% stray ink: below the threshold
-    assert "HOUS_COOP" not in vals                           # 8% stray ink: abstain, do not guess
-    assert "lone_checkbox_gray_band" in _held(base, "HOUS_COOP")
-    assert "HOUS_DISABLED" not in {w["pdf_tag"] for w in base["notes"]["withheld"]}
+    assert "HOUS_DISABLED" not in vals                       # 2% stray ink: far below the threshold
+    assert "HOUS_COOP" not in vals                           # 8% stray ink (of the old 30% core): below the threshold
+    assert not _held(base, "HOUS_COOP") and not _held(base, "HOUS_DISABLED")
     assert sum(1 for r in base["values"].values() if r.get("lane") == "checkbox") == 5   # 4 filled + HOUS_SINGLE
 
 
 def test_lane3_threshold_is_exercised(flat_2526):
     """A lower threshold must change the outcome, so a threshold mutation cannot go unnoticed."""
     low = to.extract_overlay(flat_2526, lane3_threshold=0.001)
-    assert "lone_checkbox_gray_band" in _held(low, "HOUS_DISABLED")          # 2% ink now counts as a (doubtful) check
-    assert _values_by_tag(low).get("HOUS_DISABLED") is None                  # ... and still is never emitted
-    assert not _held(to.extract_overlay(flat_2526), "HOUS_DISABLED")
+    assert _values_by_tag(low).get("HOUS_COOP") == "/X"                      # the 8% speck counts at a near-zero threshold ...
+    assert "HOUS_COOP" not in _values_by_tag(to.extract_overlay(flat_2526))  # ... and not at the default
+    assert "HOUS_COOP" not in _values_by_tag(to.extract_overlay(flat_2526, lane3_threshold=0.9))
 
 
 # --------------------------------------------------------------------------
@@ -315,6 +325,9 @@ def test_decide_year_rules():
     # strict: ONE confident other-year page holds the whole packet (no majority rule)
     assert d(c, {"2025-26": 48, "2024-25": 1}, None)[:3] == (to.STATUS_AMBIGUOUS, None, "mixed_year_packet")
     assert d(c, {"2025-26": 48, "2023-24": 1}, None)[2] == "mixed_year_packet"
+    # a weak vote for another year (poor margin or fit: sub-point prints, odd fonts) cannot hold a packet; a confident one can
+    assert d(c, {"2025-26": 48, "2023-24": 1}, None, {"2025-26": 40})[:3] == (to.STATUS_MATCHED, "2025-26", None)
+    assert d(c, {"2025-26": 48, "2023-24": 1}, None, {"2025-26": 40, "2023-24": 1})[2] == "mixed_year_packet"
     assert d(c, {"2024-25": 2}, None)[2] == "header_year_unverified"
     assert d({"2024-25": 50, "2025-26": 50}, {"2025-26": 40}, "2025-26")[2] == "tie_between_years"
     assert d({"2023-24": 50, "2024-25": 30}, {"2023-24": 40}, None)[0] == to.STATUS_UNSUPPORTED_YEAR
@@ -761,21 +774,15 @@ def test_multi_widget_fields_must_agree():
 
 def test_btn_decision():
     f = to._is_btn_checked
-    assert f([0.4], 0.05, 0.03) == (0, None) and f([0.01], 0.05, 0.03) == (None, None)
-    assert f([0.08], 0.05, 0.03) == (None, "lone_checkbox_gray_band") and f([0.12], 0.05, 0.03) == (0, None)
-    assert f([0.0, 0.4, 0.01], 0.05, 0.03) == (1, None)
-    assert f([0.4, 0.39], 0.05, 0.03) == (None, "ambiguous_radio")
-    assert f([None, None], 0.05, 0.03) == (None, None)
-    assert to.RADIO_BAND_RULE is True
-    assert f([0.0, 0.09], 0.05, 0.03) == (None, "radio_gray_band")      # winner in the band, runner-up blank: abstain
-    assert f([0.3, 0.09], 0.05, 0.03) == (0, None)                        # clear winner over a real runner-up
-    assert f([0.0, 0.3], 0.05, 0.03) == (1, None)                         # a strong check is kept
-    old = to.RADIO_BAND_RULE
-    try:
-        to.RADIO_BAND_RULE = False
-        assert f([0.0, 0.09], 0.05, 0.03) == (1, None)
-    finally:
-        to.RADIO_BAND_RULE = old
+    assert f([0.4], 0.04, 0.03) == (0, None) and f([0.01], 0.04, 0.03) == (None, None)
+    assert f([0.06], 0.04, 0.03) == (0, None)                                # no gray band: interior scores are bimodal
+    assert f([0.0, 0.4, 0.01], 0.04, 0.03) == (1, None)
+    assert f([0.4, 0.39], 0.04, 0.03) == (None, "ambiguous_radio")
+    assert f([None, None], 0.04, 0.03) == (None, None)
+    assert f([None, 0.3, 0.0], 0.04, 0.03) == (1, None)
+    for gone in ("RADIO_BAND_RULE", "LANE3_BAND_HI", "FRAME_GATE", "BORDER_RULE"):
+        assert not hasattr(to, gone), gone                                   # the legacy rules are removed, not disabled
+    assert not hasattr(to, "locate_frame") and not hasattr(to, "core_is_border_line")
 
 
 def test_fill_in_one_group_with_two_checked_abstains_on_both():
@@ -972,11 +979,15 @@ def test_header_vote_needs_an_absolute_match():
     tdoc = to._template_doc(year)
     page = tdoc[4]
     g = to.page_geometry(page)
-    vote, d0, margin = to.header_year_vote(page, g, 4, detail=True)
-    assert vote == year and d0 < 0.01 and margin > to.HEADER_VOTE_MARGIN
-    assert to.header_year_vote(page, g, 4, 40.0, 0.0) is None                      # crop taken 40 pt away from the header
-    assert to.header_year_vote(page, g, 4, 0.0, -10.0) is None                     # a blank crop would "vote" for the lightest year
-    assert to.header_year_vote(page, g, 4, 0.0, 6.0) is None                       # 6 pt off: matches no year well
+    vote, d0, margin, ratio = to.header_year_vote(page, g, 4, detail=True)
+    assert vote == year and d0 < 0.01 and margin >= to.HEADER_DISSENT_MARGIN and ratio <= to.HEADER_DISSENT_MAX_RATIO
+    def confident(dx, dy):
+        v, _d, m, r = to.header_year_vote(page, g, 4, dx, dy, detail=True)
+        return v is not None and m >= to.HEADER_DISSENT_MARGIN and r <= to.HEADER_DISSENT_MAX_RATIO
+    assert not confident(40.0, 0.0)          # crop taken 40 pt away from the header
+    assert not confident(0.0, -10.0)         # a blank crop "votes" for the lightest year at best weakly
+    assert not confident(0.0, 6.0)           # 6 pt off: matches no year well
+    assert to.header_year_vote(page, g, 4, 0.0, -30.0) is None      # fully blank crop: no ink, no vote
     assert to.header_year_vote(page, g, 4, 0.0, 0.0) == year
 
 
@@ -1086,6 +1097,317 @@ def test_thousands_dot_on_integer_typed_fields(raw, vt, ok):
         assert why == "ambiguous_thousands_separator"
 
 
+# ---- Lane 3: the box is measured where the print draws it -----------------------
+
+K3 = 216 / 72
+
+
+def _page_canvas() -> np.ndarray:
+    return np.full((int(792 * K3), int(612 * K3)), 255, dtype=np.uint8)
+
+
+def _draw_box(g: np.ndarray, x0: float, y0: float, x1: float, y1: float, stroke: float = 1.0, level: int = 0,
+              gap: tuple[str, int] | None = None) -> None:
+    """A frame with the outer edge on (x0, y0, x1, y1) (template pt, y up); `gap` ('top'|'left', px) opens it."""
+    t = max(int(round(stroke * K3)), 1)
+    r0, c0 = int((792 - y1) * K3), int(x0 * K3)
+    r1, c1 = int((792 - y0) * K3), int(x1 * K3)
+    g[r0:r0 + t, c0:c1] = level
+    g[r1 - t:r1, c0:c1] = level
+    g[r0:r1, c0:c0 + t] = level
+    g[r0:r1, c1 - t:c1] = level
+    if gap:
+        side, n = gap
+        mid = (r0 + r1) // 2 if side == "left" else (c0 + c1) // 2
+        if side == "left":
+            g[mid - n:mid + n, c0:c0 + t] = 255
+        else:
+            g[r0:r0 + t, mid - n:mid + n] = 255
+
+
+def _draw_check(g: np.ndarray, cx: float, cy: float, size: float) -> None:
+    r, c = int((792 - cy) * K3), int(cx * K3)
+    for i in range(int(size * K3)):
+        g[r + i // 2 - 2:r + i // 2 + 1, c - int(size * K3 / 2) + i:c - int(size * K3 / 2) + i + 3] = 0
+        g[r - i // 2 - 3:r - i // 2, c + i:c + i + 3] = 0
+
+
+RECT = [100.0, 500.0, 110.0, 510.0]       # a 10 x 10 pt widget rect
+
+
+def test_interior_of_an_empty_box_scores_zero_wherever_the_print_draws_it():
+    for ox, oy in [(0, 0), (0.5, 0), (-1.0, 0.7), (1.2, -1.1)]:                # box sits off the rect by up to ~1 pt
+        g = _page_canvas()
+        _draw_box(g, 100.8 + ox, 500.8 + oy, 109.2 + ox, 509.2 + oy, 1.2)
+        it, why = to.locate_interior(g, RECT, 0.0, 0.0)
+        assert it is not None and why is None, (ox, oy, why)
+        assert to.interior_density(g, it) == 0.0                                  # the frame is never inside the measured core
+
+
+def test_interior_density_measures_a_mark_not_the_frame_even_for_a_heavy_bevelled_box():
+    g = _page_canvas()
+    _draw_box(g, 99.4, 499.4, 110.6, 510.6, 1.0, level=128)                     # bigger than the rect, gray, heavy
+    _draw_box(g, 100.4, 500.4, 109.6, 509.6, 0.6, level=190)
+    it, _ = to.locate_interior(g, RECT, 0.0, 0.0)
+    assert it is not None and to.interior_density(g, it) == 0.0
+    _draw_check(g, 105.0, 505.0, 5.0)
+    it, _ = to.locate_interior(g, RECT, 0.0, 0.0)
+    assert to.interior_density(g, it) > 0.1
+
+
+def test_check_that_splits_or_crosses_the_box_still_finds_the_whole_interior():
+    g = _page_canvas()
+    _draw_box(g, 100.8, 500.8, 109.2, 509.2, 1.0)
+    clean, _ = to.locate_interior(g, RECT, 0.0, 0.0)
+    _draw_check(g, 105.0, 505.0, 7.0)                                         # the tail leaves the box
+    it, why = to.locate_interior(g, RECT, 0.0, 0.0)
+    assert it is not None, why
+    assert abs(it.w_pt - clean.w_pt) < 1.5 and abs(it.h_pt - clean.h_pt) < 1.5
+
+
+def test_filled_dot_radio_is_found_through_its_ring():
+    g = _page_canvas()
+    _draw_box(g, 100.5, 500.5, 109.5, 509.5, 0.8, level=150)
+    r0, c0 = int((792 - 505) * K3), int(105 * K3)
+    yy, xx = np.mgrid[0:g.shape[0], 0:g.shape[1]]
+    g[(yy - r0) ** 2 + (xx - c0) ** 2 <= (1.9 * K3) ** 2] = 0                 # a dot that covers the centre seed area
+    it, why = to.locate_interior(g, RECT, 0.0, 0.0)
+    assert it is not None, why
+    assert to.interior_density(g, it) > 0.3
+
+
+@pytest.mark.parametrize("name", ["open", "none"])
+def test_open_or_missing_frame_is_not_a_box(name):
+    g = _page_canvas()
+    if name == "open":
+        _draw_box(g, 100.8, 500.8, 109.2, 509.2, 1.0, gap=("left", 4))
+    it, why = to.locate_interior(g, RECT, 0.0, 0.0)
+    assert it is None and why == "box_not_closed"
+
+
+def test_white_space_that_is_not_the_box_is_not_measured():
+    g = _page_canvas()
+    _draw_box(g, 98.0, 498.0, 114.0, 514.0, 1.0)                              # a frame far bigger than the rect: 16 pt, centred 4 pt away
+    it, why = to.locate_interior(g, RECT, 0.0, 0.0)
+    assert it is None and why in ("box_geometry", "box_not_closed")
+    g = _page_canvas()
+    _draw_box(g, 100.5, 503.0, 109.5, 506.0, 0.6)                              # a squashed 9 x 3 slot: not a box
+    it, why = to.locate_interior(g, RECT, 0.0, 0.0)
+    assert it is None
+
+
+def test_interior_follows_the_applied_page_shift():
+    g = _page_canvas()
+    _draw_box(g, 103.8, 497.8, 112.2, 506.2, 1.0)                              # printed (3, -3) pt away from the template position
+    assert to.locate_interior(g, RECT, 0.0, 0.0)[0] is None or abs(to.locate_interior(g, RECT, 0.0, 0.0)[0].dcx_pt) > 1
+    it, why = to.locate_interior(g, RECT, 3.0, -3.0)
+    assert it is not None, why
+    assert abs(it.dcx_pt) < 1.0 and abs(it.dcy_pt) < 1.0
+
+
+def test_pinhole_in_an_inner_frame_does_not_merge_it_with_the_ring_around_it():
+    """FORM_DOM_*: the print draws an outer bevel and the template's inner square. A one-pixel gap in the inner
+    frame (sub-pixel phase) lets the fill into the ring, whose core holds the inner frame (read as a mark)."""
+    g = _page_canvas()
+    _draw_box(g, 99.6, 499.6, 110.4, 510.4, 1.0, level=128)          # outer bevel
+    _draw_box(g, 101.5, 501.5, 108.5, 508.5, 0.8)                    # the template's inner square
+    tpl, _ = to.locate_interior(g, RECT, 0.0, 0.0)
+    assert tpl is not None and tpl.w_pt < 6.0                        # the template's own interior is the inner pocket
+    r0, c0 = int((792 - 508.5) * K3), int(101.5 * K3)
+    g[r0 + 1, c0:c0 + 1] = 255                                       # a pinhole in the inner frame's top-left corner
+    g[r0:r0 + 3, c0:c0 + 3] = 255
+    merged, _ = to.locate_interior(g, RECT, 0.0, 0.0)                # without the template: the fill escapes into the ring
+    guarded, why = to.locate_interior(g, RECT, 0.0, 0.0, tpl)
+    assert merged is not None and merged.w_pt > tpl.w_pt * 1.2
+    assert guarded is None or guarded.w_pt < tpl.w_pt * 1.2          # with it: pinholes are closed (or the box is not read)
+
+
+def test_member_whose_box_is_not_found_blocks_the_group(flat_2526):
+    """Winner emitted only when every box of its group can be compared: erase one frame edge of a checked box."""
+    w = to.load_maps()["2025-26"].fmap["fields"]["HOUS_INTL"]["widgets"][0]
+    x0, y0, x1, y1 = w["rect"]
+    data = fill_and_flatten("2025-26", {}, {"HOUS_INTL": "/X"}, None)
+    assert _values_by_tag(to.extract_overlay(data)).get("HOUS_INTL") == "/X"
+    opened = white_out(data, w["template_page"], (x0 + 2, y1 - 2.5, x1 - 2, y1 + 3), pad=0.0)
+    out = to.extract_overlay(opened)
+    assert "HOUS_INTL" not in _values_by_tag(out)
+
+
+def test_widget_without_a_template_box_is_read_from_its_core(flat_2526):
+    """An N/A option has no box in the template: a check mark alone is measured in the rect's core."""
+    fm = to.load_maps()["2025-26"].fmap["fields"]
+    tag = next(t for t, f in fm.items() if f["ft"] == "/Btn" and f["question_number"] and len(f["widgets"]) == 3
+               and f["widgets"][2]["on_state"].strip() == "/N/A")
+    wi = 2
+    w = fm[tag]["widgets"][wi]
+    doc = pdfium.PdfDocument(flat_2526)
+    res = to.match_template(doc)
+    q = next(q for q, p in res.page_map.items() if p == w["template_page"])
+    c = to.PageCtx(doc, q, w["template_page"], "2025-26", res)
+    assert not c.template_has_box(w["rect"])
+    assert c.template_has_box(fm[tag]["widgets"][0]["rect"])
+
+
+def test_interior_core_is_the_central_60_percent_exactly():
+    """Pin the measured area: ink in the first core column counts, ink one pixel outside it does not."""
+    g = _page_canvas()
+    _draw_box(g, 100.8, 500.8, 109.2, 509.2, 1.0)
+    it, _ = to.locate_interior(g, RECT, 0.0, 0.0)
+    ih, iw = int(round((it.r1 - it.r0) * to.INTERIOR_INSET)), int(round((it.c1 - it.c0) * to.INTERIOR_INSET))
+    core_h, core_w = (it.r1 - it.r0) - 2 * ih, (it.c1 - it.c0) - 2 * iw
+    g2 = g.copy()
+    g2[it.r0 + ih:it.r1 - ih, it.c0 + iw] = 0                                  # the core's first column
+    assert abs(to.interior_density(g2, it) - 1.0 / core_w) < 1e-6
+    g3 = g.copy()
+    g3[it.r0 + ih:it.r1 - ih, it.c0 + iw - 1] = 0                              # one pixel outside the core
+    assert to.interior_density(g3, it) == 0.0
+    g4 = g.copy()
+    g4[it.r0 + ih:it.r1 - ih, it.c0 + iw + core_w - 1] = 0                     # the core's last column
+    assert abs(to.interior_density(g4, it) - 1.0 / core_w) < 1e-6
+
+
+def test_interior_geometry_gates():
+    g = _page_canvas()
+    _draw_box(g, 100.5, 502.4, 109.5, 507.6, 0.6)                              # 7.7 x 3.9 pt interior: aspect 1.97, not a box
+    it, why = to.locate_interior(g, RECT, 0.0, 0.0)
+    assert it is None and why == "box_geometry"
+    g = _page_canvas()
+    _draw_box(g, 103.0, 500.2, 112.6, 509.8, 0.6)                              # a real box whose interior is centred 2.8 pt right of the rect's centre
+    it, why = to.locate_interior(g, RECT, 0.0, 0.0)
+    assert it is None and why == "box_geometry"
+
+
+def test_blank_prints_of_both_years_emit_no_checkbox(flat_2425):
+    """Template glyphs and bevels inside a box (FORM_DOM_*, ACAD_YR, TUIT_VARY_*) must not read as marks."""
+    for data in (flat_2425, fill_and_flatten("2025-26", {}, {})):
+        out = to.extract_overlay(data)
+        assert not [r for r in out["values"].values() if r.get("lane") == "checkbox" and r["pdf_tag"] not in FILL_BUTTONS and r["pdf_tag"] != "HOUS_SINGLE"]
+
+
+def test_group_member_with_an_open_frame_blocks_the_winner():
+    year = "2025-26"
+    f = to.load_maps()[year].fmap["fields"]["AD_TFER"]
+    data = fill_and_flatten(year, {}, {"AD_TFER": "/Y"})
+    assert _values_by_tag(to.extract_overlay(data)).get("AD_TFER") == "/Y"
+    other = next(w for w in f["widgets"] if w["on_state"] != "/Y" and to.PageCtx is not None)
+    x0, y0, x1, y1 = other["rect"]
+    opened = white_out(data, other["template_page"], (x0 + 1.5, y1 - 2.2, x1 - 1.5, y1 + 3.0), pad=0.0)
+    out = to.extract_overlay(opened)
+    assert "AD_TFER" not in _values_by_tag(out)
+    assert {"box_not_closed", "box_geometry"} & set(_held(out, "AD_TFER"))
+
+
+def test_lane3_decision_constants_are_what_the_extractor_uses(flat_2526, monkeypatch):
+    calls = []
+    real = to._is_btn_checked
+
+    def spy(scores, th, mg):
+        calls.append((th, mg))
+        return real(scores, th, mg)
+    monkeypatch.setattr(to, "_is_btn_checked", spy)
+    to.extract_overlay(flat_2526)
+    assert calls and set(calls) == {(0.04, 0.03)}                              # threshold and radio margin: the measured gap
+
+
+def test_ink_the_blank_template_already_has_in_a_box_is_not_a_mark(flat_2526, monkeypatch):
+    """Pre-printed ink inside the interior (the same in the blank) is subtracted: score = print - blank."""
+    assert _values_by_tag(to.extract_overlay(flat_2526)).get("HOUS_SINGLE") == "/X"           # 30% speck: a mark
+    real = to._PageCtx.template_interior
+
+    def with_ink(self, key, rect):
+        it, _d = real(self, key, rect)
+        return it, 0.5
+    monkeypatch.setattr(to._PageCtx, "template_interior", with_ink)
+    assert "HOUS_SINGLE" not in _values_by_tag(to.extract_overlay(flat_2526))
+
+
+def test_one_tick_in_a_group_is_a_winner():
+    year = "2025-26"
+    f = to.load_maps()[year].fmap["fields"]["AD_TFER"]
+    one = add_check(fill_and_flatten(year, {}, {}), f["widgets"][1]["template_page"], f["widgets"][1]["rect"])
+    assert _values_by_tag(to.extract_overlay(one)).get("AD_TFER") == "/N"
+
+
+def test_number_cell_with_a_neighbour_row_below_is_read_but_multiline_text_is_not(flat_2526):
+    """The multi-line rule belongs to Text: a table neighbour below a number cell is not a second line of it."""
+    year = "2025-26"
+    fm = to.load_maps()[year].fmap["fields"]
+    t = fm["AD_TFER_POLICIES_T"]["widgets"][0]
+    x0, y0, x1, y1 = t["rect"]
+    data = fill_and_flatten(year, {}, {})
+    for k, yy in enumerate((y1 - 10, y1 - 22, y0 - 8)):                        # two lines inside the rect, a third just below it
+        data = add_text(data, t["template_page"], x0 + 4, yy, f"line number {k}")
+    out = to.extract_overlay(data)
+    assert "AD_TFER_POLICIES_T" not in _values_by_tag(out) and "multiline_overflow" in _held(out, "AD_TFER_POLICIES_T")
+
+
+def test_header_vote_rejects_poorly_fitting_crops_with_literal_floors():
+    page = to._template_doc("2025-26")[4]
+    g = to.page_geometry(page)
+    for dx, dy in [(0.0, 3.0), (0.0, 6.0), (40.0, 0.0), (3.0, 0.0)]:
+        assert to.header_year_vote(page, g, 4, dx, dy) is None, (dx, dy)         # fit ratio 1.1-2.6: no vote at all
+    assert to.header_year_vote(page, g, 4, 1.5, 0.0) == "2025-26"                  # within the residual search
+
+
+def _fake_votes(monkeypatch, page_vote):
+    real = to.header_year_vote
+
+    def fake(page, g, p, dx=0.0, dy=0.0, *, detail=False):
+        if p == 4 and page_vote:
+            v = page_vote
+            return v if detail else v[0]
+        return real(page, g, p, dx, dy, detail=detail)
+    monkeypatch.setattr(to, "header_year_vote", fake)
+
+
+def test_only_a_confident_vote_can_hold_a_packet(rich_2526, monkeypatch):
+    data = rich_2526[0]
+    _fake_votes(monkeypatch, ("2024-25", 0.1, 0.03, 0.7))            # margin ok, fit ratio 0.7: a weak vote
+    assert to.match_template(data).status == to.STATUS_MATCHED
+    _fake_votes(monkeypatch, ("2024-25", 0.1, 0.015, 0.4))           # good fit, margin 0.015: weak
+    assert to.match_template(data).status == to.STATUS_MATCHED
+    _fake_votes(monkeypatch, ("2024-25", 0.05, 0.03, 0.4))           # margin >= 0.02 and ratio <= 0.6: confident
+    assert to.match_template(data).reason == "mixed_year_packet"
+
+
+def test_a_page_that_fails_alignment_does_not_vote(rich_2526, monkeypatch):
+    data = rich_2526[0]
+    _fake_votes(monkeypatch, ("2024-25", 0.05, 0.03, 0.4))
+    real = to.estimate_page_alignment
+    calls = []
+
+    def bad_for_page_4(m):
+        est = real(m)
+        calls.append(1)
+        if len(calls) == 5:                                          # the fifth matched page, template page 4
+            est = dict(est, consistent=False, inconsistent_reason="partial_page_shift")
+        return est
+    monkeypatch.setattr(to, "estimate_page_alignment", bad_for_page_4)
+    res = to.match_template(data)
+    assert res.status == to.STATUS_MATCHED and res.header_votes == {"2025-26": 48}
+
+
+def test_read_widget_text_keeps_pdfium_generated_spaces_below_the_line():
+    chars = [to.PageChar("a", 10, 10, 12), to.PageChar("b", 15, 10, 17), to.PageChar(" ", 20, 6.5, 20, generated=True),
+             to.PageChar("c", 25, 10, 27), to.PageChar("d", 30, 10, 32)]
+    assert to.read_widget_text(chars, [8.0, 8.0, 34.0, 12.0])[0] == "ab cd"          # the space sits 3.5 pt under the glyph centres
+
+
+def test_sub_point_prints_keep_every_check_and_emit_no_wrong_box(rich_2526):
+    """Real prints sit at arbitrary sub-point phases: every box read must be right at every phase, and the
+    checks must still be found (v0.2.0 lost 1-4% of them and emitted two wrong ones at these offsets)."""
+    data, text, btn = rich_2526
+    ref = to.extract_overlay(data)
+    found0 = sum(1 for t, v in btn.items() if _values_by_tag(ref).get(t) == v)
+    assert found0 >= 0.6 * len(btn)       # the fixture's synthetic marks are heavy; some fill the box and abstain
+    for dx, dy in [(0.33, 0), (-0.5, 0), (0, 0.5), (0.5, -0.33), (-0.33, -0.5)]:
+        out = to.extract_overlay(translate_pages(data, dx, dy))
+        assert out["notes"]["stage1"]["status"] == "matched"
+        assert wrong_values(out, text, btn) == [], (dx, dy)
+        found = sum(1 for t, v in btn.items() if _values_by_tag(out).get(t) == v)
+        assert found >= 0.85 * found0, (dx, dy, found, found0)       # the phase does not decide what is found (the fixture's heavy marks make a few boxes phase-sensitive; the real cohort harness measures 0.1-0.5% loss)
+
+
 @pytest.mark.skipif(not REAL, reason="set CDS_M1_PDF_DIR to the review PDF directory")
 def test_real_pdfs_valparaiso_miami_arkansas():
     import eval_template_overlay as ev
@@ -1104,5 +1426,6 @@ def test_real_pdfs_valparaiso_miami_arkansas():
         assert results[name]["extras"] == []                      # nothing emitted where Tier 2 is blank
     ark = to.extract_overlay((d / "e69a95f19092cef6d67f5ceea35056bea403815b02ce0ae1f4ce3685c9b46a13.pdf").read_bytes())
     assert ark["notes"]["lane_counts"].get("text", 0) == 0 and len(ark["notes"]["unreadable_pages"]) >= 30
-    # v0.2.0 numbers (every loss is named by an abstention rule): Valparaiso 611/624, Miami /Btn 147/152
-    assert results["valpo"]["ok"] >= 611 and results["miami"]["by_type"]["Btn"][0] >= 147
+    # v0.3.0 numbers: every /Btn of both controls read right (Miami ACAD_YR included), no checkbox emitted wrongly
+    assert results["valpo"]["by_type"]["Btn"][0] == 139 and results["miami"]["by_type"]["Btn"][0] == 152
+    assert results["valpo"]["ok"] >= 614 and not [m for m in results["miami"]["misses"] if m.get("got") is not None]
