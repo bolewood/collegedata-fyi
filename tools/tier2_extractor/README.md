@@ -245,6 +245,22 @@ CDS_M1_PDF_DIR=/path/to/review/pdfs python -m pytest tools/tier2_extractor -q -k
   counts, so a uniformly gray paper, scan tone or box background is not a mark. Options with no box
   in the template (an N/A) are read from the rect core. The v0.2.0 rules this replaces (gray bands, blank-outline
   gate, border-in-interior) are removed, not disabled; PRD A9 lists what each cost.
+- **Page registration (M2).** After the whole-point page shift, each page's static ink is registered to the
+  blank at one INK_DPI pixel (1/3 pt, ±3 px) on the 216-DPI render (`refine_subpoint_shift`; the best recall is a
+  plateau because the page ink is dilated one pixel, so its centre is taken; a residual must beat (0, 0) by 0.01).
+  `PageCtx.dx/dy` are the whole-point shift plus this refinement and every lane reads through them, so a
+  0.67 pt offset no longer reads Lane 3's frame as a mark (PRD A11).
+- **Lane 2 (M2, `lane2_ocr.py`).** Numeric OCR at the widget rects of pages Lane 1 cannot read (image-only pages,
+  invisible-text pages, unreadable pages), only for Number, Dollars, Percent, Identifier, Month and Day `/Tx`
+  fields. Off unless asked for: `extract_overlay(pdf, lane2=make_hook(TesseractEngine()))`. A value is emitted only
+  when the rect holds rendered ink the blank lacks; the per-widget gates pass on the OCR word boxes (the blank's own
+  label words dropped, the same token and edge rules as Lane 1); the tight rect at 300 DPI, the tight rect at 400 DPI
+  and the token found at the rect in a 30 pt-wider context crop (the blank's own ink erased) all read the same; every
+  word clears Tesseract confidence 85; and the strict number grammar passes. Each failure is a named abstention
+  (`notes.withheld`, lane `ocr`). Values carry `lane: 2`, `emission_class: numeric`, `ocr_confidence` and `ocr_reads`.
+  The engine is the `tesseract` command line (`--psm 7`, digit whitelist, TSV); `notes.ocr_engine` records its version.
+  CI does not need it: tests that call it skip when it is absent. Identities run over the union of lanes
+  and the derived totals are made from that union.
 - **Emission classes.** Every value carries `emission_class`: `numeric` (typed numerics, derived totals),
   `choice` (`/Ch`), `checkbox_box` (Lane 3 through a located box interior), `checkbox_boxless` (Lane 3 where
   the blank draws no box), `free_text`. The shadow artifact keeps every class; `serve_values(values,

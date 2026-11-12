@@ -243,3 +243,159 @@ def test_page_shift_is_part_of_the_ocr_entry_and_the_crop(flat_numbers):
     assert hasattr(c, "dx") and hasattr(c, "dy") and c.dx == c.dx0 + c.sub[0]
     entry = to._ocr_entry(tag, c.q, 0, w["rect"], c, "unreadable_page")
     assert entry["shift"] == {"dx": c.dx, "dy": c.dy}
+
+
+# ---- scripted reads: every Lane 2 rule on its own (no Tesseract) --------------------------
+
+class FixedEngine:
+    """Returns one word per call with the given texts in call order: tight 300, tight 400, context."""
+
+    def __init__(self, texts, conf=99.0):
+        self.texts, self.conf, self.i = list(texts), conf, 0
+
+    def read(self, img, *, psm=7):
+        t = self.texts[min(self.i, len(self.texts) - 1)]
+        self.i += 1
+        return [L.OcrWord(t, self.conf, 20, 20, 60, 40)] if t else []
+
+
+def reader(c, texts, *, boxes=None, conf=99.0):
+    """A Lane2 reader whose OCR word boxes are placed by the test (template points) instead of by pixel positions."""
+    l2 = L.Lane2(FixedEngine(texts, conf), YEAR)
+    rect = c._rect
+
+    def fake_boxes(c_, words, origin, dpi):
+        mid = (rect[0] + rect[2]) / 2
+        out = boxes if boxes is not None else [to.GlyphBox(mid - 10, mid + 10, (rect[1] + rect[3]) / 2, rect[3] - 4, rect[1] + 4, words[0].text)]
+        return list(out[:len(words)] + out[len(words):]) if words else []
+    l2._to_boxes = fake_boxes
+    return l2
+
+
+@pytest.fixture
+def ctx(flat_numbers):
+    c, tag, f, w, st = flat_numbers
+    c._rect = w["rect"]
+    return c, tag, f, w, st
+
+
+def test_scripted_clean_read_is_emitted(ctx):
+    c, tag, f, w, st = ctx
+    r = reader(c, ["1234"] * 3).read_widget(c, tag, f, 0, w["rect"], st)
+    assert r.value == "1234" and r.reason is None and r.conf == 99.0
+
+
+def test_context_token_that_disagrees_abstains(ctx):
+    c, tag, f, w, st = ctx
+    r = reader(c, ["1234", "1234", "1239"]).read_widget(c, tag, f, 0, w["rect"], st)
+    assert r.value is None and r.reason == "context_disagrees"
+    old = L.RULE_CONTEXT
+    L.RULE_CONTEXT = False
+    try:
+        assert reader(c, ["1234", "1234", "1239"]).read_widget(c, tag, f, 0, w["rect"], st).value == "1234"
+    finally:
+        L.RULE_CONTEXT = old
+
+
+def test_a_token_crossing_the_rect_abstains_through_the_widget_gates(ctx):
+    c, tag, f, w, st = ctx
+    x0, y0, x1, y1 = w["rect"]
+    across = [to.GlyphBox(x1 - 12, x1 + 6, (y0 + y1) / 2, y1 - 4, y0 + 4, "1234")]
+    r = reader(c, ["1234"] * 3, boxes=across).read_widget(c, tag, f, 0, w["rect"], st)
+    assert r.value is None and r.reason in ("glyph_crosses_right_edge", "token_crosses_rect")
+    old = L.RULE_GATES
+    L.RULE_GATES = False
+    try:
+        assert reader(c, ["1234"] * 3, boxes=across).read_widget(c, tag, f, 0, w["rect"], st).value == "1234"
+    finally:
+        L.RULE_GATES = old
+
+
+def test_the_forms_own_label_word_beside_the_cell_is_dropped_but_a_school_word_is_not(ctx):
+    c, tag, f, w, st = ctx
+    x0, y0, x1, y1 = w["rect"]
+    cy = (y0 + y1) / 2
+    answer = to.GlyphBox((x0 + x1) / 2 - 10, (x0 + x1) / 2 + 10, cy, y1 - 4, y0 + 4, "1234")
+    label = to.GlyphBox(x0 - 14, x0 - 0.5, cy, y1 - 4, y0 + 4, "(name)")                      # abuts the rect's left edge
+    static = [to.PageChar(ch, x0 - 13 + 2.4 * i, cy, x0 - 11.6 + 2.4 * i, left=x0 - 14 + 2.4 * i, top=y1 - 4, bottom=y0 + 4) for i, ch in enumerate("(name)")]
+    ok = reader(c, ["1234"] * 3, boxes=[answer, label]).read_widget(c, tag, f, 0, w["rect"], tuple(static))
+    assert ok.value == "1234"                                                                  # the blank's text: not an answer, not an obstacle
+    school = reader(c, ["1234"] * 3, boxes=[answer, label]).read_widget(c, tag, f, 0, w["rect"], ())
+    assert school.value is None and school.reason == "glyph_past_left_edge"                    # the same word, not on the blank: abstain
+    old = L.RULE_LABEL_FILTER
+    L.RULE_LABEL_FILTER = False
+    try:
+        assert reader(c, ["1234"] * 3, boxes=[answer, label]).read_widget(c, tag, f, 0, w["rect"], tuple(static)).value is None
+    finally:
+        L.RULE_LABEL_FILTER = old
+
+
+def test_the_strict_number_grammar_applies_to_ocr_reads(ctx):
+    c, tag, f, w, st = ctx
+    for bad in ("1,23,4", "12.345", "1-2"):
+        r = reader(c, [bad] * 3).read_widget(c, tag, f, 0, w["rect"], st)
+        assert r.value is None and r.reason in ("not_numeric", "ambiguous_thousands_separator"), (bad, r.reason)
+
+
+def test_the_template_ink_eraser_leaves_a_blank_cell_blank(ctx):
+    """TEMPLATE_INK_DILATE: the blank's frame, registered to within a pixel, must not survive in the context crop."""
+    c, tag, f, w, st = ctx
+    other = to.load_maps()[YEAR].fmap["fields"]["AP_ADMT_1ST_MEN_N"]["widgets"][0]
+    l2 = L.Lane2(FixedEngine([""]), YEAR)
+    img, _o = l2._crop(c, other["rect"], L.OCR_DPI, x_pad_pt=L.CONTEXT_PAD_PT, erase_template=True)
+    assert int((img[L.CROP_PAD_PX:-L.CROP_PAD_PX, L.CROP_PAD_PX:-L.CROP_PAD_PX] < 128).sum()) == 0
+    kept, _o2 = l2._crop(c, other["rect"], L.OCR_DPI, x_pad_pt=L.CONTEXT_PAD_PT, erase_template=False)
+    assert int((kept < 128).sum()) > 0                                                          # (without it the frame is there)
+
+
+def test_word_boxes_are_mapped_through_the_applied_page_shift():
+    from types import SimpleNamespace
+    k = L.OCR_DPI / 72.0
+    c = SimpleNamespace(dx=2.0, dy=-1.0)
+    word = L.OcrWord("12", 99.0, L.CROP_PAD_PX + 30, L.CROP_PAD_PX + 10, L.CROP_PAD_PX + 90, L.CROP_PAD_PX + 50)
+    (b,) = L.Lane2(FixedEngine([]), YEAR)._to_boxes(c, [word], (1000, 600), L.OCR_DPI)
+    assert abs(b.left - ((600 + 30) / k - 2.0)) < 1e-9 and abs(b.right - ((600 + 90) / k - 2.0)) < 1e-9
+    assert abs(b.top - (792.0 - (1000 + 10) / k + 1.0)) < 1e-9 and abs(b.bottom - (792.0 - (1000 + 50) / k + 1.0)) < 1e-9
+
+
+def _hook_with(monkeypatch, per_call):
+    """Run the Lane 2 hook over a raster packet with `Lane2.read_widget` scripted: per_call(tag, wi) -> Lane2Read."""
+    calls = []
+
+    def fake(self, c, tag, f, wi, rect, static_chars):
+        calls.append((tag, wi))
+        return per_call(tag, wi)
+    monkeypatch.setattr(L.Lane2, "read_widget", fake)
+    data = T.fill_and_flatten(YEAR, {}, {})
+    packet = packet_with_raster_page(data, 12, data)
+    return to.extract_overlay(packet, lane2=L.make_hook(FixedEngine([])), ), calls
+
+
+def _multi_widget_numeric_tag():
+    for t, f in to.load_maps()[YEAR].fmap["fields"].items():
+        if f["ft"] == "/Tx" and f["question_number"] and len(f["widgets"]) >= 2 and to.effective_type(t, f["value_type"], "/Tx") == "Number" \
+                and all(w["template_page"] == f["widgets"][0]["template_page"] for w in f["widgets"]):
+            return t
+    pytest.skip("no two-widget numeric field on one page in this map")
+
+
+def test_hook_reads_numeric_fields_only(monkeypatch):
+    fm = to.load_maps()[YEAR].fmap["fields"]
+    calls = []
+    data = T.fill_and_flatten(YEAR, {}, {})
+    packet = packet_with_raster_page(data, 12, data)
+    monkeypatch.setattr(L.Lane2, "read_widget", lambda self, c, t, f, wi, rect, st: (calls.append(t), L.Lane2Read(value="77", text="77", conf=99.0))[1])
+    out = to.extract_overlay(packet, lane2=L.make_hook(FixedEngine([])))
+    assert calls and not [t for t in calls if fm[t]["ft"] != "/Tx" or to.effective_type(t, fm[t]["value_type"], "/Tx") not in L.NUMERIC_CLASS_TYPES]
+    assert l2_values(out) and all(r["emission_class"] == "numeric" and r["lane"] == 2 for r in out["values"].values() if r.get("lane") == 2)
+
+
+def test_hook_withholds_a_field_whose_widgets_read_differently(monkeypatch):
+    tag = _multi_widget_numeric_tag()
+    page = to.load_maps()[YEAR].fmap["fields"][tag]["widgets"][0]["template_page"]
+    data = T.fill_and_flatten(YEAR, {}, {})
+    packet = packet_with_raster_page(data, page, data)
+    monkeypatch.setattr(L.Lane2, "read_widget", lambda self, c, t, f, wi, rect, st:
+                        L.Lane2Read(value=str(10 + wi), text=str(10 + wi), conf=99.0) if t == tag else L.Lane2Read(reason="no_rendered_ink"))
+    out = to.extract_overlay(packet, lane2=L.make_hook(FixedEngine([])))
+    assert tag not in l2_values(out) and "multi_widget_disagreement" in l2_held(out, tag)
