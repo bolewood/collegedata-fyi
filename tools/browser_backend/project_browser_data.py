@@ -653,18 +653,29 @@ def infer_value_kind(record: Any, definition: Optional[FieldDefinition], text: O
     lower = (text or "").strip().lower()
     if lower in NOT_APPLICABLE_VALUES:
         return "not_applicable"
+    # The schema's answer-format hints: "Nearest 1%" is a percent, "Nearest $1"
+    # is a dollar amount, "Round to Nearest Hundredths" is a plain number.
+    # Without these, values such as "76028" in an average-aid cell were stored
+    # as text with no number.
+    format_hint = (definition.value_kind_hint if definition else "") or ""
+    format_hint = format_hint.strip().lower()
     if (
         re.search(r"\b(percent|percentage|rate)\b", hint)
         and "percentile" not in hint
-    ) or (text and "%" in text):
+    ) or (text and "%" in text) or format_hint == "nearest 1%":
         return "percent"
-    if "currency" in hint or "dollar" in hint or (text and text.strip().startswith("$")):
+    if (
+        "currency" in hint
+        or "dollar" in hint
+        or (text and text.strip().startswith("$"))
+        or format_hint == "nearest $1"
+    ):
         return "currency"
     if "yesno" in hint or "yes/no" in hint or lower in {"yes", "no", "true", "false"}:
         return "yesno"
     if lower in {"☒", "☑", "✓", "x", "/yes", "/x", "checked", "unchecked", "☐"}:
         return "checkbox"
-    if "number" in hint or "nearest tenth" in hint:
+    if "number" in hint or "nearest tenth" in hint or "nearest hundredths" in hint:
         return "number"
     if text is None:
         return "unknown"
@@ -741,7 +752,7 @@ def parse_numeric(text: str) -> Optional[Decimal]:
     if stripped.startswith("~"):
         return None
     cleaned = stripped.replace(",", "").replace("$", "").replace("%", "").strip()
-    if not re.fullmatch(r"[+-]?\d+(?:\.\d+)?", cleaned):
+    if not re.fullmatch(r"[+-]?(?:\d+(?:\.\d+)?|\.\d+)", cleaned):
         return None
     try:
         return Decimal(cleaned)
