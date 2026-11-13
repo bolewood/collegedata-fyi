@@ -836,3 +836,39 @@ overrides:
         Reject Tacoma and Bothell CDS files for this slug; 2025-26 and
         2024-25 Seattle PDFs were refreshed from the official OPB page in
         the PRD 019 group 5 source-mapping pass.
+
+  # Campus-specific sources, 2026-11-13 (issue #279). UW publishes one CDS
+  # per campus on a shared listing; the resolver had attached Seattle's file
+  # to Tacoma and Bothell for every year. Add each new year's campus file
+  # here by hand until the resolver can tell campuses apart.
+  - school_id: university-of-washington-tacoma-campus
+    browse_url: https://finance.uw.edu/iads/iads-teams/institutional-reporting-analysis/external-reporting/common-data-set
+    direct_archive_urls:
+      - { url: https://finance.uw.edu/iads/files/docs/ipeds/common_data_set/cds_2025-2026_tacoma.pdf, year: "2025-26" }
+      - { url: https://finance.uw.edu/iads/files/docs/ipeds/common_data_set/cds_2024-2025_tacoma.pdf, year: "2024-25" }
+      - { url: https://finance.uw.edu/iads/files/docs/ipeds/common_data_set/cds_tacoma_2023_2024.xlsx, year: "2023-24" }
+      - { url: https://finance.uw.edu/iads/files/docs/ipeds/common_data_set/cds_2022-2023_tacoma.xlsx, year: "2022-23" }
+      - { url: https://finance.uw.edu/iads/files/docs/ipeds/common_data_set/cds_2021-2022_tacoma.xlsx, year: "2021-22" }
+      - { url: https://finance.uw.edu/iads/files/docs/ipeds/common_data_set/cds_2020-2021_tacoma.xlsx, year: "2020-21" }
+    hosting_override:
+      file_storage: same_origin
+      notes: >-
+        Shared listing for Seattle, Bothell and Tacoma. Only files with
+        'tacoma' in the name belong to this school. No Tacoma file is published
+        before 2020-21.
+
+  - school_id: university-of-washington-bothell-campus
+    browse_url: https://finance.uw.edu/iads/iads-teams/institutional-reporting-analysis/external-reporting/common-data-set
+    direct_archive_urls:
+      - { url: https://finance.uw.edu/iads/files/docs/ipeds/common_data_set/cds_2025-2026_bothell.pdf, year: "2025-26" }
+      - { url: https://finance.uw.edu/iads/files/docs/ipeds/common_data_set/cds_2024-2025_bothell.pdf, year: "2024-25" }
+      - { url: https://finance.uw.edu/iads/files/docs/ipeds/common_data_set/cds_bothell_2023_2024.xlsx, year: "2023-24" }
+      - { url: https://finance.uw.edu/iads/files/docs/ipeds/common_data_set/cds_2022-2023_bothell.xlsx, year: "2022-23" }
+      - { url: https://finance.uw.edu/iads/files/docs/ipeds/common_data_set/cds_2021-2022_bothell.xlsx, year: "2021-22" }
+      - { url: https://finance.uw.edu/iads/files/docs/ipeds/common_data_set/cds_2020-2021_bothell.xlsx, year: "2020-21" }
+    hosting_override:
+      file_storage: same_origin
+      notes: >-
+        Shared listing for Seattle, Bothell and Tacoma. Only files with
+        'bothell' in the name belong to this school. No Bothell file is published
+        before 2020-21.

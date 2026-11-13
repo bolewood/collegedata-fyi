@@ -167,3 +167,56 @@ schools:
       year: 2014-15
     - url: https://ira.okstate.edu/site-files/documents/cds/cds1314.pdf
       year: 2013-14
+  # Wright State CORE Scholar (bepress) returns 403 to non-browser clients
+  # and lists Dayton and Lake files side by side. No landing_url on purpose:
+  # a landing crawl cannot tell the campuses apart. Add new years by hand.
+  wright-state-university-main-campus:
+    school_name: Wright State University-Main Campus
+    urls:
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1020&context=common-data-set
+      year: 2024-25
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1018&context=common-data-set
+      year: 2023-24
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1016&context=common-data-set
+      year: 2022-23
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1014&context=common-data-set
+      year: 2021-22
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1009&context=common-data-set
+      year: 2020-21
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1008&context=common-data-set
+      year: 2019-20
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1007&context=common-data-set
+      year: 2018-19
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1006&context=common-data-set
+      year: 2017-18
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1005&context=common-data-set
+      year: 2016-17
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1004&context=common-data-set
+      year: 2015-16
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1003&context=common-data-set
+      year: 2014-15
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1002&context=common-data-set
+      year: 2013-14
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1001&context=common-data-set
+      year: 2012-13
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1000&context=common-data-set
+      year: 2011-12
+  wright-state-university-lake-campus:
+    school_name: Wright State University-Lake Campus
+    urls:
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1021&context=common-data-set
+      year: 2024-25
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1019&context=common-data-set
+      year: 2023-24
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1017&context=common-data-set
+      year: 2022-23
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1015&context=common-data-set
+      year: 2021-22
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1013&context=common-data-set
+      year: 2020-21
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1012&context=common-data-set
+      year: 2019-20
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1011&context=common-data-set
+      year: 2018-19
+    - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1010&context=common-data-set
+      year: 2017-18
