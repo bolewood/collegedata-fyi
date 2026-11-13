@@ -559,6 +559,20 @@ class BrowserProjectionTests(unittest.TestCase):
             self.assertEqual(fields[field_id]["value_status"], "reported")
             self.assertEqual(Decimal(fields[field_id]["value_num"]), Decimal("0.56"))
 
+    def test_average_award_in_the_millions_is_not_published(self):
+        # Harvard 2025-26: H.605 held the H.606 total. Worcester State 2025-26:
+        # H.210 held a column total.
+        fields = self._project_with_hints(
+            {"H.605": "Nearest $1", "H.606": "Nearest $1", "H.210": "Nearest $1", "H.211": "Nearest $1"},
+            {"H.605": "66826244", "H.606": "66826244", "H.210": "14924610.5", "H.211": "83513"},
+        )
+        self.assertEqual(fields["H.605"]["value_status"], "parse_error")
+        self.assertIsNone(fields["H.605"]["value_num"])
+        self.assertEqual(fields["H.210"]["value_status"], "parse_error")
+        # A total is allowed to be large, and a real average is kept.
+        self.assertEqual(fields["H.606"]["value_status"], "reported")
+        self.assertEqual(fields["H.211"]["value_num"], "83513")
+
     def test_hundredths_format_hint_is_a_number(self):
         fields = self._project_with_hints(
             {"C.1201": "Round to Nearest Hundredths", "C.1202": "Round to Nearest Hundredths"},
