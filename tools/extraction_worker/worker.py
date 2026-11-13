@@ -269,6 +269,10 @@ def extraction_ledger_tier(source_format: str, action: str) -> str:
         return "reconciliation"
     if "fallback_tier4" in action:
         return "tier4_fallback"
+    if action.startswith("overlay"):
+        # PRD 038: the template overlay writes no ledger row (its own entry point, no run ledger). If one ever
+        # reaches here it is "unknown": a new tier value needs a CHECK-constraint migration, not in M3.
+        return "unknown"
     return {
         "xlsx": "tier1",
         "pdf_fillable": "tier2",
@@ -2135,6 +2139,32 @@ def refresh_browser_projection(
     return project_document_id(client, document_id, definitions, apply=True)
 
 
+def maybe_run_overlay(client: Client, doc: dict[str, Any]) -> None:
+    """PRD 038: run the template overlay after the Tier 4 outcome, only when OVERLAY_WORKER_ENABLED is on (default off).
+
+    The overlay package is imported lazily and only here, inside try/except: with the flag off nothing overlay-related
+    is imported or run, and with the flag on a broken or missing overlay package is logged and ignored. Whatever
+    happens, the document's status, quality flag, ledger item and projection are not touched.
+    """
+    import os
+
+    if str(os.environ.get("OVERLAY_WORKER_ENABLED", "")).strip().lower() not in {"1", "true", "yes", "on"}:
+        return
+    try:
+        from overlay_entry import run_overlay_in_loop
+
+        result = run_overlay_in_loop(client, doc)
+        if result is not None:
+            print(
+                f"    overlay: document={doc.get('id')} status={result.status} reason={result.reason}",
+                flush=True,
+            )
+    except BaseException as e:  # noqa: BLE001 - nothing the overlay does may stop the drain (incl. SystemExit from a bad import)
+        if isinstance(e, KeyboardInterrupt):
+            raise
+        print(f"    overlay_error: document={doc.get('id')} {type(e).__name__}", file=sys.stderr, flush=True)
+
+
 def extract_one(
     client: Client,
     doc: dict,
@@ -3047,6 +3077,8 @@ def main() -> int:
                 flush=True,
             )
             outcome = extraction_no_project(f"worker_error: {type(e).__name__}: {message}")
+        if not args.dry_run:
+            maybe_run_overlay(client, doc)                 # PRD 038: flag off by default; never changes `outcome`
         bucket = outcome.action.split(":")[0].split(" ")[0]
         counts[bucket] += 1
         fields = parsed_field_count(outcome.action)

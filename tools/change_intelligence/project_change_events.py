@@ -36,11 +36,22 @@ DEFAULT_REPORT_DIR = REPO_ROOT / ".context" / "reports"
 
 BAD_FLAGS = {"wrong_file", "blank_template", "low_coverage"}
 REVIEWED_STATUSES = {"confirmed", "extractor_noise", "ambiguous", "not_reportable"}
+try:
+    from browser_backend.overlay_serving import overlay_identity_of_version as _overlay_identity_of_version
+except ImportError:  # run as a script from tools/change_intelligence
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from browser_backend.overlay_serving import overlay_identity_of_version as _overlay_identity_of_version
+
 PRODUCER_FAMILY = {
     "tier1_xlsx": "tier1",
     "tier2_acroform": "tier2",
     "tier4_docling": "tier4",
     "tier6_html": "tier6",
+    # PRD 038 Decision 4: Tier 2 family, listed explicitly so a lookup never falls through to the prefix rule.
+    # Under the supplement model it is never a base candidate; an overlay-merged row keeps the base producer
+    # and carries "<base version>+overlay.<overlay version>" (A4), so the existing version gate treats a
+    # Tier-4-only year and a Tier-4-plus-overlay year as not comparable.
+    "tier2_template_overlay": "tier2",
 }
 
 
@@ -134,6 +145,18 @@ def producer_family(producer: str | None) -> str:
     if not producer:
         return ""
     return PRODUCER_FAMILY.get(producer, producer.split("_", 1)[0])
+
+
+def overlay_identity(row: dict[str, Any]) -> str | None:
+    """The overlay identity of a projected row (None when no overlay was merged): the overlay version and the served class
+    set. The ONLY place change intelligence reads it, so a later move from the `producer_version` suffix to an explicit
+    column (an owner decision) changes this function and nothing else."""
+    from_version = _overlay_identity_of_version(row.get("producer_version"))
+    return from_version
+
+
+def overlay_identity_differs(prior: dict[str, Any], latest: dict[str, Any]) -> bool:
+    return overlay_identity(prior) != overlay_identity(latest)
 
 
 def compatible_producer_version(prior: dict[str, Any], latest: dict[str, Any]) -> bool:
@@ -373,6 +396,18 @@ def classify_field_change(
             "reported_to_missing",
             f"{latest.get('school_name')} reported {rule.label} in {prior.get('canonical_year')} but it is missing in {latest.get('canonical_year')}.",
             ["candidate silence; source PDF review required"],
+        )
+
+    if overlay_identity_differs(prior, latest):
+        # One of the two rows merged template-overlay values (or a different overlay version or served class set) and the
+        # other did not: any change in what is reported, in any direction, is an extraction change, not a school-side one.
+        if old_reported and new_reported and (as_float(old) == as_float(new) if as_float(old) is not None and as_float(new) is not None else old == new):
+            return None
+        return base_event(
+            prior, latest, rule, "producer_changed", "watch", old, new, None, None,
+            "producer_or_format_changed",
+            f"{latest.get('school_name')} {rule.label} differs between {prior.get('canonical_year')} and {latest.get('canonical_year')}; the extraction changed (template overlay), so it is not a school-side change.",
+            ["not classified as school-side silence without human review"],
         )
 
     if not old_reported and new_reported:

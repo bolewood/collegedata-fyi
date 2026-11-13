@@ -2,7 +2,7 @@
   "schema_version": "2023-24",
   "source_filename": "cds_2023-24_template.xlsx + cds_2023-24_template.pdf",
   "source_note": "Synthesized from the 2024-25 canonical schema, the 2023-24 per-section XLSX structural template, and 2023-24 PDF AcroForm field names from cds_2023-24_template.pdf. The 2023-24 template has no Answer Sheet tab, so field identity is inherited from the closest canonical predecessor and corrected for 2023-24 gender fields.",
-  "extracted_at": "2026-06-14T18:44:11Z",
+  "extracted_at": "2026-11-09T23:26:02Z",
   "field_count": 1053,
   "sections": [
     "General Information",
@@ -12660,7 +12660,7 @@
     {
       "sort_order": 697,
       "question_number": "F.307",
-      "pdf_tag": "ROTC_ARMY_TEXT",
+      "pdf_tag": "ROTC_NAVY_TEXT",
       "word_tag": null,
       "question": "Name of Cooperating Institution",
       "section": "Student Life",
@@ -12711,7 +12711,7 @@
     {
       "sort_order": 700,
       "question_number": "F.310",
-      "pdf_tag": "ROTC_ARMY_TEXT",
+      "pdf_tag": "ROTC_AF_TEXT",
       "word_tag": null,
       "question": "Name of Cooperating Institution",
       "section": "Student Life",

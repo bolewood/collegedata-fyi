@@ -19,7 +19,31 @@ from run_data_integrity_audit import (
     finance_summary,
     parse_content_range,
     percentile,
+    projection_summary,
 )
+
+
+class OverlaySuffixIdentityTests(unittest.TestCase):
+    """PRD 038 A4: a row that merged overlay values carries `<base version>+overlay.<version>/<classes>`; the identity audit must
+    still see the same base, and must still catch a real mismatch."""
+
+    def _summary(self, browser_version, base_version="0.3.17", browser_producer="tier4_docling"):
+        docs = [{"id": "d1", "extraction_status": "extracted", "detected_year": "2025-26"}]
+        selected = [{"document_id": "d1", "base_producer": "tier4_docling", "base_producer_version": base_version,
+                     "base_schema_version": "2025-26", "base_created_at": "2026-11-01T00:00:00+00:00"}]
+        browser = [{"document_id": "d1", "producer": browser_producer, "producer_version": browser_version, "schema_version": "2025-26",
+                    "updated_at": "2026-11-02T00:00:00+00:00"}]
+        fields = [{"document_id": "d1", "updated_at": "2026-11-02T00:00:00+00:00"}]
+        return projection_summary(docs, selected, browser, fields)["school_browser_rows"]["producer_version_schema_proxy_mismatch"]
+
+    def test_a_suffixed_projection_is_the_same_base(self):
+        self.assertEqual(self._summary("0.3.17+overlay.0.7.0/checkbox_box,choice,numeric"), 0)
+        self.assertEqual(self._summary("0.3.17"), 0)
+
+    def test_a_real_version_or_producer_mismatch_is_still_caught(self):
+        self.assertEqual(self._summary("0.3.9+overlay.0.7.0/numeric"), 1)
+        self.assertEqual(self._summary("0.3.9"), 1)
+        self.assertEqual(self._summary("0.3.17+overlay.0.7.0/numeric", browser_producer="tier2_acroform"), 1)
 
 
 class PaginationContractTests(unittest.TestCase):

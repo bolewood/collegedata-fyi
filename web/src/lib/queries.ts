@@ -1,5 +1,14 @@
 import { cache } from "react";
 import { createHash } from "crypto";
+import {
+  OVERLAY_BASE_PRODUCER,
+  OVERLAY_PRODUCER,
+  mergeWithOverlay,
+  pickOverlay,
+  recordedSourceSha,
+  overlayServeClassesFromEnv,
+  overlayServeKey,
+} from "./overlay-serving";
 import { unstable_cache } from "next/cache";
 import { supabase } from "./supabase";
 import { clientInfoHeaders } from "./client-info";
@@ -618,11 +627,14 @@ function mapAdmissionStrategyRow(data: any): BrowserAdmissionStrategyRow {
   };
 }
 
-function fallbackMatchesCanonical(
+export function fallbackMatchesCanonical(
   canonical: ArtifactRow | null,
   fallback: ArtifactRow | null,
 ): boolean {
   if (!canonical || !fallback || canonical.producer !== "tier4_docling") return false;
+  // PRD 038: only the LLM fallback may be treated as one. The template overlay is `kind='cleaned'` too and has its
+  // own merge (overlay-serving.ts); it must never be read through this legacy fill-gaps path.
+  if (fallback.producer !== "tier4_llm_fallback") return false;
 
   const canonicalNotes = canonical.notes as ArtifactNotes | null;
   const fallbackNotes = fallback.notes as ArtifactNotes | null;
@@ -1838,6 +1850,30 @@ export async function fetchCanonicalArtifact(
   return data ?? null;
 }
 
+const OVERLAY_PAGE_SIZE = 25;
+
+async function fetchOverlayCandidates(documentId: string, canonical: ArtifactRow | null): Promise<ArtifactRow[]> {
+  const sha = recordedSourceSha(canonical);
+  if (!canonical || canonical.producer !== OVERLAY_BASE_PRODUCER || !canonical.schema_version || !sha) return [];
+  for (let from = 0; ; from += OVERLAY_PAGE_SIZE) {
+    const res = await supabase
+      .from("cds_artifacts")
+      .select("*")
+      .eq("document_id", documentId)
+      .eq("kind", "cleaned")
+      .eq("producer", OVERLAY_PRODUCER)
+      .eq("schema_version", canonical.schema_version)
+      .eq("notes->>source_sha256", sha)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(from, from + OVERLAY_PAGE_SIZE - 1);
+    throwIfPostgrestError(res.error, "Failed to fetch overlay artifacts");
+    const page = res.data ?? [];
+    if (pickOverlay(canonical, page)) return page;
+    if (page.length < OVERLAY_PAGE_SIZE) return [];
+  }
+}
+
 /**
  * Fetch the canonical (deterministic) artifact and, if present, the
  * tier4_llm_fallback artifact, and return merged values per PRD 006 Mode B
@@ -1854,8 +1890,17 @@ export const fetchExtract = cache(async function fetchExtract(
   canonical: ArtifactRow | null;
   fallback: ArtifactRow | null;
   mergedValues: Record<string, FieldValue>;
+  /** Present only when served overlay values were merged (PRD 038; off by default). */
+  overlay?: ArtifactRow | null;
 }> {
-  return cachedSchoolScopedQuery(schoolId, ["fetchExtract", documentId], async () => {
+  // PRD 038: server-only env, read per call. With the set empty (the default) nothing below changes: same cache
+  // key, same two queries, same returned object shape.
+  const overlayClasses = overlayServeClassesFromEnv();
+  const cacheKey =
+    overlayClasses.size === 0
+      ? ["fetchExtract", documentId]
+      : ["fetchExtract", documentId, overlayServeKey(overlayClasses)];
+  return cachedSchoolScopedQuery(schoolId, cacheKey, async () => {
     const [canonicalRes, fallbackRes] = await Promise.all([
       supabase
         .from("cds_artifacts")
@@ -1878,25 +1923,40 @@ export const fetchExtract = cache(async function fetchExtract(
     throwIfPostgrestError(canonicalRes.error, "Failed to fetch canonical artifact");
     throwIfPostgrestError(fallbackRes.error, "Failed to fetch fallback artifact");
 
-    const canonicalValues =
-      ((canonicalRes.data?.notes as ArtifactNotes | null)?.values ?? {}) as Record<string, FieldValue>;
     const compatibleFallback = fallbackMatchesCanonical(canonicalRes.data ?? null, fallbackRes.data ?? null)
       ? fallbackRes.data
       : null;
     const fallbackValues =
       ((compatibleFallback?.notes as ArtifactNotes | null)?.values ?? {}) as Record<string, FieldValue>;
 
-    // Mode B merge: fallback is the base, canonical overlays on top so the
-    // deterministic cleaner's values always win on collision.
-    const mergedValues: Record<string, FieldValue> = {
-      ...fallbackValues,
-      ...canonicalValues,
-    };
+    if (overlayClasses.size === 0) {
+      // Mode B merge: fallback is the base, canonical overlays on top so the
+      // deterministic cleaner's values always win on collision.
+      const canonicalValues =
+        ((canonicalRes.data?.notes as ArtifactNotes | null)?.values ?? {}) as Record<string, FieldValue>;
+      return {
+        canonical: canonicalRes.data ?? null,
+        fallback: compatibleFallback,
+        mergedValues: { ...fallbackValues, ...canonicalValues },
+      };
+    }
 
+    // Overlay merge (shadow until the owner sets OVERLAY_SERVE_CLASSES): fallback || tier4 base || overlay.
+    // Eligibility is filtered in the query (producer, kind, schema version and the base's recorded source sha) and the
+    // rows are paged newest first until a page holds an eligible one, so a run of newer held or stale overlays cannot
+    // hide an older eligible overlay (a fixed `limit` before eligibility did).
+    const overlayCandidates = await fetchOverlayCandidates(documentId, canonicalRes.data ?? null);
+    const merged = mergeWithOverlay({
+      canonical: canonicalRes.data ?? null,
+      fallbackValues,
+      overlayCandidates,
+      classes: overlayClasses,
+    });
     return {
       canonical: canonicalRes.data ?? null,
       fallback: compatibleFallback,
-      mergedValues,
+      mergedValues: merged.mergedValues,
+      overlay: merged.overlay,
     };
   });
 });

@@ -322,3 +322,27 @@ python tools/extraction_worker/worker.py --detect-year-only --school university-
 - [`tools/tier_probe/`](../tier_probe/) — backfills `source_format` so the router can route
 - [`docs/decisions/0006-tiered-extraction-strategy.md`](../../docs/decisions/0006-tiered-extraction-strategy.md) — the tier ladder rationale
 - [`docs/decisions/0007-year-authority-moves-to-extraction.md`](../../docs/decisions/0007-year-authority-moves-to-extraction.md) — why year lives here, not in the resolver
+
+## Template overlay (PRD 038 M3; off by default)
+
+`overlay_entry.py` runs the PRD 038 template overlay as its own entry point and writes a `kind='cleaned'`,
+`producer='tier2_template_overlay'` artifact. It is never imported by `worker.py` at module load.
+
+**Contract: one serial writer.** There is no database uniqueness on overlay artifacts. Before extracting, the tool skips a
+document when an overlay with the same (document, producer version, field-map version, source sha, Lane 2 requested)
+exists; two concurrent writers can both insert, which is harmless because the newest eligible overlay wins in every
+selector. This is a best-effort skip, not general idempotency.
+
+- `python tools/extraction_worker/overlay_entry.py --env .env --document-ids <id>,<id> --no-lane2`: dry run (the default):
+  extract and print a summary, write nothing. Add `--write` to insert the artifact. Neither mode writes a heartbeat or
+  ledger row, refreshes the projection or notifies the web. Lane 2 (numeric OCR) costs roughly 2 minutes per vector-path
+  document; `--no-lane2` skips it.
+- `--rehold [--hold-threshold 0.10|off] [--hold-classes numeric,choice,checkbox_box] [--write]`: no extraction; recompute
+  `held` from the stored comparison facts and append a new artifact. The hold is computed at write time over the default
+  served-candidate classes; `--env FILE` values (including `OVERLAY_HOLD_THRESHOLD`) reach the tool.
+- `--pdf-dir DIR --out-dir DIR`: local mode over `<sha256>.pdf` files, no database.
+- `OVERLAY_WORKER_ENABLED=1` makes the routine worker loop call the overlay after the Tier 4 outcome (default off; never
+  under `--dry-run`).
+- Serving is a separate switch: `OVERLAY_SERVE_CLASSES` (Python projection and web), default empty. See
+  `tools/browser_backend/overlay_serving.py` and PRD 038 A13/A14. The raw artifact rows are publicly readable through
+  the `cds_artifacts` API; no selected-result consumer serves overlay values unless that variable names classes.

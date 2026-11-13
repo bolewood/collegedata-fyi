@@ -707,8 +707,8 @@ def projection_summary(
                     browser_stale.append(doc_id)
             if (
                 browser_row.get("producer") != selected[doc_id].get("base_producer")
-                or browser_row.get("producer_version")
-                != selected[doc_id].get("base_producer_version")
+                or str(browser_row.get("producer_version") or "").split("+overlay.", 1)[0]      # PRD 038 A4
+                != str(selected[doc_id].get("base_producer_version") or "")
                 or browser_row.get("schema_version") != selected[doc_id].get("base_schema_version")
             ):
                 identity_mismatch.append(doc_id)

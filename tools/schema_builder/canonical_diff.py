@@ -44,6 +44,20 @@ SIGNATURE_KEYS = [
     "value_type",
 ]
 
+# The 2023-24 and 2024-25 Answer Sheets label all three ROTC "Name of
+# Cooperating Institution" rows with category "Army" (a copy-paste error in the
+# source tab; the PDF has ROTC_ARMY_TEXT, ROTC_NAVY_TEXT and ROTC_AF_TEXT in
+# that order, matching 2025-26 F.302 / F.305 / F.307). With the published
+# category all three collide on one signature and were all given
+# ROTC_ARMY_TEXT. Correct the category for signature matching only; the schema
+# JSON keeps the category as published. Keyed by (schema_version, question_number).
+SOURCE_CATEGORY_OVERRIDES: dict[tuple[str, str], str] = {
+    ("2024-25", "F.307"): "Navy",
+    ("2024-25", "F.310"): "Airforce",
+    ("2023-24", "F.307"): "Navy",
+    ("2023-24", "F.310"): "Airforce",
+}
+
 ACADEMIC_PROFILE_FIELDS = [
     "C.901",
     "C.902",
@@ -177,7 +191,11 @@ def build_diff(
     field_records = []
     pdf_tags_assigned = 0
     for source_field in source_fields:
-        target_field = target_by_signature.get(signature(source_field))
+        override = SOURCE_CATEGORY_OVERRIDES.get(
+            (str(source_schema.get("schema_version")), source_field["question_number"])
+        )
+        match_field = {**source_field, "category": override} if override else source_field
+        target_field = target_by_signature.get(signature(match_field))
         kind = classify_source_field(source_field, target_field)
         pdf_tag = target_field.get("pdf_tag") if target_field else None
         if pdf_tag:

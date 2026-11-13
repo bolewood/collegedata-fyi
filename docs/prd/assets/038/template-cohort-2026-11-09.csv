@@ -43,7 +43,6 @@ year,school_id,document_id,source_sha256_prefix,pages,template_pages_matched,dom
 2024-25,california-state-university-long-beach,ce35c5d3-cc4d-4651-a5d1-dfd1597414ee,ad4d044f9ba6,49,49,-1,85,Microsoft: Print To PDF
 2024-25,california-state-university-northridge,9a6676b6-fe0f-48a7-a2c2-10906dccd4e5,70333b1ec0c4,48,39,-2,404,Adobe PDF Library 26.1.163
 2024-25,california-state-university-sacramento,76174b8a-31fd-410c-ac76-ec76a8373ff5,33c13968ecb3,50,50,0,264,pdf-lib (https://github.com/Hopding/pdf-lib)
-2024-25,caltech,e19a6b67-b934-408d-9ca1-ae7bdd982694,68b19c40f048,50,50,0,347,Acrobat Distiller 25.0 (Windows)
 2024-25,cameron-university,ae879c31-759e-4ae8-9d4d-d699534cb7be,9036e29db88c,46,46,-4,74,Microsoft: Print To PDF
 2024-25,chapman-university,22c8aab8-4fad-48e2-a5f2-d2d4384768c7,b28a6a211229,50,50,0,433,Acrobat Distiller 25.0 (Windows)
 2024-25,columbia-college-chicago,a5f21f69-1b8b-42d4-97c7-725e3a9358b5,46995b8004b0,49,49,-1,356,Acrobat Distiller 24.0 (Windows)
@@ -75,7 +74,6 @@ year,school_id,document_id,source_sha256_prefix,pages,template_pages_matched,dom
 2024-25,temple,f693930c-4264-40a7-88b9-4c40572a9e0a,9ea18cce3a5f,50,50,0,401,Acrobat Distiller 25.0 (Windows)
 2024-25,texas-am,15ecf934-29e8-4b1d-9638-bc0cb6bee5ca,d09bc2c793f5,48,48,-2,438,Acrobat Distiller 25.0 (Windows)
 2024-25,texas-a-and-m-university-corpus-christi,0132f425-482c-4b21-94f4-18193cee868d,e6ac42ec7d6b,50,50,0,398,Acrobat Distiller 25.0 (Windows)
-2024-25,texas-am,15ecf934-29e8-4b1d-9638-bc0cb6bee5ca,d09bc2c793f5,48,48,-2,438,Acrobat Distiller 25.0 (Windows)
 2024-25,the-university-of-texas-at-tyler,3e1171f3-6c38-45ac-a37a-10898455075d,700cee47c42f,50,50,0,434,Acrobat Distiller 20.0 (Windows)
 2024-25,ucla,0cb51ba0-2cc1-4552-b09e-aa4414ef4ce3,28f3a0fe638f,50,50,0,109,Microsoft: Print To PDF
 2024-25,udel,dce1d6c8-c0d8-4ad6-bfc9-e4b5e129b73e,625b0202adbb,50,50,0,444,Acrobat Distiller 25.0 (Windows)

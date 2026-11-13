@@ -98,5 +98,36 @@ class CanonicalDiffTest(unittest.TestCase):
         self.assertEqual(metrics["applied"]["per_year_formulas"]["2025-26"], "C.116")
 
 
+class RotcCooperatingInstitutionTagTest(unittest.TestCase):
+    """The 2024-25 Answer Sheet labels all three ROTC text rows category Army."""
+
+    def _fields(self, categories, version_fields):
+        return [
+            field(qn, "Name of Cooperating Institution", section="Student Life",
+                  subsection="ROTC", category=cat, value_type="Text", pdf_tag=tag)
+            for (qn, tag), cat in zip(version_fields, categories)
+        ]
+
+    def test_mislabelled_army_rows_get_their_own_pdf_tags(self):
+        source = {"schema_version": "2024-25", "fields": self._fields(
+            ["Army", "Army", "Army"], [("F.303", None), ("F.307", None), ("F.310", None)])}
+        target = {"schema_version": "2025-26", "fields": self._fields(
+            ["Army", "Navy", "Airforce"],
+            [("F.302", "ROTC_ARMY_TEXT"), ("F.305", "ROTC_NAVY_TEXT"), ("F.307", "ROTC_AF_TEXT")])}
+        diff = build_diff(source, target, {"ROTC_ARMY_TEXT", "ROTC_NAVY_TEXT", "ROTC_AF_TEXT"})
+        tags = {r["field_id"]: r["pdf_tag"] for r in diff["fields"]}
+        self.assertEqual(tags, {"F.303": "ROTC_ARMY_TEXT", "F.307": "ROTC_NAVY_TEXT", "F.310": "ROTC_AF_TEXT"})
+
+    def test_committed_schemas_give_each_rotc_text_tag_once(self):
+        import json
+        from pathlib import Path
+        root = Path(__file__).resolve().parents[2] / "schemas"
+        for year in ("2023_24", "2024_25"):
+            fields = json.loads((root / f"cds_schema_{year}.json").read_text())["fields"]
+            tags = {f["question_number"]: f["pdf_tag"] for f in fields
+                    if f["question_number"] in ("F.303", "F.307", "F.310")}
+            self.assertEqual(tags, {"F.303": "ROTC_ARMY_TEXT", "F.307": "ROTC_NAVY_TEXT", "F.310": "ROTC_AF_TEXT"})
+
+
 if __name__ == "__main__":
     unittest.main()
