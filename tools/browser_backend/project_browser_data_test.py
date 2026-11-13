@@ -473,6 +473,31 @@ class BrowserProjectionTests(unittest.TestCase):
         self.assertEqual(browser["admitted"], 15)
         self.assertEqual(browser["enrolled_first_year"], 6)
 
+    def test_2024_total_smaller_than_a_reported_component_uses_component_sum(self):
+        # University of Akron 2024-25: gender rows 8,876 and 9,071 with a
+        # misread total of 6,477 and two components missing.
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2024-25"),
+            [
+                artifact(
+                    schema_version="2024-25",
+                    values={
+                        "C.101": {"value": "8876"},
+                        "C.102": {"value": "9071"},
+                        "C.117": {"value": "6477"},
+                        "C.105": {"value": "4962"},
+                        "C.106": {"value": "5736"},
+                        "C.108": {"value": "21"},
+                        "C.118": {"value": "921"},
+                    },
+                )
+            ],
+            defs(),
+        )
+
+        self.assertEqual(browser["applied"], 17947)
+        self.assertEqual(browser["admitted"], 10719)
+
     def test_2024_admissions_derived_metrics_use_total_fallback_when_available(self):
         _fields, browser = build_projection_rows(
             doc(canonical_year="2024-25"),
