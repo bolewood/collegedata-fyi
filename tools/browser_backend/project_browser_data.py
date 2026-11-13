@@ -41,12 +41,15 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # imported as `tools.browser_backend...` by the tests and as `browser_backend...` by the worker.
 try:
     from . import overlay_serving as _overlay  # type: ignore[no-redef]
+    from . import sanity_rules as _sanity  # type: ignore[no-redef]
 except ImportError:  # pragma: no cover - script / sys.path layouts
     try:
         from browser_backend import overlay_serving as _overlay  # type: ignore[no-redef]
+        from browser_backend import sanity_rules as _sanity  # type: ignore[no-redef]
     except ImportError:
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         import overlay_serving as _overlay  # type: ignore[no-redef]
+        import sanity_rules as _sanity  # type: ignore[no-redef]
 SCHEMA_DIR = REPO_ROOT / "schemas"
 SITE_BASE_URL = "https://www.collegedata.fyi"
 DEFAULT_SCHEMA_VERSION = "2025-26"
@@ -955,8 +958,11 @@ def admission_strategy_values(
 
     return {
         "ed_offered": ed_offered_effective,
-        "ed_applicants": ed_applicants,
-        "ed_admitted": ed_admitted,
+        # Counts that cannot both be true are not published (the quality
+        # flag below still says why). Seen when a date such as 3/15 is read
+        # into the two count cells.
+        "ed_applicants": None if ed_math_inconsistent else ed_applicants,
+        "ed_admitted": None if ed_math_inconsistent else ed_admitted,
         "ed_has_second_deadline": ed_has_second_deadline,
         "ea_offered": ea_offered,
         "ea_restrictive": ea_restrictive,
@@ -1208,6 +1214,17 @@ def build_projection_rows(
         if field_ids and len(field_ids) == 1:
             derived_formula_single_fields[field_ids[0]] = metric
 
+    # Cross-field sanity rules (sanity_rules.py). A field that fails one is
+    # published in cds_fields as parse_error with no number. The browser row
+    # has its own guards (see admission_strategy_values), so `selected` is
+    # left intact and its quality flags keep working.
+    reported_numbers: dict[str, Decimal] = {}
+    for field_id, record in selected.values.items():
+        probe = parse_field_value(record, schema_defs.get(field_id))
+        if probe.value_status == "reported" and probe.value_num is not None:
+            reported_numbers[field_id] = probe.value_num
+    implausible = _sanity.implausible_fields(selected.schema_version, reported_numbers)
+
     field_rows: list[dict[str, Any]] = []
     metric_values: dict[str, Decimal] = {}
 
@@ -1219,6 +1236,8 @@ def build_projection_rows(
             or derived_formula_single_fields.get(field_id)
         )
         parsed = parse_field_value(record, definition, metric)
+        if field_id in implausible:
+            parsed = ParsedValue(parsed.value_text, None, None, parsed.value_kind, "parse_error")
         source_producer, source_version = selected.value_sources.get(
             field_id,
             (selected.base_producer, selected.base_producer_version),
