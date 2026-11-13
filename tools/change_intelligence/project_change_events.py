@@ -41,6 +41,11 @@ PRODUCER_FAMILY = {
     "tier2_acroform": "tier2",
     "tier4_docling": "tier4",
     "tier6_html": "tier6",
+    # PRD 038 Decision 4: Tier 2 family, listed explicitly so a lookup never falls through to the prefix rule.
+    # Under the supplement model it is never a base candidate; an overlay-merged row keeps the base producer
+    # and carries "<base version>+overlay.<overlay version>" (A4), so the existing version gate treats a
+    # Tier-4-only year and a Tier-4-plus-overlay year as not comparable.
+    "tier2_template_overlay": "tier2",
 }
 
 

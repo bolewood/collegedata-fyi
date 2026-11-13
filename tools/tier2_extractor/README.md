@@ -345,3 +345,11 @@ Store the detected tier alongside the manifest row so consumers can filter by pr
 - [`schemas/cds_schema_2025_26.json`](../../schemas/cds_schema_2025_26.json) — the 2025-26 canonical schema
 - [`tools/extraction-validator/`](../extraction-validator/) — neutral scorer for comparing producers against hand-verified ground truth
 - [`docs/known-issues/harvey-mudd-2025-26.md`](../../docs/known-issues/harvey-mudd-2025-26.md) — the correction record explaining why this tool exists
+
+## Shadow report (PRD 038 M3, A6)
+
+`shadow_report.py` is read-only tooling over overlay artifacts: per-document field counts by class, Tier 4 agreement,
+merged counts against Tier 4 alone, strict-merge eligibility, and a seeded audit sample with rendered crops.
+`fetch_tier4.sh` pulls the Tier 4 (and fillable-twin) values from production with SELECT only. The audit itself is done
+by a person: the sample's `verdict` column is left empty.
+

@@ -1,0 +1,579 @@
+{
+ "description": "PRD 038 A2 parity fixture shared by Python (tools/browser_backend/overlay_parity_test.py) and TypeScript (web/src/lib/overlay-serving.test.ts). Expected values are hand-written, not generated.",
+ "cases": [
+  {
+   "name": "parity_same_tier4_base",
+   "artifacts": [
+    {
+     "id": "t4a",
+     "document_id": "d1",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.6.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "sha-A",
+      "values": {
+       "B.101": {
+        "value": "100"
+       },
+       "C.101": {
+        "value": "5"
+       },
+       "C.201": {
+        "value": "x"
+       },
+       "F.1": {
+        "value": "999"
+       }
+      }
+     }
+    },
+    {
+     "id": "fb1",
+     "document_id": "d1",
+     "kind": "cleaned",
+     "producer": "tier4_llm_fallback",
+     "producer_version": "1",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-02T00:00:00+00:00",
+     "notes": {
+      "base_artifact_id": "t4a",
+      "values": {
+       "F.1": {
+        "value": "fallback1"
+       },
+       "F.2": {
+        "value": "fallback2"
+       }
+      }
+     }
+    },
+    {
+     "id": "ova",
+     "document_id": "d1",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.6.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-05T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "sha-A",
+      "held": false,
+      "values": {
+       "B.101": {
+        "value": "101",
+        "emission_class": "numeric",
+        "lane": "text"
+       },
+       "C.300": {
+        "value": "7",
+        "emission_class": "ocr_numeric",
+        "lane": 2
+       },
+       "C.301": {
+        "value": "X",
+        "emission_class": "checkbox_boxless",
+        "lane": "text"
+       },
+       "C.302": {
+        "value": "X",
+        "emission_class": "checkbox_box",
+        "lane": "text"
+       },
+       "C.303": {
+        "value": "12",
+        "emission_class": "ocr_numeric",
+        "lane": "text",
+        "derived_lanes": [
+         2,
+         "text"
+        ]
+       },
+       "C.304": {
+        "value": "13",
+        "emission_class": "numeric",
+        "lane": "text",
+        "derived_lanes": [
+         2,
+         "text"
+        ]
+       },
+       "C.305": {
+        "value": "free words",
+        "emission_class": "free_text",
+        "lane": "text"
+       },
+       "C.306": {
+        "value": "Yes",
+        "emission_class": "choice",
+        "lane": "text"
+       }
+      }
+     }
+    },
+    {
+     "id": "ovs",
+     "document_id": "d1",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.5.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-06T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "sha-OLD",
+      "held": false,
+      "values": {
+       "B.101": {
+        "value": "666",
+        "emission_class": "numeric",
+        "lane": "text"
+       },
+       "C.401": {
+        "value": "1",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      }
+     }
+    },
+    {
+     "id": "ovh",
+     "document_id": "d1",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.6.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-07T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "sha-A",
+      "held": true,
+      "values": {
+       "B.101": {
+        "value": "777",
+        "emission_class": "numeric",
+        "lane": "text"
+       },
+       "C.402": {
+        "value": "2",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      }
+     }
+    }
+   ],
+   "base_artifact_id": "t4a",
+   "variants": [
+    {
+     "serve": [],
+     "values": {
+      "B.101": "100",
+      "C.101": "5",
+      "C.201": "x",
+      "F.1": "999",
+      "F.2": "fallback2"
+     },
+     "overlay_artifact_id": null,
+     "producer_version_suffix": null
+    },
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "B.101": "101",
+      "C.101": "5",
+      "C.201": "x",
+      "F.1": "999",
+      "F.2": "fallback2",
+      "C.302": "X",
+      "C.306": "Yes"
+     },
+     "overlay_artifact_id": "ova",
+     "producer_version_suffix": "0.6.0",
+     "sources": {
+      "B.101": "tier2_template_overlay",
+      "C.302": "tier2_template_overlay",
+      "C.306": "tier2_template_overlay",
+      "C.101": "tier4_docling",
+      "F.1": "tier4_docling",
+      "F.2": "tier4_llm_fallback"
+     }
+    },
+    {
+     "serve": [
+      "checkbox_boxless",
+      "free_text"
+     ],
+     "values": {
+      "B.101": "100",
+      "C.101": "5",
+      "C.201": "x",
+      "F.1": "999",
+      "F.2": "fallback2",
+      "C.301": "X",
+      "C.305": "free words"
+     },
+     "overlay_artifact_id": "ova",
+     "producer_version_suffix": "0.6.0"
+    },
+    {
+     "serve": [
+      "ocr_numeric"
+     ],
+     "values": {
+      "B.101": "100",
+      "C.101": "5",
+      "C.201": "x",
+      "F.1": "999",
+      "F.2": "fallback2"
+     },
+     "overlay_artifact_id": null,
+     "producer_version_suffix": null
+    },
+    {
+     "serve": [
+      "bogus",
+      "numeric"
+     ],
+     "values": {
+      "B.101": "100",
+      "C.101": "5",
+      "C.201": "x",
+      "F.1": "999",
+      "F.2": "fallback2"
+     },
+     "overlay_artifact_id": null,
+     "producer_version_suffix": null,
+     "note": "an unknown class name fails closed: nothing is served"
+    }
+   ]
+  },
+  {
+   "name": "tier2_base_never_merges",
+   "artifacts": [
+    {
+     "id": "t2",
+     "document_id": "d2",
+     "kind": "canonical",
+     "producer": "tier2_acroform",
+     "producer_version": "1.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "sha-B",
+      "values": {
+       "B.101": {
+        "value": "20"
+       }
+      }
+     }
+    },
+    {
+     "id": "ov2",
+     "document_id": "d2",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.6.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-05T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "sha-B",
+      "held": false,
+      "values": {
+       "B.101": {
+        "value": "21",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      }
+     }
+    }
+   ],
+   "base_artifact_id": "t2",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "B.101": "20"
+     },
+     "overlay_artifact_id": null,
+     "producer_version_suffix": null
+    }
+   ]
+  },
+  {
+   "name": "tier4_base_without_recorded_sha_never_merges",
+   "artifacts": [
+    {
+     "id": "t4n",
+     "document_id": "d4",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.6.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "values": {
+       "B.101": {
+        "value": "40"
+       }
+      }
+     }
+    },
+    {
+     "id": "ov4",
+     "document_id": "d4",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.6.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-05T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "sha-C",
+      "held": false,
+      "values": {
+       "B.101": {
+        "value": "41",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      }
+     }
+    }
+   ],
+   "base_artifact_id": "t4n",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "B.101": "40"
+     },
+     "overlay_artifact_id": null,
+     "producer_version_suffix": null
+    }
+   ]
+  },
+  {
+   "name": "tier4_base_without_schema_version_never_merges",
+   "artifacts": [
+    {
+     "id": "t4s",
+     "document_id": "d5",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.9",
+     "schema_version": null,
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "sha-F",
+      "values": {
+       "B.101": {
+        "value": "50"
+       }
+      }
+     }
+    },
+    {
+     "id": "ov5",
+     "document_id": "d5",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.6.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-05T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "sha-F",
+      "held": false,
+      "values": {
+       "B.101": {
+        "value": "51",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      }
+     }
+    }
+   ],
+   "base_artifact_id": "t4s",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "B.101": "50"
+     },
+     "overlay_artifact_id": null,
+     "producer_version_suffix": null
+    }
+   ]
+  },
+  {
+   "name": "schema_mismatch_never_merges",
+   "artifacts": [
+    {
+     "id": "t4m",
+     "document_id": "d6",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2024-25",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "sha-F",
+      "values": {
+       "B.101": {
+        "value": "60"
+       }
+      }
+     }
+    },
+    {
+     "id": "ov6",
+     "document_id": "d6",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.6.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-05T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "sha-F",
+      "held": false,
+      "values": {
+       "B.101": {
+        "value": "51",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      }
+     }
+    }
+   ],
+   "base_artifact_id": "t4m",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "B.101": "60"
+     },
+     "overlay_artifact_id": null,
+     "producer_version_suffix": null
+    }
+   ]
+  },
+  {
+   "name": "known_divergence_tier2_older_than_tier4",
+   "artifacts": [
+    {
+     "id": "t2old",
+     "document_id": "d3",
+     "kind": "canonical",
+     "producer": "tier2_acroform",
+     "producer_version": "1.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-10-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "sha-D",
+      "values": {
+       "B.101": {
+        "value": "30"
+       },
+       "T.2": {
+        "value": "tier2only"
+       }
+      }
+     }
+    },
+    {
+     "id": "t4new",
+     "document_id": "d3",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.6.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "sha-E",
+      "values": {
+       "B.101": {
+        "value": "31"
+       },
+       "T.4": {
+        "value": "tier4only"
+       }
+      }
+     }
+    },
+    {
+     "id": "ov3",
+     "document_id": "d3",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.6.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-05T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "sha-E",
+      "held": false,
+      "values": {
+       "B.101": {
+        "value": "32",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      }
+     }
+    }
+   ],
+   "note": "The view and project_browser_data rank tier2_acroform above tier4_docling; fetchExtract takes the newest canonical. Recorded, not fixed (A2, Decision 1 is a later migration).",
+   "per_selector": {
+    "sql": {
+     "base_artifact_id": "t2old",
+     "values": {
+      "B.101": "30",
+      "T.2": "tier2only"
+     }
+    },
+    "python": {
+     "base_artifact_id": "t2old",
+     "values": {
+      "B.101": "30",
+      "T.2": "tier2only"
+     }
+    },
+    "web": {
+     "base_artifact_id": "t4new",
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "B.101": "32",
+      "T.4": "tier4only"
+     },
+     "overlay_artifact_id": "ov3"
+    }
+   }
+  }
+ ]
+}

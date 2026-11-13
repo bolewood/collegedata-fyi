@@ -36,6 +36,17 @@ from typing import Any, Optional, Tuple, Union
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+# Served-overlay rules (PRD 038 A2/A3/A13). Imported three ways because this file is run as a script,
+# imported as `tools.browser_backend...` by the tests and as `browser_backend...` by the worker.
+try:
+    from . import overlay_serving as _overlay  # type: ignore[no-redef]
+except ImportError:  # pragma: no cover - script / sys.path layouts
+    try:
+        from browser_backend import overlay_serving as _overlay  # type: ignore[no-redef]
+    except ImportError:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import overlay_serving as _overlay  # type: ignore[no-redef]
 SCHEMA_DIR = REPO_ROOT / "schemas"
 SITE_BASE_URL = "https://www.collegedata.fyi"
 DEFAULT_SCHEMA_VERSION = "2025-26"
@@ -70,6 +81,8 @@ def _fallback_matches_base(
 ) -> bool:
     fallback_notes = fallback.get("notes") or {}
     if not isinstance(fallback_notes, dict):
+        return False
+    if fallback.get("producer") != FALLBACK_PRODUCER:       # PRD 038: the overlay is `cleaned` too; never read it as a fallback
         return False
 
     base_schema_version = artifact_schema_version(base)
@@ -142,6 +155,9 @@ class SelectedExtractionResult:
     fallback_producer_version: Optional[str]
     values: dict[str, Any]
     value_sources: dict[str, Tuple[str, Optional[str]]]
+    # PRD 038 A13: set only when served overlay values were merged (never with the served set empty).
+    overlay_artifact_id: Optional[str] = None
+    overlay_producer_version: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -505,7 +521,11 @@ def select_extraction_result(
     artifacts: list[dict[str, Any]],
     fallback_schema_version: str = DEFAULT_SCHEMA_VERSION,
     expected_schema_version: Optional[str] = None,
+    overlay_serve_classes: Optional[frozenset[str]] = None,
 ) -> Optional[SelectedExtractionResult]:
+    """`overlay_serve_classes` None reads `OVERLAY_SERVE_CLASSES` (default empty: no overlay code runs)."""
+    if overlay_serve_classes is None:
+        overlay_serve_classes = _overlay.served_classes()
     base_candidates = [
         artifact for artifact in artifacts
         if artifact.get("kind") == "canonical"
@@ -558,6 +578,16 @@ def select_extraction_result(
                     fallback_artifact.get("producer_version"),
                 )
 
+    # Overlay (PRD 038): merged last so it wins. With an empty served set this is skipped entirely, so the
+    # result is byte-identical with or without overlay artifacts present.
+    overlay_artifact: Optional[dict[str, Any]] = None
+    if overlay_serve_classes:
+        overlay_artifact, overlay_values = _overlay.served_overlay_for_base(base, artifacts, overlay_serve_classes)
+        if overlay_artifact is not None:
+            for field_id, value in overlay_values.items():
+                merged_values[field_id] = value
+                value_sources[field_id] = (_overlay.OVERLAY_PRODUCER, overlay_artifact.get("producer_version"))
+
     return SelectedExtractionResult(
         document_id=document_id,
         schema_version=str(schema_version),
@@ -572,6 +602,8 @@ def select_extraction_result(
         ),
         values=merged_values,
         value_sources=value_sources,
+        overlay_artifact_id=str(overlay_artifact.get("id")) if overlay_artifact else None,
+        overlay_producer_version=overlay_artifact.get("producer_version") if overlay_artifact else None,
     )
 
 
@@ -1281,7 +1313,10 @@ def build_browser_row(
         "schema_version": selected.schema_version,
         "source_format": document.get("source_format"),
         "producer": selected.base_producer,
-        "producer_version": selected.base_producer_version,
+        # A4: an overlay-merged row is not comparable with a Tier-4-only row, so the version says so.
+        "producer_version": _overlay.overlay_version_suffix(
+            selected.base_producer_version, selected.overlay_producer_version,
+        ),
         "data_quality_flag": document.get("data_quality_flag"),
         "archive_url": archive_url(str(document["school_id"]), canonical_year),
         "applied": applied,

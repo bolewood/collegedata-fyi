@@ -297,3 +297,18 @@ python tools/extraction_worker/worker.py --detect-year-only --school university-
 - [`tools/tier_probe/`](../tier_probe/) — backfills `source_format` so the router can route
 - [`docs/decisions/0006-tiered-extraction-strategy.md`](../../docs/decisions/0006-tiered-extraction-strategy.md) — the tier ladder rationale
 - [`docs/decisions/0007-year-authority-moves-to-extraction.md`](../../docs/decisions/0007-year-authority-moves-to-extraction.md) — why year lives here, not in the resolver
+
+## Template overlay (PRD 038 M3; off by default)
+
+`overlay_entry.py` runs the PRD 038 template overlay as its own entry point: its own idempotency key (document,
+producer, producer version, field-map version, source sha), run on the source PR #258 selected, writing a
+`kind='cleaned'`, `producer='tier2_template_overlay'` artifact. It is never imported by `worker.py` at module load.
+
+- `python tools/extraction_worker/overlay_entry.py --document-ids <id>,<id>`: dry run (the default): extract and
+  print a summary, write nothing. Add `--write` to insert the artifact. Neither mode writes a heartbeat or ledger
+  row, refreshes the projection or notifies the web. `--no-lane2` skips numeric OCR.
+- `--pdf-dir DIR --out-dir DIR`: local mode over `<sha256>.pdf` files, no database.
+- `OVERLAY_WORKER_ENABLED=1` makes the routine worker loop call the overlay after the Tier 4 outcome (default off).
+- Serving is a separate switch: `OVERLAY_SERVE_CLASSES` (Python projection and web), default empty. See
+  `tools/browser_backend/overlay_serving.py` and PRD 038 A13.
+

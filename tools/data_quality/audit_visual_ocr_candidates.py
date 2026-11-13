@@ -44,7 +44,7 @@ def version_tuple(version: str | None) -> tuple[int, ...]:
     if not version:
         return ()
     parts: list[int] = []
-    for part in str(version).split("."):
+    for part in str(version).split("+overlay.", 1)[0].split("."):      # PRD 038 A4: ignore the overlay suffix
         try:
             parts.append(int(part))
         except ValueError:
