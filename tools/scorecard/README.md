@@ -15,11 +15,15 @@ is below.
 
 ## What's live right now
 
-- **`scorecard_summary` — 6,322 rows** of Scorecard 2022-23 data, one per IPEDS UNITID. Every Title-IV institution.
-- **`institution_directory` — 6,322 rows** refreshed from the same Scorecard CSV, with in-scope flags and deterministic slugs for PRD 015 coverage.
-- **`cds_documents.ipeds_id` — 3,794 of 3,950 manifest rows populated** via the public manifest view; the remaining gap is mostly legacy slug variants and non-Title-IV / non-school rows. See "Slug rationalization" below.
+- **`scorecard_summary`**: one row per IPEDS UNITID (every Title-IV institution). The loaded vintage is in the `scorecard_data_year` column (2022-23 as of Nov 2026).
+- **`institution_directory`**: refreshed from the same Scorecard CSV, with in-scope flags and deterministic slugs for PRD 015 coverage.
+- **`cds_documents.ipeds_id`**: populated for nearly all manifest rows. The rest are mostly non-Title-IV or non-school rows; slug aliases are reconciled through `institution_slug_crosswalk` (see "Slug aliases" below).
 - **`cds_scorecard` view — joins live**. One row per CDS document with the Scorecard outcome slice attached. NULLs on the Scorecard side mean either the school has no IPEDS match or the school dropped out of the federal Title-IV list.
-- **`school_merit_profile` — 383 rows** joining latest primary Section H CDS merit/need-aid facts to selected Scorecard affordability and outcome fields.
+- **`school_merit_profile`**: joins latest primary Section H CDS merit/need-aid facts to selected Scorecard affordability and outcome fields.
+
+Row counts change with every refresh; see [/coverage](https://www.collegedata.fyi/coverage) for current numbers.
+
+Row counts change with every refresh; see [/coverage](https://www.collegedata.fyi/coverage) for current numbers.
 
 ## Files
 
@@ -44,43 +48,46 @@ Apply in order — the third depends on the first via `cds_manifest.ipeds_id`, a
 
 ## First-time setup
 
-Already done as of 2026-04-20. For posterity / re-setup elsewhere:
+Already done in production. For re-setup elsewhere:
 
 ```bash
-# 1. Apply migrations
-supabase db push
-# (or paste each SQL file into the Supabase SQL editor)
+# 1. Apply migrations. Migrations reach production only from a fresh `main`
+#    checkout after the PR merges; never from a feature branch and never by
+#    pasting SQL into the Supabase SQL editor (that bypasses migration history).
+git switch main && git pull --ff-only
+supabase db push --linked
 
 # 2. Backfill ipeds_id on existing cds_documents rows
-#    Recommended: review the SQL first
-python tools/scorecard/backfill_ipeds_ids.py > /tmp/backfill.sql
-head -20 /tmp/backfill.sql       # sanity check
-# Then either paste into Supabase SQL editor, OR:
+#    Review the generated SQL first (default mode only prints it):
+mkdir -p scratch/scorecard
+python tools/scorecard/backfill_ipeds_ids.py > scratch/scorecard/backfill.sql
+head -20 scratch/scorecard/backfill.sql       # sanity check
+# Then write through the service-role client:
 python tools/scorecard/backfill_ipeds_ids.py --apply
 
 # 3. Load the Scorecard CSV
-unzip ~/Downloads/Most-Recent-Cohorts.zip -d /tmp/scorecard
+unzip ~/Downloads/Most-Recent-Cohorts.zip -d scratch/scorecard/current
 python tools/scorecard/refresh_summary.py \
-  --csv /tmp/scorecard/Most-Recent-Cohorts-Institution.csv \
+  --csv scratch/scorecard/current/Most-Recent-Cohorts-Institution.csv \
   --data-year 2022-23
 # Dry run prints the first row + total count. Re-run with --apply when satisfied.
 python tools/scorecard/refresh_summary.py \
-  --csv /tmp/scorecard/Most-Recent-Cohorts-Institution.csv \
+  --csv scratch/scorecard/current/Most-Recent-Cohorts-Institution.csv \
   --data-year 2022-23 --apply
 
 # 4. Refresh the institution directory from the exact same CSV and vintage.
 # Parse locally first, then audit the production delta without writing.
 python tools/scorecard/load_directory.py \
-  --csv /tmp/scorecard/Most-Recent-Cohorts-Institution.csv \
-  --previous-csv /tmp/scorecard-previous/Most-Recent-Cohorts-Institution.csv \
+  --csv scratch/scorecard/current/Most-Recent-Cohorts-Institution.csv \
+  --previous-csv scratch/scorecard/previous/Most-Recent-Cohorts-Institution.csv \
   --data-year 2022-23
 python tools/scorecard/load_directory.py \
-  --csv /tmp/scorecard/Most-Recent-Cohorts-Institution.csv \
-  --previous-csv /tmp/scorecard-previous/Most-Recent-Cohorts-Institution.csv \
+  --csv scratch/scorecard/current/Most-Recent-Cohorts-Institution.csv \
+  --previous-csv scratch/scorecard/previous/Most-Recent-Cohorts-Institution.csv \
   --data-year 2022-23 --audit-live
 python tools/scorecard/load_directory.py \
-  --csv /tmp/scorecard/Most-Recent-Cohorts-Institution.csv \
-  --previous-csv /tmp/scorecard-previous/Most-Recent-Cohorts-Institution.csv \
+  --csv scratch/scorecard/current/Most-Recent-Cohorts-Institution.csv \
+  --previous-csv scratch/scorecard/previous/Most-Recent-Cohorts-Institution.csv \
   --data-year 2022-23 --apply
 ```
 
@@ -113,7 +120,7 @@ curl "https://api.collegedata.fyi/rest/v1/cds_scorecard?select=school_name,cds_y
 curl "https://api.collegedata.fyi/rest/v1/cds_scorecard?school_id=eq.harvard&select=school_name,net_price_0_30k,net_price_30k_48k,net_price_48k_75k,net_price_75k_110k,net_price_110k_plus&limit=1" \
   -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
 
-# Full Scorecard subset (all 6,322 institutions, not just CDS-archived ones)
+# Full Scorecard subset (every institution, not just CDS-archived ones)
 curl "https://api.collegedata.fyi/rest/v1/scorecard_summary?ipeds_id=eq.166027&select=*" \
   -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
 
@@ -124,29 +131,16 @@ curl "https://api.collegedata.fyi/rest/v1/school_merit_profile?school_id=eq.yale
 
 `cds_year` in `cds_scorecard` is the canonical CDS year for the document; `scorecard_data_year` is the Scorecard vintage. They are not the same thing — Scorecard outcomes lag, currently 2022-23 data attached to every CDS year.
 
-## Slug rationalization (130-row gap)
+## Slug aliases
 
-Ten `cds_documents.school_id` slugs don't match any `schools.yaml.id` and therefore got NULL `ipeds_id` from the backfill. They're slug variants from the discovery pipeline using IPEDS-official long names where `schools.yaml` uses canonical short forms:
-
-| In `cds_documents.school_id` | In `schools.yaml.id` (canonical) | IPEDS |
-|---|---|---|
-| `georgia-institute-of-technology-main-campus` | `georgia-tech` | 139755 |
-| `university-of-chicago` | `uchicago` | 144050 |
-| `university-of-washington-seattle-campus` | `uw` | 236948 |
-| `tulane-university` | `tulane-university-of-louisiana` | 160755 |
-| `university-of-minnesota-twin-cities` | (not present, only branch campuses) | — |
-| `caltech` | (not present under that exact slug) | 110404 |
-| `virginia-tech` | (verify) | — |
-| `rutgers-university-new-brunswick` | (verify) | — |
-| `texas-a-and-m-university-college-station` | (only system office and branches) | — |
-| `university-of-virginia-main-campus` | (verify) | — |
-
-Two clean ways to fix:
-
-1. **Add the variants to `schools.yaml`** as alternate ids pointing at the same IPEDS, then re-run `backfill_ipeds_ids.py --apply`. Idempotent — picks up only the still-NULL rows.
-2. **Run a one-off `UPDATE cds_documents SET school_id = '<canonical>' WHERE school_id = '<variant>'`** to consolidate. More invasive (frontend URLs change for the affected schools).
-
-Either way the Scorecard data already exists in `scorecard_summary` for these IPEDS — the join just doesn't fire until the slug crosswalk is reconciled.
+`cds_documents.school_id` slugs that differ from the canonical `schools.yaml`
+id (for example IPEDS long-name variants) are handled by
+`institution_slug_crosswalk` (PRD 015), populated by `load_directory.py`, and
+by the finder identity guard (`tools/finder/identity_guard.py`) and redirect
+guard (`tools/finder/school_redirect_guard.py`). If `ipeds_id` is NULL on a
+document, check that the slug exists in `schools.yaml` (or as a
+`retired_aliases` entry) and re-run `backfill_ipeds_ids.py`. It is idempotent
+and only touches still-NULL rows.
 
 ## Schema-drift events (the running log)
 
@@ -163,7 +157,7 @@ Capture each Scorecard schema-rename event here so future-us doesn't relitigate:
 pip install pandas supabase python-dotenv pyyaml
 ```
 
-`.env` at repo root:
+`.env` at repo root (`load_directory.py` also accepts `--search-nicknames`, `--identity-exceptions` and `--summary-out`; run it with `--help`):
 
 ```
 SUPABASE_URL=https://api.collegedata.fyi

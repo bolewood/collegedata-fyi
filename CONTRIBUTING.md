@@ -35,6 +35,11 @@ is missing an alias, contains an extra alias, or points at a conflicting school.
 
 Open a PR with the new entry and a short note saying how you found the URL. The discovery pipeline will pick it up on the next scheduled run.
 
+Hard schools usually need one of two other files instead of (or as well as) a `schools.yaml` entry:
+
+- [`tools/finder/school_overrides.yaml`](tools/finder/school_overrides.yaml) holds per-school `browse_url`, year-tagged `direct_archive_urls` (Box/Drive/SharePoint listings, and Archive.org snapshots for PDFs a school has taken down), and `hosting_override` blocks. Pin Wayback captures as complete `id_` URLs (toolbar URLs return HTML, and some captures truncate at 1 MB without `%%EOF`).
+- [`tools/finder/waf_blocked_urls.yaml`](tools/finder/waf_blocked_urls.yaml) lists listings behind a WAF or JavaScript wall that the scheduled headless-browser archive job crawls.
+
 ### 2. Fix your own school's data
 
 If you work in institutional research at a school we index and our extraction got something wrong, you have three options, in increasing order of effort:
@@ -53,18 +58,25 @@ To register a cleaner:
 
 1. Build and publish your cleaner as a Python package in a public repo.
 2. Open a PR appending an entry to [`cleaners.yaml`](cleaners.yaml). See the commented example in that file for schema.
-3. Once merged, the CI workflow (coming soon, tracked in M4) will install and run your cleaner against new artifacts and publish results alongside ours.
+3. Once merged, the CI workflow (coming soon, tracked in M4) will install and run your cleaner against new artifacts and publish results alongside ours. No such workflow exists yet, so registering a cleaner today only records it in `cleaners.yaml`.
 
 Per [ADR 0002](docs/decisions/0002-publish-raw-over-clean.md), we do not pick a winner. Every contributor's artifact is published side by side with the primary, tagged with the `producer` field so consumers can choose.
 
 ### 4. Help with extraction quality research
 
-The hardest part of the pipeline is extracting structured data from flattened PDFs. If you have extraction tooling, schema-aware parsers, or ideas for LLM-based fallback, take a look at [`docs/prd/006-llm-fallback.md`](docs/prd/006-llm-fallback.md) and the failure-mode catalog in [`docs/research/tier4-cleaner-learnings-for-llm-fallback.md`](docs/research/tier4-cleaner-learnings-for-llm-fallback.md). PRs welcome.
+The hardest part of the pipeline is extracting structured data from flattened PDFs. If you have extraction tooling, schema-aware parsers, or ideas for LLM-based fallback, take a look at [`docs/tier4-llm-fallback.md`](docs/tier4-llm-fallback.md) (the shipped fallback; [PRD 006](docs/prd/006-llm-fallback.md) is the design record) and the failure-mode catalog in [`docs/research/tier4-cleaner-learnings-for-llm-fallback.md`](docs/research/tier4-cleaner-learnings-for-llm-fallback.md). PRs welcome.
 
 ## Development basics
 
-- Python 3.11+, Node 20+, Deno for Supabase Edge Functions.
-- `.venv` in repo root for Python tooling. Requirements in each tool's directory.
+- Python 3.12 (pinned in [`.python-version`](.python-version); CI uses 3.12), Node 22 (what CI and Vercel run), and Deno 2.x for Supabase Edge Functions.
+- Python tooling takes its requirements from each tool's directory. For anything that runs extraction, build the venv from the lock file instead of installing packages by hand:
+
+  ```bash
+  cd tools/extraction_worker
+  python3.12 -m venv .venv && .venv/bin/pip install -r requirements.lock
+  ```
+
+  The worker checks the interpreter and every pinned package at startup and exits on any mismatch (`dependency_check.py`), because different Docling or torch builds write different field values for the same PDF. Pass `--allow-dependency-drift` only for throwaway experiments.
 - Architecture overview: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 - Schema reference: [`schemas/`](schemas/) (canonical 1,105-field CDS schema, keyed by stable question IDs).
 - Frontend: see [`web/README.md`](web/README.md).
@@ -76,6 +88,23 @@ The hardest part of the pipeline is extracting structured data from flattened PD
 - One logical change per PR where possible.
 - Reference the relevant PRD or ADR in the PR body when applicable.
 - If you're changing an extractor, run the regression scorers in [`tools/extraction-validator/`](tools/extraction-validator/) and include the delta.
+- User-visible changes bump [`VERSION`](VERSION) (four parts, `MAJOR.MINOR.PATCH.MICRO`) and add a [`CHANGELOG.md`](CHANGELOG.md) entry; recent PR titles carry a `vX.Y.Z.W` prefix. Docs-only and data-only PRs usually skip the bump. If you are not sure, say so in the PR and the maintainer will sort it out.
+
+### Migrations and Edge Functions
+
+- **Migrations reach production only from `main`.** Never run `supabase db push` from a feature branch, even for your own migration: it leaves production ahead of `main` and breaks `supabase db reset` for everyone else. Open the PR with the migration file; a maintainer applies it from a fresh `main` checkout after merge. Test a new migration against a seeded local database (`supabase db reset` on an empty one can fail, because some older migrations assume production data).
+- **Edge Functions deploy from `main` too.** The `Deploy Edge Functions` workflow deploys every function in `supabase/functions/` when function code or `supabase/config.toml` changes on `main`. Do not run `supabase functions deploy` from a branch.
+
+### CI checks
+
+Pull requests run [`.github/workflows/ci.yml`](.github/workflows/ci.yml). The checks most likely to catch a contributor:
+
+- **Migration filename hygiene**: `YYYYMMDDHHMMSS_snake_case.sql`, unique timestamps, sorted.
+- **Identity and redirect guards**: `tools/finder/identity_guard.py` and `tools/finder/school_redirect_guard.py` (see "Add a school" above).
+- **Alias-link guard**: a Vitest test (`web/src/lib/no-alias-school-links.test.ts`) fails if any web source links to `/schools/<alias-slug>` for a renamed school. Link to the canonical slug.
+- **No remote fonts**: a Vitest test (`web/src/lib/no-remote-fonts.test.ts`) fails on `next/font/google` or Google Fonts URLs. Add faces as local files.
+- **GitHub Actions heredoc lint**: `python tools/ops/lint_gha_heredocs.py` rejects heredoc patterns that break inside workflow `run:` blocks.
+- Python unit tests, Deno tests for the Edge Functions, the MCP stdio test, and the web typecheck, Vitest, build, and Playwright smoke tests (`cd web && npm ci && npm run typecheck && npm test`).
 
 ## Project governance
 
@@ -100,11 +129,11 @@ A dedicated succession ADR will be written if the project grows to a scale where
 
 The archive preserves publicly-published CDS documents on the presumption that they are public-accountability records. If your school's IR office needs a document removed (accidental publish, FERPA-adjacent content, version dispute, etc.), the protocol is documented in [ADR 0008](docs/decisions/0008-takedown-process.md).
 
-Briefly: email the contact on [collegedata.fyi](https://collegedata.fyi) from a `.edu` address matching your school's domain and specify `school_id`, `cds_year`, and reason. Catalog removal is immediate; bytes removal is available on request. Every takedown is logged in [`docs/takedowns.md`](docs/takedowns.md) as a public transparency measure (no requester PII).
+Briefly: email `contact@bolewood.com` (also shown on the [privacy page](https://collegedata.fyi/privacy)) from a `.edu` address matching your school's domain and specify `school_id`, `cds_year`, and reason. Catalog removal is immediate; bytes removal is available on request. Every takedown is logged in [`docs/takedowns.md`](docs/takedowns.md) as a public transparency measure (no requester PII).
 
 ## Questions
 
-Open a GitHub issue with the question label, or reach out via the contact on [collegedata.fyi](https://collegedata.fyi). Substantive technical questions and methodology discussions are always welcome.
+Open a GitHub issue with the question label, or email `contact@bolewood.com`. Substantive technical questions and methodology discussions are always welcome.
 
 ## License
 

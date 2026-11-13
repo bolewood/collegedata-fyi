@@ -19,6 +19,15 @@ This is the M2 half of the pipeline. M1 (discovery) archives the source bytes; M
 | `llm_client.py` | PRD 006 Phase 0. Anthropic SDK wrapper with prompt-cache split (cached head + uncached tail) and per-call cost estimation. Claude Haiku 4.5 default. |
 | `tier4_llm_fallback.py` | PRD 006 Phase 0. Prompt builder, deterministic validator (type/evidence/sanity/row-merge), and merge policy for the LLM fallback. No DB writes. |
 | `llm_fallback_bench.py` | PRD 006 Phase 0. Standalone benchmark CLI. Reads existing `tier4_docling` artifacts, runs section-scoped LLM prompts, validates responses, writes JSON report to disk. No DB writes. |
+| `llm_fallback_worker.py` | PRD 006 Phase 1. Operator-run worker (not in any scheduled workflow): for documents that already have a `tier4_docling` artifact, slices target subsections, checks `cds_llm_cache`, calls the LLM within per-doc/per-run budget caps, validates deterministically, and merges. Flags: `--mode shadow\|fill_gaps`, `--max-cost-per-doc`, `--max-cost-per-run`, `--report`. |
+| `pdf_text.py` | Per-page PDF text with a pdfium fallback when pypdf cannot read a page, so a PDF with a good text layer is not sniffed as scanned. |
+| `source_metadata.py` | Captures embedded source-file metadata (PDF `/CreationDate`, `/ModDate`, `/Producer`; XLSX `dcterms`) that the worker persists to `cds_documents`. |
+| `dependency_check.py` | Startup guard: exits unless the venv matches `requirements.lock` (override with `--allow-dependency-drift`). |
+| `html_to_markdown.py` | Tier 6: normalizes archived HTML into the pipe-delimited markdown the Tier 4 cleaner consumes. |
+| `revalidate_notify.py` | After a run, POSTs changed `school_id`s to `/api/revalidate` so only those school pages regenerate (see below). |
+| `backfill_quality_flags.py` | Adds missing data-quality flags (`blank_template`, `low_coverage`, single-section) to already-extracted Tier 1/Tier 2 documents. |
+| `b1_derive_totals.py` | Derives CDS B1 "All" gender totals from FT + PT components when the source leaves them blank. |
+| `prd014_m5_drain.py` | PRD 014 M5 staged requeue and rollback helper for year-aware schema re-extraction. |
 | `watch_resolver_drain.py` | Operator monitor. Polls the archive queue + cds_documents tables and prints a live dashboard of drain progress. Useful during a full-corpus archive run. |
 | `requirements.txt` / `requirements.lock` | Top-level deps (Docling pinned exactly) and the full Python 3.12 lock generated from them. Install from the lock; `worker.py` exits when the venv drifts from it (`dependency_check.py`). `anthropic` is required for the LLM fallback (PRD 006 Phase 0) — install separately. `python-docx` is required once Tier 3 ships (PRD 007). |
 
@@ -78,13 +87,13 @@ python worker.py --reconcile-pending --limit 100 --summary-json ../../scratch/re
 # place: each keeps its status and served data until its own re-extraction
 # finishes, then cds_fields/school_browser_rows refresh for it.
 python worker.py \
-    --env /Users/santhonys/Projects/Owen/colleges/collegedata-fyi/.env \
+    --env ../../.env \
     --requeue-document-ids <uuid>,<uuid> \
     --document-ids <uuid>,<uuid> \
     --limit 2 \
     --min-year-start 2024 \
     --seed-projection-metadata \
-    --summary-json ../../.context/local-redrain/summary.json
+    --summary-json ../../scratch/extraction_worker/local-redrain-summary.json
 
 # Force a new artifact even if producer/schema/source SHA already match.
 # Use only for managed cleaner/extractor redrains after code changes.
@@ -92,6 +101,12 @@ python worker.py --requeue-document-ids <uuid> --force-reextract --limit 1
 
 # Fresh-year drain: process the newest archived CDS rows before old backlog
 python worker.py --min-year-start 2025 --include-failed --limit 25
+
+# Ledger and run-origin flags (used by the ops workflow; operators rarely
+# need them): --trigger {schedule,dispatch,operator}, --run-url <actions url>,
+# --replay-ledger-json <file> to replay a failed run's extraction-run ledger
+# without reprocessing documents, --schema <path> (debug override: forces one schema for every
+# document and disables year-aware dispatch), and --dry-run.
 
 # Content-based year detection only, no extraction writes
 python worker.py --detect-year-only                 # report
@@ -102,9 +117,10 @@ Env vars (read from `.env` at the repo root): `SUPABASE_URL`, `SUPABASE_SERVICE_
 
 ## Managed Docling runs
 
-Managed Docling drains should run locally on an operator MacBook by default.
-Local runs have more CPU headroom, no 60-minute GitHub-hosted timeout, and can
-write complete logs under `.context/`. GitHub Actions is for automation: the
+Small managed Docling drains can run locally on an operator machine.
+Local runs have no 60-minute GitHub-hosted timeout and can write complete logs
+under `scratch/`. Large re-extractions belong in the `ops-extraction-worker`
+workflow (see "Reproducible extraction"). GitHub Actions is for automation: the
 small scheduled backlog drain, CI, and other unattended jobs.
 
 For extractor or cleaner changes, bump the relevant `producer_version` before
@@ -122,8 +138,9 @@ scheduled automation path, not managed Docling re-drains.
 
 The workflow supports both a daily scheduled drain and manual dispatch. Manual
 inputs are `limit`, `school`, `document_ids`, `requeue_document_ids`,
-`source_format`, `min_year_start`, `include_failed`,
-`seed_projection_metadata`, `low_field_threshold`, and `deadline_minutes`.
+`include_failed`, `seed_projection_metadata`, `low_field_threshold`,
+`min_year_start`, and `deadline_minutes` (default 100; scheduled runs use 25).
+`source_format` is a `worker.py` flag, not a workflow input.
 GitHub-hosted runs reject `limit` values over 100; full corpus drains should run
 on an operator laptop or a self-hosted runner.
 
@@ -201,7 +218,14 @@ for the extraction worker/browser projection, Deno tests for Supabase functions,
 and the Next.js typecheck/build. It does not perform live extraction, service
 role writes, projection rebuilds, or full Docling corpus drains.
 
-## LLM fallback benchmark (PRD 006, Phase 0)
+## LLM fallback (PRD 006)
+
+`llm_fallback_worker.py` (Phase 1) is operator-run and is not called by any
+workflow in `.github/workflows/`; see its module docstring for usage and budget
+caps. See [`docs/tier4-llm-fallback.md`](../../docs/tier4-llm-fallback.md) for
+the current status. The benchmark harness below is the Phase 0 tool.
+
+### Benchmark (Phase 0)
 
 Standalone benchmark harness. No DB writes. Reads existing `tier4_docling`
 artifacts and runs section-scoped LLM prompts against Claude Haiku 4.5,
@@ -259,7 +283,8 @@ then chooses the schema for each document from `detected_year || cds_year`.
 If no matching canonical schema exists, the worker uses the most recent
 available schema and records `notes.schema_fallback_used: true`,
 `notes.schema_fallback_reason`, and `notes.schema_version` on the artifact.
-As of 2026-06-14 the canonical years are 2023-24, 2024-25, and 2025-26; 2019-20
+The canonical years are 2023-24, 2024-25, and 2025-26 (the non-structural
+`schemas/cds_schema_*.json` files); 2019-20
 through 2022-23 still use structural schemas/overlays only and therefore fall
 back for deterministic extraction.
 

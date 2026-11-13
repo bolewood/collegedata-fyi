@@ -49,6 +49,7 @@ describe("llms.txt", () => {
     const listed = [
       "/api/mcp",
       "/api/schools/search",
+      "/api/facts/{school_id}",
       "/api/schools/{school_id}/facts",
       "/api/schools/{school_id}/sources",
       "/api/compare",

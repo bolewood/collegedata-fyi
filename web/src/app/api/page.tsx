@@ -106,6 +106,34 @@ curl 'https://www.collegedata.fyi/api/compare?schools=mit,yale,university-of-chi
 curl 'https://www.collegedata.fyi/api/fields'
 
 curl 'https://www.collegedata.fyi/openapi.json'`}</CodeBlock>
+      <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
+        <code>GET /api/facts/{"{school_id}"}</code> is deprecated. It is an
+        older flat summary of one school&apos;s latest filing, and some of its
+        values are read from fixed question numbers that do not line up for
+        every school and year. Use{" "}
+        <code>/api/schools/{"{school_id}"}/facts</code> instead, which labels
+        the source of each value.
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
+        Errors are JSON with an <code>error</code> code and a{" "}
+        <code>message</code>. A missing <code>q</code> or <code>schools</code>{" "}
+        parameter, or an unusable <code>categories</code> filter, returns{" "}
+        <code>400</code>. An unknown school returns <code>404</code> on the per-school endpoints;{" "}
+        <code>/api/compare</code> returns a row of blanks for it.{" "}
+        <code>/api/compare</code> reads at most 25 schools per request and
+        ignores the rest.
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
+        If you pass an old or alternate school slug to{" "}
+        <code>/api/schools/{"{school_id}"}/facts</code>,{" "}
+        <code>/api/schools/{"{school_id}"}/sources</code>, or{" "}
+        <code>/api/facts/{"{school_id}"}</code>, the response is a{" "}
+        <code>308</code> redirect to the same endpoint under the canonical{" "}
+        <code>school_id</code>. Follow redirects (<code>curl -L</code>, or the
+        default in most HTTP libraries). A client that does not follow them
+        will see the redirect instead of data. Take canonical IDs from{" "}
+        <code>/api/schools/search</code>.
+      </p>
       <CommunityInvitation surface="api" />
       <p className="mt-4 text-sm leading-relaxed text-[var(--ink-2)]">
         The same simple endpoints from R, with no API key.{" "}
@@ -227,7 +255,17 @@ curl 'https://www.collegedata.fyi/api/compare?schools=mit,yale,university-of-chi
           </p>
           <CodeBlock>{`COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegedata.js search mit
 COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegedata.js facts mit --categories admissions,cost
-COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegedata.js compare mit yale university-of-chicago --format csv`}</CodeBlock>
+COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegedata.js compare mit yale university-of-chicago --format csv
+COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegedata.js sources mit
+COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegedata.js fields --category admissions
+COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegedata.js export schools --format jsonl`}</CodeBlock>
+          <p className="mt-2">
+            Six subcommands: <code>search</code>, <code>facts</code>,{" "}
+            <code>compare</code>, <code>sources</code>, <code>fields</code>,
+            and <code>export</code> (downloads one{" "}
+            <a href="/api/snapshots" className={API_LINK_CLASS}>snapshot</a>{" "}
+            file, such as <code>schools</code> or <code>sources</code>).
+          </p>
         </section>
 
         <section>
@@ -292,18 +330,24 @@ COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegeda
         </section>
 
         <section>
-          <h3 className="serif text-lg">4. Pin a snapshot</h3>
+          <h3 className="serif text-lg">4. Download a snapshot</h3>
           <p className="mt-1">
-            Use pinned snapshot paths for reproducible notebooks and the{" "}
-            <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
-              latest
-            </code>{" "}
-            alias for quick experiments. The manifest names the snapshot id.
+            Four bulk files for notebooks and local analysis:{" "}
+            <code>schools.jsonl</code>, <code>school_facts.jsonl</code> (the
+            latest primary filing per school, for schools with a 2024-25 or
+            newer filing, limited to the fields in the
+            friendly dictionary that come from the comparison table),{" "}
+            <code>sources.jsonl</code>, and <code>field_dictionary.json</code>.
+            The files are usually regenerated from the live database within
+            the hour; check <code>generated_at</code> in the manifest. The dated URL (<code>/snapshots/v1/YYYY-MM-DD/</code>) is an
+            alias for the same current data, not a frozen copy, so download and
+            store a file if you need it to stay fixed.
           </p>
           <CodeBlock>{`curl 'https://www.collegedata.fyi/snapshots/latest/manifest.json'
 curl 'https://www.collegedata.fyi/snapshots/latest/schools.jsonl'
 curl 'https://www.collegedata.fyi/snapshots/latest/school_facts.jsonl'
-curl 'https://www.collegedata.fyi/snapshots/<snapshot-id>/schools.jsonl'`}</CodeBlock>
+curl 'https://www.collegedata.fyi/snapshots/latest/sources.jsonl'
+curl 'https://www.collegedata.fyi/snapshots/latest/field_dictionary.json'`}</CodeBlock>
         </section>
 
         <section>
@@ -357,6 +401,14 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
       <h2 className="serif mt-10 text-2xl">
         Resources
       </h2>
+
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
+        These are the supported public tables and views. A few other
+        anon-readable views (<code>cds_metric_aliases</code>,{" "}
+        <code>cds_canonical_field_equivalence</code>,{" "}
+        <code>site_stats_cache</code>) exist for the site itself. They are
+        internal and may change without notice.
+      </p>
 
       <div className="mt-4 space-y-6">
         <Resource
@@ -464,6 +516,8 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
             "year_start",
             "schema_version",
             "field_id",
+            "canonical_field_id",
+            "equivalence_kind",
             "canonical_metric",
             "value_text",
             "value_num",
@@ -606,7 +660,7 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         />
         <Resource
           name="fsa_nonpayment_current"
-          description="Latest Federal Student Aid institutional nonpayment vintage, one public row per matched school_id. Direct Loan borrowers who entered repayment January 2020–May 2025 and were 90+ days delinquent at the FSA pull. This is not the official cohort default rate. institution_directory now also exposes opeid (8-digit Scorecard key) and opeid6 (left 6)."
+          description="Latest Federal Student Aid institutional nonpayment vintage, one public row per matched school_id. Direct Loan borrowers who entered repayment January 2020–May 2025 and were 90+ days delinquent at the FSA pull. This is not the official cohort default rate. institution_directory exposes opeid (8-digit Scorecard key) and opeid6 (left 6)."
           fields={[
             "school_id",
             "opeid",
@@ -912,6 +966,267 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
           ]}
         />
         <Resource
+          name="institution_directory"
+          description="One row per U.S. institution in the IPEDS/Scorecard directory, with the school_id slug used across the archive, location, control, level, brand colors, and OPE IDs. in_scope marks the schools the project tracks."
+          fields={[
+            "ipeds_id",
+            "school_id",
+            "school_name",
+            "city",
+            "state",
+            "control",
+            "in_scope",
+            "opeid",
+          ]}
+          allFields={[
+            "ipeds_id",
+            "school_id",
+            "school_name",
+            "aliases",
+            "city",
+            "state",
+            "zip",
+            "website_url",
+            "scorecard_data_year",
+            "undergraduate_enrollment",
+            "control",
+            "institution_level",
+            "predominant_degree",
+            "highest_degree",
+            "currently_operating",
+            "main_campus",
+            "branch_count",
+            "latitude",
+            "longitude",
+            "in_scope",
+            "exclusion_reason",
+            "directory_source",
+            "refreshed_at",
+            "brand_colors",
+            "brand_colors_source",
+            "brand_colors_checked_at",
+            "brand_colors_confidence",
+            "brand_colors_notes",
+            "opeid",
+            "opeid6",
+          ]}
+        />
+        <Resource
+          name="institution_cds_coverage"
+          description="One row per tracked institution with its Common Data Set coverage status and the latest year found. Backs the /coverage page."
+          fields={[
+            "ipeds_id",
+            "school_id",
+            "school_name",
+            "coverage_status",
+            "coverage_label",
+            "latest_available_cds_year",
+            "last_checked_at",
+          ]}
+          allFields={[
+            "ipeds_id",
+            "school_id",
+            "school_name",
+            "aliases",
+            "city",
+            "state",
+            "website_url",
+            "undergraduate_enrollment",
+            "scorecard_data_year",
+            "coverage_status",
+            "coverage_label",
+            "coverage_summary",
+            "latest_available_cds_year",
+            "latest_found_cds_year",
+            "latest_attempted_year",
+            "latest_document_id",
+            "latest_public_source_url",
+            "latest_field_count",
+            "last_checked_at",
+            "can_submit_source",
+            "search_text",
+            "updated_at",
+          ]}
+        />
+        <Resource
+          name="cds_field_change_events"
+          description="Year-over-year changes in a school's reported fields, with severity, before and after values, and links to both source documents. Backs the /changes page. Only rows with public_visible = true are readable."
+          fields={[
+            "school_id",
+            "school_name",
+            "field_key",
+            "field_label",
+            "from_year",
+            "to_year",
+            "event_type",
+            "severity",
+            "from_value",
+            "to_value",
+            "summary",
+          ]}
+          allFields={[
+            "id",
+            "school_id",
+            "school_name",
+            "ipeds_id",
+            "field_key",
+            "field_label",
+            "field_family",
+            "from_document_id",
+            "to_document_id",
+            "from_year",
+            "to_year",
+            "from_year_start",
+            "to_year_start",
+            "event_type",
+            "severity",
+            "from_value",
+            "to_value",
+            "from_value_numeric",
+            "to_value_numeric",
+            "absolute_delta",
+            "relative_delta",
+            "threshold_rule",
+            "summary",
+            "from_producer",
+            "to_producer",
+            "from_producer_version",
+            "to_producer_version",
+            "from_source_provenance",
+            "to_source_provenance",
+            "from_archive_url",
+            "to_archive_url",
+            "from_source_url",
+            "to_source_url",
+            "evidence_json",
+            "verification_status",
+            "public_visible",
+            "created_at",
+            "updated_at",
+          ]}
+        />
+        <Resource
+          name="cds_field_observations"
+          description="One row per field value observed in a school's filing, with its source document and extraction provenance. The input to change detection."
+          fields={[
+            "school_id",
+            "canonical_year",
+            "field_key",
+            "field_id",
+            "value_numeric",
+            "value_text",
+            "source_producer",
+            "archive_url",
+          ]}
+          allFields={[
+            "school_id",
+            "school_name",
+            "sub_institutional",
+            "ipeds_id",
+            "document_id",
+            "canonical_year",
+            "year_start",
+            "field_key",
+            "schema_version",
+            "field_id",
+            "canonical_field_id",
+            "equivalence_kind",
+            "canonical_metric",
+            "value_numeric",
+            "value_text",
+            "normalized_value",
+            "unit",
+            "value_status",
+            "source_format",
+            "source_producer",
+            "source_producer_version",
+            "source_page",
+            "source_locator",
+            "archive_url",
+            "observed_at",
+            "quality_flag",
+            "source_provenance",
+            "source_url",
+            "source_sha256",
+            "source_http_last_modified",
+            "source_creation_date",
+            "source_modification_date",
+            "embedded_source_producer",
+            "section",
+            "subsection",
+          ]}
+        />
+        <Resource
+          name="cds_field_definitions"
+          description="Field dictionary for the CDS schema: field_id, label, section, and subsection for each schema_version."
+          fields={[
+            "schema_version",
+            "field_id",
+            "field_label",
+            "section",
+            "subsection",
+          ]}
+          allFields={[
+            "schema_version",
+            "field_id",
+            "field_label",
+            "section",
+            "subsection",
+            "value_kind_hint",
+          ]}
+        />
+        <Resource
+          name="fsa_nonpayment_facts"
+          description="Federal Student Aid institutional nonpayment rates by OPE ID and release, as published. Rates can be suppressed by FSA; check the suppressed column. Prefer fsa_nonpayment_current for the latest release per school."
+          fields={[
+            "release_id",
+            "opeid",
+            "school_id",
+            "nonpayment_rate",
+            "suppressed",
+            "borrowers_in_denom",
+          ]}
+          allFields={[
+            "release_id",
+            "opeid",
+            "school_id",
+            "school_name_raw",
+            "school_type",
+            "state",
+            "borrowers_in_denom",
+            "borrowers_raw",
+            "nonpayment_rate",
+            "rate_raw",
+            "suppressed",
+            "public_visible",
+            "created_at",
+          ]}
+        />
+        <Resource
+          name="fsa_releases"
+          description="One row per FSA nonpayment release: as-of date, cohort window, and source file."
+          fields={[
+            "id",
+            "as_of_date",
+            "as_of_label",
+            "cohort_window_start",
+            "cohort_window_end",
+            "source_url",
+          ]}
+          allFields={[
+            "id",
+            "as_of_date",
+            "as_of_label",
+            "cohort_window_start",
+            "cohort_window_end",
+            "source_url",
+            "source_sha256",
+            "announcement_url",
+            "title",
+            "downloaded_at",
+          ]}
+        />
+        <Resource
           name="cds_documents"
           description="Raw archive table — one row per (school, sub-institution, year). Most consumers should prefer cds_manifest."
           fields={[
@@ -934,6 +1249,7 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
             "source_url",
             "source_sha256",
             "source_format",
+            "source_producer",
             "source_page_count",
             "source_provenance",
             "participation_status",

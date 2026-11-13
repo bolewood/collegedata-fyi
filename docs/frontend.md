@@ -19,11 +19,51 @@ Supabase to the browser. Complements [`docs/prd/002-frontend.md`](prd/002-fronte
 | Styling | Tailwind CSS + project design tokens | Utility composition over the "paper, ink, and one quiet green" system |
 | Data client | @supabase/supabase-js + browser-search fetch client | PostgREST queries and the ranked browser Edge Function |
 | Analytics | @vercel/analytics | Zero-cookie, one line |
+| Error monitoring | @sentry/nextjs | Errors and sampled traces; `/feedback` events are dropped (see `lib/sentry.ts`) |
+| Fonts | `next/font/local` | Self-hosted faces in `src/app/fonts/`; a Vitest check fails `npm test` and CI on Google Fonts |
+| Unit tests | Vitest | `npm test`; includes the alias-link and no-remote-font guards |
+| Browser tests | Playwright + axe | `npm run test:smoke`; 13 spec files in `web/tests/` |
 | Hosting | Vercel | Auto-deploy from GitHub, custom domain |
 
 No additional component library. No ORM. Local state is React state; the
 browser MVP uses client-side state because filters are interactive and backed
 by one public Edge Function call.
+
+---
+
+## Route inventory
+
+Every public route in `web/src/app/`, with caching. Details for the main pages follow in [Pages](#pages).
+
+| Route | Purpose | Caching |
+|---|---|---|
+| `/` | Search-first landing page, live corpus stats | ISR, 1 h |
+| `/schools` | School directory | ISR, 1 h |
+| `/schools/[school_id]` | School detail: cards, document ledger, federal baseline; directory-only stub for non-CDS schools | static, 24 h + `school:<id>` tag |
+| `/schools/[school_id]/[year]` | Year detail: key stats, field viewer, spreadsheet downloads | static, 24 h + tag |
+| `/schools/[school_id]/[year]/cds.xlsx`, `cds.csv` | PRD 025 spreadsheet downloads | route handler, 1 h |
+| `/schools/[school_id]/acceptance-rate`, `/early-decision`, `/gpa` | PRD 031 stat pages | static, 24 h + tag |
+| `/schools/[school_id]/feed.xml` | PRD 029 per-school RSS of new CDS publications | route handler, 1 h |
+| `/schools/[school_id]/opengraph-image`, `/[year]/opengraph-image`, `/opengraph-image` | Social cards for school, school-year, and site | static, 24 h (site card 1 h) |
+| `/browse` | Queryable CDS browser over `browser-search` | ISR, 1 h |
+| `/match` | Local-only match-list builder | ISR, 1 h |
+| `/discover` | Guided discovery (noindex, unlinked) | default (no explicit revalidate) |
+| `/coverage` | Institution coverage dashboard | ISR, 15 min |
+| `/recipes`, `/recipes/{acceptance-vs-yield, alignment-gap, endowment-draw-rate, waitlist-odds, test-optional-tracker}` | Worked analyses | default (no explicit revalidate) |
+| `/methodology`, `/methodology/{positioning, admission-strategy, merit-profile}` | Card methodology | default (no explicit revalidate) |
+| `/about`, `/about/{common-data-set, college-scorecard, ipeds}` | Background pages | default (no explicit revalidate) |
+| `/usage`, `/usage.json` | PRD 033 public usage page and open data | ISR, 1 h |
+| `/pipeline-observation`, `/pipeline-observation.json` | PRD 030 public pipeline board and feed | `force-dynamic` |
+| `/feedback`, `/privacy` | Feedback form, privacy notice | default (no explicit revalidate) |
+| `/api` | API reference page | ISR, 1 h |
+| `/api/schools/search`, `/api/schools/[school_id]/{facts, sources}`, `/api/facts/[school_id]`, `/api/compare`, `/api/fields`, `/api/snapshots`, `/api/mcp` | No-auth JSON API and hosted MCP | 1 h (search 5 min; MCP `force-dynamic`) |
+| `/api/revalidate` | `POST` cache expiry hook, bearer-token protected | `force-dynamic` |
+| `/snapshots/latest/[file]`, `/snapshots/v1/[snapshot_date]/[file]` | Open-data files | 1 h |
+| `/openapi.json`, `/llms.txt`, `/robots.txt`, `sitemap.xml` | Machine-readable surfaces | 1 h (`robots.txt` `force-static`) |
+| `/changes` | Operator-only change digest (noindex, env-gated) | `force-dynamic` |
+| `/ink-lab` | Design experiment (noindex) | default (no explicit revalidate) |
+
+School pages are the largest set. They were hourly until PR #262 because hourly regeneration let crawler sweeps saturate PostgREST; now they revalidate daily, and `POST /api/revalidate` expires `school:<id>` tags on demand after the extraction worker changes data.
 
 ---
 
@@ -41,7 +81,7 @@ field rows, extraction %).
 paginated range queries (PostgREST caps at 1,000 rows per request), filtering
 out `removed_at` rows and excluded public participation statuses. Client-side
 aggregation computes school summaries and corpus stats. ISR revalidates every
-hour.
+hour (`revalidate = 3600`), as do `/schools`, `/browse`, and `/usage`.
 
 ### `/schools` School directory (`web/src/app/schools/page.tsx`)
 
@@ -118,6 +158,18 @@ NCES/IPEDS release status prominently and keeps source table/variable visible;
 status and CDS-definition alignment details are exposed on hover/focus under
 the Source column.
 
+School pages are `force-static` with `revalidate = 86400` and carry a
+`school:<school_id>` cache tag (plus a shared `school-data` tag).
+`POST /api/revalidate` (bearer `REVALIDATE_SECRET`, body `{"school_ids": [...]}`
+up to 100 or `{"all": true}`) expires those tags; the extraction worker calls it
+best-effort after data changes. The same daily window applies to the year,
+acceptance-rate, early-decision, and GPA pages and their social images.
+
+School pages are themed from `institution_brand_colors` (a two-plate ink pair
+derived in `lib/derive-inks.ts`; schools without a reviewed color use the house
+pair). FSA institutional nonpayment appears as a cited number where
+`fsa_nonpayment_current` has a matched row.
+
 Directory-only pages with `can_submit_source` render a compact `SubmissionForm`
 CTA inside the no-CDS box. Clicking "Email us!" opens the same structured
 Formspree-backed form inline when `NEXT_PUBLIC_FORMSPREE_ENDPOINT` is set.
@@ -166,6 +218,21 @@ JSON-LD includes `name`, `description`, `url`, `creator`, `temporalCoverage`,
 Dataset structured-data checks have the required fields. Unique `<title>` and
 `<meta description>` per page come from `generateMetadata()`.
 
+### `/schools/[school_id]/acceptance-rate`, `/early-decision`, `/gpa` Stat pages
+
+PRD 031. Each page answers one plain question for one school ("what is the
+acceptance rate", "do early decision applicants get in more often", "what GPA do
+admitted students have") from multi-year CDS history (`lib/acceptance-history*.ts`),
+with the copy rules in `docs/copy/wave-6-acceptance-rate.md`, `wave-7-early-decision.md`,
+and `wave-8-gpa.md`. A school gets a page only when it has enough usable years;
+the sitemap lists the pages that exist. Searchable canonical slugs (for example
+`uf` rather than the legal-name slug) are pinned in `tools/finder/public_slugs.yaml`.
+
+### `/schools/[school_id]/feed.xml` Publication feed
+
+PRD 029. An RSS feed per school built from the append-only `cds_publish_events`
+log, school-direct publications only. Mirror and operator uploads never appear.
+
 ### `/coverage` Coverage dashboard (`web/src/app/coverage/page.tsx`)
 
 PRD 015 accountability page. Server-fetches `institution_cds_coverage`;
@@ -182,19 +249,27 @@ student profile data to the backend.
 
 ### `/discover` Guided discovery (`web/src/app/discover/page.tsx`)
 
-PRD 026 slice 1, soft-launched: the route exports `noindex` metadata and is
-not linked from navigation until the discovery rounds engine ships in a later
-slice. The client-side `DiscoverFlow` component walks a geographic boundary
-step, an accessible 24-card experience sort, and a plain-language preference
-ledger. Everything runs in the browser: the session lives in localStorage only
-(30-day TTL, discarded on deck/library/policy version mismatch) and the ZIP
-never leaves the device. The sort follows the PRD accessibility contract — no
-dragging, one card at a time with four buttons, polite live-region
-announcements, nothing communicated by color alone. Content (card library,
-opening deck, `discovery_policy_v1`) is bound at build time from committed
-mirrors in `lib/discovery/content/` of the canonical CC BY-SA artifacts in
-`data/discovery/`; `content-sync.test.ts` fails the suite when a mirror
-drifts.
+PRD 026, soft-launched: the route exports `noindex` metadata and is not linked
+from navigation. The client-side `DiscoverFlow` walks a geographic boundary
+step, an accessible 24-card experience sort, a plain-language preference
+ledger, and then the discovery rounds loop: an interests step
+(`InterestsStep`), six-school rounds (`RoundsStep`) with evidence-grounded
+reasons that fail closed when the evidence is thin, reactions to each school, a
+research shelf (`ShelfStep`), and a profile strip (`ProfileStrip`). Everything
+runs in the browser. A TypeScript engine (`lib/discovery/rounds.ts`) executes
+`discovery_policy_v1` against a versioned evidence bundle
+(`web/public/discovery/evidence-v1.json`, built by
+`tools/discovery/build_evidence_bundle.py`) and is conformance-tested against
+the Python reference through a committed fixture. The session (localStorage
+only, 30-day TTL, discarded on deck/library/policy version mismatch) never
+leaves the device, and the ZIP resolves to a committed ZIP3 centroid locally.
+The sort follows the PRD accessibility contract: no dragging, one card at a
+time with four buttons, polite live-region announcements, nothing communicated
+by color alone. Content (card library, opening deck, policy) is bound at build
+time from committed mirrors in `lib/discovery/content/` of the CC BY-SA
+artifacts in `data/discovery/`; `content-sync.test.ts` fails the suite when a
+mirror drifts. The schema-constrained AI reflection step from the PRD has not
+shipped; the flow uses the non-AI path.
 
 ### `/changes` Operator digest (`web/src/app/changes/page.tsx`)
 
@@ -218,8 +293,14 @@ predictions.
 
 ### `/api` API page (`web/src/app/api/page.tsx`)
 
-Public API docs page. Documents the required anon-key headers, PostgREST
-resources, `browser-search`, and the PRD 018 `school_merit_profile` view.
+Public API reference. Covers the friendly JSON API (`/api/schools*`,
+`/api/compare`, `/api/fields`, `/api/snapshots`), the hosted MCP endpoint and
+CLI, rate limits and the `X-CollegeData-Client` header, `llms.txt` and
+`openapi.json`, the snapshot files, and the raw PostgREST resources (anon-key
+headers, `browser-search`, `school_merit_profile`, and the other served views
+listed in [`ARCHITECTURE.md`](ARCHITECTURE.md#served-views)). Per-route
+endpoint details live in `web/src/app/openapi.json/route.ts` and
+`web/src/app/llms.txt/route.ts`.
 
 ### `/about` About page (`web/src/app/about/page.tsx`)
 
@@ -236,6 +317,32 @@ versioned, checked-in generated dataset. The public-data generator and full
 methodology live in `tools/ipeds/build_endowment_draw_rate_recipe.py` and
 [`recipes/endowment-draw-rate.md`](recipes/endowment-draw-rate.md).
 
+### `/usage` and `/pipeline-observation` Public operations pages
+
+`/usage` (PRDs 032 and 033) charts daily unique downloads of archived CDS files
+split into browser, program, and bot traffic, API use by others, and demand by
+school, with a table alternative for each chart. It reads only the
+`usage_public_*` tables and publishes the same data at `/usage.json`.
+`/pipeline-observation` (PRD 030) is a live board of pipeline stations and their
+clocks, plus the last 14 days of extraction finishes. It is `force-dynamic`
+because ISR served build-time seed data as stale; `/pipeline-observation.json`
+is the feed the Discord alert poller reads. See `docs/api-usage-attribution.md`
+and `docs/ops-discord.md`.
+
+### `/feedback` and `/privacy`
+
+`/feedback` posts directly from the browser to Formspree (`FeedbackForm`; see
+[`community-feedback.md`](community-feedback.md)) and sends only bounded
+properties to analytics and nothing to Sentry. `/privacy` states what the site and API store.
+
+### Snapshot and agent surfaces
+
+`/snapshots/latest/*` and `/snapshots/v1/{date}/*` serve `schools.jsonl`,
+`school_facts.jsonl`, `sources.jsonl`, and `field_dictionary.json`;
+`/api/snapshots` returns the manifest. The files are currently built from live
+views on request (see `lib/snapshot-data.ts`), so a dated URL is not a frozen
+copy. `/llms.txt`, `/openapi.json`, and `/api/mcp` serve agents.
+
 ### Error and 404 pages
 
 - `error.tsx`: Root error boundary with "Try again" button. Catches
@@ -248,7 +355,7 @@ methodology live in `tools/ipeds/build_endowment_draw_rate_recipe.py` and
 
 ```
 Browser
-  -> Next.js page (SSR with ISR, revalidate every hour)
+  -> Next.js page (SSR with ISR: hourly for home/browse/schools, daily + on-demand tags for school pages)
     -> supabase-js client (NEXT_PUBLIC_SUPABASE_ANON_KEY)
       -> https://isduwmygvmdozhpvzaix.supabase.co/rest/v1/
         -> Postgres (RLS: public SELECT on all tables/views)
@@ -303,10 +410,11 @@ component share the same Supabase response within a single render.
 | `WhatChangedCard` | `components/WhatChangedCard.tsx` | PRD 019 public-reviewed year-over-year CDS change events. Hides when the school has no published events. |
 | `FederalBaselineTable` | `components/FederalBaselineTable.tsx` | PRD 021 accessible table for source-labeled NCES/IPEDS facts from `school_facts_unified`. |
 | `EndowmentDrawRateExplorer` | `components/EndowmentDrawRateExplorer.tsx` | Interactive sector distribution, threshold table, and school-history explorer for the endowment draw-rate recipe. |
-| `DiscoverFlow` | `components/discover/DiscoverFlow.tsx` | PRD 026 guided discovery slice 1 for `/discover`: boundary step, accessible 24-card sort, preference ledger. Session is browser-local only. |
+| `DiscoverFlow` | `components/discover/DiscoverFlow.tsx` | PRD 026 guided discovery for `/discover`: boundary step, 24-card sort, ledger, interests, rounds, reactions, shelf (`InterestsStep`, `RoundsStep`, `ShelfStep`, `ProfileStrip`). Session is browser-local only. |
 | `SchoolDocumentsLedger` | `components/SchoolDocumentsLedger.tsx` | Collapses long CDS-document histories after the three most recent files. |
 | `SpreadsheetDownloadLinks` | `components/SpreadsheetDownloadLinks.tsx` | PRD 025 XLSX + CSV download links on the year page; fires a `spreadsheet_downloaded` analytics event. |
 | `SubmissionForm` | `components/SubmissionForm.tsx` | Formspree-backed public CDS source submission form; compact mode opens inline from no-CDS pages. |
+| `FeedbackForm` | `components/FeedbackForm.tsx` | `/feedback` form; posts `FormData` to Formspree from the browser. |
 | `SchoolTable` | `components/SchoolTable.tsx` | Sortable/filterable school list with search input |
 | `DocumentCard` | `components/DocumentCard.tsx` | CDS year card with status badge, format badge, and format-aware source link |
 | `KeyStats` | `components/KeyStats.tsx` | Grid of stat cards (acceptance rate, SAT, enrollment) |
@@ -343,7 +451,15 @@ component share the same Supabase response within a single render.
 | `spreadsheet-source.ts` | `lib/spreadsheet-source.ts` | Assembles `SpreadsheetInput` for the `cds.xlsx`/`cds.csv` routes from the same queries the year page uses |
 | `xlsx.ts` | `lib/xlsx.ts` | Dependency-free minimal XLSX writer (zip of XML parts, inline strings, deterministic output); reusable for other export surfaces |
 | `discovery/content.ts` | `lib/discovery/content.ts` | Build-time binding to the versioned PRD 026 content mirrors in `lib/discovery/content/` (card library, opening deck, `discovery_policy_v1`); `content-sync.test.ts` keeps mirrors in lockstep with `data/discovery/` |
-| `discovery/geography.ts` | `lib/discovery/geography.ts` | Boundary-step validation with plain-language, field-associated errors; validates shape only — ZIP centroid resolution is deferred |
+| `discovery/geography.ts` | `lib/discovery/geography.ts` | Boundary-step validation with plain-language, field-associated errors; validates shape only (the ZIP3 centroid lookup is `resolveZip` in `content.ts`) |
+| `discovery/rounds.ts`, `bundle.ts`, `reasons.ts`, `matchers.ts` | `lib/discovery/` | Rounds engine, evidence-bundle loader, evidence-grounded reasons, and matchers for `/discover` |
+| `usage.ts`, `usage-data.ts` | `lib/` | `/usage` model and `usage_public_*` fetch |
+| `pipeline-observation.ts`, `pipeline-lamps.ts` | `lib/` | Pipeline board data and lamp logic |
+| `acceptance-history*.ts` | `lib/` | PRD 031 stat-page data, copy, and sitemap helpers |
+| `derive-inks.ts`, `school-inks.ts` | `lib/` | Brand-color ink derivation for school themes |
+| `revalidate-schools.ts`, `school-cache-tags.ts` | `lib/` | Cache tags and the `/api/revalidate` request handling |
+| `sentry.ts` | `lib/sentry.ts` | Sentry init options, noise filters, and the `/feedback` drop rule |
+| `api-usage.ts` | `lib/api-usage.ts` | Request attribution for the friendly API |
 | `discovery/session.ts` | `lib/discovery/session.ts` | Browser-local (localStorage-only) discovery session: 30-day TTL, discarded on deck/library/policy version mismatch |
 | `discovery/signals.ts` | `lib/discovery/signals.ts` | Pure card-response → preference signal/ledger mapping per `discovery_policy_v1` bucket weights |
 | `discovery/types.ts` | `lib/discovery/types.ts` | Discovery runtime types mirroring the versioned `data/discovery/` artifact shapes |
@@ -394,13 +510,18 @@ a personalized award estimate.
 - **Metadata:** Every page has a unique `<title>` and `<meta description>`
   via `generateMetadata()` or static `metadata` exports.
 - **Sitemap:** `sitemap.ts` generates URLs for all indexable static pages, all
-  school pages, and all extracted year detail pages. Noindex routes
-  (`/discover`, `/changes`) are omitted.
+  school pages, all extracted year detail pages, and the acceptance-rate,
+  early-decision, and GPA pages that exist. Noindex routes
+  (`/discover`, `/changes`, `/ink-lab`) are omitted.
 - **Robots:** `/robots.txt` allows all crawlers, points to the sitemap, and comments point automated clients at `/api` and `/llms.txt`.
 - **Schema.org:** School pages include `CollegeOrUniversity` + archive
   `Dataset` JSON-LD. Year detail pages include `Dataset` + `BreadcrumbList`
   JSON-LD with required `description`, `creator`, and `license` fields.
-- **Open Graph:** Root metadata includes OG title, description, and URL.
+- **Open Graph:** Root metadata includes OG title, description, and URL, and
+  `opengraph-image` routes generate cards for the site, school pages, and
+  school-year pages.
+- **Agents:** `/llms.txt` summarizes the API for LLM crawlers and `robots.txt`
+  points automated clients at `/api`. Sentry filters known crawler noise.
 
 ---
 
@@ -410,9 +531,13 @@ a personalized award estimate.
   are rendered as plain text nodes. The one use of `dangerouslySetInnerHTML`
   (JSON-LD script tag) escapes `<` as `\u003c` to prevent script injection.
 - **Public write path is isolated to Formspree.** The app has no public
-  Supabase write path. The optional source-submission form posts directly to
-  the configured Formspree endpoint. The Supabase anon key only allows SELECT
-  via RLS policies.
+  Supabase write path. The optional source-submission and feedback forms post
+  directly from the browser to the configured Formspree endpoints. The Supabase
+  anon key only allows SELECT via RLS policies. (The `community_feedback`
+  migration, `20261108210000`, creates private tables that no web code reads or
+  writes since the form moved to Formspree in PR #255.)
+- **`POST /api/revalidate` is bearer-protected** with `REVALIDATE_SECRET` and
+  returns 503 when the secret is unset.
 - **No auth.** No user accounts, no server-side sessions, no cookies (except
   Vercel Analytics which is zero-cookie). The `/discover` session is
   browser-local localStorage only and never leaves the device.
@@ -439,14 +564,37 @@ SUPABASE_SERVICE_ROLE_KEY=<service role key>
 Do not expose the service-role key to client components. The public school-page
 card uses the anon client and RLS-filtered rows only.
 
-Optional public source-submission form:
+Optional public source-submission and feedback forms:
 
 ```
 NEXT_PUBLIC_FORMSPREE_ENDPOINT=<formspree endpoint>
+NEXT_PUBLIC_FEEDBACK_FORMSPREE_ENDPOINT=<formspree endpoint for /feedback>
 ```
 
 When unset, the compact no-CDS CTA is disabled and full source-submission forms
-render an unavailable state.
+render an unavailable state. `/feedback` reads its own endpoint first and falls
+back to `NEXT_PUBLIC_FORMSPREE_ENDPOINT`; with neither set it shows an
+unavailable notice.
+
+Page revalidation:
+
+```
+REVALIDATE_SECRET=<shared secret>
+```
+
+Set in Vercel; the extraction worker needs the same value plus
+`COLLEGEDATA_REVALIDATE_URL` (the full `/api/revalidate` URL).
+
+Sentry (all optional; the public DSN is also the SDK default):
+
+```
+NEXT_PUBLIC_SENTRY_DSN=<public DSN>
+SENTRY_ORG=bolewood
+SENTRY_PROJECT=collegedata-fyi
+SENTRY_AUTH_TOKEN=<build-time only; source-map upload is skipped when unset>
+```
+
+See [`web/README.md`](../web/README.md) for the tag details.
 
 ---
 
@@ -454,10 +602,11 @@ render an unavailable state.
 
 ```bash
 cd web
-npm install
+npm ci
 npm run dev        # http://localhost:3000
+npm run typecheck  # tsc --noEmit
 npm test           # vitest unit tests (also run in CI)
-npm run test:smoke # Playwright smoke tests; starts the dev server itself
+npm run test:smoke # Playwright smoke tests (13 spec files in web/tests); starts the dev server itself
 npm run build      # production build, type-checks
 ```
 
@@ -470,10 +619,6 @@ Key items:
 
 - `supabase gen types` for typed Supabase client (currently using manual types)
 - Schema-version-aware labels (dependency resolved: structural schemas for 6 years now exist)
-- Playwright smoke coverage beyond `/discover` and the endowment draw-rate
-  recipe (`web/tests/discover.spec.ts` and
-  `web/tests/endowment-draw-rate-recipe.spec.ts`)
-- OG images (per-school social cards)
 - Paginated full CSV export for `/browse` when result sets exceed the Edge Function page-size cap
 - Public `/changes` launch, methodology page, and report charts after PRD 019
   calibration and human verification

@@ -20,6 +20,7 @@ Run once per archive drain, or any time a new batch of documents lands in `extra
 | `pdf_scanned` | PDF with no AcroForm and no extractable text | Tier 5 (Tier 4 with force-OCR) |
 | `xlsx` | ZIP magic bytes + XLSX workbook internals | Tier 1 (openpyxl template/embedded answer-column extraction) |
 | `docx` | ZIP magic bytes + `word/document.xml` | Tier 3 (python-docx SDT reader — not yet implemented) |
+| `html` | Archived bytes start with an HTML doctype/`<html>`/`<head>` | Tier 6 (`html_to_markdown.py` then the Tier 4 cleaner) |
 | `other` | Parse error or unexpected content type | Fails fast; operator investigates |
 
 ## Usage
@@ -41,25 +42,25 @@ python probe.py --limit 20 --dry-run
 # Target one school
 python probe.py --school yale
 
+# Write per-row details to JSON (use scratch/ for run artifacts)
+python probe.py --limit 20 --dry-run --json-out ../../scratch/tier_probe/probe.json
+
 # Re-probe rows that already have source_format (if extraction logic changed
 # how it reads the bytes and you want to reclassify)
 python probe.py --refresh
 ```
 
-Env vars (read from `.env` at the repo root): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+Other flags: `--env <path>` (default `.env`), `--json-out <file>`. Env vars (read from `.env` at the repo root): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
 
 Prints a per-row log (`school_id / cds_year → source_format`) and a final distribution histogram so you can see the tier breakdown at a glance.
 
-## Known distribution (May 2026)
+## Source-format distribution
 
-Current production `cds_manifest` source-format distribution:
-
-- 3,390 `pdf_flat` (Tier 4)
-- 362 `xlsx` (Tier 1)
-- 127 `pdf_fillable` (Tier 2)
-- 20 `pdf_scanned` (Tier 5)
-- 9 `html` (Tier 6)
-- 11 `docx` (Tier 3 pending)
+The live distribution changes with every archive run; see
+[/pipeline-observation](https://www.collegedata.fyi/pipeline-observation) or
+query `cds_manifest.source_format` through the public API. Order of magnitude as
+of Nov 2026: mostly `pdf_flat`, a few hundred `xlsx`, a couple hundred
+`pdf_fillable`, and small numbers of `pdf_scanned`, `html`, `docx` and `other`.
 
 PR #44 made ZIP classification content-aware, so DOCX files no longer route as
 XLSX just because both formats start with `PK\x03\x04`.

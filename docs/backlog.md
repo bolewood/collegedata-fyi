@@ -1,6 +1,6 @@
 # Backlog
 
-Tactical work items for collegedata.fyi. Higher-level milestones (M0 scaffolding, M1 finder, M2 extraction pipeline, M3 public API, M4 first contributor integration) live in [`v1-plan.md`](v1-plan.md). Frontend design and review decisions live in [`docs/prd/002-frontend.md`](prd/002-frontend.md). Frontend architecture is documented in [`docs/frontend.md`](frontend.md). This file tracks the smaller, between-milestone work that surfaces as we build.
+Tactical work items for collegedata.fyi. Higher-level milestones (M0 scaffolding, M1 finder, M2 extraction pipeline, M3 public API, M4 first contributor integration) live in [`v1-plan.md`](plans/v1-plan.md). Frontend design and review decisions live in [`docs/prd/002-frontend.md`](prd/002-frontend.md). Frontend architecture is documented in [`docs/frontend.md`](frontend.md). This file tracks the smaller, between-milestone work that surfaces as we build.
 
 Effort hints are rough estimates of CC-assisted time, not hand-coded human time.
 

@@ -1,6 +1,6 @@
 # Tier 4 LLM Fallback
 
-*Last updated: 2026-04-28 (fallback/base compatibility contract added)*
+*Contract and runbook last revised 2026-04-28; status section re-dated 2026-11-09 (figures below are the April 2026 backfill, not re-measured).*
 
 Schema-aware LLM repair layer that runs after the deterministic Tier 4 cleaner
 to fill in subsections the hand-coded resolvers can't reach. Scoped, cached,
@@ -298,7 +298,7 @@ not consumer-facing data.
 
 ## Current status
 
-As of 2026-04-20:
+Dated snapshot from the 2026-04-20 backfill (not re-measured since):
 
 | Metric | Value |
 |---|---|
@@ -309,6 +309,21 @@ As of 2026-04-20:
 | Total Anthropic spend | `$14.08` |
 | Cache hit rate on re-run | 100% (same prompt/model/cleaner) |
 | GT regression on audited schools | 0 |
+
+Operating notes as of 2026-11-09:
+
+- The fallback is **operator-run only**. No scheduled workflow runs
+  `llm_fallback_worker.py`; the daily extraction cron does not call it.
+- Docling is pinned exactly and the worker refuses an environment that drifts
+  from `tools/extraction_worker/requirements.lock`, so the markdown the fallback
+  reads is reproducible. A Tier 4 re-extraction that loses most of the prior
+  artifact's fields is held back, and a fallback artifact only merges when it
+  matches the selected base artifact (see "Merge rule for Mode B"). After a
+  Tier 4 redrain, stale fallback artifacts are ignored until the fallback worker
+  is re-run. See [`extraction-quality.md`](extraction-quality.md#june-to-november-2026-repairs).
+- The default model is still `claude-haiku-4-5` (override with
+  `TIER4_FALLBACK_MODEL`). Check current pricing before a large backfill; the
+  per-doc cost above reflects April 2026 prices.
 
 Next expansions (not yet done):
 

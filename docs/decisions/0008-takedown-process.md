@@ -189,3 +189,7 @@ withdrawn and why-in-a-category.
 - [`docs/takedowns.md`](../takedowns.md) — transparency log.
 - [`CONTRIBUTING.md`](../../CONTRIBUTING.md) — contact instructions
   for takedown requests.
+
+## Addendum (2026-11-09): where the contact lives
+
+Step 1 refers to "the contact link on collegedata.fyi". There is no standalone contact page. The takedown contact is `contact@bolewood.com`, shown on the [privacy page](https://collegedata.fyi/privacy) and the [feedback page](https://collegedata.fyi/feedback). GitHub issues on the repository remain a valid channel. The protocol itself is unchanged.

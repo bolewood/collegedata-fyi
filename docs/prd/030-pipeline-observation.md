@@ -1,6 +1,6 @@
 # PRD 030: Public pipeline observation
 
-**Status:** M0 live; implementing M2 extraction activity. Locked-door wall is M1.
+**Status:** M0 live and M2 extraction activity shipped (ledger in v0.6.2.0, PR #177; tooltips and live, non-ISR serving in #183 and #226). The locked-door wall (M1) is not built: `/pipeline-observation.json` carries an empty `locked_doors` array.
 **Created:** 2026-08-21
 **Updated:** 2026-09-12 (durable extraction activity slice)
 **Author:** Anthony Showalter (with Cursor Grok, via CEO-design)

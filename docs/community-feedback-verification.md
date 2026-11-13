@@ -1,5 +1,7 @@
 # PRD 037 verification evidence
 
+*Recorded 2026-11-08. The test counts below are a point-in-time record and will differ on `main` today.*
+
 `/feedback` uses the same browser-to-Formspree `FormData` pattern as
 [`SubmissionForm.tsx`](../web/src/components/SubmissionForm.tsx), reading
 `NEXT_PUBLIC_FEEDBACK_FORMSPREE_ENDPOINT` with fallback to

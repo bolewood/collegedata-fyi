@@ -4,7 +4,7 @@
 > Public copy: [`VOICE.md`](VOICE.md).
 
 **Canonical tokens:** [`web/src/app/tokens.css`](src/app/tokens.css)
-**Live reference page:** [`/design-system/`](https://collegedata.fyi/design-system/) (also in repo at [`web/public/design-system/index.html`](public/design-system/index.html))
+**Live reference page:** [`/design-system/`](https://collegedata.fyi/design-system/) (also in repo at [`web/public/design-system/index.html`](public/design-system/index.html)). It is a static file in `public/`, so it is exempt from the no-Google-fonts rule below: it loads IBM Plex from Google Fonts for its own preview. Do not copy that into app code.
 **Source handoff archive:** [`docs/design/`](../docs/design/) — original HTML/JSX prototypes from the Claude Design session
 
 This system was hand-built in April 2026 from a Claude Design handoff. The short name for it is "paper, ink, and one quiet green."
@@ -50,7 +50,7 @@ Card tint for index-card–style panels: `#faf6ec` (pale cream, slightly lighter
 
 **Chart palette** (`--chart-ink`, `--chart-accent`, `--chart-grid`, `--chart-axis`, `--chart-faint`): primary series is always ink; callouts are forest; grid is near-transparent ink. See [`docs/design/reference/recipe.jsx`](../docs/design/reference/recipe.jsx) for the reference scatter implementation.
 
-**No blue anywhere.** Any blue that appears in current code (`bg-blue-500` on NetPriceByIncome, `text-blue-700` on "try it →" links) is a palette bug and should migrate to forest + ink.
+**No blue anywhere.** Any blue that appears in current code is a palette bug and should migrate to forest + ink. The remaining instances are listed under "Known deltas" below.
 
 ---
 
@@ -113,7 +113,7 @@ Flat separators. Use strong (`.rule-2`) above section bands, hairline (`.rule`) 
 
 ### Sparkline
 
-Inline typographic sparkline, baseline-aligned with prose numbers. Intended usage is **inside a sentence**, not as a chart chrome — e.g. *"The archive holds 697 schools ⤵ and 3,924 documents ⤵ covering 1998 through 2025."* See [`web/src/components/Sparkline.tsx`](src/components/Sparkline.tsx). Only use with **real time-series data** — the handoff's synthetic `HX` arrays were explicitly called out as placeholder.
+Inline typographic sparkline, baseline-aligned with prose numbers. Intended usage is **inside a sentence**, not as a chart chrome — e.g. *"The archive holds N schools ⤵ and M documents ⤵ covering 1998 through 2025."* (illustrative numbers) See [`web/src/components/Sparkline.tsx`](src/components/Sparkline.tsx). Only use with **real time-series data** — the handoff's synthetic `HX` arrays were explicitly called out as placeholder.
 
 ### Nav row — `.cd-nav-row`, `.cd-nav-links`
 
@@ -138,14 +138,14 @@ Mono captions may lead with `§` and use uppercase tracking (0.08em). Numbers an
 
 ## Known deltas (the live site vs. the reference)
 
-Tracked as follow-ups, in priority order:
+Checked against `web/src` with `grep -rnE "(bg|text|border)-(blue|gray)-|bg-white"` on 2026-11-09. The earlier list (NetPriceByIncome bars, API page toggle, KeyStats/OutcomesBand cards, recipe blue dots) is fixed. What is left is stock Tailwind blue/gray and white that predates the palette:
 
-1. **NetPriceByIncome bars** use `bg-blue-500` — should be ink with one forest-highlighted row per the [`school.jsx`](../docs/design/reference/school.jsx) reference.
-2. **API page `Show all N fields →` toggle** uses `text-blue-700` — should inherit `--ink` with `--rule-strong` underline like the default `.cd-theme a`.
-3. **KeyStats / OutcomesBand / document cards** on school pages still use Tailwind `bg-white` + `border-gray-200` — migrate to `.cd-card` for warm-cream consistency.
-4. **Acceptance-vs-yield recipe demo** uses Tailwind blue dots — should be ink with forest highlights per [`recipe.jsx`](../docs/design/reference/recipe.jsx).
+1. **`src/app/error.tsx` and `src/app/not-found.tsx`**: `text-gray-*`, `bg-blue-600` buttons, `border-gray-300`. Should use ink text, `.cd-btn`, and the paper palette.
+2. **`src/components/MarkdownView.tsx`**: `text-blue-600` links, `border-gray-200`, `bg-gray-50`/`bg-gray-100`, `text-gray-*`. Should use ink, `--rule` borders and forest links.
+3. **`src/components/CopyButton.tsx`**: `bg-white`, `border-gray-300`, `text-gray-700`. Should use `.cd-btn` or `.cd-chip`.
+4. **`src/components/StatsBar.tsx`** (not imported anywhere; delete or restyle) and the bullet marker in `src/app/privacy/page.tsx`: `text-gray-*` only (no blue). Lower priority.
 
-None of these break functionality; they're palette-consistency debt.
+None of these break functionality; they are palette-consistency debt. Re-run the grep above before editing this list.
 
 ---
 

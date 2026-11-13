@@ -12,11 +12,12 @@ This is the **Tier 2** extraction path in the project's tiered strategy:
 
 | Tier | Input | Extractor | Accuracy |
 |---|---|---|---|
-| Tier 1 | Filled XLSX | `openpyxl` → Answer Sheet | ~100% when available, but no schools are known to publish this format |
+| Tier 1 | Filled XLSX | `tools/tier1_extractor/` (template or embedded answer-column cell map + `openpyxl`) | ~100% when the school uses the standard template layout |
 | **Tier 2** | Unflattened fillable PDF | **this tool** | **~100% when AcroForm is populated** |
-| Tier 3 | Filled DOCX | `python-docx` → Word tags | ~100% when available (not yet observed in the wild) |
-| Tier 4 | Flattened PDF | Docling/Reducto + cleaner | variable, hard path |
-| Tier 5 | Image-only scan | OCR + cleaner | worst case |
+| Tier 3 | Filled DOCX | `python-docx` → Word tags (not implemented; [PRD 007](../../docs/prd/007-tier3-docx-extraction.md)) | ~100% when available; DOCX sources exist in the corpus |
+| Tier 4 | Flattened PDF | Docling + cleaner (`tools/extraction_worker/`) | variable, hard path |
+| Tier 5 | Image-only scan | Tier 4 with forced OCR | worst case |
+| Tier 6 | Structured HTML | `html_to_markdown.py` + Tier 4 cleaner | depends on the page |
 
 Tier 2 works if and only if `pypdf.get_fields()` returns a non-empty dict for the source PDF. Flattened PDFs (Yale 2024-25, Harvard 2024-25) return `None` and need Tier 4. The scraper should probe every incoming PDF with this check first before routing to a heavier pipeline.
 
@@ -57,7 +58,7 @@ Example summary output:
 ```json
 {
   "producer": "tier2_acroform",
-  "producer_version": "0.1.0",
+  "producer_version": "0.2.0",
   "schema_version": "2025-26",
   "source_pdf": "CDS-HMC-2025.2026_shared.pdf",
   "extracted_at": "2026-04-13T06:30:00Z",
@@ -323,21 +324,9 @@ Every value matches the hand-verified numbers in [`tools/extraction-validator/gr
 
 5. **Value strings are not type-coerced.** Every value is emitted as a string, even when the schema's `value_type` says `Number`. The schema carries enough metadata for downstream code to coerce per field; this tool intentionally does not lose fidelity by parsing at extraction time. (Original string preserved for provenance.)
 
-## Tier 2 vs Tier 4 routing
+## Routing
 
-The scraper should probe every incoming PDF:
-
-```python
-import pypdf
-reader = pypdf.PdfReader(pdf_path)
-fields = reader.get_fields()
-if fields and any(f.get("/V") is not None for f in fields.values()):
-    tier = "tier2"      # route to tools/tier2_extractor
-else:
-    tier = "tier4"      # route to Docling/Reducto + cleaner
-```
-
-Store the detected tier alongside the manifest row so consumers can filter by producer quality.
+Routing is automatic. `tools/tier_probe/probe.py` classifies every archived source by its bytes and writes `cds_documents.source_format`; `tools/extraction_worker/worker.py` then sends `pdf_fillable` documents here and the other formats to their own tiers. See the "Tier routing" section of [`tools/extraction_worker/README.md`](../extraction_worker/README.md#tier-routing).
 
 ## See also
 

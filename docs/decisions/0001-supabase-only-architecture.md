@@ -29,3 +29,11 @@ Alternatives were rejected because they either required more ops (AWS), were opt
 - Coupling to one vendor. Mitigated by the fact that Postgres, S3-compatible Storage, and Deno edge functions are all portable primitives; migration off Supabase is possible if ever needed.
 - Supabase free-tier Storage limits will bite eventually (rough estimate: 500 schools × 5 years × 5MB ≈ 12GB). This is a "nice problem to have" — handled by moving to a paid plan when it matters.
 - Docling extraction can't live in the same vendor. Accepted as a pluggable worker contract instead.
+
+## Addendum (2026-11-09): frontend hosting and extraction runtime
+
+This ADR was written before the web frontend existed and does not mention it. Its "Why" section lists Vercel as a rejected alternative for hosting static files while Supabase held the data. Since launch, the Next.js frontend at `collegedata.fyi` has been hosted on Vercel. It reads the public PostgREST API and Edge Functions like any other client and stores no data of its own; Postgres, Storage, the scheduled archive functions, and the public read API remain on Supabase. No ADR has revisited the original rejection, so this addendum records the fact and does not decide the question. The frontend design is in [PRD 002](../prd/002-frontend.md) and [`docs/frontend.md`](../frontend.md).
+
+The Docling exception also moved as the paragraph above predicted: the extraction worker now runs on a daily GitHub Actions cron (`.github/workflows/ops-extraction-worker.yml`), with larger drains run by operators from a lock-file-pinned local environment. See [`docs/data-extraction-pipeline.md`](../data-extraction-pipeline.md).
+
+The original text above is left as written.

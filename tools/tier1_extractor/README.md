@@ -14,7 +14,7 @@ This is the **Tier 1** extraction path:
 |---|---|---|---|
 | **Tier 1** | **Filled XLSX** | **this tool** | **~100% when school uses the standard template** |
 | Tier 2 | Unflattened fillable PDF | `tools/tier2_extractor/` | ~100% when AcroForm is populated |
-| Tier 3 | Filled DOCX | `tools/tier3_extractor/` (PRD 007) | ~100% when SDTs preserved |
+| Tier 3 | Filled DOCX | Not implemented yet ([PRD 007](../../docs/prd/007-tier3-docx-extraction.md)) | ~100% when SDTs preserved |
 | Tier 4 | Flattened PDF | Docling + cleaner | 94% on ground-truth fields |
 | Tier 5 | Image-only scan | Tier 4 with force-OCR | variable |
 
@@ -65,7 +65,7 @@ Example summary:
 ```json
 {
   "producer": "tier1_xlsx",
-  "producer_version": "0.1.0",
+  "producer_version": "0.2.3",
   "schema_version": "2025-26",
   "source_xlsx": "MissouriS-and-T-CDS 2025-26 Gold for Posting.xlsx",
   "extracted_at": "2026-04-20T17:00:00Z",
@@ -100,9 +100,7 @@ Same shape as Tier 2's output (keyed by canonical `question_number`) so downstre
 | Aims Community College 2022-23 | 274 / 1105 (25%) | Drain pass |
 | Adelphi University (multiple years) | 36-58 | Drain pass, older template years |
 
-Corpus-wide: **362 XLSX source rows** are currently routed through Tier 1. In
-the `2024+` projection, the median populated field count is 521 and the max is
-782. Older template years and partial fills remain lower.
+Corpus-wide, several hundred XLSX source rows are routed through Tier 1 (live counts: [/pipeline-observation](https://www.collegedata.fyi/pipeline-observation)). In the `2024+` projection the median populated field count was 521 and the max 782 at the time of the last audit. Older template years and partial fills remain lower.
 
 ## Known gaps
 

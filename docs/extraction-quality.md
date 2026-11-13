@@ -1,6 +1,8 @@
 # Extraction Quality
 
-*Last updated: May 5, 2026 (post PRD 019 spike/QA, change-event projection alpha, fresh-row worker prioritization, and source-routing cleanup)*
+*Benchmark tables: May 5, 2026 snapshot. Repair log: updated November 9, 2026.*
+
+> **How to read the dates.** The summary table, tier tables, and ground-truth scores below were measured in April and May 2026 and have not been re-run since. They are a dated snapshot, not current counts. For current coverage use [`/coverage`](https://collegedata.fyi/coverage); for pipeline health use [`/pipeline-observation`](https://collegedata.fyi/pipeline-observation). The August 6, 2026 data-integrity audit ([`docs/plans/audit-2026-08-06-final/`](plans/audit-2026-08-06-final/README.md)) counted 6,322 directory institutions, 4,071 archived CDS documents, 262,537 `cds_fields` rows, and 558 `school_browser_rows`; that audit is the later, broader measurement and its counts supersede the May figures. What changed in extraction between June and November 2026 is in [June to November 2026 repairs](#june-to-november-2026-repairs).
 
 This document records current extraction accuracy across our pipeline. It's meant as an honest, calibrated self-assessment, not a marketing page. The numbers here are produced by reproducible scorers you can run yourself against our ground-truth fixtures in [`tools/extraction-validator/`](../tools/extraction-validator/).
 
@@ -11,9 +13,9 @@ We report two different kinds of number, because they measure different things:
 
 The gap between the two is where the real work is.
 
-## Summary
+## Summary (May 5, 2026 snapshot)
 
-| Measure | Value |
+| Measure | Value (May 5, 2026) |
 |---|---|
 | Institutions indexed | 6,322 Scorecard directory rows; 2,924 public in-scope coverage rows |
 | Archived CDS documents | 3,950 |
@@ -81,7 +83,7 @@ When a school publishes their CDS as an unflattened fillable PDF, extraction is 
 |---|---|---|
 | Harvey Mudd | 2025-26 | 31/31 (100%) |
 
-A meaningful minority of schools publish fillable PDFs (136 artifacts in the current corpus). For those, Tier 2 is the preferred path because it produces ground-truth-quality output with zero heuristics.
+A meaningful minority of schools publish fillable PDFs (136 artifacts at the May 2026 snapshot; the summary table's 127 `pdf_fillable` documents is a separate count that was not reconciled with it). For those, Tier 2 is the preferred path because it produces ground-truth-quality output with zero heuristics.
 
 ## Tier 4: flattened PDFs (the hard case)
 
@@ -304,6 +306,40 @@ python tools/extraction-validator/score_tier4.py \
 
 Corpus-wide surveys are available via [`corpus_survey_tier4.py`](../tools/extraction-validator/corpus_survey_tier4.py).
 
+## June to November 2026 repairs
+
+These are the extraction-quality changes that shipped after the May snapshot, taken from merged PRs. They are grouped by what they fix; none of them comes with a new accuracy figure here. Re-run the scorers (below) before quoting a number.
+
+**Field-level fixes (cleaner and parsers)**
+
+- **C1 totals.** 2025-26 residency rows were zipped All-first, so the in-state cell overwrote the total (Wabash showed 911 applicants instead of 2,496). Rows are now mapped by header, totals smaller than a gender component are restored, and the same guard runs in KeyStats and `school_browser_rows` (#160). A second pass fixed 2025-26 C1 enrolled-by-sex totals that took the full-time row (#248).
+- **B1 sex ratios.** The 2024-25 B1 gender mapping showed wrong sex ratios (#168); the table parser also missed total undergraduate men/women stored under a differently named cohort, and missing "All" totals are now derived from full-time plus part-time (#169, `b1_derive_totals.py`).
+- **Doubled text-layer cells.** Flattened-form PDFs that print every value twice made Docling read "113 113" and dropped whole tables. Doubled cells are collapsed when they dominate a document (#248).
+- **D2 transfer table.** The 2024-25 year-page layout read four cells per row from a five-cell layout; the numbering is now detected from the values (#233). The official 2021-22 and 2022-23 templates were archived from Wayback in the same change.
+- **H15 spill.** A free-text financial-aid answer ran into Sections I and J and got full 500-600 field documents hidden as low coverage. The cutoff is whitespace-tolerant and the hide threshold is now under 300 fields (#243).
+- **H14 merit versus need.** `school_merit_profile` combined non-need (H.1401) and need-based (H.1411) academic criteria; they are now separate columns and the card uses the non-need flag (#249).
+
+**Year detection, flags, and source selection**
+
+- **KU-style year detection and blank templates.** Years are detected on section-title Factbook layouts, still under ADR 0007's rule that zero or multiple distinct years returns no year. Blank-template documents are hidden from public listings, and a school-page note appears when extraction used a schema fallback (#235).
+- **Low-field flag on every tier.** Documents below the low-field threshold are flagged whatever tier produced them (#242, with archive fixes for section-split and wiki-hosted schools).
+- **Flattened-reprint guard.** When a school republishes a fillable PDF as a flattened copy and the form values still appear in the new file's text, the worker keeps Tier 2 extraction from the fillable source. Decisions are recorded in `notes.source_selection` (#258). [PRD 038](prd/038-template-overlay-extraction.md) plans a template-overlay approach for flattened fillable PDFs (#259, docs only).
+- **Section-file protection.** Archive refreshes that would replace a full CDS with a section file are held (#257).
+
+**Environment and run safety**
+
+- **Pinned Docling and regression hold-back.** The requirements said `docling>=2.0`, so CI and a local venv ran different builds (Sacramento State 2023-24: 274 versus 108 fields). Docling and its companions are pinned exactly, Docling versions are recorded in each artifact, and a Tier 4 re-extraction that keeps under 60% of the previous artifact's fields is held back as `tier4_field_regression` (#244).
+- **Lock file.** `requirements.lock` pins all packages for Python 3.12 and `dependency_check.py` makes the worker exit on drift (#245).
+- **In-place requeue.** `--requeue-document-ids` re-extracts without flipping documents to `extraction_pending`, so pages do not go blank during a redrain (#246).
+- **pdfium text fallback.** pypdf raised on some font descriptors, the format sniff counted zero text, and text PDFs were force-OCR'd (Grinnell 2023-24: 411 to 122 fields). `pdf_text.py` falls back to pdfium for the pages pypdf cannot read (#256).
+- **Wayback bytes.** Archive.org toolbar URLs return HTML; the fetch now injects the `id_` flag and rejects truncated 1 MB captures (#164).
+
+**Visibility**
+
+- **Extraction activity ledger.** A private append-only ledger records each run and item, and `/pipeline-observation` shows the last 14 days of extraction finishes without exposing document IDs or hashes (#177).
+
+The cumulative list with dates is in [`CHANGELOG.md`](../CHANGELOG.md) from 0.1.0.0 (2026-08-03). Earlier history is in git.
+
 ## Where future work goes
 
 Most of the structural work is shipped. What's left is either opportunistic coverage expansion or the one remaining tier.
@@ -317,6 +353,7 @@ Quality improvements fall into three categories, roughly in priority order:
 1. **DOCX Tier 3.** The extractor is now the only missing tier. The probe/worker route DOCX correctly; the SDT reader still needs to ship.
 2. **Failed-row triage by root cause.** Remaining failures are mostly DOCX not implemented, publisher pages that return auth/WAF/interstitial HTML instead of source bytes, malformed/empty publisher files, and a small set of low/zero-field extracts that need school-specific inspection.
 3. **Better upstream extraction** on flattened PDFs. Evaluating commercial document-extraction APIs against our ground-truth fixtures. A meaningful quality jump here would unlock most of the sections currently below 30% fill rate.
-4. **Community cleaners** for school-specific and template-specific variants. The [`cleaners.yaml`](../cleaners.yaml) registry is built for this; see [`CONTRIBUTING.md`](../CONTRIBUTING.md).
+4. **Template overlay for flattened fillable PDFs** ([PRD 038](prd/038-template-overlay-extraction.md)). Approved for M0-M3; docs only so far.
+5. **Community cleaners** for school-specific and template-specific variants. The [`cleaners.yaml`](../cleaners.yaml) registry is built for this; see [`CONTRIBUTING.md`](../CONTRIBUTING.md).
 
 Contributions that directly advance any of these categories are especially welcome.

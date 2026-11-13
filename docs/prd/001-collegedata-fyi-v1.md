@@ -5,7 +5,7 @@
 **Date:** 2026-04-13
 **Scope tag:** weekend side project
 **Supersedes:** none (first PRD)
-**Related:** [`docs/v1-plan.md`](../v1-plan.md) (detailed engineering plan), [`docs/decisions/`](../decisions/) (ADRs 0001-0005), [`docs/backlog.md`](../backlog.md)
+**Related:** [`docs/plans/v1-plan.md`](../plans/v1-plan.md) (detailed engineering plan), [`docs/decisions/`](../decisions/) (ADRs 0001-0005), [`docs/backlog.md`](../backlog.md)
 
 ---
 
@@ -85,7 +85,7 @@ The finder is runnable on its own and produces value even if extraction never ha
 
 ### V1b — Tiered Extraction Pipeline
 
-Each archived source is routed to the appropriate extractor based on its format. The tier ladder (documented in detail in `docs/v1-plan.md`):
+Each archived source is routed to the appropriate extractor based on its format. The tier ladder (documented in detail in `docs/plans/v1-plan.md`):
 
 | Tier | Input | Extractor | Status |
 |---|---|---|---|
@@ -101,7 +101,7 @@ The scraper probes every incoming document with `pypdf.get_fields()` before rout
 
 ### V1c — Public Manifest API
 
-A Supabase-hosted Postgres schema exposed read-only through PostgREST at `api.collegedata.fyi` via Supabase custom domain. Consumers query `https://api.collegedata.fyi/rest/v1/cds_documents?school_id=eq.yale` and get JSON back. No custom backend, no bespoke web server, no auth. The tables exposed (`cds_documents`, `cds_artifacts`, `cleaners`) are fully described in `docs/v1-plan.md`'s data model section.
+A Supabase-hosted Postgres schema exposed read-only through PostgREST at `api.collegedata.fyi` via Supabase custom domain. Consumers query `https://api.collegedata.fyi/rest/v1/cds_documents?school_id=eq.yale` and get JSON back. No custom backend, no bespoke web server, no auth. The tables exposed (`cds_documents`, `cds_artifacts`, `cleaners`) are fully described in `docs/plans/v1-plan.md`'s data model section.
 
 Using the custom domain from day one matters: the URL ends up in every example `curl` command and every piece of documentation, and migrating it later would invalidate every link.
 
@@ -125,7 +125,7 @@ Single vendor: **Supabase**. Supabase Postgres holds the manifest and provenance
 
 The rationale for this stack is captured in ADR 0001 (Supabase-only). The rationale for publishing raw over clean is ADR 0002. The licensing choice is ADR 0003 (MIT). The domain choice is ADR 0004. The repo location is ADR 0005. The tiered extraction strategy will be captured in ADR 0006 (on the backlog as a P1 item).
 
-Full data model, milestone breakdown, and vendor rationale live in `docs/v1-plan.md`. This PRD stays at the product level and does not duplicate that detail.
+Full data model, milestone breakdown, and vendor rationale live in `docs/plans/v1-plan.md`. This PRD stays at the product level and does not duplicate that detail.
 
 ## Milestones (weekend-project realistic)
 
@@ -196,4 +196,4 @@ Future ADRs expected to come out of V1:
 
 ## Changelog
 
-- **2026-04-13:** First draft. Consolidated from `docs/v1-plan.md`, ADRs 0001-0005, `docs/known-issues/`, `docs/backlog.md`, and the Gemini ecosystem research findings.
+- **2026-04-13:** First draft. Consolidated from `docs/plans/v1-plan.md`, ADRs 0001-0005, `docs/known-issues/`, `docs/backlog.md`, and the Gemini ecosystem research findings.

@@ -14,6 +14,9 @@ import {
   isJsonLdContextExtensionNoise,
   isSentryVerifyAllowed,
   sentryBeforeSend,
+  sentryBeforeSendTransaction,
+  sentryBeforeBreadcrumb,
+  scrubSensitiveUrl,
   sentryEnabled,
   sentryEnvironment,
   sentryInitOptions,
@@ -175,5 +178,83 @@ describe("isHeadlessReaderNoise", () => {
         exception: { values: [{ value: "Failed to fetch", stacktrace: { frames: [{ function: "loadSchoolFacts" }] } }] },
       }),
     ).not.toBeNull();
+  });
+});
+
+describe("sentry URL scrubbing", () => {
+  it("filters code and q values but keeps other params", () => {
+    expect(scrubSensitiveUrl("https://x.test/match?code=abc123&tab=1")).toBe(
+      "https://x.test/match?code=[Filtered]&tab=1",
+    );
+    expect(scrubSensitiveUrl("/api/schools/search?limit=5&q=mit")).toBe(
+      "/api/schools/search?limit=5&q=[Filtered]",
+    );
+    expect(scrubSensitiveUrl("/schools?query=x&decode=y")).toBe("/schools?query=x&decode=y");
+  });
+
+  it("scrubs request, breadcrumbs, spans, and transaction name in beforeSend", () => {
+    const event = sentryBeforeSend({
+      request: { url: "https://x.test/match?code=SECRET", query_string: "code=SECRET&a=1" },
+      transaction: "GET /match?code=SECRET",
+      breadcrumbs: [{ category: "navigation", data: { to: "/match?code=SECRET", from: "/?q=harvard" } }],
+      spans: [{ description: "GET /api/schools/search?q=harvard" }],
+    } as never) as unknown as Record<string, any>;
+    const json = JSON.stringify(event);
+    expect(json).not.toContain("SECRET");
+    expect(json).not.toContain("harvard");
+    expect(event.request.url).toBe("https://x.test/match?code=[Filtered]");
+    expect(event.request.query_string).toBe("code=[Filtered]&a=1");
+  });
+
+  it("scrubs transactions and breadcrumbs", () => {
+    const tx = sentryBeforeSendTransaction({
+      transaction: "/match?code=SECRET",
+      request: { url: "https://x.test/match?code=SECRET" },
+      contexts: { trace: { data: { "url.full": "https://x.test/match?code=SECRET" } } },
+    }) as unknown as Record<string, unknown>;
+    expect(JSON.stringify(tx)).not.toContain("SECRET");
+    const crumb = sentryBeforeBreadcrumb({
+      category: "fetch",
+      data: { url: "/api/schools/search?q=mit", status_code: 200 },
+    }) as unknown as { data: { url: string; status_code: number } };
+    expect(crumb.data.url).toBe("/api/schools/search?q=[Filtered]");
+    expect(crumb.data.status_code).toBe(200);
+  });
+});
+
+describe("sentry scrub keeps error codes", () => {
+  it("does not filter object keys named code or q in extra, contexts, tags, or spans", () => {
+    const event = sentryBeforeSend({
+      extra: { code: "57014", q: "internal" },
+      contexts: { postgrest: { code: "57014" } },
+      tags: { code: "ECONNRESET" },
+      spans: [{ data: { code: "57014" } }],
+    } as never) as unknown as Record<string, any>;
+    expect(event.extra).toEqual({ code: "57014", q: "internal" });
+    expect(event.contexts).toEqual({ postgrest: { code: "57014" } });
+    expect(event.tags).toEqual({ code: "ECONNRESET" });
+    expect(event.spans[0].data.code).toBe("57014");
+  });
+
+  it("filters request url and query_string in string and pair forms", () => {
+    const a = sentryBeforeSend({
+      request: { url: "https://x.test/s?q=harvard&code=abc", query_string: "q=harvard&x=1" },
+    } as never) as unknown as Record<string, any>;
+    expect(a.request.url).toBe("https://x.test/s?q=[Filtered]&code=[Filtered]");
+    expect(a.request.query_string).toBe("q=[Filtered]&x=1");
+    const b = sentryBeforeSend({
+      request: { query_string: [["code", "abc"], ["x", "1"]] },
+    } as never) as unknown as Record<string, any>;
+    expect(b.request.query_string).toEqual([["code", "[Filtered]"], ["x", "1"]]);
+  });
+
+  it("filters breadcrumb data.url and params but not other keys", () => {
+    const crumb = sentryBeforeBreadcrumb({
+      category: "navigation",
+      data: { url: "/match?code=abc", params: { code: "abc", page: "2" }, code: "57014" },
+    }) as unknown as { data: Record<string, any> };
+    expect(crumb.data.url).toBe("/match?code=[Filtered]");
+    expect(crumb.data.params).toEqual({ code: "[Filtered]", page: "2" });
+    expect(crumb.data.code).toBe("57014");
   });
 });

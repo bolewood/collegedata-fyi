@@ -4,7 +4,7 @@
 **Status:** Draft (in /autoplan review)
 **Date:** 2026-04-18
 **Owner:** Anthony Showalter
-**Related:** ADR 0007 (year authority), `docs/schools_hint_rewrite_proposal.md`, backlog item "Retire cds_year as discovery output"
+**Related:** ADR 0007 (year authority), `docs/plans/schools_hint_rewrite_proposal.md`, backlog item "Retire cds_year as discovery output"
 
 ## Why we are here
 
@@ -191,7 +191,7 @@ This plan rests on five premises. Each is worth saying aloud so we can stress-te
 |---|---|---|---|
 | P1 | The polymorphic `cds_url_hint` field is the *root cause* of the kids-worklist UX problem and the resolver's wasted-work problem, not just a symptom. | High | If we split the field but the resolver still wastes 50%+ of its calls on dead URLs (irrespective of hint shape), the field shape wasn't the bottleneck. |
 | P2 | A hosting JSONB sidecar is worth structuring. The information is durable enough that recording it once saves real cost on every future cron. | Medium | If hosting facts churn often (schools migrate CMSs, change auth, swap WAFs every 6-12 months), the sidecar becomes maintenance overhead. The 2-year ADR audit history suggests this is rare; a 12-month re-validation policy is cheap insurance. |
-| P3 | The 467 schools without a proposable landing page genuinely have no findable landing page. They are not a discovery-tooling gap. | Medium-Low | The proposal file (`docs/schools_hint_rewrite_proposal.md`) used Playwright probes from `manual_urls.yaml` — that's a snapshot of what we tried, not a proof of impossibility. A more aggressive probe (e.g., site-search at `school.edu/search?q=common+data+set`, or LLM-assisted IR-page discovery) might find landing pages for 50-200 of them. |
+| P3 | The 467 schools without a proposable landing page genuinely have no findable landing page. They are not a discovery-tooling gap. | Medium-Low | The proposal file (`docs/plans/schools_hint_rewrite_proposal.md`) used Playwright probes from `manual_urls.yaml` — that's a snapshot of what we tried, not a proof of impossibility. A more aggressive probe (e.g., site-search at `school.edu/search?q=common+data+set`, or LLM-assisted IR-page discovery) might find landing pages for 50-200 of them. |
 | P4 | ADR 0007's content-layer year detection is sufficient that direct-only schools work without URL-derived year parsing in `pickCandidates`. | High | This is empirically validated: `direct_archive_urls` schools bypass `pickCandidates` entirely; the extraction worker assigns the year from page content. Stage A harness measured 80% recall on PDFs. |
 | P5 | The cost of running this refactor (~15 CC-hours, 3 PRs) is justified by the marginal coverage gain plus the resolver-cost savings. | Medium | If the actual coverage gain is small (kids find 50 new years instead of 500), the JSONB sidecar is the more durable win. We should track both metrics. |
 
@@ -444,7 +444,7 @@ create view public.latest_school_hosting as
 **Goal:** ship the operational benefits.
 
 **Changes:**
-- Apply the 67 high-confidence landing-page promotions from `docs/schools_hint_rewrite_proposal.md` into `discovery_seed_url` (or `browse_url` where appropriate — some are landing pages, some are direct files).
+- Apply the 67 high-confidence landing-page promotions from `docs/plans/schools_hint_rewrite_proposal.md` into `discovery_seed_url` (or `browse_url` where appropriate — some are landing pages, some are direct files).
 - Hand-curate `school_overrides.yaml` for the known-hard cases surfaced by the batch: Adelphi (auth: microsoft_sso, no public archive), RPI (Box folder), Indiana (opaque app server), dmi.illinois.edu (custom CMS notes).
 - Rewrite `tools/data_quality/kids_worklist.py` to:
   - Query `latest_school_hosting` to skip schools where `auth_required != 'none'` (no point sending kids to auth-walled schools).

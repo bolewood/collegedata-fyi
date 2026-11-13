@@ -28,7 +28,7 @@ We classify a school's *effective* policy each year using combined SAT + ACT sub
 
 This is intentionally an *outcome* measure, not a policy measure. A school's written C.801–C.8G disclosure will tell you the declared policy. The submission rate tells you whether that policy is reality.
 
-## How to populate this with all 700+ schools
+## How to populate this with every school in the archive
 
 The seed data in the demo is hand-verified for each of the seven charted schools. To reproduce the full-corpus picture, pull C.901 and C.902 across every year and school in the archive:
 
@@ -48,7 +48,7 @@ The artifact's `notes.values["C.901"].value` is the SAT submission percentage, a
 Treat `document_id` as the CDS join key and retain its `ipeds_id` and `school_id` for provenance.
 Any federal enrichment must join on a guarded `ipeds_id`, never on the display slug.
 
-If you want a single blob rather than per-document queries, the /api page at [collegedata.fyi/api](/api) has the full PostgREST auth and query reference, including how to use `in.(…)` to fetch many documents at once.
+If you want a single blob rather than per-document queries, the /api page at [collegedata.fyi/api](https://www.collegedata.fyi/api) has the full PostgREST auth and query reference, including how to use `in.(…)` to fetch many documents at once.
 
 ## Known caveats
 
@@ -59,7 +59,7 @@ If you want a single blob rather than per-document queries, the /api page at [co
 
 ## What else to try
 
-- Cross-reference with C.707 "Standardized test scores" basis-for-selection (Very Important / Important / Considered / Not Considered) to see which schools' written policy matches their submission rate.
+- Cross-reference with C.704 "Standardized test scores" basis-for-selection (Very Important / Important / Considered / Not Considered) to see which schools' written policy matches their submission rate.
 - Plot *change* in submission percentage 2019-20 → 2024-25 as a single bar chart to see the reversion winners (MIT, Harvard direction-of-travel) vs. committed test-optional peers.
 - Compare submission rate against median SAT score — do schools whose SAT median *rose* during test-optional years look like score-submitters self-selected?
 - Pull C.801 written-policy text across years for one school to see the exact wording evolution.
