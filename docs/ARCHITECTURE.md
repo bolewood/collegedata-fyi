@@ -504,9 +504,9 @@ Returns a row from the `cds_manifest` view with the latest canonical artifact ID
 
 **When a school removes their CDS from the web:**
 1. The periodic re-check job (M3+ scope, on the backlog) HEADs every known `source_url` on some cadence
-2. When a URL starts returning 404, the re-check job sets `cds_documents.removed_at = now()`
-3. The archived file in Storage is untouched — consumers can still download the source, they just know the live URL is dead
-4. The `cds_manifest` view still returns the row; consumers can filter on `removed_at is not null` if they care
+2. When a URL starts returning 404, the re-check job sets `cds_documents.source_gone_at = now()`
+3. The archived file in Storage is untouched and the document stays on the school page, the year page and in the sitemap
+4. `removed_at` is a separate, operator-only hide flag (takedowns, retired duplicate slugs, wrong files). Every public listing filters `removed_at is null`; the re-check never sets it
 
 **When a school refuses to publish (University of Chicago, Reed):**
 1. In `schools.yaml`, their entry has `scrape_policy: verified_absent`

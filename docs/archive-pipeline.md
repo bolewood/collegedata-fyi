@@ -107,7 +107,7 @@ the original ~840-school full batch drained in roughly seven hours of wall clock
 │                                                              │
 │  Returns a discriminated ResolveResult:                      │
 │    resolved             → happy path                         │
-│    upstream_gone        → 404/410, mark removed_at on the    │
+│    upstream_gone        → 404/410, set source_gone_at on the │
 │                           most recent row for the school     │
 │    transient            → DNS/5xx/timeout, throw TransientErr│
 │    no_cds_found         → landing parsed, no usable anchor   │

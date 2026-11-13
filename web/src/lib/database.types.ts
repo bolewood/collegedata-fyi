@@ -279,6 +279,7 @@ export type Database = {
           source_http_last_modified: string | null
           source_creation_date: string | null
           source_modification_date: string | null
+          source_gone_at: string | null
           extracted_at: string | null
           sub_institutional: string | null
           updated_at: string
@@ -305,6 +306,7 @@ export type Database = {
           source_http_last_modified?: string | null
           source_creation_date?: string | null
           source_modification_date?: string | null
+          source_gone_at?: string | null
           extracted_at?: string | null
           sub_institutional?: string | null
           updated_at?: string
@@ -331,6 +333,7 @@ export type Database = {
           source_http_last_modified?: string | null
           source_creation_date?: string | null
           source_modification_date?: string | null
+          source_gone_at?: string | null
           extracted_at?: string | null
           sub_institutional?: string | null
           updated_at?: string
@@ -702,6 +705,7 @@ export type Database = {
           source_http_last_modified: string | null
           source_creation_date: string | null
           source_modification_date: string | null
+          source_gone_at: string | null
           sub_institutional: string | null
         }
         Insert: {
@@ -726,6 +730,7 @@ export type Database = {
           source_http_last_modified?: string | null
           source_creation_date?: string | null
           source_modification_date?: string | null
+          source_gone_at?: string | null
           sub_institutional?: string | null
         }
         Update: {
@@ -750,6 +755,7 @@ export type Database = {
           source_http_last_modified?: string | null
           source_creation_date?: string | null
           source_modification_date?: string | null
+          source_gone_at?: string | null
           sub_institutional?: string | null
         }
         Relationships: []

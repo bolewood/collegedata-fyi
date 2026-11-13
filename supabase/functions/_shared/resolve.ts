@@ -365,7 +365,8 @@ export const UNKNOWN_YEAR_SENTINEL = "unknown";
 // Discriminated union so callers can classify failure modes. This replaces
 // the earlier "return null for everything that isn't happy path" design,
 // which collapsed transient network errors into "upstream gone" and caused
-// cds_documents.removed_at to fire on DNS blips. Codex flagged it as the
+// the upstream-removal marker (now cds_documents.source_gone_at) to fire
+// on DNS blips. Codex flagged it as the
 // #1 critical finding in review.
 //
 // The `resolved` variant carries `docs: ResolvedCandidate[]` — a

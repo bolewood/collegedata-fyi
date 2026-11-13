@@ -447,6 +447,7 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
             "source_modification_date",
             "last_verified_at",
             "removed_at",
+            "source_gone_at",
           ]}
         />
         <Resource
@@ -1262,6 +1263,7 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
             "source_modification_date",
             "last_verified_at",
             "removed_at",
+            "source_gone_at",
             "created_at",
             "updated_at",
           ]}

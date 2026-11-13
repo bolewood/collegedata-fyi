@@ -19,6 +19,7 @@ export interface CdsDocumentRow {
   discovered_at: string | null;
   last_verified_at: string | null;
   removed_at: string | null;
+  source_gone_at: string | null;
   extraction_status: string;
 }
 
@@ -213,7 +214,10 @@ export async function refreshDocumentWithNewSha(
       last_verified_at: new Date().toISOString(),
       extraction_status: "extraction_pending",
       participation_status: "published",
+      // New bytes arrived: relist the row (unchanged behaviour) and clear
+      // the source-gone observation.
       removed_at: null,
+      source_gone_at: null,
       source_provenance: args.source_provenance ?? "school_direct",
       source_http_last_modified: args.source_http_last_modified ?? null,
     })
@@ -292,7 +296,7 @@ export async function bumpVerified(
     .update({
       last_verified_at: new Date().toISOString(),
       source_url: sourceUrl,
-      removed_at: null,
+      source_gone_at: null,
     })
     .eq("id", documentId);
   if (error) throw new Error(`bumpVerified: ${error.message}`);
@@ -324,12 +328,17 @@ export async function recordRepair(
   await bumpVerified(client, documentId, sourceUrl);
 }
 
-// Mark a previously-archived document as removed upstream. Idempotent:
-// calling this twice is a no-op on the second call because the .is filter
-// on removed_at IS NULL matches zero rows. Does NOT touch participation_status
+// Record that a previously-archived document is gone upstream. Idempotent:
+// the .is filter on source_gone_at IS NULL matches zero rows the second time,
+// so the timestamp stays at the first observation.
+//
+// This writes source_gone_at, NOT removed_at. removed_at hides a row from
+// every public listing and is operator-only (takedowns, duplicate slugs,
+// wrong files). A school deleting its file is the case the archive exists
+// for, so the document stays public. Does NOT touch participation_status
 // because a single failed hint fetch is not the same as a school publicly
-// refusing to publish; operators can promote removed rows to 'withdrawn' via
-// a separate review process after observing sustained removal.
+// refusing to publish; operators can promote rows to 'withdrawn' via a
+// separate review process after observing sustained removal.
 export async function recordRemoval(
   client: SupabaseClient,
   documentId: string,
@@ -337,9 +346,9 @@ export async function recordRemoval(
 ): Promise<void> {
   const { error } = await client
     .from("cds_documents")
-    .update({ removed_at: new Date().toISOString() })
+    .update({ source_gone_at: new Date().toISOString() })
     .eq("id", documentId)
-    .is("removed_at", null);
+    .is("source_gone_at", null);
   if (error) {
     throw new Error(`recordRemoval (${reason}): ${error.message}`);
   }
