@@ -7,4 +7,5 @@ beautifulsoup4>=4.12
 lxml>=5.0
 pyyaml>=6.0
 pytest>=8
+pytest-xdist>=3.6
 Pillow==11.3.0

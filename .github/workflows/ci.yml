@@ -57,8 +57,42 @@ jobs:
         run: python -m unittest tools.schema_builder.test_decode_checkboxes
       - name: Run discovery policy and engine tests
         run: python -m pytest tools/discovery -q
+      # The Tier 2 suite renders PDF pages and takes far longer than every
+      # other step combined. On pull requests and branch pushes it runs only
+      # when something it depends on changed. Pushes to main and manual
+      # dispatches always run it.
+      - name: Decide whether the Tier 2 suite is needed
+        id: tier2
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.sha || 'main' }}
+        run: |
+          set -euo pipefail
+          run=true
+          reason="always on ${EVENT_NAME}"
+          if [ "${EVENT_NAME}" = "pull_request" ] || { [ "${EVENT_NAME}" = "push" ] && [ "${REF_NAME}" != "main" ]; }; then
+            # Fail open: if the comparison cannot be read, or it is large
+            # enough to be truncated (300 files), run the suite.
+            if files="$(gh api "repos/${GITHUB_REPOSITORY}/compare/${BASE_REF}...${HEAD_SHA}" --jq '.files[].filename')" \
+              && [ "$(printf '%s\n' "${files}" | grep -c .)" -lt 300 ]; then
+              if printf '%s\n' "${files}" | grep -Eq '^(tools/tier2_extractor/|tools/browser_backend/|tools/extraction_worker/|tools/schema_builder/|schemas/|tools/ci-requirements\.txt$|\.github/workflows/ci\.yml$)'; then
+                reason="a dependency of the suite changed"
+              else
+                run=false
+                reason="no Tier 2 dependency changed"
+              fi
+            else
+              reason="could not read the change list"
+            fi
+          fi
+          echo "run=${run}" >> "${GITHUB_OUTPUT}"
+          echo "Tier 2 suite: run=${run} (${reason})"
       - name: Run Tier 2 field map tests
-        run: python -m pytest tools/tier2_extractor -q
+        if: steps.tier2.outputs.run == 'true'
+        run: python -m pytest tools/tier2_extractor -q -n auto
       - name: Lint GHA run-script heredocs
         run: python tools/ops/lint_gha_heredocs.py
       - name: Run ops tests
