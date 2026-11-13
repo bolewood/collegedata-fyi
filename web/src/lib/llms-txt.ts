@@ -23,6 +23,7 @@ Endowment health (IPEDS Finance Part H, fiscal years 2020+): request categories=
 - [API docs](${SITE_URL}/api): Human-readable documentation for the no-auth JSON surface, MCP connector, snapshots, and PostgREST archive
 - [MCP](${SITE_URL}/api/mcp): Streamable HTTP; paste as a Claude custom connector. No API key
 - [Search schools](${SITE_URL}/api/schools/search?q=mit): Find a school by name or alias
+- [Look up a school by IPEDS id](${SITE_URL}/api/schools/search?ipeds_id=166683): Exact match on the six-digit federal unit id
 - [School facts](${SITE_URL}/api/schools/mit/facts): Source-labeled facts for one school
 - [School facts by category](${SITE_URL}/api/schools/mit/facts?categories=finance): categories: identity, admissions, enrollment, cost, aid, finance, outcomes, sources
 - [School sources](${SITE_URL}/api/schools/mit/sources): Source ledger for one school
