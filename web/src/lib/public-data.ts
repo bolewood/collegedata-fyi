@@ -2,6 +2,7 @@ import { STORAGE_BASE_URL } from "./supabase";
 import { friendlyApiSupabase as supabase } from "./supabase-friendly-api";
 import {
   fetchInstitutionCoverage,
+  fetchInstitutionCoverageByIpedsId,
   fetchSchoolBrandColors,
   fetchSchoolDocuments,
   fetchSchoolFederalBaselineIndex,
@@ -887,6 +888,27 @@ export async function searchSchools(query: string, limit = 10) {
   const results = [...exactResult, ...rpcResults].slice(0, safeLimit);
 
   return { query: trimmed, results };
+}
+
+export async function findSchoolsByIpedsId(ipedsId: string) {
+  const rows = await fetchInstitutionCoverageByIpedsId(ipedsId);
+  const baselines = await fetchSchoolFederalBaselineIndex(rows.map((row) => row.school_id));
+  const results = await Promise.all(
+    rows.map(async (row) => ({
+      school_id: row.school_id,
+      school_name: row.school_name,
+      aliases: [],
+      city: row.city,
+      state: row.state,
+      ipeds_id: row.ipeds_id,
+      coverage_status: row.coverage_status,
+      has_cds: row.latest_available_cds_year != null,
+      has_federal_baseline: baselines.has(row.school_id),
+      school_url: `${SITE_URL}/schools/${row.school_id}`,
+      ...glyphSearchFields(await fetchSchoolBrandColors(row.school_id)),
+    })),
+  );
+  return { ipeds_id: ipedsId, results };
 }
 
 export async function getSchoolFacts(

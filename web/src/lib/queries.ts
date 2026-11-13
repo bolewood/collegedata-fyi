@@ -948,6 +948,24 @@ export const fetchInstitutionCoverage = cache(
   },
 );
 
+// Lookup by federal IPEDS unit id, for callers who already hold one (College
+// Scorecard and IPEDS extracts are keyed on it) and should not have to guess
+// our slug from a name.
+export const fetchInstitutionCoverageByIpedsId = cache(
+  async function fetchInstitutionCoverageByIpedsId(
+    ipedsId: string,
+  ): Promise<InstitutionCoverage[]> {
+    const client = supabase as unknown as UntypedSupabase;
+    const { data, error } = await client
+      .from("institution_cds_coverage")
+      .select(INSTITUTION_COVERAGE_SELECT)
+      .eq("ipeds_id", ipedsId)
+      .limit(5);
+    throwIfPostgrestError(error, "Failed to fetch institution coverage by IPEDS id");
+    return (data as InstitutionCoverage[] | null) ?? [];
+  },
+);
+
 // Brand hexes are source values only. Plates are derived at render.
 // Missing columns (pre-migration) or a null row both mean house inks.
 // Resolve the canonical directory id first so an alias URL still gets

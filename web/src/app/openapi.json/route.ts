@@ -50,12 +50,13 @@ export async function GET() {
             summary: "Search schools",
             parameters: [
               CLIENT_HEADER,
-              { name: "q", in: "query", required: true, schema: { type: "string" } },
+              { name: "q", in: "query", required: false, schema: { type: "string" }, description: "Name or alias. Required unless ipeds_id is given." },
+              { name: "ipeds_id", in: "query", required: false, schema: { type: "string", pattern: "^\\d{6}$" }, description: "Exact lookup by six-digit IPEDS unit id. Takes precedence over q." },
               { name: "limit", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 25, default: 10 } },
             ],
             responses: {
               "200": { description: "School search results" },
-              "400": { description: "Missing q (error: missing_query)", ...ERROR_RESPONSE },
+              "400": { description: "Missing q (error: missing_query) or malformed ipeds_id (error: invalid_ipeds_id)", ...ERROR_RESPONSE },
             },
           },
         },
