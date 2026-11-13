@@ -101,3 +101,13 @@ The 2023-24 template has no Answer Sheet tab, but it is close enough to the
 schema. The XLSX above is archived for structural rebuilds; the fillable PDF is
 archived because its AcroForm keys provide the exact 2023-24 PDF tags used by
 Tier 2 extraction.
+
+## Field maps (PRD 038)
+
+`cds_2023-24_template.pdf`, `cds_2024-25_template.pdf` and
+`cds_2025-26_template.pdf` are the blank sources for
+`schemas/field_maps/cds_pdf_field_map_YYYY_YY.json`, rebuilt with
+`tools/tier2_extractor/build_field_map.py` (see `tools/tier2_extractor/README.md`).
+The 2024-25 and 2025-26 PDFs match the SHA-256 values above byte for byte
+against their Wayback captures (fetched with the `id_` URL form). `*.pdf` is
+gitignored, so new template PDFs need `git add -f`.

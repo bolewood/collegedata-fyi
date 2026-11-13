@@ -8,6 +8,55 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
 
 ## [Unreleased]
 
+## [0.6.21.0] - 2026-11-12
+
+### Added
+
+- Template overlay values are served (PRD 038 A15). The school page, the
+  browser projection and `cds_selected_extraction_result` merge text-layer
+  numbers and dropdowns, boxed checkboxes, and OCR numbers from vector-rendered
+  pages onto a matching Tier 4 extraction. Checkboxes without a printed box,
+  free text and OCR from raster pages are stored but not served.
+- `school_browser_rows.overlay_producer_version` records the overlay version
+  and served classes for merged rows; change intelligence compares it so an
+  overlay-only difference between years is an extraction change.
+- `OVERLAY_SERVE_CLASSES=none` turns the merge off for the web and the
+  projection; `cds_overlay_serve_classes()` controls the SQL view.
+
+### Changed
+
+- An overlay value of zero never replaces a non-zero value from Tier 4.
+- `/api` notes that `kind=cleaned` rows from `tier2_template_overlay` include
+  unserved classes and that the selected-result view is the served data.
+
+## [0.6.20.0] - 2026-11-12
+
+### Added
+
+- Template overlay extraction (PRD 038) for flattened prints of the official
+  2024-25 and 2025-26 CDS templates. It matches each page against the blank
+  template and reads every field at its known position: text-layer values,
+  checkbox marks, and OCR for pages whose text is drawn as outlines. On the
+  95-document cohort it emits a median of 432 text and checkbox values per
+  document, against 282 fields from Tier 4.
+- `tools/extraction_worker/overlay_entry.py`: a dry-run-by-default CLI that
+  writes one `kind='cleaned'`, `producer='tier2_template_overlay'` artifact per
+  document, with `--rehold` to re-decide the Tier 4 disagreement hold without
+  re-extracting. `tools/tier2_extractor/shadow_report.py` reports per-class
+  counts and disagreement with Tier 4.
+- Overlay merge in the browser projection and the school-page query, and a
+  pending (unapplied) SQL view in `supabase/pending/`. All three are off by
+  default: with `OVERLAY_SERVE_CLASSES` unset no overlay value is served and
+  output is identical to the previous release.
+- Field maps and blank templates for 2024-25 and 2025-26 under `schemas/`.
+
+### Changed
+
+- Change intelligence classifies a difference in overlay version or served
+  classes between two years as an extraction change, not a school-side change.
+- Three audit scripts ignore a `+overlay.<version>` suffix when comparing
+  producer versions.
+
 ## [0.6.19.16] - 2026-11-09
 
 ### Changed

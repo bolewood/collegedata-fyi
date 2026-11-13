@@ -251,7 +251,8 @@ def useful_field_count(row: dict[str, Any] | None) -> int:
 
 def version_tuple(value: Any) -> tuple[int, ...]:
     parts = []
-    for part in str(value or "").split("."):
+    # PRD 038 A4: an overlay-merged row's version is "<base>+overlay.<overlay>"; compare the base part.
+    for part in str(value or "").split("+overlay.", 1)[0].split("."):
         try:
             parts.append(int(part))
         except ValueError:

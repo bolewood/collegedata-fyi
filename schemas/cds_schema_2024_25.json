@@ -13170,7 +13170,7 @@
     {
       "sort_order": 697,
       "question_number": "F.307",
-      "pdf_tag": "ROTC_ARMY_TEXT",
+      "pdf_tag": "ROTC_NAVY_TEXT",
       "word_tag": null,
       "question": "Name of Cooperating Institution",
       "section": "Student Life",
@@ -13221,7 +13221,7 @@
     {
       "sort_order": 700,
       "question_number": "F.310",
-      "pdf_tag": "ROTC_ARMY_TEXT",
+      "pdf_tag": "ROTC_AF_TEXT",
       "word_tag": null,
       "question": "Name of Cooperating Institution",
       "section": "Student Life",

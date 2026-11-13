@@ -1530,7 +1530,11 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         Prefer <code>cds_fields</code> for field-level queries. If you need the
         underlying artifact, fetch <code>kind=eq.canonical</code> on{" "}
         <code>cds_artifacts</code> — the canonical artifact is the one the site
-        serves.
+        serves. Rows with <code>kind=cleaned</code> and{" "}
+        <code>producer=tier2_template_overlay</code> are template-overlay
+        extractions. They include classes we do not serve and values nobody has
+        audited. The selected-result view,{" "}
+        <code>cds_selected_extraction_result</code>, is the data we serve.
       </p>
       <CodeBlock>{`curl '${BASE}/rest/v1/cds_artifacts?document_id=eq.<uuid>&kind=eq.canonical&select=notes' \\
   -H 'apikey: <anon key>' \\

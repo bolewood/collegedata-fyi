@@ -366,6 +366,10 @@ class ExtractionLedgerMainIntegrationTests(unittest.TestCase):
                     "sys.argv",
                     ["worker.py", "--env", f"{tmp}/.env", *extra_args],
                 ),
+                # These tests exercise the ledger, not the lock check. CI
+                # installs tools/ci-requirements.txt, not the worker lock, so
+                # any upstream release would otherwise make main() exit 2.
+                patch("dependency_check.check_environment", return_value=[]),
                 patch.object(
                     worker,
                     "load_env",

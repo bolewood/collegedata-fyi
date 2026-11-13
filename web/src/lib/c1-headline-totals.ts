@@ -220,6 +220,11 @@ export function c1TemplateForArtifact({
   if (schemaVersion == null && (producer === "tier4_docling" || producer === "tier6_html")) {
     return { template: "2025-26" };
   }
+  // PRD 038: the template overlay always records the template year it matched. It is never a base artifact,
+  // so a missing schema version is not defaulted to 2025-26 the way the Tier 4 / HTML cleaners' ids are.
+  if (producer === "tier2_template_overlay") {
+    return { template: null, reason: "template overlay artifact without a recorded template year" };
+  }
   return {
     template: null,
     reason: `no C1 mapping for schema ${schemaVersion ?? "none"} from ${producer ?? "unknown producer"}`,
