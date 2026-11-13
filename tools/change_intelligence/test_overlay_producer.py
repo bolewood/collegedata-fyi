@@ -101,5 +101,68 @@ class OverlayGateEveryDirectionTests(unittest.TestCase):
         self.assertFalse(pce.overlay_identity_differs({"producer_version": PLAIN}, {"producer_version": "0.3.9"}))
 
 
+def _col_pair(prior_ident, latest_ident, old, new):
+    prior = base_tests.row(producer_version=PLAIN, overlay_producer_version=prior_ident, sat_composite_p25=old)
+    latest = base_tests.row(document_id="00000000-0000-0000-0000-000000000002", canonical_year="2025-26", year_start=2025,
+                            producer_version=PLAIN, overlay_producer_version=latest_ident, sat_composite_p25=new)
+    return pce.classify_field_change(prior, latest, base_tests.SAT_P25, base_tests.RULES)
+
+
+class OverlayIdentityColumnTests(unittest.TestCase):
+    """PRD 038 A15: `producer_version` stays the plain Tier 4 version; the identity is the `overlay_producer_version` column."""
+
+    def test_the_identity_is_read_from_the_column(self):
+        row = {"producer_version": PLAIN, "overlay_producer_version": "0.7.0/checkbox_box,choice,numeric,ocr_numeric"}
+        self.assertEqual(pce.overlay_identity(row), "0.7.0/checkbox_box,choice,numeric,ocr_numeric")
+        self.assertIsNone(pce.overlay_identity({"producer_version": PLAIN, "overlay_producer_version": None}))
+        self.assertIsNone(pce.overlay_identity({"producer_version": PLAIN}))
+        self.assertEqual(pce.overlay_identity({"producer_version": MERGED}), "0.7.0/checkbox_box,choice,numeric")     # M3 suffix rows still read
+
+    def test_every_direction_is_gated_through_classify_field_change(self):
+        merged, other_set = "0.7.0/checkbox_box,choice,numeric,ocr_numeric", "0.7.0/numeric"
+        for old, new in ((None, 1400), (1200, 1400), (1400, None)):
+            event = _col_pair(None, merged, old, new)
+            self.assertEqual(event["event_type"], "producer_changed", (old, new))
+            self.assertIn("not classified as school-side silence", event["evidence_json"]["caveats"][0])
+        self.assertEqual(_col_pair(merged, other_set, 1200, 1400)["event_type"], "producer_changed")       # same version, different served set
+        self.assertEqual(_col_pair(merged, merged, 1200, 1400)["event_type"], "material_delta")             # same identity: school-side as before
+        self.assertEqual(_col_pair(None, None, None, 1400)["event_type"], "newly_reported")                 # no overlay: today's output
+        self.assertIsNone(_col_pair(None, merged, 1400, 1400))
+
+    def test_fetch_browser_rows_falls_back_when_the_column_does_not_exist_yet(self):
+        calls = []
+
+        class Q:
+            def __init__(self, cols):
+                self.cols = cols
+
+            def select(self, cols):
+                self.cols = cols
+                calls.append(cols)
+                return self
+
+            def __getattr__(self, name):
+                return lambda *a, **k: self
+
+            def execute(self):
+                if "overlay_producer_version" in self.cols:
+                    raise RuntimeError('column "overlay_producer_version" does not exist')
+                return type("R", (), {"data": [{"document_id": "d", "school_id": "s"}]})()
+
+        class C:
+            def table(self, name):
+                return Q("")
+
+        orig = pce.enrich_rows_with_documents
+        pce.enrich_rows_with_documents = lambda client, rows: rows
+        try:
+            rows = pce.fetch_browser_rows(C(), {}, None, 2024, 2026)
+        finally:
+            pce.enrich_rows_with_documents = orig
+        self.assertEqual(len(rows), 1)
+        self.assertIn("overlay_producer_version", calls[0])
+        self.assertNotIn("overlay_producer_version", calls[1])
+
+
 if __name__ == "__main__":
     unittest.main()

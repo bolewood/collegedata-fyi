@@ -24,8 +24,9 @@ Safety rules (the M3 "no production change on merge" rule):
 * Raw artifact rows are publicly readable through the `cds_artifacts` API (owner decision pending); no selected-result consumer
   serves overlay values unless `OVERLAY_SERVE_CLASSES` names classes.
 
-The hold (`held`) is computed at WRITE time from stored facts over the default served-candidate classes; `--rehold` recomputes it
-from those stored facts under a different threshold or class set and appends a new artifact (no extraction).
+The disagreement hold is OFF by default (A15). When a threshold is given, `held` is computed at WRITE time from stored facts over the default
+served-candidate classes; structural holds (no Tier 4 base, schema mismatch, producer document hold) always apply. `--rehold` recomputes
+it from the stored facts under a different threshold or class set and appends a new artifact (no extraction).
 
 CLI (from the repo root, with the worker environment; `--env FILE` values reach every setting the tool reads):
 
@@ -568,7 +569,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     mode.add_argument("--write", action="store_true", help="Insert the overlay artifact (kind='cleaned'). Nothing else is written.")
     parser.add_argument("--rehold", action="store_true", help="No extraction: recompute `held` from the stored facts of each document's "
                         "newest overlay artifact under --hold-threshold/--hold-classes and (with --write) append a new artifact.")
-    parser.add_argument("--hold-threshold", default=None, help="0..1, or `off`. Default: OVERLAY_HOLD_THRESHOLD from the environment or --env, else 0.05.")
+    parser.add_argument("--hold-threshold", default=None, help="0..1, or `off`. Default: OVERLAY_HOLD_THRESHOLD from the environment or --env, else OFF (PRD 038 A15: the Tier 4 disagreement hold measured Tier 4 error, so a forgotten flag must not hold documents).")
     parser.add_argument("--hold-classes", default="numeric,choice,checkbox_box", help="Classes the disagreement hold is computed over.")
     parser.add_argument("--force", action="store_true", help="Write even if the skip key already exists.")
     parser.add_argument("--no-lane2", action="store_true", help="Skip Lane 2 (numeric OCR); Lane 1 and Lane 3 only.")

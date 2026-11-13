@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 
 S = ["numeric", "choice", "checkbox_box"]
+DEFAULT = ["checkbox_box", "choice", "numeric", "ocr_numeric"]          # sorted; the default served set
 
 
 def art(id, doc, kind, producer, ver, created, notes, schema="2025-26"):
@@ -165,10 +166,38 @@ edge("a_fallback_never_stands_in_for_the_overlay", [
     lambda d: art("fbk", d, "cleaned", "tier4_llm_fallback", "1", T, {"base_artifact_id": f"b-{d}", "values": {"F": v("fb")}})],
      {"F": "fb"})
 
+# ---- ocr_numeric: served only when listed AND on a vector page (PRD 038 A15) ------------------------------
+SO = S + ["ocr_numeric"]
+ocr = lambda value, page_kind="vector", lane=2, **kw: v(value, "ocr_numeric", lane, **({"page_kind": page_kind} if page_kind is not None else {}), **kw)
+derived = lambda value, kinds="ABSENT", lane="text", dl=(2, "text"), **kw: v(value, "ocr_numeric", lane, derived_lanes=list(dl), **({} if kinds == "ABSENT" else {"input_page_kinds": kinds}), **kw)
+edge("ocr_direct_vector_listed_is_served", [lambda d: ovl("o", d, T, {"Q": ocr("7")})], {"Q": "7"}, serve=SO, overlay_id="o")
+edge("ocr_direct_vector_unlisted_is_not_served", [lambda d: ovl("o", d, T, {"Q": ocr("7")})], {}, serve=S)
+edge("ocr_alone_listed_serves_the_vector_value", [lambda d: ovl("o", d, T, {"Q": ocr("7")})], {"Q": "7"}, serve=["ocr_numeric"], overlay_id="o")
+edge("ocr_direct_raster_is_never_served", [lambda d: ovl("o", d, T, {"Q": ocr("7", "raster")})], {}, serve=SO)
+edge("ocr_direct_missing_page_kind_is_not_served", [lambda d: ovl("o", d, T, {"Q": ocr("7", None)})], {}, serve=SO)
+edge("ocr_direct_page_kind_is_exact", [lambda d: ovl("o", d, T, {"Q": ocr("7", "Vector")})], {}, serve=SO)
+edge("ocr_lane_string_2_vector_is_served", [lambda d: ovl("o", d, T, {"Q": ocr("7", lane="2"), "K": ocr("8", lane=2.0)})], {"Q": "7", "K": "8"}, serve=SO, overlay_id="o")
+edge("ocr_mislabelled_numeric_class_with_lane_2_vector_is_not_served", [
+    lambda d: ovl("o", d, T, {"Q": v("7", "numeric", 2, page_kind="vector")})], {}, serve=SO)
+edge("ocr_class_without_lane_2_evidence_is_not_served", [
+    lambda d: ovl("o", d, T, {"Q": v("7", "ocr_numeric", "text", page_kind="vector")})], {}, serve=SO)
+edge("ocr_derived_total_all_inputs_vector_is_served", [
+    lambda d: ovl("o", d, T, {"Q": derived("7", ["vector"]), "K": derived("8", ["vector", "vector"], dl=["2"])})], {"Q": "7", "K": "8"}, serve=SO, overlay_id="o")
+for nm, kinds in (("mixed", ["raster", "vector"]), ("unknown", ["unknown"]), ("empty_list", []), ("not_a_list", "vector"), ("absent", "ABSENT"), ("null", None)):
+    edge(f"ocr_derived_total_{nm}_input_kinds_is_not_served", [lambda d, kinds=kinds: ovl("o", d, T, {"Q": derived("7", kinds)})], {}, serve=SO)
+edge("ocr_derived_total_unlisted_is_not_served", [lambda d: ovl("o", d, T, {"Q": derived("7", ["vector"])})], {}, serve=S)
+edge("ocr_values_do_not_unblock_other_classes", [
+    lambda d: ovl("o", d, T, {"Q": ocr("7", "raster"), "Z": rec("z")})], {"Z": "z"}, serve=SO, overlay_id="o")
+
 out = {"description": __doc__.strip().split("\n")[0], "serve_config_cases": [
     {"raw": " numeric , choice ", "classes": ["choice", "numeric"]}, {"raw": "numeric,,choice", "classes": ["choice", "numeric"]},
     {"raw": "NUMERIC,choice", "classes": []}, {"raw": "numeric,typo", "classes": []}, {"raw": "numeric;choice", "classes": []},
-    {"raw": "", "classes": []}, {"raw": None, "classes": []}, {"raw": "ocr_numeric", "classes": ["ocr_numeric"]}],
+    {"raw": "ocr_numeric", "classes": ["ocr_numeric"]},
+    # unset, empty or whitespace = the default set; `none` is the only off token (PRD 038 A15)
+    {"raw": "", "classes": DEFAULT}, {"raw": None, "classes": DEFAULT}, {"raw": "   ", "classes": DEFAULT},
+    {"raw": "none", "classes": []}, {"raw": " NONE ", "classes": []}, {"raw": "none,numeric", "classes": []}, {"raw": "off", "classes": []},
+    {"raw": "numeric,choice,checkbox_box,ocr_numeric", "classes": DEFAULT}],
+    "default_serve_classes": DEFAULT,
     "cases": cases}
 Path(__file__).with_name("overlay_parity.json").write_text(json.dumps(out, indent=1))
 print(len(cases), "cases")

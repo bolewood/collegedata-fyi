@@ -37,10 +37,10 @@ DEFAULT_REPORT_DIR = REPO_ROOT / ".context" / "reports"
 BAD_FLAGS = {"wrong_file", "blank_template", "low_coverage"}
 REVIEWED_STATUSES = {"confirmed", "extractor_noise", "ambiguous", "not_reportable"}
 try:
-    from browser_backend.overlay_serving import overlay_identity_of_version as _overlay_identity_of_version
+    from browser_backend.overlay_serving import overlay_identity_of_row as _overlay_identity_of_row
 except ImportError:  # run as a script from tools/change_intelligence
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from browser_backend.overlay_serving import overlay_identity_of_version as _overlay_identity_of_version
+    from browser_backend.overlay_serving import overlay_identity_of_row as _overlay_identity_of_row
 
 PRODUCER_FAMILY = {
     "tier1_xlsx": "tier1",
@@ -48,9 +48,9 @@ PRODUCER_FAMILY = {
     "tier4_docling": "tier4",
     "tier6_html": "tier6",
     # PRD 038 Decision 4: Tier 2 family, listed explicitly so a lookup never falls through to the prefix rule.
-    # Under the supplement model it is never a base candidate; an overlay-merged row keeps the base producer
-    # and carries "<base version>+overlay.<overlay version>" (A4), so the existing version gate treats a
-    # Tier-4-only year and a Tier-4-plus-overlay year as not comparable.
+    # Under the supplement model it is never a base candidate; an overlay-merged row keeps the base producer and
+    # version and carries its overlay identity in school_browser_rows.overlay_producer_version (A15), which the
+    # comparability gate reads, so a Tier-4-only year and a Tier-4-plus-overlay year are not comparable.
     "tier2_template_overlay": "tier2",
 }
 
@@ -149,10 +149,9 @@ def producer_family(producer: str | None) -> str:
 
 def overlay_identity(row: dict[str, Any]) -> str | None:
     """The overlay identity of a projected row (None when no overlay was merged): the overlay version and the served class
-    set. The ONLY place change intelligence reads it, so a later move from the `producer_version` suffix to an explicit
-    column (an owner decision) changes this function and nothing else."""
-    from_version = _overlay_identity_of_version(row.get("producer_version"))
-    return from_version
+    set, read from `school_browser_rows.overlay_producer_version` (PRD 038 A15; rows projected under the M3 suffix format are
+    still read). The ONLY place change intelligence reads it."""
+    return _overlay_identity_of_row(row)
 
 
 def overlay_identity_differs(prior: dict[str, Any], latest: dict[str, Any]) -> bool:
@@ -163,6 +162,7 @@ def compatible_producer_version(prior: dict[str, Any], latest: dict[str, Any]) -
     return (
         producer_family(prior.get("producer")) == producer_family(latest.get("producer"))
         and (prior.get("producer_version") or "") == (latest.get("producer_version") or "")
+        and not overlay_identity_differs(prior, latest)       # PRD 038 A15: the overlay identity is part of comparability
     )
 
 
@@ -522,17 +522,24 @@ def fetch_browser_rows(
         "producer", "producer_version", "data_quality_flag", "archive_url",
     ]
     columns += sorted({rule.column for rule in field_rules.values()})
-    query = (
-        client.table("school_browser_rows")
-        .select(",".join(columns))
-        .gte("year_start", min_year)
-        .lte("year_start", max_year)
-        .is_("sub_institutional", "null")
-        .order("school_id")
-    )
-    if watchlist:
-        query = query.in_("school_id", sorted(watchlist))
-    rows = query.execute().data or []
+
+    def run(select_columns: list[str]) -> list[dict[str, Any]]:
+        query = (
+            client.table("school_browser_rows")
+            .select(",".join(select_columns))
+            .gte("year_start", min_year)
+            .lte("year_start", max_year)
+            .is_("sub_institutional", "null")
+            .order("school_id")
+        )
+        if watchlist:
+            query = query.in_("school_id", sorted(watchlist))
+        return query.execute().data or []
+
+    try:
+        rows = run(columns + ["overlay_producer_version"])      # PRD 038 A15: the overlay identity of each row
+    except Exception:  # noqa: BLE001 - a database where the migration has not been applied yet has no such column
+        rows = run(columns)
     return enrich_rows_with_documents(client, rows)
 
 

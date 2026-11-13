@@ -338,11 +338,12 @@ selector. This is a best-effort skip, not general idempotency.
   ledger row, refreshes the projection or notifies the web. Lane 2 (numeric OCR) costs roughly 2 minutes per vector-path
   document; `--no-lane2` skips it.
 - `--rehold [--hold-threshold 0.10|off] [--hold-classes numeric,choice,checkbox_box] [--write]`: no extraction; recompute
-  `held` from the stored comparison facts and append a new artifact. The hold is computed at write time over the default
-  served-candidate classes; `--env FILE` values (including `OVERLAY_HOLD_THRESHOLD`) reach the tool.
+  `held` from the stored comparison facts and append a new artifact. The Tier 4 disagreement hold is OFF unless a threshold is
+  given (`--hold-threshold 0.05`, or `OVERLAY_HOLD_THRESHOLD` in the environment or `--env FILE`); structural holds always apply.
 - `--pdf-dir DIR --out-dir DIR`: local mode over `<sha256>.pdf` files, no database.
 - `OVERLAY_WORKER_ENABLED=1` makes the routine worker loop call the overlay after the Tier 4 outcome (default off; never
   under `--dry-run`).
-- Serving is a separate switch: `OVERLAY_SERVE_CLASSES` (Python projection and web), default empty. See
+- Serving (PRD 038 A15): the default served set is `numeric,choice,checkbox_box,ocr_numeric` (OCR from vector pages only) in the Python projection,
+  the web and the SQL view; `OVERLAY_SERVE_CLASSES` overrides it in Python and the web and `none` serves nothing. See
   `tools/browser_backend/overlay_serving.py` and PRD 038 A13/A14. The raw artifact rows are publicly readable through
   the `cds_artifacts` API; no selected-result consumer serves overlay values unless that variable names classes.

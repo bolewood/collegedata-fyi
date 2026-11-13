@@ -28,19 +28,69 @@
    "classes": []
   },
   {
-   "raw": "",
-   "classes": []
-  },
-  {
-   "raw": null,
-   "classes": []
-  },
-  {
    "raw": "ocr_numeric",
    "classes": [
     "ocr_numeric"
    ]
+  },
+  {
+   "raw": "",
+   "classes": [
+    "checkbox_box",
+    "choice",
+    "numeric",
+    "ocr_numeric"
+   ]
+  },
+  {
+   "raw": null,
+   "classes": [
+    "checkbox_box",
+    "choice",
+    "numeric",
+    "ocr_numeric"
+   ]
+  },
+  {
+   "raw": "   ",
+   "classes": [
+    "checkbox_box",
+    "choice",
+    "numeric",
+    "ocr_numeric"
+   ]
+  },
+  {
+   "raw": "none",
+   "classes": []
+  },
+  {
+   "raw": " NONE ",
+   "classes": []
+  },
+  {
+   "raw": "none,numeric",
+   "classes": []
+  },
+  {
+   "raw": "off",
+   "classes": []
+  },
+  {
+   "raw": "numeric,choice,checkbox_box,ocr_numeric",
+   "classes": [
+    "checkbox_box",
+    "choice",
+    "numeric",
+    "ocr_numeric"
+   ]
   }
+ ],
+ "default_serve_classes": [
+  "checkbox_box",
+  "choice",
+  "numeric",
+  "ocr_numeric"
  ],
  "cases": [
   {
@@ -2760,6 +2810,1180 @@
       "F": "fb"
      },
      "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "ocr_direct_vector_listed_is_served",
+   "artifacts": [
+    {
+     "id": "b-e35",
+     "document_id": "e35",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e35",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "7",
+        "emission_class": "ocr_numeric",
+        "lane": 2,
+        "page_kind": "vector"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e35",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box",
+      "ocr_numeric"
+     ],
+     "values": {
+      "Q": "7",
+      "K": "keep"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "ocr_direct_vector_unlisted_is_not_served",
+   "artifacts": [
+    {
+     "id": "b-e36",
+     "document_id": "e36",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e36",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "7",
+        "emission_class": "ocr_numeric",
+        "lane": 2,
+        "page_kind": "vector"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e36",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "ocr_alone_listed_serves_the_vector_value",
+   "artifacts": [
+    {
+     "id": "b-e37",
+     "document_id": "e37",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e37",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "7",
+        "emission_class": "ocr_numeric",
+        "lane": 2,
+        "page_kind": "vector"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e37",
+   "variants": [
+    {
+     "serve": [
+      "ocr_numeric"
+     ],
+     "values": {
+      "Q": "7",
+      "K": "keep"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "ocr_direct_raster_is_never_served",
+   "artifacts": [
+    {
+     "id": "b-e38",
+     "document_id": "e38",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e38",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "7",
+        "emission_class": "ocr_numeric",
+        "lane": 2,
+        "page_kind": "raster"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e38",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box",
+      "ocr_numeric"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "ocr_direct_missing_page_kind_is_not_served",
+   "artifacts": [
+    {
+     "id": "b-e39",
+     "document_id": "e39",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e39",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "7",
+        "emission_class": "ocr_numeric",
+        "lane": 2
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e39",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box",
+      "ocr_numeric"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "ocr_direct_page_kind_is_exact",
+   "artifacts": [
+    {
+     "id": "b-e40",
+     "document_id": "e40",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e40",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "7",
+        "emission_class": "ocr_numeric",
+        "lane": 2,
+        "page_kind": "Vector"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e40",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box",
+      "ocr_numeric"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "ocr_lane_string_2_vector_is_served",
+   "artifacts": [
+    {
+     "id": "b-e41",
+     "document_id": "e41",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e41",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "7",
+        "emission_class": "ocr_numeric",
+        "lane": "2",
+        "page_kind": "vector"
+       },
+       "K": {
+        "value": "8",
+        "emission_class": "ocr_numeric",
+        "lane": 2.0,
+        "page_kind": "vector"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e41",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box",
+      "ocr_numeric"
+     ],
+     "values": {
+      "Q": "7",
+      "K": "8"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "ocr_mislabelled_numeric_class_with_lane_2_vector_is_not_served",
+   "artifacts": [
+    {
+     "id": "b-e42",
+     "document_id": "e42",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e42",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "7",
+        "emission_class": "numeric",
+        "lane": 2,
+        "page_kind": "vector"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e42",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box",
+      "ocr_numeric"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "ocr_class_without_lane_2_evidence_is_not_served",
+   "artifacts": [
+    {
+     "id": "b-e43",
+     "document_id": "e43",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e43",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "7",
+        "emission_class": "ocr_numeric",
+        "lane": "text",
+        "page_kind": "vector"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e43",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box",
+      "ocr_numeric"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "ocr_derived_total_all_inputs_vector_is_served",
+   "artifacts": [
+    {
+     "id": "b-e44",
+     "document_id": "e44",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e44",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "7",
+        "emission_class": "ocr_numeric",
+        "lane": "text",
+        "derived_lanes": [
+         2,
+         "text"
+        ],
+        "input_page_kinds": [
+         "vector"
+        ]
+       },
+       "K": {
+        "value": "8",
+        "emission_class": "ocr_numeric",
+        "lane": "text",
+        "derived_lanes": [
+         "2"
+        ],
+        "input_page_kinds": [
+         "vector",
+         "vector"
+        ]
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e44",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box",
+      "ocr_numeric"
+     ],
+     "values": {
+      "Q": "7",
+      "K": "8"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "ocr_derived_total_mixed_input_kinds_is_not_served",
+   "artifacts": [
+    {
+     "id": "b-e45",
+     "document_id": "e45",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e45",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "7",
+        "emission_class": "ocr_numeric",
+        "lane": "text",
+        "derived_lanes": [
+         2,
+         "text"
+        ],
+        "input_page_kinds": [
+         "raster",
+         "vector"
+        ]
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e45",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box",
+      "ocr_numeric"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "ocr_derived_total_unknown_input_kinds_is_not_served",
+   "artifacts": [
+    {
+     "id": "b-e46",
+     "document_id": "e46",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e46",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "7",
+        "emission_class": "ocr_numeric",
+        "lane": "text",
+        "derived_lanes": [
+         2,
+         "text"
+        ],
+        "input_page_kinds": [
+         "unknown"
+        ]
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e46",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box",
+      "ocr_numeric"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "ocr_derived_total_empty_list_input_kinds_is_not_served",
+   "artifacts": [
+    {
+     "id": "b-e47",
+     "document_id": "e47",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e47",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "7",
+        "emission_class": "ocr_numeric",
+        "lane": "text",
+        "derived_lanes": [
+         2,
+         "text"
+        ],
+        "input_page_kinds": []
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e47",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box",
+      "ocr_numeric"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "ocr_derived_total_not_a_list_input_kinds_is_not_served",
+   "artifacts": [
+    {
+     "id": "b-e48",
+     "document_id": "e48",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e48",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "7",
+        "emission_class": "ocr_numeric",
+        "lane": "text",
+        "derived_lanes": [
+         2,
+         "text"
+        ],
+        "input_page_kinds": "vector"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e48",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box",
+      "ocr_numeric"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "ocr_derived_total_absent_input_kinds_is_not_served",
+   "artifacts": [
+    {
+     "id": "b-e49",
+     "document_id": "e49",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e49",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "7",
+        "emission_class": "ocr_numeric",
+        "lane": "text",
+        "derived_lanes": [
+         2,
+         "text"
+        ]
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e49",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box",
+      "ocr_numeric"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "ocr_derived_total_null_input_kinds_is_not_served",
+   "artifacts": [
+    {
+     "id": "b-e50",
+     "document_id": "e50",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e50",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "7",
+        "emission_class": "ocr_numeric",
+        "lane": "text",
+        "derived_lanes": [
+         2,
+         "text"
+        ],
+        "input_page_kinds": null
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e50",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box",
+      "ocr_numeric"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "ocr_derived_total_unlisted_is_not_served",
+   "artifacts": [
+    {
+     "id": "b-e51",
+     "document_id": "e51",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e51",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "7",
+        "emission_class": "ocr_numeric",
+        "lane": "text",
+        "derived_lanes": [
+         2,
+         "text"
+        ],
+        "input_page_kinds": [
+         "vector"
+        ]
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e51",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "ocr_values_do_not_unblock_other_classes",
+   "artifacts": [
+    {
+     "id": "b-e52",
+     "document_id": "e52",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e52",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "7",
+        "emission_class": "ocr_numeric",
+        "lane": 2,
+        "page_kind": "raster"
+       },
+       "Z": {
+        "value": "z",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e52",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box",
+      "ocr_numeric"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep",
+      "Z": "z"
+     },
+     "overlay_artifact_id": "o"
     }
    ]
   }
