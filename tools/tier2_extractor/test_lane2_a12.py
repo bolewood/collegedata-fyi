@@ -154,6 +154,7 @@ def test_two_numbers_in_one_cell_abstain_on_the_raster_not_on_word_count():
     assert "AP_RECD_1ST_MEN_N" not in X.l2_values(out)
 
 
+@X.needs_tesseract
 def test_an_answer_that_overlaps_the_cell_edge_abstains_through_the_unmodified_raster():
     blank = T.fill_and_flatten(YEAR, {}, {})
     f, w = X.widget("AP_RECD_1ST_MEN_N")
