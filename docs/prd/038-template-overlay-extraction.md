@@ -91,7 +91,7 @@ The three benchmark schools in the first draft (Valparaiso, Barnard and Miami 20
 
 | Year | Source | Pages | Fields | Widgets (`/Tx` / `/Ch` / `/Btn`) | Inverted `/Rect` |
 |---|---|---:|---:|---|---:|
-| 2025-26 | Blank template (`scratch/CDS-PDF-2025-2026_PDF_Template.pdf`, **not in repo**) | 50 | 1,089 | 1,263 (789 / 76 / 398) | 114 |
+| 2025-26 | Blank template (`schemas/templates/cds_2025-26_template.pdf`) | 50 | 1,089 | 1,263 (789 / 76 / 398) | 114 |
 | 2024-25 | Official blank (`schemas/templates/cds_2024-25_template.pdf`); Vaughn and UW Tier 2 donors agree with it within 0.002 pt | 50 | 1,116 | 1,257 (817 / 76 / 364) | 0 |
 | 2023-24 | `schemas/templates/cds_2023-24_template.pdf` | 50 | 1,086 | 1,228 (784 / 76 / 368) | 0 |
 

@@ -8,6 +8,34 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
 
 ## [Unreleased]
 
+## [0.6.20.0] - 2026-11-12
+
+### Added
+
+- Template overlay extraction (PRD 038) for flattened prints of the official
+  2024-25 and 2025-26 CDS templates. It matches each page against the blank
+  template and reads every field at its known position: text-layer values,
+  checkbox marks, and OCR for pages whose text is drawn as outlines. On the
+  95-document cohort it emits a median of 432 text and checkbox values per
+  document, against 282 fields from Tier 4.
+- `tools/extraction_worker/overlay_entry.py`: a dry-run-by-default CLI that
+  writes one `kind='cleaned'`, `producer='tier2_template_overlay'` artifact per
+  document, with `--rehold` to re-decide the Tier 4 disagreement hold without
+  re-extracting. `tools/tier2_extractor/shadow_report.py` reports per-class
+  counts and disagreement with Tier 4.
+- Overlay merge in the browser projection and the school-page query, and a
+  pending (unapplied) SQL view in `supabase/pending/`. All three are off by
+  default: with `OVERLAY_SERVE_CLASSES` unset no overlay value is served and
+  output is identical to the previous release.
+- Field maps and blank templates for 2024-25 and 2025-26 under `schemas/`.
+
+### Changed
+
+- Change intelligence classifies a difference in overlay version or served
+  classes between two years as an extraction change, not a school-side change.
+- Three audit scripts ignore a `+overlay.<version>` suffix when comparing
+  producer versions.
+
 ## [0.6.19.16] - 2026-11-09
 
 ### Changed
