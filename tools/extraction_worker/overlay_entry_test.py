@@ -200,13 +200,15 @@ def test_the_stored_facts_are_per_class_with_ids_and_the_blind_spot(wired):
     assert cmp_["tier4_populated_overlay_empty"] == {"free_text": 1}      # T.1: Tier 4 has it, the overlay does not
     assert cmp_["base_artifact_id"] == "b1" and cmp_["base_recorded_sha"] == FAKE_SHA
     basis = notes["hold_basis"]
-    assert basis["classes"] == ["checkbox_box", "choice", "numeric"] and basis["threshold"] == 0.05
+    assert basis["classes"] == ["checkbox_box", "choice", "numeric"] and basis["threshold"] is None          # A15: off by default
     assert basis["compared"] == 2 and basis["disagree"] == 0 and notes["held"] is False   # free_text and ocr disagreements are outside the hold
 
 
 def test_held_is_computed_over_the_candidate_classes_at_the_given_threshold(wired):
     base = _tier4({**BASE_VALUES, "B.101": {"value": "999"}})            # 1 of the 2 numeric fields disagree = 50%
-    held = oe.run_overlay_for_document(_client(base=base), {"id": "d1"}, write=False).artifact_notes
+    default = oe.run_overlay_for_document(_client(base=base), {"id": "d1"}, write=False).artifact_notes
+    assert default["held"] is False and default["hold_basis"]["threshold"] is None and default["hold_basis"]["share"] == 0.5   # off: the share is still stored
+    held = oe.run_overlay_for_document(_client(base=base), {"id": "d1"}, write=False, hold_threshold=0.05).artifact_notes
     assert held["held"] is True and held["hold_reason"] == "disagreement_share_above_threshold" and held["hold_basis"]["share"] == 0.5
     assert held["structural_hold_reason"] is None and held["disagreement_held"] is True
     at = oe.run_overlay_for_document(_client(base=base), {"id": "d1"}, write=False, hold_threshold=0.5).artifact_notes
@@ -380,6 +382,7 @@ def test_env_file_values_reach_every_setting_the_tool_reads(wired, monkeypatch, 
 
 def _written_artifact(wired, base_values=None, **kw):
     client = _client(base=_tier4(base_values or {**BASE_VALUES, "B.101": {"value": "999"}}))
+    kw.setdefault("hold_threshold", 0.05)
     oe.run_overlay_for_document(client, {"id": "d1"}, write=True, **kw)
     return client
 

@@ -22,7 +22,8 @@ DOC_ID = "00000000-0000-0000-0000-000000000001"
 
 
 def select(artifacts, serve):
-    return pbd.select_extraction_result("d", artifacts, overlay_serve_classes=ov.parse_serve_classes(",".join(serve)))   # as the env does
+    raw = ",".join(serve) if serve else "none"                                    # an empty resolved set is the `none` off token
+    return pbd.select_extraction_result("d", artifacts, overlay_serve_classes=ov.parse_serve_classes(raw))   # as the env does
 
 
 def plain(selected):
@@ -42,7 +43,7 @@ class ParityFixtureTests(unittest.TestCase):
                     for qn, producer in (variant.get("sources") or {}).items():
                         self.assertEqual(selected.value_sources[qn][0], producer, qn)
                     n += 1
-        self.assertGreater(n, 40)
+        self.assertGreater(n, 60)
 
     def test_the_recorded_divergence_python_leg(self):
         case = next(c for c in FIXTURE["cases"] if c["name"].startswith("known_divergence"))
@@ -55,7 +56,10 @@ class ParityFixtureTests(unittest.TestCase):
     def test_serve_config_parsing(self):
         for c in FIXTURE["serve_config_cases"]:
             self.assertEqual(ov.parse_serve_classes(c["raw"]), frozenset(c["classes"]), c["raw"])
-        self.assertEqual(ov.served_classes({}), frozenset())
+        self.assertEqual(ov.served_classes({}), ov.DEFAULT_SERVE_CLASSES)
+        self.assertEqual(sorted(ov.DEFAULT_SERVE_CLASSES), FIXTURE["default_serve_classes"])
+        self.assertEqual(ov.served_classes({"OVERLAY_SERVE_CLASSES": ""}), ov.DEFAULT_SERVE_CLASSES)    # an unset repo variable expands to ""
+        self.assertEqual(ov.served_classes({"OVERLAY_SERVE_CLASSES": "none"}), frozenset())
 
     def test_empty_set_is_byte_identical_with_or_without_overlay_artifacts(self):
         case = FIXTURE["cases"][0]
@@ -63,7 +67,9 @@ class ParityFixtureTests(unittest.TestCase):
         without = [a for a in with_overlays if a["producer"] != ov.OVERLAY_PRODUCER]
         self.assertLess(len(without), len(with_overlays))
         self.assertEqual(select(with_overlays, []), select(without, []))
-        self.assertEqual(pbd.select_extraction_result("d", with_overlays), pbd.select_extraction_result("d", without))
+        none = ov.parse_serve_classes("none")
+        self.assertEqual(pbd.select_extraction_result("d", with_overlays, overlay_serve_classes=none),
+                         pbd.select_extraction_result("d", without, overlay_serve_classes=none))
 
     def test_with_the_set_empty_overlay_artifacts_are_not_fetched(self):
         class Q:
@@ -86,12 +92,12 @@ class ParityFixtureTests(unittest.TestCase):
         old = os.environ.pop("OVERLAY_SERVE_CLASSES", None)
         try:
             q = Q()
-            pbd.fetch_artifacts(q, "d")
-            self.assertIn(("neq", "producer", ov.OVERLAY_PRODUCER), q.calls)
-            os.environ["OVERLAY_SERVE_CLASSES"] = "numeric"
-            q = Q()
-            pbd.fetch_artifacts(q, "d")
+            pbd.fetch_artifacts(q, "d")                                        # the default set serves: overlay artifacts are fetched
             self.assertFalse([c for c in q.calls if c[0] == "neq"])
+            os.environ["OVERLAY_SERVE_CLASSES"] = "none"
+            q = Q()
+            pbd.fetch_artifacts(q, "d")                                        # the rollback lever: not fetched at all
+            self.assertIn(("neq", "producer", ov.OVERLAY_PRODUCER), q.calls)
         finally:
             os.environ.pop("OVERLAY_SERVE_CLASSES", None)
             if old is not None:
@@ -156,30 +162,36 @@ class ParityFixtureTests(unittest.TestCase):
             "f": {"value": "6", "emission_class": "numeric", "lane": "text", "derived_lanes": ["2"]},
         }
         every = frozenset(ov.KNOWN_CLASSES)
-        self.assertEqual(set(ov.serve_overlay_values(values, every)), {"c"})
+        self.assertEqual(set(ov.serve_overlay_values(values, every)), {"c"})        # no page_kind on "a": the ocr rule is not met
         self.assertEqual(ov.serve_overlay_values(values, frozenset()), {})
         self.assertEqual(ov.serve_overlay_values(["not", "an", "object"], every), {})
 
-    def test_the_overlay_identity_includes_the_served_class_set(self):
-        a = ov.overlay_version_suffix("0.3.17", "0.7.0", ["numeric", "choice"])
-        b = ov.overlay_version_suffix("0.3.17", "0.7.0", ["numeric"])
-        self.assertEqual(a, "0.3.17+overlay.0.7.0/choice,numeric")
-        self.assertNotEqual(ov.overlay_identity_of_version(a), ov.overlay_identity_of_version(b))
-        self.assertIsNone(ov.overlay_identity_of_version("0.3.17"))
-        self.assertEqual(ov.overlay_version_suffix("0.3.17", None, ["numeric"]), "0.3.17")
+    def test_the_overlay_identity_is_the_column_and_includes_the_served_class_set(self):
+        a = ov.overlay_identity_string("0.7.0", ["numeric", "choice"])
+        b = ov.overlay_identity_string("0.7.0", ["numeric"])
+        self.assertEqual(a, "0.7.0/choice,numeric")
+        self.assertNotEqual(a, b)
+        self.assertIsNone(ov.overlay_identity_string(None, ["numeric"]))
+        self.assertEqual(ov.overlay_identity_of_row({"overlay_producer_version": a, "producer_version": "0.3.17"}), a)
+        self.assertIsNone(ov.overlay_identity_of_row({"producer_version": "0.3.17"}))
+        # rows projected under the M3 suffix format are still readable
+        self.assertEqual(ov.overlay_identity_of_row({"producer_version": "0.3.17+overlay.0.7.0/numeric"}), "0.7.0/numeric")
 
     def test_projection_rows_are_identical_with_the_set_empty_and_versioned_when_merged(self):
         artifacts = [{**a, "document_id": DOC_ID} for a in copy.deepcopy(FIXTURE["cases"][0]["artifacts"])]
         base_only = [a for a in artifacts if a["producer"] != ov.OVERLAY_PRODUCER]
         old = os.environ.pop("OVERLAY_SERVE_CLASSES", None)
         try:
+            os.environ["OVERLAY_SERVE_CLASSES"] = "none"
             off_a = pbd.build_projection_rows(doc(), artifacts, defs())
             off_b = pbd.build_projection_rows(doc(), base_only, defs())
             self.assertEqual(json.dumps(off_a, sort_keys=True, default=str), json.dumps(off_b, sort_keys=True, default=str))
             self.assertEqual(off_a[1]["producer_version"], "0.6.0")
+            self.assertIsNone(off_a[1]["overlay_producer_version"])
             os.environ["OVERLAY_SERVE_CLASSES"] = "numeric,choice,checkbox_box"
             on_fields, on_row = pbd.build_projection_rows(doc(), artifacts, defs())
-            self.assertEqual(on_row["producer_version"], "0.6.0+overlay.0.6.0/checkbox_box,choice,numeric")
+            self.assertEqual(on_row["producer_version"], "0.6.0")                       # the plain Tier 4 version (A15)
+            self.assertEqual(on_row["overlay_producer_version"], "0.6.0/checkbox_box,choice,numeric")
             producers = {r["field_id"]: r["producer"] for r in on_fields}
             self.assertEqual(producers["B.101"], "tier2_template_overlay")
             self.assertEqual(producers["C.101"], "tier4_docling")
@@ -187,6 +199,37 @@ class ParityFixtureTests(unittest.TestCase):
             os.environ.pop("OVERLAY_SERVE_CLASSES", None)
             if old is not None:
                 os.environ["OVERLAY_SERVE_CLASSES"] = old
+
+    def test_the_write_omits_a_null_overlay_column_so_a_database_without_it_still_works(self):
+        sent = []
+        client = type("C", (), {"rpc": lambda self, name, payload: (sent.append(payload), type("E", (), {"execute": lambda s: None})())[1]})()
+        pbd.replace_projection_rows(client, "d", [], {"document_id": "d", "producer_version": "0.3.17", "overlay_producer_version": None})
+        self.assertNotIn("overlay_producer_version", sent[0]["p_browser_row"])
+        pbd.replace_projection_rows(client, "d", [], {"document_id": "d", "producer_version": "0.3.17", "overlay_producer_version": "0.7.0/numeric"})
+        self.assertEqual(sent[1]["p_browser_row"]["overlay_producer_version"], "0.7.0/numeric")
+        pbd.replace_projection_rows(client, "d", [], None)
+        self.assertIsNone(sent[2]["p_browser_row"])
+
+
+class ZeroRuleTests(unittest.TestCase):
+    """PRD 038 A15: zero never replaces a positive base value (any spelling of zero; any non-zero base, negative included)."""
+
+    def test_zero_spellings_and_non_zeros(self):
+        for zero in (0, 0.0, "0", "0.0", "0.00", "0%", "$0", " 0 ", "0,0", {"value": "0"}, {"value": 0.0}):
+            self.assertTrue(ov.zero_keeps_base(zero, {"value": "100"}), zero)
+        for not_zero in ("-5", "0.5", "none", "", None, "N/A", "0 1", "00x"):
+            self.assertFalse(ov.zero_keeps_base(not_zero, {"value": "100"}), not_zero)
+        for base in ({"value": "-3"}, {"value": 100}, {"value": "12.5%"}, {"value": "$1,200"}, "7"):
+            self.assertTrue(ov.zero_keeps_base("0", base), base)
+        for base in ({"value": "0"}, {"value": "0.0"}, {"value": ""}, {"value": "N/A"}, {"value": None}, None):
+            self.assertFalse(ov.zero_keeps_base("0", base), base)                  # fills empty, overwrites a base zero or text
+
+    def test_merge_served_values_applies_in_place_and_reports_what_it_applied(self):
+        merged = {"A": {"value": "100"}, "B": {"value": "0"}, "C": {"value": ""}}
+        applied = ov.merge_served_values(merged, {"A": {"value": "0"}, "B": {"value": "0.0"}, "C": {"value": "0"}, "D": {"value": "0"}, "E": {"value": "5"}})
+        self.assertEqual(sorted(applied), ["B", "C", "D", "E"])
+        self.assertEqual(merged["A"], {"value": "100"})                                # kept
+        self.assertEqual(merged["B"], {"value": "0.0"})
 
 
 class ComparatorTests(unittest.TestCase):
@@ -241,10 +284,11 @@ class ComparatorTests(unittest.TestCase):
         self.assertFalse(ov.disagreement_hold({}, ["numeric"], 0.05)["held"])                          # nothing compared
         self.assertEqual(ov.parse_hold_threshold("off"), None)
         self.assertEqual(ov.parse_hold_threshold("OFF"), None)
-        self.assertEqual(ov.parse_hold_threshold(None), 0.05)
+        self.assertIsNone(ov.parse_hold_threshold(None))                 # A15: the disagreement hold is off unless a threshold is given
+        self.assertIsNone(ov.parse_hold_threshold(""))
         self.assertEqual(ov.parse_hold_threshold("0.2"), 0.2)
-        self.assertEqual(ov.parse_hold_threshold("junk"), 0.05)
-        self.assertEqual(ov.parse_hold_threshold("7"), 0.05)
+        self.assertIsNone(ov.parse_hold_threshold("junk"))
+        self.assertIsNone(ov.parse_hold_threshold("7"))
 
 
 class ProducerNameConsumerTests(unittest.TestCase):

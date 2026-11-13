@@ -3,12 +3,14 @@ import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ArtifactRow } from "./types";
 import {
+  DEFAULT_OVERLAY_SERVE_CLASSES,
   mergeWithOverlay,
   overlayMatchesBase,
   overlayServeKey,
   parseOverlayServeClasses,
   pickOverlay,
   serveOverlayValues,
+  zeroKeepsBase,
 } from "./overlay-serving";
 import { c1TemplateForArtifact } from "./c1-headline-totals";
 
@@ -28,7 +30,7 @@ type Case = {
 
 const FIXTURE = JSON.parse(
   readFileSync(join(process.cwd(), "..", "tools/browser_backend/fixtures/overlay_parity.json"), "utf8"),
-) as { cases: Case[]; serve_config_cases: Array<{ raw: string | null; classes: string[] }> };
+) as { cases: Case[]; serve_config_cases: Array<{ raw: string | null; classes: string[] }>; default_serve_classes: string[] };
 
 const plain = (values: Record<string, unknown>) =>
   Object.fromEntries(
@@ -53,7 +55,7 @@ function webSelect(artifacts: ArtifactRow[], serve: string[]) {
       canonical,
       fallbackValues,
       overlayCandidates: artifacts.filter((a) => a.producer === "tier2_template_overlay"),
-      classes: parseOverlayServeClasses(serve.join(",")),
+      classes: parseOverlayServeClasses(serve.length > 0 ? serve.join(",") : "none"), // an empty resolved set is the `none` off token
     }),
   };
 }
@@ -101,10 +103,11 @@ describe("overlay serving (parity fixture shared with Python and the SQL runner)
 });
 
 describe("served-class configuration", () => {
-  it("parses the shared config cases", () => {
+  it("parses the shared config cases (default when unset or empty, `none` the only off token)", () => {
     for (const c of FIXTURE.serve_config_cases) {
       expect(Array.from(parseOverlayServeClasses(c.raw)).sort()).toEqual(c.classes);
     }
+    expect(Array.from(DEFAULT_OVERLAY_SERVE_CLASSES).sort()).toEqual(FIXTURE.default_serve_classes);
   });
 
   it("is part of the cache key", () => {
@@ -142,6 +145,23 @@ describe("served-class configuration", () => {
     expect(overlayMatchesBase({ ...base, schema_version: "2024-25" } as never, good)).toBe(false);
     expect(overlayMatchesBase(base, { ...good, schema_version: null } as never)).toBe(false);
     expect(overlayMatchesBase({ ...base, producer: "tier2_acroform" } as never, good)).toBe(false);
+  });
+});
+
+describe("zero never replaces a positive base value", () => {
+  it("treats every spelling of zero alike and keeps non-zero bases (negative included)", () => {
+    for (const zero of [0, 0.0, "0", "0.0", "0.00", "0%", "$0", " 0 ", "0,0", { value: "0" }, { value: 0 }]) {
+      expect(zeroKeepsBase(typeof zero === "object" ? zero : { value: zero }, { value: "100" })).toBe(true);
+    }
+    for (const notZero of ["-5", "0.5", "none", "", null, "N/A", "0 1", "00x"]) {
+      expect(zeroKeepsBase({ value: notZero }, { value: "100" })).toBe(false);
+    }
+    for (const base of [{ value: "-3" }, { value: 100 }, { value: "12.5%" }, { value: "$1,200" }]) {
+      expect(zeroKeepsBase({ value: "0" }, base)).toBe(true);
+    }
+    for (const base of [{ value: "0" }, { value: "0.0" }, { value: "" }, { value: "N/A" }, { value: null }, null]) {
+      expect(zeroKeepsBase({ value: "0" }, base)).toBe(false);
+    }
   });
 });
 
@@ -231,14 +251,31 @@ describe("fetchExtract", () => {
     expect(fallbackMatchesCanonical(canonical, { ...overlay, producer: "tier4_llm_fallback" } as never)).toBe(true);
   });
 
-  it("with the set empty issues the same two queries, the original cache key and no overlay key", async () => {
-    vi.stubEnv("OVERLAY_SERVE_CLASSES", "");
+  it("with `none` (the rollback lever) issues the same two queries, the original cache key and no overlay key", async () => {
+    vi.stubEnv("OVERLAY_SERVE_CLASSES", "none");
     const { fetchExtract } = await import("./queries");
     const out = await fetchExtract("d1", "school-1");
     expect(calls.map((c) => c.filters.producer ?? c.filters.kind)).toEqual(["canonical", "tier4_llm_fallback"]);
     expect(cacheKeys).toEqual([["fetchExtract", "d1"]]);
     expect("overlay" in out).toBe(false);
     expect(plain(out.mergedValues)).toEqual(FIXTURE.cases[0].variants![0].values);
+    vi.unstubAllEnvs();
+  });
+
+  it("with the variable unset or empty the default set serves: the key carries it and a document without an overlay costs exactly one extra query", async () => {
+    for (const value of [undefined, ""]) {
+      calls.length = 0;
+      cacheKeys.length = 0;
+      artifacts = FIXTURE.cases[1].artifacts.filter((a) => a.producer !== "tier2_template_overlay").map((a) => ({ ...a, producer: "tier4_docling", notes: { source_sha256: "sha-B", values: {} } })) as ArtifactRow[];
+      if (value === undefined) vi.unstubAllEnvs();
+      else vi.stubEnv("OVERLAY_SERVE_CLASSES", value);
+      vi.resetModules();
+      const { fetchExtract } = await import("./queries");
+      const out = await fetchExtract("d2", "school-1");
+      expect(calls.map((c) => c.filters.producer ?? c.filters.kind)).toEqual(["canonical", "tier4_llm_fallback", "tier2_template_overlay"]);
+      expect(cacheKeys).toEqual([["fetchExtract", "d2", "on:checkbox_box+choice+numeric+ocr_numeric"]]);
+      expect(out.overlay ?? null).toBeNull();
+    }
     vi.unstubAllEnvs();
   });
 

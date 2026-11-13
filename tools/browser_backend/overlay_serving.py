@@ -1,14 +1,16 @@
-"""Which `tier2_template_overlay` values may be served, and how they merge (PRD 038 A2, A3, A12, A13).
+"""Which `tier2_template_overlay` values may be served, and how they merge (PRD 038 A2, A3, A12, A13, A15).
 
 Pure Python on purpose: no cv2, no pdfium, no OCR. The projection (`project_browser_data.py`) and the
 worker's hold computation import this module; the overlay extractor does not. The web (`web/src/lib/
-overlay-serving.ts`) and the SQL view (`supabase/pending/038_overlay_serving.sql`) implement the same
+overlay-serving.ts`) and the SQL view (`supabase/migrations/20261113042000_overlay_serving_view.sql`) implement the same
 rules and are pinned to this module by the shared fixture `fixtures/overlay_parity.json`.
 
 The rules, in one place:
 
-* The served-class set is configuration (`OVERLAY_SERVE_CLASSES`, comma separated) and is EMPTY by default.
-  An unknown class name anywhere in the value means nothing is served (fail closed).
+* The served-class set defaults to `DEFAULT_SERVE_CLASSES` (numeric, choice, checkbox_box, ocr_numeric) in code. The env var
+  `OVERLAY_SERVE_CLASSES` (comma separated) overrides it; unset, empty or whitespace means the default (a repository variable
+  that is unset expands to an empty string and must not silently turn serving off); `none` is the ONLY off token; an unknown
+  class name anywhere in the value serves nothing (fail closed).
 * An overlay artifact is a candidate for a base artifact only when it is `kind='cleaned'`,
   `producer='tier2_template_overlay'`, its notes carry `source_sha256` equal to the base's recorded sha
   (strict, A3; a base with no recorded sha never merges), and its notes say `held` is exactly `false`
@@ -17,10 +19,16 @@ The rules, in one place:
   overlay's must both be non-null and equal: the overlay keys its values by its template year's numbering, and Tier 4
   artifacts without a schema version carry 2025-26 ids whatever the template (A13).
 * The newest such overlay is the one used.
-* A value is served only when its `emission_class` is in the served set, it is not blank, and it has no Lane 2 evidence:
-  never `lane` 2 (as 2, 2.0 or "2"), never a 2 in `derived_lanes` (same spellings), whatever the configured set says.
-  A blank overlay value (null, "", whitespace) is not merged, so it never overwrites a populated base value.
+* A value is served only when its `emission_class` is in the served set, it is not blank, and ONE predicate holds:
+    - its class is not `ocr_numeric` and it has no Lane 2 evidence (`lane` 2 as 2, 2.0 or "2", or a 2 in `derived_lanes`); or
+    - its class is `ocr_numeric`, it has Lane 2 evidence, and either it is a direct Lane 2 value (`lane` 2) whose `page_kind`
+      is `vector`, or it is a derived total (2 in `derived_lanes`) whose `input_page_kinds` is a non-empty list of only `vector`.
+  Raster-page OCR, a missing `page_kind` and a mislabelled class are never served. A blank overlay value (null, "", whitespace)
+  is not merged, so it never overwrites a populated base value.
 * `notes.values` must be a JSON object; anything else serves nothing.
+* ZERO NEVER REPLACES A POSITIVE BASE VALUE (A15): an overlay value that is numerically zero (0, 0.0, "0", "0.0", "0%", "$0") does
+  not overwrite a base (Tier 4 or fallback) value that is numerically non-zero; the base value is kept. Zero still fills a field the
+  base leaves empty (or holds as text) and still overwrites a base zero. A printed 0 in a total cell is often a form default.
 * Merge order is `fallback || tier4 base || overlay`: the overlay wins.
 """
 
@@ -35,31 +43,37 @@ OVERLAY_PRODUCER = "tier2_template_overlay"
 OVERLAY_BASE_PRODUCER = "tier4_docling"
 ENV_SERVE_CLASSES = "OVERLAY_SERVE_CLASSES"
 ENV_HOLD_THRESHOLD = "OVERLAY_HOLD_THRESHOLD"   # read by the drain tool at WRITE time only; no selector reads it
-DEFAULT_HOLD_THRESHOLD = 0.05          # Decision 3 as written; confirmed or reset from the audit (A6)
+DEFAULT_HOLD_THRESHOLD = None          # A15: the Tier 4 disagreement hold is OFF unless a threshold is given (it measured Tier 4 error)
 HOLD_CANDIDATE_CLASSES = ("numeric", "choice", "checkbox_box")   # the default served-candidate set the hold is computed over
 
-# Every class the producer writes (template_overlay.CLASS_*). `ocr_numeric` is a known class so a typo is
-# distinguishable from a deliberate entry, but values with Lane 2 evidence are never served anyway.
+# Every class the producer writes (template_overlay.CLASS_*).
 KNOWN_CLASSES = frozenset({"numeric", "choice", "checkbox_box", "checkbox_boxless", "free_text", "ocr_numeric"})
+# What is served unless configured otherwise (PRD 038 A15). `ocr_numeric` is further restricted to vector pages.
+DEFAULT_SERVE_CLASSES = frozenset({"numeric", "choice", "checkbox_box", "ocr_numeric"})
+OFF_TOKEN = "none"
 
 
 def parse_serve_classes(raw: Optional[str]) -> frozenset[str]:
-    """Comma-separated class names -> the served set. Empty or missing -> empty. Unknown name -> empty."""
-    if raw is None:
+    """The served set for an `OVERLAY_SERVE_CLASSES` value. Unset, empty or whitespace -> the default set. `none` (any case, the
+    only off token) -> empty. Comma-separated names -> exactly those. Any unknown name (including `none` mixed with others)
+    -> empty (fail closed)."""
+    if raw is None or str(raw).strip() == "":
+        return DEFAULT_SERVE_CLASSES
+    if str(raw).strip().lower() == OFF_TOKEN:
         return frozenset()
-    names = [part.strip() for part in str(raw).split(",")]
-    names = [n for n in names if n]
+    names = [n for n in (part.strip() for part in str(raw).split(",")) if n]
     if not names or any(n not in KNOWN_CLASSES for n in names):
         return frozenset()
     return frozenset(names)
 
 
 def served_classes(env: Optional[Mapping[str, str]] = None) -> frozenset[str]:
+    """The configured served set; the default when the variable is unset or empty."""
     return parse_serve_classes((os.environ if env is None else env).get(ENV_SERVE_CLASSES))
 
 
 def hold_threshold(env: Optional[Mapping[str, str]] = None) -> Optional[float]:
-    """The write-time hold threshold: 0..1, default 0.05; `off` (any case) disables the disagreement hold (None)."""
+    """The write-time hold threshold: 0..1; unset, empty or `off` disables the disagreement hold (None, the default since A15)."""
     raw = (os.environ if env is None else env).get(ENV_HOLD_THRESHOLD)
     return parse_hold_threshold(raw)
 
@@ -138,22 +152,69 @@ def has_lane2_evidence(record: Mapping[str, Any]) -> bool:
     return _is_two(record.get("lane")) or (isinstance(derived, (list, tuple)) and any(_is_two(d) for d in derived))
 
 
+def _vector_only(kinds: Any) -> bool:
+    return isinstance(kinds, (list, tuple)) and len(kinds) > 0 and all(k == "vector" for k in kinds)
+
+
+def ocr_value_is_servable(record: Mapping[str, Any]) -> bool:
+    """The `ocr_numeric` rule: Lane 2 evidence is required, and every Lane 2 input is on a vector page. A direct Lane 2 value
+    needs `page_kind == "vector"`; a derived total needs a non-empty `input_page_kinds` of only `vector`."""
+    if not has_lane2_evidence(record):
+        return False
+    if _is_two(record.get("lane")):
+        return record.get("page_kind") == "vector"
+    return _vector_only(record.get("input_page_kinds"))
+
+
 def serve_overlay_values(values: Any, classes: frozenset[str]) -> dict[str, Any]:
-    """The overlay values a consumer may serve. `classes` is REQUIRED (no default): the caller passes the
-    configured set explicitly, so the producer's own default set can never leak into serving. Blank values are
-    not merged (a blank never overwrites a populated Tier 4 value); a non-object `values` serves nothing."""
+    """The overlay values a consumer may serve. `classes` is REQUIRED (no default): the caller passes the configured set
+    explicitly. Blank values are not merged (a blank never overwrites a populated Tier 4 value); a non-object `values` serves
+    nothing; the `ocr_numeric` class is served only through `ocr_value_is_servable`."""
     if not classes or not isinstance(values, dict):
         return {}
     out: dict[str, Any] = {}
     for key, record in values.items():
         if not isinstance(record, dict):
             continue
-        if record.get("emission_class") not in classes or has_lane2_evidence(record):
+        cls = record.get("emission_class")
+        if cls not in classes or _record_text(record) is None:
             continue
-        if _record_text(record) is None:
-            continue
-        out[key] = record
+        ok = ocr_value_is_servable(record) if cls == "ocr_numeric" else not has_lane2_evidence(record)
+        if ok:
+            out[key] = record
     return out
+
+
+def _number_of(record: Any) -> Optional[Decimal]:
+    """The record's text as a number ($, %, commas stripped), or None when it is blank or not a plain number."""
+    text = _record_text(record)
+    if text is None:
+        return None
+    cleaned = text.replace(",", "").replace("$", "").replace("%", "").strip()
+    if not re.fullmatch(r"[+-]?\d+(\.\d+)?", cleaned):
+        return None
+    try:
+        return Decimal(cleaned)
+    except InvalidOperation:
+        return None
+
+
+def zero_keeps_base(overlay_record: Any, base_record: Any) -> bool:
+    """True when the overlay value is numerically zero and the base value is numerically non-zero (the base is kept)."""
+    ov, bs = _number_of(overlay_record), _number_of(base_record)
+    return ov is not None and ov == 0 and bs is not None and bs != 0
+
+
+def merge_served_values(merged: dict[str, Any], served: Mapping[str, Any]) -> list[str]:
+    """Apply the served overlay values over `merged` (fallback || Tier 4 base) in place, except where zero would replace a positive
+    base value. Returns the keys that were applied."""
+    applied: list[str] = []
+    for key, record in served.items():
+        if key in merged and zero_keeps_base(record, merged[key]):
+            continue
+        merged[key] = record
+        applied.append(key)
+    return applied
 
 
 def served_overlay_for_base(
@@ -171,24 +232,27 @@ def served_overlay_for_base(
     return (overlay, served) if served else (None, {})
 
 
-OVERLAY_MARK = "+overlay."
+OVERLAY_MARK = "+overlay."      # the M3 suffix format; no longer written (A15), still read by tolerant readers
 
 
-def overlay_version_suffix(
-    base_version: Optional[str], overlay_version: Optional[str], classes: Optional[Iterable[str]] = None,
-) -> Optional[str]:
-    """A4: `<tier4 version>+overlay.<overlay version>/<served classes, sorted, comma-joined>`. The class set is part of the
-    identity because changing it changes served values with no version change. With no overlay: the base version alone."""
+def overlay_identity_string(overlay_version: Optional[str], classes: Optional[Iterable[str]] = None) -> Optional[str]:
+    """What `school_browser_rows.overlay_producer_version` stores: `<overlay version>/<served classes, sorted, comma-joined>`, or
+    None when no overlay value was served. The class set is part of the identity so the identity of a projected row is in the
+    row, not in the current configuration."""
     if not overlay_version:
-        return base_version
+        return None
     tail = "/" + ",".join(sorted(classes)) if classes else ""
-    return f"{base_version or ''}{OVERLAY_MARK}{overlay_version}{tail}"
+    return f"{overlay_version}{tail}"
 
 
-def overlay_identity_of_version(producer_version: Optional[str]) -> Optional[str]:
-    """The single reader of overlay identity from a stored `producer_version` (None when no overlay was merged). If the
-    owner later moves the identity to an explicit column, this and `overlay_version_suffix` are the only places to change."""
-    text = str(producer_version or "")
+def overlay_identity_of_row(row: Mapping[str, Any]) -> Optional[str]:
+    """The single reader of overlay identity from a projected row: the `overlay_producer_version` column, else (rows projected
+    under the M3 suffix format) the `+overlay.` suffix of `producer_version`. If the storage changes again, change this function
+    and `overlay_identity_string`."""
+    value = row.get("overlay_producer_version")
+    if value:
+        return str(value)
+    text = str(row.get("producer_version") or "")
     return text.split(OVERLAY_MARK, 1)[1] if OVERLAY_MARK in text else None
 
 

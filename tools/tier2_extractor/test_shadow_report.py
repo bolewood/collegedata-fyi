@@ -122,14 +122,17 @@ def test_held_counts_use_only_the_served_candidate_classes():
     assert loud["held_at_5pct_over_candidate_set"] is True and loud["held_at_10pct_over_candidate_set"] is True    # 50%
 
 
-def test_lane_2_values_never_count_toward_the_merged_total_but_vector_ocr_is_reported_separately():
+def test_ocr_counts_toward_served_only_when_listed_and_on_a_vector_page():
     notes = {"values": {"A": {"value": "1", "emission_class": "ocr_numeric", "lane": 2, "page_kind": "vector"},
                         "B": {"value": "2", "emission_class": "numeric", "lane": "text"},
                         "C": {"value": "3", "emission_class": "ocr_numeric", "lane": 2, "page_kind": "raster"}}, "lane_counts": {"text": 1}}
-    row = sr.per_document("s", notes, {"values": {}, "recorded_sha": "s", "schema_version": "x"}, frozenset({"numeric", "ocr_numeric"}))
-    assert row["served_values"] == 1 and row["merged_values"] == 1 and row["regression"] is False
-    assert row["merged_values_with_vector_ocr"] == 2 and row["vector_ocr_values"] == 1      # the raster-page value never counts
-    assert row["lane2_by_page_kind"] == {"vector": 1, "raster": 1}
+    t4 = {"values": {}, "recorded_sha": "s", "schema_version": "x"}
+    unlisted = sr.per_document("s", notes, t4, frozenset({"numeric"}))
+    assert unlisted["served_values"] == 1 and unlisted["merged_values"] == 1 and unlisted["regression"] is False
+    listed = sr.per_document("s", notes, t4, frozenset({"numeric", "ocr_numeric"}))
+    assert listed["served_values"] == 2                                                  # the vector value; the raster-page value never
+    assert unlisted["merged_values_with_vector_ocr"] == 2 and unlisted["vector_ocr_values"] == 1
+    assert unlisted["lane2_by_page_kind"] == {"vector": 1, "raster": 1}
 
 
 def test_the_report_writes_only_under_out_dir(tmp_path):

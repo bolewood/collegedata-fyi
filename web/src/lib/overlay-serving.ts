@@ -1,10 +1,15 @@
-// PRD 038 A2/A3/A13: which `tier2_template_overlay` values the web may serve. Pure (no Supabase, no Next):
-// the rules mirror tools/browser_backend/overlay_serving.py and supabase/pending/038_overlay_serving.sql, and
-// all three are pinned by tools/browser_backend/fixtures/overlay_parity.json.
+// PRD 038 A2/A3/A13/A15: which `tier2_template_overlay` values the web may serve. Pure (no Supabase, no Next):
+// the rules mirror tools/browser_backend/overlay_serving.py and supabase/migrations/20261113042000_overlay_serving_view.sql,
+// and all three are pinned by tools/browser_backend/fixtures/overlay_parity.json.
 //
-// The served-class set comes from the server-only env var OVERLAY_SERVE_CLASSES (never NEXT_PUBLIC_). It is read on
-// each fetchExtract call from the server runtime's environment, and Vercel fixes a deployment's environment at build
-// time, so changing it needs a redeploy. Default: empty = nothing served.
+// The served-class set defaults to DEFAULT_OVERLAY_SERVE_CLASSES in code (numeric, choice, checkbox_box, ocr_numeric). The
+// server-only env var OVERLAY_SERVE_CLASSES (never NEXT_PUBLIC_) overrides it: unset, empty or whitespace means the default (a
+// repository variable that is unset expands to an empty string and must not silently turn serving off); `none` is the ONLY
+// off token; an unknown class name serves nothing (fail closed). It is read on each fetchExtract call; Vercel fixes a
+// deployment's environment at build time, so changing it needs a redeploy.
+//
+// ocr_numeric is further restricted: a direct Lane 2 value is served only when its page_kind is "vector"; a derived total
+// with a Lane 2 input only when its input_page_kinds is a non-empty list of only "vector". Raster-page OCR is never served.
 
 import type { ArtifactRow, FieldValue } from "./types";
 
@@ -21,9 +26,14 @@ export const KNOWN_OVERLAY_CLASSES: ReadonlySet<string> = new Set([
   "ocr_numeric",
 ]);
 
-/** Comma-separated class names -> the served set. Empty or missing -> empty. Unknown name -> empty (fail closed). */
+export const DEFAULT_OVERLAY_SERVE_CLASSES: ReadonlySet<string> = new Set(["numeric", "choice", "checkbox_box", "ocr_numeric"]);
+export const OVERLAY_OFF_TOKEN = "none";
+
+/** An OVERLAY_SERVE_CLASSES value -> the served set. Unset, empty or whitespace -> the default. `none` -> nothing. Comma-separated
+ *  names -> exactly those. Any unknown name (including `none` mixed with others) -> nothing (fail closed). */
 export function parseOverlayServeClasses(raw: string | null | undefined): ReadonlySet<string> {
-  if (raw == null) return new Set();
+  if (raw == null || raw.trim() === "") return DEFAULT_OVERLAY_SERVE_CLASSES;
+  if (raw.trim().toLowerCase() === OVERLAY_OFF_TOKEN) return new Set();
   const names = raw
     .split(",")
     .map((part) => part.trim())
@@ -115,8 +125,20 @@ export function recordText(record: unknown): string | null {
   return null;
 }
 
-/** The overlay values a consumer may serve. `classes` is required: never the producer's own default set. A blank value is
- *  not merged (it never overwrites a populated Tier 4 value) and a `values` that is not a plain object serves nothing. */
+function vectorOnly(kinds: unknown): boolean {
+  return Array.isArray(kinds) && kinds.length > 0 && kinds.every((k) => k === "vector");
+}
+
+/** The ocr_numeric rule: Lane 2 evidence is required and every Lane 2 input is on a vector page. */
+function ocrValueIsServable(r: Record<string, unknown>): boolean {
+  if (!hasLane2Evidence(r)) return false;
+  if (isTwo(r.lane)) return r.page_kind === "vector";
+  return vectorOnly(r.input_page_kinds);
+}
+
+/** The overlay values a consumer may serve. `classes` is required (the caller passes the configured set). A blank value is
+ *  not merged (it never overwrites a populated Tier 4 value), a `values` that is not a plain object serves nothing, and the
+ *  ocr_numeric class goes through ocrValueIsServable. */
 export function serveOverlayValues(
   values: unknown,
   classes: ReadonlySet<string>,
@@ -126,10 +148,26 @@ export function serveOverlayValues(
   for (const [key, record] of Object.entries(values as Record<string, unknown>)) {
     if (!record || typeof record !== "object" || Array.isArray(record)) continue;
     const r = record as Record<string, unknown>;
-    if (!classes.has(String(r.emission_class)) || hasLane2Evidence(r) || recordText(r) === null) continue;
-    out[key] = record as FieldValue;
+    if (!classes.has(String(r.emission_class)) || recordText(r) === null) continue;
+    const ok = r.emission_class === "ocr_numeric" ? ocrValueIsServable(r) : !hasLane2Evidence(r);
+    if (ok) out[key] = record as FieldValue;
   }
   return out;
+}
+
+/** The record's text as a number ($, %, commas stripped), or null when it is blank or not a plain number (mirrors overlay_serving._number_of). */
+export function numberOf(record: unknown): number | null {
+  const text = recordText(record);
+  if (text === null) return null;
+  const cleaned = text.replace(/[,$%]/g, "").trim();
+  return /^[+-]?\d+(\.\d+)?$/.test(cleaned) ? Number(cleaned) : null;
+}
+
+/** An overlay value that is numerically zero never replaces a base value that is numerically non-zero (PRD 038 A15). */
+export function zeroKeepsBase(overlayRecord: unknown, baseRecord: unknown): boolean {
+  const ov = numberOf(overlayRecord);
+  const bs = numberOf(baseRecord);
+  return ov !== null && ov === 0 && bs !== null && bs !== 0;
 }
 
 export type OverlayMergeInput = {
@@ -161,8 +199,12 @@ export function mergeWithOverlay({
   const overlay = pickOverlay(canonical, overlayCandidates);
   if (!overlay) return { mergedValues, overlay: null, overlayFields: [] };
   const served = serveOverlayValues(notesOf(overlay).values, classes);
-  const fields = Object.keys(served);
+  const fields: string[] = [];
+  for (const [key, record] of Object.entries(served)) {
+    if (key in mergedValues && zeroKeepsBase(record, mergedValues[key])) continue; // zero never replaces a positive base value
+    mergedValues[key] = record;
+    fields.push(key);
+  }
   if (fields.length === 0) return { mergedValues, overlay: null, overlayFields: [] };
-  for (const key of fields) mergedValues[key] = served[key];
   return { mergedValues, overlay, overlayFields: fields };
 }

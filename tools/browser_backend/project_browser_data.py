@@ -585,9 +585,11 @@ def select_extraction_result(
     if overlay_serve_classes:
         overlay_artifact, overlay_values = _overlay.served_overlay_for_base(base, artifacts, overlay_serve_classes)
         if overlay_artifact is not None:
-            for field_id, value in overlay_values.items():
-                merged_values[field_id] = value
+            applied = _overlay.merge_served_values(merged_values, overlay_values)      # zero never replaces a positive base value
+            for field_id in applied:
                 value_sources[field_id] = (_overlay.OVERLAY_PRODUCER, overlay_artifact.get("producer_version"))
+            if not applied:
+                overlay_artifact = None                                                 # nothing merged: no overlay identity either
 
     return SelectedExtractionResult(
         document_id=document_id,
@@ -1315,10 +1317,10 @@ def build_browser_row(
         "schema_version": selected.schema_version,
         "source_format": document.get("source_format"),
         "producer": selected.base_producer,
-        # A4: an overlay-merged row is not comparable with a Tier-4-only row, so the version says so.
-        "producer_version": _overlay.overlay_version_suffix(
-            selected.base_producer_version, selected.overlay_producer_version, selected.overlay_served_classes,
-        ),
+        # PRD 038 A15: `producer_version` is the plain base version; the overlay identity (overlay version and served classes)
+        # lives in its own column. None when no overlay value was served.
+        "producer_version": selected.base_producer_version,
+        "overlay_producer_version": _overlay.overlay_identity_string(selected.overlay_producer_version, selected.overlay_served_classes),
         "data_quality_flag": document.get("data_quality_flag"),
         "archive_url": archive_url(str(document["school_id"]), canonical_year),
         "applied": applied,
@@ -1399,7 +1401,13 @@ def replace_projection_rows(
     field_rows: list[dict[str, Any]],
     browser_row: Optional[dict[str, Any]],
 ) -> None:
-    """Atomically replace the public projection rows for one document."""
+    """Atomically replace the public projection rows for one document.
+
+    `overlay_producer_version` is sent only when it has a value (PRD 038 A15). The RPC reads `p_browser_row` through an explicit
+    column list, so even a database that does not have the column yet (the window between this code merging and the migration
+    being applied) drops an extra key instead of failing; omitting a null key keeps the payload identical to today's."""
+    if browser_row is not None and browser_row.get("overlay_producer_version") is None:
+        browser_row = {k: v for k, v in browser_row.items() if k != "overlay_producer_version"}
     client.rpc(
         "replace_browser_projection_for_document",
         {

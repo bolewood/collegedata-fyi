@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PRD 038: run the PENDING serving view (supabase/pending/038_overlay_serving.sql) over the shared parity fixture.
+"""PRD 038: run the serving view (supabase/migrations/20261113042000_overlay_serving_view.sql) over the shared parity fixture.
 NOT part of CI. SELECT only: the view body runs with `public.cds_artifacts` replaced by a CTE of the fixture rows and
 `public.cds_overlay_serve_classes()` replaced by each variant's ARRAY[...], inside BEGIN READ ONLY ... ROLLBACK, through a
 read-only psql wrapper you pass. No table is read and nothing is created.
@@ -20,7 +20,7 @@ FIXTURE = json.loads((ROOT / "tools/browser_backend/fixtures/overlay_parity.json
 
 
 def view_body() -> str:
-    text = (ROOT / "supabase/pending/038_overlay_serving.sql").read_text()
+    text = (ROOT / "supabase/migrations/20261113042000_overlay_serving_view.sql").read_text()
     start = text.index("WITH serve AS (")
     end = text.index("WHERE b.rn = 1;") + len("WHERE b.rn = 1")
     return text[start:end]

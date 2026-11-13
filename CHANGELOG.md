@@ -8,6 +8,27 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
 
 ## [Unreleased]
 
+## [0.6.21.0] - 2026-11-12
+
+### Added
+
+- Template overlay values are served (PRD 038 A15). The school page, the
+  browser projection and `cds_selected_extraction_result` merge text-layer
+  numbers and dropdowns, boxed checkboxes, and OCR numbers from vector-rendered
+  pages onto a matching Tier 4 extraction. Checkboxes without a printed box,
+  free text and OCR from raster pages are stored but not served.
+- `school_browser_rows.overlay_producer_version` records the overlay version
+  and served classes for merged rows; change intelligence compares it so an
+  overlay-only difference between years is an extraction change.
+- `OVERLAY_SERVE_CLASSES=none` turns the merge off for the web and the
+  projection; `cds_overlay_serve_classes()` controls the SQL view.
+
+### Changed
+
+- An overlay value of zero never replaces a non-zero value from Tier 4.
+- `/api` notes that `kind=cleaned` rows from `tier2_template_overlay` include
+  unserved classes and that the selected-result view is the served data.
+
 ## [0.6.20.0] - 2026-11-12
 
 ### Added
