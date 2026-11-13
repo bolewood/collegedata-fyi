@@ -498,6 +498,90 @@ class BrowserProjectionTests(unittest.TestCase):
         self.assertEqual(browser["applied"], 17947)
         self.assertEqual(browser["admitted"], 10719)
 
+    def _project(self, year, values):
+        definitions = defs()
+        for field_id, label in (
+            ("H.201", "Full-time first-year students"),
+            ("H.214", "All full-time undergraduates"),
+            ("H.202", "First-year students who applied for aid"),
+            ("H.401", "Graduating class size"),
+            ("H.501", "Graduates who borrowed"),
+            ("C.2106", "ED field 2106"),
+            ("C.2107", "ED field 2107"),
+            ("C.2110", "ED applicants"),
+            ("C.2111", "ED admitted"),
+        ):
+            definitions[year].setdefault(
+                field_id, FieldDefinition(year, field_id, label, "Section", "Subsection", "Number")
+            )
+        fields, browser = build_projection_rows(
+            doc(canonical_year=year),
+            [artifact(schema_version=year, values={k: {"value": v} for k, v in values.items()})],
+            definitions,
+        )
+        return {row["field_id"]: row for row in fields}, browser
+
+    def test_ed_counts_read_from_a_date_are_not_published(self):
+        # UNC 2025-26: a 3/15 date landed in the two Early Decision count cells.
+        fields, browser = self._project(
+            "2025-26", {"C.116": "76247", "C.117": "14000", "C.2110": "3", "C.2111": "15"}
+        )
+        for field_id in ("C.2110", "C.2111"):
+            self.assertEqual(fields[field_id]["value_status"], "parse_error")
+            self.assertIsNone(fields[field_id]["value_num"])
+        self.assertIsNone(browser["ed_applicants"])
+        self.assertIsNone(browser["ed_admitted"])
+        self.assertEqual(browser["applied"], 76247)
+
+    def test_ed_counts_from_the_2024_form_use_its_own_field_numbers(self):
+        # Hofstra 2024-25: 20 applicants, 24 admitted.
+        fields, browser = self._project("2024-25", {"C.2106": "20", "C.2107": "24"})
+        self.assertEqual(fields["C.2106"]["value_status"], "parse_error")
+        self.assertEqual(fields["C.2107"]["value_status"], "parse_error")
+        self.assertIsNone(browser["ed_applicants"])
+
+    def test_plausible_ed_counts_are_kept(self):
+        fields, browser = self._project("2025-26", {"C.2110": "6013", "C.2111": "806"})
+        self.assertEqual(fields["C.2110"]["value_status"], "reported")
+        self.assertEqual(browser["ed_applicants"], 6013)
+        self.assertEqual(browser["ed_admitted"], 806)
+
+    def test_month_and_day_cells_of_the_2025_form_are_not_treated_as_ed_counts(self):
+        # In 2025-26, C.2106/C.2107 are a month and a day, not counts.
+        fields, _browser = self._project("2025-26", {"C.2106": "11", "C.2107": "15"})
+        self.assertEqual(fields["C.2106"]["value_status"], "reported")
+        self.assertEqual(fields["C.2107"]["value_status"], "reported")
+
+    def test_graduating_class_that_is_a_calendar_year_is_not_published(self):
+        # University of Alabama 2025-26: H.401 = 2025 with 2,334 borrowers.
+        fields, _browser = self._project("2025-26", {"H.401": "2025", "H.501": "2334"})
+        self.assertEqual(fields["H.401"]["value_status"], "parse_error")
+        self.assertIsNone(fields["H.401"]["value_num"])
+        self.assertEqual(fields["H.401"]["value_text"], "2025")
+        self.assertEqual(fields["H.501"]["value_status"], "reported")
+
+    def test_graduating_class_smaller_than_its_borrowers_is_not_published(self):
+        # Georgia Tech 2025-26: H.401 = 25 with 1,186 borrowers.
+        fields, _browser = self._project("2025-26", {"H.401": "25", "H.501": "1186"})
+        self.assertEqual(fields["H.401"]["value_status"], "parse_error")
+        self.assertEqual(fields["H.501"]["value_status"], "reported")
+
+    def test_plausible_graduating_class_is_kept(self):
+        fields, _browser = self._project("2025-26", {"H.401": "4120", "H.501": "1186"})
+        self.assertEqual(fields["H.401"]["value_status"], "reported")
+
+    def test_first_year_aid_count_above_all_undergraduates_is_not_published(self):
+        # University of Florida 2025-26: H.201 = 32,857 against H.214 = 2,772.
+        fields, _browser = self._project("2025-26", {"H.201": "32857", "H.214": "2772", "H.202": "5000"})
+        self.assertEqual(fields["H.201"]["value_status"], "parse_error")
+        self.assertEqual(fields["H.214"]["value_status"], "parse_error")
+        self.assertEqual(fields["H.202"]["value_status"], "reported")
+
+    def test_first_year_aid_count_below_all_undergraduates_is_kept(self):
+        fields, _browser = self._project("2025-26", {"H.201": "6594", "H.214": "32857"})
+        self.assertEqual(fields["H.201"]["value_status"], "reported")
+        self.assertEqual(fields["H.214"]["value_status"], "reported")
+
     def test_2024_admissions_derived_metrics_use_total_fallback_when_available(self):
         _fields, browser = build_projection_rows(
             doc(canonical_year="2024-25"),
@@ -656,6 +740,8 @@ class BrowserProjectionTests(unittest.TestCase):
         )
 
         self.assertEqual(browser["admission_strategy_card_quality"], "ed_math_inconsistent")
+        self.assertIsNone(browser["ed_applicants"])
+        self.assertIsNone(browser["ed_admitted"])
 
     def test_admission_strategy_infers_ed_offered_from_valid_counts(self):
         _fields, browser = build_projection_rows(
