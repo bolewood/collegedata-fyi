@@ -39,7 +39,33 @@ school requires an operator edit to
 `data/watchlists/residential_allowlist.yaml` — hosted failure does not
 auto-promote anyone.
 
-## GitHub repo settings (required)
+## Operator escape (do not forget this machine)
+
+spoke-ops is the **residential Chromium** we use when GitHub-hosted
+Playwright is the thing that fails — today that means AWS WAF **visual**
+captcha keyed on egress IP (`x-amzn-waf-action: captcha`,
+`captcha.awswaf.com`, a puzzle that never navigates away). It is not the
+default browser for the pipeline and not a finder/Brave re-checker.
+
+Dispatch on **this private repo only**, workflow **Residential headless
+archive**, `only=<school_id>`. Fetch stays secretless; hosted jobs hold
+Supabase. Never register this runner on `bolewood/collegedata-fyi`.
+
+**Use spoke-ops when** the hosted headless job (or a residential curl from
+a laptop) records `waf_captcha` / CloudFront visual puzzle, and a person
+would otherwise download the PDF by hand.
+
+**Do not use spoke-ops when** the failure is Cloudflare `Just a moment` /
+`cf-mitigated: challenge`, Google Drive, JS cookie walls, 403 that
+hosted Chromium already clears, SSO, Tableau/PowerBI, or a stuck PDF
+seed. Those stay on `ubuntu-latest` or the finder.
+
+Checked 2026-08-30 (residential curl + archive_queue, not a full corpus
+scan): Williams and JHU are Cloudflare 403, not AWS captcha. Notre Dame
+is Drive/403. Fordham is a redirect loop and has no 2023-26 in
+`cds_documents` — different class. Production had **no** `waf_captcha`
+rows; NYU's Deno path was HTTP 405. NYU 2025-26 is the only school this
+lane has fetched.
 
 ## GitHub repo settings (required)
 
