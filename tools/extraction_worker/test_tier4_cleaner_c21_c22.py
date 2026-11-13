@@ -386,6 +386,57 @@ X
         self.assertEqual(values["C.2110"]["value"], "847")
         self.assertEqual(values["C.2111"]["value"], "359")
 
+    def test_c21_without_a_numbered_c22_heading_does_not_read_later_sections(self):
+        # UNC 2025-26: C22 prints as a bare "Early action" table, so the C21
+        # section used to run to the end of the document and the value-only
+        # fallback read "3 terms of about 15 weeks" as 3 applicants, 15 admitted.
+        markdown = """
+C21 Early Decision
+
+Number of early decision applications received by your institution
+
+Number of applicants admitted under early decision plan
+
+Yes
+
+No
+
+X
+
+| Early action | | Yes | No |
+|---|---|---|---|
+| Early action closing date | Oct. 15 | | |
+
+## D1-D2: Fall Applicants
+
+- D6 If a minimum high school GPA is required of transfer applicants, specify (on a 4.0 scale):
+
+Trimester calendar system: An academic year consisting of 3 terms of about 15 weeks each.
+"""
+        values = clean(markdown, canonical_year="2025-26")
+
+        self.assertNotIn("C.2110", values)
+        self.assertNotIn("C.2111", values)
+
+    def test_c21_dates_written_as_months_and_days_are_not_counts(self):
+        # Duke 2025-26: "12 months 15 days" was read as 12 applicants, 15 admitted.
+        markdown = """
+## C21 Early Decision
+
+| Does your institution offer an early decision plan for first-time, first-year applicants for fall enrollment? | Yes |
+|---|---|
+| First or only early decision plan closing date: 11 months 1 day | |
+| First or only early decision plan notification date: 12 months 15 days | |
+| Number of early decision applications received by your institution | |
+
+## C22 Early action
+"""
+        values = clean(markdown, canonical_year="2025-26")
+
+        self.assertNotIn("C.2110", values)
+        self.assertNotIn("C.2111", values)
+        self.assertEqual(values["C.2101"]["value"], "Yes")
+
 
 if __name__ == "__main__":
     unittest.main()
