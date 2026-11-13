@@ -1071,6 +1071,12 @@ def evaluate_metric(
                     fallback_field_id, selected, schema_defs, metric,
                 )
                 if fallback_value is not None:
+                    # A published total cannot be smaller than one of its own
+                    # reported components (same rule as the web's
+                    # preferCoherentTotal). Seen when one producer supplies
+                    # gender rows and another a misread total.
+                    if fallback_value < max(reported_values):
+                        return sum(reported_values, Decimal("0"))
                     return fallback_value
         total = sum(reported_values, Decimal("0"))
         if component_fallback_value is not None:
