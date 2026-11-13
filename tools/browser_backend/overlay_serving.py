@@ -17,8 +17,10 @@ The rules, in one place:
   overlay's must both be non-null and equal: the overlay keys its values by its template year's numbering, and Tier 4
   artifacts without a schema version carry 2025-26 ids whatever the template (A13).
 * The newest such overlay is the one used.
-* A value is served only when its `emission_class` is in the served set and it has no Lane 2 evidence:
-  never `lane == 2`, never `2` in `derived_lanes`, whatever the configured set says.
+* A value is served only when its `emission_class` is in the served set, it is not blank, and it has no Lane 2 evidence:
+  never `lane` 2 (as 2, 2.0 or "2"), never a 2 in `derived_lanes` (same spellings), whatever the configured set says.
+  A blank overlay value (null, "", whitespace) is not merged, so it never overwrites a populated base value.
+* `notes.values` must be a JSON object; anything else serves nothing.
 * Merge order is `fallback || tier4 base || overlay`: the overlay wins.
 """
 
@@ -32,8 +34,9 @@ from typing import Any, Iterable, Mapping, Optional
 OVERLAY_PRODUCER = "tier2_template_overlay"
 OVERLAY_BASE_PRODUCER = "tier4_docling"
 ENV_SERVE_CLASSES = "OVERLAY_SERVE_CLASSES"
-ENV_HOLD_THRESHOLD = "OVERLAY_HOLD_THRESHOLD"
-DEFAULT_HOLD_THRESHOLD = 0.05          # Decision 3; confirmed or reset from the shadow distribution (A6)
+ENV_HOLD_THRESHOLD = "OVERLAY_HOLD_THRESHOLD"   # read by the drain tool at WRITE time only; no selector reads it
+DEFAULT_HOLD_THRESHOLD = 0.05          # Decision 3 as written; confirmed or reset from the audit (A6)
+HOLD_CANDIDATE_CLASSES = ("numeric", "choice", "checkbox_box")   # the default served-candidate set the hold is computed over
 
 # Every class the producer writes (template_overlay.CLASS_*). `ocr_numeric` is a known class so a typo is
 # distinguishable from a deliberate entry, but values with Lane 2 evidence are never served anyway.
@@ -55,10 +58,19 @@ def served_classes(env: Optional[Mapping[str, str]] = None) -> frozenset[str]:
     return parse_serve_classes((os.environ if env is None else env).get(ENV_SERVE_CLASSES))
 
 
-def hold_threshold(env: Optional[Mapping[str, str]] = None) -> float:
+def hold_threshold(env: Optional[Mapping[str, str]] = None) -> Optional[float]:
+    """The write-time hold threshold: 0..1, default 0.05; `off` (any case) disables the disagreement hold (None)."""
     raw = (os.environ if env is None else env).get(ENV_HOLD_THRESHOLD)
+    return parse_hold_threshold(raw)
+
+
+def parse_hold_threshold(raw: Optional[str]) -> Optional[float]:
+    if raw is None or str(raw).strip() == "":
+        return DEFAULT_HOLD_THRESHOLD
+    if str(raw).strip().lower() == "off":
+        return None
     try:
-        value = float(raw) if raw not in (None, "") else DEFAULT_HOLD_THRESHOLD
+        value = float(raw)
     except ValueError:
         return DEFAULT_HOLD_THRESHOLD
     return value if 0 <= value <= 1 else DEFAULT_HOLD_THRESHOLD
@@ -110,20 +122,35 @@ def pick_overlay(base: Mapping[str, Any], artifacts: Iterable[Mapping[str, Any]]
     return sorted(matching, key=lambda r: (_created_at_key(r), str(r.get("id") or "")), reverse=True)[0]
 
 
+def _is_two(x: Any) -> bool:
+    """2, 2.0 and "2" (also "2.0", surrounding spaces) are the number two; booleans and everything else are not."""
+    if isinstance(x, bool):
+        return False
+    if isinstance(x, (int, float)):
+        return x == 2
+    if isinstance(x, str) and re.fullmatch(r"\s*[0-9]+(\.[0-9]+)?\s*", x):
+        return float(x) == 2
+    return False
+
+
 def has_lane2_evidence(record: Mapping[str, Any]) -> bool:
-    return record.get("lane") == 2 or 2 in (record.get("derived_lanes") or ())
+    derived = record.get("derived_lanes")
+    return _is_two(record.get("lane")) or (isinstance(derived, (list, tuple)) and any(_is_two(d) for d in derived))
 
 
-def serve_overlay_values(values: Mapping[str, Any], classes: frozenset[str]) -> dict[str, Any]:
+def serve_overlay_values(values: Any, classes: frozenset[str]) -> dict[str, Any]:
     """The overlay values a consumer may serve. `classes` is REQUIRED (no default): the caller passes the
-    configured set explicitly, so the producer's own default set can never leak into serving."""
-    if not classes:
+    configured set explicitly, so the producer's own default set can never leak into serving. Blank values are
+    not merged (a blank never overwrites a populated Tier 4 value); a non-object `values` serves nothing."""
+    if not classes or not isinstance(values, dict):
         return {}
     out: dict[str, Any] = {}
     for key, record in values.items():
         if not isinstance(record, dict):
             continue
         if record.get("emission_class") not in classes or has_lane2_evidence(record):
+            continue
+        if _record_text(record) is None:
             continue
         out[key] = record
     return out
@@ -140,81 +167,146 @@ def served_overlay_for_base(
     overlay = pick_overlay(base, artifacts)
     if overlay is None:
         return None, {}
-    values = _notes(overlay).get("values")
-    served = serve_overlay_values(values if isinstance(values, dict) else {}, classes)
+    served = serve_overlay_values(_notes(overlay).get("values"), classes)
     return (overlay, served) if served else (None, {})
 
 
-def overlay_version_suffix(base_version: Optional[str], overlay_version: Optional[str]) -> Optional[str]:
-    """A4: `<tier4 version>+overlay.<overlay version>` (the base version alone when there is no overlay)."""
+OVERLAY_MARK = "+overlay."
+
+
+def overlay_version_suffix(
+    base_version: Optional[str], overlay_version: Optional[str], classes: Optional[Iterable[str]] = None,
+) -> Optional[str]:
+    """A4: `<tier4 version>+overlay.<overlay version>/<served classes, sorted, comma-joined>`. The class set is part of the
+    identity because changing it changes served values with no version change. With no overlay: the base version alone."""
     if not overlay_version:
         return base_version
-    return f"{base_version or ''}+overlay.{overlay_version}"
+    tail = "/" + ",".join(sorted(classes)) if classes else ""
+    return f"{base_version or ''}{OVERLAY_MARK}{overlay_version}{tail}"
 
 
-# ---- comparing an overlay value with a Tier 4 value (the Decision 3 hold and the shadow report) --------
+def overlay_identity_of_version(producer_version: Optional[str]) -> Optional[str]:
+    """The single reader of overlay identity from a stored `producer_version` (None when no overlay was merged). If the
+    owner later moves the identity to an explicit column, this and `overlay_version_suffix` are the only places to change."""
+    text = str(producer_version or "")
+    return text.split(OVERLAY_MARK, 1)[1] if OVERLAY_MARK in text else None
 
-_NON_NUMERIC = re.compile(r"[^0-9.\-]")
+
+# ---- comparing an overlay value with a Tier 4 value (the write-time hold facts and the shadow report) ---------------
+
+_NUMERIC_CLASSES = {"numeric", "ocr_numeric"}
+_BOX_CLASSES = {"choice", "checkbox_box", "checkbox_boxless"}
 
 
 def _record_text(record: Any) -> Optional[str]:
+    """The text of a record: `value_decoded` when it is non-blank, else `value`; trimmed; None when both are blank."""
     if isinstance(record, dict):
-        raw = record.get("value_decoded")
-        if raw is None:
-            raw = record.get("value")
+        candidates = (record.get("value_decoded"), record.get("value"))
     else:
-        raw = record
-    if raw is None:
-        return None
-    text = str(raw).strip()
-    return text or None
+        candidates = (record,)
+    for raw in candidates:
+        if raw is None:
+            continue
+        text = str(raw).strip()
+        if text:
+            return text
+    return None
 
 
-# Representation differences between the two producers, not disagreements: Tier 4 writes a ticked box as "X" (and a
-# yes/no pair as "Yes"/"No"); the overlay writes the widget's export value ("/Y", "/N", "/X"), decoded as "Yes"/"No".
+# Tier 4 writes a ticked box as "X" (and a yes/no pair as "Yes"/"No"); the overlay writes the widget's export value
+# ("/Y", "/N", "/X"), decoded as "Yes"/"No". Applied to checkbox and choice classes only.
 _YES = {"yes", "y", "x", "true", "checked", "on", "\u2713", "\u2714"}
 _NO = {"no", "n", "false", "off"}
 
 
-def normalise_for_compare(record: Any) -> Optional[str]:
-    """A comparison key: numbers by value ($, %, commas and trailing zeros ignored); yes/no/ticked in their
-    spellings ("/Y", "Yes", "X", "/N", "No") as one boolean; other text lower-cased with collapsed whitespace.
-    None for a missing or blank value. This documents what is treated as the same value; it was written after
-    reading the cohort's disagreeing pairs and is not tuned to a share."""
+def normalise_for_compare(record: Any, cls: Optional[str] = None) -> Optional[str]:
+    """A comparison key by the OVERLAY value's emission class (`cls`, default: the record's own `emission_class`):
+
+    * numeric classes: numbers by value ($, %, commas and trailing zeros ignored);
+    * choice / checkbox classes: yes/no/ticked spellings ("/Y", "Yes", "X", "/N", "No") as one boolean, other text
+      lower-cased with collapsed whitespace;
+    * free text (and an unknown class): the trimmed text, nothing else.
+
+    None for a missing or blank value. "Required" vs "Required of All" is a known spelling difference that is NOT
+    normalised (83 pairs in the cohort)."""
     text = _record_text(record)
     if text is None:
         return None
-    flag = text.lstrip("/").strip().lower()
-    if flag in _YES:
-        return "b:yes"
-    if flag in _NO:
-        return "b:no"
-    stripped = text.replace(",", "").replace("$", "").replace("%", "").strip()
-    if stripped and re.fullmatch(r"-?\d+(\.\d+)?", stripped):
-        try:
-            return "n:" + format(Decimal(stripped).normalize(), "f")
-        except InvalidOperation:
-            pass
-    return "t:" + re.sub(r"\s+", " ", text).lower()
+    if cls is None and isinstance(record, dict):
+        cls = record.get("emission_class")
+    if cls in _NUMERIC_CLASSES:
+        stripped = text.replace(",", "").replace("$", "").replace("%", "").strip()
+        if re.fullmatch(r"-?\d+(\.\d+)?", stripped):
+            try:
+                return "n:" + format(Decimal(stripped).normalize(), "f")
+            except InvalidOperation:
+                pass
+        return "t:" + text
+    if cls in _BOX_CLASSES:
+        flag = text.lstrip("/").strip().lower()
+        if flag in _YES:
+            return "b:yes"
+        if flag in _NO:
+            return "b:no"
+        return "t:" + re.sub(r"\s+", " ", text).lower()
+    return "t:" + text
 
 
-def values_agree(a: Any, b: Any) -> bool:
-    return normalise_for_compare(a) == normalise_for_compare(b)
+def values_agree(overlay_record: Any, other_record: Any, cls: Optional[str] = None) -> bool:
+    """Compare under the overlay record's class (both sides normalised the same way)."""
+    if cls is None and isinstance(overlay_record, dict):
+        cls = overlay_record.get("emission_class")
+    return normalise_for_compare(overlay_record, cls) == normalise_for_compare(other_record, cls)
 
 
-def disagreement_summary(base_values: Mapping[str, Any], overlay_values: Mapping[str, Any]) -> dict[str, Any]:
-    """Fields both populate and the share that disagree (all overlay classes: this is shadow data)."""
-    both = []
-    disagree = []
-    for key, record in overlay_values.items():
-        if key not in base_values:
+def comparison_facts(
+    base_values: Mapping[str, Any], overlay_values: Mapping[str, Any], tier4_only_class_of=None,
+) -> dict[str, Any]:
+    """The facts the write-time hold (and any later rule) is computed from, so no re-extraction is needed:
+    per emission class the fields both populate and the ones that disagree, the disagreeing question ids with class, and
+    per class the fields Tier 4 populates that the overlay leaves empty (the hold's blind spot). `tier4_only_class_of`
+    maps a question id to a class name for those fields (unknown -> "unclassified")."""
+    by_class: dict[str, dict[str, int]] = {}
+    disagreeing: list[dict[str, str]] = []
+    for key in sorted(overlay_values):
+        record = overlay_values[key]
+        cls = str(record.get("emission_class")) if isinstance(record, dict) else "unclassified"
+        ours = normalise_for_compare(record, cls)
+        if ours is None or key not in base_values:
             continue
-        ours, theirs = normalise_for_compare(record), normalise_for_compare(base_values[key])
-        if ours is None or theirs is None:
+        theirs = normalise_for_compare(base_values[key], cls)
+        if theirs is None:
             continue
-        both.append(key)
+        slot = by_class.setdefault(cls, {"both": 0, "disagree": 0})
+        slot["both"] += 1
         if ours != theirs:
-            disagree.append(key)
-    share = (len(disagree) / len(both)) if both else 0.0
-    return {"both_populated": len(both), "disagreeing": len(disagree), "share": round(share, 6),
-            "disagreeing_fields": sorted(disagree)}
+            slot["disagree"] += 1
+            disagreeing.append({"question": key, "class": cls})
+    tier4_only: dict[str, int] = {}
+    for key in sorted(base_values):
+        if _record_text(base_values[key]) is None:
+            continue
+        ov = overlay_values.get(key)
+        if ov is not None and _record_text(ov) is not None:
+            continue
+        cls = (tier4_only_class_of(key) if tier4_only_class_of else None) or "unclassified"
+        tier4_only[cls] = tier4_only.get(cls, 0) + 1
+    return {"by_class": by_class, "disagreeing": disagreeing, "tier4_populated_overlay_empty": tier4_only}
+
+
+def share_over(by_class: Mapping[str, Mapping[str, int]], classes: Iterable[str]) -> tuple[int, int, Optional[float]]:
+    both = sum(by_class.get(c, {}).get("both", 0) for c in classes)
+    bad = sum(by_class.get(c, {}).get("disagree", 0) for c in classes)
+    return both, bad, (bad / both if both else None)
+
+
+def disagreement_hold(
+    by_class: Mapping[str, Mapping[str, int]], classes: Iterable[str] = HOLD_CANDIDATE_CLASSES,
+    threshold: Optional[float] = DEFAULT_HOLD_THRESHOLD,
+) -> dict[str, Any]:
+    """The Decision 3 rule over `classes`: hold when disagree / compared > threshold; threshold None (`off`) never holds."""
+    classes = tuple(classes)
+    both, bad, share = share_over(by_class, classes)
+    held = bool(threshold is not None and share is not None and share > threshold)
+    return {"classes": sorted(classes), "threshold": threshold, "compared": both, "disagree": bad,
+            "share": None if share is None else round(share, 6), "held": held}

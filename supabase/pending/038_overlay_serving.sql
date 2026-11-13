@@ -14,9 +14,15 @@
 --     base's (both non-null: the overlay's ids follow its template year; Tier 4 artifacts without a schema version
 --     carry 2025-26 ids whatever the template, A13), whose notes.held is
 --     exactly false (Decision 3), only for a tier4_docling base.
---   * serves only values whose emission_class is in cds_overlay_serve_classes() and that carry no Lane 2
---     evidence (lane = 2, or 2 in derived_lanes), whatever the set says.
+--   * validates the WHOLE served set: any name outside the known classes makes the set empty (as in Python and TS).
+--   * serves only values whose emission_class is in the (validated) set, that are not blank (a blank overlay value
+--     never overwrites a populated base value) and that carry no Lane 2 evidence: lane 2 as 2, 2.0 or "2", or any
+--     such 2 in derived_lanes, whatever the set says. A notes.values that is not a JSON object serves nothing.
+--   * treats an empty string as a missing sha or schema version (NULLIF), as Python and TS do.
 --   * merge order fallback || tier4 base || overlay (the jsonb || operator: the right side wins).
+--
+-- The disagreement hold is NOT evaluated here: `held` is a write-time fact in the artifact (PRD 038 A14), and this view
+-- only skips artifacts whose notes.held is not exactly false.
 --
 -- The output columns are exactly those of the view in 20260428153000_tier4_fallback_compatibility.sql.
 -- The Decision 1 selection-precedence change is NOT in this file (see 038_decision1_selection_diff.sql).
@@ -34,7 +40,16 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 
 CREATE OR REPLACE VIEW public.cds_selected_extraction_result
 WITH (security_invoker = true) AS
-WITH ranked_base AS (
+WITH serve AS (
+  -- the served set, validated as a whole: any unknown class name serves nothing
+  SELECT CASE
+           WHEN c <@ ARRAY['numeric', 'choice', 'checkbox_box', 'checkbox_boxless', 'free_text', 'ocr_numeric']::text[]
+             THEN c
+           ELSE '{}'::text[]
+         END AS classes
+  FROM (SELECT COALESCE(public.cds_overlay_serve_classes(), '{}'::text[]) AS c) x
+),
+ranked_base AS (
   SELECT
     a.*,
     CASE a.producer
@@ -79,6 +94,7 @@ SELECT
   END
   || COALESCE(ov.served_values, '{}'::jsonb) AS selected_values
 FROM ranked_base b
+CROSS JOIN serve sv
 LEFT JOIN LATERAL (
   SELECT a.*
   FROM public.cds_artifacts a
@@ -107,18 +123,37 @@ LEFT JOIN LATERAL (
   LIMIT 1
 ) f ON true
 LEFT JOIN LATERAL (
-  -- served overlay values: newest overlay with a strictly equal source sha, not held, Tier 4 base only
+  -- served overlay values: newest overlay with a strictly equal source sha and schema version, not held, Tier 4 base only
   SELECT
-    COALESCE(
+    CASE WHEN jsonb_typeof(o.notes -> 'values') = 'object' THEN COALESCE(
       (
         SELECT jsonb_object_agg(e.key, e.value)
         FROM jsonb_each(o.notes -> 'values') AS e
-        WHERE e.value ->> 'emission_class' = ANY (public.cds_overlay_serve_classes())
-          AND COALESCE(e.value ->> 'lane', '') <> '2'
-          AND NOT (COALESCE(e.value -> 'derived_lanes', '[]'::jsonb) @> '2'::jsonb)
+        WHERE e.value ->> 'emission_class' = ANY (sv.classes)
+          AND COALESCE(NULLIF(btrim(e.value ->> 'value_decoded'), ''), NULLIF(btrim(e.value ->> 'value'), '')) IS NOT NULL
+          AND NOT (
+            CASE
+              WHEN jsonb_typeof(e.value -> 'lane') = 'number' THEN (e.value ->> 'lane')::numeric = 2
+              WHEN jsonb_typeof(e.value -> 'lane') = 'string' AND (e.value ->> 'lane') ~ '^\s*[0-9]+(\.[0-9]+)?\s*$'
+                THEN btrim(e.value ->> 'lane')::numeric = 2
+              ELSE false
+            END
+          )
+          AND NOT EXISTS (
+            SELECT 1
+            FROM jsonb_array_elements(
+              CASE WHEN jsonb_typeof(e.value -> 'derived_lanes') = 'array' THEN e.value -> 'derived_lanes' ELSE '[]'::jsonb END
+            ) AS d(lane)
+            WHERE CASE
+              WHEN jsonb_typeof(d.lane) = 'number' THEN (d.lane #>> '{}')::numeric = 2
+              WHEN jsonb_typeof(d.lane) = 'string' AND (d.lane #>> '{}') ~ '^\s*[0-9]+(\.[0-9]+)?\s*$'
+                THEN btrim(d.lane #>> '{}')::numeric = 2
+              ELSE false
+            END
+          )
       ),
       '{}'::jsonb
-    ) AS served_values
+    ) ELSE '{}'::jsonb END AS served_values
   FROM (
     SELECT a.*
     FROM public.cds_artifacts a
@@ -126,13 +161,13 @@ LEFT JOIN LATERAL (
       AND a.kind = 'cleaned'
       AND a.producer = 'tier2_template_overlay'
       AND b.producer = 'tier4_docling'
-      AND cardinality(public.cds_overlay_serve_classes()) > 0
-      AND b.schema_version IS NOT NULL
-      AND a.schema_version IS NOT NULL
+      AND cardinality(sv.classes) > 0
+      AND NULLIF(b.schema_version, '') IS NOT NULL
+      AND NULLIF(a.schema_version, '') IS NOT NULL
       AND a.schema_version = b.schema_version
-      AND COALESCE(b.notes ->> 'source_sha256', b.notes -> 'source_artifact' ->> 'sha256') IS NOT NULL
-      AND a.notes ->> 'source_sha256' =
-          COALESCE(b.notes ->> 'source_sha256', b.notes -> 'source_artifact' ->> 'sha256')
+      AND COALESCE(NULLIF(b.notes ->> 'source_sha256', ''), NULLIF(b.notes -> 'source_artifact' ->> 'sha256', '')) IS NOT NULL
+      AND NULLIF(a.notes ->> 'source_sha256', '') =
+          COALESCE(NULLIF(b.notes ->> 'source_sha256', ''), NULLIF(b.notes -> 'source_artifact' ->> 'sha256', ''))
       AND (a.notes -> 'held') = 'false'::jsonb
     ORDER BY a.created_at DESC, a.id DESC
     LIMIT 1

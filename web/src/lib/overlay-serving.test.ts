@@ -7,31 +7,32 @@ import {
   overlayMatchesBase,
   overlayServeKey,
   parseOverlayServeClasses,
+  pickOverlay,
   serveOverlayValues,
 } from "./overlay-serving";
 import { c1TemplateForArtifact } from "./c1-headline-totals";
 
 type Variant = {
   serve: string[];
-  values: Record<string, string>;
+  values: Record<string, unknown>;
   overlay_artifact_id: string | null;
   sources?: Record<string, string>;
 };
 type Case = {
   name: string;
   artifacts: ArtifactRow[];
-  base_artifact_id?: string;
+  base_artifact_id: string;
   variants?: Variant[];
-  per_selector?: Record<string, { base_artifact_id: string; values: Record<string, string>; serve?: string[]; overlay_artifact_id?: string }>;
+  per_selector?: Record<string, { base_artifact_id: string; values: Record<string, unknown>; serve?: string[]; overlay_artifact_id?: string }>;
 };
 
 const FIXTURE = JSON.parse(
   readFileSync(join(process.cwd(), "..", "tools/browser_backend/fixtures/overlay_parity.json"), "utf8"),
-) as { cases: Case[] };
+) as { cases: Case[]; serve_config_cases: Array<{ raw: string | null; classes: string[] }> };
 
 const plain = (values: Record<string, unknown>) =>
   Object.fromEntries(
-    Object.entries(values).map(([k, v]) => [k, (v as { value?: string } | null)?.value ?? v]),
+    Object.entries(values).map(([k, v]) => [k, (v as { value?: unknown } | null)?.value ?? v]),
   );
 
 /** What fetchExtract does: newest canonical, the compatible fallback, then the overlay merge. */
@@ -46,20 +47,20 @@ function webSelect(artifacts: ArtifactRow[], serve: string[]) {
       (a.notes as { base_artifact_id?: string }).base_artifact_id === canonical?.id,
   );
   const fallbackValues = ((fallback?.notes as { values?: Record<string, never> } | null)?.values ?? {}) as Record<string, never>;
-  const overlays = artifacts.filter((a) => a.producer === "tier2_template_overlay");
   return {
     canonical,
     ...mergeWithOverlay({
       canonical,
       fallbackValues,
-      overlayCandidates: overlays,
+      overlayCandidates: artifacts.filter((a) => a.producer === "tier2_template_overlay"),
       classes: parseOverlayServeClasses(serve.join(",")),
     }),
   };
 }
 
-describe("overlay serving (parity fixture shared with Python)", () => {
+describe("overlay serving (parity fixture shared with Python and the SQL runner)", () => {
   for (const c of FIXTURE.cases) {
+    if (c.name.startsWith("known_divergence")) continue; // recorded separately below
     for (const variant of c.variants ?? []) {
       it(`${c.name}: serve=[${variant.serve.join(",")}]`, () => {
         const got = webSelect(c.artifacts, variant.serve);
@@ -77,7 +78,7 @@ describe("overlay serving (parity fixture shared with Python)", () => {
     expect(got.canonical?.id).toBe(expected.base_artifact_id);
     expect(plain(got.mergedValues)).toEqual(expected.values);
     expect(got.overlay?.id).toBe(expected.overlay_artifact_id);
-    expect(c.per_selector!.sql.base_artifact_id).not.toBe(expected.base_artifact_id);
+    expect(c.base_artifact_id).not.toBe(expected.base_artifact_id);
   });
 
   it("with the set empty the overlay rows are never even read", () => {
@@ -87,14 +88,23 @@ describe("overlay serving (parity fixture shared with Python)", () => {
     expect(withOverlays.mergedValues).toEqual(without.mergedValues);
     expect(withOverlays.overlay).toBeNull();
   });
+
+  it("the newest matching overlay wins whatever its version (a reversed order would pick the old one)", () => {
+    const base = { id: "b", producer: "tier4_docling", schema_version: "2025-26", notes: { source_sha256: "S" } } as unknown as ArtifactRow;
+    const mk = (id: string, created_at: string, version: string) =>
+      ({ id, kind: "cleaned", producer: "tier2_template_overlay", schema_version: "2025-26", created_at, producer_version: version, notes: { source_sha256: "S", held: false } }) as unknown as ArtifactRow;
+    const oldHigh = mk("old", "2026-11-02T00:00:00+00:00", "9.9");
+    const newLow = mk("new", "2026-11-03T00:00:00+00:00", "0.1");
+    expect(pickOverlay(base, [oldHigh, newLow])?.id).toBe("new");
+    expect(pickOverlay(base, [newLow, oldHigh])?.id).toBe("new");
+  });
 });
 
 describe("served-class configuration", () => {
-  it("defaults to empty and fails closed on an unknown name", () => {
-    expect(parseOverlayServeClasses(undefined).size).toBe(0);
-    expect(parseOverlayServeClasses("").size).toBe(0);
-    expect(Array.from(parseOverlayServeClasses(" numeric , choice "))).toEqual(["numeric", "choice"]);
-    expect(parseOverlayServeClasses("numeric,bogus").size).toBe(0);
+  it("parses the shared config cases", () => {
+    for (const c of FIXTURE.serve_config_cases) {
+      expect(Array.from(parseOverlayServeClasses(c.raw)).sort()).toEqual(c.classes);
+    }
   });
 
   it("is part of the cache key", () => {
@@ -103,17 +113,24 @@ describe("served-class configuration", () => {
     expect(overlayServeKey(new Set(["numeric"]))).not.toBe(overlayServeKey(new Set(["numeric", "choice"])));
   });
 
-  it("never serves Lane 2 evidence, whatever the set says", () => {
+  it("never serves Lane 2 evidence (2, 2.0, \"2\", in derived_lanes), blanks or a non-object values", () => {
     const values = {
       a: { value: "1", emission_class: "ocr_numeric", lane: 2 },
       b: { value: "2", emission_class: "numeric", lane: "text", derived_lanes: [2, "text"] },
       c: { value: "3", emission_class: "numeric", lane: "text" },
-    } as never;
+      d: { value: "4", emission_class: "numeric", lane: "2" },
+      e: { value: "5", emission_class: "numeric", lane: 2.0 },
+      f: { value: "6", emission_class: "numeric", lane: "text", derived_lanes: ["2"] },
+      g: { value: "  ", emission_class: "numeric", lane: "text" },
+      h: { value: null, value_decoded: "", emission_class: "numeric", lane: "text" },
+    };
     const every = new Set(["numeric", "choice", "checkbox_box", "checkbox_boxless", "free_text", "ocr_numeric"]);
     expect(Object.keys(serveOverlayValues(values, every))).toEqual(["c"]);
+    expect(serveOverlayValues(["x", "y"], every)).toEqual({});
+    expect(serveOverlayValues("text", every)).toEqual({});
   });
 
-  it("applies the strict sha, held and base rules", () => {
+  it("applies the strict sha, schema, held and base rules", () => {
     const base = { producer: "tier4_docling", schema_version: "2025-26", notes: { source_sha256: "S" } } as unknown as ArtifactRow;
     const good = { kind: "cleaned", producer: "tier2_template_overlay", schema_version: "2025-26", notes: { source_sha256: "S", held: false } } as unknown as ArtifactRow;
     expect(overlayMatchesBase(base, good)).toBe(true);
@@ -138,33 +155,64 @@ describe("c1 headline totals handle the overlay producer explicitly", () => {
 });
 
 describe("fetchExtract", () => {
-  const calls: Array<Record<string, unknown>> = [];
+  type Call = { table: string; filters: Record<string, unknown>; range?: [number, number]; limit?: number };
+  const calls: Call[] = [];
+  const cacheKeys: string[][] = [];
   let artifacts: ArtifactRow[] = [];
+
+  const rowValue = (row: ArtifactRow, key: string): unknown => {
+    if (key.startsWith("notes->>")) return ((row.notes ?? {}) as Record<string, unknown>)[key.slice("notes->>".length)];
+    return (row as unknown as Record<string, unknown>)[key];
+  };
 
   beforeEach(() => {
     vi.resetModules();
     calls.length = 0;
+    cacheKeys.length = 0;
     artifacts = FIXTURE.cases[0].artifacts;
-    vi.doMock("next/cache", () => ({ unstable_cache: (fn: () => unknown) => fn }));
+    vi.doMock("next/cache", () => ({
+      unstable_cache: (fn: () => unknown, key: string[]) => {
+        cacheKeys.push(key);
+        return fn;
+      },
+    }));
     vi.doMock("react", async (orig) => ({ ...(await orig<typeof import("react")>()), cache: (fn: unknown) => fn }));
     vi.doMock("./supabase", () => ({
       supabase: {
         from(table: string) {
-          const filters: Record<string, unknown> = { table };
+          const call: Call = { table, filters: {} };
           const chain: Record<string, unknown> = {};
+          let order: Array<[string, boolean]> = [];
           const resolve = () => {
-            calls.push({ ...filters });
-            let rows = artifacts.filter((a) => (filters.kind ? a.kind === filters.kind : true) && (filters.producer ? a.producer === filters.producer : true));
-            rows = [...rows].sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+            calls.push({ ...call });
+            let rows = artifacts.filter((a) => Object.entries(call.filters).every(([k, v]) => rowValue(a, k) === v));
+            rows = [...rows].sort((a, b) => {
+              for (const [col, asc] of order) {
+                const l = String(rowValue(a, col) ?? "");
+                const r = String(rowValue(b, col) ?? "");
+                if (l !== r) return (l < r ? -1 : 1) * (asc ? 1 : -1);
+              }
+              return 0;
+            });
+            if (call.range) rows = rows.slice(call.range[0], call.range[1] + 1);
+            if (call.limit !== undefined) rows = rows.slice(0, call.limit);
             return rows;
           };
-          for (const name of ["select", "order"]) chain[name] = () => chain;
+          chain.select = () => chain;
+          chain.order = (col: string, opts?: { ascending?: boolean }) => {
+            order = [...order, [col, opts?.ascending ?? true]];
+            return chain;
+          };
           chain.eq = (k: string, v: unknown) => {
-            filters[k] = v;
+            call.filters[k] = v;
             return chain;
           };
           chain.limit = (n: number) => {
-            filters.limit = n;
+            call.limit = n;
+            return chain;
+          };
+          chain.range = (from: number, to: number) => {
+            call.range = [from, to];
             return chain;
           };
           chain.maybeSingle = () => Promise.resolve({ data: resolve()[0] ?? null, error: null });
@@ -183,23 +231,56 @@ describe("fetchExtract", () => {
     expect(fallbackMatchesCanonical(canonical, { ...overlay, producer: "tier4_llm_fallback" } as never)).toBe(true);
   });
 
-  it("with the set empty issues the same two queries and returns no overlay key", async () => {
+  it("with the set empty issues the same two queries, the original cache key and no overlay key", async () => {
     vi.stubEnv("OVERLAY_SERVE_CLASSES", "");
     const { fetchExtract } = await import("./queries");
     const out = await fetchExtract("d1", "school-1");
-    expect(calls.map((c) => c.producer ?? c.kind)).toEqual(["canonical", "tier4_llm_fallback"]);
+    expect(calls.map((c) => c.filters.producer ?? c.filters.kind)).toEqual(["canonical", "tier4_llm_fallback"]);
+    expect(cacheKeys).toEqual([["fetchExtract", "d1"]]);
     expect("overlay" in out).toBe(false);
     expect(plain(out.mergedValues)).toEqual(FIXTURE.cases[0].variants![0].values);
     vi.unstubAllEnvs();
   });
 
-  it("with a set it adds one overlay query and merges", async () => {
+  it("with a set it adds overlay queries filtered by producer, kind, schema and sha, and the set is in the cache key", async () => {
     vi.stubEnv("OVERLAY_SERVE_CLASSES", "numeric,choice,checkbox_box");
     const { fetchExtract } = await import("./queries");
     const out = await fetchExtract("d1", "school-1");
-    expect(calls.some((c) => c.producer === "tier2_template_overlay")).toBe(true);
+    const overlayCalls = calls.filter((c) => c.filters.producer === "tier2_template_overlay");
+    expect(overlayCalls).toHaveLength(1);
+    expect(overlayCalls[0].filters).toMatchObject({ kind: "cleaned", schema_version: "2025-26", "notes->>source_sha256": "sha-A" });
+    expect(cacheKeys).toEqual([["fetchExtract", "d1", "on:checkbox_box+choice+numeric"]]);
     expect(out.overlay?.id).toBe("ova");
     expect(plain(out.mergedValues)).toEqual(FIXTURE.cases[0].variants![1].values);
+    vi.unstubAllEnvs();
+  });
+
+  it("finds an older eligible overlay behind a run of newer held ones (no truncation before eligibility)", async () => {
+    const base = FIXTURE.cases[0].artifacts.find((a) => a.id === "t4a")!;
+    const held = Array.from({ length: 30 }, (_, i) => ({
+      id: `held-${String(i).padStart(2, "0")}`, document_id: "d1", kind: "cleaned", producer: "tier2_template_overlay",
+      producer_version: "0.7.0", schema_version: "2025-26", created_at: `2026-12-${String(i + 1).padStart(2, "0")}T00:00:00+00:00`,
+      notes: { source_sha256: "sha-A", held: true, values: { "B.101": { value: "bad", emission_class: "numeric", lane: "text" } } },
+    })) as unknown as ArtifactRow[];
+    const eligible = { id: "ok", document_id: "d1", kind: "cleaned", producer: "tier2_template_overlay", producer_version: "0.7.0",
+      schema_version: "2025-26", created_at: "2026-11-20T00:00:00+00:00",
+      notes: { source_sha256: "sha-A", held: false, values: { "B.101": { value: "good", emission_class: "numeric", lane: "text" } } } } as unknown as ArtifactRow;
+    artifacts = [base, eligible, ...held];
+    vi.stubEnv("OVERLAY_SERVE_CLASSES", "numeric");
+    const { fetchExtract } = await import("./queries");
+    const out = await fetchExtract("d1", "school-1");
+    expect(out.overlay?.id).toBe("ok");
+    expect(plain(out.mergedValues)["B.101"]).toBe("good");
+    expect(calls.filter((c) => c.filters.producer === "tier2_template_overlay").length).toBeGreaterThan(1); // it paged
+    vi.unstubAllEnvs();
+  });
+
+  it("issues no overlay query when the base cannot match (no recorded sha)", async () => {
+    artifacts = [{ id: "t4", document_id: "d1", kind: "canonical", producer: "tier4_docling", schema_version: "2025-26", created_at: "2026-11-01T00:00:00+00:00", notes: { values: {} } } as unknown as ArtifactRow];
+    vi.stubEnv("OVERLAY_SERVE_CLASSES", "numeric");
+    const { fetchExtract } = await import("./queries");
+    await fetchExtract("d1", "school-1");
+    expect(calls.filter((c) => c.filters.producer === "tier2_template_overlay")).toHaveLength(0);
     vi.unstubAllEnvs();
   });
 });

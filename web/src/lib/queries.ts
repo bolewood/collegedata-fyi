@@ -1,8 +1,11 @@
 import { cache } from "react";
 import { createHash } from "crypto";
 import {
+  OVERLAY_BASE_PRODUCER,
   OVERLAY_PRODUCER,
   mergeWithOverlay,
+  pickOverlay,
+  recordedSourceSha,
   overlayServeClassesFromEnv,
   overlayServeKey,
 } from "./overlay-serving";
@@ -1847,6 +1850,30 @@ export async function fetchCanonicalArtifact(
   return data ?? null;
 }
 
+const OVERLAY_PAGE_SIZE = 25;
+
+async function fetchOverlayCandidates(documentId: string, canonical: ArtifactRow | null): Promise<ArtifactRow[]> {
+  const sha = recordedSourceSha(canonical);
+  if (!canonical || canonical.producer !== OVERLAY_BASE_PRODUCER || !canonical.schema_version || !sha) return [];
+  for (let from = 0; ; from += OVERLAY_PAGE_SIZE) {
+    const res = await supabase
+      .from("cds_artifacts")
+      .select("*")
+      .eq("document_id", documentId)
+      .eq("kind", "cleaned")
+      .eq("producer", OVERLAY_PRODUCER)
+      .eq("schema_version", canonical.schema_version)
+      .eq("notes->>source_sha256", sha)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(from, from + OVERLAY_PAGE_SIZE - 1);
+    throwIfPostgrestError(res.error, "Failed to fetch overlay artifacts");
+    const page = res.data ?? [];
+    if (pickOverlay(canonical, page)) return page;
+    if (page.length < OVERLAY_PAGE_SIZE) return [];
+  }
+}
+
 /**
  * Fetch the canonical (deterministic) artifact and, if present, the
  * tier4_llm_fallback artifact, and return merged values per PRD 006 Mode B
@@ -1915,19 +1942,14 @@ export const fetchExtract = cache(async function fetchExtract(
     }
 
     // Overlay merge (shadow until the owner sets OVERLAY_SERVE_CLASSES): fallback || tier4 base || overlay.
-    const overlayRes = await supabase
-      .from("cds_artifacts")
-      .select("*")
-      .eq("document_id", documentId)
-      .eq("kind", "cleaned")
-      .eq("producer", OVERLAY_PRODUCER)
-      .order("created_at", { ascending: false })
-      .limit(10);
-    throwIfPostgrestError(overlayRes.error, "Failed to fetch overlay artifacts");
+    // Eligibility is filtered in the query (producer, kind, schema version and the base's recorded source sha) and the
+    // rows are paged newest first until a page holds an eligible one, so a run of newer held or stale overlays cannot
+    // hide an older eligible overlay (a fixed `limit` before eligibility did).
+    const overlayCandidates = await fetchOverlayCandidates(documentId, canonicalRes.data ?? null);
     const merged = mergeWithOverlay({
       canonical: canonicalRes.data ?? null,
       fallbackValues,
-      overlayCandidates: overlayRes.data ?? [],
+      overlayCandidates,
       classes: overlayClasses,
     });
     return {

@@ -158,6 +158,7 @@ class SelectedExtractionResult:
     # PRD 038 A13: set only when served overlay values were merged (never with the served set empty).
     overlay_artifact_id: Optional[str] = None
     overlay_producer_version: Optional[str] = None
+    overlay_served_classes: Tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -604,6 +605,7 @@ def select_extraction_result(
         value_sources=value_sources,
         overlay_artifact_id=str(overlay_artifact.get("id")) if overlay_artifact else None,
         overlay_producer_version=overlay_artifact.get("producer_version") if overlay_artifact else None,
+        overlay_served_classes=tuple(sorted(overlay_serve_classes)) if overlay_artifact else (),
     )
 
 
@@ -1315,7 +1317,7 @@ def build_browser_row(
         "producer": selected.base_producer,
         # A4: an overlay-merged row is not comparable with a Tier-4-only row, so the version says so.
         "producer_version": _overlay.overlay_version_suffix(
-            selected.base_producer_version, selected.overlay_producer_version,
+            selected.base_producer_version, selected.overlay_producer_version, selected.overlay_served_classes,
         ),
         "data_quality_flag": document.get("data_quality_flag"),
         "archive_url": archive_url(str(document["school_id"]), canonical_year),
@@ -1464,14 +1466,16 @@ def clear_projection_tables(client: Any) -> None:
 
 
 def fetch_artifacts(client: Any, document_id: str) -> list[dict[str, Any]]:
-    result = (
+    query = (
         client.table("cds_artifacts")
         .select("*")
         .eq("document_id", document_id)
         .in_("kind", ["canonical", "cleaned"])
-        .execute()
     )
-    return result.data or []
+    if not _overlay.served_classes():
+        # PRD 038: with the served set empty (the default) overlay artifacts are not fetched or carried at all.
+        query = query.neq("producer", _overlay.OVERLAY_PRODUCER)
+    return query.execute().data or []
 
 
 def fetch_scorecard(client: Any, ipeds_id: Optional[str]) -> Optional[dict[str, Any]]:

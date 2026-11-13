@@ -119,7 +119,7 @@ class TesseractEngine:
 
     def model_info(self) -> dict:
         prim = None
-        r = subprocess.run([self.exe, "--list-langs"], capture_output=True, text=True)
+        r = subprocess.run([self.exe, "--list-langs"], capture_output=True, text=True, timeout=self.timeout)
         for line in (r.stdout or "").splitlines():
             m = re.search(r'languages in "?([^"(]+?)"?\s*(?:\(|:|$)', line)
             if line.startswith("List of available languages") and m:
@@ -154,7 +154,7 @@ class TesseractEngine:
         return shutil.which(exe) is not None
 
     def version(self) -> str:
-        r = subprocess.run([self.exe, "--version"], capture_output=True, text=True)
+        r = subprocess.run([self.exe, "--version"], capture_output=True, text=True, timeout=self.timeout)
         return (r.stdout or r.stderr).splitlines()[0].strip()
 
     def read(self, img: np.ndarray, *, psm: int = 7, whitelist: bool = True, tessdata: str | None = None) -> list[OcrWord]:
@@ -402,14 +402,20 @@ def make_hook(engine: Engine, stats: dict | None = None):
     def hook(env) -> None:
         t0 = time.time()
         l2 = Lane2(engine, env.year)
-        env.notes["ocr_engine"] = engine.version() if hasattr(engine, "version") else type(engine).__name__
-        if hasattr(engine, "model_info"):
-            env.notes["ocr_models"] = engine.model_info()
-        why_off = engine.check() if hasattr(engine, "check") and RULE_SECOND_MODEL else None
+        why_off = None                                          # check() first: a missing binary must not reach version()/model_info()
+        if hasattr(engine, "check") and RULE_SECOND_MODEL:
+            try:
+                why_off = engine.check()
+            except Exception as exc:  # noqa: BLE001
+                why_off = f"check_failed: {type(exc).__name__}: {str(exc)[:120]}"
         if why_off:
             env.notes["lane2_disabled"] = why_off              # fail closed, loudly: nothing is read, and the notes say why
             return
+        env.notes["ocr_engine"] = engine.version() if hasattr(engine, "version") else type(engine).__name__
+        if hasattr(engine, "model_info"):
+            env.notes["ocr_models"] = engine.model_info()
         n_read = n_emit = 0
+        page_info: dict = {}
         for tag, f in env.fmap["fields"].items():
             if f["ft"] != "/Tx" or f["question_number"] is None or tag in env.done or tag not in env.tag_field:
                 continue
@@ -442,8 +448,11 @@ def make_hook(engine: Engine, stats: dict | None = None):
                 env.hold(tag, "ocr", "multi_widget_disagreement", read[0][0])
                 continue
             q, r = read[0]
+            if q not in page_info:                       # PRD 038 A14: metadata only; what is emitted is unchanged
+                cov = to.page_image_coverage(env.doc[q])
+                page_info[q] = {"page_kind": to.page_kind_of(cov), "image_coverage": round(cov, 3)}
             env.record(tag, r.value, 2, et, q, to.CLASS_OCR_NUMERIC,
-                       {"ocr_confidence": round(r.conf, 1), "ocr_reads": r.reads, "lane_name": "ocr"})
+                       {"ocr_confidence": round(r.conf, 1), "ocr_reads": r.reads, "lane_name": "ocr", **page_info[q]})
             n_emit += 1
         if stats is not None:
             stats["seconds"] = stats.get("seconds", 0.0) + time.time() - t0

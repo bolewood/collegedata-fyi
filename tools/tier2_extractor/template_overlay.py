@@ -57,7 +57,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import build_field_map as bfm  # noqa: E402
 
 PRODUCER = "tier2_template_overlay"
-PRODUCER_VERSION = "0.6.0"
+PRODUCER_VERSION = "0.7.0"
 FIELD_MAP_VERSION = bfm.MAP_FORMAT_VERSION
 
 # Only these years may emit values (PRD Decision 5). 2023-24 is recognised so a
@@ -254,6 +254,30 @@ class PageChar:
     @property
     def box_left(self) -> float:
         return self.left if self.left is not None else 2.0 * self.cx - self.right
+
+
+RASTER_PAGE_COVERAGE = 0.5      # an image XObject covering at least this share of the page makes it a raster page
+
+
+def page_image_coverage(page) -> float:
+    """The largest share of the page area covered by one image XObject (0..1). Metadata only (PRD 038 A14): a page with
+    no image covering at least half of it is a "vector" page (a vector render of the form), else "raster"."""
+    if _pdfium_c is None:
+        return 0.0
+    width, height = page.get_size()
+    area = float(width) * float(height)
+    best = 0.0
+    if area <= 0:
+        return 0.0
+    for o in page.get_objects():
+        if o.type == _pdfium_c.FPDF_PAGEOBJ_IMAGE:
+            left, bottom, right, top = o.get_bounds()
+            best = max(best, max(0.0, (right - left)) * max(0.0, (top - bottom)) / area)
+    return min(best, 1.0)
+
+
+def page_kind_of(coverage: float) -> str:
+    return "raster" if coverage >= RASTER_PAGE_COVERAGE else "vector"
 
 
 def _paint_order(page: "pdfium.PdfPage"):
@@ -1631,6 +1655,23 @@ def _schema(year: str) -> dict:
         return json.load(f)
 
 
+def _b1_total_inputs(schema_fields: list) -> dict:
+    """{All-total question: [input questions]} for the B1 derivations (FT + PT; Undergraduates + Graduates for All Students)."""
+    _import_tier2()
+    import b1_derive_totals as B
+
+    index = B._index_total_fields(schema_fields)
+    out: dict[str, list[str]] = {}
+    for (group, load, gender), qn in index.items():
+        if load != "All":
+            continue
+        if group in ("Undergraduates", "Graduates"):
+            out[qn] = [q for q in (index.get((group, "FT", gender)), index.get((group, "PT", gender))) if q]
+        elif group == "All Students":
+            out[qn] = [q for q in (index.get(("Undergraduates", "All", gender)), index.get(("Graduates", "All", gender))) if q]
+    return out
+
+
 def _import_tier2():
     """decode_button_value and the B1 derivation, imported the way the worker does."""
     tools = Path(__file__).resolve().parents[1]
@@ -2127,8 +2168,20 @@ def _extract(
             f["ft"] == "/Tx" and f["question_number"] and any(w["template_page"] == p for w in f["widgets"])
             for f in fmap["fields"].values())}
         pages0 = unreadable | invisible_pages | {q for q in tx_pages0 if q not in text_pages0 and q not in set(res.rejected_pages)}
-        lane2(SimpleNamespace(doc=doc, res=res, year=year, fmap=fmap, tag_field=tag_field, by_tpage=by_tpage, ctx_for=ctx_for,
-                              ocr_pages=pages0, done=done0, record=record, hold=hold, notes=notes))
+        # A Lane 2 failure (Tesseract exits nonzero, times out, is missing) must not cost the document its Lane 1+3 result:
+        # drop everything Lane 2 did, record why, and carry on with exactly what Lane 1 and Lane 3 produced.
+        snap_values, snap_lane_of, snap_page_of, snap_withheld = dict(values), dict(lane_of), dict(page_of), len(withheld)
+        try:
+            lane2(SimpleNamespace(doc=doc, res=res, year=year, fmap=fmap, tag_field=tag_field, by_tpage=by_tpage, ctx_for=ctx_for,
+                                  ocr_pages=pages0, done=done0, record=record, hold=hold, notes=notes))
+        except Exception as exc:  # noqa: BLE001 - any engine or OCR failure
+            values.clear(); values.update(snap_values)
+            lane_of.clear(); lane_of.update(snap_lane_of)
+            page_of.clear(); page_of.update(snap_page_of)
+            del withheld[snap_withheld:]
+            notes["lane2_failed"] = f"{type(exc).__name__}: {str(exc)[:200]}"
+            for k in ("ocr_engine", "ocr_models"):
+                notes.pop(k, None)
 
     # ---- identities reject in every lane (Decision 3)
     ident, id_rejected = reject_identity_failures(values, set(fmap["fields"]))
@@ -2146,6 +2199,23 @@ def _extract(
         if r.get("derived_from") and k not in keys_before:
             r["derived_lanes"] = [2, "text"] if k in ocr_dep else ["text"]
             r["emission_class"] = CLASS_OCR_NUMERIC if k in ocr_dep else CLASS_NUMERIC       # a total derived from counts; OCR-dependent ones are OCR
+    # PRD 038 A14: a derived total that depends on Lane 2 records the page kinds of its Lane 2 inputs (metadata only)
+    if ocr_dep:
+        inputs_of = _b1_total_inputs(schema.get("fields") or [])
+        def lane2_leaves(qn: str, seen: set) -> set:
+            if qn in seen or qn not in values:
+                return set()
+            seen.add(qn)
+            rec = values[qn]
+            if rec.get("lane") == 2:
+                return {rec.get("page_kind") or "unknown"}
+            out: set = set()
+            for src in inputs_of.get(qn, ()):
+                out |= lane2_leaves(src, seen)
+            return out
+        for k in ocr_dep:
+            kinds = lane2_leaves(k, set())
+            values[k]["input_page_kinds"] = sorted(kinds) if kinds else ["unknown"]
 
     # ---- Lane 2 seam: always the unreadable and invisible pages, pages with no usable text
     #      left after rejection, and the unresolved numeric widgets on unreadable/invisible pages

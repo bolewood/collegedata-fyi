@@ -47,7 +47,7 @@ type OverlayNotes = {
   source_sha256?: string | null;
   source_artifact?: { sha256?: string | null } | null;
   held?: unknown;
-  values?: Record<string, FieldValue & Record<string, unknown>>;
+  values?: unknown;
 };
 
 function notesOf(row: ArtifactRow | null | undefined): OverlayNotes {
@@ -91,23 +91,43 @@ export function pickOverlay(base: ArtifactRow | null, artifacts: ArtifactRow[]):
   return matching[0];
 }
 
-function hasLane2Evidence(record: Record<string, unknown>): boolean {
-  const derived = record.derived_lanes;
-  return record.lane === 2 || (Array.isArray(derived) && derived.includes(2));
+function isTwo(x: unknown): boolean {
+  // 2, 2.0 and "2" (also "2.0", surrounding spaces) are the number two; booleans and everything else are not.
+  if (typeof x === "number") return x === 2;
+  if (typeof x === "string" && /^\s*[0-9]+(\.[0-9]+)?\s*$/.test(x)) return Number(x) === 2;
+  return false;
 }
 
-/** The overlay values a consumer may serve. `classes` is required: never the producer's own default set. */
+function hasLane2Evidence(record: Record<string, unknown>): boolean {
+  const derived = record.derived_lanes;
+  return isTwo(record.lane) || (Array.isArray(derived) && derived.some(isTwo));
+}
+
+/** `value_decoded` when it is non-blank, else `value`; trimmed; null when both are blank (mirrors overlay_serving._record_text). */
+export function recordText(record: unknown): string | null {
+  if (!record || typeof record !== "object") return null;
+  const r = record as Record<string, unknown>;
+  for (const raw of [r.value_decoded, r.value]) {
+    if (raw === null || raw === undefined) continue;
+    const text = String(raw).trim();
+    if (text) return text;
+  }
+  return null;
+}
+
+/** The overlay values a consumer may serve. `classes` is required: never the producer's own default set. A blank value is
+ *  not merged (it never overwrites a populated Tier 4 value) and a `values` that is not a plain object serves nothing. */
 export function serveOverlayValues(
-  values: Record<string, FieldValue> | null | undefined,
+  values: unknown,
   classes: ReadonlySet<string>,
 ): Record<string, FieldValue> {
   const out: Record<string, FieldValue> = {};
-  if (classes.size === 0 || !values) return out;
-  for (const [key, record] of Object.entries(values)) {
-    if (!record || typeof record !== "object") continue;
-    const r = record as unknown as Record<string, unknown>;
-    if (!classes.has(String(r.emission_class)) || hasLane2Evidence(r)) continue;
-    out[key] = record;
+  if (classes.size === 0 || !values || typeof values !== "object" || Array.isArray(values)) return out;
+  for (const [key, record] of Object.entries(values as Record<string, unknown>)) {
+    if (!record || typeof record !== "object" || Array.isArray(record)) continue;
+    const r = record as Record<string, unknown>;
+    if (!classes.has(String(r.emission_class)) || hasLane2Evidence(r) || recordText(r) === null) continue;
+    out[key] = record as FieldValue;
   }
   return out;
 }

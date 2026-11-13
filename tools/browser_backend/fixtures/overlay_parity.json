@@ -1,5 +1,47 @@
 {
- "description": "PRD 038 A2 parity fixture shared by Python (tools/browser_backend/overlay_parity_test.py) and TypeScript (web/src/lib/overlay-serving.test.ts). Expected values are hand-written, not generated.",
+ "description": "Writes overlay_parity.json, the fixture shared by the Python (overlay_parity_test.py), TypeScript",
+ "serve_config_cases": [
+  {
+   "raw": " numeric , choice ",
+   "classes": [
+    "choice",
+    "numeric"
+   ]
+  },
+  {
+   "raw": "numeric,,choice",
+   "classes": [
+    "choice",
+    "numeric"
+   ]
+  },
+  {
+   "raw": "NUMERIC,choice",
+   "classes": []
+  },
+  {
+   "raw": "numeric,typo",
+   "classes": []
+  },
+  {
+   "raw": "numeric;choice",
+   "classes": []
+  },
+  {
+   "raw": "",
+   "classes": []
+  },
+  {
+   "raw": null,
+   "classes": []
+  },
+  {
+   "raw": "ocr_numeric",
+   "classes": [
+    "ocr_numeric"
+   ]
+  }
+ ],
  "cases": [
   {
    "name": "parity_same_tier4_base",
@@ -175,8 +217,7 @@
       "F.1": "999",
       "F.2": "fallback2"
      },
-     "overlay_artifact_id": null,
-     "producer_version_suffix": null
+     "overlay_artifact_id": null
     },
     {
      "serve": [
@@ -194,7 +235,6 @@
       "C.306": "Yes"
      },
      "overlay_artifact_id": "ova",
-     "producer_version_suffix": "0.6.0",
      "sources": {
       "B.101": "tier2_template_overlay",
       "C.302": "tier2_template_overlay",
@@ -218,8 +258,7 @@
       "C.301": "X",
       "C.305": "free words"
      },
-     "overlay_artifact_id": "ova",
-     "producer_version_suffix": "0.6.0"
+     "overlay_artifact_id": "ova"
     },
     {
      "serve": [
@@ -233,7 +272,7 @@
       "F.2": "fallback2"
      },
      "overlay_artifact_id": null,
-     "producer_version_suffix": null
+     "note": "Lane 2 is never served, even when listed"
     },
     {
      "serve": [
@@ -248,13 +287,13 @@
       "F.2": "fallback2"
      },
      "overlay_artifact_id": null,
-     "producer_version_suffix": null,
-     "note": "an unknown class name fails closed: nothing is served"
+     "note": "an unknown class fails the whole set closed"
     }
    ]
   },
   {
    "name": "tier2_base_never_merges",
+   "base_artifact_id": "t2",
    "artifacts": [
     {
      "id": "t2",
@@ -294,7 +333,6 @@
      }
     }
    ],
-   "base_artifact_id": "t2",
    "variants": [
     {
      "serve": [
@@ -305,13 +343,13 @@
      "values": {
       "B.101": "20"
      },
-     "overlay_artifact_id": null,
-     "producer_version_suffix": null
+     "overlay_artifact_id": null
     }
    ]
   },
   {
    "name": "tier4_base_without_recorded_sha_never_merges",
+   "base_artifact_id": "t4n",
    "artifacts": [
     {
      "id": "t4n",
@@ -350,7 +388,6 @@
      }
     }
    ],
-   "base_artifact_id": "t4n",
    "variants": [
     {
      "serve": [
@@ -361,13 +398,13 @@
      "values": {
       "B.101": "40"
      },
-     "overlay_artifact_id": null,
-     "producer_version_suffix": null
+     "overlay_artifact_id": null
     }
    ]
   },
   {
    "name": "tier4_base_without_schema_version_never_merges",
+   "base_artifact_id": "t4s",
    "artifacts": [
     {
      "id": "t4s",
@@ -391,23 +428,22 @@
      "document_id": "d5",
      "kind": "cleaned",
      "producer": "tier2_template_overlay",
-     "producer_version": "0.6.0",
+     "producer_version": "0.7.0",
      "schema_version": "2025-26",
      "created_at": "2026-11-05T00:00:00+00:00",
      "notes": {
       "source_sha256": "sha-F",
-      "held": false,
       "values": {
        "B.101": {
         "value": "51",
         "emission_class": "numeric",
         "lane": "text"
        }
-      }
+      },
+      "held": false
      }
     }
    ],
-   "base_artifact_id": "t4s",
    "variants": [
     {
      "serve": [
@@ -418,13 +454,13 @@
      "values": {
       "B.101": "50"
      },
-     "overlay_artifact_id": null,
-     "producer_version_suffix": null
+     "overlay_artifact_id": null
     }
    ]
   },
   {
    "name": "schema_mismatch_never_merges",
+   "base_artifact_id": "t4m",
    "artifacts": [
     {
      "id": "t4m",
@@ -448,23 +484,22 @@
      "document_id": "d6",
      "kind": "cleaned",
      "producer": "tier2_template_overlay",
-     "producer_version": "0.6.0",
+     "producer_version": "0.7.0",
      "schema_version": "2025-26",
      "created_at": "2026-11-05T00:00:00+00:00",
      "notes": {
       "source_sha256": "sha-F",
-      "held": false,
       "values": {
        "B.101": {
         "value": "51",
         "emission_class": "numeric",
         "lane": "text"
        }
-      }
+      },
+      "held": false
      }
     }
    ],
-   "base_artifact_id": "t4m",
    "variants": [
     {
      "serve": [
@@ -475,13 +510,13 @@
      "values": {
       "B.101": "60"
      },
-     "overlay_artifact_id": null,
-     "producer_version_suffix": null
+     "overlay_artifact_id": null
     }
    ]
   },
   {
    "name": "known_divergence_tier2_older_than_tier4",
+   "base_artifact_id": "t2old",
    "artifacts": [
     {
      "id": "t2old",
@@ -544,22 +579,22 @@
      }
     }
    ],
-   "note": "The view and project_browser_data rank tier2_acroform above tier4_docling; fetchExtract takes the newest canonical. Recorded, not fixed (A2, Decision 1 is a later migration).",
+   "note": "The view and project_browser_data rank tier2_acroform above tier4_docling; fetchExtract takes the newest canonical. Recorded, not fixed (A2).",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "B.101": "30",
+      "T.2": "tier2only"
+     },
+     "overlay_artifact_id": null
+    }
+   ],
    "per_selector": {
-    "sql": {
-     "base_artifact_id": "t2old",
-     "values": {
-      "B.101": "30",
-      "T.2": "tier2only"
-     }
-    },
-    "python": {
-     "base_artifact_id": "t2old",
-     "values": {
-      "B.101": "30",
-      "T.2": "tier2only"
-     }
-    },
     "web": {
      "base_artifact_id": "t4new",
      "serve": [
@@ -574,6 +609,2159 @@
      "overlay_artifact_id": "ov3"
     }
    }
+  },
+  {
+   "name": "two_matching_versions_newest_wins",
+   "artifacts": [
+    {
+     "id": "b-e1",
+     "document_id": "e1",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "older-high-version",
+     "document_id": "e1",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "9.9",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-02T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "older",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e1",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e1",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "overlay",
+      "K": "keep"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "newest_held_older_unheld",
+   "artifacts": [
+    {
+     "id": "b-e2",
+     "document_id": "e2",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "older-ok",
+     "document_id": "e2",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-02T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "older-ok",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    },
+    {
+     "id": "newer-held",
+     "document_id": "e2",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "held",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": true
+     }
+    }
+   ],
+   "base_artifact_id": "b-e2",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "older-ok",
+      "K": "keep"
+     },
+     "overlay_artifact_id": "older-ok"
+    }
+   ]
+  },
+  {
+   "name": "held_missing",
+   "artifacts": [
+    {
+     "id": "b-e3",
+     "document_id": "e3",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e3",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      }
+     }
+    }
+   ],
+   "base_artifact_id": "b-e3",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "held_null",
+   "artifacts": [
+    {
+     "id": "b-e4",
+     "document_id": "e4",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e4",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": null
+     }
+    }
+   ],
+   "base_artifact_id": "b-e4",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "held_string_false",
+   "artifacts": [
+    {
+     "id": "b-e5",
+     "document_id": "e5",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e5",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": "false"
+     }
+    }
+   ],
+   "base_artifact_id": "b-e5",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "held_zero",
+   "artifacts": [
+    {
+     "id": "b-e6",
+     "document_id": "e6",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e6",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": 0
+     }
+    }
+   ],
+   "base_artifact_id": "b-e6",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "held_true",
+   "artifacts": [
+    {
+     "id": "b-e7",
+     "document_id": "e7",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e7",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": true
+     }
+    }
+   ],
+   "base_artifact_id": "b-e7",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "held_false",
+   "artifacts": [
+    {
+     "id": "b-e8",
+     "document_id": "e8",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e8",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e8",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "overlay",
+      "K": "keep"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "unknown_class_fails_the_whole_set_closed",
+   "artifacts": [
+    {
+     "id": "b-e9",
+     "document_id": "e9",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e9",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e9",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "typo"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "blank_overlay_values_never_overwrite_a_populated_base_value",
+   "artifacts": [
+    {
+     "id": "b-e10",
+     "document_id": "e10",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e10",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "",
+        "emission_class": "numeric",
+        "lane": "text"
+       },
+       "K": {
+        "value": null,
+        "emission_class": "numeric",
+        "lane": "text"
+       },
+       "Z": {
+        "value": "new",
+        "emission_class": "numeric",
+        "lane": "text"
+       },
+       "W": {
+        "value": "  ",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e10",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep",
+      "Z": "new"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "only_blank_values_merge_nothing",
+   "artifacts": [
+    {
+     "id": "b-e11",
+     "document_id": "e11",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e11",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e11",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "overlay_value_kept_as_written_number",
+   "artifacts": [
+    {
+     "id": "b-e12",
+     "document_id": "e12",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e12",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": 100,
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e12",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": 100,
+      "K": "keep"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "overlay_value_kept_as_written_string",
+   "artifacts": [
+    {
+     "id": "b-e13",
+     "document_id": "e13",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e13",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "100",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e13",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "100",
+      "K": "keep"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "decoded_blank_falls_back_to_value",
+   "artifacts": [
+    {
+     "id": "b-e14",
+     "document_id": "e14",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e14",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "/Y",
+        "emission_class": "checkbox_box",
+        "lane": "text",
+        "value_decoded": ""
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e14",
+   "variants": [
+    {
+     "serve": [
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "/Y",
+      "K": "keep"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "lane_int_2",
+   "artifacts": [
+    {
+     "id": "b-e15",
+     "document_id": "e15",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e15",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": 2
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e15",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "lane_float_2",
+   "artifacts": [
+    {
+     "id": "b-e16",
+     "document_id": "e16",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e16",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": 2.0
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e16",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "lane_string_2",
+   "artifacts": [
+    {
+     "id": "b-e17",
+     "document_id": "e17",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e17",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": "2"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e17",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "lane_string_2_spaces",
+   "artifacts": [
+    {
+     "id": "b-e18",
+     "document_id": "e18",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e18",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": " 2 "
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e18",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "derived_int_2",
+   "artifacts": [
+    {
+     "id": "b-e19",
+     "document_id": "e19",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e19",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": "text",
+        "derived_lanes": [
+         2,
+         "text"
+        ]
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e19",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "derived_string_2",
+   "artifacts": [
+    {
+     "id": "b-e20",
+     "document_id": "e20",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e20",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": "text",
+        "derived_lanes": [
+         "2"
+        ]
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e20",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "derived_float_2",
+   "artifacts": [
+    {
+     "id": "b-e21",
+     "document_id": "e21",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e21",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": "text",
+        "derived_lanes": [
+         2.0
+        ]
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e21",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "lane_text_and_derived_text_are_served",
+   "artifacts": [
+    {
+     "id": "b-e22",
+     "document_id": "e22",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e22",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": "text",
+        "derived_lanes": [
+         "text",
+         "checkbox"
+        ]
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e22",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "overlay",
+      "K": "keep"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "lane_other_numbers_are_served",
+   "artifacts": [
+    {
+     "id": "b-e23",
+     "document_id": "e23",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e23",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": 3
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e23",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "overlay",
+      "K": "keep"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "empty_primary_sha_falls_back_to_nested_sha",
+   "artifacts": [
+    {
+     "id": "b-e24",
+     "document_id": "e24",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      },
+      "source_artifact": {
+       "sha256": "S"
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e24",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e24",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "overlay",
+      "K": "keep"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "both_sha_empty_never_merges",
+   "artifacts": [
+    {
+     "id": "b-e25",
+     "document_id": "e25",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e25",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e25",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "both_schema_empty_never_merges",
+   "artifacts": [
+    {
+     "id": "b-e26",
+     "document_id": "e26",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e26",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e26",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "equal_timestamp_ties_break_by_id_desc",
+   "artifacts": [
+    {
+     "id": "b-e27",
+     "document_id": "e27",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e27",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "tie-o",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    },
+    {
+     "id": "z",
+     "document_id": "e27",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "tie-z",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e27",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "tie-z",
+      "K": "keep"
+     },
+     "overlay_artifact_id": "z"
+    }
+   ]
+  },
+  {
+   "name": "fractional_timestamps_order",
+   "artifacts": [
+    {
+     "id": "b-e28",
+     "document_id": "e28",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "a",
+     "document_id": "e28",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00.25+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "a",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    },
+    {
+     "id": "b",
+     "document_id": "e28",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00.5+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "b",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e28",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "b",
+      "K": "keep"
+     },
+     "overlay_artifact_id": "b"
+    }
+   ]
+  },
+  {
+   "name": "non_object_values_array_serves_nothing",
+   "artifacts": [
+    {
+     "id": "b-e29",
+     "document_id": "e29",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e29",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": [
+       "a",
+       "b"
+      ],
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e29",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "non_object_values_string_serves_nothing",
+   "artifacts": [
+    {
+     "id": "b-e30",
+     "document_id": "e30",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e30",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": "text",
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e30",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "record_class_case_and_missing_class_are_not_served",
+   "artifacts": [
+    {
+     "id": "b-e31",
+     "document_id": "e31",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e31",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "x",
+        "emission_class": "Numeric",
+        "lane": "text"
+       },
+       "K": {
+        "value": "y",
+        "lane": "text"
+       },
+       "Z": {
+        "value": "z",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e31",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep",
+      "Z": "z"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "only_lane2_values_merge_nothing",
+   "artifacts": [
+    {
+     "id": "b-e32",
+     "document_id": "e32",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e32",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "1",
+        "emission_class": "ocr_numeric",
+        "lane": 2
+       },
+       "K": {
+        "value": "2",
+        "emission_class": "numeric",
+        "lane": 2
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e32",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "ocr_numeric"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "sha_comparison_is_case_sensitive",
+   "artifacts": [
+    {
+     "id": "b-e33",
+     "document_id": "e33",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e33",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "s",
+      "values": {
+       "Q": {
+        "value": "overlay",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e33",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "a_fallback_never_stands_in_for_the_overlay",
+   "artifacts": [
+    {
+     "id": "b-e34",
+     "document_id": "e34",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "fbk",
+     "document_id": "e34",
+     "kind": "cleaned",
+     "producer": "tier4_llm_fallback",
+     "producer_version": "1",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "base_artifact_id": "b-e34",
+      "values": {
+       "F": {
+        "value": "fb"
+       }
+      }
+     }
+    }
+   ],
+   "base_artifact_id": "b-e34",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep",
+      "F": "fb"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
   }
  ]
 }

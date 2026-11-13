@@ -9,6 +9,10 @@ Inputs
                         `fetch_tier4.sh` builds it from production with SELECT only.
   --pdf-dir DIR         the PDFs, `<sha256>.pdf`, for the rendered crops.
 
+  --cohort-shas FILE    comma-separated or JSON list of the cohort's full source shas. The report FAILS (exit 2, nothing written)
+                        when any of them is missing from the overlay input or from the Tier 4 input, so a rerun whose
+                        `already_overlaid` rows carry no notes cannot silently drop documents out of the numbers.
+
 Outputs (under --out-dir): summary.json, summary.md, per_doc.csv, audit_sample.csv, crops/*.png.
 
 Per document: field counts by class; fields both Tier 4 and the overlay populate and the share that disagree (all
@@ -75,37 +79,44 @@ def per_document(sha: str, notes: dict[str, Any], tier4: Optional[dict[str, Any]
     values = _populated(notes.get("values") or {})
     by_class = Counter(v.get("emission_class") for v in values.values())
     t4_values = _populated((tier4 or {}).get("values") or {})
-    disagree_by_class: Counter = Counter()
-    both_by_class: Counter = Counter()
-    disagreeing: list[str] = []
-    for key, record in values.items():
-        if key not in t4_values:
-            continue
-        cls = record.get("emission_class")
-        both_by_class[cls] += 1
-        if not serving.values_agree(record, t4_values[key]):
-            disagree_by_class[cls] += 1
-            disagreeing.append(key)
+    facts = serving.comparison_facts(t4_values, values)          # per class: both populate / disagree (class-aware comparator)
+    cmp_by_class = facts["by_class"]
+    both_by_class = {c: x["both"] for c, x in cmp_by_class.items()}
+    disagree_by_class = {c: x["disagree"] for c, x in cmp_by_class.items()}
+    disagreeing = [d["question"] for d in facts["disagreeing"]]
     both = sum(both_by_class.values())
     served = serving.serve_overlay_values(values, serve)
     merged_keys = set(t4_values) | set(served)
+    # vector-page OCR (PRD 038 A14, record only: no selector serves it): Lane 2 values on vector pages, and derived totals whose
+    # Lane 2 inputs are all vector
+    vector_ocr = {k for k, r in values.items() if r.get("emission_class") == "ocr_numeric"
+                  and (r.get("page_kind") == "vector" or (r.get("lane") != 2 and set(r.get("input_page_kinds") or []) == {"vector"}))}
+    page_kinds = Counter((r.get("page_kind") or "unrecorded") for r in values.values() if r.get("lane") == 2)
     recorded = (tier4 or {}).get("recorded_sha")
     schema_ok = bool((tier4 or {}).get("schema_version")) and (tier4 or {}).get("schema_version") == notes.get("template_year")
     selectors = selector_bases(tier4)
+    eligible = bool(recorded) and recorded == sha and schema_ok
+    hold5 = serving.disagreement_hold(cmp_by_class, serving.HOLD_CANDIDATE_CLASSES, 0.05)
+    hold10 = serving.disagreement_hold(cmp_by_class, serving.HOLD_CANDIDATE_CLASSES, 0.10)
     return {
         "sha256": sha, "school_id": (tier4 or {}).get("school_id"), "canonical_year": (tier4 or {}).get("canonical_year"),
         "document_id": (tier4 or {}).get("document_id"), "template_year": notes.get("template_year"),
         "vector_path": is_vector_path(notes), "overlay_values": len(values), "by_class": dict(by_class),
         "tier4_values": len(t4_values), "both_populated": both, "disagreeing": len(disagreeing),
-        "disagreement_share": round(len(disagreeing) / both, 6) if both else None,
-        "both_by_class": dict(both_by_class), "disagree_by_class": dict(disagree_by_class),
+        "disagreement_share_all_classes": round(len(disagreeing) / both, 6) if both else None,
+        "both_by_class": both_by_class, "disagree_by_class": disagree_by_class,
+        "tier4_populated_overlay_empty": facts["tier4_populated_overlay_empty"],
         "served_values": len(served), "merged_values": len(merged_keys),
+        "merged_values_with_vector_ocr": len(merged_keys | vector_ocr), "vector_ocr_values": len(vector_ocr),
+        "lane2_by_page_kind": dict(page_kinds),
         "regression": len(merged_keys) < len(t4_values),
         "tier4_recorded_sha": bool(recorded), "tier4_schema_version": (tier4 or {}).get("schema_version"), "schema_match": schema_ok,
-        "mergeable_under_a3": bool(recorded) and recorded == sha and schema_ok,        # strict sha (A3) and equal schema (A13)
+        # a precondition, NOT "servable": the sha (A3) and schema (A13) rules only; the hold and the served set are separate
+        "sha_and_schema_eligible_before_hold": eligible,
         "selector_bases": selectors,
-        "mergeable_by_selector": {k: bool(recorded) and recorded == sha and schema_ok and v == "tier4_docling" for k, v in selectors.items()},
-        "held_at_threshold": (len(disagreeing) / both > serving.hold_threshold()) if both else False,
+        "sha_schema_eligible_by_selector": {k: eligible and v == "tier4_docling" for k, v in selectors.items()},
+        "hold_candidate_share": hold5["share"], "hold_candidate_compared": hold5["compared"],
+        "held_at_5pct_over_candidate_set": hold5["held"], "held_at_10pct_over_candidate_set": hold10["held"],
         "disagreeing_fields": disagreeing,
     }
 
@@ -140,51 +151,66 @@ def _median(xs: list[int]) -> Optional[float]:
 
 
 def cohort_summary(rows: list[dict[str, Any]], twins: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    def medians(subset: list[dict[str, Any]]) -> dict[str, Any]:
-        text = [r["merged_values"] for r in subset if not r["vector_path"]]
-        vec = [r["merged_values"] for r in subset if r["vector_path"]]
+    def medians(subset: list[dict[str, Any]], field: str = "merged_values") -> dict[str, Any]:
+        text = [r[field] for r in subset if not r["vector_path"]]
+        vec = [r[field] for r in subset if r["vector_path"]]
         return {"text_layer": {"documents": len(text), "median_merged": _median(text)},
                 "vector_path": {"documents": len(vec), "median_merged": _median(vec)}}
 
-    mergeable = [r for r in rows if r["mergeable_under_a3"]]
+    eligible = [r for r in rows if r["sha_and_schema_eligible_before_hold"]]
     t4_only = [r["tier4_values"] for r in rows]
     both = sum(r["both_populated"] for r in rows)
     bad = sum(r["disagreeing"] for r in rows)
-    shares = sorted(r["disagreement_share"] for r in rows if r["disagreement_share"] is not None)
+    cand = serving.HOLD_CANDIDATE_CLASSES
+    cand_both = sum(r["both_by_class"].get(c, 0) for r in rows for c in cand)
+    cand_bad = sum(r["disagree_by_class"].get(c, 0) for r in rows for c in cand)
+    shares = sorted(r["hold_candidate_share"] for r in rows if r["hold_candidate_share"] is not None)
     tw = [t for t in twins.values() if t.get("has_twin")]
     per_class: dict[str, dict[str, Any]] = {}
     for cls in AUDIT_CLASSES + ("ocr_numeric",):
         b = sum(r["both_by_class"].get(cls, 0) for r in rows)
         d = sum(r["disagree_by_class"].get(cls, 0) for r in rows)
         per_class[cls] = {"values": sum(r["by_class"].get(cls, 0) for r in rows), "both_populated": b, "disagreeing": d,
-                          "share": round(d / b, 4) if b else None}
+                          "share": round(d / b, 4) if b else None,
+                          "tier4_populated_overlay_empty": sum(r["tier4_populated_overlay_empty"].get(cls, 0) for r in rows)}
+    blind = Counter()
+    for r in rows:
+        blind.update(r["tier4_populated_overlay_empty"])
+    kinds = Counter()
+    for r in rows:
+        kinds.update(r["lane2_by_page_kind"])
     return {
         "documents": len(rows),
         "overlay_values_total": sum(r["overlay_values"] for r in rows),
         "by_class": dict(sum((Counter(r["by_class"]) for r in rows), Counter())),
         "per_class_agreement": per_class,
-        "both_populated": both, "disagreeing": bad, "disagreement_share": round(bad / both, 4) if both else None,
-        "document_share_distribution": {"p50": shares[len(shares) // 2] if shares else None,
-                                         "p90": shares[int(len(shares) * 0.9)] if shares else None,
-                                         "max": shares[-1] if shares else None,
-                                         "documents_over_threshold": sum(1 for r in rows if r["held_at_threshold"]),
-                                         "threshold": serving.hold_threshold()},
+        "both_populated_all_classes": both, "disagreeing_all_classes": bad,
+        "hold_candidate_set": list(cand), "hold_candidate_compared": cand_both, "hold_candidate_disagreeing": cand_bad,
+        "hold_candidate_share": round(cand_bad / cand_both, 4) if cand_both else None,
+        "held_documents": {"at_5pct": sum(1 for r in rows if r["held_at_5pct_over_candidate_set"]),
+                           "at_10pct": sum(1 for r in rows if r["held_at_10pct_over_candidate_set"]),
+                           "rule": "disagree / compared over numeric+choice+checkbox_box only; held when share > threshold; exactly at it is not held"},
+        "document_share_distribution_candidate_set": {"p50": shares[len(shares) // 2] if shares else None,
+                                                      "p90": shares[int(len(shares) * 0.9)] if shares else None,
+                                                      "max": shares[-1] if shares else None},
         "tier4_alone_median": _median(t4_only),
         "median_merged_if_every_document_could_merge": medians(rows),
-        "median_merged_strict_a3_only": medians(mergeable),
-        "documents_that_can_merge_under_a3": len(mergeable),
-        "documents_that_can_merge_by_selector": {k: sum(1 for r in rows if r["mergeable_by_selector"].get(k)) for k in ("sql", "python", "web")},
+        "median_merged_for_sha_and_schema_eligible_documents_ignoring_hold": medians(eligible),
+        "median_merged_with_vector_page_ocr": medians(rows, "merged_values_with_vector_ocr"),
+        "documents_sha_and_schema_eligible_before_hold": len(eligible),
+        "documents_eligible_and_not_held_at_5pct": sum(1 for r in eligible if not r["held_at_5pct_over_candidate_set"]),
+        "documents_sha_schema_eligible_by_selector": {k: sum(1 for r in rows if r["sha_schema_eligible_by_selector"].get(k)) for k in ("sql", "python", "web")},
         "documents_where_selectors_pick_different_bases": sum(1 for r in rows if len(set(r["selector_bases"].values())) > 1),
         "schema_version_pairs": dict(Counter(f"tier4={r['tier4_schema_version']} overlay={r['template_year']}" for r in rows)),
-        "disagreement_by_template_year": {y: {"both_populated": sum(r["both_populated"] for r in rows if r["template_year"] == y),
-                                              "disagreeing": sum(r["disagreeing"] for r in rows if r["template_year"] == y)}
-                                          for y in sorted({r["template_year"] for r in rows if r["template_year"]})},
         "documents_whose_tier4_base_records_no_sha": sum(1 for r in rows if not r["tier4_recorded_sha"]),
         "regressions_merged_below_tier4_alone": sum(1 for r in rows if r["regression"]),
         "regressions_note": "0 by construction: the supplement merge only adds overlay fields to Tier 4's, so a merged count below Tier 4 alone cannot occur. It is a guard against a merge bug, not evidence about accuracy.",
+        "tier4_populated_overlay_empty_by_class": dict(blind),
+        "lane2_values_by_page_kind": dict(kinds),
         "fillable_twin": {"documents_with_twin": len(tw), "values_both": sum(t["both"] for t in tw),
                           "disagreements": sum(t["disagree"] for t in tw)},
         "goal2_targets": {"text_layer": 550, "vector_path": 450},
+        "labels_note": "'eligible before hold' means only the sha and schema rules (A3, A13) pass; it does not mean servable.",
     }
 
 
@@ -225,6 +251,8 @@ def build_audit_sample(
                 record = notes["values"][key]
                 if record.get("emission_class") != cls or serving.normalise_for_compare(record) is None:
                     continue
+                if cls == "ocr_numeric" and not (record.get("page_kind") == "vector" or set(record.get("input_page_kinds") or []) == {"vector"}):
+                    continue                                        # the OCR stratum is vector pages only (PRD 038 A14)
                 pool.append({"sha": sha, "key": key, "record": record, "tags": _stratum_tags(sha, key, record, notes, row, twins[sha])})
         rng.shuffle(pool)
         chosen: list[dict[str, Any]] = []
@@ -336,6 +364,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--overlay-dir", type=Path)
     ap.add_argument("--overlay-json", type=Path)
     ap.add_argument("--tier4-json", type=Path, required=True)
+    ap.add_argument("--cohort-shas", type=Path, required=True, help="Comma-separated or JSON list of the cohort's full source shas; the report fails if any is missing from its inputs.")
     ap.add_argument("--vector-shas", type=Path, default=None, help="JSON list of source shas that are vector-path (overrides the heuristic).")
     ap.add_argument("--pdf-dir", type=Path, default=None, help="Render crops (omit to skip rendering).")
     ap.add_argument("--out-dir", type=Path, required=True)
@@ -355,6 +384,16 @@ def main(argv: Optional[list[str]] = None) -> int:
         ap.error("--serve-classes names an unknown class (or is empty)")
     overlays = load_overlay_records(args.overlay_dir, args.overlay_json)
     tier4 = json.loads(args.tier4_json.read_text())
+    raw = args.cohort_shas.read_text().strip()
+    cohort = set(json.loads(raw)) if raw.startswith("[") else {x.strip() for x in raw.split(",") if x.strip()}
+    missing_overlay = sorted(cohort - set(overlays))
+    missing_tier4 = sorted(cohort - set(tier4))
+    if missing_overlay or missing_tier4 or not cohort:
+        print(f"COHORT COVERAGE FAILED: {len(cohort)} cohort documents; {len(missing_overlay)} missing from the overlay input "
+              f"(first: {[m[:12] for m in missing_overlay[:5]]}); {len(missing_tier4)} missing from the Tier 4 input "
+              f"(first: {[m[:12] for m in missing_tier4[:5]]}). Nothing was written.", file=sys.stderr)
+        return 2
+    overlays = {sha: n for sha, n in overlays.items() if sha in cohort}
     args.out_dir.mkdir(parents=True, exist_ok=True)
     rows = {sha: per_document(sha, notes, tier4.get(sha), serve) for sha, notes in overlays.items()}
     twins = {sha: twin_stratum(notes, tier4.get(sha)) for sha, notes in overlays.items()}
@@ -364,7 +403,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     summary["strata_not_available"] = ["weak-tail Lane 3 scores (0.04-0.10): the artifact does not store the score",
                                        "specks: no minimum mark size is recorded"]
 
-    sample = build_audit_sample(overlays, rows, twins, args.per_class, args.min_disagree, args.seed, AUDIT_CLASSES)
+    sample = build_audit_sample(overlays, rows, twins, args.per_class, args.min_disagree, args.seed, AUDIT_CLASSES + ("ocr_numeric",))
     ensure_coverage(sample, overlays, rows, args.min_docs, args.min_vector_docs, args.seed)
     sample.sort(key=lambda s: (s["class"], s["sha"], s["key"]))
     out_rows = []
@@ -379,7 +418,7 @@ def main(argv: Optional[list[str]] = None) -> int:
             "n": i, "school_id": (tier4.get(item["sha"]) or {}).get("school_id"), "document_id": (tier4.get(item["sha"]) or {}).get("document_id"),
             "sha256": item["sha"], "page": page_of(item["record"], notes), "tag": item["record"].get("pdf_tag"), "question": item["key"],
             "value": item["record"].get("value_decoded", item["record"].get("value")), "class": item["class"],
-            "lane": item["record"].get("lane"), "tier4_value": None if t4 is None else serving._record_text(t4),
+            "lane": item["record"].get("lane"), "page_kind": item["record"].get("page_kind") or "|".join(item["record"].get("input_page_kinds") or []), "tier4_value": None if t4 is None else serving._record_text(t4),
             "strata": "|".join(item["tags"]), "crop": crop, "verdict": "", "note": "",
         })
     with open(args.out_dir / "audit_sample.csv", "w", newline="") as fh:
@@ -400,15 +439,17 @@ def main(argv: Optional[list[str]] = None) -> int:
                                "crop_errors": sum(1 for r in out_rows if str(r["crop"]).startswith("ERROR"))}
     (args.out_dir / "summary.json").write_text(json.dumps(summary, indent=1, default=str))
     cols = ["sha256", "school_id", "canonical_year", "template_year", "vector_path", "overlay_values", "tier4_values", "both_populated",
-            "disagreeing", "disagreement_share", "served_values", "merged_values", "regression", "tier4_recorded_sha",
-            "mergeable_under_a3", "held_at_threshold"]
+            "disagreeing", "disagreement_share_all_classes", "hold_candidate_compared", "hold_candidate_share",
+            "held_at_5pct_over_candidate_set", "held_at_10pct_over_candidate_set", "served_values", "merged_values",
+            "merged_values_with_vector_ocr", "vector_ocr_values", "regression", "tier4_recorded_sha", "schema_match",
+            "sha_and_schema_eligible_before_hold"]
     with open(args.out_dir / "per_doc.csv", "w", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=cols, extrasaction="ignore")
         writer.writeheader()
         for r in sorted(rows.values(), key=lambda r: (str(r["school_id"]), str(r["canonical_year"]))):
             writer.writerow(r)
     print(json.dumps({k: summary[k] for k in ("documents", "overlay_values_total", "regressions_merged_below_tier4_alone",
-                                              "documents_that_can_merge_under_a3", "audit_sample")}, default=str))
+                                              "documents_sha_and_schema_eligible_before_hold", "held_documents", "lane2_values_by_page_kind", "audit_sample")}, default=str))
     return 0
 
 
