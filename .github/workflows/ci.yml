@@ -51,6 +51,8 @@ jobs:
         run: python -m unittest discover -s tools/ipeds -p "test_*.py"
       - name: Run change intelligence tests
         run: python -m unittest discover -s tools/change_intelligence -p "test_*.py"
+      - name: Run checkbox label decoder tests
+        run: python -m unittest tools.schema_builder.test_decode_checkboxes
       - name: Run discovery policy and engine tests
         run: python -m pytest tools/discovery -q
       - name: Lint GHA run-script heredocs

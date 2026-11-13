@@ -9934,11 +9934,11 @@
         },
         {
           "export": "/TFER_RFS",
-          "label": "Required for Some"
+          "label": "Recommended for Some"
         },
         {
           "export": "/TFER_ROS",
-          "label": "Recommended for Some"
+          "label": "Required for Some"
         },
         {
           "export": "/TFER_NREQ",
@@ -9973,11 +9973,11 @@
         },
         {
           "export": "/TFER_RFS",
-          "label": "Required for Some"
+          "label": "Recommended for Some"
         },
         {
           "export": "/TFER_ROS",
-          "label": "Recommended for Some"
+          "label": "Required for Some"
         },
         {
           "export": "/TFER_NREQ",
@@ -10012,11 +10012,11 @@
         },
         {
           "export": "/TFER_RFS",
-          "label": "Required for Some"
+          "label": "Recommended for Some"
         },
         {
           "export": "/TFER_ROS",
-          "label": "Recommended for Some"
+          "label": "Required for Some"
         },
         {
           "export": "/TFER_NREQ",
@@ -10051,11 +10051,11 @@
         },
         {
           "export": "/TFER_RFS",
-          "label": "Required for Some"
+          "label": "Recommended for Some"
         },
         {
           "export": "/TFER_ROS",
-          "label": "Recommended for Some"
+          "label": "Required for Some"
         },
         {
           "export": "/TFER_NREQ",
@@ -10090,11 +10090,11 @@
         },
         {
           "export": "/TFER_RFS",
-          "label": "Required for Some"
+          "label": "Recommended for Some"
         },
         {
           "export": "/TFER_ROS",
-          "label": "Recommended for Some"
+          "label": "Required for Some"
         },
         {
           "export": "/TFER_NREQ",
@@ -10129,11 +10129,11 @@
         },
         {
           "export": "/TFER_RFS",
-          "label": "Required for Some"
+          "label": "Recommended for Some"
         },
         {
           "export": "/TFER_ROS",
-          "label": "Recommended for Some"
+          "label": "Required for Some"
         },
         {
           "export": "/TFER_NREQ",

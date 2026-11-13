@@ -73,8 +73,11 @@ LABELS: dict[str, str] = {
     # Transfer admission unit requirements (D-section)
     "/TFER_REQ": "Required",
     "/TFER_REC": "Recommended",
-    "/TFER_RFS": "Required for Some",
-    "/TFER_ROS": "Recommended for Some",
+    # The export names are misleading: in the official blank templates (2021-22 through 2025-26) the widget whose on-state
+    # is /TFER_RFS sits under the printed column header "Recommended of Some" and /TFER_ROS under "Required of Some".
+    # The labels follow the printed headers, not the names (verified per template year by test_decode_checkboxes.py).
+    "/TFER_RFS": "Recommended for Some",
+    "/TFER_ROS": "Required for Some",
     "/TFER_NREQ": "Not Required",
 
     # First-time admission unit requirements (C-section)
