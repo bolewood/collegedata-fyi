@@ -26,6 +26,9 @@ The rules, in one place:
   Raster-page OCR, a missing `page_kind` and a mislabelled class are never served. A blank overlay value (null, "", whitespace)
   is not merged, so it never overwrites a populated base value.
 * `notes.values` must be a JSON object; anything else serves nothing.
+* ZERO NEVER REPLACES A POSITIVE BASE VALUE (A15): an overlay value that is numerically zero (0, 0.0, "0", "0.0", "0%", "$0") does
+  not overwrite a base (Tier 4 or fallback) value that is numerically non-zero; the base value is kept. Zero still fills a field the
+  base leaves empty (or holds as text) and still overwrites a base zero. A printed 0 in a total cell is often a form default.
 * Merge order is `fallback || tier4 base || overlay`: the overlay wins.
 """
 
@@ -180,6 +183,38 @@ def serve_overlay_values(values: Any, classes: frozenset[str]) -> dict[str, Any]
         if ok:
             out[key] = record
     return out
+
+
+def _number_of(record: Any) -> Optional[Decimal]:
+    """The record's text as a number ($, %, commas stripped), or None when it is blank or not a plain number."""
+    text = _record_text(record)
+    if text is None:
+        return None
+    cleaned = text.replace(",", "").replace("$", "").replace("%", "").strip()
+    if not re.fullmatch(r"[+-]?\d+(\.\d+)?", cleaned):
+        return None
+    try:
+        return Decimal(cleaned)
+    except InvalidOperation:
+        return None
+
+
+def zero_keeps_base(overlay_record: Any, base_record: Any) -> bool:
+    """True when the overlay value is numerically zero and the base value is numerically non-zero (the base is kept)."""
+    ov, bs = _number_of(overlay_record), _number_of(base_record)
+    return ov is not None and ov == 0 and bs is not None and bs != 0
+
+
+def merge_served_values(merged: dict[str, Any], served: Mapping[str, Any]) -> list[str]:
+    """Apply the served overlay values over `merged` (fallback || Tier 4 base) in place, except where zero would replace a positive
+    base value. Returns the keys that were applied."""
+    applied: list[str] = []
+    for key, record in served.items():
+        if key in merged and zero_keeps_base(record, merged[key]):
+            continue
+        merged[key] = record
+        applied.append(key)
+    return applied
 
 
 def served_overlay_for_base(

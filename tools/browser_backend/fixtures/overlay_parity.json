@@ -3986,6 +3986,1417 @@
      "overlay_artifact_id": "o"
     }
    ]
+  },
+  {
+   "name": "zero_0_keeps_a_positive_base_value",
+   "artifacts": [
+    {
+     "id": "b-e53",
+     "document_id": "e53",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "100"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e53",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": 0,
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e53",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "100",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "zero_0.0_keeps_a_positive_base_value",
+   "artifacts": [
+    {
+     "id": "b-e54",
+     "document_id": "e54",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "100"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e54",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": 0.0,
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e54",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "100",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "zero_0_keeps_a_positive_base_value",
+   "artifacts": [
+    {
+     "id": "b-e55",
+     "document_id": "e55",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "100"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e55",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "0",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e55",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "100",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "zero_0.0_keeps_a_positive_base_value",
+   "artifacts": [
+    {
+     "id": "b-e56",
+     "document_id": "e56",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "100"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e56",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "0.0",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e56",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "100",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "zero_0.00_keeps_a_positive_base_value",
+   "artifacts": [
+    {
+     "id": "b-e57",
+     "document_id": "e57",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "100"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e57",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "0.00",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e57",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "100",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "zero_0pct_keeps_a_positive_base_value",
+   "artifacts": [
+    {
+     "id": "b-e58",
+     "document_id": "e58",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "100"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e58",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "0%",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e58",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "100",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "zero_usd0_keeps_a_positive_base_value",
+   "artifacts": [
+    {
+     "id": "b-e59",
+     "document_id": "e59",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "100"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e59",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "$0",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e59",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "100",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "zero__0__keeps_a_positive_base_value",
+   "artifacts": [
+    {
+     "id": "b-e60",
+     "document_id": "e60",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "100"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e60",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": " 0 ",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e60",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "100",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "zero_0c0_keeps_a_positive_base_value",
+   "artifacts": [
+    {
+     "id": "b-e61",
+     "document_id": "e61",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "100"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e61",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "0,0",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e61",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "100",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "zero_keeps_a_positive_numeric_base_value_json_number",
+   "artifacts": [
+    {
+     "id": "b-e62",
+     "document_id": "e62",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": 100
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e62",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "0",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e62",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": 100,
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "zero_keeps_a_negative_base_value",
+   "artifacts": [
+    {
+     "id": "b-e63",
+     "document_id": "e63",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "-3"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e63",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "0",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e63",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "-3",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "zero_keeps_a_percent_or_currency_base_value",
+   "artifacts": [
+    {
+     "id": "b-e64",
+     "document_id": "e64",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "12.5%"
+       },
+       "Z": {
+        "value": "$1,200"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e64",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "0",
+        "emission_class": "numeric",
+        "lane": "text"
+       },
+       "Z": {
+        "value": "0",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e64",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "12.5%",
+      "Z": "$1,200",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "zero_fills_a_field_the_base_leaves_empty",
+   "artifacts": [
+    {
+     "id": "b-e65",
+     "document_id": "e65",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e65",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "0",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e65",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "K": "keep",
+      "Q": "0"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "zero_fills_a_blank_base_value",
+   "artifacts": [
+    {
+     "id": "b-e66",
+     "document_id": "e66",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": ""
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e66",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "0",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e66",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "0",
+      "K": "keep"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "zero_overwrites_a_base_zero",
+   "artifacts": [
+    {
+     "id": "b-e67",
+     "document_id": "e67",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "0"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e67",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "0.0",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e67",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "0.0",
+      "K": "keep"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "zero_overwrites_a_non_numeric_base_value",
+   "artifacts": [
+    {
+     "id": "b-e68",
+     "document_id": "e68",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "N/A"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e68",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "0",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e68",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "0",
+      "K": "keep"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "a_negative_value_is_not_zero",
+   "artifacts": [
+    {
+     "id": "b-e69",
+     "document_id": "e69",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "100"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e69",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "-5",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e69",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "-5",
+      "K": "keep"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "a_small_decimal_is_not_zero",
+   "artifacts": [
+    {
+     "id": "b-e70",
+     "document_id": "e70",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "100"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e70",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "0.5",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e70",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "0.5",
+      "K": "keep"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "a_non_numeric_value_is_not_zero",
+   "artifacts": [
+    {
+     "id": "b-e71",
+     "document_id": "e71",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "100"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e71",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "none",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e71",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "none",
+      "K": "keep"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "zero_is_skipped_but_other_values_still_merge",
+   "artifacts": [
+    {
+     "id": "b-e72",
+     "document_id": "e72",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "100"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e72",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "0",
+        "emission_class": "numeric",
+        "lane": "text"
+       },
+       "Z": {
+        "value": "9",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e72",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "100",
+      "K": "keep",
+      "Z": "9"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
+  },
+  {
+   "name": "zero_keeps_a_fallback_value",
+   "artifacts": [
+    {
+     "id": "b-e73",
+     "document_id": "e73",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "base"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e73",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "F": {
+        "value": "0",
+        "emission_class": "numeric",
+        "lane": "text"
+       }
+      },
+      "held": false
+     }
+    },
+    {
+     "id": "fbz",
+     "document_id": "e73",
+     "kind": "cleaned",
+     "producer": "tier4_llm_fallback",
+     "producer_version": "1",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "base_artifact_id": "b-e73",
+      "values": {
+       "F": {
+        "value": "42"
+       }
+      }
+     }
+    }
+   ],
+   "base_artifact_id": "b-e73",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box"
+     ],
+     "values": {
+      "Q": "base",
+      "K": "keep",
+      "F": "42"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "ocr_zero_keeps_a_positive_base_value",
+   "artifacts": [
+    {
+     "id": "b-e74",
+     "document_id": "e74",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "100"
+       },
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e74",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "0",
+        "emission_class": "ocr_numeric",
+        "lane": 2,
+        "page_kind": "vector"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e74",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box",
+      "ocr_numeric"
+     ],
+     "values": {
+      "Q": "100",
+      "K": "keep"
+     },
+     "overlay_artifact_id": null
+    }
+   ]
+  },
+  {
+   "name": "ocr_zero_fills_an_empty_base",
+   "artifacts": [
+    {
+     "id": "b-e75",
+     "document_id": "e75",
+     "kind": "canonical",
+     "producer": "tier4_docling",
+     "producer_version": "0.3.17",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-01T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "K": {
+        "value": "keep"
+       }
+      }
+     }
+    },
+    {
+     "id": "o",
+     "document_id": "e75",
+     "kind": "cleaned",
+     "producer": "tier2_template_overlay",
+     "producer_version": "0.7.0",
+     "schema_version": "2025-26",
+     "created_at": "2026-11-03T00:00:00+00:00",
+     "notes": {
+      "source_sha256": "S",
+      "values": {
+       "Q": {
+        "value": "0",
+        "emission_class": "ocr_numeric",
+        "lane": 2,
+        "page_kind": "vector"
+       }
+      },
+      "held": false
+     }
+    }
+   ],
+   "base_artifact_id": "b-e75",
+   "variants": [
+    {
+     "serve": [
+      "numeric",
+      "choice",
+      "checkbox_box",
+      "ocr_numeric"
+     ],
+     "values": {
+      "K": "keep",
+      "Q": "0"
+     },
+     "overlay_artifact_id": "o"
+    }
+   ]
   }
  ]
 }

@@ -155,6 +155,21 @@ export function serveOverlayValues(
   return out;
 }
 
+/** The record's text as a number ($, %, commas stripped), or null when it is blank or not a plain number (mirrors overlay_serving._number_of). */
+export function numberOf(record: unknown): number | null {
+  const text = recordText(record);
+  if (text === null) return null;
+  const cleaned = text.replace(/[,$%]/g, "").trim();
+  return /^[+-]?\d+(\.\d+)?$/.test(cleaned) ? Number(cleaned) : null;
+}
+
+/** An overlay value that is numerically zero never replaces a base value that is numerically non-zero (PRD 038 A15). */
+export function zeroKeepsBase(overlayRecord: unknown, baseRecord: unknown): boolean {
+  const ov = numberOf(overlayRecord);
+  const bs = numberOf(baseRecord);
+  return ov !== null && ov === 0 && bs !== null && bs !== 0;
+}
+
 export type OverlayMergeInput = {
   /** The newest canonical artifact (what `fetchExtract` shows today). */
   canonical: ArtifactRow | null;
@@ -184,8 +199,12 @@ export function mergeWithOverlay({
   const overlay = pickOverlay(canonical, overlayCandidates);
   if (!overlay) return { mergedValues, overlay: null, overlayFields: [] };
   const served = serveOverlayValues(notesOf(overlay).values, classes);
-  const fields = Object.keys(served);
+  const fields: string[] = [];
+  for (const [key, record] of Object.entries(served)) {
+    if (key in mergedValues && zeroKeepsBase(record, mergedValues[key])) continue; // zero never replaces a positive base value
+    mergedValues[key] = record;
+    fields.push(key);
+  }
   if (fields.length === 0) return { mergedValues, overlay: null, overlayFields: [] };
-  for (const key of fields) mergedValues[key] = served[key];
   return { mergedValues, overlay, overlayFields: fields };
 }

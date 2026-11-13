@@ -211,6 +211,27 @@ class ParityFixtureTests(unittest.TestCase):
         self.assertIsNone(sent[2]["p_browser_row"])
 
 
+class ZeroRuleTests(unittest.TestCase):
+    """PRD 038 A15: zero never replaces a positive base value (any spelling of zero; any non-zero base, negative included)."""
+
+    def test_zero_spellings_and_non_zeros(self):
+        for zero in (0, 0.0, "0", "0.0", "0.00", "0%", "$0", " 0 ", "0,0", {"value": "0"}, {"value": 0.0}):
+            self.assertTrue(ov.zero_keeps_base(zero, {"value": "100"}), zero)
+        for not_zero in ("-5", "0.5", "none", "", None, "N/A", "0 1", "00x"):
+            self.assertFalse(ov.zero_keeps_base(not_zero, {"value": "100"}), not_zero)
+        for base in ({"value": "-3"}, {"value": 100}, {"value": "12.5%"}, {"value": "$1,200"}, "7"):
+            self.assertTrue(ov.zero_keeps_base("0", base), base)
+        for base in ({"value": "0"}, {"value": "0.0"}, {"value": ""}, {"value": "N/A"}, {"value": None}, None):
+            self.assertFalse(ov.zero_keeps_base("0", base), base)                  # fills empty, overwrites a base zero or text
+
+    def test_merge_served_values_applies_in_place_and_reports_what_it_applied(self):
+        merged = {"A": {"value": "100"}, "B": {"value": "0"}, "C": {"value": ""}}
+        applied = ov.merge_served_values(merged, {"A": {"value": "0"}, "B": {"value": "0.0"}, "C": {"value": "0"}, "D": {"value": "0"}, "E": {"value": "5"}})
+        self.assertEqual(sorted(applied), ["B", "C", "D", "E"])
+        self.assertEqual(merged["A"], {"value": "100"})                                # kept
+        self.assertEqual(merged["B"], {"value": "0.0"})
+
+
 class ComparatorTests(unittest.TestCase):
     def test_numeric_classes_compare_by_value_only(self):
         self.assertTrue(ov.values_agree({"value": "1,000", "emission_class": "numeric"}, {"value": "1000"}))

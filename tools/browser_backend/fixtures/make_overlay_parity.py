@@ -109,7 +109,7 @@ def edge(name, overlays, expect, serve=S, base_art=None, overlay_id=None, note=N
     doc = f"e{n[0]}"
     b = base_art(doc) if base_art else base(doc)
     arts = [b] + [o(doc) for o in overlays]
-    values = {"Q": "base", "K": "keep"}
+    values = {k: (r.get("value") if isinstance(r, dict) else r) for k, r in b["notes"]["values"].items() if r is not None}   # the base's own values
     values.update(expect)
     case = {"name": name, "artifacts": arts, "base_artifact_id": b["id"],
             "variants": [{"serve": serve, "values": values, "overlay_artifact_id": overlay_id}]}
@@ -188,6 +188,33 @@ for nm, kinds in (("mixed", ["raster", "vector"]), ("unknown", ["unknown"]), ("e
 edge("ocr_derived_total_unlisted_is_not_served", [lambda d: ovl("o", d, T, {"Q": derived("7", ["vector"])})], {}, serve=S)
 edge("ocr_values_do_not_unblock_other_classes", [
     lambda d: ovl("o", d, T, {"Q": ocr("7", "raster"), "Z": rec("z")})], {"Z": "z"}, serve=SO, overlay_id="o")
+
+# ---- zero never replaces a positive base value (PRD 038 A15) --------------------------------------------------
+def zbase(q, extra=None):
+    return lambda d: base(d, {"values": {"Q": v(q) if q is not None else None, "K": v("keep"), **(extra or {})}} if q is not None else {"values": {"K": v("keep")}})
+
+
+for spelling in (0, 0.0, "0", "0.0", "0.00", "0%", "$0", " 0 ", "0,0"):
+    edge(f"zero_{spelling!r}_keeps_a_positive_base_value".replace(" ", "_").replace("'", "").replace(",", "c").replace("$", "usd").replace("%", "pct"),
+         [lambda d, spelling=spelling: ovl("o", d, T, {"Q": rec(spelling)})], {}, base_art=zbase("100"))
+edge("zero_keeps_a_positive_numeric_base_value_json_number", [lambda d: ovl("o", d, T, {"Q": rec("0")})], {},
+     base_art=lambda d: base(d, {"values": {"Q": {"value": 100}, "K": v("keep")}}))
+edge("zero_keeps_a_negative_base_value", [lambda d: ovl("o", d, T, {"Q": rec("0")})], {}, base_art=zbase("-3"))
+edge("zero_keeps_a_percent_or_currency_base_value", [lambda d: ovl("o", d, T, {"Q": rec("0"), "Z": rec("0")})], {},
+     base_art=lambda d: base(d, {"values": {"Q": v("12.5%"), "Z": v("$1,200"), "K": v("keep")}}))
+edge("zero_fills_a_field_the_base_leaves_empty", [lambda d: ovl("o", d, T, {"Q": rec("0")})], {"Q": "0"}, base_art=zbase(None), overlay_id="o")
+edge("zero_fills_a_blank_base_value", [lambda d: ovl("o", d, T, {"Q": rec("0")})], {"Q": "0"}, base_art=zbase(""), overlay_id="o")
+edge("zero_overwrites_a_base_zero", [lambda d: ovl("o", d, T, {"Q": rec("0.0")})], {"Q": "0.0"}, base_art=zbase("0"), overlay_id="o")
+edge("zero_overwrites_a_non_numeric_base_value", [lambda d: ovl("o", d, T, {"Q": rec("0")})], {"Q": "0"}, base_art=zbase("N/A"), overlay_id="o")
+edge("a_negative_value_is_not_zero", [lambda d: ovl("o", d, T, {"Q": rec("-5")})], {"Q": "-5"}, base_art=zbase("100"), overlay_id="o")
+edge("a_small_decimal_is_not_zero", [lambda d: ovl("o", d, T, {"Q": rec("0.5")})], {"Q": "0.5"}, base_art=zbase("100"), overlay_id="o")
+edge("a_non_numeric_value_is_not_zero", [lambda d: ovl("o", d, T, {"Q": rec("none")})], {"Q": "none"}, base_art=zbase("100"), overlay_id="o")
+edge("zero_is_skipped_but_other_values_still_merge", [lambda d: ovl("o", d, T, {"Q": rec("0"), "Z": rec("9")})], {"Z": "9"}, base_art=zbase("100"), overlay_id="o")
+edge("zero_keeps_a_fallback_value", [
+    lambda d: ovl("o", d, T, {"F": rec("0")}),
+    lambda d: art("fbz", d, "cleaned", "tier4_llm_fallback", "1", T, {"base_artifact_id": f"b-{d}", "values": {"F": v("42")}})], {"F": "42"})
+edge("ocr_zero_keeps_a_positive_base_value", [lambda d: ovl("o", d, T, {"Q": ocr("0")})], {}, serve=SO, base_art=zbase("100"))
+edge("ocr_zero_fills_an_empty_base", [lambda d: ovl("o", d, T, {"Q": ocr("0")})], {"Q": "0"}, serve=SO, base_art=zbase(None), overlay_id="o")
 
 out = {"description": __doc__.strip().split("\n")[0], "serve_config_cases": [
     {"raw": " numeric , choice ", "classes": ["choice", "numeric"]}, {"raw": "numeric,,choice", "classes": ["choice", "numeric"]},

@@ -71,6 +71,13 @@ describe("supabase/migrations/20261113042000_overlay_serving_view.sql", () => {
     expect(pending).toContain("k.kind IS DISTINCT FROM '\"vector\"'::jsonb");
   });
 
+  it("never lets a zero replace a positive base value", () => {
+    expect(pending).toContain("AND NOT COALESCE(z.ov_num = 0 AND z.base_num <> 0, false)");
+    expect(pending).toContain("bm.vals -> e.key ->> 'value'");
+    expect(pending).toContain("'[,$%]'");
+    expect(pending.indexOf(") bm ON true")).toBeLessThan(pending.indexOf(") ov ON true")); // the base values are known before the overlay join
+  });
+
   it("validates the whole served set, skips blanks and guards a non-object values", () => {
     expect(pending).toMatch(/WHEN c <@ ARRAY\['numeric', 'choice', 'checkbox_box', 'checkbox_boxless', 'free_text', 'ocr_numeric'\]::text\[\]\s+THEN c\s+ELSE '\{\}'::text\[\]/);
     expect(pending).toContain("COALESCE(NULLIF(btrim(e.value ->> 'value_decoded'), ''), NULLIF(btrim(e.value ->> 'value'), '')) IS NOT NULL");

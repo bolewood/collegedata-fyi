@@ -20,6 +20,8 @@
 --     Lane 2 evidence and either it is a direct Lane 2 value whose page_kind is 'vector' or it is a derived total whose
 --     input_page_kinds is a non-empty list of only 'vector'. Raster-page OCR and a missing page_kind are never served. A
 --     notes.values that is not a JSON object serves nothing.
+--   * zero never replaces a positive base value: an overlay value that is numerically zero is not merged over a fallback or Tier 4
+--     value that is numerically non-zero (it still fills an empty field and still overwrites a base zero).
 --   * merge order fallback || tier4 base || overlay (the jsonb || operator: the right side wins).
 --
 -- The view's column list and order are unchanged from 20260428153000_tier4_fallback_compatibility.sql; CREATE OR REPLACE VIEW
@@ -125,6 +127,14 @@ LEFT JOIN LATERAL (
   LIMIT 1
 ) f ON true
 LEFT JOIN LATERAL (
+  -- the base values the overlay merges over: fallback || Tier 4 base (the same expression as the column below)
+  SELECT CASE
+    WHEN b.producer = 'tier4_docling' AND f.id IS NOT NULL
+      THEN COALESCE(f.notes -> 'values', '{}'::jsonb) || COALESCE(b.notes -> 'values', '{}'::jsonb)
+    ELSE COALESCE(b.notes -> 'values', '{}'::jsonb)
+  END AS vals
+) bm ON true
+LEFT JOIN LATERAL (
   -- served overlay values: newest overlay with a strictly equal source sha and schema version, not held, Tier 4 base only
   SELECT
     CASE WHEN jsonb_typeof(o.notes -> 'values') = 'object' THEN COALESCE(
@@ -162,7 +172,19 @@ LEFT JOIN LATERAL (
               )
             ) AS inputs_all_vector
         ) AS f
+        CROSS JOIN LATERAL (
+          -- zero never replaces a positive base value: the overlay and base values as numbers ($, %, commas stripped)
+          SELECT
+            CASE WHEN x.ov ~ '^[+-]?[0-9]+(\.[0-9]+)?$' THEN x.ov::numeric END AS ov_num,
+            CASE WHEN x.bs ~ '^[+-]?[0-9]+(\.[0-9]+)?$' THEN x.bs::numeric END AS base_num
+          FROM (
+            SELECT
+              btrim(regexp_replace(COALESCE(NULLIF(btrim(e.value ->> 'value_decoded'), ''), NULLIF(btrim(e.value ->> 'value'), ''), ''), '[,$%]', '', 'g')) AS ov,
+              btrim(regexp_replace(COALESCE(NULLIF(btrim(bm.vals -> e.key ->> 'value_decoded'), ''), NULLIF(btrim(bm.vals -> e.key ->> 'value'), ''), ''), '[,$%]', '', 'g')) AS bs
+          ) AS x
+        ) AS z
         WHERE e.value ->> 'emission_class' = ANY (sv.classes)
+          AND NOT COALESCE(z.ov_num = 0 AND z.base_num <> 0, false)
           AND COALESCE(NULLIF(btrim(e.value ->> 'value_decoded'), ''), NULLIF(btrim(e.value ->> 'value'), '')) IS NOT NULL
           AND CASE
             -- OCR is served only with Lane 2 evidence and every Lane 2 input on a vector page; a missing page kind is not served

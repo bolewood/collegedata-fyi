@@ -585,9 +585,11 @@ def select_extraction_result(
     if overlay_serve_classes:
         overlay_artifact, overlay_values = _overlay.served_overlay_for_base(base, artifacts, overlay_serve_classes)
         if overlay_artifact is not None:
-            for field_id, value in overlay_values.items():
-                merged_values[field_id] = value
+            applied = _overlay.merge_served_values(merged_values, overlay_values)      # zero never replaces a positive base value
+            for field_id in applied:
                 value_sources[field_id] = (_overlay.OVERLAY_PRODUCER, overlay_artifact.get("producer_version"))
+            if not applied:
+                overlay_artifact = None                                                 # nothing merged: no overlay identity either
 
     return SelectedExtractionResult(
         document_id=document_id,

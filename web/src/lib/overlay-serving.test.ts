@@ -10,6 +10,7 @@ import {
   parseOverlayServeClasses,
   pickOverlay,
   serveOverlayValues,
+  zeroKeepsBase,
 } from "./overlay-serving";
 import { c1TemplateForArtifact } from "./c1-headline-totals";
 
@@ -144,6 +145,23 @@ describe("served-class configuration", () => {
     expect(overlayMatchesBase({ ...base, schema_version: "2024-25" } as never, good)).toBe(false);
     expect(overlayMatchesBase(base, { ...good, schema_version: null } as never)).toBe(false);
     expect(overlayMatchesBase({ ...base, producer: "tier2_acroform" } as never, good)).toBe(false);
+  });
+});
+
+describe("zero never replaces a positive base value", () => {
+  it("treats every spelling of zero alike and keeps non-zero bases (negative included)", () => {
+    for (const zero of [0, 0.0, "0", "0.0", "0.00", "0%", "$0", " 0 ", "0,0", { value: "0" }, { value: 0 }]) {
+      expect(zeroKeepsBase(typeof zero === "object" ? zero : { value: zero }, { value: "100" })).toBe(true);
+    }
+    for (const notZero of ["-5", "0.5", "none", "", null, "N/A", "0 1", "00x"]) {
+      expect(zeroKeepsBase({ value: notZero }, { value: "100" })).toBe(false);
+    }
+    for (const base of [{ value: "-3" }, { value: 100 }, { value: "12.5%" }, { value: "$1,200" }]) {
+      expect(zeroKeepsBase({ value: "0" }, base)).toBe(true);
+    }
+    for (const base of [{ value: "0" }, { value: "0.0" }, { value: "" }, { value: "N/A" }, { value: null }, null]) {
+      expect(zeroKeepsBase({ value: "0" }, base)).toBe(false);
+    }
   });
 });
 
