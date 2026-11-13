@@ -23,12 +23,36 @@ fi
 
 cd "$ROOT"
 
+mint_token() {
+  local attempt json
+  for attempt in 1 2 3 4 5 6; do
+    json="$(curl -fsS -X POST \
+      -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+      -H "Accept: application/vnd.github+json" \
+      "https://api.github.com/repos/bolewood/collegedata-ops/actions/runners/registration-token" \
+      || true)"
+    if TOKEN="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["token"])' <<<"$json" 2>/dev/null)" \
+      && [[ -n "${TOKEN}" ]]; then
+      return 0
+    fi
+    echo "registration-token mint failed (attempt ${attempt}); retrying" >&2
+    sleep $((attempt * 5))
+  done
+  return 1
+}
+
 while true; do
-  TOKEN="$(curl -fsS -X POST \
-    -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-    -H "Accept: application/vnd.github+json" \
-    "https://api.github.com/repos/bolewood/collegedata-ops/actions/runners/registration-token" \
-    | python3 -c 'import json,sys; print(json.load(sys.stdin)["token"])')"
+  # Guest-Wi-Fi DNS blips leave a half-configured ephemeral runner. --replace
+  # does not overwrite a local .runner; remove it before minting a new token.
+  if [[ -f .runner ]]; then
+    ./config.sh remove --unattended || true
+    rm -f .runner .credentials .credentials_rsaparams
+  fi
+  if ! mint_token; then
+    echo "could not mint a registration token; sleeping" >&2
+    sleep 30
+    continue
+  fi
   ./config.sh --unattended --replace --ephemeral \
     --url "$REPO_URL" \
     --token "$TOKEN" \
