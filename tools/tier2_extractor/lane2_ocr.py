@@ -26,6 +26,7 @@ import re
 import shutil
 import subprocess
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Protocol
 
 import numpy as np
@@ -51,6 +52,15 @@ RULE_CONTEXT = True            # the context-crop token at the rect must agree
 RULE_CONF = True               # Tesseract confidence floor
 RULE_LABEL_FILTER = True       # the blank's own label words are dropped from the boxes
 RULE_ERASE_TEMPLATE = True     # the blank's own ink is erased from the context crop
+RULE_SECOND_MODEL = True       # A12: tessdata_best on an Otsu crop, no whitelist, must parse to the same value
+RULE_TOKEN_COMPLETE = True     # A12: no ink at the tight crop's left or right edge (the crop would cut the token), on the unmodified raster
+RULE_RAW_CONTEXT = True        # A12: the edge and token gates also run on an OCR of the UNMODIFIED context crop (erasure must not hide a token's overlap with the cell edge)
+RULE_CONTIGUOUS = True         # A12: one contiguous token: no internal gap wider than GAP_RATIO of the digit advance
+RAW_BOX_MIN_INK = 10          # A12: a raw-context word whose box holds fewer dark pixels than this once the blank's ink is erased is the form's own rule or label, not a token
+EDGE_BAND_PT = 1.5             # A12: ink (the blank's own ink erased from the strip) this far beyond the cell's left or right edge is a token the cell cuts
+EDGE_BAND_MIN_PX = 6
+CROP_EDGE_COLS = 2             # ink within this many pixel columns of the tight crop's left/right edge is ink the crop cuts
+GAP_RATIO = 0.5                # fixed before the two.jsonl sweep (a word space is ~0.5 of a digit advance; set from typography, not the sweep)
 NUMERIC_CLASS_TYPES = ("Number", "Dollars", "Percent", "Identifier", "Month", "Day")
 
 
@@ -68,11 +78,76 @@ class Engine(Protocol):
     def read(self, img: np.ndarray, *, psm: int = 7) -> list[OcrWord]: ...
 
 
-class TesseractEngine:
-    """The `tesseract` command line, one single-line read per call (`--psm 7`, digit whitelist, TSV words)."""
+# the second model (PRD A12): tessdata_best eng, fetched and verified by fetch_tessdata.py, never committed
+MODEL_SHA256 = {
+    "fast": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2",     # tessdata_fast eng (the Homebrew / apt model)
+    "best": "8280aed0782fe27257a68ea10fe7ef324ca0f8d85bd2fd145d1c2b560bcb66ba",     # tessdata_best eng (LSTM float)
+}
 
-    def __init__(self, exe: str = "tesseract", timeout: float = 30.0):
+
+def best_model_dir() -> str:
+    return os.environ.get("CDS_TESSDATA_BEST") or str(Path.home() / ".cache" / "cds-tessdata" / "best")
+
+
+def _sha256(path: str) -> str | None:
+    import hashlib
+    try:
+        return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    except OSError:
+        return None
+
+
+def otsu(img: np.ndarray) -> np.ndarray:
+    """Otsu-binarised copy (0 ink, 255 paper): the second model's preprocessing, as the verifier defined it."""
+    h = np.bincount(img.ravel(), minlength=256).astype(float)
+    p = h / h.sum()
+    w, m = np.cumsum(p), np.cumsum(p * np.arange(256))
+    s = (m[-1] * w - m) ** 2 / np.maximum(w * (1 - w), 1e-12)
+    return np.where(img > int(np.argmax(s)), 255, 0).astype(np.uint8)
+
+
+class TesseractEngine:
+    """The `tesseract` command line, one single-line read per call (`--psm 7`, digit whitelist, TSV words).
+
+    `read` raises on a failed run (a missing model must not look like thousands of empty cells). `check()` probes a
+    known rendered string with the primary and the second model and returns a reason when Lane 2 must be off.
+    """
+
+    def __init__(self, exe: str = "tesseract", timeout: float = 30.0, best_dir: str | None = None):
         self.exe, self.timeout = exe, timeout
+        self.best_dir = best_dir or best_model_dir()
+
+    def model_info(self) -> dict:
+        prim = None
+        r = subprocess.run([self.exe, "--list-langs"], capture_output=True, text=True)
+        for line in (r.stdout or "").splitlines():
+            m = re.search(r'languages in "?([^"(]+?)"?\s*(?:\(|:|$)', line)
+            if line.startswith("List of available languages") and m:
+                prim = m.group(1).strip()
+        return {"fast_sha256": _sha256(str(Path(prim) / "eng.traineddata")) if prim else None,
+                "best_sha256": _sha256(str(Path(self.best_dir) / "eng.traineddata"))}
+
+    def check(self) -> str | None:
+        """None when both models read a probe string; else why Lane 2 is disabled (fail closed)."""
+        from PIL import Image, ImageDraw, ImageFont
+        if not self.available(self.exe):
+            return "tesseract_not_installed"
+        info = self.model_info()
+        if info["best_sha256"] != MODEL_SHA256["best"]:
+            return f"second_model_missing_or_wrong_sha ({self.best_dir})"
+        if info["fast_sha256"] != MODEL_SHA256["fast"]:
+            return "primary_model_sha_not_the_measured_tessdata_fast"
+        img = Image.new("L", (520, 110), 255)
+        ImageDraw.Draw(img).text((20, 15), "0123456789", fill=0, font=ImageFont.load_default(size=64))
+        arr = np.array(img)
+        try:
+            a = "".join(w.text for w in self.read(arr))
+            b = "".join(w.text for w in self.read(otsu(arr), whitelist=False, tessdata=self.best_dir))
+        except Exception as e:  # noqa: BLE001
+            return f"probe_failed: {e}"
+        if a != "0123456789" or b != "0123456789":
+            return f"probe_misread: primary {a!r}, second {b!r}"
+        return None
 
     @staticmethod
     def available(exe: str = "tesseract") -> bool:
@@ -82,14 +157,20 @@ class TesseractEngine:
         r = subprocess.run([self.exe, "--version"], capture_output=True, text=True)
         return (r.stdout or r.stderr).splitlines()[0].strip()
 
-    def read(self, img: np.ndarray, *, psm: int = 7) -> list[OcrWord]:
+    def read(self, img: np.ndarray, *, psm: int = 7, whitelist: bool = True, tessdata: str | None = None) -> list[OcrWord]:
         from PIL import Image
         buf = io.BytesIO()
         Image.fromarray(img).save(buf, format="PNG")
         env = dict(os.environ, OMP_THREAD_LIMIT="1")
-        r = subprocess.run([self.exe, "stdin", "stdout", "--psm", str(psm), "-c", f"tessedit_char_whitelist={WHITELIST}",
-                            "-c", "load_system_dawg=0", "-c", "load_freq_dawg=0", "tsv"],
-                           input=buf.getvalue(), capture_output=True, timeout=self.timeout, env=env)
+        args = [self.exe, "stdin", "stdout", "--psm", str(psm)]
+        if tessdata:
+            args += ["--tessdata-dir", tessdata]
+        if whitelist:
+            args += ["-c", f"tessedit_char_whitelist={WHITELIST}"]
+        args += ["-c", "load_system_dawg=0", "-c", "load_freq_dawg=0", "-c", "tessedit_create_tsv=1"]     # (the `tsv` config file is not in tessdata_best)
+        r = subprocess.run(args, input=buf.getvalue(), capture_output=True, timeout=self.timeout, env=env)
+        if r.returncode != 0:
+            raise RuntimeError(f"tesseract exited {r.returncode}: {r.stderr.decode('utf-8', 'replace').strip()[:200]}")
         words = []
         for line in r.stdout.decode("utf-8", "replace").splitlines()[1:]:
             p = line.split("\t")
@@ -97,6 +178,29 @@ class TesseractEngine:
                 continue
             words.append(OcrWord(p[11].strip(), float(p[10]), int(p[6]), int(p[7]), int(p[6]) + int(p[8]), int(p[7]) + int(p[9])))
         return words
+
+
+def token_geometry(tight: np.ndarray, text: str) -> tuple[bool, bool]:
+    """(touches_edge, has_gap) of the ink in the UNMODIFIED tight crop (no template erasure, no padding).
+
+    touches_edge: ink in the first or last CROP_EDGE_COLS columns, i.e. the crop cuts (or abuts) a glyph.
+    has_gap: an internal run of empty columns wider than GAP_RATIO of the digit advance (extent / characters).
+    """
+    ink = otsu(tight) == 0
+    cols = ink.any(axis=0)
+    if not cols.any():
+        return False, False
+    edge = bool(cols[:CROP_EDGE_COLS].any() or cols[-CROP_EDGE_COLS:].any())
+    xs = np.nonzero(cols)[0]
+    lo, hi = int(xs[0]), int(xs[-1])
+    n = max(1, len(re.sub(r"[^0-9]", "", text)))
+    adv = (hi - lo + 1) / n
+    gap = 0
+    run = 0
+    for c in cols[lo:hi + 1]:
+        run = 0 if c else run + 1
+        gap = max(gap, run)
+    return edge, gap > GAP_RATIO * adv
 
 
 @dataclass
@@ -192,6 +296,28 @@ class Lane2:
                 keep.append(b)
         return keep
 
+    @staticmethod
+    def _new_ink_in(erased: np.ndarray, raw: np.ndarray, w: OcrWord) -> int:
+        """Dark pixels the blank does not explain inside an OCR word's box (the erased context crop has the same geometry as the raw one)."""
+        if erased.shape != raw.shape:
+            return RAW_BOX_MIN_INK
+        return int((erased[max(w.top, 0):w.bottom, max(w.left, 0):w.right] < 128).sum())
+
+    def _ink_beyond_edges(self, c, rect) -> bool:
+        """Completeness against the raster: dark ink left over in a strip just outside the cell's left or right edge, after the
+        blank's own ink (the rule the digit may touch) is removed from the strip, means the cell cuts a longer token."""
+        x0, y0, x1, y1 = rect
+        for win in ([x0 - EDGE_BAND_PT, y0 + 1.0, x0, y1 - 1.0], [x1, y0 + 1.0, x1 + EDGE_BAND_PT, y1 - 1.0]):
+            cr = self._crop(c, win, OCR_DPI, erase_template=True)
+            if cr is not None and int((cr[0][CROP_PAD_PX:-CROP_PAD_PX, CROP_PAD_PX:-CROP_PAD_PX] < 128).sum()) >= EDGE_BAND_MIN_PX:
+                return True
+        return False
+
+    def _second_model(self, tight: np.ndarray) -> str:
+        """tessdata_best, Otsu-binarised tight crop, psm 7, NO digit whitelist (a letter must survive to be seen)."""
+        words = self.engine.read(otsu(tight), whitelist=False, tessdata=getattr(self.engine, "best_dir", None))
+        return " ".join(w.text for w in sorted(words, key=lambda w: w.left))      # spaces kept: "12 34" must not parse
+
     # ---- one widget --------------------------------------------------------
     def read_widget(self, c: "to.PageCtx", tag: str, f: dict, wi: int, rect: list[float], static_chars) -> Lane2Read:
         if RULE_NEW_INK and c.new_ink(rect) < MIN_NEW_INK_PX:
@@ -236,6 +362,31 @@ class Lane2:
         val, why = to.normalise_text_value(norm["tight_300"], f["value_type"], tag)
         if why:
             return Lane2Read(reason=why, text=norm["tight_300"], reads=reads, conf=conf)
+        cr300 = self._crop(c, rect, OCR_DPI, inset_pt=CROP_INSET_PT)[0][CROP_PAD_PX:-CROP_PAD_PX, CROP_PAD_PX:-CROP_PAD_PX]
+        edge, gap = token_geometry(cr300, norm["tight_300"])
+        if RULE_RAW_CONTEXT:
+            raw = self._crop(c, rect, OCR_DPI, x_pad_pt=CONTEXT_PAD_PT, erase_template=False)
+            if raw is not None:
+                rwords = self.engine.read(raw[0])
+                rwords = [w for w in rwords if self._new_ink_in(ctx[0], raw[0], w) >= RAW_BOX_MIN_INK]
+                rboxes = self._to_boxes(c, rwords, raw[1], OCR_DPI)
+                if RULE_LABEL_FILTER:
+                    rboxes = self.drop_label_words(rboxes, static_chars)
+                rwhy = to.widget_gates(c, tag, wi, rect, glyphs=rboxes, multiline=False, emission_class=to.CLASS_NUMERIC) if RULE_GATES else None
+                if rwhy:
+                    return Lane2Read(reason="raw_" + rwhy, reads=reads, conf=conf)
+        if RULE_TOKEN_COMPLETE and self._ink_beyond_edges(c, rect):
+            return Lane2Read(reason="ink_beyond_cell_edge", reads=reads, conf=conf)
+        if RULE_TOKEN_COMPLETE and edge:
+            return Lane2Read(reason="token_touches_crop_edge", reads=reads, conf=conf)
+        if RULE_CONTIGUOUS and gap:
+            return Lane2Read(reason="token_not_contiguous", reads=reads, conf=conf)
+        if RULE_SECOND_MODEL:
+            second = self._second_model(cr300)
+            reads["second_model"] = second
+            sv, swhy = to.normalise_text_value(second.strip(), f["value_type"], tag) if second.strip() else (None, "empty")
+            if sv is None or sv != val:
+                return Lane2Read(reason="second_model_empty" if not second else "second_model_disagrees", reads=reads, conf=conf)
         return Lane2Read(value=val, text=norm["tight_300"], conf=conf, reads=reads)
 
 
@@ -252,6 +403,12 @@ def make_hook(engine: Engine, stats: dict | None = None):
         t0 = time.time()
         l2 = Lane2(engine, env.year)
         env.notes["ocr_engine"] = engine.version() if hasattr(engine, "version") else type(engine).__name__
+        if hasattr(engine, "model_info"):
+            env.notes["ocr_models"] = engine.model_info()
+        why_off = engine.check() if hasattr(engine, "check") and RULE_SECOND_MODEL else None
+        if why_off:
+            env.notes["lane2_disabled"] = why_off              # fail closed, loudly: nothing is read, and the notes say why
+            return
         n_read = n_emit = 0
         for tag, f in env.fmap["fields"].items():
             if f["ft"] != "/Tx" or f["question_number"] is None or tag in env.done or tag not in env.tag_field:
@@ -285,7 +442,7 @@ def make_hook(engine: Engine, stats: dict | None = None):
                 env.hold(tag, "ocr", "multi_widget_disagreement", read[0][0])
                 continue
             q, r = read[0]
-            env.record(tag, r.value, 2, et, q, to.CLASS_NUMERIC,
+            env.record(tag, r.value, 2, et, q, to.CLASS_OCR_NUMERIC,
                        {"ocr_confidence": round(r.conf, 1), "ocr_reads": r.reads, "lane_name": "ocr"})
             n_emit += 1
         if stats is not None:

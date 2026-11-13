@@ -1735,7 +1735,9 @@ def test_numeric_gate_boxes_need_nothing_from_the_text_layer():
     word = to.GlyphBox(110.0, 132.2, 13.6, 17.2, 10.0, "1234")
     assert to.numeric_token_gate([word], RECT_N) is None
     cut = to.GlyphBox(150.0, 172.2, 13.6, 17.2, 10.0, "1234")
-    assert to.numeric_token_gate([cut], RECT_N) == "token_crosses_rect" or to.numeric_token_gate([cut], RECT_N) is None
+    assert to.numeric_token_gate([cut], RECT_N) is None                      # a whole-word box whose centre is outside the rect is not in the read
+    across = to.GlyphBox(140.0, 172.2, 13.6, 17.2, 10.0, "1234")             # ... one whose centre is inside is the read, and the token then stays in the rect
+    assert to.numeric_token_gate([across], RECT_N) is None
     neighbour = to.GlyphBox(160.5, 175.0, 13.6, 17.2, 10.0, "99")
     assert to.numeric_token_gate([word, neighbour], RECT_N) is None
 

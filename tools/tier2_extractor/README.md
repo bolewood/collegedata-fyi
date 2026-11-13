@@ -250,18 +250,25 @@ CDS_M1_PDF_DIR=/path/to/review/pdfs python -m pytest tools/tier2_extractor -q -k
   plateau because the page ink is dilated one pixel, so its centre is taken; a residual must beat (0, 0) by 0.01).
   `PageCtx.dx/dy` are the whole-point shift plus this refinement and every lane reads through them, so a
   0.67 pt offset no longer reads Lane 3's frame as a mark (PRD A11).
-- **Lane 2 (M2, `lane2_ocr.py`).** Numeric OCR at the widget rects of pages Lane 1 cannot read (image-only pages,
-  invisible-text pages, unreadable pages), only for Number, Dollars, Percent, Identifier, Month and Day `/Tx`
-  fields. Off unless asked for: `extract_overlay(pdf, lane2=make_hook(TesseractEngine()))`. A value is emitted only
-  when the rect holds rendered ink the blank lacks; the per-widget gates pass on the OCR word boxes (the blank's own
-  label words dropped, the same token and edge rules as Lane 1); the tight rect at 300 DPI, the tight rect at 400 DPI
-  and the token found at the rect in a 30 pt-wider context crop (the blank's own ink erased) all read the same; every
-  word clears Tesseract confidence 85; and the strict number grammar passes. Each failure is a named abstention
-  (`notes.withheld`, lane `ocr`). Values carry `lane: 2`, `emission_class: numeric`, `ocr_confidence` and `ocr_reads`.
-  The engine is the `tesseract` command line (`--psm 7`, digit whitelist, TSV); `notes.ocr_engine` records its version.
-  CI does not need it: tests that call it skip when it is absent. Identities run over the union of lanes
-  and the derived totals are made from that union.
-- **Emission classes.** Every value carries `emission_class`: `numeric` (typed numerics, derived totals),
+- **Lane 2 (M2, `lane2_ocr.py`; gate and class changed in A12).** Numeric OCR at the widget rects of pages Lane 1
+  cannot read (image-only pages, invisible-text pages, pages whose text is hidden under an image, unreadable pages),
+  only for Number, Dollars, Percent, Identifier, Month and Day `/Tx` fields. Off unless asked for:
+  `extract_overlay(pdf, lane2=make_hook(TesseractEngine()))`. Every value is `emission_class: ocr_numeric`, `lane: 2`,
+  never served by default, and a total derived from a Lane 2 value is `ocr_numeric` too (`derived_lanes`); Lane 2 may
+  veto (an identity failure withholds every member) but never vouches for a Lane 1 value. A value is emitted only when:
+  the rect holds ink the blank lacks; the gates pass on the OCR word boxes of the erased context crop and of the
+  UNMODIFIED context crop (so erasing the blank's rule never hides a token's overlap with the cell edge); no ink sits at
+  the tight crop's left or right edge or in a 1.5 pt strip beyond the cell; the ink is one contiguous token (no internal
+  gap over 0.5 of the digit advance); the tight rect at 300 and 400 DPI and the context token agree; confidence ≥ 85;
+  the number grammar passes; and a SECOND model (tessdata_best, Otsu-binarised tight crop, no digit whitelist) reads a
+  string that parses to the same value (a letter, a space or a different digit abstains). Each failure is a named
+  abstention (`notes.withheld`, lane `ocr`). The engine is the `tesseract` command line: it raises on a failed run, and at
+  construction probes a known string with both models; a failed probe, a missing second model or a model whose sha256 is not
+  the pinned one disables Lane 2 and records why (`notes.lane2_disabled`; fail closed). Fetch the second model with
+  `python tools/tier2_extractor/fetch_tessdata.py` (sha256-verified; never committed; `CDS_TESSDATA_BEST` or
+  `~/.cache/cds-tessdata/best`). `notes.ocr_engine` and `notes.ocr_models` record the versions and shas. CI does not need
+  Tesseract: its tests skip when it is absent.
+- **Emission classes.** Every value carries `emission_class`: `numeric` (typed numerics read from the text layer, derived totals of text-layer values), `ocr_numeric` (Lane 2 and totals derived from it),
   `choice` (`/Ch`), `checkbox_box` (Lane 3 through a located box interior), `checkbox_boxless` (Lane 3 where
   the blank draws no box), `free_text`. The shadow artifact keeps every class; `serve_values(values,
   classes=SERVE_CLASSES_DEFAULT)` filters, and the default serves `numeric`, `choice` and

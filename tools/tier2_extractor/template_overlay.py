@@ -31,6 +31,7 @@ YYYY-YYYY") and must agree with the best raster year; `detected_year` and
 from __future__ import annotations
 
 import argparse
+import ctypes
 import functools
 import hashlib
 import json
@@ -56,7 +57,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import build_field_map as bfm  # noqa: E402
 
 PRODUCER = "tier2_template_overlay"
-PRODUCER_VERSION = "0.5.0"
+PRODUCER_VERSION = "0.6.0"
 FIELD_MAP_VERSION = bfm.MAP_FORMAT_VERSION
 
 # Only these years may emit values (PRD Decision 5). 2023-24 is recognised so a
@@ -255,6 +256,20 @@ class PageChar:
         return self.left if self.left is not None else 2.0 * self.cx - self.right
 
 
+def _paint_order(page: "pdfium.PdfPage"):
+    """(text-object address -> paint index, [(paint index, bounds) of each image object]): the page's deterministic paint order."""
+    if _pdfium_c is None:
+        return {}, []
+    try:
+        objs = list(page.get_objects())
+    except Exception:  # noqa: BLE001
+        return {}, []
+    covers = [(i, tuple(o.get_bounds())) for i, o in enumerate(objs) if o.type == _pdfium_c.FPDF_PAGEOBJ_IMAGE]
+    if not covers:
+        return {}, []
+    return {ctypes.cast(o.raw, ctypes.c_void_p).value: i for i, o in enumerate(objs) if o.type == _pdfium_c.FPDF_PAGEOBJ_TEXT}, covers
+
+
 def _page_chars_display(page: "pdfium.PdfPage", g: PageGeom) -> list[PageChar]:
     """Text-layer characters in DISPLAY points, with generated and invisible flags.
 
@@ -264,6 +279,7 @@ def _page_chars_display(page: "pdfium.PdfPage", g: PageGeom) -> list[PageChar]:
     """
     tp = page.get_textpage()
     out = []
+    order, covers = _paint_order(page)
     for i in range(tp.count_chars()):
         ch = tp.get_text_range(i, 1)
         if not ch:
@@ -275,6 +291,11 @@ def _page_chars_display(page: "pdfium.PdfPage", g: PageGeom) -> list[PageChar]:
             if obj:
                 invisible = int(_pdfium_c.FPDFTextObj_GetTextRenderMode(obj)) in INVISIBLE_MODES
         left, bottom, right, top = tp.get_charbox(i)
+        if covers and not generated and _pdfium_c is not None and not invisible:
+            obj = _pdfium_c.FPDFText_GetTextObject(tp.raw, i)
+            idx = order.get(ctypes.cast(obj, ctypes.c_void_p).value) if obj else None
+            if idx is not None and any(j > idx and l <= left and b <= bottom and r >= right and t >= top for j, (l, b, r, t) in covers):
+                invisible = True                    # painted over by a later image: the text is not what the page shows
         (xa, ya), (xb, yb) = user_to_display(g, left, bottom), user_to_display(g, right, top)
         out.append(PageChar(ch, (xa + xb) / 2.0, (ya + yb) / 2.0, max(xa, xb), generated, invisible, min(xa, xb),
                             max(ya, yb), min(ya, yb)))
@@ -1041,6 +1062,7 @@ CLASS_CHOICE = "choice"                  # /Ch dropdowns mapped through /Opt
 CLASS_CHECKBOX_BOX = "checkbox_box"      # Lane 3 through a located box interior
 CLASS_CHECKBOX_BOXLESS = "checkbox_boxless"   # Lane 3 where the blank draws no box (read from the rect core)
 CLASS_FREE_TEXT = "free_text"
+CLASS_OCR_NUMERIC = "ocr_numeric"            # Lane 2 (and any total derived from a Lane 2 value): never served by default (A12)
 # Classes a consumer serves by default; the shadow artifact keeps every class. Free text and the boxless
 # path are shadow-only until M3 decides from shadow data, a held-out perturbation set and the hand audit.
 SERVE_CLASSES_DEFAULT = frozenset({CLASS_NUMERIC, CLASS_CHOICE, CLASS_CHECKBOX_BOX})
@@ -1056,7 +1078,9 @@ def emission_class_text(et: str, ft: str) -> str:
 
 def serve_values(values: dict, classes=SERVE_CLASSES_DEFAULT) -> dict:
     """The values (extract() shape) whose `emission_class` is in `classes`. A record without a class is not served."""
-    return {k: r for k, r in values.items() if r.get("emission_class") in classes}
+    ocr_ok = CLASS_OCR_NUMERIC in classes
+    return {k: r for k, r in values.items() if r.get("emission_class") in classes
+            and (ocr_ok or (r.get("lane") != 2 and 2 not in (r.get("derived_lanes") or ())))}      # OCR evidence is excluded by construction
 
 
 # ---- edge-continuation guard (B3): shared by Lane 1 and the Lane 2 crops ----------
@@ -1654,8 +1678,23 @@ def refine_subpoint_shift(gray: np.ndarray, tgray: np.ndarray, dx: float, dy: fl
     if best - base < SUBPOINT_MIN_GAIN:
         return 0.0, 0.0
     # the page's ink was dilated by one pixel, so the best recall is a plateau: its centre is the shift
-    iys, ixs = np.nonzero(grid >= best - 1e-9)
-    ix, iy = int(round(ixs.mean())) - r, int(round(iys.mean())) - r
+    top = grid >= best - 1e-9
+    start = tuple(int(v) for v in np.argwhere(top)[0])
+    comp, stack = {start}, [start]
+    while stack:                                       # 8-connected plateau containing a maximum; never average disconnected maxima
+        y, x = stack.pop()
+        for dy_ in (-1, 0, 1):
+            for dx_ in (-1, 0, 1):
+                n = (y + dy_, x + dx_)
+                if 0 <= n[0] < top.shape[0] and 0 <= n[1] < top.shape[1] and top[n] and n not in comp:
+                    comp.add(n)
+                    stack.append(n)
+    iys = np.array([c[0] for c in comp])
+    ixs = np.array([c[1] for c in comp])
+    cy, cx = int(round(iys.mean())), int(round(ixs.mean()))
+    if (cy, cx) not in comp:                           # the centre of a non-convex plateau may fall off it: take its nearest member
+        cy, cx = min(comp, key=lambda c: (c[0] - iys.mean()) ** 2 + (c[1] - ixs.mean()) ** 2)
+    ix, iy = cx - r, cy - r
     return ix / k, -iy / k
 
 
@@ -2094,10 +2133,19 @@ def _extract(
     # ---- identities reject in every lane (Decision 3)
     ident, id_rejected = reject_identity_failures(values, set(fmap["fields"]))
     rejected.extend(id_rejected)
+    ocr_keys = {k for k, r in values.items() if r.get("lane") == 2}
+    keys_before = set(values)
     derived = apply_b1(values, schema_fields=schema.get("fields") or [])
-    for r in values.values():
-        if r.get("derived_from") and "emission_class" not in r:
-            r["emission_class"] = CLASS_NUMERIC       # a total derived from numeric counts
+    if ocr_keys:                                      # which derived totals depend on a Lane 2 input: derive again without them
+        plain = {k: r for k, r in values.items() if k not in ocr_keys and not (r.get("derived_from") and k not in keys_before)}
+        apply_b1(plain, schema_fields=schema.get("fields") or [])
+        ocr_dep = {k for k, r in values.items() if r.get("derived_from") and k not in keys_before and (k not in plain or plain[k].get("value") != r.get("value"))}
+    else:
+        ocr_dep = set()
+    for k, r in values.items():
+        if r.get("derived_from") and k not in keys_before:
+            r["derived_lanes"] = [2, "text"] if k in ocr_dep else ["text"]
+            r["emission_class"] = CLASS_OCR_NUMERIC if k in ocr_dep else CLASS_NUMERIC       # a total derived from counts; OCR-dependent ones are OCR
 
     # ---- Lane 2 seam: always the unreadable and invisible pages, pages with no usable text
     #      left after rejection, and the unresolved numeric widgets on unreadable/invisible pages

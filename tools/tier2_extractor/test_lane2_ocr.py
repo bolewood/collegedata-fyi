@@ -87,24 +87,23 @@ class ScriptedEngine:
     def __init__(self, scripts):
         self.scripts, self.calls = list(scripts), 0
 
-    def read(self, img, *, psm=7):
+    def read(self, img, *, psm=7, **kw):
         self.calls += 1
         return [L.OcrWord(t, c, 20, 20, 60, 40) for t, c in self.scripts.pop(0)]
 
 
-def test_reader_needs_three_agreeing_reads_and_a_confident_one(flat_numbers):
+def test_a_doubtful_first_read_abstains_on_confidence_and_spends_one_ocr_call(flat_numbers):
     c, tag, f, w, st = flat_numbers
-    l2 = L.Lane2(ScriptedEngine([[("1234", 95.0)], [("1234", 95.0)], [("1234", 95.0)]]), YEAR)
-    r = l2.read_widget(c, tag, f, 0, w["rect"], st)
-    assert r.value is None and r.reason in ("token_crosses_rect", "context_disagrees", "no_rendered_ink") or r.value == "1234"
-    # three disagreeing tight reads never emit
-    l2 = L.Lane2(ScriptedEngine([[("1234", 95.0)], [("1235", 95.0)], [("1234", 95.0)]]), YEAR)
-    r = l2.read_widget(c, tag, f, 0, w["rect"], st)
-    assert r.value is None and r.reason in ("unstable_read", "no_rendered_ink")
     l2 = L.Lane2(ScriptedEngine([[("1234", 60.0)]]), YEAR)
     r = l2.read_widget(c, tag, f, 0, w["rect"], st)
-    assert r.value is None and r.reason in ("low_confidence", "no_rendered_ink")
-    assert l2.engine.calls <= 1                                  # a doubtful first read spends no more OCR
+    assert r.value is None and r.reason == "low_confidence" and l2.engine.calls == 1
+
+
+def test_disagreeing_tight_reads_abstain_as_unstable(flat_numbers):
+    c, tag, f, w, st = flat_numbers
+    l2 = L.Lane2(ScriptedEngine([[("1234", 95.0)], [("1235", 95.0)], [("1234", 95.0)]]), YEAR)
+    r = l2.read_widget(c, tag, f, 0, w["rect"], st)
+    assert r.value is None and r.reason == "unstable_read"
 
 
 @pytest.fixture(scope="module")
@@ -127,8 +126,8 @@ def test_a_number_is_read_at_several_font_sizes(blank, size):
     out = case(blank, "AP_RECD_1ST_MEN_N", [(5, 5, "1234", size)])
     assert l2_values(out).get("AP_RECD_1ST_MEN_N") == "1234", (size, l2_held(out, "AP_RECD_1ST_MEN_N"))
     rec = next(r for r in out["values"].values() if r.get("pdf_tag") == "AP_RECD_1ST_MEN_N")
-    assert rec["lane"] == 2 and rec["emission_class"] == "numeric" and rec["ocr_confidence"] >= L.MIN_CONF
-    assert set(rec["ocr_reads"]) == {"tight_300", "tight_400", "context"} and len(set(rec["ocr_reads"].values())) == 1
+    assert rec["lane"] == 2 and rec["emission_class"] == "ocr_numeric" and rec["ocr_confidence"] >= L.MIN_CONF
+    assert set(rec["ocr_reads"]) == {"tight_300", "tight_400", "context", "second_model"} and len(set(rec["ocr_reads"].values())) == 1
 
 
 @needs_tesseract
@@ -163,7 +162,7 @@ def test_overflow_into_the_neighbour_cell_abstains_in_both_cells(blank):
 @needs_tesseract
 def test_a_label_word_beside_the_cell_abstains_and_the_forms_own_label_does_not_block(blank):
     out = case(blank, "AP_RECD_1ST_MEN_N", [(5, 5, "1234", 10), (30, 5, "approx", 10)])       # a school-added word next to the number
-    assert l2_values(out).get("AP_RECD_1ST_MEN_N") in (None, "1234")
+    assert l2_values(out).get("AP_RECD_1ST_MEN_N") is None and l2_held(out, "AP_RECD_1ST_MEN_N") == ["low_confidence"]       # the added word spoils the read
     ok = case(blank, "AP_RECD_1ST_MEN_N", [(5, 5, "1234", 10)])                                # the form's own labels sit around the cell
     assert l2_values(ok).get("AP_RECD_1ST_MEN_N") == "1234"
 
@@ -182,8 +181,8 @@ def test_digits_too_faint_to_count_as_ink_are_not_read(blank):
 def test_unstable_read_between_renderings_abstains(blank, monkeypatch):
     real = L.TesseractEngine.read
 
-    def flaky(self, img, *, psm=7):
-        words = real(self, img, psm=psm)
+    def flaky(self, img, *, psm=7, **kw):
+        words = real(self, img, psm=psm, **kw)
         if 110 < img.shape[0] < 130 and img.shape[1] < 400 and words:       # the 400 DPI tight crop
             words[0].text = words[0].text[:-1] + "9"
         return words
@@ -209,16 +208,20 @@ def test_identity_failure_across_lanes_rejects_both_and_derived_totals_follow_th
     assert {r["pdf_tag"] for r in ok["values"].values() if "pdf_tag" in r} >= {"AP_RECD_1ST_N", "AP_ADMT_1ST_N"}
 
 
-@needs_tesseract
-def test_identity_failure_inside_lane_2_rejects_both(blank):
-    f1, w1 = widget("AP_RECD_1ST_N")
-    f2, w2 = widget("AP_ADMT_1ST_N")
-    data = T.add_text(T.add_text(blank, w1["template_page"], w1["rect"][0] + 5, w1["rect"][1] + 5, "100"),
-                      w2["template_page"], w2["rect"][0] + 5, w2["rect"][1] + 5, "500")
-    out = lane2(packet_with_raster_page(blank, w1["template_page"], data))
-    vals = l2_values(out)
-    assert "AP_RECD_1ST_N" not in vals and "AP_ADMT_1ST_N" not in vals
-    assert any(x["reason"].startswith("identity_failed") for x in out["notes"]["rejected_fields"])
+def _fm_page(tag):
+    return widget(tag)[1]["template_page"]
+
+
+def test_identity_failure_inside_lane_2_rejects_both(monkeypatch):
+    vals = {"AP_RECD_1ST_N": "100", "AP_ADMT_1ST_N": "500", "EN_TOT_1ST_N": "50"}
+    monkeypatch.setattr(L.Lane2, "read_widget", lambda self, c, t, f, wi, rect, st:
+                        L.Lane2Read(value=vals[t], text=vals[t], conf=99.0) if t in vals else L.Lane2Read(reason="no_rendered_ink"))
+    data = T.fill_and_flatten(YEAR, {}, {})
+    pg = {_fm_page("AP_RECD_1ST_N"), _fm_page("AP_ADMT_1ST_N"), _fm_page("EN_TOT_1ST_N")}
+    packet = T.assemble([(rasterise_page(data, i), 0) if i in pg else (data, i) for i in range(50)])
+    out = to.extract_overlay(packet, lane2=L.make_hook(FixedEngine([])))
+    assert "AP_RECD_1ST_N" not in l2_values(out) and "AP_ADMT_1ST_N" not in l2_values(out)
+    assert {x["pdf_tag"] for x in out["notes"]["rejected_fields"] if x["reason"].startswith("identity_failed")} >= set(vals)
 
 
 @needs_tesseract
@@ -253,7 +256,7 @@ class FixedEngine:
     def __init__(self, texts, conf=99.0):
         self.texts, self.conf, self.i = list(texts), conf, 0
 
-    def read(self, img, *, psm=7):
+    def read(self, img, *, psm=7, **kw):
         t = self.texts[min(self.i, len(self.texts) - 1)]
         self.i += 1
         return [L.OcrWord(t, self.conf, 20, 20, 60, 40)] if t else []
@@ -265,6 +268,8 @@ def reader(c, texts, *, boxes=None, conf=99.0):
     rect = c._rect
 
     def fake_boxes(c_, words, origin, dpi):
+        if not words:
+            return []
         mid = (rect[0] + rect[2]) / 2
         out = boxes if boxes is not None else [to.GlyphBox(mid - 10, mid + 10, (rect[1] + rect[3]) / 2, rect[3] - 4, rect[1] + 4, words[0].text)]
         return list(out[:len(words)] + out[len(words):]) if words else []
@@ -289,12 +294,12 @@ def test_context_token_that_disagrees_abstains(ctx):
     c, tag, f, w, st = ctx
     r = reader(c, ["1234", "1234", "1239"]).read_widget(c, tag, f, 0, w["rect"], st)
     assert r.value is None and r.reason == "context_disagrees"
-    old = L.RULE_CONTEXT
-    L.RULE_CONTEXT = False
+    old = (L.RULE_CONTEXT, L.RULE_SECOND_MODEL, L.RULE_RAW_CONTEXT)
+    L.RULE_CONTEXT = L.RULE_SECOND_MODEL = L.RULE_RAW_CONTEXT = False
     try:
         assert reader(c, ["1234", "1234", "1239"]).read_widget(c, tag, f, 0, w["rect"], st).value == "1234"
     finally:
-        L.RULE_CONTEXT = old
+        L.RULE_CONTEXT, L.RULE_SECOND_MODEL, L.RULE_RAW_CONTEXT = old
 
 
 def test_a_token_crossing_the_rect_abstains_through_the_widget_gates(ctx):
@@ -302,7 +307,7 @@ def test_a_token_crossing_the_rect_abstains_through_the_widget_gates(ctx):
     x0, y0, x1, y1 = w["rect"]
     across = [to.GlyphBox(x1 - 12, x1 + 6, (y0 + y1) / 2, y1 - 4, y0 + 4, "1234")]
     r = reader(c, ["1234"] * 3, boxes=across).read_widget(c, tag, f, 0, w["rect"], st)
-    assert r.value is None and r.reason in ("glyph_crosses_right_edge", "token_crosses_rect")
+    assert r.value is None and r.reason == "glyph_crosses_right_edge"
     old = L.RULE_GATES
     L.RULE_GATES = False
     try:
@@ -334,7 +339,7 @@ def test_the_strict_number_grammar_applies_to_ocr_reads(ctx):
     c, tag, f, w, st = ctx
     for bad in ("1,23,4", "12.345", "1-2"):
         r = reader(c, [bad] * 3).read_widget(c, tag, f, 0, w["rect"], st)
-        assert r.value is None and r.reason in ("not_numeric", "ambiguous_thousands_separator"), (bad, r.reason)
+        assert r.value is None and r.reason == {"1,23,4": "not_numeric", "12.345": "ambiguous_thousands_separator", "1-2": "not_numeric"}[bad], (bad, r.reason)
 
 
 def test_the_template_ink_eraser_leaves_a_blank_cell_blank(ctx):
@@ -387,7 +392,7 @@ def test_hook_reads_numeric_fields_only(monkeypatch):
     monkeypatch.setattr(L.Lane2, "read_widget", lambda self, c, t, f, wi, rect, st: (calls.append(t), L.Lane2Read(value="77", text="77", conf=99.0))[1])
     out = to.extract_overlay(packet, lane2=L.make_hook(FixedEngine([])))
     assert calls and not [t for t in calls if fm[t]["ft"] != "/Tx" or to.effective_type(t, fm[t]["value_type"], "/Tx") not in L.NUMERIC_CLASS_TYPES]
-    assert l2_values(out) and all(r["emission_class"] == "numeric" and r["lane"] == 2 for r in out["values"].values() if r.get("lane") == 2)
+    assert l2_values(out) and all(r["emission_class"] == "ocr_numeric" and r["lane"] == 2 for r in out["values"].values() if r.get("lane") == 2)
 
 
 def test_hook_withholds_a_field_whose_widgets_read_differently(monkeypatch):
