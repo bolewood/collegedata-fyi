@@ -8,6 +8,89 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
 
 ## [Unreleased]
 
+## [0.6.22.0] - 2026-11-14
+
+Covers the 21 pull requests merged on 2026-11-13 and 2026-11-14 (#269 to #308)
+that did not bump the version at the time.
+
+### Added
+
+- Share button on school pages, year pages, `/coverage` and `/match` (PRD 024
+  M1). Desktop opens a popover with Copy link and, where supported, Share with
+  device; phones open the native share sheet. `/match` adds Copy summary: fit
+  bucket counts with no GPA, test scores or code. `/match` link previews use
+  generic Open Graph text (#308).
+- Corpus audit (`tools/data_quality/corpus_audit.py`): a read-only check for
+  one file published under several schools, different schools with identical
+  admissions counts, CDS applicants more than 1.5x away from the IPEDS count,
+  and a file whose A1 names a different school. Explained findings live in
+  `corpus_audit_accepted.yaml` with a reason each. `ops-corpus-audit.yml` runs
+  it daily at 13:40 UTC and posts the findings issue on Mondays (#293, #299,
+  #301).
+- "Data audit" station on `/pipeline-observation`, fed by the audit's
+  heartbeats. The lamp means the audit ran, not that the data is clean (#301).
+- Campus notes. A branch campus whose main campus files a CDS that does not
+  include it says so and links to the main campus; Fairleigh Dickinson's pages
+  say its one CDS covers both campuses. The list is
+  `web/src/lib/campus-filings.ts` (#295).
+- Projection sanity rules (`tools/browser_backend/sanity_rules.py`). A value
+  that cannot be true is published as `parse_error` with no number: Early
+  Decision admitted above applicants, a graduating class size that is a
+  calendar year or smaller than its borrowers, a full-time first-year count
+  above all full-time undergraduates, and a per-student average award above
+  $150,000 (#277, #291).
+- `/api/schools/search?ipeds_id=<six digits>` looks a school up by IPEDS unit
+  id; a malformed id returns `400 invalid_ipeds_id` (#289).
+- `cds_documents.source_gone_at`, also on `cds_manifest`: the school's CDS page
+  is gone. `removed_at` now means only that an operator hid the document
+  (#273).
+- `/api` explains that `field_id` numbers change between form years and that
+  `canonical_field_id` or `canonical_metric` follows one question across
+  years, lists the `value_status` values, points to admission factors on
+  `school_browser_rows`, and separates the MIT-licensed code and dataset from
+  the school-owned documents (#288).
+
+### Changed
+
+- A school taking its file down no longer removes our archived copy from the
+  site: the archive re-check writes `source_gone_at`, not `removed_at`. 18
+  documents from 17 schools hidden this way were restored (#273, #274).
+- Coverage status ignores hidden documents. A school with no visible document
+  no longer reads "CDS available" in search or on `/coverage` (#294, #297).
+- `school_browser_rows.ed_applicants` and `ed_admitted` are null when the
+  `ed_math_inconsistent` flag is set (#277).
+- On `/match`, Share replaces "Copy code". Copying the link on desktop is now
+  two clicks. `match_share_copied` still fires, alongside the new `share_*`
+  events (#308).
+- CI runs the Tier 2 suite only when its inputs change, and in parallel
+  (#275).
+- 77 documents hidden on 2026-11-14: 22 that belonged to another school or
+  were not a CDS, and 55 main-campus or system-office copies on branch campus
+  pages.
+- Spoke-ops: operator note on when to use the residential runner; the
+  registration-token request retries with backoff (#272).
+
+### Fixed
+
+- Match share codes (`code`) and search text (`q`) are dropped from the URLs
+  sent to Vercel Analytics on every page. A code decodes back to GPA and test
+  scores, and page views on `/match?code=...` were sending it (#308).
+- Dollar and percent answers under the `Nearest $1` and `Nearest 1%` format
+  hints are stored as numbers, with percents on one 0 to 1 scale. About 33,900
+  values that were text with no number gain one; template text in those cells
+  becomes `parse_error` (#290).
+- Tier 4 no longer reads Early Decision counts from later sections or from
+  written-out dates such as "12 months 15 days". Producer version 0.3.19
+  (#286).
+- The projection uses the sum of the reported components when a C1 total is
+  smaller than one of them (#271).
+- D5 transfer-credit labels follow the printed column headers: `TFER_RFS` is
+  "Recommended of Some" and `TFER_ROS` is "Required of Some". The 2023-24 to
+  2025-26 schemas are regenerated (#269).
+- Finder: UW Tacoma, UW Bothell and Wright State no longer inherit another
+  campus's files from a shared listing; WPI and Winona State seeds point at
+  listing pages instead of a single old PDF (#287, #298).
+
 ## [0.6.21.0] - 2026-11-12
 
 ### Added
