@@ -59,6 +59,18 @@ One YAML file per program: `data/scholarships/programs/<school_id>/<program_id>.
   `entry_year`; with `entry_year: null` the window is skipped and `entry_year`
   needs `conflicting` or `not_published` evidence. A month-precision date uses the
   first of the month.
+- **Advertised totals.** `offers[].advertised_totals[]` is the only place a
+  school-quoted package total may live: `{amount, scope_text}`. `amount.period`
+  may be null when the school states none. Each entry needs `reported` evidence on
+  `offers/N/advertised_totals/M/amount` with a `short_excerpt`. Never sum
+  components. A benefit promised as full cost of attendance without components
+  uses `category: cost_of_attendance`.
+- **Conditions.** A benefit with `conditions_text` (it depends on something else)
+  needs evidence on `offers/N/benefits/M/conditions_text`. `citizenship_text` is
+  the school's own wording, at most 40 words. `separate_application:
+  no_form_other_steps_required` means other steps (visit, interview,
+  recommendations) but no scholarship form; it is treated like `not_required` in
+  the `consideration_route` cross-check.
 - **Amounts.** `exact`, `up_to`, `at_least`, `approximate` need `value`; `range`
   needs `min < max`; `not_published` has no numbers.
 - **Supersedes.** Only within the same `entry_year`, acyclic, with at most one
@@ -89,7 +101,7 @@ Paths use `[]` for list items.
 | `official_name` | string |  |
 | `aliases[]` | array of string |  |
 | `program_family` | enum | stamps, national_merit, presidential, honors, other |
-| `awarding_authority` | enum | institution, affiliated_foundation, cofunded, unknown |
+| `awarding_authority` | enum | institution, affiliated_foundation, cofunded, state_program, unknown |
 | `related_programs[]` | array of object |  |
 | `related_programs[].program_id` | string |  |
 | `related_programs[].relation` | enum | component_of, includes, replaces, mutually_exclusive_with, successor_to |
@@ -116,9 +128,18 @@ Paths use `[]` for list items.
 | `versions[].offers[].aid_basis` | enum | merit_only, merit_and_need, unclear |
 | `versions[].offers[].need_role` | enum | required, considered, not_considered, top_up_only, unknown |
 | `versions[].offers[].funds_limited` | boolean|null |  |
+| `versions[].offers[].advertised_totals[]` | array of object |  |
+| `versions[].offers[].advertised_totals[].amount` | object |  |
+| `versions[].offers[].advertised_totals[].amount.qualifier` | enum | exact, range, up_to, at_least, approximate, not_published |
+| `versions[].offers[].advertised_totals[].amount.value` | number|null |  |
+| `versions[].offers[].advertised_totals[].amount.min` | number|null |  |
+| `versions[].offers[].advertised_totals[].amount.max` | number|null |  |
+| `versions[].offers[].advertised_totals[].amount.period` | enum|null | semester, academic_year, one_time, total_program |
+| `versions[].offers[].advertised_totals[].scope_text` | string |  |
 | `versions[].offers[].eligibility` | object |  |
 | `versions[].offers[].eligibility.national_merit_statuses[]` | array of enum|null | semifinalist, finalist, commended, nrp_hispanic, nrp_african_american, nrp_indigenous |
-| `versions[].offers[].eligibility.status_required_for_award` | enum|null | semifinalist, finalist, commended, nrp_hispanic, nrp_african_american, nrp_indigenous |
+| `versions[].offers[].eligibility.status_required_for_award` | enum|null | semifinalist, finalist, commended, nrp_hispanic, nrp_african_american, nrp_indigenous, scholar |
+| `versions[].offers[].eligibility.citizenship_text` | string|null |  |
 | `versions[].offers[].eligibility.first_choice_required` | boolean|null |  |
 | `versions[].offers[].eligibility.gpa` | object|null |  |
 | `versions[].offers[].eligibility.gpa.min` | number|null |  |
@@ -138,7 +159,7 @@ Paths use `[]` for list items.
 | `versions[].offers[].eligibility.eligibility_notes` | string|null |  |
 | `versions[].offers[].benefits[]` | array of object|null |  |
 | `versions[].offers[].benefits[].benefit_id` | string |  |
-| `versions[].offers[].benefits[].category` | enum | tuition, mandatory_fees, housing, meals, books, laptop, stipend, study_abroad, enrichment, health_insurance, nonresident_differential, other |
+| `versions[].offers[].benefits[].category` | enum | tuition, mandatory_fees, housing, meals, books, laptop, stipend, study_abroad, enrichment, health_insurance, nonresident_differential, cost_of_attendance, other |
 | `versions[].offers[].benefits[].instrument` | enum | scholarship, tuition_waiver, cash_stipend, restricted_fund, earned_compensation, unknown |
 | `versions[].offers[].benefits[].coverage` | enum | full, partial, fixed_amount, variable, unknown |
 | `versions[].offers[].benefits[].amount` | object|null |  |
@@ -148,11 +169,12 @@ Paths use `[]` for list items.
 | `versions[].offers[].benefits[].amount.max` | number|null |  |
 | `versions[].offers[].benefits[].amount.period` | enum|null | semester, academic_year, one_time, total_program |
 | `versions[].offers[].benefits[].duration_terms` | string|null |  |
+| `versions[].offers[].benefits[].conditions_text` | string|null |  |
 | `versions[].offers[].benefits[].exclusions[]` | array of string|null |  |
 | `versions[].offers[].benefits[].scope_text` | string|null |  |
 | `versions[].offers[].benefits[].advertised_coverage_label` | string|null |  |
 | `versions[].application` | object|null |  |
-| `versions[].application.separate_application` | enum | required, encouraged, not_required, invitation_only, unknown |
+| `versions[].application.separate_application` | enum | required, encouraged, not_required, invitation_only, no_form_other_steps_required, unknown |
 | `versions[].application.milestones[]` | array of object |  |
 | `versions[].application.milestones[].kind` | enum | application_open, admission_deadline, application_deadline, nomination_deadline, supporting_materials_deadline, test_score_deadline, interview, finalist_event, notification, acceptance_deadline, other |
 | `versions[].application.milestones[].requirement` | enum | required, priority, recommended, invitation_only |
@@ -166,8 +188,9 @@ Paths use `[]` for list items.
 | `versions[].application.prerequisites[]` | array of object |  |
 | `versions[].application.prerequisites[].kind` | enum | portal_credentials, admission_application, test_scores, recommendation, other |
 | `versions[].application.prerequisites[].minimum_lead_days` | integer|null |  |
+| `versions[].application.prerequisites[].maximum_lead_days` | integer|null |  |
 | `versions[].application.prerequisites[].notes` | string|null |  |
-| `versions[].application.interview_mode` | enum | none, in_person, virtual, either, unknown |
+| `versions[].application.interview_mode` | enum | none, in_person, virtual, either, mixed, unknown |
 | `versions[].application.finalist_event_required` | boolean|null |  |
 | `versions[].application.notes` | string|null |  |
 | `versions[].renewal_rules[]` | array of object|null |  |
@@ -177,6 +200,7 @@ Paths use `[]` for list items.
 | `versions[].renewal_rules[].gpa_min` | number|null |  |
 | `versions[].renewal_rules[].gpa_scale` | number|null |  |
 | `versions[].renewal_rules[].credit_load_min_per_term` | number|null |  |
+| `versions[].renewal_rules[].credit_load_min_per_year` | number|null |  |
 | `versions[].renewal_rules[].evaluation_timing` | string|null |  |
 | `versions[].renewal_rules[].summer_courses_can_fix_shortfall` | boolean|null |  |
 | `versions[].renewal_rules[].max_semesters` | integer|null |  |

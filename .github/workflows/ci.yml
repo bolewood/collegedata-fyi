@@ -80,6 +80,8 @@ jobs:
           else
             python tools/scholarships/validate.py data/scholarships/programs --merge-base origin/main
           fi
+      - name: Run shared polite fetcher tests
+        run: python -m pytest tools/common -q
       # The Tier 2 suite renders PDF pages and takes far longer than every
       # other step combined. On pull requests and branch pushes it runs only
       # when something it depends on changed. Pushes to main and manual
