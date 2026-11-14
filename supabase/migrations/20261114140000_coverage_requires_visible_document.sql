@@ -5,7 +5,7 @@
 -- last archive outcome was a "found" one (inserted, refreshed,
 -- unchanged_verified, unchanged_repaired). For a school whose documents were
 -- all hidden after that check, the outcome describes a file we no longer
--- publish. After 20261114130000, 62 schools read "CDS available" with no
+-- publish. After 20261114130000, 13 such schools read "CDS available" with no
 -- year, among them Miami University-Hamilton and the Kent State regional
 -- campuses, whose only files were the main campus's.
 --
