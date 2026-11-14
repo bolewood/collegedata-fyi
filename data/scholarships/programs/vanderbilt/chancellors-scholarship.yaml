@@ -1,0 +1,62 @@
+schema_version: 1
+program_id: chancellors-scholarship
+school_id: vanderbilt
+ipeds_id: '221999'
+applicable_campuses: []
+official_name: Chancellor's Scholarship (retired)
+aliases:
+- Chancellor's Scholars
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: closed_to_new_entrants
+versions:
+- version_id: chancellors-scholarship-2027
+  supersedes: null
+  entry_year: 2027
+  entry_year_label: null
+  entry_terms:
+  - fall
+  source_cohort_text: Beginning with students applying for fall 2027, the Chancellor’s Scholarship will no longer be offered
+  verification_status: verified
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-B
+  owner_spot_checked: false
+  program_status_for_entry: closed_to_new_entrants
+  offers: []
+  application: null
+  renewal_rules: null
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-vu
+    url: https://www.vanderbilt.edu/scholarships/chancellor/
+    authority: official_program
+    retrieved_at: '2026-11-14'
+    content_sha256: d2c8acf7ecb0581edce3f056ab6f00d4308e4f364822c56d9b111104475c7088
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-vu
+    locator: Chancellor's Scholars (retired) page, 'Important Update On Scholarship'
+    short_excerpt: Beginning with students applying for fall 2027, the Chancellor’s Scholarship will no longer be offered at Vanderbilt.
+    value_status: reported
+    reported_value: 2027
+  - field_path: program_status_for_entry
+    source_ref: s-vu
+    locator: Chancellor's Scholars (retired) page, 'Important Update On Scholarship'
+    short_excerpt: Beginning with students applying for fall 2027, the Chancellor’s Scholarship will no longer be offered at Vanderbilt.
+    value_status: reported
+    reported_value: closed_to_new_entrants
+  - field_path: /status
+    source_ref: s-vu
+    locator: Chancellor's Scholars (retired) page, 'Important Update On Scholarship'
+    short_excerpt: Current Chancellor Scholarships will continue to receive the award through graduation, pending their satisfactory progress toward earning a degree.
+    value_status: reported
+    reported_value: closed_to_new_entrants
+  - field_path: offers
+    source_ref: s-vu
+    locator: Page describes no current terms (amount, deadline, application) for the retired award
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

@@ -1,0 +1,346 @@
+schema_version: 1
+program_id: stamps-presidents-scholars
+school_id: georgia-tech
+ipeds_id: '139755'
+applicable_campuses: []
+official_name: Stamps President's Scholars Program
+aliases:
+- Stamps President's Scholarship
+- SPS
+program_family: stamps
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: stamps-presidents-scholars-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Entering class not named; dates are labeled "2026-2027 Important Dates"
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-B
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible:
+      - us_citizen
+      - permanent_resident
+      - international
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: International applicants must have an established role working with a community-based organization or similar partnership with, or unique identification by, Georgia Tech. Transfer
+        students are not eligible for the four-year award.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: full ride
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: "room and board"'
+      advertised_coverage_label: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: "room and board"'
+      advertised_coverage_label: null
+    - benefit_id: b-books
+      category: books
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: null
+    - benefit_id: b-personal
+      category: other
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: "personal expenses"; the catalog page refers to the program website for stipends'
+      advertised_coverage_label: null
+  application:
+    separate_application: not_required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: '2026-10-15'
+      recurring: null
+      precision: day
+      source_date_text: October 15, 2026 (Early Action 1, Georgia residents)
+    - kind: admission_deadline
+      requirement: required
+      date: '2026-11-02'
+      recurring: null
+      precision: day
+      source_date_text: November 2, 2026 (Early Action 2, non-Georgia residents)
+    - kind: notification
+      requirement: recommended
+      date: '2027-01-01'
+      recurring: null
+      precision: month
+      source_date_text: Late January 2027
+    - kind: interview
+      requirement: required
+      date: '2027-02-01'
+      recurring: null
+      precision: month
+      source_date_text: Early February 2027
+    - kind: finalist_event
+      requirement: required
+      date: null
+      recurring: null
+      precision: day
+      source_date_text: April 9-10, 2027 on the calendar; March 13 - 14, 2026 on the selection page
+    admission_plan_requirement: 'Apply through an Early Action plan: Early Action 1 for Georgia residents, Early Action 2 for non-Georgia residents'
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: true
+    notes: Semifinalist interviews are virtual and asynchronous; finalists are invited to an on-campus Stamps Scholars Weekend. Georgia Tech admits for Summer and Fall terms.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Renewable for up to four academic years or eight semesters, contingent on honors-level performance and continued leadership development; the page gives no GPA or credit threshold.
+  stacking_rules: null
+  award_counts:
+  - metric: offers
+    qualifier: exact
+    value: 50
+    cohort_year: null
+    source_ref: s-cal
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-cat
+    url: https://catalog.gatech.edu/financial/assistance/ugrad/stamps-presidents-scholarship/stamps-presidents-scholarship.pdf
+    authority: official_aid_policy
+    retrieved_at: '2026-11-14'
+    content_sha256: 7f39f7cb732088285d2c003fed38385dc0343efa147baabc06cfc58c66d5c664
+    archive_url: null
+  - source_id: s-dl
+    url: https://admission.gatech.edu/first-year/deadlines/
+    authority: official_admissions
+    retrieved_at: '2026-11-14'
+    content_sha256: 352edca4d984d2c56ebe342a33e34289f644b9558aa69fb6949907df78acbdab
+    archive_url: null
+  - source_id: s-cal
+    url: https://stampsps.gatech.edu/apply/calendar
+    authority: official_program
+    retrieved_at: '2026-11-14'
+    content_sha256: 0251d6231ccc8950e814bb046fe8e13b6c37af7549b58c62a8ea8f3832bd787d
+    archive_url: null
+  - source_id: s-sel
+    url: https://stampsps.gatech.edu/apply/selection-process
+    authority: official_program
+    retrieved_at: '2026-11-14'
+    content_sha256: 1d4ccf3ba390a2d95422b87786b78363f0975ba1c7dd9894d1a9084cbc7b3919
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-dl
+    locator: Deadlines page heading "2026-2027 Important Dates"; no entering class named
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-cat
+    locator: Catalog PDF, first paragraph
+    short_excerpt: Recipients are selected from the top applicants for admission to Georgia Tech
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/benefits
+    source_ref: s-cat
+    locator: Catalog PDF, second paragraph
+    short_excerpt: including tuition and mandatory fees, room and board, books, and personal expenses
+    value_status: reported
+    reported_value: listed
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-cat
+    locator: Catalog PDF, second paragraph
+    short_excerpt: including tuition and mandatory fees, room and board, books, and personal expenses
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-cat
+    locator: Catalog PDF, second paragraph
+    short_excerpt: including tuition and mandatory fees, room and board, books, and personal expenses
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-cat
+    locator: Catalog PDF, second paragraph
+    short_excerpt: including tuition and mandatory fees, room and board, books, and personal expenses
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-cat
+    locator: Catalog PDF, second paragraph
+    short_excerpt: including tuition and mandatory fees, room and board, books, and personal expenses
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-cat
+    locator: Catalog PDF, second paragraph
+    short_excerpt: including tuition and mandatory fees, room and board, books, and personal expenses
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/5/amount
+    source_ref: s-cat
+    locator: Catalog PDF, second paragraph
+    short_excerpt: See the website below for more information on stipends.
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_eligible
+    source_ref: s-cat
+    locator: Catalog PDF, second paragraph (eligibility)
+    short_excerpt: Recipients are US Citizens or Permanent Residents or international applicants with an established role working with a community-based organization
+    value_status: reported
+    reported_value: us_citizen; permanent_resident; international
+  - field_path: application/separate_application
+    source_ref: s-dl
+    locator: Deadlines page, "Scholarship Consideration"
+    short_excerpt: No separate scholarship application is required.
+    value_status: reported
+    reported_value: not_required
+  - field_path: application/milestones/0
+    source_ref: s-cal
+    locator: Scholarship Calendar, row "October 15, 2026 / Application Deadline (GA residents)"
+    short_excerpt: This is the early action 1 application deadline for Georgia residents only.
+    value_status: reported
+    reported_value: '2026-10-15'
+  - field_path: application/milestones/1
+    source_ref: s-cal
+    locator: Scholarship Calendar, row "November 2, 2026 / Application Deadline (Non-GA residents)"
+    short_excerpt: This is the early action 2 application deadline for non-Georgia residents only.
+    value_status: reported
+    reported_value: '2026-11-02'
+  - field_path: application/milestones/2
+    source_ref: s-cal
+    locator: Scholarship Calendar, row "Late January 2027 / Status Update"
+    short_excerpt: All applicants will be notified of their semifinalist status via the admission portal.
+    value_status: reported
+    reported_value: Late January 2027
+  - field_path: application/milestones/3
+    source_ref: s-cal
+    locator: Scholarship Calendar, row "Early February 2027 / Semifinalist Interviews"
+    short_excerpt: All applicants who advance to the semifinalist stage must participate in a virtual, asynchronous interview during this timeframe.
+    value_status: reported
+    reported_value: Early February 2027
+  - field_path: application/milestones/4/date
+    source_ref: s-cal
+    locator: Scholarship Calendar, row "April 9-10, 2027 / Stamps Scholars Weekend Activities"
+    short_excerpt: Students who are named as finalists will be invited to attend Stamp's Scholars Weekend on Georgia Tech’s campus, April 2027.
+    value_status: conflicting
+    reported_value: April 9-10, 2027
+  - field_path: application/milestones/4/date
+    source_ref: s-sel
+    locator: Selection Process page, second paragraph
+    short_excerpt: a two-day on-campus event taking place March 13 – 14, 2026.
+    value_status: conflicting
+    reported_value: March 13-14, 2026
+  - field_path: application/milestones/4/date
+    source_ref: s-cat
+    locator: Catalog PDF, first paragraph
+    short_excerpt: invited, with their parents, to campus for additional interviews and an information weekend in March or April.
+    value_status: conflicting
+    reported_value: March or April
+  - field_path: application/finalist_event_required
+    source_ref: s-cal
+    locator: Scholarship Calendar, Stamps Scholars Weekend row
+    short_excerpt: Attendance at all Stamps Scholars Weekend activities is required for a finalist to continue as a candidate in the selection process.
+    value_status: reported
+    reported_value: true
+  - field_path: renewal_rules/0/max_semesters
+    source_ref: s-cat
+    locator: Catalog PDF, third paragraph
+    short_excerpt: renewable for up to four academic years or eight semesters, contingent upon honors-level performance and continued leadership development
+    value_status: reported
+    reported_value: 8
+  - field_path: award_counts/0
+    source_ref: s-cal
+    locator: Scholarship Calendar, Stamps Scholars Weekend row
+    short_excerpt: We anticipate offering Stamps President’s Scholarship (SPS) awards to 50 finalists
+    value_status: reported
+    reported_value: 50

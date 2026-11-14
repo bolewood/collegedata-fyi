@@ -1,0 +1,386 @@
+schema_version: 1
+program_id: cheatham-white-scholarship
+school_id: north-carolina-a-and-t-state-university
+ipeds_id: '199102'
+applicable_campuses: []
+official_name: Cheatham-White Scholarship
+aliases:
+- Cheatham-White Scholars Program
+program_family: honors
+awarding_authority: institution
+related_programs: []
+status: unknown
+versions:
+- version_id: cheatham-white-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Entering class not named; dates are for 2026-2027 and the timeline is marked "Revised 7.6.26"
+  entry_terms:
+  - fall
+  source_cohort_text: null
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-B
+  owner_spot_checked: false
+  program_status_for_entry: unknown
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: honors_application
+    aid_basis: merit_only
+    need_role: not_considered
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 4.0
+        scale: null
+        basis: weighted
+      test_rules:
+      - exam: SAT
+        min: 1280
+        scoring: unknown
+        official_required: null
+      - exam: ACT
+        min: 28
+        scoring: unknown
+        official_required: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible:
+      - us_citizen
+      - permanent_resident
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: true
+      first_generation_rule: unknown
+      eligibility_notes: Honors College application must include a school-endorsed or self-endorsed nomination. Applicants must apply for admission as first-year students for fall. Recipients are selected
+        for only one of the three programs under the Honors Distinguished Scholars Program.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: fully-funded four-year scholarship
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: "student fees"'
+      advertised_coverage_label: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: null
+    - benefit_id: b-books
+      category: books
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: "textbooks"'
+      advertised_coverage_label: null
+    - benefit_id: b-laptop
+      category: laptop
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: "a laptop computer"'
+      advertised_coverage_label: null
+    - benefit_id: b-other
+      category: other
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: "supplies, travel and personal expenses"'
+      advertised_coverage_label: null
+    - benefit_id: b-summers
+      category: enrichment
+      instrument: restricted_fund
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four summers
+      exclusions: null
+      scope_text: 'School words: "four summers of fully funded enrichment and networking opportunities that may include international travel and study"'
+      advertised_coverage_label: null
+  application:
+    separate_application: required
+    milestones:
+    - kind: application_open
+      requirement: required
+      date: '2026-08-01'
+      recurring: null
+      precision: day
+      source_date_text: August 1, 2026
+    - kind: application_deadline
+      requirement: priority
+      date: '2026-11-15'
+      recurring: null
+      precision: day
+      source_date_text: 'November 15, 2026: Priority deadline'
+    - kind: finalist_event
+      requirement: required
+      date: '2027-02-26'
+      recurring: null
+      precision: day
+      source_date_text: 'February 26-27, 2027: Honors Weekend and Scholarship Interviews'
+    - kind: notification
+      requirement: required
+      date: '2027-03-15'
+      recurring: null
+      precision: approximate
+      source_date_text: Mid March 2027
+    - kind: acceptance_deadline
+      requirement: required
+      date: '2027-04-15'
+      recurring: null
+      precision: day
+      source_date_text: April 15, 2027
+    admission_plan_requirement: Apply for undergraduate admission to N.C. A&T first, then apply through the Honors College application by November 15
+    prerequisites:
+    - kind: admission_application
+      minimum_lead_days: null
+      notes: The Honors College application is reached through the Aggie Admissions Portal after an admission application is submitted.
+    interview_mode: in_person
+    finalist_event_required: null
+    notes: The timeline on the scholarships page is marked "Revised 7.6.26". Finalists are selected in late January 2027.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.5
+    gpa_scale: null
+    credit_load_min_per_term: null
+    evaluation_timing: Annually
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: Also requires enrolling full time each semester and earning at least 30 credit hours each academic year, and maintaining membership and active participation in the Honors College. GPA scale not
+      stated.
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-cw
+    url: https://www.ncat.edu/honors/cheatham-white-scholars.php
+    authority: official_program
+    retrieved_at: '2026-11-14'
+    content_sha256: 5728c6372db844cee34138c7fcfc1a0d903f8d5c18352db796659bf69087fab5
+    archive_url: null
+  - source_id: s-hon
+    url: https://www.ncat.edu/honors/scholarships.php
+    authority: official_program
+    retrieved_at: '2026-11-14'
+    content_sha256: e9b7db8e178d5e9a0a2abff4e5496e8efe73810e1ce6e57170bd854c81ba77ae
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-hon
+    locator: Honors scholarships page, "Important Dates & Deadlines"; no entering class named
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: /status
+    source_ref: s-cw
+    locator: Cheatham-White Scholars page, intro
+    short_excerpt: Prospective students are invited to join North Carolina A&T as a Cheatham-White Scholar.
+    value_status: conflicting
+    reported_value: active
+  - field_path: /status
+    source_ref: s-hon
+    locator: Honors scholarships page, "Applying to the Honors Distinguished Scholars Program"
+    short_excerpt: students are considered for one of our premier full-ride awards—previously known as the Cheatham-White, Dowdy, and February One Scholarships.
+    value_status: conflicting
+    reported_value: previously known as (folded into the Honors Distinguished Scholars Program)
+  - field_path: offers/0/selection_mode
+    source_ref: s-cw
+    locator: Cheatham-White Scholars page, "Eligibility and Selection Criteria"
+    short_excerpt: Candidates for Cheatham-White Scholarships shall be selected on the basis of merit
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/need_role
+    source_ref: s-cw
+    locator: Cheatham-White Scholars page, "Eligibility and Selection Criteria"
+    short_excerpt: Financial need shall not be a consideration.
+    value_status: reported
+    reported_value: not_considered
+  - field_path: offers/0/benefits
+    source_ref: s-cw
+    locator: Cheatham-White Scholars page, "Details of the Award"
+    short_excerpt: 'a fully-funded four-year scholarship that covers the costs of all of the following: tuition, student fees, housing, meals'
+    value_status: reported
+    reported_value: listed
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-cw
+    locator: Cheatham-White Scholars page, "Details of the Award"
+    short_excerpt: tuition, student fees, housing, meals
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-cw
+    locator: Cheatham-White Scholars page, "Details of the Award"
+    short_excerpt: tuition, student fees, housing, meals
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-cw
+    locator: Cheatham-White Scholars page, "Details of the Award"
+    short_excerpt: tuition, student fees, housing, meals
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-cw
+    locator: Cheatham-White Scholars page, "Details of the Award"
+    short_excerpt: tuition, student fees, housing, meals
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-cw
+    locator: Cheatham-White Scholars page, "Details of the Award"
+    short_excerpt: textbooks, a laptop computer, supplies, travel and personal expenses.
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/5/amount
+    source_ref: s-cw
+    locator: Cheatham-White Scholars page, "Details of the Award"
+    short_excerpt: textbooks, a laptop computer, supplies, travel and personal expenses.
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/6/amount
+    source_ref: s-cw
+    locator: Cheatham-White Scholars page, "Details of the Award"
+    short_excerpt: textbooks, a laptop computer, supplies, travel and personal expenses.
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/7/amount
+    source_ref: s-cw
+    locator: Cheatham-White Scholars page, "Details of the Award"
+    short_excerpt: Each scholarship also provides four summers of fully funded enrichment and networking opportunities that may include international travel and study.
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-cw
+    locator: Cheatham-White Scholars page, "Eligibility and Selection Criteria"
+    short_excerpt: Minimum 4.00 or higher weighted cumulative GPA.
+    value_status: reported
+    reported_value: 4.0
+  - field_path: offers/0/eligibility/test_rules
+    source_ref: s-cw
+    locator: Cheatham-White Scholars page, "Eligibility and Selection Criteria"
+    short_excerpt: Minimum scholastic test score of 1280 SAT or 28 ACT (test optional).
+    value_status: reported
+    reported_value: 1280 SAT or 28 ACT
+  - field_path: offers/0/eligibility/citizenship_eligible
+    source_ref: s-cw
+    locator: Cheatham-White Scholars page, "Eligibility and Selection Criteria"
+    short_excerpt: Be a United States citizen or permanent resident.
+    value_status: reported
+    reported_value: us_citizen; permanent_resident
+  - field_path: application/separate_application
+    source_ref: s-hon
+    locator: Honors scholarships page, FAQ "Will I automatically be considered for Honors Scholarships when I apply to the University?"
+    short_excerpt: Applicants should then apply to the Honors College by November 15 for scholarship consideration.
+    value_status: reported
+    reported_value: required
+  - field_path: application/milestones/0
+    source_ref: s-hon
+    locator: Honors scholarships page, "Important Dates & Deadlines"
+    short_excerpt: 'August 1, 2026: Honors College application opens.'
+    value_status: reported
+    reported_value: '2026-08-01'
+  - field_path: application/milestones/1
+    source_ref: s-hon
+    locator: Honors scholarships page, "Important Dates & Deadlines"
+    short_excerpt: 'November 15, 2026: Priority deadline to apply and submit a final application to the Honors College'
+    value_status: reported
+    reported_value: '2026-11-15'
+  - field_path: application/milestones/2
+    source_ref: s-hon
+    locator: Honors scholarships page, "Important Dates & Deadlines"
+    short_excerpt: 'February 26-27, 2027: Finalists are invited to campus for Honors Weekend and Scholarship Interviews.'
+    value_status: reported
+    reported_value: '2027-02-26'
+  - field_path: application/milestones/3
+    source_ref: s-hon
+    locator: Honors scholarships page, "Important Dates & Deadlines"
+    short_excerpt: 'Mid March 2027: All Finalists are notified and recipients selected.'
+    value_status: reported
+    reported_value: Mid March 2027
+  - field_path: application/milestones/4
+    source_ref: s-hon
+    locator: Honors scholarships page, "Important Dates & Deadlines"
+    short_excerpt: 'April 15, 2027: Deadline for recipients to accept scholarship offer.'
+    value_status: reported
+    reported_value: '2027-04-15'
+  - field_path: renewal_rules/0/gpa_min
+    source_ref: s-cw
+    locator: Cheatham-White Scholars page, "Expectation of Recipients"
+    short_excerpt: Maintaining a 3.5 cumulative GPA annually.
+    value_status: reported
+    reported_value: 3.5

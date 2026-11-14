@@ -1,0 +1,338 @@
+schema_version: 1
+program_id: robertson-scholars
+school_id: duke
+ipeds_id: '198419'
+participating_schools:
+- school_id: duke
+  ipeds_id: '198419'
+- school_id: unc
+  ipeds_id: '199120'
+applicable_campuses: []
+official_name: Robertson Scholars Leadership Program
+aliases:
+- Robertson Scholars
+- RSLP
+program_family: other
+awarding_authority: affiliated_foundation
+related_programs: []
+status: active
+versions:
+- version_id: robertson-scholars-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Entering class not named; page lists dates in 2026 and 2027
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-B
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible:
+      - any
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Applicants must also apply for undergraduate admission to Duke and/or UNC-Chapel Hill the same year. International students are eligible if they can obtain a U.S. study visa. Transfer
+        students and graduate students are not eligible.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: eight semesters of full tuition
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters
+      exclusions: null
+      scope_text: 'School words: "room and board"'
+      advertised_coverage_label: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters
+      exclusions: null
+      scope_text: 'School words: "room and board"'
+      advertised_coverage_label: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters
+      exclusions: null
+      scope_text: 'School words: "most mandatory fees"'
+      advertised_coverage_label: null
+    - benefit_id: b-summers
+      category: enrichment
+      instrument: restricted_fund
+      coverage: variable
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to three summers
+      exclusions: null
+      scope_text: 'School words: "generous funding for up to three summer experiences"; amount not published'
+      advertised_coverage_label: null
+    - benefit_id: b-abroad
+      category: study_abroad
+      instrument: restricted_fund
+      coverage: variable
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Two semesters
+      exclusions: null
+      scope_text: 'School words: "for two semesters of study abroad"; amount not published'
+      advertised_coverage_label: null
+  application:
+    separate_application: required
+    milestones:
+    - kind: application_open
+      requirement: required
+      date: '2026-08-15'
+      recurring: null
+      precision: day
+      source_date_text: August 15, 2026
+    - kind: application_deadline
+      requirement: priority
+      date: '2026-10-15'
+      recurring: null
+      precision: day
+      source_date_text: 'Early Notification Deadline: October 15, 2026'
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring: null
+      precision: day
+      source_date_text: November 15, 2026 on most of the page; "November 15, 2025" in the Step Two text
+    - kind: interview
+      requirement: required
+      date: '2027-02-01'
+      recurring: null
+      precision: month
+      source_date_text: 'Semi-Finalist Interviews: February 2027'
+    - kind: interview
+      requirement: required
+      date: '2027-03-01'
+      recurring: null
+      precision: approximate
+      source_date_text: 'Finalist Interviews: Early March 2027 (TBD)'
+    - kind: notification
+      requirement: required
+      date: '2027-03-15'
+      recurring: null
+      precision: approximate
+      source_date_text: by mid-March 2027
+    - kind: finalist_event
+      requirement: recommended
+      date: '2027-03-31'
+      recurring: null
+      precision: day
+      source_date_text: 'Scholar Recipient Campus Visits: March 31-April 3, 2027'
+    admission_plan_requirement: Apply separately to Duke and/or UNC-Chapel Hill (Early Action, Early Decision or Regular Decision) by their own deadlines
+    prerequisites:
+    - kind: admission_application
+      minimum_lead_days: null
+      notes: Applicants must apply to Duke and/or UNC-Chapel Hill the same year they apply to the Robertson Scholars Leadership Program.
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: 'Selection has five steps: application, group activity (December 2026 to February 2027, rolling), semi-finalist interview, finalist interview, then recipient campus visits. An invitation to the
+      group activity is not an indication of admissibility. The campus visit is for those offered the scholarship.'
+  renewal_rules: null
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-duke
+    url: https://ousf.duke.edu/merit-scholarships/robertson-scholars-program/
+    authority: official_program
+    retrieved_at: '2026-11-14'
+    content_sha256: 5a26e5096a331c49661fde423d26780ca0a1f3d7e7eb993cb4511e84ec14df3a
+    archive_url: null
+  - source_id: s-hs
+    url: https://robertsonscholars.org/high-school-students-2/
+    authority: foundation_official
+    retrieved_at: '2026-11-14'
+    content_sha256: 0acb23717a9c85f1ba938afd09833a4fef48c87861244d4454a6c4d1f97f80c9
+    archive_url: null
+  - source_id: s-home
+    url: https://robertsonscholars.org/
+    authority: foundation_official
+    retrieved_at: '2026-11-14'
+    content_sha256: ab5d122f4bb4d8b921534be5ab92c5facbe81e38b21b2405f93778d50b25f5dc
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-hs
+    locator: robertsonscholars.org High School Students page, timeline
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: /awarding_authority
+    source_ref: s-home
+    locator: robertsonscholars.org home page, "Give to RSLP"
+    short_excerpt: Julian Robertson gave boldly and generously when he created the Robertson Scholars Leadership Program.
+    value_status: reported
+    reported_value: affiliated_foundation
+  - field_path: offers/0/selection_mode
+    source_ref: s-hs
+    locator: robertsonscholars.org High School Students page, "Application and Interview Timeline"
+    short_excerpt: 'Finalist Interviews: Early March 2027'
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/benefits
+    source_ref: s-duke
+    locator: Duke OUSF Robertson page, "About the Robertson Scholars Program"
+    short_excerpt: The Robertson Scholars Leadership Program provides eight semesters of full tuition, room and board, and most mandatory fees for Scholars at Duke and UNC-Chapel Hill.
+    value_status: reported
+    reported_value: listed
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-duke
+    locator: Duke OUSF Robertson page, "About the Robertson Scholars Program"
+    short_excerpt: eight semesters of full tuition
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-duke
+    locator: Duke OUSF Robertson page, "About the Robertson Scholars Program"
+    short_excerpt: room and board
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-duke
+    locator: Duke OUSF Robertson page, "About the Robertson Scholars Program"
+    short_excerpt: room and board
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-duke
+    locator: Duke OUSF Robertson page, "About the Robertson Scholars Program"
+    short_excerpt: most mandatory fees
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-duke
+    locator: Duke OUSF Robertson page, "About the Robertson Scholars Program"
+    short_excerpt: generous funding for up to three summer experiences, funding for conferences throughout the academic year
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/5/amount
+    source_ref: s-duke
+    locator: Duke OUSF Robertson page, "About the Robertson Scholars Program"
+    short_excerpt: and for two semesters of study abroad
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_eligible
+    source_ref: s-hs
+    locator: robertsonscholars.org High School Students page, first paragraph
+    short_excerpt: The Robertson Scholars Leadership Program welcomes applications from all students regardless of citizenship or nationality.
+    value_status: reported
+    reported_value: any
+  - field_path: application/separate_application
+    source_ref: s-duke
+    locator: Duke OUSF Robertson page, "Interested in becoming a Robertson Scholar?"
+    short_excerpt: is the only four year merit scholarship at Duke that has a separate application process
+    value_status: reported
+    reported_value: required
+  - field_path: application/milestones/0
+    source_ref: s-hs
+    locator: robertsonscholars.org High School Students page, timeline
+    short_excerpt: 'Application Opens: August 15, 2026'
+    value_status: reported
+    reported_value: '2026-08-15'
+  - field_path: application/milestones/1
+    source_ref: s-hs
+    locator: robertsonscholars.org High School Students page, timeline
+    short_excerpt: 'Early Notification Deadline: October 15, 2026'
+    value_status: reported
+    reported_value: '2026-10-15'
+  - field_path: application/milestones/2/date
+    source_ref: s-hs
+    locator: robertsonscholars.org High School Students page, timeline
+    short_excerpt: 'Regular Application Deadline: November 15, 2026'
+    value_status: conflicting
+    reported_value: '2026-11-15'
+  - field_path: application/milestones/2/date
+    source_ref: s-hs
+    locator: 'robertsonscholars.org High School Students page, "Step Two: Group Activity"'
+    short_excerpt: Applicants not invited to the Group Activity who applied using the November 15, 2025, deadline will be notified by the end of February 2027.
+    value_status: conflicting
+    reported_value: '2025-11-15'
+  - field_path: application/milestones/3
+    source_ref: s-hs
+    locator: robertsonscholars.org High School Students page, timeline
+    short_excerpt: 'Semi-Finalist Interviews: February 2027'
+    value_status: reported
+    reported_value: February 2027
+  - field_path: application/milestones/4
+    source_ref: s-hs
+    locator: robertsonscholars.org High School Students page, timeline
+    short_excerpt: 'Finalist Interviews: Early March 2027'
+    value_status: reported
+    reported_value: Early March 2027
+  - field_path: application/milestones/5
+    source_ref: s-hs
+    locator: 'robertsonscholars.org High School Students page, "Step Five: Scholar Recipient Campus Visits"'
+    short_excerpt: All applicants will learn if they are offered the Robertson by mid-March 2027.
+    value_status: reported
+    reported_value: mid-March 2027
+  - field_path: application/milestones/6
+    source_ref: s-hs
+    locator: robertsonscholars.org High School Students page, timeline
+    short_excerpt: 'Scholar Recipient Campus Visits: March 31-April 3, 2027'
+    value_status: reported
+    reported_value: March 31-April 3, 2027

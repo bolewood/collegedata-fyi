@@ -1,0 +1,597 @@
+schema_version: 1
+program_id: foundation-fellowship
+school_id: uga
+ipeds_id: '139959'
+applicable_campuses: []
+official_name: Foundation Fellowship
+aliases:
+- Foundation Fellows
+- UGA Foundation Fellowship
+program_family: honors
+awarding_authority: institution
+related_programs:
+- program_id: stamps-scholars
+  relation: includes
+status: active
+versions:
+- version_id: foundation-fellowship-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Entering class not named; November 1 deadline stated for "each year", interview weekend dated February 2027
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-B
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-resident
+    parent_offer_id: null
+    variant_name: In-state students
+    residency: in_state
+    selection_mode: competitive
+    consideration_route: honors_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: &id001
+      - any
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: true
+      first_generation_rule: unknown
+      eligibility_notes: Open to students who have not yet matriculated at another university; dual-enrolled high school seniors and international students may apply. Transfer applicants and current undergraduates
+        are not eligible. Fellows live in Myers Hall, the Honors magnet housing, in the first year.
+    benefits:
+    - benefit_id: b-stipend
+      category: stipend
+      instrument: cash_stipend
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 15750
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: "Annual stipend"; the school says the stipend approximates the cost of attendance'
+      advertised_coverage_label: null
+    - benefit_id: b-zell
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: approximate
+        value: 10134
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: null
+      exclusions: null
+      scope_text: Listed by the school as a Zell Miller Scholarship added to the stipend; the page does not say which charges it covers
+      advertised_coverage_label: null
+    - benefit_id: b-travel
+      category: enrichment
+      instrument: restricted_fund
+      coverage: variable
+      amount:
+        qualifier: approximate
+        value: 15000
+        min: null
+        max: null
+        period: total_program
+      duration_terms: null
+      exclusions: null
+      scope_text: Three fully funded spring travel-study programs; the school gives $15,000 as the value of all three
+      advertised_coverage_label: null
+    - benefit_id: b-oxford
+      category: study_abroad
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: approximate
+        value: 10000
+        min: null
+        max: null
+        period: one_time
+      duration_terms: null
+      exclusions: null
+      scope_text: One fully funded summer program at the University of Oxford after the first year
+      advertised_coverage_label: null
+    - benefit_id: b-grants
+      category: enrichment
+      instrument: restricted_fund
+      coverage: variable
+      amount:
+        qualifier: up_to
+        value: 10000
+        min: null
+        max: null
+        period: total_program
+      duration_terms: null
+      exclusions: null
+      scope_text: Individual travel-study grants, cumulative cap
+      advertised_coverage_label: null
+    - benefit_id: b-research
+      category: enrichment
+      instrument: restricted_fund
+      coverage: variable
+      amount:
+        qualifier: up_to
+        value: 2000
+        min: null
+        max: null
+        period: total_program
+      duration_terms: null
+      exclusions: null
+      scope_text: Research and academic conference grants, cumulative cap
+      advertised_coverage_label: null
+  - offer_id: o-nonresident
+    parent_offer_id: null
+    variant_name: Out-of-state students
+    residency: out_of_state
+    selection_mode: competitive
+    consideration_route: honors_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: *id001
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: true
+      first_generation_rule: unknown
+      eligibility_notes: Open to students who have not yet matriculated at another university; dual-enrolled high school seniors and international students may apply. Transfer applicants and current undergraduates
+        are not eligible. Fellows live in Myers Hall, the Honors magnet housing, in the first year.
+    benefits:
+    - benefit_id: b-stipend
+      category: stipend
+      instrument: cash_stipend
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 25930
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: "Annual stipend"; the school says the stipend approximates the cost of attendance'
+      advertised_coverage_label: null
+    - benefit_id: b-waiver
+      category: other
+      instrument: tuition_waiver
+      coverage: fixed_amount
+      amount:
+        qualifier: approximate
+        value: 20844
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: null
+      exclusions: null
+      scope_text: Listed by the school as a Presidential waiver added to the stipend; the page does not say which charges it covers
+      advertised_coverage_label: null
+    - benefit_id: b-travel
+      category: enrichment
+      instrument: restricted_fund
+      coverage: variable
+      amount:
+        qualifier: approximate
+        value: 15000
+        min: null
+        max: null
+        period: total_program
+      duration_terms: null
+      exclusions: null
+      scope_text: Three fully funded spring travel-study programs; the school gives $15,000 as the value of all three
+      advertised_coverage_label: null
+    - benefit_id: b-oxford
+      category: study_abroad
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: approximate
+        value: 10000
+        min: null
+        max: null
+        period: one_time
+      duration_terms: null
+      exclusions: null
+      scope_text: One fully funded summer program at the University of Oxford after the first year
+      advertised_coverage_label: null
+    - benefit_id: b-grants
+      category: enrichment
+      instrument: restricted_fund
+      coverage: variable
+      amount:
+        qualifier: up_to
+        value: 10000
+        min: null
+        max: null
+        period: total_program
+      duration_terms: null
+      exclusions: null
+      scope_text: Individual travel-study grants, cumulative cap
+      advertised_coverage_label: null
+    - benefit_id: b-research
+      category: enrichment
+      instrument: restricted_fund
+      coverage: variable
+      amount:
+        qualifier: up_to
+        value: 2000
+        min: null
+        max: null
+        period: total_program
+      duration_terms: null
+      exclusions: null
+      scope_text: Research and academic conference grants, cumulative cap
+      advertised_coverage_label: null
+  - offer_id: o-international
+    parent_offer_id: null
+    variant_name: International students
+    residency: international
+    selection_mode: competitive
+    consideration_route: honors_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: *id001
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: true
+      first_generation_rule: unknown
+      eligibility_notes: Open to students who have not yet matriculated at another university; dual-enrolled high school seniors and international students may apply. Transfer applicants and current undergraduates
+        are not eligible. Fellows live in Myers Hall, the Honors magnet housing, in the first year.
+    benefits:
+    - benefit_id: b-stipend
+      category: stipend
+      instrument: cash_stipend
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 30000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: "Annual stipend"; the school says the stipend approximates the cost of attendance'
+      advertised_coverage_label: null
+    - benefit_id: b-waiver
+      category: other
+      instrument: tuition_waiver
+      coverage: fixed_amount
+      amount:
+        qualifier: approximate
+        value: 21740
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: null
+      exclusions: null
+      scope_text: Listed by the school as a Presidential waiver added to the stipend; the page does not say which charges it covers
+      advertised_coverage_label: null
+    - benefit_id: b-travel
+      category: enrichment
+      instrument: restricted_fund
+      coverage: variable
+      amount:
+        qualifier: approximate
+        value: 15000
+        min: null
+        max: null
+        period: total_program
+      duration_terms: null
+      exclusions: null
+      scope_text: Three fully funded spring travel-study programs; the school gives $15,000 as the value of all three
+      advertised_coverage_label: null
+    - benefit_id: b-oxford
+      category: study_abroad
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: approximate
+        value: 10000
+        min: null
+        max: null
+        period: one_time
+      duration_terms: null
+      exclusions: null
+      scope_text: One fully funded summer program at the University of Oxford after the first year
+      advertised_coverage_label: null
+    - benefit_id: b-grants
+      category: enrichment
+      instrument: restricted_fund
+      coverage: variable
+      amount:
+        qualifier: up_to
+        value: 10000
+        min: null
+        max: null
+        period: total_program
+      duration_terms: null
+      exclusions: null
+      scope_text: Individual travel-study grants, cumulative cap
+      advertised_coverage_label: null
+    - benefit_id: b-research
+      category: enrichment
+      instrument: restricted_fund
+      coverage: variable
+      amount:
+        qualifier: up_to
+        value: 2000
+        min: null
+        max: null
+        period: total_program
+      duration_terms: null
+      exclusions: null
+      scope_text: Research and academic conference grants, cumulative cap
+      advertised_coverage_label: null
+  application:
+    separate_application: required
+    milestones:
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: 'Deadline: November 1'
+    - kind: finalist_event
+      requirement: required
+      date: '2027-02-26'
+      recurring: null
+      precision: day
+      source_date_text: Friday, February 26 and Saturday, February 27, 2027
+    admission_plan_requirement: First-Year Admission application to UGA must be submitted first to unlock the Foundation Fellowship application (which is linked to the Morehead Honors College application)
+    prerequisites:
+    - kind: admission_application
+      minimum_lead_days: null
+      notes: Applicants must submit a First-Year Admission application before starting the Foundation Fellowship application.
+    interview_mode: unknown
+    finalist_event_required: true
+    notes: Finalists are notified by late January and attend a mandatory Interview Weekend; no alternate dates are offered.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.4
+    gpa_scale: null
+    credit_load_min_per_term: 12
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: GPA scale not stated. Other requirements listed by the school include remaining in good standing in the Morehead Honors College, graduating in four years, and living in Myers Hall in the first
+      year.
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-ff
+    url: https://honors.uga.edu/scholarships/prospective-students/foundation-fellowship/
+    authority: official_program
+    retrieved_at: '2026-11-14'
+    content_sha256: 297cdea61fad18c6f78fcc16769ab235de3f3aed4b96f95b45d9b04b5d2ab44f
+    archive_url: null
+  - source_id: s-apply
+    url: https://honors.uga.edu/scholarships/prospective-students/foundation-fellowship/applying-for-the-foundation-fellowship/
+    authority: official_program
+    retrieved_at: '2026-11-14'
+    content_sha256: 4ded337391468d393ccb92f4c48eb92bc6cb2373b85375ce534736de62bedad2
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-apply
+    locator: Applying page; November 1 deadline stated for each year, interview weekend dated 2027, no entering class named
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-apply
+    locator: 'Applying page, "Deadline: November 1"'
+    short_excerpt: Applicants are notified as to whether or not they are finalists for the Fellowship by late January.
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Benefits" > "Financial benefits"
+    short_excerpt: 'Annual stipend for in-state students: $15,750 plus the Zell Miller Scholarship (worth $10,134 per year)'
+    value_status: reported
+    reported_value: 15750
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Benefits" > "Financial benefits"
+    short_excerpt: 'Annual stipend for in-state students: $15,750 plus the Zell Miller Scholarship (worth $10,134 per year)'
+    value_status: reported
+    reported_value: 10134
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Benefits" > "Financial benefits"
+    short_excerpt: Three fully funded spring travel-study programs (first through third years, valued at $15,000).
+    value_status: reported
+    reported_value: 15000
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Benefits" > "Financial benefits"
+    short_excerpt: One fully funded summer study abroad program to the University of Oxford immediately following the first year (valued at $10,000)
+    value_status: reported
+    reported_value: 10000
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Benefits" > "Financial benefits"
+    short_excerpt: Individual travel-study grants up to a cumulative total of $10,000
+    value_status: reported
+    reported_value: 10000
+  - field_path: offers/0/benefits/5/amount
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Benefits" > "Financial benefits"
+    short_excerpt: Research and academic conference grants up to a cumulative total of $2,000
+    value_status: reported
+    reported_value: 2000
+  - field_path: offers/0/eligibility/citizenship_eligible
+    source_ref: s-apply
+    locator: Applying page, "Eligibility"
+    short_excerpt: Dual-enrolled high school seniors and international students are eligible to apply.
+    value_status: reported
+    reported_value: any
+  - field_path: offers/1/selection_mode
+    source_ref: s-apply
+    locator: 'Applying page, "Deadline: November 1"'
+    short_excerpt: Applicants are notified as to whether or not they are finalists for the Fellowship by late January.
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Benefits" > "Financial benefits"
+    short_excerpt: 'Annual stipend for out-of-state students: $25,930 plus a Presidential waiver (worth $20,844 per year)'
+    value_status: reported
+    reported_value: 25930
+  - field_path: offers/1/benefits/1/amount
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Benefits" > "Financial benefits"
+    short_excerpt: 'Annual stipend for out-of-state students: $25,930 plus a Presidential waiver (worth $20,844 per year)'
+    value_status: reported
+    reported_value: 20844
+  - field_path: offers/1/benefits/2/amount
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Benefits" > "Financial benefits"
+    short_excerpt: Three fully funded spring travel-study programs (first through third years, valued at $15,000).
+    value_status: reported
+    reported_value: 15000
+  - field_path: offers/1/benefits/3/amount
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Benefits" > "Financial benefits"
+    short_excerpt: One fully funded summer study abroad program to the University of Oxford immediately following the first year (valued at $10,000)
+    value_status: reported
+    reported_value: 10000
+  - field_path: offers/1/benefits/4/amount
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Benefits" > "Financial benefits"
+    short_excerpt: Individual travel-study grants up to a cumulative total of $10,000
+    value_status: reported
+    reported_value: 10000
+  - field_path: offers/1/benefits/5/amount
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Benefits" > "Financial benefits"
+    short_excerpt: Research and academic conference grants up to a cumulative total of $2,000
+    value_status: reported
+    reported_value: 2000
+  - field_path: offers/1/eligibility/citizenship_eligible
+    source_ref: s-apply
+    locator: Applying page, "Eligibility"
+    short_excerpt: Dual-enrolled high school seniors and international students are eligible to apply.
+    value_status: reported
+    reported_value: any
+  - field_path: offers/2/selection_mode
+    source_ref: s-apply
+    locator: 'Applying page, "Deadline: November 1"'
+    short_excerpt: Applicants are notified as to whether or not they are finalists for the Fellowship by late January.
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/2/benefits/0/amount
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Benefits" > "Financial benefits"
+    short_excerpt: 'Annual stipend for international students: $30,000 plus a Presidential waiver (worth $21,740 per year)'
+    value_status: reported
+    reported_value: 30000
+  - field_path: offers/2/benefits/1/amount
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Benefits" > "Financial benefits"
+    short_excerpt: 'Annual stipend for international students: $30,000 plus a Presidential waiver (worth $21,740 per year)'
+    value_status: reported
+    reported_value: 21740
+  - field_path: offers/2/benefits/2/amount
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Benefits" > "Financial benefits"
+    short_excerpt: Three fully funded spring travel-study programs (first through third years, valued at $15,000).
+    value_status: reported
+    reported_value: 15000
+  - field_path: offers/2/benefits/3/amount
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Benefits" > "Financial benefits"
+    short_excerpt: One fully funded summer study abroad program to the University of Oxford immediately following the first year (valued at $10,000)
+    value_status: reported
+    reported_value: 10000
+  - field_path: offers/2/benefits/4/amount
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Benefits" > "Financial benefits"
+    short_excerpt: Individual travel-study grants up to a cumulative total of $10,000
+    value_status: reported
+    reported_value: 10000
+  - field_path: offers/2/benefits/5/amount
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Benefits" > "Financial benefits"
+    short_excerpt: Research and academic conference grants up to a cumulative total of $2,000
+    value_status: reported
+    reported_value: 2000
+  - field_path: offers/2/eligibility/citizenship_eligible
+    source_ref: s-apply
+    locator: Applying page, "Eligibility"
+    short_excerpt: Dual-enrolled high school seniors and international students are eligible to apply.
+    value_status: reported
+    reported_value: any
+  - field_path: application/separate_application
+    source_ref: s-apply
+    locator: Applying page, "Eligibility"
+    short_excerpt: Students must first submit a First-Year Admission application to the University of Georgia in order to gain access to the Foundation Fellowship application.
+    value_status: reported
+    reported_value: required
+  - field_path: application/milestones/0
+    source_ref: s-apply
+    locator: 'Applying page, "Deadline: November 1"'
+    short_excerpt: The deadline to submit the Foundation Fellowship application is November 1.
+    value_status: reported
+    reported_value: November 1
+  - field_path: application/milestones/1
+    source_ref: s-apply
+    locator: 'Applying page, "Deadline: November 1"'
+    short_excerpt: a mandatory Interview Weekend, scheduled for Friday, February 26 and Saturday, February 27, 2027
+    value_status: reported
+    reported_value: '2027-02-26'
+  - field_path: application/finalist_event_required
+    source_ref: s-apply
+    locator: 'Applying page, "Deadline: November 1"'
+    short_excerpt: a mandatory Interview Weekend, scheduled for Friday, February 26 and Saturday, February 27, 2027
+    value_status: reported
+    reported_value: true
+  - field_path: renewal_rules/0/gpa_min
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Requirements"
+    short_excerpt: Maintain a minimum 3.40 cumulative UGA undergraduate GPA
+    value_status: reported
+    reported_value: 3.4
+  - field_path: renewal_rules/0/credit_load_min_per_term
+    source_ref: s-ff
+    locator: Foundation Fellowship page, "Requirements"
+    short_excerpt: Take a minimum of 12 hours of classes per semester (except summer)
+    value_status: reported
+    reported_value: 12
+  - field_path: /related_programs/0
+    source_ref: s-ff
+    locator: Foundation Fellowship page; Stamps Scholars page, "Selection"
+    short_excerpt: null
+    value_status: reported
+    reported_value: stamps-scholars includes

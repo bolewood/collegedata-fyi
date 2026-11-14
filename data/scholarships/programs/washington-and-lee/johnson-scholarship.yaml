@@ -1,0 +1,268 @@
+schema_version: 1
+program_id: johnson-scholarship
+school_id: washington-and-lee
+ipeds_id: '234207'
+applicable_campuses: []
+official_name: Johnson Scholarship
+aliases:
+- Johnson Scholars
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: johnson-scholarship-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Entering class not named; page gives a recurring Dec. 1 deadline
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-B
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: merit_only
+    need_role: top_up_only
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Applicants submit the Common Application plus the Johnson Scholarship supplement (a second personal essay). Applicants may apply under any admission plan.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: tuition and fees
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: tuition and fees
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: housing and food
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: housing and food
+    - benefit_id: b-summer
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 10000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: School calls this "enhancement funds" for a summer experience; the page does not say whether it is paid once or each year
+      advertised_coverage_label: null
+  application:
+    separate_application: required
+    milestones:
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 12
+        day: 1
+      precision: day
+      source_date_text: Dec. 1
+    - kind: notification
+      requirement: recommended
+      date: null
+      recurring: null
+      precision: day
+      source_date_text: late March / mid-March (page says both)
+    admission_plan_requirement: Any admission plan (ED I Nov. 1; ED II Jan. 5; RD Jan. 5); the Johnson application is due Dec. 1 regardless
+    prerequisites: []
+    interview_mode: in_person
+    finalist_event_required: true
+    notes: 'Finalists are invited to an on-campus selection event; W&L pays the event costs. Finalist invitations: the page also says early February.'
+  renewal_rules: null
+  stacking_rules: null
+  award_counts:
+  - metric: offers
+    qualifier: up_to
+    value: 44
+    cohort_year: null
+    source_ref: s-wl
+    claim: target
+    denominator: null
+  - metric: share_of_class
+    qualifier: approximate
+    value: 10
+    cohort_year: null
+    source_ref: s-wl
+    claim: target
+    denominator: first-year class (percent)
+  sources:
+  - source_id: s-wl
+    url: https://www.wlu.edu/admissions/the-johnson-scholarship
+    authority: official_program
+    retrieved_at: '2026-11-14'
+    content_sha256: f241bbb17dbc6586e4409188d05568ddeb7c79bba718fa953aba67558a3f03bd
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-wl
+    locator: Page names no entering class
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-wl
+    locator: Johnson Scholarship page, FAQ "When will I know if I am a scholarship finalist or winner?"
+    short_excerpt: Finalists for the Johnson Scholarship will be notified in early February and invited to campus for the scholarship selection competition.
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/benefits
+    source_ref: s-wl
+    locator: Johnson Scholarship page, intro
+    short_excerpt: Johnson Scholarships cover tuition and fees, housing and food, and $10,000 in funding for a summer experience
+    value_status: reported
+    reported_value: listed
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-wl
+    locator: Johnson Scholarship page, intro
+    short_excerpt: tuition and fees
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-wl
+    locator: Johnson Scholarship page, intro
+    short_excerpt: tuition and fees
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-wl
+    locator: Johnson Scholarship page, intro
+    short_excerpt: housing and food
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-wl
+    locator: Johnson Scholarship page, intro
+    short_excerpt: housing and food
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-wl
+    locator: Johnson Scholarship page, "What the Johnson program offers" section
+    short_excerpt: Every recipient of the Johnson Scholar receives an additional $10,000 to support summer experiences
+    value_status: reported
+    reported_value: 10000
+  - field_path: offers/0/need_role
+    source_ref: s-wl
+    locator: Johnson Scholarship page, intro
+    short_excerpt: Students with additional financial need may also see their scholarship amount increased to cover additional costs of attendance
+    value_status: reported
+    reported_value: top_up_only
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-wl
+    locator: Johnson Scholarship page, FAQ "How are applicants for the scholarship evaluated?"
+    short_excerpt: We will review your complete Common Application, including your transcript, letters of recommendation, test scores (if supplied), and your personal essay
+    value_status: reported
+    reported_value: optional
+  - field_path: application/separate_application
+    source_ref: s-wl
+    locator: Johnson Scholarship page, FAQ "What does the application entail?"
+    short_excerpt: the W&L Johnson Scholarship supplement, which consists of a second personal essay
+    value_status: reported
+    reported_value: required
+  - field_path: application/milestones/0
+    source_ref: s-wl
+    locator: Johnson Scholarship page, FAQ "When is the application deadline?"
+    short_excerpt: The deadline to apply for the Johnson Scholarship is Dec. 1.
+    value_status: reported
+    reported_value: Dec. 1
+  - field_path: application/milestones/1/date
+    source_ref: s-wl
+    locator: Johnson Scholarship page, intro, third paragraph
+    short_excerpt: Finalists for Johnson Scholarships participate in an on-campus selection event and are notified in late March of their status.
+    value_status: conflicting
+    reported_value: late March
+  - field_path: application/milestones/1/date
+    source_ref: s-wl
+    locator: Johnson Scholarship page, FAQ "When will I know if I am a scholarship finalist or winner?"
+    short_excerpt: Scholarship winners will be notified in mid-March with full details about the scholarship award.
+    value_status: conflicting
+    reported_value: mid-March
+  - field_path: application/finalist_event_required
+    source_ref: s-wl
+    locator: Johnson Scholarship page, intro, third paragraph
+    short_excerpt: Finalists for Johnson Scholarships participate in an on-campus selection event
+    value_status: reported
+    reported_value: true
+  - field_path: award_counts/0
+    source_ref: s-wl
+    locator: Johnson Scholarship page, intro
+    short_excerpt: Scholarships are awarded to up to 44 incoming students each year
+    value_status: reported
+    reported_value: 44
+  - field_path: award_counts/1
+    source_ref: s-wl
+    locator: Johnson Scholarship page, intro
+    short_excerpt: Scholarships are awarded to up to 44 incoming students each year (roughly 10% of the first-year class).
+    value_status: reported
+    reported_value: 10

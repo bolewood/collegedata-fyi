@@ -1,0 +1,159 @@
+schema_version: 1
+program_id: gabelli-presidential-scholars
+school_id: boston-college
+ipeds_id: '164924'
+applicable_campuses: []
+official_name: Gabelli Presidential Scholars Program
+aliases:
+- GPSP
+program_family: presidential
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: gabelli-presidential-scholars-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Entering class not named; page gives a recurring November 1 priority deadline
+  entry_terms:
+  - fall
+  source_cohort_text: Early Decision and Regular Decision applicants ... will be considered; only candidates for fall admission
+  verification_status: verified
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-B
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Only candidates for fall admission are considered. Early Decision and Regular Decision applicants who apply by the priority deadline are considered.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: full-tuition scholarships
+    - benefit_id: b-summers
+      category: enrichment
+      instrument: restricted_fund
+      coverage: variable
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: School says "fully-funded, GPSP-sponsored summer programs"; amount not published on this page
+      advertised_coverage_label: null
+  application:
+    separate_application: not_required
+    milestones:
+    - kind: application_deadline
+      requirement: priority
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: November 1 priority scholarship deadline
+    admission_plan_requirement: Early Decision or Regular Decision application to Boston College submitted by the November 1 priority scholarship deadline; fall admission only
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: null
+  renewal_rules: null
+  stacking_rules: null
+  award_counts:
+  - metric: offers
+    qualifier: exact
+    value: 18
+    cohort_year: null
+    source_ref: s-bc
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-bc
+    url: https://www.bc.edu/bc-web/academics/sites/gabelli-presidential-scholars-program.html
+    authority: official_program
+    retrieved_at: '2026-11-14'
+    content_sha256: 4c5710552733f4217809dc628d1ab132bc702af10daea451bffeac6cb56aa2bf
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-bc
+    locator: Home page; no entering class named
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-bc
+    locator: Home page, paragraph under 'An Opportunity for Leaders of Unusual Promise'
+    short_excerpt: by the November 1 priority scholarship deadline will be considered
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-bc
+    locator: Home page, paragraph under 'An Opportunity for Leaders of Unusual Promise'
+    short_excerpt: annually awards full-tuition scholarships
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-bc
+    locator: Home page, paragraph under 'An Opportunity for Leaders of Unusual Promise'
+    short_excerpt: full-tuition scholarships
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-bc
+    locator: Home page, paragraph under 'An Opportunity for Leaders of Unusual Promise'
+    short_excerpt: fully-funded, GPSP-sponsored summer programs
+    value_status: not_published
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-bc
+    locator: Home page, paragraph under 'An Opportunity for Leaders of Unusual Promise'
+    short_excerpt: There is no separate application for this scholarship
+    value_status: reported
+    reported_value: not_required
+  - field_path: application/milestones/0
+    source_ref: s-bc
+    locator: Home page, paragraph under 'An Opportunity for Leaders of Unusual Promise'
+    short_excerpt: by the November 1 priority scholarship deadline
+    value_status: reported
+    reported_value: November 1
+  - field_path: award_counts/0
+    source_ref: s-bc
+    locator: Home page, paragraph under 'An Opportunity for Leaders of Unusual Promise'
+    short_excerpt: annually awards full-tuition scholarships and fully-funded, GPSP-sponsored summer programs to 18 incoming freshman students
+    value_status: reported
+    reported_value: 18
