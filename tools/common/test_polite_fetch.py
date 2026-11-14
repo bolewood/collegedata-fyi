@@ -229,3 +229,61 @@ def test_redirect_ok():
     fk = Fake({ROBOTS: [R(404)], PAGE: [R(301, location="/moved")], "https://a.edu/moved": [R(200, b"z")]})
     r = fk.fetcher().fetch(PAGE)
     assert r.status == OK and r.final_url == "https://a.edu/moved"
+
+
+def test_conditional_get_survives_redirect():
+    fk = Fake({ROBOTS: [R(404)], PAGE: [R(301, location="/moved")],
+               "https://a.edu/moved": [R(200, b"v1", etag='"r1"'), R(304)]})
+    f = fk.fetcher()
+    assert f.fetch(PAGE).status == OK
+    r = f.fetch(PAGE)
+    assert r.status == NOT_MODIFIED
+    assert fk.calls[-1][1] == "https://a.edu/moved"
+    assert fk.calls[-1][2]["If-None-Match"] == '"r1"'
+
+
+def test_requests_hold_the_host_lock_and_http_https_share_it():
+    fk = Fake({ROBOTS: [R(404)], PAGE: [R(200)], "http://a.edu/robots.txt": [R(404)], "http://a.edu/x": [R(200)]})
+    f = fk.fetcher()
+    held = []
+    orig = fk.transport
+
+    def checking(method, url, headers, timeout):
+        held.append(f._host_locks["a.edu"].locked())
+        return orig(method, url, headers, timeout)
+
+    f._transport = checking
+    f.fetch(PAGE); f.fetch("http://a.edu/x")
+    assert held and all(held)
+    t = [c[0] for c in fk.calls]
+    assert all(b - a >= 2.0 for a, b in zip(t, t[1:]))  # http and https spaced as one host
+
+
+def test_refresh_of_robots_uses_known_crawl_delay():
+    fk = Fake({ROBOTS: [R(200, b"User-agent: *\nCrawl-delay: 20\n")], PAGE: [R(200)]})
+    f = fk.fetcher()
+    f.fetch(PAGE)
+    fk.t += 24 * 3600 + 1
+    n = len(fk.calls)
+    f.fetch(PAGE)
+    assert fk.calls[n][1] == ROBOTS
+    # the refresh was issued 24h later so it needed no wait; the page after it is 20 s later
+    assert fk.calls[n + 1][0] - fk.calls[n][0] >= 20.0
+
+
+def test_default_transport_wraps_http_client_errors(monkeypatch):
+    import http.client
+    import urllib.request
+    from tools.common import polite_fetch as pf
+
+    class Op:
+        def open(self, *a, **k):
+            raise http.client.IncompleteRead(b"x")
+
+    monkeypatch.setattr(urllib.request, "build_opener", lambda *a: Op())
+    try:
+        pf.urllib_transport("GET", "https://a.edu/", {}, 1)
+    except OSError:
+        pass
+    else:
+        raise AssertionError("expected OSError subclass")

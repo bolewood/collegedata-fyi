@@ -21,6 +21,7 @@ Left out of RFC 9309 on purpose: see ``RFC9309_NOT_IMPLEMENTED``.
 
 from __future__ import annotations
 
+import http.client
 import json
 import re
 import threading
@@ -111,6 +112,8 @@ def urllib_transport(method: str, url: str, headers: Mapping[str, str], timeout:
     try:
         with opener.open(req, timeout=timeout) as r:
             return Response(r.status, {k.lower(): v for k, v in r.headers.items()}, r.read())
+    except http.client.HTTPException as e:
+        raise ConnectionError(f"{type(e).__name__}: {e}") from e
     except urllib.error.HTTPError as e:
         try:
             body = e.read()
@@ -289,13 +292,17 @@ class PoliteFetcher:
             return self._host_locks.setdefault(host, threading.Lock())
 
     @staticmethod
+    def _host(url: str) -> str:
+        return (urlsplit(url).hostname or "").lower()
+
+    @staticmethod
     def _origin(url: str) -> str:
         p = urlsplit(url)
         return f"{p.scheme}://{p.netloc.lower()}"
 
     def _spaced_request(self, url: str, headers: Mapping[str, str], delay: float) -> Response:
         """One request, serialised per host and spaced. Caller holds no lock."""
-        origin = self._origin(url)
+        origin = self._host(url)
         with self._lock(origin):
             last = self._last_request.get(origin)
             if last is not None:
@@ -314,10 +321,11 @@ class PoliteFetcher:
             return hit[1]
         url = origin + "/robots.txt"
         headers = {"User-Agent": self.user_agent, "Accept": "text/plain, */*;q=0.1"}
+        prev_delay = self._delay_for(hit[1]) if hit else self.min_spacing
         policy: RobotsPolicy | None = None
         for _ in range(MAX_REDIRECTS + 1):
             try:
-                resp = self._spaced_request(url, headers, self.min_spacing)
+                resp = self._spaced_request(url, headers, prev_delay)
             except OSError:
                 return None
             if resp.status in (301, 302, 303, 307, 308) and resp.headers.get("location"):
@@ -376,7 +384,7 @@ class PoliteFetcher:
                 return FetchResult(BLOCKED_BY_ROBOTS, url, current, reason=f"disallowed by robots.txt for {origin}", attempts=attempts)
 
             headers = {"User-Agent": self.user_agent, "Accept": "*/*"}
-            cached = self.cache.get(url) if current == url else None
+            cached = self.cache.get(url)
             if cached:
                 if cached.get("etag"):
                     headers["If-None-Match"] = cached["etag"]
