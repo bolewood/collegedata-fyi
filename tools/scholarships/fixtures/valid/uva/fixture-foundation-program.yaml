@@ -9,7 +9,7 @@ official_name: Fixture Foundation Scholars
 aliases:
 - FFS
 program_family: other
-awarding_authority: affiliated_foundation
+awarding_authority: state_program
 related_programs:
 - program_id: fixture-parent-program
   relation: component_of
@@ -114,6 +114,29 @@ versions:
       exclusions: []
       scope_text: Funded summer experiences, quoted by the foundation as one total
       advertised_coverage_label: null
+    - benefit_id: b-coa
+      category: cost_of_attendance
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      conditions_text: null
+      exclusions: null
+      scope_text: Promised as full cost of attendance; components not listed
+      advertised_coverage_label: null
+    advertised_totals:
+    - amount:
+        qualifier: at_least
+        value: 89000
+        min: null
+        max: null
+        period: null
+      scope_text: Total value of the package per year as the foundation advertises it
   - offer_id: o-tier
     parent_offer_id: o-main
     variant_name: National Merit tier
@@ -130,13 +153,16 @@ versions:
       gpa: null
       test_rules: []
       tests_policy_for_scholarship: unknown
-      citizenship_eligible: null
+      citizenship_eligible:
+      - us_citizen
+      - permanent_resident
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
       first_generation_rule: unknown
       eligibility_notes: null
-      status_required_for_award: null
+      status_required_for_award: scholar
+      citizenship_text: U.S. citizens and permanent residents
     benefits:
     - benefit_id: b-differential
       category: nonresident_differential
@@ -152,6 +178,7 @@ versions:
       exclusions: null
       scope_text: Waives the out-of-state tuition differential only
       advertised_coverage_label: null
+      conditions_text: Requires at least $4,000 a year in other competitive scholarships
   application:
     separate_application: required
     milestones:
@@ -175,13 +202,14 @@ versions:
         day: 15
       precision: approximate
       source_date_text: mid-March each year
-    interview_mode: in_person
+    interview_mode: mixed
     finalist_event_required: true
     admission_plan_requirement: Early Action application by November 1
     prerequisites:
     - kind: portal_credentials
       minimum_lead_days: 5
       notes: Allow about five days for portal credentials.
+      maximum_lead_days: 5
     notes: null
   renewal_rules:
   - applies_to: []
@@ -192,6 +220,7 @@ versions:
     summer_courses_can_fix_shortfall: null
     max_semesters: 8
     notes: The page lists two minimum GPAs; see field_evidence.
+    credit_load_min_per_year: 24
   stacking_rules:
   - other_aid_type: institutional_merit
     relation: not_allowed
@@ -302,5 +331,17 @@ versions:
     locator: About page, first paragraph
     short_excerpt: null
     value_status: reported
-    reported_value: affiliated_foundation
+    reported_value: state_program
+  - field_path: offers/0/advertised_totals/0/amount
+    source_ref: s-foundation
+    locator: Benefits page, headline
+    short_excerpt: more than $89,000 per year
+    value_status: reported
+    reported_value: 89000
+  - field_path: offers/1/benefits/0/conditions_text
+    source_ref: s-school
+    locator: Waiver footnote
+    short_excerpt: must hold $4,000 a year in competitive scholarships
+    value_status: reported
+    reported_value: null
   program_status_for_entry: active

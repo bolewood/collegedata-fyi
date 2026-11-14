@@ -74,6 +74,7 @@
         "institution",
         "affiliated_foundation",
         "cofunded",
+        "state_program",
         "unknown"
       ]
     },
@@ -293,6 +294,7 @@
             "enrichment",
             "health_insurance",
             "nonresident_differential",
+            "cost_of_attendance",
             "other"
           ]
         },
@@ -330,6 +332,13 @@
             "string",
             "null"
           ]
+        },
+        "conditions_text": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "What the benefit depends on, in the school's words, e.g. other awards that must be held. Needs field_evidence."
         },
         "exclusions": {
           "type": [
@@ -447,8 +456,16 @@
             "nrp_hispanic",
             "nrp_african_american",
             "nrp_indigenous",
+            "scholar",
             null
           ]
+        },
+        "citizenship_text": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The school's own wording on citizenship, at most 40 words."
         },
         "first_choice_required": {
           "type": [
@@ -610,6 +627,27 @@
             "null"
           ]
         },
+        "advertised_totals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "amount": {
+                "$ref": "#/$defs/amount"
+              },
+              "scope_text": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "amount",
+              "scope_text"
+            ]
+          },
+          "description": "Package totals the school itself quotes, with scope. The only place a total may live; each needs reported evidence with an excerpt."
+        },
         "eligibility": {
           "$ref": "#/$defs/eligibility"
         },
@@ -736,6 +774,7 @@
             "encouraged",
             "not_required",
             "invitation_only",
+            "no_form_other_steps_required",
             "unknown"
           ]
         },
@@ -773,6 +812,12 @@
                   "null"
                 ]
               },
+              "maximum_lead_days": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
               "notes": {
                 "type": [
                   "string",
@@ -791,6 +836,7 @@
             "in_person",
             "virtual",
             "either",
+            "mixed",
             "unknown"
           ]
         },
@@ -861,6 +907,12 @@
           ]
         },
         "credit_load_min_per_term": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "credit_load_min_per_year": {
           "type": [
             "number",
             "null"

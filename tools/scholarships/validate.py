@@ -27,6 +27,7 @@ Checks, each with a stable error code:
     E_ENTRY_YEAR_UNKNOWN        dated milestone, no entry_year, and no conflicting/not_published evidence on entry_year
     E_MILESTONE_UNDATED         milestone with neither date nor recurring and no conflicting evidence
     E_APPLIES_TO                renewal rule scope names an offer or benefit that does not exist
+    E_TEXT_LENGTH               citizenship_text is longer than 40 words
     E_AMOUNT_RANGE              range amount with min >= max
     E_CONTRADICTION             aid_basis/need_role or consideration_route/separate_application disagree
     E_MILESTONE_WINDOW          dated milestone outside the version's application cycle
@@ -72,6 +73,7 @@ FOUNDATIONS_PATH = REPO_ROOT / "data" / "scholarships" / "foundation_domains.yam
 DEFAULT_PROGRAMS_DIR = REPO_ROOT / "data" / "scholarships" / "programs"
 ARCHIVE_HOSTS = {"web.archive.org"}
 MAX_EXCERPT_WORDS = 25
+MAX_CITIZENSHIP_WORDS = 40
 MISSING = object()
 
 
@@ -432,17 +434,21 @@ def _check_offers(version, vloc, add):
                 break
             seen.add(cur)
             cur = ids[cur].get("parent_offer_id")
-        for bi, b in enumerate(o["benefits"] or []):
-            amt = b.get("amount")
+        amounts = [(f"{loc}/benefits/{bi}/amount", b.get("amount")) for bi, b in enumerate(o["benefits"] or [])]
+        amounts += [(f"{loc}/advertised_totals/{ti}/amount", t["amount"]) for ti, t in enumerate(o.get("advertised_totals") or [])]
+        for aloc, amt in amounts:
             if amt and amt["qualifier"] == "range" and not amt["min"] < amt["max"]:
-                add("E_AMOUNT_RANGE", f"{loc}/benefits/{bi}/amount", "a range needs min < max")
+                add("E_AMOUNT_RANGE", aloc, "a range needs min < max")
+        ctext = (o.get("eligibility") or {}).get("citizenship_text")
+        if ctext and len(ctext.split()) > MAX_CITIZENSHIP_WORDS:
+            add("E_TEXT_LENGTH", f"{loc}/eligibility/citizenship_text", f"{len(ctext.split())} words; limit is {MAX_CITIZENSHIP_WORDS}")
         if o.get("aid_basis") == "merit_only" and o.get("need_role") == "required":
             add("E_CONTRADICTION", loc, "aid_basis merit_only contradicts need_role required")
         route = o.get("consideration_route")
         if route == "admission_application" and separate == "required":
             add("E_CONTRADICTION", loc, "consideration_route admission_application contradicts application.separate_application required")
-        if route == "separate_application" and separate == "not_required":
-            add("E_CONTRADICTION", loc, "consideration_route separate_application contradicts application.separate_application not_required")
+        if route == "separate_application" and separate in ("not_required", "no_form_other_steps_required"):
+            add("E_CONTRADICTION", loc, f"consideration_route separate_application contradicts application.separate_application {separate}")
 
 
 def _check_renewal_scope(version, vloc, add):
@@ -497,7 +503,11 @@ def _required_evidence_paths(version) -> list[tuple[str, str]]:
             out.append((f"{base}/selection_mode", "guaranteed" if o["selection_mode"] == "automatic_guaranteed" else "plain"))
         if _stated((o.get("eligibility") or {}).get("national_merit_statuses")):
             out.append((f"{base}/eligibility/national_merit_statuses", "plain"))
+        for ti, _ in enumerate(o.get("advertised_totals") or []):
+            out.append((f"{base}/advertised_totals/{ti}/amount", "total"))
         for bi, b in enumerate(o["benefits"] or []):
+            if b.get("conditions_text"):
+                out.append((f"{base}/benefits/{bi}/conditions_text", "plain"))
             amount = b.get("amount")
             if _stated(amount):
                 kind = "total" if amount.get("period") == "total_program" else "plain"
