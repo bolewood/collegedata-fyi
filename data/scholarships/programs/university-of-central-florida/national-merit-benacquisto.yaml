@@ -8,7 +8,7 @@ aliases:
 - UCF National Merit Finalist Scholarship
 - Benacquisto Scholarship
 program_family: national_merit
-awarding_authority: unknown
+awarding_authority: state_program
 related_programs: []
 status: active
 versions:
@@ -38,28 +38,28 @@ versions:
     eligibility:
       national_merit_statuses:
       - finalist
-      status_required_for_award: null
+      status_required_for_award: scholar
       first_choice_required: true
       gpa: null
       test_rules: null
       tests_policy_for_scholarship: unknown
       citizenship_eligible: null
+      citizenship_text: Be a U.S. citizen or eligible noncitizen (as determined by the institution).
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
       first_generation_rule: unknown
       eligibility_notes: 'The Benacquisto page requires National Merit Scholar status (a Finalist who
-        receives a National Merit $2500, corporate-sponsored or college-sponsored award); the format has
-        no value for ''Scholar''. Also: U.S. citizen or eligible noncitizen as determined by the institution,
-        full-time (12 credit hours per term) in a baccalaureate program, Florida high school diploma or
-        equivalent, enrolling in the fall term after high school graduation. The flyer says Florida-resident
-        Finalists who designate UCF first choice ''are guaranteed the UCF National Merit Finalist Scholarship''
+        receives a National Merit $2500, corporate-sponsored or college-sponsored award). Also: full-time
+        (12 credit hours per term) in a baccalaureate program, Florida high school diploma or equivalent,
+        enrolling in the fall term after high school graduation. The flyer says Florida-resident Finalists
+        who designate UCF first choice ''are guaranteed the UCF National Merit Finalist Scholarship''
         (a differently named award from Benacquisto). The flyer also lists guaranteed Burnett Honors College
         admission (with application) and four years of guaranteed on-campus housing (upon application);
         those are not funding benefits.'
     benefits:
     - benefit_id: b-benacquisto
-      category: other
+      category: cost_of_attendance
       instrument: scholarship
       coverage: variable
       amount:
@@ -76,6 +76,8 @@ versions:
       scope_text: Award equals the institutional cost of attendance minus the sum of the Bright Futures
         award and the National Merit award; the state Benacquisto program funds it
       advertised_coverage_label: stacked to total your UCF cost of attendance
+      conditions_text: null
+    advertised_totals: []
   - offer_id: o-out-of-state-finalist
     parent_offer_id: null
     variant_name: National Merit Finalist, out-of-state
@@ -94,6 +96,7 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: unknown
       citizenship_eligible: null
+      citizenship_text: null
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
@@ -101,6 +104,7 @@ versions:
       eligibility_notes: The admissions page tells out-of-state Finalists to contact scholarsprogram@ucf.edu
         about current non-Florida National Merit benefits; no terms are published.
     benefits: null
+    advertised_totals: []
   - offer_id: o-semifinalist
     parent_offer_id: null
     variant_name: National Merit Semifinalist
@@ -119,6 +123,7 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: unknown
       citizenship_eligible: null
+      citizenship_text: null
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
@@ -126,6 +131,7 @@ versions:
       eligibility_notes: Considered for a scholarship upon admission; the flyer lists expedited admission
         decision and priority consideration for merit scholarships. No amount is published.
     benefits: null
+    advertised_totals: []
   application:
     separate_application: not_required
     milestones:
@@ -136,7 +142,8 @@ versions:
         month: 5
         day: 31
       precision: day
-      source_date_text: May 31 deadline to designate UCF as first choice with the NMSC
+      source_date_text: May 31 deadline to designate UCF as first choice with the NMSC (admissions page);
+        the flyer calls May 31 the last opportunity for students who are undecided with the NMSC
     - kind: acceptance_deadline
       requirement: required
       date: null
@@ -159,6 +166,7 @@ versions:
     gpa_min: 3.0
     gpa_scale: 4.0
     credit_load_min_per_term: null
+    credit_load_min_per_year: null
     evaluation_timing: At the end of the second semester of the academic year (end of spring term)
     summer_courses_can_fix_shortfall: null
     max_semesters: null
@@ -254,6 +262,18 @@ versions:
     locator: Admissions page, Packages and Benefits, first paragraph
     short_excerpt: You will be considered for a scholarship upon admission to UCF if you are named a National
       Merit Semifinalist.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/status_required_for_award
+    source_ref: s-bq
+    locator: Benacquisto page, Eligibility Requirements
+    short_excerpt: 'A National Merit Finalist becomes a Scholar by receiving:'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_text
+    source_ref: s-bq
+    locator: Benacquisto page, Eligibility Requirements, 'All students will:'
+    short_excerpt: Be a U.S. citizen or eligible noncitizen (as determined by the institution).
     value_status: reported
     reported_value: null
   - field_path: application/separate_application

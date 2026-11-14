@@ -46,6 +46,7 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: unknown
       citizenship_eligible: null
+      citizenship_text: null
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
@@ -70,10 +71,11 @@ versions:
       exclusions: null
       scope_text: Described as the value of tuition
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-housing
       category: housing
       instrument: scholarship
-      coverage: full
+      coverage: partial
       amount:
         qualifier: not_published
         value: null
@@ -82,9 +84,10 @@ versions:
         period: null
       duration_terms: Four years of on-campus housing
       exclusions: null
-      scope_text: 'Regular room rate: the cost of the largest room option in the assigned dorm, based
-        on Housing assignment'
+      scope_text: 'Capped at the regular room rate: the cost of the largest room option in the assigned
+        dorm, based on Housing assignment'
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-supplement
       category: other
       instrument: scholarship
@@ -100,6 +103,7 @@ versions:
       scope_text: Undergraduate supplemental scholarship; a portion paid by the National Merit Scholarship
         Corporation is applied to the student account within the first six weeks of each semester
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-allowance
       category: enrichment
       instrument: restricted_fund
@@ -114,6 +118,8 @@ versions:
       exclusions: null
       scope_text: Allowance for research or international study
       advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
   - offer_id: o-semifinalist-presidential-in-state
     parent_offer_id: null
     variant_name: 'National Merit Semifinalist: Presidential Scholarship (in-state)'
@@ -135,6 +141,7 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: unknown
       citizenship_eligible: null
+      citizenship_text: null
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
@@ -157,6 +164,8 @@ versions:
       exclusions: null
       scope_text: In-state automatic grid lists the Presidential yearly value as 'Tuition'
       advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
   - offer_id: o-semifinalist-presidential-out-of-state
     parent_offer_id: null
     variant_name: 'National Merit Semifinalist: Presidential Scholarship (out-of-state)'
@@ -178,6 +187,7 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: unknown
       citizenship_eligible: null
+      citizenship_text: null
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
@@ -202,6 +212,8 @@ versions:
       scope_text: Yearly value in the out-of-state and international automatic grid; the page does not
         say which charges it applies to
       advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
   application:
     separate_application: unknown
     milestones:

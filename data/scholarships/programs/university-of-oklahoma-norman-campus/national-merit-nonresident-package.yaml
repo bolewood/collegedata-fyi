@@ -42,28 +42,25 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: optional
       citizenship_eligible: null
+      citizenship_text: null
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
       first_generation_rule: unknown
-      eligibility_notes: Semifinalists who advance to Finalist standing and name OU as their college choice
-        by April 30 are eligible to be upgraded to the Finalist package. OU is test-optional for scholarships
-        for fall 2027.
-    benefits:
-    - benefit_id: b-package
-      category: other
-      instrument: unknown
-      coverage: fixed_amount
-      amount:
+      eligibility_notes: Institutional scholarships and waivers cannot be transferred or applied to OU
+        Online bachelor's degree programs. Semifinalists who advance to Finalist standing and name OU
+        as their college choice by April 30 are eligible to be upgraded to the Finalist package. OU is
+        test-optional for scholarships for fall 2027.
+    benefits: null
+    advertised_totals:
+    - amount:
         qualifier: exact
         value: 157050
         min: null
         max: null
         period: null
-      duration_terms: null
-      exclusions: null
-      scope_text: Listed in the Award Amount column with no per-year or component breakdown on this page
-      advertised_coverage_label: null
+      scope_text: Package value listed in the Award Amount column for the National Merit Finalist row;
+        the page gives no per-year or component breakdown
   - offer_id: o-nonres-semifinalist
     parent_offer_id: null
     variant_name: National Merit Semifinalist (non-resident)
@@ -85,11 +82,13 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: optional
       citizenship_eligible: null
+      citizenship_text: null
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
       first_generation_rule: unknown
-      eligibility_notes: GPA is OU's standardized weighted 'scholarship GPA'.
+      eligibility_notes: GPA is OU's standardized weighted 'scholarship GPA'. Institutional scholarships
+        and waivers cannot be transferred or applied to OU Online bachelor's degree programs.
     benefits:
     - benefit_id: b-annual
       category: other
@@ -103,10 +102,18 @@ versions:
         period: academic_year
       duration_terms: Four years
       exclusions: null
-      scope_text: The school's chart quotes '$70,000 ($17,500 x 4 years)'. The page's introduction calls
-        these awards a 'tuition waiver' while the chart column says 'Scholarship', so the instrument is
-        left unknown.
+      scope_text: The page's introduction calls these awards a 'tuition waiver' while the chart column
+        says 'Scholarship', so the instrument is left unknown.
       advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: exact
+        value: 70000
+        min: null
+        max: null
+        period: total_program
+      scope_text: 'School-quoted total for the Semifinalist row: ''$70,000 ($17,500 x 4 years)'''
   application:
     separate_application: not_required
     milestones:
@@ -172,7 +179,7 @@ versions:
       Merit Finalist package
     value_status: reported
     reported_value: null
-  - field_path: offers/0/benefits/0/amount
+  - field_path: offers/0/advertised_totals/0/amount
     source_ref: s-sch
     locator: Scholarships page, Non-Resident Freshman Scholarships table, National Merit Finalist row,
       Award Amount column
@@ -201,6 +208,13 @@ versions:
     value_status: reported
     reported_value: null
   - field_path: offers/1/benefits/0/amount
+    source_ref: s-sch
+    locator: Scholarships page, Non-Resident Freshman Scholarships table, National Merit Semifinalist
+      row, Award Amount column
+    short_excerpt: National Merit Semifinalist $70,000 ($17,500 x 4 years)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/advertised_totals/0/amount
     source_ref: s-sch
     locator: Scholarships page, Non-Resident Freshman Scholarships table, National Merit Semifinalist
       row, Award Amount column

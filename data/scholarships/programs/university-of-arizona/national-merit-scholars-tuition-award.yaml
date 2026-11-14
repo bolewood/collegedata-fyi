@@ -43,15 +43,18 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: unknown
       citizenship_eligible: null
+      citizenship_text: Limited to domestic students including U.S. citizens, U.S. nationals, permanent
+        residents, and those lawfully present in the U.S. who can establish domicile under federal immigration
+        law.
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
       first_generation_rule: unknown
-      eligibility_notes: Limited to domestic students (U.S. citizens, nationals, permanent residents and
-        those lawfully present who can establish domicile). First-time, full-time, degree-seeking students
-        pursuing a first bachelor's degree; not available to spring-admitted students, GED applicants,
-        or Online and Near You Network campuses. Students who become Finalists receive this award, which
-        supersedes and replaces other merit tuition scholarships.
+      eligibility_notes: Students eligible for the High School 150% Resident Tuition Rate or participating
+        in the Western Undergraduate Exchange (WUE) program are not eligible for this award. First-time,
+        full-time, degree-seeking students pursuing a first bachelor's degree; not available to spring-admitted
+        students, GED applicants, or Online and Near You Network campuses. Students who become Finalists
+        receive this award, which supersedes and replaces other merit tuition scholarships.
     benefits:
     - benefit_id: b-tuition
       category: tuition
@@ -70,6 +73,8 @@ versions:
       scope_text: Described as an undergraduate tuition award; the page gives no dollar amount and no
         statement that it covers all tuition
       advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
   application:
     separate_application: not_required
     milestones:
@@ -100,6 +105,7 @@ versions:
     gpa_min: 3.0
     gpa_scale: null
     credit_load_min_per_term: null
+    credit_load_min_per_year: null
     evaluation_timing: By the conclusion of the academic year (fall, winter, spring and summer semesters)
     summer_courses_can_fix_shortfall: null
     max_semesters: 8
@@ -111,6 +117,14 @@ versions:
     relation: replaces
     note: The National Scholar award supersedes and replaces all other merit tuition scholarships offered
       to the student.
+  - other_aid_type: other
+    relation: not_allowed
+    note: Cannot be combined with ROTC tuition awards, the GI Bill, and some departmental tuition awards
+      depending on type and amount.
+  - other_aid_type: tuition_waiver
+    relation: counts_within_package
+    note: Multiple awards designated to cover base tuition cannot exceed 100% of base tuition; the award
+      is adjusted if Qualified Tuition Reduction or other tuition reduction programs or waivers are used.
   award_counts: []
   sources:
   - source_id: s-terms
@@ -134,6 +148,37 @@ versions:
       Selection
     short_excerpt: National Merit Finalist must declare the University of Arizona as your first school
       of choice
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_text
+    source_ref: s-terms
+    locator: 2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027,
+      Eligibility
+    short_excerpt: Limited to domestic students including U.S. citizens, U.S. nationals, permanent residents,
+      and those lawfully present in the U.S.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/eligibility_notes
+    source_ref: s-terms
+    locator: 2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027,
+      Multiple Awards and Tuition Programs
+    short_excerpt: Students eligible for the High School 150% Resident Tuition Rate or participating in
+      the Western Undergraduate Exchange (WUE) program are not eligible for this award.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/1
+    source_ref: s-terms
+    locator: 2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027,
+      Multiple Awards and Tuition Programs
+    short_excerpt: This award cannot be combined with ROTC tuition awards, the GI Bill, and some departmental
+      tuition awards depending on type and amount.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/2
+    source_ref: s-terms
+    locator: 2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027,
+      Multiple Awards and Tuition Programs
+    short_excerpt: cannot receive more than 100% of the cost of tuition from the combination of the awards
     value_status: reported
     reported_value: null
   - field_path: offers/0/funds_limited

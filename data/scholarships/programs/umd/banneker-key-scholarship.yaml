@@ -43,6 +43,7 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: unknown
       citizenship_eligible: null
+      citizenship_text: null
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
@@ -66,6 +67,7 @@ versions:
       exclusions: null
       scope_text: Full tuition
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-fees
       category: mandatory_fees
       instrument: scholarship
@@ -82,10 +84,11 @@ versions:
       - Required departmental fees
       scope_text: Tuition-associated mandatory fees
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-housing
       category: housing
       instrument: scholarship
-      coverage: full
+      coverage: partial
       amount:
         qualifier: not_published
         value: null
@@ -94,13 +97,15 @@ versions:
         period: null
       duration_terms: null
       exclusions: null
-      scope_text: On-campus housing at the Traditional Double with AC rate; more expensive options are
-        paid by the student
+      scope_text: Capped at the on-campus Traditional Double with AC rate; more expensive options are
+        paid by the student; the housing amount is lower for students living with family ($1,620 in the
+        policy page's with-parent table)
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-food
       category: meals
       instrument: scholarship
-      coverage: full
+      coverage: partial
       amount:
         qualifier: not_published
         value: null
@@ -109,8 +114,9 @@ versions:
         period: null
       duration_terms: null
       exclusions: null
-      scope_text: Base Plus meal plan; the amount depends on where the student lives
+      scope_text: Capped at the Base Plus meal plan; the amount depends on where the student lives
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-books
       category: books
       instrument: cash_stipend
@@ -125,6 +131,40 @@ versions:
       exclusions: null
       scope_text: Book allowance, 2026-2027 estimate on the policy page
       advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: approximate
+        value: 31554
+        min: null
+        max: null
+        period: academic_year
+      scope_text: 'Policy page 2026-2027 estimate, Full Banneker/Key, resident, living on or off campus:
+        ''Total Cost of Attendance'' row'
+    - amount:
+        qualifier: approximate
+        value: 62806
+        min: null
+        max: null
+        period: academic_year
+      scope_text: 'Policy page 2026-2027 estimate, Full Banneker/Key, non-resident, living on or off campus:
+        ''Total Cost of Attendance'' row'
+    - amount:
+        qualifier: approximate
+        value: 18494
+        min: null
+        max: null
+        period: academic_year
+      scope_text: 'Policy page 2026-2027 estimate, Full Banneker/Key, resident, living with parent: ''Total
+        Cost of Attendance'' row'
+    - amount:
+        qualifier: approximate
+        value: 49746
+        min: null
+        max: null
+        period: academic_year
+      scope_text: 'Policy page 2026-2027 estimate, Full Banneker/Key, non-resident, living with parent:
+        ''Total Cost of Attendance'' row'
   - offer_id: o-partial-in-state
     parent_offer_id: null
     variant_name: Partial Banneker/Key (Maryland resident)
@@ -142,6 +182,7 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: unknown
       citizenship_eligible: null
+      citizenship_text: null
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
@@ -163,6 +204,7 @@ versions:
       exclusions: null
       scope_text: 'Honors page: ''towards tuition'' (as of Fall 2026); policy page: ''2026-2027 estimate'''
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-books
       category: books
       instrument: cash_stipend
@@ -177,6 +219,8 @@ versions:
       exclusions: null
       scope_text: Book allowance, 2026-2027 estimate on the policy page
       advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
   - offer_id: o-partial-out-of-state
     parent_offer_id: null
     variant_name: Partial Banneker/Key (non-resident)
@@ -194,6 +238,7 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: unknown
       citizenship_eligible: null
+      citizenship_text: null
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
@@ -211,6 +256,7 @@ versions:
       scope_text: 'Amount in conflict: the honors page says $20,000 towards tuition (as of Fall 2026);
         the policy page''s 2026-2027 estimate says $12,000'
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-books
       category: books
       instrument: cash_stipend
@@ -225,6 +271,8 @@ versions:
       exclusions: null
       scope_text: Book allowance, 2026-2027 estimate on the policy page
       advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
   application:
     separate_application: not_required
     milestones:
@@ -248,6 +296,7 @@ versions:
     gpa_min: 3.2
     gpa_scale: null
     credit_load_min_per_term: 12
+    credit_load_min_per_year: 30
     evaluation_timing: OSFA reviews cumulative GPA at the conclusion of each fall and spring semester
     summer_courses_can_fix_shortfall: true
     max_semesters: 8
@@ -257,8 +306,8 @@ versions:
   stacking_rules:
   - other_aid_type: institutional_merit
     relation: not_allowed
-    note: Only one of Banneker/Key, Frederick Douglass, Maryland Transfer, President's or Dean's Scholarship;
-      they can be combined with other grants and scholarships up to the cost of attendance.
+    note: 'Only one of these five may be held: Banneker/Key, Frederick Douglass, Maryland Transfer, President''s
+      or Dean''s Scholarship. The policy page says they can be combined with other grants and scholarships.'
   - other_aid_type: outside_scholarship
     relation: allowed
     note: Up to the cost of attendance; the scholarship can be reduced if total aid exceeds it. Full scholars
@@ -340,6 +389,30 @@ versions:
     source_ref: s-policy
     locator: Policy page, Award Amount, estimated Full Banneker/Key table, Book Allowance row
     short_excerpt: Book Allowance $1,250
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/advertised_totals/0/amount
+    source_ref: s-policy
+    locator: Policy page, Award Amount, estimated Full Banneker/Key tables, Total Cost of Attendance row
+    short_excerpt: Total Cost of Attendance $31,554 $62,806
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/advertised_totals/1/amount
+    source_ref: s-policy
+    locator: Policy page, Award Amount, estimated Full Banneker/Key tables, Total Cost of Attendance row
+    short_excerpt: Total Cost of Attendance $31,554 $62,806
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/advertised_totals/2/amount
+    source_ref: s-policy
+    locator: Policy page, Award Amount, estimated Full Banneker/Key tables, Total Cost of Attendance row
+    short_excerpt: Total Cost of Attendance $18,494 $49,746
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/advertised_totals/3/amount
+    source_ref: s-policy
+    locator: Policy page, Award Amount, estimated Full Banneker/Key tables, Total Cost of Attendance row
+    short_excerpt: Total Cost of Attendance $18,494 $49,746
     value_status: reported
     reported_value: null
   - field_path: offers/1/benefits/0/amount

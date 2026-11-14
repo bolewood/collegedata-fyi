@@ -41,6 +41,7 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: unknown
       citizenship_eligible: null
+      citizenship_text: null
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
@@ -63,6 +64,8 @@ versions:
       exclusions: null
       scope_text: Page says 'valued at $20,000 per year'; it does not state how many years
       advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
   application:
     separate_application: unknown
     milestones: []

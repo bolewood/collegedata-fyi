@@ -46,13 +46,17 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: unknown
       citizenship_eligible: null
+      citizenship_text: null
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
       first_generation_rule: unknown
       eligibility_notes: Requires admission and documentation of National Merit standing. The page sits
         under the Non-Resident section, and the award text says it 'also covers full non-resident fee,
-        if applicable'. The resident page was not fetched.
+        if applicable'. The resident page was not fetched. The page says these awards cannot be stacked
+        with the Academic Merit awards (this applies to this offer only, not to the other two). A freshman
+        has earned no more than 18 college credit hours after high school graduation (dual enrollment
+        excluded).
     benefits:
     - benefit_id: b-tuition
       category: tuition
@@ -68,10 +72,11 @@ versions:
       exclusions: null
       scope_text: Full tuition scholarship
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-room
       category: housing
       instrument: scholarship
-      coverage: full
+      coverage: partial
       amount:
         qualifier: not_published
         value: null
@@ -80,8 +85,9 @@ versions:
         period: null
       duration_terms: null
       exclusions: null
-      scope_text: Standard cost of a double occupancy room in a campus residence hall
+      scope_text: Capped at the standard cost of a double occupancy room in a campus residence hall
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-nr-fee
       category: nonresident_differential
       instrument: unknown
@@ -96,6 +102,8 @@ versions:
       exclusions: null
       scope_text: Covers the full non-resident fee, if applicable; the page does not call it a waiver
       advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
   - offer_id: o-nmf-scholarship
     parent_offer_id: null
     variant_name: National Merit Finalist Scholarship
@@ -114,11 +122,12 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: unknown
       citizenship_eligible: null
+      citizenship_text: null
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
       first_generation_rule: unknown
-      eligibility_notes: Not for students receiving a National Merit Corporation award; requires selecting
+      eligibility_notes: Not for students receiving a National Merit Corporate award; requires selecting
         Ole Miss as first choice with the National Merit office.
     benefits:
     - benefit_id: b-nmf
@@ -135,6 +144,15 @@ versions:
       exclusions: null
       scope_text: 'Page text: ''$4,000 ($1,000 per year)'''
       advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: exact
+        value: 4000
+        min: null
+        max: null
+        period: total_program
+      scope_text: 'School-quoted total: ''$4,000 ($1,000 per year)'''
   - offer_id: o-barnard
     parent_offer_id: null
     variant_name: Barnard Scholarship
@@ -153,6 +171,7 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: unknown
       citizenship_eligible: null
+      citizenship_text: null
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
@@ -173,6 +192,15 @@ versions:
       exclusions: null
       scope_text: 'Page text: ''$20,000 ($5,000/year)'''
       advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: exact
+        value: 20000
+        min: null
+        max: null
+        period: total_program
+      scope_text: 'School-quoted total: ''$20,000 ($5,000/year)'''
   application:
     separate_application: unknown
     milestones: []
@@ -190,15 +218,13 @@ versions:
     gpa_min: null
     gpa_scale: null
     credit_load_min_per_term: null
+    credit_load_min_per_year: null
     evaluation_timing: null
     summer_courses_can_fix_shortfall: null
     max_semesters: null
     notes: Renewable for up to four years as long as all terms and conditions are met. The page does not
       state a GPA or credit rule.
-  stacking_rules:
-  - other_aid_type: institutional_merit
-    relation: not_allowed
-    note: Academic Excellence National Merit awards cannot be stacked with the Academic Merit awards.
+  stacking_rules: null
   award_counts: []
   sources:
   - source_id: s-nr
@@ -304,10 +330,22 @@ versions:
       are met
     value_status: reported
     reported_value: null
-  - field_path: stacking_rules/0
+  - field_path: offers/0/eligibility/eligibility_notes
     source_ref: s-nr
     locator: Non-Resident Freshman page, Academic Excellence National Merit section, Award Amount
     short_excerpt: These cannot be stacked with the Academic Merit awards.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/advertised_totals/0/amount
+    source_ref: s-nr
+    locator: Non-Resident Freshman page, National Merit Finalist Scholarship, Award Amount
+    short_excerpt: 'Award Amount: $4,000 ($1,000 per year)'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/advertised_totals/0/amount
+    source_ref: s-nr
+    locator: Non-Resident Freshman page, Barnard Scholarship, Award Amount
+    short_excerpt: 'Award Amount: $20,000 ($5,000/year)'
     value_status: reported
     reported_value: null
   - field_path: entry_year

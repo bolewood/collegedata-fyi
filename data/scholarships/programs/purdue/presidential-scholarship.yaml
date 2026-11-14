@@ -41,14 +41,15 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: unknown
       citizenship_eligible: null
+      citizenship_text: Domestic students include United States citizens, U.S. nationals, permanent resident
+        aliens and aliens lawfully present in and able to establish domicile in the U.S. per federal immigration
+        laws.
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
       first_generation_rule: unknown
-      eligibility_notes: Only domestic students are eligible (U.S. citizens, U.S. nationals, permanent
-        residents, and aliens lawfully present who can establish domicile under federal immigration law);
-        the format cannot hold that list. Holistic review of the admission application. About 15% of applicants
-        receive a merit award (all merit awards, not this one).
+      eligibility_notes: Only domestic students are eligible. Holistic review of the admission application.
+        About 15% of applicants receive a merit award (all merit awards, not this one).
     benefits:
     - benefit_id: b-award
       category: other
@@ -66,6 +67,8 @@ versions:
       scope_text: The total amount may be adjusted if the overall financial aid package exceeds Purdue's
         cost of attendance
       advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
   - offer_id: o-resident
     parent_offer_id: null
     variant_name: Presidential Scholarship (Indiana resident)
@@ -83,14 +86,15 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: unknown
       citizenship_eligible: null
+      citizenship_text: Domestic students include United States citizens, U.S. nationals, permanent resident
+        aliens and aliens lawfully present in and able to establish domicile in the U.S. per federal immigration
+        laws.
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
       first_generation_rule: unknown
-      eligibility_notes: Only domestic students are eligible (U.S. citizens, U.S. nationals, permanent
-        residents, and aliens lawfully present who can establish domicile under federal immigration law);
-        the format cannot hold that list. Holistic review of the admission application. About 15% of applicants
-        receive a merit award (all merit awards, not this one).
+      eligibility_notes: Only domestic students are eligible. Holistic review of the admission application.
+        About 15% of applicants receive a merit award (all merit awards, not this one).
     benefits:
     - benefit_id: b-award
       category: other
@@ -108,6 +112,8 @@ versions:
       scope_text: The total amount may be adjusted if the overall financial aid package exceeds Purdue's
         cost of attendance
       advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
   application:
     separate_application: not_required
     milestones:
@@ -131,11 +137,12 @@ versions:
     gpa_min: 3.0
     gpa_scale: null
     credit_load_min_per_term: null
+    credit_load_min_per_year: null
     evaluation_timing: null
     summer_courses_can_fix_shortfall: null
     max_semesters: 8
-    notes: Renewable with a Purdue cumulative GPA of 3.00 or higher; must remain continuously enrolled
-      and enroll in the academic year the scholarship was awarded.
+    notes: Renewable with a Purdue cumulative GPA of 3.00 or higher; requires continuous full-time enrollment
+      and enrollment in the academic year the scholarship was awarded.
   stacking_rules:
   - other_aid_type: other
     relation: counts_within_package
@@ -161,6 +168,13 @@ versions:
     short_excerpt: $10,000 per year (nonresidents)
     value_status: reported
     reported_value: null
+  - field_path: offers/0/eligibility/citizenship_text
+    source_ref: s-sch
+    locator: First-year Scholarships page, Important Information, domestic students paragraph
+    short_excerpt: Domestic students include United States citizens, U.S. nationals, permanent resident
+      aliens and aliens lawfully present in and able to establish domicile
+    value_status: reported
+    reported_value: null
   - field_path: offers/1/selection_mode
     source_ref: s-sch
     locator: First-year Scholarships page, Presidential Scholarship, Criteria
@@ -171,6 +185,13 @@ versions:
     source_ref: s-sch
     locator: First-year Scholarships page, Presidential Scholarship, Value
     short_excerpt: $4,000 per year (Indiana residents)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/eligibility/citizenship_text
+    source_ref: s-sch
+    locator: First-year Scholarships page, Important Information, domestic students paragraph
+    short_excerpt: Domestic students include United States citizens, U.S. nationals, permanent resident
+      aliens and aliens lawfully present in and able to establish domicile
     value_status: reported
     reported_value: null
   - field_path: application/separate_application

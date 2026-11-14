@@ -44,6 +44,7 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: unknown
       citizenship_eligible: null
+      citizenship_text: null
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
@@ -67,10 +68,11 @@ versions:
       exclusions: null
       scope_text: Full tuition excluding summers
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-housing
       category: housing
       instrument: scholarship
-      coverage: full
+      coverage: partial
       amount:
         qualifier: not_published
         value: null
@@ -79,12 +81,14 @@ versions:
         period: null
       duration_terms: null
       exclusions: null
-      scope_text: Basic housing; upgrades are available at the student's expense. If the student receives
-        the $750 university-sponsored National Merit award, that amount applies toward the room portion
-        of the package; it is not an extra benefit.
+      scope_text: Capped at basic housing; upgrades are available at the student's expense. If the student
+        receives the $750 university-sponsored National Merit award, that amount applies toward the room
+        portion of the package; it is not an extra benefit.
       advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
   application:
-    separate_application: unknown
+    separate_application: no_form_other_steps_required
     milestones:
     - kind: admission_deadline
       requirement: required
@@ -147,6 +151,7 @@ versions:
     gpa_min: null
     gpa_scale: null
     credit_load_min_per_term: 12
+    credit_load_min_per_year: null
     evaluation_timing: null
     summer_courses_can_fix_shortfall: null
     max_semesters: null
@@ -221,10 +226,11 @@ versions:
     reported_value: null
   - field_path: application/separate_application
     source_ref: s-nmsf
-    locator: 'National Merit Semifinalist Package page, Requirements to qualify: no separate scholarship
-      form named, but visit, interview and recommendations are required'
-    short_excerpt: null
-    value_status: not_published
+    locator: 'National Merit Semifinalist Package page, Requirements to qualify: no scholarship form is
+      named; visit, interview and recommendations are required'
+    short_excerpt: Applicants are required to attend an on-campus, in-person National Merit Semifinalist
+      interview by Nov. 1.
+    value_status: reported
     reported_value: null
   - field_path: application/milestones/0
     source_ref: s-nmsf
