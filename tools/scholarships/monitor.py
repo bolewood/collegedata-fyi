@@ -12,8 +12,7 @@ Usage:
     python tools/scholarships/monitor.py --mode milestones       # only versions with a required/priority
                                                                  # dated milestone 30 or 7 days away
     python tools/scholarships/monitor.py --only some-program --limit 5
-    python tools/scholarships/monitor.py --cache-file scratch/scholarships/fetch-cache.json \\
-        --findings-json findings.json --findings-md findings.md
+    python tools/scholarships/monitor.py --findings-json findings.json --findings-md findings.md
 
 Rules (the report for M4 states the same):
 
@@ -29,19 +28,25 @@ Rules (the report for M4 states the same):
   does not set `needs_review`.
 * Each row stores per-source tokens (amounts, dates, years, selection words) so
   the next run can diff them: a hash alone cannot say what changed.
-* Normalized text changed: `changed`, `needs_review`, and a deterministic diff of
-  the tokens (empty diff still counts: "text changed, no amount, date, year or
-  selection word changed").
-* `needs_review` is carried forward from the previous row until a person clears
-  it (runbook), so an unchanged re-check never silently restores the old status.
+* Only a detected change in terms sets `needs_review`: the normalized main text
+  changed AND the change touches an amount, date, year or selection word (a
+  token diff). Any other text change (banners, wording that moves no token) is
+  recorded as `text_changed_no_terms`, moves the baseline and does not flag.
+  Stale signals, unreachable sources, suspect pages, unreadable text and raw-only
+  PDF changes are reported in the issue and never change public status.
+* `needs_review` set by a change is carried forward from the previous row until a
+  person clears it (runbook), so an unchanged re-check never silently restores
+  the old status.
 * Unreachable (robots block, robots unreachable, login/CAPTCHA, any HTTP error
-  including 404) never sets `needs_review`; a 404 never implies the program ended.
-  The previous baseline is carried through so the next good fetch still diffs.
-* Result precedence for one version: changed > stale_signal > (carried review
-  origin) > unreachable > unchanged. Every signal is listed in `detail`.
-* The conditional-GET cache is a plain file given by --cache-file. It is
-  written only after a successful --apply database write, never in a dry run,
-  and entries for a URL with no baseline are dropped before the fetch.
+  including 404, a suspect page) never sets `needs_review`; a 404 never implies
+  the program ended. The previous baseline is carried through.
+* Result precedence for one version: changed > stale_signal > unreachable >
+  unchanged. Every signal is listed in `detail`.
+* Each distinct URL is fetched once per run and compared with every baseline that
+  cites it. Conditional-GET validators are stored in each source's own `detail`
+  entry (never in a shared URL cache), so a baseline only ever sends its own
+  validators. A host that throttles (429, retries exhausted) is skipped for the
+  rest of the run. Each version's row is inserted as soon as it is checked.
 
 Credentials: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (environment or .env).
 A dry run uses them read-only when present, to diff against the stored
@@ -58,9 +63,10 @@ import os
 import re
 import sys
 import unicodedata
+from urllib.parse import urlsplit
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -70,22 +76,38 @@ import validate  # noqa: E402
 REPO_ROOT = validate.REPO_ROOT
 sys.path.insert(0, str(REPO_ROOT))
 from tools.common.polite_fetch import (  # noqa: E402
+    HTTP_ERROR,
     NOT_MODIFIED,
     OK,
+    FetchResult,
     PoliteFetcher,
 )
 
-NORMALIZER_VERSION = 1
+NORMALIZER_VERSION = 2
+MIN_TEXT_CHARS = 200  # shorter normalized text is treated as unreadable (JS shell, error page)
 PRODUCT_TOKEN = "scholarship-monitor"
-SELECTION_WORDS = ("guaranteed", "automatic", "competitive", "considered", "required", "deadline", "no longer")
-MILESTONE_DAYS = (30, 7)
+SELECTION_WORDS = (
+    "not guaranteed", "not automatic", "not required", "non-renewable", "guaranteed", "automatic",
+    "competitive", "considered", "required", "deadline", "no longer", "renewable", "semifinalist",
+    "finalist", "commended",
+)
+MILESTONE_MARKS = (30, 7)
 MAX_FINDINGS_CHARS = 60_000
 ARCHIVE_SAVE = "https://web.archive.org/save/"
 TOKEN_KEYS = ("amounts", "dates", "years", "selection_words")
 
 # ------------------------------------------------------------------ normalizer
 
-_DROP_TAGS = ("script", "style", "noscript", "template", "svg", "iframe", "nav", "footer", "aside", "form")
+# aside is kept: deadline callouts often live in a sidebar box.
+_DROP_TAGS = ("script", "style", "noscript", "template", "svg", "iframe", "nav", "footer", "header", "form")
+_DROP_ROLES = {"banner", "navigation", "contentinfo"}
+_CHURN_CLASS_RE = re.compile(r"news|related|alert|banner|carousel|breadcrumb", re.I)
+_CHURN_MAX_CHARS = 1500  # a teaser block is short; a long block with such a class is content
+_SUSPECT_RE = re.compile(
+    r"captcha|cf-chl|cf-turnstile|just a moment|attention required|are you a robot|verify you are human|"
+    r"page not found|404 not found|not be found|under maintenance|down for maintenance|"
+    r"temporarily unavailable|access denied|service unavailable",
+)
 _ZERO_WIDTH = re.compile("[​‌‍⁠﻿]")
 _WS = re.compile(r"\s+")
 
@@ -94,6 +116,30 @@ def _clean(text: str) -> str:
     text = unicodedata.normalize("NFKC", text)
     text = _ZERO_WIDTH.sub("", text)
     return _WS.sub(" ", text).strip().lower()
+
+
+_UPDATED_RE = None  # compiled after the month pattern below
+
+
+def _strip_updated(text: str) -> str:
+    return _WS.sub(" ", _UPDATED_RE.sub(" ", text)).strip()
+
+
+def parser_fingerprint() -> str:
+    """Versions of the parsers behind the normalizer. A change re-baselines."""
+    try:
+        import bs4
+
+        b = bs4.__version__
+    except ImportError:  # pragma: no cover
+        b = "none"
+    try:
+        import pypdf
+
+        p = pypdf.__version__
+    except ImportError:  # pragma: no cover
+        p = "none"
+    return f"bs4={b};pypdf={p}"
 
 
 def _decode(body: bytes, content_type: str) -> str:
@@ -115,21 +161,24 @@ class Page:
 def normalize_page(body: bytes, content_type: str = "") -> Page:
     """Normalized main text of a fetched page. NORMALIZER_VERSION 1:
 
-    HTML is parsed with html.parser; comments and script, style, noscript,
-    template, svg, iframe, nav, footer, aside and form elements are dropped;
-    the text of the first <main>, <article> or [role=main] (else <body>) is
-    joined with single spaces, Unicode NFKC folded, zero-width characters
-    removed, lower-cased and whitespace-collapsed. text_sha256 is SHA-256 of the
-    UTF-8 text. Plain text gets the same folding. PDFs go through pypdf when it
-    is installed; an unreadable PDF has text None (raw bytes only).
-    Change any of this and bump NORMALIZER_VERSION.
+    HTML is parsed with html.parser. Comments and script, style, noscript, template,
+    svg, iframe, nav, footer, header, form elements, [role=banner|navigation|
+    contentinfo] and short blocks (<= 1500 chars) whose class or id matches
+    news|related|alert|banner|carousel|breadcrumb are dropped; aside is kept. The
+    root is the first <main> or [role=main], else the <article> with the most text,
+    else <body>. Its text is joined with single spaces, NFKC folded, zero-width
+    characters removed, lower-cased, whitespace-collapsed, and "last|page
+    updated|modified|reviewed <date>" phrases are removed. text_sha256 is SHA-256 of
+    the UTF-8 text. PDFs go through pypdf; an unreadable PDF has text None (raw
+    bytes only). Bump NORMALIZER_VERSION when this rule changes; a pypdf or bs4
+    release change re-baselines through parser_fingerprint instead of flagging.
     """
     ctype = (content_type or "").lower()
     if body[:5] == b"%PDF-" or "pdf" in ctype:
         return _normalize_pdf(body)
     raw = _decode(body, content_type)
     if "html" not in ctype and not re.search(r"<\s*(html|body|div|p|h1|main)\b", raw[:4096], re.I):
-        return Page(_clean(raw))
+        return Page(_strip_updated(_clean(raw)))
     from bs4 import BeautifulSoup, Comment
 
     soup = BeautifulSoup(raw, "html.parser")
@@ -137,9 +186,23 @@ def normalize_page(body: bytes, content_type: str = "") -> Page:
         c.extract()
     for tag in soup.find_all(_DROP_TAGS):
         tag.decompose()
-    root = soup.find("main") or soup.find("article") or soup.find(attrs={"role": "main"}) or soup.body or soup
+    for el in soup.find_all(True):
+        if getattr(el, "decomposed", False) or el.name in ("html", "body", "main", "article"):
+            continue
+        if el.find("main") or el.find(attrs={"role": "main"}):
+            continue  # a wrapper around the content
+        marker = " ".join(el.get("class") or []) + " " + (el.get("id") or "")
+        if (el.get("role") in _DROP_ROLES) or (
+            _CHURN_CLASS_RE.search(marker) and len(el.get_text(" ")) <= _CHURN_MAX_CHARS
+        ):
+            el.decompose()
+    root = soup.find("main") or soup.find(attrs={"role": "main"})
+    if root is None:
+        articles = soup.find_all("article")
+        root = max(articles, key=lambda a: len(a.get_text(" ")), default=None)
+    root = root or soup.body or soup
     headings = [h for h in (_clean(t.get_text(" ")) for t in root.find_all(["h1", "h2", "h3"])) if h]
-    return Page(_clean(root.get_text(" ")), headings)
+    return Page(_strip_updated(_clean(root.get_text(" "))), headings)
 
 
 def _normalize_pdf(body: bytes) -> Page:
@@ -152,7 +215,7 @@ def _normalize_pdf(body: bytes) -> Page:
         text = " ".join((p.extract_text() or "") for p in reader.pages)
     except Exception:
         return Page(None)
-    cleaned = _clean(text)
+    cleaned = _strip_updated(_clean(text))
     return Page(cleaned or None)
 
 
@@ -166,6 +229,10 @@ _MON_NAMES = "|".join(
     ["jan(?:uary)?", "feb(?:ruary)?", "mar(?:ch)?", "apr(?:il)?", "may", "june?", "july?",
      "aug(?:ust)?", "sep(?:t(?:ember)?)?", "oct(?:ober)?", "nov(?:ember)?", "dec(?:ember)?"]
 )
+_UPDATED_RE = re.compile(
+    rf"\b(?:last|page)\s+(?:updated|modified|reviewed|revised)\b[:\s]*(?:on\s+)?"
+    rf"(?:(?:{_MON_NAMES})\.?\s+\d{{1,2}}(?:st|nd|rd|th)?(?:,?\s+20\d\d)?|\d{{1,2}}/\d{{1,2}}/\d{{2,4}}|20\d\d-\d\d-\d\d)"
+)
 _AMOUNT_RE = re.compile(r"\$\s?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?(?:\s?(thousand|million|k|m)\b)?")
 _DATE_NAMED_RE = re.compile(
     rf"\b({_MON_NAMES})\.?\s+(\d{{1,2}})(?!\d)(?:st|nd|rd|th)?(?:,?\s+(20\d\d)\b)?"
@@ -174,7 +241,10 @@ _DATE_MONTH_YEAR_RE = re.compile(rf"\b({_MON_NAMES})\.?,?\s+(20\d\d)\b")
 _DATE_SLASH_RE = re.compile(r"\b(\d{1,2})/(\d{1,2})/(\d{4}|\d{2})\b")
 _DATE_ISO_RE = re.compile(r"\b(20\d\d)-(\d\d)-(\d\d)\b")
 _YEAR_RE = re.compile(r"\b(20[1-4]\d)\b")
-_SEL_RE = re.compile(r"\b(guaranteed|automatic(?:ally)?|competitive|considered|required|deadline|no longer)\b")
+_SEL_RE = re.compile(
+    r"\b(not guaranteed|not automatic(?:ally)?|not required|non-renewable|guaranteed|automatic(?:ally)?|"
+    r"competitive|considered|required|deadline|no longer|renewable|semifinalist|finalist|commended)\b"
+)
 _DEADLINE_WINDOW_RE = re.compile(
     r"\b(?:deadlines?|due|apply by|submitted by|postmarked by|closes?)\b[^.;]{0,80}", re.I
 )
@@ -213,7 +283,7 @@ def extract_tokens(text: str) -> Dict[str, List[Any]]:
             dates.add(f"{list(_MONTHS)[mo - 1]} {d} {m.group(1)}")
 
     years = sorted({int(y) for y in _YEAR_RE.findall(stripped)})
-    words = {("automatic" if w.startswith("automatic") else w) for w in _SEL_RE.findall(text)}
+    words = {w.replace("automatically", "automatic") for w in _SEL_RE.findall(text)}
     return {
         "amounts": sorted(amounts, key=lambda a: (float(a[1:]), a)),
         "dates": sorted(dates),
@@ -323,16 +393,23 @@ def _dated_milestones(row: Dict[str, Any]) -> List[Dict[str, Any]]:
     return [m for m in (app.get("milestones") or []) if m.get("date")]
 
 
-def milestone_due(row: Dict[str, Any], today: dt.date) -> bool:
-    """A required or priority dated milestone exactly 30 or 7 days away."""
+def milestone_due(row: Dict[str, Any], today: dt.date, last_checked: Optional[dt.date] = None) -> bool:
+    """A required or priority dated milestone is due a recheck when it is 0-30 days
+    away and the version has not been checked since its 30-day mark (or, within 7
+    days, its 7-day mark). The daily run normally hits the marks exactly; a missed
+    or failed run is caught up the next day instead of being lost."""
     for m in _dated_milestones(row):
         if m.get("requirement") not in ("required", "priority"):
             continue
         try:
-            days = (dt.date.fromisoformat(m["date"]) - today).days
+            due = dt.date.fromisoformat(m["date"])
         except ValueError:
             continue
-        if days in MILESTONE_DAYS:
+        days = (due - today).days
+        if not 0 <= days <= MILESTONE_MARKS[0]:
+            continue
+        mark = MILESTONE_MARKS[1] if days <= MILESTONE_MARKS[1] else MILESTONE_MARKS[0]
+        if last_checked is None or last_checked < due - dt.timedelta(days=mark):
             return True
     return False
 
@@ -343,12 +420,19 @@ def select_versions(
     today: dt.date,
     only: Optional[List[str]] = None,
     limit: Optional[int] = None,
+    store: Optional["CheckStore"] = None,
 ) -> List[Dict[str, Any]]:
     rows = model.select_published(ds)
     if only:
         rows = [r for r in rows if r["program_id"] in only]
     if mode == "milestones":
-        rows = [r for r in rows if milestone_due(r, today)]
+        picked = []
+        for r in rows:
+            last = store.latest(r["program_id"], r["version_id"]) if store is not None else None
+            checked = dt.date.fromisoformat(last["checked_at"][:10]) if last and last.get("checked_at") else None
+            if milestone_due(r, today, checked):
+                picked.append(r)
+        rows = picked
     if limit is not None:
         rows = rows[:limit]
     return rows
@@ -444,7 +528,11 @@ def _load_env(path: Path) -> None:
 
 # ----------------------------------------------------------------- source check
 
-_CARRY = ("raw_sha256", "text_sha256", "normalizer_version", "tokens", "facts", "baseline_fetched_at")
+_CARRY = (
+    "raw_sha256", "text_sha256", "normalizer_version", "parsers", "tokens", "facts",
+    "text_len", "text_unreadable", "baseline_fetched_at", "validators",
+)
+_SHRINK_RATIO = 0.3
 
 
 def _prev_sources(prev: Optional[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
@@ -456,30 +544,88 @@ def _sha(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
 
 
+def _token_count(tokens: Optional[Dict[str, List[Any]]]) -> int:
+    return sum(len(v) for v in (tokens or {}).values())
+
+
+def _tokens_kept(old: Optional[Dict[str, List[Any]]], new: Optional[Dict[str, List[Any]]]) -> float:
+    total = _token_count(old)
+    kept = sum(len(set(v) & set((new or {}).get(k) or [])) for k, v in (old or {}).items())
+    return kept / total if total else 1.0
+
+
+class RunFetcher:
+    """Fetching for one run.
+
+    * A URL cited by several (version, source) pairs is fetched once, without
+      validators, and the body is compared with every baseline. A 304 can only be
+      used by the baseline whose validators were sent.
+    * Validators come from the source's own previous entry, never from a shared
+      URL cache, so one baseline cannot swallow another's change.
+    * A host that throttles (429, retries exhausted, Retry-After over the cap) or
+      keeps failing is skipped for the rest of the run.
+    """
+
+    def __init__(self, fetcher: PoliteFetcher, shared_urls: Optional[set] = None):
+        self.fetcher = fetcher
+        self.shared = shared_urls or set()
+        self.memo: Dict[str, FetchResult] = {}
+        self.dead_hosts: Dict[str, str] = {}
+
+    def fetch(self, url: str, validators: Optional[Dict[str, Any]] = None) -> FetchResult:
+        host = (urlsplit(url).hostname or "").lower()
+        if host in self.dead_hosts:
+            return FetchResult(HTTP_ERROR, url, reason=f"host skipped for the rest of this run: {self.dead_hosts[host]}")
+        if url in self.shared:
+            if url in self.memo:
+                return self.memo[url]
+            validators = None
+        cache = self.fetcher.cache
+        cache.pop(url, None)
+        if validators:
+            cache[url] = dict(validators)
+        res = self.fetcher.fetch(url)
+        cache.pop(url, None)
+        if url in self.shared:
+            self.memo[url] = res
+        if res.status == HTTP_ERROR and (
+            res.http_status == 429
+            or any(k in res.reason for k in ("retries exhausted", "exceeds cap", "network error"))
+        ):
+            self.dead_hosts[host] = res.reason
+        return res
+
+
+def _entry_base(src: Dict[str, Any]) -> Dict[str, Any]:
+    return {"source_id": src["source_id"], "url": src["url"], "authority": src.get("authority")}
+
+
 def check_source(
-    src: Dict[str, Any], prev: Optional[Dict[str, Any]], fetcher: PoliteFetcher, now_iso: str
+    src: Dict[str, Any], prev: Optional[Dict[str, Any]], fetcher: Any, now_iso: str
 ) -> Tuple[Dict[str, Any], Optional[Dict[str, Any]]]:
     """Fetch one source and compare it to its previous entry.
 
-    Returns (entry for detail.sources, diff or None). `change` is one of
-    baseline, none, markup_only, text_changed, raw_changed, normalizer_rebaseline.
+    Returns (entry for detail.sources, token diff or None). `change` is one of
+    baseline, none, markup_only, text_changed (flags), text_changed_no_terms,
+    raw_changed, normalizer_rebaseline. Only text_changed sets needs_review.
     """
+    if not isinstance(fetcher, RunFetcher):
+        fetcher = RunFetcher(fetcher)
     url = src["url"]
     has_base = bool(prev and prev.get("raw_sha256"))
-    if not has_base:
-        fetcher.cache.pop(url, None)  # a 304 has no body to baseline from
-    entry: Dict[str, Any] = {
-        "source_id": src["source_id"],
-        "url": url,
-        "authority": src.get("authority"),
-    }
+    entry = _entry_base(src)
 
     def carry() -> None:
         for k in _CARRY:
             if prev and k in prev:
                 entry[k] = prev[k]
 
-    res = fetcher.fetch(url)
+    def unreachable(reason: str, res: FetchResult) -> Tuple[Dict[str, Any], None]:
+        carry()
+        entry.update({"fetched": False, "status": "unreachable", "reason": reason, "change": "none"})
+        return entry, None
+
+    res = fetcher.fetch(url, (prev or {}).get("validators") if has_base else None)
     entry["fetch_status"] = res.status
     entry["http_status"] = res.http_status
     if res.status == NOT_MODIFIED and has_base:
@@ -492,30 +638,47 @@ def check_source(
             reason = "304 Not Modified but no stored baseline"
         if res.http_status in (404, 410):
             reason += "; a missing page does not mean the program ended"
-        carry()
-        entry.update({"fetched": False, "status": "unreachable", "reason": reason, "change": "none"})
-        return entry, None
+        return unreachable(reason, res)
 
     body = res.body or b""
     page = normalize_page(body, res.headers.get("content-type", ""))
+    text = page.text
+    text_len = len(text) if text is not None else 0
+    tokens = extract_tokens(text) if text is not None else None
+    unreadable = text is None or text_len < MIN_TEXT_CHARS or _token_count(tokens) == 0
+
+    # A 200 that is not the page: challenge, maintenance, soft 404, or a page that
+    # lost most of its baseline content. Never baseline it, never flag it.
+    if text is not None and text_len < 1500 and _SUSPECT_RE.search(text):
+        return unreachable("suspect page: error, maintenance or challenge text served with HTTP 200", res)
+    if has_base and not prev.get("text_unreadable") and prev.get("text_sha256"):
+        shrunk = prev.get("text_len") and text_len < _SHRINK_RATIO * prev["text_len"]
+        lost = _token_count(prev.get("tokens")) >= 4 and _tokens_kept(prev.get("tokens"), tokens) < _SHRINK_RATIO
+        if unreadable or shrunk or lost:
+            return unreachable("suspect page: most of the baseline content is missing", res)
+
     raw = _sha(body)
-    text_sha = _sha(page.text.encode("utf-8")) if page.text is not None else None
-    tokens = extract_tokens(page.text) if page.text is not None else None
-    facts = {
+    facts = {} if unreadable else {
         "years": (tokens or {}).get("years", []),
         "heading_entry_years": heading_entry_years(page.headings),
-        "deadline_years": deadline_years(page.text) if page.text is not None else [],
+        "deadline_years": deadline_years(text or ""),
     }
     entry.update({
         "fetched": True,
         "status": "ok",
         "raw_sha256": raw,
-        "text_sha256": text_sha,
+        "text_sha256": None if unreadable else _sha(text.encode("utf-8")),
         "normalizer_version": NORMALIZER_VERSION,
-        "tokens": tokens,
+        "parsers": parser_fingerprint(),
+        "tokens": None if unreadable else tokens,
         "facts": facts,
+        "text_len": text_len,
         "baseline_fetched_at": now_iso,
     })
+    if unreadable:
+        entry["text_unreadable"] = True
+    if res.etag or res.last_modified:
+        entry["validators"] = {"etag": res.etag, "last_modified": res.last_modified, "final_url": res.final_url or url}
     if res.final_url and res.final_url != url:
         entry["final_url"] = res.final_url
 
@@ -527,21 +690,22 @@ def check_source(
             entry["yaml_content_sha256"] = "match" if yaml_sha == raw else "differs"
             if yaml_sha != raw:
                 entry["raw_differs_from_yaml"] = True
-    elif prev.get("normalizer_version") != NORMALIZER_VERSION and prev.get("text_sha256") is not None:
+    elif (
+        prev.get("normalizer_version") != NORMALIZER_VERSION or prev.get("parsers") != entry["parsers"]
+    ) and prev.get("text_sha256") is not None:
         entry["change"] = "none" if prev["raw_sha256"] == raw else "normalizer_rebaseline"
-    elif text_sha is not None and prev.get("text_sha256") is not None:
-        if text_sha == prev["text_sha256"]:
+    elif entry["text_sha256"] is not None and prev.get("text_sha256") is not None:
+        if entry["text_sha256"] == prev["text_sha256"]:
             entry["change"] = "none" if prev["raw_sha256"] == raw else "markup_only"
         else:
-            entry["change"] = "text_changed"
             diff = diff_tokens(prev.get("tokens") or {}, tokens or {})
-            entry["diff"] = diff
-    else:  # no readable text on one side: raw bytes are all there is
-        if prev["raw_sha256"] == raw:
-            entry["change"] = "none"
-        else:
-            entry["change"] = "raw_changed"
-            entry["diff"] = diff = {}
+            if diff:
+                entry["change"] = "text_changed"
+                entry["diff"] = diff
+            else:  # wording moved, no amount/date/year/selection word did
+                entry["change"] = "text_changed_no_terms"
+    else:  # no usable text on one side: report a raw-bytes change, never flag it
+        entry["change"] = "none" if prev["raw_sha256"] == raw else "raw_changed"
     return entry, diff
 
 
@@ -551,13 +715,19 @@ def check_source(
 @dataclass
 class VersionCheck:
     row: Dict[str, Any]  # the scholarship_version_checks insert
-    finding: Optional[Dict[str, Any]]  # None when there is nothing new to report
+    finding: Optional[Dict[str, Any]]  # None when there is nothing to report
+
+
+def _source_ref(e: Dict[str, Any], **extra: Any) -> Dict[str, Any]:
+    out = {"source_id": e["source_id"], "url": e["url"], "archive_save_url": ARCHIVE_SAVE + e["url"]}
+    out.update(extra)
+    return out
 
 
 def check_version(
     version: Dict[str, Any],
     prev: Optional[Dict[str, Any]],
-    fetcher: PoliteFetcher,
+    fetcher: Any,
     today: dt.date,
     now: dt.datetime,
     mode: str = "full",
@@ -565,38 +735,43 @@ def check_version(
     now_iso = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     prev_by_id = _prev_sources(prev)
     entries: List[Dict[str, Any]] = []
-    changed: List[Dict[str, Any]] = []
     for src in version["record"]["sources"]:
         entry, _ = check_source(src, prev_by_id.get(src["source_id"]), fetcher, now_iso)
         entries.append(entry)
-        if entry["change"] in ("text_changed", "raw_changed"):
-            changed.append(entry)
+    changed = [e for e in entries if e["change"] == "text_changed"]
 
     signals = stale_signals(version, entries, today)
     prev_detail = (prev or {}).get("detail") or {}
     prev_signal_keys = {(s.get("code"), s.get("source_id")) for s in prev_detail.get("stale_signals", [])}
     new_signals = [s for s in signals if (s["code"], s["source_id"]) not in prev_signal_keys]
     unreachable = [e for e in entries if e["status"] == "unreachable"]
-    carried = bool(prev and prev.get("needs_review"))
-    prev_review = prev_detail.get("review") or {}
-    origin = prev_review.get("origin_result") or (prev or {}).get("result")
-    if origin not in ("changed", "stale_signal"):
-        origin = "changed"
+    new_unreachable = [e for e in unreachable if (prev_by_id.get(e["source_id"]) or {}).get("status") != "unreachable"]
+    unreadable_new = [e for e in entries if e.get("text_unreadable") and not (prev_by_id.get(e["source_id"]) or {}).get("text_unreadable")]
+    raw_changed = [e for e in entries if e["change"] == "raw_changed"]
 
-    if changed:
+    # Only a detected change in terms flags a version, and the flag is carried until a person clears it.
+    prev_review = prev_detail.get("review") or {}
+    carried = bool(
+        prev and prev.get("needs_review") and (prev_review.get("origin_result") or prev.get("result")) == "changed"
+    )
+    needs_review = bool(changed) or carried
+
+    if needs_review:
         result = "changed"
     elif signals:
         result = "stale_signal"
-    elif carried:
-        result = origin
     elif unreachable:
         result = "unreachable"
     else:
         result = "unchanged"
-    needs_review = bool(changed or signals or carried)
 
     detail: Dict[str, Any] = {
-        "monitor": {"normalizer_version": NORMALIZER_VERSION, "mode": mode, "checked_on": today.isoformat()},
+        "monitor": {
+            "normalizer_version": NORMALIZER_VERSION,
+            "parsers": parser_fingerprint(),
+            "mode": mode,
+            "checked_on": today.isoformat(),
+        },
         "baseline_only": prev is None and not unreachable and all(e["change"] == "baseline" for e in entries),
         "sources": entries,
         "stale_signals": signals,
@@ -606,20 +781,13 @@ def check_version(
     if any(e["change"] == "normalizer_rebaseline" for e in entries):
         detail["normalizer_rebaseline"] = True
     if needs_review:
-        keep = carried and bool(prev_review) and not changed and not new_signals
-        if keep:
-            review = dict(prev_review)
+        if changed or not prev_review:
+            review = {"origin_result": "changed", "origin_checked_at": now_iso}
         else:
-            review = {"origin_result": "changed" if changed else "stale_signal", "origin_checked_at": now_iso}
-        reasons = set()
-        if changed:
-            reasons.add("text_changed")
-        reasons.update(s["code"] for s in signals)
-        if keep and not reasons:
-            reasons.update(prev_review.get("reasons") or ["carried_from_previous_check"])
-        review["reasons"] = sorted(reasons)
+            review = dict(prev_review)
+        review["reasons"] = ["terms_changed"] if changed else (prev_review.get("reasons") or ["carried_from_previous_check"])
         detail["review"] = review
-        detail["needs_review_carried"] = bool(carried and not changed and not new_signals)
+        detail["needs_review_carried"] = not changed
 
     row = {
         "program_id": version["program_id"],
@@ -630,21 +798,17 @@ def check_version(
         "detail": detail,
     }
     finding = None
-    if changed or new_signals:
+    if needs_review or new_signals or new_unreachable or unreadable_new or raw_changed:
         finding = {
             "program_id": version["program_id"],
             "version_id": version["version_id"],
-            "kind": "changed" if changed else "stale_signal",
-            "changed_sources": [
-                {
-                    "source_id": e["source_id"],
-                    "url": e["url"],
-                    "archive_save_url": ARCHIVE_SAVE + e["url"],
-                    "diff": e.get("diff") or {},
-                }
-                for e in changed
-            ],
+            "kind": "changed" if needs_review else "info",
+            "new": bool(changed),  # False: still flagged from an earlier run
+            "changed_sources": [_source_ref(e, diff=e.get("diff") or {}) for e in changed],
             "stale_signals": new_signals,
+            "unreachable_sources": [_source_ref(e, reason=e.get("reason")) for e in new_unreachable],
+            "unreadable_sources": [_source_ref(e) for e in unreadable_new],
+            "raw_changed_sources": [_source_ref(e) for e in raw_changed],
         }
     return VersionCheck(row, finding)
 
@@ -667,20 +831,33 @@ def run(
     today: dt.date,
     now: dt.datetime,
     mode: str = "full",
+    sink: Optional[Callable[[Dict[str, Any]], None]] = None,
+    out: Optional[RunResult] = None,
 ) -> RunResult:
-    out = RunResult(baseline_source="database" if store is not None else "none")
+    """Check every version. `sink` receives each row as soon as it is built (the
+    apply path inserts it there); `out` lets the caller keep partial results if a
+    later version raises."""
+    out = out if out is not None else RunResult()
+    out.baseline_source = "database" if store is not None else "none"
     # A check row has a foreign key to the loaded version; a version merged but not
-    # yet loaded is not served, so it is skipped rather than failing the whole insert.
+    # yet loaded is not served, so it is skipped rather than failing the insert.
     known = store.known_versions() if store is not None else None
+    counts: Dict[str, int] = {}
+    for v in versions:
+        for src in v["record"]["sources"]:
+            counts[src["url"]] = counts.get(src["url"], 0) + 1
+    rf = RunFetcher(fetcher, {u for u, n in counts.items() if n > 1})
     for v in versions:
         if known is not None and (v["program_id"], v["version_id"]) not in known:
             out.skipped.append(f"{v['program_id']}/{v['version_id']}")
             continue
         prev = store.latest(v["program_id"], v["version_id"]) if store is not None else None
-        vc = check_version(v, prev, fetcher, today, now, mode)
+        vc = check_version(v, prev, rf, today, now, mode)
         out.rows.append(vc.row)
         if vc.finding:
             out.findings.append(vc.finding)
+        if sink is not None:
+            sink(vc.row)
     return out
 
 
@@ -705,20 +882,30 @@ def _fmt_diff(diff: Dict[str, Any]) -> List[str]:
 
 def findings_markdown(findings: List[Dict[str, Any]], today: dt.date) -> str:
     if not findings:
-        return f"No scholarship changes or stale signals on {today.isoformat()}.\n"
+        return f"No scholarship changes or notices on {today.isoformat()}.\n"
+    flagged = [f for f in findings if f["kind"] == "changed"]
+    info = [f for f in findings if f["kind"] != "changed"]
     parts = [
-        f"Scholarship monitor, {today.isoformat()}: {len(findings)} version(s) need review. "
-        "Nothing was published or edited; each is marked `needs_review` in `scholarship_version_checks`. "
-        "Clear a flag only after re-verifying (docs/runbooks/scholarships-annual-review.md).\n"
+        f"Scholarship monitor, {today.isoformat()}. Nothing was published or edited. "
+        "Only a detected change in terms is marked `needs_review` (which changes the public status); "
+        "everything else below is for information. Clear a flag only after re-verifying "
+        "(docs/runbooks/scholarships-annual-review.md).\n"
     ]
-    for f in findings:
-        parts.append(f"### {f['program_id']} / {f['version_id']} ({f['kind']})\n")
+    if flagged:
+        parts.append(f"## Needs review ({len(flagged)})\n")
+    for f in flagged:
+        parts.append(f"### {f['program_id']} / {f['version_id']} ({'new' if f['new'] else 'still flagged'})\n")
         for s in f["changed_sources"]:
             parts.append(f"**{s['source_id']}** {s['url']}\n")
             parts.extend(_fmt_diff(s["diff"]))
             parts.append(f"- Save a snapshot: {s['archive_save_url']}\n")
-        for sig in f["stale_signals"]:
-            parts.append(f"- stale signal `{sig['code']}`: {sig['message']}")
+        parts.extend(_info_lines(f))
+        parts.append("")
+    if info:
+        parts.append(f"## For information ({len(info)})\n")
+    for f in info:
+        parts.append(f"### {f['program_id']} / {f['version_id']}\n")
+        parts.extend(_info_lines(f))
         parts.append("")
     text = "\n".join(parts)
     if len(text) > MAX_FINDINGS_CHARS:
@@ -726,33 +913,33 @@ def findings_markdown(findings: List[Dict[str, Any]], today: dt.date) -> str:
     return text
 
 
+def _info_lines(f: Dict[str, Any]) -> List[str]:
+    lines = []
+    for sig in f["stale_signals"]:
+        lines.append(f"- stale signal `{sig['code']}`: {sig['message']}")
+    for s in f["unreachable_sources"]:
+        lines.append(f"- unreachable {s['url']}: {s['reason']} (no status change; {s['archive_save_url']})")
+    for s in f["unreadable_sources"]:
+        lines.append(f"- {s['url']} has little or no readable text (script-rendered page or scan); needs a manual check")
+    for s in f["raw_changed_sources"]:
+        lines.append(f"- {s['url']} changed as raw bytes but has no readable text to compare; check by hand ({s['archive_save_url']})")
+    return lines
+
+
 def summary_lines(result: RunResult) -> List[str]:
     lines = []
     for r in result.rows:
         srcs = r["detail"]["sources"]
-        reasons = [f"{s['source_id']}:{s['change']}" if s["status"] != "unreachable" else f"{s['source_id']}:unreachable ({s.get('reason')})" for s in srcs]
+        reasons = [
+            f"{s['source_id']}:{s['change']}" if s["status"] != "unreachable"
+            else f"{s['source_id']}:unreachable ({s.get('reason')})"
+            for s in srcs
+        ]
         lines.append(
             f"{r['program_id']}/{r['version_id']}  {r['result']}  needs_review={str(r['needs_review']).lower()}  "
             + "; ".join(reasons)
         )
     return lines
-
-
-def load_cache(path: Optional[Path]) -> Dict[str, Dict[str, Any]]:
-    if path is None:
-        return {}
-    try:
-        data = json.loads(path.read_text())
-    except (OSError, ValueError):
-        return {}
-    return data if isinstance(data, dict) else {}
-
-
-def save_cache(path: Path, cache: Dict[str, Dict[str, Any]]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.name + f".{os.getpid()}.tmp")
-    tmp.write_text(json.dumps(cache, indent=2, sort_keys=True))
-    os.replace(tmp, path)
 
 
 def main(
@@ -768,7 +955,6 @@ def main(
     ap.add_argument("--mode", choices=("full", "milestones"), default="full")
     ap.add_argument("--only", action="append", metavar="PROGRAM_ID")
     ap.add_argument("--limit", type=int)
-    ap.add_argument("--cache-file", type=Path, help="conditional-GET cache; saved only after a successful --apply")
     ap.add_argument("--today", type=dt.date.fromisoformat, help="override today (tests, backfills)")
     ap.add_argument("--min-spacing", type=float, default=2.0)
     ap.add_argument("--findings-json", type=Path)
@@ -783,18 +969,42 @@ def main(
         for i in issues:
             print(i, file=sys.stderr)
         return 1
-    versions = select_versions(ds, args.mode, today, args.only, args.limit)
 
     if store is None:
         store = SupabaseCheckStore.from_env(required=args.apply)
-    cache = load_cache(args.cache_file)
+    versions = select_versions(ds, args.mode, today, args.only, args.limit, store)
     if fetcher is None:
-        fetcher = PoliteFetcher(PRODUCT_TOKEN, cache=cache, min_spacing=args.min_spacing)
-    else:
-        cache = fetcher.cache  # type: ignore[assignment]
+        fetcher = PoliteFetcher(PRODUCT_TOKEN, min_spacing=args.min_spacing)
 
     print(f"{'APPLY' if args.apply else 'DRY RUN'}: mode={args.mode} versions={len(versions)} today={today}")
-    result = run(versions, store, fetcher, today, now, args.mode)
+    result = RunResult()
+    written = 0
+
+    def sink(row: Dict[str, Any]) -> None:
+        nonlocal written
+        assert store is not None
+        store.insert([row])  # one row at a time: a later failure cannot lose earlier results
+        written += 1
+
+    refresh_failed = False
+    try:
+        run(versions, store, fetcher, today, now, args.mode, sink if args.apply else None, result)
+    finally:
+        # Findings first (the workflow reads them even after a failure), then refresh
+        # whatever was written so the public view never lags the stored flags.
+        if args.findings_json:
+            args.findings_json.parent.mkdir(parents=True, exist_ok=True)
+            args.findings_json.write_text(json.dumps(result.findings, indent=2, sort_keys=True))
+        if args.findings_md:
+            args.findings_md.parent.mkdir(parents=True, exist_ok=True)
+            args.findings_md.write_text(findings_markdown(result.findings, today))
+        if args.apply and written:
+            try:
+                store.refresh()
+            except Exception as exc:  # rows are written; the public view is stale until the next refresh
+                print(f"rows written but refresh_scholarship_directory_cache() failed: {exc}", file=sys.stderr)
+                refresh_failed = True
+
     if result.baseline_source == "none":
         print("no database credentials: every source is treated as a first run (baseline only)")
     for line in summary_lines(result):
@@ -803,31 +1013,16 @@ def main(
         print(f"skipped (not loaded): {name}")
     if args.show_rows:
         print(json.dumps(result.rows, indent=2, sort_keys=True))
-    md = findings_markdown(result.findings, today)
-    if args.findings_json:
-        args.findings_json.parent.mkdir(parents=True, exist_ok=True)
-        args.findings_json.write_text(json.dumps(result.findings, indent=2, sort_keys=True))
-    if args.findings_md:
-        args.findings_md.parent.mkdir(parents=True, exist_ok=True)
-        args.findings_md.write_text(md)
     print(f"findings: {len(result.findings)}")
     if result.findings and not args.findings_md:
-        print(md)
+        print(findings_markdown(result.findings, today))
 
     if not args.apply:
-        print("dry run: nothing written (no rows, no cache refresh, no cache file)")
+        print("dry run: nothing written (no rows, no cache refresh)")
         return 0
-
-    assert store is not None
-    store.insert(result.rows)
-    if args.cache_file:
-        save_cache(args.cache_file, cache)  # only after the rows are in
-    try:
-        store.refresh()
-    except Exception as exc:  # rows are written; the public view is stale until the next refresh
-        print(f"rows written but refresh_scholarship_directory_cache() failed: {exc}", file=sys.stderr)
+    if refresh_failed:
         return 1
-    print(f"wrote {len(result.rows)} check rows and refreshed the directory cache")
+    print(f"wrote {written} check rows and refreshed the directory cache")
     return 0
 
 

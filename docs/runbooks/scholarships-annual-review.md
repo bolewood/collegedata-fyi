@@ -7,27 +7,43 @@ the next entering class, and handling what the change monitor
 ## What the monitor does and does not do
 
 - Fetches each source URL of each served version politely (robots.txt, crawl delay,
-  no logins or CAPTCHAs) and writes one row per version to
-  `scholarship_version_checks`. It never edits `data/scholarships/` and never
-  publishes terms.
-- `needs_review = true` on the latest row flips the public status to
-  `current_cycle_unconfirmed`. That happens for a changed page (normalized text
-  differs from the last check) and for a stale signal.
-- A robots block, unreachable robots.txt, login or CAPTCHA wall, or a 404 is
-  recorded as `unreachable` and does not set `needs_review`. A 404 never means the
-  program ended; check the live site by hand.
+  no logins or CAPTCHAs), once per distinct URL per run, and writes one row per
+  version to `scholarship_version_checks`. It never edits `data/scholarships/` and
+  never publishes terms.
+- **Only a detected change in terms sets `needs_review = true`**, which flips the
+  public status to `current_cycle_unconfirmed`. A change counts when the extracted
+  main text changed and the change touches an amount, a date, a year or a selection
+  word (guaranteed, automatic, competitive, considered, required, deadline, no
+  longer, and a few close relatives such as "not guaranteed" and "finalist").
+  Banners, news teasers, "last updated" dates, markup and wording that moves none
+  of those are ignored on purpose: the monitor under-alerts rather than flip a
+  record on noise. A real change in a GPA or test threshold, or a rewording that
+  moves no token, will not be caught here; the annual review is the backstop.
+- **Never changes public status** (listed in the issue under "For information"):
+  stale signals (heading or deadline years that look old, every dated milestone
+  past with no next-cycle year), unreachable sources (robots block, robots
+  unreachable, login or CAPTCHA wall, any HTTP error including 404, a host that
+  throttled, a "suspect page" such as a maintenance or soft-404 page served with
+  HTTP 200), pages with no readable text (script-rendered, scanned PDF), and raw-byte
+  changes to a source with no readable text. A 404 never means the program ended;
+  check the live site by hand.
+- A flag set by a change is carried forward on every later run until a person clears
+  it, and every run's issue comment lists each still-flagged version (marked "still
+  flagged"), so a run that failed after writing rows cannot hide a flag.
 - One GitHub issue ("Scholarship monitor: terms changed or stale, review needed")
-  collects new findings, each with the diff and a "save page" link for
-  Archive.org. Click the link to snapshot the new page before you edit anything.
+  collects the findings, each with the diff and a "save page" link for Archive.org.
+  Click it to snapshot the new page before you edit anything.
 - Schedule: weekly July to January, monthly February to June, plus a daily run that
-  only rechecks versions with a required or priority dated milestone 30 or 7 days
-  away. Dispatch the workflow with `dry_run` on to preview a run.
+  rechecks versions with a required or priority dated milestone 0 to 30 days away
+  that have not been checked since their 30-day mark (or, inside 7 days, their 7-day
+  mark), so a missed run is caught up the next day. Dispatch the workflow with
+  `dry_run` on to preview a run.
 
 ## Triage a finding
 
 1. Open the source URLs from the issue. Compare against the version in
    `data/scholarships/programs/<program_id>/`.
-2. Pure wording or layout change, terms the same: clear the flag (below).
+2. Wording or layout change, terms the same: clear the flag (below).
 3. Terms changed for the same entering class: it is a correction. Add a new version
    with `supersedes` (published versions are immutable), re-verify with evidence
    locators, merge, then run the loader from `main`. The new version has no
@@ -55,8 +71,8 @@ limit 1;
 select public.refresh_scholarship_directory_cache();
 ```
 
-A stale signal comes back on the next run if the page still has it; fix the cause
-(a new version, or a corrected page) rather than clearing it repeatedly.
+Stale signals and the other informational findings carry no flag, so there is
+nothing to clear; act on them in the next re-verification batch (below).
 
 ## August to September: re-verify for the next entering class
 

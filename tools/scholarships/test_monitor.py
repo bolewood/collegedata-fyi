@@ -36,7 +36,10 @@ PAGE = (
     "<html><head><title>x</title></head><body><nav>Menu Home</nav><main>"
     "<h1>Fixture Scholars 2027</h1>"
     "<p>The scholarship covers $12,000 per year. The application deadline is December 1, 2026. "
-    "Awards are competitive.</p></main><footer>Contact us</footer></body></html>"
+    "Awards are competitive.</p>"
+    "<p>Applicants complete the online form, submit transcripts and one recommendation, and attend "
+    "an interview with the selection committee before the finalist weekend on campus.</p>"
+    "</main><footer>Contact us</footer></body></html>"
 )
 
 
@@ -89,7 +92,7 @@ class FakeStore(monitor.CheckStore):
 
     def known_versions(self):
         every = {(r["program_id"], r["version_id"]) for r in self.rows}
-        return (every | {(PROGRAM, VERSION)}) - self.unloaded
+        return (every | {(PROGRAM, VERSION), ("other-program", "other-program-2027")}) - self.unloaded
 
     def latest(self, program_id, version_id):
         mine = [r for r in self.rows if r["program_id"] == program_id and r["version_id"] == version_id]
@@ -117,10 +120,10 @@ def version(ds) -> Dict[str, Any]:
     return next(r for r in model.select_published(ds) if r["version_id"] == VERSION)
 
 
-def check(version, net: Net, store: Optional[FakeStore] = None, today=TODAY, cache=None) -> Dict[str, Any]:
+def check(version, net: Net, store: Optional[FakeStore] = None, today=TODAY) -> Dict[str, Any]:
     """One monitor pass over a single version; returns the written row."""
     store = store if store is not None else FakeStore()
-    res = monitor.run([version], store, net.fetcher(cache), today, NOW)
+    res = monitor.run([version], store, net.fetcher(), today, NOW)
     store.rows.extend(res.rows)  # run() does not write; main() does
     check.findings = res.findings  # type: ignore[attr-defined]
     return res.rows[0]
@@ -139,6 +142,7 @@ def test_first_run_records_baseline_only(version):
     assert row["detail"]["baseline_only"] is True and row["detail"]["first_run"] is True
     s = src(row)
     assert s["change"] == "baseline" and s["normalizer_version"] == monitor.NORMALIZER_VERSION
+    assert s["parsers"] == monitor.parser_fingerprint()
     assert s["raw_sha256"] and s["text_sha256"]
     assert s["tokens"]["amounts"] == ["$12000"] and "dec 1 2026" in s["tokens"]["dates"]
     assert check.findings == []  # type: ignore[attr-defined]
@@ -201,13 +205,52 @@ def test_date_and_selection_word_change(version):
     assert row["needs_review"] is True
 
 
-def test_text_change_with_empty_token_diff_still_needs_review(version):
+def test_wording_change_that_touches_no_token_does_not_flag(version):
     store = FakeStore()
     check(version, Net(routes()), store)
     row = check(version, Net(routes(school=html(PAGE.replace("Awards are", "Awards are very")))), store)
-    assert row["result"] == "changed" and row["needs_review"] is True
-    assert src(row)["diff"] == {}
-    assert "no amount, date, year or selection word changed" in monitor.findings_markdown(check.findings, TODAY)  # type: ignore[attr-defined]
+    assert row["result"] == "unchanged" and row["needs_review"] is False
+    assert src(row)["change"] == "text_changed_no_terms"
+    assert check.findings == []  # type: ignore[attr-defined]
+    # the baseline moved, so the next identical fetch is quiet too
+    row = check(version, Net(routes(school=html(PAGE.replace("Awards are", "Awards are very")))), store)
+    assert src(row)["change"] == "none"
+
+
+def test_banner_and_updated_date_churn_does_not_flag(version):
+    base = (
+        "<html><body><header>Site header</header><div class='alert-banner'>Campus closed Monday</div>"
+        "<div class='page'><h1>Fixture Scholars 2027</h1>"
+        "<p>The scholarship covers $12,000 per year. The application deadline is December 1, 2026. "
+        "Awards are competitive and applicants complete the online form with transcripts, one recommendation "
+        "and an interview with the selection committee.</p>"
+        "<div class='latest-news'>Story one about robotics</div>"
+        "<p>Page last updated November 3, 2026</p></div></body></html>"
+    )
+    noisy = (
+        base.replace("Campus closed Monday", "Snow day: campus closed Tuesday January 5")
+        .replace("Story one about robotics", "A different story about $5,000 gifts on March 3")
+        .replace("November 3, 2026", "November 10, 2026")
+    )
+    store = FakeStore()
+    check(version, Net(routes(school=html(base))), store)
+    row = check(version, Net(routes(school=html(noisy))), store)
+    assert row["needs_review"] is False and src(row)["change"] in ("none", "markup_only")
+
+
+def test_aside_deadline_box_is_kept_and_article_with_most_text_is_the_root(version):
+    page = (
+        "<html><body><article>Related story teaser</article>"
+        "<article><h1>Fixture Scholars</h1><p>The scholarship covers $12,000 per year and awards are competitive. "
+        "Applicants submit the form, transcripts, a recommendation and attend an interview with the committee "
+        "before the finalist weekend on campus in the spring semester.</p>"
+        "<aside>Deadline: December 1, 2026</aside></article></body></html>"
+    )
+    store = FakeStore()
+    check(version, Net(routes(school=html(page))), store)
+    row = check(version, Net(routes(school=html(page.replace("December 1", "November 1")))), store)
+    assert row["needs_review"] is True
+    assert src(row)["diff"]["dates"] == {"added": ["nov 1 2026"], "removed": ["dec 1 2026"]}
 
 
 def test_needs_review_is_carried_until_cleared(version):
@@ -218,7 +261,9 @@ def test_needs_review_is_carried_until_cleared(version):
     row = check(version, Net(routes(school=html(PAGE.replace("$12,000", "$9,500")))), store)
     assert row["needs_review"] is True and row["result"] == "changed"
     assert row["detail"]["needs_review_carried"] is True
-    assert check.findings == []  # type: ignore[attr-defined]  # not reported twice
+    # level-triggered: a still-flagged version is listed on every run, marked as not new
+    f = check.findings[0]  # type: ignore[attr-defined]
+    assert f["kind"] == "changed" and f["new"] is False and f["changed_sources"] == []
     # a person clears it (runbook): a row with needs_review false and the same baseline
     cleared = copy.deepcopy(store.rows[-1])
     cleared.update(result="unchanged", needs_review=False)
@@ -231,33 +276,87 @@ def test_needs_review_is_carried_until_cleared(version):
 def test_normalizer_version_bump_rebaselines_instead_of_flagging(version, monkeypatch):
     store = FakeStore()
     check(version, Net(routes()), store)
-    monkeypatch.setattr(monitor, "NORMALIZER_VERSION", 2)
+    monkeypatch.setattr(monitor, "NORMALIZER_VERSION", 99)
     row = check(version, Net(routes(school=html(PAGE.replace("$12,000", "$9,500")))), store)
     assert row["result"] == "unchanged" and row["needs_review"] is False
     assert src(row)["change"] == "normalizer_rebaseline" and row["detail"]["normalizer_rebaseline"] is True
-    assert src(row)["normalizer_version"] == 2
+    assert src(row)["normalizer_version"] == 99
 
 
-def test_not_modified_carries_the_baseline(version):
+def test_parser_version_change_rebaselines_instead_of_flagging(version, monkeypatch):
     store = FakeStore()
-    cache: dict = {}
-    check(version, Net(routes(school=Response(200, {"content-type": "text/html", "etag": '"a"'}, PAGE.encode()))), store, cache=cache)
-    assert cache[S_SCHOOL]["etag"] == '"a"'
+    check(version, Net(routes()), store)
+    monkeypatch.setattr(monitor, "parser_fingerprint", lambda: "bs4=9.9;pypdf=9.9")
+    row = check(version, Net(routes(school=html(PAGE.replace("$12,000", "$9,500")))), store)
+    assert row["needs_review"] is False and src(row)["change"] == "normalizer_rebaseline"
+
+
+def test_parsers_are_pinned_exactly():
+    reqs = (v.REPO_ROOT / "tools" / "ci-requirements.txt").read_text().splitlines()
+    for name in ("pypdf", "beautifulsoup4"):
+        assert any(line.startswith(name + "==") for line in reqs), name
+
+
+def test_not_modified_uses_the_baselines_own_validators_and_carries_it(version):
+    store = FakeStore()
+    etagged = Response(200, {"content-type": "text/html", "etag": '"a"'}, PAGE.encode())
+    check(version, Net(routes(school=etagged)), store)
+    assert src(store.rows[0])["validators"]["etag"] == '"a"'
     net = Net(routes(school=Response(304)))
-    row = check(version, net, store, cache=cache)
+    row = check(version, net, store)
     assert dict(net.calls)[S_SCHOOL].get("If-None-Match") == '"a"'
     s = src(row)
     assert s["status"] == "not_modified" and s["fetched"] is False
     assert s["raw_sha256"] == src(store.rows[0])["raw_sha256"] and s["tokens"]["amounts"] == ["$12000"]
+    assert s["validators"]["etag"] == '"a"'
     assert row["result"] == "unchanged"
 
 
-def test_cache_entry_without_baseline_is_dropped_before_fetch(version):
-    cache = {S_SCHOOL: {"etag": '"stale"', "last_modified": None, "final_url": S_SCHOOL}}
+def test_no_validators_are_sent_without_a_baseline(version):
     net = Net(routes())
-    row = check(version, net, FakeStore(), cache=cache)
+    check(version, net, FakeStore())
     assert "If-None-Match" not in dict(net.calls)[S_SCHOOL]
-    assert src(row)["change"] == "baseline"
+
+
+def two_versions(version):
+    """Two served versions of two programs that cite the same URL."""
+    other = copy.deepcopy(version)
+    other["program_id"] = "other-program"
+    other["version_id"] = "other-program-2027"
+    return [version, other]
+
+
+def test_shared_url_change_reaches_every_version_that_cites_it(version):
+    store = FakeStore()
+    both = two_versions(version)
+    etagged = Response(200, {"content-type": "text/html", "etag": '"a"'}, PAGE.encode())
+    res = monitor.run(both, store, Net(routes(school=etagged)).fetcher(), TODAY, NOW)
+    store.rows.extend(res.rows)
+    new = Response(200, {"content-type": "text/html", "etag": '"b"'}, PAGE.replace("$12,000", "$9,500").encode())
+    net = Net(routes(school=new))
+    res = monitor.run(both, store, net.fetcher(), TODAY, NOW)
+    assert [r["result"] for r in res.rows] == ["changed", "changed"]
+    assert [r["needs_review"] for r in res.rows] == [True, True]
+    assert [u for u, _ in net.calls].count(S_SCHOOL) == 1  # fetched once per run
+    assert "If-None-Match" not in dict(net.calls)[S_SCHOOL]  # a shared fetch is unconditional
+
+
+def test_milestone_run_does_not_hide_a_change_from_a_later_full_run(version):
+    """A run that only refreshes one version's validators must not 304 another's baseline."""
+    store = FakeStore()
+    both = two_versions(version)
+    a_page = Response(200, {"content-type": "text/html", "etag": '"a"'}, PAGE.encode())
+    res = monitor.run(both, store, Net(routes(school=a_page)).fetcher(), TODAY, NOW)
+    store.rows.extend(res.rows)
+    new = Response(200, {"content-type": "text/html", "etag": '"b"'}, PAGE.replace("$12,000", "$9,500").encode())
+    # only the first version is rechecked (milestone mode)
+    res = monitor.run([both[0]], store, Net(routes(school=new)).fetcher(), TODAY, NOW, "milestones")
+    store.rows.extend(res.rows)
+    # the full run now sends the *second* version's own validators ("a"), not "b"
+    net = Net(routes(school=Response(200, {"content-type": "text/html", "etag": '"b"'}, PAGE.replace("$12,000", "$9,500").encode())))
+    res = monitor.run([both[1]], store, net.fetcher(), TODAY, NOW)
+    assert dict(net.calls)[S_SCHOOL].get("If-None-Match") == '"a"'
+    assert res.rows[0]["result"] == "changed"
 
 
 # ----------------------------------------------------------------- unreachable
@@ -310,8 +409,9 @@ def test_heading_older_than_cycle(version):
     row = check(version, Net(routes(school=html(page))))
     codes = [s["code"] for s in row["detail"]["stale_signals"]]
     assert "heading_year_older_than_cycle" in codes
-    assert row["result"] == "stale_signal" and row["needs_review"] is True
-    assert check.findings[0]["kind"] == "stale_signal"  # type: ignore[attr-defined]
+    assert row["result"] == "stale_signal" and row["needs_review"] is False  # reported, never public
+    f = check.findings[0]  # type: ignore[attr-defined]
+    assert f["kind"] == "info" and f["stale_signals"]
 
 
 def test_heading_year_conflicts_with_deadline_years(version):
@@ -328,7 +428,7 @@ def test_all_milestones_past_without_a_next_cycle_year(version):
     late = dt.date(2027, 1, 20)  # entry year 2027 is still current until 1 July 2027
     row = check(version, Net(routes()), today=late)
     assert [s["code"] for s in row["detail"]["stale_signals"]] == ["all_milestones_past_no_next_cycle"]
-    assert row["result"] == "stale_signal"
+    assert row["result"] == "stale_signal" and row["needs_review"] is False
     nxt = html(PAGE.replace("</main>", "<p>Applications for the class entering in 2028 open in August.</p></main>"))
     row = check(version, Net(routes(school=nxt)), today=late)
     assert row["detail"]["stale_signals"] == []
@@ -355,13 +455,33 @@ def _with_milestone(version, date: str, requirement: str = "required", kind: str
     return v2
 
 
+def _last(days_ago: Optional[int]) -> Optional[dt.date]:
+    return None if days_ago is None else TODAY - dt.timedelta(days=days_ago)
+
+
 @pytest.mark.parametrize(
-    "offset, expected",
-    [(30, True), (7, True), (29, False), (31, False), (6, False), (8, False), (0, False)],
+    "offset, days_since_last_check, expected",
+    [
+        (30, None, True),
+        (30, 5, True),  # last checked before the 30-day mark (today)
+        (30, 0, False),  # checked today: the mark is covered
+        (7, 8, True),
+        (7, 0, False),
+        (31, None, False),  # not yet in the window
+        (-1, None, False),  # already past
+        (29, 3, True),  # the day-30 run never happened: caught up
+        (29, 0, False),
+        (8, 23, True),  # still waiting for a 7-day mark; the 30-day mark was missed
+        (8, 5, False),  # checked since the 30-day mark
+        (6, 6, True),  # the day-7 run never happened
+        (6, 0, False),
+        (0, 8, True),
+        (0, 0, False),
+    ],
 )
-def test_milestone_selector_30_and_7_days(version, offset, expected):
+def test_milestone_selector_marks_and_catch_up(version, offset, days_since_last_check, expected):
     date = (TODAY + dt.timedelta(days=offset)).isoformat()
-    assert monitor.milestone_due(_with_milestone(version, date), TODAY) is expected
+    assert monitor.milestone_due(_with_milestone(version, date), TODAY, _last(days_since_last_check)) is expected
 
 
 def test_milestone_selector_ignores_recommended_and_undated(version):
@@ -377,43 +497,89 @@ def test_milestone_selector_ignores_recommended_and_undated(version):
 
 
 def test_select_versions_modes(ds):
-    # fixture deadline is 2026-12-01 = 30 days after 2026-11-01
+    # fixture required deadline is 2026-12-01
     assert [r["version_id"] for r in monitor.select_versions(ds, "milestones", dt.date(2026, 11, 1))] == [VERSION]
-    assert monitor.select_versions(ds, "milestones", dt.date(2026, 11, 2)) == []
+    assert monitor.select_versions(ds, "milestones", dt.date(2026, 10, 31)) == []  # 31 days away
     assert len(monitor.select_versions(ds, "full", TODAY)) == len(model.select_published(ds))
     assert monitor.select_versions(ds, "full", TODAY, only=["nope"]) == []
     assert len(monitor.select_versions(ds, "full", TODAY, limit=1)) == 1
 
 
+def test_select_versions_uses_the_latest_check_for_catch_up(ds):
+    store = FakeStore()
+    day = dt.date(2026, 11, 20)  # 11 days before the deadline; the day-30 mark was 2026-11-01
+    assert [r["version_id"] for r in monitor.select_versions(ds, "milestones", day, store=store)] == [VERSION]
+    store.rows.append({"program_id": PROGRAM, "version_id": VERSION, "checked_at": "2026-11-05T09:00:00Z"})
+    assert monitor.select_versions(ds, "milestones", day, store=store) == []
+    store.rows[-1]["checked_at"] = "2026-10-20T09:00:00Z"
+    assert len(monitor.select_versions(ds, "milestones", day, store=store)) == 1
+
+
 # --------------------------------------------------------------------- CLI run
 
 
-def _main(tmp_path, net, store, *flags, cache: Optional[Path] = None):
+def _main(tmp_path, net, store, *flags):
     args = [str(FIXTURES), "--only", PROGRAM, "--today", TODAY.isoformat(), *flags]
-    if cache:
-        args += ["--cache-file", str(cache)]
-    return monitor.main(args, store=store, fetcher=net.fetcher(monitor.load_cache(cache)), now=NOW)
+    return monitor.main(args, store=store, fetcher=net.fetcher(), now=NOW)
 
 
-def test_dry_run_writes_nothing(tmp_path, capsys):
-    store, cache = FakeStore(), tmp_path / "cache.json"
+def test_dry_run_writes_no_rows_and_no_refresh(tmp_path, capsys):
+    store = FakeStore()
     findings = tmp_path / "f.json"
-    net = Net(routes(school=Response(200, {"content-type": "text/html", "etag": '"a"'}, PAGE.encode())))
-    assert _main(tmp_path, net, store, cache=cache) == 0
-    assert store.rows == [] and store.inserts == 0 and store.refreshes == 0
-    assert not cache.exists() and not findings.exists()
+    net = Net(routes(school=html(PAGE.replace("$12,000", "$9,500"))))
+    # a baseline exists, so this run has a finding; a dry run still reports it
+    store.rows.append(_baseline_row(tmp_path))
+    assert _main(tmp_path, net, store, "--findings-json", str(findings)) == 0
+    assert len(store.rows) == 1 and store.inserts == 0 and store.refreshes == 0
+    assert json.loads(findings.read_text())[0]["kind"] == "changed"  # findings files are fine in a dry run
     assert "dry run: nothing written" in capsys.readouterr().out
 
 
-def test_apply_inserts_saves_cache_and_refreshes(tmp_path):
-    store, cache = FakeStore(), tmp_path / "cache.json"
-    net = Net(routes(school=Response(200, {"content-type": "text/html", "etag": '"a"'}, PAGE.encode())))
-    assert _main(tmp_path, net, store, "--apply", cache=cache) == 0
+def _baseline_row(tmp_path) -> Dict[str, Any]:
+    scratch = FakeStore()
+    res = monitor.run([_version_from_fixtures()], scratch, Net(routes()).fetcher(), TODAY, NOW)
+    return res.rows[0]
+
+
+def _version_from_fixtures() -> Dict[str, Any]:
+    docs = {str(p): v.load_yaml_text(p.read_text(encoding="utf-8")) for p in sorted(FIXTURES.glob("*/*.yaml"))}
+    d = model.build_dataset(docs, root=v.REPO_ROOT)
+    return next(r for r in model.select_published(d) if r["version_id"] == VERSION)
+
+
+def test_apply_inserts_each_row_and_refreshes(tmp_path):
+    store = FakeStore()
+    assert _main(tmp_path, Net(routes()), store, "--apply") == 0
     assert store.inserts == 1 and store.refreshes == 1 and len(store.rows) == 1
-    assert json.loads(cache.read_text())[S_SCHOOL]["etag"] == '"a"'
-    # the insert is a valid scholarship_version_checks row
     assert set(store.rows[0]) == {"program_id", "version_id", "checked_at", "result", "needs_review", "detail"}
     assert store.rows[0]["result"] in ("unchanged", "changed", "stale_signal", "unreachable", "conflicting")
+
+
+def test_failure_midway_keeps_written_rows_refreshes_and_writes_findings(tmp_path, monkeypatch, version):
+    class Flaky(FakeStore):
+        def insert(self, rows):
+            if self.inserts >= 1:
+                raise RuntimeError("db down")
+            super().insert(rows)
+
+    store = Flaky()
+    monkeypatch.setattr(monitor, "select_versions", lambda *a, **k: two_versions(version))
+    out = tmp_path / "f.json"
+    args = [str(FIXTURES), "--today", TODAY.isoformat(), "--apply", "--findings-json", str(out)]
+    with pytest.raises(RuntimeError):
+        monitor.main(args, store=store, fetcher=Net(routes()).fetcher(), now=NOW)
+    assert len(store.rows) == 1 and store.refreshes == 1  # refresh in finally: the view never lags the flags
+    assert out.exists()
+
+
+def test_failed_refresh_exits_nonzero_after_the_rows_are_written(tmp_path):
+    class NoRefresh(FakeStore):
+        def refresh(self):
+            raise RuntimeError("timeout")
+
+    store = NoRefresh()
+    assert _main(tmp_path, Net(routes()), store, "--apply") == 1
+    assert len(store.rows) == 1
 
 
 def test_version_not_loaded_in_the_database_is_skipped(tmp_path, capsys):
@@ -423,18 +589,6 @@ def test_version_not_loaded_in_the_database_is_skipped(tmp_path, capsys):
     assert _main(tmp_path, net, store, "--apply") == 0
     assert store.rows == [] and net.calls == []  # no fetch, no insert that would hit the foreign key
     assert f"skipped (not loaded): {PROGRAM}/{VERSION}" in capsys.readouterr().out
-
-
-def test_failed_insert_does_not_save_the_cache(tmp_path):
-    class Boom(FakeStore):
-        def insert(self, rows):
-            raise RuntimeError("db down")
-
-    cache = tmp_path / "cache.json"
-    net = Net(routes(school=Response(200, {"content-type": "text/html", "etag": '"a"'}, PAGE.encode())))
-    with pytest.raises(RuntimeError):
-        _main(tmp_path, net, Boom(), "--apply", cache=cache)
-    assert not cache.exists()
 
 
 def test_findings_files_are_written_when_asked(tmp_path):
@@ -448,11 +602,104 @@ def test_findings_files_are_written_when_asked(tmp_path):
 
 
 def test_findings_markdown_is_capped():
-    big = [{"program_id": f"p{i}", "version_id": "v", "kind": "changed",
+    big = [{"program_id": f"p{i}", "version_id": "v", "kind": "changed", "new": True,
             "changed_sources": [{"source_id": "s", "url": "https://x/" + "a" * 500, "archive_save_url": "u",
                                  "diff": {"amounts": {"added": ["$1"], "removed": []}}}],
-            "stale_signals": []} for i in range(400)]
+            "stale_signals": [], "unreachable_sources": [], "unreadable_sources": [],
+            "raw_changed_sources": []} for i in range(400)]
     assert len(monitor.findings_markdown(big, TODAY)) <= monitor.MAX_FINDINGS_CHARS + 200
+
+
+# ------------------------------------------- stale, unreachable, unreadable: never flag
+
+
+def test_clearing_a_stale_only_row_stays_cleared(version):
+    store = FakeStore()
+    page = html(PAGE.replace("Fixture Scholars 2027", "Class of 2029 Fixture Scholars"))
+    check(version, Net(routes(school=page)), store)
+    row = check(version, Net(routes(school=page)), store)
+    assert row["needs_review"] is False and row["detail"]["stale_signals"]
+    cleared = copy.deepcopy(store.rows[-1])
+    cleared["detail"].pop("stale_signals")  # what the runbook SQL does
+    store.rows.append(cleared)
+    row = check(version, Net(routes(school=page)), store)
+    assert row["needs_review"] is False
+
+
+def test_stale_signal_on_the_first_run_does_not_flag(version):
+    row = check(version, Net(routes(school=html(PAGE.replace("Fixture Scholars 2027", "Class of 2029 Fixture Scholars")))))
+    assert row["detail"]["first_run"] is True and row["needs_review"] is False
+
+
+def test_unreachable_is_reported_once_and_never_flags(version):
+    store = FakeStore()
+    check(version, Net(routes()), store)
+    row = check(version, Net(routes(school=Response(404))), store)
+    assert row["needs_review"] is False
+    f = check.findings[0]  # type: ignore[attr-defined]
+    assert f["kind"] == "info" and f["unreachable_sources"][0]["source_id"] == "s-school"
+    check(version, Net(routes(school=Response(404))), store)
+    assert check.findings == []  # type: ignore[attr-defined]  # already reported
+
+
+def test_script_rendered_page_is_unreadable_and_never_flags(version):
+    shell = "<html><body><div id='root'></div><script>load()</script></body></html>"
+    store = FakeStore()
+    row = check(version, Net(routes(school=html(shell))), store)
+    assert src(row)["text_unreadable"] is True and src(row)["text_sha256"] is None
+    assert check.findings[0]["unreadable_sources"]  # type: ignore[attr-defined]
+    row = check(version, Net(routes(school=html(shell.replace("load()", "load(2)")))), store)
+    assert row["needs_review"] is False and src(row)["change"] == "raw_changed"
+    assert check.findings[0]["raw_changed_sources"] and not check.findings[0]["unreadable_sources"]  # type: ignore[attr-defined]
+
+
+def test_200_maintenance_or_soft_404_page_is_unreachable_not_a_change(version):
+    store = FakeStore()
+    check(version, Net(routes()), store)
+    for body in ("<html><body><main><h1>Page not found</h1><p>The page cannot be found.</p></main></body></html>",
+                 "<html><body><main><p>This site is under maintenance. Please check back.</p></main></body></html>"):
+        row = check(version, Net(routes(school=html(body))), store)
+        s = src(row)
+        assert s["status"] == "unreachable" and "suspect page" in s["reason"]
+        assert row["needs_review"] is False
+        assert s["raw_sha256"] == src(store.rows[0])["raw_sha256"]  # baseline carried, not replaced
+
+
+def test_page_that_lost_most_of_its_content_is_suspect(version):
+    store = FakeStore()
+    check(version, Net(routes()), store)
+    stub = "<html><body><main><h1>Fixture Scholars</h1>" + "<p>" + ("Welcome to our page. " * 20) + "</p></main></body></html>"
+    row = check(version, Net(routes(school=html(stub))), store)
+    assert src(row)["status"] == "unreachable" and row["needs_review"] is False
+
+
+def test_a_challenge_page_is_never_baselined(version):
+    chal = "<html><body><main><p>Verify you are human to continue. " + "x " * 100 + "</p></main></body></html>"
+    row = check(version, Net(routes(school=html(chal))))
+    assert src(row)["status"] == "unreachable" and "raw_sha256" not in src(row)
+
+
+def test_pdf_without_text_reports_raw_change_but_never_flags(version):
+    pdf = Response(200, {"content-type": "application/pdf"}, b"%PDF-1.4 /CreationDate 1")
+    store = FakeStore()
+    check(version, Net(routes(school=pdf)), store)
+    row = check(version, Net(routes(school=Response(200, {"content-type": "application/pdf"}, b"%PDF-1.4 /CreationDate 2"))), store)
+    assert src(row)["change"] == "raw_changed" and row["needs_review"] is False and row["result"] == "unchanged"
+    assert check.findings[0]["raw_changed_sources"]  # type: ignore[attr-defined]
+
+
+def test_throttling_host_is_skipped_for_the_rest_of_the_run(version):
+    store = FakeStore()
+    both = copy.deepcopy(version)
+    both["record"]["sources"][1]["url"] = "https://admission.virginia.edu/affordability/second"
+    net_routes = routes(school=Response(429, {"retry-after": "99999"}))
+    net_routes["https://admission.virginia.edu/affordability/second"] = html()
+    net = Net(net_routes)
+    res = monitor.run([both], store, net.fetcher(), TODAY, NOW)
+    row = res.rows[0]
+    assert all(s["status"] == "unreachable" for s in row["detail"]["sources"])
+    assert "skipped for the rest of this run" in src(row, "s-foundation")["reason"]
+    assert "https://admission.virginia.edu/affordability/second" not in [u for u, _ in net.calls]
 
 
 # ------------------------------------------------------------------ extraction
@@ -467,16 +714,6 @@ def test_tokens_and_heading_years():
     assert t["years"] == [2026]
     assert t["selection_words"] == ["automatic", "considered", "no longer"]
     assert monitor.heading_entry_years(["class of 2030 scholars", "2025-26 awards", "fall 2027 entrants"]) == [2025, 2026, 2027]
-
-
-def test_unreadable_pdf_falls_back_to_raw_bytes(version):
-    pdf = Response(200, {"content-type": "application/pdf"}, b"%PDF-1.4 not really a pdf")
-    store = FakeStore()
-    row = check(version, Net(routes(school=pdf)), store)
-    assert src(row)["text_sha256"] is None
-    pdf2 = Response(200, {"content-type": "application/pdf"}, b"%PDF-1.4 different bytes")
-    row = check(version, Net(routes(school=pdf2)), store)
-    assert row["result"] == "changed" and src(row)["change"] == "raw_changed"
 
 
 # -------------------------------------------------------------------- workflow
@@ -503,6 +740,16 @@ def test_workflow_keeps_the_service_key_in_the_monitor_step_only():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert text.count("SUPABASE_SERVICE_ROLE_KEY") == 2  # name and value, one env block
     assert "SUPABASE_SERVICE_ROLE_KEY" not in text.split("    steps:")[0]
-    install = text.split("name: Install Python dependencies")[1].split("- name:")[0]
+    install = text.split("name: Install Python dependencies")[1].split("- id: monitor")[0]
     assert "SUPABASE" not in install
     assert "--apply" in text and "dry_run" in text
+
+
+def test_workflow_reports_findings_even_when_the_monitor_step_fails():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    issue = text.split("name: Open or update the findings issue")[1].split("- name:")[0]
+    assert "if: always()" in issue and "steps.monitor.outputs.findings" in issue
+    step = text.split("name: Run the monitor")[1].split("- uses:")[0]
+    assert "set -uo pipefail" in step and "set -e" not in step  # outputs are written before the exit
+    assert step.index("findings=") < step.index('exit "${rc}"')
+    assert "--cache-file" not in text

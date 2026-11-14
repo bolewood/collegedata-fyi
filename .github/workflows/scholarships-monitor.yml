@@ -3,8 +3,10 @@ name: Scholarship monitor
 # PRD 036 M4. Fetches the official sources of every served scholarship
 # version, records one row per version in scholarship_version_checks and
 # refreshes the directory cache. It never edits data/scholarships/ and never
-# publishes: a changed page or a stale signal sets needs_review, which flips the
-# public freshness status, and opens one GitHub issue for a person to review.
+# publishes: only a detected change in terms (an amount, date, year or selection
+# word) sets needs_review, which flips the public freshness status. Stale signals,
+# unreachable sources and unreadable pages are listed in the issue but never change
+# public status. One upserted GitHub issue lists every flagged version each run.
 #
 # Schedules (UTC). GitHub treats day-of-month and day-of-week as OR, so no
 # schedule sets both:
@@ -13,7 +15,8 @@ name: Scholarship monitor
 #   - daily                                   (only versions with a required or
 #                                              priority milestone 30 or 7 days away)
 # The mode is read from github.event.schedule, so keep the strings below in step
-# with the case statement in the monitor step.
+# with the case statement in the monitor step. Conditional-GET validators live in
+# each version's own check row, so there is no cross-run cache step.
 
 on:
   workflow_dispatch:
@@ -70,15 +73,6 @@ jobs:
       - name: Install Python dependencies
         run: python -m pip install -r tools/ci-requirements.txt
 
-      # Conditional-GET validators. Keys are immutable, so each run saves under
-      # its own run id and restores the newest earlier one.
-      - name: Restore the fetch cache
-        uses: actions/cache/restore@v4
-        with:
-          path: scholarship-monitor-cache
-          key: scholarship-monitor-${{ github.run_id }}
-          restore-keys: scholarship-monitor-
-
       # The service role key is scoped to this step so dependency install code
       # never sees it. A dry run reads it only to diff against stored baselines.
       - id: monitor
@@ -87,7 +81,7 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          set -euo pipefail
+          set -uo pipefail
           mode=full
           apply=true
           if [[ "${EVENT_NAME}" == "schedule" ]]; then
@@ -97,24 +91,25 @@ jobs:
             if [[ "${INPUT_DRY_RUN}" == "true" ]]; then apply=false; fi
           fi
           args=(--mode "${mode}"
-                --cache-file scholarship-monitor-cache/fetch-cache.json
                 --findings-json scholarship-monitor/findings.json
                 --findings-md scholarship-monitor/findings.md)
           if [[ -n "${INPUT_ONLY:-}" ]]; then args+=(--only "${INPUT_ONLY}"); fi
           if [[ "${apply}" == "true" ]]; then args+=(--apply); fi
-          mkdir -p scholarship-monitor scholarship-monitor-cache
+          mkdir -p scholarship-monitor
+          # Rows are inserted as each version finishes, and findings are written even
+          # after a failure, so the outputs below are set before the step exits.
           python tools/scholarships/monitor.py "${args[@]}" | tee scholarship-monitor/run.log
-          count="$(python -c "import json; print(len(json.load(open('scholarship-monitor/findings.json'))))")"
+          rc="${PIPESTATUS[0]}"
+          count=0
+          if [[ -f scholarship-monitor/findings.json ]]; then
+            count="$(python -c "import json; print(len(json.load(open('scholarship-monitor/findings.json'))))")"
+          fi
           echo "findings=${count}" >> "$GITHUB_OUTPUT"
           echo "apply=${apply}" >> "$GITHUB_OUTPUT"
-          cat scholarship-monitor/findings.md >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Save the fetch cache
-        if: steps.monitor.outputs.apply == 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: scholarship-monitor-cache
-          key: scholarship-monitor-${{ github.run_id }}
+          if [[ -f scholarship-monitor/findings.md ]]; then
+            cat scholarship-monitor/findings.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "${rc}"
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -124,7 +119,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Open or update the findings issue
-        if: steps.monitor.outputs.findings != '0' && steps.monitor.outputs.apply == 'true'
+        if: always() && steps.monitor.outputs.findings != '' && steps.monitor.outputs.findings != '0' && steps.monitor.outputs.apply == 'true'
         run: |
           python tools/ops/upsert_pipeline_alert_issue.py \
             --repo "${REPO}" \
