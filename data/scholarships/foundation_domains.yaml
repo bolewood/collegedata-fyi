@@ -1,0 +1,27 @@
+# Affiliated-foundation domains allowed as official sources (PRD 036).
+#
+# A scholarship record may cite a foundation's own site only when the school
+# names the foundation as the program's administrator or sponsor. Each entry
+# is keyed by the canonical school_id from tools/finder/schools.yaml. A source
+# whose authority is `foundation_official` must be on one of these domains;
+# the school's own domain is always allowed and is not repeated here.
+#
+# Add a domain only with a school page that names the foundation. Domains were
+# checked against the links in docs/research/036-scholarship-landscape-and-seed.md.
+version: 1
+foundations:
+  uva:
+    - domain: jeffersonscholars.org
+      name: Jefferson Scholars Foundation
+      programs: Jefferson Scholars, Walentas Scholars
+  unc:
+    - domain: moreheadcain.org
+      name: Morehead-Cain Foundation
+      programs: Morehead-Cain Scholars
+    - domain: robertsonscholars.org
+      name: Robertson Scholars Leadership Program
+      programs: Robertson Scholars (joint with Duke)
+  duke:
+    - domain: robertsonscholars.org
+      name: Robertson Scholars Leadership Program
+      programs: Robertson Scholars (joint with UNC)

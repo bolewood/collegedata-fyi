@@ -57,6 +57,12 @@ jobs:
         run: python -m unittest tools.schema_builder.test_decode_checkboxes
       - name: Run discovery policy and engine tests
         run: python -m pytest tools/discovery -q
+      - name: Run scholarship record tests
+        run: python -m pytest tools/scholarships -q
+      - name: Fetch main for the published-version check
+        run: git fetch --no-tags --depth=1 origin main:refs/remotes/origin/main
+      - name: Validate scholarship records
+        run: python tools/scholarships/validate.py data/scholarships/programs --base origin/main
       # The Tier 2 suite renders PDF pages and takes far longer than every
       # other step combined. On pull requests and branch pushes it runs only
       # when something it depends on changed. Pushes to main and manual
