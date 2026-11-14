@@ -1542,6 +1542,49 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 
+      <h2 id="field-numbering" className="serif mt-10 text-2xl">
+        Field numbers change between years
+      </h2>
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
+        The CDS form renumbers its questions when it adds or drops one, so a{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">field_id</code>{" "}
+        means one thing in one year and something else in the next. In
+        2024-25, <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">C.120</code> counts applicants; in 2025-26 the same
+        number counts admitted students. Early Decision applicants are{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">C.2106</code> in 2024-25 and{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">C.2110</code> in 2025-26.
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
+        To follow one question across years, filter{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">cds_fields</code> on{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">canonical_field_id</code>, which carries the 2025-26 number
+        for every year, or on <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">canonical_metric</code> where one
+        exists. Use <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">field_id</code> only together with{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">schema_version</code>. The year-to-year mapping is in{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">cds_canonical_field_equivalence</code>.
+      </p>
+      <CodeBlock>{`curl '${BASE}/rest/v1/cds_fields?school_id=eq.duke&canonical_field_id=eq.C.2110&select=canonical_year,field_id,value_num,value_status' \\
+  -H 'apikey: <anon key>'`}</CodeBlock>
+      <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
+        Every row has a <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">value_status</code>:{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">reported</code> (the school gave a value we could read),{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">not_applicable</code> (the school marked it N/A),{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">missing</code> (blank), or{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">parse_error</code> (the cell held something that is not a
+        valid answer, or a number that cannot be true next to its neighbours,
+        such as more students admitted than applied). A{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">parse_error</code> row keeps the original text in{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">value_text</code> and has no number. Filter on{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">value_status=eq.reported</code> before doing arithmetic.
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
+        The admission factors a school says it considers (first-generation
+        status, legacy, state residency, demonstrated interest) are columns on{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">school_browser_rows</code>, named{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">c711_first_gen_factor</code> and so on. They are not in{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">school_facts_unified</code>.
+      </p>
+
       <h2 className="serif mt-10 text-2xl">
         JavaScript client
       </h2>
@@ -1598,9 +1641,10 @@ const { data } = await supabase
         >
           schemas/
         </a>
-        . The dataset is MIT-licensed; the underlying CDS documents are owned
-        by their respective institutions and reproduced here under their
-        public-document status.
+        . The code and the structured dataset we derive are MIT-licensed. The
+        CDS documents themselves belong to the schools that published them
+        and are reproduced here as public documents; the MIT licence does not
+        cover them.
       </p>
 
       <div className="mt-10 border-t border-[var(--rule)] pt-6 text-sm text-[var(--ink-3)]">
