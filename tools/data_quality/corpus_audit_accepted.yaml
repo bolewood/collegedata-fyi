@@ -4,8 +4,16 @@
 # key is not listed here as "new". Add an entry only when the finding is
 # correct as published, and say why. Fix the data instead when it is wrong.
 # The audit lists entries that no longer fire so they can be removed.
-#
-# accepted:
-#   - key: "shared_source_file:school-a,school-b"
-#     reason: "One institution under two directory ids; both pages should show the file."
-accepted: []
+accepted:
+  # Fairleigh Dickinson files one CDS for both New Jersey campuses. Its 11,478
+  # applicants equal Florham's 5,652 plus Metropolitan's 5,826 in IPEDS (fall
+  # 2024). Both pages keep the file with a note saying it covers both
+  # (web/src/lib/campus-filings.ts).
+  - key: "shared_source_file:fairleigh-dickinson-university-florham-campus,fairleigh-dickinson-university-metropolitan-campus"
+    reason: "One combined filing for both campuses; labelled as such on both pages."
+  - key: "shared_admissions_numbers:2024-25:fairleigh-dickinson-university-florham-campus,fairleigh-dickinson-university-metropolitan-campus"
+    reason: "One combined filing for both campuses; labelled as such on both pages."
+  - key: "federal_applicants_mismatch:fairleigh-dickinson-university-florham-campus:2024-25"
+    reason: "Combined filing: the CDS count is both campuses, the IPEDS count is Florham alone."
+  - key: "federal_applicants_mismatch:fairleigh-dickinson-university-metropolitan-campus:2024-25"
+    reason: "Combined filing: the CDS count is both campuses, the IPEDS count is Metropolitan alone."
