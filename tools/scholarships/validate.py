@@ -480,7 +480,7 @@ def compare_published(
             now = head_versions.get(key)
             if now is None:
                 issues.append(Issue("E_PUBLISHED_EDITED", path, f"verified version {key[1]!r} of {key[0]!r} was removed or renamed; add a new version with supersedes instead"))
-            elif now != v:
+            elif json.dumps(now, sort_keys=True) != json.dumps(v, sort_keys=True):
                 issues.append(Issue("E_PUBLISHED_EDITED", path, f"verified version {key[1]!r} of {key[0]!r} was edited; add a new version with supersedes instead"))
     return issues
 

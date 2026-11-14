@@ -285,6 +285,32 @@ def test_yaml_dates_stay_strings_and_duplicate_keys_fail():
         v.load_yaml_text("a: 1\na: 2\n")
 
 
+# ------------------------------------------- rejecting fixtures as files
+
+REJECTING = Path(__file__).resolve().parent / "fixtures" / "rejecting"
+REJECT_CASES = {
+    "automatic-guaranteed-without-evidence": {"E_GUARANTEED_NO_EVIDENCE"},
+    "summed-total": {"E_SUMMED_TOTAL"},
+    "off-domain-source": {"E_OFF_DOMAIN"},
+    "mismatched-school-and-ipeds": {"E_IDENTITY"},
+    "missing-evidence": {"E_NO_EVIDENCE"},
+    "milestone-outside-cycle": {"E_MILESTONE_WINDOW"},
+}
+
+
+@pytest.mark.parametrize("case", sorted(REJECT_CASES))
+def test_rejecting_fixture_files(case, ctx):
+    path = REJECTING / case / "uva" / MAIN.name
+    record = v.load_yaml_text(path.read_text(encoding="utf-8"))
+    assert codes(v.validate_doc(record, ctx, str(path), "uva", path.stem)) == REJECT_CASES[case]
+
+
+def test_rejecting_fixture_edited_published_version():
+    base = v.load_yaml_text((REJECTING / "edited-published-version" / "base.yaml").read_text())
+    head = v.load_yaml_text((REJECTING / "edited-published-version" / "head.yaml").read_text())
+    assert codes(v.compare_published({"f.yaml": base}, {"f.yaml": head})) == {"E_PUBLISHED_EDITED"}
+
+
 # ------------------------------------------------------- published versions
 
 
@@ -308,6 +334,18 @@ def test_compare_published_flags_edit_removal_and_allows_correction(doc):
     new["offers"][0]["benefits"][1]["amount"]["value"] = 6000
     corrected["versions"].append(new)
     assert v.compare_published(base, {"f.yaml": corrected}) == []
+
+
+def test_compare_published_is_type_strict(doc):
+    edited = copy.deepcopy(doc)
+    for e in version27(edited)["field_evidence"]:
+        if e["field_path"] == "offers/0/benefits/1/amount":
+            e["reported_value"] = 5000.0  # 5000 == 5000.0 in Python, not in YAML
+    assert codes(v.compare_published({"f.yaml": doc}, {"f.yaml": edited})) == {"E_PUBLISHED_EDITED"}
+    base, head = copy.deepcopy(doc), copy.deepcopy(doc)
+    version27(base)["field_evidence"][0]["reported_value"] = True
+    version27(head)["field_evidence"][0]["reported_value"] = 1
+    assert codes(v.compare_published({"f.yaml": base}, {"f.yaml": head})) == {"E_PUBLISHED_EDITED"}
 
 
 def test_compare_ignores_unverified_base_versions(doc):
