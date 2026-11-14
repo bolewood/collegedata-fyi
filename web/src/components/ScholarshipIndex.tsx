@@ -86,7 +86,7 @@ export function ScholarshipIndex({ rows }: { rows: IndexRow[] }) {
           <select id="f-sort" value={sort} onChange={(e) => setSort(e.target.value as ScholarshipSort)}>
             <option value="school">School name</option>
             <option value="deadline">Deadline (soonest first)</option>
-            <option value="coverage">Coverage</option>
+            <option value="coverage">Coverage (grouped)</option>
           </select>
         </label>
         {active ? (
@@ -97,7 +97,7 @@ export function ScholarshipIndex({ rows }: { rows: IndexRow[] }) {
       </form>
 
       <p className="sch-count mono" aria-live="polite">
-        Showing {shown.length} of {rows.length} programs.
+        Showing {shown.length} of {rows.length} listings. A program shared by two schools is listed once for each.
       </p>
 
       {shown.length === 0 ? (

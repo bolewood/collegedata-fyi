@@ -825,9 +825,7 @@ export function filterRows(rows: IndexRow[], f: ScholarshipFilters): IndexRow[] 
   });
 }
 
-const COVERAGE_ORDER = ["full_school_coa", "tuition_housing_meals", "full_tuition_fees", "full_tuition", "partial_or_fixed", "other"];
-
-/** Sort by a factual field. Never by "best". Ties fall back to school then program name. */
+/** Sort by a factual field. Never by "best" or by generosity. Ties fall back to school then program name. */
 export function sortRows(rows: IndexRow[], by: ScholarshipSort): IndexRow[] {
   const tie = (a: IndexRow, b: IndexRow) =>
     a.school_name.localeCompare(b.school_name) || a.official_name.localeCompare(b.official_name);
@@ -840,11 +838,9 @@ export function sortRows(rows: IndexRow[], by: ScholarshipSort): IndexRow[] {
       return tie(a, b);
     });
   } else if (by === "coverage") {
-    const rank = (r: IndexRow) => {
-      const ranks = r.coverages.map((c) => COVERAGE_ORDER.indexOf(c)).filter((i) => i >= 0);
-      return ranks.length ? Math.min(...ranks) : COVERAGE_ORDER.length;
-    };
-    out.sort((a, b) => rank(a) - rank(b) || tie(a, b));
+    // Grouped by coverage label, alphabetically. A grouping, not a ranking.
+    const key = (r: IndexRow) => [...r.coverages].map((c) => COVERAGE_LABEL[c] ?? c).sort()[0] ?? "~";
+    out.sort((a, b) => key(a).localeCompare(key(b)) || tie(a, b));
   } else {
     out.sort(tie);
   }

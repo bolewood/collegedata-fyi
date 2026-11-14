@@ -154,7 +154,7 @@ source link and "Confirm on the official page."
 | Amber: The school's pages disagree on {the renewal GPA, a date}. Both are on the official page; read it before relying on either. Read Nov 8, 2026. | `conflicting`, naming what disagrees (from the conflicting evidence fields) |
 | Amber: The school's pages disagree with each other. Read the official page before relying on any figure here. Read Nov 8, 2026. | `conflicting` with no field named |
 | These terms have not been re-read for this cycle. Last read Nov 8, 2026. | `current_cycle_unconfirmed` |
-| Confirm on the official page | Link text next to every freshness line and every date |
+| Confirm on the official page | Plain text beside the source link on every freshness line; also ends every printed date |
 | Official page ↗ | Source link. One per source; the label for a foundation source is "Foundation's page ↗"; for an archived copy "Archived copy ↗" |
 | Report an update | Link to the GitHub issue template |
 
@@ -194,9 +194,9 @@ application requirement. Anything else prints "a figure".
 | Deadline month | Filter label. Options: Any, January to December |
 | Residency | Filter label. Options: Any, In-state, Out-of-state, International, Any residency |
 | School | Filter label, a text box. Placeholder: "School name" |
-| Sort by | Sort label. Options: School name, Deadline (soonest first), Coverage |
+| Sort by | Sort label. Options: School name, Deadline (soonest first), Coverage (grouped alphabetically by coverage label; a grouping, never a ranking) |
 | Clear filters | Button, shown when a filter is set |
-| Showing {n} of {total} programs. | Result count |
+| Showing {n} of {total} listings. A program shared by two schools is listed once for each. | Result count |
 | No programs match these filters. The list is partial, so try fewer filters. | Empty filtered state |
 | No programs are documented yet. The list is partial and is being added to. | Empty state when the view has no rows or could not be read. The page still renders |
 | Columns: School · Program · What it covers · Chosen how · Deadline · Terms as of | Table header |
@@ -254,7 +254,7 @@ application requirement. Anything else prints "a figure".
 |---|---|
 | Scholarship correction | Template name |
 | Something on a scholarship page does not match the school's page. | Description |
-| correction, scholarship | Labels |
+| scholarship, data-error | Labels |
 | Official page URL | Input label. Required. Description: "The school's (or foundation's) own page that shows the correct term." |
 | Program and school | Input label. Required. Placeholder: "Program name, school" |
 | What does our page say, and what does the official page say? | Textarea label. Required |

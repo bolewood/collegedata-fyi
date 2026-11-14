@@ -51,8 +51,12 @@ export default async function ScholarshipsPage() {
           different from having no named scholarships. Every program links to the school&rsquo;s own page.
         </p>
         <p className="mono" style={{ marginTop: 14, fontSize: 12, color: "var(--ink-3)" }}>
-          {programCount} {programCount === 1 ? "program" : "programs"} at {schoolCount}{" "}
-          {schoolCount === 1 ? "school" : "schools"} ·{" "}
+          {programCount > 0 ? (
+            <>
+              {programCount} {programCount === 1 ? "program" : "programs"} at {schoolCount}{" "}
+              {schoolCount === 1 ? "school" : "schools"} ·{" "}
+            </>
+          ) : null}
           <Link href="/methodology/scholarships">Method</Link> ·{" "}
           <Link href="/methodology/scholarships#reuse">How to cite</Link>
         </p>

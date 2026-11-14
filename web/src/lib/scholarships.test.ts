@@ -18,6 +18,7 @@ import {
   renewalSummary,
   sortRows,
   EMPTY_FILTERS,
+  COVERAGE_LABEL,
   type Benefit,
   type IndexRow,
   type ScholarshipDirectoryRow,
@@ -249,6 +250,10 @@ describe("index filters and sort", () => {
     const firstUndated = sorted.findIndex((r) => !r.key_deadline);
     expect(sorted.slice(firstUndated).every((r) => !r.key_deadline)).toBe(true);
     expect(sortRows(index, "school").map((r) => r.school_name)).toEqual([...index.map((r) => r.school_name)].sort((a, b) => a.localeCompare(b)));
+  });
+  it("sorts by coverage label alphabetically, not by generosity", () => {
+    const labels = sortRows(index, "coverage").map((r) => [...r.coverages].map((c) => COVERAGE_LABEL[c]).sort()[0] ?? "~");
+    expect(labels).toEqual([...labels].sort((a, b) => a.localeCompare(b)));
   });
   it("counts a shared program once, by its lead school", () => {
     const counts = countProgramsByControl(ROWS, (id) => (id === "duke" ? "private_nonprofit" : id === "unc" ? "public" : "unknown"));

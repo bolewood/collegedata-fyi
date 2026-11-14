@@ -193,7 +193,9 @@ export default function ScholarshipMethodologyPage() {
           documented at{" "}
           <Link href="/api" className="underline">/api</Link>.
         </p>
-        <CodeBlock>{`curl '${BASE}/rest/v1/scholarship_directory?school_id=eq.university-of-tulsa&select=official_name,entry_year,freshness_status,key_deadline,sources,attribution'`}</CodeBlock>
+        <CodeBlock>{`curl '${BASE}/rest/v1/scholarship_directory?school_id=eq.university-of-tulsa&select=official_name,entry_year,freshness_status,key_deadline,sources,attribution' \\
+  -H 'apikey: <anon key>' \\
+  -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
         <p>
           The list is documented by hand and is partial. See{" "}
           <Link href="/scholarships" className="underline">all documented programs</Link>.
