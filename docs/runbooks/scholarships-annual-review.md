@@ -14,11 +14,14 @@ the next entering class, and handling what the change monitor
   public status to `current_cycle_unconfirmed`. A change counts when the extracted
   main text changed and the change touches an amount, a date, a year or a selection
   word (guaranteed, automatic, competitive, considered, required, deadline, no
-  longer, and a few close relatives such as "not guaranteed" and "finalist").
-  Banners, news teasers, "last updated" dates, markup and wording that moves none
-  of those are ignored on purpose: the monitor under-alerts rather than flip a
-  record on noise. A real change in a GPA or test threshold, or a rewording that
-  moves no token, will not be caught here; the annual review is the backstop.
+  longer, and a few close relatives such as "not guaranteed" and "finalist"), or a
+  number within four words of GPA or grade point, SAT, ACT, credits, hours,
+  semesters, recipients, scholars or awards (a renewal GPA of 3.0 becoming 3.2, a
+  minimum SAT, the number of awards). Banners, news teasers, "last updated" dates,
+  markup, phone numbers and visitor counts, and wording that moves none of those
+  are ignored on purpose: the monitor under-alerts rather than flip a record on
+  noise. A rewording that moves no token, or a threshold stated without those
+  words nearby, will not be caught here; the annual review is the backstop.
 - **Never changes public status** (listed in the issue under "For information"):
   stale signals (heading or deadline years that look old, every dated milestone
   past with no next-cycle year), unreachable sources (robots block, robots

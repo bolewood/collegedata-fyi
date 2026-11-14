@@ -205,6 +205,38 @@ def test_date_and_selection_word_change(version):
     assert row["needs_review"] is True
 
 
+def _flag_test(version, old: str, new: str, expect: str, key: str = "thresholds"):
+    page = PAGE.replace("</main>", f"<p>{old}</p></main>")
+    store = FakeStore()
+    check(version, Net(routes(school=html(page))), store)
+    row = check(version, Net(routes(school=html(page.replace(old, new)))), store)
+    assert row["needs_review"] is True and row["result"] == "changed"
+    assert expect in src(row)["diff"][key]["added"]
+
+
+def test_renewal_gpa_change_flags(version):
+    _flag_test(version, "Scholars must keep a cumulative GPA of 3.0 to renew.",
+               "Scholars must keep a cumulative GPA of 3.2 to renew.", "gpa 3.2")
+
+
+def test_sat_minimum_change_flags(version):
+    _flag_test(version, "A minimum SAT score of 1400 is expected.", "A minimum SAT score of 1450 is expected.", "sat 1450")
+
+
+def test_award_count_change_flags(version):
+    _flag_test(version, "We select 25 awards each year.", "We select 20 awards each year.", "awards 20")
+
+
+def test_unrelated_numbers_do_not_flag(version):
+    old = "Questions? Call the office at 555-0100 or visit us. This page has had 12,345 visitors."
+    page = PAGE.replace("</main>", f"<p>{old}</p></main>")
+    store = FakeStore()
+    check(version, Net(routes(school=html(page))), store)
+    new = old.replace("555-0100", "555-0199").replace("12,345", "13,001")
+    row = check(version, Net(routes(school=html(page.replace(old, new)))), store)
+    assert row["needs_review"] is False and src(row)["change"] == "text_changed_no_terms"
+
+
 def test_wording_change_that_touches_no_token_does_not_flag(version):
     store = FakeStore()
     check(version, Net(routes()), store)

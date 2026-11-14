@@ -83,7 +83,7 @@ from tools.common.polite_fetch import (  # noqa: E402
     PoliteFetcher,
 )
 
-NORMALIZER_VERSION = 2
+NORMALIZER_VERSION = 3  # 3: thresholds token
 MIN_TEXT_CHARS = 200  # shorter normalized text is treated as unreadable (JS shell, error page)
 PRODUCT_TOKEN = "scholarship-monitor"
 SELECTION_WORDS = (
@@ -94,7 +94,7 @@ SELECTION_WORDS = (
 MILESTONE_MARKS = (30, 7)
 MAX_FINDINGS_CHARS = 60_000
 ARCHIVE_SAVE = "https://web.archive.org/save/"
-TOKEN_KEYS = ("amounts", "dates", "years", "selection_words")
+TOKEN_KEYS = ("amounts", "dates", "years", "selection_words", "thresholds")
 
 # ------------------------------------------------------------------ normalizer
 
@@ -285,11 +285,42 @@ def extract_tokens(text: str) -> Dict[str, List[Any]]:
     years = sorted({int(y) for y in _YEAR_RE.findall(stripped)})
     words = {w.replace("automatically", "automatic") for w in _SEL_RE.findall(text)}
     return {
+        "thresholds": threshold_tokens(stripped),
         "amounts": sorted(amounts, key=lambda a: (float(a[1:]), a)),
         "dates": sorted(dates),
         "years": years,
         "selection_words": sorted(words),
     }
+
+
+_THRESHOLD_WORDS = {
+    "gpa": "gpa", "grade": "gpa", "sat": "sat", "act": "act", "credit": "credit", "credits": "credit",
+    "hour": "hours", "hours": "hours", "semester": "semester", "semesters": "semester",
+    "recipients": "recipients", "scholars": "scholars", "awards": "awards",
+}
+_THRESHOLD_WINDOW = 4
+_NUM_RE = re.compile(r"^\d+(?:\.\d+)?$")
+
+
+def threshold_tokens(text: str) -> List[str]:
+    """Numbers within four words of GPA / grade point, SAT, ACT, credit(s), hour(s),
+    semester(s), recipients, scholars or awards, as "keyword number" ("gpa 3.2").
+    Amounts, dates and years are removed first; a phone number or a visitor count
+    far from those words is not a threshold."""
+    cleaned = _DATE_ISO_RE.sub(" ", _DATE_SLASH_RE.sub(" ", _DATE_MONTH_YEAR_RE.sub(" ", _DATE_NAMED_RE.sub(" ", text))))
+    cleaned = _YEAR_RE.sub(" ", cleaned)
+    words = [w.strip(".,;:()[]\"'!?") for w in cleaned.split()]
+    kws = [(_THRESHOLD_WORDS.get(w)) for w in words]
+    out = set()
+    for i, w in enumerate(words):
+        num = w.replace(",", "")
+        if not _NUM_RE.match(num):
+            continue
+        lo, hi = max(0, i - _THRESHOLD_WINDOW), min(len(words), i + _THRESHOLD_WINDOW + 1)
+        near = [(abs(j - i), kws[j]) for j in range(lo, hi) if kws[j] and j != i]
+        if near:
+            out.add(f"{min(near)[1]} {num}")
+    return sorted(out)
 
 
 def deadline_years(text: str) -> List[int]:
