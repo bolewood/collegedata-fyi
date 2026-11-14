@@ -251,6 +251,11 @@ class ReportTests(unittest.TestCase):
             report["summary"]["findings"]["shared_source_file"], {"new": 0, "accepted": 1}
         )
         self.assertEqual(report["metrics"]["parse_errors"]["by_section"], {"H": 1})
+        self.assertEqual(
+            audit.heartbeat_summary(report),
+            {"new_findings": 1, "accepted_findings": 1, "federal_rows_compared": 1,
+             "values_withheld": 0, "parse_errors": 1},
+        )
         markdown = audit.render_markdown(report)
         self.assertIn("New: `shared_admissions_numbers` (1)", markdown)
         self.assertNotIn("New: `shared_source_file`", markdown)

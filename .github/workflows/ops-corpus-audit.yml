@@ -3,14 +3,15 @@ name: Ops corpus audit
 # Read-only check of the published data for the failures consumers have
 # reported: one file under two schools, two schools with identical admissions
 # numbers, CDS applicants far from the federal count, and a file that names a
-# different institution. Opens (or comments
-# on) one issue when a finding is not in corpus_audit_accepted.yaml.
+# different institution. Runs daily and reports to the pipeline board as the
+# corpus_audit station. On Mondays (and on dispatch) it opens or comments on
+# one issue when a finding is not in corpus_audit_accepted.yaml.
 
 on:
   workflow_dispatch:
   schedule:
-    # Mondays 13:40 UTC, after the weekend's archive and extraction runs.
-    - cron: "40 13 * * 1"
+    # Daily 13:40 UTC, after the archive (02:00) and extraction (09:17) runs.
+    - cron: "40 13 * * *"
 
 concurrency:
   group: ops-corpus-audit
@@ -28,6 +29,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       REPO: ${{ github.repository }}
+      PIPELINE_TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'dispatch' }}
       PIPELINE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
       - uses: actions/checkout@v5
@@ -41,10 +43,21 @@ jobs:
       - name: Install Python dependencies
         run: python -m pip install -r tools/ci-requirements.txt
 
+      # The service role key is scoped to the steps that need it so dependency
+      # install code never sees it.
+      - name: Heartbeat corpus_audit start
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          python tools/ops/record_heartbeat.py \
+            --station corpus_audit \
+            --status running \
+            --trigger "${PIPELINE_TRIGGER}" \
+            --run-url "${PIPELINE_RUN_URL}"
+
       - id: audit
         name: Run the audit
-        # The service role key is scoped to this step so dependency install
-        # code never sees it.
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -52,9 +65,16 @@ jobs:
           set -euo pipefail
           python tools/data_quality/corpus_audit.py \
             --out-json corpus-audit/report.json \
-            --out-md corpus-audit/report.md
-          new_findings="$(python -c "import json; print(json.load(open('corpus-audit/report.json'))['summary']['new_findings'])")"
+            --out-md corpus-audit/report.md \
+            --out-heartbeat corpus-audit/heartbeat.json
+          new_findings="$(python -c "import json; print(json.load(open('corpus-audit/heartbeat.json'))['new_findings'])")"
           echo "new_findings=${new_findings}" >> "$GITHUB_OUTPUT"
+          # One issue comment a week is enough; the board shows the daily count.
+          post_issue=false
+          if [[ "${PIPELINE_TRIGGER}" == "dispatch" || "$(date -u +%u)" == "1" ]]; then
+            post_issue=true
+          fi
+          echo "post_issue=${post_issue}" >> "$GITHUB_OUTPUT"
           cat corpus-audit/report.md >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v4
@@ -64,8 +84,33 @@ jobs:
           path: corpus-audit/
           if-no-files-found: ignore
 
+      - name: Heartbeat corpus_audit finish
+        if: always()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STEP_OUTCOME: ${{ steps.audit.outcome }}
+        run: |
+          mkdir -p corpus-audit
+          if [[ ! -f corpus-audit/heartbeat.json ]]; then
+            printf '{"new_findings":0,"accepted_findings":0,"federal_rows_compared":0}\n' > corpus-audit/heartbeat.json
+          fi
+          status=ok
+          error=none
+          if [[ "$STEP_OUTCOME" != "success" ]]; then
+            status=error
+            error=job_failed
+          fi
+          python tools/ops/record_heartbeat.py \
+            --station corpus_audit \
+            --status "${status}" \
+            --trigger "${PIPELINE_TRIGGER}" \
+            --error-code "${error}" \
+            --run-url "${PIPELINE_RUN_URL}" \
+            --summary-json corpus-audit/heartbeat.json
+
       - name: Open or update the findings issue
-        if: steps.audit.outputs.new_findings != '0'
+        if: steps.audit.outputs.new_findings != '0' && steps.audit.outputs.post_issue == 'true'
         run: |
           python tools/ops/upsert_pipeline_alert_issue.py \
             --repo "${REPO}" \
@@ -82,4 +127,4 @@ jobs:
             --component corpus_audit \
             --title "Pipeline alert: corpus audit failed to run" \
             --run-url "${PIPELINE_RUN_URL}" \
-            --body "The weekly corpus audit did not finish, so wrong-campus files and federal mismatches are not being checked."
+            --body "The daily corpus audit did not finish, so wrong-campus files and federal mismatches are not being checked."

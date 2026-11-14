@@ -159,6 +159,7 @@ get three tiles because they get three writes.
 | `extraction_worker` | Extraction | `ops-extraction-worker.yml` (schedule `--limit 5`, `--deadline-minutes 25`) | daily SLA | see below |
 | `coverage_refresh` | Coverage refresh | pg_cron `refresh-coverage-hourly` (`17 * * * *`) → `refresh-coverage` | hourly SLA | `last_scheduled_status` not `ok` inside **3 hours** |
 | `serving_cache_refresh` | Public serving caches | pg_cron `refresh-public-serving-caches-hourly` (`23 * * * *`, plain SQL `refresh_public_serving_caches()`) (D4) | hourly SLA | `last_scheduled_status` not `ok` inside **3 hours** |
+| `corpus_audit` | Data audit | `ops-corpus-audit.yml` (read-only `tools/data_quality/corpus_audit.py`, daily 13:40 UTC) | daily SLA | `last_scheduled_status` not `ok` inside **36 hours**. The lamp says the audit ran, not that it found nothing; the result line carries the count to review. |
 | `ipeds_release_probe` | IPEDS release probe | `ipeds-release-probe.yml` | monthly SLA | `last_scheduled_status` not `ok` inside **40 days**. A monthly no-op still writes `ok` with `new_release=false`. |
 | `schema_build` | Schema (CDS year) | operator | yearly | `never` → slate. Down only if `last_finished_at` is non-null and older than **18 months**. Do not infer vintage from git. |
 | `scorecard_load` | Scorecard load | operator | yearly | same 18-month rule |
@@ -395,6 +396,7 @@ an exhaustive fixture next to it (D6). **No Python lamp tests.**
 | `extraction_worker` | `extracted`, `failed`, `pending_remaining`, `stopped_reason` |
 | `coverage_refresh` | `current`, `stale`, `inaccessible`, `never_found` |
 | `serving_cache_refresh` | `ok` (bool) |
+| `corpus_audit` | `new_findings`, `accepted_findings`, `federal_rows_compared` |
 | `ipeds_release_probe` | `new_release`, `issue_opened` |
 | `schema_build` | `years` |
 | `scorecard_load` | `vintage`, `rows` |

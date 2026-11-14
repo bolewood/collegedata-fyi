@@ -46,6 +46,7 @@ REGISTRY_STATIONS = (
     "directory_enqueue",
     "mirror_ingest",
     "api_usage_ingest",
+    "corpus_audit",
 )
 
 
