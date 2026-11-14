@@ -1,0 +1,66 @@
+name: Scholarships load
+
+# Loads the reviewed scholarship records under data/scholarships/ into Supabase
+# after they merge to main (PRD 036 M2), then refreshes the public cache. The
+# loader validates the whole tree first and aborts on any issue, so a bad merge
+# cannot partially load. It is idempotent: rerunning writes the same rows.
+#
+# The scholarship_* tables come from the 20261114160000_scholarship_directory
+# migration, applied from main with `supabase db push --linked`. Until that has
+# run, this workflow fails at the load step.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/scholarships/**"
+  workflow_dispatch:
+
+concurrency:
+  group: scholarships-load
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  load:
+    name: Validate and load scholarship records
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/ci-requirements.txt
+
+      - name: Install Python dependencies
+        run: python -m pip install -r tools/ci-requirements.txt
+
+      - name: Validate records and dry-run the load
+        run: |
+          python tools/scholarships/validate.py data/scholarships/programs
+          python tools/scholarships/load.py --report scholarships-out/load-report.json
+
+      # The service role key is scoped to this step so dependency install code
+      # never sees it.
+      - name: Load records into Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          python tools/scholarships/load.py --apply --report scholarships-out/load-report.json
+
+      - name: Build the download snapshots
+        run: |
+          python tools/scholarships/build_downloads.py --out-dir scholarships-out
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scholarships-load
+          path: scholarships-out/
+          if-no-files-found: ignore
