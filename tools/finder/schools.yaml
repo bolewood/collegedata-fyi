@@ -26648,7 +26648,11 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.winona.edu/wp-content/uploads/2022/12/WSU-CDS-2021-2022.pdf
+  # Listing page (2018-19 to 2022-23 as of 2026-11-14; newer years are on
+  # request from the school). The old seed was the 2021-22 PDF, and the
+  # College Transitions mirror supplied Iowa State's files for five other
+  # years (hidden 2026-11-14).
+  discovery_seed_url: https://www.winona.edu/about/leadership/institutional-data/
 - id: winston-salem-state-university
   name: Winston-Salem State University
   domain: wssu.edu
@@ -26773,7 +26777,10 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.wpi.edu/sites/default/files/docs/Offices/Institutional-Research/WPI_Common_Data_Set_07-08(1).pdf
+  # Listing page with every year. The old seed was the 2007-08 PDF, so no
+  # newer year was ever found here and the College Transitions mirror
+  # supplied Whitman College's file as WPI 2024-25 (hidden 2026-11-14).
+  discovery_seed_url: https://www.wpi.edu/offices/strategic-initiatives-university-analytics/data-resources
 - id: worcester-state-university
   name: Worcester State University
   domain: worcester.edu
