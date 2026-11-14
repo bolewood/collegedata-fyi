@@ -6,6 +6,10 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
     "program_id": {
       "type": "string",
       "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
@@ -17,6 +21,28 @@
     "ipeds_id": {
       "type": "string",
       "pattern": "^[0-9]{6}$"
+    },
+    "participating_schools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "school_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "ipeds_id": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$"
+          }
+        },
+        "required": [
+          "school_id",
+          "ipeds_id"
+        ]
+      },
+      "description": "Joint programs: every participating school, first entry equal to school_id. The file lives under the first participant's directory."
     },
     "applicable_campuses": {
       "type": "array",
@@ -76,6 +102,7 @@
     }
   },
   "required": [
+    "schema_version",
     "program_id",
     "school_id",
     "ipeds_id",
@@ -154,7 +181,96 @@
       "required": [
         "qualifier"
       ],
-      "description": "USD. A null amount object on a benefit means the amount is unknown or conflicting; qualifier not_published means the school says nothing about the figure. total_program amounts must be quoted by the school and carry field_evidence."
+      "description": "USD. A null amount object on a benefit means the amount is unknown or conflicting; qualifier not_published means the school says nothing about the figure. total_program amounts must be quoted by the school and carry field_evidence.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "qualifier": {
+                "enum": [
+                  "exact",
+                  "up_to",
+                  "at_least",
+                  "approximate"
+                ]
+              }
+            },
+            "required": [
+              "qualifier"
+            ]
+          },
+          "then": {
+            "required": [
+              "value"
+            ],
+            "properties": {
+              "value": {
+                "type": "number"
+              },
+              "min": {
+                "type": "null"
+              },
+              "max": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "qualifier": {
+                "const": "range"
+              }
+            },
+            "required": [
+              "qualifier"
+            ]
+          },
+          "then": {
+            "required": [
+              "min",
+              "max"
+            ],
+            "properties": {
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "value": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "qualifier": {
+                "const": "not_published"
+              }
+            },
+            "required": [
+              "qualifier"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "null"
+              },
+              "min": {
+                "type": "null"
+              },
+              "max": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
     },
     "benefit": {
       "type": "object",
@@ -176,6 +292,7 @@
             "study_abroad",
             "enrichment",
             "health_insurance",
+            "nonresident_differential",
             "other"
           ]
         },
@@ -215,7 +332,10 @@
           ]
         },
         "exclusions": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "items": {
             "type": "string"
           }
@@ -232,17 +352,6 @@
             "null"
           ],
           "description": "The school's own words for what the benefit covers."
-        },
-        "normalized_coverage": {
-          "enum": [
-            "full_tuition",
-            "full_tuition_fees",
-            "tuition_housing_meals",
-            "full_school_coa",
-            "partial_or_fixed",
-            "other",
-            null
-          ]
         }
       },
       "required": [
@@ -321,10 +430,25 @@
           "items": {
             "enum": [
               "semifinalist",
-              "finalist"
+              "finalist",
+              "commended",
+              "nrp_hispanic",
+              "nrp_african_american",
+              "nrp_indigenous"
             ]
           },
           "uniqueItems": true
+        },
+        "status_required_for_award": {
+          "enum": [
+            "semifinalist",
+            "finalist",
+            "commended",
+            "nrp_hispanic",
+            "nrp_african_american",
+            "nrp_indigenous",
+            null
+          ]
         },
         "first_choice_required": {
           "type": [
@@ -343,7 +467,10 @@
           ]
         },
         "test_rules": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "items": {
             "$ref": "#/$defs/test_rule"
           }
@@ -355,21 +482,6 @@
             "not_considered",
             "unknown"
           ]
-        },
-        "residency_eligible": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "enum": [
-              "in_state",
-              "out_of_state",
-              "international",
-              "any"
-            ]
-          },
-          "uniqueItems": true
         },
         "citizenship_eligible": {
           "type": [
@@ -450,8 +562,9 @@
         },
         "residency": {
           "enum": [
-            "resident",
-            "nonresident",
+            "in_state",
+            "out_of_state",
+            "international",
             "any",
             "unknown"
           ]
@@ -501,7 +614,10 @@
           "$ref": "#/$defs/eligibility"
         },
         "benefits": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "items": {
             "$ref": "#/$defs/benefit"
           }
@@ -520,6 +636,7 @@
         "kind": {
           "enum": [
             "application_open",
+            "admission_deadline",
             "application_deadline",
             "nomination_deadline",
             "supporting_materials_deadline",
@@ -593,34 +710,21 @@
         "requirement",
         "precision"
       ],
-      "oneOf": [
-        {
-          "required": [
-            "date"
-          ],
-          "properties": {
-            "date": {
-              "type": "string"
-            },
-            "recurring": {
-              "type": "null"
-            }
-          }
-        },
-        {
-          "required": [
-            "recurring"
-          ],
-          "properties": {
-            "recurring": {
-              "type": "object"
-            },
-            "date": {
-              "type": "null"
-            }
+      "description": "date and recurring are never both set. Both null only when the milestone's evidence is conflicting.",
+      "not": {
+        "required": [
+          "date",
+          "recurring"
+        ],
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "recurring": {
+            "type": "object"
           }
         }
-      ]
+      }
     },
     "application": {
       "type": "object",
@@ -641,6 +745,46 @@
             "$ref": "#/$defs/milestone"
           }
         },
+        "admission_plan_requirement": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Admission plan or deadline the scholarship depends on, in the school's words."
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "enum": [
+                  "portal_credentials",
+                  "admission_application",
+                  "test_scores",
+                  "recommendation",
+                  "other"
+                ]
+              },
+              "minimum_lead_days": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "notes": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        },
         "interview_mode": {
           "enum": [
             "none",
@@ -655,6 +799,12 @@
             "boolean",
             "null"
           ]
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
@@ -662,10 +812,42 @@
         "milestones"
       ]
     },
-    "renewal_rules": {
+    "renewal_rule": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "applies_to": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "offer_id": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "benefit_id": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "description": "Offers or benefits this rule covers. Empty means the whole version."
+        },
         "gpa_min": {
           "type": [
             "number",
@@ -708,7 +890,10 @@
             "null"
           ]
         }
-      }
+      },
+      "required": [
+        "applies_to"
+      ]
     },
     "stacking_rule": {
       "type": "object",
@@ -754,7 +939,6 @@
           "enum": [
             "offers",
             "new_recipients",
-            "target",
             "share_of_class"
           ]
         },
@@ -782,13 +966,48 @@
         "source_ref": {
           "type": "string",
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "claim": {
+          "enum": [
+            "target",
+            "actual"
+          ]
+        },
+        "denominator": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "What a share_of_class value is a share of, e.g. the entering first-year class."
         }
       },
       "required": [
         "metric",
+        "claim",
         "qualifier",
         "source_ref"
-      ]
+      ],
+      "if": {
+        "properties": {
+          "metric": {
+            "const": "share_of_class"
+          }
+        },
+        "required": [
+          "metric"
+        ]
+      },
+      "then": {
+        "required": [
+          "denominator"
+        ],
+        "properties": {
+          "denominator": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
     },
     "source": {
       "type": "object",
@@ -940,15 +1159,10 @@
         "verification_status": {
           "enum": [
             "verified",
-            "needs_review",
             "conflicting",
             "historical_only",
             "unverified"
           ]
-        },
-        "last_checked_at": {
-          "type": "string",
-          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
         },
         "last_reviewed_at": {
           "type": [
@@ -969,12 +1183,16 @@
             "null"
           ]
         },
-        "next_reverify_at": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        "program_status_for_entry": {
+          "enum": [
+            "active",
+            "paused",
+            "closed_to_new_entrants",
+            "merged",
+            "discontinued",
+            "unknown",
+            null
+          ]
         },
         "offers": {
           "type": "array",
@@ -993,20 +1211,23 @@
           ]
         },
         "renewal_rules": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/renewal_rules"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/renewal_rule"
+          }
         },
         "stacking_rules": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "items": {
             "$ref": "#/$defs/stacking_rule"
-          }
+          },
+          "description": "null means not documented; an explicitly empty list needs field_evidence."
         },
         "award_counts": {
           "type": "array",
@@ -1032,7 +1253,6 @@
         "version_id",
         "entry_year",
         "verification_status",
-        "last_checked_at",
         "offers",
         "sources",
         "field_evidence"

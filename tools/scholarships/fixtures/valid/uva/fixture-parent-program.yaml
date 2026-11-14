@@ -1,21 +1,22 @@
-# FIXTURE ONLY. Invented relation target for tools/scholarships/validate.py tests.
+# FIXTURE ONLY. Invented terms relation target for tools/scholarships/validate.py.
+# Not real program data; never copy into data/scholarships/programs.
+schema_version: 1
 program_id: fixture-parent-program
 school_id: uva
-ipeds_id: "234076"
+ipeds_id: '234076'
 official_name: Fixture Parent Program
 program_family: honors
 awarding_authority: institution
 status: unknown
 versions:
-  - version_id: fixture-parent-program-draft
-    entry_year: null
-    entry_year_label: Entry year not yet confirmed
-    verification_status: unverified
-    last_checked_at: "2026-11-08"
-    offers: []
-    sources:
-      - source_id: s-school
-        url: https://www.virginia.edu/fixture
-        authority: official_program
-        retrieved_at: "2026-11-08"
-    field_evidence: []
+- version_id: fixture-parent-program-draft
+  entry_year: null
+  entry_year_label: Entry year not yet confirmed
+  verification_status: unverified
+  offers: []
+  sources:
+  - source_id: s-school
+    url: https://www.virginia.edu/fixture
+    authority: official_program
+    retrieved_at: '2026-11-08'
+  field_evidence: []

@@ -22,6 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # scholarship published-version check needs merge-base history
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
@@ -59,10 +61,25 @@ jobs:
         run: python -m pytest tools/discovery -q
       - name: Run scholarship record tests
         run: python -m pytest tools/scholarships -q
-      - name: Fetch main for the published-version check
-        run: git fetch --no-tags --depth=1 origin main:refs/remotes/origin/main
       - name: Validate scholarship records
-        run: python tools/scholarships/validate.py data/scholarships/programs --base origin/main
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          # Pushes to main compare to the commit before the push, so an edit to a
+          # published version cannot slip in by pushing straight to main.
+          # Pull requests and other branch pushes compare to the merge base with
+          # main, so a branch cut before another PR merged is not blamed for it.
+          if [ "${EVENT_NAME}" = "push" ] && [ "${REF_NAME}" = "main" ] \
+            && [ "${BEFORE_SHA}" != "0000000000000000000000000000000000000000" ] \
+            && git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
+            python tools/scholarships/validate.py data/scholarships/programs --base "${BEFORE_SHA}"
+          else
+            python tools/scholarships/validate.py data/scholarships/programs --merge-base origin/main
+          fi
       # The Tier 2 suite renders PDF pages and takes far longer than every
       # other step combined. On pull requests and branch pushes it runs only
       # when something it depends on changed. Pushes to main and manual

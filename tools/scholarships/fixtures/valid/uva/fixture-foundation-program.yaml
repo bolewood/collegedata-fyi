@@ -1,262 +1,306 @@
 # FIXTURE ONLY. Invented terms used to test tools/scholarships/validate.py.
 # Not real program data; never copy into data/scholarships/programs.
+schema_version: 1
 program_id: fixture-foundation-program
 school_id: uva
-ipeds_id: "234076"
+ipeds_id: '234076'
 applicable_campuses: []
 official_name: Fixture Foundation Scholars
 aliases:
-  - FFS
+- FFS
 program_family: other
 awarding_authority: affiliated_foundation
 related_programs:
-  - program_id: fixture-parent-program
-    relation: component_of
+- program_id: fixture-parent-program
+  relation: component_of
 status: active
 versions:
-  - version_id: fixture-foundation-program-2026
-    supersedes: null
-    entry_year: 2026
-    entry_terms: [fall]
-    source_cohort_text: Terms for the class entering in fall 2026
-    verification_status: historical_only
-    last_checked_at: "2025-11-01"
-    last_reviewed_at: "2025-11-01"
-    reviewed_by: fixture-agent-run-0
-    owner_spot_checked: false
-    next_reverify_at: null
-    offers: []
-    application: null
-    renewal_rules: null
-    stacking_rules: []
-    award_counts: []
-    sources:
-      - source_id: s-foundation
-        url: https://www.jeffersonscholars.org/scholarships
-        authority: foundation_official
-        retrieved_at: "2025-11-01"
-        content_sha256: null
-        archive_url: null
-    field_evidence: []
-  - version_id: fixture-foundation-program-2027
-    supersedes: fixture-foundation-program-2026
-    entry_year: 2027
-    entry_terms: [fall]
-    source_cohort_text: Terms for the class entering in fall 2027
-    verification_status: verified
-    last_checked_at: "2026-11-08"
-    last_reviewed_at: "2026-11-08"
-    reviewed_by: fixture-agent-run-1
-    owner_spot_checked: true
-    next_reverify_at: "2027-08-15"
-    offers:
-      # Offer 0: the competitive package, with a component the school does not price.
-      - offer_id: o-main
-        parent_offer_id: null
-        variant_name: Main package
-        residency: any
-        selection_mode: competitive
-        consideration_route: nomination
-        aid_basis: merit_and_need
-        need_role: considered
-        funds_limited: null
-        eligibility:
-          national_merit_statuses: null
-          first_choice_required: null
-          gpa: null
-          test_rules: []
-          tests_policy_for_scholarship: unknown
-          residency_eligible: null
-          citizenship_eligible: null
-          majors_allowed: null
-          major_change_restrictions: null
-          honors_requirement: null
-          first_generation_rule: unknown
-          eligibility_notes: null
-        benefits:
-          - benefit_id: b-tuition
-            category: tuition
-            instrument: scholarship
-            coverage: full
-            amount:
-              qualifier: not_published
-              value: null
-              min: null
-              max: null
-              period: null
-            duration_terms: Eight semesters
-            exclusions: []
-            scope_text: null
-            advertised_coverage_label: full tuition
-            normalized_coverage: full_tuition
-          - benefit_id: b-stipend
-            category: stipend
-            instrument: cash_stipend
-            coverage: fixed_amount
-            amount:
-              qualifier: exact
-              value: 5000
-              min: null
-              max: null
-              period: academic_year
-            duration_terms: null
-            exclusions: []
-            scope_text: null
-            advertised_coverage_label: null
-            normalized_coverage: partial_or_fixed
-          - benefit_id: b-summers
-            category: enrichment
-            instrument: restricted_fund
-            coverage: fixed_amount
-            amount:
-              qualifier: up_to
-              value: 12000
-              min: null
-              max: null
-              period: total_program
-            duration_terms: null
-            exclusions: []
-            scope_text: Funded summer experiences, quoted by the foundation as one total
-            advertised_coverage_label: null
-            normalized_coverage: other
-      # Offer 1: a tier nested inside the main package.
-      - offer_id: o-tier
-        parent_offer_id: o-main
-        variant_name: National Merit tier
-        residency: any
-        selection_mode: automatic_guaranteed
-        consideration_route: admission_application
-        aid_basis: merit_only
-        need_role: not_considered
-        funds_limited: false
-        eligibility:
-          national_merit_statuses: [finalist]
-          first_choice_required: true
-          gpa: null
-          test_rules: []
-          tests_policy_for_scholarship: unknown
-          residency_eligible: null
-          citizenship_eligible: null
-          majors_allowed: null
-          major_change_restrictions: null
-          honors_requirement: null
-          first_generation_rule: unknown
-          eligibility_notes: null
-        benefits: []
-    application:
-      separate_application: required
-      milestones:
-        - kind: application_deadline
-          requirement: required
-          date: "2026-12-01"
-          recurring: null
-          precision: day
-          source_date_text: December 1
-        - kind: notification
-          requirement: recommended
-          date: null
-          recurring:
-            month: 3
-            day: 15
-          precision: approximate
-          source_date_text: mid-March each year
-      interview_mode: in_person
-      finalist_event_required: true
-    renewal_rules:
-      gpa_min: null
-      gpa_scale: 4.0
-      credit_load_min_per_term: 12
-      evaluation_timing: End of each spring term
-      summer_courses_can_fix_shortfall: null
-      max_semesters: 8
-      notes: The page lists two minimum GPAs; see field_evidence.
-    stacking_rules:
-      - other_aid_type: institutional_merit
-        relation: not_allowed
-        note: null
-    award_counts:
-      - metric: target
-        qualifier: approximate
-        value: 12
-        cohort_year: 2027
-        source_ref: s-foundation
-    sources:
-      - source_id: s-school
-        url: https://admission.virginia.edu/affordability/fixture-page
-        authority: official_aid_policy
-        retrieved_at: "2026-11-08"
-        content_sha256: null
-        archive_url: https://web.archive.org/web/2026id_/https://admission.virginia.edu/affordability/fixture-page
-      - source_id: s-foundation
-        url: https://www.jeffersonscholars.org/scholarships/fixture-faq
-        authority: foundation_official
-        retrieved_at: "2026-11-08"
-        content_sha256: null
-        archive_url: null
-    field_evidence:
-      - field_path: offers/0/selection_mode
-        source_ref: s-foundation
-        locator: "FAQ, 'How are scholars chosen'"
-        short_excerpt: null
-        value_status: reported
-        reported_value: competitive
-      - field_path: offers/0/benefits/0/amount
-        source_ref: s-foundation
-        locator: "Benefits table, tuition row"
-        short_excerpt: null
-        value_status: not_published
-        reported_value: null
-      - field_path: offers/0/benefits/1/amount
-        source_ref: s-foundation
-        locator: "Benefits table, stipend row"
-        short_excerpt: $5,000 each academic year
-        value_status: reported
-        reported_value: 5000
-      - field_path: offers/0/benefits/2/amount
-        source_ref: s-foundation
-        locator: "Benefits table, summers row"
-        short_excerpt: up to $12,000 for funded summer experiences
-        value_status: reported
-        reported_value: 12000
-      - field_path: offers/1/selection_mode
-        source_ref: s-school
-        locator: "National Merit section, first paragraph"
-        short_excerpt: Every National Merit Finalist who names us first choice receives this award
-        value_status: reported
-        reported_value: automatic_guaranteed
-      - field_path: offers/1/eligibility/national_merit_statuses
-        source_ref: s-school
-        locator: "National Merit section, first paragraph"
-        short_excerpt: null
-        value_status: reported
-        reported_value: finalist
-      - field_path: application/separate_application
-        source_ref: s-foundation
-        locator: "Apply page, heading"
-        short_excerpt: null
-        value_status: reported
-        reported_value: required
-      - field_path: application/milestones/0
-        source_ref: s-foundation
-        locator: "Apply page, deadlines list, first row"
-        short_excerpt: Applications are due December 1
-        value_status: reported
-        reported_value: "2026-12-01"
-      - field_path: application/milestones/1
-        source_ref: s-foundation
-        locator: "Apply page, timeline paragraph"
-        short_excerpt: null
-        value_status: reported
-        reported_value: mid-March
-      - field_path: renewal_rules/gpa_min
-        source_ref: s-school
-        locator: "Renewal section, bullet 1"
-        short_excerpt: maintain a 3.0 cumulative GPA
-        value_status: conflicting
-        reported_value: 3.0
-      - field_path: renewal_rules/gpa_min
-        source_ref: s-school
-        locator: "Renewal section, bullet 4"
-        short_excerpt: scholars must hold at least a 3.2
-        value_status: conflicting
-        reported_value: 3.2
+- version_id: fixture-foundation-program-2026
+  supersedes: null
+  entry_year: 2026
+  entry_terms:
+  - fall
+  source_cohort_text: Terms for the class entering in fall 2026
+  verification_status: historical_only
+  last_reviewed_at: '2025-11-01'
+  reviewed_by: fixture-agent-run-0
+  owner_spot_checked: false
+  offers: []
+  application: null
+  renewal_rules: null
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-foundation
+    url: https://www.jeffersonscholars.org/scholarships
+    authority: foundation_official
+    retrieved_at: '2025-11-01'
+    content_sha256: null
+    archive_url: null
+  field_evidence: []
+- version_id: fixture-foundation-program-2027
+  supersedes: null
+  entry_year: 2027
+  entry_terms:
+  - fall
+  source_cohort_text: Terms for the class entering in fall 2027
+  verification_status: verified
+  last_reviewed_at: '2026-11-08'
+  reviewed_by: fixture-agent-run-1
+  owner_spot_checked: true
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: Main package
+    residency: any
+    selection_mode: competitive
+    consideration_route: nomination
+    aid_basis: merit_and_need
+    need_role: considered
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      first_choice_required: null
+      gpa: null
+      test_rules: []
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: null
+      status_required_for_award: null
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters
+      exclusions: []
+      scope_text: null
+      advertised_coverage_label: full tuition
+    - benefit_id: b-stipend
+      category: stipend
+      instrument: cash_stipend
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 5000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: null
+      exclusions: []
+      scope_text: null
+      advertised_coverage_label: null
+    - benefit_id: b-summers
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: up_to
+        value: 12000
+        min: null
+        max: null
+        period: total_program
+      duration_terms: null
+      exclusions: []
+      scope_text: Funded summer experiences, quoted by the foundation as one total
+      advertised_coverage_label: null
+  - offer_id: o-tier
+    parent_offer_id: o-main
+    variant_name: National Merit tier
+    residency: out_of_state
+    selection_mode: automatic_guaranteed
+    consideration_route: multiple
+    aid_basis: merit_only
+    need_role: not_considered
+    funds_limited: false
+    eligibility:
+      national_merit_statuses:
+      - finalist
+      first_choice_required: true
+      gpa: null
+      test_rules: []
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: null
+      status_required_for_award: null
+    benefits:
+    - benefit_id: b-differential
+      category: nonresident_differential
+      instrument: tuition_waiver
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Waives the out-of-state tuition differential only
+      advertised_coverage_label: null
+  application:
+    separate_application: required
+    milestones:
+    - kind: admission_deadline
+      requirement: recommended
+      date: '2026-11-01'
+      recurring: null
+      precision: day
+      source_date_text: November 1
+    - kind: application_deadline
+      requirement: required
+      date: '2026-12-01'
+      recurring: null
+      precision: day
+      source_date_text: December 1
+    - kind: notification
+      requirement: recommended
+      date: null
+      recurring:
+        month: 3
+        day: 15
+      precision: approximate
+      source_date_text: mid-March each year
+    interview_mode: in_person
+    finalist_event_required: true
+    admission_plan_requirement: Early Action application by November 1
+    prerequisites:
+    - kind: portal_credentials
+      minimum_lead_days: 5
+      notes: Allow about five days for portal credentials.
+    notes: null
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: 4.0
+    credit_load_min_per_term: 12
+    evaluation_timing: End of each spring term
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: The page lists two minimum GPAs; see field_evidence.
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: not_allowed
+    note: null
+  award_counts:
+  - metric: offers
+    qualifier: approximate
+    value: 12
+    cohort_year: 2027
+    source_ref: s-foundation
+    claim: target
+    denominator: null
+  - metric: share_of_class
+    qualifier: approximate
+    value: 1
+    cohort_year: 2027
+    source_ref: s-foundation
+    claim: actual
+    denominator: entering first-year class (percent)
+  sources:
+  - source_id: s-school
+    url: https://admission.virginia.edu/affordability/fixture-page
+    authority: official_aid_policy
+    retrieved_at: '2026-11-08'
+    content_sha256: null
+    archive_url: https://web.archive.org/web/2026id_/https://admission.virginia.edu/affordability/fixture-page
+  - source_id: s-foundation
+    url: https://www.jeffersonscholars.org/scholarships/fixture-faq
+    authority: foundation_official
+    retrieved_at: '2026-11-08'
+    content_sha256: null
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-foundation
+    locator: FAQ, 'How are scholars chosen'
+    short_excerpt: null
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-foundation
+    locator: Benefits table, tuition row
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-foundation
+    locator: Benefits table, stipend row
+    short_excerpt: $5,000 each academic year
+    value_status: reported
+    reported_value: 5000
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-foundation
+    locator: Benefits table, summers row
+    short_excerpt: up to $12,000 for funded summer experiences
+    value_status: reported
+    reported_value: 12000
+  - field_path: offers/1/selection_mode
+    source_ref: s-school
+    locator: National Merit section, first paragraph
+    short_excerpt: Every National Merit Finalist who names us first choice receives this award
+    value_status: reported
+    reported_value: automatic_guaranteed
+  - field_path: offers/1/eligibility/national_merit_statuses
+    source_ref: s-school
+    locator: National Merit section, first paragraph
+    short_excerpt: null
+    value_status: reported
+    reported_value: finalist
+  - field_path: application/separate_application
+    source_ref: s-foundation
+    locator: Apply page, heading
+    short_excerpt: null
+    value_status: reported
+    reported_value: required
+  - field_path: application/milestones/1
+    source_ref: s-foundation
+    locator: Apply page, deadlines list, first row
+    short_excerpt: Applications are due December 1
+    value_status: reported
+    reported_value: '2026-12-01'
+  - field_path: application/milestones/2
+    source_ref: s-foundation
+    locator: Apply page, timeline paragraph
+    short_excerpt: null
+    value_status: reported
+    reported_value: mid-March
+  - field_path: renewal_rules/0/gpa_min
+    source_ref: s-school
+    locator: Renewal section, bullet 1
+    short_excerpt: maintain a 3.0 cumulative GPA
+    value_status: conflicting
+    reported_value: 3.0
+  - field_path: renewal_rules/0/gpa_min
+    source_ref: s-school
+    locator: Renewal section, bullet 4
+    short_excerpt: scholars must hold at least a 3.2
+    value_status: conflicting
+    reported_value: 3.2
+  - field_path: application/milestones/0
+    source_ref: s-school
+    locator: Apply page, admission box
+    short_excerpt: Early Action applications are due November 1
+    value_status: reported
+    reported_value: '2026-11-01'
+  - field_path: /awarding_authority
+    source_ref: s-foundation
+    locator: About page, first paragraph
+    short_excerpt: null
+    value_status: reported
+    reported_value: affiliated_foundation
+  program_status_for_entry: active

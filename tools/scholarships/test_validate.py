@@ -47,6 +47,10 @@ def version27(d: dict) -> dict:
     return d["versions"][1]
 
 
+def ms(d: dict, kind: str) -> dict:
+    return next(m for m in version27(d)["application"]["milestones"] if m["kind"] == kind)
+
+
 def drop_evidence(d: dict, path: str) -> None:
     ver = version27(d)
     ver["field_evidence"] = [e for e in ver["field_evidence"] if e["field_path"] != path]
@@ -172,7 +176,7 @@ def test_rejects_milestone_outside_cycle(doc, ctx):
 
 
 def test_recurring_milestone_is_exempt_from_cycle(doc, ctx):
-    doc["versions"][1]["application"]["milestones"][1]["recurring"] = {"month": 1, "day": 2}
+    ms(doc, "notification")["recurring"] = {"month": 1, "day": 2}
     assert v.validate_doc(doc, ctx) == []
 
 
@@ -189,7 +193,7 @@ def test_milestone_needs_exactly_one_of_date_or_recurring(doc, ctx):
 
 
 def test_rejects_confident_value_next_to_conflict(doc, ctx):
-    version27(doc)["renewal_rules"]["gpa_min"] = 3.0
+    version27(doc)["renewal_rules"][0]["gpa_min"] = 3.0
     assert codes(v.validate_doc(doc, ctx)) == {"E_CONFLICT_VALUE"}
 
 
@@ -206,13 +210,17 @@ def test_rejects_verified_without_reviewer(doc, ctx):
     assert codes(v.validate_doc(doc, ctx)) == {"E_VERIFIED_INCOMPLETE"}
 
 
-def test_verified_with_unconfirmed_label_is_ok(doc, ctx):
+def test_dated_milestone_allowed_when_entry_year_unconfirmed_by_evidence(doc, ctx):
     ver = version27(doc)
     ver["entry_year"] = None
     ver["entry_year_label"] = "Unconfirmed: heading says Fall 2026, deadlines say 2027"
-    ver["application"]["milestones"][0]["date"] = None
-    ver["application"]["milestones"][0]["recurring"] = {"month": 12, "day": 1}
-    assert v.validate_doc(doc, ctx) == []
+    assert codes(v.validate_doc(doc, ctx)) == {"E_ENTRY_YEAR_UNKNOWN"}  # no evidence yet
+    for year, src in ((2026, "s-school"), (2027, "s-foundation")):
+        ver["field_evidence"].append(
+            {"field_path": "entry_year", "source_ref": src, "locator": "heading", "value_status": "conflicting", "reported_value": year}
+        )
+    assert v.validate_doc(doc, ctx) == []  # window check skipped, dates kept as published
+    assert ms(doc, "application_deadline")["date"] == "2026-12-01"
 
 
 def test_rejects_evidence_pointing_nowhere(doc, ctx):
@@ -350,7 +358,7 @@ def test_compare_published_is_type_strict(doc):
 
 def test_compare_ignores_unverified_base_versions(doc):
     draft = copy.deepcopy(doc)
-    version27(draft)["verification_status"] = "needs_review"
+    version27(draft)["verification_status"] = "unverified"
     changed = copy.deepcopy(draft)
     version27(changed)["source_cohort_text"] = "edited"
     assert v.compare_published({"f.yaml": draft}, {"f.yaml": changed}) == []
@@ -414,3 +422,421 @@ def test_foundation_domains_are_keyed_by_real_schools(ctx):
     assert "jeffersonscholars.org" in ctx.foundations["uva"]
     assert "moreheadcain.org" in ctx.foundations["unc"]
     assert "robertsonscholars.org" in ctx.foundations["unc"] and "robertsonscholars.org" in ctx.foundations["duke"]
+
+
+# ===================================================== review round (15 findings)
+
+
+def other_evidence(d: dict, path: str, **kw) -> dict:
+    e = {"field_path": path, "source_ref": "s-foundation", "locator": "x", "value_status": "reported"}
+    e.update(kw)
+    version27(d)["field_evidence"].append(e)
+    return e
+
+
+# 1. conflicting dated facts -------------------------------------------------
+
+
+def test_f1_conflicting_deadline_can_be_stored_null(doc, ctx):
+    m = ms(doc, "application_deadline")
+    m["date"] = None
+    drop_evidence(doc, "application/milestones/1")
+    for dated in ("2026-12-01", "2027-01-15"):
+        other_evidence(doc, "application/milestones/1/date", value_status="conflicting", reported_value=dated)
+    assert v.validate_doc(doc, ctx) == []
+
+
+def test_f1_undated_milestone_without_conflict_is_rejected(doc, ctx):
+    ms(doc, "application_deadline")["date"] = None
+    drop_evidence(doc, "application/milestones/1")
+    assert codes(v.validate_doc(doc, ctx)) == {"E_MILESTONE_UNDATED"}
+
+
+def test_f1_milestone_cannot_be_dated_and_recurring(doc, ctx):
+    ms(doc, "application_deadline")["recurring"] = {"month": 12, "day": 1}
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+
+
+# 2. renewal is a list with scope -------------------------------------------
+
+
+def test_f2_renewal_rules_per_benefit(doc, ctx):
+    ver = version27(doc)
+    ver["renewal_rules"] = [
+        {"applies_to": [{"offer_id": "o-main", "benefit_id": "b-tuition"}], "gpa_min": 2.0},
+        {"applies_to": [{"offer_id": "o-main", "benefit_id": "b-stipend"}], "gpa_min": 3.25},
+        {"applies_to": [], "max_semesters": 8},
+    ]
+    ver["field_evidence"] = [e for e in ver["field_evidence"] if not e["field_path"].startswith("renewal_rules")]
+    assert v.validate_doc(doc, ctx) == []
+
+
+def test_f2_renewal_scope_must_exist(doc, ctx):
+    version27(doc)["renewal_rules"][0]["applies_to"] = [{"offer_id": "o-main", "benefit_id": "b-ghost"}]
+    assert codes(v.validate_doc(doc, ctx)) == {"E_APPLIES_TO"}
+    version27(doc)["renewal_rules"][0]["applies_to"] = [{"offer_id": None, "benefit_id": None}]
+    assert codes(v.validate_doc(doc, ctx)) == {"E_APPLIES_TO"}
+
+
+def test_f2_single_object_renewal_rules_is_rejected(doc, ctx):
+    version27(doc)["renewal_rules"] = {"gpa_min": 3.0}
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+
+
+# 3. joint programs ----------------------------------------------------------
+
+
+def _joint(d: dict) -> None:
+    d["participating_schools"] = [
+        {"school_id": "uva", "ipeds_id": "234076"},
+        {"school_id": "duke", "ipeds_id": "198419"},
+    ]
+
+
+def test_f3_joint_program_accepts_each_participants_domain(doc, ctx):
+    version27(doc)["sources"][0]["url"] = "https://ousf.duke.edu/merit-scholarships/fixture"
+    assert codes(v.validate_doc(doc, ctx)) == {"E_OFF_DOMAIN"}  # not joint yet
+    _joint(doc)
+    assert v.validate_doc(doc, ctx) == []
+
+
+def test_f3_joint_program_unions_foundation_domains(doc, ctx):
+    _joint(doc)
+    version27(doc)["sources"][1]["url"] = "https://robertsonscholars.org/fixture"  # Duke's and UNC's foundation
+    assert v.validate_doc(doc, ctx) == []
+
+
+def test_f3_participants_are_validated_against_identity(doc, ctx):
+    _joint(doc)
+    doc["participating_schools"][1]["ipeds_id"] = "199120"
+    assert codes(v.validate_doc(doc, ctx)) == {"E_IDENTITY"}
+    _joint(doc)
+    doc["participating_schools"][0] = {"school_id": "duke", "ipeds_id": "198419"}
+    assert codes(v.validate_doc(doc, ctx)) == {"E_IDENTITY"}  # first must be the record's own school
+
+
+# 4. program-level evidence and per-entry status ----------------------------
+
+
+def test_f4_status_for_entry_needs_evidence_unless_active(doc, ctx):
+    version27(doc)["program_status_for_entry"] = "closed_to_new_entrants"
+    assert codes(v.validate_doc(doc, ctx)) == {"E_NO_EVIDENCE"}
+    other_evidence(doc, "program_status_for_entry", short_excerpt="no longer accepting new applicants")
+    assert v.validate_doc(doc, ctx) == []
+
+
+def test_f4_evidence_can_address_program_fields(doc, ctx):
+    other_evidence(doc, "/related_programs/0")
+    assert v.validate_doc(doc, ctx) == []  # /awarding_authority is already in the fixture
+    other_evidence(doc, "/awarding_authorty")
+    assert codes(v.validate_doc(doc, ctx)) == {"E_EVIDENCE_PATH"}
+
+
+def test_f4_status_for_entry_is_optional(doc, ctx):
+    del version27(doc)["program_status_for_entry"]
+    assert v.validate_doc(doc, ctx) == []
+
+
+# 5. coverage label is derived, nonresident differential ---------------------
+
+
+def test_f5_normalized_coverage_is_gone_from_yaml(doc, ctx):
+    version27(doc)["offers"][0]["benefits"][0]["normalized_coverage"] = "full_tuition"
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+    assert "normalized_coverage" not in v.SCHEMA_PATH.read_text()
+
+
+def test_f5_nonresident_differential_category_exists(doc, ctx):
+    b = version27(doc)["offers"][1]["benefits"][0]
+    assert b["category"] == "nonresident_differential" and b["instrument"] == "tuition_waiver"
+    assert v.validate_doc(doc, ctx) == []
+
+
+# 6. guaranteed needs a real promise on the exact path -----------------------
+
+
+def test_f6_guaranteed_rejects_parent_path_evidence(doc, ctx):
+    drop_evidence(doc, "offers/1/selection_mode")
+    other_evidence(doc, "offers", short_excerpt="Benefits table", reported_value="automatic_guaranteed")
+    assert codes(v.validate_doc(doc, ctx)) == {"E_GUARANTEED_NO_EVIDENCE"}
+
+
+def test_f6_guaranteed_rejects_evidence_reporting_another_value(doc, ctx):
+    for e in version27(doc)["field_evidence"]:
+        if e["field_path"] == "offers/1/selection_mode":
+            e["reported_value"] = "competitive"
+    assert codes(v.validate_doc(doc, ctx)) == {"E_GUARANTEED_NO_EVIDENCE"}
+
+
+# 7. evidence must support the value ----------------------------------------
+
+
+def test_f7_total_rejects_evidence_on_a_distant_ancestor(doc, ctx):
+    drop_evidence(doc, "offers/0/benefits/2/amount")
+    other_evidence(doc, "offers/0", short_excerpt="quoted", source_ref="s-school")
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SUMMED_TOTAL"}
+
+
+def test_f7_total_needs_an_excerpt(doc, ctx):
+    for e in version27(doc)["field_evidence"]:
+        if e["field_path"] == "offers/0/benefits/2/amount":
+            e["short_excerpt"] = None
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SUMMED_TOTAL"}
+
+
+def test_f7_not_published_evidence_cannot_back_a_stated_amount(doc, ctx):
+    for e in version27(doc)["field_evidence"]:
+        if e["field_path"] == "offers/0/benefits/1/amount":
+            e["value_status"] = "not_published"
+    assert codes(v.validate_doc(doc, ctx)) == {"E_NO_EVIDENCE"}
+
+
+def test_f7_grandparent_evidence_does_not_count(doc, ctx):
+    drop_evidence(doc, "offers/0/benefits/1/amount")
+    other_evidence(doc, "offers/0/benefits")
+    assert codes(v.validate_doc(doc, ctx)) == {"E_NO_EVIDENCE"}
+
+
+# 8. no monitor fields; schema_version; additive evolution -------------------
+
+
+@pytest.mark.parametrize("key,value", [("last_checked_at", "2026-11-08"), ("next_reverify_at", "2027-08-15")])
+def test_f8_monitor_fields_are_gone(doc, ctx, key, value):
+    version27(doc)[key] = value
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+
+
+def test_f8_needs_review_is_not_a_yaml_status(doc, ctx):
+    version27(doc)["verification_status"] = "needs_review"
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+
+
+def test_f8_schema_version_is_required_and_pinned(doc, ctx):
+    del doc["schema_version"]
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+    doc["schema_version"] = 2
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+
+
+def test_f8_absent_at_base_and_null_at_head_is_not_an_edit(doc):
+    base = copy.deepcopy(doc)
+    del version27(base)["owner_spot_checked"]
+    del version27(base)["offers"][0]["funds_limited"]
+    head = copy.deepcopy(base)
+    version27(head)["owner_spot_checked"] = None
+    version27(head)["offers"][0]["funds_limited"] = None
+    assert v.compare_published({"f.yaml": base}, {"f.yaml": head}) == []
+
+
+def test_f8_other_differences_are_still_edits(doc):
+    base = copy.deepcopy(doc)
+    del version27(base)["owner_spot_checked"]
+    added = copy.deepcopy(base)
+    version27(added)["owner_spot_checked"] = True  # absent -> non-null
+    assert codes(v.compare_published({"f.yaml": base}, {"f.yaml": added})) == {"E_PUBLISHED_EDITED"}
+    nulled = copy.deepcopy(doc)  # present at base, absent at head
+    base2 = copy.deepcopy(doc)
+    del version27(nulled)["offers"][0]["funds_limited"]
+    assert codes(v.compare_published({"f.yaml": base2}, {"f.yaml": nulled})) == {"E_PUBLISHED_EDITED"}
+
+
+# 9. supersedes -------------------------------------------------------------
+
+
+def _correction(d: dict) -> dict:
+    new = copy.deepcopy(version27(d))
+    new["version_id"] = "fixture-foundation-program-2027-b"
+    new["supersedes"] = "fixture-foundation-program-2027"
+    d["versions"].append(new)
+    return new
+
+
+def test_f9_correction_in_same_year_is_valid(doc, ctx):
+    _correction(doc)
+    assert v.validate_doc(doc, ctx) == []
+
+
+def test_f9_supersedes_cannot_cross_entry_years(doc, ctx):
+    version27(doc)["supersedes"] = "fixture-foundation-program-2026"
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SUPERSEDES"}
+
+
+def test_f9_two_unsuperseded_versions_in_one_year(doc, ctx):
+    new = _correction(doc)
+    new["supersedes"] = None
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SUPERSEDES"}
+
+
+def test_f9_supersedes_cycle(doc, ctx):
+    new = _correction(doc)
+    version27(doc)["supersedes"] = new["version_id"]
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SUPERSEDES"}
+
+
+# 11. null means not documented ----------------------------------------------
+
+
+def test_f11_null_lists_are_valid_and_empty_stacking_needs_evidence(doc, ctx):
+    ver = version27(doc)
+    ver["stacking_rules"] = None
+    ver["offers"][0]["benefits"][0]["exclusions"] = None
+    ver["offers"][0]["eligibility"]["test_rules"] = None
+    assert v.validate_doc(doc, ctx) == []
+    ver["stacking_rules"] = []
+    assert codes(v.validate_doc(doc, ctx)) == {"E_NO_EVIDENCE"}
+    other_evidence(doc, "stacking_rules", short_excerpt="may be combined with any other aid")
+    assert v.validate_doc(doc, ctx) == []
+
+
+# 12. application additions -------------------------------------------------
+
+
+def test_f12_admission_deadline_and_lead_time_are_representable(doc, ctx):
+    app = version27(doc)["application"]
+    assert ms(doc, "admission_deadline")["date"] == "2026-11-01"
+    assert app["prerequisites"][0]["minimum_lead_days"] == 5
+    assert app["admission_plan_requirement"] and "notes" in app
+    app["prerequisites"][0]["kind"] = "carrier_pigeon"
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+
+
+# 13. amount shape ----------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "amount",
+    [
+        {"qualifier": "exact", "value": None, "min": None, "max": None, "period": "academic_year"},
+        {"qualifier": "range", "value": None, "min": None, "max": None, "period": "academic_year"},
+        {"qualifier": "range", "value": None, "min": 1000, "max": None, "period": "academic_year"},
+        {"qualifier": "up_to", "value": 100, "min": 1, "max": 2, "period": None},
+        {"qualifier": "not_published", "value": 100, "min": None, "max": None, "period": None},
+    ],
+)
+def test_f13_malformed_amounts_are_rejected(doc, ctx, amount):
+    version27(doc)["offers"][0]["benefits"][1]["amount"] = amount
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+
+
+def test_f13_range_amount_rules(doc, ctx):
+    b = version27(doc)["offers"][0]["benefits"][1]
+    b["amount"] = {"qualifier": "range", "value": None, "min": 1000, "max": 5000, "period": "academic_year"}
+    assert v.validate_doc(doc, ctx) == []
+    b["amount"]["min"] = 5000
+    assert codes(v.validate_doc(doc, ctx)) == {"E_AMOUNT_RANGE"}
+
+
+# 14. contradictions, vocab, counts, statuses --------------------------------
+
+
+def test_f14_merit_only_with_required_need_is_a_contradiction(doc, ctx):
+    o = version27(doc)["offers"][0]
+    o["aid_basis"], o["need_role"] = "merit_only", "required"
+    assert codes(v.validate_doc(doc, ctx)) == {"E_CONTRADICTION"}
+
+
+def test_f14_admission_route_with_required_separate_application(doc, ctx):
+    version27(doc)["offers"][0]["consideration_route"] = "admission_application"
+    assert codes(v.validate_doc(doc, ctx)) == {"E_CONTRADICTION"}
+    version27(doc)["offers"][0]["consideration_route"] = "separate_application"
+    version27(doc)["application"]["separate_application"] = "not_required"
+    assert codes(v.validate_doc(doc, ctx)) == {"E_CONTRADICTION"}
+
+
+def test_f14_one_residency_vocabulary(doc, ctx):
+    version27(doc)["offers"][0]["residency"] = "nonresident"
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+    version27(doc)["offers"][0]["residency"] = "in_state"
+    version27(doc)["offers"][0]["eligibility"]["residency_eligible"] = ["in_state"]
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+
+
+def test_f14_award_counts_claim_and_denominator(doc, ctx):
+    counts = version27(doc)["award_counts"]
+    assert {c["claim"] for c in counts} == {"target", "actual"}
+    counts[1]["denominator"] = None
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+    counts[1]["denominator"] = "entering class"
+    counts[0]["metric"] = "target"
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+
+
+def test_f14_recognition_statuses_and_required_status(doc, ctx):
+    e = version27(doc)["offers"][1]["eligibility"]
+    e["national_merit_statuses"] = ["semifinalist", "finalist", "commended", "nrp_hispanic"]
+    e["status_required_for_award"] = "finalist"
+    assert v.validate_doc(doc, ctx) == []
+    e["status_required_for_award"] = "winner"
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+
+
+# 15. boundaries and CI git shapes -------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "date,ok",
+    [("2026-06-30", False), ("2026-07-01", True), ("2027-08-31", True), ("2027-09-01", False)],
+)
+def test_f15_cycle_window_boundaries(doc, ctx, date, ok):
+    ms(doc, "application_deadline")["date"] = date
+    expected = set() if ok else {"E_MILESTONE_WINDOW"}
+    assert codes(v.validate_doc(doc, ctx)) == expected
+
+
+def test_f15_non_vacuous_tree_run():
+    assert v.main([str(FIXTURES)]) == 0
+    assert v.main([str(REJECTING / "off-domain-source")]) == 1
+
+
+def _repo_with_program(tmp_path: Path):
+    repo = tmp_path.resolve()
+    programs = repo / "data" / "scholarships" / "programs"
+    (programs / "uva").mkdir(parents=True)
+    shutil.copy(FIXTURES / "uva" / "fixture-parent-program.yaml", programs / "uva")
+    shutil.copy(MAIN, programs / "uva")
+    _git(repo, "init", "-q", "-b", "main")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "base")
+    return repo, programs
+
+
+def _sha(repo: Path) -> str:
+    return subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
+
+
+def test_f15_branch_behind_main_uses_the_merge_base(tmp_path):
+    repo, programs = _repo_with_program(tmp_path)
+    _git(repo, "checkout", "-q", "-b", "feature")
+    _git(repo, "checkout", "-q", "main")
+    other = programs / "uva" / "fixture-other-program.yaml"  # a verified program that landed on main later
+    text = (programs / "uva" / MAIN.name).read_text().replace("fixture-foundation-program", "fixture-other-program")
+    text = text.replace("related_programs:\n- program_id: fixture-parent-program\n  relation: component_of\n", "")
+    other.write_text(text)
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "main moves on")
+    _git(repo, "update-ref", "refs/remotes/origin/main", "main")
+    _git(repo, "checkout", "-q", "feature")
+    assert not other.exists()  # the feature branch has never seen that file
+    assert "E_PUBLISHED_EDITED" in codes(v.validate_tree(programs, base="origin/main"))  # the false failure
+    assert v.main([str(programs), "--merge-base", "origin/main"]) == 0
+    assert v.main([str(programs), "--merge-base", "origin/nope"]) == 1
+
+
+def test_f15_base_equal_to_head_is_clean_and_edits_are_caught_by_before_sha(tmp_path):
+    repo, programs = _repo_with_program(tmp_path)
+    before = _sha(repo)
+    assert v.main([str(programs), "--base", before]) == 0
+    target = programs / "uva" / MAIN.name
+    target.write_text(target.read_text().replace("value: 5000", "value: 6000"))
+    _git(repo, "commit", "-aq", "-m", "edit published version")
+    assert v.main([str(programs), "--base", _sha(repo)]) == 0  # base == HEAD: nothing to compare
+    assert v.main([str(programs), "--base", before]) == 1  # push-to-main shape: before sha catches it
+
+
+@pytest.mark.parametrize("status", ["conflicting", "historical_only"])
+def test_f10_every_non_draft_status_is_protected(doc, status):
+    base = copy.deepcopy(doc)
+    version27(base)["verification_status"] = status
+    edited = copy.deepcopy(base)
+    version27(edited)["source_cohort_text"] = "edited"
+    assert codes(v.compare_published({"f.yaml": base}, {"f.yaml": edited})) == {"E_PUBLISHED_EDITED"}

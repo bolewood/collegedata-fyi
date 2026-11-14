@@ -54,7 +54,7 @@ version under CC BY-SA 4.0.
 Validate with:
 
 ```
-python tools/scholarships/validate.py data/scholarships/programs --base origin/main
+python tools/scholarships/validate.py data/scholarships/programs --merge-base origin/main
 ```
 
 ## Sourcing rules
@@ -87,28 +87,79 @@ python tools/scholarships/validate.py data/scholarships/programs --base origin/m
    `normalized_coverage`; keep the school's own words in
    `advertised_coverage_label`.
 10. Excerpts are 25 words or fewer.
-11. Published versions are immutable. Once a version is `verified` and merged,
-    it cannot change. A correction is a new version with `supersedes`.
+11. Published versions are immutable. Once a version other than `unverified`
+    is merged, it cannot change. A correction is a new version with
+    `supersedes`. A key that is absent in the published version and null in the
+    new one is not counted as a change, so optional fields can be added later.
 
 ## Field guide
 
-The structure is a program with a list of `versions`. Each version holds
-`offers` (resident, nonresident or tier variants; a tier nests under another
-with `parent_offer_id`), each offer holds `eligibility` and `benefits`, and
-the version holds `application`, `renewal_rules`, `stacking_rules`,
-`award_counts`, `sources` and `field_evidence`. See
-[`schema/FIELDS.md`](schema/FIELDS.md) for every field.
+Every file starts with `schema_version: 1`. The structure is a program with a
+list of `versions`. Each version holds `offers` (resident, out-of-state or tier
+variants; a tier nests under another with `parent_offer_id`), each offer holds
+`eligibility` and `benefits`, and the version holds `application`,
+`renewal_rules`, `stacking_rules`, `award_counts`, `sources` and
+`field_evidence`. See [`schema/FIELDS.md`](schema/FIELDS.md) for every field.
 
-Fields that need `field_evidence` before they can carry a value: an offer's
-`selection_mode`, `eligibility.national_merit_statuses`, each benefit's
-`amount`, `application.separate_application` and each milestone.
-`field_path` is a slash path inside the version, such as
-`offers/0/benefits/1/amount`; evidence on a parent path covers its children.
+- **Joint programs** (Robertson at Duke and UNC) are one file under the first
+  participant's directory, with `participating_schools` listing every school.
+  Each participant's domain is an allowed source domain.
+- **Not documented vs none.** `benefits`, `exclusions`, `test_rules`,
+  `renewal_rules` and `stacking_rules` are null when you did not find the
+  terms, and `[]` only when the school says there are none. An empty
+  `stacking_rules` needs evidence.
+- **Renewal** is a list of rules; each `applies_to` names offers or benefits,
+  and an empty `applies_to` covers the whole version.
+- **Status.** `status` is the program's current summary.
+  `program_status_for_entry` is the status for that entering class and needs
+  evidence unless it is `active` or `unknown`. Evidence for program-level
+  fields uses a leading slash: `/awarding_authority`, `/related_programs/0`.
+- **No coverage label in YAML.** The loader derives `full tuition` and similar
+  labels from the typed benefits. A waiver of the out-of-state differential is
+  `category: nonresident_differential`, `instrument: tuition_waiver`.
+- **Check dates and the monitor's needs-review flag are not in these files.**
+  They live in the database. `last_reviewed_at`, `reviewed_by` and
+  `owner_spot_checked` stay.
+- **Application.** Use milestone kind `admission_deadline` for the admission
+  plan date and `application_deadline` for the scholarship's own. Record lead
+  times in `application.prerequisites` (`minimum_lead_days`), the required
+  admission plan in `admission_plan_requirement`, and anything else in `notes`.
+- **Amounts.** `exact`, `up_to`, `at_least` and `approximate` carry `value`;
+  `range` carries `min` and `max` with `min < max`; `not_published` carries
+  no numbers.
+- **Counts.** `award_counts[].metric` is the unit (`offers`, `new_recipients`,
+  `share_of_class`), `claim` says `target` or `actual`, and a share needs a
+  `denominator`.
+- **Recognition.** `national_merit_statuses` also takes `commended` and the
+  `nrp_*` recognition programs; `status_required_for_award` records the status
+  a student must hold to receive the award when it differs from the one that
+  lets them apply.
 
-Application cycle: for entry year Y, dated milestones must fall between
-1 July of Y-1 and 31 August of Y. Recurring milestones have no year and are
-exempt.
+Evidence rules. `field_path` is a slash path inside the version, such as
+`offers/0/benefits/1/amount`. A stated value (an offer's `selection_mode`,
+`eligibility.national_merit_statuses`, a benefit `amount`,
+`application.separate_application`, a milestone) needs `reported` evidence on
+its own path or its direct parent. `not_published` evidence never supports a
+value. `automatic_guaranteed` and `total_program` amounts need `reported`
+evidence on the exact path with a `short_excerpt` of the school's words (and
+`reported_value: automatic_guaranteed` for the former). When a school
+contradicts itself, leave the field null and add two or more `conflicting`
+entries with `reported_value`.
 
-Review state: `verification_status` is an internal status and does not appear
-in product copy. A `verified` version needs `last_reviewed_at`, `reviewed_by`
-and an `entry_year` or an explicit label.
+Dates. For entry year Y, dated milestones fall between 1 July of Y-1 and
+31 August of Y. Recurring milestones have no year and are exempt. If the entry
+year is genuinely unclear, set `entry_year: null` with an `entry_year_label`
+and `conflicting` or `not_published` evidence on `entry_year`; dated
+milestones are then kept as published and the window is skipped. A milestone
+whose date is in conflict may have both `date` and `recurring` null if it has
+`conflicting` evidence.
+
+Corrections. A correction is a new version in the same `entry_year` with
+`supersedes` pointing at the version it replaces. A new cycle is a new version
+with no `supersedes`. `supersedes` never crosses entry years, and each year has
+one unsuperseded version.
+
+Review state. `verification_status` is `verified`, `conflicting`,
+`historical_only` or `unverified`, and does not appear in product copy. A
+`verified` version needs `last_reviewed_at`, `reviewed_by` and an `entry_year`
+or an explicit label.

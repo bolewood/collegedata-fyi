@@ -3,7 +3,8 @@
 
 Usage:
     python tools/scholarships/validate.py data/scholarships/programs
-    python tools/scholarships/validate.py data/scholarships/programs --base origin/main
+    python tools/scholarships/validate.py data/scholarships/programs --merge-base origin/main
+    python tools/scholarships/validate.py data/scholarships/programs --base <sha>
     python tools/scholarships/validate.py --print-fields   # regenerate FIELDS.md body
 
 Checks, each with a stable error code:
@@ -23,16 +24,26 @@ Checks, each with a stable error code:
     E_CONFLICT_SHAPE            conflicting evidence needs two or more entries with reported_value
     E_CONFLICT_VALUE            a confident value sits next to conflicting evidence
     E_VERIFIED_INCOMPLETE       verified version lacks reviewer, review date or entry year/label
-    E_ENTRY_YEAR_UNKNOWN        dated milestone on a version with no entry_year
+    E_ENTRY_YEAR_UNKNOWN        dated milestone, no entry_year, and no conflicting/not_published evidence on entry_year
+    E_MILESTONE_UNDATED         milestone with neither date nor recurring and no conflicting evidence
+    E_APPLIES_TO                renewal rule scope names an offer or benefit that does not exist
+    E_AMOUNT_RANGE              range amount with min >= max
+    E_CONTRADICTION             aid_basis/need_role or consideration_route/separate_application disagree
     E_MILESTONE_WINDOW          dated milestone outside the version's application cycle
     E_OFFER_PARENT              parent_offer_id missing or cyclic
-    E_SUPERSEDES                supersedes names a version that does not exist
+    E_SUPERSEDES                supersedes crosses entry_year, cycles, dangles, or two heads share an entry_year
     E_RELATION_TARGET           related_programs target does not exist
-    E_PUBLISHED_EDITED          a verified version at the base ref changed or vanished
+    E_PUBLISHED_EDITED          a version (other than unverified) at the base ref changed or vanished
     E_BASE_REF                  --base was given but cannot be resolved
 
 Application cycle for entry_year Y: 1 Jul of Y-1 through 31 Aug of Y. Recurring
-milestones (month/day, no year) are exempt.
+milestones (month/day, no year) are exempt. With no entry_year, dated milestones skip
+the window check but need conflicting or not_published evidence on entry_year.
+
+Evidence rules: a stated value needs `reported` evidence on its own path or its direct
+parent; automatic_guaranteed and total_program amounts need `reported` evidence on the exact
+path with a short_excerpt (and reported_value automatic_guaranteed for the former).
+A field_path starting with "/" addresses the program (/awarding_authority).
 
 The identity helpers are imported from tools/finder/identity_guard.py, not copied.
 """
@@ -175,14 +186,28 @@ def _schema_child(schema: dict[str, Any], root: dict[str, Any], seg: str):
     return None
 
 
-def resolve_path(version: dict[str, Any], path: str, schema_root: dict[str, Any]):
-    """Return (ok, value). ok means the path names a real field of a version.
+def resolve_path(
+    version: dict[str, Any],
+    path: str,
+    schema_root: dict[str, Any],
+    program: dict[str, Any] | None = None,
+):
+    """Return (ok, value). ok means the path names a real field.
 
-    A field the schema allows but the record omits resolves with MISSING, so a
-    not_published or conflicting entry can point at a field left null.
+    A path starting with "/" addresses the program (e.g. /awarding_authority,
+    /related_programs/0); any other path is relative to the version. A field the
+    schema allows but the record omits resolves with MISSING, so a not_published
+    or conflicting entry can point at a field left null.
     """
-    node: Any = version
-    schema: dict[str, Any] | None = schema_root["$defs"]["version"]
+    if path.startswith("/"):
+        if program is None:
+            return False, None
+        node: Any = program
+        schema: dict[str, Any] | None = schema_root
+        path = path[1:]
+    else:
+        node = version
+        schema = schema_root["$defs"]["version"]
     for seg in path.split("/"):
         if schema is None or not seg:
             return False, None
@@ -204,8 +229,9 @@ def resolve_path(version: dict[str, Any], path: str, schema_root: dict[str, Any]
     return True, (None if node is MISSING else node)
 
 
-def _covers(evidence_path: str, field_path: str) -> bool:
-    return field_path == evidence_path or field_path.startswith(evidence_path + "/")
+def _supports(evidence_path: str, field_path: str) -> bool:
+    """Evidence supports a field on its own path or on its direct parent."""
+    return field_path == evidence_path or field_path.rsplit("/", 1)[0] == evidence_path
 
 
 def _stated(value: Any) -> bool:
@@ -214,6 +240,15 @@ def _stated(value: Any) -> bool:
     if isinstance(value, dict) and value.get("qualifier") == "not_published":
         return False
     return True
+
+
+def _reported(evidence: list[dict[str, Any]], path: str, *, exact: bool = False) -> list[dict[str, Any]]:
+    return [
+        e
+        for e in evidence
+        if e["value_status"] == "reported"
+        and (e["field_path"] == path if exact else _supports(e["field_path"], path))
+    ]
 
 
 # -------------------------------------------------------------- record checks
@@ -243,52 +278,66 @@ def validate_doc(
     if expected_file is not None and doc["program_id"] != expected_file:
         add("E_DIR_MISMATCH", "program_id", f"program_id {doc['program_id']!r} but file is {expected_file!r}.yaml")
 
-    claim = _check_identity(doc, ctx, add)
-    allowed_school = set()
-    if claim:
+    claims = _check_identity(doc, ctx, add)
+    allowed_school: set[str] = set()
+    foundation: set[str] = set()
+    for claim in claims:
         allowed_school.add(claim["claimed_domain"])
         official = ctx.snapshot.get(claim["ipeds_id"], {}).get("official_domain")
         if official:
             allowed_school.add(official)
-    foundation = set(ctx.foundations.get(doc["school_id"], []))
+        foundation.update(ctx.foundations.get(claim["school_id"], []))
+    identity_ok = bool(claims)
 
     _check_unique(doc, add)
     _check_relations(doc, ctx, add)
-    versions_by_id = {v["version_id"]: v for v in doc["versions"]}
+    _check_supersedes(doc, add)
     for vi, version in enumerate(doc["versions"]):
         vloc = f"versions/{vi}"
-        if claim:  # without a resolved identity the school domain is unknown
+        if identity_ok:  # without a resolved identity the school domain is unknown
             _check_sources(version, vloc, allowed_school, foundation, add)
         _check_offers(version, vloc, add)
-        _check_evidence(version, vloc, ctx.schema, add)
-        _check_required_evidence(version, vloc, ctx.schema, add)
+        _check_renewal_scope(version, vloc, add)
+        _check_evidence(doc, version, vloc, ctx.schema, add)
+        _check_required_evidence(version, vloc, add)
         _check_verified(version, vloc, add)
         _check_milestones(version, vloc, add)
-        sup = version.get("supersedes")
-        if sup is not None and (sup not in versions_by_id or sup == version["version_id"]):
-            add("E_SUPERSEDES", f"{vloc}/supersedes", f"supersedes {sup!r} is not another version of this program")
     return issues
 
 
-def _check_identity(doc, ctx, add):
-    school_id, ipeds = doc["school_id"], doc["ipeds_id"]
-    claims = ctx.claims_by_school.get(school_id)
-    if not claims:
-        hint = ctx.retired_aliases.get(school_id)
-        extra = f"; retired alias, use {hint!r}" if hint else ""
-        add("E_IDENTITY", "school_id", f"school_id {school_id!r} is not a known school{extra}")
-        return None
-    if len(claims) != 1:
-        add("E_IDENTITY", "school_id", f"school_id {school_id!r} is ambiguous in schools.yaml")
-        return None
-    claim = claims[0]
-    if ig.normalize_ipeds(ipeds) != claim["ipeds_id"]:
-        add("E_IDENTITY", "ipeds_id", f"ipeds_id {ipeds} does not match {school_id!r} (schools.yaml says {claim['ipeds_id']})")
-        return None
-    if claim["ipeds_id"] not in ctx.snapshot:
-        add("E_IDENTITY", "ipeds_id", f"ipeds_id {ipeds} is not in the checked-in IPEDS identity snapshot")
-        return None
-    return claim
+def _check_identity(doc, ctx, add) -> list[dict[str, Any]]:
+    """Resolve the primary school and any joint participants; [] on failure."""
+    pairs = [("school_id", doc["school_id"], doc["ipeds_id"])]
+    participants = doc.get("participating_schools") or []
+    if participants:
+        first = participants[0]
+        if (first["school_id"], first["ipeds_id"]) != (doc["school_id"], doc["ipeds_id"]):
+            add("E_IDENTITY", "participating_schools/0", "the first participant must be the record's own school_id and ipeds_id")
+        pairs += [(f"participating_schools/{i}", p["school_id"], p["ipeds_id"]) for i, p in enumerate(participants) if i > 0]
+        seen = [p["school_id"] for p in participants]
+        if len(set(seen)) != len(seen):
+            add("E_IDENTITY", "participating_schools", "duplicate participant")
+    resolved: list[dict[str, Any]] = []
+    ok = True
+    for loc, school_id, ipeds in pairs:
+        claims = ctx.claims_by_school.get(school_id)
+        if not claims:
+            hint = ctx.retired_aliases.get(school_id)
+            extra = f"; retired alias, use {hint!r}" if hint else ""
+            add("E_IDENTITY", f"{loc}", f"school_id {school_id!r} is not a known school{extra}")
+            ok = False
+        elif len(claims) != 1:
+            add("E_IDENTITY", f"{loc}", f"school_id {school_id!r} is ambiguous in schools.yaml")
+            ok = False
+        elif ig.normalize_ipeds(ipeds) != claims[0]["ipeds_id"]:
+            add("E_IDENTITY", f"{loc}", f"ipeds_id {ipeds} does not match {school_id!r} (schools.yaml says {claims[0]['ipeds_id']})")
+            ok = False
+        elif claims[0]["ipeds_id"] not in ctx.snapshot:
+            add("E_IDENTITY", f"{loc}", f"ipeds_id {ipeds} is not in the checked-in IPEDS identity snapshot")
+            ok = False
+        else:
+            resolved.append(claims[0])
+    return resolved if ok else []
 
 
 def _check_unique(doc, add):
@@ -306,7 +355,7 @@ def _check_unique(doc, add):
         for d in dupes(o["offer_id"] for o in v["offers"]):
             add("E_DUPLICATE_ID", f"versions/{vi}/offers", f"duplicate offer_id {d!r}")
         for oi, o in enumerate(v["offers"]):
-            for d in dupes(b["benefit_id"] for b in o["benefits"]):
+            for d in dupes(b["benefit_id"] for b in o["benefits"] or []):
                 add("E_DUPLICATE_ID", f"versions/{vi}/offers/{oi}/benefits", f"duplicate benefit_id {d!r}")
 
 
@@ -317,6 +366,39 @@ def _check_relations(doc, ctx, add):
             add("E_RELATION_TARGET", f"related_programs/{i}", "a program cannot relate to itself")
         elif ctx.program_ids is not None and target not in ctx.program_ids:
             add("E_RELATION_TARGET", f"related_programs/{i}", f"target program {target!r} does not exist")
+
+
+def _check_supersedes(doc, add):
+    """supersedes is a correction chain inside one entry_year, acyclic, one head per year."""
+    by_id = {v["version_id"]: v for v in doc["versions"]}
+    superseded: set[str] = set()
+    for vi, v in enumerate(doc["versions"]):
+        sup = v.get("supersedes")
+        if sup is None:
+            continue
+        loc = f"versions/{vi}/supersedes"
+        if sup == v["version_id"] or sup not in by_id:
+            add("E_SUPERSEDES", loc, f"supersedes {sup!r} is not another version of this program")
+            continue
+        if by_id[sup]["entry_year"] != v["entry_year"]:
+            add("E_SUPERSEDES", loc, "supersedes may only point at a version with the same entry_year; a new cycle is a new version")
+        superseded.add(sup)
+        seen, cur = {v["version_id"]}, sup
+        while cur is not None:
+            if cur in seen:
+                add("E_SUPERSEDES", loc, "supersedes forms a cycle")
+                break
+            seen.add(cur)
+            cur = by_id[cur].get("supersedes")
+            if cur is not None and cur not in by_id:
+                break
+    heads: dict[Any, list[str]] = {}
+    for v in doc["versions"]:
+        if v["version_id"] not in superseded:
+            heads.setdefault(v["entry_year"], []).append(v["version_id"])
+    for year, ids in heads.items():
+        if len(ids) > 1:
+            add("E_SUPERSEDES", "versions", f"entry_year {year}: more than one unsuperseded version ({', '.join(ids)}); a correction must supersede the version it replaces")
 
 
 def _check_sources(version, vloc, allowed_school, foundation, add):
@@ -337,34 +419,62 @@ def _check_sources(version, vloc, allowed_school, foundation, add):
 
 def _check_offers(version, vloc, add):
     ids = {o["offer_id"]: o for o in version["offers"]}
+    separate = (version.get("application") or {}).get("separate_application")
     for oi, o in enumerate(version["offers"]):
+        loc = f"{vloc}/offers/{oi}"
         seen, cur = {o["offer_id"]}, o.get("parent_offer_id")
         while cur is not None:
             if cur not in ids:
-                add("E_OFFER_PARENT", f"{vloc}/offers/{oi}/parent_offer_id", f"parent {cur!r} is not an offer in this version")
+                add("E_OFFER_PARENT", f"{loc}/parent_offer_id", f"parent {cur!r} is not an offer in this version")
                 break
             if cur in seen:
-                add("E_OFFER_PARENT", f"{vloc}/offers/{oi}/parent_offer_id", "parent_offer_id forms a cycle")
+                add("E_OFFER_PARENT", f"{loc}/parent_offer_id", "parent_offer_id forms a cycle")
                 break
             seen.add(cur)
             cur = ids[cur].get("parent_offer_id")
+        for bi, b in enumerate(o["benefits"] or []):
+            amt = b.get("amount")
+            if amt and amt["qualifier"] == "range" and not amt["min"] < amt["max"]:
+                add("E_AMOUNT_RANGE", f"{loc}/benefits/{bi}/amount", "a range needs min < max")
+        if o.get("aid_basis") == "merit_only" and o.get("need_role") == "required":
+            add("E_CONTRADICTION", loc, "aid_basis merit_only contradicts need_role required")
+        route = o.get("consideration_route")
+        if route == "admission_application" and separate == "required":
+            add("E_CONTRADICTION", loc, "consideration_route admission_application contradicts application.separate_application required")
+        if route == "separate_application" and separate == "not_required":
+            add("E_CONTRADICTION", loc, "consideration_route separate_application contradicts application.separate_application not_required")
 
 
-def _check_evidence(version, vloc, schema_root, add):
+def _check_renewal_scope(version, vloc, add):
+    offers = {o["offer_id"]: {b["benefit_id"] for b in o["benefits"] or []} for o in version["offers"]}
+    all_benefits = set().union(*offers.values()) if offers else set()
+    for ri, rule in enumerate(version.get("renewal_rules") or []):
+        for si, scope in enumerate(rule["applies_to"]):
+            loc = f"{vloc}/renewal_rules/{ri}/applies_to/{si}"
+            oid, bid = scope.get("offer_id"), scope.get("benefit_id")
+            if oid is None and bid is None:
+                add("E_APPLIES_TO", loc, "give an offer_id, a benefit_id or both")
+            elif oid is not None and oid not in offers:
+                add("E_APPLIES_TO", loc, f"offer {oid!r} is not in this version")
+            elif bid is not None and bid not in (offers[oid] if oid is not None else all_benefits):
+                add("E_APPLIES_TO", loc, f"benefit {bid!r} is not in {'offer ' + repr(oid) if oid else 'this version'}")
+
+
+def _check_evidence(doc, version, vloc, schema_root, add):
     source_ids = {s["source_id"] for s in version["sources"]}
     by_path: dict[str, list[dict[str, Any]]] = {}
     for ei, ev in enumerate(version["field_evidence"]):
         loc = f"{vloc}/field_evidence/{ei}"
-        ok, _ = resolve_path(version, ev["field_path"], schema_root)
+        ok, _ = resolve_path(version, ev["field_path"], schema_root, doc)
         if not ok:
-            add("E_EVIDENCE_PATH", f"{loc}/field_path", f"{ev['field_path']!r} is not a field of a version")
+            add("E_EVIDENCE_PATH", f"{loc}/field_path", f"{ev['field_path']!r} is not a field of a version (a leading / addresses the program)")
         if ev["source_ref"] not in source_ids:
             add("E_EVIDENCE_SOURCE", f"{loc}/source_ref", f"unknown source {ev['source_ref']!r}")
         excerpt = ev.get("short_excerpt")
         if excerpt and len(excerpt.split()) > MAX_EXCERPT_WORDS:
             add("E_EXCERPT_LENGTH", f"{loc}/short_excerpt", f"{len(excerpt.split())} words; limit is {MAX_EXCERPT_WORDS}")
         by_path.setdefault(ev["field_path"], []).append(ev)
-    for ci, ac in enumerate(version.get("award_counts", [])):
+    for ci, ac in enumerate(version.get("award_counts") or []):
         if ac["source_ref"] not in source_ids:
             add("E_EVIDENCE_SOURCE", f"{vloc}/award_counts/{ci}/source_ref", f"unknown source {ac['source_ref']!r}")
     for path, evs in by_path.items():
@@ -373,7 +483,7 @@ def _check_evidence(version, vloc, schema_root, add):
             continue
         if len(conflicting) < 2 or any(e.get("reported_value") is None for e in conflicting):
             add("E_CONFLICT_SHAPE", f"{vloc}/field_evidence", f"{path!r}: conflicting needs two or more entries, each with reported_value")
-        ok, value = resolve_path(version, path, schema_root)
+        ok, value = resolve_path(version, path, schema_root, doc)
         if ok and _stated(value):
             add("E_CONFLICT_VALUE", f"{vloc}/{path}", "field has a value although its evidence is conflicting; leave it null")
 
@@ -387,7 +497,7 @@ def _required_evidence_paths(version) -> list[tuple[str, str]]:
             out.append((f"{base}/selection_mode", "guaranteed" if o["selection_mode"] == "automatic_guaranteed" else "plain"))
         if _stated((o.get("eligibility") or {}).get("national_merit_statuses")):
             out.append((f"{base}/eligibility/national_merit_statuses", "plain"))
-        for bi, b in enumerate(o["benefits"]):
+        for bi, b in enumerate(o["benefits"] or []):
             amount = b.get("amount")
             if _stated(amount):
                 kind = "total" if amount.get("period") == "total_program" else "plain"
@@ -397,25 +507,30 @@ def _required_evidence_paths(version) -> list[tuple[str, str]]:
         if _stated(app["separate_application"]):
             out.append(("application/separate_application", "plain"))
         for mi, m in enumerate(app["milestones"]):
-            out.append((f"application/milestones/{mi}", "plain"))
+            if m.get("date") is not None or m.get("recurring") is not None:
+                out.append((f"application/milestones/{mi}", "plain"))
+    if version.get("program_status_for_entry") not in (None, "active", "unknown"):
+        out.append(("program_status_for_entry", "plain"))
+    if version.get("stacking_rules") == []:
+        out.append(("stacking_rules", "plain"))
     return out
 
 
-def _check_required_evidence(version, vloc, schema_root, add):
+def _check_required_evidence(version, vloc, add):
     evidence = version["field_evidence"]
     for path, kind in _required_evidence_paths(version):
-        covering = [e for e in evidence if _covers(e["field_path"], path)]
         if kind == "guaranteed":
             ok = any(
-                e["value_status"] == "reported" and e.get("short_excerpt") for e in covering
+                e.get("short_excerpt") and e.get("reported_value") == "automatic_guaranteed"
+                for e in _reported(evidence, path, exact=True)
             )
             if not ok:
-                add("E_GUARANTEED_NO_EVIDENCE", f"{vloc}/{path}", "automatic_guaranteed needs reported evidence with a short_excerpt of the school's explicit promise")
+                add("E_GUARANTEED_NO_EVIDENCE", f"{vloc}/{path}", "automatic_guaranteed needs reported evidence on this exact path, reported_value automatic_guaranteed, and a short_excerpt of the school's explicit promise")
         elif kind == "total":
-            if not any(e["value_status"] == "reported" for e in covering):
-                add("E_SUMMED_TOTAL", f"{vloc}/{path}", "a total_program amount must be quoted by the school (reported field_evidence); never add up components")
-        elif not covering:
-            add("E_NO_EVIDENCE", f"{vloc}/{path}", "publication-grade field has no field_evidence")
+            if not any(e.get("short_excerpt") for e in _reported(evidence, path, exact=True)):
+                add("E_SUMMED_TOTAL", f"{vloc}/{path}", "a total_program amount must be quoted by the school: reported evidence on this exact path with a short_excerpt; never add up components")
+        elif not _reported(evidence, path):
+            add("E_NO_EVIDENCE", f"{vloc}/{path}", "stated value needs reported field_evidence on its own path or its direct parent; not_published evidence does not support a value")
 
 
 def _check_verified(version, vloc, add):
@@ -434,17 +549,28 @@ def _check_milestones(version, vloc, add):
     if not app:
         return
     year = version["entry_year"]
+    evidence = version["field_evidence"]
+    year_unconfirmed = any(
+        e["field_path"] == "entry_year" and e["value_status"] in ("conflicting", "not_published") for e in evidence
+    )
     for mi, m in enumerate(app["milestones"]):
+        mloc = f"{vloc}/application/milestones/{mi}"
+        if m.get("date") is None and m.get("recurring") is None:
+            paths = {f"application/milestones/{mi}", f"application/milestones/{mi}/date"}
+            if not any(e["field_path"] in paths and e["value_status"] == "conflicting" for e in evidence):
+                add("E_MILESTONE_UNDATED", mloc, "a milestone with no date and no recurring month/day needs conflicting evidence; otherwise drop it")
+            continue
         if m.get("date") is None:
-            continue  # recurring: exempt
-        loc = f"{vloc}/application/milestones/{mi}/date"
+            continue  # recurring: exempt from the window
+        loc = f"{mloc}/date"
         try:
             d = dt.date.fromisoformat(m["date"])
         except ValueError:
             add("E_SCHEMA", loc, f"{m['date']!r} is not a calendar date")
             continue
         if year is None:
-            add("E_ENTRY_YEAR_UNKNOWN", loc, "dated milestone on a version with no entry_year; use a recurring month/day")
+            if not year_unconfirmed:
+                add("E_ENTRY_YEAR_UNKNOWN", loc, "dated milestone with no entry_year needs conflicting or not_published field_evidence on entry_year")
             continue
         lo, hi = dt.date(year - 1, 7, 1), dt.date(year, 8, 31)
         if not lo <= d <= hi:
@@ -454,14 +580,28 @@ def _check_milestones(version, vloc, add):
 # ------------------------------------------------------------ published check
 
 
+def _same(base: Any, head: Any) -> bool:
+    """Strict structural equality. A key absent at base and null at head is
+    ignored, so a later optional field can be added without touching published
+    versions; every other difference is an edit. Types are compared too, so
+    true vs 1 and 5000 vs 5000.0 differ."""
+    if isinstance(base, dict) and isinstance(head, dict):
+        if any(k not in head or not _same(v, head[k]) for k, v in base.items()):
+            return False
+        return all(k in base or v is None for k, v in head.items())
+    if isinstance(base, list) and isinstance(head, list):
+        return len(base) == len(head) and all(_same(x, y) for x, y in zip(base, head))
+    return type(base) is type(head) and base == head
+
+
 def compare_published(
     base_docs: dict[str, Any], head_docs: dict[str, Any]
 ) -> list[Issue]:
-    """A verified version at base must be identical at head.
+    """Every version that existed at base, except unverified drafts, must be unchanged.
 
     Docs are keyed by file path for reporting; versions are matched on
     (program_id, version_id), so a moved file is fine but a deleted, renamed or
-    edited verified version is not. A correction is a new version with supersedes.
+    edited version is not. A correction is a new version with supersedes.
     """
     head_versions: dict[tuple[str, str], Any] = {}
     for doc in head_docs.values():
@@ -474,19 +614,28 @@ def compare_published(
         if not isinstance(doc, dict):
             continue
         for v in doc.get("versions") or []:
-            if not (isinstance(v, dict) and v.get("verification_status") == "verified"):
+            if not isinstance(v, dict) or v.get("verification_status") == "unverified":
                 continue
             key = (doc.get("program_id"), v.get("version_id"))
             now = head_versions.get(key)
             if now is None:
-                issues.append(Issue("E_PUBLISHED_EDITED", path, f"verified version {key[1]!r} of {key[0]!r} was removed or renamed; add a new version with supersedes instead"))
-            elif json.dumps(now, sort_keys=True) != json.dumps(v, sort_keys=True):
-                issues.append(Issue("E_PUBLISHED_EDITED", path, f"verified version {key[1]!r} of {key[0]!r} was edited; add a new version with supersedes instead"))
+                issues.append(Issue("E_PUBLISHED_EDITED", path, f"version {key[1]!r} of {key[0]!r} was removed or renamed; add a new version with supersedes instead"))
+            elif not _same(v, now):
+                issues.append(Issue("E_PUBLISHED_EDITED", path, f"version {key[1]!r} of {key[0]!r} was edited; add a new version with supersedes instead"))
     return issues
 
 
 def _git(repo: Path, *args: str) -> subprocess.CompletedProcess:
     return subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True)
+
+
+def resolve_merge_base(programs_dir: Path, ref: str) -> tuple[str | None, list[Issue]]:
+    """git merge-base HEAD <ref>: what a branch or pull request actually changed."""
+    probe = programs_dir if programs_dir.exists() else programs_dir.parent
+    out = _git(probe, "merge-base", "HEAD", ref)
+    if out.returncode != 0 or not out.stdout.strip():
+        return None, [Issue("E_BASE_REF", ref, f"no merge base between HEAD and {ref!r}; fetch it with full history (git fetch origin main)")]
+    return out.stdout.strip(), []
 
 
 def load_base_docs(programs_dir: Path, base: str) -> tuple[dict[str, Any], list[Issue]]:
@@ -614,13 +763,17 @@ def render_fields_table(schema: dict[str, Any]) -> str:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("programs_dir", nargs="?", type=Path, default=DEFAULT_PROGRAMS_DIR)
-    ap.add_argument("--base", help="git ref to compare against, e.g. origin/main")
+    ap.add_argument("--base", help="git ref or sha to compare against, e.g. the push's before sha")
+    ap.add_argument("--merge-base", metavar="REF", help="compare against git merge-base HEAD REF, e.g. origin/main (pull requests, branch pushes)")
     ap.add_argument("--print-fields", action="store_true", help="print the FIELDS.md table and exit")
     args = ap.parse_args(argv)
     if args.print_fields:
         sys.stdout.write(render_fields_table(load_schema()))
         return 0
-    issues = validate_tree(args.programs_dir, base=args.base)
+    base, pre = args.base, []
+    if args.merge_base:
+        base, pre = resolve_merge_base(args.programs_dir, args.merge_base)
+    issues = pre + validate_tree(args.programs_dir, base=base)
     for issue in issues:
         print(issue, file=sys.stderr)
     n = len(list(args.programs_dir.glob("*/*.yaml"))) if args.programs_dir.is_dir() else 0
