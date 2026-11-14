@@ -15,6 +15,7 @@ on:
       - Ops extraction worker
       - Ops archive seed catchup
       - Ops headless archive
+      - Ops corpus audit
     types:
       - completed
   deployment_status:
