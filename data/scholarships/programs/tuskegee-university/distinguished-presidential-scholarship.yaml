@@ -55,8 +55,9 @@ versions:
       major_change_restrictions: null
       honors_requirement: null
       first_generation_rule: unknown
-      eligibility_notes: Only for applicants who apply under Standard Admission. An interview is required. The page says test-optional applicants outside Alabama may not apply for merit scholarships; the
-        asterisk allowing test-optional applies only to the Alabama Incentive Grant.
+      eligibility_notes: Only for applicants who apply under Standard Admission. An interview is required. The award is not transferable to other terms or years of entry, and the university may revoke it
+        if the final cumulative high school GPA or test score falls below the scholarship requirement. The page says test-optional applicants outside Alabama may not apply for merit scholarships; the asterisk
+        allowing test-optional applies only to the Alabama Incentive Grant.
     benefits:
     - benefit_id: b-tuition
       category: tuition
@@ -72,6 +73,7 @@ versions:
       exclusions: null
       scope_text: null
       advertised_coverage_label: Full tuition, room/board, fees, and $300 eBook voucher
+      conditions_text: Subject to availability of University funds and completion of the FAFSA
     - benefit_id: b-fees
       category: mandatory_fees
       instrument: scholarship
@@ -87,6 +89,7 @@ versions:
       - The non-refundable enrollment fee
       scope_text: null
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-housing
       category: housing
       instrument: scholarship
@@ -101,6 +104,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "room/board"'
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-meals
       category: meals
       instrument: scholarship
@@ -115,6 +119,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "room/board"'
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-ebook
       category: books
       instrument: restricted_fund
@@ -129,6 +134,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "$300 eBook voucher"; the page does not say how often it is paid'
       advertised_coverage_label: null
+      conditions_text: null
   application:
     separate_application: unknown
     milestones:
@@ -162,11 +168,21 @@ versions:
       recurring: null
       precision: day
       source_date_text: by January 30 / by January 15 (page says both)
+    - kind: acceptance_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 4
+        day: 1
+      precision: day
+      source_date_text: April 1
     admission_plan_requirement: Standard Admission only; completed admission application received by Dec. 1 for Presidential consideration
     prerequisites: []
     interview_mode: unknown
     finalist_event_required: null
-    notes: Scholars Day is held in mid-February (invitation only). The page also says the scholarship application opens December 1 and closes January 1, and that a link is sent to students who qualify.
+    notes: Applicants who are extended an offer are encouraged to attend Scholars Day in mid-February (invitation only) and must finalize their admissions decision by April 1. All new students must pay
+      a non-refundable $500 enrollment fee by the priority date on the scholarship letter or the award is subject to cancellation; the award does not cover that fee. The page also says the scholarship application
+      opens December 1 and closes January 1, and that a link is sent to students who qualify.
   renewal_rules:
   - applies_to: []
     gpa_min: 3.5
@@ -175,8 +191,9 @@ versions:
     evaluation_timing: Each academic year (Fall and Spring semesters at Tuskegee only)
     summer_courses_can_fix_shortfall: false
     max_semesters: null
-    notes: The award list reads "-3.5/30", with the legend "Renewable CGPA/CREDIT Attainment". The page does not say 30 credits per year in words and gives no per-term load. External credits and summer
-      terms do not count. GPA scale not stated.
+    notes: The award list reads "-3.5/30", with the legend "Renewable CGPA/CREDIT Attainment"; 30 is read as credits per academic year, and the page gives no per-term load. External credits and summer terms
+      do not count. Recipients must register for the Thurgood Marshall, UNCF and Tuskegee University scholarship portals annually. GPA scale not stated.
+    credit_load_min_per_year: 30
   stacking_rules:
   - other_aid_type: federal_or_state_need
     relation: counts_within_package
@@ -184,6 +201,9 @@ versions:
   - other_aid_type: outside_scholarship
     relation: counts_within_package
     note: Awards combined with Federal Student Aid and external awards cannot exceed the total cost of attendance.
+  - other_aid_type: federal_or_state_need
+    relation: counts_within_package
+    note: If the Student Aid Report shows eligibility for Federal Grant Aid, institutional scholarship and grant awards are adjusted to direct cost of attendance (the cap is direct, not total, cost).
   award_counts: []
   sources:
   - source_id: s-tu
@@ -307,6 +327,54 @@ versions:
     short_excerpt: Notifications of any scholarship awards will be sent by January 15.
     value_status: conflicting
     reported_value: January 15
+  - field_path: application/milestones/4
+    source_ref: s-tu
+    locator: Scholarships page, "Priority Scholarship Deadlines"
+    short_excerpt: finalize their admissions decision by April 1
+    value_status: reported
+    reported_value: April 1
+  - field_path: offers/0/benefits/0/conditions_text
+    source_ref: s-tu
+    locator: Scholarships page, "Merit Based Scholarship and Grant Policies"
+    short_excerpt: Scholarships and grants are subject to availability of University funds and the completion of the Free Application for Federal Student Aid.
+    value_status: reported
+    reported_value: FAFSA
+  - field_path: offers/0/eligibility/eligibility_notes
+    source_ref: s-tu
+    locator: Scholarships page, "Merit Based Scholarship and Grant Policies"
+    short_excerpt: The University reserves the right to revoke any scholarship and grant awards for students whose final cumulative high school grade point average
+    value_status: reported
+    reported_value: revocation
+  - field_path: offers/0/eligibility/eligibility_notes
+    source_ref: s-tu
+    locator: Scholarships page, "Merit Based Scholarship and Grant Policies"
+    short_excerpt: Scholarships are not transferable to other terms or years of entry to Tuskegee University
+    value_status: reported
+    reported_value: not transferable
+  - field_path: application/notes
+    source_ref: s-tu
+    locator: Scholarships page, "Merit Based Scholarship and Grant Policies"
+    short_excerpt: All new students are required to pay a non-refundable $500 enrollment fee by the priority date stated on your scholarship letter.
+    value_status: reported
+    reported_value: enrollment fee
+  - field_path: stacking_rules/2
+    source_ref: s-tu
+    locator: Scholarships page, "Merit Based Scholarship and Grant Policies"
+    short_excerpt: your institutional scholarship and grant awards will be adjusted to direct cost of attendance.
+    value_status: reported
+    reported_value: counts_within_package
+  - field_path: renewal_rules/0/notes
+    source_ref: s-tu
+    locator: Scholarships page, "Merit Based Scholarship and Grant Policies"
+    short_excerpt: Scholarship recipients must register for the Thurgood Marshall, UNCF and Tuskegee University scholarship portals annually.
+    value_status: reported
+    reported_value: portal registration
+  - field_path: renewal_rules/0/credit_load_min_per_year
+    source_ref: s-tu
+    locator: Scholarships page, "Scholarships for Incoming Freshmen" award list
+    short_excerpt: Distinguished Presidential, 3.8, 1400, 30 (Full tuition, room/board, fees, and $300 eBook voucher) -3.5/30 (Interview Required)
+    value_status: reported
+    reported_value: 30
   - field_path: renewal_rules/0/gpa_min
     source_ref: s-tu
     locator: Scholarships page, "Scholarships for Incoming Freshmen" award list

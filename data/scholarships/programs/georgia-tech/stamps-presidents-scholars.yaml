@@ -19,7 +19,7 @@ versions:
   entry_terms:
   - unspecified
   source_cohort_text: null
-  verification_status: conflicting
+  verification_status: verified
   last_reviewed_at: '2026-11-14'
   reviewed_by: agent:claude-sonnet-5-5/prd036-canary-B
   owner_spot_checked: false
@@ -51,6 +51,8 @@ versions:
       first_generation_rule: unknown
       eligibility_notes: International applicants must have an established role working with a community-based organization or similar partnership with, or unique identification by, Georgia Tech. Transfer
         students are not eligible for the four-year award.
+      citizenship_text: Recipients are US Citizens or Permanent Residents or international applicants with an established role working with a community-based organization or similar partnership with/unique
+        identification by Georgia Tech.
     benefits:
     - benefit_id: b-tuition
       category: tuition
@@ -66,6 +68,7 @@ versions:
       exclusions: null
       scope_text: null
       advertised_coverage_label: full ride
+      conditions_text: null
     - benefit_id: b-fees
       category: mandatory_fees
       instrument: scholarship
@@ -80,10 +83,11 @@ versions:
       exclusions: null
       scope_text: null
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-housing
       category: housing
       instrument: scholarship
-      coverage: full
+      coverage: unknown
       amount:
         qualifier: not_published
         value: null
@@ -92,12 +96,13 @@ versions:
         period: null
       duration_terms: null
       exclusions: null
-      scope_text: 'School words: "room and board"'
+      scope_text: Listed as included in the school's "full ride" sentence ("room and board"); the page gives no rate or cap and refers to the program website for stipends
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-meals
       category: meals
       instrument: scholarship
-      coverage: full
+      coverage: unknown
       amount:
         qualifier: not_published
         value: null
@@ -106,12 +111,13 @@ versions:
         period: null
       duration_terms: null
       exclusions: null
-      scope_text: 'School words: "room and board"'
+      scope_text: Listed as included in the school's "full ride" sentence ("room and board"); the page gives no rate or cap and refers to the program website for stipends
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-books
       category: books
       instrument: scholarship
-      coverage: full
+      coverage: unknown
       amount:
         qualifier: not_published
         value: null
@@ -120,8 +126,9 @@ versions:
         period: null
       duration_terms: null
       exclusions: null
-      scope_text: null
+      scope_text: Listed as included in the school's "full ride" sentence; the page gives no amount and refers to the program website for stipends
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-personal
       category: other
       instrument: scholarship
@@ -136,8 +143,9 @@ versions:
       exclusions: null
       scope_text: 'School words: "personal expenses"; the catalog page refers to the program website for stipends'
       advertised_coverage_label: null
+      conditions_text: null
   application:
-    separate_application: not_required
+    separate_application: no_form_other_steps_required
     milestones:
     - kind: admission_deadline
       requirement: required
@@ -165,15 +173,42 @@ versions:
       source_date_text: Early February 2027
     - kind: finalist_event
       requirement: required
-      date: null
+      date: '2027-04-09'
       recurring: null
       precision: day
-      source_date_text: April 9-10, 2027 on the calendar; March 13 - 14, 2026 on the selection page
+      source_date_text: April 9-10, 2027
+    - kind: supporting_materials_deadline
+      requirement: required
+      date: '2026-10-30'
+      recurring: null
+      precision: day
+      source_date_text: October 30 (Early Action 1 document deadline)
+    - kind: supporting_materials_deadline
+      requirement: required
+      date: '2026-11-16'
+      recurring: null
+      precision: day
+      source_date_text: November 16 (Early Action 2 document deadline)
+    - kind: test_score_deadline
+      requirement: required
+      date: '2026-11-16'
+      recurring: null
+      precision: day
+      source_date_text: November 16 (Early Action 1 self-reported test scores)
+    - kind: test_score_deadline
+      requirement: required
+      date: '2026-12-08'
+      recurring: null
+      precision: day
+      source_date_text: December 8 (Early Action 2 self-reported test scores)
     admission_plan_requirement: 'Apply through an Early Action plan: Early Action 1 for Georgia residents, Early Action 2 for non-Georgia residents'
     prerequisites: []
-    interview_mode: unknown
+    interview_mode: mixed
     finalist_event_required: true
-    notes: Semifinalist interviews are virtual and asynchronous; finalists are invited to an on-campus Stamps Scholars Weekend. Georgia Tech admits for Summer and Fall terms.
+    notes: 'Semifinalist interviews are virtual and asynchronous; finalists are invited to an on-campus Stamps Scholars Weekend. Georgia Tech admits for Summer and Fall terms. Leftover passages: the Selection
+      Process page still shows the prior cycle''s weekend ("March 13 – 14, 2026", before this cycle''s October 15, 2026 deadline) and "about 43,000" applicants; this record uses the Scholarship Calendar''s
+      April 9-10, 2027. The catalog PDF says only "March or April". Applicants whose Early Action file is incomplete are considered in Regular Decision, and the deadlines page says scholarship consideration
+      requires an Early Action plan and its deadlines.'
   renewal_rules:
   - applies_to: []
     gpa_min: null
@@ -183,6 +218,7 @@ versions:
     summer_courses_can_fix_shortfall: null
     max_semesters: 8
     notes: Renewable for up to four academic years or eight semesters, contingent on honors-level performance and continued leadership development; the page gives no GPA or credit threshold.
+    credit_load_min_per_year: null
   stacking_rules: null
   award_counts:
   - metric: offers
@@ -283,7 +319,7 @@ versions:
     locator: Deadlines page, "Scholarship Consideration"
     short_excerpt: No separate scholarship application is required.
     value_status: reported
-    reported_value: not_required
+    reported_value: no_form_other_steps_required
   - field_path: application/milestones/0
     source_ref: s-cal
     locator: Scholarship Calendar, row "October 15, 2026 / Application Deadline (GA residents)"
@@ -308,24 +344,42 @@ versions:
     short_excerpt: All applicants who advance to the semifinalist stage must participate in a virtual, asynchronous interview during this timeframe.
     value_status: reported
     reported_value: Early February 2027
-  - field_path: application/milestones/4/date
+  - field_path: application/milestones/4
     source_ref: s-cal
     locator: Scholarship Calendar, row "April 9-10, 2027 / Stamps Scholars Weekend Activities"
     short_excerpt: Students who are named as finalists will be invited to attend Stamp's Scholars Weekend on Georgia Tech’s campus, April 2027.
-    value_status: conflicting
-    reported_value: April 9-10, 2027
-  - field_path: application/milestones/4/date
-    source_ref: s-sel
-    locator: Selection Process page, second paragraph
-    short_excerpt: a two-day on-campus event taking place March 13 – 14, 2026.
-    value_status: conflicting
-    reported_value: March 13-14, 2026
-  - field_path: application/milestones/4/date
-    source_ref: s-cat
-    locator: Catalog PDF, first paragraph
-    short_excerpt: invited, with their parents, to campus for additional interviews and an information weekend in March or April.
-    value_status: conflicting
-    reported_value: March or April
+    value_status: reported
+    reported_value: '2027-04-09'
+  - field_path: application/milestones/5
+    source_ref: s-dl
+    locator: Deadlines page, 2026-2027 Important Dates table, Document Deadline row (EA1, EA2, RD columns)
+    short_excerpt: '| Document Deadline | October 30 | November 16 | January 22'
+    value_status: reported
+    reported_value: '2026-10-30'
+  - field_path: application/milestones/6
+    source_ref: s-dl
+    locator: Deadlines page, 2026-2027 Important Dates table, Document Deadline row (EA1, EA2, RD columns)
+    short_excerpt: '| Document Deadline | October 30 | November 16 | January 22'
+    value_status: reported
+    reported_value: '2026-11-16'
+  - field_path: application/milestones/7
+    source_ref: s-dl
+    locator: Deadlines page, 2026-2027 Important Dates table, Self-Reported Test Scores Deadline row
+    short_excerpt: '| Self-Reported Test Scores Deadline | November 16 | December 8 | January 22'
+    value_status: reported
+    reported_value: '2026-11-16'
+  - field_path: application/milestones/8
+    source_ref: s-dl
+    locator: Deadlines page, 2026-2027 Important Dates table, Self-Reported Test Scores Deadline row
+    short_excerpt: '| Self-Reported Test Scores Deadline | November 16 | December 8 | January 22'
+    value_status: reported
+    reported_value: '2026-12-08'
+  - field_path: application/interview_mode
+    source_ref: s-cal
+    locator: Scholarship Calendar, "Semifinalist Interviews" and "Stamps Scholars Weekend" rows
+    short_excerpt: must participate in a virtual, asynchronous interview during this timeframe.
+    value_status: reported
+    reported_value: mixed
   - field_path: application/finalist_event_required
     source_ref: s-cal
     locator: Scholarship Calendar, Stamps Scholars Weekend row

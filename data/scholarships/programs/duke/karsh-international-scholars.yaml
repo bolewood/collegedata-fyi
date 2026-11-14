@@ -62,6 +62,7 @@ versions:
       exclusions: null
       scope_text: null
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-fees
       category: mandatory_fees
       instrument: scholarship
@@ -76,6 +77,7 @@ versions:
       exclusions: null
       scope_text: null
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-housing
       category: housing
       instrument: scholarship
@@ -90,6 +92,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "room and board" (housing and meals together)'
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-meals
       category: meals
       instrument: scholarship
@@ -104,6 +107,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "room and board" (housing and meals together)'
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-need
       category: other
       instrument: scholarship
@@ -118,6 +122,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "demonstrated need that exceeds those costs"; amount depends on the student and is not published'
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-summers
       category: enrichment
       instrument: restricted_fund
@@ -132,6 +137,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "three summers of funding for research, unpaid internships, and other opportunities"; amount not published'
       advertised_coverage_label: null
+      conditions_text: null
   application:
     separate_application: not_required
     milestones: []

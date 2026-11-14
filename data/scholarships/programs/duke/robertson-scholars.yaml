@@ -24,7 +24,7 @@ versions:
   entry_terms:
   - unspecified
   source_cohort_text: null
-  verification_status: conflicting
+  verification_status: verified
   last_reviewed_at: '2026-11-14'
   reviewed_by: agent:claude-sonnet-5-5/prd036-canary-B
   owner_spot_checked: false
@@ -52,8 +52,10 @@ versions:
       major_change_restrictions: null
       honors_requirement: null
       first_generation_rule: unknown
-      eligibility_notes: Applicants must also apply for undergraduate admission to Duke and/or UNC-Chapel Hill the same year. International students are eligible if they can obtain a U.S. study visa. Transfer
-        students and graduate students are not eligible.
+      eligibility_notes: Applicants must also apply for undergraduate admission to Duke and/or UNC-Chapel Hill the same year, and cannot receive the Robertson without admission to Duke or UNC-Chapel Hill.
+        International students are eligible if they can obtain a U.S. study visa. Transfer students and graduate students are not eligible. Gap-year students already admitted to Duke or UNC may not apply
+        until they matriculate. Students who have taken the ACT or SAT are required to report their score. Finalist invitations are school specific (Duke and UNC).
+      citizenship_text: The Robertson Scholars Leadership Program welcomes applications from all students regardless of citizenship or nationality.
     benefits:
     - benefit_id: b-tuition
       category: tuition
@@ -69,6 +71,7 @@ versions:
       exclusions: null
       scope_text: null
       advertised_coverage_label: eight semesters of full tuition
+      conditions_text: null
     - benefit_id: b-housing
       category: housing
       instrument: scholarship
@@ -83,6 +86,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "room and board"'
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-meals
       category: meals
       instrument: scholarship
@@ -97,6 +101,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "room and board"'
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-fees
       category: mandatory_fees
       instrument: scholarship
@@ -111,6 +116,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "most mandatory fees"'
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-summers
       category: enrichment
       instrument: restricted_fund
@@ -125,6 +131,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "generous funding for up to three summer experiences"; amount not published'
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-abroad
       category: study_abroad
       instrument: restricted_fund
@@ -135,10 +142,11 @@ versions:
         min: null
         max: null
         period: null
-      duration_terms: Two semesters
+      duration_terms: Up to two semesters
       exclusions: null
-      scope_text: 'School words: "for two semesters of study abroad"; amount not published'
+      scope_text: 'School words: "for up to two semesters of study abroad" (foundation FAQ); amount not published'
       advertised_coverage_label: null
+      conditions_text: null
   application:
     separate_application: required
     milestones:
@@ -156,10 +164,10 @@ versions:
       source_date_text: 'Early Notification Deadline: October 15, 2026'
     - kind: application_deadline
       requirement: required
-      date: null
+      date: '2026-11-15'
       recurring: null
       precision: day
-      source_date_text: November 15, 2026 on most of the page; "November 15, 2025" in the Step Two text
+      source_date_text: 'Regular Application Deadline: November 15, 2026'
     - kind: interview
       requirement: required
       date: '2027-02-01'
@@ -189,10 +197,14 @@ versions:
     - kind: admission_application
       minimum_lead_days: null
       notes: Applicants must apply to Duke and/or UNC-Chapel Hill the same year they apply to the Robertson Scholars Leadership Program.
+    - kind: recommendation
+      minimum_lead_days: null
+      notes: Exactly one letter of recommendation; more than one is not accepted. All materials, including the letter, are due by midnight on November 15 and no updates are accepted.
     interview_mode: unknown
     finalist_event_required: null
-    notes: 'Selection has five steps: application, group activity (December 2026 to February 2027, rolling), semi-finalist interview, finalist interview, then recipient campus visits. An invitation to the
-      group activity is not an indication of admissibility. The campus visit is for those offered the scholarship.'
+    notes: 'Leftover passage: the Step Two text of the High School Students page says "November 15, 2025, deadline"; every other statement on the three foundation pages says November 15, 2026, and a 2025
+      date cannot belong to a cycle that opens August 15, 2026, so it is treated as a typo. Selection has five steps: application, group activity (December 2026 to February 2027, rolling), semi-finalist
+      interview, finalist interview, then recipient campus visits. An invitation to the group activity is not an indication of admissibility. The campus visit is for those offered the scholarship.'
   renewal_rules: null
   stacking_rules: null
   award_counts: []
@@ -214,6 +226,12 @@ versions:
     authority: foundation_official
     retrieved_at: '2026-11-14'
     content_sha256: ab5d122f4bb4d8b921534be5ab92c5facbe81e38b21b2405f93778d50b25f5dc
+    archive_url: null
+  - source_id: s-faq
+    url: https://robertsonscholars.org/application-faqs/
+    authority: foundation_official
+    retrieved_at: '2026-11-14'
+    content_sha256: 90a158f5e9b1211ab006aa4faee4b3ce6d0e43d120ad055374a3fc248d30bf32
     archive_url: null
   field_evidence:
   - field_path: entry_year
@@ -300,18 +318,60 @@ versions:
     short_excerpt: 'Early Notification Deadline: October 15, 2026'
     value_status: reported
     reported_value: '2026-10-15'
-  - field_path: application/milestones/2/date
+  - field_path: application/milestones/2
     source_ref: s-hs
     locator: robertsonscholars.org High School Students page, timeline
     short_excerpt: 'Regular Application Deadline: November 15, 2026'
-    value_status: conflicting
+    value_status: reported
     reported_value: '2026-11-15'
-  - field_path: application/milestones/2/date
+  - field_path: offers/0/benefits/5/duration_terms
+    source_ref: s-faq
+    locator: Application FAQs, "What does the Robertson cover?" answer
+    short_excerpt: for up to two semesters of study abroad
+    value_status: reported
+    reported_value: Up to two semesters
+  - field_path: offers/0/eligibility/eligibility_notes
+    source_ref: s-faq
+    locator: Application FAQs, admission question
+    short_excerpt: A student cannot receive the Robertson if they are not granted admission by either UNC-Chapel Hill or Duke.
+    value_status: reported
+    reported_value: admission required
+  - field_path: offers/0/eligibility/eligibility_notes
     source_ref: s-hs
-    locator: 'robertsonscholars.org High School Students page, "Step Two: Group Activity"'
-    short_excerpt: Applicants not invited to the Group Activity who applied using the November 15, 2025, deadline will be notified by the end of February 2027.
-    value_status: conflicting
-    reported_value: '2025-11-15'
+    locator: robertsonscholars.org High School Students page, "Eligibility"
+    short_excerpt: may not apply for the Robertson until they matriculate to their respective institution
+    value_status: reported
+    reported_value: gap year
+  - field_path: offers/0/eligibility/eligibility_notes
+    source_ref: s-faq
+    locator: Application FAQs, test-score question
+    short_excerpt: Students who have taken the ACT or SAT are required to report their test score.
+    value_status: reported
+    reported_value: report scores
+  - field_path: offers/0/eligibility/eligibility_notes
+    source_ref: s-faq
+    locator: Application FAQs, two-school question
+    short_excerpt: However, finalist invitations are school specific.
+    value_status: reported
+    reported_value: school-specific
+  - field_path: application/prerequisites/1
+    source_ref: s-faq
+    locator: Application FAQs, recommendation question
+    short_excerpt: it must contain one (1) letter of recommendation. We will NOT ACCEPT more than one letter.
+    value_status: reported
+    reported_value: one letter
+  - field_path: application/prerequisites/1
+    source_ref: s-faq
+    locator: Application FAQs, deadline question
+    short_excerpt: All materials, including a letter of recommendation must be submitted by midnight on November 15th for an application to be considered.
+    value_status: reported
+    reported_value: November 15 midnight
+  - field_path: application/notes
+    source_ref: s-faq
+    locator: Application FAQs, updates question
+    short_excerpt: We will not accept updates to applications.
+    value_status: reported
+    reported_value: no updates
   - field_path: application/milestones/3
     source_ref: s-hs
     locator: robertsonscholars.org High School Students page, timeline

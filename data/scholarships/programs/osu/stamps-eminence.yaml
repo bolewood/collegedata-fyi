@@ -47,11 +47,12 @@ versions:
       major_change_restrictions: null
       honors_requirement: true
       first_generation_rule: unknown
-      eligibility_notes: Applicants indicate interest in the University Honors Program or Ohio State Scholars Program; finalists from the Scholars program move into Honors. Criteria include top 10% class
-        rank and official ACT or SAT scores. Transfer students are not eligible for merit awards.
+      eligibility_notes: Applicants indicate interest in the University Honors Program or Ohio State Scholars Program; finalists from the Scholars program move into Honors. Applicants are evaluated on criteria
+        that include a top 10% (and above) class rank and official ACT or SAT scores; these are evaluation criteria, not stated minimums. Transfer students are not eligible for merit awards.
+      citizenship_text: U.S. citizens and permanent residents are eligible to apply.
     benefits:
     - benefit_id: b-coa
-      category: other
+      category: cost_of_attendance
       instrument: scholarship
       coverage: full
       amount:
@@ -64,6 +65,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "Full cost of attendance at Ohio State"; the page does not itemize the components'
       advertised_coverage_label: Full cost of attendance
+      conditions_text: null
     - benefit_id: b-enrich
       category: enrichment
       instrument: restricted_fund
@@ -74,10 +76,11 @@ versions:
         min: null
         max: null
         period: null
-      duration_terms: Accessible after the first year of successful study
+      duration_terms: null
       exclusions: null
       scope_text: null
       advertised_coverage_label: null
+      conditions_text: Accessible after the first year of successful study
   application:
     separate_application: required
     milestones:
@@ -104,9 +107,9 @@ versions:
     admission_plan_requirement: Apply to Ohio State by the November 1 early action deadline and indicate interest in the University Honors Program or Ohio State Scholars Program on the Common Application
     prerequisites:
     - kind: portal_credentials
-      minimum_lead_days: 5
-      notes: The school says the applicant receives an email with an Ohio State username within 1-5 days of the admission application; the Stamps Eminence application needs that username and password. The
-        value here is the upper end of the stated range.
+      minimum_lead_days: 1
+      maximum_lead_days: 5
+      notes: The school says the applicant receives an email with an Ohio State username within 1-5 days of the admission application; the Stamps Eminence application needs that username and password.
     interview_mode: virtual
     finalist_event_required: true
     notes: The school states the 2026-2027 Stamps Eminence application is now closed (as of retrieval). Finalist decisions are emailed in January; finalist interviews are held virtually in January and February.
@@ -120,6 +123,7 @@ versions:
     max_semesters: null
     notes: 'To remain in good standing: maintain Honors status every semester, give back through community engagement, complete an Honors thesis or capstone, and take part in required program events. The
       page gives no GPA or credit threshold.'
+    credit_load_min_per_year: null
   stacking_rules:
   - other_aid_type: institutional_merit
     relation: not_allowed
@@ -169,6 +173,12 @@ versions:
     short_excerpt: an enrichment grant valued at up to $5,000 accessible after the first year of successful study
     value_status: reported
     reported_value: 5000
+  - field_path: offers/0/benefits/1/conditions_text
+    source_ref: s-merit
+    locator: Merit scholarships page, "Stamps Eminence Scholarship Program"
+    short_excerpt: accessible after the first year of successful study
+    value_status: reported
+    reported_value: after first year
   - field_path: offers/0/eligibility/citizenship_eligible
     source_ref: s-apply
     locator: Apply page, "Eligibility and Criteria"

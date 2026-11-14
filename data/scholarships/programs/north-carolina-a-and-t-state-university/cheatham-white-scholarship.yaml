@@ -9,7 +9,7 @@ aliases:
 program_family: honors
 awarding_authority: institution
 related_programs: []
-status: unknown
+status: active
 versions:
 - version_id: cheatham-white-undated
   supersedes: null
@@ -18,11 +18,11 @@ versions:
   entry_terms:
   - fall
   source_cohort_text: null
-  verification_status: conflicting
+  verification_status: verified
   last_reviewed_at: '2026-11-14'
   reviewed_by: agent:claude-sonnet-5-5/prd036-canary-B
   owner_spot_checked: false
-  program_status_for_entry: unknown
+  program_status_for_entry: active
   offers:
   - offer_id: o-main
     parent_offer_id: null
@@ -60,6 +60,7 @@ versions:
       first_generation_rule: unknown
       eligibility_notes: Honors College application must include a school-endorsed or self-endorsed nomination. Applicants must apply for admission as first-year students for fall. Recipients are selected
         for only one of the three programs under the Honors Distinguished Scholars Program.
+      citizenship_text: Be a United States citizen or permanent resident.
     benefits:
     - benefit_id: b-tuition
       category: tuition
@@ -75,6 +76,7 @@ versions:
       exclusions: null
       scope_text: null
       advertised_coverage_label: fully-funded four-year scholarship
+      conditions_text: null
     - benefit_id: b-fees
       category: mandatory_fees
       instrument: scholarship
@@ -89,6 +91,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "student fees"'
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-housing
       category: housing
       instrument: scholarship
@@ -103,6 +106,7 @@ versions:
       exclusions: null
       scope_text: null
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-meals
       category: meals
       instrument: scholarship
@@ -117,6 +121,7 @@ versions:
       exclusions: null
       scope_text: null
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-books
       category: books
       instrument: scholarship
@@ -131,6 +136,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "textbooks"'
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-laptop
       category: laptop
       instrument: scholarship
@@ -145,6 +151,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "a laptop computer"'
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-other
       category: other
       instrument: scholarship
@@ -159,6 +166,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "supplies, travel and personal expenses"'
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-summers
       category: enrichment
       instrument: restricted_fund
@@ -173,6 +181,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "four summers of fully funded enrichment and networking opportunities that may include international travel and study"'
       advertised_coverage_label: null
+      conditions_text: null
   application:
     separate_application: required
     milestones:
@@ -183,13 +192,13 @@ versions:
       precision: day
       source_date_text: August 1, 2026
     - kind: application_deadline
-      requirement: priority
+      requirement: required
       date: '2026-11-15'
       recurring: null
       precision: day
       source_date_text: 'November 15, 2026: Priority deadline'
     - kind: finalist_event
-      requirement: required
+      requirement: invitation_only
       date: '2027-02-26'
       recurring: null
       precision: day
@@ -213,7 +222,9 @@ versions:
       notes: The Honors College application is reached through the Aggie Admissions Portal after an admission application is submitted.
     interview_mode: in_person
     finalist_event_required: null
-    notes: The timeline on the scholarships page is marked "Revised 7.6.26". Finalists are selected in late January 2027.
+    notes: 'The timeline on the scholarships page is marked "Revised 7.6.26". Finalists are selected in late January 2027. Naming: the Honors scholarships page calls the Honors Distinguished Scholars Program
+      the umbrella for the Cheatham-White, Dowdy and February One awards and says the awards were "previously known as" those names, but the same page tells applicants how to apply for consideration of
+      the Cheatham-White Scholarship this cycle, so the award is recorded as active. Applications after November 15 are considered for the Honors College only.'
   renewal_rules:
   - applies_to: []
     gpa_min: 3.5
@@ -224,6 +235,7 @@ versions:
     max_semesters: null
     notes: Also requires enrolling full time each semester and earning at least 30 credit hours each academic year, and maintaining membership and active participation in the Honors College. GPA scale not
       stated.
+    credit_load_min_per_year: 30
   stacking_rules: null
   award_counts: []
   sources:
@@ -247,17 +259,11 @@ versions:
     value_status: not_published
     reported_value: null
   - field_path: /status
-    source_ref: s-cw
-    locator: Cheatham-White Scholars page, intro
-    short_excerpt: Prospective students are invited to join North Carolina A&T as a Cheatham-White Scholar.
-    value_status: conflicting
-    reported_value: active
-  - field_path: /status
     source_ref: s-hon
-    locator: Honors scholarships page, "Applying to the Honors Distinguished Scholars Program"
-    short_excerpt: students are considered for one of our premier full-ride awards—previously known as the Cheatham-White, Dowdy, and February One Scholarships.
-    value_status: conflicting
-    reported_value: previously known as (folded into the Honors Distinguished Scholars Program)
+    locator: Honors scholarships page, FAQ "When should I apply?"
+    short_excerpt: applicants should apply to the Honors College between August 1 - November 15
+    value_status: reported
+    reported_value: active
   - field_path: offers/0/selection_mode
     source_ref: s-cw
     locator: Cheatham-White Scholars page, "Eligibility and Selection Criteria"
@@ -384,3 +390,9 @@ versions:
     short_excerpt: Maintaining a 3.5 cumulative GPA annually.
     value_status: reported
     reported_value: 3.5
+  - field_path: renewal_rules/0/credit_load_min_per_year
+    source_ref: s-cw
+    locator: Cheatham-White Scholars page, "Expectation of Recipients"
+    short_excerpt: Enrolling full time each semester and earning a minimum 30 credit hours each academic year.
+    value_status: reported
+    reported_value: 30

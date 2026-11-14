@@ -61,6 +61,7 @@ versions:
       exclusions: null
       scope_text: null
       advertised_coverage_label: full-tuition scholarships
+      conditions_text: null
     - benefit_id: b-summers
       category: enrichment
       instrument: restricted_fund
@@ -75,10 +76,11 @@ versions:
       exclusions: null
       scope_text: School says "fully-funded, GPSP-sponsored summer programs"; amount not published on this page
       advertised_coverage_label: null
+      conditions_text: null
   application:
     separate_application: not_required
     milestones:
-    - kind: application_deadline
+    - kind: admission_deadline
       requirement: priority
       date: null
       recurring:

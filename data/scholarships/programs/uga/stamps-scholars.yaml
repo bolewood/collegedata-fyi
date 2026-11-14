@@ -31,7 +31,7 @@ versions:
     variant_name: null
     residency: any
     selection_mode: competitive
-    consideration_route: honors_application
+    consideration_route: nomination
     aid_basis: unclear
     need_role: unknown
     funds_limited: null
@@ -51,7 +51,7 @@ versions:
         are chosen as "walk-on" Stamps Scholars through the Mid-Term Foundation Fellowship process.'
     benefits: null
   application:
-    separate_application: required
+    separate_application: no_form_other_steps_required
     milestones:
     - kind: application_deadline
       requirement: required
@@ -61,7 +61,7 @@ versions:
         day: 1
       precision: day
       source_date_text: November 1 (Foundation Fellowship application)
-    admission_plan_requirement: Apply through the Foundation Fellowship application; there is no separate Stamps application
+    admission_plan_requirement: Selected from that year's Foundation Fellows, via the Foundation Fellowship application (due November 1); six Fellows are nominated to interview
     prerequisites: []
     interview_mode: unknown
     finalist_event_required: null
@@ -113,7 +113,7 @@ versions:
     locator: Stamps Scholars page, "Selection"
     short_excerpt: UGA Stamps Scholars are part of the Foundation Fellowship and are selected through the Foundation Fellowship application process.
     value_status: reported
-    reported_value: required
+    reported_value: no_form_other_steps_required
   - field_path: application/milestones/0
     source_ref: s-apply
     locator: 'Applying page, "Deadline: November 1"'

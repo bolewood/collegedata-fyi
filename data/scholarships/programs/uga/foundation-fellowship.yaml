@@ -51,6 +51,7 @@ versions:
       first_generation_rule: unknown
       eligibility_notes: Open to students who have not yet matriculated at another university; dual-enrolled high school seniors and international students may apply. Transfer applicants and current undergraduates
         are not eligible. Fellows live in Myers Hall, the Honors magnet housing, in the first year.
+      citizenship_text: The Foundation Fellowship application is open to all students who have not yet matriculated at another university.
     benefits:
     - benefit_id: b-stipend
       category: stipend
@@ -66,6 +67,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "Annual stipend"; the school says the stipend approximates the cost of attendance'
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-zell
       category: other
       instrument: scholarship
@@ -80,6 +82,7 @@ versions:
       exclusions: null
       scope_text: Listed by the school as a Zell Miller Scholarship added to the stipend; the page does not say which charges it covers
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-travel
       category: enrichment
       instrument: restricted_fund
@@ -94,6 +97,7 @@ versions:
       exclusions: null
       scope_text: Three fully funded spring travel-study programs; the school gives $15,000 as the value of all three
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-oxford
       category: study_abroad
       instrument: restricted_fund
@@ -108,6 +112,7 @@ versions:
       exclusions: null
       scope_text: One fully funded summer program at the University of Oxford after the first year
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-grants
       category: enrichment
       instrument: restricted_fund
@@ -122,6 +127,7 @@ versions:
       exclusions: null
       scope_text: Individual travel-study grants, cumulative cap
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-research
       category: enrichment
       instrument: restricted_fund
@@ -136,6 +142,7 @@ versions:
       exclusions: null
       scope_text: Research and academic conference grants, cumulative cap
       advertised_coverage_label: null
+      conditions_text: null
   - offer_id: o-nonresident
     parent_offer_id: null
     variant_name: Out-of-state students
@@ -159,6 +166,7 @@ versions:
       first_generation_rule: unknown
       eligibility_notes: Open to students who have not yet matriculated at another university; dual-enrolled high school seniors and international students may apply. Transfer applicants and current undergraduates
         are not eligible. Fellows live in Myers Hall, the Honors magnet housing, in the first year.
+      citizenship_text: The Foundation Fellowship application is open to all students who have not yet matriculated at another university.
     benefits:
     - benefit_id: b-stipend
       category: stipend
@@ -174,6 +182,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "Annual stipend"; the school says the stipend approximates the cost of attendance'
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-waiver
       category: other
       instrument: tuition_waiver
@@ -188,6 +197,7 @@ versions:
       exclusions: null
       scope_text: Listed by the school as a Presidential waiver added to the stipend; the page does not say which charges it covers
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-travel
       category: enrichment
       instrument: restricted_fund
@@ -202,6 +212,7 @@ versions:
       exclusions: null
       scope_text: Three fully funded spring travel-study programs; the school gives $15,000 as the value of all three
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-oxford
       category: study_abroad
       instrument: restricted_fund
@@ -216,6 +227,7 @@ versions:
       exclusions: null
       scope_text: One fully funded summer program at the University of Oxford after the first year
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-grants
       category: enrichment
       instrument: restricted_fund
@@ -230,6 +242,7 @@ versions:
       exclusions: null
       scope_text: Individual travel-study grants, cumulative cap
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-research
       category: enrichment
       instrument: restricted_fund
@@ -244,6 +257,7 @@ versions:
       exclusions: null
       scope_text: Research and academic conference grants, cumulative cap
       advertised_coverage_label: null
+      conditions_text: null
   - offer_id: o-international
     parent_offer_id: null
     variant_name: International students
@@ -267,6 +281,7 @@ versions:
       first_generation_rule: unknown
       eligibility_notes: Open to students who have not yet matriculated at another university; dual-enrolled high school seniors and international students may apply. Transfer applicants and current undergraduates
         are not eligible. Fellows live in Myers Hall, the Honors magnet housing, in the first year.
+      citizenship_text: The Foundation Fellowship application is open to all students who have not yet matriculated at another university.
     benefits:
     - benefit_id: b-stipend
       category: stipend
@@ -282,6 +297,7 @@ versions:
       exclusions: null
       scope_text: 'School words: "Annual stipend"; the school says the stipend approximates the cost of attendance'
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-waiver
       category: other
       instrument: tuition_waiver
@@ -296,6 +312,7 @@ versions:
       exclusions: null
       scope_text: Listed by the school as a Presidential waiver added to the stipend; the page does not say which charges it covers
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-travel
       category: enrichment
       instrument: restricted_fund
@@ -310,6 +327,7 @@ versions:
       exclusions: null
       scope_text: Three fully funded spring travel-study programs; the school gives $15,000 as the value of all three
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-oxford
       category: study_abroad
       instrument: restricted_fund
@@ -324,6 +342,7 @@ versions:
       exclusions: null
       scope_text: One fully funded summer program at the University of Oxford after the first year
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-grants
       category: enrichment
       instrument: restricted_fund
@@ -338,6 +357,7 @@ versions:
       exclusions: null
       scope_text: Individual travel-study grants, cumulative cap
       advertised_coverage_label: null
+      conditions_text: null
     - benefit_id: b-research
       category: enrichment
       instrument: restricted_fund
@@ -352,6 +372,7 @@ versions:
       exclusions: null
       scope_text: Research and academic conference grants, cumulative cap
       advertised_coverage_label: null
+      conditions_text: null
   application:
     separate_application: required
     milestones:
@@ -387,6 +408,7 @@ versions:
     max_semesters: null
     notes: GPA scale not stated. Other requirements listed by the school include remaining in good standing in the Morehead Honors College, graduating in four years, and living in Myers Hall in the first
       year.
+    credit_load_min_per_year: null
   stacking_rules: null
   award_counts: []
   sources:
@@ -454,7 +476,7 @@ versions:
   - field_path: offers/0/eligibility/citizenship_eligible
     source_ref: s-apply
     locator: Applying page, "Eligibility"
-    short_excerpt: Dual-enrolled high school seniors and international students are eligible to apply.
+    short_excerpt: The Foundation Fellowship application is open to all students who have not yet matriculated at another university.
     value_status: reported
     reported_value: any
   - field_path: offers/1/selection_mode
@@ -502,7 +524,7 @@ versions:
   - field_path: offers/1/eligibility/citizenship_eligible
     source_ref: s-apply
     locator: Applying page, "Eligibility"
-    short_excerpt: Dual-enrolled high school seniors and international students are eligible to apply.
+    short_excerpt: The Foundation Fellowship application is open to all students who have not yet matriculated at another university.
     value_status: reported
     reported_value: any
   - field_path: offers/2/selection_mode
@@ -550,7 +572,7 @@ versions:
   - field_path: offers/2/eligibility/citizenship_eligible
     source_ref: s-apply
     locator: Applying page, "Eligibility"
-    short_excerpt: Dual-enrolled high school seniors and international students are eligible to apply.
+    short_excerpt: The Foundation Fellowship application is open to all students who have not yet matriculated at another university.
     value_status: reported
     reported_value: any
   - field_path: application/separate_application
