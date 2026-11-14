@@ -1,0 +1,1314 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://collegedata.fyi/schemas/scholarship-program.schema.json",
+  "title": "collegedata.fyi named scholarship program (PRD 036 M1)",
+  "description": "One file per program under data/scholarships/programs/<school_id>/<program_id>.yaml. Program-level fields plus one immutable version per entering class. Unknown is never false: use null, unknown, not_published or a conflicting field_evidence entry.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "program_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "school_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "ipeds_id": {
+      "type": "string",
+      "pattern": "^[0-9]{6}$"
+    },
+    "participating_schools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "school_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "ipeds_id": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$"
+          }
+        },
+        "required": [
+          "school_id",
+          "ipeds_id"
+        ]
+      },
+      "description": "Joint programs: every participating school, first entry equal to school_id. The file lives under the first participant's directory."
+    },
+    "applicable_campuses": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "official_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "program_family": {
+      "enum": [
+        "stamps",
+        "national_merit",
+        "presidential",
+        "honors",
+        "other"
+      ]
+    },
+    "awarding_authority": {
+      "enum": [
+        "institution",
+        "affiliated_foundation",
+        "cofunded",
+        "state_program",
+        "unknown"
+      ]
+    },
+    "related_programs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/related_program"
+      }
+    },
+    "status": {
+      "enum": [
+        "active",
+        "paused",
+        "closed_to_new_entrants",
+        "merged",
+        "discontinued",
+        "unknown"
+      ]
+    },
+    "versions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/version"
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "schema_version",
+    "program_id",
+    "school_id",
+    "ipeds_id",
+    "official_name",
+    "program_family",
+    "awarding_authority",
+    "status",
+    "versions"
+  ],
+  "$defs": {
+    "related_program": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "program_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "relation": {
+          "enum": [
+            "component_of",
+            "includes",
+            "replaces",
+            "mutually_exclusive_with",
+            "successor_to"
+          ]
+        }
+      },
+      "required": [
+        "program_id",
+        "relation"
+      ]
+    },
+    "amount": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "qualifier": {
+          "enum": [
+            "exact",
+            "range",
+            "up_to",
+            "at_least",
+            "approximate",
+            "not_published"
+          ]
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "min": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "max": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "period": {
+          "enum": [
+            "semester",
+            "academic_year",
+            "one_time",
+            "total_program",
+            null
+          ]
+        }
+      },
+      "required": [
+        "qualifier"
+      ],
+      "description": "USD. A null amount object on a benefit means the amount is unknown or conflicting; qualifier not_published means the school says nothing about the figure. total_program amounts must be quoted by the school and carry field_evidence.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "qualifier": {
+                "enum": [
+                  "exact",
+                  "up_to",
+                  "at_least",
+                  "approximate"
+                ]
+              }
+            },
+            "required": [
+              "qualifier"
+            ]
+          },
+          "then": {
+            "required": [
+              "value"
+            ],
+            "properties": {
+              "value": {
+                "type": "number"
+              },
+              "min": {
+                "type": "null"
+              },
+              "max": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "qualifier": {
+                "const": "range"
+              }
+            },
+            "required": [
+              "qualifier"
+            ]
+          },
+          "then": {
+            "required": [
+              "min",
+              "max"
+            ],
+            "properties": {
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "value": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "qualifier": {
+                "const": "not_published"
+              }
+            },
+            "required": [
+              "qualifier"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "null"
+              },
+              "min": {
+                "type": "null"
+              },
+              "max": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "benefit": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "benefit_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "category": {
+          "enum": [
+            "tuition",
+            "mandatory_fees",
+            "housing",
+            "meals",
+            "books",
+            "laptop",
+            "stipend",
+            "study_abroad",
+            "enrichment",
+            "health_insurance",
+            "nonresident_differential",
+            "cost_of_attendance",
+            "other"
+          ]
+        },
+        "instrument": {
+          "enum": [
+            "scholarship",
+            "tuition_waiver",
+            "cash_stipend",
+            "restricted_fund",
+            "earned_compensation",
+            "unknown"
+          ]
+        },
+        "coverage": {
+          "enum": [
+            "full",
+            "partial",
+            "fixed_amount",
+            "variable",
+            "unknown"
+          ]
+        },
+        "amount": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/amount"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration_terms": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "conditions_text": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "What the benefit depends on, in the school's words, e.g. other awards that must be held. Needs field_evidence."
+        },
+        "exclusions": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "scope_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "advertised_coverage_label": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The school's own words for what the benefit covers."
+        }
+      },
+      "required": [
+        "benefit_id",
+        "category",
+        "instrument",
+        "coverage"
+      ]
+    },
+    "test_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "exam": {
+          "type": "string"
+        },
+        "min": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "scoring": {
+          "enum": [
+            "single_sitting",
+            "superscore",
+            "unknown"
+          ]
+        },
+        "official_required": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "exam"
+      ]
+    },
+    "gpa": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "scale": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "basis": {
+          "enum": [
+            "weighted",
+            "unweighted",
+            "recalculated_by_school",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "eligibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "national_merit_statuses": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "enum": [
+              "semifinalist",
+              "finalist",
+              "commended",
+              "nrp_hispanic",
+              "nrp_african_american",
+              "nrp_indigenous"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "status_required_for_award": {
+          "enum": [
+            "semifinalist",
+            "finalist",
+            "commended",
+            "nrp_hispanic",
+            "nrp_african_american",
+            "nrp_indigenous",
+            "scholar",
+            null
+          ]
+        },
+        "citizenship_text": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The school's own wording on citizenship, at most 40 words."
+        },
+        "first_choice_required": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "gpa": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/gpa"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "test_rules": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/test_rule"
+          }
+        },
+        "tests_policy_for_scholarship": {
+          "enum": [
+            "required",
+            "optional",
+            "not_considered",
+            "unknown"
+          ]
+        },
+        "citizenship_eligible": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "enum": [
+              "us_citizen",
+              "permanent_resident",
+              "international",
+              "any"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "majors_allowed": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "major_change_restrictions": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "honors_requirement": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "first_generation_rule": {
+          "enum": [
+            "required",
+            "considered",
+            "not_considered",
+            "unknown"
+          ]
+        },
+        "eligibility_notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "offer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "offer_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "parent_offer_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "variant_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "residency": {
+          "enum": [
+            "in_state",
+            "out_of_state",
+            "international",
+            "any",
+            "unknown"
+          ]
+        },
+        "selection_mode": {
+          "enum": [
+            "automatic_guaranteed",
+            "competitive",
+            "hybrid",
+            "unknown"
+          ]
+        },
+        "consideration_route": {
+          "enum": [
+            "admission_application",
+            "separate_application",
+            "honors_application",
+            "nomination",
+            "invitation",
+            "multiple",
+            "unknown"
+          ]
+        },
+        "aid_basis": {
+          "enum": [
+            "merit_only",
+            "merit_and_need",
+            "unclear"
+          ]
+        },
+        "need_role": {
+          "enum": [
+            "required",
+            "considered",
+            "not_considered",
+            "top_up_only",
+            "unknown"
+          ]
+        },
+        "funds_limited": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "advertised_totals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "amount": {
+                "$ref": "#/$defs/amount"
+              },
+              "scope_text": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "amount",
+              "scope_text"
+            ]
+          },
+          "description": "Package totals the school itself quotes, with scope. The only place a total may live; each needs reported evidence with an excerpt."
+        },
+        "eligibility": {
+          "$ref": "#/$defs/eligibility"
+        },
+        "benefits": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/benefit"
+          }
+        }
+      },
+      "required": [
+        "offer_id",
+        "selection_mode",
+        "benefits"
+      ]
+    },
+    "milestone": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "application_open",
+            "admission_deadline",
+            "application_deadline",
+            "nomination_deadline",
+            "supporting_materials_deadline",
+            "test_score_deadline",
+            "interview",
+            "finalist_event",
+            "notification",
+            "acceptance_deadline",
+            "other"
+          ]
+        },
+        "requirement": {
+          "enum": [
+            "required",
+            "priority",
+            "recommended",
+            "invitation_only"
+          ]
+        },
+        "date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "recurring": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "month": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 12
+                },
+                "day": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 31
+                }
+              },
+              "required": [
+                "month",
+                "day"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "precision": {
+          "enum": [
+            "day",
+            "month",
+            "season",
+            "approximate"
+          ]
+        },
+        "source_date_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "requirement",
+        "precision"
+      ],
+      "description": "date and recurring are never both set. Both null only when the milestone's evidence is conflicting.",
+      "not": {
+        "required": [
+          "date",
+          "recurring"
+        ],
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "recurring": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "application": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "separate_application": {
+          "enum": [
+            "required",
+            "encouraged",
+            "not_required",
+            "invitation_only",
+            "no_form_other_steps_required",
+            "unknown"
+          ]
+        },
+        "milestones": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/milestone"
+          }
+        },
+        "admission_plan_requirement": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Admission plan or deadline the scholarship depends on, in the school's words."
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "enum": [
+                  "portal_credentials",
+                  "admission_application",
+                  "test_scores",
+                  "recommendation",
+                  "other"
+                ]
+              },
+              "minimum_lead_days": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "maximum_lead_days": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "notes": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        },
+        "interview_mode": {
+          "enum": [
+            "none",
+            "in_person",
+            "virtual",
+            "either",
+            "mixed",
+            "unknown"
+          ]
+        },
+        "finalist_event_required": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "separate_application",
+        "milestones"
+      ]
+    },
+    "renewal_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "applies_to": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "offer_id": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "benefit_id": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "description": "Offers or benefits this rule covers. Empty means the whole version."
+        },
+        "gpa_min": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "gpa_scale": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "credit_load_min_per_term": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "credit_load_min_per_year": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "evaluation_timing": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "summer_courses_can_fix_shortfall": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "max_semesters": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "applies_to"
+      ]
+    },
+    "stacking_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "other_aid_type": {
+          "enum": [
+            "institutional_merit",
+            "institutional_need",
+            "federal_or_state_need",
+            "state_merit",
+            "outside_scholarship",
+            "athletic",
+            "tuition_waiver",
+            "other"
+          ]
+        },
+        "relation": {
+          "enum": [
+            "allowed",
+            "not_allowed",
+            "replaces",
+            "counts_within_package"
+          ]
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "other_aid_type",
+        "relation"
+      ]
+    },
+    "award_count": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "metric": {
+          "enum": [
+            "offers",
+            "new_recipients",
+            "share_of_class"
+          ]
+        },
+        "qualifier": {
+          "enum": [
+            "exact",
+            "up_to",
+            "at_least",
+            "approximate",
+            "not_published"
+          ]
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "cohort_year": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "source_ref": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "claim": {
+          "enum": [
+            "target",
+            "actual"
+          ]
+        },
+        "denominator": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "What a share_of_class value is a share of, e.g. the entering first-year class."
+        }
+      },
+      "required": [
+        "metric",
+        "claim",
+        "qualifier",
+        "source_ref"
+      ],
+      "if": {
+        "properties": {
+          "metric": {
+            "const": "share_of_class"
+          }
+        },
+        "required": [
+          "metric"
+        ]
+      },
+      "then": {
+        "required": [
+          "denominator"
+        ],
+        "properties": {
+          "denominator": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https://"
+        },
+        "authority": {
+          "enum": [
+            "official_program",
+            "official_aid_policy",
+            "official_admissions",
+            "official_news",
+            "archived_official",
+            "foundation_official"
+          ]
+        },
+        "retrieved_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "content_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "archive_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^https://"
+        }
+      },
+      "required": [
+        "source_id",
+        "url",
+        "authority",
+        "retrieved_at"
+      ]
+    },
+    "field_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "field_path": {
+          "type": "string",
+          "description": "Slash path inside the version, e.g. offers/0/benefits/1/amount. Evidence on a parent path covers its children."
+        },
+        "source_ref": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "short_excerpt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "At most 25 words, quoted from the source."
+        },
+        "value_status": {
+          "enum": [
+            "reported",
+            "not_published",
+            "conflicting"
+          ]
+        },
+        "reported_value": {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ],
+          "description": "The value this source reports; required in practice for conflicting entries."
+        }
+      },
+      "required": [
+        "field_path",
+        "source_ref",
+        "locator",
+        "value_status"
+      ]
+    },
+    "version": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "supersedes": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entry_year": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 2000,
+          "maximum": 2100
+        },
+        "entry_year_label": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Explicit unconfirmed label, used when entry_year is null."
+        },
+        "entry_terms": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "fall",
+              "spring",
+              "summer",
+              "unspecified"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "source_cohort_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "verification_status": {
+          "enum": [
+            "verified",
+            "conflicting",
+            "historical_only",
+            "unverified"
+          ]
+        },
+        "last_reviewed_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "reviewed_by": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "owner_spot_checked": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "program_status_for_entry": {
+          "enum": [
+            "active",
+            "paused",
+            "closed_to_new_entrants",
+            "merged",
+            "discontinued",
+            "unknown",
+            null
+          ]
+        },
+        "offers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/offer"
+          }
+        },
+        "application": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/application"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "renewal_rules": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/renewal_rule"
+          }
+        },
+        "stacking_rules": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/stacking_rule"
+          },
+          "description": "null means not documented; an explicitly empty list needs field_evidence."
+        },
+        "award_counts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/award_count"
+          }
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source"
+          },
+          "minItems": 1
+        },
+        "field_evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/field_evidence"
+          }
+        }
+      },
+      "required": [
+        "version_id",
+        "entry_year",
+        "verification_status",
+        "offers",
+        "sources",
+        "field_evidence"
+      ]
+    }
+  }
+}
