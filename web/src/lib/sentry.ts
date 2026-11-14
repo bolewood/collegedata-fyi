@@ -1,4 +1,4 @@
-import { isPrivateFeedback, communityBreadcrumb } from "./community-privacy";
+import { isPrivateFeedback, communityBreadcrumb, SENSITIVE_PARAMS } from "./community-privacy";
 /**
  * Single source of truth for Sentry project identity and runtime options.
  *
@@ -125,8 +125,7 @@ export function isHeadlessReaderNoise(event: SentryEventLike): boolean {
 }
 
 const FILTERED = "[Filtered]";
-const SENSITIVE_PARAMS = new Set(["code", "q"]);
-const SENSITIVE_QUERY_RE = /(^|[?&;])(code|q)=[^&#\s"'<>]*/gi;
+const SENSITIVE_QUERY_RE = new RegExp(`(^|[?&;])(${[...SENSITIVE_PARAMS].join("|")})=[^&#\\s"'<>]*`, "gi");
 
 /** Replace the value of `code` (Match share codes) and `q` (search text) query params. */
 export function scrubSensitiveUrl(value: string): string {

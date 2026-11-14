@@ -43,6 +43,7 @@ import { combinedFilingNote } from "@/lib/campus-filings";
 import { yearArchiveLead } from "@/lib/archive-lead";
 import { schemaFallbackNoteFromArtifact } from "@/lib/schema-fallback";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
+import { ShareButton } from "@/components/ShareButton";
 import { externalLinkRel } from "@/lib/client-info";
 
 export const dynamic = "force-static";
@@ -225,6 +226,14 @@ export default async function SchoolYearPage({ params }: {
           <h2 className="serif" style={{ fontSize: 22, fontWeight: 400, margin: "10px 0 0" }}>
             {year}
           </h2>
+        </div>
+        <div className="cd-school-header__aside">
+          <ShareButton
+            surface="school_year"
+            title={`${schoolName} Common Data Set ${year}`}
+            text="Source-linked admissions, enrollment, aid, and CDS documents from CollegeData.fyi."
+            path={`/schools/${school_id}/${year}`}
+          />
         </div>
       </header>
       <ArchiveLead lead={yearLead} showHeading={false} />

@@ -21,8 +21,12 @@ import {
   type AcademicFit,
   type StudentProfile,
 } from "@/lib/positioning";
+import { matchSharePath } from "@/lib/share";
+import { countsFromGroups, formatMatchSummary } from "@/lib/match-share";
+import { ShareButton } from "./ShareButton";
 import { SchoolListItem } from "./SchoolListItem";
 
+const SHARE_NOTICE = "Anyone with this link can open this Match profile.";
 const STORAGE_KEY = "cdfyi.matchProfile.v1";
 const ACADEMIC_FIT_SEQUENCE: AcademicFit[] = [
   "strong_academic_fit",
@@ -81,7 +85,6 @@ export function MatchListBuilder({
 }) {
   const [profile, setProfile] = useState<MatchProfile | null>(null);
   const [filters, setFilters] = useState<MatchFilters>(DEFAULT_MATCH_FILTERS);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const shareCode = resolveMatchShareCode(initialCode, window.location.search);
@@ -120,10 +123,21 @@ export function MatchListBuilder({
     [grouped],
   );
   const shareCode = profile ? encodeProfileCode(profile) : null;
-  const shareHref =
-    typeof window === "undefined" || !shareCode
-      ? ""
-      : `${window.location.origin}/match?code=${encodeURIComponent(shareCode)}`;
+  // The copied summary is computed from default filters only: transient
+  // client-side filter state is not reproducible from the shared URL.
+  const summaryText = useMemo(
+    () =>
+      formatMatchSummary(
+        countsFromGroups(
+          groupRankedSchools(
+            profile && hasScoreInput
+              ? rankMatchSchools(profile, schools, DEFAULT_MATCH_FILTERS)
+              : [],
+          ),
+        ),
+      ),
+    [hasScoreInput, profile, schools],
+  );
 
   function onProfileSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -139,7 +153,6 @@ export function MatchListBuilder({
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     setProfile(next);
-    setCopied(false);
     trackEvent("match_profile_entered", {
       has_gpa: next.gpa != null,
       has_sat: next.sat != null,
@@ -160,28 +173,6 @@ export function MatchListBuilder({
       carnegie: selectValue<"all" | CarnegieBucket>(form.get("carnegie"), "all"),
       sort: selectValue<MatchFilters["sort"]>(form.get("sort"), "fit"),
     });
-  }
-
-  async function copyShareLink() {
-    if (!shareHref) return;
-    try {
-      await navigator.clipboard.writeText(shareHref);
-      trackEvent("match_share_copied", { ranked_count: ranked.length });
-      setCopied(true);
-      return;
-    } catch {
-      const textarea = document.createElement("textarea");
-      textarea.value = shareHref;
-      textarea.setAttribute("readonly", "true");
-      textarea.style.position = "fixed";
-      textarea.style.left = "-9999px";
-      document.body.appendChild(textarea);
-      textarea.select();
-      const ok = document.execCommand("copy");
-      textarea.remove();
-      if (ok) trackEvent("match_share_copied", { ranked_count: ranked.length });
-      setCopied(ok);
-    }
   }
 
   return (
@@ -314,10 +305,22 @@ export function MatchListBuilder({
           >
             Print
           </button>
-          <button className="cd-btn cd-btn--ghost" type="button" onClick={copyShareLink} disabled={!shareHref}>
-            {copied ? "Copied" : "Copy code"}
-          </button>
+          <ShareButton
+            surface="match"
+            title="CollegeData.fyi match list"
+            path={shareCode ? matchSharePath(shareCode) : undefined}
+            onLinkShared={() => trackEvent("match_share_copied", { ranked_count: ranked.length })}
+            align="start"
+            notice={SHARE_NOTICE}
+            summary={hasScoreInput ? { label: "Copy summary", text: summaryText } : undefined}
+            disabled={!shareCode}
+          />
           {shareCode ? <div className="match-code mono">{shareCode}</div> : null}
+          {shareCode ? (
+            <p className="match-share-note" style={{ margin: 0, fontSize: 12, color: "var(--ink-2)" }}>
+              {SHARE_NOTICE}
+            </p>
+          ) : null}
         </div>
       </aside>
 

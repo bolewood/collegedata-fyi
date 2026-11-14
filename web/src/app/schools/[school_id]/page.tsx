@@ -54,6 +54,7 @@ import { ArchiveLead } from "@/components/ArchiveLead";
 import { SchemaFallbackNote } from "@/components/SchemaFallbackNote";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
 import { schemaFallbackNoteFromArtifact } from "@/lib/schema-fallback";
+import { ShareButton } from "@/components/ShareButton";
 import { combinedFilingNote, notIncludedLead } from "@/lib/campus-filings";
 import type { ArtifactNotes, ManifestRow, InstitutionCoverage } from "@/lib/types";
 
@@ -527,6 +528,12 @@ export default async function SchoolDetailPage({ params }: {
           {history.length > 1 && (
             <Sparkline data={history} w={120} h={26} color="currentColor" />
           )}
+          <ShareButton
+            surface="school"
+            title={`${name} Common Data Set archive`}
+            text="Source-linked admissions, enrollment, aid, and CDS documents from CollegeData.fyi."
+            path={`/schools/${school_id}`}
+          />
         </div>
       </header>
 
@@ -728,6 +735,14 @@ async function DirectoryOnlySchoolPage({
             )}
           </div>
         )}
+        </div>
+        <div className="cd-school-header__aside">
+          <ShareButton
+            surface="school"
+            title={`${coverage.school_name} Common Data Set archive`}
+            text="Source-linked admissions, enrollment, aid, and CDS documents from CollegeData.fyi."
+            path={`/schools/${school_id}`}
+          />
         </div>
       </header>
 
