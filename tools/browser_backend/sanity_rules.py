@@ -89,6 +89,38 @@ def _first_year_aid_count_exceeds_all_undergraduates(
     return ()
 
 
+# H2 lines J-M and O/Q for the three cohorts, and H6's average award to
+# nonresidents. Each is a dollar average per student.
+_PER_STUDENT_AVERAGE_FIELDS = (
+    "H.210", "H.211", "H.212", "H.213",
+    "H.223", "H.224", "H.225", "H.226",
+    "H.236", "H.237", "H.238", "H.239",
+    "H.2A02", "H.2A04", "H.2A06", "H.2A08", "H.2A10", "H.2A12",
+    "H.605",
+)
+# The largest real per-student average in the corpus is about $91,000. Values
+# above this ceiling are a column total sitting in the average's cell.
+_PER_STUDENT_AVERAGE_CEILING = Decimal(150_000)
+
+
+def _per_student_average_is_a_total(
+    schema_version: str, values: ReportedNumbers
+) -> tuple[str, ...]:
+    """H2/H6: an "average award" in the millions is the total, not the average.
+
+    Seen when the neighbouring total lands in the average's cell (Harvard
+    2025-26 H.605 = $66,826,244, the H.606 total).
+    """
+    if schema_version not in _H_SCHEMAS:
+        return ()
+    return tuple(
+        field_id
+        for field_id in _PER_STUDENT_AVERAGE_FIELDS
+        if (value := values.get(field_id)) is not None
+        and value > _PER_STUDENT_AVERAGE_CEILING
+    )
+
+
 Rule = Callable[[str, ReportedNumbers], tuple[str, ...]]
 
 RULES: tuple[tuple[str, Rule], ...] = (
@@ -98,6 +130,17 @@ RULES: tuple[tuple[str, Rule], ...] = (
         "first_year_aid_count_exceeds_all_undergraduates",
         _first_year_aid_count_exceeds_all_undergraduates,
     ),
+    ("per_student_average_is_a_total", _per_student_average_is_a_total),
+)
+
+
+# Every field id a rule reads. The corpus audit fetches exactly these to replay
+# the rules over the published rows; a rule that reads a field missing from
+# this set would be silently under-counted there (a test guards it).
+FIELD_IDS: frozenset[str] = frozenset(
+    {field_id for pair in _ED_COUNT_FIELDS.values() for field_id in pair}
+    | {"H.401", "H.501", "H.201", "H.214"}
+    | set(_PER_STUDENT_AVERAGE_FIELDS)
 )
 
 

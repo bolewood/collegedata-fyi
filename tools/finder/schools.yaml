@@ -24710,26 +24710,26 @@ schools:
   name: University of Washington-Bothell Campus
   domain: uwb.edu
   ipeds_id: '377555'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-08-21T22:51:00Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.uwb.edu/chancellor/institutional-research/data-resources-and-links/
+  notes: Seed cleared 2026-11-13. The campus IR page links to the shared UW listing, where the resolver picked Seattle's file for every year. Bothell's own files (2020-21 on) are pinned in school_overrides.yaml.
 - id: university-of-washington-tacoma-campus
   name: University of Washington-Tacoma Campus
   domain: tacoma.uw.edu
   ipeds_id: '377564'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-04-14T13:23:54Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.tacoma.uw.edu/ir
+  notes: Seed cleared 2026-11-13. The campus IR page links to the shared UW listing, where the resolver picked Seattle's file for every year. Tacoma's own files (2020-21 on) are pinned in school_overrides.yaml.
 - id: university-of-west-alabama
   name: University of West Alabama
   domain: uwa.edu
@@ -26648,7 +26648,11 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.winona.edu/wp-content/uploads/2022/12/WSU-CDS-2021-2022.pdf
+  # Listing page (2018-19 to 2022-23 as of 2026-11-14; newer years are on
+  # request from the school). The old seed was the 2021-22 PDF, and the
+  # College Transitions mirror supplied Iowa State's files for five other
+  # years (hidden 2026-11-14).
+  discovery_seed_url: https://www.winona.edu/about/leadership/institutional-data/
 - id: winston-salem-state-university
   name: Winston-Salem State University
   domain: wssu.edu
@@ -26773,7 +26777,10 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.wpi.edu/sites/default/files/docs/Offices/Institutional-Research/WPI_Common_Data_Set_07-08(1).pdf
+  # Listing page with every year. The old seed was the 2007-08 PDF, so no
+  # newer year was ever found here and the College Transitions mirror
+  # supplied Whitman College's file as WPI 2024-25 (hidden 2026-11-14).
+  discovery_seed_url: https://www.wpi.edu/offices/strategic-initiatives-university-analytics/data-resources
 - id: worcester-state-university
   name: Worcester State University
   domain: worcester.edu
@@ -26819,18 +26826,19 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
+  notes: Lake campus files (2017-18 on) are published on the shared Wright State CORE Scholar listing and are listed in waf_blocked_urls.yaml for the headless archiver.
 - id: wright-state-university-main-campus
   name: Wright State University-Main Campus
   domain: wright.edu
   ipeds_id: '206604'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
     last_probed_at: '2026-09-11T22:42:42Z'
-    last_result: found
+    last_result: shared_parent_seed
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://corescholar.libraries.wright.edu/common-data-set/
+  notes: Seed cleared 2026-11-13. The CORE Scholar listing carries Dayton and Lake campus files side by side and the resolver archived the Lake file here. The repository also returns 403 to non-browser clients, so Dayton's files are listed in waf_blocked_urls.yaml for the headless archiver.
 - id: xavier-university
   name: Xavier University
   domain: xavier.edu

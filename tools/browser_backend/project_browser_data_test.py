@@ -521,6 +521,67 @@ class BrowserProjectionTests(unittest.TestCase):
         )
         return {row["field_id"]: row for row in fields}, browser
 
+    def _project_with_hints(self, hints, values, year="2025-26"):
+        definitions = defs()
+        for field_id, hint in hints.items():
+            definitions[year][field_id] = FieldDefinition(
+                year, field_id, "A. Any loan program", "Financial Aid", "Aid", hint
+            )
+        fields, _browser = build_projection_rows(
+            doc(canonical_year=year),
+            [artifact(schema_version=year, values={k: {"value": v} for k, v in values.items()})],
+            definitions,
+        )
+        return {row["field_id"]: row for row in fields}
+
+    def test_dollar_format_hint_types_a_bare_number_as_currency(self):
+        # Duke 2024-25 H.210 was stored as the text "76028" with no number.
+        fields = self._project_with_hints(
+            {"H.210": "Nearest $1", "H.211": "Nearest $1", "H.212": "Nearest $1"},
+            {"H.210": "76028", "H.211": "$ 61,250", "H.212": "Nearest $1"},
+        )
+        self.assertEqual(fields["H.210"]["value_kind"], "currency")
+        self.assertEqual(fields["H.210"]["value_num"], "76028")
+        self.assertEqual(fields["H.210"]["value_status"], "reported")
+        self.assertEqual(fields["H.211"]["value_num"], "61250")
+        # The template's own format label is not an answer.
+        self.assertEqual(fields["H.212"]["value_status"], "parse_error")
+        self.assertIsNone(fields["H.212"]["value_num"])
+
+    def test_percent_format_hint_stores_one_scale(self):
+        # H.506 arrived as "56", "56%" and ".56" depending on the file.
+        fields = self._project_with_hints(
+            {"H.506": "Nearest 1%", "H.507": "Nearest 1%", "H.508": "Nearest 1%", "H.509": "Nearest 1%"},
+            {"H.506": "56", "H.507": "56%", "H.508": ".56", "H.509": "0.56"},
+        )
+        for field_id in ("H.506", "H.507", "H.508", "H.509"):
+            self.assertEqual(fields[field_id]["value_kind"], "percent")
+            self.assertEqual(fields[field_id]["value_status"], "reported")
+            self.assertEqual(Decimal(fields[field_id]["value_num"]), Decimal("0.56"))
+
+    def test_average_award_in_the_millions_is_not_published(self):
+        # Harvard 2025-26: H.605 held the H.606 total. Worcester State 2025-26:
+        # H.210 held a column total.
+        fields = self._project_with_hints(
+            {"H.605": "Nearest $1", "H.606": "Nearest $1", "H.210": "Nearest $1", "H.211": "Nearest $1"},
+            {"H.605": "66826244", "H.606": "66826244", "H.210": "14924610.5", "H.211": "83513"},
+        )
+        self.assertEqual(fields["H.605"]["value_status"], "parse_error")
+        self.assertIsNone(fields["H.605"]["value_num"])
+        self.assertEqual(fields["H.210"]["value_status"], "parse_error")
+        # A total is allowed to be large, and a real average is kept.
+        self.assertEqual(fields["H.606"]["value_status"], "reported")
+        self.assertEqual(fields["H.211"]["value_num"], "83513")
+
+    def test_hundredths_format_hint_is_a_number(self):
+        fields = self._project_with_hints(
+            {"C.1201": "Round to Nearest Hundredths", "C.1202": "Round to Nearest Hundredths"},
+            {"C.1201": "3.85", "C.1202": "No minimum required"},
+        )
+        self.assertEqual(fields["C.1201"]["value_kind"], "number")
+        self.assertEqual(fields["C.1201"]["value_num"], "3.85")
+        self.assertEqual(fields["C.1202"]["value_status"], "parse_error")
+
     def test_ed_counts_read_from_a_date_are_not_published(self):
         # UNC 2025-26: a 3/15 date landed in the two Early Decision count cells.
         fields, browser = self._project(

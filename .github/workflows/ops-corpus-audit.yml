@@ -1,0 +1,85 @@
+name: Ops corpus audit
+
+# Read-only check of the published data for the failures consumers have
+# reported: one file under two schools, two schools with identical admissions
+# numbers, CDS applicants far from the federal count, and a file that names a
+# different institution. Opens (or comments
+# on) one issue when a finding is not in corpus_audit_accepted.yaml.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Mondays 13:40 UTC, after the weekend's archive and extraction runs.
+    - cron: "40 13 * * 1"
+
+concurrency:
+  group: ops-corpus-audit
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    name: Audit published data
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+      PIPELINE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/ci-requirements.txt
+
+      - name: Install Python dependencies
+        run: python -m pip install -r tools/ci-requirements.txt
+
+      - id: audit
+        name: Run the audit
+        # The service role key is scoped to this step so dependency install
+        # code never sees it.
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          python tools/data_quality/corpus_audit.py \
+            --out-json corpus-audit/report.json \
+            --out-md corpus-audit/report.md
+          new_findings="$(python -c "import json; print(json.load(open('corpus-audit/report.json'))['summary']['new_findings'])")"
+          echo "new_findings=${new_findings}" >> "$GITHUB_OUTPUT"
+          cat corpus-audit/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: corpus-audit
+          path: corpus-audit/
+          if-no-files-found: ignore
+
+      - name: Open or update the findings issue
+        if: steps.audit.outputs.new_findings != '0'
+        run: |
+          python tools/ops/upsert_pipeline_alert_issue.py \
+            --repo "${REPO}" \
+            --component corpus_audit \
+            --title "Corpus audit: findings to review" \
+            --run-url "${PIPELINE_RUN_URL}" \
+            --body "$(cat corpus-audit/report.md)"
+
+      - name: Open issue when the audit itself fails
+        if: failure() && steps.audit.outcome == 'failure'
+        run: |
+          python tools/ops/upsert_pipeline_alert_issue.py \
+            --repo "${REPO}" \
+            --component corpus_audit \
+            --title "Pipeline alert: corpus audit failed to run" \
+            --run-url "${PIPELINE_RUN_URL}" \
+            --body "The weekly corpus audit did not finish, so wrong-campus files and federal mismatches are not being checked."

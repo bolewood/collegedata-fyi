@@ -47,7 +47,9 @@ const GATED_SAMPLE: [string, string | null][] = [
   // "another gender" applicants as 41 (2,146 applied).
   ["lake-superior-state-university", null],
   ["university-of-houston", null], // repaired
-  ["university-of-houston-system-administration", "2025-26"], // administrative unit: no figures
+  // The administrative-unit outcome had one live example, the University of
+  // Houston System office, which carried the main campus's file. That copy was
+  // hidden on 2026-11-14, so the office has no hub or year page to compare.
   ["cornell", null], // unchanged
 ];
 

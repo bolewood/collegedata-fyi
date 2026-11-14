@@ -102,7 +102,7 @@ jobs:
       - name: Run API usage ingest tests
         run: python -m unittest tools.api_usage.test_classify tools.api_usage.test_ingest_gateway_logs tools.api_usage.test_pipeline_identity tools.api_usage.test_publish
       - name: Run data-integrity audit support tests
-        run: python -m unittest tools.data_quality.test_audit_support
+        run: python -m unittest tools.data_quality.test_audit_support tools.data_quality.test_corpus_audit
 
   migrations:
     # Structural sanity checks on supabase/migrations/. Verifies every

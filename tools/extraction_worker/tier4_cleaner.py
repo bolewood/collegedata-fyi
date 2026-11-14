@@ -3829,6 +3829,11 @@ def _extract_c21_layout_month_day_values(text: str) -> list[tuple[str, str]]:
     return values
 
 
+# The C21 prompts and their value-only answers fit well inside this window;
+# past it the text belongs to another question.
+_C21_LAYOUT_FALLBACK_CHARS = 4000
+
+
 def _extract_c21_layout_count_pair(text: str) -> tuple[str, str] | None:
     """Extract Docling's value-only C.21 count row.
 
@@ -3852,6 +3857,9 @@ def _extract_c21_layout_count_pair(text: str) -> tuple[str, str] | None:
         if re.search(r"\b(?:initiated|cycle|removed from cds)\b", line, re.IGNORECASE):
             continue
         if month_re.search(line):
+            continue
+        # "closing date: 11 months 1 day" is a date written out, not two counts.
+        if re.search(r"\b(?:months?|days?|weeks?)\b", line, re.IGNORECASE):
             continue
         nums = re.findall(r"\b\d[\d,]*\b", line)
         if len(nums) == 2:
@@ -4635,12 +4643,32 @@ def resolve_c13_application_fee(
         c21_start_re,
         c22_start_re,
     )
+    # Some layouts print C22 without its number (a bare "Early action" table),
+    # so the section above runs to the end of the document. Stop it at the
+    # first sign of C22 or Section D.
+    c21_overrun = re.search(
+        r"(?:^|\n)\s*(?:\|\s*)?Early action\b"
+        r"|(?:^|\n)\s*(?:[-*]\s*)?(?:##\s*)?D1(?:\s*-\s*D2)?\b[:.\s]"
+        r"|(?:^|\n)\s*(?:##\s*)?D\.\s+TRANSFER ADMISSION",
+        c21,
+        re.IGNORECASE,
+    )
+    if c21_overrun and c21_overrun.start() > 0:
+        c21 = c21[: c21_overrun.start()]
     if c21:
         if "C.2101" not in out:
             c2101 = _extract_yes_no_from_lines(_nonempty_lines(c21))
             if not c2101:
                 c21_prompt_answers = _extract_yes_or_no_prompt_answers(c21)
                 c2101 = c21_prompt_answers[0] if c21_prompt_answers else None
+            if not c2101:
+                # Table layout: the prompt and its answer share one row.
+                row_answer = re.search(
+                    r"offer an early decision plan[^\n]*?\|\s*(Yes|No)\s*\|",
+                    c21,
+                    re.IGNORECASE,
+                )
+                c2101 = row_answer.group(1).capitalize() if row_answer else None
             if c2101:
                 out["C.2101"] = {"value": c2101, "source": "tier4_cleaner"}
         applications = _extract_number_after_label(
@@ -4651,8 +4679,12 @@ def resolve_c13_application_fee(
             c21,
             r"Number of applicants admitted under early decision plan",
         )
+        # The value-only fallback guesses from bare numbers, so it reads only
+        # the top of the section (a real count row sits within a few lines of
+        # the prompts). It is not gated on C.2101: that answer is itself often
+        # misread as "No" in these layouts, and valid counts correct it below.
         if not applications or not admitted:
-            layout_counts = _extract_c21_layout_count_pair(c21)
+            layout_counts = _extract_c21_layout_count_pair(c21[:_C21_LAYOUT_FALLBACK_CHARS])
             if layout_counts:
                 applications = applications or layout_counts[0]
                 admitted = admitted or layout_counts[1]
