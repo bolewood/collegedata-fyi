@@ -151,9 +151,15 @@ export function ScholarshipIndex({ rows, today }: { rows: IndexRow[]; today: str
                       {row.coverages.length === 0 ? (
                         <span className="sch-muted">Not stated</span>
                       ) : (
-                        row.coverages.map((c) => (
-                          <span key={c} className="cd-chip sch-chip">{COVERAGE_LABEL[c] ?? c}</span>
-                        ))
+                        row.coverages.map((c) =>
+                          c === "other" ? (
+                            <Link key={c} href={`/schools/${row.school_id}#scholarship-${row.program_id}`} className="cd-chip sch-chip">
+                              See details
+                            </Link>
+                          ) : (
+                            <span key={c} className="cd-chip sch-chip">{COVERAGE_LABEL[c] ?? c}</span>
+                          ),
+                        )
                       )}
                     </td>
                     <td role="cell" data-label="Chosen how">{selectionCell(row.selection_modes)}</td>

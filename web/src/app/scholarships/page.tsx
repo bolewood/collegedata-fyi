@@ -84,7 +84,7 @@ export default async function ScholarshipsPage() {
       <ScholarshipIndex rows={rows} today={today} />
 
       <p className="sch-fine mono" style={{ marginTop: 28 }}>
-        The data is open. Download or query it; credit is requested. See{" "}
+        The data is open to download and query; credit is required by the licence. See{" "}
         <Link href="/methodology/scholarships#reuse">Reuse and credit</Link> and <Link href="/api">the API</Link>.{" "}
         {SCHOLARSHIP_LICENSE_LINE.replace(" how to cite", "")}{" "}
         <Link href="/methodology/scholarships#reuse">how to cite</Link>

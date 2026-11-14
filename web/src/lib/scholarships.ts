@@ -467,6 +467,18 @@ const CATEGORY_LABEL: Record<string, string> = {
   other: "Other",
 };
 
+/** The school's own name for a benefit that has no standard category: its label, else the named award in scope_text. */
+function ownName(b: Benefit): { name: string; fromLabel: boolean } | null {
+  const label = b.advertised_coverage_label?.trim();
+  if (label) return { name: capFirst(label), fromLabel: true };
+  const scope = b.scope_text?.trim();
+  if (!scope) return null;
+  const listed = /(?:listed as|called)\s+['"“]([^'"”]{2,50})['"”]/i.exec(scope);
+  if (listed) return { name: listed[1].trim(), fromLabel: false };
+  const first = scope.split(/[;.]/)[0].trim();
+  return first.length >= 3 && first.length <= 50 ? { name: first, fromLabel: false } : null;
+}
+
 export type BenefitLine = {
   label: string;
   text: string;
@@ -478,7 +490,8 @@ export type BenefitLine = {
 
 /** One benefit component in words. Waivers, caps and conditions are always named. */
 export function benefitLine(b: Benefit, opts: { amountConflicts?: boolean } = {}): BenefitLine {
-  const label = CATEGORY_LABEL[b.category] ?? "Other";
+  const named = b.category === "other" || !CATEGORY_LABEL[b.category] ? ownName(b) : null;
+  const label = named?.name ?? (b.category === "other" ? "Award" : CATEGORY_LABEL[b.category] ?? "Award");
   const amount = amountText(b.amount);
   const waiver = b.instrument === "tuition_waiver";
   const capped =
@@ -515,7 +528,8 @@ export function benefitLine(b: Benefit, opts: { amountConflicts?: boolean } = {}
     text,
     flags: { waiver, capped: capped && !waiver, conditional },
     scope: b.scope_text?.trim() || null,
-    quotedLabel: b.advertised_coverage_label?.trim() || null,
+    // Not repeated as "The school calls it ..." when it already leads the line.
+    quotedLabel: named?.fromLabel ? null : b.advertised_coverage_label?.trim() || null,
   };
 }
 
@@ -871,10 +885,18 @@ export function relatedItems(
     }));
 }
 
+const SOURCE_LABEL: Record<string, string> = {
+  official_program: "Program page",
+  official_aid_policy: "Aid policy page",
+  official_admissions: "Admissions page",
+  official_news: "News page",
+  archived_official: "Archived page",
+  foundation_official: "Foundation's page",
+};
+
+/** Label by what kind of page it is, so two links to one program are told apart. */
 export function sourceLabel(authority: string): string {
-  if (authority === "foundation_official") return "Foundation's page ↗";
-  if (authority === "archived_official") return "Archived copy ↗";
-  return "Official page ↗";
+  return `${SOURCE_LABEL[authority] ?? "Official page"} ↗`;
 }
 
 // ---------------------------------------------------------------- filters

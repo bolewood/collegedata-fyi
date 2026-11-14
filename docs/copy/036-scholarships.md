@@ -155,7 +155,7 @@ source link and "Confirm on the official page."
 | Amber: The school's pages disagree with each other. Read the official page before relying on any figure here. Read Nov 8, 2026. | `conflicting` with no field named |
 | These terms have not been re-read for this cycle. Last read Nov 8, 2026. | `current_cycle_unconfirmed` |
 | Confirm on the official page | Plain text beside the source link on every freshness line; also ends every printed date |
-| Official page ↗ | Source link. One per source; the label for a foundation source is "Foundation's page ↗"; for an archived copy "Archived copy ↗" |
+| Program page ↗ / Aid policy page ↗ / Admissions page ↗ / News page ↗ / Archived page ↗ / Foundation's page ↗ | Source link, labelled by the kind of page (the source's authority), so two links to one program are told apart. "Official page ↗" is only the fallback for an authority this page does not know |
 | Report an update | Link to the GitHub issue template |
 
 Fields we name when pages conflict: the renewal GPA, the renewal credit load, a
@@ -205,7 +205,7 @@ application requirement. Anything else prints "a figure".
 | {coverage chip}, one or more per row | Chips use the coverage words above |
 | {freshness short}: Entry {year} · Dates through {Month year} · No year stated · Past cycle · Pages disagree · Not re-read | Last column. Amber text for the last three states |
 | Deadline cell: "{date}" or "Each {Month}" (recurring) or "Not stated" | Table cell, plus the source link on the program name |
-| The data is open. Download or query it; credit is requested. | Footer line; links to the methodology reuse section and /api |
+| The data is open to download and query; credit is required by the licence. | Footer line; links to the methodology reuse section and /api |
 | Data CC BY-SA 4.0 · collegedata.fyi · how to cite | Page footer, same as the card |
 
 ---
@@ -320,5 +320,16 @@ New or changed strings. Everything not listed is unchanged.
 | Open to all residencies | Residency filter option (was "Any residency"). Matches programs open to all. Picking In-state, Out-of-state or International also keeps programs open to all |
 | {date} (passed) | Index Deadline cell for a dated deadline before today, in amber. Sorting by deadline lists upcoming dates, then passed dates, then rows with no date |
 | Showing {n} of {total} listings. A program shared by two schools is listed once for each. | Unchanged from the prior round; listed because the sort label is now "Coverage (grouped)" |
-| {program}: {Official page / Foundation's page / Archived copy} (opens in a new tab) | Screen-reader label on every source link (card and index) |
+| {program}: {Program page / Aid policy page / Admissions page / News page / Archived page / Foundation's page} (opens in a new tab) | Screen-reader label on every source link (card and index) |
 | Part of / Includes / Replaces / Successor to / Cannot be held together with {program name} | Related-program lines. The name is a link when that program is documented on the same page |
+
+---
+
+## 9. Owner-review fixes (labels)
+
+| String | Where / state |
+|---|---|
+| {the school's own name}: {text} | Benefit line for a benefit with no standard category (category "other"). The name is the school's `advertised_coverage_label` when present, else the named award from the benefit's scope text (for example "President's Endowed Scholarship", "National Merit Sponsorship"). When the label leads the line, "The school calls it ..." is not repeated |
+| Award: {text} | Same, when the record has no name for it. Replaces "Other:" |
+| See details | Index "What it covers" chip when a program's derived coverage is other. Links to the program on the school page. Replaces the chip "OTHER". The Coverage filter option is still "Other" |
+| The data is open to download and query; credit is required by the licence. | /scholarships footer line (was "credit is requested") |

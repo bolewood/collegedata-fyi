@@ -21,6 +21,7 @@ import {
   closedLabel,
   NOT_STATED,
   otherDateLines,
+  sourceLabel,
   recurringDeadline,
   relatedItems,
   renewalSummary,
@@ -438,5 +439,38 @@ describe("related programs link when documented on the page", () => {
     const items = relatedItems(stamps, { "foundation-fellowship": "Foundation Fellowship" });
     expect(items.some((i) => i.programId === "foundation-fellowship" && i.onPage && i.name === "Foundation Fellowship")).toBe(true);
     expect(relatedItems(stamps, {}).every((i) => !i.onPage)).toBe(true);
+  });
+});
+
+describe("benefit names and source labels (owner review)", () => {
+  const benefit = (over: Partial<Benefit>): Benefit => ({ category: "other", instrument: "scholarship", coverage: "fixed_amount", amount: { qualifier: "exact", value: 3000, min: null, max: null, period: "academic_year" }, ...over });
+
+  it("leads with the school's own name for an 'other' benefit, never 'Other' (real: Texas A&M)", () => {
+    const tamu = row("national-merit-scholars", "texas-am");
+    const labels = tamu.offers.flatMap((o) => coverageSummary(o, tamu.offers).benefits.map((b) => b.label));
+    expect(labels).not.toContain("Other");
+    expect(labels).toContain("President's Endowed Scholarship");
+    expect(labels).toContain("National Merit Sponsorship");
+  });
+  it("uses advertised_coverage_label first, scope text second, 'Award' last", () => {
+    expect(benefitLine(benefit({ advertised_coverage_label: "Presidential Award" })).label).toBe("Presidential Award");
+    expect(benefitLine(benefit({ advertised_coverage_label: "Presidential Award" })).quotedLabel).toBeNull();
+    expect(benefitLine(benefit({ scope_text: "Dean's Award; table also shows a total" })).label).toBe("Dean's Award");
+    expect(benefitLine(benefit({})).label).toBe("Award");
+    expect(benefitLine(benefit({ scope_text: "x".repeat(120) })).label).toBe("Award");
+  });
+  it("keeps the standard label for a standard category", () => {
+    expect(benefitLine(benefit({ category: "housing", scope_text: "Something; else" })).label).toBe("Housing");
+  });
+  it("labels sources by authority so two links are told apart", () => {
+    expect(sourceLabel("official_program")).toBe("Program page ↗");
+    expect(sourceLabel("official_aid_policy")).toBe("Aid policy page ↗");
+    expect(sourceLabel("official_admissions")).toBe("Admissions page ↗");
+    expect(sourceLabel("official_news")).toBe("News page ↗");
+    expect(sourceLabel("archived_official")).toBe("Archived page ↗");
+    expect(sourceLabel("foundation_official")).toBe("Foundation's page ↗");
+    // Real rows: the labels follow the authority, so a program page and an aid policy page differ.
+    const auths = new Set(ROWS.flatMap((r) => r.sources.map((x) => x.authority)));
+    expect(new Set([...auths].map(sourceLabel)).size).toBe(auths.size);
   });
 });

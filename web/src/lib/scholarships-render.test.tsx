@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import fixture from "./__fixtures__/scholarship-directory.json";
@@ -68,7 +70,7 @@ describe("card", () => {
     const html = renderToStaticMarkup(
       <ScholarshipProgramsCard programs={ROWS.filter((r) => r.school_id === "texas-am")} names={{}} schoolId="texas-am" today={TODAY} />,
     );
-    expect(html).toMatch(/aria-label="National Merit Scholars[^"]*: Official page \(opens in a new tab\)"/);
+    expect(html).toMatch(/aria-label="National Merit Scholars[^"]*: (Program page|Aid policy page|Admissions page|News page|Archived page|Foundation's page) \(opens in a new tab\)"/);
   });
   it("renders nothing for a school with no programs", () => {
     expect(renderToStaticMarkup(<ScholarshipProgramsCard programs={[]} names={{}} schoolId="x" />)).toBe("");
@@ -88,7 +90,7 @@ describe("index", () => {
   it("has table roles and per-program source labels, and the residency filter has Not stated", () => {
     expect(indexHtml).toContain('role="table"');
     expect(indexHtml).toContain('role="cell"');
-    expect(indexHtml).toMatch(/aria-label="Johnson Scholarship: Official page \(opens in a new tab\)"/);
+    expect(indexHtml).toMatch(/aria-label="Johnson Scholarship: (Program page|Aid policy page|Admissions page|News page|Archived page|Foundation's page) \(opens in a new tab\)"/);
     expect(indexHtml).toMatch(/<option value="not_stated">Not stated<\/option>/);
   });
   it("does not ship offers or evidence to the browser", () => {
@@ -96,5 +98,16 @@ describe("index", () => {
     const slim = JSON.stringify(ROWS.map((r) => toIndexRow(r, r.school_id)));
     expect(slim).not.toContain("offer_id");
     expect(slim).not.toContain("field_path");
+  });
+  it("shows 'See details' instead of an OTHER chip, linking to the school page (Oklahoma, Arizona)", () => {
+    const ou = indexHtml.slice(indexHtml.indexOf("university-of-oklahoma"), indexHtml.indexOf("</tr>", indexHtml.indexOf("university-of-oklahoma")));
+    expect(ou).toMatch(/href="\/schools\/university-of-oklahoma-norman-campus#scholarship-national-merit-nonresident-package"[^>]*>See details</);
+    expect(indexText).toContain("See details");
+    expect(indexHtml).not.toMatch(/sch-chip">Other</);
+  });
+  it("the /scholarships footer says credit is required by the licence", () => {
+    const page = readFileSync(resolve(__dirname, "../app/scholarships/page.tsx"), "utf8");
+    expect(page).toContain("credit is required by the licence");
+    expect(page).not.toContain("credit is requested");
   });
 });
