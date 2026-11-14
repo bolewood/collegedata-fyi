@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
-import { buildSharePayload, isShareCancellation, type ShareSurface } from "@/lib/share";
+import {
+  buildSharePayload,
+  isShareCancellation,
+  shareEventProperties,
+  type ShareSurface,
+} from "@/lib/share";
 
 // PRD 024 M1. One reusable share control: native share where it is the
 // natural choice, copy link everywhere, and a selectable URL as the last
@@ -24,6 +29,8 @@ type ShareButtonProps = {
   /** Optional second copy action (the Match summary). */
   summary?: { label: string; text: string };
   disabled?: boolean;
+  /** Called after the link was copied or natively shared (for surface-specific reporting that must not carry the URL). */
+  onLinkShared?: () => void;
 };
 
 type CopyMethod = "clipboard" | "exec_command";
@@ -73,10 +80,13 @@ export function ShareButton({
   notice,
   summary,
   disabled = false,
+  onLinkShared,
 }: ShareButtonProps) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState<"link" | "summary" | null>(null);
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
+  const [fallbackSummary, setFallbackSummary] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
   const [canNativeShare, setCanNativeShare] = useState(false);
   const [coarsePointer, setCoarsePointer] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -96,18 +106,15 @@ export function ShareButton({
   }, []);
 
   const props = useCallback(
-    (method?: string) => ({
-      surface,
-      variant,
-      has_section: Boolean(sectionId),
-      ...(method ? { method } : {}),
-    }),
+    (method?: string) => shareEventProperties({ surface, variant, sectionId, method }),
     [surface, variant, sectionId],
   );
 
   const close = useCallback((returnFocus: boolean) => {
     setOpen(false);
     setFallbackUrl(null);
+    setFallbackSummary(null);
+    setFailed(false);
     if (returnFocus) triggerRef.current?.focus();
   }, []);
 
@@ -159,6 +166,7 @@ export function ShareButton({
     try {
       await navigator.share(payload());
       trackEvent("share_native", props("native"));
+      onLinkShared?.();
       return true;
     } catch (error) {
       // Dismissing the share sheet is not a failure.
@@ -186,10 +194,12 @@ export function ShareButton({
     const method = await copyText(url);
     if (method) {
       trackEvent("share_copy_link", props(method));
+      onLinkShared?.();
       flashCopied("link");
       close(true);
     } else {
       trackEvent("share_failed", props("copy"));
+      setFailed(true);
       setFallbackUrl(url);
     }
   }
@@ -203,6 +213,8 @@ export function ShareButton({
       close(true);
     } else {
       trackEvent("share_failed", props("copy"));
+      setFailed(true);
+      setFallbackSummary(summary.text);
     }
   }
 
@@ -228,7 +240,14 @@ export function ShareButton({
   };
 
   return (
-    <div ref={rootRef} style={{ position: "relative", display: "inline-block" }}>
+    <div
+      ref={rootRef}
+      style={{ position: "relative", display: "inline-block" }}
+      onBlur={(event) => {
+        // Close when focus leaves the component, without moving focus.
+        if (open && !event.currentTarget.contains(event.relatedTarget as Node | null)) close(false);
+      }}
+    >
       <button
         ref={triggerRef}
         type="button"
@@ -236,7 +255,6 @@ export function ShareButton({
         style={{ padding: iconOnly ? "8px 10px" : "8px 14px" }}
         onClick={onTriggerClick}
         disabled={disabled}
-        aria-haspopup="true"
         aria-expanded={open}
         aria-controls={open ? popoverId : undefined}
         aria-label={iconOnly ? "Share this section" : undefined}
@@ -245,7 +263,13 @@ export function ShareButton({
         {iconOnly ? null : <span>{label}</span>}
       </button>
       <span className="sr-only" role="status" aria-live="polite">
-        {copied === "link" ? "Link copied" : copied === "summary" ? "Summary copied" : ""}
+        {failed
+          ? "Copy failed. The text is selectable in the share options."
+          : copied === "link"
+            ? "Link copied"
+            : copied === "summary"
+              ? "Summary copied"
+              : ""}
       </span>
       {open ? (
         <div
@@ -285,6 +309,23 @@ export function ShareButton({
                 type="text"
                 readOnly
                 value={fallbackUrl}
+                className="mono"
+                style={{ width: "100%", fontSize: 12, padding: "6px 8px", border: "1px solid var(--rule-strong)", background: "var(--paper)" }}
+                onFocus={(event) => event.currentTarget.select()}
+                autoFocus
+              />
+            </div>
+          ) : null}
+          {fallbackSummary ? (
+            <div style={{ padding: "10px 14px" }}>
+              <label className="meta" htmlFor={`${popoverId}-summary`} style={{ display: "block", marginBottom: 6 }}>
+                Copy this summary
+              </label>
+              <textarea
+                id={`${popoverId}-summary`}
+                readOnly
+                rows={8}
+                value={fallbackSummary}
                 className="mono"
                 style={{ width: "100%", fontSize: 12, padding: "6px 8px", border: "1px solid var(--rule-strong)", background: "var(--paper)" }}
                 onFocus={(event) => event.currentTarget.select()}

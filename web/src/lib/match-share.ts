@@ -56,6 +56,7 @@ export function formatMatchSummary(counts: MatchFitCounts): string {
   return [
     head,
     `${total} ${total === 1 ? "school" : "schools"} ranked`,
+    "Counts use the default filters.",
     "",
     ...lines,
     "",

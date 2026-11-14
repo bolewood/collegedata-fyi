@@ -17,6 +17,7 @@ export const metadata: Metadata = {
     title: "CollegeData.fyi Match List Builder",
     description: "Build a college match list from the numbers schools publish.",
     url: "/match",
+    siteName: "collegedata.fyi",
     type: "website",
   },
   twitter: {

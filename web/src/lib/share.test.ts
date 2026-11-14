@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildSharePayload, buildShareUrl, isShareCancellation } from "./share";
+import {
+  buildSharePayload,
+  buildShareUrl,
+  isShareCancellation,
+  matchSharePath,
+  shareEventProperties,
+} from "./share";
 
 const ORIGIN = "https://www.collegedata.fyi";
 
@@ -50,5 +56,33 @@ describe("isShareCancellation", () => {
     expect(isShareCancellation(Object.assign(new Error("x"), { name: "AbortError" }))).toBe(true);
     expect(isShareCancellation(new Error("x"))).toBe(false);
     expect(isShareCancellation(null)).toBe(false);
+  });
+});
+
+describe("shareEventProperties", () => {
+  it("is limited to surface, variant, has_section and method", () => {
+    const props = shareEventProperties({ surface: "match", variant: "header", method: "clipboard" });
+    expect(Object.keys(props).sort()).toEqual(["has_section", "method", "surface", "variant"]);
+    expect(props).toEqual({ surface: "match", variant: "header", has_section: false, method: "clipboard" });
+  });
+  it("omits method when absent and reports sections as a boolean", () => {
+    const props = shareEventProperties({ surface: "school_section", variant: "icon", sectionId: "documents" });
+    expect(props).toEqual({ surface: "school_section", variant: "icon", has_section: true });
+  });
+  it("cannot carry a URL or code: extra inputs are ignored", () => {
+    const props = shareEventProperties({
+      surface: "match",
+      variant: "header",
+      url: "https://x/match?code=ABC-123",
+      code: "ABC-123",
+    } as never);
+    expect(JSON.stringify(props)).not.toMatch(/ABC|http|code/);
+  });
+});
+
+describe("matchSharePath", () => {
+  it("is exactly /match?code=<encoded>", () => {
+    expect(matchSharePath("K9F-3XQ")).toBe("/match?code=K9F-3XQ");
+    expect(matchSharePath("a b&c")).toBe("/match?code=a%20b%26c");
   });
 });

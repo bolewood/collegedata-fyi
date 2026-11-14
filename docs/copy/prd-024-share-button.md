@@ -12,6 +12,9 @@ Every new user-visible string. Owner reads before ship.
 | Copy summary | Popover item, Match page only |
 | Share with device | Popover item, only when the browser supports native share |
 | Copy this link | Label of the selectable URL field, shown only if copying fails |
+| Copy this summary | Label of the selectable summary field, shown only if copying the summary fails |
+| Copy failed. The text is selectable in the share options. | Screen-reader announcement when a copy fails |
+| Counts use the default filters. | Second line of the copied Match summary |
 | Link copied / Summary copied | Screen-reader announcement after a copy |
 | Anyone with this link can open this Match profile. | Popover note, Match page |
 | {School} Common Data Set archive | Title passed to device share, school page |
@@ -27,6 +30,7 @@ Every new user-visible string. Owner reads before ship.
 ```
 CollegeData.fyi Match
 42 schools ranked
+Counts use the default filters.
 
 Strong fit   █████        8
 Above range  ███          5

@@ -24,6 +24,7 @@ describe("formatMatchSummary", () => {
     ).toMatchInlineSnapshot(`
       "CollegeData.fyi Match
       3 schools ranked
+      Counts use the default filters.
 
       Strong fit   █████       1
       Above range              0
@@ -46,6 +47,7 @@ describe("formatMatchSummary", () => {
     ).toMatchInlineSnapshot(`
       "CollegeData.fyi Match
       42 schools ranked
+      Counts use the default filters.
 
       Strong fit   █████        8
       Above range  ███          5

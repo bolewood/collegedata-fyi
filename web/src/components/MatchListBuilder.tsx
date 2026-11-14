@@ -21,6 +21,7 @@ import {
   type AcademicFit,
   type StudentProfile,
 } from "@/lib/positioning";
+import { matchSharePath } from "@/lib/share";
 import { countsFromGroups, formatMatchSummary } from "@/lib/match-share";
 import { ShareButton } from "./ShareButton";
 import { SchoolListItem } from "./SchoolListItem";
@@ -307,7 +308,8 @@ export function MatchListBuilder({
           <ShareButton
             surface="match"
             title="CollegeData.fyi match list"
-            path={shareCode ? `/match?code=${encodeURIComponent(shareCode)}` : undefined}
+            path={shareCode ? matchSharePath(shareCode) : undefined}
+            onLinkShared={() => trackEvent("match_share_copied", { ranked_count: ranked.length })}
             align="start"
             notice={SHARE_NOTICE}
             summary={hasScoreInput ? { label: "Copy summary", text: summaryText } : undefined}

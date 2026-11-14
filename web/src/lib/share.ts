@@ -56,3 +56,33 @@ export function isShareCancellation(error: unknown): boolean {
     (error as { name?: unknown }).name === "AbortError"
   );
 }
+
+export type ShareEventProperties = {
+  surface: ShareSurface;
+  variant: "header" | "icon";
+  has_section: boolean;
+  method?: string;
+};
+
+/**
+ * The only properties a share analytics event may carry. Deliberately takes
+ * no URL, path, title, code or text, so none can be added by accident.
+ */
+export function shareEventProperties(args: {
+  surface: ShareSurface;
+  variant: "header" | "icon";
+  sectionId?: string;
+  method?: string;
+}): ShareEventProperties {
+  return {
+    surface: args.surface,
+    variant: args.variant,
+    has_section: Boolean(args.sectionId),
+    ...(args.method ? { method: args.method } : {}),
+  };
+}
+
+/** The Match share path. The code format is unchanged; only the URL encoding is applied. */
+export function matchSharePath(code: string): string {
+  return `/match?code=${encodeURIComponent(code)}`;
+}
