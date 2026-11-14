@@ -36,7 +36,7 @@ create table public.scholarship_programs (
   program_family text not null
     check (program_family in ('stamps', 'national_merit', 'presidential', 'honors', 'other')),
   awarding_authority text not null
-    check (awarding_authority in ('institution', 'affiliated_foundation', 'cofunded', 'unknown')),
+    check (awarding_authority in ('institution', 'affiliated_foundation', 'cofunded', 'state_program', 'unknown')),
   related_programs jsonb not null default '[]'::jsonb,
   status text not null
     check (status in ('active', 'paused', 'closed_to_new_entrants', 'merged', 'discontinued', 'unknown')),
@@ -51,9 +51,13 @@ create table public.scholarship_program_versions (
   version_id text not null,
   primary key (program_id, version_id),
   supersedes text,
-  -- True when no other version supersedes this one. The directory serves the
-  -- head of each chain; the loader computes the flag.
+  -- True when no other version supersedes this one (informational).
   is_chain_head boolean not null,
+  -- True for the newest member of its supersedes chain that is not unverified:
+  -- the version the directory may serve for that entry year. An unverified
+  -- correction therefore leaves the verified version it supersedes published.
+  -- The loader computes the flag.
+  is_published boolean not null,
   entry_year integer,
   entry_year_label text,
   entry_terms text[] not null default '{}',
@@ -70,11 +74,13 @@ create table public.scholarship_program_versions (
   selection_modes text[] not null default '{}',
   residencies text[] not null default '{}',
   national_merit_statuses text[] not null default '{}',
+  statuses_required text[] not null default '{}',
   need_roles text[] not null default '{}',
   separate_application text,
   deadline_months integer[] not null default '{}',
   key_deadline date,
-  latest_milestone_date date,
+  -- Latest dated milestone of any kind; the date the cycle is known to run through.
+  cycle_through_date date,
   source_retrieved_at date,
   -- The record's offers with the derived normalized_coverage added to each.
   offers jsonb not null default '[]'::jsonb,
@@ -149,38 +155,69 @@ comment on table public.scholarship_version_checks is
   'PRD 036 monitor results per program version, written by the M4 monitor. The latest row per version feeds freshness_status. Service role only.';
 
 -- Freshness rule. The view calls these at query time, so a version ages out
--- without a cache refresh.
+-- without a cache refresh. Python reference: tools/scholarships/model.py
+-- (freshness_status); test_sql_parity.py checks the two agree.
 --
 -- Entry cycle: a class entering in fall Y is the current cycle from 1 July of
--- Y-1 (the validator's application window opens then). So the current entry
--- year at time t is year(t) + 1 when month(t) >= 7, else year(t), in UTC.
--- On 2026-11-14 that is 2027.
+-- Y-1 (the validator's application window opens then). So the cycle a date
+-- falls in is year + 1 from July to December and year from January to June, and
+-- the current entry year is the cycle of today in UTC (2027 on 2026-11-14).
+--
+-- cycle_basis says what the cycle rests on:
+--   entry_year        the version states its entering class
+--   milestone_dates   no entry_year, but dated milestones; the cycle runs
+--                     through the latest one (cycle_through_date)
+--   none              neither; the cycle is unknown
 --
 -- freshness_status, first match wins:
 --   conflicting               verification_status = 'conflicting', or the latest
 --                             check result is 'conflicting'
---   past_cycle                verification_status = 'historical_only'; or
---                             entry_year < current entry year; or entry_year is
---                             null and its latest dated milestone is before today
---   current_cycle_unconfirmed entry_year is null (cycle not stated); or the latest
---                             check set needs_review; or the status is anything
---                             other than 'verified'
---   current_cycle_verified    verified, entry_year >= current entry year, and no
---                             open needs_review on the latest check
+--   past_cycle                verification_status = 'historical_only'; or basis
+--                             entry_year and entry_year < current entry year; or
+--                             basis milestone_dates and cycle_through_date is
+--                             before today
+--   current_cycle_unconfirmed basis none; or the latest check set needs_review;
+--                             or the status is anything other than 'verified'
+--   current_cycle_verified    verified, no open needs_review, and either
+--                             entry_year >= current entry year or
+--                             cycle_through_date is today or later
 -- A version for a later entry year than the current one counts as current cycle.
+create function public.scholarship_cycle_year(p_date date)
+returns integer
+language sql
+immutable
+set search_path = pg_catalog, public
+as $$
+  select (extract(year from p_date))::integer
+    + case when extract(month from p_date) >= 7 then 1 else 0 end;
+$$;
+
 create function public.scholarship_current_entry_year(p_at timestamptz default now())
 returns integer
 language sql
 stable
+set search_path = pg_catalog, public
 as $$
-  select (extract(year from p_at at time zone 'UTC'))::integer
-    + case when extract(month from p_at at time zone 'UTC') >= 7 then 1 else 0 end;
+  select public.scholarship_cycle_year((p_at at time zone 'UTC')::date);
+$$;
+
+create function public.scholarship_cycle_basis(p_entry_year integer, p_cycle_through_date date)
+returns text
+language sql
+immutable
+set search_path = pg_catalog, public
+as $$
+  select case
+    when p_entry_year is not null then 'entry_year'
+    when p_cycle_through_date is not null then 'milestone_dates'
+    else 'none'
+  end;
 $$;
 
 create function public.scholarship_freshness_status(
   p_entry_year integer,
   p_verification_status text,
-  p_latest_milestone_date date,
+  p_cycle_through_date date,
   p_check_result text,
   p_check_needs_review boolean,
   p_at timestamptz default now()
@@ -188,6 +225,7 @@ create function public.scholarship_freshness_status(
 returns text
 language sql
 stable
+set search_path = pg_catalog, public
 as $$
   select case
     when p_verification_status = 'conflicting' or p_check_result = 'conflicting'
@@ -195,10 +233,10 @@ as $$
     when p_verification_status = 'historical_only'
       or (p_entry_year is not null and p_entry_year < public.scholarship_current_entry_year(p_at))
       or (p_entry_year is null
-          and p_latest_milestone_date is not null
-          and p_latest_milestone_date < (p_at at time zone 'UTC')::date)
+          and p_cycle_through_date is not null
+          and p_cycle_through_date < (p_at at time zone 'UTC')::date)
       then 'past_cycle'
-    when p_entry_year is null
+    when public.scholarship_cycle_basis(p_entry_year, p_cycle_through_date) = 'none'
       or coalesce(p_check_needs_review, false)
       or p_verification_status is distinct from 'verified'
       then 'current_cycle_unconfirmed'
@@ -207,12 +245,16 @@ as $$
 $$;
 
 comment on function public.scholarship_freshness_status(integer, text, date, text, boolean, timestamptz) is
-  'PRD 036 freshness_status: conflicting, then past_cycle, then current_cycle_unconfirmed, else current_cycle_verified. Entry cycle turns over on 1 July (UTC) of the year before entry.';
+  'PRD 036 freshness_status: conflicting, then past_cycle, then current_cycle_unconfirmed, else current_cycle_verified. Entry cycle turns over on 1 July (UTC) of the year before entry; with no entry_year the cycle runs through the latest dated milestone.';
 
 -- One row per program per participating school (a joint program appears once
--- for each school). Per program the cache holds the latest entry year whose
--- chain head is not unverified, so an unverified draft never reaches the
--- public. Time-dependent status is not computed here: a materialized view
+-- for each school). Per program the cache holds one version: among the
+-- published ones (is_published: per supersedes chain, the newest member that is
+-- not unverified, so an unverified draft never reaches the public) the latest by
+-- rank year. A version with an entry_year ranks by it; one without ranks by the
+-- cycle its latest dated milestone falls in, else the cycle of the day its
+-- sources were retrieved; a dated version beats an undated one of the same rank
+-- year. Time-dependent status is not computed here: a materialized view
 -- freezes now() at refresh time, and the loader refreshes only when YAML
 -- changes. The inputs are stored instead and the view derives freshness_status.
 -- The monitor must call refresh_scholarship_directory_cache() after writing checks.
@@ -220,9 +262,17 @@ create materialized view public.scholarship_directory_cache as
 with heads as (
   select distinct on (v.program_id) v.*
   from public.scholarship_program_versions v
-  where v.is_chain_head
+  where v.is_published
     and v.verification_status <> 'unverified'
-  order by v.program_id, v.entry_year desc nulls last, v.version_id
+  order by
+    v.program_id,
+    coalesce(
+      v.entry_year,
+      public.scholarship_cycle_year(v.cycle_through_date),
+      public.scholarship_cycle_year(v.source_retrieved_at)
+    ) desc nulls last,
+    (v.entry_year is null),
+    v.version_id
 )
 select
   p.program_id,
@@ -255,11 +305,12 @@ select
   h.selection_modes,
   h.residencies,
   h.national_merit_statuses,
+  h.statuses_required,
   h.need_roles,
   h.separate_application,
   h.deadline_months,
   h.key_deadline,
-  h.latest_milestone_date,
+  h.cycle_through_date,
   h.source_retrieved_at,
 
   h.offers,
@@ -268,6 +319,7 @@ select
   nullif(h.record -> 'stacking_rules', 'null'::jsonb) as stacking_rules,
   coalesce(nullif(h.record -> 'award_counts', 'null'::jsonb), '[]'::jsonb) as award_counts,
   coalesce(src.sources, '[]'::jsonb) as sources,
+  coalesce(ev.evidence, '[]'::jsonb) as evidence,
 
   lc.checked_at as last_check_at,
   lc.result as last_check_result,
@@ -296,6 +348,20 @@ left join lateral (
   where so.program_id = h.program_id
     and so.version_id = h.version_id
 ) src on true
+left join lateral (
+  -- Locators only: field_path, source_ref, locator, value_status. Never the excerpt.
+  select jsonb_agg(
+    jsonb_build_object(
+      'field_path', e.item -> 'field_path',
+      'source_ref', e.item -> 'source_ref',
+      'locator', e.item -> 'locator',
+      'value_status', e.item -> 'value_status'
+    )
+    order by e.ord
+  ) as evidence
+  from jsonb_array_elements(coalesce(nullif(h.record -> 'field_evidence', 'null'::jsonb), '[]'::jsonb))
+    with ordinality as e(item, ord)
+) ev on true
 left join lateral (
   select c.checked_at, c.result, c.needs_review
   from public.scholarship_version_checks c
@@ -346,10 +412,12 @@ select
   public.scholarship_freshness_status(
     c.entry_year,
     c.verification_status,
-    c.latest_milestone_date,
+    c.cycle_through_date,
     c.last_check_result,
     c.needs_review
   ) as freshness_status,
+  public.scholarship_cycle_basis(c.entry_year, c.cycle_through_date) as cycle_basis,
+  c.cycle_through_date,
   public.scholarship_current_entry_year() as current_entry_year,
   c.last_reviewed_at,
   c.reviewed_by,
@@ -360,11 +428,11 @@ select
   c.selection_modes,
   c.residencies,
   c.national_merit_statuses,
+  c.statuses_required,
   c.need_roles,
   c.separate_application,
   c.deadline_months,
   c.key_deadline,
-  c.latest_milestone_date,
   c.source_retrieved_at,
 
   c.offers,
@@ -373,8 +441,10 @@ select
   c.stacking_rules,
   c.award_counts,
   c.sources,
+  c.evidence,
 
   c.last_check_at,
+  c.last_check_result,
   c.needs_review,
 
   'CC-BY-SA-4.0'::text as license,

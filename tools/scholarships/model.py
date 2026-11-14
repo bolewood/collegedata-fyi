@@ -9,6 +9,7 @@ keep the two in step.
 from __future__ import annotations
 
 import copy
+import datetime as dt
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Set
@@ -38,9 +39,11 @@ DEADLINE_KINDS = frozenset(
     }
 )
 
-# Coverage derivation. A benefit counts toward tuition coverage only when it is
-# a real scholarship. A tuition_waiver instrument or a nonresident_differential
-# category never counts, in any bracket and never as partial coverage.
+# Coverage derivation. A benefit counts toward a full_* label only when it is a
+# real scholarship (or restricted fund) with full coverage, no conditions_text,
+# and an amount that is not capped. A tuition_waiver instrument or a
+# nonresident_differential category never counts, in any bracket and never as
+# partial coverage. advertised_totals are never used.
 NORMALIZED_COVERAGE = (
     "full_tuition",
     "full_tuition_fees",
@@ -49,45 +52,65 @@ NORMALIZED_COVERAGE = (
     "partial_or_fixed",
     "other",
 )
+_FULL_INSTRUMENTS = frozenset({"scholarship", "restricted_fund"})
 _PARTIAL_INSTRUMENTS = frozenset({"scholarship", "cash_stipend", "restricted_fund"})
 _PARTIAL_COVERAGES = frozenset({"partial", "fixed_amount", "variable"})
+# A stipend unlocks full_school_coa only when its size is something the school stated.
+_STATED_COVERAGES = frozenset({"full", "partial", "fixed_amount", "variable"})
+
+
+def _counted(b: Dict[str, Any]) -> bool:
+    return b.get("instrument") != "tuition_waiver" and b.get("category") != "nonresident_differential"
+
+
+def _uncapped(b: Dict[str, Any]) -> bool:
+    """`full` with an up_to, at_least, range or approximate amount is not full."""
+    amount = b.get("amount")
+    return amount is None or amount.get("qualifier") in ("exact", "not_published")
+
+
+def _full(b: Dict[str, Any], instruments: frozenset = _FULL_INSTRUMENTS) -> bool:
+    return (
+        _counted(b)
+        and b.get("coverage") == "full"
+        and b.get("instrument") in instruments
+        and not b.get("conditions_text")
+        and _uncapped(b)
+    )
 
 
 def derive_normalized_coverage(benefits: Optional[List[Dict[str, Any]]]) -> Optional[str]:
-    """Normalized coverage for one offer, from that offer's own benefits.
+    """Normalized coverage from a list of benefits (see derive_offers for scope).
 
     - `None` benefits means not documented: returns None (unknown is not no).
-    - Only `instrument: scholarship` + `coverage: full` benefits make a full
-      bracket. Waivers, the nonresident differential, and `unknown` instruments
-      are excluded everywhere.
     - Brackets, highest first:
-        full_school_coa        tuition + mandatory_fees + housing + meals + books
-                               all full, plus a stipend benefit (scholarship or
-                               cash_stipend, any amount), because cost of
-                               attendance also includes personal and travel costs
+        full_school_coa        a full `cost_of_attendance` scholarship benefit; or
+                               tuition + mandatory_fees + housing + meals + books
+                               all full plus a stipend of stated size, because
+                               cost of attendance also includes personal costs
         tuition_housing_meals  tuition + housing + meals full (fees optional)
         full_tuition_fees      tuition + mandatory_fees full
         full_tuition           tuition full
-        partial_or_fixed       no full tuition, but some non-waiver benefit is
-                               partial, fixed_amount or variable
+        partial_or_fixed       no bracket, but some non-waiver benefit is partial,
+                               fixed_amount, variable, or `full` yet capped,
+                               conditional, or short of a bracket
         other                  anything else, including coverage `unknown`
-    - A child offer does not inherit from its parent.
+    - `full` counts only for instrument scholarship or restricted_fund (cost of
+      attendance: scholarship only), with no conditions_text and an amount that
+      is null, exact or not_published.
     """
     if benefits is None:
         return None
-    counted = [
-        b
-        for b in benefits
-        if b.get("instrument") != "tuition_waiver" and b.get("category") != "nonresident_differential"
-    ]
-    full = {
-        b["category"]
-        for b in counted
-        if b.get("instrument") == "scholarship" and b.get("coverage") == "full"
-    }
+    if any(b.get("category") == "cost_of_attendance" and _full(b, frozenset({"scholarship"})) for b in benefits):
+        return "full_school_coa"
+    full = {b["category"] for b in benefits if _full(b)}
     has_stipend = any(
-        b.get("category") == "stipend" and b.get("instrument") in ("scholarship", "cash_stipend")
-        for b in counted
+        b.get("category") == "stipend"
+        and _counted(b)
+        and b.get("instrument") in ("scholarship", "cash_stipend")
+        and b.get("coverage") in _STATED_COVERAGES
+        and not b.get("conditions_text")
+        for b in benefits
     )
     if {"tuition", "mandatory_fees", "housing", "meals", "books"} <= full and has_stipend:
         return "full_school_coa"
@@ -98,19 +121,39 @@ def derive_normalized_coverage(benefits: Optional[List[Dict[str, Any]]]) -> Opti
     if "tuition" in full:
         return "full_tuition"
     if any(
-        b.get("instrument") in _PARTIAL_INSTRUMENTS and b.get("coverage") in _PARTIAL_COVERAGES
-        for b in counted
+        _counted(b)
+        and b.get("instrument") in _PARTIAL_INSTRUMENTS
+        and (b.get("coverage") in _PARTIAL_COVERAGES or b.get("coverage") == "full")
+        for b in benefits
     ):
         return "partial_or_fixed"
     return "other"
 
 
 def derive_offers(offers: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Copy of the offers with `normalized_coverage` added to each."""
+    """Copy of the offers with `normalized_coverage` added to each.
+
+    A tier nests under its parent (`parent_offer_id`) and may list only what it
+    adds, so an offer's coverage is derived from its own benefits plus those of
+    all its ancestors. An offer whose own `benefits` is null stays null (not
+    documented). Waivers are excluded by the derivation.
+    """
+    by_id = {o["offer_id"]: o for o in offers}
     out = []
     for offer in offers:
         o = copy.deepcopy(offer)
-        o["normalized_coverage"] = derive_normalized_coverage(offer.get("benefits"))
+        own = offer.get("benefits")
+        if own is None:
+            o["normalized_coverage"] = None
+        else:
+            combined = list(own)
+            seen = {offer["offer_id"]}
+            parent = offer.get("parent_offer_id")
+            while parent and parent in by_id and parent not in seen:
+                seen.add(parent)
+                combined += by_id[parent].get("benefits") or []
+                parent = by_id[parent].get("parent_offer_id")
+            o["normalized_coverage"] = derive_normalized_coverage(combined)
         out.append(o)
     return out
 
@@ -124,6 +167,83 @@ def chain_heads(doc: Dict[str, Any]) -> Set[str]:
     """
     superseded = {v["supersedes"] for v in doc["versions"] if v.get("supersedes")}
     return {v["version_id"] for v in doc["versions"] if v["version_id"] not in superseded}
+
+
+def published_ids(doc: Dict[str, Any]) -> Set[str]:
+    """version_ids the directory may serve: per supersedes chain, the newest
+    member that is not `unverified`.
+
+    Walk from each chain head back through `supersedes` until a version that is
+    not unverified. An unverified correction therefore leaves the verified
+    version it supersedes in place; a chain that is unverified throughout
+    publishes nothing.
+    """
+    by_id = {v["version_id"]: v for v in doc["versions"]}
+    out: Set[str] = set()
+    for head in chain_heads(doc):
+        cur = by_id[head]
+        while cur["verification_status"] == "unverified" and cur.get("supersedes") in by_id:
+            cur = by_id[cur["supersedes"]]
+        if cur["verification_status"] != "unverified":
+            out.add(cur["version_id"])
+    return out
+
+
+# ------------------------------------------------------------ freshness reference
+# Python reference of the SQL functions in the migration, used for the tests and
+# the SQL parity check. Keep in step with scholarship_freshness_status.
+
+
+def cycle_year(d: dt.date) -> int:
+    """Entry year whose cycle a date falls in: a class entering in fall Y is
+    current from 1 July of Y-1, so July to December belong to year + 1."""
+    return d.year + (1 if d.month >= 7 else 0)
+
+
+def current_entry_year(today: dt.date) -> int:
+    return cycle_year(today)
+
+
+def cycle_basis(entry_year: Optional[int], cycle_through_date: Optional[str]) -> str:
+    if entry_year is not None:
+        return "entry_year"
+    return "milestone_dates" if cycle_through_date else "none"
+
+
+def freshness_status(
+    entry_year: Optional[int],
+    verification_status: str,
+    cycle_through_date: Optional[str],
+    check_result: Optional[str],
+    needs_review: Optional[bool],
+    today: dt.date,
+) -> str:
+    """conflicting, then past_cycle, then current_cycle_unconfirmed, else
+    current_cycle_verified. See the migration comment and the view contract."""
+    if verification_status == "conflicting" or check_result == "conflicting":
+        return "conflicting"
+    basis = cycle_basis(entry_year, cycle_through_date)
+    if verification_status == "historical_only":
+        return "past_cycle"
+    if basis == "entry_year" and entry_year < current_entry_year(today):
+        return "past_cycle"
+    if basis == "milestone_dates" and dt.date.fromisoformat(cycle_through_date) < today:
+        return "past_cycle"
+    if basis == "none" or bool(needs_review) or verification_status != "verified":
+        return "current_cycle_unconfirmed"
+    return "current_cycle_verified"
+
+
+def rank_year(entry_year: Optional[int], cycle_through_date: Optional[str], source_retrieved_at: Optional[str]) -> Optional[int]:
+    """Year used to pick a program's latest version. A dated version ranks by its
+    entry_year; an undated one by the cycle its latest milestone falls in, else
+    the cycle of the day its sources were retrieved."""
+    if entry_year is not None:
+        return entry_year
+    for d in (cycle_through_date, source_retrieved_at):
+        if d:
+            return cycle_year(dt.date.fromisoformat(d))
+    return None
 
 
 def _distinct(values: Iterable[Any]) -> List[Any]:
@@ -161,7 +281,7 @@ def key_deadline(version: Dict[str, Any]) -> Optional[str]:
     return None
 
 
-def latest_milestone_date(version: Dict[str, Any]) -> Optional[str]:
+def cycle_through_date(version: Dict[str, Any]) -> Optional[str]:
     dates = [m["date"] for m in _milestones(version) if m.get("date")]
     return max(dates) if dates else None
 
@@ -196,7 +316,9 @@ def build_program_row(doc: Dict[str, Any], file_path: str) -> Dict[str, Any]:
     }
 
 
-def build_version_row(doc: Dict[str, Any], version: Dict[str, Any], heads: Set[str]) -> Dict[str, Any]:
+def build_version_row(
+    doc: Dict[str, Any], version: Dict[str, Any], heads: Set[str], published: Set[str]
+) -> Dict[str, Any]:
     offers = derive_offers(version["offers"])
     elig = [o.get("eligibility") or {} for o in version["offers"]]
     app = version.get("application") or {}
@@ -206,6 +328,7 @@ def build_version_row(doc: Dict[str, Any], version: Dict[str, Any], heads: Set[s
         "version_id": version["version_id"],
         "supersedes": version.get("supersedes"),
         "is_chain_head": version["version_id"] in heads,
+        "is_published": version["version_id"] in published,
         "entry_year": version["entry_year"],
         "entry_year_label": version.get("entry_year_label"),
         "entry_terms": version.get("entry_terms") or [],
@@ -221,11 +344,12 @@ def build_version_row(doc: Dict[str, Any], version: Dict[str, Any], heads: Set[s
         "national_merit_statuses": _distinct(
             s for e in elig for s in (e.get("national_merit_statuses") or [])
         ),
+        "statuses_required": _distinct(e.get("status_required_for_award") for e in elig),
         "need_roles": _distinct(o.get("need_role") for o in version["offers"]),
         "separate_application": app.get("separate_application"),
         "deadline_months": deadline_months(version),
         "key_deadline": key_deadline(version),
-        "latest_milestone_date": latest_milestone_date(version),
+        "cycle_through_date": cycle_through_date(version),
         "source_retrieved_at": max(retrieved) if retrieved else None,
         "offers": offers,
         "record": version,
@@ -270,9 +394,10 @@ def build_dataset(docs: Dict[str, Dict[str, Any]], root: Optional[Path] = None) 
             except ValueError:
                 shown = str(path)
         heads = chain_heads(doc)
+        published = published_ids(doc)
         ds.programs.append(build_program_row(doc, shown))
         for version in doc["versions"]:
-            ds.versions.append(build_version_row(doc, version, heads))
+            ds.versions.append(build_version_row(doc, version, heads, published))
             ds.sources.extend(build_source_rows(doc, version))
     ds.programs.sort(key=lambda r: r["program_id"])
     ds.versions.sort(key=lambda r: (r["program_id"], r["version_id"]))
@@ -283,15 +408,14 @@ def build_dataset(docs: Dict[str, Dict[str, Any]], root: Optional[Path] = None) 
 def select_published(ds: Dataset) -> List[Dict[str, Any]]:
     """The version the public view serves per program.
 
-    Chain heads that are not `unverified`, latest entry_year first with a null
-    entry_year last; ties on version_id. Mirrors the SQL in
-    scholarship_directory_cache. An unverified correction at the head of a
-    chain hides that entry year (the older verified version it supersedes is not
-    a head); the next-latest year is served instead, if any.
+    Among the published versions (`is_published`: per supersedes chain, the
+    newest member that is not `unverified`), the one with the latest rank year;
+    see `rank_year`. A dated version beats an undated one of the same rank year;
+    ties on version_id. Mirrors the SQL in scholarship_directory_cache.
     """
     best: Dict[str, Dict[str, Any]] = {}
     for row in ds.versions:
-        if not row["is_chain_head"] or row["verification_status"] == "unverified":
+        if not row["is_published"]:
             continue
         cur = best.get(row["program_id"])
         if cur is None or _rank(row) < _rank(cur):
@@ -300,8 +424,21 @@ def select_published(ds: Dataset) -> List[Dict[str, Any]]:
 
 
 def _rank(row: Dict[str, Any]):
-    year = row["entry_year"]
-    return (year is None, -(year or 0), row["version_id"])
+    year = rank_year(row["entry_year"], row["cycle_through_date"], row["source_retrieved_at"])
+    return (year is None, -(year or 0), row["entry_year"] is None, row["version_id"])
+
+
+def public_evidence(record: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Evidence locators for the public view: where on which source, never the excerpt."""
+    return [
+        {
+            "field_path": e["field_path"],
+            "source_ref": e["source_ref"],
+            "locator": e["locator"],
+            "value_status": e["value_status"],
+        }
+        for e in record.get("field_evidence") or []
+    ]
 
 
 def public_record(program: Dict[str, Any], version: Dict[str, Any], school: Dict[str, str]) -> Dict[str, Any]:
@@ -326,6 +463,8 @@ def public_record(program: Dict[str, Any], version: Dict[str, Any], school: Dict
         "entry_terms": version["entry_terms"],
         "source_cohort_text": version["source_cohort_text"],
         "verification_status": version["verification_status"],
+        "cycle_basis": cycle_basis(version["entry_year"], version["cycle_through_date"]),
+        "cycle_through_date": version["cycle_through_date"],
         "last_reviewed_at": version["last_reviewed_at"],
         "reviewed_by": version["reviewed_by"],
         "owner_spot_checked": version["owner_spot_checked"],
@@ -334,11 +473,11 @@ def public_record(program: Dict[str, Any], version: Dict[str, Any], school: Dict
         "selection_modes": version["selection_modes"],
         "residencies": version["residencies"],
         "national_merit_statuses": version["national_merit_statuses"],
+        "statuses_required": version["statuses_required"],
         "need_roles": version["need_roles"],
         "separate_application": version["separate_application"],
         "deadline_months": version["deadline_months"],
         "key_deadline": version["key_deadline"],
-        "latest_milestone_date": version["latest_milestone_date"],
         "source_retrieved_at": version["source_retrieved_at"],
         "offers": version["offers"],
         "application": app,
@@ -355,4 +494,5 @@ def public_record(program: Dict[str, Any], version: Dict[str, Any], school: Dict
             }
             for s in sorted(record["sources"], key=lambda s: s["source_id"])  # the SQL orders by source_id too
         ],
+        "evidence": public_evidence(record),
     }

@@ -7,14 +7,26 @@ name: Scholarships load
 #
 # The scholarship_* tables come from the 20261114160000_scholarship_directory
 # migration, applied from main with `supabase db push --linked`. Until that has
-# run, this workflow fails at the load step.
+# run, this workflow fails at the load step. After the migration is applied,
+# dispatch this workflow once to fill the tables (a migration alone loads no rows).
 
 on:
   push:
     branches: [main]
     paths:
       - "data/scholarships/**"
+      # Derived columns (normalized_coverage, filters) come from this code, so a
+      # change to it must reload the database even with no YAML change.
+      - "tools/scholarships/model.py"
+      - "tools/scholarships/load.py"
+      - "supabase/migrations/*_scholarship_directory.sql"
+      - ".github/workflows/scholarships-load.yml"
   workflow_dispatch:
+    inputs:
+      allow_prune:
+        description: "Allow removing more than 5 programs (or 10%) in one run"
+        type: boolean
+        default: false
 
 concurrency:
   group: scholarships-load
@@ -51,12 +63,14 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ALLOW_PRUNE: ${{ inputs.allow_prune }}
         run: |
-          python tools/scholarships/load.py --apply --report scholarships-out/load-report.json
-
-      - name: Build the download snapshots
-        run: |
-          python tools/scholarships/build_downloads.py --out-dir scholarships-out
+          set -euo pipefail
+          flags=""
+          if [[ "${ALLOW_PRUNE}" == "true" ]]; then
+            flags="--allow-prune"
+          fi
+          python tools/scholarships/load.py --apply ${flags} --report scholarships-out/load-report.json
 
       - uses: actions/upload-artifact@v4
         if: always()

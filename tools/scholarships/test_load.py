@@ -8,6 +8,7 @@ view contract and the attribution string in step.
 from __future__ import annotations
 
 import copy
+import datetime as dt
 import json
 import re
 import sys
@@ -55,8 +56,19 @@ def foundation(docs: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
 # --------------------------------------------------------- coverage derivation
 
 
-def b(category: str, instrument: str = "scholarship", coverage: str = "full") -> Dict[str, Any]:
-    return {"benefit_id": f"b-{category}", "category": category, "instrument": instrument, "coverage": coverage}
+def b(
+    category: str,
+    instrument: str = "scholarship",
+    coverage: str = "full",
+    qualifier: Any = None,
+    conditions: Any = None,
+) -> Dict[str, Any]:
+    out: Dict[str, Any] = {"benefit_id": f"b-{category}", "category": category, "instrument": instrument, "coverage": coverage}
+    if qualifier:
+        out["amount"] = {"qualifier": qualifier, "value": 15000 if qualifier != "not_published" else None}
+    if conditions:
+        out["conditions_text"] = conditions
+    return out
 
 
 @pytest.mark.parametrize(
@@ -81,7 +93,7 @@ def b(category: str, instrument: str = "scholarship", coverage: str = "full") ->
         ([b("tuition", coverage="variable")], "partial_or_fixed"),
         ([b("stipend", "cash_stipend", "fixed_amount")], "partial_or_fixed"),
         ([b("tuition", coverage="unknown")], "other"),
-        ([b("housing")], "other"),  # full housing alone is not tuition coverage
+        ([b("housing")], "partial_or_fixed"),  # full housing alone is not tuition coverage, but it is not nothing
         ([b("tuition", instrument="unknown")], "other"),  # cannot prove it is a scholarship
         ([b("tuition", instrument="earned_compensation")], "other"),
         # Waivers never count as tuition coverage, in any bracket.
@@ -91,8 +103,37 @@ def b(category: str, instrument: str = "scholarship", coverage: str = "full") ->
         ([b("nonresident_differential", instrument="tuition_waiver", coverage="partial")], "other"),
         (
             [b("tuition", instrument="tuition_waiver"), b("mandatory_fees"), b("housing"), b("meals")],
-            "other",  # waiver "tuition" does not unlock the housing and meals bracket
+            "partial_or_fixed",  # waiver "tuition" does not unlock the housing and meals bracket
         ),
+        # Review 4: `full` with a capped or inexact amount is not full.
+        ([b("tuition", qualifier="up_to")], "partial_or_fixed"),
+        ([b("tuition", qualifier="at_least")], "partial_or_fixed"),
+        ([b("tuition", qualifier="approximate")], "partial_or_fixed"),
+        ([b("tuition", qualifier="exact")], "full_tuition"),
+        ([b("tuition", qualifier="not_published")], "full_tuition"),
+        # Review 5: full tuition paid from a restricted fund is still full tuition.
+        ([b("tuition", instrument="restricted_fund")], "full_tuition"),
+        ([b("tuition", instrument="cash_stipend")], "partial_or_fixed"),
+        # Review 7: a stipend of unknown size does not unlock cost of attendance.
+        (
+            [b("tuition"), b("mandatory_fees"), b("housing"), b("meals"), b("books"), b("stipend", "cash_stipend", "unknown")],
+            "tuition_housing_meals",
+        ),
+        # A benefit with conditions_text never counts toward a full_* label.
+        ([b("tuition", conditions="needs $4,000 in other scholarships")], "partial_or_fixed"),
+        ([b("tuition"), b("mandatory_fees", conditions="if enrolled in honors")], "full_tuition"),
+        (
+            [b("tuition"), b("mandatory_fees"), b("housing"), b("meals"), b("books"), b("stipend", "cash_stipend", "fixed_amount", conditions="summer only")],
+            "tuition_housing_meals",
+        ),
+        # cost_of_attendance, full, scholarship instrument: full_school_coa.
+        ([b("cost_of_attendance")], "full_school_coa"),
+        ([b("cost_of_attendance", qualifier="not_published")], "full_school_coa"),
+        ([b("cost_of_attendance", conditions="while on campus")], "partial_or_fixed"),
+        ([b("cost_of_attendance", instrument="tuition_waiver")], "other"),
+        ([b("cost_of_attendance", instrument="restricted_fund")], "partial_or_fixed"),
+        ([b("cost_of_attendance", qualifier="up_to")], "partial_or_fixed"),
+        ([b("cost_of_attendance", coverage="partial")], "partial_or_fixed"),
         # The differential waiver beside a real tuition scholarship: the scholarship decides.
         ([b("nonresident_differential", instrument="tuition_waiver"), b("tuition")], "full_tuition"),
         (
@@ -113,13 +154,48 @@ def test_coverage_values_are_the_documented_set():
     assert "full_ride" not in model.NORMALIZED_COVERAGE
 
 
-def test_fixture_offers_derive_per_offer_with_no_parent_inheritance(ds):
+def test_fixture_offers_derive_with_ancestors(ds):
     version = next(r for r in ds.versions if r["version_id"] == "fixture-foundation-program-2027")
     by_offer = {o["offer_id"]: o["normalized_coverage"] for o in version["offers"]}
-    # o-main: full tuition scholarship + stipend + restricted fund. o-tier is a child of o-main
-    # whose only benefit is the nonresident differential waiver: it is not full tuition.
-    assert by_offer == {"o-main": "full_tuition", "o-tier": "other"}
-    assert version["coverages"] == ["full_tuition", "other"]
+    # o-main has a full cost_of_attendance scholarship. o-tier is its child whose own benefit
+    # is only a (conditional) differential waiver; it inherits the parent's package.
+    assert by_offer == {"o-main": "full_school_coa", "o-tier": "full_school_coa"}
+    assert version["coverages"] == ["full_school_coa"]
+
+
+def offer(oid: str, benefits, parent=None) -> Dict[str, Any]:
+    return {"offer_id": oid, "parent_offer_id": parent, "benefits": benefits}
+
+
+def test_child_offer_adds_to_its_ancestors_and_the_parent_is_unchanged():
+    # Review 6: a tier lists only what it adds.
+    offers = [
+        offer("o-main", [b("tuition")]),
+        offer("o-finalist", [b("housing"), b("meals")], parent="o-main"),
+        offer("o-grand", [b("books")], parent="o-finalist"),
+    ]
+    got = {o["offer_id"]: o["normalized_coverage"] for o in model.derive_offers(offers)}
+    assert got == {"o-main": "full_tuition", "o-finalist": "tuition_housing_meals", "o-grand": "tuition_housing_meals"}
+
+
+def test_child_with_undocumented_benefits_stays_unknown_and_ancestor_waivers_do_not_count():
+    offers = [
+        offer("o-main", [b("nonresident_differential", "tuition_waiver")]),
+        offer("o-unknown", None, parent="o-main"),
+        offer("o-kid", [b("housing")], parent="o-main"),
+    ]
+    got = {o["offer_id"]: o["normalized_coverage"] for o in model.derive_offers(offers)}
+    assert got == {"o-main": "other", "o-unknown": None, "o-kid": "partial_or_fixed"}
+
+
+def test_advertised_totals_pass_through_and_never_derive_coverage(ds):
+    version = next(r for r in ds.versions if r["version_id"] == "fixture-foundation-program-2027")
+    main = version["record"]["offers"][0]
+    assert main["advertised_totals"][0]["amount"]["value"] == 89000
+    assert version["offers"][0]["advertised_totals"] == main["advertised_totals"]
+    only_total = offer("o", [])
+    only_total["advertised_totals"] = [{"amount": {"qualifier": "at_least", "value": 89000}, "scope_text": "advertised"}]
+    assert model.derive_offers([only_total])[0]["normalized_coverage"] == "other"
 
 
 def test_derived_coverage_is_not_in_the_stored_record_or_the_yaml(ds, docs):
@@ -149,12 +225,14 @@ def test_version_row_filter_columns(ds):
     assert row["selection_modes"] == ["automatic_guaranteed", "competitive"]
     assert row["residencies"] == ["any", "out_of_state"]
     assert row["national_merit_statuses"] == ["finalist"]
+    assert row["statuses_required"] == ["scholar"]  # new enum value loads and is filterable
     assert row["need_roles"] == ["considered", "not_considered"]
     assert row["separate_application"] == "required"
     # The November 1 admission deadline is only "recommended"; December 1 is required.
     assert row["deadline_months"] == [12]
     assert row["key_deadline"] == "2026-12-01"
-    assert row["latest_milestone_date"] == "2026-12-01"
+    assert row["cycle_through_date"] == "2026-12-01"
+    assert row["is_published"] is True
     assert row["source_retrieved_at"] == "2026-11-08"
 
 
@@ -239,6 +317,14 @@ def selected(out: model.Dataset) -> List[Tuple[str, str]]:
     return [(r["program_id"], r["version_id"]) for r in model.select_published(out)]
 
 
+def add_version(doc: Dict[str, Any], vid: str, **changes: Any) -> Dict[str, Any]:
+    ver = copy.deepcopy(doc["versions"][1])
+    ver["version_id"] = vid
+    ver.update(changes)
+    doc["versions"].append(ver)
+    return ver
+
+
 def test_select_serves_latest_year_and_never_unverified(ds):
     # The parent has only an unverified draft: no row. The foundation serves 2027, not the
     # historical 2026 version.
@@ -247,37 +333,75 @@ def test_select_serves_latest_year_and_never_unverified(ds):
 
 def test_select_serves_correction_head_not_the_superseded_version(docs):
     doc = foundation(docs)
-    fix = copy.deepcopy(doc["versions"][1])
-    fix["version_id"] = "fixture-foundation-program-2027b"
-    fix["supersedes"] = "fixture-foundation-program-2027"
-    fix["verification_status"] = "conflicting"
-    doc["versions"].append(fix)
+    add_version(doc, "fixture-foundation-program-2027b", supersedes="fixture-foundation-program-2027", verification_status="conflicting")
     assert selected(model.build_dataset(docs)) == [(FOUNDATION, "fixture-foundation-program-2027b")]
 
 
-def test_unverified_correction_hides_its_entry_year(docs):
-    # Decision as recorded: serve the chain head, never unverified. A draft correction therefore
-    # takes its year off the view until it is verified; the next-latest year is served.
+def test_unverified_correction_leaves_the_verified_version_published(docs):
+    # Review 1: the newest publishable member of the chain is served. An unverified
+    # correction must not hide the verified version it supersedes.
     doc = foundation(docs)
-    fix = copy.deepcopy(doc["versions"][1])
-    fix["version_id"] = "fixture-foundation-program-2027b"
-    fix["supersedes"] = "fixture-foundation-program-2027"
-    fix["verification_status"] = "unverified"
-    doc["versions"].append(fix)
-    assert selected(model.build_dataset(docs)) == [(FOUNDATION, "fixture-foundation-program-2026")]
+    add_version(doc, "fixture-foundation-program-2027b", supersedes="fixture-foundation-program-2027", verification_status="unverified")
+    out = model.build_dataset(docs)
+    assert selected(out) == [(FOUNDATION, "fixture-foundation-program-2027")]
+    flags = {r["version_id"]: r["is_published"] for r in out.versions if r["program_id"] == FOUNDATION}
+    assert flags == {
+        "fixture-foundation-program-2026": True,
+        "fixture-foundation-program-2027": True,
+        "fixture-foundation-program-2027b": False,
+    }
 
 
-def test_select_ranks_null_entry_year_last(docs):
+def test_published_walks_back_through_a_chain_of_unverified_corrections(docs):
     doc = foundation(docs)
-    undated = copy.deepcopy(doc["versions"][1])
-    undated.update(version_id="v-undated", entry_year=None, entry_year_label="Year unclear")
-    undated["application"]["milestones"] = []
-    doc["versions"].append(undated)
-    assert selected(model.build_dataset(docs)) == [(FOUNDATION, "fixture-foundation-program-2027")]
+    add_version(doc, "v-b", supersedes="fixture-foundation-program-2027", verification_status="unverified")
+    add_version(doc, "v-c", supersedes="v-b", verification_status="unverified")
+    assert model.published_ids(doc) == {"fixture-foundation-program-2026", "fixture-foundation-program-2027"}
     doc["versions"][1]["verification_status"] = "unverified"
-    assert selected(model.build_dataset(docs)) == [(FOUNDATION, "fixture-foundation-program-2026")]
-    doc["versions"][0]["verification_status"] = "unverified"
+    assert model.published_ids(doc) == {"fixture-foundation-program-2026"}  # a wholly unverified chain publishes nothing
+
+
+def test_rank_year_for_undated_versions():
+    assert model.rank_year(2027, "2026-01-01", "2020-01-01") == 2027
+    assert model.rank_year(None, "2026-12-01", None) == 2027  # Dec 2026 falls in the 2027 cycle
+    assert model.rank_year(None, "2026-06-30", None) == 2026
+    assert model.rank_year(None, None, "2026-11-08") == 2027  # no milestones: the retrieval day
+    assert model.rank_year(None, None, None) is None
+
+
+def undated(doc: Dict[str, Any], vid: str, milestone: Any) -> None:
+    ver = add_version(doc, vid, entry_year=None, entry_year_label="Year not stated")
+    ms = [] if milestone is None else [
+        {"kind": "application_deadline", "requirement": "required", "date": milestone, "recurring": None, "precision": "day", "source_date_text": "x"}
+    ]
+    ver["application"]["milestones"] = ms
+    ver["field_evidence"] = [e for e in ver["field_evidence"] if not e["field_path"].startswith("application/milestones")]
+    ver["field_evidence"].append(
+        {"field_path": "entry_year", "source_ref": "s-school", "locator": "page", "short_excerpt": None, "value_status": "not_published", "reported_value": None}
+    )
+
+
+def test_undated_version_ranks_by_cycle_through_date(docs):
+    # Review 8A + decision A: the school's current page names no class, only a Dec 2026 deadline.
+    # That is the 2027 cycle, so it ties the dated 2027 version (dated wins) and beats a dated 2026 one.
+    doc = foundation(docs)
+    undated(doc, "v-undated", "2026-12-15")
+    assert selected(model.build_dataset(docs)) == [(FOUNDATION, "fixture-foundation-program-2027")]
+    doc["versions"][1]["verification_status"] = "unverified"  # now only 2026 (dated) vs undated Dec 2026
     assert selected(model.build_dataset(docs)) == [(FOUNDATION, "v-undated")]
+
+
+def test_undated_version_with_no_milestones_ranks_by_retrieval_day(docs):
+    doc = foundation(docs)
+    undated(doc, "v-no-dates", None)  # retrieved 2026-11-08 -> cycle 2027
+    doc["versions"][1]["verification_status"] = "unverified"  # leaves historical 2026 vs the undated one
+    assert selected(model.build_dataset(docs)) == [(FOUNDATION, "v-no-dates")]
+
+
+def test_undated_old_version_does_not_beat_a_newer_dated_one(docs):
+    doc = foundation(docs)
+    undated(doc, "v-old", "2025-12-01")  # 2026 cycle
+    assert selected(model.build_dataset(docs)) == [(FOUNDATION, "fixture-foundation-program-2027")]
 
 
 def test_select_with_nothing_publishable_is_empty(docs):
@@ -427,8 +551,34 @@ def test_apply_refuses_to_wipe_the_database_from_an_empty_tree():
     with pytest.raises(load.RefusedError):
         load.apply(store, model.Dataset())
     assert store.calls == []  # refused before any write
-    load.apply(store, model.Dataset(), allow_empty=True)
+    load.apply(store, model.Dataset(), allow_prune=True)
     assert ("delete", "scholarship_programs", 1) in store.calls
+
+
+def existing_programs(n: int) -> load.Existing:
+    return load.Existing(programs={(f"p{i}",) for i in range(n)} | {(FOUNDATION,), (PARENT,)})
+
+
+def test_prune_guard_refuses_a_mass_removal_not_just_an_empty_tree(ds):
+    # Review 11: a checkout with one school's YAML would otherwise delete everything else.
+    store = FakeStore(existing_programs(40))  # 42 in the database, 2 in the tree: 40 would go
+    with pytest.raises(load.RefusedError, match="remove 40 of 42"):
+        load.apply(store, ds)
+    assert store.calls == []
+    assert load.apply(FakeStore(existing_programs(40)), ds, allow_prune=True)["pruned"]["programs"]
+
+
+def test_prune_guard_limits(ds):
+    # 6 programs of 100 is over the 5-program limit; 5 of 100 is fine; 2 of 12 is over 10%.
+    big = lambda n, total: load.Existing(programs={(f"p{i}",) for i in range(n)} | {(f"keep{i}",) for i in range(total - n - 2)} | {(FOUNDATION,), (PARENT,)})  # noqa: E731
+    keep_all = model.Dataset(programs=[{"program_id": f"keep{i}"} for i in range(200)] + list(ds.programs), versions=[], sources=[])
+    with pytest.raises(load.RefusedError):
+        load.check_prune_guard(load.compute_prune(keep_all, big(6, 108)), big(6, 108), False)
+    load.check_prune_guard(load.compute_prune(keep_all, big(5, 108)), big(5, 108), False)
+    with pytest.raises(load.RefusedError):
+        load.check_prune_guard(load.compute_prune(keep_all, big(2, 14)), big(2, 14), False)
+    # One program may always be removed.
+    load.check_prune_guard(load.compute_prune(keep_all, big(1, 8)), big(1, 8), False)
 
 
 def test_apply_on_an_empty_tree_and_empty_database_is_fine():
@@ -492,7 +642,9 @@ def test_migration_view_never_uses_now_inside_the_cache():
     sql = MIGRATION.read_text(encoding="utf-8")
     cache = sql.split("create materialized view public.scholarship_directory_cache", 1)[1].split("comment on materialized view", 1)[0]
     assert "now()" not in cache and "current_date" not in cache  # frozen at refresh; the view computes it
-    assert "verification_status <> 'unverified'" in cache and "is_chain_head" in cache
+    assert "v.is_published" in cache and "is_chain_head" not in cache  # review 1: serve the newest publishable version
+    assert "scholarship_cycle_year(v.cycle_through_date)" in cache  # decision A: rank an undated version by its dates
+    assert "'field_path'" in cache and "short_excerpt" not in cache  # review 2: locators, never excerpts
 
 
 def test_migration_check_constraints_cover_schema_enums():
@@ -504,6 +656,8 @@ def test_migration_check_constraints_cover_schema_enums():
             assert f"'{value}'" in sql, (field, value)
     for value in schema["$defs"]["version"]["properties"]["verification_status"]["enum"]:
         assert f"'{value}'" in sql
+    for value in schema["$defs"]["source"]["properties"]["authority"]["enum"]:
+        assert f"'{value}'" in sql, value  # scholarship_sources.authority CHECK
 
 
 # ----------------------------------------------------------------- view contract
@@ -532,13 +686,22 @@ def test_contract_example_row_matches_the_view_columns():
     assert all(o["normalized_coverage"] in model.NORMALIZED_COVERAGE for o in example["offers"])
 
 
+def full_row(ds: model.Dataset, today: dt.date) -> Dict[str, Any]:
+    version = model.select_published(ds)[0]
+    rec = model.public_record(ds.program(version["program_id"]), version, {"school_id": "uva", "ipeds_id": "234076"})
+    rec["freshness_status"] = model.freshness_status(
+        rec["entry_year"], rec["verification_status"], rec["cycle_through_date"], None, None, today
+    )
+    rec["current_entry_year"] = model.current_entry_year(today)
+    rec.update(last_check_at=None, last_check_result=None, needs_review=None, license=model.LICENSE_ID, attribution=model.ATTRIBUTION)
+    return rec
+
+
 def test_contract_example_row_agrees_with_the_loader_output(ds):
     text = CONTRACT.read_text(encoding="utf-8")
     example = json.loads(text.split("```json\n", 1)[1].split("\n```", 1)[0])
-    version = next(r for r in ds.versions if r["version_id"] == example["version_id"])
-    rec = model.public_record(ds.program(FOUNDATION), version, {"school_id": "uva", "ipeds_id": "234076"})
-    for key, value in rec.items():
-        assert example[key] == value, key
+    assert example == full_row(ds, dt.date(2026, 11, 14))
+    assert list(example) == view_columns(MIGRATION.read_text(encoding="utf-8"))  # same order as the view
 
 
 def test_freshness_rule_is_stated_in_the_migration_and_the_contract():
@@ -547,3 +710,83 @@ def test_freshness_rule_is_stated_in_the_migration_and_the_contract():
     for state in ("current_cycle_verified", "current_cycle_unconfirmed", "past_cycle", "conflicting"):
         assert state in sql and state in contract
     assert "1 July" in sql and "1 July" in contract
+
+
+# ------------------------------------------------------------ freshness reference
+
+
+def fr(entry_year, status="verified", through=None, result=None, review=None, today="2026-11-14"):
+    return model.freshness_status(entry_year, status, through, result, review, dt.date.fromisoformat(today))
+
+
+def test_cycle_rollover_is_on_1_july():
+    assert model.current_entry_year(dt.date(2026, 6, 30)) == 2026
+    assert model.current_entry_year(dt.date(2026, 7, 1)) == 2027
+    assert model.current_entry_year(dt.date(2026, 12, 31)) == 2027
+    assert model.current_entry_year(dt.date(2027, 1, 1)) == 2027
+
+
+def test_explicit_entry_year_rule_is_kept():
+    assert fr(2027) == "current_cycle_verified"
+    assert fr(2028) == "current_cycle_verified"
+    assert fr(2026) == "past_cycle"
+    assert fr(2026, today="2026-06-30") == "current_cycle_verified"
+    assert fr(2027, today="2027-07-01") == "past_cycle"  # the 2028 cycle has opened
+    assert fr(2027, through="2026-01-01") == "current_cycle_verified"  # milestones never override an explicit year
+    assert fr(2027, review=True) == "current_cycle_unconfirmed"
+
+
+def test_decision_a_undated_versions_use_their_milestone_dates():
+    assert model.cycle_basis(None, "2026-12-01") == "milestone_dates"
+    assert model.cycle_basis(None, None) == "none"
+    assert model.cycle_basis(2027, "2026-12-01") == "entry_year"
+    # Latest dated milestone today or later, verified, no needs_review: current.
+    assert fr(None, through="2026-11-14") == "current_cycle_verified"
+    assert fr(None, through="2027-03-01") == "current_cycle_verified"
+    # Every dated milestone past: past_cycle.
+    assert fr(None, through="2026-11-13") == "past_cycle"
+    # No dated milestone at all: unconfirmed.
+    assert fr(None, through=None) == "current_cycle_unconfirmed"
+    # needs_review, or a status other than verified, still unconfirms.
+    assert fr(None, through="2027-03-01", review=True) == "current_cycle_unconfirmed"
+    assert fr(None, status="unverified", through="2027-03-01") == "current_cycle_unconfirmed"
+
+
+def test_conflicting_and_historical_precedence():
+    assert fr(2026, status="conflicting") == "conflicting"  # conflicting before past_cycle
+    assert fr(2027, result="conflicting") == "conflicting"
+    assert fr(2027, status="historical_only") == "past_cycle"
+    assert fr(None, status="historical_only", through="2027-03-01") == "past_cycle"
+
+
+# ------------------------------------------------------- migration text pins
+
+
+def test_helper_functions_pin_their_search_path():
+    sql = MIGRATION.read_text(encoding="utf-8")
+    for name in ("scholarship_cycle_year", "scholarship_current_entry_year", "scholarship_cycle_basis", "scholarship_freshness_status"):
+        block = sql.split(f"create function public.{name}(", 1)[1].split("$$;", 1)[0]
+        assert "set search_path = pg_catalog, public" in block, name
+
+
+def test_view_pins_the_attribution_and_license_literals():
+    sql = MIGRATION.read_text(encoding="utf-8")
+    assert f"'{model.ATTRIBUTION}'::text as attribution" in sql
+    assert f"'{model.LICENSE_ID}'::text as license" in sql
+
+
+def test_view_exposes_last_check_result_on_purpose():
+    # Review 9: the cache is readable by anon, so every cache column the view omits would be a
+    # second, undocumented endpoint. The cache and the view agree except for computed columns.
+    sql = MIGRATION.read_text(encoding="utf-8")
+    cache = sql.split("create materialized view public.scholarship_directory_cache", 1)[1].split("comment on materialized view", 1)[0]
+    cache_cols = set(re.findall(r"\bas ([a-z_]+),?$", cache, re.M)) | set(re.findall(r"^  [a-z]+\.([a-z_]+),?$", cache, re.M))
+    hidden = cache_cols - set(view_columns(sql))
+    assert hidden == set(), hidden
+
+
+def test_reload_workflow_triggers_on_derivation_code():
+    wf = (REPO / ".github" / "workflows" / "scholarships-load.yml").read_text(encoding="utf-8")
+    for path in ("tools/scholarships/model.py", "tools/scholarships/load.py", "supabase/migrations/*_scholarship_directory.sql", "data/scholarships/**"):
+        assert f'- "{path}"' in wf, path
+    assert "allow_prune" in wf and "dispatch this workflow once" in wf

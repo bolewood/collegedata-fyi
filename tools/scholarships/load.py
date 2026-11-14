@@ -13,7 +13,8 @@ published-version git compare, which CI runs on the PR). Any issue aborts.
 --apply upserts scholarship_programs, scholarship_program_versions and
 scholarship_sources, keyed on program_id and (program_id, version_id), then
 prunes rows whose program, version or source is no longer in the YAML (so a
-removed draft cannot stay public), then calls
+removed draft cannot stay public; a run that would remove more than 5 programs
+or 10% of them is refused unless --allow-prune), then calls
 refresh_scholarship_directory_cache(). It is idempotent: a second run writes
 the same rows and prunes nothing. The writes are separate PostgREST requests,
 not one transaction; parents go first and prune goes last, so a failed run
@@ -221,15 +222,35 @@ class RefusedError(RuntimeError):
     """The apply would do something the loader will not do without a flag."""
 
 
-def apply(store: Store, ds: model.Dataset, allow_empty: bool = False) -> Dict[str, Any]:
+# Removing more than this many programs, or this share of them, in one run looks
+# like a bad checkout rather than an edit, and the cascade also deletes their
+# check history. One program may always be removed.
+MAX_PRUNE_PROGRAMS = 5
+MAX_PRUNE_SHARE = 0.10
+
+
+def check_prune_guard(prune: Prune, existing: Existing, allow_prune: bool) -> None:
+    n, total = len(prune.programs), len(existing.programs)
+    if allow_prune or n <= 1:
+        return
+    if n > MAX_PRUNE_PROGRAMS or n / total > MAX_PRUNE_SHARE:
+        raise RefusedError(
+            f"this run would remove {n} of {total} programs (limit: {MAX_PRUNE_PROGRAMS} programs "
+            f"or {int(MAX_PRUNE_SHARE * 100)}%); that looks like a bad checkout, not an edit. "
+            "Check the tree, then pass --allow-prune to proceed."
+        )
+
+
+def apply(store: Store, ds: model.Dataset, allow_prune: bool = False) -> Dict[str, Any]:
     """Upsert, prune, refresh. Returns a summary. Raises RefusedError before any write."""
     existing = store.existing()
-    if not ds.programs and existing.programs and not allow_empty:
+    prune = compute_prune(ds, existing)
+    if not ds.programs and existing.programs and not allow_prune:
         raise RefusedError(
             f"the YAML tree has no programs but the database has {len(existing.programs)}; "
-            "this looks like a bad checkout. Pass --allow-empty to remove them all."
+            "this looks like a bad checkout. Pass --allow-prune to remove them all."
         )
-    prune = compute_prune(ds, existing)
+    check_prune_guard(prune, existing, allow_prune)
     store.upsert("scholarship_programs", ds.programs)
     store.upsert("scholarship_program_versions", ds.versions)
     store.upsert("scholarship_sources", ds.sources)
@@ -286,7 +307,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("programs_dir", nargs="?", type=Path, default=validate.DEFAULT_PROGRAMS_DIR)
     ap.add_argument("--apply", action="store_true", help="write to Supabase (default is a dry run)")
     ap.add_argument("--check-db", action="store_true", help="dry run that also reads the database to list what --apply would prune")
-    ap.add_argument("--allow-empty", action="store_true", help="allow --apply to remove every program when the YAML tree is empty")
+    ap.add_argument("--allow-prune", action="store_true", help="allow --apply to remove many programs at once (more than 5 or 10%% of them, or all of them)")
     ap.add_argument("--report", type=Path, default=DEFAULT_REPORT, help="where to write the JSON report")
     args = ap.parse_args(argv)
 
@@ -304,7 +325,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     if args.apply:
         assert store is not None
         try:
-            result = apply(store, ds, allow_empty=args.allow_empty)
+            result = apply(store, ds, allow_prune=args.allow_prune)
         except RefusedError as exc:
             print(f"REFUSED: {exc}", file=sys.stderr)
             return 1

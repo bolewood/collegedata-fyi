@@ -12,13 +12,16 @@ Writes, for dataset version N:
                               comment), LICENSE.txt, ATTRIBUTION.txt
 
 The records are the ones scholarship_directory serves: per program, the latest
-non-unverified chain-head version. The downloads leave out freshness_status
+non-unverified chain-head version. The committed copies under web/public/data are checked by test_downloads.py,
+which fails when they are stale: rerun this script and commit the result.
+The downloads leave out freshness_status
 because it depends on the day it is read; every record carries
 verification_status and last_reviewed_at instead.
 
 Output is deterministic: the same records give byte-identical files. N comes
 from --dataset-version (default model.DATASET_VERSION); generated_at defaults to
-the newest last_reviewed_at in the data, and meta.dataset_id is the version plus
+the newest last_reviewed_at in the data (else the newest source retrieved_at, else
+1970-01-01; never the clock), and meta.dataset_id is the version plus
 a digest of the records, so a changed record is a new dataset_id.
 """
 
@@ -26,7 +29,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import datetime as dt
 import hashlib
 import io
 import json
@@ -59,11 +61,14 @@ CSV_COLUMNS = [
     "entry_year",
     "entry_year_label",
     "verification_status",
+    "cycle_basis",
+    "cycle_through_date",
     "last_reviewed_at",
     "coverages",
     "selection_modes",
     "residencies",
     "national_merit_statuses",
+    "statuses_required",
     "need_roles",
     "separate_application",
     "deadline_months",
@@ -138,9 +143,18 @@ def dataset_id(version: int, records: List[Dict[str, Any]]) -> str:
     return f"collegedata-scholarships-v{version}-{digest[:12]}"
 
 
+# generated_at comes from the records, never the clock, so the committed
+# snapshot is byte-stable until a record changes.
+EMPTY_GENERATED_AT = "1970-01-01"
+
+
 def default_generated_at(records: List[Dict[str, Any]]) -> str:
-    dates = [r["last_reviewed_at"] for r in records if r["last_reviewed_at"]]
-    return max(dates) if dates else dt.datetime.now(dt.timezone.utc).date().isoformat()
+    """Newest last_reviewed_at; else newest source retrieved_at; else a constant."""
+    reviewed = [r["last_reviewed_at"] for r in records if r["last_reviewed_at"]]
+    if reviewed:
+        return max(reviewed)
+    retrieved = [r["source_retrieved_at"] for r in records if r["source_retrieved_at"]]
+    return max(retrieved) if retrieved else EMPTY_GENERATED_AT
 
 
 def build_json(records: List[Dict[str, Any]], version: int, generated_at: str) -> str:
