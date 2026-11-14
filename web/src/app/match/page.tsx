@@ -11,6 +11,19 @@ export const metadata: Metadata = {
   description:
     "Build a college list from the numbers schools publish. On this device. No account. No student profile stored.",
   alternates: { canonical: "/match" },
+  // Generic on purpose (PRD 024 M1): never put a Match code or any profile
+  // value in preview metadata.
+  openGraph: {
+    title: "CollegeData.fyi Match List Builder",
+    description: "Build a college match list from the numbers schools publish.",
+    url: "/match",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "CollegeData.fyi Match List Builder",
+    description: "Build a college match list from the numbers schools publish.",
+  },
 };
 
 export default async function MatchPage() {

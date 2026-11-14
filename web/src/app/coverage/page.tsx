@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { fetchCoverageRows, fetchBrandColorIndex } from "@/lib/queries";
+import { ShareButton } from "@/components/ShareButton";
 import { CoverageDashboard } from "@/components/CoverageDashboard";
 
 export const revalidate = 900; // ISR: 15 minutes, matches the refresh-coverage cron
@@ -56,6 +57,10 @@ export default async function CoveragePage() {
           a public report on file. Publishing is voluntary. Some schools post
           the file, some bury it, some don&rsquo;t publish one we could find.
         </p>
+        <div style={{ marginTop: 18 }}>
+          {/* No path: shares the address bar as it is, filter params included. */}
+          <ShareButton surface="coverage" align="start" title="CollegeData.fyi CDS coverage view" />
+        </div>
       </header>
 
       {/* Suspense boundary required because CoverageDashboard reads
