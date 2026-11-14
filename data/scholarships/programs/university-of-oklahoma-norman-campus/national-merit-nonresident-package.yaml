@@ -1,0 +1,248 @@
+schema_version: 1
+program_id: national-merit-nonresident-package
+school_id: university-of-oklahoma-norman-campus
+ipeds_id: '207500'
+applicable_campuses:
+- Norman
+official_name: National Merit Finalist and Semifinalist (non-resident freshman)
+aliases: []
+program_family: national_merit
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: nonresident-2027
+  supersedes: null
+  entry_year: 2027
+  entry_year_label: null
+  entry_terms:
+  - fall
+  source_cohort_text: The awards listed above are for students entering OU for the fall 2027 semester.
+  verification_status: verified
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-A
+  owner_spot_checked: false
+  program_status_for_entry: null
+  offers:
+  - offer_id: o-nonres-finalist
+    parent_offer_id: null
+    variant_name: National Merit Finalist (non-resident)
+    residency: out_of_state
+    selection_mode: automatic_guaranteed
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - finalist
+      status_required_for_award: null
+      first_choice_required: true
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Semifinalists who advance to Finalist standing and name OU as their college choice
+        by April 30 are eligible to be upgraded to the Finalist package. OU is test-optional for scholarships
+        for fall 2027.
+    benefits:
+    - benefit_id: b-package
+      category: other
+      instrument: unknown
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 157050
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Listed in the Award Amount column with no per-year or component breakdown on this page
+      advertised_coverage_label: null
+  - offer_id: o-nonres-semifinalist
+    parent_offer_id: null
+    variant_name: National Merit Semifinalist (non-resident)
+    residency: out_of_state
+    selection_mode: automatic_guaranteed
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - semifinalist
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.5
+        scale: null
+        basis: recalculated_by_school
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: GPA is OU's standardized weighted 'scholarship GPA'.
+    benefits:
+    - benefit_id: b-annual
+      category: other
+      instrument: unknown
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 17500
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Four years
+      exclusions: null
+      scope_text: The school's chart quotes '$70,000 ($17,500 x 4 years)'. The page's introduction calls
+        these awards a 'tuition waiver' while the chart column says 'Scholarship', so the instrument is
+        left unknown.
+      advertised_coverage_label: null
+  application:
+    separate_application: not_required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 12
+        day: 15
+      precision: day
+      source_date_text: December 15
+    - kind: other
+      requirement: required
+      date: null
+      recurring:
+        month: 4
+        day: 30
+      precision: day
+      source_date_text: Name OU as college choice with National Merit by April 30 (Finalist upgrade)
+    admission_plan_requirement: null
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: Test scores and a seventh-semester transcript can be sent through April 30 for scholarship
+      update consideration. The page does not say which year December 15 or April 30 falls in; it labels
+      the awards for students entering fall 2027.
+  renewal_rules: null
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: not_allowed
+    note: Students cannot receive more than one of these merit-based awards.
+  - other_aid_type: other
+    relation: counts_within_package
+    note: Institutional scholarships combined with other federal, state and institutional aid should not
+      exceed the published Cost of Attendance.
+  award_counts: []
+  sources:
+  - source_id: s-sch
+    url: https://www.ou.edu/admissions/affordability/scholarships
+    authority: official_aid_policy
+    retrieved_at: '2026-11-14'
+    content_sha256: 6a2a5d4011d421da918c8f02bacc2ae812208c7bb05dd11bcb1eb422f1f5e36b
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-sch
+    locator: Scholarships page, Non-Resident Freshman Scholarships, intro paragraph
+    short_excerpt: Admitted students will be offered the highest scholarship listed in the chart below
+      based on their qualifications.
+    value_status: reported
+    reported_value: automatic_guaranteed
+  - field_path: offers/0/eligibility/national_merit_statuses
+    source_ref: s-sch
+    locator: Scholarships page, Non-Resident Freshman Scholarships table, National Merit Finalist row
+    short_excerpt: National Merit Finalist $157,050 National Merit Finalist
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/first_choice_required
+    source_ref: s-sch
+    locator: Scholarships page, Non-Resident Freshman Scholarships table, National Merit Semifinalist
+      row, upgrade sentence
+    short_excerpt: name OU as their college choice by April 30 are eligible to be upgraded to the National
+      Merit Finalist package
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-sch
+    locator: Scholarships page, Non-Resident Freshman Scholarships table, National Merit Finalist row,
+      Award Amount column
+    short_excerpt: National Merit Finalist $157,050 National Merit Finalist
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/selection_mode
+    source_ref: s-sch
+    locator: Scholarships page, Non-Resident Freshman Scholarships, intro paragraph
+    short_excerpt: Admitted students will be offered the highest scholarship listed in the chart below
+      based on their qualifications.
+    value_status: reported
+    reported_value: automatic_guaranteed
+  - field_path: offers/1/eligibility/national_merit_statuses
+    source_ref: s-sch
+    locator: Scholarships page, Non-Resident Freshman Scholarships table, National Merit Semifinalist
+      row, Qualifications
+    short_excerpt: Be named a National Merit Semifinalist and have a 3.5 GPA.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/eligibility/gpa
+    source_ref: s-sch
+    locator: Scholarships page, Non-Resident Freshman Scholarships table, National Merit Semifinalist
+      row, Qualifications
+    short_excerpt: Be named a National Merit Semifinalist and have a 3.5 GPA.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-sch
+    locator: Scholarships page, Non-Resident Freshman Scholarships table, National Merit Semifinalist
+      row, Award Amount column
+    short_excerpt: National Merit Semifinalist $70,000 ($17,500 x 4 years)
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-sch
+    locator: Scholarships page, Freshman Scholarships, intro paragraph
+    short_excerpt: No additional application is required for OU’s merit-based awards.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-sch
+    locator: Scholarships page, Freshman Scholarships, intro paragraph
+    short_excerpt: You must apply by December 15 to receive consideration.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-sch
+    locator: Scholarships page, Non-Resident Freshman Scholarships table, National Merit Semifinalist
+      row, upgrade sentence
+    short_excerpt: name OU as their college choice by April 30
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-sch
+    locator: Scholarships page, Non-Resident Freshman Scholarships table, intro paragraph
+    short_excerpt: Students cannot receive more than one of these merit-based awards.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/1
+    source_ref: s-sch
+    locator: Scholarships page, Freshman Scholarships, intro paragraph
+    short_excerpt: Institutional scholarships, combined with other federal, state and/or institutional
+      aid, should not exceed the published Cost of Attendance.
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-sch
+    locator: Scholarships page, note under the Non-Resident Freshman Scholarships table
+    short_excerpt: The scholarship awards listed above are for students entering OU for the fall 2027
+      semester.
+    value_status: reported
+    reported_value: null

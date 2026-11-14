@@ -1,0 +1,111 @@
+schema_version: 1
+program_id: national-merit-scholarship
+school_id: usc
+ipeds_id: '123961'
+applicable_campuses: []
+official_name: National Merit Scholarship
+aliases: []
+program_family: national_merit
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: national-merit-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Page names no entering class for the National Merit scholarship
+  entry_terms:
+  - unspecified
+  source_cohort_text: Page names no cohort
+  verification_status: verified
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-A
+  owner_spot_checked: false
+  program_status_for_entry: null
+  offers:
+  - offer_id: o-nmf
+    parent_offer_id: null
+    variant_name: National Merit Finalist scholarship
+    residency: unknown
+    selection_mode: unknown
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - finalist
+      status_required_for_award: null
+      first_choice_required: true
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: The page says USC 'awards' a $20,000-per-year scholarship to students who are
+        admitted, are named National Merit Finalists and list USC first choice with NMSC. It does not
+        use 'will receive' or 'guaranteed', so selection is left unknown.
+    benefits:
+    - benefit_id: b-nmf
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 20000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: null
+      exclusions: null
+      scope_text: Page says 'valued at $20,000 per year'; it does not state how many years
+      advertised_coverage_label: null
+  application:
+    separate_application: unknown
+    milestones: []
+    admission_plan_requirement: null
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: The page says application deadlines for USC Merit Scholarships are on the Dates and Deadlines
+      page; no National Merit deadline or first-choice deadline appears on this page. A site banner about
+      December 1 applies to merit scholarships generally and is not recorded here.
+  renewal_rules: null
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-sch
+    url: https://admission.usc.edu/cost-and-financial-aid/scholarships/
+    authority: official_admissions
+    retrieved_at: '2026-11-14'
+    content_sha256: 78453af37d7388760f579fd9cf905402a9d041b3f221b9551bdaf5c6f9db491d
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/eligibility/national_merit_statuses
+    source_ref: s-sch
+    locator: Scholarships page, USC Merit Scholarships section, second paragraph
+    short_excerpt: students who are admitted to USC, named National Merit Finalists by the National Merit
+      Corporation, and list USC as their first-choice institution with NMSC
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/first_choice_required
+    source_ref: s-sch
+    locator: Scholarships page, USC Merit Scholarships section, second paragraph
+    short_excerpt: list USC as their first-choice institution with NMSC
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-sch
+    locator: Scholarships page, USC Merit Scholarships section, second paragraph
+    short_excerpt: USC also awards a scholarship valued at $20,000 per year
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-sch
+    locator: 'Scholarships page: the National Merit paragraph names no entering class'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

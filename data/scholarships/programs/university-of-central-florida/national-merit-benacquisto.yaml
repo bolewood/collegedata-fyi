@@ -1,0 +1,289 @@
+schema_version: 1
+program_id: national-merit-benacquisto
+school_id: university-of-central-florida
+ipeds_id: '132903'
+applicable_campuses: []
+official_name: National Merit Scholarship Program and Benacquisto Scholarship
+aliases:
+- UCF National Merit Finalist Scholarship
+- Benacquisto Scholarship
+program_family: national_merit
+awarding_authority: unknown
+related_programs: []
+status: active
+versions:
+- version_id: national-merit-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: UCF pages name a 2026-27 newsletter and flyer but no entering class
+  entry_terms:
+  - unspecified
+  source_cohort_text: Admissions page and flyer are labeled 2026-27; the Benacquisto page is undated (last
+    modified 2024-06-27 per page metadata)
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-A
+  owner_spot_checked: false
+  program_status_for_entry: null
+  offers:
+  - offer_id: o-florida-finalist
+    parent_offer_id: null
+    variant_name: National Merit Finalist, Florida resident (Benacquisto)
+    residency: in_state
+    selection_mode: automatic_guaranteed
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - finalist
+      status_required_for_award: null
+      first_choice_required: true
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: 'The Benacquisto page requires National Merit Scholar status (a Finalist who
+        receives a National Merit $2500, corporate-sponsored or college-sponsored award); the format has
+        no value for ''Scholar''. Also: U.S. citizen or eligible noncitizen as determined by the institution,
+        full-time (12 credit hours per term) in a baccalaureate program, Florida high school diploma or
+        equivalent, enrolling in the fall term after high school graduation. The flyer says Florida-resident
+        Finalists who designate UCF first choice ''are guaranteed the UCF National Merit Finalist Scholarship''
+        (a differently named award from Benacquisto). The flyer also lists guaranteed Burnett Honors College
+        admission (with application) and four years of guaranteed on-campus housing (upon application);
+        those are not funding benefits.'
+    benefits:
+    - benefit_id: b-benacquisto
+      category: other
+      instrument: scholarship
+      coverage: variable
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to 10 semesters or 15 quarters, or until completion of a baccalaureate degree
+        if sooner
+      exclusions:
+      - Remedial or developmental coursework
+      - Summer coursework
+      scope_text: Award equals the institutional cost of attendance minus the sum of the Bright Futures
+        award and the National Merit award; the state Benacquisto program funds it
+      advertised_coverage_label: stacked to total your UCF cost of attendance
+  - offer_id: o-out-of-state-finalist
+    parent_offer_id: null
+    variant_name: National Merit Finalist, out-of-state
+    residency: out_of_state
+    selection_mode: unknown
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - finalist
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: The admissions page tells out-of-state Finalists to contact scholarsprogram@ucf.edu
+        about current non-Florida National Merit benefits; no terms are published.
+    benefits: null
+  - offer_id: o-semifinalist
+    parent_offer_id: null
+    variant_name: National Merit Semifinalist
+    residency: any
+    selection_mode: unknown
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - semifinalist
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Considered for a scholarship upon admission; the flyer lists expedited admission
+        decision and priority consideration for merit scholarships. No amount is published.
+    benefits: null
+  application:
+    separate_application: not_required
+    milestones:
+    - kind: other
+      requirement: required
+      date: null
+      recurring:
+        month: 5
+        day: 31
+      precision: day
+      source_date_text: May 31 deadline to designate UCF as first choice with the NMSC
+    - kind: acceptance_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 5
+        day: 1
+      precision: day
+      source_date_text: Enrollment deposit by May 1
+    admission_plan_requirement: null
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: 'Flyer: submit the admission application early in the fall semester with a short essay; the
+      application fee can be waived by contacting scholarsprogram@ucf.edu. The Burnett Honors College
+      benefits need a separate paper application (flyer). The page names no year for May 31 or May 1.'
+  renewal_rules:
+  - applies_to:
+    - offer_id: o-florida-finalist
+      benefit_id: b-benacquisto
+    gpa_min: 3.0
+    gpa_scale: 4.0
+    credit_load_min_per_term: null
+    evaluation_timing: At the end of the second semester of the academic year (end of spring term)
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: Also requires earned credit for all hours enrolled by the regular drop/add period each term.
+      A student who does not meet the hours or GPA is ineligible to continue; an appeal can be filed for
+      documented illness or emergency. This page gives one renewal GPA (3.0); the renewal-GPA conflict
+      noted in the seed was not found on UCF's live pages today.
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-adm
+    url: https://www.ucf.edu/admissions/undergraduate/national-merit/
+    authority: official_admissions
+    retrieved_at: '2026-11-14'
+    content_sha256: e73f341049ce18aceafd8e4ac37069957e330c5a525a3f6b9946cafabad8c5c3
+    archive_url: null
+  - source_id: s-flyer
+    url: https://www.ucf.edu/admissions/undergraduate/wp-content/uploads/sites/4/2026/10/UCF-National-Merit-Flyer-2026-27.pdf
+    authority: official_admissions
+    retrieved_at: '2026-11-14'
+    content_sha256: 72f67c93b96cb5d8f307e68fad7d8b93c7cb4220799b225f10629d4f9515df86
+    archive_url: null
+  - source_id: s-bq
+    url: https://www.ucf.edu/financial-aid/types/scholarships/benacquisto/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-14'
+    content_sha256: 6ba453bbcefb133d16ce76d80700d064d70a832eb5c002a9c638da873fb5eaa4
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-adm
+    locator: Admissions page, Packages and Benefits, second paragraph
+    short_excerpt: Florida residents who advance to become National Merit Finalists will be awarded the
+      Benacquisto Scholarship
+    value_status: reported
+    reported_value: automatic_guaranteed
+  - field_path: offers/0/eligibility/eligibility_notes
+    source_ref: s-flyer
+    locator: Flyer, checklist January-February, 'Check if you are a National Merit finalist'
+    short_excerpt: All finalists who are Florida residents and designate UCF as their first choice by
+      the NMSC deadline are guaranteed the UCF National Merit Finalist Scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/national_merit_statuses
+    source_ref: s-adm
+    locator: Admissions page, Packages and Benefits, second paragraph
+    short_excerpt: Florida residents who advance to become National Merit Finalists will be awarded the
+      Benacquisto Scholarship in addition to the Florida Bright Futures Scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/first_choice_required
+    source_ref: s-adm
+    locator: Admissions page, Packages and Benefits, first paragraph
+    short_excerpt: designate UCF as your “first-choice” with the National Merit Scholarship Corporation
+      by the May 31 deadline
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-bq
+    locator: Benacquisto page, Award Amounts
+    short_excerpt: Benacquisto Scholarship Program = COA – (BF + NM)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-bq
+    locator: 'Benacquisto page, Award Amounts: formula only, no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/selection_mode
+    source_ref: s-bq
+    locator: 'Benacquisto page, intro paragraph: out-of-state award formula'
+    short_excerpt: Out-of-state students will receive an award equal to the in-state cost of attendance
+      minus their National Merit award.
+    value_status: conflicting
+    reported_value: award_exists_for_out_of_state
+  - field_path: offers/1/selection_mode
+    source_ref: s-bq
+    locator: Benacquisto page, Eligibility Requirements, note after the Scholar definition
+    short_excerpt: Effective for 2022-2023 the Benacquisto Scholarship will no longer be award to out
+      of state students
+    value_status: conflicting
+    reported_value: no_award_for_out_of_state_from_2022_23
+  - field_path: offers/1/eligibility/national_merit_statuses
+    source_ref: s-adm
+    locator: Admissions page, Packages and Benefits, third paragraph
+    short_excerpt: Out-of-state National Merit Finalists should contact scholarsprogram@ucf.edu to inquire
+      about current Non-Florida National Merit benefits.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/eligibility/national_merit_statuses
+    source_ref: s-adm
+    locator: Admissions page, Packages and Benefits, first paragraph
+    short_excerpt: You will be considered for a scholarship upon admission to UCF if you are named a National
+      Merit Semifinalist.
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-bq
+    locator: Benacquisto page, intro paragraph
+    short_excerpt: An initial application is not required.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-adm
+    locator: Admissions page, Packages and Benefits, first paragraph
+    short_excerpt: by the May 31 deadline
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-flyer
+    locator: Flyer, checklist March-June, 'Submit the UCF enrollment deposit'
+    short_excerpt: Submit the $200 enrollment deposit, which is applied toward your first semester tuition
+      and is not waived as part of your scholarship, by May 1.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-bq
+    locator: Benacquisto page, Renewal Requirements
+    short_excerpt: Earned a minimum cumulative GPA of 3.0 on a 4.0 scale.
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-adm
+    locator: Admissions page, '2026-27 Scholars Program Newsletter' heading; no entering class named
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
