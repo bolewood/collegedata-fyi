@@ -225,6 +225,14 @@ const SEED_META: Array<{
     help: "Hourly we refresh the homepage and API caches so the public site is not reading live tables on every visit.",
   },
   {
+    station_id: "corpus_audit",
+    display_name: "Data audit",
+    cadence_label: "daily · SLA 36h",
+    class: "daily_sla",
+    on_board: true,
+    help: "Once a day we check the published numbers for mistakes a reader would notice: one school showing another school's file, two schools with identical admissions counts, or applicant totals far from the federal figure. Anything new goes to a person to review.",
+  },
+  {
     station_id: "ipeds_release_probe",
     display_name: "IPEDS probe",
     cadence_label: "monthly · scheduled SLA 40d",
@@ -469,6 +477,8 @@ function resultLine(row: PipelineFactRow, lamp: Lamp): string {
       return `${num(summary.current)} current · ${num(summary.stale)} stale`;
     case "serving_cache_refresh":
       return summary.ok === false ? "refresh failed" : "refresh_public_serving_caches";
+    case "corpus_audit":
+      return `${num(summary.new_findings)} to review · ${num(summary.accepted_findings)} explained · ${num(summary.values_withheld)} values withheld`;
     case "ipeds_release_probe":
       return summary.new_release === true ? "new release listed" : "no new release";
     case "schema_build":

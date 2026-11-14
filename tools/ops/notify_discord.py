@@ -57,6 +57,7 @@ STATION_SLA: dict[str, tuple[str, int]] = {
     "schema_build": ("18mo", 18 * 30 * 24 * 3600),
     "scorecard_load": ("18mo", 18 * 30 * 24 * 3600),
     "api_usage_ingest": ("8h", 8 * 3600),
+    "corpus_audit": ("36h", 36 * 3600),
 }
 
 API_USAGE_WORKFLOW = "API usage ingest"

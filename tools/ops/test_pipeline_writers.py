@@ -12,21 +12,29 @@ EXTRACTION = ROOT / ".github/workflows/ops-extraction-worker.yml"
 HEADLESS = ROOT / ".github/workflows/ops-headless-archive.yml"
 IPEDS = ROOT / ".github/workflows/ipeds-release-probe.yml"
 API_USAGE = ROOT / ".github/workflows/ops-api-usage-ingest.yml"
+CORPUS_AUDIT = ROOT / ".github/workflows/ops-corpus-audit.yml"
 STATION_RE = re.compile(r"--station\s+(\S+)")
 
 
 class PipelineWriterLintTests(unittest.TestCase):
     def test_workflow_station_ids_are_in_the_registry(self) -> None:
         stations: set[str] = set()
-        for path in (FINDER, EXTRACTION, HEADLESS, IPEDS, API_USAGE):
+        for path in (FINDER, EXTRACTION, HEADLESS, IPEDS, API_USAGE, CORPUS_AUDIT):
             stations.update(STATION_RE.findall(path.read_text(encoding="utf-8")))
         self.assertTrue(stations)
         self.assertTrue(stations <= set(REGISTRY_STATIONS), stations - set(REGISTRY_STATIONS))
         self.assertIn("headless_archive", stations)
         self.assertIn("api_usage_ingest", stations)
+        self.assertIn("corpus_audit", stations)
+
+    def test_corpus_audit_keeps_the_service_key_out_of_dependency_install(self) -> None:
+        text = CORPUS_AUDIT.read_text(encoding="utf-8")
+        job_env = text.split("    steps:")[0]
+        self.assertNotIn("SUPABASE_SERVICE_ROLE_KEY", job_env)
+        self.assertIn("--out-heartbeat", text)
 
     def test_scheduled_workflows_keep_on_schedule(self) -> None:
-        for path in (FINDER, EXTRACTION, HEADLESS, IPEDS, API_USAGE):
+        for path in (FINDER, EXTRACTION, HEADLESS, IPEDS, API_USAGE, CORPUS_AUDIT):
             text = path.read_text(encoding="utf-8")
             self.assertRegex(text, r"(?m)^  schedule:\s*$", msg=f"{path.name} lost on.schedule")
             self.assertRegex(text, r"- cron:")

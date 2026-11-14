@@ -465,6 +465,18 @@ def build_report(
     }
 
 
+def heartbeat_summary(report: Mapping[str, Any]) -> dict[str, int]:
+    """The numbers the pipeline board shows for the corpus_audit station.
+    Keys must stay within the station's allowed_keys (see the migration)."""
+    return {
+        "new_findings": report["summary"]["new_findings"],
+        "accepted_findings": len(report["findings"]["accepted"]),
+        "federal_rows_compared": report["summary"]["federal_rows_compared"],
+        "values_withheld": sum(report["metrics"]["sanity_rules"]["values_flagged"].values()),
+        "parse_errors": report["metrics"]["parse_errors"]["total"],
+    }
+
+
 def fetch_inputs(client: ReadOnlyPostgrest) -> dict[str, list[dict[str, Any]]]:
     def rows(identifier, table, params, key, page_size=1000):
         fetched, _evidence = client.paginate(
@@ -553,6 +565,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--accepted", type=Path, default=DEFAULT_ACCEPTED)
     parser.add_argument("--env", type=Path, default=REPO_ROOT / ".env")
     parser.add_argument(
+        "--out-heartbeat",
+        type=Path,
+        help="Write the pipeline heartbeat summary (station corpus_audit) to this path.",
+    )
+    parser.add_argument(
         "--fail-on-new",
         action="store_true",
         help="Exit 3 when a finding is not in the accepted file.",
@@ -575,6 +592,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text)
+
+    if args.out_heartbeat:
+        args.out_heartbeat.parent.mkdir(parents=True, exist_ok=True)
+        args.out_heartbeat.write_text(json.dumps(heartbeat_summary(report)) + "\n")
 
     print(json.dumps(report["summary"], indent=2))
     print(f"Wrote {args.out_json} and {args.out_md}")

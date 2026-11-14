@@ -35,6 +35,7 @@ export const BOARD_STATION_IDS = [
   "extraction_worker",
   "coverage_refresh",
   "serving_cache_refresh",
+  "corpus_audit",
   "ipeds_release_probe",
   "schema_build",
   "scorecard_load",
