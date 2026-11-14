@@ -1,0 +1,401 @@
+schema_version: 1
+program_id: distinguished-presidential-scholarship
+school_id: tuskegee-university
+ipeds_id: '102377'
+applicable_campuses: []
+official_name: Distinguished Presidential Scholarship
+aliases: []
+program_family: presidential
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: distinguished-presidential-2027
+  supersedes: null
+  entry_year: 2027
+  entry_year_label: Incoming Freshmen 2027-2028
+  entry_terms:
+  - unspecified
+  source_cohort_text: Academic Scholarships/Grants for Incoming Freshmen 2027-2028
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-B
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: unknown
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: true
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.8
+        scale: null
+        basis: unweighted
+      test_rules:
+      - exam: SAT
+        min: 1400
+        scoring: single_sitting
+        official_required: null
+      - exam: ACT
+        min: 30
+        scoring: single_sitting
+        official_required: null
+      tests_policy_for_scholarship: required
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Only for applicants who apply under Standard Admission. An interview is required. The award is not transferable to other terms or years of entry, and the university may revoke it
+        if the final cumulative high school GPA or test score falls below the scholarship requirement. The page says test-optional applicants outside Alabama may not apply for merit scholarships; the asterisk
+        allowing test-optional applies only to the Alabama Incentive Grant.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: Full tuition, room/board, fees, and $300 eBook voucher
+      conditions_text: Subject to availability of University funds and completion of the FAFSA
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions:
+      - The non-refundable enrollment fee
+      scope_text: null
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: "room/board"'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: "room/board"'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-ebook
+      category: books
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 300
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: "$300 eBook voucher"; the page does not say how often it is paid'
+      advertised_coverage_label: null
+      conditions_text: null
+  application:
+    separate_application: unknown
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 12
+        day: 1
+      precision: day
+      source_date_text: Dec. 1 (completed application for Presidential consideration)
+    - kind: application_open
+      requirement: required
+      date: null
+      recurring:
+        month: 12
+        day: 1
+      precision: day
+      source_date_text: December 1
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 1
+        day: 1
+      precision: day
+      source_date_text: January 1
+    - kind: notification
+      requirement: required
+      date: null
+      recurring: null
+      precision: day
+      source_date_text: by January 30 / by January 15 (page says both)
+    - kind: acceptance_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 4
+        day: 1
+      precision: day
+      source_date_text: April 1
+    admission_plan_requirement: Standard Admission only; completed admission application received by Dec. 1 for Presidential consideration
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: Applicants who are extended an offer are encouraged to attend Scholars Day in mid-February (invitation only) and must finalize their admissions decision by April 1. All new students must pay
+      a non-refundable $500 enrollment fee by the priority date on the scholarship letter or the award is subject to cancellation; the award does not cover that fee. The page also says the scholarship application
+      opens December 1 and closes January 1, and that a link is sent to students who qualify.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.5
+    gpa_scale: null
+    credit_load_min_per_term: null
+    evaluation_timing: Each academic year (Fall and Spring semesters at Tuskegee only)
+    summer_courses_can_fix_shortfall: false
+    max_semesters: null
+    notes: The award list reads "-3.5/30", with the legend "Renewable CGPA/CREDIT Attainment"; 30 is read as credits per academic year, and the page gives no per-term load. External credits and summer terms
+      do not count. Recipients must register for the Thurgood Marshall, UNCF and Tuskegee University scholarship portals annually. GPA scale not stated.
+    credit_load_min_per_year: 30
+  stacking_rules:
+  - other_aid_type: federal_or_state_need
+    relation: counts_within_package
+    note: Awards combined with Federal Student Aid and external awards cannot exceed the total cost of attendance.
+  - other_aid_type: outside_scholarship
+    relation: counts_within_package
+    note: Awards combined with Federal Student Aid and external awards cannot exceed the total cost of attendance.
+  - other_aid_type: federal_or_state_need
+    relation: counts_within_package
+    note: If the Student Aid Report shows eligibility for Federal Grant Aid, institutional scholarship and grant awards are adjusted to direct cost of attendance (the cap is direct, not total, cost).
+  award_counts: []
+  sources:
+  - source_id: s-tu
+    url: https://www.tuskegee.edu/financial-aid/Scholarships.html
+    authority: official_aid_policy
+    retrieved_at: '2026-11-14'
+    content_sha256: ee0818fae6b5c0debd32e76d5ffa23de5a81fe31f75163d1f973223d9248f00a
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-tu
+    locator: Freshman scholarships list heading
+    short_excerpt: Academic Scholarships/Grants for Incoming Freshmen 2027-2028
+    value_status: reported
+    reported_value: 2027
+  - field_path: offers/0/selection_mode
+    source_ref: s-tu
+    locator: Scholarships page, "Priority Scholarship Deadlines"
+    short_excerpt: Scholarship awards are offered on a competitive basis and are subject to the availability of funds.
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/funds_limited
+    source_ref: s-tu
+    locator: Scholarships page, "Priority Scholarship Deadlines"
+    short_excerpt: Scholarship awards are offered on a competitive basis and are subject to the availability of funds.
+    value_status: reported
+    reported_value: true
+  - field_path: offers/0/benefits
+    source_ref: s-tu
+    locator: Scholarships page, "Scholarships for Incoming Freshmen" award list
+    short_excerpt: Distinguished Presidential, 3.8, 1400, 30 (Full tuition, room/board, fees, and $300 eBook voucher) -3.5/30 (Interview Required)
+    value_status: reported
+    reported_value: listed
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-tu
+    locator: Scholarships page, "Scholarships for Incoming Freshmen" award list
+    short_excerpt: Full tuition, room/board, fees, and $300 eBook voucher
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-tu
+    locator: Scholarships page, "Scholarships for Incoming Freshmen" award list
+    short_excerpt: Full tuition, room/board, fees, and $300 eBook voucher
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-tu
+    locator: Scholarships page, "Scholarships for Incoming Freshmen" award list
+    short_excerpt: Full tuition, room/board, fees, and $300 eBook voucher
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-tu
+    locator: Scholarships page, "Scholarships for Incoming Freshmen" award list
+    short_excerpt: Full tuition, room/board, fees, and $300 eBook voucher
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-tu
+    locator: Scholarships page, "Scholarships for Incoming Freshmen" award list
+    short_excerpt: Distinguished Presidential, 3.8, 1400, 30 (Full tuition, room/board, fees, and $300 eBook voucher) -3.5/30 (Interview Required)
+    value_status: reported
+    reported_value: 300
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-tu
+    locator: Scholarships page, "Scholarships for Incoming Freshmen" award list
+    short_excerpt: Scholarship Name - GPA Unweighted - SAT Total Score - ACT Composite (with Science) - Award Details - and Renewable CGPA/CREDIT Attainment.
+    value_status: reported
+    reported_value: 3.8
+  - field_path: offers/0/eligibility/test_rules
+    source_ref: s-tu
+    locator: Scholarships page, "Merit Based Scholarship and Grant Policies"
+    short_excerpt: SUPERSCORED ACT/SAT scores ARE NOT permissible for scholarship awards.
+    value_status: reported
+    reported_value: no superscoring
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-tu
+    locator: Scholarships page, award list intro
+    short_excerpt: Test Optional Applicants outside of the State of Alabama, may not apply for merit based scholarships.
+    value_status: reported
+    reported_value: required
+  - field_path: application/separate_application
+    source_ref: s-tu
+    locator: Scholarships page, "Scholarships for Incoming Freshmen"
+    short_excerpt: There is no separate scholarship application.
+    value_status: conflicting
+    reported_value: not_required
+  - field_path: application/separate_application
+    source_ref: s-tu
+    locator: Scholarships page, award list intro
+    short_excerpt: All students must APPLY for merit based scholarships within the scholarship window.
+    value_status: conflicting
+    reported_value: required
+  - field_path: application/milestones/0
+    source_ref: s-tu
+    locator: Scholarships page, "Scholarships for Incoming Freshmen" notes
+    short_excerpt: Completed Applications must be received by Dec. 1 for Presidential consideration
+    value_status: reported
+    reported_value: Dec. 1
+  - field_path: application/milestones/1
+    source_ref: s-tu
+    locator: Scholarships page, "Priority Scholarship Deadlines"
+    short_excerpt: The priority scholarship application opens December 1 and closes January 1.
+    value_status: reported
+    reported_value: December 1
+  - field_path: application/milestones/2
+    source_ref: s-tu
+    locator: Scholarships page, "Priority Scholarship Deadlines"
+    short_excerpt: The priority scholarship application opens December 1 and closes January 1.
+    value_status: reported
+    reported_value: January 1
+  - field_path: application/milestones/3/date
+    source_ref: s-tu
+    locator: Scholarships page, "Priority Scholarship Deadlines"
+    short_excerpt: notifications of any scholarship awards will be sent by January 30.
+    value_status: conflicting
+    reported_value: January 30
+  - field_path: application/milestones/3/date
+    source_ref: s-tu
+    locator: Scholarships page, award list intro
+    short_excerpt: Notifications of any scholarship awards will be sent by January 15.
+    value_status: conflicting
+    reported_value: January 15
+  - field_path: application/milestones/4
+    source_ref: s-tu
+    locator: Scholarships page, "Priority Scholarship Deadlines"
+    short_excerpt: finalize their admissions decision by April 1
+    value_status: reported
+    reported_value: April 1
+  - field_path: offers/0/benefits/0/conditions_text
+    source_ref: s-tu
+    locator: Scholarships page, "Merit Based Scholarship and Grant Policies"
+    short_excerpt: Scholarships and grants are subject to availability of University funds and the completion of the Free Application for Federal Student Aid.
+    value_status: reported
+    reported_value: FAFSA
+  - field_path: offers/0/eligibility/eligibility_notes
+    source_ref: s-tu
+    locator: Scholarships page, "Merit Based Scholarship and Grant Policies"
+    short_excerpt: The University reserves the right to revoke any scholarship and grant awards for students whose final cumulative high school grade point average
+    value_status: reported
+    reported_value: revocation
+  - field_path: offers/0/eligibility/eligibility_notes
+    source_ref: s-tu
+    locator: Scholarships page, "Merit Based Scholarship and Grant Policies"
+    short_excerpt: Scholarships are not transferable to other terms or years of entry to Tuskegee University
+    value_status: reported
+    reported_value: not transferable
+  - field_path: application/notes
+    source_ref: s-tu
+    locator: Scholarships page, "Merit Based Scholarship and Grant Policies"
+    short_excerpt: All new students are required to pay a non-refundable $500 enrollment fee by the priority date stated on your scholarship letter.
+    value_status: reported
+    reported_value: enrollment fee
+  - field_path: stacking_rules/2
+    source_ref: s-tu
+    locator: Scholarships page, "Merit Based Scholarship and Grant Policies"
+    short_excerpt: your institutional scholarship and grant awards will be adjusted to direct cost of attendance.
+    value_status: reported
+    reported_value: counts_within_package
+  - field_path: renewal_rules/0/notes
+    source_ref: s-tu
+    locator: Scholarships page, "Merit Based Scholarship and Grant Policies"
+    short_excerpt: Scholarship recipients must register for the Thurgood Marshall, UNCF and Tuskegee University scholarship portals annually.
+    value_status: reported
+    reported_value: portal registration
+  - field_path: renewal_rules/0/credit_load_min_per_year
+    source_ref: s-tu
+    locator: Scholarships page, "Scholarships for Incoming Freshmen" award list
+    short_excerpt: Distinguished Presidential, 3.8, 1400, 30 (Full tuition, room/board, fees, and $300 eBook voucher) -3.5/30 (Interview Required)
+    value_status: reported
+    reported_value: 30
+  - field_path: renewal_rules/0/gpa_min
+    source_ref: s-tu
+    locator: Scholarships page, "Scholarships for Incoming Freshmen" award list
+    short_excerpt: Distinguished Presidential, 3.8, 1400, 30 (Full tuition, room/board, fees, and $300 eBook voucher) -3.5/30 (Interview Required)
+    value_status: reported
+    reported_value: 3.5
+  - field_path: renewal_rules/0/summer_courses_can_fix_shortfall
+    source_ref: s-tu
+    locator: Scholarships page, "Merit Based Scholarship and Grant Policies"
+    short_excerpt: Summer semesters do not count toward scholarship renewal.
+    value_status: reported
+    reported_value: false
+  - field_path: stacking_rules/0
+    source_ref: s-tu
+    locator: Scholarships page, "Merit Based Scholarship and Grant Policies"
+    short_excerpt: Scholarships and grant funds awarded, once combined with Federal Student Aid and any external awards cannot exceed the total cost of attendance.
+    value_status: reported
+    reported_value: counts_within_package
+  - field_path: offers/0/benefits/1/exclusions
+    source_ref: s-tu
+    locator: Scholarships page, "Merit Based Scholarship and Grant Policies"
+    short_excerpt: Scholarship and Grant awards DO NOT cover the University's non-refundable enrollment fee.
+    value_status: reported
+    reported_value: enrollment fee

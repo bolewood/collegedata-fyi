@@ -1,0 +1,178 @@
+schema_version: 1
+program_id: cornelius-vanderbilt-scholarship
+school_id: vanderbilt
+ipeds_id: '221999'
+applicable_campuses: []
+official_name: Cornelius Vanderbilt Scholarship
+aliases: []
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: cornelius-vanderbilt-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Entering class not named; page lists a December 1, 2026 application deadline
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-B
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: merit_only
+    need_role: top_up_only
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Audition scores are a factor in merit scholarship selection for Blair School of Music recipients.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: full tuition
+      conditions_text: null
+    - benefit_id: b-summer
+      category: stipend
+      instrument: cash_stipend
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: One-time, following the sophomore or junior year
+      exclusions: null
+      scope_text: School says "a one-time summer stipend for an immersive experience"; amount not published on this page
+      advertised_coverage_label: null
+      conditions_text: null
+  application:
+    separate_application: encouraged
+    milestones:
+    - kind: application_deadline
+      requirement: recommended
+      date: '2026-12-01'
+      recurring: null
+      precision: day
+      source_date_text: December 1, 2026
+    - kind: notification
+      requirement: recommended
+      date: '2027-03-01'
+      recurring: null
+      precision: month
+      source_date_text: End of March 2027
+    admission_plan_requirement: Applicants apply via MyAppVU after submitting the admission application
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: null
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.0
+    gpa_scale: null
+    credit_load_min_per_term: null
+    evaluation_timing: Each year
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: Page does not state the GPA scale or a credit load.
+    credit_load_min_per_year: null
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-vu
+    url: https://www.vanderbilt.edu/scholarships/signature/
+    authority: official_program
+    retrieved_at: '2026-11-14'
+    content_sha256: 75dcda6b90ef0bb0af697f0accd32002be254024b37493cba63152648b42c8c1
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-vu
+    locator: Page names no entering class; lists a December 1, 2026 deadline
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-vu
+    locator: Cornelius Vanderbilt Scholarship page, intro paragraphs
+    short_excerpt: Cornelius Vanderbilt Scholars are selected on the basis of academic achievement, intellectual promise, and leadership and contribution outside the classroom
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-vu
+    locator: Cornelius Vanderbilt Scholarship page, intro paragraphs
+    short_excerpt: Cornelius Vanderbilt Scholars receive full tuition, plus a one-time summer stipend for an immersive experience following the sophomore or junior year.
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-vu
+    locator: Cornelius Vanderbilt Scholarship page, intro paragraphs
+    short_excerpt: full tuition
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-vu
+    locator: Cornelius Vanderbilt Scholarship page, intro paragraphs
+    short_excerpt: a one-time summer stipend
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/need_role
+    source_ref: s-vu
+    locator: Cornelius Vanderbilt Scholarship page, intro paragraphs
+    short_excerpt: Vanderbilt will provide additional need-based financial aid to those Cornelius Vanderbilt Scholarship recipients whose demonstrated need exceeds the amount of full-tuition.
+    value_status: reported
+    reported_value: top_up_only
+  - field_path: application/separate_application
+    source_ref: s-vu
+    locator: Cornelius Vanderbilt Scholarship page, intro paragraphs
+    short_excerpt: The Cornelius Vanderbilt application is strongly encouraged; preference is given to those who apply.
+    value_status: reported
+    reported_value: encouraged
+  - field_path: application/milestones/0
+    source_ref: s-vu
+    locator: Scholarship Application Deadlines sidebar
+    short_excerpt: December 1, 2026 Deadline to electronically submit Cornelius Vanderbilt Scholarship application
+    value_status: reported
+    reported_value: '2026-12-01'
+  - field_path: application/milestones/1
+    source_ref: s-vu
+    locator: Scholarship Application Deadlines sidebar
+    short_excerpt: End of March 2027 Cornelius Vanderbilt Scholarship recipients notified by mail and e-mail
+    value_status: reported
+    reported_value: End of March 2027
+  - field_path: renewal_rules/0/gpa_min
+    source_ref: s-vu
+    locator: Cornelius Vanderbilt Scholarship page, intro paragraphs
+    short_excerpt: Scholarships are renewed each year as long as the recipient maintains at least a 3.0 GPA.
+    value_status: reported
+    reported_value: 3.0
