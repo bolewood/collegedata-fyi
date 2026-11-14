@@ -838,3 +838,111 @@ def test_f10_every_non_draft_status_is_protected(doc, status):
     edited = copy.deepcopy(base)
     version27(edited)["source_cohort_text"] = "edited"
     assert codes(v.compare_published({"f.yaml": base}, {"f.yaml": edited})) == {"E_PUBLISHED_EDITED"}
+
+
+# ===================================================== real-record amendments
+
+
+def test_a1_cost_of_attendance_category(doc, ctx):
+    b = version27(doc)["offers"][0]["benefits"][3]
+    assert b["category"] == "cost_of_attendance"
+    assert v.validate_doc(doc, ctx) == []
+    b["category"] = "full_ride"
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+
+
+def test_a2_advertised_total_is_valid_with_null_period_and_evidence(doc, ctx):
+    t = version27(doc)["offers"][0]["advertised_totals"][0]
+    assert t["amount"]["period"] is None
+    assert v.validate_doc(doc, ctx) == []
+
+
+def test_a2_advertised_total_needs_exact_path_evidence_with_excerpt(doc, ctx):
+    drop_evidence(doc, "offers/0/advertised_totals/0/amount")
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SUMMED_TOTAL"}
+    other_evidence(doc, "offers/0/advertised_totals", short_excerpt="quoted")  # parent path is not enough
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SUMMED_TOTAL"}
+    version27(doc)["field_evidence"].pop()
+    other_evidence(doc, "offers/0/advertised_totals/0/amount", short_excerpt=None)
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SUMMED_TOTAL"}
+
+
+def test_a2_advertised_total_shape(doc, ctx):
+    t = version27(doc)["offers"][0]["advertised_totals"][0]
+    t["scope_text"] = ""
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+    t["scope_text"] = "x"
+    t["amount"] = {"qualifier": "range", "value": None, "min": 5, "max": 1, "period": None}
+    assert codes(v.validate_doc(doc, ctx)) == {"E_AMOUNT_RANGE"}
+
+
+def test_a3_credit_load_per_year(doc, ctx):
+    assert version27(doc)["renewal_rules"][0]["credit_load_min_per_year"] == 24
+    assert v.validate_doc(doc, ctx) == []
+
+
+def test_a4_maximum_lead_days(doc, ctx):
+    p = version27(doc)["application"]["prerequisites"][0]
+    assert p["maximum_lead_days"] == 5
+    p["maximum_lead_days"] = "five"
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+
+
+def test_a5_interview_mode_mixed(doc, ctx):
+    assert version27(doc)["application"]["interview_mode"] == "mixed"
+    assert v.validate_doc(doc, ctx) == []
+
+
+def test_a6_scholar_is_a_status_required_for_award_only(doc, ctx):
+    e = version27(doc)["offers"][1]["eligibility"]
+    assert e["status_required_for_award"] == "scholar"
+    e["national_merit_statuses"] = ["scholar"]  # not a status a student holds when applying
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+
+
+def test_a7_state_program_authority(doc, ctx):
+    assert doc["awarding_authority"] == "state_program"
+    assert v.validate_doc(doc, ctx) == []
+
+
+def test_a8_citizenship_text_length(doc, ctx):
+    e = version27(doc)["offers"][1]["eligibility"]
+    e["citizenship_text"] = " ".join(["word"] * 40)
+    assert v.validate_doc(doc, ctx) == []
+    e["citizenship_text"] = " ".join(["word"] * 41)
+    assert codes(v.validate_doc(doc, ctx)) == {"E_TEXT_LENGTH"}
+
+
+def test_a9_no_form_other_steps_required(doc, ctx):
+    app = version27(doc)["application"]
+    app["separate_application"] = "no_form_other_steps_required"
+    assert v.validate_doc(doc, ctx) == []  # evidence on separate_application still counts
+    version27(doc)["offers"][0]["consideration_route"] = "separate_application"
+    assert codes(v.validate_doc(doc, ctx)) == {"E_CONTRADICTION"}
+    drop_evidence(doc, "application/separate_application")
+    assert "E_NO_EVIDENCE" in codes(v.validate_doc(doc, ctx))
+
+
+def test_a10_conditions_text_needs_evidence(doc, ctx):
+    b = version27(doc)["offers"][1]["benefits"][0]
+    assert b["conditions_text"]
+    assert v.validate_doc(doc, ctx) == []
+    drop_evidence(doc, "offers/1/benefits/0/conditions_text")
+    assert codes(v.validate_doc(doc, ctx)) == {"E_NO_EVIDENCE"}
+    b["conditions_text"] = None
+    assert v.validate_doc(doc, ctx) == []
+
+
+def test_amendments_are_additive_for_published_versions(doc):
+    """A version published before these fields existed still compares equal."""
+    base = copy.deepcopy(doc)
+    head = copy.deepcopy(doc)
+    for ver in (base,):
+        o = version27(ver)["offers"][0]
+        o.pop("advertised_totals")
+        o["benefits"][0].pop("conditions_text", None)
+    version27(head)["offers"][0]["advertised_totals"] = None
+    version27(head)["offers"][0]["benefits"][0]["conditions_text"] = None
+    version27(head)["offers"][0]["benefits"].pop(3)
+    version27(base)["offers"][0]["benefits"].pop(3)
+    assert v.compare_published({"f.yaml": base}, {"f.yaml": head}) == []

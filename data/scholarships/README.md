@@ -127,6 +127,22 @@ variants; a tier nests under another with `parent_offer_id`), each offer holds
 - **Amounts.** `exact`, `up_to`, `at_least` and `approximate` carry `value`;
   `range` carries `min` and `max` with `min < max`; `not_published` carries
   no numbers.
+- **Quoted totals.** A package total the school itself advertises (for example
+  "more than $89,000 per year") goes in the offer's `advertised_totals` with its
+  `scope_text`; `period` may be null. It needs `reported` evidence on the exact
+  path with an excerpt. This is the only place a total may live. A promise of
+  full cost of attendance with no components is a benefit with
+  `category: cost_of_attendance`.
+- **Conditions and wording.** `conditions_text` on a benefit records what it
+  depends on (it needs evidence on that path). `citizenship_text` keeps the
+  school's own citizenship wording, 40 words or fewer. Use
+  `separate_application: no_form_other_steps_required` when a school asks for a
+  visit, interview or recommendations but has no scholarship form.
+  `awarding_authority: state_program` is for a state program run through the
+  school. `interview_mode: mixed` covers a virtual first round with in-person
+  finals. `status_required_for_award: scholar` is a Finalist who receives a
+  National Merit award. Renewal rules take `credit_load_min_per_year` and
+  prerequisites take `maximum_lead_days`.
 - **Counts.** `award_counts[].metric` is the unit (`offers`, `new_recipients`,
   `share_of_class`), `claim` says `target` or `actual`, and a share needs a
   `denominator`.
