@@ -36,6 +36,7 @@ export function Footer() {
           </a>
           <CommunityLink surface="footer">Feedback</CommunityLink>
           <a href="/coverage">Coverage</a>
+          <a href="/scholarships">Scholarships</a>
           <a href="/pipeline-observation">Pipeline</a>
           {isUsageLaunched() ? <a href="/usage">Usage</a> : null}
           <a href="/recipes">Recipes</a>

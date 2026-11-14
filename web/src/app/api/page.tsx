@@ -967,6 +967,67 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
           ]}
         />
         <Resource
+          name="scholarship_directory"
+          description="One row per named merit scholarship program per participating school: the latest published terms, a dated freshness status, and links to the school's own page. Not a ranking; no odds. A blank field means the page did not say. Programs are documented by hand and partially. An empty result means the school has not been documented yet. Every row carries license and attribution columns; if you display or republish these rows, show the attribution string."
+          fields={[
+            "program_id",
+            "school_id",
+            "official_name",
+            "entry_year",
+            "freshness_status",
+            "coverages",
+            "selection_modes",
+            "key_deadline",
+            "sources",
+            "license",
+            "attribution",
+          ]}
+          allFields={[
+            "program_id",
+            "school_id",
+            "ipeds_id",
+            "participating_school_ids",
+            "official_name",
+            "aliases",
+            "program_family",
+            "awarding_authority",
+            "program_status",
+            "applicable_campuses",
+            "related_programs",
+            "version_id",
+            "entry_year",
+            "entry_year_label",
+            "entry_terms",
+            "source_cohort_text",
+            "verification_status",
+            "freshness_status",
+            "cycle_basis",
+            "cycle_through_date",
+            "current_entry_year",
+            "last_reviewed_at",
+            "program_status_for_entry",
+            "coverages",
+            "selection_modes",
+            "residencies",
+            "national_merit_statuses",
+            "statuses_required",
+            "need_roles",
+            "separate_application",
+            "deadline_months",
+            "key_deadline",
+            "source_retrieved_at",
+            "offers",
+            "application",
+            "renewal_rules",
+            "stacking_rules",
+            "award_counts",
+            "sources",
+            "evidence",
+            "license",
+            "attribution",
+          ]}
+        />
+        <Resource
           name="institution_directory"
           description="One row per U.S. institution in the IPEDS/Scorecard directory, with the school_id slug used across the archive, location, control, level, brand colors, and OPE IDs. in_scope marks the schools the project tracks."
           fields={[
@@ -1508,6 +1569,33 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         .
       </p>
       <CodeBlock>{`curl '${BASE}/rest/v1/school_merit_profile?school_id=eq.bowdoin&select=school_id,school_name,canonical_year,first_year_ft_students,non_need_aid_recipients_first_year_ft,avg_non_need_grant_first_year_ft,non_need_aid_share_first_year_ft,avg_net_price,graduation_rate_6yr,earnings_10yr_median' \\
+  -H 'apikey: <anon key>' \\
+  -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
+
+      <h3 className="serif mt-6 text-lg">
+        Fetch the scholarship programs documented for one school
+      </h3>
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
+        <code>scholarship_directory</code> holds named merit scholarships as each
+        school published them, with a dated freshness status and the school&apos;s
+        own page as the source. The list is partial: an empty result means the
+        school has not been documented yet, not that it has no named scholarships.
+        Every row carries <code>license</code> and <code>attribution</code>
+        columns. If you display or republish these rows, please show the
+        attribution string. Method and reuse terms:{" "}
+        <Link href="/methodology/scholarships" className={API_LINK_CLASS}>
+          /methodology/scholarships
+        </Link>
+        .
+      </p>
+      <CodeBlock>{`curl '${BASE}/rest/v1/scholarship_directory?school_id=eq.university-of-tulsa&select=official_name,entry_year,freshness_status,key_deadline,coverages,sources,attribution' \\
+  -H 'apikey: <anon key>' \\
+  -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
+
+      <h3 className="serif mt-6 text-lg">
+        Find National Merit packages and what they cover
+      </h3>
+      <CodeBlock>{`curl '${BASE}/rest/v1/scholarship_directory?national_merit_statuses=cs.{finalist}&select=school_id,official_name,coverages,offers,key_deadline,freshness_status,attribution&order=school_id.asc' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}</CodeBlock>
 

@@ -39,6 +39,10 @@ vi.mock("@/lib/queries", () => ({
   fetchSchoolYearFacts: mocks.fetchSchoolYearFacts,
 }));
 
+vi.mock("@/lib/scholarships-data", () => ({
+  fetchScholarshipsBySchoolId: vi.fn(async () => ({ programs: [], names: {} })),
+}));
+
 vi.mock("next/navigation", () => ({
   permanentRedirect: mocks.permanentRedirect,
   notFound: mocks.notFound,

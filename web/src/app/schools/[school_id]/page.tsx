@@ -31,6 +31,8 @@ import { OutcomesSection } from "@/components/OutcomesSection";
 import { PositioningCard } from "@/components/PositioningCard";
 import { AdmissionStrategyCard } from "@/components/AdmissionStrategyCard";
 import { MeritProfileCard } from "@/components/MeritProfileCard";
+import { ScholarshipProgramsCard } from "@/components/ScholarshipProgramsCard";
+import { fetchScholarshipsBySchoolId } from "@/lib/scholarships-data";
 import { WhatChangedCard } from "@/components/WhatChangedCard";
 import { SchoolDocumentsLedger } from "@/components/SchoolDocumentsLedger";
 import { ScorecardVintageNote } from "@/components/ScorecardVintageNote";
@@ -237,6 +239,7 @@ export default async function SchoolDetailPage({ params }: {
     earlyDecisionPageServed,
     gpaPageServed,
     latestExtract,
+    scholarships,
   ] = await Promise.all([
     fetchScorecardByIpedsId(ipedsId),
     fetchBrowserRowBySchoolId(school_id),
@@ -255,6 +258,8 @@ export default async function SchoolDetailPage({ params }: {
     latestExtractedDoc?.document_id
       ? fetchExtract(latestExtractedDoc.document_id, school_id)
       : Promise.resolve(null),
+    // Empty on a missing view or any error: the card renders nothing then.
+    fetchScholarshipsBySchoolId(school_id),
   ]);
   const schemaFallbackCopy = schemaFallbackNoteFromArtifact(
     (latestExtract?.canonical?.notes as ArtifactNotes | null) ?? null,
@@ -611,6 +616,13 @@ export default async function SchoolDetailPage({ params }: {
         />
       )}
 
+      <ScholarshipProgramsCard
+        programs={scholarships.programs}
+        names={scholarships.names}
+        cdsYear={meritProfile && meritProfile.cdsMeritFieldCount > 0 ? meritProfile.cdsYear : null}
+        schoolId={school_id}
+      />
+
       <WhatChangedCard events={changeEvents} />
 
       <FederalBaselineTable facts={federalFacts} />
@@ -663,10 +675,12 @@ async function DirectoryOnlySchoolPage({
   coverage: InstitutionCoverage;
   school_id: string;
 }) {
-  const [scorecard, federalFacts, nonpayment] = await Promise.all([
+  const [scorecard, federalFacts, nonpayment, scholarships] = await Promise.all([
     fetchScorecardByIpedsId(coverage.ipeds_id),
     fetchSchoolFederalFacts(school_id),
     fetchFsaNonpaymentBySchoolId(school_id),
+    // Named programs do not depend on a Common Data Set being on file.
+    fetchScholarshipsBySchoolId(school_id),
   ]);
 
   const { head, tail } = splitInstitutionalSuffix(coverage.school_name);
@@ -819,6 +833,12 @@ async function DirectoryOnlySchoolPage({
           />
         )}
       </section>
+
+      <ScholarshipProgramsCard
+        programs={scholarships.programs}
+        names={scholarships.names}
+        schoolId={school_id}
+      />
 
       <FederalBaselineTable facts={federalFacts} compact />
 

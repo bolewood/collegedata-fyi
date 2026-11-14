@@ -317,6 +317,13 @@ export function CmdKCatalog() {
         href: "/coverage",
       },
       {
+        id: "route-scholarships",
+        title: "Named scholarship programs",
+        subtitle: "A partial, hand-built list with dated terms and source links",
+        callNumber: "§ /SCHOLARSHIPS",
+        href: "/scholarships",
+      },
+      {
         id: "route-api",
         title: "Public API & MCP reference",
         subtitle: "No-auth REST, PostgREST, and Model Context Protocol endpoints",
