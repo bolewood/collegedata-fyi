@@ -210,15 +210,22 @@ def cycle_basis(entry_year: Optional[int], cycle_through_date: Optional[str]) ->
     return "milestone_dates" if cycle_through_date else "none"
 
 
+def year_not_stated_expiry(last_reviewed_at: str) -> dt.date:
+    """The first 1 July strictly after the review date. A verified version with no
+    entry_year and no dated milestone becomes past_cycle from this day."""
+    return dt.date(cycle_year(dt.date.fromisoformat(last_reviewed_at)), 7, 1)
+
+
 def freshness_status(
     entry_year: Optional[int],
     verification_status: str,
     cycle_through_date: Optional[str],
+    last_reviewed_at: Optional[str],
     check_result: Optional[str],
     needs_review: Optional[bool],
     today: dt.date,
 ) -> str:
-    """conflicting, then past_cycle, then current_cycle_unconfirmed, else
+    """conflicting, past_cycle, current_cycle_unconfirmed, year_not_stated, else
     current_cycle_verified. See the migration comment and the view contract."""
     if verification_status == "conflicting" or check_result == "conflicting":
         return "conflicting"
@@ -229,8 +236,13 @@ def freshness_status(
         return "past_cycle"
     if basis == "milestone_dates" and dt.date.fromisoformat(cycle_through_date) < today:
         return "past_cycle"
-    if basis == "none" or bool(needs_review) or verification_status != "verified":
+    plain = verification_status == "verified" and not needs_review
+    if basis == "none" and plain and last_reviewed_at and today >= year_not_stated_expiry(last_reviewed_at):
+        return "past_cycle"  # a verified version that states no year ages out
+    if bool(needs_review) or verification_status != "verified":
         return "current_cycle_unconfirmed"
+    if basis == "none":
+        return "year_not_stated"
     return "current_cycle_verified"
 
 

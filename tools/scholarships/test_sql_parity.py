@@ -115,36 +115,43 @@ def test_freshness_status_matches_the_python_reference(pg):
     statuses = ["verified", "conflicting", "historical_only", "unverified"]
     dates = [None, "2026-06-30", "2026-11-13", "2026-11-14", "2027-01-01"]
     checks = [(None, None), ("changed", True), ("conflicting", False), ("unchanged", False)]
+    reviewed = [None, "2026-03-01", "2026-07-01", "2026-11-01"]
     ats = ["2026-06-30 23:59:59+00:00", "2026-07-01 00:00:00+00:00", "2026-11-14 12:00:00+00:00", "2027-06-30 23:59:59+00:00", "2027-07-01 00:00:00+00:00"]
-    cases = list(itertools.product(years, statuses, dates, checks, ats))
+    cases = list(itertools.product(years, statuses, dates, reviewed, checks, ats))
     values = ",\n".join(
-        f"({i}, {lit(y, 'int')}, {lit(st, 'text')}, {lit(d, 'date')}, {lit(c[0], 'text')}, {lit(c[1], 'boolean')}, {lit(at, 'timestamptz')})"
-        for i, (y, st, d, c, at) in enumerate(cases)
+        f"({i}, {lit(y, 'int')}, {lit(st, 'text')}, {lit(d, 'date')}, {lit(rv, 'date')}, {lit(c[0], 'text')}, {lit(c[1], 'boolean')}, {lit(at, 'timestamptz')})"
+        for i, (y, st, d, rv, c, at) in enumerate(cases)
     )
     got = pg.rows(
-        "select json_build_object('i', t.i, 'f', public.scholarship_freshness_status(t.y, t.st, t.d, t.cr, t.nr, t.at),"
+        "select json_build_object('i', t.i, 'f', public.scholarship_freshness_status(t.y, t.st, t.d, t.rv, t.cr, t.nr, t.at),"
         " 'b', public.scholarship_cycle_basis(t.y, t.d), 'c', public.scholarship_current_entry_year(t.at)) "
-        f"from (values {values}) as t(i, y, st, d, cr, nr, at) order by t.i;"
+        f"from (values {values}) as t(i, y, st, d, rv, cr, nr, at) order by t.i;"
     )
     assert len(got) == len(cases)
-    for row, (y, st, d, c, at) in zip(got, cases):
+    for row, (y, st, d, rv, c, at) in zip(got, cases):
         today = dt.datetime.fromisoformat(at).astimezone(dt.timezone.utc).date()
-        expected = model.freshness_status(y, st, d, c[0], c[1], today)
-        assert row["f"] == expected, (y, st, d, c, at)
+        expected = model.freshness_status(y, st, d, rv, c[0], c[1], today)
+        assert row["f"] == expected, (y, st, d, rv, c, at)
         assert row["b"] == model.cycle_basis(y, d)
         assert row["c"] == model.current_entry_year(today)
 
 
 def test_the_rollover_and_the_decision_a_rules_in_sql(pg):
     def f(*args: Any) -> str:
-        return pg.run(f"select public.scholarship_freshness_status({args[0]}, {args[1]}, {args[2]}, NULL, NULL, '{args[3]}');").strip()
+        reviewed = args[4] if len(args) > 4 else "NULL::date"
+        return pg.run(f"select public.scholarship_freshness_status({args[0]}, {args[1]}, {args[2]}, {reviewed}, NULL, NULL, '{args[3]}');").strip()
 
     assert pg.run("select public.scholarship_current_entry_year('2026-06-30 23:59:59+00');").strip() == "2026"
     assert pg.run("select public.scholarship_current_entry_year('2026-07-01 00:00:00+00');").strip() == "2027"
     # Decision A: no entry_year. Through-date today or later and verified: current, basis milestone_dates.
     assert f("NULL::int", "'verified'", "'2026-11-14'::date", "2026-11-14 09:00+00:00") == "current_cycle_verified"
     assert f("NULL::int", "'verified'", "'2026-11-13'::date", "2026-11-14 09:00+00:00") == "past_cycle"
-    assert f("NULL::int", "'verified'", "NULL::date", "2026-11-14 09:00+00:00") == "current_cycle_unconfirmed"
+    # No entry_year and no dated milestone: year_not_stated, until the 1 July after last_reviewed_at.
+    assert f("NULL::int", "'verified'", "NULL::date", "2026-11-14 09:00+00:00", "'2026-11-01'::date") == "year_not_stated"
+    assert f("NULL::int", "'verified'", "NULL::date", "2027-06-30 23:59:59+00:00", "'2026-11-01'::date") == "year_not_stated"
+    assert f("NULL::int", "'verified'", "NULL::date", "2027-07-01 00:00:00+00:00", "'2026-11-01'::date") == "past_cycle"
+    assert f("NULL::int", "'verified'", "NULL::date", "2026-07-01 00:00:00+00:00", "'2026-03-01'::date") == "past_cycle"
+    assert f("NULL::int", "'unverified'", "NULL::date", "2026-11-14 09:00+00:00", "'2026-11-01'::date") == "current_cycle_unconfirmed"
     assert pg.run("select public.scholarship_cycle_basis(NULL, NULL), public.scholarship_cycle_basis(NULL, '2026-12-01'), public.scholarship_cycle_basis(2027, NULL);").strip() == "none|milestone_dates|entry_year"
     # An explicit entry_year keeps its rule: verified for 2027 stays current even with every milestone passed.
     assert f("2027", "'verified'", "'2026-01-01'::date", "2026-11-14 09:00+00:00") == "current_cycle_verified"
@@ -271,7 +278,9 @@ def test_new_enum_values_load_and_filter(pg, seeded):
     )
     assert got and all(r["a"] == "state_program" and r["m"] == "mixed" and r["s"] == ["scholar"] for r in got)
     other = pg.rows("select json_build_object('p', program_id, 'b', cycle_basis, 'f', freshness_status) from public.scholarship_directory where separate_application = 'no_form_other_steps_required';")
-    assert other == [{"p": "zz-nodates", "b": "none", "f": "current_cycle_unconfirmed"}]
+    # No entry_year, no dated milestone, verified: year_not_stated, and past_cycle once its review ages out (the clock is real here).
+    assert [(r["p"], r["b"]) for r in other] == [("zz-nodates", "none")]
+    assert other[0]["f"] in ("year_not_stated", "past_cycle")
 
 
 def test_access_model_in_a_database_that_mimics_supabase_defaults(pg, seeded):

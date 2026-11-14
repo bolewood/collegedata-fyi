@@ -680,7 +680,7 @@ def test_contract_example_row_matches_the_view_columns():
     assert example["license"] == model.LICENSE_ID
     assert example["attribution"] == model.ATTRIBUTION
     assert example["freshness_status"] in {
-        "current_cycle_verified", "current_cycle_unconfirmed", "past_cycle", "conflicting",
+        "current_cycle_verified", "year_not_stated", "current_cycle_unconfirmed", "past_cycle", "conflicting",
     }
     assert example["verification_status"] != "unverified"
     assert all(o["normalized_coverage"] in model.NORMALIZED_COVERAGE for o in example["offers"])
@@ -690,7 +690,7 @@ def full_row(ds: model.Dataset, today: dt.date) -> Dict[str, Any]:
     version = model.select_published(ds)[0]
     rec = model.public_record(ds.program(version["program_id"]), version, {"school_id": "uva", "ipeds_id": "234076"})
     rec["freshness_status"] = model.freshness_status(
-        rec["entry_year"], rec["verification_status"], rec["cycle_through_date"], None, None, today
+        rec["entry_year"], rec["verification_status"], rec["cycle_through_date"], rec["last_reviewed_at"], None, None, today
     )
     rec["current_entry_year"] = model.current_entry_year(today)
     rec.update(last_check_at=None, last_check_result=None, needs_review=None, license=model.LICENSE_ID, attribution=model.ATTRIBUTION)
@@ -707,7 +707,7 @@ def test_contract_example_row_agrees_with_the_loader_output(ds):
 def test_freshness_rule_is_stated_in_the_migration_and_the_contract():
     sql = MIGRATION.read_text(encoding="utf-8")
     contract = CONTRACT.read_text(encoding="utf-8")
-    for state in ("current_cycle_verified", "current_cycle_unconfirmed", "past_cycle", "conflicting"):
+    for state in ("current_cycle_verified", "year_not_stated", "current_cycle_unconfirmed", "past_cycle", "conflicting"):
         assert state in sql and state in contract
     assert "1 July" in sql and "1 July" in contract
 
@@ -715,8 +715,8 @@ def test_freshness_rule_is_stated_in_the_migration_and_the_contract():
 # ------------------------------------------------------------ freshness reference
 
 
-def fr(entry_year, status="verified", through=None, result=None, review=None, today="2026-11-14"):
-    return model.freshness_status(entry_year, status, through, result, review, dt.date.fromisoformat(today))
+def fr(entry_year, status="verified", through=None, result=None, review=None, today="2026-11-14", reviewed="2026-11-01"):
+    return model.freshness_status(entry_year, status, through, reviewed, result, review, dt.date.fromisoformat(today))
 
 
 def test_cycle_rollover_is_on_1_july():
@@ -745,11 +745,29 @@ def test_decision_a_undated_versions_use_their_milestone_dates():
     assert fr(None, through="2027-03-01") == "current_cycle_verified"
     # Every dated milestone past: past_cycle.
     assert fr(None, through="2026-11-13") == "past_cycle"
-    # No dated milestone at all: unconfirmed.
-    assert fr(None, through=None) == "current_cycle_unconfirmed"
+    # No dated milestone at all (a recurring month/day never counts): year_not_stated, see below.
+    assert fr(None, through=None) == "year_not_stated"
     # needs_review, or a status other than verified, still unconfirms.
     assert fr(None, through="2027-03-01", review=True) == "current_cycle_unconfirmed"
     assert fr(None, status="unverified", through="2027-03-01") == "current_cycle_unconfirmed"
+
+
+def test_year_not_stated_ages_out_on_the_1_july_after_review():
+    assert fr(None, reviewed="2026-11-01", today="2027-06-30") == "year_not_stated"
+    assert fr(None, reviewed="2026-11-01", today="2027-07-01") == "past_cycle"
+    assert fr(None, reviewed="2026-03-01", today="2026-06-30") == "year_not_stated"
+    assert fr(None, reviewed="2026-03-01", today="2026-07-01") == "past_cycle"
+    assert fr(None, reviewed="2026-07-01", today="2027-06-30") == "year_not_stated"  # review on a 1 July waits a year
+    assert model.year_not_stated_expiry("2026-07-01") == dt.date(2027, 7, 1)
+    assert model.year_not_stated_expiry("2026-06-30") == dt.date(2026, 7, 1)
+    # Only verified, unflagged versions get year_not_stated or age out this way.
+    assert fr(None, review=True) == "current_cycle_unconfirmed"
+    assert fr(None, review=True, today="2028-01-01") == "current_cycle_unconfirmed"
+    assert fr(None, status="unverified") == "current_cycle_unconfirmed"
+    assert fr(None, status="conflicting", today="2028-01-01") == "conflicting"
+    # Explicit-year and dated-milestone versions are not affected by the review date.
+    assert fr(2027, today="2027-06-30", reviewed="2025-01-01") == "current_cycle_verified"
+    assert fr(None, through="2027-03-01", reviewed="2025-01-01") == "current_cycle_verified"
 
 
 def test_conflicting_and_historical_precedence():

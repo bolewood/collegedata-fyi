@@ -176,11 +176,17 @@ comment on table public.scholarship_version_checks is
 --                             entry_year and entry_year < current entry year; or
 --                             basis milestone_dates and cycle_through_date is
 --                             before today
---   current_cycle_unconfirmed basis none; or the latest check set needs_review;
---                             or the status is anything other than 'verified'
+--   (also past_cycle)         verified, no needs_review, basis none, and the first
+--                             1 July after last_reviewed_at has passed
+--   current_cycle_unconfirmed the latest check set needs_review, or the status is
+--                             anything other than 'verified'
+--   year_not_stated           verified, no needs_review, basis none (no entry_year
+--                             and no dated milestone), before that 1 July: the
+--                             terms are checked but the school names no class
 --   current_cycle_verified    verified, no open needs_review, and either
 --                             entry_year >= current entry year or
 --                             cycle_through_date is today or later
+-- A recurring month/day milestone never dates a cycle.
 -- A version for a later entry year than the current one counts as current cycle.
 create function public.scholarship_cycle_year(p_date date)
 returns integer
@@ -218,6 +224,7 @@ create function public.scholarship_freshness_status(
   p_entry_year integer,
   p_verification_status text,
   p_cycle_through_date date,
+  p_last_reviewed_at date,
   p_check_result text,
   p_check_needs_review boolean,
   p_at timestamptz default now()
@@ -237,15 +244,23 @@ as $$
           and p_cycle_through_date < (p_at at time zone 'UTC')::date)
       then 'past_cycle'
     when public.scholarship_cycle_basis(p_entry_year, p_cycle_through_date) = 'none'
-      or coalesce(p_check_needs_review, false)
+      and p_verification_status = 'verified'
+      and not coalesce(p_check_needs_review, false)
+      and p_last_reviewed_at is not null
+      and (p_at at time zone 'UTC')::date
+          >= make_date(public.scholarship_cycle_year(p_last_reviewed_at), 7, 1)
+      then 'past_cycle'
+    when coalesce(p_check_needs_review, false)
       or p_verification_status is distinct from 'verified'
       then 'current_cycle_unconfirmed'
+    when public.scholarship_cycle_basis(p_entry_year, p_cycle_through_date) = 'none'
+      then 'year_not_stated'
     else 'current_cycle_verified'
   end;
 $$;
 
-comment on function public.scholarship_freshness_status(integer, text, date, text, boolean, timestamptz) is
-  'PRD 036 freshness_status: conflicting, then past_cycle, then current_cycle_unconfirmed, else current_cycle_verified. Entry cycle turns over on 1 July (UTC) of the year before entry; with no entry_year the cycle runs through the latest dated milestone.';
+comment on function public.scholarship_freshness_status(integer, text, date, date, text, boolean, timestamptz) is
+  'PRD 036 freshness_status: conflicting, past_cycle, current_cycle_unconfirmed, year_not_stated, else current_cycle_verified. Entry cycle turns over on 1 July (UTC) of the year before entry; with no entry_year the cycle runs through the latest dated milestone.';
 
 -- One row per program per participating school (a joint program appears once
 -- for each school). Per program the cache holds one version: among the
@@ -413,6 +428,7 @@ select
     c.entry_year,
     c.verification_status,
     c.cycle_through_date,
+    c.last_reviewed_at,
     c.last_check_result,
     c.needs_review
   ) as freshness_status,

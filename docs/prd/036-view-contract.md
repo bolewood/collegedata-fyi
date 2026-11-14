@@ -62,7 +62,7 @@ Types are Postgres types; PostgREST returns arrays as JSON arrays, `date` as
 | `entry_terms` | text[] | no | Elements: `fall`, `spring`, `summer`, `unspecified`. |
 | `source_cohort_text` | text | yes | The school's own cohort wording. |
 | `verification_status` | text | no | `verified`, `conflicting`, `historical_only`. (`unverified` is never served.) Internal: VOICE.md forbids saying "verified" in product copy. |
-| `freshness_status` | text | no | `current_cycle_verified`, `current_cycle_unconfirmed`, `past_cycle`, `conflicting`. Rule below. |
+| `freshness_status` | text | no | `current_cycle_verified`, `year_not_stated`, `current_cycle_unconfirmed`, `past_cycle`, `conflicting`. Rule below. |
 | `cycle_basis` | text | no | What the cycle rests on: `entry_year` (the version states its class), `milestone_dates` (no `entry_year`, but dated milestones), `none` (neither). Most official pages give deadlines only, so expect `milestone_dates`. |
 | `cycle_through_date` | date | yes | The latest dated milestone of any kind; the date the cycle is known to run through. Null if no milestone is dated. |
 | `current_entry_year` | integer | no | The entry year `freshness_status` was computed against. |
@@ -130,17 +130,24 @@ the cycle rests on. First match wins:
 2. `past_cycle`: `verification_status` is `historical_only`; or `cycle_basis` is
    `entry_year` and `entry_year` is below `current_entry_year`; or `cycle_basis`
    is `milestone_dates` and `cycle_through_date` is before today.
-3. `current_cycle_unconfirmed`: `cycle_basis` is `none` (no `entry_year` and no
-   dated milestone); or the latest check has `needs_review` true; or the status
-   is anything other than `verified`.
-4. `current_cycle_verified`: everything else: verified, nothing flagged, and
+3. `past_cycle` (aging): `verification_status` is `verified`, the latest check
+   has no `needs_review`, `cycle_basis` is `none`, and the first 1 July after
+   `last_reviewed_at` has passed (on or before today).
+4. `current_cycle_unconfirmed`: the latest check has `needs_review` true, or the
+   status is anything other than `verified`.
+5. `year_not_stated`: verified, no `needs_review`, `cycle_basis` is `none` (no
+   `entry_year` and no dated milestone), and not yet aged out by rule 3. The
+   terms are checked; the school just names no class or date. A recurring
+   month/day milestone never dates a cycle.
+6. `current_cycle_verified`: everything else: verified, nothing flagged, and
    either `entry_year` at or after `current_entry_year`, or (no `entry_year`)
    `cycle_through_date` today or later.
 
 An explicit `entry_year` is never overridden by milestone dates. UI:
 `past_cycle` and `conflicting` get the amber note; never roll last year's dates
 forward. With `cycle_basis` `milestone_dates` do not print an entry year; say
-"deadlines through <cycle_through_date>".
+"deadlines through <cycle_through_date>". For `year_not_stated` say the school
+does not state a year and show `last_reviewed_at`; do not print a class.
 
 ## Filtering and sorting (PostgREST)
 
