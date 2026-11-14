@@ -297,3 +297,28 @@ school card, methodology, footer, command menu, sitemap and llms.txt.
 - The card also renders on the directory-only school page (a school with no Common Data Set on file), because named programs do not depend on a CDS. Tulsa and Tuskegee are in that state today.
 - A retired program with no offers (Vanderbilt Chancellor's) shows "Closed to new entrants" and "No award terms listed for new entrants." It never shows an empty coverage line.
 - Accent for the amber note is the palette's `--ochre`; no new color is added.
+
+---
+
+## 8. Review-round changes (M3 review fixes)
+
+New or changed strings. Everything not listed is unchanged.
+
+| String | Where / state |
+|---|---|
+| {Category}: {text} Not included: {item}; {item}. | Any benefit with exclusions. Always on the same line as the benefit it limits, including "the school says it covers all of it." |
+| {Category}: {text} For {duration}. | Any benefit with duration terms (for example "For eight semesters.") |
+| {Category}: the school's pages give different amounts. | A benefit whose amount is conflicting in the evidence. Never "amount not published" |
+| Other date on the page: {the school's words}. This is not a deadline for the award. | A required or priority milestone that is not a deadline kind (an NMSC designation, an interview). Shown in the Deadline panel, muted |
+| Closed to new entrants as of the page we read {date}. | Freshness line for a program whose status for the class is closed to new entrants. Replaces "Terms for fall N entry". Same shape for "Paused", "Merged into another program", "Discontinued". A conflict still shows the amber disagree note |
+| Closed to new entrants / Paused / Merged into another program / Discontinued | Chip beside the program name in the index; also the index "Terms as of" cell |
+| The school's page lists this program as closed to new entrants. | Card line under a closed program. " Terms below are kept for reference." is added only when the program has terms |
+| Read the official page for the current terms. | Freshness line when the status is one this page does not know. Index cell: "Check the official page" |
+| Varies by award | Index "Chosen how" when a program's offers do not all share one selection mode |
+| Not stated | New option at the end of the Coverage, How recipients are chosen, Separate application, Deadline month and Residency filters. Matches rows where the record does not say (empty or unknown) |
+| Other | Coverage filter option, replacing "Other or not stated" (not stated is its own option) |
+| Open to all residencies | Residency filter option (was "Any residency"). Matches programs open to all. Picking In-state, Out-of-state or International also keeps programs open to all |
+| {date} (passed) | Index Deadline cell for a dated deadline before today, in amber. Sorting by deadline lists upcoming dates, then passed dates, then rows with no date |
+| Showing {n} of {total} listings. A program shared by two schools is listed once for each. | Unchanged from the prior round; listed because the sort label is now "Coverage (grouped)" |
+| {program}: {Official page / Foundation's page / Archived copy} (opens in a new tab) | Screen-reader label on every source link (card and index) |
+| Part of / Includes / Replaces / Successor to / Cannot be held together with {program name} | Related-program lines. The name is a link when that program is documented on the same page |

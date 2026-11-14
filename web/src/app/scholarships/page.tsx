@@ -20,10 +20,11 @@ export const metadata: Metadata = {
 };
 
 export default async function ScholarshipsPage() {
-  const { rows, controls } = await fetchScholarshipIndex();
+  const { rows, controls, programs } = await fetchScholarshipIndex();
+  const today = new Date().toISOString().slice(0, 10);
   const programCount = new Set(rows.map((r) => r.program_id)).size;
   const schoolCount = new Set(rows.map((r) => r.school_id)).size;
-  const byType = countProgramsByControl(rows, (id) => controls[id] ?? "unknown");
+  const byType = countProgramsByControl(programs, (id) => controls[id] ?? "unknown");
   const typeRows = (Object.keys(CONTROL_LABEL) as SchoolControl[]).filter((k) => byType[k] > 0);
 
   return (
@@ -80,7 +81,7 @@ export default async function ScholarshipsPage() {
         </section>
       ) : null}
 
-      <ScholarshipIndex rows={rows} />
+      <ScholarshipIndex rows={rows} today={today} />
 
       <p className="sch-fine mono" style={{ marginTop: 28 }}>
         The data is open. Download or query it; credit is requested. See{" "}

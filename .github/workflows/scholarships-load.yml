@@ -72,6 +72,33 @@ jobs:
           fi
           python tools/scholarships/load.py --apply ${flags} --report scholarships-out/load-report.json
 
+      # Best effort: tell the web app to refresh the school pages and /scholarships
+      # so new or corrected terms show within minutes, not after the 24 h cache.
+      # Never fails the run (the load above is the part that matters). No-op when
+      # the URL or secret is unset.
+      - name: Tell the web app to refresh scholarship pages
+        if: success()
+        continue-on-error: true
+        env:
+          COLLEGEDATA_REVALIDATE_URL: ${{ vars.COLLEGEDATA_REVALIDATE_URL || secrets.COLLEGEDATA_REVALIDATE_URL }}
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+        run: |
+          if [[ -z "${COLLEGEDATA_REVALIDATE_URL:-}" || -z "${REVALIDATE_SECRET:-}" ]]; then
+            echo "revalidate: URL or secret not set; skipping"
+            exit 0
+          fi
+          # Batches of 100 school ids (the endpoint's cap), each also expiring the directory read.
+          jq -c '.school_ids // [] | _nwise(100)' scholarships-out/load-report.json | while read -r batch; do
+            body=$(jq -c -n --argjson ids "$batch" '{school_ids: $ids, scholarships: true}')
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 \
+              -X POST "${COLLEGEDATA_REVALIDATE_URL}" \
+              -H "Authorization: Bearer ${REVALIDATE_SECRET}" \
+              -H "Content-Type: application/json" \
+              -d "$body" || echo "curl-failed")
+            echo "revalidate: batch of $(jq 'length' <<<"$batch") -> HTTP ${code}"
+          done || true
+          exit 0
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:

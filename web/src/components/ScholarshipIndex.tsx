@@ -9,12 +9,15 @@ import { useMemo, useState } from "react";
 import {
   COVERAGE_LABEL,
   EMPTY_FILTERS,
+  NOT_STATED,
   RESIDENCY_LABEL,
   SELECTION_LABEL,
   SEPARATE_APP_LABEL,
+  closedLabel,
   deadlineCell,
   filterRows,
   freshnessShort,
+  selectionCell,
   sortRows,
   sourceLabel,
   type IndexRow,
@@ -53,11 +56,13 @@ function Select({
   );
 }
 
-export function ScholarshipIndex({ rows }: { rows: IndexRow[] }) {
+const notStated = (entries: [string, string][]): [string, string][] => [...entries, [NOT_STATED, "Not stated"]];
+
+export function ScholarshipIndex({ rows, today }: { rows: IndexRow[]; today: string }) {
   const [filters, setFilters] = useState<ScholarshipFilters>(EMPTY_FILTERS);
   const [sort, setSort] = useState<ScholarshipSort>("school");
   const set = (key: keyof ScholarshipFilters) => (v: string) => setFilters((f) => ({ ...f, [key]: v }));
-  const shown = useMemo(() => sortRows(filterRows(rows, filters), sort), [rows, filters, sort]);
+  const shown = useMemo(() => sortRows(filterRows(rows, filters), sort, today), [rows, filters, sort, today]);
   const active = Object.values(filters).some(Boolean);
 
   if (rows.length === 0) {
@@ -71,12 +76,12 @@ export function ScholarshipIndex({ rows }: { rows: IndexRow[] }) {
   return (
     <div>
       <form className="sch-filters" onSubmit={(e) => e.preventDefault()} aria-label="Filters and sort">
-        <Select id="f-coverage" label="Coverage" value={filters.coverage} onChange={set("coverage")} options={Object.entries(COVERAGE_LABEL)} />
-        <Select id="f-selection" label="How recipients are chosen" value={filters.selection} onChange={set("selection")} options={Object.entries(SELECTION_LABEL)} />
+        <Select id="f-coverage" label="Coverage" value={filters.coverage} onChange={set("coverage")} options={notStated(Object.entries(COVERAGE_LABEL))} />
+        <Select id="f-selection" label="How recipients are chosen" value={filters.selection} onChange={set("selection")} options={notStated(Object.entries(SELECTION_LABEL))} />
         <Select id="f-nm" label="National Merit" value={filters.nationalMerit} onChange={set("nationalMerit")} options={[["semifinalist", "Semifinalist"], ["finalist", "Finalist"]]} />
-        <Select id="f-app" label="Separate application" value={filters.separateApplication} onChange={set("separateApplication")} options={Object.entries(SEPARATE_APP_LABEL)} />
-        <Select id="f-month" label="Deadline month" value={filters.deadlineMonth} onChange={set("deadlineMonth")} options={MONTHS.map((m, i) => [String(i + 1), m])} />
-        <Select id="f-res" label="Residency" value={filters.residency} onChange={set("residency")} options={Object.entries(RESIDENCY_LABEL)} />
+        <Select id="f-app" label="Separate application" value={filters.separateApplication} onChange={set("separateApplication")} options={notStated(Object.entries(SEPARATE_APP_LABEL))} />
+        <Select id="f-month" label="Deadline month" value={filters.deadlineMonth} onChange={set("deadlineMonth")} options={notStated(MONTHS.map((m, i): [string, string] => [String(i + 1), m]))} />
+        <Select id="f-res" label="Residency" value={filters.residency} onChange={set("residency")} options={notStated(Object.entries(RESIDENCY_LABEL))} />
         <label className="sch-filter" htmlFor="f-school">
           <span className="meta">School</span>
           <input id="f-school" type="search" placeholder="School name" value={filters.school} onChange={(e) => set("school")(e.target.value)} />
@@ -104,36 +109,45 @@ export function ScholarshipIndex({ rows }: { rows: IndexRow[] }) {
         <p className="sch-empty">No programs match these filters. The list is partial, so try fewer filters.</p>
       ) : (
         <div className="sch-table-wrap">
-          <table className="sch-table">
-            <thead>
-              <tr>
-                <th>School</th>
-                <th>Program</th>
-                <th>What it covers</th>
-                <th>Chosen how</th>
-                <th>Deadline</th>
-                <th>Terms as of</th>
+          <table className="sch-table" role="table">
+            <thead role="rowgroup">
+              <tr role="row">
+                <th role="columnheader">School</th>
+                <th role="columnheader">Program</th>
+                <th role="columnheader">What it covers</th>
+                <th role="columnheader">Chosen how</th>
+                <th role="columnheader">Deadline</th>
+                <th role="columnheader">Terms as of</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               {shown.map((row) => {
                 const fresh = freshnessShort(row);
+                const closed = closedLabel(row);
+                const deadline = deadlineCell(row, today);
                 return (
-                  <tr key={`${row.program_id}-${row.school_id}`}>
-                    <td data-label="School">
+                  <tr key={`${row.program_id}-${row.school_id}`} role="row">
+                    <td role="cell" data-label="School">
                       <Link href={`/schools/${row.school_id}#scholarships`}>{row.school_name}</Link>
                     </td>
-                    <td data-label="Program">
+                    <td role="cell" data-label="Program">
                       {row.official_name}
+                      {closed ? <span className="cd-chip sch-chip sch-chip--status">{closed}</span> : null}
                       <div className="sch-sources mono">
-                        {row.sources.slice(0, 2).map((s) => (
-                          <a key={s.source_id} href={s.url} target="_blank" rel="noopener noreferrer">
-                            {sourceLabel(s.authority)}
+                        {row.sources.map((src) => (
+                          <a
+                            key={src.source_id}
+                            href={src.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`${row.official_name}: ${sourceLabel(src.authority).replace(" ↗", "")} (opens in a new tab)`}
+                          >
+                            {sourceLabel(src.authority)}
                           </a>
                         ))}
                       </div>
                     </td>
-                    <td data-label="What it covers">
+                    <td role="cell" data-label="What it covers">
                       {row.coverages.length === 0 ? (
                         <span className="sch-muted">Not stated</span>
                       ) : (
@@ -142,16 +156,11 @@ export function ScholarshipIndex({ rows }: { rows: IndexRow[] }) {
                         ))
                       )}
                     </td>
-                    <td data-label="Chosen how">
-                      {(() => {
-                        const known = row.selection_modes.filter((m) => SELECTION_LABEL[m]);
-                        return known.length === 0
-                          ? <span className="sch-muted">Not stated</span>
-                          : known.map((m) => SELECTION_LABEL[m]).join(", ");
-                      })()}
+                    <td role="cell" data-label="Chosen how">{selectionCell(row.selection_modes)}</td>
+                    <td role="cell" data-label="Deadline" className={deadline.past ? "nums sch-amber" : "nums"}>
+                      {deadline.text}
                     </td>
-                    <td data-label="Deadline" className="nums">{deadlineCell(row)}</td>
-                    <td data-label="Terms as of" className={fresh.tone === "amber" ? "sch-amber" : undefined}>
+                    <td role="cell" data-label="Terms as of" className={fresh.tone === "amber" ? "sch-amber" : undefined}>
                       {fresh.text}
                     </td>
                   </tr>

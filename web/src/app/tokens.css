@@ -1819,6 +1819,9 @@
 .sch-chip {
   margin: 0 6px 6px 0;
 }
+.sch-chip--status {
+  margin-left: 8px;
+}
 .sch-sources {
   display: flex;
   flex-wrap: wrap;

@@ -162,6 +162,10 @@ export const SCHOLARSHIP_SELECT = [
   "award_counts", "sources", "evidence", "license", "attribution",
 ].join(",");
 
+function isObject(v: unknown): boolean {
+  return v !== null && typeof v === "object" && !Array.isArray(v);
+}
+
 /** Make a row from the API safe to read: every list is a list, so a partial row cannot crash a page. */
 export function normalizeScholarshipRow(raw: unknown): ScholarshipDirectoryRow | null {
   if (!raw || typeof raw !== "object") return null;
@@ -174,22 +178,33 @@ export function normalizeScholarshipRow(raw: unknown): ScholarshipDirectoryRow |
       ? (list(r.participating_school_ids) as string[])
       : [r.school_id],
     official_name: typeof r.official_name === "string" ? r.official_name : r.program_id,
-    related_programs: list(r.related_programs),
+    related_programs: list(r.related_programs).filter(isObject),
     entry_terms: list(r.entry_terms),
     coverages: list(r.coverages),
     selection_modes: list(r.selection_modes),
     residencies: list(r.residencies),
     national_merit_statuses: list(r.national_merit_statuses),
     deadline_months: list(r.deadline_months),
-    offers: list(r.offers),
-    award_counts: list(r.award_counts),
-    sources: list(r.sources),
-    evidence: list(r.evidence),
-    renewal_rules: Array.isArray(r.renewal_rules) ? r.renewal_rules : null,
-    stacking_rules: Array.isArray(r.stacking_rules) ? r.stacking_rules : null,
+    offers: list(r.offers)
+      .filter((o) => isObject(o) && typeof (o as { offer_id?: unknown }).offer_id === "string")
+      .map((o) => {
+        const offer = o as Record<string, unknown>;
+        return {
+          ...offer,
+          benefits: Array.isArray(offer.benefits) ? offer.benefits.filter(isObject) : null,
+          advertised_totals: Array.isArray(offer.advertised_totals) ? offer.advertised_totals.filter(isObject) : null,
+        };
+      }),
+    award_counts: list(r.award_counts).filter(isObject),
+    sources: list(r.sources).filter(
+      (x) => isObject(x) && typeof (x as { url?: unknown }).url === "string" && /^https?:/.test((x as { url: string }).url),
+    ),
+    evidence: list(r.evidence).filter(isObject),
+    renewal_rules: Array.isArray(r.renewal_rules) ? r.renewal_rules.filter(isObject) : null,
+    stacking_rules: Array.isArray(r.stacking_rules) ? r.stacking_rules.filter(isObject) : null,
     application:
       r.application && typeof r.application === "object"
-        ? { ...(r.application as object), milestones: list((r.application as { milestones?: unknown }).milestones) }
+        ? { ...(r.application as object), milestones: list((r.application as { milestones?: unknown }).milestones).filter(isObject) }
         : null,
   } as ScholarshipDirectoryRow;
 }
@@ -292,11 +307,32 @@ function entryWord(row: Pick<ScholarshipDirectoryRow, "entry_year" | "entry_term
   return terms.length === 1 && terms[0] === "fall" ? `fall ${row.entry_year}` : `${row.entry_year}`;
 }
 
-type FreshnessInput = Pick<
+type FreshnessShortInput = Pick<
   ScholarshipDirectoryRow,
-  | "freshness_status" | "cycle_basis" | "entry_year" | "entry_terms" | "cycle_through_date"
-  | "last_reviewed_at" | "source_retrieved_at" | "verification_status" | "evidence"
->;
+  | "freshness_status" | "cycle_basis" | "entry_year" | "cycle_through_date"
+> & {
+  program_status?: string | null;
+  program_status_for_entry?: string | null;
+};
+
+type FreshnessInput = FreshnessShortInput &
+  Pick<
+    ScholarshipDirectoryRow,
+    "entry_terms" | "last_reviewed_at" | "source_retrieved_at" | "verification_status" | "evidence"
+  >;
+
+const CLOSED_LABEL: Record<string, string> = {
+  closed_to_new_entrants: "Closed to new entrants",
+  paused: "Paused",
+  merged: "Merged into another program",
+  discontinued: "Discontinued",
+};
+
+/** The program's status when it is not open ("Closed to new entrants" and kin), else null. */
+export function closedLabel(row: { program_status?: string | null; program_status_for_entry?: string | null }): string | null {
+  const s = row.program_status_for_entry ?? row.program_status ?? null;
+  return s ? CLOSED_LABEL[s] ?? null : null;
+}
 
 /**
  * One line per freshness_status and cycle_basis. Never prints a class we were
@@ -307,6 +343,15 @@ export function freshnessLine(row: FreshnessInput): FreshnessLine {
   const read = formatDay(row.last_reviewed_at ?? row.source_retrieved_at);
   const published = formatDay(row.source_retrieved_at ?? row.last_reviewed_at);
   const readSentence = read ? ` Read ${read}.` : "";
+
+  // A program that is not open never reads as "terms for fall N entry".
+  const closed = closedLabel(row);
+  if (closed && row.freshness_status !== "conflicting") {
+    return {
+      tone: "plain",
+      text: read ? `${closed} as of the page we read ${read}.` : `${closed} on the page we read.`,
+    };
+  }
 
   switch (row.freshness_status) {
     case "conflicting": {
@@ -354,8 +399,7 @@ export function freshnessLine(row: FreshnessInput): FreshnessLine {
           ? `The school's page does not name a year. We read it ${read}.`
           : "The school's page does not name a year.",
       };
-    case "current_cycle_verified":
-    default: {
+    case "current_cycle_verified": {
       if (row.cycle_basis === "entry_year" && row.entry_year != null) {
         return {
           tone: "plain",
@@ -377,17 +421,22 @@ export function freshnessLine(row: FreshnessInput): FreshnessLine {
           : "The school's page does not name a year.",
       };
     }
+    default:
+      // A status this build does not know never reads as current.
+      return { tone: "plain", text: "Read the official page for the current terms." };
   }
 }
 
 /** Short form for the index table's last column. */
-export function freshnessShort(row: FreshnessInput): { tone: "plain" | "amber"; text: string } {
+export function freshnessShort(row: FreshnessShortInput): { tone: "plain" | "amber"; text: string } {
+  const closed = closedLabel(row);
+  if (closed && row.freshness_status !== "conflicting") return { tone: "plain", text: closed };
   switch (row.freshness_status) {
     case "conflicting": return { tone: "amber", text: "Pages disagree" };
     case "past_cycle": return { tone: "amber", text: "Past cycle" };
     case "current_cycle_unconfirmed": return { tone: "plain", text: "Not re-read" };
     case "year_not_stated": return { tone: "plain", text: "No year stated" };
-    default:
+    case "current_cycle_verified":
       if (row.cycle_basis === "entry_year" && row.entry_year != null) {
         return { tone: "plain", text: `Entry ${row.entry_year}` };
       }
@@ -395,6 +444,8 @@ export function freshnessShort(row: FreshnessInput): { tone: "plain" | "amber"; 
         return { tone: "plain", text: `Dates through ${formatMonthYear(row.cycle_through_date)}` };
       }
       return { tone: "plain", text: "No year stated" };
+    default:
+      return { tone: "plain", text: "Check the official page" };
   }
 }
 
@@ -426,7 +477,7 @@ export type BenefitLine = {
 };
 
 /** One benefit component in words. Waivers, caps and conditions are always named. */
-export function benefitLine(b: Benefit): BenefitLine {
+export function benefitLine(b: Benefit, opts: { amountConflicts?: boolean } = {}): BenefitLine {
   const label = CATEGORY_LABEL[b.category] ?? "Other";
   const amount = amountText(b.amount);
   const waiver = b.instrument === "tuition_waiver";
@@ -436,7 +487,10 @@ export function benefitLine(b: Benefit): BenefitLine {
   const conditional = Boolean(b.conditions_text);
 
   let text: string;
-  if (waiver) {
+  if (opts.amountConflicts) {
+    // Conflicting evidence is never "not published".
+    text = "the school's pages give different amounts.";
+  } else if (waiver) {
     text = `waiver, not a scholarship${amount ? `. ${capFirst(amount)}` : ""}.`;
   } else if (capped && amount) {
     text = `capped. ${capFirst(amount)}.`;
@@ -452,6 +506,10 @@ export function benefitLine(b: Benefit): BenefitLine {
     text = "amount not published.";
   }
   if (conditional) text += ` Condition: ${trimStop(b.conditions_text as string)}.`;
+  // Limits sit on the same line as the benefit they limit, never elsewhere.
+  const exclusions = (b.exclusions ?? []).filter((e): e is string => typeof e === "string" && e.trim() !== "");
+  if (exclusions.length) text += ` Not included: ${exclusions.map(trimStop).join("; ")}.`;
+  if (b.duration_terms?.trim()) text += ` For ${trimStop(b.duration_terms)}.`;
   return {
     label,
     text,
@@ -479,9 +537,17 @@ export type OfferSummary = {
 };
 
 /** The coverage summary for one offer. A tier lists only what it adds, so it names its parent. */
-export function coverageSummary(offer: Offer, all: Offer[]): OfferSummary {
+export function coverageSummary(
+  offer: Offer,
+  all: Offer[],
+  evidence: ScholarshipEvidence[] = [],
+): OfferSummary {
   const parent = offer.parent_offer_id ? all.find((o) => o.offer_id === offer.parent_offer_id) : undefined;
-  const benefits = (offer.benefits ?? []).map(benefitLine);
+  const oi = all.indexOf(offer);
+  const conflicts = new Set(evidence.filter((e) => e.value_status === "conflicting").map((e) => e.field_path));
+  const benefits = (offer.benefits ?? []).map((b, bi) =>
+    benefitLine(b, { amountConflicts: oi >= 0 && conflicts.has(`offers/${oi}/benefits/${bi}/amount`) }),
+  );
   const quotedTotals: OfferSummary["quotedTotals"] = [];
   for (const t of offer.advertised_totals ?? []) {
     const quote = amountText(t.amount);
@@ -620,29 +686,65 @@ export function deadlineLine(
       past,
     };
   }
-  const recurring = (row.application?.milestones ?? []).find(
-    (m) => m.recurring && (m.requirement === "required" || m.requirement === "priority"),
-  );
-  if (recurring?.recurring) {
-    const label = KIND_LABEL[recurring.kind] ?? "Date";
+  const recurring = recurringDeadline(row.application);
+  if (recurring) {
+    const label = KIND_LABEL[recurring.kind] ?? "Deadline";
     return {
-      text: `${label}: ${MONTHS[recurring.recurring.month - 1]} ${recurring.recurring.day} each year. The page names no year, so no date is shown. Confirm on the official page.`,
+      text: `${label}: ${MONTHS[recurring.month - 1]} ${recurring.day} each year. The page names no year, so no date is shown. Confirm on the official page.`,
       past: false,
     };
   }
   return { text: "No deadline stated on the page we read.", past: false };
 }
 
-/** Deadline cell for the index table: a date, "Each November", or "Not stated". */
-export function deadlineCell(
-  row: Pick<ScholarshipDirectoryRow, "key_deadline" | "application">,
-): string {
-  if (row.key_deadline) return formatDay(row.key_deadline);
-  const recurring = (row.application?.milestones ?? []).find(
-    (m) => m.recurring && (m.requirement === "required" || m.requirement === "priority"),
+/** Kinds that count as a deadline everywhere: key_deadline, deadline_months, this page. Mirrors model.py. */
+export const DEADLINE_KINDS = [
+  "admission_deadline",
+  "application_deadline",
+  "nomination_deadline",
+  "supporting_materials_deadline",
+  "test_score_deadline",
+];
+
+/** First recurring required or priority deadline, by the same rule as deadline_months. */
+export function recurringDeadline(
+  app: Application,
+): { kind: string; month: number; day: number } | null {
+  const m = (app?.milestones ?? []).find(
+    (x) =>
+      x.recurring &&
+      !x.date &&
+      DEADLINE_KINDS.includes(x.kind) &&
+      (x.requirement === "required" || x.requirement === "priority"),
   );
-  if (recurring?.recurring) return `Each ${MONTHS[recurring.recurring.month - 1]}`;
-  return "Not stated";
+  return m?.recurring ? { kind: m.kind, month: m.recurring.month, day: m.recurring.day } : null;
+}
+
+/**
+ * Required or priority dates of a kind that is not a deadline (an NMSC
+ * designation, an interview), in the school's words. Never called a deadline.
+ */
+export function otherDateLines(app: Application): string[] {
+  return (app?.milestones ?? [])
+    .filter((m) => !DEADLINE_KINDS.includes(m.kind) && (m.requirement === "required" || m.requirement === "priority"))
+    .map((m) => {
+      const when = m.source_date_text?.trim() || (m.recurring ? `${MONTHS[m.recurring.month - 1]} ${m.recurring.day} each year` : formatDay(m.date));
+      return when ? `Other date on the page: ${when}. This is not a deadline for the award.` : "";
+    })
+    .filter(Boolean);
+}
+
+/** Deadline cell for the index table. A passed date is marked; a recurring one has no year. */
+export function deadlineCell(
+  row: Pick<IndexRow, "key_deadline" | "recurring_deadline">,
+  today: string,
+): { text: string; past: boolean } {
+  if (row.key_deadline) {
+    const past = row.key_deadline < today;
+    return { text: `${formatDay(row.key_deadline)}${past ? " (passed)" : ""}`, past };
+  }
+  if (row.recurring_deadline) return { text: `Each ${MONTHS[row.recurring_deadline.month - 1]}`, past: false };
+  return { text: "Not stated", past: false };
 }
 
 // ---------------------------------------------------------------- renewal
@@ -754,6 +856,21 @@ export function relatedLines(
     .map((r) => `${RELATION[r.relation]} ${namesById[r.program_id] ?? humanizeId(r.program_id)}`);
 }
 
+/** Related programs as a lead phrase plus a name; `onPage` when the target is documented for this school. */
+export function relatedItems(
+  row: Pick<ScholarshipDirectoryRow, "related_programs">,
+  namesById: Record<string, string>,
+): { lead: string; name: string; programId: string; onPage: boolean }[] {
+  return row.related_programs
+    .filter((r) => RELATION[r.relation])
+    .map((r) => ({
+      lead: RELATION[r.relation],
+      name: namesById[r.program_id] ?? humanizeId(r.program_id),
+      programId: r.program_id,
+      onPage: Boolean(namesById[r.program_id]),
+    }));
+}
+
 export function sourceLabel(authority: string): string {
   if (authority === "foundation_official") return "Foundation's page ↗";
   if (authority === "archived_official") return "Archived copy ↗";
@@ -768,8 +885,11 @@ export const COVERAGE_LABEL: Record<string, string> = {
   tuition_housing_meals: "Tuition, housing and meals",
   full_school_coa: "Full cost of attendance",
   partial_or_fixed: "Partial or fixed amount",
-  other: "Other or not stated",
+  other: "Other",
 };
+
+/** Filter value for "the record does not say". Never dropped: it has its own option. */
+export const NOT_STATED = "not_stated";
 
 export const SELECTION_LABEL: Record<string, string> = {
   competitive: "Competitive",
@@ -789,7 +909,7 @@ export const RESIDENCY_LABEL: Record<string, string> = {
   in_state: "In-state",
   out_of_state: "Out-of-state",
   international: "International",
-  any: "Any residency",
+  any: "Open to all residencies",
 };
 
 export type ScholarshipFilters = {
@@ -809,32 +929,110 @@ export const EMPTY_FILTERS: ScholarshipFilters = {
 
 export type ScholarshipSort = "school" | "deadline" | "coverage";
 
-export type IndexRow = ScholarshipDirectoryRow & { school_name: string };
+/** The fields the index table and its filters read, and nothing else. This is what reaches the browser. */
+export type IndexRow = {
+  program_id: string;
+  school_id: string;
+  school_name: string;
+  official_name: string;
+  coverages: string[];
+  selection_modes: string[];
+  residencies: string[];
+  national_merit_statuses: string[];
+  separate_application: string | null;
+  deadline_months: number[];
+  key_deadline: string | null;
+  recurring_deadline: { kind: string; month: number; day: number } | null;
+  freshness_status: FreshnessStatus;
+  cycle_basis: CycleBasis;
+  entry_year: number | null;
+  cycle_through_date: string | null;
+  program_status: string;
+  program_status_for_entry: string | null;
+  sources: { source_id: string; url: string; authority: string }[];
+};
+
+export function toIndexRow(row: ScholarshipDirectoryRow, schoolName: string): IndexRow {
+  return {
+    program_id: row.program_id,
+    school_id: row.school_id,
+    school_name: schoolName,
+    official_name: row.official_name,
+    coverages: row.coverages,
+    selection_modes: row.selection_modes,
+    residencies: row.residencies,
+    national_merit_statuses: row.national_merit_statuses,
+    separate_application: row.separate_application ?? null,
+    deadline_months: row.deadline_months,
+    key_deadline: row.key_deadline ?? null,
+    recurring_deadline: recurringDeadline(row.application),
+    freshness_status: row.freshness_status,
+    cycle_basis: row.cycle_basis,
+    entry_year: row.entry_year ?? null,
+    cycle_through_date: row.cycle_through_date ?? null,
+    program_status: row.program_status,
+    program_status_for_entry: row.program_status_for_entry ?? null,
+    sources: row.sources.slice(0, 2).map((x) => ({ source_id: x.source_id, url: x.url, authority: x.authority })),
+  };
+}
+
+/**
+ * The program-level "how chosen" label. Shown only when every offer shares it;
+ * otherwise "Varies by award". `selection_modes` is the distinct set over offers.
+ */
+export function selectionCell(modes: string[]): string {
+  if (modes.length === 0) return "Not stated";
+  if (modes.length > 1) return "Varies by award";
+  return SELECTION_LABEL[modes[0]] ?? "Not stated";
+}
 
 export function filterRows(rows: IndexRow[], f: ScholarshipFilters): IndexRow[] {
   const q = f.school.trim().toLowerCase();
   return rows.filter((r) => {
-    if (f.coverage && !r.coverages.includes(f.coverage)) return false;
-    if (f.selection && !r.selection_modes.includes(f.selection)) return false;
+    if (f.coverage) {
+      if (f.coverage === NOT_STATED ? r.coverages.length > 0 : !r.coverages.includes(f.coverage)) return false;
+    }
+    if (f.selection) {
+      const unstated = r.selection_modes.length === 0 || r.selection_modes.includes("unknown");
+      if (f.selection === NOT_STATED ? !unstated : !r.selection_modes.includes(f.selection)) return false;
+    }
     if (f.nationalMerit && !r.national_merit_statuses.includes(f.nationalMerit)) return false;
-    if (f.separateApplication && r.separate_application !== f.separateApplication) return false;
-    if (f.deadlineMonth && !r.deadline_months.includes(Number(f.deadlineMonth))) return false;
-    if (f.residency && !r.residencies.includes(f.residency)) return false;
+    if (f.separateApplication) {
+      const unstated = r.separate_application == null || r.separate_application === "unknown";
+      if (f.separateApplication === NOT_STATED ? !unstated : r.separate_application !== f.separateApplication) return false;
+    }
+    if (f.deadlineMonth) {
+      if (f.deadlineMonth === NOT_STATED ? r.deadline_months.length > 0 : !r.deadline_months.includes(Number(f.deadlineMonth))) return false;
+    }
+    if (f.residency) {
+      const open = r.residencies.includes("any");
+      const unstated = r.residencies.length === 0 || r.residencies.includes("unknown");
+      if (f.residency === NOT_STATED) {
+        if (!unstated) return false;
+      } else if (f.residency === "any") {
+        if (!open) return false;
+      } else if (!open && !r.residencies.includes(f.residency)) {
+        // A program open to all residencies is open to this one too.
+        return false;
+      }
+    }
     if (q && !r.school_name.toLowerCase().includes(q)) return false;
     return true;
   });
 }
 
 /** Sort by a factual field. Never by "best" or by generosity. Ties fall back to school then program name. */
-export function sortRows(rows: IndexRow[], by: ScholarshipSort): IndexRow[] {
+export function sortRows(rows: IndexRow[], by: ScholarshipSort, today: string): IndexRow[] {
   const tie = (a: IndexRow, b: IndexRow) =>
     a.school_name.localeCompare(b.school_name) || a.official_name.localeCompare(b.official_name);
   const out = [...rows];
   if (by === "deadline") {
+    // Upcoming dates first, then passed dates, then rows with no date.
+    const group = (r: IndexRow) => (!r.key_deadline ? 2 : r.key_deadline < today ? 1 : 0);
     out.sort((a, b) => {
+      const ga = group(a), gb = group(b);
+      if (ga !== gb) return ga - gb;
       if (a.key_deadline && b.key_deadline) return a.key_deadline.localeCompare(b.key_deadline) || tie(a, b);
-      if (a.key_deadline) return -1;
-      if (b.key_deadline) return 1;
       return tie(a, b);
     });
   } else if (by === "coverage") {
@@ -863,7 +1061,7 @@ export const CONTROL_LABEL: Record<SchoolControl, string> = {
  * (first of participating_school_ids), so a shared program is not counted twice.
  */
 export function countProgramsByControl(
-  rows: Pick<ScholarshipDirectoryRow, "program_id" | "participating_school_ids" | "school_id">[],
+  rows: { program_id: string; school_id: string; participating_school_ids?: string[] }[],
   controlOf: (schoolId: string) => SchoolControl,
 ): Record<SchoolControl, number> {
   const counts: Record<SchoolControl, number> = { public: 0, private_nonprofit: 0, private_for_profit: 0, unknown: 0 };
@@ -871,7 +1069,7 @@ export function countProgramsByControl(
   for (const r of rows) {
     if (seen.has(r.program_id)) continue;
     seen.add(r.program_id);
-    counts[controlOf(r.participating_school_ids[0] ?? r.school_id)] += 1;
+    counts[controlOf(r.participating_school_ids?.[0] ?? r.school_id)] += 1;
   }
   return counts;
 }

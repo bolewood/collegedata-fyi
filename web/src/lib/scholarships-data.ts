@@ -13,6 +13,7 @@
 import { unstable_cache } from "next/cache";
 import { supabase } from "./supabase";
 import {
+  SCHOLARSHIP_INDEX_TAG,
   SCHOOL_DATA_REVALIDATE_SECONDS,
   SCHOOL_DATA_TAG,
   schoolCacheTag,
@@ -21,12 +22,13 @@ import {
   SCHOLARSHIP_SELECT,
   humanizeId,
   normalizeScholarshipRow,
+  toIndexRow,
   type IndexRow,
   type ScholarshipDirectoryRow,
   type SchoolControl,
 } from "./scholarships";
 
-export const SCHOLARSHIP_INDEX_TAG = "scholarship-directory";
+export { SCHOLARSHIP_INDEX_TAG };
 
 type UntypedSupabase = { from: (table: string) => any };
 
@@ -123,6 +125,33 @@ function cached<T>(key: string[], tags: string[], fn: () => Promise<T>): Promise
   })();
 }
 
+type AllScholarships = {
+  rows: ScholarshipDirectoryRow[];
+  info: Record<string, SchoolInfo>;
+};
+
+const NONE: AllScholarships = { rows: [], info: {} };
+
+/**
+ * The whole directory in one cached read (the view is small). School pages and
+ * the index both derive from it, so a crawler sweep of thousands of school
+ * pages costs one query a day, not one per school. Throws on error.
+ */
+async function fetchAllScholarships(): Promise<AllScholarships> {
+  return cached(["fetchAllScholarships"], [SCHOLARSHIP_INDEX_TAG], async () => {
+    const rows = await loadScholarshipRows();
+    if (rows.length === 0) return NONE;
+    let info: Record<string, SchoolInfo> = {};
+    try {
+      info = await loadSchoolInfo(rows.flatMap((r) => [r.school_id, ...r.participating_school_ids]));
+    } catch (error) {
+      // Names and types are a nicety; never fail the directory for them.
+      console.warn(`scholarship school names: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    return { rows, info };
+  });
+}
+
 export type SchoolScholarships = {
   programs: ScholarshipDirectoryRow[];
   /** School id to display name, for joint programs and related lines. */
@@ -131,21 +160,17 @@ export type SchoolScholarships = {
 
 const NO_PROGRAMS: SchoolScholarships = { programs: [], names: {} };
 
-/** Programs for one school page. Empty on a missing view or any error. */
+/** Programs for one school page, filtered from the one cached read. Empty on a missing view or any error. */
 export async function fetchScholarshipsBySchoolId(schoolId: string): Promise<SchoolScholarships> {
   return emptyOnError("fetchScholarshipsBySchoolId", NO_PROGRAMS, () =>
+    // Thin per-school entry so `school:<id>` still expires this school's pages.
     cached(["fetchScholarshipsBySchoolId", schoolId], [schoolCacheTag(schoolId)], async () => {
-      const programs = await loadScholarshipRows({ eq: ["school_id", schoolId] });
+      const all = await fetchAllScholarships();
+      const programs = all.rows.filter((r) => r.school_id === schoolId);
       if (programs.length === 0) return NO_PROGRAMS;
-      const others = programs.flatMap((p) => p.participating_school_ids).filter((id) => id !== schoolId);
       const names: Record<string, string> = {};
-      if (others.length) {
-        try {
-          const info = await loadSchoolInfo(others);
-          for (const [id, v] of Object.entries(info)) names[id] = v.name;
-        } catch {
-          for (const id of others) names[id] = humanizeId(id); // names are a nicety; never fail the card for them
-        }
+      for (const id of programs.flatMap((p) => p.participating_school_ids)) {
+        if (id !== schoolId) names[id] = all.info[id]?.name ?? humanizeId(id);
       }
       return { programs, names };
     }),
@@ -155,26 +180,28 @@ export async function fetchScholarshipsBySchoolId(schoolId: string): Promise<Sch
 export type ScholarshipIndex = {
   rows: IndexRow[];
   controls: Record<string, SchoolControl>;
+  /** Lead school and program id per program, for counts by school type. */
+  programs: { program_id: string; school_id: string; participating_school_ids: string[] }[];
 };
 
-const NO_INDEX: ScholarshipIndex = { rows: [], controls: {} };
+const NO_INDEX: ScholarshipIndex = { rows: [], controls: {}, programs: [] };
 
-/** Every row, with school names and types, for /scholarships. Empty on a missing view or any error. */
+/** Slim rows for /scholarships: only what the table and its filters read. Empty on a missing view or any error. */
 export async function fetchScholarshipIndex(): Promise<ScholarshipIndex> {
-  return emptyOnError("fetchScholarshipIndex", NO_INDEX, () =>
-    cached(["fetchScholarshipIndex"], [SCHOLARSHIP_INDEX_TAG], async () => {
-      const rows = await loadScholarshipRows();
-      if (rows.length === 0) return NO_INDEX;
-      let info: Record<string, SchoolInfo> = {};
-      try {
-        info = await loadSchoolInfo(rows.flatMap((r) => [r.school_id, ...r.participating_school_ids]));
-      } catch (error) {
-        console.warn(`fetchScholarshipIndex school names: ${error instanceof Error ? error.message : String(error)}`);
-      }
-      const nameOf = (id: string) => info[id]?.name ?? humanizeId(id);
-      const controls: Record<string, SchoolControl> = {};
-      for (const [id, v] of Object.entries(info)) controls[id] = v.control;
-      return { rows: rows.map((r) => ({ ...r, school_name: nameOf(r.school_id) })), controls };
-    }),
-  );
+  return emptyOnError("fetchScholarshipIndex", NO_INDEX, async () => {
+    const all = await fetchAllScholarships();
+    if (all.rows.length === 0) return NO_INDEX;
+    const nameOf = (id: string) => all.info[id]?.name ?? humanizeId(id);
+    const controls: Record<string, SchoolControl> = {};
+    for (const [id, v] of Object.entries(all.info)) controls[id] = v.control;
+    return {
+      rows: all.rows.map((r) => toIndexRow(r, nameOf(r.school_id))),
+      controls,
+      programs: all.rows.map((r) => ({
+        program_id: r.program_id,
+        school_id: r.school_id,
+        participating_school_ids: r.participating_school_ids,
+      })),
+    };
+  });
 }

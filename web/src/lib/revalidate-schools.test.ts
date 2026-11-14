@@ -17,7 +17,7 @@ import {
   isAuthorized,
   parseRevalidateBody,
 } from "./revalidate-schools";
-import { schoolCacheTag } from "./school-cache-tags";
+import { SCHOLARSHIP_INDEX_TAG, schoolCacheTag } from "./school-cache-tags";
 
 function req(body: unknown, auth: string | null = "Bearer s3cret", raw?: string) {
   return new Request("https://example.test/api/revalidate", {
@@ -59,7 +59,7 @@ describe("parseRevalidateBody", () => {
   it("dedupes and separates rejected slugs", () => {
     expect(parseRevalidateBody({ school_ids: ["yale", "yale", "Bad/Slug", 5] })).toEqual({
       ok: true,
-      request: { kind: "schools", schoolIds: ["yale"], rejected: ["Bad/Slug", "5"] },
+      request: { kind: "schools", schoolIds: ["yale"], rejected: ["Bad/Slug", "5"], scholarships: false },
     });
   });
 });
@@ -119,5 +119,20 @@ describe("POST /api/revalidate", () => {
     expect(res.status).toBe(200);
     expect(revalidateTag).toHaveBeenCalledWith("school-data", { expire: 0 });
     expect(revalidatePath).toHaveBeenCalledWith("/schools/[school_id]", "layout");
+  });
+});
+
+describe("scholarship directory revalidation", () => {
+  it("expires the directory read only when the request asks (data load), not on every school batch", async () => {
+    await POST(req({ school_ids: ["yale"] }));
+    expect(revalidateTag).not.toHaveBeenCalledWith(SCHOLARSHIP_INDEX_TAG, { expire: 0 });
+    vi.clearAllMocks();
+    const res = await POST(req({ school_ids: ["yale"], scholarships: true }));
+    expect(res.status).toBe(200);
+    expect(revalidateTag).toHaveBeenCalledWith(SCHOLARSHIP_INDEX_TAG, { expire: 0 });
+    expect(revalidatePath).toHaveBeenCalledWith("/scholarships");
+  });
+  it("rejects a non-boolean scholarships flag", () => {
+    expect(parseRevalidateBody({ school_ids: ["yale"], scholarships: "yes" }).ok).toBe(false);
   });
 });

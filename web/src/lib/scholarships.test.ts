@@ -15,6 +15,14 @@ import {
   freshnessLine,
   freshnessShort,
   normalizeScholarshipRow,
+  toIndexRow,
+  selectionCell,
+  deadlineCell,
+  closedLabel,
+  NOT_STATED,
+  otherDateLines,
+  recurringDeadline,
+  relatedItems,
   renewalSummary,
   sortRows,
   EMPTY_FILTERS,
@@ -237,27 +245,198 @@ describe("deadline and renewal", () => {
 });
 
 describe("index filters and sort", () => {
-  const index: IndexRow[] = ROWS.map((r) => ({ ...r, school_name: r.school_id }));
-  it("filters by coverage, National Merit and school name", () => {
-    expect(filterRows(index, { ...EMPTY_FILTERS, coverage: "full_tuition" }).every((r) => r.coverages.includes("full_tuition"))).toBe(true);
+  const TODAY = "2026-11-14";
+  const index: IndexRow[] = ROWS.map((r) => toIndexRow(r, r.school_id));
+  const ids = (f: Partial<typeof EMPTY_FILTERS>) => filterRows(index, { ...EMPTY_FILTERS, ...f }).map((r) => `${r.school_id}/${r.program_id}`);
+
+  it("filters by coverage, National Merit and school name (non-empty results)", () => {
+    const full = filterRows(index, { ...EMPTY_FILTERS, coverage: "full_tuition" });
+    expect(full.length).toBeGreaterThan(0);
+    expect(full.every((r) => r.coverages.includes("full_tuition"))).toBe(true);
     expect(filterRows(index, { ...EMPTY_FILTERS, nationalMerit: "finalist" }).length).toBeGreaterThan(0);
     expect(filterRows(index, { ...EMPTY_FILTERS, school: "TULSA" }).map((r) => r.school_id)).toEqual(["university-of-tulsa"]);
   });
-  it("sorts by deadline with undated rows last, never by generosity", () => {
-    const sorted = sortRows(index, "deadline");
-    const dated = sorted.filter((r) => r.key_deadline).map((r) => r.key_deadline!);
-    expect([...dated].sort()).toEqual(dated);
-    const firstUndated = sorted.findIndex((r) => !r.key_deadline);
-    expect(sorted.slice(firstUndated).every((r) => !r.key_deadline)).toBe(true);
-    expect(sortRows(index, "school").map((r) => r.school_name)).toEqual([...index.map((r) => r.school_name)].sort((a, b) => a.localeCompare(b)));
+
+  it("a residency choice keeps programs open to all residencies, and has a Not stated option", () => {
+    // Boston College Gabelli is open to all; it used to vanish under "In-state".
+    for (const choice of ["in_state", "out_of_state", "international"]) {
+      expect(ids({ residency: choice })).toContain("boston-college/gabelli-presidential-scholars");
+    }
+    expect(ids({ residency: "any" })).toContain("boston-college/gabelli-presidential-scholars");
+    const unstated = ids({ residency: NOT_STATED });
+    expect(unstated).toContain("university-of-tulsa/national-merit-semifinalist-package");
+    expect(unstated).toContain("vanderbilt/chancellors-scholarship"); // empty residencies
+    expect(unstated).not.toContain("boston-college/gabelli-presidential-scholars");
   });
-  it("sorts by coverage label alphabetically, not by generosity", () => {
-    const labels = sortRows(index, "coverage").map((r) => [...r.coverages].map((c) => COVERAGE_LABEL[c]).sort()[0] ?? "~");
+
+  it("no filter silently drops a record: every row is found by some option of each filter", () => {
+    const filters: [keyof typeof EMPTY_FILTERS, string[]][] = [
+      ["coverage", [...Object.keys(COVERAGE_LABEL), NOT_STATED]],
+      ["selection", ["competitive", "automatic_guaranteed", "hybrid", NOT_STATED]],
+      ["separateApplication", ["required", "encouraged", "not_required", "invitation_only", "no_form_other_steps_required", NOT_STATED]],
+      ["deadlineMonth", [...Array.from({ length: 12 }, (_, i) => String(i + 1)), NOT_STATED]],
+    ];
+    for (const [key, options] of filters) {
+      const found = new Set(options.flatMap((o) => ids({ [key]: o })));
+      for (const r of index) expect(found, `${key}: ${r.school_id}/${r.program_id}`).toContain(`${r.school_id}/${r.program_id}`);
+    }
+  });
+
+  it("Not stated coverage finds rows with no coverage, and Other no longer claims them", () => {
+    expect(ids({ coverage: NOT_STATED })).toEqual(expect.arrayContaining(["uga/stamps-scholars", "vanderbilt/chancellors-scholarship"]));
+    expect(ids({ coverage: "other" })).not.toContain("uga/stamps-scholars");
+  });
+
+  it("Not stated selection finds Texas A&M, whose offers include unstated ones", () => {
+    expect(ids({ selection: NOT_STATED })).toContain("texas-am/national-merit-scholars");
+  });
+
+  it("sorts by deadline: upcoming first, then passed, then undated", () => {
+    const sorted = sortRows(index, "deadline", TODAY);
+    const kinds = sorted.map((r) => (!r.key_deadline ? "none" : r.key_deadline < TODAY ? "passed" : "upcoming"));
+    expect(kinds.indexOf("upcoming")).toBe(0);
+    const order = { upcoming: 0, passed: 1, none: 2 } as const;
+    expect(kinds.map((k) => order[k])).toEqual([...kinds.map((k) => order[k])].sort((a, b) => a - b));
+    expect(kinds).toContain("passed"); // Georgia Tech Stamps, 2026-10-15
+    const gt = sorted.findIndex((r) => r.program_id === "stamps-presidents-scholars");
+    const duke = sorted.findIndex((r) => r.program_id === "robertson-scholars");
+    expect(duke).toBeLessThan(gt);
+  });
+
+  it("sorts by school and by coverage label, never by generosity", () => {
+    expect(sortRows(index, "school", TODAY).map((r) => r.school_name)).toEqual([...index.map((r) => r.school_name)].sort((a, b) => a.localeCompare(b)));
+    const labels = sortRows(index, "coverage", TODAY).map((r) => [...r.coverages].map((c) => COVERAGE_LABEL[c]).sort()[0] ?? "~");
     expect(labels).toEqual([...labels].sort((a, b) => a.localeCompare(b)));
   });
+
+  it("marks a passed deadline and never prints a year for a recurring one", () => {
+    const gt = index.find((r) => r.program_id === "stamps-presidents-scholars")!;
+    expect(deadlineCell(gt, TODAY)).toEqual({ text: "Oct 15, 2026 (passed)", past: true });
+    const duke = index.find((r) => r.program_id === "robertson-scholars" && r.school_id === "duke")!;
+    expect(deadlineCell(duke, TODAY)).toEqual({ text: "Nov 15, 2026", past: false });
+    const tulsa = index.find((r) => r.school_id === "university-of-tulsa")!;
+    expect(deadlineCell(tulsa, TODAY).text).toMatch(/^Each [A-Z][a-z]+$/);
+  });
+
+  it("the recurring cell follows the deadline_months rule (UCF's May 31 is not a deadline)", () => {
+    const ucf = index.find((r) => r.program_id === "national-merit-benacquisto")!;
+    expect(ucf.deadline_months).toEqual([]);
+    expect(deadlineCell(ucf, TODAY).text).toBe("Not stated");
+    expect(recurringDeadline(row("national-merit-benacquisto").application)).toBeNull();
+    expect(otherDateLines(row("national-merit-benacquisto").application).join(" ")).toMatch(/not a deadline for the award/);
+  });
+
   it("counts a shared program once, by its lead school", () => {
     const counts = countProgramsByControl(ROWS, (id) => (id === "duke" ? "private_nonprofit" : id === "unc" ? "public" : "unknown"));
-    expect(counts.private_nonprofit).toBeGreaterThanOrEqual(2); // Karsh and Robertson at Duke
+    expect(counts.private_nonprofit).toBeGreaterThanOrEqual(2);
     expect(counts.public + counts.private_nonprofit + counts.unknown).toBe(23);
+  });
+});
+
+describe("the index row carries only what the table reads", () => {
+  it("drops offers, evidence, application and renewal from what goes to the browser", () => {
+    const slim = toIndexRow(row("national-merit-scholars", "texas-am"), "Texas A&M");
+    const keys = Object.keys(slim);
+    for (const heavy of ["offers", "evidence", "application", "renewal_rules", "stacking_rules", "award_counts", "attribution"]) {
+      expect(keys).not.toContain(heavy);
+    }
+    expect(JSON.stringify(ROWS.map((r) => toIndexRow(r, r.school_id))).length).toBeLessThan(JSON.stringify(ROWS).length / 8);
+    expect(slim.sources.length).toBeLessThanOrEqual(2);
+  });
+});
+
+describe("program-level selection label", () => {
+  it("is shown only when every offer shares it, else 'Varies by award' (Texas A&M, UCF)", () => {
+    expect(selectionCell(row("national-merit-scholars", "texas-am").selection_modes)).toBe("Varies by award");
+    expect(selectionCell(row("national-merit-benacquisto").selection_modes)).toBe("Varies by award");
+    expect(selectionCell(["competitive"])).toBe("Competitive");
+    expect(selectionCell(["automatic_guaranteed"])).toBe("Automatic if you qualify");
+    expect(selectionCell([])).toBe("Not stated");
+    expect(selectionCell(["unknown"])).toBe("Not stated");
+  });
+});
+
+describe("exclusions, duration and conflicting amounts sit with the benefit", () => {
+  const lines = (r: ScholarshipDirectoryRow) =>
+    r.offers.flatMap((o) => coverageSummary(o, r.offers, r.evidence).benefits.map((b) => `${b.label}: ${b.text}`));
+
+  it("prints UMD's fee exclusions next to 'covers all of it' (real: Banneker/Key)", () => {
+    const fees = lines(row("banneker-key-scholarship")).filter((l) => l.startsWith("Mandatory fees: the school says it covers all of it"));
+    expect(fees.length).toBeGreaterThan(0);
+    expect(fees.every((l) => /Not included: .*(Miscellaneous fees|departmental fees)/.test(l))).toBe(true);
+  });
+  it("prints Tuskegee's enrollment-fee exclusion on its fees line (real)", () => {
+    const l = lines(row("distinguished-presidential-scholarship")).find((x) => x.startsWith("Mandatory fees"))!;
+    expect(l).toMatch(/Not included: .*enrollment fee/i);
+  });
+  it("prints duration terms (real: Robertson, eight semesters)", () => {
+    expect(lines(row("robertson-scholars", "duke")).some((l) => /For Eight semesters\./i.test(l))).toBe(true);
+  });
+  it("says the pages give different amounts, not 'not published', where the amount conflicts (real: UMD out-of-state tuition)", () => {
+    const r = row("banneker-key-scholarship");
+    const conflicted = r.evidence.filter((e) => e.value_status === "conflicting" && /benefits\/\d+\/amount$/.test(e.field_path));
+    expect(conflicted.length).toBeGreaterThan(0);
+    const all = lines(r).join("\n");
+    expect(all).toMatch(/Tuition: the school's pages give different amounts\./);
+    // Same benefit without the evidence falls back to the generic wording, proving the evidence drives it.
+    const without = r.offers.flatMap((o) => coverageSummary(o, r.offers, []).benefits.map((b) => b.text)).join("\n");
+    expect(without).not.toMatch(/different amounts/);
+  });
+  it("benefitLine adds exclusions and duration (unit)", () => {
+    const b: Benefit = { category: "mandatory_fees", instrument: "scholarship", coverage: "full", amount: null, exclusions: ["Parking"], duration_terms: "four years" };
+    expect(benefitLine(b).text).toBe("the school says it covers all of it. Not included: Parking. For four years.");
+  });
+});
+
+describe("closed programs never read as open", () => {
+  it("replaces the 'terms for fall N entry' line with the closed status (real: Vanderbilt Chancellor's)", () => {
+    const v = row("chancellors-scholarship");
+    expect(closedLabel(v)).toBe("Closed to new entrants");
+    const line = freshnessLine(v).text;
+    expect(line).toMatch(/^Closed to new entrants as of the page we read [A-Z][a-z]{2} \d{1,2}, 2026\.$/);
+    expect(line).not.toMatch(/Terms for/);
+    expect(freshnessShort(v)).toEqual({ tone: "plain", text: "Closed to new entrants" });
+  });
+  it("still shows conflicting as a conflict even if closed", () => {
+    const v = { ...row("distinguished-presidential-scholarship"), program_status_for_entry: "paused" };
+    expect(freshnessLine(v).tone).toBe("amber");
+  });
+});
+
+describe("unknown freshness status", () => {
+  it("never reads as current", () => {
+    const odd = { ...row("national-merit-semifinalist-package"), freshness_status: "something_new" as never };
+    expect(freshnessLine(odd).text).toBe("Read the official page for the current terms.");
+    expect(freshnessShort(odd).text).toBe("Check the official page");
+  });
+});
+
+describe("normalizeScholarshipRow survives malformed elements", () => {
+  it("drops null offers, null milestones, null benefits and sources without a url", () => {
+    const base = ROWS[0] as unknown as Record<string, unknown>;
+    const messy = normalizeScholarshipRow({
+      ...base,
+      offers: [null, 5, { offer_id: "o1", benefits: [null, { category: "tuition", instrument: "scholarship", coverage: "full", amount: null }] }],
+      application: { milestones: [null, { kind: "application_deadline", requirement: "required", date: "2026-12-01", recurring: null }] },
+      sources: [null, { source_id: "x" }, { source_id: "y", url: "javascript:alert(1)", authority: "official_program" }, { source_id: "z", url: "https://example.edu/a", authority: "official_program" }],
+      related_programs: [null],
+      renewal_rules: [null],
+    })!;
+    expect(messy.offers.map((o) => o.offer_id)).toEqual(["o1"]);
+    expect(messy.offers[0].benefits).toHaveLength(1);
+    expect(messy.application?.milestones).toHaveLength(1);
+    expect(messy.sources.map((s) => s.source_id)).toEqual(["z"]);
+    expect(messy.renewal_rules).toEqual([]);
+    expect(() => coverageSummary(messy.offers[0], messy.offers)).not.toThrow();
+    expect(() => deadlineLine(messy, "2026-11-14")).not.toThrow();
+  });
+});
+
+describe("related programs link when documented on the page", () => {
+  it("marks a related program on the same page (UGA Stamps -> Foundation Fellowship)", () => {
+    const stamps = row("stamps-scholars", "uga");
+    const items = relatedItems(stamps, { "foundation-fellowship": "Foundation Fellowship" });
+    expect(items.some((i) => i.programId === "foundation-fellowship" && i.onPage && i.name === "Foundation Fellowship")).toBe(true);
+    expect(relatedItems(stamps, {}).every((i) => !i.onPage)).toBe(true);
   });
 });

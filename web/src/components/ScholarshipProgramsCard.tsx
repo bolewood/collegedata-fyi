@@ -10,7 +10,8 @@ import {
   coverageSummary,
   deadlineLine,
   freshnessLine,
-  relatedLines,
+  otherDateLines,
+  relatedItems,
   renewalSummary,
   residencyLine,
   sourceLabel,
@@ -38,7 +39,7 @@ function Offers({ row }: { row: ScholarshipDirectoryRow }) {
   return (
     <div className="sch-offers">
       {row.offers.map((offer) => {
-        const summary = coverageSummary(offer, row.offers);
+        const summary = coverageSummary(offer, row.offers, row.evidence);
         const considered = consideredLines(offer);
         const residency = residencyLine(offer);
         return (
@@ -105,7 +106,7 @@ function Program({
   const status = statusChip(row);
   const closed = (row.program_status_for_entry ?? row.program_status) === "closed_to_new_entrants";
   const authority = authorityLine(row.awarding_authority);
-  const related = relatedLines(row, namesById);
+  const related = relatedItems(row, namesById);
   const others = row.participating_school_ids.filter((id) => id !== schoolId);
   const hasTerms = row.offers.some((o) => (o.benefits ?? []).length > 0);
 
@@ -117,7 +118,8 @@ function Program({
       </header>
       {closed ? (
         <p className="sch-line">
-          The school&rsquo;s page lists this program as closed to new entrants. Terms below are kept for reference.
+          The school&rsquo;s page lists this program as closed to new entrants.
+          {hasTerms ? " Terms below are kept for reference." : ""}
         </p>
       ) : null}
       {others.length > 0 ? (
@@ -135,8 +137,11 @@ function Program({
       {authority ? <p className="sch-line sch-line--muted">{authority}</p> : null}
       {related.length > 0 ? (
         <ul className="sch-list sch-list--muted">
-          {related.map((line) => (
-            <li key={line} className="sch-line">{line}</li>
+          {related.map((r) => (
+            <li key={`${r.lead}-${r.programId}`} className="sch-line">
+              {r.lead}{" "}
+              {r.onPage ? <a href={`#scholarship-${r.programId}`}>{r.name}</a> : r.name}
+            </li>
           ))}
         </ul>
       ) : null}
@@ -152,6 +157,9 @@ function Program({
           <div className="meta">§ Deadline</div>
           <p className={`sch-line${deadline.past ? " sch-line--amber" : ""}`}>{deadline.text}</p>
           {deadline.past ? <p className="sch-line sch-line--amber">Past. Check the official page for the next cycle.</p> : null}
+          {otherDateLines(row.application).map((line) => (
+            <p key={line} className="sch-line sch-line--muted">{line}</p>
+          ))}
           {appLines.map((line) => (
             <p key={line} className="sch-line">{line}</p>
           ))}
@@ -180,7 +188,13 @@ function Program({
         <p className="sch-line">{fresh.text}</p>
         <p className="sch-links mono">
           {row.sources.map((s) => (
-            <a key={s.source_id} href={s.url} target="_blank" rel={externalLinkRel(s.url)}>
+            <a
+              key={s.source_id}
+              href={s.url}
+              target="_blank"
+              rel={externalLinkRel(s.url)}
+              aria-label={`${row.official_name}: ${sourceLabel(s.authority).replace(" ↗", "")} (opens in a new tab)`}
+            >
               {sourceLabel(s.authority)}
             </a>
           ))}

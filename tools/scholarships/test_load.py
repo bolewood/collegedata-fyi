@@ -808,3 +808,10 @@ def test_reload_workflow_triggers_on_derivation_code():
     for path in ("tools/scholarships/model.py", "tools/scholarships/load.py", "supabase/migrations/*_scholarship_directory.sql", "data/scholarships/**"):
         assert f'- "{path}"' in wf, path
     assert "allow_prune" in wf and "dispatch this workflow once" in wf
+
+
+def test_report_lists_every_participating_school_for_revalidation(ds):
+    """The load workflow tells the web app which school pages to refresh from this list."""
+    report = load.build_report(ds, None)
+    expected = sorted({s["school_id"] for p in ds.programs for s in model.participants_of(p)})
+    assert report["school_ids"] == expected and expected
