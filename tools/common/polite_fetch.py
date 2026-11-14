@@ -3,8 +3,8 @@
 Behaviour (PRD 036 M4):
 
 * robots.txt per RFC 9309, cached 24 h per host. 4xx on robots.txt means
-  "allowed"; a network error or 5xx means "unreachable" and blocks every fetch
-  to that host (the unreachable state is not cached, so the next call retries).
+  "allowed" except 429; a network error, 5xx or 429 means "unreachable" and
+  blocks every fetch to that host (the unreachable state is not cached, so the next call retries).
 * ``Crawl-delay`` is honoured; requests to one host are strictly serialised and
   spaced by ``max(min_spacing, crawl_delay)``.
 * ``User-Agent`` follows the repo form ``collegedata-fyi-<token>/<ver> (<url>)``.
@@ -23,12 +23,16 @@ from __future__ import annotations
 
 import http.client
 import json
+import logging
+import math
+import os
 import re
 import threading
 import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
+from datetime import timezone
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Callable, Mapping, MutableMapping
@@ -38,13 +42,15 @@ CONTACT_URL = "https://github.com/bolewood/collegedata-fyi"
 ROBOTS_TTL_SECONDS = 24 * 60 * 60
 ROBOTS_MAX_BYTES = 500 * 1024  # RFC 9309 s2.5: parse at least 500 KiB
 MAX_REDIRECTS = 5
+log = logging.getLogger(__name__)
 
 RFC9309_NOT_IMPLEMENTED = (
     "Sitemap lines are ignored (not needed for access decisions). "
     "Cache-Control/Expires on robots.txt is ignored in favour of a fixed 24 h TTL. "
     "Percent-encoding is normalised by unquoting both sides (unreserved-only "
     "normalisation is not distinguished). Non-UTF-8 robots bytes are decoded "
-    "with errors='replace' rather than rejected."
+    "with errors='replace' rather than rejected. A 429 on robots.txt is treated as "
+    "unreachable (stricter than RFC 9309 s2.3.1.3, which counts every 4xx as unavailable)."
 )
 
 # Result statuses.
@@ -196,7 +202,7 @@ class RobotsPolicy:
             if key == "crawl-delay":
                 try:
                     d = float(val)
-                    if d >= 0 and self.crawl_delay is None:
+                    if math.isfinite(d) and d >= 0 and self.crawl_delay is None:
                         self.crawl_delay = d
                 except ValueError:
                     pass
@@ -238,6 +244,8 @@ def parse_retry_after(value: str | None, now: float) -> float | None:
         return None
     if dt is None:
         return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
     return max(0.0, dt.timestamp() - now)
 
 
@@ -258,6 +266,7 @@ class PoliteFetcher:
         max_retries: int = 3,
         backoff_base: float = 2.0,
         max_retry_after: float = 300.0,
+        max_crawl_delay: float = 300.0,
         timeout: float = 30.0,
         transport: Transport = urllib_transport,
         clock: Callable[[], float] = time.time,
@@ -270,21 +279,30 @@ class PoliteFetcher:
         self.max_retries = max_retries
         self.backoff_base = backoff_base
         self.max_retry_after = max_retry_after
+        self.max_crawl_delay = max_crawl_delay
         self.timeout = timeout
         self._transport, self._clock, self._sleep = transport, clock, sleep
         self._cache_path: Path | None = None
         if isinstance(cache, (str, Path)):
             self._cache_path = Path(cache)
+            loaded: object = {}
             try:
-                self.cache: MutableMapping[str, dict] = json.loads(self._cache_path.read_text())
-            except (OSError, ValueError):
-                self.cache = {}
+                loaded = json.loads(self._cache_path.read_text())
+            except FileNotFoundError:
+                pass
+            except (OSError, ValueError) as e:
+                log.warning("polite_fetch: unreadable cache %s (%s); starting empty", self._cache_path, e)
+            if not isinstance(loaded, dict):
+                log.warning("polite_fetch: cache %s is not a JSON object; starting empty", self._cache_path)
+                loaded = {}
+            self.cache: MutableMapping[str, dict] = loaded
         else:
             self.cache = cache if cache is not None else {}
         self._robots: dict[str, tuple[float, RobotsPolicy]] = {}
         self._last_request: dict[str, float] = {}
         self._host_locks: dict[str, threading.Lock] = {}
         self._locks_guard = threading.Lock()
+        self._cache_lock = threading.Lock()
 
     # -- internals
     def _lock(self, host: str) -> threading.Lock:
@@ -321,19 +339,23 @@ class PoliteFetcher:
             return hit[1]
         url = origin + "/robots.txt"
         headers = {"User-Agent": self.user_agent, "Accept": "text/plain, */*;q=0.1"}
-        prev_delay = self._delay_for(hit[1]) if hit else self.min_spacing
+        prev_delay = min(self._delay_for(hit[1]), self.max_crawl_delay) if hit else self.min_spacing
         policy: RobotsPolicy | None = None
         for _ in range(MAX_REDIRECTS + 1):
             try:
                 resp = self._spaced_request(url, headers, prev_delay)
-            except OSError:
+            except (OSError, ValueError):
                 return None
             if resp.status in (301, 302, 303, 307, 308) and resp.headers.get("location"):
                 url = urljoin(url, resp.headers["location"])
+                if urlsplit(url).scheme not in ("http", "https"):
+                    return None
                 continue
             if 200 <= resp.status < 300:
-                text = resp.body[:ROBOTS_MAX_BYTES].decode("utf-8", errors="replace")
+                text = resp.body[:ROBOTS_MAX_BYTES].decode("utf-8-sig", errors="replace")
                 policy = RobotsPolicy(text, self.robots_token)
+            elif resp.status == 429:
+                return None  # rate-limited: treat as unreachable, never cache as allow
             elif 400 <= resp.status < 500:
                 policy = RobotsPolicy.allow_all()
             else:
@@ -347,10 +369,23 @@ class PoliteFetcher:
     def _delay_for(self, policy: RobotsPolicy) -> float:
         return max(self.min_spacing, policy.crawl_delay or 0.0)
 
-    def _save_cache(self) -> None:
-        if self._cache_path is not None:
-            self._cache_path.parent.mkdir(parents=True, exist_ok=True)
-            self._cache_path.write_text(json.dumps(self.cache, indent=2, sort_keys=True))
+    def _remember(self, url: str, entry: dict) -> None:
+        """Store validators and persist atomically (temp file + os.replace)."""
+        with self._cache_lock:
+            self.cache[url] = entry
+            if self._cache_path is None:
+                return
+            tmp = self._cache_path.with_name(self._cache_path.name + f".{os.getpid()}.tmp")
+            try:
+                self._cache_path.parent.mkdir(parents=True, exist_ok=True)
+                tmp.write_text(json.dumps(self.cache, indent=2, sort_keys=True))
+                os.replace(tmp, self._cache_path)
+            except OSError as e:
+                log.warning("polite_fetch: could not save cache %s: %s", self._cache_path, e)
+                try:
+                    tmp.unlink()
+                except OSError:
+                    pass
 
     @staticmethod
     def _is_sso_redirect(url: str) -> bool:
@@ -362,7 +397,7 @@ class PoliteFetcher:
         if resp.status in (401, 403, 429, 503):
             if resp.headers.get("www-authenticate") or resp.headers.get("cf-mitigated"):
                 return True
-            if resp.status in (401, 403) and _CHALLENGE_BODY_RE.search(resp.body[:65536]):
+            if _CHALLENGE_BODY_RE.search(resp.body[:65536]):
                 return True
             if resp.status == 401:
                 return True
@@ -383,8 +418,13 @@ class PoliteFetcher:
             if not policy.allowed(current):
                 return FetchResult(BLOCKED_BY_ROBOTS, url, current, reason=f"disallowed by robots.txt for {origin}", attempts=attempts)
 
+            if policy.crawl_delay is not None and policy.crawl_delay > self.max_crawl_delay:
+                return FetchResult(HTTP_ERROR, url, current, reason=f"Crawl-delay {policy.crawl_delay:.0f}s exceeds cap {self.max_crawl_delay:.0f}s", attempts=attempts)
+
             headers = {"User-Agent": self.user_agent, "Accept": "*/*"}
             cached = self.cache.get(url)
+            if not isinstance(cached, dict) or current != cached.get("final_url", url):
+                cached = None  # validators belong to the resource they came from
             if cached:
                 if cached.get("etag"):
                     headers["If-None-Match"] = cached["etag"]
@@ -394,6 +434,8 @@ class PoliteFetcher:
             attempts += 1
             try:
                 resp = self._spaced_request(current, headers, self._delay_for(policy))
+            except ValueError as e:
+                return FetchResult(HTTP_ERROR, url, current, reason=f"invalid request/response: {e}", attempts=attempts)
             except OSError as e:
                 if retries < self.max_retries:
                     self._sleep(self.backoff_base * (2**retries))
@@ -403,6 +445,8 @@ class PoliteFetcher:
 
             if resp.status in (301, 302, 303, 307, 308) and resp.headers.get("location"):
                 nxt = urljoin(current, resp.headers["location"])
+                if urlsplit(nxt).scheme not in ("http", "https"):
+                    return FetchResult(HTTP_ERROR, url, current, resp.status, reason=f"redirect to non-HTTP target {nxt[:80]!r}", attempts=attempts)
                 if self._is_sso_redirect(nxt) and not self._is_sso_redirect(current):
                     return FetchResult(LOGIN_OR_CAPTCHA, url, nxt, resp.status, reason="redirect to login/SSO host", attempts=attempts)
                 redirects += 1
@@ -421,8 +465,7 @@ class PoliteFetcher:
             if 200 <= resp.status < 300:
                 etag, lm = resp.headers.get("etag"), resp.headers.get("last-modified")
                 if etag or lm:
-                    self.cache[url] = {"etag": etag, "last_modified": lm}
-                    self._save_cache()
+                    self._remember(url, {"etag": etag, "last_modified": lm, "final_url": current})
                 return FetchResult(OK, url, current, resp.status, resp.body, resp.headers, etag, lm, attempts=attempts)
 
             if resp.status in (429, 500, 502, 503, 504):

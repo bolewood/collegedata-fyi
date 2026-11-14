@@ -287,3 +287,195 @@ def test_default_transport_wraps_http_client_errors(monkeypatch):
         pass
     else:
         raise AssertionError("expected OSError subclass")
+
+
+# ---------------------------------------------------------------- review round
+
+import os
+import time as _time
+
+import pytest
+
+from tools.common.polite_fetch import RobotsPolicy
+
+TOKEN = "collegedata-fyi-scholarships"
+
+
+def test_m1_utf8_bom_in_robots_does_not_drop_first_group():
+    fk = Fake({ROBOTS: [R(200, b"\xef\xbb\xbfUser-agent: *\nDisallow: /\n")], PAGE: [R(200)]})
+    assert fk.fetcher().fetch(PAGE).status == BLOCKED_BY_ROBOTS
+
+
+def test_m2_robots_429_is_unreachable_and_not_cached():
+    fk = Fake({ROBOTS: [R(429, retry_after="5"), R(200, b"User-agent: *\nDisallow: /\n")], PAGE: [R(200)]})
+    f = fk.fetcher()
+    assert f.fetch(PAGE).status == ROBOTS_UNREACHABLE
+    assert [c[1] for c in fk.calls] == [ROBOTS]
+    assert f.fetch(PAGE).status == BLOCKED_BY_ROBOTS  # refetched, real file honoured
+    assert [c[1] for c in fk.calls].count(ROBOTS) == 2
+
+
+@pytest.mark.parametrize("status", [429, 503])
+def test_m3_captcha_body_on_429_503_not_retried(status):
+    fk = Fake({ROBOTS: [R(404)], PAGE: [R(status, b"<div class='g-recaptcha'></div>"), R(200)]})
+    r = fk.fetcher().fetch(PAGE)
+    assert r.status == LOGIN_OR_CAPTCHA
+    assert [c[1] for c in fk.calls].count(PAGE) == 1
+
+
+def test_m4_validators_not_sent_to_a_different_redirect_target():
+    new = "https://b.edu/new"
+    fk = Fake({ROBOTS: [R(404)], "https://b.edu/robots.txt": [R(404)],
+               PAGE: [R(301, location="/moved"), R(301, location=new)],
+               "https://a.edu/moved": [R(200, b"v1", last_modified="Mon, 01 Jun 2026 00:00:00 GMT")],
+               new: [R(200, b"different")]})
+    f = fk.fetcher()
+    assert f.fetch(PAGE).status == OK
+    n = len(fk.calls)
+    r = f.fetch(PAGE)
+    assert r.status == OK and r.body == b"different"
+    for _, url, h in fk.calls[n:]:
+        assert "If-Modified-Since" not in h and "If-None-Match" not in h, url
+
+
+def test_s1_cache_file_atomic_and_bad_json_shapes(tmp_path, monkeypatch):
+    p = tmp_path / "c.json"
+    p.write_text("[]")  # valid JSON, not an object
+    fk = Fake({ROBOTS: [R(404)], PAGE: [R(200, b"v", etag='"a"')]})
+    assert fk.fetcher(cache=p).fetch(PAGE).status == OK
+    assert json.loads(p.read_text())[PAGE]["etag"] == '"a"'
+    assert [x.name for x in tmp_path.iterdir()] == ["c.json"]  # no temp litter
+
+    # a failed replace leaves the previous file intact and does not raise
+    before = p.read_text()
+    fk2 = Fake({ROBOTS: [R(404)], PAGE: [R(200, b"v", etag='"b"')]})
+    monkeypatch.setattr(os, "replace", lambda *a: (_ for _ in ()).throw(OSError("disk")))
+    assert fk2.fetcher(cache=p).fetch(PAGE).status == OK
+    assert p.read_text() == before
+
+
+def test_s1_cache_serialised_under_lock(tmp_path, monkeypatch):
+    from tools.common import polite_fetch as pf
+    fk = Fake({ROBOTS: [R(404)], PAGE: [R(200, b"v", etag='"a"')]})
+    f = fk.fetcher(cache=tmp_path / "c.json")
+    seen = []
+    real = pf.json.dumps
+    monkeypatch.setattr(pf.json, "dumps", lambda *a, **k: (seen.append(f._cache_lock.locked()), real(*a, **k))[1])
+    f.fetch(PAGE)
+    assert seen == [True]
+
+
+@pytest.mark.parametrize("loc", ["data:text/plain,hi", "ftp://a.edu/x"])
+def test_s2_non_http_redirect_refused(loc):
+    fk = Fake({ROBOTS: [R(404)], PAGE: [R(302, location=loc)]})
+    r = fk.fetcher().fetch(PAGE)
+    assert r.status == HTTP_ERROR
+    assert [c[1] for c in fk.calls] == [ROBOTS, PAGE]
+
+
+def test_s2_non_http_robots_redirect_is_unreachable():
+    fk = Fake({ROBOTS: [R(302, location="ftp://a.edu/robots.txt")], PAGE: [R(200)]})
+    assert fk.fetcher().fetch(PAGE).status == ROBOTS_UNREACHABLE
+
+
+def test_s2_value_error_from_transport_does_not_escape():
+    fk = Fake({ROBOTS: [R(404)], PAGE: [UnicodeEncodeError("ascii", "é", 0, 1, "bad")]})
+    assert fk.fetcher().fetch(PAGE).status == HTTP_ERROR
+    fk = Fake({ROBOTS: [ValueError("bad")], PAGE: [R(200)]})
+    assert fk.fetcher().fetch(PAGE).status == ROBOTS_UNREACHABLE
+
+
+def test_s3_naive_retry_after_date_read_as_utc(monkeypatch):
+    if not hasattr(_time, "tzset"):
+        pytest.skip("no tzset")
+    monkeypatch.setenv("TZ", "America/Los_Angeles")
+    _time.tzset()
+    try:
+        asctime = _time.asctime(_time.gmtime(NOW + 45))
+        assert abs(parse_retry_after(asctime, NOW) - 45) < 2
+    finally:
+        monkeypatch.undo()
+        _time.tzset()
+
+
+def test_s4_infinite_crawl_delay_ignored_and_huge_one_refused():
+    fk = Fake({ROBOTS: [R(200, b"User-agent: *\nCrawl-delay: inf\n")], PAGE: [R(200)]})
+    assert fk.fetcher().fetch(PAGE).status == OK
+    assert all(s != float("inf") for s in fk.sleeps)
+    fk = Fake({ROBOTS: [R(200, b"User-agent: *\nCrawl-delay: 86400\n")], PAGE: [R(200)]})
+    r = fk.fetcher().fetch(PAGE)
+    assert r.status == HTTP_ERROR and "Crawl-delay" in r.reason
+    assert [c[1] for c in fk.calls] == [ROBOTS]
+
+
+def test_s5_network_errors_bounded():
+    fk = Fake({ROBOTS: [R(404)], PAGE: [OSError("down")]})
+    r = fk.fetcher(max_retries=2).fetch(PAGE)
+    assert r.status == HTTP_ERROR and r.attempts == 3
+
+
+def test_s5_redirect_loop_bounded():
+    fk = Fake({ROBOTS: [R(404)], PAGE: [R(301, location="/b")], "https://a.edu/b": [R(301, location="/page")]})
+    r = fk.fetcher().fetch(PAGE)
+    assert r.status == HTTP_ERROR and "redirect" in r.reason
+    assert len(fk.calls) <= 7
+
+
+def test_s5_robots_redirect_loop_bounded_and_followed():
+    fk = Fake({ROBOTS: [R(301, location="/r2")], "https://a.edu/r2": [R(301, location="/robots.txt")], PAGE: [R(200)]})
+    assert fk.fetcher().fetch(PAGE).status == OK  # loop treated as unavailable-allowed per RFC 9309
+    assert len(fk.calls) <= 8
+    fk = Fake({ROBOTS: [R(301, location="https://a.edu/other")],
+               "https://a.edu/other": [R(200, b"User-agent: *\nDisallow: /page\n")], PAGE: [R(200)]})
+    assert fk.fetcher().fetch(PAGE).status == BLOCKED_BY_ROBOTS
+
+
+def test_s5_robots_refresh_waits_known_crawl_delay():
+    fk = Fake({ROBOTS: [R(200, b"User-agent: *\nCrawl-delay: 20\n")], PAGE: [R(200)]})
+    f = fk.fetcher()
+    f.fetch(PAGE)
+    fk.t = NOW + 24 * 3600 - 5
+    f.fetch(PAGE)  # inside TTL: no robots request
+    page_t = fk.calls[-1][0]
+    fk.t += 6  # now past the TTL
+    f.fetch(PAGE)
+    robots_calls = [c for c in fk.calls if c[1] == ROBOTS]
+    assert len(robots_calls) == 2
+    assert robots_calls[1][0] - page_t >= 20.0
+
+
+def test_s5_same_host_login_path_redirect_refused():
+    fk = Fake({ROBOTS: [R(404)], PAGE: [R(302, location="https://a.edu/user/login")]})
+    assert fk.fetcher().fetch(PAGE).status == LOGIN_OR_CAPTCHA
+
+
+def _pol(text):
+    return RobotsPolicy(text, TOKEN)
+
+
+def test_s6_rfc9309_matching_rules():
+    u = lambda path: "https://a.edu" + path
+    # equal-length Allow/Disallow: Allow wins
+    assert _pol("User-agent: *\nDisallow: /p\nAllow: /p\n").allowed(u("/p"))
+    assert _pol("User-agent: *\nAllow: /p\nDisallow: /p\n").allowed(u("/p"))
+    # longer pattern beats shorter regardless of type
+    assert not _pol("User-agent: *\nAllow: /p\nDisallow: /p/q\n").allowed(u("/p/q"))
+    # first Crawl-delay wins
+    assert _pol("User-agent: *\nCrawl-delay: 3\nCrawl-delay: 9\n").crawl_delay == 3
+    # split groups for the same agent are merged
+    pol = _pol(f"User-agent: {TOKEN}\nDisallow: /a\n\nUser-agent: *\nDisallow: /z\n\nUser-agent: {TOKEN}\nDisallow: /b\n")
+    assert not pol.allowed(u("/a")) and not pol.allowed(u("/b")) and pol.allowed(u("/z"))
+    # agent names are case-insensitive
+    assert not _pol("User-agent: CollegeData-FYI-Scholarships\nDisallow: /\n").allowed(u("/x"))
+    assert not _pol("USER-AGENT: *\nDISALLOW: /\n").allowed(u("/x"))
+    # percent-encoding equivalence
+    assert not _pol("User-agent: *\nDisallow: /%7Euser\n").allowed(u("/~user"))
+    assert not _pol("User-agent: *\nDisallow: /~user\n").allowed(u("/%7Euser"))
+    # empty Disallow allows everything
+    assert _pol("User-agent: *\nDisallow:\n").allowed(u("/x"))
+
+
+def test_s6_robots_truncated_at_500_kib():
+    body = b"#" + b"x" * (500 * 1024) + b"\nUser-agent: *\nDisallow: /\n"
+    fk = Fake({ROBOTS: [R(200, body)], PAGE: [R(200)]})
+    assert fk.fetcher().fetch(PAGE).status == OK
