@@ -54,6 +54,7 @@ import { ArchiveLead } from "@/components/ArchiveLead";
 import { SchemaFallbackNote } from "@/components/SchemaFallbackNote";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
 import { schemaFallbackNoteFromArtifact } from "@/lib/schema-fallback";
+import { combinedFilingNote, notIncludedLead } from "@/lib/campus-filings";
 import type { ArtifactNotes, ManifestRow, InstitutionCoverage } from "@/lib/types";
 
 export const dynamic = "force-static";
@@ -258,6 +259,7 @@ export default async function SchoolDetailPage({ params }: {
     (latestExtract?.canonical?.notes as ArtifactNotes | null) ?? null,
     latestExtractedDoc?.canonical_year,
   );
+  const combinedCampusCopy = combinedFilingNote(school_id);
   const administrativeUnit = ipedsAdmissions(federalFacts, ipedsId).administrativeUnit;
   const projectedPositioning = browserRow && !administrativeUnit
     ? { ...browserRow, ...gpaProfile }
@@ -462,6 +464,7 @@ export default async function SchoolDetailPage({ params }: {
           </h1>
           {schoolLead ? <ArchiveLead lead={schoolLead} showHeading={false} /> : null}
           {schemaFallbackCopy ? <SchemaFallbackNote note={schemaFallbackCopy} /> : null}
+          {combinedCampusCopy ? <SchemaFallbackNote note={combinedCampusCopy} /> : null}
           <div
             style={{
               display: "flex",
@@ -669,6 +672,8 @@ async function DirectoryOnlySchoolPage({
     : null;
   const hasFederal = Boolean(scorecard) || federalFacts.length > 0 || Boolean(nonpayment);
   const lead = directoryOnlyLead(hasFederal);
+  // A branch whose main campus files a report that does not cover it.
+  const campusLead = notIncludedLead(school_id, hasFederal);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -761,7 +766,17 @@ async function DirectoryOnlySchoolPage({
             maxWidth: 640,
           }}
         >
-          {lead}
+          {campusLead
+            ? campusLead.map((part, i) =>
+                part.type === "link" ? (
+                  <Link key={i} href={part.href}>
+                    {part.text}
+                  </Link>
+                ) : (
+                  <span key={i}>{part.text}</span>
+                ),
+              )
+            : lead}
         </p>
         {coverage.website_url && (
           <p

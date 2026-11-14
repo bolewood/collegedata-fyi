@@ -39,6 +39,7 @@ import { AdmissionStrategyCard } from "@/components/AdmissionStrategyCard";
 import { SpreadsheetDownloadLinks } from "@/components/SpreadsheetDownloadLinks";
 import { ArchiveLead } from "@/components/ArchiveLead";
 import { SchemaFallbackNote } from "@/components/SchemaFallbackNote";
+import { combinedFilingNote } from "@/lib/campus-filings";
 import { yearArchiveLead } from "@/lib/archive-lead";
 import { schemaFallbackNoteFromArtifact } from "@/lib/schema-fallback";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
@@ -354,6 +355,9 @@ async function DocumentVariant({
       </div>
 
       {schemaFallbackCopy ? <SchemaFallbackNote note={schemaFallbackCopy} /> : null}
+      {combinedFilingNote(schoolId) ? (
+        <SchemaFallbackNote note={combinedFilingNote(schoolId) as string} />
+      ) : null}
 
       {hasValues && (
         <div style={{ marginTop: 16 }}>
