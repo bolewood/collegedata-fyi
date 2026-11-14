@@ -35,6 +35,7 @@ WATCHED_WORKFLOWS = {
     "Ops extraction worker": "ops-extraction-worker.yml",
     "Ops archive seed catchup": "ops-archive-seed-catchup.yml",
     "Ops headless archive": "ops-headless-archive.yml",
+    "Ops corpus audit": "ops-corpus-audit.yml",
 }
 DEPLOY_SUCCESS_WORKFLOWS = frozenset({"CI", "Deploy Edge Functions"})
 SELF_WORKFLOW_FILE = "ops-discord-notify.yml"
