@@ -85,6 +85,12 @@ class FakeStore(monitor.CheckStore):
         self.refreshes = 0
         self.inserts = 0
 
+    unloaded: set = set()
+
+    def known_versions(self):
+        every = {(r["program_id"], r["version_id"]) for r in self.rows}
+        return (every | {(PROGRAM, VERSION)}) - self.unloaded
+
     def latest(self, program_id, version_id):
         mine = [r for r in self.rows if r["program_id"] == program_id and r["version_id"] == version_id]
         return mine[-1] if mine else None
@@ -408,6 +414,15 @@ def test_apply_inserts_saves_cache_and_refreshes(tmp_path):
     # the insert is a valid scholarship_version_checks row
     assert set(store.rows[0]) == {"program_id", "version_id", "checked_at", "result", "needs_review", "detail"}
     assert store.rows[0]["result"] in ("unchanged", "changed", "stale_signal", "unreachable", "conflicting")
+
+
+def test_version_not_loaded_in_the_database_is_skipped(tmp_path, capsys):
+    store = FakeStore()
+    store.unloaded = {(PROGRAM, VERSION)}
+    net = Net(routes())
+    assert _main(tmp_path, net, store, "--apply") == 0
+    assert store.rows == [] and net.calls == []  # no fetch, no insert that would hit the foreign key
+    assert f"skipped (not loaded): {PROGRAM}/{VERSION}" in capsys.readouterr().out
 
 
 def test_failed_insert_does_not_save_the_cache(tmp_path):

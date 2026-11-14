@@ -360,6 +360,10 @@ def select_versions(
 class CheckStore:
     """The database operations the monitor needs. SupabaseCheckStore is the real one."""
 
+    def known_versions(self) -> set:  # pragma: no cover
+        """(program_id, version_id) pairs loaded into scholarship_program_versions."""
+        raise NotImplementedError
+
     def latest(self, program_id: str, version_id: str) -> Optional[Dict[str, Any]]:  # pragma: no cover
         raise NotImplementedError
 
@@ -387,6 +391,24 @@ class SupabaseCheckStore(CheckStore):
                 raise SystemExit("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required for --apply")
             return None
         return cls(url, key)
+
+    def known_versions(self) -> set:
+        out: set = set()
+        start = 0
+        while True:
+            page = (
+                self.client.table("scholarship_program_versions")
+                .select("program_id,version_id")
+                .order("program_id")
+                .order("version_id")
+                .range(start, start + 999)
+                .execute()
+                .data
+            )
+            out.update((r["program_id"], r["version_id"]) for r in page)
+            if len(page) < 1000:
+                return out
+            start += 1000
 
     def latest(self, program_id: str, version_id: str) -> Optional[Dict[str, Any]]:
         res = (
@@ -634,6 +656,7 @@ def check_version(
 class RunResult:
     rows: List[Dict[str, Any]] = field(default_factory=list)
     findings: List[Dict[str, Any]] = field(default_factory=list)
+    skipped: List[str] = field(default_factory=list)  # in the YAML, not loaded yet
     baseline_source: str = "none"
 
 
@@ -646,7 +669,13 @@ def run(
     mode: str = "full",
 ) -> RunResult:
     out = RunResult(baseline_source="database" if store is not None else "none")
+    # A check row has a foreign key to the loaded version; a version merged but not
+    # yet loaded is not served, so it is skipped rather than failing the whole insert.
+    known = store.known_versions() if store is not None else None
     for v in versions:
+        if known is not None and (v["program_id"], v["version_id"]) not in known:
+            out.skipped.append(f"{v['program_id']}/{v['version_id']}")
+            continue
         prev = store.latest(v["program_id"], v["version_id"]) if store is not None else None
         vc = check_version(v, prev, fetcher, today, now, mode)
         out.rows.append(vc.row)
@@ -770,6 +799,8 @@ def main(
         print("no database credentials: every source is treated as a first run (baseline only)")
     for line in summary_lines(result):
         print(line)
+    for name in result.skipped:
+        print(f"skipped (not loaded): {name}")
     if args.show_rows:
         print(json.dumps(result.rows, indent=2, sort_keys=True))
     md = findings_markdown(result.findings, today)

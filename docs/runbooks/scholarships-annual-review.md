@@ -79,11 +79,16 @@ Early deadlines start in October and November, so the work finishes before then.
 ### The 30-day rule
 
 A program that is still unconfirmed 30 days before its likely early deadline is
-shown as past-cycle and its dates are never carried forward. Concretely: 30 days
-before the previous cycle's earliest required or priority deadline (month from
-`deadline_months`), list programs whose newest version is not yet for the next
-entering class. Leave them unverified for that year: the freshness rule shows them
-as past-cycle once their entry year is no longer current, and no new version is
-published until an official page for the new cycle exists. Do not copy last year's
-version forward, and do not set `cycle_through_date` or any milestone to a guessed
-date.
+shown as past-cycle and its dates are never carried forward.
+
+- Last year's version needs nothing from you: from 1 July the freshness rule already
+  shows it as `past_cycle`, and nothing publishes a guessed replacement.
+- At the 30-day mark (30 days before the previous cycle's earliest required or
+  priority deadline, from `deadline_months`), list programs with no verified version
+  for the next entering class. Leave them unverified. Do not copy last year's version
+  forward and do not set `cycle_through_date` or any milestone to a guessed date.
+- Nothing automatic enforces the rest. A current-cycle version still flagged
+  `needs_review` at that mark shows as `current_cycle_unconfirmed`, not past-cycle.
+  The reviewer re-verifies it or, if the official page is gone or unchanged from
+  last cycle, adds a `historical_only` version (or sets the program `status`) so it
+  stops reading as current.
