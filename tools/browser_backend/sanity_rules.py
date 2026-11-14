@@ -134,6 +134,16 @@ RULES: tuple[tuple[str, Rule], ...] = (
 )
 
 
+# Every field id a rule reads. The corpus audit fetches exactly these to replay
+# the rules over the published rows; a rule that reads a field missing from
+# this set would be silently under-counted there (a test guards it).
+FIELD_IDS: frozenset[str] = frozenset(
+    {field_id for pair in _ED_COUNT_FIELDS.values() for field_id in pair}
+    | {"H.401", "H.501", "H.201", "H.214"}
+    | set(_PER_STUDENT_AVERAGE_FIELDS)
+)
+
+
 def implausible_fields(
     schema_version: Optional[str], values: ReportedNumbers
 ) -> dict[str, str]:
