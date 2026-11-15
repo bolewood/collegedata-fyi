@@ -52,9 +52,7 @@ versions:
         scoring: unknown
         official_required: null
       tests_policy_for_scholarship: optional
-      citizenship_eligible:
-      - us_citizen
-      - permanent_resident
+      citizenship_eligible: null
       citizenship_text: a U.S. citizen or a U.S. Permanent Resident Alien (copy of alien registration
         card is required and/or proof of immigration status in the USA), or an undocumented student who
         has resided in Connecticut for two or more years
@@ -145,9 +143,9 @@ versions:
       required for the first two semesters; winter and summer courses are not covered.
   stacking_rules:
   - other_aid_type: tuition_waiver
-    relation: not_allowed
+    relation: counts_within_package
     note: A student receiving a tuition waiver does not also receive the equivalent tuition value from
-      the scholarship.
+      the scholarship; the award is then applied to University and student fees, housing and/or meals.
   - other_aid_type: federal_or_state_need
     relation: counts_within_package
     note: Merit scholarship plus a Pell Grant may not exceed the cost of attendance; with other need-based

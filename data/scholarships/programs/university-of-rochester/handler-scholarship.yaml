@@ -173,39 +173,25 @@ versions:
     - benefit_id: b-enrichment
       category: enrichment
       instrument: restricted_fund
-      coverage: unknown
+      coverage: variable
       amount:
-        qualifier: not_published
-        value: null
+        qualifier: up_to
+        value: 5000
         min: null
         max: null
         period: null
       duration_terms: null
       exclusions: null
-      scope_text: Enrichment support fund over the four-year experience; the admissions page states $5,000
-        two ways (guaranteed funding; up to $5,000), so no amount is recorded
+      scope_text: 'School wording: ''Enrichment fund of up to $5,000''; the page also calls it ''a support
+        fund of up to $5,000 ... over the course of a four-year experience'' and ''$5,000 in guaranteed
+        funding''; summer school, academic or professional endeavors, study abroad or needs related to
+        the academic program'
       advertised_coverage_label: null
-      conditions_text: null
+      conditions_text: Requests must be submitted prior to the last date of the term to be considered
     advertised_totals: []
   application:
     separate_application: unknown
     milestones:
-    - kind: application_open
-      requirement: invitation_only
-      date: null
-      recurring:
-        month: 9
-        day: 15
-      precision: day
-      source_date_text: Nominations will open September 15
-    - kind: nomination_deadline
-      requirement: required
-      date: null
-      recurring:
-        month: 11
-        day: 30
-      precision: day
-      source_date_text: close November 30
     - kind: admission_deadline
       requirement: recommended
       date: null
@@ -225,14 +211,15 @@ versions:
     admission_plan_requirement: null
     prerequisites: []
     interview_mode: virtual
-    finalist_event_required: null
+    finalist_event_required: true
     notes: 'CONFLICT on route: the scholarships page says the award ''requires a nomination from a recommender
       who is not related to the prospective student''; the Handler admissions page says every first-year
       applicant is reviewed ''simply by submitting an application ... no additional materials are required''
       while also inviting counselors, teachers and community officials to nominate (not students or parents).
-      Nominations open September 15 and close November 30. The admissions page says the application need
-      not be Early Decision. Finalists are invited to a two-part virtual interview event in mid-February;
-      recipients may be invited to River Campus in late spring.'
+      Nominations open September 15 and close November 30 (recurring, no year); they are not recorded
+      as milestones because whether that step is required is exactly what the two pages disagree on. The
+      admissions page says the application need not be Early Decision. Finalists are invited to a two-part
+      virtual interview event in mid-February; recipients may be invited to River Campus in late spring.'
   renewal_rules:
   - applies_to: []
     gpa_min: null
@@ -373,39 +360,34 @@ versions:
     reported_value: null
   - field_path: offers/0/benefits/7/amount
     source_ref: s-adm
-    locator: Handler page, top Scholarship Benefits list
-    short_excerpt: $5,000 in guaranteed funding to support academic or professional enrichment
-    value_status: conflicting
-    reported_value: guaranteed funding of $5,000
-  - field_path: offers/0/benefits/7/amount
-    source_ref: s-adm
     locator: Handler page, financial award details, Scholarship benefits list
     short_excerpt: Enrichment fund of up to $5,000 to support other enhancements or needs related to the
       academic experience.
-    value_status: conflicting
-    reported_value: up to $5,000
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/7/conditions_text
+    source_ref: s-adm
+    locator: Handler page, Handler enrichment fund paragraph
+    short_excerpt: Requests must be submitted prior to the last date of the term to be considered.
+    value_status: reported
+    reported_value: null
   - field_path: application/milestones/0
-    source_ref: s-adm
-    locator: Handler page, Nomination process
-    short_excerpt: Nominations will open September 15 and close November 30.
-    value_status: reported
-    reported_value: null
-  - field_path: application/milestones/1
-    source_ref: s-adm
-    locator: Handler page, Nomination process
-    short_excerpt: Nominations will open September 15 and close November 30.
-    value_status: reported
-    reported_value: null
-  - field_path: application/milestones/2
     source_ref: s-adm
     locator: Handler page, How to apply
     short_excerpt: should be submitted by December 1
     value_status: reported
     reported_value: null
-  - field_path: application/milestones/3
+  - field_path: application/milestones/1
     source_ref: s-adm
     locator: Handler page, Finalist interviews
     short_excerpt: two-part virtual interview event
+    value_status: reported
+    reported_value: null
+  - field_path: application/finalist_event_required
+    source_ref: s-adm
+    locator: Handler page, FAQ
+    short_excerpt: Participating in the virtual interview event is a mandatory part of the scholarship
+      process.
     value_status: reported
     reported_value: null
   - field_path: renewal_rules/0

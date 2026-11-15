@@ -20,7 +20,7 @@ versions:
   entry_terms:
   - fall
   source_cohort_text: enroll at the University of Connecticut beginning fall semester 2027
-  verification_status: conflicting
+  verification_status: verified
   last_reviewed_at: '2026-11-15'
   reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b4
   owner_spot_checked: false
@@ -62,10 +62,11 @@ versions:
       first_generation_rule: unknown
       eligibility_notes: The score minimums apply only to applicants who choose to submit scores. The
         page also says applicants should rank in the top 10% of their class (if rank is available), be
-        involved in leadership, and have shown a commitment to community service. Stamps Scholarship applicants
-        may be considered for only one of the Nutmeg, Stamps and Day of Pride scholarships. Recipients
-        are guaranteed admission to the Honors College. The Honors page lists 'Full support (tuition,
-        room and board, fees, books, transportation, miscellaneous)'; the admissions page says 'full cost-of-attendance'.
+        involved in leadership, and have shown a commitment to community service. The page says interested
+        and eligible students 'must choose to apply to either the Nutmeg, Day of Pride, or Stamps Scholarship
+        and may not apply for all three'. Recipients are guaranteed admission to the Honors College. The
+        Honors page lists 'Full support (tuition, room and board, fees, books, transportation, miscellaneous)';
+        the admissions page says 'full cost-of-attendance'.
     benefits:
     - benefit_id: b-coa
       category: cost_of_attendance
@@ -89,18 +90,18 @@ versions:
     - benefit_id: b-enrichment
       category: enrichment
       instrument: restricted_fund
-      coverage: unknown
+      coverage: variable
       amount:
-        qualifier: not_published
-        value: null
+        qualifier: up_to
+        value: 12000
         min: null
         max: null
-        period: null
+        period: one_time
       duration_terms: null
       exclusions: null
-      scope_text: Enrichment funding for research and experiential learning. The admissions page says
-        'a one-time enrichment award of $12,000'; the Honors page says 'access to up to $12,000', so no
-        amount is recorded
+      scope_text: 'Enrichment funding for research and experiential learning. Admissions page: ''a one-time
+        enrichment award of $12,000''; Honors page: ''access to up to $12,000''. Recorded as up to $12,000,
+        which fits both wordings'
       advertised_coverage_label: null
       conditions_text: null
     advertised_totals: []
@@ -143,9 +144,9 @@ versions:
     finalist_event_required: null
     notes: 'Selected applicants have a required interview with the Admissions Committee and the Stamps
       Scholars Program; no date or format is given. Early Decision applicants who apply for the Stamps
-      Scholarship are not notified of the award at the time of admission. The page asks applicants to
-      choose among Nutmeg, Day of Pride and Stamps: ''may not apply for all three''. Supplemental application:
-      three short answers, a resume and two letters of recommendation.'
+      Scholarship are not notified of the award at the time of admission. The page says students ''must
+      choose to apply to either the Nutmeg, Day of Pride, or Stamps Scholarship and may not apply for
+      all three''. Supplemental application: three short answers, a resume and two letters of recommendation.'
   renewal_rules:
   - applies_to: []
     gpa_min: 3.0
@@ -161,9 +162,9 @@ versions:
       are not covered.
   stacking_rules:
   - other_aid_type: tuition_waiver
-    relation: not_allowed
+    relation: counts_within_package
     note: A student receiving a tuition waiver does not also receive the equivalent tuition value from
-      the scholarship.
+      the scholarship; the award is then applied to University and student fees, housing and/or meals.
   - other_aid_type: federal_or_state_need
     relation: counts_within_package
     note: Merit scholarship plus a Pell Grant may not exceed the cost of attendance; with other need-based
@@ -271,14 +272,14 @@ versions:
     locator: Merit Scholarships, Stamps Scholarship, first paragraph
     short_excerpt: Applicants selected for the Stamps Scholarship will also receive a one-time enrichment
       award of $12,000
-    value_status: conflicting
-    reported_value: one-time award of $12,000
+    value_status: reported
+    reported_value: null
   - field_path: offers/0/benefits/1/amount
     source_ref: s-hon
     locator: Stamps Scholarship page, Stamps Scholars Enrichment Award
     short_excerpt: As a benefit, recipients have access to up to $12,000 to fund enrichment activities.
-    value_status: conflicting
-    reported_value: access to up to $12,000
+    value_status: reported
+    reported_value: null
   - field_path: application/separate_application
     source_ref: s-merit
     locator: Merit Scholarships, intro, second paragraph

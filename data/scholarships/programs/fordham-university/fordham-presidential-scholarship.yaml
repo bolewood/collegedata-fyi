@@ -41,7 +41,8 @@ versions:
       test_rules: null
       tests_policy_for_scholarship: optional
       citizenship_eligible: null
-      citizenship_text: null
+      citizenship_text: you must be a US citizen or eligible non-citizen to qualify for the scholarships
+        and grants listed below
       majors_allowed: null
       major_change_restrictions: null
       honors_requirement: null
@@ -256,6 +257,13 @@ versions:
     locator: Fordham Presidential Scholarship, enrichment sentence
     short_excerpt: Recipients are also eligible for a maximum of $20,000 over four years to use for academic
       enrichment experiences.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_text
+    source_ref: s-aid
+    locator: Requirements block above the scholarship list
+    short_excerpt: you must be a US citizen or eligible non-citizen to qualify for the scholarships and
+      grants listed below
     value_status: reported
     reported_value: null
   - field_path: application/separate_application
