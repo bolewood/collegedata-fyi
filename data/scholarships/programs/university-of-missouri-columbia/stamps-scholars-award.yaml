@@ -59,10 +59,13 @@ versions:
       major_change_restrictions: null
       honors_requirement: true
       first_generation_rule: unknown
-      eligibility_notes: Open to students enrolled in any accredited U.S. or international high school; applicants must be admitted to Mizzou and the Honors College before the Dec. 1 scholarship deadline.
-        The 3.5 is a "core GPA"; the pages give no scale. The honors page lists the minimums as at least a 32 ACT (or 1420 SAT); the admissions table lists 32-36 ACT or 1420-1600 SAT.
-      citizenship_text: not currently considering international applicants for the Stamps Scholarship. Individuals lawfully in the United States as permanent resident aliens, asylum seekers, refugees or
-        on a non-immigration visa are welcome to apply.
+      eligibility_notes: Open to students enrolled in any accredited U.S. or international high school;
+        applicants must be admitted to Mizzou and the Honors College before the Dec. 1 scholarship deadline.
+        The 3.5 is a "core GPA"; the pages give no scale. The honors page lists the minimums as at least
+        a 32 ACT (or 1420 SAT); the admissions table lists 32-36 ACT or 1420-1600 SAT.
+      citizenship_text: not currently considering international applicants for the Stamps Scholarship.
+        Individuals lawfully in the United States as permanent resident aliens, asylum seekers, refugees
+        or on a non-immigration visa are welcome to apply.
     benefits:
     - benefit_id: b-coa
       category: cost_of_attendance
@@ -76,7 +79,8 @@ versions:
         period: null
       duration_terms: Four years
       exclusions: null
-      scope_text: The Honors College page says a four-year full cost of attendance scholarship; the admissions page says "Full scholarship (up to estimated cost of attendance)". No dollar value is published.
+      scope_text: The Honors College page says a four-year full cost of attendance scholarship; the admissions
+        page says "Full scholarship (up to estimated cost of attendance)". No dollar value is published.
       advertised_coverage_label: null
       conditions_text: null
     - benefit_id: b-enrichment
@@ -91,7 +95,8 @@ versions:
         period: one_time
       duration_terms: null
       exclusions: null
-      scope_text: 'School words: a one-time award for academic development and leadership; the Honors College page says it is used during the student''s four years'
+      scope_text: 'School words: a one-time award for academic development and leadership; the Honors
+        College page says it is used during the student''s four years'
       advertised_coverage_label: null
       conditions_text: null
   application:
@@ -110,13 +115,15 @@ versions:
       date: '2026-12-01'
       recurring: null
       precision: day
-      source_date_text: December 1, 2026; must be admitted to Mizzou and the Honors College by Dec. 1 (Nov. 1 strongly encouraged)
+      source_date_text: December 1, 2026; must be admitted to Mizzou and the Honors College by Dec. 1
+        (Nov. 1 strongly encouraged)
     - kind: supporting_materials_deadline
       requirement: priority
       date: '2026-12-15'
       recurring: null
       precision: day
-      source_date_text: December 15, 2026 (official high school transcript for priority merit scholarship consideration)
+      source_date_text: December 15, 2026 (official high school transcript for priority merit scholarship
+        consideration)
     - kind: application_deadline
       requirement: required
       date: null
@@ -131,7 +138,8 @@ versions:
       recurring: null
       precision: day
       source_date_text: Feb. 4-6, 2027 Stamps Interview Weekend on Mizzou campus
-    admission_plan_requirement: Apply to Mizzou, then the Honors College, then the Premier Scholars application (which includes the Stamps Scholarship) through the application status page; the school strongly
+    admission_plan_requirement: Apply to Mizzou, then the Honors College, then the Premier Scholars application
+      (which includes the Stamps Scholarship) through the application status page; the school strongly
       encourages applying to Mizzou and the Honors College by Nov. 1
     prerequisites:
     - kind: admission_application
@@ -141,13 +149,17 @@ versions:
     - kind: recommendation
       minimum_lead_days: null
       maximum_lead_days: null
-      notes: Two letters of recommendation, one from a teacher or counselor, submitted by Dec. 1; plus an additional essay of 500-750 words
+      notes: Two letters of recommendation, one from a teacher or counselor, submitted by Dec. 1; plus
+        an additional essay of 500-750 words
     interview_mode: mixed
     finalist_event_required: true
-    notes: 'Stages: mid-December, 100 quarter-finalists are invited to submit a video interview; mid-January, 20 semi-finalists are invited to the Stamps Interview Weekend (in-person interview; all semi-finalists
-      must attend; Mizzou pays food and event expenses, semi-finalists pay travel); March 1 is listed as "Finalist nomination". The admissions page calls the first stage quarter-finalists, the honors page
-      lists quarter-finalists and semi-finalists. The Dec. 1 scholarship deadline carries no year on the honors page and is recorded as recurring; the admissions Key Dates give December 1, 2026 for the
-      admission application.'
+    notes: 'Stages: mid-December, 100 quarter-finalists are invited to submit a video interview; mid-January,
+      20 semi-finalists are invited to the Stamps Interview Weekend (in-person interview; all semi-finalists
+      must attend; Mizzou pays food and event expenses, semi-finalists pay travel); March 1 is listed
+      as "Finalist nomination". The admissions page calls the first stage quarter-finalists, the honors
+      page lists quarter-finalists and semi-finalists. The Dec. 1 scholarship deadline carries no year
+      on the honors page and is recorded as recurring; the admissions Key Dates give December 1, 2026
+      for the admission application.'
   renewal_rules:
   - applies_to: []
     gpa_min: null
@@ -157,15 +169,18 @@ versions:
     evaluation_timing: null
     summer_courses_can_fix_shortfall: null
     max_semesters: null
-    notes: Stamps Scholars must be enrolled in the Honors College for all four years, working toward the Honors Certificate. The admissions page sends the Stamps renewal criteria to the Honors College;
+    notes: Stamps Scholars must be enrolled in the Honors College for all four years, working toward the
+      Honors Certificate. The admissions page sends the Stamps renewal criteria to the Honors College;
       the 2.75 GPA stated there applies to other awards, and no Stamps GPA is published on these pages.
   stacking_rules:
   - other_aid_type: institutional_merit
     relation: not_allowed
-    note: 'School words: unless otherwise noted, none of these competitive scholarships may be combined with any other scholarships'
+    note: 'School words: unless otherwise noted, none of these competitive scholarships may be combined
+      with any other scholarships'
   - other_aid_type: other
     relation: counts_within_package
-    note: 'School words: financial aid awards from all sources may not exceed the annual cost of attendance assigned by MU'
+    note: 'School words: financial aid awards from all sources may not exceed the annual cost of attendance
+      assigned by MU'
   award_counts: []
   sources:
   - source_id: s-hon
@@ -190,7 +205,8 @@ versions:
   - field_path: offers/0/selection_mode
     source_ref: s-adm
     locator: Freshman scholarships page, Competitive Scholarships table, Stamps Scholars Award row
-    short_excerpt: The most distinguished applicants will become quarter-finalists and will be notified of the next steps in the interview process.
+    short_excerpt: The most distinguished applicants will become quarter-finalists and will be notified
+      of the next steps in the interview process.
     value_status: reported
     reported_value: competitive
   - field_path: offers/0/benefits
@@ -202,7 +218,8 @@ versions:
   - field_path: offers/0/benefits/0/coverage
     source_ref: s-hon
     locator: Stamps Scholars page, second paragraph
-    short_excerpt: a four-year, full cost of attendance scholarship, plus an additional $16,000 enrichment fund
+    short_excerpt: a four-year, full cost of attendance scholarship, plus an additional $16,000 enrichment
+      fund
     value_status: conflicting
     reported_value: full
   - field_path: offers/0/benefits/0/coverage
@@ -262,13 +279,15 @@ versions:
   - field_path: application/milestones/1
     source_ref: s-adm
     locator: Freshman scholarships page, Stamps Scholars Award row
-    short_excerpt: Must be admitted to Mizzou and the Honors College by Dec. 1 and submit required documents by Dec. 1.
+    short_excerpt: Must be admitted to Mizzou and the Honors College by Dec. 1 and submit required documents
+      by Dec. 1.
     value_status: reported
     reported_value: '2026-12-01'
   - field_path: application/milestones/2
     source_ref: s-adm
     locator: Freshman scholarships page, Key Dates table
-    short_excerpt: If your transcript does not reach our office by Dec. 15, 2026, you may not be considered for scholarships.
+    short_excerpt: If your transcript does not reach our office by Dec. 15, 2026, you may not be considered
+      for scholarships.
     value_status: reported
     reported_value: '2026-12-15'
   - field_path: application/milestones/3
@@ -298,7 +317,8 @@ versions:
   - field_path: renewal_rules/0
     source_ref: s-hon
     locator: Stamps Scholars page, second paragraph
-    short_excerpt: Stamps Scholars must be enrolled in the Honors College for all four years, working toward the completion of the Honors Certificate.
+    short_excerpt: Stamps Scholars must be enrolled in the Honors College for all four years, working
+      toward the completion of the Honors Certificate.
     value_status: reported
     reported_value: Honors College enrollment
   - field_path: stacking_rules/0
@@ -310,6 +330,329 @@ versions:
   - field_path: stacking_rules/1
     source_ref: s-adm
     locator: Freshman scholarships page, table footnote
-    short_excerpt: Financial aid scholarships from all sources (federal, state, institutional or private aid) may not exceed the annual cost of attendance assigned by MU.
+    short_excerpt: Financial aid scholarships from all sources (federal, state, institutional or private
+      aid) may not exceed the annual cost of attendance assigned by MU.
+    value_status: reported
+    reported_value: counts_within_package
+- version_id: stamps-scholars-award-fall-2027-r2
+  supersedes: stamps-scholars-award-fall-2027
+  entry_year: 2027
+  entry_year_label: Fall 2027 entry
+  entry_terms:
+  - fall
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-fable-5-2, owner ruling 2026-11-15
+  owner_spot_checked: true
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    advertised_totals: []
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.5
+        scale: null
+        basis: unknown
+      test_rules:
+      - exam: ACT
+        min: 32
+        scoring: unknown
+        official_required: null
+      - exam: SAT
+        min: 1420
+        scoring: unknown
+        official_required: null
+      tests_policy_for_scholarship: required
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: true
+      first_generation_rule: unknown
+      eligibility_notes: Open to students enrolled in any accredited U.S. or international high school;
+        applicants must be admitted to Mizzou and the Honors College before the Dec. 1 scholarship deadline.
+        The 3.5 is a "core GPA"; the pages give no scale. The honors page lists the minimums as at least
+        a 32 ACT (or 1420 SAT); the admissions table lists 32-36 ACT or 1420-1600 SAT.
+      citizenship_text: not currently considering international applicants for the Stamps Scholarship.
+        Individuals lawfully in the United States as permanent resident aliens, asylum seekers, refugees
+        or on a non-immigration visa are welcome to apply.
+    benefits:
+    - benefit_id: b-coa
+      category: cost_of_attendance
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: The Honors College page says 'a four-year, full cost of attendance scholarship'; the
+        admissions page says 'Full scholarship (up to estimated cost of attendance)'. Read as one promise
+        of the full estimated cost of attendance (owner ruling, 2026-11-15)
+      advertised_coverage_label: full cost of attendance
+      conditions_text: null
+    - benefit_id: b-enrichment
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 16000
+        min: null
+        max: null
+        period: one_time
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: a one-time award for academic development and leadership; the Honors
+        College page says it is used during the student''s four years'
+      advertised_coverage_label: null
+      conditions_text: null
+  application:
+    separate_application: required
+    milestones:
+    - kind: application_open
+      requirement: recommended
+      date: null
+      recurring:
+        month: 9
+        day: 15
+      precision: day
+      source_date_text: Sept. 15 Honors College application opens
+    - kind: admission_deadline
+      requirement: required
+      date: '2026-12-01'
+      recurring: null
+      precision: day
+      source_date_text: December 1, 2026; must be admitted to Mizzou and the Honors College by Dec. 1
+        (Nov. 1 strongly encouraged)
+    - kind: supporting_materials_deadline
+      requirement: priority
+      date: '2026-12-15'
+      recurring: null
+      precision: day
+      source_date_text: December 15, 2026 (official high school transcript for priority merit scholarship
+        consideration)
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 12
+        day: 1
+      precision: day
+      source_date_text: Dec. 1 Premier Scholars application deadline
+    - kind: finalist_event
+      requirement: required
+      date: '2027-02-04'
+      recurring: null
+      precision: day
+      source_date_text: Feb. 4-6, 2027 Stamps Interview Weekend on Mizzou campus
+    admission_plan_requirement: Apply to Mizzou, then the Honors College, then the Premier Scholars application
+      (which includes the Stamps Scholarship) through the application status page; the school strongly
+      encourages applying to Mizzou and the Honors College by Nov. 1
+    prerequisites:
+    - kind: admission_application
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Must be admitted to Mizzou and the Honors College in advance of the Dec. 1 scholarship deadline
+    - kind: recommendation
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Two letters of recommendation, one from a teacher or counselor, submitted by Dec. 1; plus
+        an additional essay of 500-750 words
+    interview_mode: mixed
+    finalist_event_required: true
+    notes: 'Stages: mid-December, 100 quarter-finalists are invited to submit a video interview; mid-January,
+      20 semi-finalists are invited to the Stamps Interview Weekend (in-person interview; all semi-finalists
+      must attend; Mizzou pays food and event expenses, semi-finalists pay travel); March 1 is listed
+      as "Finalist nomination". The admissions page calls the first stage quarter-finalists, the honors
+      page lists quarter-finalists and semi-finalists. The Dec. 1 scholarship deadline carries no year
+      on the honors page and is recorded as recurring; the admissions Key Dates give December 1, 2026
+      for the admission application.'
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: Stamps Scholars must be enrolled in the Honors College for all four years, working toward the
+      Honors Certificate. The admissions page sends the Stamps renewal criteria to the Honors College;
+      the 2.75 GPA stated there applies to other awards, and no Stamps GPA is published on these pages.
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: not_allowed
+    note: 'School words: unless otherwise noted, none of these competitive scholarships may be combined
+      with any other scholarships'
+  - other_aid_type: other
+    relation: counts_within_package
+    note: 'School words: financial aid awards from all sources may not exceed the annual cost of attendance
+      assigned by MU'
+  award_counts: []
+  sources:
+  - source_id: s-hon
+    url: https://honors.missouri.edu/scholarships-aid/stamps-scholars/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 3ab6ac77eea3a13cb993a78f856707faba0f7a29c5a155e2f034ffdbd6e63324
+    archive_url: null
+  - source_id: s-adm
+    url: https://admissions.missouri.edu/costs-aid/scholarships/freshman-scholarships/
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: 30124839c8444e829882fbca3f40f5dd384005b9ac41ec15603e462e6b754244
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-adm
+    locator: Freshman scholarships page, intro paragraph
+    short_excerpt: The information on this page applies to first-year students entering in Fall 2027.
+    value_status: reported
+    reported_value: Fall 2027
+  - field_path: offers/0/selection_mode
+    source_ref: s-adm
+    locator: Freshman scholarships page, Competitive Scholarships table, Stamps Scholars Award row
+    short_excerpt: The most distinguished applicants will become quarter-finalists and will be notified
+      of the next steps in the interview process.
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/benefits
+    source_ref: s-hon
+    locator: Stamps Scholars page, second paragraph
+    short_excerpt: Stamps Scholars receive a four-year, full cost of attendance scholarship
+    value_status: reported
+    reported_value: listed
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-hon
+    locator: Stamps Scholars page, second paragraph
+    short_excerpt: a four-year, full cost of attendance scholarship, plus an additional $16,000 enrichment
+      fund
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-adm
+    locator: Freshman scholarships page, Competitive Scholarships table, Stamps Scholars Award row
+    short_excerpt: Full scholarship (up to estimated cost of attendance)
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-hon
+    locator: 'Stamps Scholars page, second paragraph: no dollar value for cost of attendance'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-adm
+    locator: Freshman scholarships page, Competitive Scholarships table, Stamps Scholars Award row
+    short_excerpt: one-time award of $16,000 for academic development and leadership
+    value_status: reported
+    reported_value: 16000
+  - field_path: offers/0/eligibility/test_rules
+    source_ref: s-hon
+    locator: Stamps Scholars page, "Eligibility"
+    short_excerpt: Have at least a 32 ACT (or 1420 SAT)
+    value_status: reported
+    reported_value: ACT 32 / SAT 1420
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-hon
+    locator: Stamps Scholars page, "Eligibility"
+    short_excerpt: Hold at least a 3.5 core GPA
+    value_status: reported
+    reported_value: 3.5
+  - field_path: offers/0/eligibility/citizenship_text
+    source_ref: s-hon
+    locator: Stamps Scholars page, "Eligibility"
+    short_excerpt: we are not currently considering international applicants for the Stamps Scholarship.
+    value_status: reported
+    reported_value: international applicants not considered
+  - field_path: application/separate_application
+    source_ref: s-hon
+    locator: Stamps Scholars page, "How to Apply" Step 3
+    short_excerpt: Submit the Premier Scholars application (which includes the Stamps Scholarship
+    value_status: reported
+    reported_value: required
+  - field_path: application/milestones/0
+    source_ref: s-hon
+    locator: Stamps Scholars page, "Deadlines and Notifications"
+    short_excerpt: Sept. 15 – Honors College application opens
+    value_status: reported
+    reported_value: Sept. 15
+  - field_path: application/milestones/1
+    source_ref: s-adm
+    locator: Freshman scholarships page, Key Dates table
+    short_excerpt: December 1, 2026
+    value_status: reported
+    reported_value: '2026-12-01'
+  - field_path: application/milestones/1
+    source_ref: s-adm
+    locator: Freshman scholarships page, Stamps Scholars Award row
+    short_excerpt: Must be admitted to Mizzou and the Honors College by Dec. 1 and submit required documents
+      by Dec. 1.
+    value_status: reported
+    reported_value: '2026-12-01'
+  - field_path: application/milestones/2
+    source_ref: s-adm
+    locator: Freshman scholarships page, Key Dates table
+    short_excerpt: If your transcript does not reach our office by Dec. 15, 2026, you may not be considered
+      for scholarships.
+    value_status: reported
+    reported_value: '2026-12-15'
+  - field_path: application/milestones/3
+    source_ref: s-hon
+    locator: Stamps Scholars page, "Deadlines and Notifications"
+    short_excerpt: Dec. 1 – Premier Scholars application deadline
+    value_status: reported
+    reported_value: Dec. 1
+  - field_path: application/milestones/4
+    source_ref: s-hon
+    locator: Stamps Scholars page, "Deadlines and Notifications"
+    short_excerpt: Feb. 4-6, 2027 – Stamps Interview Weekend on Mizzou campus
+    value_status: reported
+    reported_value: '2027-02-04'
+  - field_path: application/interview_mode
+    source_ref: s-hon
+    locator: Stamps Scholars page, "Deadlines and Notifications"
+    short_excerpt: 100 quarter-finalists invited to submit video interview
+    value_status: reported
+    reported_value: mixed
+  - field_path: application/finalist_event_required
+    source_ref: s-hon
+    locator: Stamps Scholars page, "Deadlines and Notifications"
+    short_excerpt: All semi-finalists are required to attend.
+    value_status: reported
+    reported_value: true
+  - field_path: renewal_rules/0
+    source_ref: s-hon
+    locator: Stamps Scholars page, second paragraph
+    short_excerpt: Stamps Scholars must be enrolled in the Honors College for all four years, working
+      toward the completion of the Honors Certificate.
+    value_status: reported
+    reported_value: Honors College enrollment
+  - field_path: stacking_rules/0
+    source_ref: s-adm
+    locator: Freshman scholarships page, Competitive Scholarships intro
+    short_excerpt: Unless otherwise noted, none of these scholarships may be combined with any other scholarships.
+    value_status: reported
+    reported_value: not_allowed
+  - field_path: stacking_rules/1
+    source_ref: s-adm
+    locator: Freshman scholarships page, table footnote
+    short_excerpt: Financial aid scholarships from all sources (federal, state, institutional or private
+      aid) may not exceed the annual cost of attendance assigned by MU.
     value_status: reported
     reported_value: counts_within_package

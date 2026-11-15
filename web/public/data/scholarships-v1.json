@@ -1,6 +1,6 @@
 {
   "meta": {
-    "dataset_id": "collegedata-scholarships-v1-2abbd5cbed5d",
+    "dataset_id": "collegedata-scholarships-v1-d9e7933e2500",
     "version": 1,
     "license": "CC-BY-SA-4.0",
     "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
@@ -12360,22 +12360,22 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "johnson-scholars-undated",
+      "version_id": "johnson-scholars-undated-r2",
       "entry_year": null,
       "entry_year_label": "The pages name no entering class",
       "entry_terms": [
         "unspecified"
       ],
       "source_cohort_text": null,
-      "verification_status": "conflicting",
+      "verification_status": "verified",
       "cycle_basis": "none",
       "cycle_through_date": null,
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b6",
-      "owner_spot_checked": false,
+      "reviewed_by": "agent:claude-fable-5-2, owner ruling 2026-11-15",
+      "owner_spot_checked": true,
       "program_status_for_entry": "active",
       "coverages": [
-        "partial_or_fixed"
+        "full_tuition"
       ],
       "selection_modes": [
         "competitive"
@@ -12425,7 +12425,7 @@
               "benefit_id": "b-tuition",
               "category": "tuition",
               "instrument": "scholarship",
-              "coverage": "unknown",
+              "coverage": "full",
               "amount": {
                 "qualifier": "not_published",
                 "value": null,
@@ -12435,8 +12435,8 @@
               },
               "duration_terms": "Renewable annually for up to four years; summer tuition and classes not included",
               "exclusions": null,
-              "scope_text": "Coverage is in conflict between two SCU pages; see field_evidence",
-              "advertised_coverage_label": null,
+              "scope_text": "The program page says 'a merit scholarship covering full tuition during the academic year'; the merit scholarships page lists 'Up to full tuition, standard room & board, books & supplies'. Read as full tuition, with the other items available on top (owner ruling, 2026-11-15)",
+              "advertised_coverage_label": "full tuition",
               "conditions_text": null
             },
             {
@@ -12531,7 +12531,7 @@
             }
           ],
           "advertised_totals": [],
-          "normalized_coverage": "partial_or_fixed"
+          "normalized_coverage": "full_tuition"
         }
       ],
       "application": {
@@ -12674,13 +12674,13 @@
           "field_path": "offers/0/benefits/0/coverage",
           "source_ref": "s-about",
           "locator": "About the Program/Award page, The Award",
-          "value_status": "conflicting"
+          "value_status": "reported"
         },
         {
           "field_path": "offers/0/benefits/0/coverage",
           "source_ref": "s-merit",
           "locator": "Merit Scholarships page, Johnson Scholars Award list, Awards bullet",
-          "value_status": "conflicting"
+          "value_status": "reported"
         },
         {
           "field_path": "offers/0/benefits/0/amount",
@@ -24034,22 +24034,22 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "stamps-scholars-award-fall-2027",
+      "version_id": "stamps-scholars-award-fall-2027-r2",
       "entry_year": 2027,
       "entry_year_label": "Fall 2027 entry",
       "entry_terms": [
         "fall"
       ],
       "source_cohort_text": null,
-      "verification_status": "conflicting",
+      "verification_status": "verified",
       "cycle_basis": "entry_year",
       "cycle_through_date": "2027-02-04",
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b5",
-      "owner_spot_checked": false,
+      "reviewed_by": "agent:claude-fable-5-2, owner ruling 2026-11-15",
+      "owner_spot_checked": true,
       "program_status_for_entry": "active",
       "coverages": [
-        "partial_or_fixed"
+        "full_school_coa"
       ],
       "selection_modes": [
         "competitive"
@@ -24117,7 +24117,7 @@
               "benefit_id": "b-coa",
               "category": "cost_of_attendance",
               "instrument": "scholarship",
-              "coverage": "unknown",
+              "coverage": "full",
               "amount": {
                 "qualifier": "not_published",
                 "value": null,
@@ -24127,8 +24127,8 @@
               },
               "duration_terms": "Four years",
               "exclusions": null,
-              "scope_text": "The Honors College page says a four-year full cost of attendance scholarship; the admissions page says \"Full scholarship (up to estimated cost of attendance)\". No dollar value is published.",
-              "advertised_coverage_label": null,
+              "scope_text": "The Honors College page says 'a four-year, full cost of attendance scholarship'; the admissions page says 'Full scholarship (up to estimated cost of attendance)'. Read as one promise of the full estimated cost of attendance (owner ruling, 2026-11-15)",
+              "advertised_coverage_label": "full cost of attendance",
               "conditions_text": null
             },
             {
@@ -24150,7 +24150,7 @@
               "conditions_text": null
             }
           ],
-          "normalized_coverage": "partial_or_fixed"
+          "normalized_coverage": "full_school_coa"
         }
       ],
       "application": {
@@ -24287,13 +24287,13 @@
           "field_path": "offers/0/benefits/0/coverage",
           "source_ref": "s-hon",
           "locator": "Stamps Scholars page, second paragraph",
-          "value_status": "conflicting"
+          "value_status": "reported"
         },
         {
           "field_path": "offers/0/benefits/0/coverage",
           "source_ref": "s-adm",
           "locator": "Freshman scholarships page, Competitive Scholarships table, Stamps Scholars Award row",
-          "value_status": "conflicting"
+          "value_status": "reported"
         },
         {
           "field_path": "offers/0/benefits/0/amount",
