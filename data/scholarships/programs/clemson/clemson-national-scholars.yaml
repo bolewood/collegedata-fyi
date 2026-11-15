@@ -1,0 +1,285 @@
+schema_version: 1
+program_id: clemson-national-scholars
+school_id: clemson
+ipeds_id: '217882'
+applicable_campuses: []
+official_name: National Scholars Program
+aliases:
+- Clemson National Scholars
+- NSP
+program_family: honors
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: national-scholars-2027
+  supersedes: null
+  entry_year: 2027
+  entry_year_label: '2027 Cohort (entry year derived: fall 2027)'
+  entry_terms:
+  - fall
+  source_cohort_text: 2027 Cohort Selection Deadlines
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b2
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: honors_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible:
+      - any
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: true
+      first_generation_rule: unknown
+      eligibility_notes: Applicants must submit both the Clemson undergraduate application (by the Early
+        Action deadline) and the Honors College application (by the Honors Priority deadline); late or
+        General-round Honors applicants are not considered. The program says it is not affiliated with
+        the National Merit Scholarship; National Merit recipients may be strong candidates but it is a
+        separate process. Clemson is test optional; test scores sent to Clemson also apply to the Honors
+        review.
+    benefits:
+    - benefit_id: b-coa
+      category: cost_of_attendance
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''a full cost of attendance scholarship''; the mission statement says it ''covers all
+        tuition, fees and other required expenses''; no dollar amount published'
+      advertised_coverage_label: full cost of attendance scholarship
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 10
+        day: 15
+      precision: day
+      source_date_text: October 15 (Undergraduate Admissions Early Action application submission deadline;
+        year not stated)
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 10
+        day: 22
+      precision: day
+      source_date_text: October 22 (Honors Priority application deadline; year not stated)
+    - kind: supporting_materials_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: November 1 (Honors Priority materials deadline and Early Action required materials
+        deadline; year not stated)
+    - kind: notification
+      requirement: recommended
+      date: '2027-01-01'
+      recurring: null
+      precision: month
+      source_date_text: January (finalist notification; mid-January per the same page)
+    - kind: finalist_event
+      requirement: required
+      date: '2027-02-19'
+      recurring: null
+      precision: day
+      source_date_text: February 19-20 (Scholarship Recruitment Weekend), under '2027 Cohort Selection
+        Deadlines'
+    - kind: notification
+      requirement: recommended
+      date: '2027-03-01'
+      recurring: null
+      precision: month
+      source_date_text: Early March (notified of status)
+    admission_plan_requirement: Clemson undergraduate application by the Early Action deadline plus the
+      Honors College application by the Honors Priority deadline (separate applications)
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: true
+    notes: 'The Honors page gives month and day without a year, so those three milestones are recurring.
+      Leftover passage: under ''2027 Cohort Selection Deadlines'' the page says ''Finalists have been
+      selected and notified'', which is past tense although the January 2027 notification has not happened;
+      it reads as left over from the prior cycle and was not used. Typical weekend activities: panel interview
+      with faculty and alumni, small-group interview and a group decision-making activity.'
+  renewal_rules: null
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-home
+    url: https://www.clemson.edu/academics/programs/national-scholars/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: bb031d05cc0db1910a6ea003014a98af5acfe7776dce579ec1c1fe2c9523a4a7
+    archive_url: null
+  - source_id: s-sel
+    url: https://www.clemson.edu/academics/programs/national-scholars/scholar-selection/index.html
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 22def98f1f7feae802d0576858fbfadba4db67f80ebe27669573483ed7a642e7
+    archive_url: null
+  - source_id: s-exp
+    url: https://www.clemson.edu/academics/programs/national-scholars/program-experience/index.html
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 44ccd1413a2e4770fefd29cd3ef2c2bbff2e18a55c9f74257e251e2e97c63345
+    archive_url: null
+  - source_id: s-honors
+    url: https://www.clemson.edu/cuhonors/admissions/first-year-student.html
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: b92c04d691318650ee916acea6a4a45a1392c9c62ce84a1da1ed25b7a8723da3
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-sel
+    locator: Scholar Selection, 'How National Scholars are Selected'
+    short_excerpt: followed by interviews and other activities with student finalists during a Scholarship
+      Recruitment Weekend.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-sel
+    locator: Scholar Selection, 'Scholar Criteria'
+    short_excerpt: Clemson University Honors College admissions application
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-home
+    locator: National Scholars Program home page, first paragraph
+    short_excerpt: This includes a full cost of attendance scholarship, enhanced program opportunities,
+      and becoming part of a community of scholars on campus.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-home
+    locator: 'Home and Program Experience pages: cost-of-attendance award without a dollar figure'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/eligibility/honors_requirement
+    source_ref: s-sel
+    locator: Scholar Selection, 'Scholar Criteria'
+    short_excerpt: 'To be considered for the National Scholars Program, an applicant must submit two applications
+      online:'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_eligible
+    source_ref: s-sel
+    locator: Scholar Selection, 'Scholar Criteria'
+    short_excerpt: All applications are considered, regardless of the student's residency (including international
+      students).
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-sel
+    locator: Scholar Selection, 'Scholar Criteria'
+    short_excerpt: 'To be considered for the National Scholars Program, an applicant must submit two applications
+      online:'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-honors
+    locator: Honors first-year page, 'Application Deadlines', Priority Deadlines
+    short_excerpt: Undergraduate Admissions Early Action application
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-honors
+    locator: Honors first-year page, 'Application Deadlines', Priority Deadlines
+    short_excerpt: Honors Priority application deadline
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-honors
+    locator: Honors first-year page, 'Application Deadlines', Priority Deadlines
+    short_excerpt: Honors Priority materials deadline; Undergraduate Admissions Early Action required
+      materials deadline
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-sel
+    locator: Scholar Selection, '2027 Cohort Selection Deadlines', January row
+    short_excerpt: Notification of selection as a National Scholars Program Finalist and invitation to
+      interview during the Scholarship Recruitment Weekend
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/4
+    source_ref: s-sel
+    locator: Scholar Selection, '2027 Cohort Selection Deadlines', February 19-20 row
+    short_excerpt: Finalists must participate in Scholarship Recruitment Weekend in order to be considered
+      for acceptance to the National Scholars Program.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/5
+    source_ref: s-sel
+    locator: Scholar Selection, '2027 Cohort Selection Deadlines', Early March row
+    short_excerpt: Notified of status.
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-sel
+    locator: 'Scholar Selection, ''Scholarship Recruitment Weekend'': interview mode not stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/finalist_event_required
+    source_ref: s-sel
+    locator: Scholar Selection, 'Scholarship Recruitment Weekend'
+    short_excerpt: Finalists must participate in the weekend to be eligible for the scholarship.
+    value_status: reported
+    reported_value: true
+  - field_path: entry_year
+    source_ref: s-sel
+    locator: Scholar Selection heading '2027 Cohort Selection Deadlines'; Honors page 'Fall 2027 essay
+      prompts'
+    short_excerpt: 2027 Cohort Selection Deadlines
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules
+    source_ref: s-exp
+    locator: 'Program pages read: no renewal condition stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: stacking_rules
+    source_ref: s-sel
+    locator: 'Scholar Selection: other scholarships are referred to the Financial Aid Office; no stacking
+      rule stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: award_counts
+    source_ref: s-exp
+    locator: 'Program Experience: ''A small, select cohort''; no number stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

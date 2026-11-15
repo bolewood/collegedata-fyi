@@ -1,0 +1,225 @@
+schema_version: 1
+program_id: usf-golden-achievement-national-merit
+school_id: university-of-south-florida
+ipeds_id: '137351'
+applicable_campuses: []
+official_name: Golden Achievement Program for National Merit Finalists (non-Florida residents)
+aliases:
+- USF National Merit Scholarship
+- Golden Achievement Program
+program_family: national_merit
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: usf-golden-achievement-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Benefits page names no entering class
+  entry_terms:
+  - unspecified
+  source_cohort_text: No year on the benefits page
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b2
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-non-florida
+    parent_offer_id: null
+    variant_name: Non-Florida residents (Golden Achievement Program)
+    residency: out_of_state
+    selection_mode: unknown
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - finalist
+      status_required_for_award: null
+      first_choice_required: true
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Must be a high school graduate who achieved the National Merit Finalist designation,
+        select USF as first choice with NMSC and be admitted. This record covers the non-Florida resident
+        package; the page's Florida-resident package (Benacquisto plus a Tradition of Excellence award)
+        is a different offer and is not recorded. The page says residency is 'as determined by USF'. National
+        Merit Semifinalists are 'considered for generous scholarships upon your admission'; no amounts
+        are given.
+    benefits:
+    - benefit_id: b-coa
+      category: cost_of_attendance
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''100 percent of your cost of attendance is covered during fall and spring terms'';
+        the scholarship amount is reduced by any award from the National Merit Scholarship Corporation,
+        so the package totals 100 percent of cost of attendance'
+      advertised_coverage_label: 100 percent of your cost of attendance
+      conditions_text: Golden Achievement Program amount is reduced by the NMSC award
+    - benefit_id: b-passport
+      category: study_abroad
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 2000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: USF Passport Scholarship for study abroad; the page gives no period
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: no_form_other_steps_required
+    milestones:
+    - kind: other
+      requirement: required
+      date: null
+      recurring:
+        month: 5
+        day: 31
+      precision: day
+      source_date_text: Designate USF as your first-choice school with NMSC by the May 31 deadline (year
+        not stated)
+    admission_plan_requirement: Apply to USF and complete the admissions process (grades and test scores);
+      a separate dates page lists the Fall/Summer 2027 admission deadlines but does not tie them to this
+      package
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: The only scholarship-specific date is the May 31 first-choice deadline, with no year. The separate
+      admissions dates page lists, for Fall/Summer 2027 start, an Early Action application deadline of
+      November 2, 2026, Regular Decision December 16, 2026 and a Scholarship Consideration Deadline of
+      January 15, 2027 for automatic merit consideration; the benefits page does not say these apply to
+      the National Merit package, so they are not recorded as milestones. A downloadable National Merit
+      Guide is linked from a non-USF host and was not used.
+  renewal_rules: null
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: replaces
+    note: '''If you qualify for this award, it will replace all other awards from the Office of Admissions.''
+      The Passport study-abroad scholarship is listed with it.'
+  award_counts: []
+  sources:
+  - source_id: s-ben
+    url: https://www.usf.edu/admissions/freshmen/admissions-scholarships/national-merit-scholarship/benefits.aspx
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: dafce77fdbad05f6a7028d95433d59bd74f01231e8c423a50265909e0b5b2f73
+    archive_url: null
+  - source_id: s-dates
+    url: https://www.usf.edu/admissions/freshmen/admission-information/dates-deadlines.aspx
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: 61476129f972b9fd8bb3d218167d8d359d4422803b6ee47e4099a5a6ae74f1d7
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-ben
+    locator: 'Benefits page, ''National Merit Finalists'': ''follow these steps to receive''; no explicit
+      promise stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-ben
+    locator: Benefits page, 'National Merit Finalists' steps
+    short_excerpt: Apply to USF.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/national_merit_statuses
+    source_ref: s-ben
+    locator: Benefits page, 'Generous Scholarships and Financial Support'
+    short_excerpt: achieved the National Merit® Scholar Finalist designation and selected USF as your
+      first-choice school with NMSC.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/first_choice_required
+    source_ref: s-ben
+    locator: Benefits page, 'National Merit Finalists' steps
+    short_excerpt: Designate USF as your first-choice school with the National Merit Scholarship Corporation
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-ben
+    locator: Benefits page, 'Scholarship Benefits For NON-Florida Residents', Golden Achievement Program
+    short_excerpt: This merit-based award will ensure that 100 percent of your cost of attendance is covered
+      during fall and spring terms.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/conditions_text
+    source_ref: s-ben
+    locator: Benefits page, 'Scholarship Benefits For NON-Florida Residents'
+    short_excerpt: Your Golden Achievement Program scholarship amount will be reduced by the award amount
+      you receive from the NMSC.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-ben
+    locator: 'Benefits page: a percentage of cost of attendance, no dollar figure'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-ben
+    locator: Benefits page, 'Scholarship Benefits For NON-Florida Residents', last item
+    short_excerpt: 'The USF Passport Scholarship for study abroad: ($2,000)'
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-ben
+    locator: 'Benefits page, ''National Merit Finalists'': three listed steps (apply to USF, complete
+      admissions, designate USF with NMSC); no scholarship form is listed'
+    short_excerpt: Complete the admissions process by submitting your grades and test scores.
+    value_status: reported
+    reported_value: no_form_other_steps_required
+  - field_path: application/milestones/0
+    source_ref: s-ben
+    locator: Benefits page, 'National Merit Finalists', third step
+    short_excerpt: by the May 31 deadline.
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-ben
+    locator: 'Benefits page: no entering class or year named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: renewal_rules
+    source_ref: s-ben
+    locator: 'Benefits page: no renewal condition stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-ben
+    locator: Benefits page, Golden Achievement Program
+    short_excerpt: If you qualify for this award, it will replace all other awards from the Office of
+      Admissions.
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts
+    source_ref: s-ben
+    locator: 'Benefits page: no award count stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

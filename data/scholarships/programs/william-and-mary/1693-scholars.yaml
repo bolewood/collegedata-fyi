@@ -1,0 +1,543 @@
+schema_version: 1
+program_id: 1693-scholars
+school_id: william-and-mary
+ipeds_id: '231624'
+applicable_campuses: []
+official_name: 1693 Scholars Program
+aliases:
+- 1693 Scholars
+program_family: honors
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: 1693-scholars-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Entering class not named; the only published timeline is the 2026 cycle, already past
+  entry_terms:
+  - unspecified
+  source_cohort_text: Page timeline headed '2026 Application, Nomination and Notification Timeline'
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b2
+  owner_spot_checked: false
+  program_status_for_entry: unknown
+  offers:
+  - offer_id: o-in-state
+    parent_offer_id: null
+    variant_name: Virginia residents (full scholarship)
+    residency: in_state
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: All first-year applicants (Regular Decision, Early Decision, Early Decision II,
+        St Andrews joint degree and international) are reviewed. The page describes finalists as typically
+        in the top 5% of their class (if ranked) with the most demanding curriculum and SAT above 1500
+        or ACT above 33; that is a profile, not a minimum, and W&M is test-optional.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four-year scholarship
+      exclusions: null
+      scope_text: Virginia tuition, annually; the page calls the in-state award a 'full scholarship'
+      advertised_coverage_label: full scholarship
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four-year scholarship
+      exclusions: null
+      scope_text: Fees, annually, as part of 'Virginia tuition, fees, room and board'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four-year scholarship
+      exclusions: null
+      scope_text: '''room and board annually''; no rate or cap published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four-year scholarship
+      exclusions: null
+      scope_text: '''room and board annually''; no rate or cap published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-research
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Research grant or project stipend; two W&M pages give different amounts ($5,000 vs $6,000);
+        whether it is paid once or per year is not stated
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  - offer_id: o-out-of-state
+    parent_offer_id: null
+    variant_name: Out-of-state residents (partial scholarship)
+    residency: out_of_state
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: All first-year applicants (Regular Decision, Early Decision, Early Decision II,
+        St Andrews joint degree and international) are reviewed. The page describes finalists as typically
+        in the top 5% of their class (if ranked) with the most demanding curriculum and SAT above 1500
+        or ACT above 33; that is a profile, not a minimum, and W&M is test-optional.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four-year scholarship
+      exclusions: null
+      scope_text: Virginia tuition, annually; the page calls the out-of-state award a 'partial scholarship'
+        and does not say how the nonresident tuition differential is treated. Not recorded as a waiver
+      advertised_coverage_label: partial scholarship
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four-year scholarship
+      exclusions: null
+      scope_text: Fees, annually, as part of 'Virginia tuition, fees, room and board'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four-year scholarship
+      exclusions: null
+      scope_text: '''room and board annually''; no rate or cap published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four-year scholarship
+      exclusions: null
+      scope_text: '''room and board annually''; no rate or cap published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-research
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Research grant or project stipend; two W&M pages give different amounts ($5,000 vs $6,000);
+        whether it is paid once or per year is not stated
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: not_required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: '2026-01-05'
+      recurring: null
+      precision: day
+      source_date_text: January 5 (2026 timeline)
+    - kind: notification
+      requirement: recommended
+      date: '2026-02-01'
+      recurring: null
+      precision: month
+      source_date_text: February (about 200 semifinalists notified; additional essay and video follow)
+    - kind: interview
+      requirement: required
+      date: '2026-03-12'
+      recurring: null
+      precision: day
+      source_date_text: March 12 - March 21 (virtual finalist interviews)
+    - kind: finalist_event
+      requirement: recommended
+      date: '2026-04-10'
+      recurring: null
+      precision: day
+      source_date_text: April 10 - April 11 (on-campus weekend)
+    - kind: notification
+      requirement: recommended
+      date: '2026-04-13'
+      recurring: null
+      precision: day
+      source_date_text: April 13 - April 20 (scholars selected and notified)
+    admission_plan_requirement: Apply to W&M first-year admission (Regular Decision, ED, ED II, joint
+      degree or international); every first-year applicant is reviewed
+    prerequisites: []
+    interview_mode: mixed
+    finalist_event_required: null
+    notes: The page's only timeline is headed '2026' and its dates (January 5, April 10-11) are already
+      past relative to today; no later cycle is published, so nothing was rolled forward. About 200 semifinalists
+      submit one 200-300 word essay and a 3-minute video (about two weeks to respond); about 15 finalists
+      are invited to an expense-paid April weekend. The two W&M pages disagree on the research grant ($5,000
+      vs $6,000), so the record is conflicting.
+  renewal_rules: null
+  stacking_rules: null
+  award_counts:
+  - metric: new_recipients
+    qualifier: exact
+    value: 9
+    cohort_year: 2026
+    source_ref: s-sel
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-sel
+    url: https://www.wm.edu/as/1693scholars/selectioninfo/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 522c399388b720112418ba37ffd9cd7ecb94af970b0b0d5254d83c07def976ce
+    archive_url: null
+  - source_id: s-about
+    url: https://www.wm.edu/as/1693scholars/about/index.php
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 95275bee154027414574f052fdf8347296c618c93ba42655b72d3593f9a167d4
+    archive_url: null
+  - source_id: s-cc
+    url: https://www.wm.edu/as/charlescenter/scholars/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 29916caa5e06d6292fdd6de8bbd75cc5cd4a432ee9cc09de56a4536ecd5f15b4
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-sel
+    locator: Selection Information, 'Application Review and Selection'
+    short_excerpt: The committee selects applicants as potential finalists (semi-finalists)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-sel
+    locator: Selection Information, 'Application Review and Selection'
+    short_excerpt: All first-year applicants are reviewed as potential 1693 Scholars; there is no separate
+      application.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-sel
+    locator: Selection Information, test-optional note
+    short_excerpt: applicants will still be reviewed for the 1693 Scholars Program if they do not submit
+      an SAT or ACT score.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-about
+    locator: 'Program Benefits: no dollar amounts for tuition, fees, room or board'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-about
+    locator: 'Program Benefits: no dollar amounts for tuition, fees, room or board'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-about
+    locator: 'Program Benefits: no dollar amounts for tuition, fees, room or board'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-about
+    locator: 'Program Benefits: no dollar amounts for tuition, fees, room or board'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/selection_mode
+    source_ref: s-sel
+    locator: Selection Information, 'Application Review and Selection'
+    short_excerpt: The committee selects applicants as potential finalists (semi-finalists)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/consideration_route
+    source_ref: s-sel
+    locator: Selection Information, 'Application Review and Selection'
+    short_excerpt: All first-year applicants are reviewed as potential 1693 Scholars; there is no separate
+      application.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/eligibility/tests_policy_for_scholarship
+    source_ref: s-sel
+    locator: Selection Information, test-optional note
+    short_excerpt: applicants will still be reviewed for the 1693 Scholars Program if they do not submit
+      an SAT or ACT score.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-about
+    locator: 'Program Benefits: no dollar amounts for tuition, fees, room or board'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/1/amount
+    source_ref: s-about
+    locator: 'Program Benefits: no dollar amounts for tuition, fees, room or board'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/2/amount
+    source_ref: s-about
+    locator: 'Program Benefits: no dollar amounts for tuition, fees, room or board'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/3/amount
+    source_ref: s-about
+    locator: 'Program Benefits: no dollar amounts for tuition, fees, room or board'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-about
+    locator: Program Benefits, first bullet
+    short_excerpt: A four-year scholarship that includes Virginia tuition, fees, room and board annually
+      for in-state residents (full scholarship)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-about
+    locator: Program Benefits, first bullet
+    short_excerpt: A four-year scholarship that includes Virginia tuition, fees, room and board annually
+      for in-state residents (full scholarship)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-about
+    locator: Program Benefits, first bullet
+    short_excerpt: A four-year scholarship that includes Virginia tuition, fees, room and board annually
+      for in-state residents (full scholarship)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3
+    source_ref: s-about
+    locator: Program Benefits, first bullet
+    short_excerpt: A four-year scholarship that includes Virginia tuition, fees, room and board annually
+      for in-state residents (full scholarship)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0
+    source_ref: s-about
+    locator: Program Benefits, first bullet
+    short_excerpt: Virginia tuition, fees, room and board annually for out-of-state residents (partial
+      scholarship)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/1
+    source_ref: s-about
+    locator: Program Benefits, first bullet
+    short_excerpt: Virginia tuition, fees, room and board annually for out-of-state residents (partial
+      scholarship)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/2
+    source_ref: s-about
+    locator: Program Benefits, first bullet
+    short_excerpt: Virginia tuition, fees, room and board annually for out-of-state residents (partial
+      scholarship)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/3
+    source_ref: s-about
+    locator: Program Benefits, first bullet
+    short_excerpt: Virginia tuition, fees, room and board annually for out-of-state residents (partial
+      scholarship)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-cc
+    locator: 'Charles Center scholars page, 1693 Scholars paragraph: ''$5,000 research grant'''
+    short_excerpt: 'receive significant financial awards: Virginia tuition, fees, room and board annually
+      as well as a $5,000 research grant.'
+    value_status: conflicting
+    reported_value: 5000
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-about
+    locator: '1693 Scholars Program Benefits page, bullet list: ''$6,000 research/project stipend'''
+    short_excerpt: $6,000 research/project stipend
+    value_status: conflicting
+    reported_value: 6000
+  - field_path: offers/1/benefits/4/amount
+    source_ref: s-cc
+    locator: 'Charles Center scholars page, 1693 Scholars paragraph: ''$5,000 research grant'''
+    short_excerpt: 'receive significant financial awards: Virginia tuition, fees, room and board annually
+      as well as a $5,000 research grant.'
+    value_status: conflicting
+    reported_value: 5000
+  - field_path: offers/1/benefits/4/amount
+    source_ref: s-about
+    locator: '1693 Scholars Program Benefits page, bullet list: ''$6,000 research/project stipend'''
+    short_excerpt: $6,000 research/project stipend
+    value_status: conflicting
+    reported_value: 6000
+  - field_path: application/separate_application
+    source_ref: s-sel
+    locator: Selection Information, 'Application Review and Selection'
+    short_excerpt: there is no separate application.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-sel
+    locator: Selection Information, '2026 Application, Nomination and Notification Timeline', January
+      5
+    short_excerpt: January 5 - Application deadline for William & Mary first-year admission.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-sel
+    locator: Timeline, February
+    short_excerpt: February - Approximately 200 semi-finalists will be notified (via email)
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-sel
+    locator: Timeline, March 12 - March 21
+    short_excerpt: March 12 - March 21 - Virtual Finalist Interviews
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-sel
+    locator: Timeline, April 10 - April 11
+    short_excerpt: Friday, April 10 - Saturday, April 11 - 1693 Scholars Finalist Weekend (on-campus)
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/4
+    source_ref: s-sel
+    locator: Timeline, April 13 - April 20
+    short_excerpt: April 13 - April 20 - Nine 1693 Scholars will be selected and notified.
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-sel
+    locator: Selection Information, 'Application Review and Selection'
+    short_excerpt: Finalists are required to complete a virtual interview with two alumni as well as a
+      virtual presentation to a faculty panel.
+    value_status: reported
+    reported_value: mixed
+  - field_path: entry_year
+    source_ref: s-sel
+    locator: 'Selection Information: only a ''2026 Application, Nomination and Notification Timeline''
+      (January 5, April 10-11 2026, both past); no fall 2027 terms published'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: program_status_for_entry
+    source_ref: s-sel
+    locator: 'Selection Information: no terms for a later class published'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: renewal_rules
+    source_ref: s-about
+    locator: '1693 pages read: no renewal condition stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: stacking_rules
+    source_ref: s-about
+    locator: '1693 pages read: no stacking rule stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: award_counts/0
+    source_ref: s-sel
+    locator: Selection Information, Timeline, April 13 - April 20
+    short_excerpt: Nine 1693 Scholars will be selected and notified.
+    value_status: reported
+    reported_value: null
