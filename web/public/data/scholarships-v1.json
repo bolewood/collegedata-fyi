@@ -1,13 +1,13 @@
 {
   "meta": {
-    "dataset_id": "collegedata-scholarships-v1-6a7b39e1a673",
+    "dataset_id": "collegedata-scholarships-v1-7af51cae1e92",
     "version": 1,
     "license": "CC-BY-SA-4.0",
     "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
     "attribution": "Scholarship program data from collegedata.fyi (https://collegedata.fyi/scholarships), CC BY-SA 4.0. Terms as published by each school; see the source link on each record.",
     "generated_at": "2026-11-15",
     "source_repository": "https://github.com/bolewood/collegedata-fyi",
-    "record_count": 78
+    "record_count": 85
   },
   "programs": [
     {
@@ -798,6 +798,312 @@
           "field_path": "award_counts",
           "source_ref": "s-exp",
           "locator": "Program Experience: 'A small, select cohort'; no number stated",
+          "value_status": "not_published"
+        }
+      ]
+    },
+    {
+      "program_id": "grewcock-presidential-scholarship",
+      "school_id": "colorado-school-of-mines",
+      "ipeds_id": "126775",
+      "participating_school_ids": [
+        "colorado-school-of-mines"
+      ],
+      "official_name": "Grewcock Presidential Scholarship",
+      "aliases": [
+        "Grewcock Presidential Scholars Program",
+        "Grewcock Presidential Scholars"
+      ],
+      "program_family": "presidential",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "grewcock-undated",
+      "entry_year": null,
+      "entry_year_label": "Dates given (application December 15, 2026 to February 1, 2027); the page does not name an entering class",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": null,
+      "verification_status": "verified",
+      "cycle_basis": "milestone_dates",
+      "cycle_through_date": "2027-02-01",
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b6",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "full_tuition_fees"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "any"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "required",
+      "deadline_months": [
+        2
+      ],
+      "key_deadline": "2027-02-01",
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "any",
+          "selection_mode": "competitive",
+          "consideration_route": "separate_application",
+          "aid_basis": "unclear",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "First-year undergraduate students from in-state and out-of-state; applicants must first be admitted to Mines. The page calls Grewcock one of the 'foundation scholarships' reached from the Mines General Scholarship Application. Prior leadership experience is not necessary. Applications are de-identified for review and use four essay questions. Finalists get a virtual interview."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Renewable for up to eight semesters",
+              "exclusions": null,
+              "scope_text": "School words: 'full tuition and mandatory fees'",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-fees",
+              "category": "mandatory_fees",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Renewable for up to eight semesters",
+              "exclusions": null,
+              "scope_text": "School words: 'full tuition and mandatory fees'",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "full_tuition_fees"
+        }
+      ],
+      "application": {
+        "separate_application": "required",
+        "milestones": [
+          {
+            "kind": "application_open",
+            "requirement": "required",
+            "date": "2026-12-15",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "Application opens: Tuesday, December 15, 2026"
+          },
+          {
+            "kind": "other",
+            "requirement": "required",
+            "date": "2026-12-01",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "Essay questions for the Grewcock Presidential Scholarship will be released on December 1, 2026."
+          },
+          {
+            "kind": "application_deadline",
+            "requirement": "required",
+            "date": "2027-02-01",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "Application deadline: Monday, February 1, 2027"
+          }
+        ],
+        "admission_plan_requirement": "Admission to Mines is required before the scholarship application can be started",
+        "prerequisites": [
+          {
+            "kind": "portal_credentials",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "The page says students must be admitted to Mines to gain access to their Trailhead account, where the application is made."
+          }
+        ],
+        "interview_mode": "virtual",
+        "finalist_event_required": null,
+        "notes": "The page says identifying information (last name, social media accounts, identifiable business names, LinkedIn links) in essay responses will result in disqualification of the application. The application opens December 15, 2026 and the essay questions are released December 1, 2026, which is earlier than the opening date; the page shows both. The page does not say which entering class these dates belong to."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": 3.0,
+          "gpa_scale": 4.0,
+          "credit_load_min_per_term": null,
+          "credit_load_min_per_year": 30,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": 8,
+          "notes": "Renewable for up to eight semesters. Credits: 15 per semester or 30 per academic year (the page says 'or'). The Maintaining Scholarships page also expects consistent attendance and engagement in Grewcock community programming, high ethical standards, a campus leadership role or new initiative by graduation, and ongoing leadership development."
+        }
+      ],
+      "stacking_rules": null,
+      "award_counts": [
+        {
+          "metric": "new_recipients",
+          "qualifier": "exact",
+          "value": 10,
+          "cohort_year": null,
+          "source_ref": "s-pascal",
+          "claim": "target",
+          "denominator": null
+        }
+      ],
+      "sources": [
+        {
+          "source_id": "s-pascal",
+          "url": "https://pascal.mines.edu/grewcock-scholars/",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-ren",
+          "url": "https://finaid.mines.edu/maintaining-scholarships/",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-pascal",
+          "locator": "Applicant Requirements",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-pascal",
+          "locator": "Applicant Requirements, application paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-pascal",
+          "locator": "Scholarship Components and Expectations, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-pascal",
+          "locator": "Scholarship Components: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/1",
+          "source_ref": "s-pascal",
+          "locator": "Scholarship Components and Expectations, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-pascal",
+          "locator": "Scholarship Components: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-pascal",
+          "locator": "Applicant Requirements, application paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/0",
+          "source_ref": "s-pascal",
+          "locator": "How To Apply & Timeline, Important Dates",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/2",
+          "source_ref": "s-pascal",
+          "locator": "How To Apply & Timeline, Important Dates",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/1",
+          "source_ref": "s-pascal",
+          "locator": "How To Apply & Timeline, Important Dates",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/interview_mode",
+          "source_ref": "s-pascal",
+          "locator": "Applicant Requirements, last paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-pascal",
+          "locator": "Scholarship Components and Expectations, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-ren",
+          "locator": "Maintaining Scholarships, Grewcock Presidential Scholars Program, requirements list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-ren",
+          "locator": "Maintaining Scholarships, Grewcock Presidential Scholars Program, requirements list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules",
+          "source_ref": "s-pascal",
+          "locator": "Grewcock pages: no rule on other aid",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "award_counts/0",
+          "source_ref": "s-pascal",
+          "locator": "Applicant Requirements, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-pascal",
+          "locator": "How To Apply & Timeline: dates are given, the entering class is not named",
           "value_status": "not_published"
         }
       ]
@@ -8014,6 +8320,591 @@
       ]
     },
     {
+      "program_id": "nccu-cheatham-white-scholarship",
+      "school_id": "north-carolina-central-university",
+      "ipeds_id": "199157",
+      "participating_school_ids": [
+        "north-carolina-central-university"
+      ],
+      "official_name": "Cheatham-White Scholarship",
+      "aliases": [
+        "Cheatham-White Scholarship Program",
+        "Cheatham-White Scholars"
+      ],
+      "program_family": "honors",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "cheatham-white-2027",
+      "entry_year": 2027,
+      "entry_year_label": "Apply page: nominations for the 2027-2028 year",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": null,
+      "verification_status": "verified",
+      "cycle_basis": "entry_year",
+      "cycle_through_date": "2027-03-01",
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b6",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "tuition_housing_meals"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "unknown"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "required",
+      "deadline_months": [
+        11
+      ],
+      "key_deadline": "2026-11-01",
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "unknown",
+          "selection_mode": "competitive",
+          "consideration_route": "nomination",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": {
+              "min": 4.0,
+              "scale": 4.0,
+              "basis": "unknown"
+            },
+            "test_rules": [
+              {
+                "exam": "SAT",
+                "min": 1280,
+                "scoring": "superscore",
+                "official_required": null
+              },
+              {
+                "exam": "ACT",
+                "min": 28,
+                "scoring": "superscore",
+                "official_required": null
+              }
+            ],
+            "tests_policy_for_scholarship": "optional",
+            "citizenship_eligible": [
+              "us_citizen",
+              "permanent_resident"
+            ],
+            "citizenship_text": "Candidates must be US citizens or permanent residents",
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": true,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Admitted as a first-year student in the fall to a baccalaureate program, on course to graduate from high school that spring. Minimum 4.0 weighted or unweighted cumulative GPA (the policy page says 'weighted'). Test scores are optional: the apply page says so for the 2027-2028 academic year; the FAQ page still says 2026-2027 (a leftover from the previous cycle). Selection looks at character, leadership, extracurricular involvement and service; the policy says financial need is not a consideration. Students are enrolled in the University Honors Program automatically. The policy page also lists SAT 1280 / ACT 28 as required; the apply page makes tests optional for 2027-2028 and is followed. Policy nominee caps by school: 2 to 5 depending on senior class size."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Four years",
+              "exclusions": null,
+              "scope_text": null,
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-fees",
+              "category": "mandatory_fees",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "School words: 'full tuition and fees'",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-housing",
+              "category": "housing",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": null,
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-meals",
+              "category": "meals",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": null,
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-books",
+              "category": "books",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "School words: 'textbooks'",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-laptop",
+              "category": "laptop",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "School words: 'a laptop'; the FAQ highlights list calls it the 'Laptop Checkout Program'",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-other",
+              "category": "other",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "School words: 'travel and select personal expenses' (FAQ); the policy says 'supplies, travel, and personal expenses'",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-summers",
+              "category": "enrichment",
+              "instrument": "restricted_fund",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Four summers",
+              "exclusions": null,
+              "scope_text": "School words: 'four summers of fully funded enrichment and networking opportunities that may include international travel and study' (policy page)",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "tuition_housing_meals"
+        }
+      ],
+      "application": {
+        "separate_application": "required",
+        "milestones": [
+          {
+            "kind": "application_open",
+            "requirement": "required",
+            "date": "2026-08-15",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "August 15, 2026 | Nomination forms available"
+          },
+          {
+            "kind": "nomination_deadline",
+            "requirement": "required",
+            "date": "2026-11-01",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "November 1, 2026 | Deadline for nomination forms"
+          },
+          {
+            "kind": "application_deadline",
+            "requirement": "required",
+            "date": "2026-11-15",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "November 15, 2026 | Cheatham-White application material deadline"
+          },
+          {
+            "kind": "notification",
+            "requirement": "required",
+            "date": "2027-01-15",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "January 15, 2027 | Applicants will be notified if selected to continue as a finalist"
+          },
+          {
+            "kind": "interview",
+            "requirement": "invitation_only",
+            "date": "2027-02-20",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "February 20, 2027 | Eagle Scholars Day and finalists' interviews"
+          },
+          {
+            "kind": "notification",
+            "requirement": "required",
+            "date": "2027-03-01",
+            "recurring": null,
+            "precision": "month",
+            "source_date_text": "March 2027 | All applicants are notified of the final status"
+          }
+        ],
+        "admission_plan_requirement": "Admission to NCCU by the Cheatham-White application deadline, plus a nomination by a high school administrator or a self-nomination",
+        "prerequisites": [],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "Finalist interviews cannot be rescheduled: the interview date is announced a year in advance and finalists are told a month before. Self-nominations go through the Eagle Promise Portal after an admission application and must be followed by a letter of recommendation (FAQ). The FAQ page still says 'for the 2026-2027 academic year' for test-optional; the apply page says 2027-2028 and is used here. The FAQ says recipients are notified in early March, finalists decide by mid-April and the class is announced in early May. The scholarship is non-binding: scholars need not attend NCCU."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": 3.5,
+          "gpa_scale": 4.0,
+          "credit_load_min_per_term": null,
+          "credit_load_min_per_year": 30,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": null,
+          "notes": "Cumulative 3.5 GPA, full-time enrollment each semester with at least 30 credit hours each academic year, and membership and active participation in the University Honors Program."
+        }
+      ],
+      "stacking_rules": [
+        {
+          "other_aid_type": "outside_scholarship",
+          "relation": "allowed",
+          "note": "Outside scholarships will not affect eligibility to fully qualify."
+        },
+        {
+          "other_aid_type": "federal_or_state_need",
+          "relation": "allowed",
+          "note": "Federal Pell Grants are considered an entitlement and the scholarship would not be adjusted."
+        }
+      ],
+      "award_counts": [],
+      "sources": [
+        {
+          "source_id": "s-apply",
+          "url": "https://www.nccu.edu/usp/cheatham-white-scholarship-program/apply",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-faq",
+          "url": "https://www.nccu.edu/usp/cheatham-white-scholarship-program/faqs",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-pol",
+          "url": "https://www.nccu.edu/policies/retrieve/6",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-pol",
+          "locator": "Policy 4.1 Selection Criteria",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-apply",
+          "locator": "How to Apply, Submitting a Nomination",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/aid_basis",
+          "source_ref": "s-pol",
+          "locator": "Policy 4.1 Selection Criteria",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-faq",
+          "locator": "About the Program, 'Is Cheatham-White a full-ride scholarship?'",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-faq",
+          "locator": "FAQ and policy: no dollar amount for this component",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/1",
+          "source_ref": "s-faq",
+          "locator": "About the Program, 'Is Cheatham-White a full-ride scholarship?'",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-faq",
+          "locator": "FAQ and policy: no dollar amount for this component",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/2",
+          "source_ref": "s-faq",
+          "locator": "About the Program, 'Is Cheatham-White a full-ride scholarship?'",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2/amount",
+          "source_ref": "s-faq",
+          "locator": "FAQ and policy: no dollar amount for this component",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/3",
+          "source_ref": "s-faq",
+          "locator": "About the Program, 'Is Cheatham-White a full-ride scholarship?'",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/3/amount",
+          "source_ref": "s-faq",
+          "locator": "FAQ and policy: no dollar amount for this component",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/4",
+          "source_ref": "s-faq",
+          "locator": "About the Program, 'Is Cheatham-White a full-ride scholarship?'",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/4/amount",
+          "source_ref": "s-faq",
+          "locator": "FAQ and policy: no dollar amount for this component",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/5",
+          "source_ref": "s-faq",
+          "locator": "About the Program, 'Is Cheatham-White a full-ride scholarship?'",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/5/amount",
+          "source_ref": "s-faq",
+          "locator": "FAQ and policy: no dollar amount for this component",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/6",
+          "source_ref": "s-faq",
+          "locator": "About the Program, 'Is Cheatham-White a full-ride scholarship?'",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/6/amount",
+          "source_ref": "s-faq",
+          "locator": "FAQ and policy: no dollar amount for this component",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/7",
+          "source_ref": "s-faq",
+          "locator": "About the Program, 'Is Cheatham-White a full-ride scholarship?'",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/7/amount",
+          "source_ref": "s-faq",
+          "locator": "FAQ and policy: no dollar amount for this component",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/7",
+          "source_ref": "s-pol",
+          "locator": "Policy page, 1. Purpose",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/gpa",
+          "source_ref": "s-apply",
+          "locator": "Eligibility and Selection Criteria",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/citizenship_text",
+          "source_ref": "s-apply",
+          "locator": "Eligibility and Selection Criteria",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/tests_policy_for_scholarship",
+          "source_ref": "s-apply",
+          "locator": "Eligibility and Selection Criteria, test scores bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/test_rules",
+          "source_ref": "s-apply",
+          "locator": "Eligibility and Selection Criteria, test scores bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/honors_requirement",
+          "source_ref": "s-faq",
+          "locator": "About the Program, honors question",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-apply",
+          "locator": "How to Apply, Submitting an Application",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/0",
+          "source_ref": "s-apply",
+          "locator": "Important Dates table",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/1",
+          "source_ref": "s-apply",
+          "locator": "Important Dates table",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/2",
+          "source_ref": "s-apply",
+          "locator": "Important Dates table",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/3",
+          "source_ref": "s-apply",
+          "locator": "Important Dates table",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/4",
+          "source_ref": "s-apply",
+          "locator": "Important Dates table",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/5",
+          "source_ref": "s-apply",
+          "locator": "Important Dates table",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/interview_mode",
+          "source_ref": "s-apply",
+          "locator": "Important Dates table: finalists are interviewed on Eagle Scholars Day; no format stated",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-faq",
+          "locator": "About the Program, academic eligibility question",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-faq",
+          "locator": "About the Program, additional scholarships question",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/1",
+          "source_ref": "s-faq",
+          "locator": "About the Program, additional scholarships question",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "award_counts",
+          "source_ref": "s-apply",
+          "locator": "Cheatham-White pages fetched: no current award count",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-apply",
+          "locator": "Apply page: 'Nominations for the 2027–2028 year will open on August 15, 2026.'",
+          "value_status": "reported"
+        }
+      ]
+    },
+    {
       "program_id": "park-scholarships",
       "school_id": "north-carolina-state-university-at-raleigh",
       "ipeds_id": "199193",
@@ -10343,6 +11234,685 @@
           "source_ref": "s-prog",
           "locator": "Alfond page, intro",
           "value_status": "reported"
+        }
+      ]
+    },
+    {
+      "program_id": "scu-johnson-scholars-award",
+      "school_id": "santa-clara-university",
+      "ipeds_id": "122931",
+      "participating_school_ids": [
+        "santa-clara-university"
+      ],
+      "official_name": "Johnson Scholars Award",
+      "aliases": [
+        "Johnson Scholars Program",
+        "Johnson Scholars"
+      ],
+      "program_family": "honors",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "johnson-scholars-undated",
+      "entry_year": null,
+      "entry_year_label": "The pages name no entering class",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": null,
+      "verification_status": "conflicting",
+      "cycle_basis": "none",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b6",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "partial_or_fixed"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "any"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "top_up_only"
+      ],
+      "separate_application": "required",
+      "deadline_months": [
+        11
+      ],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "any",
+          "selection_mode": "competitive",
+          "consideration_route": "honors_application",
+          "aid_basis": "merit_and_need",
+          "need_role": "top_up_only",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": "International students are not eligible for consideration.",
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": true,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Applicants must be admitted in the Early Action or Early Decision I round and then apply to the University Honors Program. Finalists are chosen from that pool on academic achievement and potential to contribute. The page says 'Not reserved for Gap Year students'."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Renewable annually for up to four years; summer tuition and classes not included",
+              "exclusions": null,
+              "scope_text": "Coverage is in conflict between two SCU pages; see field_evidence",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-housing",
+              "category": "housing",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "'Standard room and board fees'; the page says students 'may be eligible' after the forms",
+              "advertised_coverage_label": null,
+              "conditions_text": "Depends on completing the FAFSA and CSS Profile for need-based consideration"
+            },
+            {
+              "benefit_id": "b-meals",
+              "category": "meals",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "'Standard room and board fees'; the page says students 'may be eligible' after the forms",
+              "advertised_coverage_label": null,
+              "conditions_text": "Depends on completing the FAFSA and CSS Profile for need-based consideration"
+            },
+            {
+              "benefit_id": "b-books",
+              "category": "books",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "'Books & supplies' and 'book and other customary expenses'; the page says students 'may be eligible' after the forms",
+              "advertised_coverage_label": null,
+              "conditions_text": "Depends on completing the FAFSA and CSS Profile for need-based consideration"
+            },
+            {
+              "benefit_id": "b-summer",
+              "category": "stipend",
+              "instrument": "cash_stipend",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Summer stipend; no amount published",
+              "advertised_coverage_label": null,
+              "conditions_text": "Upon application, in the sophomore or junior year"
+            },
+            {
+              "benefit_id": "b-prof-dev",
+              "category": "enrichment",
+              "instrument": "restricted_fund",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "up_to",
+                "value": 10000,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Professional development funds scholars can apply for after their first year; the page gives no period",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "partial_or_fixed"
+        }
+      ],
+      "application": {
+        "separate_application": "required",
+        "milestones": [
+          {
+            "kind": "admission_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 11,
+              "day": 1
+            },
+            "precision": "day",
+            "source_date_text": "November 1 Deadline for Early Decision application"
+          },
+          {
+            "kind": "admission_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 11,
+              "day": 1
+            },
+            "precision": "day",
+            "source_date_text": "November 1 Deadline for Early Action application"
+          },
+          {
+            "kind": "finalist_event",
+            "requirement": "invitation_only",
+            "date": null,
+            "recurring": {
+              "month": 3,
+              "day": 15
+            },
+            "precision": "approximate",
+            "source_date_text": "virtual Selection Day in mid-March"
+          }
+        ],
+        "admission_plan_requirement": "Early Action or Early Decision I admission, then an application to the University Honors Program",
+        "prerequisites": [],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "The pages give no deadline for the University Honors Program application. Admission deadlines come from SCU's key-deadlines page and carry no year. Selection Day is virtual and in mid-March; whether attendance is required is not stated. Not open to international students."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": 3.5,
+          "gpa_scale": 4.0,
+          "credit_load_min_per_term": 12,
+          "credit_load_min_per_year": null,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": null,
+          "notes": "Cumulative 3.5 GPA, satisfactory academic progress, a cumulative 67% completion rate, and a full load of 12 or more units per quarter. Also required: Honors Program membership, annual FAFSA, and active participation in Johnson Scholars events. Renewable annually for up to four years (12 quarters on the merit page; the school counts in quarters, so max_semesters is left empty)."
+        }
+      ],
+      "stacking_rules": [
+        {
+          "other_aid_type": "other",
+          "relation": "counts_within_package",
+          "note": "The merit page says only 'Coordinated with federal, state and other University aid'."
+        }
+      ],
+      "award_counts": [
+        {
+          "metric": "new_recipients",
+          "qualifier": "exact",
+          "value": 5,
+          "cohort_year": null,
+          "source_ref": "s-sel",
+          "claim": "target",
+          "denominator": null
+        }
+      ],
+      "sources": [
+        {
+          "source_id": "s-about",
+          "url": "https://www.scu.edu/johnsonscholars/about-the-programaward/",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-dl",
+          "url": "https://www.scu.edu/admission/undergraduate/first-year-students/fy-key-deadlines/",
+          "authority": "official_admissions",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-merit",
+          "url": "https://www.scu.edu/financialaid/types-of-aid/scholarships-and-grants/merit-scholarships/",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-req",
+          "url": "https://www.scu.edu/johnsonscholars/johnson-scholars-program-requirements-/",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-sel",
+          "url": "https://www.scu.edu/johnsonscholars/selection/",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-sel",
+          "locator": "Selection Process page, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, Johnson Scholars Award, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/aid_basis",
+          "source_ref": "s-about",
+          "locator": "About the Program/Award page, The Award",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/need_role",
+          "source_ref": "s-about",
+          "locator": "About the Program/Award page, The Award",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/coverage",
+          "source_ref": "s-about",
+          "locator": "About the Program/Award page, The Award",
+          "value_status": "conflicting"
+        },
+        {
+          "field_path": "offers/0/benefits/0/coverage",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, Johnson Scholars Award list, Awards bullet",
+          "value_status": "conflicting"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-about",
+          "locator": "About page: no dollar amount for tuition",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/1",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, Johnson Scholars Award list, Awards bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/conditions_text",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, Johnson Scholars Award, last paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-merit",
+          "locator": "Merit page: no dollar amount for room",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/2",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, Johnson Scholars Award list, Awards bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2/conditions_text",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, Johnson Scholars Award, last paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2/amount",
+          "source_ref": "s-merit",
+          "locator": "Merit page: no dollar amount for board",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/3",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, Johnson Scholars Award list, Awards bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/3/conditions_text",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, Johnson Scholars Award, last paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/3/amount",
+          "source_ref": "s-merit",
+          "locator": "Merit page: no dollar amount for books",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/4",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, Johnson Scholars Award list, Awards bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/4/conditions_text",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, Johnson Scholars Award list, Awards bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/4/amount",
+          "source_ref": "s-merit",
+          "locator": "Merit page: no dollar amount for the summer stipend",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/5/amount",
+          "source_ref": "s-about",
+          "locator": "About page, Creative Leadership and Research Opportunities",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/honors_requirement",
+          "source_ref": "s-sel",
+          "locator": "Selection Process page, last sentences",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, Johnson Scholars Award, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/0",
+          "source_ref": "s-dl",
+          "locator": "Key Deadlines page, Early Decision I list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/1",
+          "source_ref": "s-dl",
+          "locator": "Key Deadlines page, Early Action list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/2",
+          "source_ref": "s-sel",
+          "locator": "Selection Process page, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-req",
+          "locator": "Program Requirements page, Academic Requirements",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, Johnson Scholars Award list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "award_counts/0",
+          "source_ref": "s-sel",
+          "locator": "Selection Process page, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-sel",
+          "locator": "Selection Process page: no entering class named",
+          "value_status": "not_published"
+        }
+      ]
+    },
+    {
+      "program_id": "scu-presidential-at-entry-scholarship",
+      "school_id": "santa-clara-university",
+      "ipeds_id": "122931",
+      "participating_school_ids": [
+        "santa-clara-university"
+      ],
+      "official_name": "SCU Presidential at Entry Scholarship",
+      "aliases": [
+        "Presidential at Entry Scholarship"
+      ],
+      "program_family": "presidential",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "presidential-at-entry-undated",
+      "entry_year": null,
+      "entry_year_label": "The page names no entering class",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": null,
+      "verification_status": "verified",
+      "cycle_basis": "none",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b6",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "full_tuition"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "any"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "not_required",
+      "deadline_months": [],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "any",
+          "selection_mode": "competitive",
+          "consideration_route": "admission_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "First-year applicants only. The page defines the award as for students who demonstrate qualities the president identifies as critical to the University's mission. It says 'Not reserved for Gap Year students' and does not say whether international students are eligible (that line appears only under the Dean's Scholarship)."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Renewable for 12 consecutive academic quarters",
+              "exclusions": null,
+              "scope_text": "School words: 'Full tuition'; the page also says the award is indexed to tuition increases",
+              "advertised_coverage_label": "Full tuition",
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "full_tuition"
+        }
+      ],
+      "application": {
+        "separate_application": "not_required",
+        "milestones": [],
+        "admission_plan_requirement": "Admission application; the page says merit awards are reviewed at the time of admission",
+        "prerequisites": [],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "No scholarship deadline is published; consideration comes with the admission application. SCU's key-deadlines page lists Early Action and Early Decision dates but does not tie scholarship consideration to a round for this award."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": 3.5,
+          "gpa_scale": 4.0,
+          "credit_load_min_per_term": null,
+          "credit_load_min_per_year": null,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": null,
+          "notes": "Renewable for 12 consecutive academic quarters (the school counts in quarters, so max_semesters is left empty). Must meet satisfactory academic progress, maintain a 3.5 cumulative GPA, and enroll full time. If degree requirements are completed early, adjustments are made to the award."
+        }
+      ],
+      "stacking_rules": [
+        {
+          "other_aid_type": "other",
+          "relation": "counts_within_package",
+          "note": "The page says only that the award is 'Coordinated with federal, state and other University aid'; it gives no detail."
+        }
+      ],
+      "award_counts": [],
+      "sources": [
+        {
+          "source_id": "s-merit",
+          "url": "https://www.scu.edu/financialaid/types-of-aid/scholarships-and-grants/merit-scholarships/",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, SCU Presidential at Entry Scholarship list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, intro paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, SCU Presidential at Entry Scholarship list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, Presidential at Entry list: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, intro paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page: no scholarship deadline; consideration comes with the admission application",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, Presidential at Entry list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page, Presidential at Entry list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "award_counts",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page: no award count for this scholarship",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships page: no entering class named",
+          "value_status": "not_published"
         }
       ]
     },
@@ -20876,6 +22446,503 @@
       ]
     },
     {
+      "program_id": "unm-regents-scholarship",
+      "school_id": "university-of-new-mexico-main-campus",
+      "ipeds_id": "187985",
+      "participating_school_ids": [
+        "university-of-new-mexico-main-campus"
+      ],
+      "official_name": "Regents' Scholarship",
+      "aliases": [
+        "UNM Regents Scholarship"
+      ],
+      "program_family": "other",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "regents-2027",
+      "entry_year": 2027,
+      "entry_year_label": "Page heading: 'Freshman New Mexico Resident Scholarships 2027-28' (and the non-resident equivalent)",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": "Heading '2027-28' on both the resident and non-resident tables",
+      "verification_status": "verified",
+      "cycle_basis": "entry_year",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b6",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "other"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "in_state",
+        "out_of_state"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "required",
+      "deadline_months": [
+        12
+      ],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-resident",
+          "parent_offer_id": null,
+          "variant_name": "Regents' Scholarship (New Mexico resident)",
+          "residency": "in_state",
+          "selection_mode": "competitive",
+          "consideration_route": "separate_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": true,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": {
+              "min": 3.9,
+              "scale": null,
+              "basis": "unweighted"
+            },
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Also GED scaled score of 175 or higher. The page says scholarships consider unweighted cumulative GPA, and are 'limited and selective'."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Renewable for 4 years",
+              "exclusions": null,
+              "scope_text": "'Base tuition', part of an approximately $15,500 per year award that also covers fees and housing",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-fees",
+              "category": "mandatory_fees",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Renewable for 4 years",
+              "exclusions": null,
+              "scope_text": "Part of the approximately $15,500 per year award; the page does not say which fees",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-housing",
+              "category": "housing",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Renewable for 4 years",
+              "exclusions": null,
+              "scope_text": "Part of the approximately $15,500 per year award; freshmen must live in the Scholars Wing in Hokona Hall to renew",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [
+            {
+              "amount": {
+                "qualifier": "approximate",
+                "value": 15500,
+                "min": null,
+                "max": null,
+                "period": "academic_year"
+              },
+              "scope_text": "'Approximately $15,500 per year — covers base tuition, fees, and housing' (resident table)"
+            }
+          ],
+          "normalized_coverage": "other"
+        },
+        {
+          "offer_id": "o-nonresident",
+          "parent_offer_id": null,
+          "variant_name": "Regents' Scholarship (non-resident)",
+          "residency": "out_of_state",
+          "selection_mode": "competitive",
+          "consideration_route": "separate_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": true,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": {
+              "min": 3.9,
+              "scale": null,
+              "basis": "unweighted"
+            },
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Also GED scaled score of 175 or higher."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Renewable for 4 years",
+              "exclusions": null,
+              "scope_text": "'Base tuition', part of an approximately $24,000 per year award that also covers fees and housing",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-fees",
+              "category": "mandatory_fees",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Renewable for 4 years",
+              "exclusions": null,
+              "scope_text": "Part of the approximately $24,000 per year award; the page does not say which fees",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-housing",
+              "category": "housing",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Renewable for 4 years",
+              "exclusions": null,
+              "scope_text": "Part of the approximately $24,000 per year award; freshmen must live in the Scholars Wing in Hokona Hall to renew",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-waiver",
+              "category": "nonresident_differential",
+              "instrument": "tuition_waiver",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Renewable for 4 years",
+              "exclusions": null,
+              "scope_text": "Tuition waiver that adjusts non-resident tuition to the New Mexico resident rate; the page does not say whether the $24,000 figure includes it",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [
+            {
+              "amount": {
+                "qualifier": "approximate",
+                "value": 24000,
+                "min": null,
+                "max": null,
+                "period": "academic_year"
+              },
+              "scope_text": "'Approximately $24,000 per year — covers base tuition, fees and housing' (non-resident table)"
+            }
+          ],
+          "normalized_coverage": "other"
+        }
+      ],
+      "application": {
+        "separate_application": "required",
+        "milestones": [
+          {
+            "kind": "application_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 12,
+              "day": 1
+            },
+            "precision": "day",
+            "source_date_text": "Complete Admissions Application and Scholarship Application by December 1"
+          }
+        ],
+        "admission_plan_requirement": "Admission application and the Regents' scholarship application, both by December 1",
+        "prerequisites": [],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "The page gives no year for December 1; it is recorded as recurring. The page's header links offer separate 'Regents' Scholarship Application' and 'Presidential Scholarship Application' forms. Freshman Regents' Scholars must live in the Scholars Wing in Hokona Hall to renew."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": 3.3,
+          "gpa_scale": null,
+          "credit_load_min_per_term": 15,
+          "credit_load_min_per_year": null,
+          "evaluation_timing": "Each semester (fall and spring)",
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": null,
+          "notes": "Renewable for 4 years. Freshmen: complete 15 new credit hours with a 3.3 GPA each semester and live in the Scholars Wing in Hokona Hall. Sophomores and above: 15 new credit hours with a 3.3 GPA each semester."
+        }
+      ],
+      "stacking_rules": [
+        {
+          "other_aid_type": "other",
+          "relation": "allowed",
+          "note": "The table header says the resident institutional scholarships can be combined with the NM Legislative Lottery and Opportunity Scholarship; the non-resident table says nothing about combining."
+        }
+      ],
+      "award_counts": [],
+      "sources": [
+        {
+          "source_id": "s-sch",
+          "url": "https://scholarship.unm.edu/",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-sch",
+          "locator": "Freshman New Mexico Resident Scholarships 2027-28, Regents' Scholarship row, Amount column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-sch",
+          "locator": "Freshman New Mexico Resident Scholarships 2027-28, Regents' Scholarship row, Application Deadlines column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/funds_limited",
+          "source_ref": "s-sch",
+          "locator": "Freshman New Mexico Resident Scholarships 2027-28, intro paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-sch",
+          "locator": "Resident table, Regents' Scholarship row, Amount column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1",
+          "source_ref": "s-sch",
+          "locator": "Resident table, Regents' Scholarship row, Amount column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2",
+          "source_ref": "s-sch",
+          "locator": "Resident table, Regents' Scholarship row, Amount column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-sch",
+          "locator": "Resident table: one bundled amount, no per-component amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-sch",
+          "locator": "Resident table: one bundled amount, no per-component amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/2/amount",
+          "source_ref": "s-sch",
+          "locator": "Resident table: one bundled amount, no per-component amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/advertised_totals/0/amount",
+          "source_ref": "s-sch",
+          "locator": "Resident table, Regents' Scholarship row, Amount column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/gpa",
+          "source_ref": "s-sch",
+          "locator": "Resident table, Regents' Scholarship row, Criteria for Consideration column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/selection_mode",
+          "source_ref": "s-sch",
+          "locator": "Freshman Non-Resident Scholarships 2027-28, Regents' Scholarship row, Amount column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/consideration_route",
+          "source_ref": "s-sch",
+          "locator": "Freshman Non-Resident Scholarships 2027-28, Regents' Scholarship row, Application Deadlines column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/funds_limited",
+          "source_ref": "s-sch",
+          "locator": "Freshman Non-Resident Scholarships 2027-28, intro paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/benefits/0",
+          "source_ref": "s-sch",
+          "locator": "Non-resident table, Regents' Scholarship row, Amount column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/benefits/1",
+          "source_ref": "s-sch",
+          "locator": "Non-resident table, Regents' Scholarship row, Amount column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/benefits/2",
+          "source_ref": "s-sch",
+          "locator": "Non-resident table, Regents' Scholarship row, Amount column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/benefits/0/amount",
+          "source_ref": "s-sch",
+          "locator": "Non-resident table: one bundled amount, no per-component amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/1/benefits/1/amount",
+          "source_ref": "s-sch",
+          "locator": "Non-resident table: one bundled amount, no per-component amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/1/benefits/2/amount",
+          "source_ref": "s-sch",
+          "locator": "Non-resident table: one bundled amount, no per-component amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/1/benefits/3",
+          "source_ref": "s-sch",
+          "locator": "Non-resident table, Regents' Scholarship row, Amount column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/benefits/3/amount",
+          "source_ref": "s-sch",
+          "locator": "Non-resident table: no dollar value for the waiver",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/1/advertised_totals/0/amount",
+          "source_ref": "s-sch",
+          "locator": "Non-resident table, Regents' Scholarship row, Amount column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/eligibility/gpa",
+          "source_ref": "s-sch",
+          "locator": "Non-resident table, Regents' Scholarship row, Criteria for Consideration column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-sch",
+          "locator": "Resident table, Regents' Scholarship row, Application Deadlines column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/0",
+          "source_ref": "s-sch",
+          "locator": "Resident and non-resident tables, Regents' Scholarship row, Application Deadlines column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-sch",
+          "locator": "Resident table, Regents' Scholarship row, Maintaining Your Scholarship column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-sch",
+          "locator": "Resident table, Institutional Scholarships header row",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-sch",
+          "locator": "Resident section heading",
+          "value_status": "reported"
+        }
+      ]
+    },
+    {
       "program_id": "levine-scholars",
       "school_id": "university-of-north-carolina-at-charlotte",
       "ipeds_id": "199139",
@@ -21761,6 +23828,633 @@
           "source_ref": "s-sch",
           "locator": "Scholarships page, note under the Non-Resident Freshman Scholarships table",
           "value_status": "reported"
+        }
+      ]
+    },
+    {
+      "program_id": "uo-stamps-scholarship",
+      "school_id": "university-of-oregon",
+      "ipeds_id": "209551",
+      "participating_school_ids": [
+        "university-of-oregon"
+      ],
+      "official_name": "Stamps Scholarship",
+      "aliases": [
+        "UO Stamps Scholarship",
+        "Stamps Scholars"
+      ],
+      "program_family": "stamps",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "stamps-undated",
+      "entry_year": null,
+      "entry_year_label": "Page says 'this 2026-2027 scholarship' and names no entering class; the label appears to be left over from the prior cycle",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": null,
+      "verification_status": "verified",
+      "cycle_basis": "none",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b6",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "full_tuition_fees",
+        "tuition_housing_meals"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "in_state",
+        "out_of_state"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "required",
+      "deadline_months": [
+        11
+      ],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-resident",
+          "parent_offer_id": null,
+          "variant_name": "Oregon resident",
+          "residency": "in_state",
+          "selection_mode": "competitive",
+          "consideration_route": "separate_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": {
+              "min": 3.85,
+              "scale": 4.0,
+              "basis": "unknown"
+            },
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": "Incoming domestic first-year student",
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Incoming domestic first-year students. The page says scholars are guaranteed admission to the Robert D. Clark Honors College. Selection criteria: academic preparation, activities and talents, leadership, innovation and perseverance, volunteer service, work experience, and four short-answer essay questions."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Four years",
+              "exclusions": null,
+              "scope_text": "School words: 'full UO tuition'",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-fees",
+              "category": "mandatory_fees",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Four years",
+              "exclusions": null,
+              "scope_text": "Listed after 'full' in 'full UO tuition, fees, food, and housing'; the page gives no cap",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-meals",
+              "category": "meals",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Four years",
+              "exclusions": null,
+              "scope_text": "'Food', listed after 'full' in 'full UO tuition, fees, food, and housing'; the page gives no cap",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-housing",
+              "category": "housing",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Four years",
+              "exclusions": null,
+              "scope_text": "Listed after 'full' in 'full UO tuition, fees, food, and housing'; the page gives no cap",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-enrich",
+              "category": "enrichment",
+              "instrument": "restricted_fund",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "up_to",
+                "value": 12000,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "'Up to $12,000 in enrichment funds for study abroad, unpaid internships, or other experiences'; the page gives no period",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [
+            {
+              "amount": {
+                "qualifier": "approximate",
+                "value": 125000,
+                "min": null,
+                "max": null,
+                "period": "total_program"
+              },
+              "scope_text": "School words: 'approximately $125,000 for Oregon residents' over four years"
+            }
+          ],
+          "normalized_coverage": "tuition_housing_meals"
+        },
+        {
+          "offer_id": "o-nonresident",
+          "parent_offer_id": null,
+          "variant_name": "Out-of-state",
+          "residency": "out_of_state",
+          "selection_mode": "competitive",
+          "consideration_route": "separate_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": {
+              "min": 3.85,
+              "scale": 4.0,
+              "basis": "unknown"
+            },
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": "Incoming domestic first-year student",
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Incoming domestic first-year students. The page says scholars are guaranteed admission to the Robert D. Clark Honors College. Selection criteria: academic preparation, activities and talents, leadership, innovation and perseverance, volunteer service, work experience, and four short-answer essay questions."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Four years",
+              "exclusions": null,
+              "scope_text": "School words: 'nonresident tuition and fees'",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-fees",
+              "category": "mandatory_fees",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Four years",
+              "exclusions": null,
+              "scope_text": "School words: 'nonresident tuition and fees'",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-enrich",
+              "category": "enrichment",
+              "instrument": "restricted_fund",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "up_to",
+                "value": 12000,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "'Up to $12,000 in enrichment funds for study abroad, unpaid internships, or other experiences'; the page gives no period",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [
+            {
+              "amount": {
+                "qualifier": "approximate",
+                "value": 185000,
+                "min": null,
+                "max": null,
+                "period": "total_program"
+              },
+              "scope_text": "School words: '$185,000 for nonresidents' over four years"
+            }
+          ],
+          "normalized_coverage": "full_tuition_fees"
+        }
+      ],
+      "application": {
+        "separate_application": "required",
+        "milestones": [
+          {
+            "kind": "admission_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 11,
+              "day": 1
+            },
+            "precision": "day",
+            "source_date_text": "Apply for admission to the University of Oregon by November 1, as an early action applicant."
+          },
+          {
+            "kind": "application_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 11,
+              "day": 15
+            },
+            "precision": "day",
+            "source_date_text": "Complete the Stamps Scholarship Application within the UO Scholarship Dashboard by November 15."
+          },
+          {
+            "kind": "supporting_materials_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 11,
+              "day": 15
+            },
+            "precision": "day",
+            "source_date_text": "Submit all required admission application materials to the Office of Admissions by November 15."
+          },
+          {
+            "kind": "interview",
+            "requirement": "invitation_only",
+            "date": null,
+            "recurring": {
+              "month": 2,
+              "day": 1
+            },
+            "precision": "approximate",
+            "source_date_text": "in late January/early February"
+          },
+          {
+            "kind": "notification",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 3,
+              "day": 15
+            },
+            "precision": "day",
+            "source_date_text": "Recipients of Stamps Scholarships will be notified by March 15."
+          }
+        ],
+        "admission_plan_requirement": "Early action admission application by November 1",
+        "prerequisites": [
+          {
+            "kind": "admission_application",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "A few days after applying for admission the UO student ID appears in the Status Profile and is needed to create a UO Scholarship Dashboard account."
+          }
+        ],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "The page gives no year for these dates and calls this 'the 2026-2027 scholarship'; that label appears to be left over from the prior cycle, and the undated Nov 1 / Nov 15 deadlines are recorded as recurring. The first-year scholarships page shows the same Stamps due date (November 15). The page says the semifinalist interview is on the University of Oregon campus; the finalist interview by the Stamps Scholars Program has no stated format, so interview_mode is unknown. The interview date is approximate: the page says only 'late January/early February', recorded here as February 1 with approximate precision. The scholarship is awarded in partnership with the Stamps Scholars Program."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": 3.25,
+          "gpa_scale": null,
+          "credit_load_min_per_term": 12,
+          "credit_load_min_per_year": 36,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": null,
+          "notes": "Cumulative 3.25 UO GPA and 12 UO credits per term (36 per year). Renewed annually for up to 12 terms of undergraduate study over five years, excluding summer; the school counts terms, so max_semesters is left empty."
+        }
+      ],
+      "stacking_rules": [
+        {
+          "other_aid_type": "institutional_merit",
+          "relation": "not_allowed",
+          "note": "The page says the scholarship 'may not be combined with most other scholarships from the University of Oregon, including, but not limited to, the Presidential Scholarship'."
+        }
+      ],
+      "award_counts": [
+        {
+          "metric": "new_recipients",
+          "qualifier": "approximate",
+          "value": 20,
+          "cohort_year": null,
+          "source_ref": "s-stamps",
+          "claim": "target",
+          "denominator": null
+        }
+      ],
+      "sources": [
+        {
+          "source_id": "s-first",
+          "url": "https://financialaid.uoregon.edu/scholarships_first_year",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-stamps",
+          "url": "https://financialaid.uoregon.edu/stamps_scholarship",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, intro paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, How to Apply",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Award Information",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/gpa",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Eligibility Requirements",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/advertised_totals/0/amount",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Award Information",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/selection_mode",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, intro paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/consideration_route",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, How to Apply",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/benefits/0",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Award Information",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/eligibility/gpa",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Eligibility Requirements",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/advertised_totals/0/amount",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Award Information",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-stamps",
+          "locator": "Award Information: no dollar amount per year",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/1",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Award Information",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-stamps",
+          "locator": "Award Information: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/2",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Award Information",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2/amount",
+          "source_ref": "s-stamps",
+          "locator": "Award Information: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/3",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Award Information",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/3/amount",
+          "source_ref": "s-stamps",
+          "locator": "Award Information: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/4",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Award Information",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/4/amount",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Award Information",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/benefits/0/amount",
+          "source_ref": "s-stamps",
+          "locator": "Award Information: no dollar amount per year",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/1/benefits/1",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Award Information",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/benefits/1/amount",
+          "source_ref": "s-stamps",
+          "locator": "Award Information: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/1/benefits/2",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Award Information",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/benefits/2/amount",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Award Information",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, How to Apply",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/0",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, How to Apply, first step",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/1",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, How to Apply, third step",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/1",
+          "source_ref": "s-first",
+          "locator": "First-Year Student Scholarships table, Stamps row (resident and non-resident)",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/2",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, How to Apply, fourth step",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/3",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Selection Criteria",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/4",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Award Notification",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/interview_mode",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Selection Criteria: semifinalists interviewed on campus, finalists by the Stamps Scholars Program; no single format stated",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Scholarship Renewal",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, Award Information",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "award_counts/0",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, intro paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-stamps",
+          "locator": "Stamps Scholarship, How to Apply",
+          "value_status": "not_published"
         }
       ]
     },
@@ -28231,6 +30925,419 @@
           "source_ref": "s-wl",
           "locator": "Johnson Scholarship page, intro",
           "value_status": "reported"
+        }
+      ]
+    },
+    {
+      "program_id": "distinguished-regents-scholars",
+      "school_id": "washington-state-university",
+      "ipeds_id": "236939",
+      "participating_school_ids": [
+        "washington-state-university"
+      ],
+      "official_name": "Distinguished Regents Scholar Award",
+      "aliases": [
+        "Regents Scholars Program",
+        "Regents Scholar"
+      ],
+      "program_family": "other",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [
+        "Pullman"
+      ],
+      "related_programs": [],
+      "version_id": "distinguished-regents-fall-2027",
+      "entry_year": 2027,
+      "entry_year_label": "Fall 2027 and after",
+      "entry_terms": [
+        "fall"
+      ],
+      "source_cohort_text": "Main page: 'resident first-year students enrolling Fall 2027 or later'; terms page '2027-28'",
+      "verification_status": "verified",
+      "cycle_basis": "entry_year",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b6",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "partial_or_fixed"
+      ],
+      "selection_modes": [
+        "automatic_guaranteed",
+        "competitive"
+      ],
+      "residencies": [
+        "in_state"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "required",
+      "deadline_months": [
+        10,
+        12
+      ],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-distinguished",
+          "parent_offer_id": null,
+          "variant_name": "Distinguished Regents Scholar",
+          "residency": "in_state",
+          "selection_mode": "competitive",
+          "consideration_route": "nomination",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Washington high schools nominate two students each. The terms page also says: 'Students with a 3.8 minimum high school GPA must enroll full-time at the WSU Pullman campus in fall semester and be a Washington State resident to receive their Regents award.' It does not say whether 3.8 is an entry minimum, so no GPA minimum is recorded. Selection looks at academic achievement, community involvement and an academic reference."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Four years",
+              "exclusions": null,
+              "scope_text": "Full tuition for up to 18 credits per semester, per the terms page; Pullman campus",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-fees",
+              "category": "mandatory_fees",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Four years",
+              "exclusions": null,
+              "scope_text": "Mandatory fees for up to 18 credits per semester, per the terms page; Pullman campus",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "partial_or_fixed"
+        },
+        {
+          "offer_id": "o-regents",
+          "parent_offer_id": null,
+          "variant_name": "Regents Scholar",
+          "residency": "in_state",
+          "selection_mode": "automatic_guaranteed",
+          "consideration_route": "nomination",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Nominees must complete the admission and scholarship application process by the deadline. Same Pullman-campus, full-time, Washington-resident conditions as the page's 3.8 GPA sentence. Students must enroll for at least 12 credits each semester. Not eligible: students previously enrolled at WSU (other than through Running Start) and transfer students (2027-28 terms page)."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-award",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "fixed_amount",
+              "amount": {
+                "qualifier": "exact",
+                "value": 4000,
+                "min": null,
+                "max": null,
+                "period": "academic_year"
+              },
+              "duration_terms": "Four years",
+              "exclusions": null,
+              "scope_text": "$4,000 per academic year, credited against tuition charges; half applies to fall and half to spring (2027-28 terms page)",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "partial_or_fixed"
+        }
+      ],
+      "application": {
+        "separate_application": "required",
+        "milestones": [
+          {
+            "kind": "application_open",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 10,
+              "day": 1
+            },
+            "precision": "day",
+            "source_date_text": "October 1: Nominations open"
+          },
+          {
+            "kind": "nomination_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 10,
+              "day": 31
+            },
+            "precision": "day",
+            "source_date_text": "October 31: Counselor nomination deadline"
+          },
+          {
+            "kind": "application_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 12,
+              "day": 1
+            },
+            "precision": "day",
+            "source_date_text": "December 1: Student application deadline"
+          },
+          {
+            "kind": "notification",
+            "requirement": "recommended",
+            "date": null,
+            "recurring": {
+              "month": 1,
+              "day": 15
+            },
+            "precision": "approximate",
+            "source_date_text": "Mid-January: Award winners notified"
+          }
+        ],
+        "admission_plan_requirement": "Admission application to WSU, plus a high-school nomination",
+        "prerequisites": [],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "The pages give no year for these dates; the main page's award list is for students enrolling Fall 2027 or later, so they are recorded as recurring month/day. The 2026-27 winners page shows the same dates are used each cycle."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": null,
+          "gpa_scale": null,
+          "credit_load_min_per_term": null,
+          "credit_load_min_per_year": 24,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": null,
+          "notes": "Continuous fall and spring enrollment on the Pullman campus, at least 24 graded credits each year, and an undergraduate (non-professional) program of study (Regents Scholars Program block). The separate Regents Scholars Award block adds: good academic standing by the end of spring semester, and 12 credits each semester on the Pullman campus; renewable for a maximum of four years. The two blocks overlap and are both recorded."
+        }
+      ],
+      "stacking_rules": [
+        {
+          "other_aid_type": "institutional_merit",
+          "relation": "not_allowed",
+          "note": "The Regents Scholars Award cannot be combined with either level of the University Achievement Award or the National Merit Scholarship (2027-28 terms page, Regents Scholars Award block)."
+        },
+        {
+          "other_aid_type": "institutional_need",
+          "relation": "counts_within_package",
+          "note": "The terms page says the award is included in the determination of financial aid eligibility."
+        }
+      ],
+      "award_counts": [
+        {
+          "metric": "new_recipients",
+          "qualifier": "approximate",
+          "value": 10,
+          "cohort_year": null,
+          "source_ref": "s-terms",
+          "claim": "target",
+          "denominator": null
+        }
+      ],
+      "sources": [
+        {
+          "source_id": "s-main",
+          "url": "https://financialaid.wsu.edu/washington-state-scholarships/",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-terms",
+          "url": "https://financialaid.wsu.edu/scholarship-terms-conditions/",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-win",
+          "url": "https://financialaid.wsu.edu/wsu-regents-scholarship-winners/",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-terms",
+          "locator": "Terms page, 2027-28, Regents Scholars Program, intro paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-main",
+          "locator": "Main page, Regents Scholars, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-terms",
+          "locator": "Terms page, 2027-28, Regents Scholars Program, Award Levels",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1",
+          "source_ref": "s-terms",
+          "locator": "Terms page, 2027-28, Regents Scholars Program, Award Levels",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-terms",
+          "locator": "Terms page, Regents Scholars Program, Award Levels: no dollar amount for the Distinguished level",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-terms",
+          "locator": "Terms page, Regents Scholars Program, Award Levels: no dollar amount for the Distinguished level",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/1/selection_mode",
+          "source_ref": "s-terms",
+          "locator": "Terms page, 2027-28, Regents Scholars Program, Award Levels, Regents Scholar bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/consideration_route",
+          "source_ref": "s-main",
+          "locator": "Main page, Regents Scholars, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/benefits/0",
+          "source_ref": "s-terms",
+          "locator": "Terms page, 2027-28 tab, Regents Scholars Award block",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/benefits/0/amount",
+          "source_ref": "s-terms",
+          "locator": "Terms page, 2027-28, Regents Scholars Program, Award Levels, Regents Scholar bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-terms",
+          "locator": "Terms page, Distinguished Award Criteria, second bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/0",
+          "source_ref": "s-terms",
+          "locator": "Terms page, Regents Scholars Program, Deadlines list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/1",
+          "source_ref": "s-terms",
+          "locator": "Terms page, Regents Scholars Program, Deadlines list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/2",
+          "source_ref": "s-terms",
+          "locator": "Terms page, Regents Scholars Program, Deadlines list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/3",
+          "source_ref": "s-terms",
+          "locator": "Terms page, Regents Scholars Program, Deadlines list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-terms",
+          "locator": "Terms page, Regents Scholars Program, Renewal Requirements",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-terms",
+          "locator": "Terms page, 2027-28 tab, Regents Scholars Award block",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/1",
+          "source_ref": "s-terms",
+          "locator": "Terms page, 2027-28 tab, Regents Scholars Award block",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "award_counts/0",
+          "source_ref": "s-terms",
+          "locator": "Terms page, Regents Scholars Program, Award Levels",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-main",
+          "locator": "Main page, intro to the award list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "program_status_for_entry",
+          "source_ref": "s-main",
+          "locator": "Main page, Regents Scholars block lists current deadlines",
+          "value_status": "not_published"
         }
       ]
     },
