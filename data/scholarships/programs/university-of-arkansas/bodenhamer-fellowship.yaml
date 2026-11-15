@@ -1,0 +1,250 @@
+schema_version: 1
+program_id: bodenhamer-fellowship
+school_id: university-of-arkansas
+ipeds_id: '106397'
+applicable_campuses: []
+official_name: Bodenhamer Fellowship
+aliases:
+- Bodenhamer Fellow
+program_family: honors
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: bodenhamer-fellowship-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Catalog is the 2026-27 edition and a scholarships page cites the Fall 2026/Spring
+    2027 cycle; neither names the fellowships' entering class
+  entry_terms:
+  - unspecified
+  source_cohort_text: Catalog (2026-27 Edition) lists the fellowship with recurring November 15 and February
+    1 deadlines
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b3
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.9
+        scale: null
+        basis: recalculated_by_school
+      test_rules:
+      - exam: ACT composite
+        min: 32
+        scoring: single_sitting
+        official_required: null
+      - exam: SAT
+        min: 1430
+        scoring: single_sitting
+        official_required: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Minimums are 32 ACT / 1430 SAT and a 3.90 GPA; the Academic Scholarship Office
+        recalculates GPAs to a standard 4-point scale (one extra point for AP, IB and dual-credit courses).
+        The catalog says the university offers about 90 endowed fellowships a year across four programs
+        (Honors College, Bodenhamer, Sturgis, Boyer) to the top 1-2 percent of students; that is not a
+        count for this program.
+    benefits:
+    - benefit_id: b-fellowship
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 20000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Renewable for 4 years or 8 semesters total
+      exclusions: null
+      scope_text: Annual award. For programs with degree plans longer than 4 years, extra semester(s)
+        of funding may be available (catalog)
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: required
+    milestones:
+    - kind: admission_deadline
+      requirement: priority
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: November 1 (admission application, for the November 15 priority scholarship deadline)
+    - kind: application_deadline
+      requirement: priority
+      date: null
+      recurring:
+        month: 11
+        day: 15
+      precision: day
+      source_date_text: 'Priority Deadline: November 15 (Scholarship Priority Consideration Deadline)'
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 1
+        day: 15
+      precision: day
+      source_date_text: January 15 (admission application, for the February 1 final scholarship deadline)
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 2
+        day: 1
+      precision: day
+      source_date_text: 'Final Deadline: February 1 (all fellowship materials, including letters of recommendation)'
+    admission_plan_requirement: Apply for admission, then complete the fellowship application in the New
+      Student Center
+    prerequisites:
+    - kind: recommendation
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Letters of recommendation must be submitted by the February 1 final deadline to be considered
+        for fellowships
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: The pages name no year for these dates; the Academic Scholarship Office page says its priority
+      deadlines were updated for the Fall 2026/Spring 2027 cycle. No fellowship interview format or date
+      was found on the pages read. Fellowship scores are not superscored.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.0
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: Evaluated at the end of the second semester of each academic year
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: 'Catalog: ''Cumulative 3.00 GPA and 27 hours earned by the end of the second semester of each
+      academic year, and 30 hours earned in each subsequent academic year.'' Renewable for 4 years or
+      8 semesters total.'
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-cat
+    url: https://catalog.uark.edu/undergraduatecatalog/financialaidandscholarships/scholarshipsfornewstudents/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 3bb4df9a63de795cd9bed2ef860a41c5960ce918d0dbebcce8291554788f160c
+    archive_url: null
+  - source_id: s-guide
+    url: https://scholarships.uark.edu/guide-to-academic-freshman-scholarships/index.php
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: e383385e95eff9ccc232f2235ead0c80657a911ada0eb6325aaa97341a27cd94
+    archive_url: null
+  - source_id: s-home
+    url: https://scholarships.uark.edu/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 4fe5c977cd8ea0ca77c4234dc2df8182d55b1fb404f95c431b614e13fab3cb1f
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-cat
+    locator: Catalog, Endowed Fellowships, introduction
+    short_excerpt: U of A Fellowships are awarded competitively.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-cat
+    locator: Catalog, Scholarships for New Students table, Bodenhamer Fellowship row, Annual Award
+    short_excerpt: Bodenhamer Fellowship | $20,000 per year
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-cat
+    locator: Catalog table, Bodenhamer Fellowship row, Eligibility Criteria
+    short_excerpt: 32 ACT/ 1430 SAT and 3.90 GPA or higher
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/test_rules
+    source_ref: s-guide
+    locator: Guide, Freshman Scholarship Application Checklist, test scores step
+    short_excerpt: Superscores are calculated for scholarship consideration, but are not used for fellowship
+      consideration.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/eligibility_notes
+    source_ref: s-cat
+    locator: Catalog, Endowed Fellowships, introduction
+    short_excerpt: The endowed fellowships are among the most competitive in the nation and are awarded
+      to the top 1-2 percent of students.
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-cat
+    locator: Catalog table, Bodenhamer Fellowship row, Application Procedure
+    short_excerpt: Requires application for admission along with the Honors College Fellowship application
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-guide
+    locator: Guide, checklist, admission step
+    short_excerpt: submit their admissions application by November 1 to be considered for the November
+      15 priority scholarship deadline
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-cat
+    locator: Catalog table, Bodenhamer Fellowship row, Application Procedure
+    short_excerpt: 'Priority Deadline: November 15 (Scholarship Priority Consideration Deadline)'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-guide
+    locator: Guide, checklist, admission step
+    short_excerpt: and by January 15 for the February 1 final
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-guide
+    locator: Guide, checklist, admission step
+    short_excerpt: In order to be considered for fellowships, all application materials, including the
+      letters of recommendation, must be submitted by the February 1 final
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-cat
+    locator: Catalog table, Bodenhamer Fellowship row, Renewal Criteria
+    short_excerpt: Cumulative 3.00 GPA and 27 hours earned by the end of the second semester of each academic
+      year
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0/max_semesters
+    source_ref: s-cat
+    locator: Catalog table, Bodenhamer Fellowship row, Renewal Criteria
+    short_excerpt: Renewable for 4 years or 8 semesters total.
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-home
+    locator: 'Academic Scholarship Office page, deadlines: ''Fall 2026/Spring 2027 application cycle'';
+      the catalog is the ''2026-27 Edition''; neither names the fellowships'' entering class'
+    short_excerpt: Priority deadlines have been updated for the Fall 2026/Spring 2027 application cycle.
+    value_status: not_published
+    reported_value: null

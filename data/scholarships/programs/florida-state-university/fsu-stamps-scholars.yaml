@@ -1,0 +1,307 @@
+schema_version: 1
+program_id: fsu-stamps-scholars
+school_id: florida-state-university
+ipeds_id: '134097'
+applicable_campuses: []
+official_name: Stamps Scholars Program and Scholarship
+aliases:
+- FSU Stamps Scholars
+program_family: stamps
+awarding_authority: cofunded
+related_programs:
+- program_id: presidential-scholars
+  relation: component_of
+status: active
+versions:
+- version_id: fsu-stamps-scholars-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Pages name a Dec. 1, 2026 application deadline and 2027 interview dates but no entering
+    class
+  entry_terms:
+  - unspecified
+  source_cohort_text: 'Application Process page dates: Dec. 1, 2026; Feb. 18, 2027; April 2-3, 2027'
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b3
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: honors_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: true
+      first_generation_rule: unknown
+      eligibility_notes: Selected from among students admitted to the Presidential Scholars Program (and
+        so the Honors Program); first-year students. Stamps Scholars also take part in the Presidential
+        Scholars Program. The current-students renewal page is written for enrolled students; its coverage
+        wording and waiver value differ from the applicant pages.
+    benefits:
+    - benefit_id: b-coa
+      category: cost_of_attendance
+      instrument: scholarship
+      coverage: partial
+      amount: null
+      duration_terms: Up to four years
+      exclusions: null
+      scope_text: '''Funding valued up to the full estimated cost of attendance for up to four years''
+        (Stamps and admissions pages); an upper bound. The current-students renewal page words it ''covers
+        the full cost of attendance for four years'', which is not used here'
+      advertised_coverage_label: valued up to the full estimated cost of attendance
+      conditions_text: null
+    - benefit_id: b-enrichment
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 20000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'Enrichment funding for experiential learning: internships, international learning,
+        research, service learning, entrepreneurial development'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-waiver
+      category: nonresident_differential
+      instrument: tuition_waiver
+      coverage: full
+      amount: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'Out-of-state tuition waiver for non-Florida residents; a waiver, not a scholarship.
+        No applicant page prices the Stamps waiver: the renewal page''s Stamps row says $73,080 over four
+        years, and the admissions page''s Presidential section says $73,808'
+      advertised_coverage_label: null
+      conditions_text: Non-Florida residents
+    advertised_totals: []
+  application:
+    separate_application: required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: '2026-12-01'
+      recurring: null
+      precision: day
+      source_date_text: Dec. 1, 2026 (FSU application)
+    - kind: application_deadline
+      requirement: required
+      date: '2026-12-01'
+      recurring: null
+      precision: day
+      source_date_text: 11:59 p.m. EST on Dec. 1, 2026 (Honors/Presidential Scholars application essay)
+    - kind: notification
+      requirement: recommended
+      date: '2027-02-18'
+      recurring: null
+      precision: day
+      source_date_text: Feb. 18, 2027 (admission and Honors status; semi-finalists named)
+    - kind: supporting_materials_deadline
+      requirement: required
+      date: '2027-02-28'
+      recurring: null
+      precision: day
+      source_date_text: Feb. 28, 2027, 11:59 p.m. EST (semi-finalist video responses)
+    - kind: finalist_event
+      requirement: required
+      date: '2027-04-02'
+      recurring: null
+      precision: day
+      source_date_text: April 2-3, 2027 (Recruitment Weekend, required on-campus interview)
+    admission_plan_requirement: Apply to FSU by Dec. 1, 2026 and answer 'Yes' to the Honors Program interest
+      question
+    prerequisites: []
+    interview_mode: in_person
+    finalist_event_required: true
+    notes: There is no separate Stamps form, but the supplemental University Honors Program essay (due
+      Dec. 1, 2026) is mandatory and doubles as the Stamps essay; selection is part of the Presidential
+      Scholars process. Presidential Scholars nominated for Stamps interview with a member of the Stamps
+      Scholars Program national leadership team as the final step; no date or format is given.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.0
+    gpa_scale: null
+    credit_load_min_per_term: 15
+    credit_load_min_per_year: null
+    evaluation_timing: Reviewed each semester; the award renews automatically if the requirements are
+      met
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: Enrollment in 15 credit hours each semester, a 3.0 cumulative FSU GPA and consistent degree
+      progress, per the current-students renewal table.
+  stacking_rules: null
+  award_counts:
+  - metric: new_recipients
+    qualifier: exact
+    value: 5
+    cohort_year: null
+    source_ref: s-adm
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-adm
+    url: https://admissions.fsu.edu/first-year/scholarships
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: 15e087c1d723431b0b6c46c06a93154bc80cf66ab7544048a920bbabb6f1d3e2
+    archive_url: null
+  - source_id: s-stamps
+    url: https://presidentialscholars.fsu.edu/stamps-scholars-program
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: b96040fe5968f80b97e7f8f150fc8bd4f3ea078116a1e5181a469bfcb69ed08d
+    archive_url: null
+  - source_id: s-app
+    url: https://presidentialscholars.fsu.edu/application-process
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 83a49982f7087045011ee9367606930f55adf537498c2ae669602e1a44ea76fc
+    archive_url: null
+  - source_id: s-ren
+    url: https://admissions.fsu.edu/first-year/scholarships/current-students
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 21cb0aa601c58987cafa09304fa0388c648135275186c3088acd3f08d21d9661
+    archive_url: null
+  field_evidence:
+  - field_path: /awarding_authority
+    source_ref: s-stamps
+    locator: Stamps Scholars page, 'About the Stamps Scholars Program'
+    short_excerpt: The Stamps Scholars Program and partner schools like Florida State University share
+      the costs of these awards
+    value_status: reported
+    reported_value: null
+  - field_path: /related_programs/0
+    source_ref: s-app
+    locator: Application Process page, second paragraph
+    short_excerpt: Among those selected as Presidential Scholars, five students will also be named
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-adm
+    locator: Admissions Scholarships page, Stamps Scholars Program and Scholarship
+    short_excerpt: Students who apply to the University Honors Program are automatically considered for
+      this invitation-only scholarship program, which incorporates an interview process.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-stamps
+    locator: Stamps Scholars page, Benefits, first bullet
+    short_excerpt: Funding valued up to the full estimated cost of attendance for up to four years
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-stamps
+    locator: Stamps Scholars page, Benefits, second bullet
+    short_excerpt: $20,000 in dedicated enrichment funding
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/conditions_text
+    source_ref: s-stamps
+    locator: Stamps Scholars page, Benefits, first bullet
+    short_excerpt: including an out-of-state tuition waiver for non-Florida residents
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-adm
+    locator: Admissions Scholarships page, Presidential Scholars section (Stamps Scholars also join the
+      Presidential Scholars Program; the Stamps section itself gives no waiver value)
+    short_excerpt: plus an out-of-state tuition waiver valued at $73,808 distributed across four years
+    value_status: conflicting
+    reported_value: 73808
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-ren
+    locator: Current-students page, renewal table, Stamps row
+    short_excerpt: Out-of-state applicants will also receive a full out-of-state tuition waiver valued
+      at $73,080 over four years
+    value_status: conflicting
+    reported_value: 73080
+  - field_path: application/separate_application
+    source_ref: s-app
+    locator: Application Process page, note after step 1
+    short_excerpt: The application essay for the Presidential Scholars Program and Stamps Scholarship
+      is the same as the University Honors Program application essay.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-ren
+    locator: Current-students page, renewal table, Stamps row
+    short_excerpt: Maintenance of a cumulative FSU grade point average of 3.0 or better
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts/0
+    source_ref: s-adm
+    locator: Admissions Scholarships page, Stamps Scholars Program and Scholarship
+    short_excerpt: awarded annually to five incoming first-year students
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-app
+    locator: Application Process page, step 1
+    short_excerpt: first-year applicants must first submit an application to Florida State University
+      by Dec. 1, 2026
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-app
+    locator: Application Process page, step 2
+    short_excerpt: 11:59 p.m. EST on Dec. 1, 2026
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-app
+    locator: Application Process page, step 2
+    short_excerpt: Incoming prospective first-year students will be notified of their admission status
+      to FSU and to University Honors on Feb. 18, 2027.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-app
+    locator: Application Process page, step 3
+    short_excerpt: These are due Feb. 28, 2027, by 11:59 p.m. EST
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/4
+    source_ref: s-app
+    locator: Application Process page, step 4
+    short_excerpt: required on-campus interview during Recruitment Weekend, April 2-3, 2027
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-app
+    locator: Application Process page, step 4
+    short_excerpt: required on-campus interview during Recruitment Weekend
+    value_status: reported
+    reported_value: null
+  - field_path: application/finalist_event_required
+    source_ref: s-app
+    locator: Application Process page, step 4
+    short_excerpt: required on-campus interview during Recruitment Weekend
+    value_status: reported
+    reported_value: true
+  - field_path: entry_year
+    source_ref: s-app
+    locator: 'Application Process page, steps 1-4: dates in 2026 and 2027; no entering class named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

@@ -1,0 +1,809 @@
+schema_version: 1
+program_id: top-scholars
+school_id: university-of-south-carolina-columbia
+ipeds_id: '218663'
+applicable_campuses: []
+official_name: Top Scholars (Stamps, Carolina, 1801, McNair and Horseshoe Scholars Awards)
+aliases:
+- Stamps, Carolina and 1801 Scholars Awards
+- Stamps, McNair and Horseshoe Scholars Awards
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: top-scholars-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Pages call their figures last year's recipient averages and date only the Top Scholar
+    Weekend (Feb. 27 - March 1, 2027); no entering class is named
+  entry_terms:
+  - unspecified
+  source_cohort_text: Resident and nonresident scholarship pages; Carolina Elite application page
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b3
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: r-stamps
+    parent_offer_id: null
+    variant_name: Stamps Scholars Award (South Carolina resident)
+    residency: in_state
+    selection_mode: competitive
+    consideration_route: honors_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Five Stamps Scholars named each year. School-quoted four-year value is recorded
+        under advertised totals; it is not a sum of the components here. The page's SAT, ACT and GPA figures
+        are last year's recipient averages and 'should not be interpreted as minimum requirements or guarantees'.
+    benefits:
+    - benefit_id: b-award
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 20000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Four years (school quotes a four-year value)
+      exclusions: null
+      scope_text: Annual value as the school states it
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-enrichment
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 15000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Enrichment fund quoted with the four-year value
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: exact
+        value: 80000
+        min: null
+        max: null
+        period: total_program
+      scope_text: 'School-quoted four-year value for this award (Four-year value: $80,000 + $15,000 enrichment
+        fund); the enrichment fund, where quoted, is listed separately'
+  - offer_id: r-carolina
+    parent_offer_id: null
+    variant_name: Carolina Scholars Award (South Carolina resident)
+    residency: in_state
+    selection_mode: competitive
+    consideration_route: honors_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: 20 Carolina Scholars named each year. School-quoted four-year value is recorded
+        under advertised totals; it is not a sum of the components here. The page's SAT, ACT and GPA figures
+        are last year's recipient averages and 'should not be interpreted as minimum requirements or guarantees'.
+    benefits:
+    - benefit_id: b-award
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 15000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Four years (school quotes a four-year value)
+      exclusions: null
+      scope_text: Annual value as the school states it
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-enrichment
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 15000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Enrichment fund quoted with the four-year value
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: exact
+        value: 60000
+        min: null
+        max: null
+        period: total_program
+      scope_text: 'School-quoted four-year value for this award (Four-year value: $60,000 + $15,000 enrichment
+        fund); the enrichment fund, where quoted, is listed separately'
+  - offer_id: r-1801
+    parent_offer_id: null
+    variant_name: 1801 Scholars Award (South Carolina resident)
+    residency: in_state
+    selection_mode: competitive
+    consideration_route: honors_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: up to 25 1801 Scholars named each year. School-quoted four-year value is recorded
+        under advertised totals; it is not a sum of the components here. The page's SAT, ACT and GPA figures
+        are last year's recipient averages and 'should not be interpreted as minimum requirements or guarantees'.
+    benefits:
+    - benefit_id: b-award
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 10000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Four years (school quotes a four-year value)
+      exclusions: null
+      scope_text: Annual value as the school states it
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: exact
+        value: 40000
+        min: null
+        max: null
+        period: total_program
+      scope_text: 'School-quoted four-year value for this award (Four-year value: $40,000); the enrichment
+        fund, where quoted, is listed separately'
+  - offer_id: n-stamps
+    parent_offer_id: null
+    variant_name: Stamps Scholars Award (nonresident)
+    residency: out_of_state
+    selection_mode: competitive
+    consideration_route: honors_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Five Stamps Scholars named each year. School-quoted four-year value is recorded
+        under advertised totals; it is not a sum of the components here. The page's SAT, ACT and GPA figures
+        are last year's recipient averages and 'should not be interpreted as minimum requirements or guarantees'.
+    benefits:
+    - benefit_id: b-award
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: approximate
+        value: 25810
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Four years (school quotes a four-year value)
+      exclusions: null
+      scope_text: Annual value as the school states it
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-enrichment
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 15000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Enrichment fund quoted with the four-year value
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-waiver
+      category: nonresident_differential
+      instrument: tuition_waiver
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''Tuition reduction to in-state rate''; a reduction of the nonresident rate, not a
+        scholarship. No dollar value is given'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: approximate
+        value: 219000
+        min: null
+        max: null
+        period: total_program
+      scope_text: 'School-quoted four-year value for this award (Four-year value: approximately $219,000
+        + $15,000 enrichment fund); the enrichment fund, where quoted, is listed separately'
+  - offer_id: n-mcnair
+    parent_offer_id: null
+    variant_name: McNair Scholars Award (nonresident)
+    residency: out_of_state
+    selection_mode: competitive
+    consideration_route: honors_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: 20 McNair Scholars named each year. School-quoted four-year value is recorded
+        under advertised totals; it is not a sum of the components here. The page's SAT, ACT and GPA figures
+        are last year's recipient averages and 'should not be interpreted as minimum requirements or guarantees'.
+    benefits:
+    - benefit_id: b-award
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 24000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Four years (school quotes a four-year value)
+      exclusions: null
+      scope_text: Annual value as the school states it
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-enrichment
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 14000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Enrichment fund quoted with the four-year value
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-waiver
+      category: nonresident_differential
+      instrument: tuition_waiver
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''Tuition reduction to in-state rate''; a reduction of the nonresident rate, not a
+        scholarship. No dollar value is given'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: at_least
+        value: 199000
+        min: null
+        max: null
+        period: total_program
+      scope_text: 'School-quoted four-year value for this award (Four-year value: more than $199,000 +
+        $14,000 enrichment fund); the enrichment fund, where quoted, is listed separately'
+  - offer_id: n-horseshoe
+    parent_offer_id: null
+    variant_name: Horseshoe Scholars Award (nonresident)
+    residency: out_of_state
+    selection_mode: competitive
+    consideration_route: honors_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: up to 20 Horseshoe Scholars named each year. School-quoted four-year value is
+        recorded under advertised totals; it is not a sum of the components here. The page's SAT, ACT
+        and GPA figures are last year's recipient averages and 'should not be interpreted as minimum requirements
+        or guarantees'.
+    benefits:
+    - benefit_id: b-award
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 11000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Four years (school quotes a four-year value)
+      exclusions: null
+      scope_text: Annual value as the school states it
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-waiver
+      category: nonresident_differential
+      instrument: tuition_waiver
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''Tuition reduction to in-state rate''; a reduction of the nonresident rate, not a
+        scholarship. No dollar value is given'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: at_least
+        value: 147000
+        min: null
+        max: null
+        period: total_program
+      scope_text: 'School-quoted four-year value for this award (Four-year value: more than $147,000);
+        the enrichment fund, where quoted, is listed separately'
+  application:
+    separate_application: required
+    milestones:
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 15
+      precision: day
+      source_date_text: Nov. 15 (Honors College application, which also considers students for the Top
+        Scholar Program)
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 12
+        day: 1
+      precision: day
+      source_date_text: Dec. 1 (application credentials deadline)
+    - kind: interview
+      requirement: invitation_only
+      date: null
+      recurring:
+        month: 1
+        day: 1
+      precision: month
+      source_date_text: late January (virtual semifinalist interview)
+    - kind: other
+      requirement: recommended
+      date: null
+      recurring:
+        month: 2
+        day: 1
+      precision: month
+      source_date_text: by mid-February (Honors College admission notifications; not the Top Scholar award
+        notice)
+    - kind: finalist_event
+      requirement: invitation_only
+      date: '2027-02-27'
+      recurring: null
+      precision: day
+      source_date_text: February 27 - March 1, 2027 (in-person Top Scholar Weekend)
+    admission_plan_requirement: General university application plus the South Carolina Honors College
+      application
+    prerequisites: []
+    interview_mode: mixed
+    finalist_event_required: true
+    notes: The Honors College application also requires two additional essays and one letter of recommendation.
+      Semifinalists have a mandatory virtual interview; finalists attend an in-person Top Scholar Weekend.
+      The pages name no year for Nov. 15, Dec. 1 or the interview month; only the weekend is dated.
+  renewal_rules: null
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: not_allowed
+    note: 'Both pages footnote the top awards: they may not be combined with any other general university
+      merit-based scholarship from Undergraduate Admissions, except the Provost Scholars Award (the resident
+      page also excepts the Presidential Scholars Award and the USC STEM Supplement)'
+  - other_aid_type: institutional_merit
+    relation: allowed
+    note: Provost Scholars Award (National Merit Finalists) may be combined with any other university
+      merit-based scholarship
+  - other_aid_type: state_merit
+    relation: allowed
+    note: Resident awards may be paired with a South Carolina state lottery-funded scholarship; total
+      university aid cannot exceed the cost of attendance (scholarship FAQ)
+  award_counts:
+  - metric: offers
+    qualifier: exact
+    value: 50
+    cohort_year: null
+    source_ref: s-res
+    claim: target
+    denominator: null
+  - metric: offers
+    qualifier: exact
+    value: 45
+    cohort_year: null
+    source_ref: s-nr
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-nr
+    url: https://sc.edu/about/offices_and_divisions/undergraduate_admissions/tuition_scholarships/nonresidents/
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: c3a834c9cd0fde6dcc9f21001f3577d99c9322d06740e586f795ed0f49c3fec4
+    archive_url: null
+  - source_id: s-res
+    url: https://sc.edu/about/offices_and_divisions/undergraduate_admissions/tuition_scholarships/sc_residents/index.php
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: d5c439cb8339cfebe10fa791a06efbdb39794c3b90c456e3a62ad3c5ee63ac68
+    archive_url: null
+  - source_id: s-apply
+    url: https://sc.edu/about/offices_and_divisions/undergraduate_admissions/honors_and_scholars_programs/apply/index.php
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: 30ef2e0791421f8ebdcde2ecbd60de64e5b33e172a98c7ef050a8aa72704c817
+    archive_url: null
+  - source_id: s-faq
+    url: https://sc.edu/about/offices_and_divisions/undergraduate_admissions/tuition_scholarships/scholarship_faqs/index.php
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 371486ca6fed5be70e22a9332c714f17b1b06551d1a536c423366d6df21a467f
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-res
+    locator: S.C. residents page, Stamps, Carolina/McNair/Horseshoe and 1801 awards list
+    short_excerpt: 'Stamps Scholars Award annual value: $20,000'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-res
+    locator: Same list, four-year value line
+    short_excerpt: 'Four-year value: $80,000 + $15,000 enrichment fund'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/advertised_totals/0/amount
+    source_ref: s-res
+    locator: Same list, Four-year value line
+    short_excerpt: 'Four-year value: $80,000 + $15,000 enrichment fund'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-res
+    locator: Same section, paragraph after the list
+    short_excerpt: Candidates for these awards will be invited to participate in a mandatory interview
+      and an in-person Top Scholar Weekend.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-res
+    locator: S.C. residents page, Stamps, Carolina/McNair/Horseshoe and 1801 awards list
+    short_excerpt: 'Carolina Scholars Award annual value: $15,000'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/1/amount
+    source_ref: s-res
+    locator: Same list, four-year value line
+    short_excerpt: 'Four-year value: $60,000 + $15,000 enrichment fund'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/advertised_totals/0/amount
+    source_ref: s-res
+    locator: Same list, Four-year value line
+    short_excerpt: 'Four-year value: $60,000 + $15,000 enrichment fund'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/selection_mode
+    source_ref: s-res
+    locator: Same section, paragraph after the list
+    short_excerpt: Candidates for these awards will be invited to participate in a mandatory interview
+      and an in-person Top Scholar Weekend.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/benefits/0/amount
+    source_ref: s-res
+    locator: S.C. residents page, Stamps, Carolina/McNair/Horseshoe and 1801 awards list
+    short_excerpt: '1801 Scholars Award annual value: $10,000'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/advertised_totals/0/amount
+    source_ref: s-res
+    locator: Same list, Four-year value line
+    short_excerpt: 'Four-year value: $40,000'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/selection_mode
+    source_ref: s-res
+    locator: Same section, paragraph after the list
+    short_excerpt: Candidates for these awards will be invited to participate in a mandatory interview
+      and an in-person Top Scholar Weekend.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/3/benefits/0/amount
+    source_ref: s-nr
+    locator: Nonresident page, Stamps, Carolina/McNair/Horseshoe and 1801 awards list
+    short_excerpt: 'Stamps Scholars Award annual value: approximately $25,810 + tuition reduction to in-state
+      rate'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/3/benefits/1/amount
+    source_ref: s-nr
+    locator: Same list, four-year value line
+    short_excerpt: 'Four-year value: approximately $219,000 + $15,000 enrichment fund'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/3/benefits/2
+    source_ref: s-nr
+    locator: Nonresident page, annual value line
+    short_excerpt: tuition reduction to in-state rate
+    value_status: reported
+    reported_value: null
+  - field_path: offers/3/advertised_totals/0/amount
+    source_ref: s-nr
+    locator: Same list, Four-year value line
+    short_excerpt: 'Four-year value: approximately $219,000 + $15,000 enrichment fund'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/3/selection_mode
+    source_ref: s-nr
+    locator: Same section, paragraph after the list
+    short_excerpt: Candidates for these awards will be invited to participate in a mandatory interview
+      and an in-person Top Scholar Weekend.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/4/benefits/0/amount
+    source_ref: s-nr
+    locator: Nonresident page, Stamps, Carolina/McNair/Horseshoe and 1801 awards list
+    short_excerpt: 'McNair Scholars Award annual value: $24,000 + tuition reduction to in-state rate'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/4/benefits/1/amount
+    source_ref: s-nr
+    locator: Same list, four-year value line
+    short_excerpt: 'Four-year value: more than $199,000 + $14,000 enrichment fund'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/4/benefits/2
+    source_ref: s-nr
+    locator: Nonresident page, annual value line
+    short_excerpt: tuition reduction to in-state rate
+    value_status: reported
+    reported_value: null
+  - field_path: offers/4/advertised_totals/0/amount
+    source_ref: s-nr
+    locator: Same list, Four-year value line
+    short_excerpt: 'Four-year value: more than $199,000 + $14,000 enrichment fund'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/4/selection_mode
+    source_ref: s-nr
+    locator: Same section, paragraph after the list
+    short_excerpt: Candidates for these awards will be invited to participate in a mandatory interview
+      and an in-person Top Scholar Weekend.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/5/benefits/0/amount
+    source_ref: s-nr
+    locator: Nonresident page, Stamps, Carolina/McNair/Horseshoe and 1801 awards list
+    short_excerpt: 'Horseshoe Scholars Award annual value: $11,000 + tuition reduction to in-state rate'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/5/benefits/1
+    source_ref: s-nr
+    locator: Nonresident page, annual value line
+    short_excerpt: tuition reduction to in-state rate
+    value_status: reported
+    reported_value: null
+  - field_path: offers/5/advertised_totals/0/amount
+    source_ref: s-nr
+    locator: Same list, Four-year value line
+    short_excerpt: 'Four-year value: more than $147,000'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/5/selection_mode
+    source_ref: s-nr
+    locator: Same section, paragraph after the list
+    short_excerpt: Candidates for these awards will be invited to participate in a mandatory interview
+      and an in-person Top Scholar Weekend.
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-nr
+    locator: Nonresident page, Top Scholar section
+    short_excerpt: To apply for these awards, you must submit both a general university application and
+      a South Carolina Honors College application
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-nr
+    locator: Nonresident page, Top Scholar section
+    short_excerpt: The deadline for the Honors College application is Nov. 15
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-apply
+    locator: Apply to Carolina Elite page, Important Dates
+    short_excerpt: Send in all required materials by Dec. 1 to complete your application for admission.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-apply
+    locator: Apply to Carolina Elite page, Decisions
+    short_excerpt: interview in late January
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-apply
+    locator: Apply to Carolina Elite page, Decisions
+    short_excerpt: Honors College admission notifications will be sent via email by mid-February.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/4
+    source_ref: s-apply
+    locator: Apply to Carolina Elite page, Decisions
+    short_excerpt: you will be invited to our in-person Top Scholar Weekend from February 27 – March 1,
+      2027
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-apply
+    locator: Apply to Carolina Elite page, Decisions
+    short_excerpt: you will be invited to participate in a mandatory
+    value_status: reported
+    reported_value: null
+  - field_path: application/finalist_event_required
+    source_ref: s-nr
+    locator: Nonresident page, Top Scholar section
+    short_excerpt: Candidates for these awards will be invited to participate in a mandatory interview
+      and an in-person Top Scholar Weekend.
+    value_status: reported
+    reported_value: true
+  - field_path: stacking_rules/0
+    source_ref: s-nr
+    locator: Nonresident page, footnote under the awards (applies to the Stamps, McNair and Horseshoe
+      awards)
+    short_excerpt: May not be combined with any other general university merit-based scholarship offered
+      by the University of South Carolina Office of Undergraduate Admissions
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-res
+    locator: S.C. residents page, footnote under the awards (same footnote; it also excepts the Presidential
+      Scholars Award and the USC STEM Supplement)
+    short_excerpt: May not be combined with any other general university merit-based scholarship offered
+      by the University of South Carolina Office of Undergraduate Admissions
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/1
+    source_ref: s-res
+    locator: S.C. residents page, Provost Scholars Award
+    short_excerpt: The Provost Scholars Award may be combined with any other university merit-based scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/2
+    source_ref: s-res
+    locator: S.C. residents page, introduction
+    short_excerpt: While most university merit-based scholarships cannot be combined, they may be paired
+      with a South Carolina state lottery–funded scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/2
+    source_ref: s-faq
+    locator: Scholarship FAQs, 'Can I receive more than one scholarship from the Office of Undergraduate
+      Admissions?'
+    short_excerpt: total university aid cannot exceed the cost of attendance
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts/0
+    source_ref: s-res
+    locator: S.C. residents page, Top Scholar section
+    short_excerpt: Fifty students with strong academic records and leadership qualities are offered a
+      Top Scholar award each year.
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts/1
+    source_ref: s-nr
+    locator: Nonresident page, Top Scholar section
+    short_excerpt: Forty-five students with strong academic records and leadership qualities are offered
+      a Top Scholar award each year.
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-nr
+    locator: 'Nonresident and resident pages: ''The information below reflects last year''s recipient
+      averages''; the apply page gives a February 27 - March 1, 2027 weekend; no entering class is named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
