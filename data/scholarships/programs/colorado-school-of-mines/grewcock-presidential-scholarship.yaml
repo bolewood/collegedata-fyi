@@ -49,8 +49,10 @@ versions:
       honors_requirement: null
       first_generation_rule: unknown
       eligibility_notes: First-year undergraduate students from in-state and out-of-state; applicants
-        must first be admitted to Mines. Prior leadership experience is not necessary. Applications are
-        de-identified for review and use four essay questions. Finalists get a virtual interview.
+        must first be admitted to Mines. The page calls Grewcock one of the 'foundation scholarships'
+        reached from the Mines General Scholarship Application. Prior leadership experience is not necessary.
+        Applications are de-identified for review and use four essay questions. Finalists get a virtual
+        interview.
     benefits:
     - benefit_id: b-tuition
       category: tuition
@@ -120,15 +122,17 @@ versions:
       class these dates belong to.
   renewal_rules:
   - applies_to: []
-    gpa_min: null
-    gpa_scale: null
-    credit_load_min_per_term: null
-    credit_load_min_per_year: null
+    gpa_min: 3.0
+    gpa_scale: 4.0
+    credit_load_min_per_term: 15
+    credit_load_min_per_year: 30
     evaluation_timing: null
     summer_courses_can_fix_shortfall: null
     max_semesters: 8
-    notes: Renewable for up to eight semesters; the pages fetched give no GPA or credit threshold. The
-      Grewcock home page says the award pays for four years.
+    notes: Renewable for up to eight semesters. The Maintaining Scholarships page also expects consistent
+      attendance and engagement in Grewcock community programming, high ethical standards, a campus leadership
+      role or new initiative by graduation, and ongoing leadership development. The Grewcock home page
+      says the award pays for four years.
   stacking_rules: null
   award_counts:
   - metric: new_recipients
@@ -145,11 +149,11 @@ versions:
     retrieved_at: '2026-11-15'
     content_sha256: 9ef2900950c3261e13ad5abc13d2de76aaaa75bc0f5e5c0e985fe26c4edce1e5
     archive_url: null
-  - source_id: s-home
-    url: https://grewcockscholars.mines.edu
-    authority: official_program
+  - source_id: s-ren
+    url: https://finaid.mines.edu/maintaining-scholarships/
+    authority: official_aid_policy
     retrieved_at: '2026-11-15'
-    content_sha256: 5503bcb47064618f872cb667a1ec859c19e3a0f36cee44c1881f962044e508d0
+    content_sha256: 1ddd9a7013159ae08c01bf2f2ec9cf79cd6d14db42df2b230815b4528c832456
     archive_url: null
   field_evidence:
   - field_path: offers/0/selection_mode
@@ -226,6 +230,18 @@ versions:
     source_ref: s-pascal
     locator: Scholarship Components and Expectations, first paragraph
     short_excerpt: The award covers full tuition and mandatory fees and is renewable for up to eight semesters.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-ren
+    locator: Maintaining Scholarships, Grewcock Presidential Scholars Program, requirements list
+    short_excerpt: Maintain a minimum 3.000 GPA
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-ren
+    locator: Maintaining Scholarships, Grewcock Presidential Scholars Program, requirements list
+    short_excerpt: Complete at least 15 credit hours per semester, or 30 credit hours per academic year
     value_status: reported
     reported_value: null
   - field_path: stacking_rules

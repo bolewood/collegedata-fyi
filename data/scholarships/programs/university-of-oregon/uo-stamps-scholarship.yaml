@@ -8,7 +8,7 @@ aliases:
 - UO Stamps Scholarship
 - Stamps Scholars
 program_family: stamps
-awarding_authority: cofunded
+awarding_authority: institution
 related_programs: []
 status: active
 versions:
@@ -257,7 +257,7 @@ versions:
       requirement: required
       date: null
       recurring:
-        month: 1
+        month: 2
         day: 1
       precision: approximate
       source_date_text: in late January/early February
@@ -276,12 +276,14 @@ versions:
       maximum_lead_days: null
       notes: A few days after applying for admission the UO student ID appears in the Status Profile and
         is needed to create a UO Scholarship Dashboard account.
-    interview_mode: in_person
+    interview_mode: unknown
     finalist_event_required: null
-    notes: The page gives no year for these dates and calls this 'the 2026-2027 scholarship'. The first-year
-      scholarships page shows the same Stamps due date (November 15). The semifinalist interview is on
-      the Oregon campus; the finalist interview by the Stamps Scholars Program has no stated format. The
-      interview date is recorded as approximate; the page says only 'late January/early February'.
+    notes: 'The page gives no year for these dates and calls this ''the 2026-2027 scholarship''. The first-year
+      scholarships page shows the same Stamps due date (November 15). The page says the semifinalist interview
+      is on the University of Oregon campus; the finalist interview by the Stamps Scholars Program has
+      no stated format, so interview_mode is unknown. The interview date is approximate: the page says
+      only ''late January/early February'', recorded here as February 1 with approximate precision. The
+      scholarship is awarded in partnership with the Stamps Scholars Program.'
   renewal_rules:
   - applies_to: []
     gpa_min: 3.25
@@ -501,12 +503,6 @@ versions:
     short_excerpt: Stamps (due November 15)
     value_status: reported
     reported_value: null
-  - field_path: /awarding_authority
-    source_ref: s-stamps
-    locator: Stamps Scholarship, intro paragraph
-    short_excerpt: in partnership with the Stamps Scholars Program
-    value_status: reported
-    reported_value: null
   - field_path: application/milestones/2
     source_ref: s-stamps
     locator: Stamps Scholarship, How to Apply, fourth step
@@ -529,10 +525,10 @@ versions:
     reported_value: null
   - field_path: application/interview_mode
     source_ref: s-stamps
-    locator: Stamps Scholarship, Selection Criteria
-    short_excerpt: Finalists are then interviewed by the Stamps Scholars Program before final selections
-      are made.
-    value_status: reported
+    locator: 'Stamps Scholarship, Selection Criteria: semifinalists interviewed on campus, finalists by
+      the Stamps Scholars Program; no single format stated'
+    short_excerpt: null
+    value_status: not_published
     reported_value: null
   - field_path: renewal_rules/0
     source_ref: s-stamps

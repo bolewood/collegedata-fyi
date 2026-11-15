@@ -113,7 +113,7 @@ versions:
         sentence.
     benefits:
     - benefit_id: b-award
-      category: tuition
+      category: other
       instrument: scholarship
       coverage: fixed_amount
       amount:

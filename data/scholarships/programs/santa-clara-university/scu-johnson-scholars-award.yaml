@@ -64,7 +64,7 @@ versions:
       duration_terms: Renewable annually for up to four years; summer tuition and classes not included
       exclusions: null
       scope_text: Coverage is in conflict between two SCU pages; see field_evidence
-      advertised_coverage_label: full tuition
+      advertised_coverage_label: null
       conditions_text: null
     - benefit_id: b-housing
       category: housing
