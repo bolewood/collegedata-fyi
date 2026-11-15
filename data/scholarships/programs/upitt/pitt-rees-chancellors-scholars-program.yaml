@@ -1,0 +1,276 @@
+schema_version: 1
+program_id: pitt-rees-chancellors-scholars-program
+school_id: upitt
+ipeds_id: '215293'
+applicable_campuses: []
+official_name: Rees-Chancellor's Scholars Program
+aliases:
+- Rees-Chancellor's Scholarship
+- Chancellor's Scholarship (former name)
+program_family: honors
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: rees-chancellors-fall-2027
+  supersedes: null
+  entry_year: 2027
+  entry_year_label: null
+  entry_terms:
+  - fall
+  source_cohort_text: will premiere and welcome its first cohort in Fall 2027
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b4
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: unknown
+    selection_mode: competitive
+    consideration_route: honors_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: U.S. residents or DACA recipients
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Factors for review include weighted GPA, rigor of curriculum, SAT/ACT scores
+        (if applicable), class rank (if applicable), extracurricular activities and the quality of the
+        Common Application essay or Pitt personal statement; high school research experience and leadership
+        are highly recommended. The page states no minimum GPA or score, and the test-policy wording ('if
+        applicable') is not specific enough to record. The program was renamed and expanded from the Chancellor's
+        Scholarship.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: full tuition coverage
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School wording: ''room and board''; the page gives no rate or cap'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School wording: ''room and board''; the page gives no rate or cap'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-experiential
+      category: enrichment
+      instrument: restricted_fund
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School wording: ''guaranteed funding for experiential learning, including study abroad,
+        internship, and research opportunities''; no amount is given'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: no_form_other_steps_required
+    milestones:
+    - kind: application_deadline
+      requirement: priority
+      date: null
+      recurring:
+        month: 12
+        day: 1
+      precision: day
+      source_date_text: submit all required application materials by December 1
+    - kind: notification
+      requirement: invitation_only
+      date: null
+      recurring:
+        month: 12
+        day: 1
+      precision: month
+      source_date_text: Semifinalists will be notified in December
+    - kind: notification
+      requirement: invitation_only
+      date: null
+      recurring:
+        month: 2
+        day: 1
+      precision: month
+      source_date_text: Finalists will be notified in February
+    - kind: notification
+      requirement: required
+      date: null
+      recurring:
+        month: 3
+        day: 1
+      precision: month
+      source_date_text: recipients will be notified in early March
+    admission_plan_requirement: Apply to the University of Pittsburgh, be accepted into the Frederick
+      Honors College and indicate interest in it
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: Two interview rounds (semifinalists in December, finalists in February); the page does not
+      give dates or formats for them. The December 1 date has no year on the page. No renewal terms are
+      stated.
+  renewal_rules: null
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-prog
+    url: https://www.frederickhonors.pitt.edu/rees-chancellors-scholars-program
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 3fecacdcba88ee75a616460d626ed59888810eaa2c395592e461fb7f4057e4b6
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-prog
+    locator: Rees-Chancellor's Scholars Program, first paragraph
+    short_excerpt: premiere and welcome its first cohort in Fall 2027
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-prog
+    locator: Eligibility paragraph
+    short_excerpt: Factors for review include weighted grade point average, rigor and strength of high
+      school curriculum
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-prog
+    locator: Eligibility paragraph
+    short_excerpt: must first apply to the University of Pittsburgh and be accepted into the Frederick
+      Honors College
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-prog
+    locator: Second paragraph
+    short_excerpt: Rees-Chancellor's Scholars receive a package that includes full tuition coverage, room
+      and board, and guaranteed funding for experiential learning
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-prog
+    locator: 'Second paragraph: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-prog
+    locator: Second paragraph
+    short_excerpt: Rees-Chancellor's Scholars receive a package that includes full tuition coverage, room
+      and board, and guaranteed funding for experiential learning
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-prog
+    locator: 'Second paragraph: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-prog
+    locator: Second paragraph
+    short_excerpt: Rees-Chancellor's Scholars receive a package that includes full tuition coverage, room
+      and board, and guaranteed funding for experiential learning
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-prog
+    locator: 'Second paragraph: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3
+    source_ref: s-prog
+    locator: Second paragraph
+    short_excerpt: Rees-Chancellor's Scholars receive a package that includes full tuition coverage, room
+      and board, and guaranteed funding for experiential learning
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-prog
+    locator: 'Second paragraph: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-prog
+    locator: Application timeline paragraph
+    short_excerpt: First-year applicants who indicate their interest in the Frederick Honors College and
+      submit all required application materials by December 1 will receive priority consideration
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-prog
+    locator: Application timeline paragraph
+    short_excerpt: submit all required application materials by December 1 will receive priority consideration
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-prog
+    locator: Application timeline paragraph
+    short_excerpt: Rees-Chancellor Semifinalists will be notified in December to schedule their first-round
+      interview.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-prog
+    locator: Application timeline paragraph
+    short_excerpt: Finalists will be notified in February to schedule their second-round interview.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-prog
+    locator: Application timeline paragraph
+    short_excerpt: Chosen Rees-Chancellor's Scholarship recipients will be notified in early March.
+    value_status: reported
+    reported_value: null

@@ -1,0 +1,237 @@
+schema_version: 1
+program_id: dovey-johnson-roundtree-presidential-scholarship
+school_id: spelman-college
+ipeds_id: '141060'
+applicable_campuses: []
+official_name: Dovey Johnson Roundtree, Class of 38, Presidential Scholarship
+aliases:
+- Roundtree Presidential Scholarship
+- Dovey Johnson Rountree, Class of 38, Presidential Scholarship
+program_family: presidential
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: dovey-johnson-roundtree-presidential-scholarship-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Page names no entering class or year
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b4
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: unknown
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: The page says the committee considers grade point average, standardized test
+        scores (if applicable), community service and leadership, and that decisions are made by the Office
+        of Admissions, not Financial Aid. It states no minimum GPA or score. The page spells the name
+        'Roundtree' in the heading and 'Rountree' in the description; the heading spelling is used here.
+        The same page lists a separate 'Presidential Scholarship' (five scholars), recorded as its own
+        program; the page does not say how the two relate.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Next four academic years
+      exclusions: null
+      scope_text: 'School wording: ''includes the cost of tuition, fees, and the equivalent cost of room
+        and board whether living on or off campus'''
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Next four academic years
+      exclusions: null
+      scope_text: 'School wording: ''fees'''
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Next four academic years
+      exclusions: null
+      scope_text: 'School wording: ''the equivalent cost of room and board whether living on or off campus'';
+        the page gives no rate or cap'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Next four academic years
+      exclusions: null
+      scope_text: 'School wording: ''the equivalent cost of room and board whether living on or off campus'';
+        the page gives no rate or cap'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: not_required
+    milestones: []
+    admission_plan_requirement: null
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: Applying for admission is the application for merit scholarships; recipients are notified at
+      the time of admission on the SpelCheck portal. The Early Action / Early Decision requirement on
+      the page applies only to the Bonner, UPS and Ralph Lauren Civic Scholar programs, not to this award.
+  renewal_rules: null
+  stacking_rules: null
+  award_counts:
+  - metric: new_recipients
+    qualifier: exact
+    value: 20
+    cohort_year: null
+    source_ref: s-future
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-future
+    url: https://www.spelman.edu/financial-aid/explore-types-of-financial-aid/scholarships/scholarships-for-future-students.html
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 6e796eb4c49089ba13c636b8838dc890d260ae224e45fc0add55964efcc27014
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-future
+    locator: 'Scholarships for Future Students: no entering class or year is named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-future
+    locator: Page intro, What types of scholarships are available, first paragraph
+    short_excerpt: Recipients are selected from a competitive pool of students based on the academic profile
+      and details she submitted in her application.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-future
+    locator: Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship
+    short_excerpt: includes the cost of tuition, fees, and the equivalent cost of room and board whether
+      living on or off campus
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-future
+    locator: 'Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship: no
+      dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-future
+    locator: Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship
+    short_excerpt: includes the cost of tuition, fees, and the equivalent cost of room and board whether
+      living on or off campus
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-future
+    locator: 'Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship: no
+      dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-future
+    locator: Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship
+    short_excerpt: includes the cost of tuition, fees, and the equivalent cost of room and board whether
+      living on or off campus
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-future
+    locator: 'Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship: no
+      dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3
+    source_ref: s-future
+    locator: Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship
+    short_excerpt: includes the cost of tuition, fees, and the equivalent cost of room and board whether
+      living on or off campus
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-future
+    locator: 'Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship: no
+      dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-future
+    locator: Page intro, What types of scholarships are available, second paragraph
+    short_excerpt: All students will be considered for merit scholarships with or without standardized
+      test scores.
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-future
+    locator: Page intro, How do scholarships work at Spelman
+    short_excerpt: There is no separate application you need to complete in order to be considered for
+      scholarships.
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts/0
+    source_ref: s-future
+    locator: Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship
+    short_excerpt: is awarded to twenty scholars
+    value_status: reported
+    reported_value: null

@@ -1,0 +1,160 @@
+schema_version: 1
+program_id: umass-chancellors-award
+school_id: university-of-massachusetts-amherst
+ipeds_id: '166629'
+applicable_campuses: []
+official_name: Chancellor's Award
+aliases:
+- UMass Amherst Chancellor's Award
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: chancellors-award-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Page names no entering class or year
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b4
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: out_of_state
+    selection_mode: unknown
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: null
+        scale: null
+        basis: recalculated_by_school
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Admitted first-year students from outside Massachusetts 'whose academic and personal
+        achievements are especially strong'. The page does not describe the selection process beyond that.
+        UMass Amherst recalculates every applicant's GPA with uniform weighting for honors, AP and college
+        coursework, following Massachusetts Board of Higher Education standards.
+    benefits:
+    - benefit_id: b-award
+      category: other
+      instrument: scholarship
+      coverage: variable
+      amount:
+        qualifier: range
+        value: null
+        min: 10000
+        max: 18000
+        period: academic_year
+      duration_terms: Renewable up to an aggregate total of four years (eight consecutive semesters) of
+        full-time undergraduate enrollment
+      exclusions: null
+      scope_text: Amount set at admission 'based on information you provided with your application' and
+        'not negotiable'; the page does not say which charges it applies to
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: not_required
+    milestones: []
+    admission_plan_requirement: null
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: 'Notification: the Admissions Office notifies recipients at the time of acceptance. The page
+      gives no deadline.'
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Renewal requires the minimum satisfactory academic progress set in the Academic Regulations
+      of the Registrar, and full-time enrollment, for up to eight consecutive semesters. Any change in
+      residency status that reduces the cost of attendance, including university-initiated changes tied
+      to military, veterans or Massachusetts state employee benefits, eliminates the award.
+  stacking_rules:
+  - other_aid_type: other
+    relation: allowed
+    note: The page says these scholarships and awards 'may be combined with a tuition credit' and refers
+      to its FAQ.
+  award_counts: []
+  sources:
+  - source_id: s-aid
+    url: https://www.umass.edu/financialaid/umass-admissions-scholarships-and-awards
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 6e71b9c308c729e0080b34958609d52c8ef1c7d64ae05defd0b27cdd7b2e5785
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-aid
+    locator: 'UMass Admissions Scholarships and Awards, For Our Non-Massachusetts Applicants: no entering
+      class or year is named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/residency
+    source_ref: s-aid
+    locator: For Our Non-Massachusetts Applicants, UMass Amherst Chancellor's Award
+    short_excerpt: offers the Chancellor's Award to admitted first-year students from outside of Massachusetts
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-aid
+    locator: UMass Amherst Chancellor's Award, Award application
+    short_excerpt: 'Award application: None required'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-aid
+    locator: UMass Amherst Chancellor's Award, award amount line
+    short_excerpt: Awards range from $10,000-$18,000 per year.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-aid
+    locator: UMass Amherst Chancellor's Award, first paragraph
+    short_excerpt: UMass Amherst does not use the GPA provided by the high school but instead recalculates
+      a GPA for every applicant
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-aid
+    locator: UMass Amherst Chancellor's Award, Award application
+    short_excerpt: 'Award application: None required'
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-aid
+    locator: UMass Amherst Chancellor's Award, Renewal requirement
+    short_excerpt: Maintain the minimum requirements of satisfactory academic progress
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-aid
+    locator: UMass Amherst Chancellor's Award, first paragraph
+    short_excerpt: These scholarships and awards may be combined with a tuition credit.
+    value_status: reported
+    reported_value: null

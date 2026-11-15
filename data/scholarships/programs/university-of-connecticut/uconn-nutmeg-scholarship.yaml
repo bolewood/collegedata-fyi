@@ -1,0 +1,312 @@
+schema_version: 1
+program_id: uconn-nutmeg-scholarship
+school_id: university-of-connecticut
+ipeds_id: '129020'
+applicable_campuses:
+- Storrs
+official_name: Nutmeg Scholarship
+aliases:
+- UConn Nutmeg Scholarship
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: uconn-nutmeg-fall-2027
+  supersedes: null
+  entry_year: 2027
+  entry_year_label: null
+  entry_terms:
+  - fall
+  source_cohort_text: enroll at the University of Connecticut beginning fall semester 2027
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b4
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: in_state
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.7
+        scale: 4.0
+        basis: unknown
+      test_rules:
+      - exam: SAT (combined)
+        min: 1370
+        scoring: unknown
+        official_required: null
+      - exam: ACT (composite)
+        min: 30
+        scoring: unknown
+        official_required: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible:
+      - us_citizen
+      - permanent_resident
+      citizenship_text: a U.S. citizen or a U.S. Permanent Resident Alien (copy of alien registration
+        card is required and/or proof of immigration status in the USA), or an undocumented student who
+        has resided in Connecticut for two or more years
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Connecticut resident enrolled in and expected to graduate from a Connecticut
+        secondary school system. The score minimums apply only to applicants who choose to submit scores.
+        The page also says applicants should rank in the top 10% of their class (if rank is available),
+        be involved in leadership, and have shown a commitment to community service. Applicants may be
+        considered for either a Nutmeg, Stamps or Day of Pride scholarship, 'not all three'. Limited to
+        20 recipients statewide.
+    benefits:
+    - benefit_id: b-coa
+      category: cost_of_attendance
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Renewable up to eight semesters of full-time undergraduate study
+      exclusions: null
+      scope_text: 'School wording: ''Full Scholarship (Includes direct and indirect cost of attendance.
+        Some restrictions may apply.)''; the policies page limits housing to the prior-year average housing
+        cost and food to the Value Meal Plan, for on-campus residents only'
+      advertised_coverage_label: Full Scholarship (Includes direct and indirect cost of attendance. Some
+        restrictions may apply.)
+      conditions_text: Housing and food are covered only for students who live on campus, based on cost-of-attendance
+        components; the scholarship covers up to the Value Meal Plan; tuition already covered by a tuition
+        waiver is not covered again
+    advertised_totals: []
+  application:
+    separate_application: required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: '2026-11-01'
+      recurring: null
+      precision: day
+      source_date_text: November 1, 2026
+    - kind: application_deadline
+      requirement: required
+      date: '2026-11-08'
+      recurring: null
+      precision: day
+      source_date_text: November 8, 2026
+    - kind: notification
+      requirement: recommended
+      date: null
+      recurring:
+        month: 2
+        day: 1
+      precision: month
+      source_date_text: early February
+    admission_plan_requirement: null
+    prerequisites:
+    - kind: recommendation
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Two letters of recommendation are required; the same two may serve the admission application.
+    - kind: portal_credentials
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: The supplemental application is in the applicant portal, which needs an activated NetID;
+        the page says most applicants receive a NetID within five days of applying, and August applicants
+        in mid-September.
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: 'Interview ''determined by the Scholarship Selection Committee''; no date or format is given.
+      Early Decision applicants who apply for the Nutmeg Scholarship are not notified of the award at
+      the time of admission. Supplemental application: three short answers, a resume and two letters of
+      recommendation.'
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.0
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: Reviewed annually for compliance with the SAP/GPA requirements
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Renewable annually for up to eight semesters of full-time undergraduate study on a 3.0 cumulative
+      GPA; housing and food are covered only while the student lives on campus; the Honors College is
+      required for the first two semesters; winter and summer courses are not covered.
+  stacking_rules:
+  - other_aid_type: tuition_waiver
+    relation: not_allowed
+    note: A student receiving a tuition waiver does not also receive the equivalent tuition value from
+      the scholarship.
+  - other_aid_type: federal_or_state_need
+    relation: counts_within_package
+    note: Merit scholarship plus a Pell Grant may not exceed the cost of attendance; with other need-based
+      aid, may not exceed federally defined need or the cost of attendance.
+  award_counts:
+  - metric: new_recipients
+    qualifier: up_to
+    value: 20
+    cohort_year: null
+    source_ref: s-merit
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-app
+    url: https://admissions.uconn.edu/nutmeg-applicants/
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: 1db3017dab1e370f11694dec6ab94a22fa147ce4ecbdae1e410c016d9d65cbd0
+    archive_url: null
+  - source_id: s-merit
+    url: https://admissions.uconn.edu/cost-aid/scholarship/
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: fd298c83c13ca374bf8fcbe1637644287740bbec0cca620777fdb5ccf88fee4d
+    archive_url: null
+  - source_id: s-pol
+    url: https://admissions.uconn.edu/cost-aid/scholarship/policies/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 3e1043d7a5d10880e1139837c0e390628d21c115c1b8bb3eac029cddf5e6e57b
+    archive_url: null
+  field_evidence:
+  - field_path: /applicable_campuses/0
+    source_ref: s-merit
+    locator: Merit Scholarships, Nutmeg Scholarship heading
+    short_excerpt: Restricted to Storrs Campus applicants who are Connecticut residents.
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-app
+    locator: Nutmeg Scholarship Eligibility & Selection
+    short_excerpt: enroll at the University of Connecticut beginning fall semester 2027
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/residency
+    source_ref: s-merit
+    locator: Merit Scholarships, Nutmeg Scholarship
+    short_excerpt: Available to In-State Applicants Only
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-app
+    locator: Nutmeg Scholarship Applicants, second paragraph
+    short_excerpt: The selection process is competitive and the number of applications received greatly
+      exceeds the number of available scholarships.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-merit
+    locator: Merit Scholarships, intro, second paragraph
+    short_excerpt: with the exception of the Nutmeg, Day of Pride, and Stamps Scholarships, which require
+      a supplemental application
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-app
+    locator: Nutmeg Scholarship Eligibility & Selection, last bullet
+    short_excerpt: Applicants should have a minimum grade point average of 3.7 on a 4.0 scale
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/test_rules
+    source_ref: s-app
+    locator: Nutmeg Scholarship Eligibility & Selection, test score bullet
+    short_excerpt: should achieve a minimum combined SAT Score of 1370 or an ACT composite score of 30
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-app
+    locator: Nutmeg Scholarship Eligibility & Selection, test score bullet
+    short_excerpt: Submission of standardized test scores is optional and is not required for Nutmeg Scholarship
+      eligibility.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-merit
+    locator: Merit Scholarships, Nutmeg Scholarship
+    short_excerpt: Full Scholarship (Includes direct and indirect cost of attendance. Some restrictions
+      may apply.)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-merit
+    locator: 'Merit Scholarships, Nutmeg Scholarship: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/0/conditions_text
+    source_ref: s-pol
+    locator: Policies, Nutmeg, Day of Pride, Stamps Scholarships, Eligibility Requirements
+    short_excerpt: Students who choose to live off-campus are not eligible to receive the value of the
+      on-campus housing
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-merit
+    locator: Merit Scholarships, intro, second paragraph
+    short_excerpt: with the exception of the Nutmeg, Day of Pride, and Stamps Scholarships, which require
+      a supplemental application
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-app
+    locator: Nutmeg Scholarship Applicants, Deadlines table
+    short_excerpt: November 1, 2026 | Deadline to complete either the Common Application or Coalition
+      Application
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-app
+    locator: Nutmeg Scholarship Applicants, Deadlines table
+    short_excerpt: November 8, 2026 | Nutmeg Supplemental Application Deadline
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-app
+    locator: Nutmeg Scholarship Applicants, third paragraph
+    short_excerpt: Nutmeg Scholarship selection will be made in early February.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-pol
+    locator: Policies, Renewal and Satisfactory Academic Progress
+    short_excerpt: Nutmeg Scholarship, and Stamps Scholarship which require maintaining a 3.0 cumulative
+      grade point average
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-pol
+    locator: Policies, Nutmeg, Day of Pride, Stamps Scholarships
+    short_excerpt: Students receiving a tuition waiver are not eligible to receive the equivalent tuition
+      value
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/1
+    source_ref: s-pol
+    locator: Policies, Excess of Funds
+    short_excerpt: may not have their individual Cost of Attendance (COA) exceeded
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts/0
+    source_ref: s-merit
+    locator: Merit Scholarships, Nutmeg Scholarship
+    short_excerpt: Limited to 20 recipients statewide.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_text
+    source_ref: s-app
+    locator: Nutmeg Scholarship Eligibility & Selection, first bullet
+    short_excerpt: a U.S. citizen or a U.S. Permanent Resident Alien (copy of alien registration card
+      is required and/or proof of immigration status in the USA)
+    value_status: reported
+    reported_value: null

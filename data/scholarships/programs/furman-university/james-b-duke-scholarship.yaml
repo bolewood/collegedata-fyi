@@ -1,0 +1,266 @@
+schema_version: 1
+program_id: james-b-duke-scholarship
+school_id: furman-university
+ipeds_id: '218070'
+applicable_campuses: []
+official_name: James B. Duke Scholarship
+aliases:
+- James B. Duke Scholarships
+- Duke Scholarship
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: james-b-duke-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: 'Page names no entering class or year (''Priority deadline: November 1'' has no year)'
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b4
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: unknown
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Page says finalists typically have standardized test scores above 34 ACT or 1500
+        SAT, challenging coursework and significant leadership; these are described as typical, not as
+        minimums. The page does not state citizenship or residency rules for this award. Award also includes
+        participation in the Riley Institute Advantage Scholars program and membership in Furman's Community
+        of Scholars.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Renewable for four years or eight semesters
+      exclusions: null
+      scope_text: 'Page words: "Full scholarship covering tuition, room, board, and all fees"'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'Page words: "all fees"'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'Page words: "room"; no rate or cap is given'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'Page words: "board"; no rate or cap is given'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: no_form_other_steps_required
+    milestones:
+    - kind: application_deadline
+      requirement: priority
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: 'Priority deadline: November 1'
+    - kind: interview
+      requirement: invitation_only
+      date: null
+      recurring:
+        month: 3
+        day: 1
+      precision: month
+      source_date_text: invited in early February to attend a Scholarship Interview Event in March
+    admission_plan_requirement: null
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: Application for admission doubles as the scholarship application. The November 1 priority date
+      sits under 'PREMIER SCHOLARSHIPS' for all premier awards; the page does not say whether it is the
+      admission or the scholarship date. The page says interviews are 'held in late March' and that premier
+      candidates 'may be asked to interview on campus'; the Interview Event's format is not otherwise
+      stated.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Renewable for four years or eight semesters; the page gives no GPA or credit threshold.
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: replaces
+    note: Winners receive the Duke Scholarship in lieu of any Bell Tower Scholarship previously awarded.
+  award_counts: []
+  sources:
+  - source_id: s-merit
+    url: https://www.furman.edu/financial-aid/aid-types/merit-based-scholarships/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 05b78734dc714c44a17a009d6b4247e1f2fc91a340d7f7911bdef8b57e5f9e1b
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-merit
+    locator: 'Merit-Based Scholarships page: no entering class or year is named anywhere on the page'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-merit
+    locator: James B. Duke Scholarships section, first paragraph
+    short_excerpt: These full scholarships go to our most outstanding applicants – typically the top 1-2%
+      of our applicant pool.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-merit
+    locator: James B. Duke Scholarships, Award Benefits, first bullet
+    short_excerpt: Full scholarship covering tuition, room, board, and all fees
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-merit
+    locator: 'James B. Duke Scholarships, Award Benefits: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-merit
+    locator: James B. Duke Scholarships, Award Benefits, first bullet
+    short_excerpt: Full scholarship covering tuition, room, board, and all fees
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-merit
+    locator: 'James B. Duke Scholarships, Award Benefits: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-merit
+    locator: James B. Duke Scholarships, Award Benefits, first bullet
+    short_excerpt: Full scholarship covering tuition, room, board, and all fees
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-merit
+    locator: 'James B. Duke Scholarships, Award Benefits: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3
+    source_ref: s-merit
+    locator: James B. Duke Scholarships, Award Benefits, first bullet
+    short_excerpt: Full scholarship covering tuition, room, board, and all fees
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-merit
+    locator: 'James B. Duke Scholarships, Award Benefits: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-merit
+    locator: Page intro, list of what the committee considers
+    short_excerpt: Standardized test scores (if submitted)
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-merit
+    locator: Page intro, below the list of selection factors
+    short_excerpt: no separate application required
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-merit
+    locator: PREMIER SCHOLARSHIPS box, below the Bell Tower Scholarships section
+    short_excerpt: 'Priority deadline: November 1'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-merit
+    locator: James B. Duke Scholarships, Selection Process, first paragraph
+    short_excerpt: Select students will be invited in early February to attend a Scholarship Interview
+      Event in March.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-merit
+    locator: James B. Duke Scholarships, Award Benefits, second bullet
+    short_excerpt: Renewable for four years or eight semesters
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-merit
+    locator: James B. Duke Scholarships, Learn more about the selection process, second paragraph
+    short_excerpt: Students selected as winners of these awards will receive this scholarship in lieu
+      of any Bell Tower Scholarships previously awarded.
+    value_status: reported
+    reported_value: null
