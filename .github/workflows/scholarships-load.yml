@@ -88,7 +88,7 @@ jobs:
             exit 0
           fi
           # Batches of 100 school ids (the endpoint's cap), each also expiring the directory read.
-          jq -c '.school_ids // [] | _nwise(100)' scholarships-out/load-report.json | while read -r batch; do
+          jq -c '(.school_ids // []) as $ids | range(0; $ids | length; 100) as $i | $ids[$i:$i+100]' scholarships-out/load-report.json | while read -r batch; do
             body=$(jq -c -n --argjson ids "$batch" '{school_ids: $ids, scholarships: true}')
             code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 \
               -X POST "${COLLEGEDATA_REVALIDATE_URL}" \
