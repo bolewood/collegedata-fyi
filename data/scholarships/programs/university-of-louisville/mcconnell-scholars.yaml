@@ -37,8 +37,19 @@ versions:
       national_merit_statuses: null
       status_required_for_award: null
       first_choice_required: null
-      gpa: null
-      test_rules: null
+      gpa:
+        min: 3.5
+        scale: null
+        basis: unknown
+      test_rules:
+      - exam: ACT
+        min: 26
+        scoring: unknown
+        official_required: null
+      - exam: SAT
+        min: 1230
+        scoring: unknown
+        official_required: null
       tests_policy_for_scholarship: unknown
       citizenship_eligible: null
       citizenship_text: null

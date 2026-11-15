@@ -218,7 +218,7 @@ versions:
     source_ref: s-faq
     locator: Scholarship FAQ, 'How do I apply?'
     short_excerpt: Mandatory interviews for finalists will take place during Preeminent Scholars Weekend,
-      March 6 - 7, 2026
+      March 6 – 7, 2026
     value_status: reported
     reported_value: null
   - field_path: application/interview_mode
@@ -232,7 +232,7 @@ versions:
     source_ref: s-faq
     locator: Scholarship FAQ, 'How do I apply?'
     short_excerpt: Mandatory interviews for finalists will take place during Preeminent Scholars Weekend,
-      March 6 - 7, 2026
+      March 6 – 7, 2026
     value_status: reported
     reported_value: true
   - field_path: award_counts/0

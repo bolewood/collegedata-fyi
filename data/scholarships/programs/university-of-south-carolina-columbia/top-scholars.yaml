@@ -732,7 +732,7 @@ versions:
   - field_path: application/milestones/4
     source_ref: s-apply
     locator: Apply to Carolina Elite page, Decisions
-    short_excerpt: you will be invited to our in-person Top Scholar Weekend from February 27 - March 1,
+    short_excerpt: you will be invited to our in-person Top Scholar Weekend from February 27 – March 1,
       2027
     value_status: reported
     reported_value: null
@@ -775,7 +775,7 @@ versions:
     source_ref: s-res
     locator: S.C. residents page, introduction
     short_excerpt: While most university merit-based scholarships cannot be combined, they may be paired
-      with a South Carolina state lottery-funded scholarship.
+      with a South Carolina state lottery–funded scholarship.
     value_status: reported
     reported_value: null
   - field_path: stacking_rules/2

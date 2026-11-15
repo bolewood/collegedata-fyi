@@ -204,7 +204,7 @@ versions:
   - field_path: application/separate_application
     source_ref: s-stamps
     locator: Stamps Scholars page, application paragraph
-    short_excerpt: Applicants will need to complete the Stamps Scholarship application on VT's Scholarship
+    short_excerpt: Applicants will need to complete the Stamps Scholarship application on VT’s Scholarship
       Central by the posted deadline each year.
     value_status: conflicting
     reported_value: required

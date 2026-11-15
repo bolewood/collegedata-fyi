@@ -191,7 +191,7 @@ versions:
   - field_path: offers/0/selection_mode
     source_ref: s-hon
     locator: 'Honors College page, Honors College Scholarships: Distinguished Scholars'
-    short_excerpt: are invited to campus to participate in interviews for UD's top scholarships
+    short_excerpt: are invited to campus to participate in interviews for UD’s top scholarships
     value_status: reported
     reported_value: null
   - field_path: offers/0/benefits/0
@@ -243,7 +243,7 @@ versions:
   - field_path: application/interview_mode
     source_ref: s-hon
     locator: Honors College page, Distinguished Scholars
-    short_excerpt: are invited to campus to participate in interviews for UD's top scholarships
+    short_excerpt: are invited to campus to participate in interviews for UD’s top scholarships
     value_status: reported
     reported_value: null
   - field_path: entry_year

@@ -135,7 +135,7 @@ versions:
     gpa_min: 3.0
     gpa_scale: null
     credit_load_min_per_term: null
-    credit_load_min_per_year: 30
+    credit_load_min_per_year: null
     evaluation_timing: Evaluated at the end of the second semester of each academic year
     summer_courses_can_fix_shortfall: null
     max_semesters: 8
