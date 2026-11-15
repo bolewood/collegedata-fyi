@@ -1,0 +1,479 @@
+schema_version: 1
+program_id: southern-miss-national-merit
+school_id: university-of-southern-mississippi
+ipeds_id: '176372'
+applicable_campuses: []
+official_name: National Merit Scholarship (Southern Miss)
+aliases:
+- National Merit Finalist Scholarship
+- National Merit Semifinalist Scholarship
+program_family: national_merit
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: usm-nm-2027
+  supersedes: null
+  entry_year: 2027
+  entry_year_label: '2027 high school graduates (entry year derived: fall 2027)'
+  entry_terms:
+  - unspecified
+  source_cohort_text: 'First-Year, Full-Time Incoming Freshmen Only: 2027 High School Graduates'
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b2
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-finalist
+    parent_offer_id: null
+    variant_name: National Merit Finalist package
+    residency: unknown
+    selection_mode: unknown
+    consideration_route: separate_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - finalist
+      status_required_for_award: null
+      first_choice_required: true
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: 'First-year, full-time incoming freshmen only: 2027 high school graduates. The
+        page links ''additional eligibility for freshman scholarships'' without an address that could
+        be read, so general freshman-scholarship rules were not checked.'
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: '''Full tuition scholarship for four years'''
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''Campus housing''; the sentence ends ''for four years'', which may cover all three
+        items listed; no rate or cap published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''meal plan''; same sentence as housing; no rate or cap published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-allowance
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 1000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''$1,000 educational allowance for four years''; the page does not say whether $1,000
+        is per year or in total, so no period is recorded'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-abroad
+      category: study_abroad
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 4000
+        min: null
+        max: null
+        period: one_time
+      duration_terms: null
+      exclusions: null
+      scope_text: One-time study abroad scholarship
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  - offer_id: o-semifinalist
+    parent_offer_id: null
+    variant_name: National Merit Semifinalist package
+    residency: unknown
+    selection_mode: unknown
+    consideration_route: multiple
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - semifinalist
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: 'First-year, full-time incoming freshmen only: 2027 high school graduates. The
+        page links ''additional eligibility for freshman scholarships'' without an address that could
+        be read, so general freshman-scholarship rules were not checked. The GO System application applies
+        to Finalists only; Semifinalists do not apply and must be admitted by the March 1 priority deadline;
+        the page does not say the offer is guaranteed.'
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: '''Full tuition scholarship for four years'''
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''Campus housing''; the sentence ends ''for freshman year only'', which may limit housing,
+        meal plan and allowance to the first year; no rate or cap published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''meal plan''; same sentence as housing; no rate or cap published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-allowance
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 500
+        min: null
+        max: null
+        period: one_time
+      duration_terms: Freshman year only
+      exclusions: null
+      scope_text: '''one-time $500 educational allowance for freshman year only'''
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: required
+    milestones:
+    - kind: admission_deadline
+      requirement: priority
+      date: null
+      recurring:
+        month: 3
+        day: 1
+      precision: day
+      source_date_text: March 1 (priority admission deadline for semifinalists; year not stated)
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 5
+        day: 1
+      precision: day
+      source_date_text: May 1 (finalists apply in the GO System; year not stated)
+    - kind: acceptance_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 5
+        day: 1
+      precision: day
+      source_date_text: May 1 (semifinalists accept in the GO System; year not stated)
+    - kind: acceptance_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 7
+        day: 1
+      precision: day
+      source_date_text: July 1 (finalists accept in the GO System; year not stated)
+    admission_plan_requirement: The GO System application applies to Finalists only; Semifinalists do
+      not apply and must be admitted by the March 1 priority deadline; finalists must apply and submit
+      official documentation through the GO System
+    prerequisites:
+    - kind: portal_credentials
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: The GO System needs USM SOAR credentials, so an admitted student must activate them first
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: The finalist application is a scholarship form in the GO System (Academic Works), and a student
+      must sign in with SOAR credentials. The page says 'Last Updated 8/24/26'. The page's heading names
+      2027 high school graduates; its dates carry no year, so they are recurring. The page does not say
+      whether semifinalist awards are guaranteed.
+  renewal_rules: null
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-nm
+    url: https://www.usm.edu/scholarships-financial-wellness/freshman_scholarships/nationalmerit.php
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: c64d378549f868c067e2bd95951bdf51c60d313e20cd621ec907c8e545fd9ea5
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-nm
+    locator: 'Page, ''Finalist'' package: finalists apply; the page describes no competition and makes
+      no guarantee'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-nm
+    locator: Page, 'Finalist' package
+    short_excerpt: Finalists must apply and submit official documentation by May 1 through the GO System
+      for National Merit Finalist Scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/national_merit_statuses
+    source_ref: s-nm
+    locator: Page, intro
+    short_excerpt: named a National Merit Semi Finalist or National Merit Finalist by the
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/first_choice_required
+    source_ref: s-nm
+    locator: Page, Deadlines, May 1
+    short_excerpt: Finalists must list USM as their first-choice institution with the National Merit Corporation.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-nm
+    locator: 'Page, ''National merit scholarship package: Finalist'''
+    short_excerpt: Full tuition scholarship for four years
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-nm
+    locator: Page, 'Finalist' package
+    short_excerpt: Campus housing, meal plan, and $1,000 educational allowance for four years
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-nm
+    locator: Page, 'Finalist' package
+    short_excerpt: Campus housing, meal plan, and $1,000 educational allowance for four years
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-nm
+    locator: Page, 'Finalist' package
+    short_excerpt: Campus housing, meal plan, and $1,000 educational allowance for four years
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-nm
+    locator: Page, 'Finalist' package
+    short_excerpt: One-time $4,000 study abroad scholarship
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-nm
+    locator: 'Page: no dollar amount for tuition, housing or meal plan'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-nm
+    locator: 'Page: no dollar amount for tuition, housing or meal plan'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-nm
+    locator: 'Page: no dollar amount for tuition, housing or meal plan'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/selection_mode
+    source_ref: s-nm
+    locator: 'Page, ''semi-finalist'' package: ''Semifinalists do not have to apply ... but must be admitted
+      by the priority deadline'''
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/consideration_route
+    source_ref: s-nm
+    locator: Page, 'semi-finalist' package
+    short_excerpt: Semifinalists do not have to apply for the semifinalist scholarship, but must be admitted
+      by the priority deadline of
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/eligibility/national_merit_statuses
+    source_ref: s-nm
+    locator: Page, intro
+    short_excerpt: named a National Merit Semi Finalist or National Merit Finalist by the
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0
+    source_ref: s-nm
+    locator: Page, 'semi-finalist' package
+    short_excerpt: Full tuition scholarship for four years
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/1
+    source_ref: s-nm
+    locator: Page, 'semi-finalist' package
+    short_excerpt: Campus housing, meal plan, and one-time $500 educational allowance for freshman year
+      only
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/2
+    source_ref: s-nm
+    locator: Page, 'semi-finalist' package
+    short_excerpt: Campus housing, meal plan, and one-time $500 educational allowance for freshman year
+      only
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/3/amount
+    source_ref: s-nm
+    locator: Page, 'semi-finalist' package
+    short_excerpt: Campus housing, meal plan, and one-time $500 educational allowance for freshman year
+      only
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-nm
+    locator: 'Page: no dollar amount for tuition, housing or meal plan'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/1/amount
+    source_ref: s-nm
+    locator: 'Page: no dollar amount for tuition, housing or meal plan'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/2/amount
+    source_ref: s-nm
+    locator: 'Page: no dollar amount for tuition, housing or meal plan'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-nm
+    locator: 'Page, ''How to Apply'' and Finalist package: finalists apply through the GO System'
+    short_excerpt: Finalists must apply and submit official documentation by May 1 through the GO System
+      for National Merit Finalist Scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-nm
+    locator: Page, semifinalist package
+    short_excerpt: must be admitted by the priority deadline of
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-nm
+    locator: Page, Deadlines, May 1
+    short_excerpt: 'National Merit Finalists: Deadline to apply for National Merit Finalist Scholarship
+      in the GO System.'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-nm
+    locator: Page, Deadlines, May 1
+    short_excerpt: 'National Merit Semifinalists: Deadline to accept semifinalist scholarship in the GO
+      System.'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-nm
+    locator: Page, Deadlines, July 1
+    short_excerpt: Finalists must accept Freshman National Merit Finalist Scholarships in the GO System.
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-nm
+    locator: 'Page heading: ''First-Year, Full-Time Incoming FreshmEn Only: 2027 High School Graduates'''
+    short_excerpt: 2027 High School Graduates
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules
+    source_ref: s-nm
+    locator: 'Page: no renewal condition stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: stacking_rules
+    source_ref: s-nm
+    locator: 'Page: no stacking rule stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: award_counts
+    source_ref: s-nm
+    locator: 'Page: no award count stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

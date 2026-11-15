@@ -1,0 +1,819 @@
+schema_version: 1
+program_id: park-scholarships
+school_id: north-carolina-state-university-at-raleigh
+ipeds_id: '199193'
+applicable_campuses: []
+official_name: Park Scholarships
+aliases:
+- Park Scholars
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: park-class-of-2031
+  supersedes: null
+  entry_year: 2027
+  entry_year_label: 'Class of 2031 (entry year derived: fall 2027)'
+  entry_terms:
+  - fall
+  source_cohort_text: Class of 2031
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b2
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-in-state
+    parent_offer_id: null
+    variant_name: null
+    residency: in_state
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: merit_only
+    need_role: not_considered
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.8
+        scale: null
+        basis: unweighted
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: Be a United States citizen, permanent resident of the U.S., or graduating from
+        a high school located in the U.S. (regardless of citizenship status).
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Must apply for fall, first-year admission to a baccalaureate program at NC State.
+        The page says 'minimum unweighted GPA of 3.80 (non-rounded)', so a 3.79 does not round up. Park
+        Scholarships and NC State admission are separate applications. The FAQ says the scholarship can
+        be deferred one year. ACT/SAT scores are not required for the Park application; if sent to NC
+        State and requested for admission consideration they are also considered.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Tuition; the page says the award covers 'tuition and fees' and gives no dollar rate
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Fees; the page says the award covers 'tuition and fees' and gives no dollar rate
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Listed as 'room and board'; page gives no rate or cap
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Listed as 'room and board'; page gives no rate or cap
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-books
+      category: books
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Listed as 'books and supplies'; page gives no amount
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-travel
+      category: other
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Listed as 'travel'; page gives no amount
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-computer
+      category: laptop
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Listed as 'computer stipend'; page gives no amount
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-personal
+      category: other
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Listed as 'personal expenses'; page gives no amount
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: approximate
+        value: 129000
+        min: null
+        max: null
+        period: total_program
+      scope_text: Four-year scholarship value for in-state students, Class of 2031, as the program page
+        states it
+  - offer_id: o-out-of-state
+    parent_offer_id: null
+    variant_name: null
+    residency: out_of_state
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: merit_only
+    need_role: not_considered
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.8
+        scale: null
+        basis: unweighted
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: Be a United States citizen, permanent resident of the U.S., or graduating from
+        a high school located in the U.S. (regardless of citizenship status).
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Must apply for fall, first-year admission to a baccalaureate program at NC State.
+        The page says 'minimum unweighted GPA of 3.80 (non-rounded)', so a 3.79 does not round up. Park
+        Scholarships and NC State admission are separate applications. The FAQ says the scholarship can
+        be deferred one year. ACT/SAT scores are not required for the Park application; if sent to NC
+        State and requested for admission consideration they are also considered.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Tuition; the page says the award covers 'tuition and fees' and gives no dollar rate
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Fees; the page says the award covers 'tuition and fees' and gives no dollar rate
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Listed as 'room and board'; page gives no rate or cap
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Listed as 'room and board'; page gives no rate or cap
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-books
+      category: books
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Listed as 'books and supplies'; page gives no amount
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-travel
+      category: other
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Listed as 'travel'; page gives no amount
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-computer
+      category: laptop
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Listed as 'computer stipend'; page gives no amount
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-personal
+      category: other
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Listed as 'personal expenses'; page gives no amount
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: approximate
+        value: 244000
+        min: null
+        max: null
+        period: total_program
+      scope_text: Four-year scholarship value for out-of-state students, Class of 2031, as the program
+        page states it
+  application:
+    separate_application: required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: '2026-11-01'
+      recurring: null
+      precision: day
+      source_date_text: 'By 11:59 pm ET, November 1: Apply for undergraduate admission to NC State.'
+    - kind: application_deadline
+      requirement: required
+      date: '2026-11-01'
+      recurring: null
+      precision: day
+      source_date_text: 'By 11:59 pm ET, November 1: Complete the Park Scholarships application'
+    - kind: notification
+      requirement: required
+      date: '2026-12-18'
+      recurring: null
+      precision: day
+      source_date_text: 'By Dec. 18, 2026: All applicants notified of Semifinalist status'
+    - kind: interview
+      requirement: required
+      date: '2027-01-16'
+      recurring: null
+      precision: day
+      source_date_text: 'Jan. 16, 2027: Semifinal Interviews (live, by Zoom)'
+    - kind: notification
+      requirement: required
+      date: '2027-02-03'
+      recurring: null
+      precision: day
+      source_date_text: 'By Feb. 3, 2027: All semifinalists notified of Finalist status'
+    - kind: finalist_event
+      requirement: required
+      date: '2027-03-05'
+      recurring: null
+      precision: day
+      source_date_text: 'March 5-6, 2027: Final Selection Activities in Raleigh, NC'
+    - kind: notification
+      requirement: required
+      date: '2027-03-24'
+      recurring: null
+      precision: day
+      source_date_text: 'By March 24, 2027: All finalists notified of award status'
+    admission_plan_requirement: Apply for fall, first-year admission to NC State by November 1 (separate
+      from the Park application)
+    prerequisites: []
+    interview_mode: mixed
+    finalist_event_required: true
+    notes: The apply page says 'The application for 2026-2027 is now closed' (the November 1, 2026 deadline
+      has passed); the program itself is active. Two recommendations and two essays are required. The
+      page names no per-stage dates beyond those listed. The selection page's own tabs repeat the same
+      dates.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: 12
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Renewable for eight semesters; scholars must meet 'high standards in academic performance,
+      character, conduct, and participation in program and service activities' while completing at least
+      12 credit hours per semester. No GPA figure is published.
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: allowed
+    note: Eligible for additional NC State merit scholarships provided total funds do not exceed the cost
+      of attendance, unless the awarding department stipulates otherwise.
+  - other_aid_type: outside_scholarship
+    relation: counts_within_package
+    note: NC State adjusts the Park Scholarship if outside awards plus Park exceed cost of attendance
+      in a semester.
+  - other_aid_type: federal_or_state_need
+    relation: counts_within_package
+    note: Park Scholarship is reduced appropriately for Pell, NC state or university need grants to keep
+      the student within cost of attendance.
+  award_counts:
+  - metric: offers
+    qualifier: approximate
+    value: 38
+    cohort_year: null
+    source_ref: s-about
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-about
+    url: https://park.ncsu.edu/about/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: a6ad3e9df608d066b057f524d7d52216ae8a44699a7b706a88b8f1f5e0d35922
+    archive_url: null
+  - source_id: s-apply
+    url: https://park.ncsu.edu/apply/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: e7fd497375062b76e3e82fad66537333c4e4b2b0e3ddfaa03a726b87230fc8df
+    archive_url: null
+  - source_id: s-crit
+    url: https://park.ncsu.edu/apply/selection-criteria/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 3abb99d97f71f8d815267e2d73df2add87b0106bc146d5420d6ce877b6c17247
+    archive_url: null
+  - source_id: s-faq
+    url: https://park.ncsu.edu/faq/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: bb1e7cf9944b09bed5d4e346df95a20c7d2e1620461199d3f37c74a60b8ba725
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-crit
+    locator: Selection Criteria & Process, selection paragraph
+    short_excerpt: Park Scholars are selected on the basis of demonstrated achievement and evidence of
+      future potential in scholarship, leadership, service and character.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-faq
+    locator: FAQ, 'What is the Park Scholarships program?'
+    short_excerpt: The scholarship is a four-year award that covers tuition and fees, room and board,
+      books and supplies, travel and personal expenses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-faq
+    locator: FAQ, 'What is the Park Scholarships program?'
+    short_excerpt: The scholarship is a four-year award that covers tuition and fees, room and board,
+      books and supplies, travel and personal expenses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-faq
+    locator: FAQ, 'What is the Park Scholarships program?'
+    short_excerpt: The scholarship is a four-year award that covers tuition and fees, room and board,
+      books and supplies, travel and personal expenses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3
+    source_ref: s-faq
+    locator: FAQ, 'What is the Park Scholarships program?'
+    short_excerpt: The scholarship is a four-year award that covers tuition and fees, room and board,
+      books and supplies, travel and personal expenses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-apply
+    locator: Apply page, eligibility list
+    short_excerpt: Have a minimum unweighted GPA of 3.80 (non-rounded).
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-apply
+    locator: Apply page, footnote to the application requirements
+    short_excerpt: ACT and/or SAT scores are not required for your Park Scholarships application.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_text
+    source_ref: s-apply
+    locator: Apply page, eligibility list
+    short_excerpt: Be a United States citizen, permanent resident of the U.S., or graduating from a high
+      school located in the U.S. (regardless of citizenship status).
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/need_role
+    source_ref: s-faq
+    locator: FAQ, 'Is financial need taken into consideration?'
+    short_excerpt: The Park Scholarship is a merit-based award and financial need is not a selection criterion.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-apply
+    locator: Apply page, 'The Park Scholarships application requires'
+    short_excerpt: Complete the Park Scholarships application.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/selection_mode
+    source_ref: s-crit
+    locator: Selection Criteria & Process, selection paragraph
+    short_excerpt: Park Scholars are selected on the basis of demonstrated achievement and evidence of
+      future potential in scholarship, leadership, service and character.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0
+    source_ref: s-faq
+    locator: FAQ, 'What is the Park Scholarships program?'
+    short_excerpt: The scholarship is a four-year award that covers tuition and fees, room and board,
+      books and supplies, travel and personal expenses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/1
+    source_ref: s-faq
+    locator: FAQ, 'What is the Park Scholarships program?'
+    short_excerpt: The scholarship is a four-year award that covers tuition and fees, room and board,
+      books and supplies, travel and personal expenses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/2
+    source_ref: s-faq
+    locator: FAQ, 'What is the Park Scholarships program?'
+    short_excerpt: The scholarship is a four-year award that covers tuition and fees, room and board,
+      books and supplies, travel and personal expenses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/3
+    source_ref: s-faq
+    locator: FAQ, 'What is the Park Scholarships program?'
+    short_excerpt: The scholarship is a four-year award that covers tuition and fees, room and board,
+      books and supplies, travel and personal expenses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/eligibility/gpa
+    source_ref: s-apply
+    locator: Apply page, eligibility list
+    short_excerpt: Have a minimum unweighted GPA of 3.80 (non-rounded).
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/eligibility/tests_policy_for_scholarship
+    source_ref: s-apply
+    locator: Apply page, footnote to the application requirements
+    short_excerpt: ACT and/or SAT scores are not required for your Park Scholarships application.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/eligibility/citizenship_text
+    source_ref: s-apply
+    locator: Apply page, eligibility list
+    short_excerpt: Be a United States citizen, permanent resident of the U.S., or graduating from a high
+      school located in the U.S. (regardless of citizenship status).
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/need_role
+    source_ref: s-faq
+    locator: FAQ, 'Is financial need taken into consideration?'
+    short_excerpt: The Park Scholarship is a merit-based award and financial need is not a selection criterion.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/consideration_route
+    source_ref: s-apply
+    locator: Apply page, 'The Park Scholarships application requires'
+    short_excerpt: Complete the Park Scholarships application.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/advertised_totals/0/amount
+    source_ref: s-about
+    locator: About the Program, 'Exceptional Benefits' list
+    short_excerpt: Four-year scholarship valued at approximately $129,000 for in-state students and $244,000
+      for out-of-state students (for the Class of 2031)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/advertised_totals/0/amount
+    source_ref: s-about
+    locator: About the Program, 'Exceptional Benefits' list
+    short_excerpt: Four-year scholarship valued at approximately $129,000 for in-state students and $244,000
+      for out-of-state students (for the Class of 2031)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-about
+    locator: 'About the Program, ''Exceptional Benefits'' list: components listed without amounts'
+    short_excerpt: including tuition and fees, room and board, books and supplies, travel, computer stipend
+      and personal expenses
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-about
+    locator: 'About the Program, ''Exceptional Benefits'' list: components listed without amounts'
+    short_excerpt: including tuition and fees, room and board, books and supplies, travel, computer stipend
+      and personal expenses
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-about
+    locator: 'About the Program, ''Exceptional Benefits'' list: components listed without amounts'
+    short_excerpt: including tuition and fees, room and board, books and supplies, travel, computer stipend
+      and personal expenses
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/5/amount
+    source_ref: s-about
+    locator: 'About the Program, ''Exceptional Benefits'' list: components listed without amounts'
+    short_excerpt: including tuition and fees, room and board, books and supplies, travel, computer stipend
+      and personal expenses
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/6/amount
+    source_ref: s-about
+    locator: 'About the Program, ''Exceptional Benefits'' list: components listed without amounts'
+    short_excerpt: including tuition and fees, room and board, books and supplies, travel, computer stipend
+      and personal expenses
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/7/amount
+    source_ref: s-about
+    locator: 'About the Program, ''Exceptional Benefits'' list: components listed without amounts'
+    short_excerpt: including tuition and fees, room and board, books and supplies, travel, computer stipend
+      and personal expenses
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-about
+    locator: 'About the Program, ''Exceptional Benefits'' list: no separate tuition or fee amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-about
+    locator: 'About the Program, ''Exceptional Benefits'' list: no separate tuition or fee amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/2/amount
+    source_ref: s-about
+    locator: 'About the Program, ''Exceptional Benefits'' list: components listed without amounts'
+    short_excerpt: including tuition and fees, room and board, books and supplies, travel, computer stipend
+      and personal expenses
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/3/amount
+    source_ref: s-about
+    locator: 'About the Program, ''Exceptional Benefits'' list: components listed without amounts'
+    short_excerpt: including tuition and fees, room and board, books and supplies, travel, computer stipend
+      and personal expenses
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/4/amount
+    source_ref: s-about
+    locator: 'About the Program, ''Exceptional Benefits'' list: components listed without amounts'
+    short_excerpt: including tuition and fees, room and board, books and supplies, travel, computer stipend
+      and personal expenses
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/5/amount
+    source_ref: s-about
+    locator: 'About the Program, ''Exceptional Benefits'' list: components listed without amounts'
+    short_excerpt: including tuition and fees, room and board, books and supplies, travel, computer stipend
+      and personal expenses
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/6/amount
+    source_ref: s-about
+    locator: 'About the Program, ''Exceptional Benefits'' list: components listed without amounts'
+    short_excerpt: including tuition and fees, room and board, books and supplies, travel, computer stipend
+      and personal expenses
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/7/amount
+    source_ref: s-about
+    locator: 'About the Program, ''Exceptional Benefits'' list: components listed without amounts'
+    short_excerpt: including tuition and fees, room and board, books and supplies, travel, computer stipend
+      and personal expenses
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-about
+    locator: 'About the Program, ''Exceptional Benefits'' list: no separate tuition or fee amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/1/amount
+    source_ref: s-about
+    locator: 'About the Program, ''Exceptional Benefits'' list: no separate tuition or fee amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-apply
+    locator: Apply page, intro
+    short_excerpt: The application processes for Park Scholarships and NC State undergraduate admissions
+      are separate
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-apply
+    locator: Apply page, 'By 11:59 pm ET, November 1' list; dates table 'Important Dates for 2026-2027'
+    short_excerpt: 'Nov. 1, 2026:'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-apply
+    locator: Apply page, 'By 11:59 pm ET, November 1' list; dates table 'Important Dates for 2026-2027'
+    short_excerpt: 'Nov. 1, 2026:'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-apply
+    locator: Apply page, Important Dates for 2026-2027
+    short_excerpt: All applicants notified of Semifinalist status
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-apply
+    locator: Apply page, Important Dates for 2026-2027
+    short_excerpt: Semifinal Interviews (live, by Zoom)
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/4
+    source_ref: s-apply
+    locator: Apply page, Important Dates for 2026-2027
+    short_excerpt: All semifinalists notified of Finalist status
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/5
+    source_ref: s-apply
+    locator: Apply page, Important Dates for 2026-2027
+    short_excerpt: Final Selection Activities in Raleigh, NC
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/6
+    source_ref: s-apply
+    locator: Apply page, Important Dates for 2026-2027
+    short_excerpt: All finalists notified of award status
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-faq
+    locator: FAQ, 'What are Park Scholarships interviews like?'
+    short_excerpt: Semifinal Interviews are held via Zoom. Finalist Interviews are held in-person during
+      our Final Selection Activities weekend.
+    value_status: reported
+    reported_value: mixed
+  - field_path: application/finalist_event_required
+    source_ref: s-crit
+    locator: Selection Criteria & Process
+    short_excerpt: Each finalist will participate in an interview and an additional evaluated group task
+    value_status: reported
+    reported_value: true
+  - field_path: renewal_rules/0
+    source_ref: s-faq
+    locator: FAQ, 'What are the conditions for renewal of the Park Scholarships?'
+    short_excerpt: The Park Scholarship is renewable for a total of eight semesters at NC State.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-faq
+    locator: FAQ, 'Am I able to receive scholarships in addition to the Park Scholarship?'
+    short_excerpt: Park Scholars are eligible for additional merit scholarships from North Carolina State
+      University provided they do not receive funds that exceed the
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/1
+    source_ref: s-faq
+    locator: FAQ, 'Am I able to receive scholarships in addition...', second paragraph
+    short_excerpt: NC State will adjust the Park Scholarship to reflect other funds received so that the
+      total amount of funds a student receives
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/2
+    source_ref: s-faq
+    locator: FAQ, 'Am I able to receive scholarships in addition...', third paragraph
+    short_excerpt: will have the Park Scholarship reduced appropriately to keep the student within the
+      Cost of Attendance.
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts/0
+    source_ref: s-about
+    locator: About the Program, paragraph after the Stamps partnership text
+    short_excerpt: Approximately 38 scholarships will be awarded this year to outstanding entering freshmen
+      for undergraduate study in any discipline at NC State.
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-about
+    locator: 'About the Program, ''Exceptional Benefits'' list: ''for the Class of 2031''; apply page
+      ''Park Scholarships Class of 2031 announced'' (2027)'
+    short_excerpt: Four-year scholarship valued at approximately $129,000 for in-state students and $244,000
+      for out-of-state students (for the Class of 2031)
+    value_status: reported
+    reported_value: null

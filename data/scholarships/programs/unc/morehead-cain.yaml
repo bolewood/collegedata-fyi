@@ -1,0 +1,509 @@
+schema_version: 1
+program_id: morehead-cain
+school_id: unc
+ipeds_id: '199120'
+applicable_campuses: []
+official_name: Morehead-Cain Scholarship
+aliases:
+- Morehead-Cain
+- Morehead-Cain Scholars
+program_family: other
+awarding_authority: affiliated_foundation
+related_programs: []
+status: active
+versions:
+- version_id: morehead-cain-class-of-2031
+  supersedes: null
+  entry_year: 2027
+  entry_year_label: 'Class of 2031 (entry year derived: fall 2027)'
+  entry_terms:
+  - fall
+  source_cohort_text: Morehead-Cain Class of 2031
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b2
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: multiple
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: 'Must be on track to graduate high school in the spring and be a competitive
+        applicant to UNC-Chapel Hill; admission to UNC is a separate process. Routes: nomination by a
+        high school or affiliate program, North Carolina self-nomination, or the Admissions Referral Program
+        for out-of-state students who apply to UNC by the Early Action deadline. Test-optional for scholarship
+        selection in the 2026-2027 cycle. Pages for Canada, the United Kingdom and international applicants
+        were not read.'
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: '''Tuition, books, room and board and/or semester stipend'' with ''Four years, four
+        summers—fully funded''; no dollar amount, cap or per-component promise published'
+      advertised_coverage_label: fully funded
+      conditions_text: null
+    - benefit_id: b-books
+      category: books
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: Listed with tuition, room and board; no amount published
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: '''room and board and/or semester stipend''; no rate or cap published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: '''room and board and/or semester stipend''; no rate or cap published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-summers
+      category: enrichment
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: A four-year Summer Enrichment Program of customized experiences; amount not published
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-discovery
+      category: enrichment
+      instrument: restricted_fund
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''Discovery funds to be used for educational opportunities outside the classroom'';
+        amount not published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-study-abroad
+      category: study_abroad
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''The opportunity to study abroad for a semester or summer term''; amount not published'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: required
+    milestones:
+    - kind: application_open
+      requirement: required
+      date: '2026-08-15'
+      recurring: null
+      precision: day
+      source_date_text: August 15, 2026
+    - kind: application_deadline
+      requirement: required
+      date: '2026-10-01'
+      recurring: null
+      precision: day
+      source_date_text: October 1 (All application materials due); open until 11:59 p.m. EST on October
+        1, 2026
+    - kind: admission_deadline
+      requirement: required
+      date: '2026-10-15'
+      recurring: null
+      precision: day
+      source_date_text: October 15, 2026, if applying Early Action (UNC application must be complete)
+    - kind: admission_deadline
+      requirement: required
+      date: '2027-01-01'
+      recurring: null
+      precision: day
+      source_date_text: January 1, 2027, if applying Regular Decision (two weeks before UNC's own RD deadline)
+    - kind: notification
+      requirement: recommended
+      date: '2026-12-01'
+      recurring: null
+      precision: month
+      source_date_text: Mid December (semifinalists)
+    - kind: interview
+      requirement: required
+      date: '2026-12-01'
+      recurring: null
+      precision: month
+      source_date_text: Mid December (video interviews)
+    - kind: notification
+      requirement: recommended
+      date: '2027-01-01'
+      recurring: null
+      precision: month
+      source_date_text: Mid January 2027 (finalists)
+    - kind: finalist_event
+      requirement: required
+      date: '2027-01-01'
+      recurring: null
+      precision: month
+      source_date_text: January–February 2027 (Finalist and Alumni Connection Experience)
+    - kind: finalist_event
+      requirement: required
+      date: '2027-02-26'
+      recurring: null
+      precision: day
+      source_date_text: February 26 to March 1, 2027 (Final Selection Experience)
+    - kind: notification
+      requirement: recommended
+      date: '2027-03-05'
+      recurring: null
+      precision: day
+      source_date_text: March 5, 2027
+    - kind: acceptance_deadline
+      requirement: required
+      date: '2027-04-05'
+      recurring: null
+      precision: day
+      source_date_text: April 5, 2027
+    admission_plan_requirement: A complete UNC-Chapel Hill application by October 15, 2026 (Early Action)
+      or January 1, 2027 (Regular Decision); nominees need not apply Early Action, but the Admissions
+      Referral Program requires it
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: 'Leftover passages: the deadlines page still says the Class of 2031 application ''will open
+      on August 15, 2026'' (that date has passed) and the FAQ says the cycle ''will begin in spring 2026'';
+      the North Carolina page says the application was open until October 1, 2026, a deadline that has
+      also passed. Counselors submit nominations by June 30 (FAQ). The program also lists a separate UNC
+      Sophomore Process, not read here.'
+  renewal_rules: null
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-about
+    url: https://www.moreheadcain.org/application-eligibility/about-the-morehead-cain-scholarship-program/
+    authority: foundation_official
+    retrieved_at: '2026-11-15'
+    content_sha256: 5ea8174d43eb1a90d849ef02939f783ce03dc4854b3f55dc3bebb8d37c766c51
+    archive_url: null
+  - source_id: s-dates
+    url: https://www.moreheadcain.org/application-eligibility/deadlines/
+    authority: foundation_official
+    retrieved_at: '2026-11-15'
+    content_sha256: 63b4e871380659d9f5b3ca83da63b7dc9884a16a95fba507ef211aaa6b4f8d91
+    archive_url: null
+  - source_id: s-nc
+    url: https://www.moreheadcain.org/application-eligibility/eligibility-information/north-carolina/
+    authority: foundation_official
+    retrieved_at: '2026-11-15'
+    content_sha256: 82aff34715456c4a0b736e7adcd849426c8e1d2410abebe8142c35f1a129f6d2
+    archive_url: null
+  - source_id: s-us
+    url: https://www.moreheadcain.org/application-eligibility/eligibility-information/us/
+    authority: foundation_official
+    retrieved_at: '2026-11-15'
+    content_sha256: 4e2f5b717c9983d4c4b308e1c50b6c6a4ee0b05ef9ef540aa2a26a07936af5d8
+    archive_url: null
+  - source_id: s-faq
+    url: https://www.moreheadcain.org/application-eligibility/faqs/
+    authority: foundation_official
+    retrieved_at: '2026-11-15'
+    content_sha256: 39de629da4394501efdb32598c1be5cca1214a3dbb29f82229b829143c6735d4
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-dates
+    locator: Deadlines & Important Dates, Final Selection row
+    short_excerpt: Morehead-Cain Final Selection Experience
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-nc
+    locator: North Carolina eligibility page, 'To apply for the Morehead-Cain, you must be'
+    short_excerpt: Nominated by your high school, affiliate program, or self-nomination.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-nc
+    locator: North Carolina eligibility page, 'Things you should know'
+    short_excerpt: will, therefore, be test-optional for scholarship selection in the 2026–2027 cycle.
+    value_status: reported
+    reported_value: optional
+  - field_path: offers/0/benefits/0
+    source_ref: s-about
+    locator: About page, 'Support for Life at Carolina and Around the World'
+    short_excerpt: Tuition, books, room and board and/or semester stipend
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-about
+    locator: About page, 'Support for Life at Carolina and Around the World'
+    short_excerpt: Tuition, books, room and board and/or semester stipend
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-about
+    locator: About page, 'Support for Life at Carolina and Around the World'
+    short_excerpt: Tuition, books, room and board and/or semester stipend
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3
+    source_ref: s-about
+    locator: About page, 'Support for Life at Carolina and Around the World'
+    short_excerpt: Tuition, books, room and board and/or semester stipend
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/4
+    source_ref: s-about
+    locator: About page, same list
+    short_excerpt: 'A four-year Summer Enrichment Program made up of diverse, customized experiences:'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/5
+    source_ref: s-about
+    locator: About page, same list
+    short_excerpt: Discovery funds to be used for educational opportunities outside the classroom
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/6
+    source_ref: s-about
+    locator: About page, same list
+    short_excerpt: The opportunity to study abroad for a semester or summer term
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/advertised_coverage_label
+    source_ref: s-about
+    locator: About page, intro paragraph
+    short_excerpt: Four years, four summers—fully funded.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-about
+    locator: 'About page: no dollar amounts for any component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-about
+    locator: 'About page: no dollar amounts for any component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-about
+    locator: 'About page: no dollar amounts for any component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-about
+    locator: 'About page: no dollar amounts for any component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-about
+    locator: 'About page: no dollar amounts for any component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/5/amount
+    source_ref: s-about
+    locator: 'About page: no dollar amounts for any component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/6/amount
+    source_ref: s-about
+    locator: 'About page: no dollar amounts for any component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-nc
+    locator: North Carolina eligibility page, 'Things you should know'
+    short_excerpt: Admission to the University of North Carolina at Chapel Hill is a separate process
+      from the Morehead-Cain application.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-dates
+    locator: Deadlines page, intro
+    short_excerpt: The application to join the Morehead-Cain Class of 2031 will open on August 15, 2026.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-nc
+    locator: North Carolina eligibility page, Important Dates
+    short_excerpt: The application to join the Morehead-Cain Class of 2031 is open until 11:59 p.m. EST
+      on October 1, 2026.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-nc
+    locator: 'North Carolina eligibility page, ''Things you should know'': UNC application by Oct. 15,
+      2026 (Early Action)'
+    short_excerpt: October 15, 2026, if applying Early Action; or
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-nc
+    locator: 'North Carolina eligibility page, ''Things you should know'': UNC application by Jan. 1,
+      2027 (Regular Decision)'
+    short_excerpt: January 1, 2027, if applying Regular Decision*
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/4
+    source_ref: s-dates
+    locator: Deadlines page, row 'Semifinalist notification to all students'
+    short_excerpt: Semifinalist notification to all students
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/5
+    source_ref: s-dates
+    locator: Deadlines page, row 'Video interviews for semifinalists'
+    short_excerpt: Video interviews for semifinalists
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/6
+    source_ref: s-dates
+    locator: Deadlines page, row 'Finalist notification to students'
+    short_excerpt: Finalist notification to students
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/7
+    source_ref: s-dates
+    locator: Deadlines page, row 'Finalist and Alumni Connection Experience (FACE)'
+    short_excerpt: Finalist and Alumni Connection Experience (FACE)
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/8
+    source_ref: s-dates
+    locator: Deadlines page, row 'Morehead-Cain Final Selection Experience'
+    short_excerpt: February 26 to March 1, 2027
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/9
+    source_ref: s-dates
+    locator: Deadlines page, row 'Recipient notification'
+    short_excerpt: Recipient notification
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/10
+    source_ref: s-dates
+    locator: Deadlines page, row 'Deadline for recipients to accept'
+    short_excerpt: Deadline for recipients to accept the Morehead-Cain Scholarship
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-dates
+    locator: 'Deadlines page: only semifinalist video interviews are described; the Final Selection Experience
+      format is not stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/finalist_event_required
+    source_ref: s-dates
+    locator: 'Deadlines page, ''Morehead-Cain Final Selection Experience'' follows finalist notification:
+      no statement that attendance is mandatory'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-dates
+    locator: 'Deadlines page: ''Morehead-Cain Class of 2031''; recipient notification March 5, 2027'
+    short_excerpt: The application to join the Morehead-Cain Class of 2031 will open on August 15, 2026.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules
+    source_ref: s-faq
+    locator: 'About, Deadlines, eligibility and FAQ pages: no renewal condition stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: stacking_rules
+    source_ref: s-faq
+    locator: 'About, Deadlines, eligibility and FAQ pages: no stacking rule stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: award_counts
+    source_ref: s-about
+    locator: 'About and eligibility pages: no award count stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: /awarding_authority
+    source_ref: s-about
+    locator: 'About page, ''The Morehead-Cain Program at UNC–Chapel Hill'': program run by the Morehead-Cain
+      Foundation (page footer: © Morehead-Cain Foundation)'
+    short_excerpt: null
+    value_status: reported
+    reported_value: null

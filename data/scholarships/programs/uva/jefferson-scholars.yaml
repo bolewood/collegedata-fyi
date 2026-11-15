@@ -1,0 +1,634 @@
+schema_version: 1
+program_id: jefferson-scholars
+school_id: uva
+ipeds_id: '234076'
+applicable_campuses: []
+official_name: Jefferson Scholarship
+aliases:
+- Jefferson Scholars Program
+- Jefferson Scholars
+program_family: other
+awarding_authority: affiliated_foundation
+related_programs: []
+status: active
+versions:
+- version_id: jefferson-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Entering class not named; the FAQ describes the 2026-2027 selection process
+  entry_terms:
+  - fall
+  source_cohort_text: 2026-2027 selection process (FAQ)
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b2
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-virginia
+    parent_offer_id: null
+    variant_name: Virginia residents
+    residency: in_state
+    selection_mode: competitive
+    consideration_route: multiple
+    aid_basis: merit_only
+    need_role: not_considered
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: not_considered
+      citizenship_eligible:
+      - any
+      citizenship_text: Jefferson and Walentas Scholars do not have to be U.S. citizens.
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Must gain admission to UVA; the foundation's selection is separate from UVA admissions
+        and does not consider EA, ED or RD plan. Nominees are not selected on financial need or interest
+        in UVA. SAT, ACT, AP and IB scores are not considered for the 2026-2027 selection process.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters at UVA
+      exclusions: null
+      scope_text: Included in the scholarship per the FAQ; the overview says the award 'is intended to
+        cover the entire cost of attendance'
+      advertised_coverage_label: intended to cover the entire cost of attendance
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters at UVA
+      exclusions: null
+      scope_text: Room is listed as included; no rate or cap published
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters at UVA
+      exclusions: null
+      scope_text: Board is listed as included; no rate or cap published
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-books
+      category: books
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters at UVA
+      exclusions: null
+      scope_text: Books are listed as included; no amount published
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-misc
+      category: other
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters at UVA
+      exclusions: null
+      scope_text: '''Miscellaneous expenses'' are listed as included; no amount published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-enrich
+      category: enrichment
+      instrument: restricted_fund
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'Overview: ''plus coverage of supplemental enrichment experiences'' (international travel,
+        networking, leadership institute, exploratory fund); amount not published'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: at_least
+        value: 42000
+        min: null
+        max: null
+        period: academic_year
+      scope_text: '''over $42,000 per year'' as the foundation''s scholarships page states it'
+    - amount:
+        qualifier: at_least
+        value: 230000
+        min: null
+        max: null
+        period: total_program
+      scope_text: '''upwards of $230,000 total'' as the foundation''s scholarships page states it'
+  - offer_id: o-non-virginia
+    parent_offer_id: null
+    variant_name: Non-Virginians (the page does not separate international students)
+    residency: out_of_state
+    selection_mode: competitive
+    consideration_route: multiple
+    aid_basis: merit_only
+    need_role: not_considered
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: not_considered
+      citizenship_eligible:
+      - any
+      citizenship_text: Jefferson and Walentas Scholars do not have to be U.S. citizens.
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Must gain admission to UVA; the foundation's selection is separate from UVA admissions
+        and does not consider EA, ED or RD plan. Nominees are not selected on financial need or interest
+        in UVA. SAT, ACT, AP and IB scores are not considered for the 2026-2027 selection process.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters at UVA
+      exclusions: null
+      scope_text: Included in the scholarship per the FAQ; the overview says the award 'is intended to
+        cover the entire cost of attendance'
+      advertised_coverage_label: intended to cover the entire cost of attendance
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters at UVA
+      exclusions: null
+      scope_text: Room is listed as included; no rate or cap published
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters at UVA
+      exclusions: null
+      scope_text: Board is listed as included; no rate or cap published
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-books
+      category: books
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters at UVA
+      exclusions: null
+      scope_text: Books are listed as included; no amount published
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-misc
+      category: other
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters at UVA
+      exclusions: null
+      scope_text: '''Miscellaneous expenses'' are listed as included; no amount published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-enrich
+      category: enrichment
+      instrument: restricted_fund
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'Overview: ''plus coverage of supplemental enrichment experiences'' (international travel,
+        networking, leadership institute, exploratory fund); amount not published'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: at_least
+        value: 83000
+        min: null
+        max: null
+        period: academic_year
+      scope_text: '''over $83,000 per year'' as the foundation''s scholarships page states it'
+    - amount:
+        qualifier: at_least
+        value: 405000
+        min: null
+        max: null
+        period: total_program
+      scope_text: '''upwards of $405,000 total'' as the foundation''s scholarships page states it'
+  application:
+    separate_application: invitation_only
+    milestones:
+    - kind: nomination_deadline
+      requirement: required
+      date: '2026-12-01'
+      recurring: null
+      precision: day
+      source_date_text: December 1, 2026 (counselor and nominee materials; all regions)
+    - kind: notification
+      requirement: recommended
+      date: '2027-01-01'
+      recurring: null
+      precision: month
+      source_date_text: before the end of January (status in either competition)
+    - kind: interview
+      requirement: required
+      date: '2027-02-01'
+      recurring: null
+      precision: month
+      source_date_text: late February of 2027 (final selection interviews)
+    - kind: acceptance_deadline
+      requirement: required
+      date: '2027-04-01'
+      recurring: null
+      precision: month
+      source_date_text: mid-April (decide whether to accept)
+    admission_plan_requirement: Nominee must apply to UVA and be admitted; the foundation does not consider
+      EA, ED or RD plan
+    prerequisites:
+    - kind: admission_application
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Nominees must have applied to UVA and ultimately gain admission
+    interview_mode: mixed
+    finalist_event_required: null
+    notes: 'Only eligible schools can nominate; the nomination form needs a counselor scholastic report,
+      one letter of recommendation, transcript and school profile from the counselor, and activities,
+      awards and two essays from the nominee. Regional interviews (mid-December to January) may be in
+      person or virtual; final selection interviews are virtual. The UVA Office of Undergraduate Admission
+      also reviews Early applicants and recommends nominees for the Jefferson Scholarship (notified in
+      February). The page names no entering class: the FAQ says ''2026-2027 selection process'' with final
+      selection in late February 2027.'
+  renewal_rules: null
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-overview
+    url: https://www.jeffersonscholars.org/scholarships
+    authority: foundation_official
+    retrieved_at: '2026-11-15'
+    content_sha256: 86ca18a3273f77360a530a2e933643127acac5ec08ca669ad0a5e45b857a6848
+    archive_url: null
+  - source_id: s-selection
+    url: https://www.jeffersonscholars.org/scholarships/selection
+    authority: foundation_official
+    retrieved_at: '2026-11-15'
+    content_sha256: 993fd8e401d062d8763ae147a44b155acfd1166859c011f792f661359fc2acb9
+    archive_url: null
+  - source_id: s-faq
+    url: https://www.jeffersonscholars.org/scholarships/walentas-faqs
+    authority: foundation_official
+    retrieved_at: '2026-11-15'
+    content_sha256: 1382746bfe91640951b94ab37aceea978e43acfdf9d7c0f1e813d8216fa67661
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-selection
+    locator: Selection page, intro
+    short_excerpt: The Jefferson and Walentas Scholarships feature two similar, yet distinct, selection
+      processes
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-selection
+    locator: Selection page, 'Nomination' section
+    short_excerpt: Eligible schools are asked to nominate a student in the senior class
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-faq
+    locator: FAQ, 'Is this a full scholarship for four years?'
+    short_excerpt: The scholarship includes tuition, room, board, books, and miscellaneous expenses based
+      on full-time enrollment for eight semesters at the University of Virginia.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/5
+    source_ref: s-overview
+    locator: Scholarships page, 'Awards'
+    short_excerpt: plus coverage of supplemental enrichment experiences
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-overview
+    locator: 'Scholarships page, ''Awards'': benefit amounts given only as package totals'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-overview
+    locator: 'Scholarships page, ''Awards'': benefit amounts given only as package totals'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-overview
+    locator: 'Scholarships page, ''Awards'': benefit amounts given only as package totals'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-overview
+    locator: 'Scholarships page, ''Awards'': benefit amounts given only as package totals'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-overview
+    locator: 'Scholarships page, ''Awards'': benefit amounts given only as package totals'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/5/amount
+    source_ref: s-overview
+    locator: 'Scholarships page, ''Awards'': enrichment amount not published'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/need_role
+    source_ref: s-faq
+    locator: FAQ, 'Are financial need or prior interest in UVA considerations for the scholarships?'
+    short_excerpt: no financial information is utilized in the selection process.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-faq
+    locator: FAQ, 'What are the components of the nomination form?'
+    short_excerpt: SAT, ACT, AP, and IB scores are not considered for the 2026-2027 selection process.
+    value_status: reported
+    reported_value: not_considered
+  - field_path: offers/0/eligibility/citizenship_text
+    source_ref: s-faq
+    locator: FAQ, 'I or my student is not a U.S. citizen. Is citizenship a requirement?'
+    short_excerpt: Jefferson and Walentas Scholars do not have to be U.S. citizens.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_eligible
+    source_ref: s-faq
+    locator: FAQ, 'I or my student is not a U.S. citizen. Is citizenship a requirement?'
+    short_excerpt: Jefferson and Walentas Scholars do not have to be U.S. citizens.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/selection_mode
+    source_ref: s-selection
+    locator: Selection page, intro
+    short_excerpt: The Jefferson and Walentas Scholarships feature two similar, yet distinct, selection
+      processes
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/consideration_route
+    source_ref: s-selection
+    locator: Selection page, 'Nomination' section
+    short_excerpt: Eligible schools are asked to nominate a student in the senior class
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0
+    source_ref: s-faq
+    locator: FAQ, 'Is this a full scholarship for four years?'
+    short_excerpt: The scholarship includes tuition, room, board, books, and miscellaneous expenses based
+      on full-time enrollment for eight semesters at the University of Virginia.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/5
+    source_ref: s-overview
+    locator: Scholarships page, 'Awards'
+    short_excerpt: plus coverage of supplemental enrichment experiences
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-overview
+    locator: 'Scholarships page, ''Awards'': benefit amounts given only as package totals'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/1/amount
+    source_ref: s-overview
+    locator: 'Scholarships page, ''Awards'': benefit amounts given only as package totals'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/2/amount
+    source_ref: s-overview
+    locator: 'Scholarships page, ''Awards'': benefit amounts given only as package totals'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/3/amount
+    source_ref: s-overview
+    locator: 'Scholarships page, ''Awards'': benefit amounts given only as package totals'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/4/amount
+    source_ref: s-overview
+    locator: 'Scholarships page, ''Awards'': benefit amounts given only as package totals'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/5/amount
+    source_ref: s-overview
+    locator: 'Scholarships page, ''Awards'': enrichment amount not published'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/need_role
+    source_ref: s-faq
+    locator: FAQ, 'Are financial need or prior interest in UVA considerations for the scholarships?'
+    short_excerpt: no financial information is utilized in the selection process.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/eligibility/tests_policy_for_scholarship
+    source_ref: s-faq
+    locator: FAQ, 'What are the components of the nomination form?'
+    short_excerpt: SAT, ACT, AP, and IB scores are not considered for the 2026-2027 selection process.
+    value_status: reported
+    reported_value: not_considered
+  - field_path: offers/1/eligibility/citizenship_text
+    source_ref: s-faq
+    locator: FAQ, 'I or my student is not a U.S. citizen. Is citizenship a requirement?'
+    short_excerpt: Jefferson and Walentas Scholars do not have to be U.S. citizens.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/eligibility/citizenship_eligible
+    source_ref: s-faq
+    locator: FAQ, 'I or my student is not a U.S. citizen. Is citizenship a requirement?'
+    short_excerpt: Jefferson and Walentas Scholars do not have to be U.S. citizens.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/advertised_totals/0/amount
+    source_ref: s-overview
+    locator: Scholarships page, 'Awards'
+    short_excerpt: Virginians receive over $42,000 per year or upwards of $230,000 total.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/advertised_totals/1/amount
+    source_ref: s-overview
+    locator: Scholarships page, 'Awards'
+    short_excerpt: Virginians receive over $42,000 per year or upwards of $230,000 total.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/advertised_totals/0/amount
+    source_ref: s-overview
+    locator: Scholarships page, 'Awards'
+    short_excerpt: Non-Virginians receive over $83,000 per year or upwards of $405,000 total.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/advertised_totals/1/amount
+    source_ref: s-overview
+    locator: Scholarships page, 'Awards'
+    short_excerpt: Non-Virginians receive over $83,000 per year or upwards of $405,000 total.
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-selection
+    locator: Selection page, 'Nomination'
+    short_excerpt: No one may apply for a Jefferson or Walentas Scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-faq
+    locator: FAQ, Nomination Process, 'What is the deadline for submission?'
+    short_excerpt: for both counselor and nominee materials for the Jefferson or Walentas Scholarship
+      is
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-faq
+    locator: FAQ, Selection Process, 'I submitted my nomination form by the deadline. What happens next?'
+    short_excerpt: Nominees can expect to receive information regarding their status in either competition
+      before the end of January.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-faq
+    locator: FAQ, Selection Process, final selection interviews
+    short_excerpt: The Final Selection for each scholarship will take place in late February of 2027.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-selection
+    locator: Selection page, 'Final Selection'
+    short_excerpt: All recipients must decide whether to accept the scholarship offer by mid-April.
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-faq
+    locator: FAQ, 'Are the interviews in-person or virtual?'
+    short_excerpt: Final selection interviews for both scholarships will be virtual without exception.
+    value_status: reported
+    reported_value: mixed
+  - field_path: entry_year
+    source_ref: s-faq
+    locator: 'FAQ and Selection page: ''2026-2027 selection process'', final selection ''late February
+      of 2027''; no entering class named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: renewal_rules
+    source_ref: s-faq
+    locator: 'FAQ and Scholarships page: no renewal condition stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: stacking_rules
+    source_ref: s-faq
+    locator: 'FAQ and Scholarships page: no stacking rule stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: award_counts
+    source_ref: s-selection
+    locator: 'Scholarships and Selection pages: no per-class award count stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: /awarding_authority
+    source_ref: s-overview
+    locator: 'Scholarships page, intro: ''The Jefferson Scholars Foundation attracts outstanding undergraduate
+      students to the University of Virginia through two scholarship programs'''
+    short_excerpt: null
+    value_status: reported
+    reported_value: null
+  - field_path: application/finalist_event_required
+    source_ref: s-selection
+    locator: 'Selection page, ''Final Selection'': recipients ''have an opportunity to visit Charlottesville'';
+      no required event'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

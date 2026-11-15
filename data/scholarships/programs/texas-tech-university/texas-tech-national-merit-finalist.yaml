@@ -1,0 +1,211 @@
+schema_version: 1
+program_id: texas-tech-national-merit-finalist
+school_id: texas-tech-university
+ipeds_id: '229115'
+applicable_campuses: []
+official_name: National Merit Finalist award (Texas Tech)
+aliases:
+- Texas Tech National Merit Finalist
+program_family: national_merit
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: ttu-nmf-2026-27-chart
+  supersedes: null
+  entry_year: 2026
+  entry_year_label: 2026-2027 academic year chart (past cycle); no fall 2027 chart published
+  entry_terms:
+  - fall
+  source_cohort_text: These awards are for the 2026-2027 academic year
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b2
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: National Merit Finalist
+    residency: unknown
+    selection_mode: unknown
+    consideration_route: unknown
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - finalist
+      status_required_for_award: null
+      first_choice_required: true
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: 'The row sits in the Presidential Merit chart, whose footnote says the awards
+        are for the 2026-2027 academic year, need no additional application and require enrollment in
+        at least 12 hours for fall and spring. The scholarships page says qualifying students must designate
+        Texas Tech as their first-choice institution before April 1. Nonresident wording on the Presidential
+        chart that holds this row: ''If you are a non-resident awarded a Presidential Scholarship, you
+        will also qualify to pay in-state tuition'' (scholarships page) and ''you may qualify to pay in-state
+        tuition'' (admissions page); neither says whether the National Merit Finalist row counts as a
+        Presidential Scholarship.'
+    benefits:
+    - benefit_id: b-coa
+      category: cost_of_attendance
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'Chart row: ''100% of originally federally approved cost of attendance''. The scholarships
+        page says 100% of TTU Cost of Attendance including tuition, fees, room, board, books, transportation
+        and a personal/miscellaneous allowance'
+      advertised_coverage_label: 100% of originally federally approved cost of attendance
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: not_required
+    milestones:
+    - kind: admission_deadline
+      requirement: priority
+      date: null
+      recurring: null
+      precision: approximate
+      source_date_text: null
+    - kind: other
+      requirement: required
+      date: null
+      recurring:
+        month: 4
+        day: 1
+      precision: day
+      source_date_text: designate Texas Tech University as their first choice institution prior to April
+        1 (year not stated)
+    admission_plan_requirement: Admission to Texas Tech; no additional scholarship application is stated
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: Scholarship priority application deadline is December 1 for general scholarships (not specific
+      to this row). The chart and its footnote are labeled 2026-2027, so this is the current chart, not
+      a published fall 2027 chart. The guarantee-by date for the Presidential Merit chart that holds this
+      row is stated as May 1 on one page and April 1st on the other; the record is therefore conflicting.
+      The row's 'originally federally approved' wording is not explained on either page.
+  renewal_rules: null
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-value
+    url: https://www.depts.ttu.edu/admissions/value/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 4fe8a75793a0bb0a723316413ae2511b7ff7b0df52da875500f7c199c5593098
+    archive_url: null
+  - source_id: s-sch
+    url: https://www.depts.ttu.edu/scholarships/incFreshman.php
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 3b48135668ad009b4757e8db3ecae65196c44b9f9f1c450aeb196e9706b14440
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-sch
+    locator: 'Scholarships page, ''National Merit Finalists'' paragraph: ''are eligible to receive'';
+      no explicit promise'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-sch
+    locator: 'Scholarships page, ''National Merit Finalists'' paragraph: no application route stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/eligibility/national_merit_statuses
+    source_ref: s-value
+    locator: Freshman Merit Scholarships chart, row 'National Merit Finalist'
+    short_excerpt: National Merit Finalist
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/first_choice_required
+    source_ref: s-sch
+    locator: Scholarships page, 'National Merit Finalists' paragraph
+    short_excerpt: designate Texas Tech University as their first choice institution prior to April 1
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-sch
+    locator: Scholarships page, 'National Merit Finalists' paragraph
+    short_excerpt: are eligible to receive 100% of TTU Cost of Attendance including tuition, fees, room,
+      board, books, transportation
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-value
+    locator: 'Freshman Merit Scholarships chart, row ''National Merit Finalist'': a percentage of cost
+      of attendance, no dollar figure'
+    short_excerpt: 100% of originally federally approved cost of attendance
+    value_status: not_published
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-sch
+    locator: Scholarships page, chart footnote
+    short_excerpt: No additional application is required.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0/date
+    source_ref: s-value
+    locator: 'Admissions page, ''Freshman Merit Scholarships'' intro: merit awards guaranteed if admitted
+      by May 1'
+    short_excerpt: All merit awards are guaranteed for students admitted by May 1.
+    value_status: conflicting
+    reported_value: May 1
+  - field_path: application/milestones/0/date
+    source_ref: s-sch
+    locator: 'Scholarships page, ''Presidential Merit Scholarships'' intro: merit awards guaranteed if
+      admitted by April 1'
+    short_excerpt: Merit awards are guaranteed to freshmen admitted by April 1st for fall entry.
+    value_status: conflicting
+    reported_value: April 1
+  - field_path: application/milestones/1
+    source_ref: s-sch
+    locator: Scholarships page, 'National Merit Finalists' paragraph
+    short_excerpt: designate Texas Tech University as their first choice institution prior to April 1
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-value
+    locator: Admissions page and scholarships page chart footnote
+    short_excerpt: These awards are for the 2026-2027 academic year and are subject to change without
+      notice.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules
+    source_ref: s-sch
+    locator: Scholarships page, 'Renewal Requirements' list covers awards of $1,000-$9,000 only; none
+      stated for the National Merit Finalist row
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: stacking_rules
+    source_ref: s-sch
+    locator: 'Scholarships page: no stacking rule stated for the National Merit Finalist row'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: award_counts
+    source_ref: s-sch
+    locator: 'Scholarships page: no award count stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

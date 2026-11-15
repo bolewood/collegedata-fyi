@@ -1,0 +1,387 @@
+schema_version: 1
+program_id: eugene-mcdermott-scholars
+school_id: the-university-of-texas-at-dallas
+ipeds_id: '228787'
+applicable_campuses: []
+official_name: Eugene McDermott Scholars Program
+aliases:
+- McDermott Scholars
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: mcdermott-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Entering class not named on the page; Q&A sessions are listed for Nov. 16-30
+  entry_terms:
+  - fall
+  source_cohort_text: No year on the page
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b2
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: invitation
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.6
+        scale: 4
+        basis: weighted
+      test_rules:
+      - exam: SAT
+        min: 1490
+        scoring: superscore
+        official_required: true
+      - exam: ACT
+        min: 34
+        scoring: unknown
+        official_required: true
+      tests_policy_for_scholarship: required
+      citizenship_eligible:
+      - any
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: 'First-time, first-year UT Dallas applicant who enters in the fall semester immediately
+        after high school graduation: no transfers, gap years or deferrals. Domestic and international
+        students in any major are welcomed. Minimums are a weighted 3.6 on a four-point scale and an official
+        SAT of 1490 (superscore acceptable) or ACT of 34.'
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: 11 semesters (four years including summers)
+      exclusions: null
+      scope_text: '''Coverage of UT Dallas tuition and mandatory fees''; no dollar amount'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: 11 semesters (four years including summers)
+      exclusions: null
+      scope_text: '''Coverage of UT Dallas tuition and mandatory fees''; no dollar amount'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: cash_stipend
+      coverage: variable
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: 11 semesters (four years including summers)
+      exclusions: null
+      scope_text: 'Stipend: on-campus Honors Housing for the first two semesters, then a semesterly amount
+        for housing on or off campus; the amount is not published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-living
+      category: meals
+      instrument: cash_stipend
+      coverage: variable
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: 11 semesters (four years including summers)
+      exclusions: null
+      scope_text: Comet Unlimited meal plan and a living stipend for the first two semesters, then a semesterly
+        amount for meals and living expenses; amounts not published
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-books
+      category: books
+      instrument: cash_stipend
+      coverage: variable
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: 11 semesters (four years including summers)
+      exclusions: null
+      scope_text: '''Stipends for books/educational expenses''; amount not published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-abroad
+      category: study_abroad
+      instrument: restricted_fund
+      coverage: variable
+      amount:
+        qualifier: up_to
+        value: 15000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''Up to $15,000 for study abroad experiences and other engagement''; the page states
+        no period'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: at_least
+        value: 180000
+        min: null
+        max: null
+        period: null
+      scope_text: '''$180,000+ Value of the scholarship'', a headline figure on the Experience & Impact
+        page with no period or component breakdown'
+  application:
+    separate_application: invitation_only
+    milestones:
+    - kind: admission_deadline
+      requirement: priority
+      date: null
+      recurring:
+        month: 12
+        day: 1
+      precision: day
+      source_date_text: UT Dallas Dec. 1 priority deadline (year not stated)
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 12
+        day: 1
+      precision: day
+      source_date_text: The deadline to submit the McDermott Application is Dec. 1 (year not stated);
+        application and two recommendations due Dec. 1
+    admission_plan_requirement: Apply to UT Dallas through Common App or ApplyTexas well before the Dec.
+      1 priority deadline; the program reviews applicants and invites those who qualify
+    prerequisites:
+    - kind: recommendation
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Two recommendations due Dec. 1
+    - kind: test_scores
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Official SAT or ACT scores are required for the eligibility determination
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: 'Stages on the page: applicant, semifinalist, finalist, offeree, scholar. Recorded interview
+      in January, live panel interview in February, fully funded campus visit in March; no year is given,
+      so these are not recorded as dated milestones. The provost URL in the lead list now redirects to
+      mcdermott.utdallas.edu; the redirected site is what was read. Virtual Q&A sessions run Nov. 16-30.'
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 11
+    notes: Scholarship awarded for 11 semesters (four years including summers). The page says scholars
+      maintain 'high semesterly (and cumulative) GPA requirements' and engagement-hour requirements; no
+      GPA figure is published.
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-apply
+    url: https://mcdermott.utdallas.edu/apply/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 637b6d9a6567e561d39913e97fe8568640f7d713e91d96beddf1eece943c50ce
+    archive_url: null
+  - source_id: s-exp
+    url: https://mcdermott.utdallas.edu/experience/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 9f6fc07c121eab1d264b310cec38ba2ea4587f97fa96284bc1646717a1b01f78
+    archive_url: null
+  - source_id: s-home
+    url: https://provost.utdallas.edu/mcdermott-programs/eugene-mcdermott-scholars/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: ace10cd20ecf2de1283f2419089e2c23506f664235ceba11cddd261a8aa872ce
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-apply
+    locator: 'Apply page, Step 2: Watch Your Email'
+    short_excerpt: Students selected to move forward will receive an email invitation with instructions
+      for accessing and completing the McDermott Application.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-apply
+    locator: 'Apply page, Step 2: Watch Your Email'
+    short_excerpt: the Eugene McDermott Scholars Program will review applicant information to identify
+      eligible candidates.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-exp
+    locator: Experience & Impact, 'Financial Support'
+    short_excerpt: Coverage of UT Dallas tuition and mandatory fees.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-exp
+    locator: Experience & Impact, 'Financial Support'
+    short_excerpt: Coverage of UT Dallas tuition and mandatory fees.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/5/amount
+    source_ref: s-exp
+    locator: Experience & Impact, 'Personal & Professional Development Resources'
+    short_excerpt: Up to $15,000 for study abroad experiences and other engagement.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/advertised_totals/0/amount
+    source_ref: s-exp
+    locator: Experience & Impact, 'The McDermott Difference' tile
+    short_excerpt: $180,000+ Value of the scholarship
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-exp
+    locator: 'Experience & Impact, ''Financial Support'': stipends listed without amounts'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-exp
+    locator: 'Experience & Impact, ''Financial Support'': stipends listed without amounts'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-exp
+    locator: 'Experience & Impact, ''Financial Support'': stipends listed without amounts'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-exp
+    locator: 'Experience & Impact, ''Financial Support'': no tuition or fee dollar figure'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-exp
+    locator: 'Experience & Impact, ''Financial Support'': no tuition or fee dollar figure'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-apply
+    locator: Apply page, Eligibility
+    short_excerpt: 'minimum (weighted, four-point): 3.6'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/test_rules
+    source_ref: s-apply
+    locator: Apply page, Eligibility, Test Score
+    short_excerpt: 'minimum SAT: 1490, minimum ACT: 34'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-apply
+    locator: Apply page, Step 1
+    short_excerpt: Submission of official SAT (superscore is acceptable) or ACT scores is required for
+      McDermott eligibility determination
+    value_status: reported
+    reported_value: required
+  - field_path: offers/0/eligibility/citizenship_eligible
+    source_ref: s-apply
+    locator: Apply page, Eligibility
+    short_excerpt: Domestic and international students, in any major, are welcomed.
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-apply
+    locator: 'Apply page, Step 2: Watch Your Email'
+    short_excerpt: Students selected to move forward will receive an email invitation with instructions
+      for accessing and completing the McDermott Application.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-apply
+    locator: 'Apply page, Step 1: Apply to UT Dallas Now'
+    short_excerpt: Dec. 1 priority deadline
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-apply
+    locator: 'Apply page, Step 2: Watch Your Email'
+    short_excerpt: The deadline to submit the McDermott Application is Dec. 1
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-apply
+    locator: 'Apply page, ''Timing'' strip: recorded interview in January, live panel interview in February;
+      mode of the live panel not stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/finalist_event_required
+    source_ref: s-apply
+    locator: 'Apply page, ''Timing'' strip: ''Fully-funded campus visit in March''; not stated as mandatory'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-apply
+    locator: 'Apply page: no entering class or year named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-exp
+    locator: Experience & Impact, scholar expectations
+    short_excerpt: Scholars maintain high semesterly (and cumulative) GPA requirements.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules
+    source_ref: s-exp
+    locator: 'Experience & Impact pages: no stacking rule stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: award_counts
+    source_ref: s-exp
+    locator: 'Apply and Experience pages: no award count stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

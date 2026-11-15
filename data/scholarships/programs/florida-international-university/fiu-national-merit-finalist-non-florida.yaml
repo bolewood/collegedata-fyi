@@ -1,0 +1,338 @@
+schema_version: 1
+program_id: fiu-national-merit-finalist-non-florida
+school_id: florida-international-university
+ipeds_id: '133951'
+applicable_campuses: []
+official_name: National Merit Finalist award for non-Florida residents (FIU)
+aliases:
+- FIU National Merit Finalist
+program_family: national_merit
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: fiu-nmf-non-florida-2027
+  supersedes: null
+  entry_year: 2027
+  entry_year_label: Early Fall/Fall 2027 (page); National Merit requirements dated May 1, 2027
+  entry_terms:
+  - fall
+  source_cohort_text: Award for Early Fall/Fall 2027 students (Presidential Merit section); National Merit
+    Finalist requirements May 1, 2027
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b2
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-non-florida
+    parent_offer_id: null
+    variant_name: Non-Florida residents, funded by FIU
+    residency: out_of_state
+    selection_mode: unknown
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: true
+    eligibility:
+      national_merit_statuses:
+      - finalist
+      status_required_for_award: null
+      first_choice_required: true
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible:
+      - us_citizen
+      - permanent_resident
+      - international
+      citizenship_text: students must be a citizen of the United States, a U.S. lawful granted permanent
+        resident or an international student with intention of receiving the F-1 visa to study in the
+        United States (or another eligible visa).
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: 'This record covers the non-Florida resident package. Florida-resident finalists
+        are funded by the state Benacquisto award, a different offer not recorded here. Semifinalists
+        are only invited to email admissions. The page-wide intro gives a December 16, 2026 early-action
+        date for non-Florida residents and the National Merit tab gives May 1, 2027; the page does not
+        say which governs this package (see application notes). A merit offer is tied to the admission
+        term in the original offer: changing the start term or deferring voids the offer. Other benefits
+        listed: guaranteed admission to the Honors College, Honors College Early Assurance Programs access,
+        priority registration, guaranteed research opportunities and mentorship.'
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''100% Undergraduate tuition and fees''; no dollar amount published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''100% Undergraduate tuition and fees''; no dollar amount published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-books
+      category: books
+      instrument: cash_stipend
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''a book stipend''; amount not published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''100% on campus housing with meal plan''; no dollar amount published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''100% on campus housing with meal plan''; no dollar amount published'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: no_form_other_steps_required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring: null
+      precision: day
+      source_date_text: null
+    - kind: other
+      requirement: required
+      date: '2027-05-01'
+      recurring: null
+      precision: day
+      source_date_text: 'Select FIU as your #1 choice with the National Merit Scholarship Corporation
+        no later than May 1, 2027'
+    admission_plan_requirement: Apply to FIU and complete the admissions process by May 1, 2027
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: 'CONFLICT: the page intro says FIU automatically considers students who submit a completed
+      Fall 2027 application by the early-action dates (non-Florida residents: December 16, 2026) and that
+      later materials make a student ineligible for merit awards, while the National Merit Finalist tab
+      says to apply and complete admissions by May 1, 2027. The page does not reconcile them, so the admission
+      deadline is left empty. The general paragraph says merit awards need no additional application or
+      FAFSA and that scholarship funding is limited; the Scholarship Office reviews admitted students
+      until funding is allocated. The page names Early Fall/Fall 2027 for the Presidential Merit and Gold
+      and Blue awards; the National Merit tab is dated by its May 1, 2027 requirements. The page is a
+      tabbed panel and was read through the saved page text.'
+  renewal_rules: null
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-merit
+    url: https://scholarships.fiu.edu/browse-scholarships/merit-scholarships/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: c73f43cae09bbf2adac381476da88fbb4672cd6522e5b345ccd41c38e7bdc31b
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-merit
+    locator: 'National Merit Finalist tab: eligibility and requirements; no explicit promise stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-merit
+    locator: National Merit Finalist tab, Requirements
+    short_excerpt: Apply to FIU and complete the admissions process by May 1, 2027.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/national_merit_statuses
+    source_ref: s-merit
+    locator: National Merit Finalist tab, intro
+    short_excerpt: Are you a National Merit® Finalist?
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/first_choice_required
+    source_ref: s-merit
+    locator: National Merit Finalist tab, Requirements
+    short_excerpt: 'Select FIU as your #1 choice of university on the National Merit Scholarship Corporation
+      no later than May 1, 2027.'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/funds_limited
+    source_ref: s-merit
+    locator: Merit scholarships page, before 'First Year Students'
+    short_excerpt: Scholarship funding is limited for both First Year students and Transfer students.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-merit
+    locator: National Merit Finalist tab, Non-Florida Residents
+    short_excerpt: 100% Undergraduate tuition and fees, plus a book stipend
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-merit
+    locator: National Merit Finalist tab, Non-Florida Residents
+    short_excerpt: 100% Undergraduate tuition and fees, plus a book stipend
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-merit
+    locator: National Merit Finalist tab, Non-Florida Residents
+    short_excerpt: 100% Undergraduate tuition and fees, plus a book stipend
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3
+    source_ref: s-merit
+    locator: National Merit Finalist tab, Non-Florida Residents
+    short_excerpt: 100% on campus housing with meal plan
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/4
+    source_ref: s-merit
+    locator: National Merit Finalist tab, Non-Florida Residents
+    short_excerpt: 100% on campus housing with meal plan
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-merit
+    locator: 'National Merit Finalist tab: percentages and a stipend named, no dollar amounts'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-merit
+    locator: 'National Merit Finalist tab: percentages and a stipend named, no dollar amounts'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-merit
+    locator: 'National Merit Finalist tab: percentages and a stipend named, no dollar amounts'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-merit
+    locator: 'National Merit Finalist tab: percentages and a stipend named, no dollar amounts'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-merit
+    locator: 'National Merit Finalist tab: percentages and a stipend named, no dollar amounts'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-merit
+    locator: 'National Merit Finalist tab, Requirements: apply to FIU, complete admissions, select FIU
+      on NMSC; no scholarship form listed'
+    short_excerpt: Apply to FIU and complete the admissions process by May 1, 2027.
+    value_status: reported
+    reported_value: no_form_other_steps_required
+  - field_path: application/milestones/0/date
+    source_ref: s-merit
+    locator: 'Merit Scholarships page intro, before the tabs: automatic consideration needs a completed
+      Fall 2027 application by the early-action dates'
+    short_excerpt: Non-Florida Residents - December 16, 2026
+    value_status: conflicting
+    reported_value: '2026-12-16'
+  - field_path: application/milestones/0/date
+    source_ref: s-merit
+    locator: National Merit Finalist tab, Requirements
+    short_excerpt: Apply to FIU and complete the admissions process by May 1, 2027.
+    value_status: conflicting
+    reported_value: '2027-05-01'
+  - field_path: offers/0/eligibility/citizenship_text
+    source_ref: s-merit
+    locator: Merit Scholarships page, eligibility paragraph below the tabs
+    short_excerpt: an international student with intention of receiving the F-1 visa to study in the United
+      States
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_eligible
+    source_ref: s-merit
+    locator: Merit Scholarships page, eligibility paragraph below the tabs
+    short_excerpt: an international student with intention of receiving the F-1 visa to study in the United
+      States
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-merit
+    locator: National Merit Finalist tab, Requirements
+    short_excerpt: 'Select FIU as your #1 choice of university on the National Merit Scholarship Corporation
+      no later than May 1, 2027.'
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-merit
+    locator: 'Merit scholarships page: Presidential Merit and Gold and Blue sections say ''Early Fall/Fall
+      2027''; National Merit Finalist requirements are dated May 1, 2027'
+    short_excerpt: Award for Early Fall/Fall 2027 students
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules
+    source_ref: s-merit
+    locator: 'Merit scholarships page: no renewal condition stated for the National Merit Finalist package'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: stacking_rules
+    source_ref: s-merit
+    locator: 'Merit scholarships page: stacking limits are stated for Gold and Blue and the tuition reduction,
+      none for the National Merit Finalist package'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: award_counts
+    source_ref: s-merit
+    locator: 'Merit scholarships page: no award count stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
