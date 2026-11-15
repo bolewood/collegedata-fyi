@@ -1,0 +1,208 @@
+schema_version: 1
+program_id: squire-scholarship
+school_id: case-western-reserve-university
+ipeds_id: '201645'
+applicable_campuses: []
+official_name: Andrew and Eleanor Squire Scholarship
+aliases:
+- Squire Scholarship
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: squire-scholarship-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Entering class not named; the scholarship page gives "Feb. 15" and "April 1" with no year
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b5
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    advertised_totals: []
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      majors_allowed:
+      - arts
+      - humanities
+      - management
+      - accountancy
+      - natural sciences
+      - social sciences
+      - behavioral sciences
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Open to first-year applicants in the listed areas. International students can participate in scholarship competitions unless otherwise noted; the Squire entry carries no such note.
+        Applicants otherwise eligible for full-tuition benefits at Case Western Reserve are not eligible for these awards. The scholarship is one of several competitions; the page does not say how many
+        Squire awards are made beyond the general one-student-per-scholarship statement.
+      citizenship_text: null
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: 'School words: a four-year scholarship "in the amount of tuition"; no dollar amount is published, and fees, housing, meals and books are not mentioned for this award'
+      advertised_coverage_label: in the amount of tuition
+      conditions_text: null
+  application:
+    separate_application: required
+    milestones:
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 2
+        day: 15
+      precision: day
+      source_date_text: a complete scholarship application must be received by Feb. 15
+    - kind: notification
+      requirement: recommended
+      date: null
+      recurring:
+        month: 4
+        day: 1
+      precision: day
+      source_date_text: Winners will be notified of their award by April 1
+    admission_plan_requirement: A complete application for admission should be submitted by the applicant deadline for the admission plan chosen; the scholarship page does not name a specific admission
+      date
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: The scholarship application asks for additional information and an essay response. The Feb. 15 and April 1 dates carry no year on the page and are recorded as recurring.
+  renewal_rules: null
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: replaces
+    note: 'School words: a scholarship in the amount of tuition replaces any previous scholarship and/or grant award from the university'
+  - other_aid_type: institutional_need
+    relation: replaces
+    note: 'School words: a scholarship in the amount of tuition replaces any previous scholarship and/or grant award from the university'
+  award_counts:
+  - metric: new_recipients
+    qualifier: exact
+    value: 1
+    cohort_year: null
+    source_ref: s-sch
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-sch
+    url: https://case.edu/admission/cost-and-aid/scholarships
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 441e7a820aa0adc8e17c53273ecc01a178148865b9e11958358f19ead84de16f
+    archive_url: null
+  - source_id: s-dl
+    url: https://case.edu/admission/apply/deadlines-and-requirements
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: 9fd27c9b9be4c2404344d321dcd8adb280111f8ac786ad178dc07846407b34a4
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-sch
+    locator: Scholarships page, "Scholarship Competitions" > "Awarding"; deadline pages list no entering class for this scholarship
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-sch
+    locator: Scholarships page, "Scholarship Competitions" intro
+    short_excerpt: We offer a select number of scholarships, including full-tuition awards, that require you to provide additional information and respond to an essay prompt.
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/benefits
+    source_ref: s-sch
+    locator: Scholarships page, "Andrew and Eleanor Squire Scholarship"
+    short_excerpt: This four-year scholarship in the amount of tuition
+    value_status: reported
+    reported_value: tuition
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-sch
+    locator: Scholarships page, "Andrew and Eleanor Squire Scholarship"
+    short_excerpt: This four-year scholarship in the amount of tuition
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-sch
+    locator: Scholarships page, "Andrew and Eleanor Squire Scholarship"
+    short_excerpt: This four-year scholarship in the amount of tuition
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/eligibility/majors_allowed
+    source_ref: s-sch
+    locator: Scholarships page, "Andrew and Eleanor Squire Scholarship"
+    short_excerpt: open to first-year applicants in the arts; humanities; management; accountancy; and natural, social and behavioral sciences
+    value_status: reported
+    reported_value: listed
+  - field_path: application/separate_application
+    source_ref: s-sch
+    locator: Scholarships page, "Scholarship Competitions" > "Awarding"
+    short_excerpt: a complete scholarship application must be received by Feb. 15 to be considered for these special awards.
+    value_status: reported
+    reported_value: required
+  - field_path: application/milestones/0
+    source_ref: s-sch
+    locator: Scholarships page, "Scholarship Competitions" > "Awarding"
+    short_excerpt: a complete scholarship application must be received by Feb. 15
+    value_status: reported
+    reported_value: Feb. 15
+  - field_path: application/milestones/1
+    source_ref: s-sch
+    locator: Scholarships page, "Scholarship Competitions" > "Awarding"
+    short_excerpt: Winners will be notified of their award by April 1.
+    value_status: reported
+    reported_value: April 1
+  - field_path: stacking_rules/0
+    source_ref: s-sch
+    locator: Scholarships page, "Scholarship Competitions" > "Awarding"
+    short_excerpt: this replaces any previous scholarship and/or grant award from the university.
+    value_status: reported
+    reported_value: replaces
+  - field_path: stacking_rules/1
+    source_ref: s-sch
+    locator: Scholarships page, "Scholarship Competitions" > "Awarding"
+    short_excerpt: this replaces any previous scholarship and/or grant award from the university.
+    value_status: reported
+    reported_value: replaces
+  - field_path: award_counts/0
+    source_ref: s-sch
+    locator: Scholarships page, "Scholarship Competitions" > "Awarding" (general statement for the competitions)
+    short_excerpt: We award each scholarship to a single student annually, unless otherwise noted.
+    value_status: reported
+    reported_value: 1
+  - field_path: renewal_rules
+    source_ref: s-sch
+    locator: 'Scholarships page, Squire entry: only "four-year"; no GPA or credit rule stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

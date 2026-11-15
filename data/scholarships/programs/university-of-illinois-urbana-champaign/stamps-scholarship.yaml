@@ -1,0 +1,184 @@
+schema_version: 1
+program_id: stamps-scholarship
+school_id: university-of-illinois-urbana-champaign
+ipeds_id: '145637'
+applicable_campuses: []
+official_name: Stamps Scholarship
+aliases:
+- Stamps Scholars Program
+- Illinois Stamps Scholars
+program_family: stamps
+awarding_authority: cofunded
+related_programs: []
+status: active
+versions:
+- version_id: stamps-scholarship-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Entering class not named; the Stamps pages give no year or deadline
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b5
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: in_state
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    advertised_totals: []
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Only Illinois residents are reviewed for the Stamps Scholarship. The page names no test, GPA or citizenship minimum for selection.
+      citizenship_text: null
+    benefits:
+    - benefit_id: b-coa
+      category: cost_of_attendance
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: No more than 8 consecutive semesters (fall and spring only)
+      exclusions: null
+      scope_text: 'School words: the award covers a student''s full cost of attendance; no dollar value or component list is published on these pages'
+      advertised_coverage_label: full cost of attendance
+      conditions_text: null
+    - benefit_id: b-enrichment
+      category: enrichment
+      instrument: restricted_fund
+      coverage: partial
+      amount:
+        qualifier: up_to
+        value: 12000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: up to $12,000 in enrichment funds to support activities that propel academic and professional futures; the page does not say over what period'
+      advertised_coverage_label: null
+      conditions_text: null
+  application:
+    separate_application: no_form_other_steps_required
+    milestones: []
+    admission_plan_requirement: Illinois admission applications are reviewed; there is no scholarship application
+    prerequisites: []
+    interview_mode: in_person
+    finalist_event_required: null
+    notes: In early spring, candidates are invited for a campus visit that includes an interview with a selection committee, current Stamps Scholars and a representative of their academic program. The pages
+      give no dates, deadlines or entering class.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.0
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Stamps recipients must maintain a 3.0 grade point average, maintain full-time enrollment, and meet other program engagement requirements outlined by the Stamps Program Lead; the page gives no
+      GPA scale.
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-what
+    url: https://stamps.illinois.edu/whats-stamps/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: ce8ef6b9e5b66376ba6f5697347a7b5f263b0e44d70a211db524ca70da3f2360
+    archive_url: null
+  - source_id: s-sel
+    url: https://stamps.illinois.edu/selection/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: da821ad3aade9a76847e5a990fc5f779d06169a13e2e6a30cd44d56a43588160
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-sel
+    locator: 'Selection and Renewal and What''s Stamps pages: no entering class, year or deadline named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: /awarding_authority
+    source_ref: s-what
+    locator: What's Stamps?, fourth paragraph
+    short_excerpt: is funded jointly with the generous support from benefactor E. Roe Stamps and the University of Illinois at Urbana-Champaign.
+    value_status: reported
+    reported_value: cofunded
+  - field_path: offers/0/selection_mode
+    source_ref: s-sel
+    locator: Selection and Renewal, "Selection Process"
+    short_excerpt: Illinois admission applications are thoroughly reviewed each year to identify exceptional candidates
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/benefits
+    source_ref: s-what
+    locator: What's Stamps?, second paragraph
+    short_excerpt: The award covers a student's full cost of attendance and also supplies up to $12,000 in enrichment funds
+    value_status: reported
+    reported_value: listed
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-what
+    locator: What's Stamps?, second paragraph
+    short_excerpt: The award covers a student's full cost of attendance
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-what
+    locator: 'What''s Stamps?, second paragraph: no dollar value for cost of attendance'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-what
+    locator: What's Stamps?, second paragraph
+    short_excerpt: supplies up to $12,000 in enrichment funds
+    value_status: reported
+    reported_value: 12000
+  - field_path: application/separate_application
+    source_ref: s-sel
+    locator: Selection and Renewal, "Selection Process"
+    short_excerpt: There is not a scholarship application for consideration for the Stamps Scholars Program.
+    value_status: reported
+    reported_value: no_form_other_steps_required
+  - field_path: application/interview_mode
+    source_ref: s-sel
+    locator: Selection and Renewal, "Selection Process"
+    short_excerpt: candidates are invited for a campus visit which includes an interview with a selection committees
+    value_status: reported
+    reported_value: in_person
+  - field_path: renewal_rules/0
+    source_ref: s-sel
+    locator: Selection and Renewal, "Renewal Criteria"
+    short_excerpt: Stamps recipients must maintain a 3.0 grade point average, maintain full-time enrolment
+    value_status: reported
+    reported_value: 3.0
+  - field_path: renewal_rules/0/max_semesters
+    source_ref: s-sel
+    locator: Selection and Renewal, "Renewal Criteria"
+    short_excerpt: no more than 8 consecutive semesters (fall and spring only).
+    value_status: reported
+    reported_value: 8

@@ -1,0 +1,203 @@
+schema_version: 1
+program_id: regents-scholar-tuition-commitment
+school_id: university-of-nebraska-lincoln
+ipeds_id: '181464'
+applicable_campuses: []
+official_name: Regents Scholar Tuition Commitment
+aliases:
+- Regents Scholarship
+- Regents Scholar
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: regents-scholar-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Entering class not named; the page names no cycle or year
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b5
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: in_state
+    selection_mode: unknown
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    advertised_totals: []
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules:
+      - exam: ACT (or SAT equivalent)
+        min: 32
+        scoring: single_sitting
+        official_required: true
+      tests_policy_for_scholarship: required
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: 'Available to first-year, in-state applicants: Nebraska residents with top test scores and academic distinction in high school. The minimum is a composite 32 ACT (or SAT equivalent);
+        super scores are excluded, and final official scores from the February test date or earlier must be received by May 1. After one year and meeting renewal rules, a Regents Scholar may transfer to
+        another University of Nebraska campus once, in an amount set by Board of Regents policy. The page shows no separate scoring tiers.'
+      citizenship_text: individuals awarded these funds must be citizens of the United States or if a qualified alien have been verified as lawfully present in the United States
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to 120 credit hours or completion of a bachelor's degree, whichever comes first, including summers
+      exclusions: null
+      scope_text: Includes differential tuition (Colleges of Business, Architecture and Engineering); no dollar value is published; the award plus all other non-loan aid may not exceed cost of attendance
+      advertised_coverage_label: full University of Nebraska-Lincoln undergraduate tuition
+      conditions_text: null
+  application:
+    separate_application: unknown
+    milestones:
+    - kind: application_deadline
+      requirement: priority
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: 'Priority: November 1'
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 2
+        day: 1
+      precision: day
+      source_date_text: 'Final: February 1'
+    - kind: test_score_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 5
+        day: 1
+      precision: day
+      source_date_text: Final official scores from the February test date or earlier must be received by May 1
+    admission_plan_requirement: null
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: Regents Scholars are described as admitted University of Nebraska-Lincoln students who demonstrate academic distinction through standardized test scores; the page does not say whether a separate
+      form exists or whether the award is automatic at the threshold. The deadlines carry no year on the page and are recorded as recurring.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: each academic year (fall/spring)
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: Students must maintain a 3.500 cumulative GPA OR rank in the upper 25% of their applicable class each academic year (fall/spring); two alternative routes, so no single GPA minimum is recorded;
+      the page gives no GPA scale. The award runs for up to 120 credit hours or completion of a bachelor's degree.
+  stacking_rules:
+  - other_aid_type: other
+    relation: counts_within_package
+    note: 'School words: the Regents Scholarship award amount, in combination with all other sources of non-loan aid, shall not exceed Cost of Attendance, and award amounts shall be reduced accordingly
+      (Regents Policy 5.8.5)'
+  award_counts: []
+  sources:
+  - source_id: s-reg
+    url: https://admissions.unl.edu/cost/scholarships/regents-scholar-tuition-commitment/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: e391a35362d1cb7a92e045e70bf7d2fb6828c1059ec6686267d200f83471d4f3
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-reg
+    locator: 'Regents Scholar Tuition Commitment page: no entering class, cycle or year named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-reg
+    locator: 'Regents Scholar Tuition Commitment page, "Review Basis": minimums stated, no promise that every qualifier is awarded'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits
+    source_ref: s-reg
+    locator: Regents Scholar Tuition Commitment page, "Award"
+    short_excerpt: Recipients are awarded full University of Nebraska–Lincoln undergraduate tuition for up to 120 credit hours or completion of a bachelor's degree
+    value_status: reported
+    reported_value: tuition
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-reg
+    locator: Regents Scholar Tuition Commitment page, "Award"
+    short_excerpt: Recipients are awarded full University of Nebraska–Lincoln undergraduate tuition
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-reg
+    locator: 'Regents Scholar Tuition Commitment page, "Award": no dollar value'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/eligibility/test_rules
+    source_ref: s-reg
+    locator: Regents Scholar Tuition Commitment page, "Review Basis"
+    short_excerpt: Eligibility requires a minimum composite score of 32 ACT (or SAT equivalent); super scores excluded.
+    value_status: reported
+    reported_value: ACT 32, no superscores
+  - field_path: application/separate_application
+    source_ref: s-reg
+    locator: 'Regents Scholar Tuition Commitment page: no statement about a separate application'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-reg
+    locator: Regents Scholar Tuition Commitment page, "Deadline"
+    short_excerpt: 'Priority: November 1'
+    value_status: reported
+    reported_value: November 1
+  - field_path: application/milestones/1
+    source_ref: s-reg
+    locator: Regents Scholar Tuition Commitment page, "Deadline"
+    short_excerpt: 'Final: February 1'
+    value_status: reported
+    reported_value: February 1
+  - field_path: application/milestones/2
+    source_ref: s-reg
+    locator: Regents Scholar Tuition Commitment page, "Review Basis"
+    short_excerpt: Final official scores from the February test date or earlier must be received by May 1.
+    value_status: reported
+    reported_value: May 1
+  - field_path: renewal_rules/0
+    source_ref: s-reg
+    locator: Regents Scholar Tuition Commitment page, "Renewal Information"
+    short_excerpt: Students must maintain a 3.500 cumulative GPA or rank in the upper 25% of their applicable class each academic year
+    value_status: reported
+    reported_value: 3.500 GPA or upper 25% of class
+  - field_path: stacking_rules/0
+    source_ref: s-reg
+    locator: Regents Scholar Tuition Commitment page, "Award" note
+    short_excerpt: in combination with all other sources of non-loan aid, shall not exceed Cost of Attendance.
+    value_status: reported
+    reported_value: counts_within_package

@@ -1,0 +1,518 @@
+schema_version: 1
+program_id: alumni-distinguished-scholarship
+school_id: michigan-state-university
+ipeds_id: '171100'
+applicable_campuses: []
+official_name: Alumni Distinguished Scholarship
+aliases:
+- Alumni Distinguished Scholars
+- MSU Alumni Distinguished Scholarship
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: alumni-distinguished-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Entering class not named on the high-achieving scholarships or regulations pages
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b5
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-ads
+    parent_offer_id: null
+    variant_name: Alumni Distinguished Scholarship (top 15 candidates)
+    residency: unknown
+    selection_mode: competitive
+    consideration_route: invitation
+    aid_basis: merit_only
+    need_role: not_considered
+    funds_limited: null
+    advertised_totals: []
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: true
+      first_generation_rule: unknown
+      eligibility_notes: First-year applicants. Invitations to compete in the Spartan Distinguished Scholars examination are sent to the most outstanding students who apply for admission by November 1;
+        the awards are by competition rank (top 15, 20 runners-up, 30 finalists, 65 semifinalists). Recipients enroll for the semester the award is made; the award may not be deferred. The page names no
+        citizenship or residency rule for these awards.
+      citizenship_text: null
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight consecutive fall/spring semesters
+      exclusions: null
+      scope_text: Tuition up to 18 credits per semester; enrollment above 18 credits may be approved by contacting the scholarships office; first undergraduate MSU degree only; no dollar value is published
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight consecutive fall/spring semesters
+      exclusions: null
+      scope_text: Fees equivalent to the number of credits taken; no dollar value is published
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight consecutive fall/spring semesters
+      exclusions: null
+      scope_text: Housing in a double-occupancy MSU residence hall
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight consecutive fall/spring semesters
+      exclusions: null
+      scope_text: DineOn Silver meal plan
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-allowance
+      category: stipend
+      instrument: cash_stipend
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 1000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Eight consecutive fall/spring semesters
+      exclusions: null
+      scope_text: 'School words: an allowance of $1,000 per year toward expenses'
+      advertised_coverage_label: null
+      conditions_text: null
+  - offer_id: o-dfy
+    parent_offer_id: o-ads
+    variant_name: Distinguished First-year Scholarship (20 runners-up)
+    residency: unknown
+    selection_mode: competitive
+    consideration_route: invitation
+    aid_basis: merit_only
+    need_role: not_considered
+    funds_limited: null
+    advertised_totals: []
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: true
+      first_generation_rule: unknown
+      eligibility_notes: First-year applicants. Invitations to compete in the Spartan Distinguished Scholars examination are sent to the most outstanding students who apply for admission by November 1;
+        the awards are by competition rank (top 15, 20 runners-up, 30 finalists, 65 semifinalists). Recipients enroll for the semester the award is made; the award may not be deferred. The page names no
+        citizenship or residency rule for these awards.
+      citizenship_text: null
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight consecutive fall/spring semesters
+      exclusions: null
+      scope_text: Tuition up to 18 credits per semester; enrollment above 18 credits may be approved by contacting the scholarships office; first undergraduate MSU degree only; no dollar value is published
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight consecutive fall/spring semesters
+      exclusions: null
+      scope_text: Fees equivalent to the number of credits taken; no dollar value is published
+      advertised_coverage_label: null
+      conditions_text: null
+  - offer_id: o-cf
+    parent_offer_id: o-ads
+    variant_name: Alumni Distinguished Scholarship Commended Finalist (30 finalists)
+    residency: unknown
+    selection_mode: competitive
+    consideration_route: invitation
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    advertised_totals: []
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: First-year applicants. Invitations to compete in the Spartan Distinguished Scholars examination are sent to the most outstanding students who apply for admission by November 1;
+        the awards are by competition rank (top 15, 20 runners-up, 30 finalists, 65 semifinalists). Recipients enroll for the semester the award is made; the award may not be deferred. The page names no
+        citizenship or residency rule for these awards.
+      citizenship_text: null
+    benefits:
+    - benefit_id: b-award
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 2500
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Eight consecutive semesters
+      exclusions: null
+      scope_text: A fixed award paid in equal installments between fall and spring; the page does not say what charges it applies to
+      advertised_coverage_label: null
+      conditions_text: null
+  - offer_id: o-cs
+    parent_offer_id: o-ads
+    variant_name: Alumni Distinguished Scholarship Commended Semifinalist (65 semifinalists)
+    residency: unknown
+    selection_mode: competitive
+    consideration_route: invitation
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    advertised_totals: []
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: First-year applicants. Invitations to compete in the Spartan Distinguished Scholars examination are sent to the most outstanding students who apply for admission by November 1;
+        the awards are by competition rank (top 15, 20 runners-up, 30 finalists, 65 semifinalists). Recipients enroll for the semester the award is made; the award may not be deferred. The page names no
+        citizenship or residency rule for these awards.
+      citizenship_text: null
+    benefits:
+    - benefit_id: b-award
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 1500
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Eight consecutive semesters
+      exclusions: null
+      scope_text: A fixed award paid in equal installments between fall and spring; the page does not say what charges it applies to
+      advertised_coverage_label: null
+      conditions_text: null
+  application:
+    separate_application: no_form_other_steps_required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: students who apply for admission by November 1
+    admission_plan_requirement: Apply for admission by November 1 to be eligible for an invitation to compete in the Spartan Distinguished Scholars competition
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: Consideration is automatic and no additional application is required; invitations to compete in the examination go to the most outstanding admission applicants. The page gives no dates for the
+      examination or notification. November 1 carries no year and is recorded as recurring. Four of the 15 Alumni Distinguished awards carry special designations (Baldwin Foundation, James E. Nordberg,
+      Hanna M. Rasmussen Memorial, Guy G. Speeker).
+  renewal_rules:
+  - applies_to:
+    - offer_id: o-ads
+      benefit_id: null
+    - offer_id: o-dfy
+      benefit_id: null
+    gpa_min: 3.2
+    gpa_scale: 4.0
+    credit_load_min_per_term: 12
+    credit_load_min_per_year: null
+    evaluation_timing: end of the first two semesters, then each semester
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Must be a member of the MSU Honors College and keep a 3.2 cumulative GPA on a 4.0 scale; one semester of probation, then cancellation until 3.2 is re-established; probation semesters count toward
+      the eight-semester limit. Alumni Distinguished recipients are also expected to take part in the ADS Cohort program each year.
+  - applies_to:
+    - offer_id: o-cf
+      benefit_id: null
+    - offer_id: o-cs
+      benefit_id: null
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: 12
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Must complete at least 12 credit hours each semester and remain in good academic standing; semesters without eligibility count toward the eight-semester limit. No GPA minimum is stated for these
+      two awards.
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: counts_within_package
+    note: 'School words: MSU reserves the right to adjust an award in consideration of other MSU scholarship offers'
+  - other_aid_type: institutional_need
+    relation: counts_within_package
+    note: 'School words: the award is not related to financial need, but other need-based aid programs may be reduced or withdrawn if this award meets the student''s total need (stated for Alumni Distinguished
+      and Distinguished First-year)'
+  - other_aid_type: institutional_merit
+    relation: not_allowed
+    note: The Honors Distinction, Honors Excellence and Honors College STATE scholarships may not be combined with the Distinguished First-year or Alumni Distinguished Scholarship, per their regulations
+  award_counts:
+  - metric: new_recipients
+    qualifier: exact
+    value: 15
+    cohort_year: null
+    source_ref: s-hi
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-hi
+    url: https://admissions.msu.edu/cost-aid/scholarships/first-year/high-achieving
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: ebd49cdacc0d46f7c938443a9b8d9c820789bc2637e209a613e326dca2856c42
+    archive_url: null
+  - source_id: s-reg
+    url: https://admissions.msu.edu/cost-aid/scholarships/first-year/high-achieving/scholarship-regulations
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 41fe82295872584e254121dc0a5b1468d4b463ba9daa4568f4b2aa55682bb510
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-hi
+    locator: 'High-achieving student scholarships page and regulations page: no entering class or year named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-hi
+    locator: High-achieving student scholarships, Alumni Distinguished Scholarship entry
+    short_excerpt: Awarded to the top 15 candidates based on intellectual performance and participation in the MSU Spartan Distinguished Scholars competition.
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/1/selection_mode
+    source_ref: s-hi
+    locator: High-achieving student scholarships, Alumni Distinguished Scholarship entry
+    short_excerpt: Awarded to 20 runners-up in the Spartan Distinguished Scholars competition
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/2/selection_mode
+    source_ref: s-hi
+    locator: High-achieving student scholarships, Alumni Distinguished Scholarship entry
+    short_excerpt: Awarded to 30 finalists in the Spartan Distinguished Scholars competition
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/3/selection_mode
+    source_ref: s-hi
+    locator: High-achieving student scholarships, Alumni Distinguished Scholarship entry
+    short_excerpt: Awarded to 65 semifinalists in the Spartan Distinguished Scholars competition
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/eligibility/honors_requirement
+    source_ref: s-reg
+    locator: Regulations, Alumni Distinguished Scholarship regulations
+    short_excerpt: be a member of the MSU Honors College;
+    value_status: reported
+    reported_value: true
+  - field_path: offers/1/eligibility/honors_requirement
+    source_ref: s-reg
+    locator: Regulations, Distinguished First-year Scholarship regulations
+    short_excerpt: be a member of the MSU Honors College.
+    value_status: reported
+    reported_value: true
+  - field_path: offers/0/aid_basis
+    source_ref: s-reg
+    locator: Regulations, Alumni Distinguished Scholarship regulations
+    short_excerpt: Although the award is not related to financial need
+    value_status: reported
+    reported_value: merit_only
+  - field_path: offers/0/benefits
+    source_ref: s-hi
+    locator: High-achieving student scholarships, Alumni Distinguished Scholarship entry
+    short_excerpt: these scholarships include tuition, fees, food and housing (double occupancy in an MSU residence hall and silver meal plan), and $1,000 annually.
+    value_status: reported
+    reported_value: listed
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-reg
+    locator: Regulations, Alumni Distinguished Scholarship regulations
+    short_excerpt: tuition up to 18 credits and fees equivalent to the number of credits taken within each of eight (8) consecutive academic year semesters
+    value_status: reported
+    reported_value: partial
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-reg
+    locator: 'Regulations, Alumni Distinguished Scholarship regulations: no dollar value for this component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-reg
+    locator: 'Regulations, Alumni Distinguished Scholarship regulations: no dollar value for this component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-reg
+    locator: 'Regulations, Alumni Distinguished Scholarship regulations: no dollar value for this component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-reg
+    locator: 'Regulations, Alumni Distinguished Scholarship regulations: no dollar value for this component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-reg
+    locator: Regulations, Alumni Distinguished Scholarship regulations
+    short_excerpt: an allowance of $1,000 per year toward expenses
+    value_status: reported
+    reported_value: 1000
+  - field_path: offers/1/benefits/0/coverage
+    source_ref: s-reg
+    locator: Regulations, Distinguished First-year Scholarship regulations
+    short_excerpt: tuition up to 18 credits and fees equivalent to the number of credits taken within each of eight (8) consecutive academic year semesters
+    value_status: reported
+    reported_value: partial
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-reg
+    locator: 'Regulations, Distinguished First-year Scholarship regulations: no dollar value'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/1/amount
+    source_ref: s-reg
+    locator: 'Regulations, Distinguished First-year Scholarship regulations: no dollar value'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/2/benefits/0/amount
+    source_ref: s-reg
+    locator: Regulations, Alumni Distinguished Scholarship Commended Finalist regulations
+    short_excerpt: The award, in the amount of $2,500
+    value_status: reported
+    reported_value: 2500
+  - field_path: offers/3/benefits/0/amount
+    source_ref: s-reg
+    locator: Regulations, Alumni Distinguished Scholarship Commended Semifinalist regulations
+    short_excerpt: The award, in the amount of $1,500
+    value_status: reported
+    reported_value: 1500
+  - field_path: application/separate_application
+    source_ref: s-hi
+    locator: High-achieving student scholarships, intro paragraph
+    short_excerpt: Consideration for these awards is automatic, and no additional applications are required.
+    value_status: reported
+    reported_value: no_form_other_steps_required
+  - field_path: application/milestones/0
+    source_ref: s-hi
+    locator: High-achieving student scholarships, Alumni Distinguished Scholarship entry
+    short_excerpt: Invitations to compete in the examination are sent to the most outstanding students who apply for admission by November 1.
+    value_status: reported
+    reported_value: November 1
+  - field_path: renewal_rules/0
+    source_ref: s-reg
+    locator: Regulations, Alumni Distinguished Scholarship regulations
+    short_excerpt: maintain a minimum of a 3.2 cumulative GPA on a 4.0 scale.
+    value_status: reported
+    reported_value: 3.2
+  - field_path: renewal_rules/1
+    source_ref: s-reg
+    locator: Regulations, Alumni Distinguished Scholarship Commended Finalist regulations
+    short_excerpt: The student recipient must remain in good academic standing with the university for the award to continue to be disbursed.
+    value_status: reported
+    reported_value: good standing
+  - field_path: stacking_rules/0
+    source_ref: s-reg
+    locator: Regulations, Alumni Distinguished Scholarship Commended Finalist regulations
+    short_excerpt: MSU reserves the right to adjust an award in consideration of other MSU scholarship offers
+    value_status: reported
+    reported_value: counts_within_package
+  - field_path: stacking_rules/1
+    source_ref: s-reg
+    locator: Regulations, Alumni Distinguished Scholarship regulations
+    short_excerpt: other aid programs that are awarded based on demonstrated need may be reduced or withdrawn if this award meets the student's total need.
+    value_status: reported
+    reported_value: counts_within_package
+  - field_path: stacking_rules/2
+    source_ref: s-reg
+    locator: Regulations, Distinguished First-year Scholarship and Honors Distinction Scholarship regulations
+    short_excerpt: may not be combined with large MSU awards based on merit such as an Honors Excellence Scholarship, Distinguished First-year Scholarship, or Alumni Distinguished Scholarship.
+    value_status: reported
+    reported_value: not_allowed
+  - field_path: award_counts/0
+    source_ref: s-hi
+    locator: High-achieving student scholarships, Alumni Distinguished Scholarship entry
+    short_excerpt: Awarded to the top 15 candidates
+    value_status: reported
+    reported_value: 15
