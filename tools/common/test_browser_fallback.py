@@ -1,0 +1,224 @@
+"""Browser-fallback policy of PoliteFetcher. Fake transports only: no network, no browser."""
+
+import subprocess
+import sys
+
+import pytest
+
+from tools.common.polite_fetch import (
+    BLOCKED_BY_ROBOTS, HTTP_ERROR, LOGIN_OR_CAPTCHA, OK, ROBOTS_UNREACHABLE, PoliteFetcher, Response,
+)
+
+NOW = 1_800_000_000.0
+ROBOTS = "https://a.edu/robots.txt"
+PAGE = "https://a.edu/page"
+PAGE2 = "https://a.edu/page2"
+
+
+class Net:
+    """Scripted transport: url -> list of responses (last repeats). Records (time, url, headers)."""
+
+    def __init__(self, routes, clock):
+        self.routes = {k: list(v) for k, v in routes.items()}
+        self.calls = []
+        self.clock = clock
+
+    def __call__(self, method, url, headers, timeout):
+        self.calls.append((self.clock.t, url, dict(headers)))
+        q = self.routes[url]
+        r = q.pop(0) if len(q) > 1 else q[0]
+        if isinstance(r, Exception):
+            raise r
+        return r
+
+    @property
+    def urls(self):
+        return [c[1] for c in self.calls]
+
+
+class Clock:
+    def __init__(self):
+        self.t = NOW
+        self.sleeps = []
+
+    def __call__(self):
+        return self.t
+
+    def sleep(self, s):
+        self.sleeps.append(s)
+        self.t += s
+
+
+def R(status=200, body=b"", **h):
+    return Response(status, {k.replace("_", "-"): v for k, v in h.items()}, body)
+
+
+def make(plain, browser=None, fallback=True, **kw):
+    clock = Clock()
+    p = Net(plain, clock)
+    b = Net(browser or {}, clock)
+    f = PoliteFetcher(
+        "scholarships", transport=p, browser_fallback=b if fallback else None,
+        clock=clock, sleep=clock.sleep, min_spacing=kw.pop("min_spacing", 2.0), **kw,
+    )
+    return f, p, b, clock
+
+
+def test_fallback_on_404_and_403():
+    for status in (404, 403, 406):
+        f, p, b, _ = make({ROBOTS: [R(404)], PAGE: [R(status)]}, {PAGE: [R(200, b"<html>dom</html>")]})
+        r = f.fetch(PAGE)
+        assert r.status == OK and r.transport == "browser" and r.body == b"<html>dom</html>", status
+        assert p.urls == [ROBOTS, PAGE] and b.urls == [PAGE]
+
+
+def test_no_fallback_on_200_500_or_login_redirect():
+    f, p, b, _ = make({ROBOTS: [R(404)], PAGE: [R(200, b"ok")]})
+    r = f.fetch(PAGE)
+    assert r.transport == "http" and b.calls == []
+    f, p, b, _ = make({ROBOTS: [R(404)], PAGE: [R(500)]}, max_retries=1)
+    assert f.fetch(PAGE).status == HTTP_ERROR and b.calls == []
+    f, p, b, _ = make({ROBOTS: [R(404)], PAGE: [R(302, location="https://login.a.edu/sso?x=1")]})
+    r = f.fetch(PAGE)
+    assert r.status == LOGIN_OR_CAPTCHA and b.calls == []
+
+
+@pytest.mark.parametrize("hdrs,body", [
+    ({"www_authenticate": "Basic"}, b""),
+    ({}, b"<div class='g-recaptcha'></div>"),
+    ({}, b"please verify you are human captcha"),
+])
+def test_login_and_captcha_never_retried_in_browser(hdrs, body):
+    f, p, b, _ = make({ROBOTS: [R(404)], PAGE: [R(403, body, **hdrs)]}, {PAGE: [R(200, b"x")]})
+    r = f.fetch(PAGE)
+    assert r.status == LOGIN_OR_CAPTCHA and b.calls == []
+
+
+def test_soft_bot_wall_gets_one_browser_retry_and_stays_blocked_if_still_walled():
+    wall = R(403, b"<title>Just a moment...</title>", cf_mitigated="challenge")
+    f, p, b, _ = make({ROBOTS: [R(404)], PAGE: [wall]}, {PAGE: [R(200, b"<html>page</html>")]})
+    assert f.fetch(PAGE).transport == "browser"
+    f, p, b, _ = make({ROBOTS: [R(404)], PAGE: [wall]}, {PAGE: [wall]})
+    r = f.fetch(PAGE)
+    assert r.status == LOGIN_OR_CAPTCHA and r.transport == "browser" and len(b.calls) == 1
+
+
+def test_one_fallback_attempt_per_url_and_failure_reported_as_plain():
+    f, p, b, _ = make({ROBOTS: [R(404)], PAGE: [R(404)]}, {PAGE: [R(404)]})
+    r = f.fetch(PAGE)
+    assert r.status == HTTP_ERROR and r.http_status == 404 and "browser fallback also failed" in r.reason
+    assert f.browser_hosts == set()  # a failed fallback does not make the host sticky
+    f.fetch(PAGE)
+    assert len(b.calls) == 1 and p.urls.count(PAGE) == 2  # not tried again in the same run
+
+
+def test_browser_error_returns_plain_result_without_retries():
+    f, p, b, c = make({ROBOTS: [R(404)], PAGE: [R(404)]}, {PAGE: [ConnectionError("no playwright")]})
+    r = f.fetch(PAGE)
+    assert r.status == HTTP_ERROR and r.http_status == 404 and len(b.calls) == 1
+    assert 4.0 not in c.sleeps and 8.0 not in c.sleeps  # spacing only, no backoff loop
+
+
+def test_robots_disallow_read_via_browser_blocks_and_page_never_fetched():
+    f, p, b, _ = make(
+        {ROBOTS: [R(500)], PAGE: [R(200)]},
+        {ROBOTS: [R(200, b"User-agent: *\nDisallow: /page\n")], PAGE: [R(200)]},
+    )
+    r = f.fetch(PAGE)
+    assert r.status == BLOCKED_BY_ROBOTS
+    assert PAGE not in p.urls and PAGE not in b.urls
+
+
+def test_robots_404_in_browser_allows_and_host_goes_sticky():
+    f, p, b, _ = make({ROBOTS: [R(403)], PAGE: [R(200)]}, {ROBOTS: [R(404)], PAGE: [R(200, b"<html>x</html>")]})
+    r = f.fetch(PAGE)
+    assert r.status == OK and r.transport == "browser"
+    assert p.urls == [ROBOTS]  # no plain page request: the host needed the browser for robots
+
+
+def test_robots_unreadable_in_browser_too_stays_unreachable():
+    for plain in (R(500), R(429), R(403)):
+        f, p, b, _ = make({ROBOTS: [plain], PAGE: [R(200)]}, {ROBOTS: [R(503)], PAGE: [R(200)]})
+        assert f.fetch(PAGE).status == ROBOTS_UNREACHABLE, plain.status
+        assert PAGE not in p.urls and PAGE not in b.urls
+
+
+def test_clean_robots_404_does_not_use_the_browser():
+    f, p, b, _ = make({ROBOTS: [R(410)], PAGE: [R(200, b"ok")]})
+    assert f.fetch(PAGE).status == OK and b.calls == []
+
+
+def test_robots_challenge_not_retried_in_browser():
+    f, p, b, _ = make({ROBOTS: [R(403, b"captcha")], PAGE: [R(200)]}, {ROBOTS: [R(200, b"")]})
+    f.fetch(PAGE)
+    assert b.calls == []
+
+
+def test_host_stickiness_after_successful_fallback():
+    f, p, b, _ = make(
+        {ROBOTS: [R(404)], PAGE: [R(404)], PAGE2: [R(200, b"plain")]},
+        {PAGE: [R(200, b"<html>1</html>")], PAGE2: [R(200, b"<html>2</html>")]},
+    )
+    assert f.fetch(PAGE).transport == "browser"
+    assert f.browser_hosts == {"a.edu"}
+    r2 = f.fetch(PAGE2)
+    assert r2.transport == "browser" and r2.body == b"<html>2</html>"
+    assert PAGE2 not in p.urls  # no doomed plain request
+
+
+def test_browser_requests_honour_spacing_and_crawl_delay():
+    f, p, b, c = make(
+        {ROBOTS: [R(200, b"User-agent: *\nCrawl-delay: 7\n")], PAGE: [R(404)]},
+        {PAGE: [R(200, b"<html>1</html>")], PAGE2: [R(200, b"<html>2</html>")]},
+    )
+    f.fetch(PAGE)
+    f.fetch(PAGE2)
+    times = [t for t, *_ in p.calls + b.calls]
+    assert sorted(times)[1] - sorted(times)[0] >= 7 - 1e-9
+    spaced = sorted(times)
+    assert all(b2 - a >= 7 - 1e-9 for a, b2 in zip(spaced, spaced[1:]))
+    assert b.calls[1][0] - b.calls[0][0] >= 7 - 1e-9
+
+
+def test_no_validators_for_browser_fetches():
+    cache = {PAGE: {"etag": '"abc"', "last_modified": "x", "final_url": PAGE}}
+    f, p, b, _ = make({ROBOTS: [R(404)], PAGE: [R(404)]}, {PAGE: [R(200, b"<html></html>", etag='"zzz"')]}, cache=cache)
+    r = f.fetch(PAGE)
+    assert r.transport == "browser" and r.etag is None
+    assert "If-None-Match" not in b.calls[0][2]
+    assert cache[PAGE]["etag"] == '"abc"'  # nothing stored from the browser response
+
+
+def test_browser_redirect_to_sso_is_refused_not_followed():
+    f, p, b, _ = make(
+        {ROBOTS: [R(404)], PAGE: [R(404)]},
+        {PAGE: [R(302, location="https://login.a.edu/sso?x=1")]},
+    )
+    r = f.fetch(PAGE)
+    assert r.status == LOGIN_OR_CAPTCHA and r.transport == "browser"
+
+
+def test_disabled_by_default_changes_nothing():
+    f, p, b, _ = make({ROBOTS: [R(404)], PAGE: [R(404)]}, fallback=False)
+    r = f.fetch(PAGE)
+    assert r.status == HTTP_ERROR and r.http_status == 404 and r.reason == "HTTP 404" and r.transport == "http"
+    assert b.calls == []
+    # a plain 403 robots.txt is still allow-all with the fallback off
+    f, p, b, _ = make({ROBOTS: [R(403)], PAGE: [R(200, b"ok")]}, fallback=False)
+    assert f.fetch(PAGE).status == OK
+    f, p, b, _ = make({ROBOTS: [R(500)], PAGE: [R(200)]}, fallback=False)
+    assert f.fetch(PAGE).status == ROBOTS_UNREACHABLE
+
+
+def test_importing_browser_transport_does_not_import_playwright():
+    code = "import sys; import tools.common.browser_transport; assert 'playwright' not in sys.modules"
+    subprocess.run([sys.executable, "-c", code], check=True)
+
+
+def test_browser_transport_without_playwright_raises_connection_error(monkeypatch):
+    from tools.common.browser_transport import BrowserTransport
+
+    monkeypatch.setitem(sys.modules, "playwright", None)
+    monkeypatch.setitem(sys.modules, "playwright.sync_api", None)
+    with pytest.raises(ConnectionError, match="playwright is not installed"):
+        BrowserTransport()("GET", PAGE, {"User-Agent": "x"}, 5)

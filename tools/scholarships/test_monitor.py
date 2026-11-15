@@ -785,3 +785,131 @@ def test_workflow_reports_findings_even_when_the_monitor_step_fails():
     assert "set -uo pipefail" in step and "set -e" not in step  # outputs are written before the exit
     assert step.index("findings=") < step.index('exit "${rc}"')
     assert "--cache-file" not in text
+
+
+# ------------------------------------------------------------- browser fallback
+
+
+def _bfetcher(plain: Net, browser: Net) -> PoliteFetcher:
+    return PoliteFetcher(
+        "scholarship-monitor", transport=plain.transport, browser_fallback=browser.transport,
+        clock=lambda: 1_800_000_000.0, sleep=lambda s: None, min_spacing=0, cache={},
+    )
+
+
+def _refused(url_robots=Response(404)) -> Dict[str, Any]:
+    """Plain client is refused (404) on both source pages."""
+    return routes(school=Response(404), found=Response(404))
+
+
+def _check_b(version, plain: Net, browser: Net, store: FakeStore) -> Dict[str, Any]:
+    res = monitor.run([version], store, _bfetcher(plain, browser), TODAY, NOW)
+    store.rows.extend(res.rows)
+    return res.rows[0]
+
+
+def _browser_net(school: str = PAGE, found: str = PAGE) -> Net:
+    return Net({S_SCHOOL: html(school), S_FOUND: html(found), ROBOTS_SCHOOL: Response(404), ROBOTS_FOUND: Response(404)})
+
+
+def test_fallback_records_transport_and_baselines(version):
+    store = FakeStore()
+    row = _check_b(version, Net(_refused()), _browser_net(), store)
+    s = src(row)
+    assert s["transport"] == "browser" and s["status"] == "ok" and s["change"] == "baseline"
+    assert row["result"] == "unchanged" and row["needs_review"] is False
+
+
+def test_browser_fetch_ignores_raw_sha256(version):
+    store = FakeStore()
+    _check_b(version, Net(_refused()), _browser_net(), store)
+    # same text, different bytes (the rendered DOM is not byte-stable): not markup_only, not raw_changed
+    noisy = PAGE.replace("<body>", "<body data-x='123'>") + "<!-- t=99 -->"
+    row = _check_b(version, Net(_refused()), _browser_net(noisy, noisy), store)
+    assert src(row)["change"] == "none" and src(row)["raw_sha256"] != store.rows[0]["detail"]["sources"][0]["raw_sha256"]
+    assert row["result"] == "unchanged" and row["needs_review"] is False
+
+
+def test_browser_fetch_still_flags_a_terms_change_by_text_and_tokens(version):
+    store = FakeStore()
+    _check_b(version, Net(_refused()), _browser_net(), store)
+    row = _check_b(version, Net(_refused()), _browser_net(PAGE.replace("$12,000", "$10,000"), PAGE), store)
+    assert src(row)["change"] == "text_changed" and row["needs_review"] is True
+
+
+def test_transport_change_rebaselines_without_needs_review(version):
+    store = FakeStore()
+    check(version, Net(routes()), store)  # http baseline
+    changed = PAGE.replace("$12,000", "$9,000")  # even a real difference must not flag across transports
+    row = _check_b(version, Net(_refused()), _browser_net(changed, changed), store)
+    s = src(row)
+    assert s["change"] == "transport_rebaseline" and s["transport"] == "browser"
+    assert row["needs_review"] is False and row["result"] == "unchanged"
+    assert row["detail"]["transport_rebaseline"] is True
+    # and back again: browser baseline, plain fetch works now
+    row2 = check(version, Net(routes()), store)
+    assert src(row2)["change"] == "transport_rebaseline" and src(row2)["transport"] == "http"
+    assert row2["needs_review"] is False
+    # the next plain run compares normally against the new baseline
+    row3 = check(version, Net(routes()), store)
+    assert src(row3)["change"] == "none"
+
+
+def test_previous_row_without_transport_is_http(version):
+    store = FakeStore()
+    row = check(version, Net(routes()), store)
+    for s in row["detail"]["sources"]:
+        s.pop("transport", None)  # a row written before the fallback existed
+        s.pop("attempt_transport", None)
+    row2 = check(version, Net(routes()), store)
+    assert src(row2)["change"] == "none" and src(row2)["transport"] == "http"
+
+
+def test_unreachable_run_keeps_baseline_transport(version):
+    store = FakeStore()
+    _check_b(version, Net(_refused()), _browser_net(), store)
+    dead = Net(routes(school=Response(404), found=Response(404)))
+    row = _check_b(version, dead, Net({S_SCHOOL: Response(404), S_FOUND: Response(404), ROBOTS_SCHOOL: Response(404), ROBOTS_FOUND: Response(404)}), store)
+    s = src(row)
+    assert s["status"] == "unreachable" and s["transport"] == "browser"  # the baseline's transport survives
+    assert s["attempt_transport"] == "http"  # the failed result was the plain one; the browser retry did not help
+
+
+def test_error_page_served_with_200_through_the_browser_is_unreachable(version):
+    store = FakeStore()
+    _check_b(version, Net(_refused()), _browser_net(), store)
+    err = "<html><body><main><h1>Page not found</h1><p>The page you requested could not be found.</p></main></body></html>"
+    row = _check_b(version, Net(_refused()), _browser_net(err, err), store)
+    s = src(row)
+    assert s["status"] == "unreachable" and "suspect page" in s["reason"]
+    assert row["needs_review"] is False and row["result"] == "unreachable"
+
+
+def test_fallback_disabled_leaves_a_404_unreachable(version):
+    row = check(version, Net(_refused()))
+    s = src(row)
+    assert s["status"] == "unreachable" and "transport" not in s
+    assert "attempt_transport" in s and s["attempt_transport"] == "http"
+    assert row["needs_review"] is False
+
+
+def test_browser_fallback_flag_builds_fetcher_with_browser(monkeypatch, tmp_path):
+    import tools.common.browser_transport as bt
+
+    made = []
+
+    class Fake:
+        def __init__(self):
+            made.append(self)
+            self.closed = False
+
+        def __call__(self, *a):
+            raise ConnectionError("fake")
+
+        def close(self):
+            self.closed = True
+
+    monkeypatch.setattr(bt, "BrowserTransport", Fake)
+    store = FakeStore()
+    rc = monitor.main(["--only", "nope", "--browser-fallback"], store=store, now=NOW)
+    assert rc == 0 and len(made) == 1 and made[0].closed is True

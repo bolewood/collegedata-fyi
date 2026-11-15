@@ -42,6 +42,14 @@ Rules (the report for M4 states the same):
   the program ended. The previous baseline is carried through.
 * Result precedence for one version: changed > stale_signal > unreachable >
   unchanged. Every signal is listed in `detail`.
+* Browser fallback (`--browser-fallback`, see polite_fetch.BROWSER_FALLBACK_RULES):
+  a page the plain client is refused (403/404/406) is read once through headless
+  Chromium; robots Disallow, logins and CAPTCHAs are still never bypassed. Each
+  source's `detail` entry records `transport` ("http" or "browser"; a row with no
+  `transport` is "http"). A rendered DOM is not byte-stable, so for a browser fetch
+  `raw_sha256` drives nothing: only the normalized text hash and the tokens are
+  compared. If the previous baseline used the other transport, the source
+  re-baselines (`transport_rebaseline`) and never sets `needs_review`.
 * Each distinct URL is fetched once per run and compared with every baseline that
   cites it. Conditional-GET validators are stored in each source's own `detail`
   entry (never in a shared URL cache), so a baseline only ever sends its own
@@ -561,7 +569,7 @@ def _load_env(path: Path) -> None:
 
 _CARRY = (
     "raw_sha256", "text_sha256", "normalizer_version", "parsers", "tokens", "facts",
-    "text_len", "text_unreadable", "baseline_fetched_at", "validators",
+    "text_len", "text_unreadable", "baseline_fetched_at", "validators", "transport",
 )
 _SHRINK_RATIO = 0.3
 
@@ -638,7 +646,8 @@ def check_source(
 
     Returns (entry for detail.sources, token diff or None). `change` is one of
     baseline, none, markup_only, text_changed (flags), text_changed_no_terms,
-    raw_changed, normalizer_rebaseline. Only text_changed sets needs_review.
+    raw_changed, normalizer_rebaseline, transport_rebaseline. Only text_changed
+    sets needs_review.
     """
     if not isinstance(fetcher, RunFetcher):
         fetcher = RunFetcher(fetcher)
@@ -659,6 +668,8 @@ def check_source(
     res = fetcher.fetch(url, (prev or {}).get("validators") if has_base else None)
     entry["fetch_status"] = res.status
     entry["http_status"] = res.http_status
+    entry["attempt_transport"] = res.transport
+    browser = res.transport == "browser"
     if res.status == NOT_MODIFIED and has_base:
         carry()
         entry.update({"fetched": False, "status": "not_modified", "change": "none"})
@@ -689,6 +700,7 @@ def check_source(
             return unreachable("suspect page: most of the baseline content is missing", res)
 
     raw = _sha(body)
+    prev_transport = (prev or {}).get("transport") or "http"  # rows written before the fallback existed are http
     facts = {} if unreadable else {
         "years": (tokens or {}).get("years", []),
         "heading_entry_years": heading_entry_years(page.headings),
@@ -700,6 +712,7 @@ def check_source(
         "raw_sha256": raw,
         "text_sha256": None if unreadable else _sha(text.encode("utf-8")),
         "normalizer_version": NORMALIZER_VERSION,
+        "transport": res.transport,
         "parsers": parser_fingerprint(),
         "tokens": None if unreadable else tokens,
         "facts": facts,
@@ -721,13 +734,15 @@ def check_source(
             entry["yaml_content_sha256"] = "match" if yaml_sha == raw else "differs"
             if yaml_sha != raw:
                 entry["raw_differs_from_yaml"] = True
+    elif prev_transport != res.transport:
+        entry["change"] = "transport_rebaseline"  # the two transports' bytes and DOM are not comparable
     elif (
         prev.get("normalizer_version") != NORMALIZER_VERSION or prev.get("parsers") != entry["parsers"]
     ) and prev.get("text_sha256") is not None:
-        entry["change"] = "none" if prev["raw_sha256"] == raw else "normalizer_rebaseline"
+        entry["change"] = "none" if (prev["raw_sha256"] == raw and not browser) else "normalizer_rebaseline"
     elif entry["text_sha256"] is not None and prev.get("text_sha256") is not None:
         if entry["text_sha256"] == prev["text_sha256"]:
-            entry["change"] = "none" if prev["raw_sha256"] == raw else "markup_only"
+            entry["change"] = "none" if (browser or prev["raw_sha256"] == raw) else "markup_only"
         else:
             diff = diff_tokens(prev.get("tokens") or {}, tokens or {})
             if diff:
@@ -736,7 +751,7 @@ def check_source(
             else:  # wording moved, no amount/date/year/selection word did
                 entry["change"] = "text_changed_no_terms"
     else:  # no usable text on one side: report a raw-bytes change, never flag it
-        entry["change"] = "none" if prev["raw_sha256"] == raw else "raw_changed"
+        entry["change"] = "none" if (browser or prev["raw_sha256"] == raw) else "raw_changed"
     return entry, diff
 
 
@@ -811,6 +826,8 @@ def check_version(
         detail["first_run"] = True
     if any(e["change"] == "normalizer_rebaseline" for e in entries):
         detail["normalizer_rebaseline"] = True
+    if any(e["change"] == "transport_rebaseline" for e in entries):
+        detail["transport_rebaseline"] = True
     if needs_review:
         if changed or not prev_review:
             review = {"origin_result": "changed", "origin_checked_at": now_iso}
@@ -990,6 +1007,9 @@ def main(
     ap.add_argument("--min-spacing", type=float, default=2.0)
     ap.add_argument("--findings-json", type=Path)
     ap.add_argument("--findings-md", type=Path)
+    ap.add_argument("--browser-fallback", action="store_true",
+                    help="retry pages the plain client is refused (403/404/406) through headless Chromium; "
+                         "needs tools/scholarships/monitor-requirements.txt")
     ap.add_argument("--show-rows", action="store_true", help="print the full rows that would be written")
     args = ap.parse_args(argv)
 
@@ -1005,7 +1025,12 @@ def main(
         store = SupabaseCheckStore.from_env(required=args.apply)
     versions = select_versions(ds, args.mode, today, args.only, args.limit, store)
     if fetcher is None:
-        fetcher = PoliteFetcher(PRODUCT_TOKEN, min_spacing=args.min_spacing)
+        browser = None
+        if args.browser_fallback:
+            from tools.common.browser_transport import BrowserTransport
+
+            browser = BrowserTransport()
+        fetcher = PoliteFetcher(PRODUCT_TOKEN, min_spacing=args.min_spacing, browser_fallback=browser)
 
     print(f"{'APPLY' if args.apply else 'DRY RUN'}: mode={args.mode} versions={len(versions)} today={today}")
     result = RunResult()
@@ -1021,6 +1046,7 @@ def main(
     try:
         run(versions, store, fetcher, today, now, args.mode, sink if args.apply else None, result)
     finally:
+        fetcher.close()
         # Findings first (the workflow reads them even after a failure), then refresh
         # whatever was written so the public view never lags the stored flags.
         if args.findings_json:
