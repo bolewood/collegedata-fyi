@@ -1,0 +1,362 @@
+schema_version: 1
+program_id: distinguished-regents-scholars
+school_id: washington-state-university
+ipeds_id: '236939'
+applicable_campuses:
+- Pullman
+official_name: Distinguished Regents Scholar Award
+aliases:
+- Regents Scholars Program
+- Regents Scholar
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: distinguished-regents-fall-2027
+  supersedes: null
+  entry_year: 2027
+  entry_year_label: Fall 2027 and after
+  entry_terms:
+  - fall
+  source_cohort_text: 'Main page: ''resident first-year students enrolling Fall 2027 or later''; terms
+    page ''2027-28'''
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b6
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-distinguished
+    parent_offer_id: null
+    variant_name: Distinguished Regents Scholar
+    residency: in_state
+    selection_mode: competitive
+    consideration_route: nomination
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: 'Washington high schools nominate two students each. The terms page also says:
+        ''Students with a 3.8 minimum high school GPA must enroll full-time at the WSU Pullman campus
+        in fall semester and be a Washington State resident to receive their Regents award.'' It does
+        not say whether 3.8 is an entry minimum, so no GPA minimum is recorded. Selection looks at academic
+        achievement, community involvement and an academic reference.'
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: Full tuition for up to 18 credits per semester, per the terms page; Pullman campus
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: Mandatory fees for up to 18 credits per semester, per the terms page; Pullman campus
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  - offer_id: o-regents
+    parent_offer_id: null
+    variant_name: Regents Scholar
+    residency: in_state
+    selection_mode: automatic_guaranteed
+    consideration_route: nomination
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: 'Nominees must complete the admission and scholarship application process by
+        the deadline. Same Pullman-campus, full-time, Washington-resident conditions as the page''s 3.8
+        GPA sentence. Students must enroll for at least 12 credits each semester. Not eligible: students
+        previously enrolled at WSU (other than through Running Start) and transfer students (2027-28 terms
+        page).'
+    benefits:
+    - benefit_id: b-award
+      category: tuition
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 4000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Four years
+      exclusions: null
+      scope_text: $4,000 per academic year, credited against tuition charges; half applies to fall and
+        half to spring (2027-28 terms page)
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: required
+    milestones:
+    - kind: application_open
+      requirement: required
+      date: null
+      recurring:
+        month: 10
+        day: 1
+      precision: day
+      source_date_text: 'October 1: Nominations open'
+    - kind: nomination_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 10
+        day: 31
+      precision: day
+      source_date_text: 'October 31: Counselor nomination deadline'
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 12
+        day: 1
+      precision: day
+      source_date_text: 'December 1: Student application deadline'
+    - kind: notification
+      requirement: recommended
+      date: null
+      recurring:
+        month: 1
+        day: 15
+      precision: approximate
+      source_date_text: 'Mid-January: Award winners notified'
+    admission_plan_requirement: Admission application to WSU, plus a high-school nomination
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: The pages give no year for these dates; the main page's award list is for students enrolling
+      Fall 2027 or later, so they are recorded as recurring month/day. The 2026-27 winners page shows
+      the same dates are used each cycle.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: 24
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: 'Continuous fall and spring enrollment on the Pullman campus, at least 24 graded credits each
+      year, and an undergraduate (non-professional) program of study (Regents Scholars Program block).
+      The separate Regents Scholars Award block adds: good academic standing by the end of spring semester,
+      and 12 credits each semester on the Pullman campus; renewable for a maximum of four years. The two
+      blocks overlap and are both recorded.'
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: not_allowed
+    note: The Regents Scholars Award cannot be combined with either level of the University Achievement
+      Award or the National Merit Scholarship (2027-28 terms page, Regents Scholars Award block).
+  - other_aid_type: institutional_need
+    relation: counts_within_package
+    note: The terms page says the award is included in the determination of financial aid eligibility.
+  award_counts:
+  - metric: new_recipients
+    qualifier: approximate
+    value: 10
+    cohort_year: null
+    source_ref: s-terms
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-main
+    url: https://financialaid.wsu.edu/washington-state-scholarships/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 83f58e34c2a8aea778b19460165b74bc5691d9e661957118e05ff226e7d603bf
+    archive_url: null
+  - source_id: s-terms
+    url: https://financialaid.wsu.edu/scholarship-terms-conditions/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 1b0bde5b0ee02c8923bbd6657f4b427f7d3cdaab56e707199e0bde4753560ff9
+    archive_url: null
+  - source_id: s-win
+    url: https://financialaid.wsu.edu/wsu-regents-scholarship-winners/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 2bafc125ae9671acdaf97510940f54c4d8923bd73bc92471c74a7278cc2cec1b
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-terms
+    locator: Terms page, 2027-28, Regents Scholars Program, intro paragraph
+    short_excerpt: The top nominees (usually 10 recipients) are competitively selected for the Distinguished
+      Regents Scholar award.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-main
+    locator: Main page, Regents Scholars, first paragraph
+    short_excerpt: High schools in Washington are invited to nominate two of their top students for this
+      scholarship program.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-terms
+    locator: Terms page, 2027-28, Regents Scholars Program, Award Levels
+    short_excerpt: 'Distinguished Regents Scholar: Full tuition and mandatory fees for up to 18 credits
+      per semester, for four years.'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-terms
+    locator: Terms page, 2027-28, Regents Scholars Program, Award Levels
+    short_excerpt: 'Distinguished Regents Scholar: Full tuition and mandatory fees for up to 18 credits
+      per semester, for four years.'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-terms
+    locator: 'Terms page, Regents Scholars Program, Award Levels: no dollar amount for the Distinguished
+      level'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-terms
+    locator: 'Terms page, Regents Scholars Program, Award Levels: no dollar amount for the Distinguished
+      level'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/selection_mode
+    source_ref: s-terms
+    locator: Terms page, 2027-28, Regents Scholars Program, Award Levels, Regents Scholar bullet
+    short_excerpt: All qualified nominees who complete the admission and scholarship application process
+      by the deadline will receive this award.
+    value_status: reported
+    reported_value: automatic_guaranteed
+  - field_path: offers/1/consideration_route
+    source_ref: s-main
+    locator: Main page, Regents Scholars, first paragraph
+    short_excerpt: High schools in Washington are invited to nominate two of their top students for this
+      scholarship program.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0
+    source_ref: s-terms
+    locator: Terms page, 2027-28 tab, Regents Scholars Award block
+    short_excerpt: Funds from the Regents Scholars Award will credit against tuition charges.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-terms
+    locator: Terms page, 2027-28, Regents Scholars Program, Award Levels, Regents Scholar bullet
+    short_excerpt: 'Regents Scholar: $4,000 per academic year for four years.'
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-terms
+    locator: Terms page, Distinguished Award Criteria, second bullet
+    short_excerpt: The WSU scholarship application includes short essays
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-terms
+    locator: Terms page, Regents Scholars Program, Deadlines list
+    short_excerpt: 'October 1: Nominations open'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-terms
+    locator: Terms page, Regents Scholars Program, Deadlines list
+    short_excerpt: 'October 31: Counselor nomination deadline'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-terms
+    locator: Terms page, Regents Scholars Program, Deadlines list
+    short_excerpt: 'December 1: Student application deadline'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-terms
+    locator: Terms page, Regents Scholars Program, Deadlines list
+    short_excerpt: 'Mid-January: Award winners notified'
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-terms
+    locator: Terms page, Regents Scholars Program, Renewal Requirements
+    short_excerpt: Completion of at least 24 graded credits each year
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-terms
+    locator: Terms page, 2027-28 tab, Regents Scholars Award block
+    short_excerpt: The Regents Scholars Award cannot be combined with either level of the University Achievement
+      Award or the National Merit Scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/1
+    source_ref: s-terms
+    locator: Terms page, 2027-28 tab, Regents Scholars Award block
+    short_excerpt: if you are receiving financial aid, the amount of this award will be included in the
+      determination of financial aid eligibility.
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts/0
+    source_ref: s-terms
+    locator: Terms page, Regents Scholars Program, Award Levels
+    short_excerpt: Approximately 10 students will receive this award.
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-main
+    locator: Main page, intro to the award list
+    short_excerpt: The following awards are available to resident first-year students enrolling Fall 2027
+      or later.
+    value_status: reported
+    reported_value: null
+  - field_path: program_status_for_entry
+    source_ref: s-main
+    locator: Main page, Regents Scholars block lists current deadlines
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

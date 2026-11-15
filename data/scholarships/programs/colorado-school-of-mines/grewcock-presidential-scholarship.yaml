@@ -1,0 +1,266 @@
+schema_version: 1
+program_id: grewcock-presidential-scholarship
+school_id: colorado-school-of-mines
+ipeds_id: '126775'
+applicable_campuses: []
+official_name: Grewcock Presidential Scholarship
+aliases:
+- Grewcock Presidential Scholars Program
+- Grewcock Presidential Scholars
+program_family: presidential
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: grewcock-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Dates given (application December 15, 2026 to February 1, 2027); the page does not
+    name an entering class
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b6
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: First-year undergraduate students from in-state and out-of-state; applicants
+        must first be admitted to Mines. The page calls Grewcock one of the 'foundation scholarships'
+        reached from the Mines General Scholarship Application. Prior leadership experience is not necessary.
+        Applications are de-identified for review and use four essay questions. Finalists get a virtual
+        interview.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Renewable for up to eight semesters
+      exclusions: null
+      scope_text: 'School words: ''full tuition and mandatory fees'''
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Renewable for up to eight semesters
+      exclusions: null
+      scope_text: 'School words: ''full tuition and mandatory fees'''
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: required
+    milestones:
+    - kind: application_open
+      requirement: required
+      date: '2026-12-15'
+      recurring: null
+      precision: day
+      source_date_text: 'Application opens: Tuesday, December 15, 2026'
+    - kind: other
+      requirement: required
+      date: '2026-12-01'
+      recurring: null
+      precision: day
+      source_date_text: Essay questions for the Grewcock Presidential Scholarship will be released on
+        December 1, 2026.
+    - kind: application_deadline
+      requirement: required
+      date: '2027-02-01'
+      recurring: null
+      precision: day
+      source_date_text: 'Application deadline: Monday, February 1, 2027'
+    admission_plan_requirement: Admission to Mines is required before the scholarship application can
+      be started
+    prerequisites:
+    - kind: portal_credentials
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: The page says students must be admitted to Mines to gain access to their Trailhead account,
+        where the application is made.
+    interview_mode: virtual
+    finalist_event_required: null
+    notes: The page says identifying information (last name, social media accounts, identifiable business
+      names, LinkedIn links) in essay responses will result in disqualification of the application. The
+      application opens December 15, 2026 and the essay questions are released December 1, 2026, which
+      is earlier than the opening date; the page shows both. The page does not say which entering class
+      these dates belong to.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.0
+    gpa_scale: 4.0
+    credit_load_min_per_term: null
+    credit_load_min_per_year: 30
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: 'Renewable for up to eight semesters. Credits: 15 per semester or 30 per academic year (the
+      page says ''or''). The Maintaining Scholarships page also expects consistent attendance and engagement
+      in Grewcock community programming, high ethical standards, a campus leadership role or new initiative
+      by graduation, and ongoing leadership development.'
+  stacking_rules: null
+  award_counts:
+  - metric: new_recipients
+    qualifier: exact
+    value: 10
+    cohort_year: null
+    source_ref: s-pascal
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-pascal
+    url: https://pascal.mines.edu/grewcock-scholars/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 9ef2900950c3261e13ad5abc13d2de76aaaa75bc0f5e5c0e985fe26c4edce1e5
+    archive_url: null
+  - source_id: s-ren
+    url: https://finaid.mines.edu/maintaining-scholarships/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 1ddd9a7013159ae08c01bf2f2ec9cf79cd6d14db42df2b230815b4528c832456
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-pascal
+    locator: Applicant Requirements
+    short_excerpt: If selected, applicants will be invited to interview for the Grewcock Presidential
+      Scholarship Program.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-pascal
+    locator: Applicant Requirements, application paragraph
+    short_excerpt: All applicants must first complete the Mines General Scholarship Application on their
+      Trailhead accounts.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-pascal
+    locator: Scholarship Components and Expectations, first paragraph
+    short_excerpt: The award covers full tuition and mandatory fees and is renewable for up to eight semesters.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-pascal
+    locator: 'Scholarship Components: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-pascal
+    locator: Scholarship Components and Expectations, first paragraph
+    short_excerpt: The award covers full tuition and mandatory fees and is renewable for up to eight semesters.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-pascal
+    locator: 'Scholarship Components: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-pascal
+    locator: Applicant Requirements, application paragraph
+    short_excerpt: Upon completing the Mines General Scholarship Applications, applicants will be prompted
+      to complete their applications for foundation scholarships—including Grewcock!
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-pascal
+    locator: How To Apply & Timeline, Important Dates
+    short_excerpt: 'Application opens: Tuesday, December 15, 2026'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-pascal
+    locator: How To Apply & Timeline, Important Dates
+    short_excerpt: 'Application deadline: Monday, February 1, 2027'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-pascal
+    locator: How To Apply & Timeline, Important Dates
+    short_excerpt: Essay questions for the Grewcock Presidential Scholarship will be released on December
+      1, 2026.
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-pascal
+    locator: Applicant Requirements, last paragraph
+    short_excerpt: Finalists will be invited to attend a virtual interview.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-pascal
+    locator: Scholarship Components and Expectations, first paragraph
+    short_excerpt: The award covers full tuition and mandatory fees and is renewable for up to eight semesters.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-ren
+    locator: Maintaining Scholarships, Grewcock Presidential Scholars Program, requirements list
+    short_excerpt: Maintain a minimum 3.000 GPA
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-ren
+    locator: Maintaining Scholarships, Grewcock Presidential Scholars Program, requirements list
+    short_excerpt: Complete at least 15 credit hours per semester, or 30 credit hours per academic year
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules
+    source_ref: s-pascal
+    locator: 'Grewcock pages: no rule on other aid'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: award_counts/0
+    source_ref: s-pascal
+    locator: Applicant Requirements, first paragraph
+    short_excerpt: Ten scholars will ultimately be selected for the program.
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-pascal
+    locator: 'How To Apply & Timeline: dates are given, the entering class is not named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

@@ -1,0 +1,248 @@
+schema_version: 1
+program_id: uh-manoa-regents-scholarship
+school_id: university-of-hawaii-at-manoa
+ipeds_id: '141574'
+applicable_campuses:
+- Manoa
+official_name: Regents Scholarship
+aliases:
+- Regents and Presidential Scholars (RAPS)
+- UH Regents Scholarship
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: regents-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: The Manoa pages name no entering class
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: unverified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b6
+  owner_spot_checked: false
+  program_status_for_entry: null
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: Regents Scholarship (incoming first-year students)
+    residency: in_state
+    selection_mode: unknown
+    consideration_route: honors_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: true
+      first_generation_rule: unknown
+      eligibility_notes: Hawaii residents; incoming first-year students. The student must apply and be
+        accepted to the Honors Program to receive the scholarship. Scholars also complete 10 hours of
+        service each fall or spring semester. The Manoa pages state no GPA minimum, citizenship rule or
+        test rule.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: tuition_waiver
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years of undergraduate study
+      exclusions: null
+      scope_text: 'School words: ''full tuition waivers''; the Manoa pages give no cap or exclusions'
+      advertised_coverage_label: full tuition waivers
+      conditions_text: null
+    - benefit_id: b-stipend
+      category: stipend
+      instrument: cash_stipend
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Each fall and spring semester
+      exclusions: null
+      scope_text: The Manoa pages say a stipend is paid each fall and spring semester and give no amount
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-travel
+      category: enrichment
+      instrument: unknown
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: One time
+      exclusions: null
+      scope_text: The Manoa pages list a one-time travel grant and give no amount
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: unknown
+    milestones:
+    - kind: other
+      requirement: priority
+      date: null
+      recurring:
+        month: 5
+        day: 1
+      precision: day
+      source_date_text: 'May 1: Students accepted by this date (including Honors interview) have priority
+        registration'
+    - kind: other
+      requirement: recommended
+      date: null
+      recurring:
+        month: 6
+        day: 15
+      precision: day
+      source_date_text: 'June 15: Students accepted by this date can join the Honors program in the fall'
+    admission_plan_requirement: null
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: 'These two dates are the Honors Program''s acceptance dates, not a published scholarship deadline:
+      the Honors page says it accepts applications year-round and that an Honors interview is part of
+      every date. The scholarship''s own application and its deadline are described on pages of the UH
+      System Office (www.hawaii.edu), which is not an allowed source domain for this school, so they are
+      not recorded.'
+  renewal_rules: null
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-raps
+    url: https://manoa.hawaii.edu/undergrad/honors/regents-and-presidential-scholars-2/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: e513aaec73f15520dfd7eb8da1b1ab02b9b8e380a4559b1e021a6e638fb994ff
+    archive_url: null
+  - source_id: s-apply
+    url: https://manoa.hawaii.edu/undergrad/honors/apply-as-a-first-year-2/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 9a575974992335b07e4a80fa864921701de82e221e4809537c0cf2757a0aa566
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/consideration_route
+    source_ref: s-raps
+    locator: Regents and Presidential Scholars page, Regents Scholarship list, third bullet
+    short_excerpt: Apply separately for Honors. Student must apply and be accepted to Honors to receive
+      scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-raps
+    locator: Regents and Presidential Scholars page, Regents Scholarship list, third bullet
+    short_excerpt: Students receive full tuition waivers for four years of undergraduate study, plus a
+      stipend each Fall and Spring semester
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-raps
+    locator: Regents page lists no tuition dollar amount
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-raps
+    locator: Regents and Presidential Scholars page, Regents Scholarship list, third bullet
+    short_excerpt: Students receive full tuition waivers for four years of undergraduate study, plus a
+      stipend each Fall and Spring semester
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-raps
+    locator: Regents page lists no stipend amount
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-raps
+    locator: Regents and Presidential Scholars page, Regents Scholarship list, fourth bullet
+    short_excerpt: One-time travel grant.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-raps
+    locator: Regents page lists no travel grant amount
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/eligibility/honors_requirement
+    source_ref: s-raps
+    locator: Regents and Presidential Scholars page, Regents Scholarship list, third bullet
+    short_excerpt: Student must apply and be accepted to Honors to receive scholarship.
+    value_status: reported
+    reported_value: true
+  - field_path: offers/0/residency
+    source_ref: s-raps
+    locator: Regents and Presidential Scholars page, Regents Scholarship list
+    short_excerpt: Must be a Hawaiʻi resident
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-apply
+    locator: Apply to Honors, first-year deadlines paragraph
+    short_excerpt: 'May 1: Students accepted by this date (including Honors interview) have priority registration
+      for all their Fall classes.'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-apply
+    locator: Apply to Honors, first-year deadlines paragraph
+    short_excerpt: 'June 15: Students accepted by this date can join the Honors program in the fall and
+      register for Fall Honors classes.'
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-apply
+    locator: 'Apply to Honors, scheduling paragraph: an interview is required, no format is named'
+    short_excerpt: Your application cannot be processed before you meet with an Honors faculty member.
+    value_status: reported
+    reported_value: unknown
+  - field_path: entry_year
+    source_ref: s-raps
+    locator: 'Regents and Presidential Scholars page: no entering class named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: renewal_rules
+    source_ref: s-raps
+    locator: 'Regents and Presidential Scholars page: no renewal GPA or credit rule on the Manoa pages'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: stacking_rules
+    source_ref: s-raps
+    locator: 'Regents and Presidential Scholars page: no rule on other aid'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: award_counts
+    source_ref: s-raps
+    locator: 'Regents and Presidential Scholars page: no award count'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

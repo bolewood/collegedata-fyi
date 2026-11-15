@@ -1,0 +1,565 @@
+schema_version: 1
+program_id: uo-stamps-scholarship
+school_id: university-of-oregon
+ipeds_id: '209551'
+applicable_campuses: []
+official_name: Stamps Scholarship
+aliases:
+- UO Stamps Scholarship
+- Stamps Scholars
+program_family: stamps
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: stamps-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Page says 'this 2026-2027 scholarship' and names no entering class; the label appears
+    to be left over from the prior cycle
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b6
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-resident
+    parent_offer_id: null
+    variant_name: Oregon resident
+    residency: in_state
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.85
+        scale: 4.0
+        basis: unknown
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: Incoming domestic first-year student
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: 'Incoming domestic first-year students. The page says scholars are guaranteed
+        admission to the Robert D. Clark Honors College. Selection criteria: academic preparation, activities
+        and talents, leadership, innovation and perseverance, volunteer service, work experience, and
+        four short-answer essay questions.'
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: 'School words: ''full UO tuition'''
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: Listed after 'full' in 'full UO tuition, fees, food, and housing'; the page gives no
+        cap
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: '''Food'', listed after ''full'' in ''full UO tuition, fees, food, and housing''; the
+        page gives no cap'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: Listed after 'full' in 'full UO tuition, fees, food, and housing'; the page gives no
+        cap
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-enrich
+      category: enrichment
+      instrument: restricted_fund
+      coverage: partial
+      amount:
+        qualifier: up_to
+        value: 12000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''Up to $12,000 in enrichment funds for study abroad, unpaid internships, or other
+        experiences''; the page gives no period'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: approximate
+        value: 125000
+        min: null
+        max: null
+        period: total_program
+      scope_text: 'School words: ''approximately $125,000 for Oregon residents'' over four years'
+  - offer_id: o-nonresident
+    parent_offer_id: null
+    variant_name: Out-of-state
+    residency: out_of_state
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.85
+        scale: 4.0
+        basis: unknown
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: Incoming domestic first-year student
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: 'Incoming domestic first-year students. The page says scholars are guaranteed
+        admission to the Robert D. Clark Honors College. Selection criteria: academic preparation, activities
+        and talents, leadership, innovation and perseverance, volunteer service, work experience, and
+        four short-answer essay questions.'
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: 'School words: ''nonresident tuition and fees'''
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: 'School words: ''nonresident tuition and fees'''
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-enrich
+      category: enrichment
+      instrument: restricted_fund
+      coverage: partial
+      amount:
+        qualifier: up_to
+        value: 12000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''Up to $12,000 in enrichment funds for study abroad, unpaid internships, or other
+        experiences''; the page gives no period'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: approximate
+        value: 185000
+        min: null
+        max: null
+        period: total_program
+      scope_text: 'School words: ''$185,000 for nonresidents'' over four years'
+  application:
+    separate_application: required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: Apply for admission to the University of Oregon by November 1, as an early action
+        applicant.
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 15
+      precision: day
+      source_date_text: Complete the Stamps Scholarship Application within the UO Scholarship Dashboard
+        by November 15.
+    - kind: supporting_materials_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 15
+      precision: day
+      source_date_text: Submit all required admission application materials to the Office of Admissions
+        by November 15.
+    - kind: interview
+      requirement: invitation_only
+      date: null
+      recurring:
+        month: 2
+        day: 1
+      precision: approximate
+      source_date_text: in late January/early February
+    - kind: notification
+      requirement: required
+      date: null
+      recurring:
+        month: 3
+        day: 15
+      precision: day
+      source_date_text: Recipients of Stamps Scholarships will be notified by March 15.
+    admission_plan_requirement: Early action admission application by November 1
+    prerequisites:
+    - kind: admission_application
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: A few days after applying for admission the UO student ID appears in the Status Profile and
+        is needed to create a UO Scholarship Dashboard account.
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: 'The page gives no year for these dates and calls this ''the 2026-2027 scholarship''; that
+      label appears to be left over from the prior cycle, and the undated Nov 1 / Nov 15 deadlines are
+      recorded as recurring. The first-year scholarships page shows the same Stamps due date (November
+      15). The page says the semifinalist interview is on the University of Oregon campus; the finalist
+      interview by the Stamps Scholars Program has no stated format, so interview_mode is unknown. The
+      interview date is approximate: the page says only ''late January/early February'', recorded here
+      as February 1 with approximate precision. The scholarship is awarded in partnership with the Stamps
+      Scholars Program.'
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.25
+    gpa_scale: null
+    credit_load_min_per_term: 12
+    credit_load_min_per_year: 36
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: Cumulative 3.25 UO GPA and 12 UO credits per term (36 per year). Renewed annually for up to
+      12 terms of undergraduate study over five years, excluding summer; the school counts terms, so max_semesters
+      is left empty.
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: not_allowed
+    note: The page says the scholarship 'may not be combined with most other scholarships from the University
+      of Oregon, including, but not limited to, the Presidential Scholarship'.
+  award_counts:
+  - metric: new_recipients
+    qualifier: approximate
+    value: 20
+    cohort_year: null
+    source_ref: s-stamps
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-stamps
+    url: https://financialaid.uoregon.edu/stamps_scholarship
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 17a3ba25d033916a3e147adbfdf63912e6fe7fdf2ff22b3232a209d88549a3b8
+    archive_url: null
+  - source_id: s-first
+    url: https://financialaid.uoregon.edu/scholarships_first_year
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: a3138fad8cff79d197ec7a71d6663a9997af8f7f5af3c4646fff26abef314f18
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-stamps
+    locator: Stamps Scholarship, intro paragraph
+    short_excerpt: This highly competitive, merit-based scholarship is awarded to approximately 20 students
+      each year
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-stamps
+    locator: Stamps Scholarship, How to Apply
+    short_excerpt: The Stamps Scholarship requires a separate application.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-stamps
+    locator: Stamps Scholarship, Award Information
+    short_excerpt: Oregon resident Stamps Scholars receive full UO tuition, fees, food, and housing for
+      four years, while out-of-state recipients receive nonresident tuition and fees.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-stamps
+    locator: Stamps Scholarship, Eligibility Requirements
+    short_excerpt: A minimum 3.85 cumulative high school grade point average on a 4.00 scale
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/advertised_totals/0/amount
+    source_ref: s-stamps
+    locator: Stamps Scholarship, Award Information
+    short_excerpt: The total award is approximately $125,000 for Oregon residents and $185,000 for nonresidents
+      over four years.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/selection_mode
+    source_ref: s-stamps
+    locator: Stamps Scholarship, intro paragraph
+    short_excerpt: This highly competitive, merit-based scholarship is awarded to approximately 20 students
+      each year
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/consideration_route
+    source_ref: s-stamps
+    locator: Stamps Scholarship, How to Apply
+    short_excerpt: The Stamps Scholarship requires a separate application.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0
+    source_ref: s-stamps
+    locator: Stamps Scholarship, Award Information
+    short_excerpt: Oregon resident Stamps Scholars receive full UO tuition, fees, food, and housing for
+      four years, while out-of-state recipients receive nonresident tuition and fees.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/eligibility/gpa
+    source_ref: s-stamps
+    locator: Stamps Scholarship, Eligibility Requirements
+    short_excerpt: A minimum 3.85 cumulative high school grade point average on a 4.00 scale
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/advertised_totals/0/amount
+    source_ref: s-stamps
+    locator: Stamps Scholarship, Award Information
+    short_excerpt: The total award is approximately $125,000 for Oregon residents and $185,000 for nonresidents
+      over four years.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-stamps
+    locator: 'Award Information: no dollar amount per year'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-stamps
+    locator: Stamps Scholarship, Award Information
+    short_excerpt: Oregon resident Stamps Scholars receive full UO tuition, fees, food, and housing for
+      four years
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-stamps
+    locator: 'Award Information: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-stamps
+    locator: Stamps Scholarship, Award Information
+    short_excerpt: Oregon resident Stamps Scholars receive full UO tuition, fees, food, and housing for
+      four years
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-stamps
+    locator: 'Award Information: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3
+    source_ref: s-stamps
+    locator: Stamps Scholarship, Award Information
+    short_excerpt: Oregon resident Stamps Scholars receive full UO tuition, fees, food, and housing for
+      four years
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-stamps
+    locator: 'Award Information: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4
+    source_ref: s-stamps
+    locator: Stamps Scholarship, Award Information
+    short_excerpt: All scholars are also awarded up to $12,000 in enrichment funds for study abroad, unpaid
+      internships, or other experiences.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-stamps
+    locator: Stamps Scholarship, Award Information
+    short_excerpt: up to $12,000 in enrichment funds
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-stamps
+    locator: 'Award Information: no dollar amount per year'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/1
+    source_ref: s-stamps
+    locator: Stamps Scholarship, Award Information
+    short_excerpt: out-of-state recipients receive nonresident tuition and fees
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/1/amount
+    source_ref: s-stamps
+    locator: 'Award Information: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/2
+    source_ref: s-stamps
+    locator: Stamps Scholarship, Award Information
+    short_excerpt: All scholars are also awarded up to $12,000 in enrichment funds for study abroad, unpaid
+      internships, or other experiences.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/2/amount
+    source_ref: s-stamps
+    locator: Stamps Scholarship, Award Information
+    short_excerpt: up to $12,000 in enrichment funds
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-stamps
+    locator: Stamps Scholarship, How to Apply
+    short_excerpt: The Stamps Scholarship requires a separate application.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-stamps
+    locator: Stamps Scholarship, How to Apply, first step
+    short_excerpt: Apply for admission to the University of Oregon by November 1, as an early action applicant.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-stamps
+    locator: Stamps Scholarship, How to Apply, third step
+    short_excerpt: Complete the Stamps Scholarship Application within the UO Scholarship Dashboard by
+      November 15.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-first
+    locator: First-Year Student Scholarships table, Stamps row (resident and non-resident)
+    short_excerpt: Stamps (due November 15)
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-stamps
+    locator: Stamps Scholarship, How to Apply, fourth step
+    short_excerpt: Submit all required admission application materials to the Office of Admissions by
+      November 15.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-stamps
+    locator: Stamps Scholarship, Selection Criteria
+    short_excerpt: The University of Oregon will interview semifinalists at the University of Oregon campus
+      on in late January/early February.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/4
+    source_ref: s-stamps
+    locator: Stamps Scholarship, Award Notification
+    short_excerpt: Recipients of Stamps Scholarships will be notified by March 15.
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-stamps
+    locator: 'Stamps Scholarship, Selection Criteria: semifinalists interviewed on campus, finalists by
+      the Stamps Scholars Program; no single format stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-stamps
+    locator: Stamps Scholarship, Scholarship Renewal
+    short_excerpt: Maintain a 3.25 cumulative UO GPA and complete 12 UO credits per term (36 UO credits
+      per year).
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-stamps
+    locator: Stamps Scholarship, Award Information
+    short_excerpt: The Stamps Scholarship may not be combined with most other scholarships from the University
+      of Oregon
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts/0
+    source_ref: s-stamps
+    locator: Stamps Scholarship, intro paragraph
+    short_excerpt: awarded to approximately 20 students each year—10 Oregon residents and 10 out-of-state
+      students.
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-stamps
+    locator: Stamps Scholarship, How to Apply
+    short_excerpt: 'To be considered for this 2026-2027 scholarship you must:'
+    value_status: not_published
+    reported_value: null
