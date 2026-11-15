@@ -1,0 +1,418 @@
+schema_version: 1
+program_id: wells-scholars
+school_id: indiana-bloomington
+ipeds_id: '151351'
+applicable_campuses: []
+official_name: Wells Scholars Program
+aliases:
+- Herman B Wells Scholars Program
+- Wells Scholarship
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: wells-scholars-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Entering class not named; the domestic deadlines page is labeled the "2026-2027 WSP application cycle"
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b5
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: nomination
+    aid_basis: merit_only
+    need_role: not_considered
+    funds_limited: null
+    advertised_totals: []
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Domestic high school seniors are nominated by their high schools or self-nominate by a deadline; international students who are non-US residents and non-US passport holders follow
+        a separate nomination process with its own deadlines. One to two current IUB students are also selected each year to join the junior or senior class of Scholars (not first-year awards). Scholars
+        may pursue any bachelor's degree offered at IUB and are members of the Hutton Honors College. The pages name no citizenship, test or GPA minimum for selection.
+      citizenship_text: null
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters
+      exclusions: null
+      scope_text: Fall and spring tuition for a standard course load of 12-18 credits; no dollar value is published
+      advertised_coverage_label: guarantees the full cost of attendance
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters
+      exclusions: null
+      scope_text: Fall and spring mandatory and course-related fees for a standard course load of 12-18 credits; no dollar value is published
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-stipend
+      category: stipend
+      instrument: cash_stipend
+      coverage: variable
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Fall and spring
+      exclusions: null
+      scope_text: A living stipend sufficient to cover the cost of a standard double dorm room contract and a standard meal plan in the residence halls, paid whether the student lives on or off campus;
+        the exact amount varies from year to year and is not stated on the page
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-study-abroad
+      category: study_abroad
+      instrument: unknown
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: financial support for study abroad through IU Overseas Study; no amount published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-summer
+      category: enrichment
+      instrument: unknown
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: financial support for a summer experience like an internship, research or volunteer project, or creative activity; optional additional funding for summer courses on the
+        IUB campus; no amount published'
+      advertised_coverage_label: null
+      conditions_text: null
+  application:
+    separate_application: required
+    milestones:
+    - kind: application_open
+      requirement: recommended
+      date: null
+      recurring:
+        month: 9
+        day: 1
+      precision: day
+      source_date_text: September 1 Nomination Submission Opens
+    - kind: other
+      requirement: required
+      date: null
+      recurring:
+        month: 10
+        day: 26
+      precision: day
+      source_date_text: October 26 Deadline for Nominating Schools (last day for a high school to become a nominating school)
+    - kind: nomination_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 10
+        day: 29
+      precision: day
+      source_date_text: October 29 Last Day to Submit a Self-Nomination Form
+    - kind: admission_deadline
+      requirement: priority
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: November 1 Deadline for IU Bloomington Application (to be eligible for other IU opportunities)
+    - kind: nomination_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 2
+      precision: day
+      source_date_text: November 2 Deadline for Nominations (domestic)
+    - kind: nomination_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 16
+      precision: day
+      source_date_text: November 16 Deadline for Nominations (international)
+    - kind: interview
+      requirement: invitation_only
+      date: null
+      recurring:
+        month: 2
+        day: 13
+      precision: day
+      source_date_text: We are planning an in-person Interview Weekend in February on the 13th through the 14th (domestic)
+    - kind: interview
+      requirement: invitation_only
+      date: null
+      recurring:
+        month: 3
+        day: 1
+      precision: month
+      source_date_text: Early March Finalist Interviews, by video (international)
+    - kind: acceptance_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 5
+        day: 1
+      precision: day
+      source_date_text: May 1 Deadline for Acceptance
+    admission_plan_requirement: Apply to IU Bloomington as soon as possible and no later than November 1 to be eligible for other opportunities at IU; the Wells nomination is separate
+    prerequisites: []
+    interview_mode: mixed
+    finalist_event_required: null
+    notes: 'The scholarship is by nomination, not by an application form alone: domestic nominations (by the high school, or self-nomination) include letters of recommendation and student essays submitted
+      through an online portal. About 40 domestic finalists are selected in mid-January and notified of status in mid-spring. Dates carry the label "2026-2027 WSP application cycle" but no year per date,
+      so all are recorded as recurring; the planned Interview Weekend date is stated as planned.'
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.4
+    gpa_scale: null
+    credit_load_min_per_term: 12
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Scholars must complete a minimum of 12 credit hours each semester and keep both cumulative and semester GPA at least 3.4, plus meet conduct standards; the page gives no GPA scale.
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: allowed
+    note: 'School words: other campus awards can be combined, but the total award package cannot exceed the official cost of attendance at IU'
+  award_counts:
+  - metric: new_recipients
+    qualifier: approximate
+    value: 18
+    cohort_year: null
+    source_ref: s-abt
+    claim: target
+    denominator: null
+  - metric: new_recipients
+    qualifier: approximate
+    value: 14
+    cohort_year: null
+    source_ref: s-dom
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-det
+    url: https://wellsscholars.indiana.edu/about-the-program/scholarship-details/index.html
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 9c4d1c3eb536603f3231d5de0bd7debfb581cdd7f2ceccb9b603a901952b1792
+    archive_url: null
+  - source_id: s-abt
+    url: https://wellsscholars.indiana.edu/about-the-program/index.html
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: b61e609d4aee77c75ccb198af65261446cbb9c3a7df9a8fe9dac8c3fdc352b87
+    archive_url: null
+  - source_id: s-dom
+    url: https://wellsscholars.indiana.edu/deadlines/high-school-nomination.html
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: a38f3e2ec615b1a28f04a254ba57c4d7c4d854371c4d0f651f2a9073080b019b
+    archive_url: null
+  - source_id: s-int
+    url: https://wellsscholars.indiana.edu/deadlines/international-nomination.html
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: df00b3b965ce1e11838c370673b20b0597326aef479dbcfd2b6e4cc6c011d02e
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-dom
+    locator: 'Domestic Student Deadlines, "Deadline for Nominating Schools": the page names a cycle (2026-2027) but no entering class'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-dom
+    locator: Domestic Student Deadlines, "Notification of Status"
+    short_excerpt: Around 14 Wells Scholars will be selected from the finalist group
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/aid_basis
+    source_ref: s-abt
+    locator: About the Program, second paragraph
+    short_excerpt: around 18 incoming freshmen receive the award, based solely on merit.
+    value_status: reported
+    reported_value: merit_only
+  - field_path: offers/0/benefits
+    source_ref: s-det
+    locator: Scholarship Details, first paragraph
+    short_excerpt: guarantees the full cost of attendance for a period of eight semesters of undergraduate study
+    value_status: reported
+    reported_value: listed
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-det
+    locator: Scholarship Details, first paragraph
+    short_excerpt: fall and spring tuition and mandatory and course-related fees for a standard course load of 12-18 credits
+    value_status: reported
+    reported_value: partial
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-det
+    locator: 'Scholarship Details, first paragraph: no dollar value for tuition'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-det
+    locator: 'Scholarship Details, first paragraph: no dollar value for fees'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-det
+    locator: Scholarship Details, first paragraph
+    short_excerpt: The exact dollar amount varies slightly from year to year
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-det
+    locator: 'Scholarship Details, "WSP also offers" list: no amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-det
+    locator: 'Scholarship Details, "WSP also offers" list: no amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-dom
+    locator: Domestic Student Deadlines, "Deadline for Nominations"
+    short_excerpt: Deadline for receipt of fully completed electronic nominations and supplementary materials
+    value_status: reported
+    reported_value: required
+  - field_path: application/milestones/0
+    source_ref: s-dom
+    locator: Domestic Student Deadlines
+    short_excerpt: September 1 Nomination Submission Opens
+    value_status: reported
+    reported_value: September 1
+  - field_path: application/milestones/1
+    source_ref: s-dom
+    locator: Domestic Student Deadlines
+    short_excerpt: October 26 Deadline for Nominating Schools
+    value_status: reported
+    reported_value: October 26
+  - field_path: application/milestones/2
+    source_ref: s-dom
+    locator: Domestic Student Deadlines
+    short_excerpt: October 29 Last Day to Submit a Self-Nomination Form
+    value_status: reported
+    reported_value: October 29
+  - field_path: application/milestones/3
+    source_ref: s-dom
+    locator: Domestic Student Deadlines
+    short_excerpt: November 1 Deadline for IU Bloomington Application
+    value_status: reported
+    reported_value: November 1
+  - field_path: application/milestones/4
+    source_ref: s-dom
+    locator: Domestic Student Deadlines
+    short_excerpt: November 2 Deadline for Nominations
+    value_status: reported
+    reported_value: November 2
+  - field_path: application/milestones/5
+    source_ref: s-int
+    locator: International Student Nominations
+    short_excerpt: November 16 Deadline for Nominations
+    value_status: reported
+    reported_value: November 16
+  - field_path: application/milestones/6
+    source_ref: s-dom
+    locator: Domestic Student Deadlines, "Interviews"
+    short_excerpt: We are planning an in-person Interview Weekend in February on the 13th through the 14th
+    value_status: reported
+    reported_value: February 13-14
+  - field_path: application/milestones/7
+    source_ref: s-int
+    locator: International Student Nominations, "Finalist Interviews"
+    short_excerpt: Early March Finalist Interviews
+    value_status: reported
+    reported_value: Early March
+  - field_path: application/milestones/8
+    source_ref: s-dom
+    locator: Domestic Student Deadlines
+    short_excerpt: May 1 Deadline for Acceptance
+    value_status: reported
+    reported_value: May 1
+  - field_path: application/interview_mode
+    source_ref: s-int
+    locator: International Student Nominations, "Finalist Interviews"
+    short_excerpt: Finalists participate in video interviews with faculty and staff.
+    value_status: reported
+    reported_value: mixed (domestic in person, international by video)
+  - field_path: renewal_rules/0
+    source_ref: s-det
+    locator: Scholarship Details, "Wells Scholars must"
+    short_excerpt: Maintain a minimum cumulative and semester GPA of at least 3.4
+    value_status: reported
+    reported_value: 3.4
+  - field_path: stacking_rules/0
+    source_ref: s-det
+    locator: Scholarship Details, second paragraph
+    short_excerpt: a student's total award package cannot exceed the official cost of attendance at IU.
+    value_status: reported
+    reported_value: allowed
+  - field_path: award_counts/0
+    source_ref: s-abt
+    locator: About the Program, second paragraph
+    short_excerpt: Each year, around 18 incoming freshmen receive the award, based solely on merit.
+    value_status: reported
+    reported_value: 18
+  - field_path: award_counts/1
+    source_ref: s-dom
+    locator: Domestic Student Deadlines, "Notification of Status"
+    short_excerpt: Around 14 Wells Scholars will be selected from the finalist group
+    value_status: reported
+    reported_value: 14

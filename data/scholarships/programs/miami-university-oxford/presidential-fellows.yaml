@@ -1,0 +1,351 @@
+schema_version: 1
+program_id: presidential-fellows
+school_id: miami-university-oxford
+ipeds_id: '204024'
+applicable_campuses: []
+official_name: Presidential Fellows Scholarship
+aliases:
+- Presidential Fellows Program
+- Miami Presidential Fellows
+program_family: presidential
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: presidential-fellows-fall-2027
+  supersedes: null
+  entry_year: 2027
+  entry_year_label: Fall 2027 entry (the page says "New for fall 2027" for the test-score rule)
+  entry_terms:
+  - fall
+  source_cohort_text: null
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b5
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    advertised_totals: []
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules:
+      - exam: ACT or SAT (self-reported)
+        min: null
+        scoring: unknown
+        official_required: null
+      tests_policy_for_scholarship: required
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Applicants indicate interest on the admission application. Fellows are guaranteed a room in the Honors Residential College. The page names no citizenship or residency rule.
+      citizenship_text: null
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight fall/spring semesters
+      exclusions:
+      - winter and summer terms
+      - study abroad program fees
+      - health insurance
+      - books
+      - computers
+      - supplies
+      scope_text: 'School words: tuition and fees include instructional, non-resident surcharge, basic general, career development, course overload and course fees; Miami reserves the right to determine
+        which charges the scholarship pays'
+      advertised_coverage_label: elite, full-ride scholarship opportunity
+      conditions_text: Tuition and fees are covered for eight fall/spring semesters provided the student maintains a 3.50 cumulative grade point average each year
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight fall/spring semesters
+      exclusions: null
+      scope_text: Covered together with tuition ("tuition and fees"); see the tuition benefit for the school's list of charges and exclusions
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters
+      exclusions: null
+      scope_text: Room expenses up to the cost of a traditional double occupancy room in a residence hall; a different room selection leaves the difference to the student
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters
+      exclusions: null
+      scope_text: Covers a Diplomat Standard meal plan (16 buffet meals per week, $500 Dining Dollars); a different plan leaves the difference to the student; food only, for the student only
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-enrichment
+      category: enrichment
+      instrument: unknown
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words conflict: a one-time $5,000 academic enrichment stipend (benefits list) versus an enrichment fund of up to $5,000 used over four years, with an application to a review committee
+        (FAQ 4); unused funds are not refundable'
+      advertised_coverage_label: null
+      conditions_text: null
+  application:
+    separate_application: invitation_only
+    milestones:
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 12
+        day: 1
+      precision: day
+      source_date_text: the firm Dec. 1 deadline
+    - kind: finalist_event
+      requirement: invitation_only
+      date: null
+      recurring:
+        month: 2
+        day: 1
+      precision: month
+      source_date_text: invitation-only on-campus experience in February
+    admission_plan_requirement: Indicate interest in the Presidential Fellows Scholarship on the admission application and submit all required materials through the application status page by the firm Dec.
+      1 deadline
+    prerequisites:
+    - kind: test_scores
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Self-reported ACT or SAT scores are required, new for fall 2027
+    interview_mode: in_person
+    finalist_event_required: true
+    notes: 'Semi-finalists are selected after the Dec. 1 deadline and complete a final Presidential Fellows application step. Finalist interviews are an invitation-only on-campus experience in February;
+      selection is finalized in the two weeks after the campus interviews. Dec. 1 and February carry no year on the page and are recorded as recurring. Study abroad: the scholarship may be used for one
+      fall or spring semester of a Miami-billed program.'
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.5
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: each year
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Tuition and fees are covered for eight fall/spring semesters provided the student maintains a 3.50 cumulative GPA each year; the page does not give a GPA scale.
+  stacking_rules:
+  - other_aid_type: other
+    relation: counts_within_package
+    note: 'School words: students can receive aid up to their cost of attendance; if they receive more aid than that, the Presidential Fellows Scholarship may be adjusted'
+  award_counts:
+  - metric: new_recipients
+    qualifier: exact
+    value: 15
+    cohort_year: null
+    source_ref: s-prog
+    claim: target
+    denominator: null
+  - metric: new_recipients
+    qualifier: exact
+    value: 22
+    cohort_year: 2030
+    source_ref: s-news
+    claim: actual
+    denominator: null
+  sources:
+  - source_id: s-prog
+    url: https://miamioh.edu/admission-aid/majors-minors-programs/honors-programs/presidential-fellows-program.html
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: bb83ce3308786c013b762a782a6df9ee2ae227801bc4ba08faecf8c539a4b58c
+    archive_url: null
+  - source_id: s-news
+    url: https://miamioh.edu/news/2026/07/miami-welcomes-class-of-2030-presidential-fellows.html
+    authority: official_news
+    retrieved_at: '2026-11-15'
+    content_sha256: 472805f9cf480c56d48b44d1f8465dbbe4cb6ef70e07cfb34b640ef32484dd0e
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-prog
+    locator: Presidential Fellows page, "Application Process"
+    short_excerpt: New for fall 2027, applicants must provide self-reported ACT or SAT test scores
+    value_status: reported
+    reported_value: fall 2027
+  - field_path: offers/0/selection_mode
+    source_ref: s-prog
+    locator: Presidential Fellows page, "Application Process"
+    short_excerpt: to be considered for this highly competitive opportunity
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/benefits
+    source_ref: s-prog
+    locator: Presidential Fellows page, "Benefits for Presidential Fellows"
+    short_excerpt: A four-year, renewable scholarship covering tuition, fees, housing, and food.
+    value_status: reported
+    reported_value: listed
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-prog
+    locator: Scholarship FAQs, question 1
+    short_excerpt: Your Presidential Fellows scholarship package will cover tuition and fees for eight fall/spring semesters
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/0/conditions_text
+    source_ref: s-prog
+    locator: Scholarship FAQs, question 1
+    short_excerpt: provided that you maintain a 3.50 cumulative grade point average each year
+    value_status: reported
+    reported_value: 3.50 GPA
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-prog
+    locator: 'Scholarship FAQs, question 1: no dollar value for tuition'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-prog
+    locator: 'Scholarship FAQs, question 1: no dollar value for fees'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/coverage
+    source_ref: s-prog
+    locator: Scholarship FAQs, question 2
+    short_excerpt: room expenses up to the cost of a traditional double occupancy room in a residence hall for eight semesters
+    value_status: reported
+    reported_value: partial
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-prog
+    locator: 'Scholarship FAQs, question 2: no dollar value for housing'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/coverage
+    source_ref: s-prog
+    locator: Scholarship FAQs, question 2
+    short_excerpt: which will cover a Diplomat Standard meal plan.
+    value_status: reported
+    reported_value: partial
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-prog
+    locator: 'Scholarship FAQs, question 2: no dollar value for meals'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-prog
+    locator: Presidential Fellows page, "Benefits for Presidential Fellows"
+    short_excerpt: A one-time $5,000 academic enrichment stipend.
+    value_status: conflicting
+    reported_value: exact 5000, one-time stipend
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-prog
+    locator: Scholarship FAQs, question 4
+    short_excerpt: you will have access to an enrichment fund of up to $5,000.
+    value_status: conflicting
+    reported_value: up to 5000, fund over four years
+  - field_path: offers/0/eligibility/test_rules
+    source_ref: s-prog
+    locator: Presidential Fellows page, "Application Process"
+    short_excerpt: applicants must provide self-reported ACT or SAT test scores
+    value_status: reported
+    reported_value: ACT or SAT self-reported
+  - field_path: application/separate_application
+    source_ref: s-prog
+    locator: Presidential Fellows page, "Application Process"
+    short_excerpt: will be asked to complete a final Presidential Fellows application step.
+    value_status: reported
+    reported_value: invitation_only
+  - field_path: application/milestones/0
+    source_ref: s-prog
+    locator: Presidential Fellows page, "Application Process"
+    short_excerpt: by the firm Dec. 1 deadline.
+    value_status: reported
+    reported_value: Dec. 1
+  - field_path: application/milestones/1
+    source_ref: s-prog
+    locator: Presidential Fellows page, "Application Process"
+    short_excerpt: Finalist interviews take place during an invitation-only, on-campus experience in February.
+    value_status: reported
+    reported_value: February
+  - field_path: application/interview_mode
+    source_ref: s-prog
+    locator: Presidential Fellows page, "Selection Process"
+    short_excerpt: invitation-only finalist interview experience with the scholarship selection committee in February
+    value_status: reported
+    reported_value: in_person
+  - field_path: application/finalist_event_required
+    source_ref: s-prog
+    locator: Presidential Fellows page, "Selection Process"
+    short_excerpt: Finalists for Presidential Fellows will participate in an invitation-only finalist interview experience
+    value_status: reported
+    reported_value: true
+  - field_path: renewal_rules/0
+    source_ref: s-prog
+    locator: Scholarship FAQs, question 1
+    short_excerpt: provided that you maintain a 3.50 cumulative grade point average each year
+    value_status: reported
+    reported_value: 3.5
+  - field_path: stacking_rules/0
+    source_ref: s-prog
+    locator: Scholarship FAQs, question 5
+    short_excerpt: If you receive more aid than your cost of attendance your Presidential Fellows Scholarship may be adjusted.
+    value_status: reported
+    reported_value: counts_within_package
+  - field_path: award_counts/0
+    source_ref: s-prog
+    locator: Presidential Fellows page, opening paragraph
+    short_excerpt: pleased to select fifteen of the brightest and best scholars and leaders of the 21st century each year
+    value_status: reported
+    reported_value: 15
+  - field_path: award_counts/1
+    source_ref: s-news
+    locator: News release "Miami welcomes Class of 2030 Presidential Fellows", first paragraph
+    short_excerpt: Miami University has selected 22 exceptional incoming students to receive the
+    value_status: reported
+    reported_value: 22
