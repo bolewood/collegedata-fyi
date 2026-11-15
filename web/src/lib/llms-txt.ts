@@ -40,6 +40,8 @@ Endowment health (IPEDS Finance Part H, fiscal years 2020+): request categories=
 - [College Scorecard vs CDS](${SITE_URL}/about/college-scorecard): Federal outcomes vs the school's own filing
 - [What IPEDS is, and what it cannot replace](${SITE_URL}/about/ipeds): Federal baseline facts
 - [Coverage](${SITE_URL}/coverage): Which schools have a Common Data Set archived, and which years
+- [Scholarship programs](${SITE_URL}/scholarships): A partial, hand-built list of named merit scholarships, each dated and linked to the school's page. CC BY-SA 4.0; credit requested
+- [Scholarship methodology](${SITE_URL}/methodology/scholarships): Sourcing rules, field definitions, freshness states, how to credit
 - [Changes](${SITE_URL}/changes): Year-over-year changes in reported fields
 - [Methodology](${SITE_URL}/methodology): How fields are read and what each card means
 - [Recipes](${SITE_URL}/recipes): Worked analyses with sources

@@ -1,0 +1,45 @@
+name: Scholarship correction
+description: Something on a scholarship page does not match the school's own page.
+title: "Scholarship correction: "
+labels:
+  - scholarship
+  - data-error
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do not include names, emails, or any detail about a student. We only need the school's page and what differs.
+  - type: input
+    id: official_url
+    attributes:
+      label: Official page URL
+      description: The school's (or its foundation's) own page that shows the correct term.
+      placeholder: https://
+    validations:
+      required: true
+  - type: input
+    id: program
+    attributes:
+      label: Program and school
+      placeholder: Program name, school
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of figure?
+      options:
+        - Amount
+        - Deadline
+        - Eligibility
+        - Renewal
+        - How recipients are chosen
+        - Other
+    validations:
+      required: false
+  - type: textarea
+    id: difference
+    attributes:
+      label: What does our page say, and what does the official page say?
+    validations:
+      required: true

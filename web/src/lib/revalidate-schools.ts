@@ -1,6 +1,6 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { SCHOOL_DATA_TAG, schoolCacheTag } from "./school-cache-tags";
+import { SCHOLARSHIP_INDEX_TAG, SCHOOL_DATA_TAG, schoolCacheTag } from "./school-cache-tags";
 
 /** Max school ids per request. The extraction worker batches at the same size. */
 export const MAX_SCHOOL_IDS = 100;
@@ -30,7 +30,7 @@ export function isAuthorized(header: string | null, secret: string): boolean {
 
 export type RevalidateRequest =
   | { kind: "all" }
-  | { kind: "schools"; schoolIds: string[]; rejected: string[] };
+  | { kind: "schools"; schoolIds: string[]; rejected: string[]; scholarships: boolean };
 
 export type ParseResult =
   | { ok: true; request: RevalidateRequest }
@@ -40,7 +40,7 @@ export function parseRevalidateBody(body: unknown): ParseResult {
   if (typeof body !== "object" || body === null || Array.isArray(body)) {
     return { ok: false, error: "Body must be a JSON object." };
   }
-  const { all, school_ids: schoolIds } = body as Record<string, unknown>;
+  const { all, school_ids: schoolIds, scholarships } = body as Record<string, unknown>;
   if (all !== undefined && all !== true) {
     return { ok: false, error: '"all" must be true when present.' };
   }
@@ -49,6 +49,9 @@ export function parseRevalidateBody(body: unknown): ParseResult {
       return { ok: false, error: 'Pass either "all" or "school_ids", not both.' };
     }
     return { ok: true, request: { kind: "all" } };
+  }
+  if (scholarships !== undefined && typeof scholarships !== "boolean") {
+    return { ok: false, error: '"scholarships" must be true or false when present.' };
   }
   if (!Array.isArray(schoolIds) || schoolIds.length === 0) {
     return { ok: false, error: 'Pass {"school_ids": [...]} or {"all": true}.' };
@@ -67,7 +70,7 @@ export function parseRevalidateBody(body: unknown): ParseResult {
   }
   return {
     ok: true,
-    request: { kind: "schools", schoolIds: [...valid], rejected },
+    request: { kind: "schools", schoolIds: [...valid], rejected, scholarships: scholarships === true },
   };
 }
 
@@ -116,7 +119,14 @@ export async function applyRevalidation(
   if (request.kind === "all") {
     revalidateTag(SCHOOL_DATA_TAG, EXPIRE_NOW);
     revalidatePath("/schools/[school_id]", "layout");
+    revalidatePath("/scholarships");
     return { schools: 0, tags: 1, paths: 1 };
+  }
+  if (request.scholarships) {
+    // The scholarship directory is one cached read shared by every school page
+    // and /scholarships; a data load expires it along with the schools' tags.
+    revalidateTag(SCHOLARSHIP_INDEX_TAG, EXPIRE_NOW);
+    revalidatePath("/scholarships");
   }
   const ids = await expandWithCanonical(request.schoolIds, resolve);
   let tags = 0;

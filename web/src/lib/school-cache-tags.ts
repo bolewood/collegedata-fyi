@@ -19,3 +19,6 @@ export function schoolCacheTag(schoolId: string): string {
  * because Next requires statically analyzable segment config; a test pins both.
  */
 export const SCHOOL_DATA_REVALIDATE_SECONDS = 86400;
+
+/** Tag on the cached scholarship directory read (PRD 036). Expired together with school tags by /api/revalidate. */
+export const SCHOLARSHIP_INDEX_TAG = "scholarship-directory";

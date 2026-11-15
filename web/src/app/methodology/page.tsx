@@ -25,6 +25,11 @@ const METHODS = [
     title: "Merit and need aid",
     body: "What the school reported in Section H, plus federal net-price and outcome context. Not a package estimate.",
   },
+  {
+    href: "/methodology/scholarships",
+    title: "Scholarship programs",
+    body: "Named merit scholarships at selected schools, with the date and page each term comes from. Not a ranking, not an estimate.",
+  },
 ];
 
 export default function MethodologyIndexPage() {
@@ -48,7 +53,7 @@ export default function MethodologyIndexPage() {
         decision or a financial-aid package.
       </p>
 
-      <div className="mt-10 grid gap-4 sm:grid-cols-3">
+      <div className="mt-10 grid gap-4 sm:grid-cols-2">
         {METHODS.map((method) => (
           <Link
             key={method.href}

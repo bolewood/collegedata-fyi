@@ -277,6 +277,8 @@ def build_report(ds: model.Dataset, prune: Optional[Prune]) -> Dict[str, Any]:
     published = {r["program_id"]: r["version_id"] for r in model.select_published(ds)}
     return {
         "counts": counts(ds),
+        # Every school a program page appears on: the load workflow tells the web app to refresh these.
+        "school_ids": sorted({sch["school_id"] for p in ds.programs for sch in model.participants_of(p)}),
         "programs": [
             {
                 "program_id": p["program_id"],

@@ -1588,6 +1588,288 @@
   .merit-profile-stats { grid-template-columns: 1fr; }
 }
 
+/* PRD 036 scholarship programs. The card sits after the CDS merit card and
+   the index page reuses the same vocabulary. Amber is --ochre (the palette's
+   one held-back warm), used as a left rule and a tint, never as fill text on
+   cream. No blue, no white, no shadows. */
+.sch-card {
+  margin-top: 40px;
+  padding-top: 24px;
+}
+.sch-card__body {
+  margin-top: 10px;
+  padding: 28px 32px 22px;
+}
+.sch-card__head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.sch-card__title {
+  margin: 0;
+  max-width: 640px;
+  font-size: clamp(26px, 3vw, 34px);
+  line-height: 1.05;
+}
+.sch-lede {
+  margin: 14px 0 0;
+  max-width: 640px;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.sch-program {
+  margin-top: 26px;
+  border-top: 2px solid var(--ink);
+  padding-top: 16px;
+}
+.sch-program__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px 14px;
+}
+.sch-program__name {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.15;
+}
+.sch-offers {
+  display: grid;
+  gap: 14px;
+  margin-top: 12px;
+}
+.sch-offer {
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+}
+.sch-offer__name {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 400;
+}
+.sch-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+}
+.sch-line {
+  margin: 6px 0 0;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.sch-line strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.sch-line--muted,
+.sch-list--muted .sch-line {
+  color: var(--ink-3);
+}
+.sch-line--amber {
+  color: var(--ochre);
+}
+.sch-scope {
+  color: var(--ink-3);
+}
+.sch-quote {
+  border-left: 2px solid var(--rule-strong);
+  padding-left: 10px;
+}
+.sch-gap {
+  margin-top: 12px;
+}
+.sch-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.sch-panel {
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+  margin-top: 0;
+}
+.sch-note {
+  margin-top: 16px;
+  border: 1px solid var(--rule-strong);
+  padding: 12px 14px;
+}
+.sch-note--amber {
+  border-left: 4px solid var(--ochre);
+  background: var(--paper-2);
+}
+.sch-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 8px 0 0;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.sch-links a {
+  color: var(--forest);
+}
+.sch-card__source {
+  margin-top: 26px;
+  padding-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  font-size: 10.5px;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+/* /scholarships */
+.sch-types {
+  margin-bottom: 28px;
+  border-top: 1px solid var(--rule-strong);
+  padding-top: 14px;
+}
+.sch-types__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 36px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.sch-types__n {
+  display: block;
+  font-size: 34px;
+  line-height: 1;
+}
+.sch-types__label {
+  display: block;
+  margin-top: 4px;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.sch-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px 16px;
+  border-top: 1px solid var(--rule-strong);
+  padding-top: 14px;
+}
+.sch-filter {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.sch-filter select,
+.sch-filter input {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  background: #faf6ec;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  padding: 6px 8px;
+}
+.sch-clear {
+  align-self: end;
+  justify-self: start;
+}
+.sch-count {
+  margin: 16px 0 8px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.sch-table-wrap {
+  overflow-x: auto;
+  border-top: 2px solid var(--ink);
+}
+.sch-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.sch-table th {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding: 10px 12px 10px 0;
+  border-bottom: 1px solid var(--rule-strong);
+}
+.sch-table td {
+  vertical-align: top;
+  padding: 12px 12px 12px 0;
+  border-bottom: 1px solid var(--rule);
+  line-height: 1.45;
+}
+.sch-table a {
+  color: var(--forest);
+}
+.sch-chip {
+  margin: 0 6px 6px 0;
+}
+.sch-chip--status {
+  margin-left: 8px;
+}
+.sch-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 4px;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.sch-amber {
+  color: var(--ochre);
+}
+.sch-muted {
+  color: var(--ink-3);
+}
+.sch-empty {
+  margin: 20px 0;
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.sch-fine {
+  margin: 14px 0 0;
+  max-width: 720px;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+@media (max-width: 820px) {
+  .sch-card__body { padding: 24px 20px 20px; }
+  .sch-grid { grid-template-columns: 1fr; }
+  .sch-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Phone: each row becomes a labeled stack, so nothing scrolls sideways. */
+  .sch-table thead { position: absolute; left: -9999px; }
+  .sch-table, .sch-table tbody, .sch-table tr, .sch-table td { display: block; width: 100%; }
+  .sch-table tr { border-bottom: 1px solid var(--rule-strong); padding: 10px 0; }
+  .sch-table td { border: 0; padding: 4px 0; }
+  .sch-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+}
+
 /* PRD 019 change intelligence. Only public-reviewed events render here;
    operator candidates stay behind RLS until explicitly published. */
 .what-changed-card {
