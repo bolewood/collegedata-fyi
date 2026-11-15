@@ -17,6 +17,13 @@ name: Scholarship monitor
 # The mode is read from github.event.schedule, so keep the strings below in step
 # with the case statement in the monitor step. Conditional-GET validators live in
 # each version's own check row, so there is no cross-run cache step.
+#
+# Browser fallback: some school sites refuse a plain HTTP client (403/404) but serve
+# the same public page to a browser. The monitor runs with --browser-fallback, which
+# retries only those pages through headless Chromium (Playwright, installed for this
+# workflow only via tools/scholarships/monitor-requirements.txt). It loads only the
+# one document, runs no other script, and never bypasses a robots.txt Disallow, a
+# login, a CAPTCHA or a bot challenge.
 
 on:
   workflow_dispatch:
@@ -68,10 +75,25 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: tools/ci-requirements.txt
+          cache-dependency-path: |
+            tools/ci-requirements.txt
+            tools/scholarships/monitor-requirements.txt
 
       - name: Install Python dependencies
-        run: python -m pip install -r tools/ci-requirements.txt
+        run: python -m pip install -r tools/ci-requirements.txt -r tools/scholarships/monitor-requirements.txt
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('tools/scholarships/monitor-requirements.txt') }}
+
+      # Always runs: a cache hit skips the download but still installs OS packages.
+      # continue-on-error: a failed install must not skip the monitor step (and so
+      # its failure alert); without Chromium the fallback degrades to plain HTTP.
+      - name: Install Chromium for the browser fallback
+        continue-on-error: true
+        run: python -m playwright install --with-deps chromium
 
       # The service role key is scoped to this step so dependency install code
       # never sees it. A dry run reads it only to diff against stored baselines.
@@ -92,7 +114,8 @@ jobs:
           fi
           args=(--mode "${mode}"
                 --findings-json scholarship-monitor/findings.json
-                --findings-md scholarship-monitor/findings.md)
+                --findings-md scholarship-monitor/findings.md
+                --browser-fallback)
           if [[ -n "${INPUT_ONLY:-}" ]]; then args+=(--only "${INPUT_ONLY}"); fi
           if [[ "${apply}" == "true" ]]; then args+=(--apply); fi
           mkdir -p scholarship-monitor

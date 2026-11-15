@@ -1,0 +1,5 @@
+# Extra dependency for the scholarship monitor's browser fallback only
+# (`monitor.py --browser-fallback`, workflow scholarships-monitor.yml). Not part of
+# tools/ci-requirements.txt: tests use fake transports and need no browser.
+# After installing: python -m playwright install --with-deps chromium
+playwright==1.60.0

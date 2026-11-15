@@ -13,8 +13,9 @@ Behaviour (PRD 036 M4):
 * 429/5xx/network errors are retried a bounded number of times, honouring
   Retry-After (delta-seconds or HTTP-date).
 
-Transport, clock and sleep are injectable so tests need no network. Standard
-library only.
+Browser fallback (off by default, ``browser_fallback=<transport>``): see
+``BROWSER_FALLBACK_RULES``. Transport, clock and sleep are injectable so tests
+need no network. Standard library only.
 
 Left out of RFC 9309 on purpose: see ``RFC9309_NOT_IMPLEMENTED``.
 """
@@ -53,6 +54,26 @@ RFC9309_NOT_IMPLEMENTED = (
     "unreachable (stricter than RFC 9309 s2.3.1.3, which counts every 4xx as unavailable)."
 )
 
+BROWSER_FALLBACK_RULES = (
+    "With browser_fallback set, a page that the plain transport answers 403, 404 or "
+    "406 (and that is not a login or CAPTCHA challenge) is retried once per URL per "
+    "run through the browser transport. A robots.txt the plain transport cannot read "
+    "(a network error, a 5xx or another non-2xx other than a clean 404/410; never a "
+    "429, which is not retried in the browser) is retried through the browser first: "
+    "its rules apply as usual, a Disallow still blocks, a 404/410 there means "
+    "allow-all. If it cannot be read there either, the result is robots_unreachable "
+    "when the plain answer was unreachable; when the plain answer was a 4xx (allow-all "
+    "by RFC 9309) plain fetches keep that reading but the browser is forbidden on that "
+    "origin. A browser robots.txt that is an HTML page or a challenge is unreadable. "
+    "Logins, SSO redirects, CAPTCHAs and bot challenges are never retried and never "
+    "bypassed: the browser loads nothing but the first document and cannot get past "
+    "one. A host whose fallback succeeded uses the browser directly for the rest of the "
+    "run (browser_hosts), unless the caller passes prefer_http=True for that URL. "
+    "Spacing and Crawl-delay apply to browser requests; validators are neither sent nor "
+    "stored for them. After a browser error on a sticky host the plain transport is "
+    "tried once, and the browser transport is never retried on network errors."
+)
+
 # Result statuses.
 OK = "ok"
 NOT_MODIFIED = "not_modified"
@@ -73,6 +94,10 @@ _CHALLENGE_BODY_RE = re.compile(
     rb"are you a robot|verify you are human|g-recaptcha|h-captcha",
     re.I,
 )
+_HARD_CHALLENGE_BODY_RE = re.compile(
+    rb"captcha|cf-turnstile|are you a robot|verify you are human|g-recaptcha|h-captcha", re.I
+)
+_FALLBACK_STATUSES = (403, 404, 406)
 
 
 @dataclass
@@ -100,6 +125,7 @@ class FetchResult:
     last_modified: str | None = None
     reason: str = ""
     attempts: int = 0
+    transport: str = "http"  # "http" | "browser": which transport produced the response
 
     @property
     def ok(self) -> bool:
@@ -269,6 +295,7 @@ class PoliteFetcher:
         max_crawl_delay: float = 300.0,
         timeout: float = 30.0,
         transport: Transport = urllib_transport,
+        browser_fallback: Transport | None = None,
         clock: Callable[[], float] = time.time,
         sleep: Callable[[float], None] = time.sleep,
     ):
@@ -282,6 +309,10 @@ class PoliteFetcher:
         self.max_crawl_delay = max_crawl_delay
         self.timeout = timeout
         self._transport, self._clock, self._sleep = transport, clock, sleep
+        self._browser = browser_fallback
+        self.browser_hosts: set[str] = set()  # hosts that needed the browser this run
+        self._fallback_tried: set[str] = set()  # URLs (and robots.txt URLs) already retried
+        self._no_browser: set[str] = set()  # origins whose robots.txt the browser may not be used on
         self._cache_path: Path | None = None
         if isinstance(cache, (str, Path)):
             self._cache_path = Path(cache)
@@ -318,7 +349,15 @@ class PoliteFetcher:
         p = urlsplit(url)
         return f"{p.scheme}://{p.netloc.lower()}"
 
-    def _spaced_request(self, url: str, headers: Mapping[str, str], delay: float) -> Response:
+    def close(self) -> None:
+        """Release the browser transport, if it has a close()."""
+        closer = getattr(self._browser, "close", None)
+        if callable(closer):
+            closer()
+
+    def _spaced_request(
+        self, url: str, headers: Mapping[str, str], delay: float, transport: Transport | None = None
+    ) -> Response:
         """One request, serialised per host and spaced. Caller holds no lock."""
         origin = self._host(url)
         with self._lock(origin):
@@ -328,41 +367,90 @@ class PoliteFetcher:
                 if wait > 0:
                     self._sleep(wait)
             try:
-                return self._transport("GET", url, headers, self.timeout)
+                return (transport or self._transport)("GET", url, headers, self.timeout)
             finally:
                 self._last_request[origin] = self._clock()
+
+    def _read_robots(
+        self, origin: str, delay: float, transport: Transport | None
+    ) -> tuple[RobotsPolicy | None, str, str]:
+        """One robots.txt read. Returns (policy, kind, challenge); challenge is "none",
+        "soft" (a bot wall) or "hard" (login or CAPTCHA); any challenge keeps the browser away; kind is "read",
+        "missing" (clean 404/410 or a redirect loop: allow-all), "denied" (another
+        4xx except 429: allow-all by RFC 9309), "throttled" (429, policy None) or
+        "unreachable" (policy None). A browser read counts as "read" only when it is
+        not an HTML page or a challenge: a bot manager's 200 interstitial is not
+        robots.txt."""
+        url = origin + "/robots.txt"
+        headers = {"User-Agent": self.user_agent, "Accept": "text/plain, */*;q=0.1"}
+        for _ in range(MAX_REDIRECTS + 1):
+            try:
+                resp = self._spaced_request(url, headers, delay, transport)
+            except (OSError, ValueError):
+                return None, "unreachable", "none"
+            if resp.status in (301, 302, 303, 307, 308) and resp.headers.get("location"):
+                url = urljoin(url, resp.headers["location"])
+                if urlsplit(url).scheme not in ("http", "https"):
+                    return None, "unreachable", "none"
+                continue
+            if 200 <= resp.status < 300:
+                if transport is not None and (
+                    "html" in resp.headers.get("content-type", "").lower()
+                    or resp.body.lstrip()[:1] == b"<"
+                    or resp.headers.get("cf-mitigated")
+                    or _CHALLENGE_BODY_RE.search(resp.body[:65536])
+                    or self._is_hard_challenge(resp)
+                ):
+                    return None, "unreachable", "none"
+                text = resp.body[:ROBOTS_MAX_BYTES].decode("utf-8-sig", errors="replace")
+                return RobotsPolicy(text, self.robots_token), "read", "none"
+            challenged = "none"
+            if self._is_challenge(resp):
+                challenged = "hard" if self._is_hard_challenge(resp) else "soft"
+            if resp.status == 429:
+                return None, "throttled", challenged  # rate-limited: never cache as allow
+            if resp.status in (404, 410):
+                return RobotsPolicy.allow_all(), "missing", challenged
+            if 400 <= resp.status < 500:
+                return RobotsPolicy.allow_all(), "denied", challenged
+            return None, "unreachable", challenged  # 5xx or unexpected
+        return RobotsPolicy.allow_all(), "missing", "none"  # redirect loop >5 hops treated as 404 (RFC 9309 2.3.1.2)
 
     def _get_robots(self, origin: str) -> RobotsPolicy | None:
         """Policy for origin, or None when robots.txt is unreachable."""
         hit = self._robots.get(origin)
         if hit and self._clock() - hit[0] < ROBOTS_TTL_SECONDS:
             return hit[1]
-        url = origin + "/robots.txt"
-        headers = {"User-Agent": self.user_agent, "Accept": "text/plain, */*;q=0.1"}
+        host = self._host(origin)
         prev_delay = min(self._delay_for(hit[1]), self.max_crawl_delay) if hit else self.min_spacing
-        policy: RobotsPolicy | None = None
-        for _ in range(MAX_REDIRECTS + 1):
-            try:
-                resp = self._spaced_request(url, headers, prev_delay)
-            except (OSError, ValueError):
-                return None
-            if resp.status in (301, 302, 303, 307, 308) and resp.headers.get("location"):
-                url = urljoin(url, resp.headers["location"])
-                if urlsplit(url).scheme not in ("http", "https"):
-                    return None
-                continue
-            if 200 <= resp.status < 300:
-                text = resp.body[:ROBOTS_MAX_BYTES].decode("utf-8-sig", errors="replace")
-                policy = RobotsPolicy(text, self.robots_token)
-            elif resp.status == 429:
-                return None  # rate-limited: treat as unreachable, never cache as allow
-            elif 400 <= resp.status < 500:
-                policy = RobotsPolicy.allow_all()
-            else:
-                return None  # 5xx or unexpected: unreachable
-            break
+        if self._browser is not None and host in self.browser_hosts:
+            policy, kind, _ = self._read_robots(origin, prev_delay, self._browser)
+            if kind not in ("read", "missing"):
+                policy = None  # a 4xx here is not allow-all: nobody read this origin's robots.txt
         else:
-            policy = RobotsPolicy.allow_all()  # redirect loop >5 hops treated as 404 (RFC 9309 2.3.1.2)
+            policy, kind, challenge = self._read_robots(origin, prev_delay, None)
+            rurl = origin + "/robots.txt"
+            if self._browser is not None and kind in ("denied", "unreachable"):
+                # The plain client could not read robots.txt: ask the browser once. Its
+                # rules apply. If it cannot read the file either, an unreachable plain
+                # answer stays unreachable; a plain 4xx keeps its RFC 9309 allow-all for
+                # plain fetches, but the browser is forbidden on this origin. A login,
+                # CAPTCHA or bot challenge is never retried in the browser.
+                if challenge != "none" or rurl in self._fallback_tried:
+                    bkind = "unreadable"
+                else:
+                    self._fallback_tried.add(rurl)
+                    bpolicy, bkind, _ = self._read_robots(origin, prev_delay, self._browser)
+                    if bkind in ("read", "missing"):
+                        policy = bpolicy
+                        self.browser_hosts.add(host)
+                if bkind not in ("read", "missing"):
+                    if kind == "denied":
+                        self._no_browser.add(origin)
+                    else:
+                        policy = None
+        if policy is None:
+            return None
         self._robots[origin] = (self._clock(), policy)
         return policy
 
@@ -393,6 +481,14 @@ class PoliteFetcher:
         return bool(_SSO_HOST_RE.search(p.hostname or "") or _SSO_PATH_RE.search(p.path))
 
     @staticmethod
+    def _is_hard_challenge(resp: Response) -> bool:
+        """Login or CAPTCHA signals (401, www-authenticate, CAPTCHA markers in the
+        body), on any status: such a response is never retried in the browser."""
+        if resp.status == 401 or resp.headers.get("www-authenticate"):
+            return True
+        return bool(_HARD_CHALLENGE_BODY_RE.search(resp.body[:65536]))
+
+    @staticmethod
     def _is_challenge(resp: Response) -> bool:
         if resp.status in (401, 403, 429, 503):
             if resp.headers.get("www-authenticate") or resp.headers.get("cf-mitigated"):
@@ -403,13 +499,26 @@ class PoliteFetcher:
                 return True
         return False
 
+    @staticmethod
+    def _browser_failed(plain: FetchResult, why: str, attempts: int) -> FetchResult:
+        """The browser retry did not help: report the plain result, noting the retry."""
+        plain.reason = f"{plain.reason}; browser fallback also failed ({why})"
+        plain.attempts = attempts
+        return plain
+
     # -- public API
-    def fetch(self, url: str) -> FetchResult:
-        """GET url politely. Never raises on network/HTTP problems."""
+    def fetch(self, url: str, prefer_http: bool = False) -> FetchResult:
+        """GET url politely. Never raises on network/HTTP problems.
+
+        prefer_http: try the plain transport first even on a host that already needed
+        the browser (the 403/404/406 fallback still applies). Callers use it for a
+        URL whose last good fetch was plain, so its transport stays stable."""
         current = url
         attempts = 0
         retries = 0
         redirects = 0
+        plain_failure: FetchResult | None = None  # set while a browser retry is in flight
+        plain_after_browser_error = False
         while True:
             origin = self._origin(current)
             policy = self._get_robots(origin)
@@ -421,10 +530,17 @@ class PoliteFetcher:
             if policy.crawl_delay is not None and policy.crawl_delay > self.max_crawl_delay:
                 return FetchResult(HTTP_ERROR, url, current, reason=f"Crawl-delay {policy.crawl_delay:.0f}s exceeds cap {self.max_crawl_delay:.0f}s", attempts=attempts)
 
+            use_browser = (
+                self._browser is not None
+                and not prefer_http
+                and not plain_after_browser_error
+                and self._host(current) in self.browser_hosts
+            )
+            via = "browser" if (use_browser or plain_failure is not None) else "http"
             headers = {"User-Agent": self.user_agent, "Accept": "*/*"}
             cached = self.cache.get(url)
-            if not isinstance(cached, dict) or current != cached.get("final_url", url):
-                cached = None  # validators belong to the resource they came from
+            if via == "browser" or not isinstance(cached, dict) or current != cached.get("final_url", url):
+                cached = None  # validators belong to the resource they came from; none for the browser
             if cached:
                 if cached.get("etag"):
                     headers["If-None-Match"] = cached["etag"]
@@ -433,22 +549,32 @@ class PoliteFetcher:
 
             attempts += 1
             try:
-                resp = self._spaced_request(current, headers, self._delay_for(policy))
+                resp = self._spaced_request(
+                    current, headers, self._delay_for(policy), self._browser if via == "browser" else None
+                )
             except ValueError as e:
-                return FetchResult(HTTP_ERROR, url, current, reason=f"invalid request/response: {e}", attempts=attempts)
+                if plain_failure is not None:
+                    return self._browser_failed(plain_failure, f"invalid response: {e}", attempts)
+                return FetchResult(HTTP_ERROR, url, current, reason=f"invalid request/response: {e}", attempts=attempts, transport=via)
             except OSError as e:
+                if plain_failure is not None:
+                    return self._browser_failed(plain_failure, f"browser error: {e}", attempts)
+                if via == "browser":
+                    # Sticky host and the browser failed: no browser retries; one plain try.
+                    plain_after_browser_error = True
+                    continue
                 if retries < self.max_retries:
                     self._sleep(self.backoff_base * (2**retries))
                     retries += 1
                     continue
-                return FetchResult(HTTP_ERROR, url, current, reason=f"network error: {e}", attempts=attempts)
+                return FetchResult(HTTP_ERROR, url, current, reason=f"network error: {e}", attempts=attempts, transport=via)
 
             if resp.status in (301, 302, 303, 307, 308) and resp.headers.get("location"):
                 nxt = urljoin(current, resp.headers["location"])
                 if urlsplit(nxt).scheme not in ("http", "https"):
                     return FetchResult(HTTP_ERROR, url, current, resp.status, reason=f"redirect to non-HTTP target {nxt[:80]!r}", attempts=attempts)
                 if self._is_sso_redirect(nxt) and not self._is_sso_redirect(current):
-                    return FetchResult(LOGIN_OR_CAPTCHA, url, nxt, resp.status, reason="redirect to login/SSO host", attempts=attempts)
+                    return FetchResult(LOGIN_OR_CAPTCHA, url, nxt, resp.status, reason="redirect to login/SSO host", attempts=attempts, transport=via)
                 redirects += 1
                 if redirects > MAX_REDIRECTS:
                     return FetchResult(HTTP_ERROR, url, current, resp.status, reason="too many redirects", attempts=attempts)
@@ -456,26 +582,47 @@ class PoliteFetcher:
                 continue
 
             if self._is_challenge(resp):
-                return FetchResult(LOGIN_OR_CAPTCHA, url, current, resp.status, headers=resp.headers, reason="login or CAPTCHA challenge; not retried", attempts=attempts)
+                return FetchResult(LOGIN_OR_CAPTCHA, url, current, resp.status, headers=resp.headers, reason="login or CAPTCHA challenge; not retried", attempts=attempts, transport=via)
+
+            if (
+                via == "http"
+                and self._browser is not None
+                and resp.status in _FALLBACK_STATUSES
+                and current not in self._fallback_tried
+                and self._origin(current) not in self._no_browser
+            ):
+                if self._is_hard_challenge(resp):
+                    return FetchResult(LOGIN_OR_CAPTCHA, url, current, resp.status, headers=resp.headers, reason="login or CAPTCHA challenge; not retried", attempts=attempts)
+                # The plain client was refused or told "not found": one retry through the browser.
+                self._fallback_tried.add(current)
+                plain_failure = FetchResult(HTTP_ERROR, url, current, resp.status, resp.body, resp.headers, reason=f"HTTP {resp.status}", attempts=attempts)
+                continue
 
             if resp.status == 304:
                 c = cached or {}
                 return FetchResult(NOT_MODIFIED, url, current, 304, headers=resp.headers, etag=c.get("etag"), last_modified=c.get("last_modified"), attempts=attempts)
 
             if 200 <= resp.status < 300:
+                if via == "browser":
+                    if plain_failure is not None:
+                        self.browser_hosts.add(self._host(current))  # the fallback worked: stay on the browser for this host
+                    return FetchResult(OK, url, current, resp.status, resp.body, resp.headers, attempts=attempts, transport="browser")
                 etag, lm = resp.headers.get("etag"), resp.headers.get("last-modified")
                 if etag or lm:
                     self._remember(url, {"etag": etag, "last_modified": lm, "final_url": current})
                 return FetchResult(OK, url, current, resp.status, resp.body, resp.headers, etag, lm, attempts=attempts)
 
+            if plain_failure is not None:
+                return self._browser_failed(plain_failure, f"browser got HTTP {resp.status}", attempts)
+
             if resp.status in (429, 500, 502, 503, 504):
                 if retries >= self.max_retries:
-                    return FetchResult(HTTP_ERROR, url, current, resp.status, headers=resp.headers, reason="retries exhausted", attempts=attempts)
+                    return FetchResult(HTTP_ERROR, url, current, resp.status, headers=resp.headers, reason="retries exhausted", attempts=attempts, transport=via)
                 ra = parse_retry_after(resp.headers.get("retry-after"), self._clock())
                 if ra is not None and ra > self.max_retry_after:
-                    return FetchResult(HTTP_ERROR, url, current, resp.status, headers=resp.headers, reason=f"Retry-After {ra:.0f}s exceeds cap", attempts=attempts)
+                    return FetchResult(HTTP_ERROR, url, current, resp.status, headers=resp.headers, reason=f"Retry-After {ra:.0f}s exceeds cap", attempts=attempts, transport=via)
                 self._sleep(ra if ra is not None else self.backoff_base * (2**retries))
                 retries += 1
                 continue
 
-            return FetchResult(HTTP_ERROR, url, current, resp.status, resp.body, resp.headers, reason=f"HTTP {resp.status}", attempts=attempts)
+            return FetchResult(HTTP_ERROR, url, current, resp.status, resp.body, resp.headers, reason=f"HTTP {resp.status}", attempts=attempts, transport=via)
