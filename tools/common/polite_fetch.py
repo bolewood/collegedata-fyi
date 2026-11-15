@@ -60,7 +60,8 @@ BROWSER_FALLBACK_RULES = (
     "run through the browser transport. A robots.txt the plain transport cannot read "
     "(any non-2xx other than a clean 404/410, or 429) is retried through the browser "
     "first: its rules apply as usual, a Disallow still blocks, a 404/410 there means "
-    "allow-all, and if it is still unreadable the result is robots_unreachable. "
+    "allow-all, and if it is still unreadable (or the plain answer was a login/CAPTCHA "
+    "wall) the result is robots_unreachable, never allow-all. "
     "Logins, SSO redirects and CAPTCHAs are never retried and never bypassed. A host "
     "whose fallback succeeded uses the browser directly for the rest of the run "
     "(``browser_hosts``). Spacing and Crawl-delay apply to browser requests too; "
@@ -365,8 +366,9 @@ class PoliteFetcher:
 
     def _read_robots(
         self, origin: str, delay: float, transport: Transport | None
-    ) -> tuple[RobotsPolicy | None, str, bool]:
-        """One robots.txt read. Returns (policy, kind, challenged); kind is "read",
+    ) -> tuple[RobotsPolicy | None, str, str]:
+        """One robots.txt read. Returns (policy, kind, challenge); challenge is "none",
+        "soft" (a bot wall) or "hard" (login or CAPTCHA); kind is "read",
         "missing" (clean 404/410 or a redirect loop: allow-all), "denied" (another
         4xx except 429: allow-all by RFC 9309) or "unreachable" (policy None)."""
         url = origin + "/robots.txt"
@@ -375,16 +377,18 @@ class PoliteFetcher:
             try:
                 resp = self._spaced_request(url, headers, delay, transport)
             except (OSError, ValueError):
-                return None, "unreachable", False
+                return None, "unreachable", "none"
             if resp.status in (301, 302, 303, 307, 308) and resp.headers.get("location"):
                 url = urljoin(url, resp.headers["location"])
                 if urlsplit(url).scheme not in ("http", "https"):
-                    return None, "unreachable", False
+                    return None, "unreachable", "none"
                 continue
             if 200 <= resp.status < 300:
                 text = resp.body[:ROBOTS_MAX_BYTES].decode("utf-8-sig", errors="replace")
-                return RobotsPolicy(text, self.robots_token), "read", False
-            challenged = self._is_challenge(resp)
+                return RobotsPolicy(text, self.robots_token), "read", "none"
+            challenged = "none"
+            if self._is_challenge(resp):
+                challenged = "hard" if self._is_hard_challenge(resp) else "soft"
             if resp.status == 429:
                 return None, "unreachable", challenged  # rate-limited: never cache as allow
             if resp.status in (404, 410):
@@ -392,7 +396,7 @@ class PoliteFetcher:
             if 400 <= resp.status < 500:
                 return RobotsPolicy.allow_all(), "denied", challenged
             return None, "unreachable", challenged  # 5xx or unexpected
-        return RobotsPolicy.allow_all(), "missing", False  # redirect loop >5 hops treated as 404 (RFC 9309 2.3.1.2)
+        return RobotsPolicy.allow_all(), "missing", "none"  # redirect loop >5 hops treated as 404 (RFC 9309 2.3.1.2)
 
     def _get_robots(self, origin: str) -> RobotsPolicy | None:
         """Policy for origin, or None when robots.txt is unreachable."""
@@ -404,25 +408,25 @@ class PoliteFetcher:
         if self._browser is not None and host in self.browser_hosts:
             policy, _, _ = self._read_robots(origin, prev_delay, self._browser)
         else:
-            policy, kind, challenged = self._read_robots(origin, prev_delay, None)
+            policy, kind, challenge = self._read_robots(origin, prev_delay, None)
             rurl = origin + "/robots.txt"
-            if (
-                self._browser is not None
-                and kind in ("denied", "unreachable")
-                and not challenged
-                and rurl not in self._fallback_tried
-            ):
-                # The plain client could not read robots.txt: ask the browser once. Its
-                # rules apply as usual; if it cannot read the file either, the plain
-                # kind stands, except that a plain "denied" (allow-all) becomes
-                # unreachable, so the fallback never loosens a policy.
-                self._fallback_tried.add(rurl)
-                bpolicy, bkind, _ = self._read_robots(origin, prev_delay, self._browser)
-                if bkind in ("read", "missing"):
-                    policy = bpolicy
-                    self.browser_hosts.add(host)
-                else:
+            if self._browser is not None and kind in ("denied", "unreachable"):
+                # The plain client could not read robots.txt. With the fallback on, the
+                # browser must resolve it (its rules apply; a Disallow blocks; a clean
+                # 404/410 means allow-all) or the host is unreachable: a plain 4xx is
+                # never taken as allow-all here, or the browser could fetch a page whose
+                # robots.txt nobody read. A login/CAPTCHA wall is never retried; a host
+                # whose fallback worked is sticky, so "already tried" only covers failures.
+                if challenge == "hard" or rurl in self._fallback_tried:
                     policy = None
+                else:
+                    self._fallback_tried.add(rurl)
+                    bpolicy, bkind, _ = self._read_robots(origin, prev_delay, self._browser)
+                    if bkind in ("read", "missing"):
+                        policy = bpolicy
+                        self.browser_hosts.add(host)
+                    else:
+                        policy = None
         if policy is None:
             return None
         self._robots[origin] = (self._clock(), policy)

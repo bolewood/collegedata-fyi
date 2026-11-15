@@ -2,6 +2,7 @@
 
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -150,7 +151,7 @@ def test_clean_robots_404_does_not_use_the_browser():
 
 def test_robots_challenge_not_retried_in_browser():
     f, p, b, _ = make({ROBOTS: [R(403, b"captcha")], PAGE: [R(200)]}, {ROBOTS: [R(200, b"")]})
-    f.fetch(PAGE)
+    assert f.fetch(PAGE).status == ROBOTS_UNREACHABLE
     assert b.calls == []
 
 
@@ -212,7 +213,7 @@ def test_disabled_by_default_changes_nothing():
 
 def test_importing_browser_transport_does_not_import_playwright():
     code = "import sys; import tools.common.browser_transport; assert 'playwright' not in sys.modules"
-    subprocess.run([sys.executable, "-c", code], check=True)
+    subprocess.run([sys.executable, "-c", code], check=True, cwd=Path(__file__).resolve().parents[2])
 
 
 def test_browser_transport_without_playwright_raises_connection_error(monkeypatch):
@@ -222,3 +223,24 @@ def test_browser_transport_without_playwright_raises_connection_error(monkeypatc
     monkeypatch.setitem(sys.modules, "playwright.sync_api", None)
     with pytest.raises(ConnectionError, match="playwright is not installed"):
         BrowserTransport()("GET", PAGE, {"User-Agent": "x"}, 5)
+
+
+def test_robots_unreadable_stays_unreachable_for_every_url_on_the_host():
+    f, p, b, _ = make({ROBOTS: [R(403)], PAGE: [R(404)], PAGE2: [R(404)]}, {ROBOTS: [R(503)], PAGE: [R(200)], PAGE2: [R(200)]})
+    assert f.fetch(PAGE).status == ROBOTS_UNREACHABLE
+    assert f.fetch(PAGE2).status == ROBOTS_UNREACHABLE  # not the cached plain allow-all
+    assert b.urls == [ROBOTS]  # browser read robots once
+    assert PAGE not in p.urls + b.urls and PAGE2 not in p.urls + b.urls
+
+
+def test_soft_wall_on_robots_then_browser_disallow_blocks():
+    wall = R(403, b"<title>Just a moment...</title>", cf_mitigated="challenge")
+    f, p, b, _ = make({ROBOTS: [wall], PAGE: [wall]}, {ROBOTS: [R(200, b"User-agent: *\nDisallow: /page\n")], PAGE: [R(200)]})
+    assert f.fetch(PAGE).status == BLOCKED_BY_ROBOTS
+    assert PAGE not in p.urls + b.urls
+
+
+def test_captcha_on_robots_is_unreachable_with_no_browser_call():
+    f, p, b, _ = make({ROBOTS: [R(403, b"<div class='g-recaptcha'></div>")], PAGE: [R(404)]}, {ROBOTS: [R(200, b"")], PAGE: [R(200)]})
+    r = f.fetch(PAGE)
+    assert r.status == ROBOTS_UNREACHABLE and b.calls == []

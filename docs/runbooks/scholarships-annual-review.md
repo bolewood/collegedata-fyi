@@ -57,7 +57,8 @@ this workflow only).
   the browser for the rest of the run. Spacing and Crawl-delay apply as usual.
 - **robots.txt first:** it is retried through the browser. Its rules apply; a
   Disallow still blocks and the browser never fetches a disallowed path; a 404/410
-  there means allow-all; if it still cannot be read the source stays unreachable.
+  there means allow-all; if it still cannot be read (or the plain answer was a login or
+  CAPTCHA wall) the source is unreachable, never treated as allow-all.
 - **Never bypassed:** a robots Disallow, a login or SSO redirect, a CAPTCHA. Those
   are reported as before and are not retried in the browser.
 - **Hashes:** a rendered page is not byte-stable, so for a browser fetch only the
