@@ -128,7 +128,7 @@ versions:
       conditions_text: null
     - benefit_id: b-books
       category: books
-      instrument: cash_stipend
+      instrument: unknown
       coverage: fixed_amount
       amount:
         qualifier: exact

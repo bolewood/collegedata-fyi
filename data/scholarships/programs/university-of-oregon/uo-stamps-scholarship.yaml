@@ -15,7 +15,8 @@ versions:
 - version_id: stamps-undated
   supersedes: null
   entry_year: null
-  entry_year_label: Page says 'this 2026-2027 scholarship' and names no entering class
+  entry_year_label: Page says 'this 2026-2027 scholarship' and names no entering class; the label appears
+    to be left over from the prior cycle
   entry_terms:
   - unspecified
   source_cohort_text: null
@@ -73,7 +74,7 @@ versions:
     - benefit_id: b-fees
       category: mandatory_fees
       instrument: scholarship
-      coverage: unknown
+      coverage: full
       amount:
         qualifier: not_published
         value: null
@@ -82,13 +83,14 @@ versions:
         period: null
       duration_terms: Four years
       exclusions: null
-      scope_text: Listed in the same sentence as full tuition; the page gives no rate or cap
+      scope_text: Listed after 'full' in 'full UO tuition, fees, food, and housing'; the page gives no
+        cap
       advertised_coverage_label: null
       conditions_text: null
     - benefit_id: b-meals
       category: meals
       instrument: scholarship
-      coverage: unknown
+      coverage: full
       amount:
         qualifier: not_published
         value: null
@@ -97,13 +99,14 @@ versions:
         period: null
       duration_terms: Four years
       exclusions: null
-      scope_text: '''Food'', listed in the same sentence; the page gives no rate or cap'
+      scope_text: '''Food'', listed after ''full'' in ''full UO tuition, fees, food, and housing''; the
+        page gives no cap'
       advertised_coverage_label: null
       conditions_text: null
     - benefit_id: b-housing
       category: housing
       instrument: scholarship
-      coverage: unknown
+      coverage: full
       amount:
         qualifier: not_published
         value: null
@@ -112,7 +115,8 @@ versions:
         period: null
       duration_terms: Four years
       exclusions: null
-      scope_text: Listed in the same sentence; the page gives no rate or cap
+      scope_text: Listed after 'full' in 'full UO tuition, fees, food, and housing'; the page gives no
+        cap
       advertised_coverage_label: null
       conditions_text: null
     - benefit_id: b-enrich
@@ -254,7 +258,7 @@ versions:
       source_date_text: Submit all required admission application materials to the Office of Admissions
         by November 15.
     - kind: interview
-      requirement: required
+      requirement: invitation_only
       date: null
       recurring:
         month: 2
@@ -278,12 +282,14 @@ versions:
         is needed to create a UO Scholarship Dashboard account.
     interview_mode: unknown
     finalist_event_required: null
-    notes: 'The page gives no year for these dates and calls this ''the 2026-2027 scholarship''. The first-year
-      scholarships page shows the same Stamps due date (November 15). The page says the semifinalist interview
-      is on the University of Oregon campus; the finalist interview by the Stamps Scholars Program has
-      no stated format, so interview_mode is unknown. The interview date is approximate: the page says
-      only ''late January/early February'', recorded here as February 1 with approximate precision. The
-      scholarship is awarded in partnership with the Stamps Scholars Program.'
+    notes: 'The page gives no year for these dates and calls this ''the 2026-2027 scholarship''; that
+      label appears to be left over from the prior cycle, and the undated Nov 1 / Nov 15 deadlines are
+      recorded as recurring. The first-year scholarships page shows the same Stamps due date (November
+      15). The page says the semifinalist interview is on the University of Oregon campus; the finalist
+      interview by the Stamps Scholars Program has no stated format, so interview_mode is unknown. The
+      interview date is approximate: the page says only ''late January/early February'', recorded here
+      as February 1 with approximate precision. The scholarship is awarded in partnership with the Stamps
+      Scholars Program.'
   renewal_rules:
   - applies_to: []
     gpa_min: 3.25

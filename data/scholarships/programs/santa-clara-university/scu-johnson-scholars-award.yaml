@@ -166,7 +166,7 @@ versions:
       precision: day
       source_date_text: November 1 Deadline for Early Action application
     - kind: finalist_event
-      requirement: required
+      requirement: invitation_only
       date: null
       recurring:
         month: 3

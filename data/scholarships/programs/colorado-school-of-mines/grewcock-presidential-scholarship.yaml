@@ -117,22 +117,24 @@ versions:
         where the application is made.
     interview_mode: virtual
     finalist_event_required: null
-    notes: The application opens December 15, 2026 and the essay questions are released December 1, 2026,
-      which is earlier than the opening date; the page shows both. The page does not say which entering
-      class these dates belong to.
+    notes: The page says identifying information (last name, social media accounts, identifiable business
+      names, LinkedIn links) in essay responses will result in disqualification of the application. The
+      application opens December 15, 2026 and the essay questions are released December 1, 2026, which
+      is earlier than the opening date; the page shows both. The page does not say which entering class
+      these dates belong to.
   renewal_rules:
   - applies_to: []
     gpa_min: 3.0
     gpa_scale: 4.0
-    credit_load_min_per_term: 15
+    credit_load_min_per_term: null
     credit_load_min_per_year: 30
     evaluation_timing: null
     summer_courses_can_fix_shortfall: null
     max_semesters: 8
-    notes: Renewable for up to eight semesters. The Maintaining Scholarships page also expects consistent
-      attendance and engagement in Grewcock community programming, high ethical standards, a campus leadership
-      role or new initiative by graduation, and ongoing leadership development. The Grewcock home page
-      says the award pays for four years.
+    notes: 'Renewable for up to eight semesters. Credits: 15 per semester or 30 per academic year (the
+      page says ''or''). The Maintaining Scholarships page also expects consistent attendance and engagement
+      in Grewcock community programming, high ethical standards, a campus leadership role or new initiative
+      by graduation, and ongoing leadership development.'
   stacking_rules: null
   award_counts:
   - metric: new_recipients
@@ -207,13 +209,13 @@ versions:
     short_excerpt: 'Application opens: Tuesday, December 15, 2026'
     value_status: reported
     reported_value: null
-  - field_path: application/milestones/1
+  - field_path: application/milestones/2
     source_ref: s-pascal
     locator: How To Apply & Timeline, Important Dates
     short_excerpt: 'Application deadline: Monday, February 1, 2027'
     value_status: reported
     reported_value: null
-  - field_path: application/milestones/2
+  - field_path: application/milestones/1
     source_ref: s-pascal
     locator: How To Apply & Timeline, Important Dates
     short_excerpt: Essay questions for the Grewcock Presidential Scholarship will be released on December

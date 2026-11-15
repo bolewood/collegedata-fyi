@@ -108,12 +108,14 @@ versions:
       major_change_restrictions: null
       honors_requirement: null
       first_generation_rule: unknown
-      eligibility_notes: Nominees must complete the admission and scholarship application process by the
-        deadline. Same Pullman-campus, full-time, Washington-resident conditions as the page's 3.8 GPA
-        sentence.
+      eligibility_notes: 'Nominees must complete the admission and scholarship application process by
+        the deadline. Same Pullman-campus, full-time, Washington-resident conditions as the page''s 3.8
+        GPA sentence. Students must enroll for at least 12 credits each semester. Not eligible: students
+        previously enrolled at WSU (other than through Running Start) and transfer students (2027-28 terms
+        page).'
     benefits:
     - benefit_id: b-award
-      category: other
+      category: tuition
       instrument: scholarship
       coverage: fixed_amount
       amount:
@@ -124,7 +126,8 @@ versions:
         period: academic_year
       duration_terms: Four years
       exclusions: null
-      scope_text: $4,000 per academic year; the page does not say what it is applied to
+      scope_text: $4,000 per academic year, credited against tuition charges; half applies to fall and
+        half to spring (2027-28 terms page)
       advertised_coverage_label: null
       conditions_text: null
     advertised_totals: []
@@ -179,9 +182,19 @@ versions:
     evaluation_timing: null
     summer_courses_can_fix_shortfall: null
     max_semesters: null
-    notes: Continuous fall and spring enrollment on the Pullman campus, at least 24 graded credits each
-      year, and an undergraduate (non-professional) program of study.
-  stacking_rules: null
+    notes: 'Continuous fall and spring enrollment on the Pullman campus, at least 24 graded credits each
+      year, and an undergraduate (non-professional) program of study (Regents Scholars Program block).
+      The separate Regents Scholars Award block adds: good academic standing by the end of spring semester,
+      and 12 credits each semester on the Pullman campus; renewable for a maximum of four years. The two
+      blocks overlap and are both recorded.'
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: not_allowed
+    note: The Regents Scholars Award cannot be combined with either level of the University Achievement
+      Award or the National Merit Scholarship (2027-28 terms page, Regents Scholars Award block).
+  - other_aid_type: institutional_need
+    relation: counts_within_package
+    note: The terms page says the award is included in the determination of financial aid eligibility.
   award_counts:
   - metric: new_recipients
     qualifier: approximate
@@ -266,6 +279,12 @@ versions:
       scholarship program.
     value_status: reported
     reported_value: null
+  - field_path: offers/1/benefits/0
+    source_ref: s-terms
+    locator: Terms page, 2027-28 tab, Regents Scholars Award block
+    short_excerpt: Funds from the Regents Scholars Award will credit against tuition charges.
+    value_status: reported
+    reported_value: null
   - field_path: offers/1/benefits/0/amount
     source_ref: s-terms
     locator: Terms page, 2027-28, Regents Scholars Program, Award Levels, Regents Scholar bullet
@@ -308,12 +327,19 @@ versions:
     short_excerpt: Completion of at least 24 graded credits each year
     value_status: reported
     reported_value: null
-  - field_path: stacking_rules
+  - field_path: stacking_rules/0
     source_ref: s-terms
-    locator: 'Terms page, Regents Scholars Program section: no rule on combining the Regents awards with
-      other aid'
-    short_excerpt: null
-    value_status: not_published
+    locator: Terms page, 2027-28 tab, Regents Scholars Award block
+    short_excerpt: The Regents Scholars Award cannot be combined with either level of the University Achievement
+      Award or the National Merit Scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/1
+    source_ref: s-terms
+    locator: Terms page, 2027-28 tab, Regents Scholars Award block
+    short_excerpt: if you are receiving financial aid, the amount of this award will be included in the
+      determination of financial aid eligibility.
+    value_status: reported
     reported_value: null
   - field_path: award_counts/0
     source_ref: s-terms

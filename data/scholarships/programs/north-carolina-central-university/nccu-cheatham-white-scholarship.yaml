@@ -66,7 +66,9 @@ versions:
         the 2027-2028 academic year; the FAQ page still says 2026-2027 (a leftover from the previous cycle).
         Selection looks at character, leadership, extracurricular involvement and service; the policy
         says financial need is not a consideration. Students are enrolled in the University Honors Program
-        automatically.'
+        automatically. The policy page also lists SAT 1280 / ACT 28 as required; the apply page makes
+        tests optional for 2027-2028 and is followed. Policy nominee caps by school: 2 to 5 depending
+        on senior class size.'
     benefits:
     - benefit_id: b-tuition
       category: tuition
@@ -155,7 +157,8 @@ versions:
         period: null
       duration_terms: null
       exclusions: null
-      scope_text: 'School words: ''a laptop'''
+      scope_text: 'School words: ''a laptop''; the FAQ highlights list calls it the ''Laptop Checkout
+        Program'''
       advertised_coverage_label: null
       conditions_text: null
     - benefit_id: b-other
@@ -219,7 +222,7 @@ versions:
       precision: day
       source_date_text: January 15, 2027 | Applicants will be notified if selected to continue as a finalist
     - kind: interview
-      requirement: required
+      requirement: invitation_only
       date: '2027-02-20'
       recurring: null
       precision: day
@@ -235,11 +238,13 @@ versions:
     prerequisites: []
     interview_mode: unknown
     finalist_event_required: null
-    notes: 'Self-nominations go through the Eagle Promise Portal after an admission application and must
-      be followed by a letter of recommendation (FAQ). The FAQ page still says ''for the 2026-2027 academic
-      year'' for test-optional; the apply page says 2027-2028 and is used here. The FAQ says recipients
-      are notified in early March, finalists decide by mid-April and the class is announced in early May.
-      The scholarship is non-binding: scholars need not attend NCCU.'
+    notes: 'Finalist interviews cannot be rescheduled: the interview date is announced a year in advance
+      and finalists are told a month before. Self-nominations go through the Eagle Promise Portal after
+      an admission application and must be followed by a letter of recommendation (FAQ). The FAQ page
+      still says ''for the 2026-2027 academic year'' for test-optional; the apply page says 2027-2028
+      and is used here. The FAQ says recipients are notified in early March, finalists decide by mid-April
+      and the class is announced in early May. The scholarship is non-binding: scholars need not attend
+      NCCU.'
   renewal_rules:
   - applies_to: []
     gpa_min: 3.5

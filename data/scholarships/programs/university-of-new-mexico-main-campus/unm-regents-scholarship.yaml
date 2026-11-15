@@ -56,7 +56,7 @@ versions:
     - benefit_id: b-tuition
       category: tuition
       instrument: scholarship
-      coverage: partial
+      coverage: unknown
       amount:
         qualifier: not_published
         value: null
@@ -72,7 +72,7 @@ versions:
     - benefit_id: b-fees
       category: mandatory_fees
       instrument: scholarship
-      coverage: partial
+      coverage: unknown
       amount:
         qualifier: not_published
         value: null
@@ -87,7 +87,7 @@ versions:
     - benefit_id: b-housing
       category: housing
       instrument: scholarship
-      coverage: partial
+      coverage: unknown
       amount:
         qualifier: not_published
         value: null
@@ -139,7 +139,7 @@ versions:
     - benefit_id: b-tuition
       category: tuition
       instrument: scholarship
-      coverage: partial
+      coverage: unknown
       amount:
         qualifier: not_published
         value: null
@@ -155,7 +155,7 @@ versions:
     - benefit_id: b-fees
       category: mandatory_fees
       instrument: scholarship
-      coverage: partial
+      coverage: unknown
       amount:
         qualifier: not_published
         value: null
@@ -170,7 +170,7 @@ versions:
     - benefit_id: b-housing
       category: housing
       instrument: scholarship
-      coverage: partial
+      coverage: unknown
       amount:
         qualifier: not_published
         value: null

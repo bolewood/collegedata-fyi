@@ -17,8 +17,8 @@ versions:
 - version_id: trustee-undated
   supersedes: null
   entry_year: null
-  entry_year_label: Award guide is labeled First-Year Students 2026-2027; no entering class is named for
-    Trustee
+  entry_year_label: Award guide is labeled First-Year Students 2026-2027 and may be the prior cycle's
+    terms; no entering class is named for Trustee
   entry_terms:
   - unspecified
   source_cohort_text: null
@@ -57,7 +57,7 @@ versions:
     - benefit_id: b-tuition
       category: tuition
       instrument: scholarship
-      coverage: full
+      coverage: unknown
       amount:
         qualifier: not_published
         value: null
@@ -103,7 +103,9 @@ versions:
       The guide says the merit scholarship 'will be applied automatically as long as your enrollment commitment
       deposit is received by May 1'; that is about accepting an award already offered, not a promise of
       selection. The Dornsife FAQ question is the only place found where Trustee is described as covering
-      tuition in full.
+      tuition in full, and it is the premise of a student question, so coverage is recorded as unknown.
+      The guide section is labeled 2026-2027 and may carry the prior cycle's terms; the dates page is
+      for the cycle with a January 10, 2027 deadline.
   renewal_rules:
   - applies_to: []
     gpa_min: null
