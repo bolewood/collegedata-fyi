@@ -1,0 +1,499 @@
+schema_version: 1
+program_id: woodruff-scholars
+school_id: emory
+ipeds_id: '139658'
+applicable_campuses:
+- Atlanta
+- Oxford
+official_name: Robert W. Woodruff Scholarship
+aliases:
+- Woodruff Scholars Program
+- Woodruff Scholars
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: woodruff-scholars-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Pages name no entering class; dates have no year
+  entry_terms:
+  - unspecified
+  source_cohort_text: Emory pages describe the current application cycle without an entering class
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b1
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-atlanta
+    parent_offer_id: null
+    variant_name: Emory College Woodruff Scholarship (Atlanta campus)
+    residency: any
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: top_up_only
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: First-year, homeschooled and international applicants, regardless of citizenship,
+        can apply (apply page). Students must answer 'Yes' to the Scholars question on the Emory application
+        to be considered. Awarded to incoming Emory College first years.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Required fees
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: On-campus room
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: On-campus meals
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  - offer_id: o-oxford
+    parent_offer_id: null
+    variant_name: Oxford College Woodruff Scholarship (Oxford, then Emory College)
+    residency: any
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: top_up_only
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: First-year, homeschooled and international applicants, regardless of citizenship,
+        can apply (apply page). Students must answer 'Yes' to the Scholars question on the Emory application
+        to be considered. Oxford Woodruff Scholars join the Oxford College Woodruff Scholars Program for
+        semesters 1-4 and the Emory College Woodruff Scholars Program for semesters 3-8, and the scholarship
+        continues to Emory College, Goizueta Business School or the nursing school.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: full-tuition, fees, room, and board
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Described as 'board'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: no_form_other_steps_required
+    milestones:
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: November 1 | EDI Scholar Program deadline
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 15
+      precision: day
+      source_date_text: November 15 | EDII and RD Scholar Program deadline
+    admission_plan_requirement: Early Decision I, Early Decision II or Regular Decision application with
+      the Scholars question answered Yes
+    prerequisites: []
+    interview_mode: in_person
+    finalist_event_required: null
+    notes: Finalists are selected and notified by the end of February. Finalists located within the US
+      are required to attend an on-campus Scholars Finalists Visit in late March, at no cost; the visit
+      includes interviews. The apply page does not say how finalists outside the US take part. Oxford
+      finalists attend Oxford College Scholars Weekend (usually near the end of March). The Oxford catalog
+      names only a November 15 deadline for applying to Oxford with the scholarship box checked. The pages
+      name no entering class.
+  renewal_rules:
+  - applies_to:
+    - offer_id: o-atlanta
+      benefit_id: null
+    - offer_id: o-oxford
+      benefit_id: null
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Renewable for a total of eight regular academic-year semesters, provided students meet the
+      program's semester and annual requirements (details given on acceptance). The Atlanta program page
+      gives no GPA number.
+  - applies_to:
+    - offer_id: o-oxford
+      benefit_id: null
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: 'Conflict on the minimum GPA: the Oxford merit scholarships page table lists a 3.4 GPA requirement
+      for the Woodruff column; the Oxford catalog says students must maintain a 3.2 grade-point average
+      to continue as Woodruff Scholars. Both pages are current; the field is left empty. Also: must remain
+      at Oxford College four consecutive semesters and meet mandatory meetings and community service requirements
+      (details in the offer letter); academic scholars placed on Honor or Conduct Council probation may
+      lose their scholarships permanently (catalog).'
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-atl
+    url: https://oue.college.emory.edu/scholars/scholarships/woodruff-scholarships/index.html
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: fae61c8b4dd50467649039b26a1af6c6abd7a3bf6e29b53e989715c74a677a7a
+    archive_url: null
+  - source_id: s-apply
+    url: https://apply.emory.edu/financial-aid/scholar-program.html
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: 602c0203701b483baaf3eec456ebac4b2162647fd64640efffef81daa8b274fd
+    archive_url: null
+  - source_id: s-oxm
+    url: https://oxford.emory.edu/admission/merit_scholarships.html
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: 2a2c8b174c164216cc0e03a7aa11bf788833e38968167fd7311a8bfd9e20d67b
+    archive_url: null
+  - source_id: s-oxc
+    url: https://oxford.emory.edu/catalog/admission-and-aid/scholarships.html
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 1dbb6eca075220a56a878fe65050749496c802592598bd2f31d630bf6c4e56e6
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-apply
+    locator: 'Scholar Programs page: no entering class named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-apply
+    locator: Scholar Programs page, selection paragraph
+    short_excerpt: About 10,000 students apply to be scholars each year. From these, 175 to 200 students
+      are selected as finalists.
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/1/selection_mode
+    source_ref: s-apply
+    locator: Scholar Programs page, selection paragraph
+    short_excerpt: About 10,000 students apply to be scholars each year. From these, 175 to 200 students
+      are selected as finalists.
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/consideration_route
+    source_ref: s-apply
+    locator: Scholar Programs page, Step 2
+    short_excerpt: Answer “Yes” to the Scholars Question
+    value_status: reported
+    reported_value: admission_application
+  - field_path: offers/1/consideration_route
+    source_ref: s-oxm
+    locator: Oxford merit scholarships page, Application and Selection Process
+    short_excerpt: Students wishing to be considered for merit scholarship at Emory University will self-nominate
+      on their admission application.
+    value_status: reported
+    reported_value: admission_application
+  - field_path: offers/0/need_role
+    source_ref: s-apply
+    locator: Scholar Programs page, selection paragraph
+    short_excerpt: Students who also applied for financial aid may be eligible for need-based grants and
+      loans if there is remaining need beyond the merit scholarship award.
+    value_status: reported
+    reported_value: top_up_only
+  - field_path: offers/1/need_role
+    source_ref: s-apply
+    locator: Scholar Programs page, selection paragraph
+    short_excerpt: Students who also applied for financial aid may be eligible for need-based grants and
+      loans if there is remaining need beyond the merit scholarship award.
+    value_status: reported
+    reported_value: top_up_only
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-atl
+    locator: Atlanta Woodruff page, intro
+    short_excerpt: the Robert W. Woodruff Scholarship includes full tuition, required fees, on-campus
+      room and meals
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-atl
+    locator: 'Atlanta Woodruff page: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/coverage
+    source_ref: s-atl
+    locator: Atlanta Woodruff page, intro
+    short_excerpt: the Robert W. Woodruff Scholarship includes full tuition, required fees, on-campus
+      room and meals
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-atl
+    locator: 'Atlanta Woodruff page: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/coverage
+    source_ref: s-atl
+    locator: Atlanta Woodruff page, intro
+    short_excerpt: the Robert W. Woodruff Scholarship includes full tuition, required fees, on-campus
+      room and meals
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-atl
+    locator: 'Atlanta Woodruff page: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/coverage
+    source_ref: s-atl
+    locator: Atlanta Woodruff page, intro
+    short_excerpt: the Robert W. Woodruff Scholarship includes full tuition, required fees, on-campus
+      room and meals
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-atl
+    locator: 'Atlanta Woodruff page: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/0/coverage
+    source_ref: s-oxm
+    locator: Oxford merit scholarships page, Application and Selection Process
+    short_excerpt: The Woodruff Scholarship is a four-year full-tuition, fees, room, and board scholarship
+    value_status: reported
+    reported_value: full
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-oxm
+    locator: 'Oxford merit scholarships page: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/1/coverage
+    source_ref: s-oxm
+    locator: Oxford merit scholarships page, Application and Selection Process
+    short_excerpt: The Woodruff Scholarship is a four-year full-tuition, fees, room, and board scholarship
+    value_status: reported
+    reported_value: full
+  - field_path: offers/1/benefits/1/amount
+    source_ref: s-oxm
+    locator: 'Oxford merit scholarships page: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/2/coverage
+    source_ref: s-oxm
+    locator: Oxford merit scholarships page, Application and Selection Process
+    short_excerpt: The Woodruff Scholarship is a four-year full-tuition, fees, room, and board scholarship
+    value_status: reported
+    reported_value: full
+  - field_path: offers/1/benefits/2/amount
+    source_ref: s-oxm
+    locator: 'Oxford merit scholarships page: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/3/coverage
+    source_ref: s-oxm
+    locator: Oxford merit scholarships page, Application and Selection Process
+    short_excerpt: The Woodruff Scholarship is a four-year full-tuition, fees, room, and board scholarship
+    value_status: reported
+    reported_value: full
+  - field_path: offers/1/benefits/3/amount
+    source_ref: s-oxm
+    locator: 'Oxford merit scholarships page: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-apply
+    locator: Scholar Programs page, Step 2
+    short_excerpt: Your Emory Application will ask, “Are you interested in being considered for the Emory
+      University Scholar Programs?”
+    value_status: reported
+    reported_value: no_form_other_steps_required
+  - field_path: application/milestones/0
+    source_ref: s-apply
+    locator: Scholar Programs page, dates table
+    short_excerpt: EDI Scholar Program deadline
+    value_status: reported
+    reported_value: 11-01
+  - field_path: application/milestones/1
+    source_ref: s-apply
+    locator: Scholar Programs page, dates table
+    short_excerpt: EDII and RD Scholar Program deadline
+    value_status: reported
+    reported_value: 11-15
+  - field_path: renewal_rules/0
+    source_ref: s-apply
+    locator: Scholar Programs page, renewal paragraph
+    short_excerpt: Scholarships are renewable for a total of eight regular academic-year semesters of
+      undergraduate study
+    value_status: reported
+    reported_value: 8
+  - field_path: renewal_rules/1/gpa_min
+    source_ref: s-oxm
+    locator: Oxford merit scholarships page, comparison table, 3.4 GPA Requirement row
+    short_excerpt: 3.4 GPA Requirement | Yes | Yes | Yes
+    value_status: conflicting
+    reported_value: '3.4'
+  - field_path: renewal_rules/1
+    source_ref: s-oxm
+    locator: Oxford merit scholarships page, comparison table, Woodruff column
+    short_excerpt: Remain at Oxford College Four Consecutive Semesters
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/1
+    source_ref: s-oxm
+    locator: Oxford merit scholarships page, comparison table, Woodruff column
+    short_excerpt: Mandatory meetings and community service
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/1
+    source_ref: s-oxc
+    locator: Oxford catalog, Academic Scholarships
+    short_excerpt: Academic scholars placed on Honor or Conduct Council probation may lose their scholarships
+      permanently.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/1/gpa_min
+    source_ref: s-oxc
+    locator: Oxford catalog, Robert W. Woodruff Scholars
+    short_excerpt: Students must maintain a 3.2 grade-point average to continue as Woodruff Scholars.
+    value_status: conflicting
+    reported_value: '3.2'

@@ -1,0 +1,264 @@
+schema_version: 1
+program_id: ingram-scholars
+school_id: vanderbilt
+ipeds_id: '221999'
+applicable_campuses: []
+official_name: Ingram Scholars Program
+aliases: []
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: ingram-scholars-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Pages name no entering class; they list a December 1, 2026 deadline
+  entry_terms:
+  - unspecified
+  source_cohort_text: Scholarship page lists a December 1, 2026 first-year deadline and a 2027-2028 route
+    for current first-years
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b1
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: merit_only
+    need_role: top_up_only
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Prospective first-year students apply after applying to Vanderbilt. Currently
+        enrolled first-year students may apply separately for the following year (2027-2028 on the page);
+        this record covers the first-year entry route only. Scholars are expected to devote approximately
+        twenty hours each month during the academic year and at least one undergraduate summer to community
+        service.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: full-tuition
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: all required fees
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: The page says 'the value of on-campus housing each year'; it does not say whether room
+        charges are covered in full
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-summer
+      category: stipend
+      instrument: cash_stipend
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: One summer service project, following the sophomore year
+      exclusions: null
+      scope_text: A 'stipend for a special summer service project'; amount not published
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: encouraged
+    milestones:
+    - kind: application_deadline
+      requirement: recommended
+      date: '2026-12-01'
+      recurring: null
+      precision: day
+      source_date_text: December 1, 2026
+    admission_plan_requirement: Apply to Vanderbilt first, then apply to the Ingram Scholars Program via
+      MyAppVU
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: Finalists are required to interview with the selection committee; the pages give no interview
+      date or format. The pages name no entering class for the December 1, 2026 deadline. Currently enrolled
+      first-year students have a separate February 28, 2027 deadline for 2027-2028.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.0
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: Annually
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Renewable annually, contingent on a 3.0 minimum GPA and monthly service. The program page says
+      up to eight semesters; the scholarship page says renewable 'through the senior year'. GPA scale
+      and credit load are not stated.
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-sch
+    url: https://www.vanderbilt.edu/scholarships/ingram/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 8f5a980cf179c0d2f8c4fe949e10ccdc7d5843ef3645868316eaeeea3c3612a9
+    archive_url: null
+  - source_id: s-prog
+    url: https://www.vanderbilt.edu/ingram/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 4eb319005a890913857b2dd227d3260dabf1880a14dc49fac97eda39f5aa958e
+    archive_url: null
+  - source_id: s-apply
+    url: https://www.vanderbilt.edu/ingram/apply/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: b122d6af954b5c40d5c13c8a7d7b2ad8924bac0a1285a4a5a250a3ac60527d9d
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-sch
+    locator: Ingram Scholars Program page, Application and Selection; no entering class named
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-sch
+    locator: Scholarship page, Application and Selection
+    short_excerpt: Ingram Scholars are selected on the basis of commitment to civic-minded service, an
+      entrepreneurial spirit, strength of personal character, and leadership potential.
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-sch
+    locator: Scholarship page, Scholarship Benefits
+    short_excerpt: Ingram Scholars receive full-tuition, all required fees, and the value of on-campus
+      housing each year plus a stipend for a special summer service project.
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-sch
+    locator: 'Scholarship page, Scholarship Benefits: no dollar amount given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/coverage
+    source_ref: s-sch
+    locator: Scholarship page, Scholarship Benefits
+    short_excerpt: Ingram Scholars receive full-tuition, all required fees, and the value of on-campus
+      housing each year plus a stipend for a special summer service project.
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-sch
+    locator: 'Scholarship page, Scholarship Benefits: no dollar amount given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-sch
+    locator: 'Scholarship page, Scholarship Benefits: no dollar amount given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-sch
+    locator: 'Scholarship page, Scholarship Benefits: stipend amount not given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/need_role
+    source_ref: s-sch
+    locator: Scholarship page, Scholarship Benefits
+    short_excerpt: Vanderbilt will provide additional need-based financial aid to those Ingram Scholarship
+      recipients whose demonstrated financial need exceeds the amount of full tuition.
+    value_status: reported
+    reported_value: top_up_only
+  - field_path: offers/0/consideration_route
+    source_ref: s-sch
+    locator: Scholarship page, Application and Selection
+    short_excerpt: Applicants apply via MyAppVU after submitting admission application.
+    value_status: reported
+    reported_value: separate_application
+  - field_path: application/separate_application
+    source_ref: s-sch
+    locator: Scholarship page, Application and Selection
+    short_excerpt: The Ingram Scholars Program application is strongly encouraged; preference is given
+      to those who apply.
+    value_status: reported
+    reported_value: encouraged
+  - field_path: application/milestones/0
+    source_ref: s-sch
+    locator: Scholarship page, Scholarship Application Deadlines
+    short_excerpt: Ingram Scholars Program - December 1, 2026
+    value_status: reported
+    reported_value: '2026-12-01'
+  - field_path: application/interview_mode
+    source_ref: s-apply
+    locator: Apply page, Application and Selection
+    short_excerpt: Ingram Scholar Finalists are also required to interview with the selection committee.
+    value_status: reported
+    reported_value: unknown
+  - field_path: renewal_rules/0/gpa_min
+    source_ref: s-sch
+    locator: Scholarship page, Scholarship Benefits
+    short_excerpt: renewable annually through the senior year contingent on the maintenance of a 3.0 minimum
+      GPA and fulfillment of service-related requirements
+    value_status: reported
+    reported_value: 3.0
+  - field_path: renewal_rules/0/max_semesters
+    source_ref: s-prog
+    locator: Program page, Student Benefits
+    short_excerpt: Scholarships are renewable annually up to eight semesters, contingent on a 3.0 minimum
+      GPA
+    value_status: reported
+    reported_value: 8
