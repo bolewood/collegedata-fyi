@@ -8,6 +8,53 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
 
 ## [Unreleased]
 
+## [0.6.23.0] - 2026-11-14
+
+Named scholarship directory (PRD 036), merged as #310 to #315.
+
+### Added
+
+- `/scholarships`: a directory of named merit scholarships, each linked to the
+  school's own page and dated. Launches with 23 programs at 20 schools.
+  Filters cover coverage, selection, National Merit status, separate
+  application, deadline month and residency. School pages show a scholarship card when the school has a
+  record; schools without one show nothing (#315).
+- `/methodology/scholarships`: how records are made and checked, what each
+  freshness label means, how to cite and reuse the data, and a correction
+  issue template (#315).
+- Public API view `scholarship_directory`: the newest publishable version of
+  each program per school, with sources, evidence locators, a
+  `freshness_status` and the cycle basis. Joint programs appear once per
+  participating school. Documented on `/api` (#312, #315).
+- Record format for programs under `data/scholarships/programs/`: one YAML
+  file per program, a JSON Schema, a field guide, a CC BY 4.0 licence with
+  attribution text, and `tools/scholarships/validate.py`, which CI runs on
+  every PR. Verified versions are immutable; a correction is a new version
+  (#311).
+- The first 23 records, drafted from official pages fetched on 2026-11-14 and
+  checked field by field in a second pass. 19 are verified; 4 are published as
+  conflicting because the school's own pages disagree (#313).
+- Loader and downloads: `scholarships-load.yml` validates and loads records on
+  merge to `main`, then revalidates the web pages. The full set is downloadable
+  as `/data/scholarships-v1.json` and `/data/scholarships-v1.csv.zip`; a test
+  fails when the committed snapshot is stale (#312, #315).
+- Change monitor (`tools/scholarships/monitor.py`, `scholarships-monitor.yml`):
+  re-fetches each program's source pages and flags a record for review only
+  when a term it records has changed. Unreachable pages and stale-cycle signals
+  open an issue without changing the record. Runbook:
+  `docs/runbooks/scholarships-annual-review.md` (#314).
+- `tools/common/polite_fetch.py`: a shared fetcher that obeys robots.txt and
+  crawl delays, sends conditional requests, and reports login or CAPTCHA walls
+  as their own result (#310).
+
+### Known limits
+
+- Texas A&M's pages return 404 to a plain fetch and were read in a headless
+  browser. The monitor cannot reach them and reports them as unreachable.
+- The 12 records corrected during checking did not get a second independent
+  pass.
+- Capped housing or meal allowances are recorded as partial coverage.
+
 ## [0.6.22.0] - 2026-11-14
 
 Covers the 21 pull requests merged on 2026-11-13 and 2026-11-14 (#269 to #308)
