@@ -57,6 +57,22 @@ Validate with:
 python tools/scholarships/validate.py data/scholarships/programs --merge-base origin/main
 ```
 
+## What belongs here: the size floor
+
+The directory lists large awards only. A program qualifies when the school's
+own page shows that its top tier meets one of these:
+
+1. At least $10,000 per academic year, or an advertised program total of at
+   least $40,000 over four years.
+2. Full tuition or more, whatever the dollar value.
+3. A waiver of the nonresident tuition differential attached to the award
+   (out-of-state tier only). Record it as a waiver, per sourcing rule 8.
+
+Test the top tier only, then record every tier of a qualifying program. Never
+add components or multiply an amount to reach the floor. Do not submit a
+program whose value the school does not publish. Reviewers check the floor;
+the validator does not.
+
 ## Sourcing rules
 
 1. The school's own page is the authority. Third-party directories are leads
