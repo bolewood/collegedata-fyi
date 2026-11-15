@@ -326,13 +326,15 @@ versions:
   - field_path: offers/0/need_role
     source_ref: s-apply
     locator: Scholar Programs page, selection paragraph
-    short_excerpt: The scholar selection process is completely separate from the financial aid process.
+    short_excerpt: Students who also applied for financial aid may be eligible for need-based grants and
+      loans if there is remaining need beyond the merit scholarship award.
     value_status: reported
     reported_value: top_up_only
   - field_path: offers/1/need_role
     source_ref: s-apply
     locator: Scholar Programs page, selection paragraph
-    short_excerpt: The scholar selection process is completely separate from the financial aid process.
+    short_excerpt: Students who also applied for financial aid may be eligible for need-based grants and
+      loans if there is remaining need beyond the merit scholarship award.
     value_status: reported
     reported_value: top_up_only
   - field_path: offers/0/benefits/0/coverage

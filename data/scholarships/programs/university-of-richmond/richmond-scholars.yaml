@@ -113,7 +113,7 @@ versions:
       conditions_text: Described as 'eligibility for' a one-time grant to support a student-selected activity
     advertised_totals: []
   application:
-    separate_application: not_required
+    separate_application: no_form_other_steps_required
     milestones:
     - kind: admission_deadline
       requirement: required
@@ -211,7 +211,7 @@ versions:
     locator: Merit-based scholarships table, Richmond Scholars Program row
     short_excerpt: Submit admission application by December 1st
     value_status: reported
-    reported_value: not_required
+    reported_value: no_form_other_steps_required
   - field_path: offers/0/benefits/0/coverage
     source_ref: s-pro
     locator: Prospective Scholars page, benefits list

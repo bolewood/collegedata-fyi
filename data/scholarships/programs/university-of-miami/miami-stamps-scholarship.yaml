@@ -86,7 +86,7 @@ versions:
       conditions_text: Enrichment fund expenses are subject to prior approval
     advertised_totals: []
   application:
-    separate_application: not_required
+    separate_application: no_form_other_steps_required
     milestones:
     - kind: admission_deadline
       requirement: required
@@ -155,7 +155,7 @@ versions:
     locator: Eligibility Criteria
     short_excerpt: There is no separate application outside of the Common Application to be considered.
     value_status: reported
-    reported_value: not_required
+    reported_value: no_form_other_steps_required
   - field_path: application/milestones/0
     source_ref: s-first
     locator: First-Year Merit Scholarships page, award/eligibility/deadline table
