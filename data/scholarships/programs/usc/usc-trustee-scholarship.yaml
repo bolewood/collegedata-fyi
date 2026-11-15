@@ -1,0 +1,267 @@
+schema_version: 1
+program_id: usc-trustee-scholarship
+school_id: usc
+ipeds_id: '123961'
+applicable_campuses: []
+official_name: Trustee Scholarship
+aliases:
+- USC Trustee Scholarship
+- Trustee Scholar
+program_family: other
+awarding_authority: institution
+related_programs:
+- program_id: national-merit-scholarship
+  relation: mutually_exclusive_with
+status: active
+versions:
+- version_id: trustee-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Award guide is labeled First-Year Students 2026-2027; no entering class is named for
+    Trustee
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: unverified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b6
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: First-year admission merit scholarship. The pages do not state a GPA, test or
+        citizenship rule for Trustee, or how many are awarded. The Admission Merit Scholarships are awarded
+        'based on academic excellence, leadership, service and talent'.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters (ten in the five-year Bachelor of Architecture program)
+      exclusions: null
+      scope_text: 'Per a USC Dornsife FAQ question: ''my USC tuition is already covered in full by my
+        Trustee Scholarship''. The guide says Trustee value is based on flat-rate tuition (12-18 units
+        per semester). The award is reduced if state tuition grants such as the Cal Grant would push total
+        aid past tuition and mandatory fees.'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: unknown
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: Early Decision (most majors) — November 1; Early Action (most majors) — November
+        1
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 12
+        day: 1
+      precision: day
+      source_date_text: Regular Decision (performing arts majors) — December 1
+    admission_plan_requirement: Early Decision or Early Action by November 1 (most majors), or Regular
+      Decision by December 1 (performing arts majors), to be considered for USC Merit Scholarships
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: The dates carry no year on the first-year dates page. The same page lists Regular Decision
+      for most majors by January 10 but does not say those applicants are considered for merit scholarships.
+      The guide says the merit scholarship 'will be applied automatically as long as your enrollment commitment
+      deposit is received by May 1'; that is about accepting an award already offered, not a promise of
+      selection. The Dornsife FAQ question is the only place found where Trustee is described as covering
+      tuition in full.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: 30
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: 'Renewable for each subsequent year, up to six additional semesters (eight for the five-year
+      Bachelor of Architecture program), if the student keeps USC academic standing, completes at least
+      30 units a year and meets conduct standards. Full-time enrollment is required each semester. Shortfall:
+      scholarship probation for a maximum of two semesters (16 units per semester).'
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: not_allowed
+    note: Admission Merit Scholarships are mutually exclusive; the student receives only the one with
+      the greatest value.
+  - other_aid_type: outside_scholarship
+    relation: counts_within_package
+    note: Tuition-restricted awards from other non-need sources may be combined if the total does not
+      exceed USC tuition by more than $8,000.
+  - other_aid_type: institutional_need
+    relation: counts_within_package
+    note: The guide says merit scholarships may reduce need-based aid depending on source and need; combined
+      scholarships and need-based aid cannot exceed USC-determined need.
+  award_counts: []
+  sources:
+  - source_id: s-guide
+    url: https://admission.usc.edu/scholarship-guide/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 976c338594a6dacc9a59da7d87b3c83d044082c2db1466088b86c5b116758f9a
+    archive_url: null
+  - source_id: s-sch
+    url: https://admission.usc.edu/cost-and-financial-aid/scholarships/
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: 78453af37d7388760f579fd9cf905402a9d041b3f221b9551bdaf5c6f9db491d
+    archive_url: null
+  - source_id: s-dates
+    url: https://admission.usc.edu/prospective-students/how-to-apply/first-year-students/
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: 5a524bff9b6449b5201a8d0a607459cc2d68687c5cf816eba371f375e56547b8
+    archive_url: null
+  - source_id: s-faq
+    url: https://dornsife.usc.edu/css/faq/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 27ed482be21f92e62811ba6d60f6aca8d8775f8b4e0d7ee7a3aff5f8323f6002
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-sch
+    locator: Scholarships page, USC Merit Scholarships, first paragraph
+    short_excerpt: USC Merit Scholarships are awarded based on academic excellence, leadership, service
+      and talent.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-dates
+    locator: First-Year Dates and Deadlines, Early Decision and Early Action
+    short_excerpt: EA applicants will be considered for USC Merit Scholarships.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/aid_basis
+    source_ref: s-sch
+    locator: Scholarships page, General Information
+    short_excerpt: Students do not need to submit a need-based financial aid application to be considered
+      for a merit scholarship offered by the Office of Admission.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-faq
+    locator: FAQ, Application Components section, Trustee Scholar question
+    short_excerpt: I am a Trustee Scholar and my USC tuition is already covered in full by my Trustee
+      Scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-guide
+    locator: 'Scholarship guide, USC Undergraduate Admission Merit Scholarships: values stated relative
+      to tuition, no dollar amount for Trustee'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/0/scope_text
+    source_ref: s-guide
+    locator: Scholarship guide, First-Year Students 2026-2027, merit scholarships paragraph
+    short_excerpt: The relative values of the Trustee, Presidential and Deans scholarships are based on
+      the cost of flat-rate tuition
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-sch
+    locator: 'Scholarships page, General Information: states that no need-based application is needed;
+      does not say whether any other form is needed'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-dates
+    locator: First-Year Dates and Deadlines, Early Decision (most majors)
+    short_excerpt: 'Application Deadline: November 1'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-dates
+    locator: First-Year Dates and Deadlines, Regular Decision (performing arts majors)
+    short_excerpt: Candidates applying to these programs by December 1 will be considered for USC Merit
+      Scholarships.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-guide
+    locator: Scholarship guide, Renewing Your USC Undergraduate Admission Merit Scholarship
+    short_excerpt: If you complete fewer than 30 units in one academic year, your USC Undergraduate Admission
+      Merit Scholarship may not be carried over
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-guide
+    locator: Scholarship guide, USC Undergraduate Admission Merit Scholarships
+    short_excerpt: USC Undergraduate Admission Merit Scholarships are mutually exclusive.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/1
+    source_ref: s-guide
+    locator: Scholarship guide, Coordinating with Funds from Other Non-Need-Based Sources
+    short_excerpt: Awards from other non–need-based sources restricted to the payment of tuition only
+      may be combined with these merit-based funds
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/2
+    source_ref: s-guide
+    locator: Scholarship guide, Coordinating with Need-Based Financial Aid
+    short_excerpt: USC Merit Scholarships may reduce these aid amounts, however, depending on the source
+      of the scholarship and the student’s USC-determined financial need.
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts
+    source_ref: s-guide
+    locator: 'Scholarship guide and scholarships page: no Trustee award count'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-guide
+    locator: 'Scholarship guide: the 2026-2027 award guide names no entering class for Trustee, and the
+      dates pages show 2026 and 2027 dates'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: /related_programs/0
+    source_ref: s-guide
+    locator: Scholarship guide, USC Undergraduate Admission Merit Scholarships
+    short_excerpt: If you are awarded more than one, you will receive only the scholarship with the greatest
+      value.
+    value_status: reported
+    reported_value: null

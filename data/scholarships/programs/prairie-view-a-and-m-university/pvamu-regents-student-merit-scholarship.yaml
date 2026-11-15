@@ -1,0 +1,345 @@
+schema_version: 1
+program_id: pvamu-regents-student-merit-scholarship
+school_id: prairie-view-a-and-m-university
+ipeds_id: '227526'
+applicable_campuses: []
+official_name: Regents' Student Merit Scholarship
+aliases:
+- Regents' Scholarship
+- Regents' Student Merit Scholarship
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: regents-student-merit-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: The page names no entering class
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: unverified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b6
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: true
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.5
+        scale: 4.0
+        basis: unknown
+      test_rules:
+      - exam: SAT
+        min: 1260
+        scoring: single_sitting
+        official_required: null
+      - exam: ACT
+        min: 27
+        scoring: single_sitting
+        official_required: null
+      tests_policy_for_scholarship: required
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Graduated from high school within 12 months of enrolling; not a transfer student.
+        The page lists 1260 (new SAT) or 27 ACT composite, from same-day testing; scores from multiple
+        sittings are not combined. Awards are limited and given by admission date and competitiveness.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Every academic year, excluding summer; renewable up to four years (eight semesters)
+      exclusions: null
+      scope_text: 'School words: ''covers up tuition and mandatory fees, on campus housing, meals and
+        books ($600 per semester)''; the wording has no ''to'', so whether ''up'' is a typo or a cap is
+        unclear'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Every academic year, excluding summer
+      exclusions: null
+      scope_text: 'School words: ''covers up tuition and mandatory fees, on campus housing, meals and
+        books ($600 per semester)''; the wording has no ''to'', so whether ''up'' is a typo or a cap is
+        unclear. The page adds ''*Fees do not cover fines and deposits.'''
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Every academic year, excluding summer
+      exclusions: null
+      scope_text: On-campus housing, listed in the same sentence; no rate or cap given
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Every academic year, excluding summer
+      exclusions: null
+      scope_text: Meals, listed in the same sentence; no rate or cap given
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-books
+      category: books
+      instrument: cash_stipend
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 600
+        min: null
+        max: null
+        period: semester
+      duration_terms: Every academic year, excluding summer
+      exclusions: null
+      scope_text: 'School words: ''books ($600 per semester)'''
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-waiver
+      category: nonresident_differential
+      instrument: tuition_waiver
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''Regents'' Scholars who are non-residents are eligible for an out-of-state tuition
+        waiver''; no dollar value or limits given'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: not_required
+    milestones: []
+    admission_plan_requirement: Admission to the university; the page says admitted students meeting the
+      criteria are automatically considered
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: No deadline is published. The Office of Scholarship Services menu lists a separate 'General
+      Scholarship Application' page that was not read; whether it affects this award is not known.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.2
+    gpa_scale: 4.0
+    credit_load_min_per_term: null
+    credit_load_min_per_year: 30
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: false
+    max_semesters: 8
+    notes: Renewable up to four years (eight semesters). Summer coursework cannot be used to meet the
+      credit load or GPA requirement.
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-merit
+    url: https://www.pvamu.edu/oss/university-scholarships/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 3def99cdc4255c5e3ed1811ec9a8148deb42287b9e082ac6e88422d2bcc09c5b
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-merit
+    locator: University Merit Scholarships, intro paragraph
+    short_excerpt: Award availability is limited and is awarded based upon admission date and competitiveness.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-merit
+    locator: University Merit Scholarships, intro paragraph
+    short_excerpt: all admitted students meeting this criterion are automatically considered for these
+      awards.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/funds_limited
+    source_ref: s-merit
+    locator: University Merit Scholarships, intro paragraph
+    short_excerpt: Award availability is limited and is awarded based upon admission date and competitiveness.
+    value_status: reported
+    reported_value: true
+  - field_path: offers/0/benefits/0
+    source_ref: s-merit
+    locator: The Regents' Student Merit Scholarship, first paragraph
+    short_excerpt: The Regents’ scholarship covers up tuition and mandatory fees, on campus housing, meals
+      and books ($600 per semester) every academic year
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-merit
+    locator: The Regents' Student Merit Scholarship, first paragraph
+    short_excerpt: The Regents’ scholarship covers up tuition and mandatory fees, on campus housing, meals
+      and books ($600 per semester) every academic year
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-merit
+    locator: The Regents' Student Merit Scholarship, first paragraph
+    short_excerpt: The Regents’ scholarship covers up tuition and mandatory fees, on campus housing, meals
+      and books ($600 per semester) every academic year
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3
+    source_ref: s-merit
+    locator: The Regents' Student Merit Scholarship, first paragraph
+    short_excerpt: The Regents’ scholarship covers up tuition and mandatory fees, on campus housing, meals
+      and books ($600 per semester) every academic year
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/4
+    source_ref: s-merit
+    locator: The Regents' Student Merit Scholarship, first paragraph
+    short_excerpt: The Regents’ scholarship covers up tuition and mandatory fees, on campus housing, meals
+      and books ($600 per semester) every academic year
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-merit
+    locator: 'Regents'' paragraph: no dollar amount for this component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-merit
+    locator: 'Regents'' paragraph: no dollar amount for this component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-merit
+    locator: 'Regents'' paragraph: no dollar amount for this component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-merit
+    locator: 'Regents'' paragraph: no dollar amount for this component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-merit
+    locator: The Regents' Student Merit Scholarship, first paragraph
+    short_excerpt: books ($600 per semester)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/5
+    source_ref: s-merit
+    locator: The Regents' Student Merit Scholarship, first paragraph
+    short_excerpt: Regents’ Scholars who are non-residents are eligible for an out-of-state tuition waiver.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/5/amount
+    source_ref: s-merit
+    locator: 'Regents'' paragraph: no dollar value for the waiver'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-merit
+    locator: Regents' criteria list
+    short_excerpt: Must have a minimum 3.50 cumulative high school GPA. (3.50 on a 4.0 scale)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/test_rules
+    source_ref: s-merit
+    locator: Regents' criteria list
+    short_excerpt: Must have a minimum SAT score of 1260 (New SAT)/1760 (Old SAT) Verbal,Writing and Math
+      only or 27 composite ACT score.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-merit
+    locator: Regents' criteria list
+    short_excerpt: Must have a minimum SAT score of 1260 (New SAT)/1760 (Old SAT) Verbal,Writing and Math
+      only or 27 composite ACT score.
+    value_status: reported
+    reported_value: required
+  - field_path: application/separate_application
+    source_ref: s-merit
+    locator: University Merit Scholarships, intro paragraph
+    short_excerpt: all admitted students meeting this criterion are automatically considered for these
+      awards.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones
+    source_ref: s-merit
+    locator: 'University Merit Scholarships page: no scholarship deadline'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-merit
+    locator: Regents' criteria list, renewal sentence
+    short_excerpt: renewable up to four years (eight semesters) provided the student earns 30 semester
+      credit hours per academic year with a minimum 3.2 cumulative GPA.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules
+    source_ref: s-merit
+    locator: 'University Merit Scholarships page: no rule on other aid for the Regents'' award'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: award_counts
+    source_ref: s-merit
+    locator: 'University Merit Scholarships page: no award count'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-merit
+    locator: 'University Merit Scholarships page: no entering class named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

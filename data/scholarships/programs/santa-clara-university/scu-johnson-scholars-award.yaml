@@ -1,0 +1,431 @@
+schema_version: 1
+program_id: scu-johnson-scholars-award
+school_id: santa-clara-university
+ipeds_id: '122931'
+applicable_campuses: []
+official_name: Johnson Scholars Award
+aliases:
+- Johnson Scholars Program
+- Johnson Scholars
+program_family: honors
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: johnson-scholars-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: The pages name no entering class
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b6
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: honors_application
+    aid_basis: merit_and_need
+    need_role: top_up_only
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: International students are not eligible for consideration.
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: true
+      first_generation_rule: unknown
+      eligibility_notes: Applicants must be admitted in the Early Action or Early Decision I round and
+        then apply to the University Honors Program. Finalists are chosen from that pool on academic achievement
+        and potential to contribute. The page says 'Not reserved for Gap Year students'.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Renewable annually for up to four years; summer tuition and classes not included
+      exclusions: null
+      scope_text: Coverage is in conflict between two SCU pages; see field_evidence
+      advertised_coverage_label: full tuition
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''Standard room and board fees''; the page says students ''may be eligible'' after
+        the forms'
+      advertised_coverage_label: null
+      conditions_text: Depends on completing the FAFSA and CSS Profile for need-based consideration
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''Standard room and board fees''; the page says students ''may be eligible'' after
+        the forms'
+      advertised_coverage_label: null
+      conditions_text: Depends on completing the FAFSA and CSS Profile for need-based consideration
+    - benefit_id: b-books
+      category: books
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''Books & supplies'' and ''book and other customary expenses''; the page says students
+        ''may be eligible'' after the forms'
+      advertised_coverage_label: null
+      conditions_text: Depends on completing the FAFSA and CSS Profile for need-based consideration
+    - benefit_id: b-summer
+      category: stipend
+      instrument: cash_stipend
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Summer stipend; no amount published
+      advertised_coverage_label: null
+      conditions_text: Upon application, in the sophomore or junior year
+    - benefit_id: b-prof-dev
+      category: enrichment
+      instrument: restricted_fund
+      coverage: partial
+      amount:
+        qualifier: up_to
+        value: 10000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Professional development funds scholars can apply for after their first year; the page
+        gives no period
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: November 1 Deadline for Early Decision application
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: November 1 Deadline for Early Action application
+    - kind: finalist_event
+      requirement: required
+      date: null
+      recurring:
+        month: 3
+        day: 15
+      precision: approximate
+      source_date_text: virtual Selection Day in mid-March
+    admission_plan_requirement: Early Action or Early Decision I admission, then an application to the
+      University Honors Program
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: The pages give no deadline for the University Honors Program application. Admission deadlines
+      come from SCU's key-deadlines page and carry no year. Selection Day is virtual and in mid-March;
+      whether attendance is required is not stated. Not open to international students.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.5
+    gpa_scale: 4.0
+    credit_load_min_per_term: 12
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: 'Cumulative 3.5 GPA, satisfactory academic progress, a cumulative 67% completion rate, and
+      a full load of 12 or more units per quarter. Also required: Honors Program membership, annual FAFSA,
+      and active participation in Johnson Scholars events. Renewable annually for up to four years (12
+      quarters on the merit page; the school counts in quarters, so max_semesters is left empty).'
+  stacking_rules:
+  - other_aid_type: other
+    relation: counts_within_package
+    note: The merit page says only 'Coordinated with federal, state and other University aid'.
+  award_counts:
+  - metric: new_recipients
+    qualifier: exact
+    value: 5
+    cohort_year: null
+    source_ref: s-sel
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-merit
+    url: https://www.scu.edu/financialaid/types-of-aid/scholarships-and-grants/merit-scholarships/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 3bc71b36ffe710cd14b01f655b7ed9c71631e9a5565c6ab057d043a34242fdeb
+    archive_url: null
+  - source_id: s-about
+    url: https://www.scu.edu/johnsonscholars/about-the-programaward/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: ae56f627fe81560c0ea5f4815ca18dc409a6a2e8f69fe3474136af0abbf5d9e2
+    archive_url: null
+  - source_id: s-sel
+    url: https://www.scu.edu/johnsonscholars/selection/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: a91cdb627a23f3847577b642834cf75d40dbb4efa6a422e7b0e6f179c6f15e2b
+    archive_url: null
+  - source_id: s-req
+    url: https://www.scu.edu/johnsonscholars/johnson-scholars-program-requirements-/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 563a0d31a1c59baf955197b78ba67fadddbb8394abd77b81663048d7f2fabf63
+    archive_url: null
+  - source_id: s-dl
+    url: https://www.scu.edu/admission/undergraduate/first-year-students/fy-key-deadlines/
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: cdc12c237250a55ab349580b11a5689b6c5c56863e0587664aa101e777b10680
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-sel
+    locator: Selection Process page, first paragraph
+    short_excerpt: Johnson Scholars Finalists will be selected out of the EA and EDI University Honors
+      Program applicant pool.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-merit
+    locator: Merit Scholarships page, Johnson Scholars Award, first paragraph
+    short_excerpt: must apply to the University Honors Program to be considered for the Johnson Scholars
+      Program.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/aid_basis
+    source_ref: s-about
+    locator: About the Program/Award page, The Award
+    short_excerpt: the University is committed to fully meeting the demonstrated financial need of each
+      Johnson Scholar
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/need_role
+    source_ref: s-about
+    locator: About the Program/Award page, The Award
+    short_excerpt: Upon completion of required financial aid forms (FAFSA and the CSS PROFILE) students
+      may be eligible for additional costs of attendance
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-about
+    locator: About the Program/Award page, The Award
+    short_excerpt: Students selected as Johnson Scholars receive a merit scholarship covering full tuition
+      during the academic year
+    value_status: conflicting
+    reported_value: full tuition
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-merit
+    locator: Merit Scholarships page, Johnson Scholars Award list, Awards bullet
+    short_excerpt: 'Awards: Up to full tuition, standard room & board, books & supplies; summer stipend
+      upon application in sophomore/junior year'
+    value_status: conflicting
+    reported_value: up to full tuition
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-about
+    locator: 'About page: no dollar amount for tuition'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-merit
+    locator: Merit Scholarships page, Johnson Scholars Award list, Awards bullet
+    short_excerpt: 'Awards: Up to full tuition, standard room & board, books & supplies; summer stipend
+      upon application in sophomore/junior year'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/conditions_text
+    source_ref: s-merit
+    locator: Merit Scholarships page, Johnson Scholars Award, last paragraph
+    short_excerpt: students may be eligible for additional costs of attendance, such as standard room
+      and board fees
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-merit
+    locator: 'Merit page: no dollar amount for room'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-merit
+    locator: Merit Scholarships page, Johnson Scholars Award list, Awards bullet
+    short_excerpt: 'Awards: Up to full tuition, standard room & board, books & supplies; summer stipend
+      upon application in sophomore/junior year'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/conditions_text
+    source_ref: s-merit
+    locator: Merit Scholarships page, Johnson Scholars Award, last paragraph
+    short_excerpt: students may be eligible for additional costs of attendance, such as standard room
+      and board fees
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-merit
+    locator: 'Merit page: no dollar amount for board'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3
+    source_ref: s-merit
+    locator: Merit Scholarships page, Johnson Scholars Award list, Awards bullet
+    short_excerpt: 'Awards: Up to full tuition, standard room & board, books & supplies; summer stipend
+      upon application in sophomore/junior year'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3/conditions_text
+    source_ref: s-merit
+    locator: Merit Scholarships page, Johnson Scholars Award, last paragraph
+    short_excerpt: students may be eligible for additional costs of attendance, such as standard room
+      and board fees
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-merit
+    locator: 'Merit page: no dollar amount for books'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4
+    source_ref: s-merit
+    locator: Merit Scholarships page, Johnson Scholars Award list, Awards bullet
+    short_excerpt: 'Awards: Up to full tuition, standard room & board, books & supplies; summer stipend
+      upon application in sophomore/junior year'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/4/conditions_text
+    source_ref: s-merit
+    locator: Merit Scholarships page, Johnson Scholars Award list, Awards bullet
+    short_excerpt: summer stipend upon application in sophomore/junior year
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-merit
+    locator: 'Merit page: no dollar amount for the summer stipend'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/5/amount
+    source_ref: s-about
+    locator: About page, Creative Leadership and Research Opportunities
+    short_excerpt: they are eligible to apply for up to $10,000 in professional development funds
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/honors_requirement
+    source_ref: s-sel
+    locator: Selection Process page, last sentences
+    short_excerpt: Johnson Scholars are also members of the University Honors Program.
+    value_status: reported
+    reported_value: true
+  - field_path: application/separate_application
+    source_ref: s-merit
+    locator: Merit Scholarships page, Johnson Scholars Award, first paragraph
+    short_excerpt: must apply to the University Honors Program to be considered for the Johnson Scholars
+      Program.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-dl
+    locator: Key Deadlines page, Early Decision I list
+    short_excerpt: November 1 Deadline for Early Decision application
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-dl
+    locator: Key Deadlines page, Early Action list
+    short_excerpt: November 1 Deadline for Early Action application
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-sel
+    locator: Selection Process page, first paragraph
+    short_excerpt: Those selected as JSP finalists will be invited to attend virtual Selection Day in
+      mid-March.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-req
+    locator: Program Requirements page, Academic Requirements
+    short_excerpt: Johnson Scholars must maintain a 3.5 cumulative GPA and each scholar must make satisfactory
+      academic progress
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-merit
+    locator: Merit Scholarships page, Johnson Scholars Award list
+    short_excerpt: Coordinated with federal, state and other University aid
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts/0
+    source_ref: s-sel
+    locator: Selection Process page, first paragraph
+    short_excerpt: From among the finalists, 5 Johnson Scholars will be selected and notified shortly
+      thereafter.
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-sel
+    locator: 'Selection Process page: no entering class named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

@@ -1,0 +1,169 @@
+schema_version: 1
+program_id: scu-presidential-at-entry-scholarship
+school_id: santa-clara-university
+ipeds_id: '122931'
+applicable_campuses: []
+official_name: SCU Presidential at Entry Scholarship
+aliases:
+- Presidential at Entry Scholarship
+program_family: presidential
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: presidential-at-entry-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: The page names no entering class
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b6
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: First-year applicants only. The page defines the award as for students who demonstrate
+        qualities the president identifies as critical to the University's mission. It says 'Not reserved
+        for Gap Year students' and does not say whether international students are eligible (that line
+        appears only under the Dean's Scholarship).
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Renewable for 12 consecutive academic quarters
+      exclusions: null
+      scope_text: 'School words: ''Full tuition''; the page also says the award is indexed to tuition
+        increases'
+      advertised_coverage_label: Full tuition
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: not_required
+    milestones: []
+    admission_plan_requirement: Admission application; the page says merit awards are reviewed at the
+      time of admission
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: No scholarship deadline is published; consideration comes with the admission application. SCU's
+      key-deadlines page lists Early Action and Early Decision dates but does not tie scholarship consideration
+      to a round for this award.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.5
+    gpa_scale: 4.0
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: Renewable for 12 consecutive academic quarters (the school counts in quarters, so max_semesters
+      is left empty). Must meet satisfactory academic progress, maintain a 3.5 cumulative GPA, and enroll
+      full time. If degree requirements are completed early, adjustments are made to the award.
+  stacking_rules:
+  - other_aid_type: other
+    relation: counts_within_package
+    note: The page says only that the award is 'Coordinated with federal, state and other University aid';
+      it gives no detail.
+  award_counts: []
+  sources:
+  - source_id: s-merit
+    url: https://www.scu.edu/financialaid/types-of-aid/scholarships-and-grants/merit-scholarships/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 3bc71b36ffe710cd14b01f655b7ed9c71631e9a5565c6ab057d043a34242fdeb
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-merit
+    locator: Merit Scholarships page, SCU Presidential at Entry Scholarship list
+    short_excerpt: Recipients selected at time of admission
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-merit
+    locator: Merit Scholarships page, intro paragraph
+    short_excerpt: Merit awards are reviewed at the time of admission and no additional application is
+      required to be considered for these awards.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-merit
+    locator: Merit Scholarships page, SCU Presidential at Entry Scholarship list
+    short_excerpt: 'Awards: Full tuition'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-merit
+    locator: 'Merit Scholarships page, Presidential at Entry list: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-merit
+    locator: Merit Scholarships page, intro paragraph
+    short_excerpt: no additional application is required to be considered for these awards.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones
+    source_ref: s-merit
+    locator: 'Merit Scholarships page: no scholarship deadline; consideration comes with the admission
+      application'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-merit
+    locator: Merit Scholarships page, Presidential at Entry list
+    short_excerpt: Must maintain a 3.5 cumulative minimum grade point average
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-merit
+    locator: Merit Scholarships page, Presidential at Entry list
+    short_excerpt: Coordinated with federal, state and other University aid
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts
+    source_ref: s-merit
+    locator: 'Merit Scholarships page: no award count for this scholarship'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-merit
+    locator: 'Merit Scholarships page: no entering class named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
