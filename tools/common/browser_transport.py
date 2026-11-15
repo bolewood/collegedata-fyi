@@ -14,9 +14,14 @@ its own robots.txt, crawl-delay, redirect and login/CAPTCHA rules to it unchange
 * HTML: the body is the rendered DOM (``page.content()``) as UTF-8 bytes.
   Anything else (PDF, text/plain such as robots.txt): the response body bytes.
 * The User-Agent is Chromium-shaped with the fetcher's project UA appended.
-* Images, fonts, media and stylesheets are aborted; the page is read, not rendered
-  for display. Only the main document is spaced by the fetcher, so the extra
-  subresource requests (scripts, XHR) are kept to what the DOM needs.
+* Every request except the first main-frame navigation is aborted: no scripts,
+  XHR, fetch, iframes, images or stylesheets from any host, and no later navigation
+  (meta refresh, ``location=``, a challenge's reload) in any frame. Only the one
+  document the fetcher asked for, and checked against robots, is fetched. Inline
+  scripts in that document still run, so the DOM is what the page renders without
+  loading anything else. Consequence: a page that needs JavaScript ends up
+  unreachable or unreadable text, and this fallback does not get past a bot
+  challenge (those pages need scripts).
 * One browser, one thread: the Playwright sync API is thread-bound, so calls are
   serialised by an internal lock. Call ``close()`` when done.
 
@@ -30,7 +35,6 @@ from typing import Any, Mapping
 
 from tools.common.polite_fetch import Response
 
-_BLOCKED_RESOURCES = {"image", "font", "media", "stylesheet"}
 _HTML_TYPES = ("text/html", "application/xhtml")
 
 
@@ -90,12 +94,12 @@ class BrowserTransport:
 
             def handler(route: Any) -> None:
                 req = route.request
-                if req.resource_type in _BLOCKED_RESOURCES:
-                    route.abort()
+                if "status" in captured or captured.get("started") or not (
+                    req.is_navigation_request() and req.frame == page.main_frame
+                ):
+                    route.abort()  # only the first main-frame navigation is ever fetched
                     return
-                if not (req.is_navigation_request() and req.frame == page.main_frame):
-                    route.continue_()
-                    return
+                captured["started"] = True
                 r = route.fetch(max_redirects=0)
                 hdrs = {k.lower(): v for k, v in r.headers.items()}
                 captured.update(status=r.status, headers=hdrs, body=None)
@@ -114,6 +118,7 @@ class BrowserTransport:
                     raise  # never reached the document
             if "status" not in captured:
                 raise ConnectionError("no navigation response captured")
+            captured.pop("started", None)
             if captured["body"] is None:
                 if self._wait_after_load:
                     page.wait_for_timeout(self._wait_after_load * 1000)

@@ -95,15 +95,6 @@ def test_login_and_captcha_never_retried_in_browser(hdrs, body):
     assert r.status == LOGIN_OR_CAPTCHA and b.calls == []
 
 
-def test_soft_bot_wall_gets_one_browser_retry_and_stays_blocked_if_still_walled():
-    wall = R(403, b"<title>Just a moment...</title>", cf_mitigated="challenge")
-    f, p, b, _ = make({ROBOTS: [R(404)], PAGE: [wall]}, {PAGE: [R(200, b"<html>page</html>")]})
-    assert f.fetch(PAGE).transport == "browser"
-    f, p, b, _ = make({ROBOTS: [R(404)], PAGE: [wall]}, {PAGE: [wall]})
-    r = f.fetch(PAGE)
-    assert r.status == LOGIN_OR_CAPTCHA and r.transport == "browser" and len(b.calls) == 1
-
-
 def test_one_fallback_attempt_per_url_and_failure_reported_as_plain():
     f, p, b, _ = make({ROBOTS: [R(404)], PAGE: [R(404)]}, {PAGE: [R(404)]})
     r = f.fetch(PAGE)
@@ -137,22 +128,9 @@ def test_robots_404_in_browser_allows_and_host_goes_sticky():
     assert p.urls == [ROBOTS]  # no plain page request: the host needed the browser for robots
 
 
-def test_robots_unreadable_in_browser_too_stays_unreachable():
-    for plain in (R(500), R(429), R(403)):
-        f, p, b, _ = make({ROBOTS: [plain], PAGE: [R(200)]}, {ROBOTS: [R(503)], PAGE: [R(200)]})
-        assert f.fetch(PAGE).status == ROBOTS_UNREACHABLE, plain.status
-        assert PAGE not in p.urls and PAGE not in b.urls
-
-
 def test_clean_robots_404_does_not_use_the_browser():
     f, p, b, _ = make({ROBOTS: [R(410)], PAGE: [R(200, b"ok")]})
     assert f.fetch(PAGE).status == OK and b.calls == []
-
-
-def test_robots_challenge_not_retried_in_browser():
-    f, p, b, _ = make({ROBOTS: [R(403, b"captcha")], PAGE: [R(200)]}, {ROBOTS: [R(200, b"")]})
-    assert f.fetch(PAGE).status == ROBOTS_UNREACHABLE
-    assert b.calls == []
 
 
 def test_host_stickiness_after_successful_fallback():
@@ -224,23 +202,109 @@ def test_browser_transport_without_playwright_raises_connection_error(monkeypatc
     with pytest.raises(ConnectionError, match="playwright is not installed"):
         BrowserTransport()("GET", PAGE, {"User-Agent": "x"}, 5)
 
+def test_bot_wall_is_never_retried_in_the_browser():
+    wall = R(403, b"<title>Just a moment...</title>", cf_mitigated="challenge")
+    f, p, b, _ = make({ROBOTS: [R(404)], PAGE: [wall]}, {PAGE: [R(200, b"<html>page</html>")]})
+    r = f.fetch(PAGE)
+    assert r.status == LOGIN_OR_CAPTCHA and b.calls == []
 
-def test_robots_unreadable_stays_unreachable_for_every_url_on_the_host():
-    f, p, b, _ = make({ROBOTS: [R(403)], PAGE: [R(404)], PAGE2: [R(404)]}, {ROBOTS: [R(503)], PAGE: [R(200)], PAGE2: [R(200)]})
+
+@pytest.mark.parametrize("status", [404, 406])
+def test_captcha_body_on_404_or_406_is_not_retried_in_browser(status):
+    f, p, b, _ = make({ROBOTS: [R(404)], PAGE: [R(status, b"<div class='g-recaptcha'></div>")]}, {PAGE: [R(200, b"x")]})
+    r = f.fetch(PAGE)
+    assert r.status == LOGIN_OR_CAPTCHA and b.calls == []
+
+
+def test_robots_unreachable_in_both_stays_unreachable_for_every_url():
+    f, p, b, _ = make({ROBOTS: [R(500)], PAGE: [R(404)], PAGE2: [R(404)]}, {ROBOTS: [R(503)], PAGE: [R(200)], PAGE2: [R(200)]})
     assert f.fetch(PAGE).status == ROBOTS_UNREACHABLE
-    assert f.fetch(PAGE2).status == ROBOTS_UNREACHABLE  # not the cached plain allow-all
-    assert b.urls == [ROBOTS]  # browser read robots once
+    assert f.fetch(PAGE2).status == ROBOTS_UNREACHABLE
+    assert b.urls == [ROBOTS]  # the browser read robots once
     assert PAGE not in p.urls + b.urls and PAGE2 not in p.urls + b.urls
 
 
-def test_soft_wall_on_robots_then_browser_disallow_blocks():
-    wall = R(403, b"<title>Just a moment...</title>", cf_mitigated="challenge")
-    f, p, b, _ = make({ROBOTS: [wall], PAGE: [wall]}, {ROBOTS: [R(200, b"User-agent: *\nDisallow: /page\n")], PAGE: [R(200)]})
+def test_robots_429_is_not_retried_in_the_browser():
+    f, p, b, _ = make({ROBOTS: [R(429, b"", retry_after="120")], PAGE: [R(200)]}, {ROBOTS: [R(200, b"")]})
+    assert f.fetch(PAGE).status == ROBOTS_UNREACHABLE and b.calls == []
+
+
+def test_plain_robots_403_keeps_allow_all_for_plain_but_forbids_the_browser():
+    f, p, b, _ = make(
+        {ROBOTS: [R(403)], PAGE: [R(200, b"ok")], PAGE2: [R(404)]},
+        {ROBOTS: [R(503)], PAGE: [R(200, b"<html>x</html>")], PAGE2: [R(200, b"<html>x</html>")]},
+    )
+    r = f.fetch(PAGE)
+    assert r.status == OK and r.transport == "http"  # reachable as it is without the fallback
+    r2 = f.fetch(PAGE2)
+    assert r2.status == HTTP_ERROR and r2.http_status == 404
+    assert b.urls == [ROBOTS]  # the browser never fetched a page on that origin
+
+
+def test_plain_robots_403_captcha_forbids_browser_without_calling_it():
+    f, p, b, _ = make({ROBOTS: [R(403, b"<div class='g-recaptcha'></div>")], PAGE: [R(404)]}, {ROBOTS: [R(200, b"")], PAGE: [R(200)]})
+    r = f.fetch(PAGE)
+    assert r.status == HTTP_ERROR and b.calls == []
+
+
+def test_plain_robots_403_then_browser_disallow_blocks():
+    f, p, b, _ = make({ROBOTS: [R(403)], PAGE: [R(200)]}, {ROBOTS: [R(200, b"User-agent: *\nDisallow: /page\n", content_type="text/plain")], PAGE: [R(200)]})
     assert f.fetch(PAGE).status == BLOCKED_BY_ROBOTS
     assert PAGE not in p.urls + b.urls
 
 
-def test_captcha_on_robots_is_unreachable_with_no_browser_call():
-    f, p, b, _ = make({ROBOTS: [R(403, b"<div class='g-recaptcha'></div>")], PAGE: [R(404)]}, {ROBOTS: [R(200, b"")], PAGE: [R(200)]})
+@pytest.mark.parametrize("resp", [
+    R(200, b"<html><body>Page not found</body></html>", content_type="text/html"),
+    R(200, b"  <!doctype html><title>x</title>", content_type="text/plain"),
+    R(200, b"Just a moment...", cf_mitigated="challenge"),
+])
+def test_browser_robots_that_is_html_or_a_challenge_is_not_read(resp):
+    f, p, b, _ = make({ROBOTS: [R(500)], PAGE: [R(200)]}, {ROBOTS: [resp], PAGE: [R(200)]})
     r = f.fetch(PAGE)
-    assert r.status == ROBOTS_UNREACHABLE and b.calls == []
+    assert r.status == ROBOTS_UNREACHABLE and f.browser_hosts == set()
+    assert PAGE not in p.urls + b.urls
+
+
+def test_sticky_host_other_origin_with_unreadable_robots_is_unreachable():
+    other = "http://a.edu/page"
+    f, p, b, _ = make(
+        {ROBOTS: [R(404)], PAGE: [R(404)], "http://a.edu/robots.txt": [R(200)], other: [R(200)]},
+        {PAGE: [R(200, b"<html>1</html>")], "http://a.edu/robots.txt": [R(403, b"<div class='g-recaptcha'></div>")], other: [R(200)]},
+    )
+    assert f.fetch(PAGE).transport == "browser"
+    r = f.fetch(other)
+    assert r.status == ROBOTS_UNREACHABLE  # not allow-all, and the page is not fetched
+    assert other not in p.urls + b.urls
+
+
+def test_prefer_http_ignores_stickiness_but_keeps_the_403_404_fallback():
+    f, p, b, _ = make(
+        {ROBOTS: [R(404)], PAGE: [R(404)], PAGE2: [R(200, b"plain")]},
+        {PAGE: [R(200, b"<html>1</html>")], PAGE2: [R(200, b"<html>2</html>")]},
+    )
+    assert f.fetch(PAGE).transport == "browser"
+    r = f.fetch(PAGE2, prefer_http=True)
+    assert r.transport == "http" and r.body == b"plain" and b.urls == [PAGE]
+    f2, p2, b2, _ = make({ROBOTS: [R(404)], PAGE: [R(404)], PAGE2: [R(404)]}, {PAGE: [R(200, b"<html>1</html>")], PAGE2: [R(200, b"<html>2</html>")]})
+    f2.fetch(PAGE)
+    r2 = f2.fetch(PAGE2, prefer_http=True)
+    assert r2.transport == "browser" and p2.urls.count(PAGE2) == 1
+
+
+def test_browser_error_on_sticky_host_tries_plain_once_without_browser_retries():
+    f, p, b, c = make(
+        {ROBOTS: [R(404)], PAGE: [R(404)], PAGE2: [R(200, b"plain")]},
+        {PAGE: [R(200, b"<html>1</html>")], PAGE2: [ConnectionError("timeout")]},
+    )
+    assert f.fetch(PAGE).transport == "browser"
+    r = f.fetch(PAGE2)
+    assert r.status == OK and r.transport == "http" and r.body == b"plain"
+    assert b.urls.count(PAGE2) == 1  # no browser retries
+    f2, p2, b2, c2 = make(
+        {ROBOTS: [R(404)], PAGE: [R(404)], PAGE2: [OSError("down")]},
+        {PAGE: [R(200, b"<html>1</html>")], PAGE2: [ConnectionError("timeout")]},
+        max_retries=2,
+    )
+    f2.fetch(PAGE)
+    r2 = f2.fetch(PAGE2)
+    assert r2.status == HTTP_ERROR and b2.urls.count(PAGE2) == 1 and p2.urls.count(PAGE2) == 3  # plain keeps its retries

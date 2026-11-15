@@ -840,19 +840,80 @@ def test_browser_fetch_still_flags_a_terms_change_by_text_and_tokens(version):
 def test_transport_change_rebaselines_without_needs_review(version):
     store = FakeStore()
     check(version, Net(routes()), store)  # http baseline
-    changed = PAGE.replace("$12,000", "$9,000")  # even a real difference must not flag across transports
-    row = _check_b(version, Net(_refused()), _browser_net(changed, changed), store)
+    noisy = PAGE.replace("<body>", "<body data-x='1'>")  # same text, different bytes, no token change
+    row = _check_b(version, Net(_refused()), _browser_net(noisy, noisy), store)
+    assert src(row)["change"] == "none" and src(row)["transport"] == "browser"
+    assert row["needs_review"] is False and row["result"] == "unchanged"
+    # a text change that moves no token re-baselines
+    reworded = PAGE.replace("Awards are competitive.", "Awards are competitive. We love our scholars.")
+    store2 = FakeStore()
+    check(version, Net(routes()), store2)
+    row = _check_b(version, Net(_refused()), _browser_net(reworded, reworded), store2)
     s = src(row)
     assert s["change"] == "transport_rebaseline" and s["transport"] == "browser"
-    assert row["needs_review"] is False and row["result"] == "unchanged"
-    assert row["detail"]["transport_rebaseline"] is True
+    assert row["needs_review"] is False and row["detail"]["transport_rebaseline"] is True
     # and back again: browser baseline, plain fetch works now
-    row2 = check(version, Net(routes()), store)
+    row2 = check(version, Net(routes()), store2)
     assert src(row2)["change"] == "transport_rebaseline" and src(row2)["transport"] == "http"
     assert row2["needs_review"] is False
     # the next plain run compares normally against the new baseline
-    row3 = check(version, Net(routes()), store)
+    row3 = check(version, Net(routes()), store2)
     assert src(row3)["change"] == "none"
+
+
+def test_transport_flip_with_a_token_change_keeps_the_baseline_and_reports_info(version):
+    store = FakeStore()
+    base = check(version, Net(routes()), store)
+    changed = PAGE.replace("$12,000", "$9,000")
+    row = _check_b(version, Net(_refused()), _browser_net(changed, changed), store)
+    s = src(row)
+    assert s["change"] == "transport_flip_diff" and s["diff"]["amounts"]["added"] == ["$9000"]
+    assert row["needs_review"] is False and row["result"] == "unchanged"
+    # the previous baseline is carried, not replaced
+    old = src(base)
+    assert s["text_sha256"] == old["text_sha256"] and s["raw_sha256"] == old["raw_sha256"] and s["transport"] == "http"
+    assert s["attempt_transport"] == "browser"
+    f = [f for f in check_findings(version, store, changed)][0]
+    assert f["kind"] == "info" and f["transport_flip_sources"][0]["diff"]["amounts"]["added"] == ["$9000"]
+    assert "$9000" in monitor.findings_markdown([f], TODAY)
+    # still http next run: compared against the unchanged baseline, so a real change flags normally
+    row2 = check(version, Net(routes(school=html(changed), found=html(changed))), store)
+    assert src(row2)["change"] == "text_changed" and row2["needs_review"] is True
+
+
+def check_findings(version, store, changed):
+    res = monitor.run([version], store, _bfetcher(Net(_refused()), _browser_net(changed, changed)), TODAY, NOW)
+    return res.findings
+
+
+def test_http_baseline_source_asks_for_plain_http_first_on_a_sticky_host(version):
+    store = FakeStore()
+    check(version, Net(routes()), store)  # both sources http
+    plain, browser = Net(routes()), _browser_net()
+    f = _bfetcher(plain, browser)
+    f.browser_hosts.add("admission.virginia.edu")  # another URL on this host already needed the browser
+    res = monitor.run([version], store, f, TODAY, NOW)
+    assert {s["transport"] for s in res.rows[0]["detail"]["sources"]} == {"http"}
+    assert S_SCHOOL not in [c[0] for c in browser.calls]
+    # a source whose baseline is the browser does use the sticky host's browser directly
+    store2 = FakeStore()
+    _check_b(version, Net(_refused()), _browser_net(), store2)
+    plain2, browser2 = Net(routes()), _browser_net()
+    f2 = _bfetcher(plain2, browser2)
+    f2.browser_hosts.add("admission.virginia.edu")
+    res2 = monitor.run([version], store2, f2, TODAY, NOW)
+    assert src(res2.rows[0])["transport"] == "browser"
+
+
+def test_browser_first_baseline_does_not_compare_raw_to_yaml(version):
+    v = copy.deepcopy(version)
+    for s_ in v["record"]["sources"]:
+        s_["content_sha256"] = "0" * 64
+    row = _check_b(v, Net(_refused()), _browser_net(), FakeStore())
+    s = src(row)
+    assert s["yaml_content_sha256"] == "not_comparable_browser" and "raw_differs_from_yaml" not in s
+    row_http = check(v, Net(routes()))
+    assert src(row_http)["yaml_content_sha256"] == "differs"
 
 
 def test_previous_row_without_transport_is_http(version):

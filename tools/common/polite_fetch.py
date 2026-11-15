@@ -58,14 +58,20 @@ BROWSER_FALLBACK_RULES = (
     "With browser_fallback set, a page that the plain transport answers 403, 404 or "
     "406 (and that is not a login or CAPTCHA challenge) is retried once per URL per "
     "run through the browser transport. A robots.txt the plain transport cannot read "
-    "(any non-2xx other than a clean 404/410, or 429) is retried through the browser "
-    "first: its rules apply as usual, a Disallow still blocks, a 404/410 there means "
-    "allow-all, and if it is still unreadable (or the plain answer was a login/CAPTCHA "
-    "wall) the result is robots_unreachable, never allow-all. "
-    "Logins, SSO redirects and CAPTCHAs are never retried and never bypassed. A host "
-    "whose fallback succeeded uses the browser directly for the rest of the run "
-    "(``browser_hosts``). Spacing and Crawl-delay apply to browser requests too; "
-    "validators are neither sent nor stored for them."
+    "(a network error, a 5xx or another non-2xx other than a clean 404/410; never a "
+    "429, which is not retried in the browser) is retried through the browser first: "
+    "its rules apply as usual, a Disallow still blocks, a 404/410 there means "
+    "allow-all. If it cannot be read there either, the result is robots_unreachable "
+    "when the plain answer was unreachable; when the plain answer was a 4xx (allow-all "
+    "by RFC 9309) plain fetches keep that reading but the browser is forbidden on that "
+    "origin. A browser robots.txt that is an HTML page or a challenge is unreadable. "
+    "Logins, SSO redirects, CAPTCHAs and bot challenges are never retried and never "
+    "bypassed: the browser loads nothing but the first document and cannot get past "
+    "one. A host whose fallback succeeded uses the browser directly for the rest of the "
+    "run (browser_hosts), unless the caller passes prefer_http=True for that URL. "
+    "Spacing and Crawl-delay apply to browser requests; validators are neither sent nor "
+    "stored for them. After a browser error on a sticky host the plain transport is "
+    "tried once, and the browser transport is never retried on network errors."
 )
 
 # Result statuses.
@@ -306,6 +312,7 @@ class PoliteFetcher:
         self._browser = browser_fallback
         self.browser_hosts: set[str] = set()  # hosts that needed the browser this run
         self._fallback_tried: set[str] = set()  # URLs (and robots.txt URLs) already retried
+        self._no_browser: set[str] = set()  # origins whose robots.txt the browser may not be used on
         self._cache_path: Path | None = None
         if isinstance(cache, (str, Path)):
             self._cache_path = Path(cache)
@@ -368,9 +375,12 @@ class PoliteFetcher:
         self, origin: str, delay: float, transport: Transport | None
     ) -> tuple[RobotsPolicy | None, str, str]:
         """One robots.txt read. Returns (policy, kind, challenge); challenge is "none",
-        "soft" (a bot wall) or "hard" (login or CAPTCHA); kind is "read",
+        "soft" (a bot wall) or "hard" (login or CAPTCHA); any challenge keeps the browser away; kind is "read",
         "missing" (clean 404/410 or a redirect loop: allow-all), "denied" (another
-        4xx except 429: allow-all by RFC 9309) or "unreachable" (policy None)."""
+        4xx except 429: allow-all by RFC 9309), "throttled" (429, policy None) or
+        "unreachable" (policy None). A browser read counts as "read" only when it is
+        not an HTML page or a challenge: a bot manager's 200 interstitial is not
+        robots.txt."""
         url = origin + "/robots.txt"
         headers = {"User-Agent": self.user_agent, "Accept": "text/plain, */*;q=0.1"}
         for _ in range(MAX_REDIRECTS + 1):
@@ -384,13 +394,21 @@ class PoliteFetcher:
                     return None, "unreachable", "none"
                 continue
             if 200 <= resp.status < 300:
+                if transport is not None and (
+                    "html" in resp.headers.get("content-type", "").lower()
+                    or resp.body.lstrip()[:1] == b"<"
+                    or resp.headers.get("cf-mitigated")
+                    or _CHALLENGE_BODY_RE.search(resp.body[:65536])
+                    or self._is_hard_challenge(resp)
+                ):
+                    return None, "unreachable", "none"
                 text = resp.body[:ROBOTS_MAX_BYTES].decode("utf-8-sig", errors="replace")
                 return RobotsPolicy(text, self.robots_token), "read", "none"
             challenged = "none"
             if self._is_challenge(resp):
                 challenged = "hard" if self._is_hard_challenge(resp) else "soft"
             if resp.status == 429:
-                return None, "unreachable", challenged  # rate-limited: never cache as allow
+                return None, "throttled", challenged  # rate-limited: never cache as allow
             if resp.status in (404, 410):
                 return RobotsPolicy.allow_all(), "missing", challenged
             if 400 <= resp.status < 500:
@@ -406,25 +424,29 @@ class PoliteFetcher:
         host = self._host(origin)
         prev_delay = min(self._delay_for(hit[1]), self.max_crawl_delay) if hit else self.min_spacing
         if self._browser is not None and host in self.browser_hosts:
-            policy, _, _ = self._read_robots(origin, prev_delay, self._browser)
+            policy, kind, _ = self._read_robots(origin, prev_delay, self._browser)
+            if kind not in ("read", "missing"):
+                policy = None  # a 4xx here is not allow-all: nobody read this origin's robots.txt
         else:
             policy, kind, challenge = self._read_robots(origin, prev_delay, None)
             rurl = origin + "/robots.txt"
             if self._browser is not None and kind in ("denied", "unreachable"):
-                # The plain client could not read robots.txt. With the fallback on, the
-                # browser must resolve it (its rules apply; a Disallow blocks; a clean
-                # 404/410 means allow-all) or the host is unreachable: a plain 4xx is
-                # never taken as allow-all here, or the browser could fetch a page whose
-                # robots.txt nobody read. A login/CAPTCHA wall is never retried; a host
-                # whose fallback worked is sticky, so "already tried" only covers failures.
-                if challenge == "hard" or rurl in self._fallback_tried:
-                    policy = None
+                # The plain client could not read robots.txt: ask the browser once. Its
+                # rules apply. If it cannot read the file either, an unreachable plain
+                # answer stays unreachable; a plain 4xx keeps its RFC 9309 allow-all for
+                # plain fetches, but the browser is forbidden on this origin. A login,
+                # CAPTCHA or bot challenge is never retried in the browser.
+                if challenge != "none" or rurl in self._fallback_tried:
+                    bkind = "unreadable"
                 else:
                     self._fallback_tried.add(rurl)
                     bpolicy, bkind, _ = self._read_robots(origin, prev_delay, self._browser)
                     if bkind in ("read", "missing"):
                         policy = bpolicy
                         self.browser_hosts.add(host)
+                if bkind not in ("read", "missing"):
+                    if kind == "denied":
+                        self._no_browser.add(origin)
                     else:
                         policy = None
         if policy is None:
@@ -460,9 +482,8 @@ class PoliteFetcher:
 
     @staticmethod
     def _is_hard_challenge(resp: Response) -> bool:
-        """Login or CAPTCHA signals: never retried in the browser. The softer
-        bot-wall hits of _is_challenge (cf-mitigated, "just a moment", "attention
-        required", cf-chl without CAPTCHA markers) get one browser retry."""
+        """Login or CAPTCHA signals (401, www-authenticate, CAPTCHA markers in the
+        body), on any status: such a response is never retried in the browser."""
         if resp.status == 401 or resp.headers.get("www-authenticate"):
             return True
         return bool(_HARD_CHALLENGE_BODY_RE.search(resp.body[:65536]))
@@ -486,13 +507,18 @@ class PoliteFetcher:
         return plain
 
     # -- public API
-    def fetch(self, url: str) -> FetchResult:
-        """GET url politely. Never raises on network/HTTP problems."""
+    def fetch(self, url: str, prefer_http: bool = False) -> FetchResult:
+        """GET url politely. Never raises on network/HTTP problems.
+
+        prefer_http: try the plain transport first even on a host that already needed
+        the browser (the 403/404/406 fallback still applies). Callers use it for a
+        URL whose last good fetch was plain, so its transport stays stable."""
         current = url
         attempts = 0
         retries = 0
         redirects = 0
         plain_failure: FetchResult | None = None  # set while a browser retry is in flight
+        plain_after_browser_error = False
         while True:
             origin = self._origin(current)
             policy = self._get_robots(origin)
@@ -504,7 +530,12 @@ class PoliteFetcher:
             if policy.crawl_delay is not None and policy.crawl_delay > self.max_crawl_delay:
                 return FetchResult(HTTP_ERROR, url, current, reason=f"Crawl-delay {policy.crawl_delay:.0f}s exceeds cap {self.max_crawl_delay:.0f}s", attempts=attempts)
 
-            use_browser = self._browser is not None and self._host(current) in self.browser_hosts
+            use_browser = (
+                self._browser is not None
+                and not prefer_http
+                and not plain_after_browser_error
+                and self._host(current) in self.browser_hosts
+            )
             via = "browser" if (use_browser or plain_failure is not None) else "http"
             headers = {"User-Agent": self.user_agent, "Accept": "*/*"}
             cached = self.cache.get(url)
@@ -528,6 +559,10 @@ class PoliteFetcher:
             except OSError as e:
                 if plain_failure is not None:
                     return self._browser_failed(plain_failure, f"browser error: {e}", attempts)
+                if via == "browser":
+                    # Sticky host and the browser failed: no browser retries; one plain try.
+                    plain_after_browser_error = True
+                    continue
                 if retries < self.max_retries:
                     self._sleep(self.backoff_base * (2**retries))
                     retries += 1
@@ -547,17 +582,6 @@ class PoliteFetcher:
                 continue
 
             if self._is_challenge(resp):
-                if (
-                    via == "http"
-                    and self._browser is not None
-                    and resp.status in (403, 503)
-                    and not self._is_hard_challenge(resp)
-                    and current not in self._fallback_tried
-                ):
-                    # A bot wall that is neither a login nor a CAPTCHA: one browser retry.
-                    self._fallback_tried.add(current)
-                    plain_failure = FetchResult(LOGIN_OR_CAPTCHA, url, current, resp.status, headers=resp.headers, reason="bot-wall challenge; browser retry also failed", attempts=attempts)
-                    continue
                 return FetchResult(LOGIN_OR_CAPTCHA, url, current, resp.status, headers=resp.headers, reason="login or CAPTCHA challenge; not retried", attempts=attempts, transport=via)
 
             if (
@@ -565,7 +589,10 @@ class PoliteFetcher:
                 and self._browser is not None
                 and resp.status in _FALLBACK_STATUSES
                 and current not in self._fallback_tried
+                and self._origin(current) not in self._no_browser
             ):
+                if self._is_hard_challenge(resp):
+                    return FetchResult(LOGIN_OR_CAPTCHA, url, current, resp.status, headers=resp.headers, reason="login or CAPTCHA challenge; not retried", attempts=attempts)
                 # The plain client was refused or told "not found": one retry through the browser.
                 self._fallback_tried.add(current)
                 plain_failure = FetchResult(HTTP_ERROR, url, current, resp.status, resp.body, resp.headers, reason=f"HTTP {resp.status}", attempts=attempts)

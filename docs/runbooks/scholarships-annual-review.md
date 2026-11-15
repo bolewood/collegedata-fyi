@@ -44,28 +44,39 @@ the next entering class, and handling what the change monitor
 
 ## Browser fallback
 
-Some school sites answer a plain HTTP client with 403 or 404 (or a bot-wall page)
-while serving the same public page to a browser; a source like that shows up as
-`unreachable` on every run. The workflow runs the monitor with `--browser-fallback`,
-which retries such a page once through headless Chromium (Playwright, installed for
-this workflow only).
+Some school sites answer a plain HTTP client with 403 or 404 while serving the same
+public page to a browser; a source like that shows up as `unreachable` on every run.
+The workflow runs the monitor with `--browser-fallback`, which retries such a page
+once through headless Chromium (Playwright, installed for this workflow only; if the
+install fails the run continues over plain HTTP).
 
-- **Triggers:** only after the plain request got 403, 404 or 406 for the page (or a
-  bot-wall block that is neither a login nor a CAPTCHA), or when robots.txt could not
-  be read (any non-2xx other than a clean 404/410, or 429). Never as a first attempt.
-  One browser attempt per URL per run; a host whose fallback worked is read through
-  the browser for the rest of the run. Spacing and Crawl-delay apply as usual.
-- **robots.txt first:** it is retried through the browser. Its rules apply; a
-  Disallow still blocks and the browser never fetches a disallowed path; a 404/410
-  there means allow-all; if it still cannot be read (or the plain answer was a login or
-  CAPTCHA wall) the source is unreachable, never treated as allow-all.
-- **Never bypassed:** a robots Disallow, a login or SSO redirect, a CAPTCHA. Those
-  are reported as before and are not retried in the browser.
+- **It does not get past bot challenges.** The browser loads only the one document
+  requested: no scripts, XHR, iframes or later redirects (meta refresh, JavaScript).
+  A page that needs JavaScript, or a challenge or CAPTCHA wall, comes back as
+  `unreachable` or as a page with little readable text, never as a change.
+- **Triggers:** only after the plain request got 403, 404 or 406 for the page, and
+  never for a login, SSO redirect, CAPTCHA or bot-challenge response. One browser
+  attempt per URL per run. A host whose fallback worked is read through the browser
+  for the rest of the run, except for a source whose last good read was plain HTTP,
+  which tries plain HTTP first. Spacing and Crawl-delay apply as usual.
+- **robots.txt:** a robots.txt the plain client cannot read (network error, 5xx, other
+  non-2xx but not 404/410, never a 429) is read through the browser first. Its rules
+  apply; a Disallow still blocks and the browser never fetches a disallowed path; a
+  404/410 means allow-all. An HTML or challenge page is not robots.txt. If the
+  browser cannot read it either: an unreachable robots.txt stays `robots_unreachable`;
+  a plain 4xx keeps its allow-all reading for plain fetches, but the browser is not
+  used on that origin.
+- **Never bypassed:** a robots Disallow, a login or SSO redirect, a CAPTCHA.
 - **Hashes:** a rendered page is not byte-stable, so for a browser fetch only the
-  normalized text and its tokens are compared (`raw_sha256` is ignored). The first
-  run after a source switches between plain and browser re-baselines it
-  (`transport_rebaseline` in the row's `detail`) and never sets `needs_review`.
-  Each source's `detail` entry records its `transport`.
+  normalized text and its tokens are compared (`raw_sha256` is ignored, including
+  against the YAML hash). When a source switches transport, equal text is `none`, a
+  change that moves no token re-baselines (`transport_rebaseline`), and a change that
+  moves a token keeps the previous baseline and is listed under "For information"
+  with its diff (`transport_flip_diff`); none of them sets `needs_review`. Check
+  those by hand. Each source's `detail` entry records its `transport`.
+- **Limit:** the main document is fetched through Playwright's own HTTP client
+  (`route.fetch`), not Chromium's network stack, so a site that judges clients by TLS
+  fingerprint may still refuse it. It worked for aggie.tamu.edu.
 - Run it locally with `pip install -r tools/scholarships/monitor-requirements.txt`,
   `python -m playwright install chromium`, then `monitor.py --browser-fallback`.
 

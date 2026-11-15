@@ -21,8 +21,9 @@ name: Scholarship monitor
 # Browser fallback: some school sites refuse a plain HTTP client (403/404) but serve
 # the same public page to a browser. The monitor runs with --browser-fallback, which
 # retries only those pages through headless Chromium (Playwright, installed for this
-# workflow only via tools/scholarships/monitor-requirements.txt). It never bypasses a
-# robots.txt Disallow, a login or a CAPTCHA.
+# workflow only via tools/scholarships/monitor-requirements.txt). It loads only the
+# one document, runs no other script, and never bypasses a robots.txt Disallow, a
+# login, a CAPTCHA or a bot challenge.
 
 on:
   workflow_dispatch:
@@ -88,7 +89,10 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('tools/scholarships/monitor-requirements.txt') }}
 
       # Always runs: a cache hit skips the download but still installs OS packages.
+      # continue-on-error: a failed install must not skip the monitor step (and so
+      # its failure alert); without Chromium the fallback degrades to plain HTTP.
       - name: Install Chromium for the browser fallback
+        continue-on-error: true
         run: python -m playwright install --with-deps chromium
 
       # The service role key is scoped to this step so dependency install code
