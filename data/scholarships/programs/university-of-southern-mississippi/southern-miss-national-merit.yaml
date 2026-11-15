@@ -29,7 +29,7 @@ versions:
     parent_offer_id: null
     variant_name: National Merit Finalist package
     residency: unknown
-    selection_mode: competitive
+    selection_mode: unknown
     consideration_route: separate_application
     aid_basis: unclear
     need_role: unknown
@@ -155,8 +155,9 @@ versions:
       first_generation_rule: unknown
       eligibility_notes: 'First-year, full-time incoming freshmen only: 2027 high school graduates. The
         page links ''additional eligibility for freshman scholarships'' without an address that could
-        be read, so general freshman-scholarship rules were not checked. Semifinalists must be admitted
-        by the March 1 priority deadline; the page does not say the offer is guaranteed.'
+        be read, so general freshman-scholarship rules were not checked. The GO System application applies
+        to Finalists only; Semifinalists do not apply and must be admitted by the March 1 priority deadline;
+        the page does not say the offer is guaranteed.'
     benefits:
     - benefit_id: b-tuition
       category: tuition
@@ -255,8 +256,9 @@ versions:
         day: 1
       precision: day
       source_date_text: July 1 (finalists accept in the GO System; year not stated)
-    admission_plan_requirement: Semifinalists must be admitted by the March 1 priority deadline; finalists
-      must apply and submit official documentation through the GO System
+    admission_plan_requirement: The GO System application applies to Finalists only; Semifinalists do
+      not apply and must be admitted by the March 1 priority deadline; finalists must apply and submit
+      official documentation through the GO System
     prerequisites:
     - kind: portal_credentials
       minimum_lead_days: null
@@ -281,11 +283,10 @@ versions:
   field_evidence:
   - field_path: offers/0/selection_mode
     source_ref: s-nm
-    locator: 'Page, ''Finalist'' package: ''Finalists must apply and submit official documentation by
-      May 1'''
-    short_excerpt: Finalists must apply and submit official documentation by May 1 through the GO System
-      for National Merit Finalist Scholarship.
-    value_status: reported
+    locator: 'Page, ''Finalist'' package: finalists apply; the page describes no competition and makes
+      no guarantee'
+    short_excerpt: null
+    value_status: not_published
     reported_value: null
   - field_path: offers/0/consideration_route
     source_ref: s-nm

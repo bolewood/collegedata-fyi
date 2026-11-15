@@ -11,12 +11,12 @@ awarding_authority: institution
 related_programs: []
 status: active
 versions:
-- version_id: 1693-scholars-undated
+- version_id: 1693-scholars-2026
   supersedes: null
-  entry_year: null
-  entry_year_label: Entering class not named; the only published timeline is the 2026 cycle, already past
+  entry_year: 2026
+  entry_year_label: '2026 cycle (past): the only published timeline, headed 2026; no later cycle published'
   entry_terms:
-  - unspecified
+  - fall
   source_cohort_text: Page timeline headed '2026 Application, Nomination and Notification Timeline'
   verification_status: conflicting
   last_reviewed_at: '2026-11-15'
@@ -169,7 +169,7 @@ versions:
     - benefit_id: b-fees
       category: mandatory_fees
       instrument: scholarship
-      coverage: partial
+      coverage: unknown
       amount:
         qualifier: not_published
         value: null
@@ -259,7 +259,7 @@ versions:
     admission_plan_requirement: Apply to W&M first-year admission (Regular Decision, ED, ED II, joint
       degree or international); every first-year applicant is reviewed
     prerequisites: []
-    interview_mode: mixed
+    interview_mode: virtual
     finalist_event_required: null
     notes: The page's only timeline is headed '2026' and its dates (January 5, April 10-11) are already
       past relative to today; no later cycle is published, so nothing was rolled forward. About 200 semifinalists
@@ -509,13 +509,13 @@ versions:
     short_excerpt: Finalists are required to complete a virtual interview with two alumni as well as a
       virtual presentation to a faculty panel.
     value_status: reported
-    reported_value: mixed
+    reported_value: virtual
   - field_path: entry_year
     source_ref: s-sel
-    locator: 'Selection Information: only a ''2026 Application, Nomination and Notification Timeline''
-      (January 5, April 10-11 2026, both past); no fall 2027 terms published'
-    short_excerpt: null
-    value_status: not_published
+    locator: 'Selection Information heading: ''2026 Application, Nomination and Notification Timeline''
+      (January 5 deadline, April 13-20 selection); no later timeline published'
+    short_excerpt: 2026 Application, Nomination and Notification Timeline
+    value_status: reported
     reported_value: null
   - field_path: program_status_for_entry
     source_ref: s-sel

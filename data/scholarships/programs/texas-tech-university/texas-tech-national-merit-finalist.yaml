@@ -13,10 +13,10 @@ status: active
 versions:
 - version_id: ttu-nmf-2026-27-chart
   supersedes: null
-  entry_year: null
-  entry_year_label: Chart labeled 2026-2027 academic year; no fall 2027 chart published
+  entry_year: 2026
+  entry_year_label: 2026-2027 academic year chart (past cycle); no fall 2027 chart published
   entry_terms:
-  - unspecified
+  - fall
   source_cohort_text: These awards are for the 2026-2027 academic year
   verification_status: conflicting
   last_reviewed_at: '2026-11-15'
@@ -47,10 +47,14 @@ versions:
       major_change_restrictions: null
       honors_requirement: null
       first_generation_rule: unknown
-      eligibility_notes: The row sits in the Presidential Merit chart, whose footnote says the awards
+      eligibility_notes: 'The row sits in the Presidential Merit chart, whose footnote says the awards
         are for the 2026-2027 academic year, need no additional application and require enrollment in
         at least 12 hours for fall and spring. The scholarships page says qualifying students must designate
-        Texas Tech as their first-choice institution before April 1. Nonresident status is not addressed.
+        Texas Tech as their first-choice institution before April 1. Nonresident wording on the Presidential
+        chart that holds this row: ''If you are a non-resident awarded a Presidential Scholarship, you
+        will also qualify to pay in-state tuition'' (scholarships page) and ''you may qualify to pay in-state
+        tuition'' (admissions page); neither says whether the National Merit Finalist row counts as a
+        Presidential Scholarship.'
     benefits:
     - benefit_id: b-coa
       category: cost_of_attendance
@@ -181,11 +185,10 @@ versions:
     reported_value: null
   - field_path: entry_year
     source_ref: s-value
-    locator: 'Admissions page and scholarships page chart footnote: ''These awards are for the 2026-2027
-      academic year''; no entering class named'
+    locator: Admissions page and scholarships page chart footnote
     short_excerpt: These awards are for the 2026-2027 academic year and are subject to change without
       notice.
-    value_status: not_published
+    value_status: reported
     reported_value: null
   - field_path: renewal_rules
     source_ref: s-sch

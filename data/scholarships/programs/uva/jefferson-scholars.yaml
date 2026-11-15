@@ -327,7 +327,7 @@ versions:
       minimum_lead_days: null
       maximum_lead_days: null
       notes: Nominees must have applied to UVA and ultimately gain admission
-    interview_mode: either
+    interview_mode: mixed
     finalist_event_required: null
     notes: 'Only eligible schools can nominate; the nomination form needs a counselor scholastic report,
       one letter of recommendation, transcript and school profile from the counselor, and activities,
@@ -592,7 +592,7 @@ versions:
     locator: FAQ, 'Are the interviews in-person or virtual?'
     short_excerpt: Final selection interviews for both scholarships will be virtual without exception.
     value_status: reported
-    reported_value: either
+    reported_value: mixed
   - field_path: entry_year
     source_ref: s-faq
     locator: 'FAQ and Selection page: ''2026-2027 selection process'', final selection ''late February

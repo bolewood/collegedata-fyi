@@ -51,9 +51,10 @@ versions:
       honors_requirement: null
       first_generation_rule: unknown
       eligibility_notes: Must apply for fall, first-year admission to a baccalaureate program at NC State.
-        Park Scholarships and NC State admission are separate applications. ACT/SAT scores are not required
-        for the Park application; if sent to NC State and requested for admission consideration they are
-        also considered.
+        The page says 'minimum unweighted GPA of 3.80 (non-rounded)', so a 3.79 does not round up. Park
+        Scholarships and NC State admission are separate applications. The FAQ says the scholarship can
+        be deferred one year. ACT/SAT scores are not required for the Park application; if sent to NC
+        State and requested for admission consideration they are also considered.
     benefits:
     - benefit_id: b-tuition
       category: tuition
@@ -211,9 +212,10 @@ versions:
       honors_requirement: null
       first_generation_rule: unknown
       eligibility_notes: Must apply for fall, first-year admission to a baccalaureate program at NC State.
-        Park Scholarships and NC State admission are separate applications. ACT/SAT scores are not required
-        for the Park application; if sent to NC State and requested for admission consideration they are
-        also considered.
+        The page says 'minimum unweighted GPA of 3.80 (non-rounded)', so a 3.79 does not round up. Park
+        Scholarships and NC State admission are separate applications. The FAQ says the scholarship can
+        be deferred one year. ACT/SAT scores are not required for the Park application; if sent to NC
+        State and requested for admission consideration they are also considered.
     benefits:
     - benefit_id: b-tuition
       category: tuition

@@ -154,7 +154,7 @@ versions:
         value: 8000
         min: null
         max: null
-        period: one_time
+        period: null
       duration_terms: null
       exclusions: null
       scope_text: Grant to design and lead a project with a local nonprofit; the page says scholars 'have

@@ -236,7 +236,7 @@ versions:
       or January 1, 2027 (Regular Decision); nominees need not apply Early Action, but the Admissions
       Referral Program requires it
     prerequisites: []
-    interview_mode: mixed
+    interview_mode: unknown
     finalist_event_required: null
     notes: 'Leftover passages: the deadlines page still says the Class of 2031 application ''will open
       on August 15, 2026'' (that date has passed) and the FAQ says the cycle ''will begin in spring 2026'';
@@ -464,10 +464,11 @@ versions:
     reported_value: null
   - field_path: application/interview_mode
     source_ref: s-dates
-    locator: Deadlines page, 'Video interviews for semifinalists'; finalists attend an on-campus experience
-    short_excerpt: Video interviews for semifinalists
-    value_status: reported
-    reported_value: mixed
+    locator: 'Deadlines page: only semifinalist video interviews are described; the Final Selection Experience
+      format is not stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
   - field_path: application/finalist_event_required
     source_ref: s-dates
     locator: 'Deadlines page, ''Morehead-Cain Final Selection Experience'' follows finalist notification:
