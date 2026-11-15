@@ -53,7 +53,7 @@ It sits next to the CDS merit profile on each school page. CDS gives the aggrega
 
 ## Goals
 
-- **G1:** Publish 75 to 100 verified programs at launch, chosen from the 76-program research seed plus Stamps partners. Each record needs official-source evidence, an entering-year label and a review date.
+- **G1:** Publish 75 to 100 verified programs at launch, chosen from the 76-program research seed plus Stamps partners, limited to programs that meet the size floor. Each record needs official-source evidence, an entering-year label and a review date.
 - **G2:** Keep the record format accurate about selection, coverage, amounts, deadlines, renewal and stacking. No false flags like "full ride", "guaranteed" or "stackable".
 - **G3:** Show the directory on school pages next to the CDS merit profile, and on a filterable `/scholarships` index.
 - **G4:** Serve it through the public API (PostgREST view) and as a versioned CC BY-SA data download.
@@ -70,6 +70,25 @@ It sits next to the CDS merit profile on each school page. CDS gives the aggrega
 - Rankings. This is not a ranking product (VOICE.md). Sorting is factual (deadline, coverage); there is no "best scholarships" list.
 - Exhaustive grids of every automatic award tier. MeritPlaybook owns that space. MVP includes only named National Merit packages and named flagship tiers.
 - Copying third-party directory text or their selection of programs.
+- Small awards. A program is listed only when its top tier is worth at least $10,000 a year or covers full tuition (see "Size floor" below).
+
+## Size floor (owner decision, 2026-11-15)
+
+The directory starts with the largest awards. A program qualifies when the school's own page shows that its **top tier** meets one of these:
+
+1. A stated amount of at least $10,000 per academic year. A total the school advertises for the whole program counts when it is at least $40,000 over four years.
+2. Full tuition or more, whatever the dollar value. This keeps full-tuition awards at low-tuition public schools, where the stated value can be under $10,000 for residents.
+3. A waiver of the nonresident tuition differential that the school attaches to the award. It counts toward the floor for the out-of-state tier even when the school publishes no dollar figure. It is still recorded as a waiver and never as tuition coverage.
+
+Rules for applying it:
+
+- The test is on the top tier only. Once a program qualifies, all of its tiers are recorded, including small ones, so a family sees the whole program.
+- We never add components or multiply to reach the floor (principle 5). Only amounts and totals the school states are used.
+- A program whose value the school does not publish is not picked as a new candidate. One that is already listed stays until the next annual review.
+- A program that drops below the floor in a later cycle gets a new version for that cycle and is then left out of the next one. Published versions are not deleted.
+- The floor is an editorial rule checked in review. The validator does not enforce it.
+
+Audit of the first 23 records against the floor: 21 qualify on stated terms. Texas A&M qualifies under rule 3 (its largest stated award is $7,000 a year, with a nonresident tuition waiver attached). Arizona's tuition award publishes no amount and stays until the 2027 review. None were retired.
 
 ## Product principles
 
