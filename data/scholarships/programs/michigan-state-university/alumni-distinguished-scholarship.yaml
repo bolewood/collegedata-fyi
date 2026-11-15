@@ -28,7 +28,7 @@ versions:
   - offer_id: o-ads
     parent_offer_id: null
     variant_name: Alumni Distinguished Scholarship (top 15 candidates)
-    residency: any
+    residency: unknown
     selection_mode: competitive
     consideration_route: invitation
     aid_basis: merit_only
@@ -45,7 +45,7 @@ versions:
       citizenship_eligible: null
       majors_allowed: null
       major_change_restrictions: null
-      honors_requirement: null
+      honors_requirement: true
       first_generation_rule: unknown
       eligibility_notes: First-year applicants. Invitations to compete in the Spartan Distinguished Scholars examination are sent to the most outstanding students who apply for admission by November 1;
         the awards are by competition rank (top 15, 20 runners-up, 30 finalists, 65 semifinalists). Recipients enroll for the semester the award is made; the award may not be deferred. The page names no
@@ -130,7 +130,7 @@ versions:
   - offer_id: o-dfy
     parent_offer_id: o-ads
     variant_name: Distinguished First-year Scholarship (20 runners-up)
-    residency: any
+    residency: unknown
     selection_mode: competitive
     consideration_route: invitation
     aid_basis: merit_only
@@ -147,7 +147,7 @@ versions:
       citizenship_eligible: null
       majors_allowed: null
       major_change_restrictions: null
-      honors_requirement: null
+      honors_requirement: true
       first_generation_rule: unknown
       eligibility_notes: First-year applicants. Invitations to compete in the Spartan Distinguished Scholars examination are sent to the most outstanding students who apply for admission by November 1;
         the awards are by competition rank (top 15, 20 runners-up, 30 finalists, 65 semifinalists). Recipients enroll for the semester the award is made; the award may not be deferred. The page names no
@@ -187,7 +187,7 @@ versions:
   - offer_id: o-cf
     parent_offer_id: o-ads
     variant_name: Alumni Distinguished Scholarship Commended Finalist (30 finalists)
-    residency: any
+    residency: unknown
     selection_mode: competitive
     consideration_route: invitation
     aid_basis: unclear
@@ -229,7 +229,7 @@ versions:
   - offer_id: o-cs
     parent_offer_id: o-ads
     variant_name: Alumni Distinguished Scholarship Commended Semifinalist (65 semifinalists)
-    residency: any
+    residency: unknown
     selection_mode: competitive
     consideration_route: invitation
     aid_basis: unclear
@@ -378,6 +378,18 @@ versions:
     short_excerpt: Awarded to 65 semifinalists in the Spartan Distinguished Scholars competition
     value_status: reported
     reported_value: competitive
+  - field_path: offers/0/eligibility/honors_requirement
+    source_ref: s-reg
+    locator: Regulations, Alumni Distinguished Scholarship regulations
+    short_excerpt: be a member of the MSU Honors College;
+    value_status: reported
+    reported_value: true
+  - field_path: offers/1/eligibility/honors_requirement
+    source_ref: s-reg
+    locator: Regulations, Distinguished First-year Scholarship regulations
+    short_excerpt: be a member of the MSU Honors College.
+    value_status: reported
+    reported_value: true
   - field_path: offers/0/aid_basis
     source_ref: s-reg
     locator: Regulations, Alumni Distinguished Scholarship regulations

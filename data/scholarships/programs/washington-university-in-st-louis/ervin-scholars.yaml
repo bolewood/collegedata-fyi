@@ -138,12 +138,12 @@ versions:
       recurring: null
       precision: day
       source_date_text: January 4, 2027
-    - kind: application_deadline
+    - kind: admission_deadline
       requirement: priority
       date: '2026-12-16'
       recurring: null
       precision: day
-      source_date_text: December 16, 2026 (priority consideration)
+      source_date_text: submit a Common Application or Coalition Application by December 16, 2026 for priority consideration for the scholar programs
     - kind: notification
       requirement: recommended
       date: null
@@ -286,9 +286,9 @@ versions:
     value_status: reported
     reported_value: '2027-01-04'
   - field_path: application/milestones/1
-    source_ref: s-faq
-    locator: FAQ, "When is the deadline to apply?"
-    short_excerpt: For priority consideration, applications should be submitted by December 16, 2026.
+    source_ref: s-app
+    locator: Application Process, "How to Apply"
+    short_excerpt: submit either a Common Application or Coalition Application by December 16, 2026
     value_status: reported
     reported_value: '2026-12-16'
   - field_path: application/milestones/2

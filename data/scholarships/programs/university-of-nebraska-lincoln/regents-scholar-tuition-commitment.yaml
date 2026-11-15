@@ -106,15 +106,15 @@ versions:
       form exists or whether the award is automatic at the threshold. The deadlines carry no year on the page and are recorded as recurring.
   renewal_rules:
   - applies_to: []
-    gpa_min: 3.5
+    gpa_min: null
     gpa_scale: null
     credit_load_min_per_term: null
     credit_load_min_per_year: null
     evaluation_timing: each academic year (fall/spring)
     summer_courses_can_fix_shortfall: null
     max_semesters: null
-    notes: Students must maintain a 3.500 cumulative GPA or rank in the upper 25% of their applicable class each academic year (fall/spring); the page gives no GPA scale. The award runs for up to 120 credit
-      hours or completion of a bachelor's degree.
+    notes: Students must maintain a 3.500 cumulative GPA OR rank in the upper 25% of their applicable class each academic year (fall/spring); two alternative routes, so no single GPA minimum is recorded;
+      the page gives no GPA scale. The award runs for up to 120 credit hours or completion of a bachelor's degree.
   stacking_rules:
   - other_aid_type: other
     relation: counts_within_package
@@ -194,7 +194,7 @@ versions:
     locator: Regents Scholar Tuition Commitment page, "Renewal Information"
     short_excerpt: Students must maintain a 3.500 cumulative GPA or rank in the upper 25% of their applicable class each academic year
     value_status: reported
-    reported_value: 3.5
+    reported_value: 3.500 GPA or upper 25% of class
   - field_path: stacking_rules/0
     source_ref: s-reg
     locator: Regents Scholar Tuition Commitment page, "Award" note

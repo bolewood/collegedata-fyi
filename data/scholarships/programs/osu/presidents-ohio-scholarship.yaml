@@ -123,7 +123,7 @@ versions:
     notes: 'Full-time enrollment required. GPA: the Honors and Scholars page says a cumulative 3.0 keeps the scholarship and that University Honors participants must hold 3.4 or 3.5 depending on major;
       the admissions page says the scholarship requires the GPA of the chosen Honors or Scholars program. The Scholars Program GPA is not stated on these pages.'
   stacking_rules:
-  - other_aid_type: institutional_merit
+  - other_aid_type: other
     relation: not_allowed
     note: A student cannot receive more than one of the President's Ohio, Stamps Eminence and Morrill scholarships; if offered more than one, the student must choose
   award_counts: []

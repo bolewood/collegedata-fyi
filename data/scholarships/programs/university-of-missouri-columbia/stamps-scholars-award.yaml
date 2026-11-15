@@ -110,7 +110,13 @@ versions:
       date: '2026-12-01'
       recurring: null
       precision: day
-      source_date_text: December 1, 2026 (submit the admission application)
+      source_date_text: December 1, 2026; must be admitted to Mizzou and the Honors College by Dec. 1 (Nov. 1 strongly encouraged)
+    - kind: supporting_materials_deadline
+      requirement: priority
+      date: '2026-12-15'
+      recurring: null
+      precision: day
+      source_date_text: December 15, 2026 (official high school transcript for priority merit scholarship consideration)
     - kind: application_deadline
       requirement: required
       date: null
@@ -253,13 +259,25 @@ versions:
     short_excerpt: December 1, 2026
     value_status: reported
     reported_value: '2026-12-01'
+  - field_path: application/milestones/1
+    source_ref: s-adm
+    locator: Freshman scholarships page, Stamps Scholars Award row
+    short_excerpt: Must be admitted to Mizzou and the Honors College by Dec. 1 and submit required documents by Dec. 1.
+    value_status: reported
+    reported_value: '2026-12-01'
   - field_path: application/milestones/2
+    source_ref: s-adm
+    locator: Freshman scholarships page, Key Dates table
+    short_excerpt: If your transcript does not reach our office by Dec. 15, 2026, you may not be considered for scholarships.
+    value_status: reported
+    reported_value: '2026-12-15'
+  - field_path: application/milestones/3
     source_ref: s-hon
     locator: Stamps Scholars page, "Deadlines and Notifications"
     short_excerpt: Dec. 1 – Premier Scholars application deadline
     value_status: reported
     reported_value: Dec. 1
-  - field_path: application/milestones/3
+  - field_path: application/milestones/4
     source_ref: s-hon
     locator: Stamps Scholars page, "Deadlines and Notifications"
     short_excerpt: Feb. 4-6, 2027 – Stamps Interview Weekend on Mizzou campus

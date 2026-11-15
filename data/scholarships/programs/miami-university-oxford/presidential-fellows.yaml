@@ -79,7 +79,7 @@ versions:
     - benefit_id: b-fees
       category: mandatory_fees
       instrument: scholarship
-      coverage: full
+      coverage: partial
       amount:
         qualifier: not_published
         value: null
@@ -87,8 +87,13 @@ versions:
         max: null
         period: null
       duration_terms: Eight fall/spring semesters
-      exclusions: null
-      scope_text: Covered together with tuition ("tuition and fees"); see the tuition benefit for the school's list of charges and exclusions
+      exclusions:
+      - health center fees
+      - pharmacy charges
+      - orientation, pre-enrollment or pre-admission testing fees
+      - university contract confirmation deposits
+      scope_text: 'Covered together with tuition ("tuition and fees"): instructional, non-resident surcharge, basic general, career development, course overload and course fees; Miami reserves the right
+        to determine which charges the scholarship pays'
       advertised_coverage_label: null
       conditions_text: null
     - benefit_id: b-housing
@@ -103,7 +108,8 @@ versions:
         period: null
       duration_terms: Eight semesters
       exclusions: null
-      scope_text: Room expenses up to the cost of a traditional double occupancy room in a residence hall; a different room selection leaves the difference to the student
+      scope_text: Room expenses up to the cost of a traditional double occupancy room in a residence hall; a different room selection leaves the difference to the student; if the student lives off campus
+        in the third or fourth year, housing and food are covered up to allowable costs (standard double room and Diplomat Standard meal plan)
       advertised_coverage_label: null
       conditions_text: null
     - benefit_id: b-meals
@@ -120,7 +126,7 @@ versions:
       exclusions: null
       scope_text: Covers a Diplomat Standard meal plan (16 buffet meals per week, $500 Dining Dollars); a different plan leaves the difference to the student; food only, for the student only
       advertised_coverage_label: null
-      conditions_text: null
+      conditions_text: To have food covered, the student must purchase a University meal plan, even if living off campus
     - benefit_id: b-enrichment
       category: enrichment
       instrument: unknown
@@ -169,7 +175,11 @@ versions:
       selection is finalized in the two weeks after the campus interviews. Dec. 1 and February carry no year on the page and are recorded as recurring. Study abroad: the scholarship may be used for one
       fall or spring semester of a Miami-billed program.'
   renewal_rules:
-  - applies_to: []
+  - applies_to:
+    - offer_id: o-main
+      benefit_id: b-tuition
+    - offer_id: o-main
+      benefit_id: b-fees
     gpa_min: 3.5
     gpa_scale: null
     credit_load_min_per_term: null
@@ -193,7 +203,7 @@ versions:
   - metric: new_recipients
     qualifier: exact
     value: 22
-    cohort_year: 2030
+    cohort_year: 2026
     source_ref: s-news
     claim: actual
     denominator: null
@@ -269,6 +279,18 @@ versions:
     source_ref: s-prog
     locator: Scholarship FAQs, question 2
     short_excerpt: which will cover a Diplomat Standard meal plan.
+    value_status: reported
+    reported_value: partial
+  - field_path: offers/0/benefits/3/conditions_text
+    source_ref: s-prog
+    locator: Scholarship FAQs, question 3
+    short_excerpt: you must purchase a University meal plan, even if living off campus.
+    value_status: reported
+    reported_value: meal plan purchase required
+  - field_path: offers/0/benefits/1/coverage
+    source_ref: s-prog
+    locator: Scholarship FAQs, question 1
+    short_excerpt: reserves the right to determine which charges may/may not be paid by the Presidential Fellows scholarship.
     value_status: reported
     reported_value: partial
   - field_path: offers/0/benefits/3/amount

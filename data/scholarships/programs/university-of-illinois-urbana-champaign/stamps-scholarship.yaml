@@ -81,7 +81,7 @@ versions:
       advertised_coverage_label: null
       conditions_text: null
   application:
-    separate_application: not_required
+    separate_application: no_form_other_steps_required
     milestones: []
     admission_plan_requirement: Illinois admission applications are reviewed; there is no scholarship application
     prerequisites: []
@@ -163,7 +163,7 @@ versions:
     locator: Selection and Renewal, "Selection Process"
     short_excerpt: There is not a scholarship application for consideration for the Stamps Scholars Program.
     value_status: reported
-    reported_value: not_required
+    reported_value: no_form_other_steps_required
   - field_path: application/interview_mode
     source_ref: s-sel
     locator: Selection and Renewal, "Selection Process"
