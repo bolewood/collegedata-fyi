@@ -57,13 +57,14 @@ versions:
     - benefit_id: b-coa
       category: cost_of_attendance
       instrument: scholarship
-      coverage: unknown
+      coverage: partial
       amount: null
       duration_terms: Up to four years
       exclusions: null
-      scope_text: 'Pages differ: ''valued up to the full estimated cost of attendance'' (Stamps and admissions
-        pages) vs ''covers the full cost of attendance'' (current-students renewal page)'
-      advertised_coverage_label: null
+      scope_text: '''Funding valued up to the full estimated cost of attendance for up to four years''
+        (Stamps and admissions pages); an upper bound. The current-students renewal page words it ''covers
+        the full cost of attendance for four years'', which is not used here'
+      advertised_coverage_label: valued up to the full estimated cost of attendance
       conditions_text: null
     - benefit_id: b-enrichment
       category: enrichment
@@ -88,14 +89,14 @@ versions:
       amount: null
       duration_terms: null
       exclusions: null
-      scope_text: Out-of-state tuition waiver for non-Florida residents; a waiver, not a scholarship.
-        The 100 percent waiver is valued at $73,808 on the admissions page and $73,080 on the renewal
-        page
+      scope_text: 'Out-of-state tuition waiver for non-Florida residents; a waiver, not a scholarship.
+        No applicant page prices the Stamps waiver: the renewal page''s Stamps row says $73,080 over four
+        years, and the admissions page''s Presidential section says $73,808'
       advertised_coverage_label: null
       conditions_text: Non-Florida residents
     advertised_totals: []
   application:
-    separate_application: no_form_other_steps_required
+    separate_application: required
     milestones:
     - kind: admission_deadline
       requirement: required
@@ -132,9 +133,10 @@ versions:
     prerequisites: []
     interview_mode: in_person
     finalist_event_required: true
-    notes: 'There is no separate Stamps form: selection is part of the Presidential Scholars process.
-      Presidential Scholars nominated for Stamps interview with a member of the Stamps Scholars Program
-      national leadership team as the final step; no date or format is given.'
+    notes: There is no separate Stamps form, but the supplemental University Honors Program essay (due
+      Dec. 1, 2026) is mandatory and doubles as the Stamps essay; selection is part of the Presidential
+      Scholars process. Presidential Scholars nominated for Stamps interview with a member of the Stamps
+      Scholars Program national leadership team as the final step; no date or format is given.
   renewal_rules:
   - applies_to: []
     gpa_min: 3.0
@@ -206,15 +208,8 @@ versions:
     source_ref: s-stamps
     locator: Stamps Scholars page, Benefits, first bullet
     short_excerpt: Funding valued up to the full estimated cost of attendance for up to four years
-    value_status: conflicting
-    reported_value: partial
-  - field_path: offers/0/benefits/0/coverage
-    source_ref: s-ren
-    locator: Current-students page, renewal table, Stamps row
-    short_excerpt: The scholarship covers the full cost of attendance for four years, plus $20,000 in
-      enrichment funding
-    value_status: conflicting
-    reported_value: full
+    value_status: reported
+    reported_value: null
   - field_path: offers/0/benefits/1/amount
     source_ref: s-stamps
     locator: Stamps Scholars page, Benefits, second bullet
@@ -229,9 +224,9 @@ versions:
     reported_value: null
   - field_path: offers/0/benefits/2/amount
     source_ref: s-adm
-    locator: Admissions Scholarships page, University Out-of-State Tuition Waiver > Merit (the same 100
-      percent waiver)
-    short_excerpt: a total value of $73,808 distributed across four years
+    locator: Admissions Scholarships page, Presidential Scholars section (Stamps Scholars also join the
+      Presidential Scholars Program; the Stamps section itself gives no waiver value)
+    short_excerpt: plus an out-of-state tuition waiver valued at $73,808 distributed across four years
     value_status: conflicting
     reported_value: 73808
   - field_path: offers/0/benefits/2/amount
@@ -242,10 +237,10 @@ versions:
     value_status: conflicting
     reported_value: 73080
   - field_path: application/separate_application
-    source_ref: s-stamps
-    locator: Stamps Scholars page, Application
-    short_excerpt: Selection for the Stamps Scholarship is integrated into the application process for
-      the Presidential Scholars Program
+    source_ref: s-app
+    locator: Application Process page, note after step 1
+    short_excerpt: The application essay for the Presidential Scholars Program and Stamps Scholarship
+      is the same as the University Honors Program application essay.
     value_status: reported
     reported_value: null
   - field_path: renewal_rules/0

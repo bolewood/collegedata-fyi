@@ -139,9 +139,9 @@ versions:
     evaluation_timing: Evaluated at the end of the second semester of each academic year
     summer_courses_can_fix_shortfall: null
     max_semesters: 8
-    notes: Cumulative 3.00 GPA and 27 hours earned by the end of the second semester of the first academic
-      year, then 30 hours earned in each subsequent academic year. Renewable for 4 years or 8 semesters
-      total.
+    notes: 'Catalog: ''Cumulative 3.00 GPA and 27 hours earned by the end of the second semester of each
+      academic year, and 30 hours earned in each subsequent academic year.'' Renewable for 4 years or
+      8 semesters total.'
   stacking_rules: null
   award_counts: []
   sources:

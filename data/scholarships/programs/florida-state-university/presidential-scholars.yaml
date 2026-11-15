@@ -35,7 +35,7 @@ versions:
     consideration_route: honors_application
     aid_basis: merit_only
     need_role: unknown
-    funds_limited: null
+    funds_limited: true
     eligibility:
       national_merit_statuses: null
       status_required_for_award: null
@@ -49,11 +49,14 @@ versions:
       major_change_restrictions: null
       honors_requirement: true
       first_generation_rule: unknown
-      eligibility_notes: Open to high school seniors admitted into the FSU Honors Program. First-year
-        applicants; all finalists are admitted to the Honors Program. The $42,000 package carries a 'Presidential
-        Scholars selected starting Fall 2024' footnote on the admissions page, which dates the amount,
-        not the entering class. The current-students renewal page is written for enrolled students and
-        gives the waiver as $73,080.
+      eligibility_notes: Open to high school seniors admitted into the FSU Honors Program. 'Scholarship
+        funds are limited, so students are encouraged to apply early.' Program obligations on the benefits
+        page include a four-year curriculum, monthly Sunday meetings and first-year residence in Landis
+        Hall; a participation agreement is signed on acceptance. First-year applicants; all finalists
+        are admitted to the Honors Program. The $42,000 package carries a 'Presidential Scholars selected
+        starting Fall 2024' footnote on the admissions page, which dates the amount, not the entering
+        class. The current-students renewal page is written for enrolled students and gives the waiver
+        as $73,080.
     benefits:
     - benefit_id: b-presidential
       category: other

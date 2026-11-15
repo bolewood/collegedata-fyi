@@ -32,7 +32,7 @@ versions:
     consideration_route: admission_application
     aid_basis: merit_only
     need_role: unknown
-    funds_limited: null
+    funds_limited: true
     eligibility:
       national_merit_statuses: null
       status_required_for_award: null
@@ -73,7 +73,7 @@ versions:
         min: null
         max: null
         period: null
-      duration_terms: Four-year renewable scholarship
+      duration_terms: null
       exclusions: null
       scope_text: Full in-state tuition
       advertised_coverage_label: null
@@ -88,7 +88,7 @@ versions:
         min: null
         max: null
         period: null
-      duration_terms: Four-year renewable scholarship
+      duration_terms: null
       exclusions: null
       scope_text: Mandatory fees, plus course and program fees
       advertised_coverage_label: null
@@ -117,7 +117,7 @@ versions:
     consideration_route: admission_application
     aid_basis: merit_only
     need_role: unknown
-    funds_limited: null
+    funds_limited: true
     eligibility:
       national_merit_statuses: null
       status_required_for_award: null
@@ -158,7 +158,7 @@ versions:
         min: null
         max: null
         period: null
-      duration_terms: Four-year renewable scholarship
+      duration_terms: null
       exclusions: null
       scope_text: Full out-of-state tuition
       advertised_coverage_label: null
@@ -173,7 +173,7 @@ versions:
         min: null
         max: null
         period: null
-      duration_terms: Four-year renewable scholarship
+      duration_terms: null
       exclusions: null
       scope_text: Mandatory fees, plus course and program fees
       advertised_coverage_label: null
@@ -206,10 +206,12 @@ versions:
         transcript)
     - kind: interview
       requirement: invitation_only
-      date: '2027-01-01'
-      recurring: null
+      date: null
+      recurring:
+        month: 1
+        day: 1
       precision: month
-      source_date_text: Interviews beginning in January through mid-February
+      source_date_text: Interviews beginning in January through mid-February (no year given)
     - kind: acceptance_deadline
       requirement: recommended
       date: '2027-05-01'

@@ -45,7 +45,7 @@ versions:
       citizenship_text: null
       majors_allowed: null
       major_change_restrictions: null
-      honors_requirement: null
+      honors_requirement: true
       first_generation_rule: unknown
       eligibility_notes: Invitation only, for select students admitted to the UD Honors College. Honors
         applicants complete the Common or Coalition application with early action by the early-action
@@ -157,14 +157,15 @@ versions:
         day: 1
       precision: day
       source_date_text: early-action deadline of Nov. 1
-    - kind: notification
+    - kind: other
       requirement: recommended
       date: null
       recurring:
         month: 1
         day: 1
       precision: month
-      source_date_text: late January (invitations to join the Honors College)
+      source_date_text: late January (invitations to join the Honors College; the page gives no date for
+        the Distinguished Scholar award decision)
     admission_plan_requirement: Early action application with all materials by the Nov. 1 early-action
       deadline
     prerequisites: []

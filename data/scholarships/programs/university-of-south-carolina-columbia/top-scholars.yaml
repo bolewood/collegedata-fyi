@@ -456,23 +456,24 @@ versions:
       precision: day
       source_date_text: Dec. 1 (application credentials deadline)
     - kind: interview
-      requirement: required
+      requirement: invitation_only
       date: null
       recurring:
         month: 1
         day: 1
       precision: month
       source_date_text: late January (virtual semifinalist interview)
-    - kind: notification
+    - kind: other
       requirement: recommended
       date: null
       recurring:
         month: 2
         day: 1
       precision: month
-      source_date_text: by mid-February (Honors College admission notifications)
+      source_date_text: by mid-February (Honors College admission notifications; not the Top Scholar award
+        notice)
     - kind: finalist_event
-      requirement: required
+      requirement: invitation_only
       date: '2027-02-27'
       recurring: null
       precision: day

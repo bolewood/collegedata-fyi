@@ -53,7 +53,7 @@ versions:
         one the application page describes. Transfer students are not eligible; students who earn a high
         school diploma and an A.A. or 60 college credits concurrently and are admitted as freshmen are
         eligible. The selection committee reviews only the Preeminent Scholar application materials, not
-        the UF Common Application.
+        the UF Common Application. Summer enrichment experiences are mandatory.
     benefits:
     - benefit_id: b-coa
       category: cost_of_attendance
@@ -67,9 +67,9 @@ versions:
         period: null
       duration_terms: Up to four years
       exclusions: null
-      scope_text: '''Funding valued up to the full cost of attendance'' (school''s words); an upper bound,
-        not a promise of the full charge'
-      advertised_coverage_label: null
+      scope_text: '''Funding valued up to the full cost of attendance for up to four years'' (school''s
+        words); an upper bound, not a promise of the full charge'
+      advertised_coverage_label: valued up to the full cost of attendance
       conditions_text: null
     - benefit_id: b-experiential
       category: enrichment
@@ -92,7 +92,7 @@ versions:
       instrument: restricted_fund
       coverage: fixed_amount
       amount:
-        qualifier: approximate
+        qualifier: exact
         value: 18000
         min: null
         max: null
@@ -100,7 +100,7 @@ versions:
       duration_terms: null
       exclusions: null
       scope_text: Four fully funded summer enrichment experiences 'valued at $18,000'; shared with Lombardi
-        Scholars
+        Scholars. The summer experiences are mandatory
       advertised_coverage_label: null
       conditions_text: null
     - benefit_id: b-stipend
@@ -120,7 +120,7 @@ versions:
       conditions_text: null
     advertised_totals: []
   application:
-    separate_application: encouraged
+    separate_application: required
     milestones:
     - kind: application_open
       requirement: recommended
@@ -139,7 +139,8 @@ versions:
     prerequisites: []
     interview_mode: in_person
     finalist_event_required: true
-    notes: Both pages carry the prior cycle's dates (January and March 2026); UF has not posted dates
+    notes: Summer enrichment experiences are mandatory (the Class of 2030 schedule starts July 27 - August
+      3, 2026). Both pages carry the prior cycle's dates (January and March 2026); UF has not posted dates
       for the next entering class on these pages. High school nomination and letters of recommendation
       are no longer required.
   renewal_rules: null

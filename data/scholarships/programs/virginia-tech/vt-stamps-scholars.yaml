@@ -30,7 +30,7 @@ versions:
     variant_name: null
     residency: any
     selection_mode: competitive
-    consideration_route: multiple
+    consideration_route: unknown
     aid_basis: merit_only
     need_role: unknown
     funds_limited: null
@@ -45,12 +45,13 @@ versions:
       citizenship_text: null
       majors_allowed: null
       major_change_restrictions: null
-      honors_requirement: null
+      honors_requirement: true
       first_generation_rule: unknown
-      eligibility_notes: Freshman applicants who indicated an interest in the Honors College on their
-        undergraduate application. Applicants after the Early Action deadline cannot be considered. The
-        same page both says all Early Action applicants are considered and tells applicants to complete
-        a Stamps Scholarship application on Scholarship Central; see application.notes.
+      eligibility_notes: Stamps Scholarships are 'available to incoming first-year Honors College students'.
+        Freshman applicants who indicated an interest in the Honors College on their undergraduate application.
+        Applicants after the Early Action deadline cannot be considered. The same page both says all Early
+        Action applicants are considered and tells applicants to complete a Stamps Scholarship application
+        on Scholarship Central; see application.notes.
     benefits:
     - benefit_id: b-coa
       category: cost_of_attendance
@@ -93,14 +94,15 @@ versions:
       date: '2026-09-01'
       recurring: null
       precision: day
-      source_date_text: September 1, 2026 (recruitment scholarship applications open)
+      source_date_text: September 1, 2026 (recruitment scholarship applications open; relevant to Stamps
+        only if the disputed Scholarship Central form is required)
     - kind: application_deadline
-      requirement: required
+      requirement: recommended
       date: '2027-01-08'
       recurring: null
       precision: day
-      source_date_text: January 8, 2027 (recruitment scholarship applications close; Stamps also needs
-        Early Action admission)
+      source_date_text: January 8, 2027 (recruitment scholarship applications close; disputed for Stamps,
+        which says applying after Early Action cannot be considered)
     - kind: admission_deadline
       requirement: required
       date: null
